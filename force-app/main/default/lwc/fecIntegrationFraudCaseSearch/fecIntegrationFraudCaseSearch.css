@@ -1,0 +1,32 @@
+.search-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.button-row {
+    margin-top: 1rem;
+}
+
+.pagination {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.page-label {
+    font-weight: bold;
+}
+
+.no-result {
+    padding: 1rem;
+    text-align: center;
+    color: #888;
+}
+
+.help-text {
+    margin-top: 0.5rem;
+    color: #777;
+}

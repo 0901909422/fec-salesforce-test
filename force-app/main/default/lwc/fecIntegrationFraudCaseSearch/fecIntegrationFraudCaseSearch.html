@@ -1,0 +1,48 @@
+<template>
+    <lightning-card title="Search Fraud Case Screen">
+
+        <!-- Search Filters -->
+        <div class="search-grid">
+            <lightning-input label="Fraud Case ID" value={fraudCaseId} onchange={handleChange} data-field="fraudCaseId"></lightning-input>
+            <lightning-input label="National ID" value={nationalId} onchange={handleChange} data-field="nationalId"></lightning-input>
+            <lightning-input label="Phone number" value={phoneNumber} onchange={handleChange} data-field="phoneNumber"></lightning-input>
+
+            <lightning-input label="Application ID" value={applicationId} onchange={handleChange} data-field="applicationId"></lightning-input>
+            <lightning-input label="Contract Number" value={contractNumber} onchange={handleChange} data-field="contractNumber"></lightning-input>
+            <lightning-input label="Account Number" value={accountNumber} onchange={handleChange} data-field="accountNumber"></lightning-input>
+        </div>
+
+        <div class="button-row">
+            <lightning-button variant="brand" label="Search" onclick={doSearchFraudCase}></lightning-button>
+            <lightning-button class="slds-m-left_x-small" label="Clear" onclick={doClear}></lightning-button>
+        </div>
+
+        <p class="help-text">Enter any one value for search.</p>
+
+        <!-- RESULTS TABLE -->
+        <template if:true={records.length}>
+           <lightning-datatable
+                key-field="Id"
+                data={records}
+                columns={columns}
+                hide-checkbox-column
+                sorted-by={sortBy}
+                sorted-direction={sortDirection}
+                onsort={handleSort}>
+            </lightning-datatable>
+
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <lightning-button label="Prev" onclick={prevPage} disabled={isFirstPage}></lightning-button>
+                <span class="page-label">Page {pageNumber} / {totalPages}</span>
+                <lightning-button label="Next" onclick={nextPage} disabled={isLastPage}></lightning-button>
+            </div>
+        </template>
+
+        <template if:true={noResult}>
+            <p class="no-result">No records found.</p>
+        </template>
+
+    </lightning-card>
+</template>
