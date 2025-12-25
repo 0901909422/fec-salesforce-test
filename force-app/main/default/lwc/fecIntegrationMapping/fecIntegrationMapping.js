@@ -108,6 +108,7 @@ export default class FraudIntegrationMapping extends LightningElement {
         
     }
 
+	//Load data for update
     loadForUpdate() {
         //this.loading = true;
         loadIntegrationMapping({ mappingId: this.mappingId })
