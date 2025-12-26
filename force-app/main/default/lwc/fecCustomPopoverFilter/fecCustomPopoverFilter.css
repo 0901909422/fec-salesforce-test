@@ -1,0 +1,15 @@
+.filter-popover-fixed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 300px;
+    z-index: 99999; /* Đảm bảo cực cao */
+    pointer-events: auto;
+}
+
+/* Quan trọng: Mũi tên phải khớp với điểm neo */
+.slds-nubbin_top-right::before, 
+.slds-nubbin_top-right::after {
+    left: auto !important;
+    right: 20px !important;
+}

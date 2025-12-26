@@ -1,0 +1,97 @@
+<template>
+    <c-fec-generic-modal title={title} size="medium" onclose={handleClose}>
+        <div class="slds-p-around_small" style="max-height: 70vh; overflow-y: auto;">
+                <lightning-layout vertical-align="start" multiple-rows>
+                    <lightning-layout-item size="6" padding="around-small">
+                        <lightning-combobox name="accountLinkage" label="Trường liên kết dữ liệu *" options={accountLinkageOptions} value={localData.accountLinkage} onchange={handleInputChange}></lightning-combobox>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="6" padding="around-small">
+                        <lightning-input type="text" label="Mã số trường *" value={localData.fieldCode} onchange={handleInputChange} name="fieldCode"></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="6" padding="around-small">
+                        <lightning-input type="text" label="Tên trường dữ liệu *" value={localData.dataLabel} onchange={handleInputChange} name="dataLabel"></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="6" padding="around-small" class="slds-p-top_large">
+                        <lightning-input type="checkbox" label="Khả dụng?" checked={localData.isActive} onchange={handleInputChange} name="isActive"></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="6" padding="around-small">
+                        <lightning-input type="date" label="Ngày bắt đầu *" value={localData.startDate} onchange={handleInputChange} name="startDate"></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="6" padding="around-small">
+                        <lightning-input type="date" label="Ngày hoàn tất" value={localData.endDate} onchange={handleInputChange} name="endDate"></lightning-input>
+                    </lightning-layout-item>
+                </lightning-layout>
+
+                <hr class="slds-m-vertical_medium" />
+                
+                <div class="slds-grid slds-grid_vertical-align-center">
+                    <div class="slds-col slds-size_1-of-3">
+                        <p class="slds-text-body_regular slds-text-color_success">
+                            <lightning-icon icon-name="utility:info" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                            Tệp đã tải lên sẽ được xử lý vào cuối ngày
+                        </p>
+                    </div>
+                </div>
+
+                <lightning-layout vertical-align="start">
+                    <lightning-layout-item size="3" padding="around-small">
+                        <lightning-input type="file" label="Chọn tập tin" variant="label-hidden" onchange={handleFileChange} accept={fileAccept}></lightning-input>
+                        <div class="slds-text-body_small slds-m-top_x-small">{fileName}</div>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="3" padding="around-small">
+                        <lightning-button label="Tải lên" variant="success" onclick={handleUpload} disabled={isUploadDisabled}></lightning-button>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="3" padding="around-small" class="slds-col_bump-left">
+                        <lightning-button label="Download template" variant="brand" onclick={handleDownloadTemplate}></lightning-button>
+                    </lightning-layout-item>
+                </lightning-layout>
+                
+                <hr class="slds-m-vertical_medium" />
+
+                <lightning-layout horizontal-align="space">
+                    <lightning-layout-item size="3" padding="around-small">
+                        <p class="slds-text-title_bold">File Name</p>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="2" padding="around-small">
+                        <p class="slds-text-title_bold">Tình trạng</p>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="3" padding="around-small">
+                        <p class="slds-text-title_bold">Uploaded By</p>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="2" padding="around-small">
+                        <p class="slds-text-title_bold">Upload time</p>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="2" padding="around-small">
+                        <p class="slds-text-title_bold">Actions</p>
+                    </lightning-layout-item>
+                </lightning-layout>
+                
+                <template if:true={existingFiles.length}>
+                    <template for:each={existingFiles} for:item="file">
+                        <div key={file.id} class="slds-border_top slds-p-vertical_x-small">
+                            <lightning-layout horizontal-align="space">
+                                <lightning-layout-item size="3"><a href="#" data-id={file.id} onclick={handleFileDownload}>{file.name}</a></lightning-layout-item>
+                                <lightning-layout-item size="2"><span>{file.status}</span></lightning-layout-item>
+                                <lightning-layout-item size="3"><span>{file.uploadedBy}</span></lightning-layout-item>
+                                <lightning-layout-item size="2"><span>{file.uploadTime}</span></lightning-layout-item>
+                                <lightning-layout-item size="2">
+                                    <lightning-button-icon icon-name="utility:delete" variant="bare" data-id={file.id} onclick={handleDeleteFile}></lightning-button-icon>
+                                </lightning-layout-item>
+                            </lightning-layout>
+                        </div>
+                    </template>
+                </template>
+                <template if:false={existingFiles.length}>
+                    <div class="slds-p-around_small slds-border_top">
+                        <p class="slds-text-body_medium slds-text-align_center">
+                            No content available
+                        </p>
+                    </div>
+                </template>
+            </div>
+            <div slot="footer">
+                <lightning-button label="Hủy bỏ" variant="neutral" onclick={handleClose} class="slds-m-right_small"></lightning-button>
+                <lightning-button label="Hoàn tất" variant="success" onclick={handleSave}></lightning-button>
+            </div>
+        </c-fec-generic-modal>
+</template>
