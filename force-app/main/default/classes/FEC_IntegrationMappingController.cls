@@ -185,7 +185,6 @@ public with sharing class FEC_IntegrationMappingController{
                 mapping.FEC_Status__c = true;
                 log('[SAVE] Creating new mapping');
             }
-			
     
             // Common fields (insert + update)
             mapping.FEC_User_Type_Id__c        = (String) header.get(caseField.SOURCE_TYPE_USER_TYPE);
