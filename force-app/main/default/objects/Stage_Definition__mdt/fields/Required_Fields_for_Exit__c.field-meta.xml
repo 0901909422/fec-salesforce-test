@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Required_Fields_for_Exit__c</fullName>
-    <description>Danh sách API Name các trường trên Case cần điền trước khi chuyển Stage (cách nhau bằng dấu phẩy hoặc dòng mới). Logic kiểm tra sẽ nằm trong Flow chính hoặc Screen Flow.</description>
-    <fieldManageability>DeveloperControlled</fieldManageability>
-    <label>Required Fields for Exit</label>
-    <required>false</required>
-    <type>TextArea</type>
-</CustomField>

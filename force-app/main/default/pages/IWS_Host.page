@@ -1,0 +1,38 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" applyBodyTag="false" applyHtmlTag="false" docType="html-5.0">
+    <html>
+        <head>
+            <meta http-equiv="Content-Security-Policy" 
+                  content="
+                        default-src 'self'; 
+                        connect-src 'self' https://127.0.0.1:6969; 
+                        script-src 'self' https://127.0.0.1:6969 'unsafe-inline' 'unsafe-eval'; 
+                        img-src 'self' data:; 
+                        style-src 'self' 'unsafe-inline';" />
+            <title>IWS Connector Host</title>
+
+            <apex:includeScript value="{!$Resource.IWSConnectorBundle + '/jquery-3.6.0.min.js'}"/>
+            <apex:includeScript value="{!$Resource.IWSConnectorBundle + '/jquery.jsonp.js'}"/>
+            <apex:includeScript value="{!$Resource.IWSConnectorBundle + '/consolelogmin.js'}"/>
+            <apex:includeScript value="{!$Resource.IWSConnectorBundle + '/iwscoremin.js'}"/>
+            <apex:includeScript value="{!$Resource.IWSConnectorBundle + '/iwcommandmin.js'}"/>
+            <apex:includeScript value="{!$Resource.IWSConnectorBundle + '/iwprescript.js'}"/>
+            <apex:includeScript value="{!$Resource.IWSConnectorBundle + '/iwsconfig.js'}"/>
+            <apex:includeScript value="{!$Resource.IWSConnectorBundle + '/iwscript.js'}"/>
+            <apex:includeScript value="{!$Resource.IWSConnectorBundle + '/iwcustom.js'}"/> 
+
+        </head>
+        <body style="margin: 0; padding: 0;">
+            <script>
+                // Hàm gửi sự kiện Genesys qua postMessage đến LWC cha
+                window.postMessageToLWC = function(eventType, data) {
+                    console.log('Hàm gửi sự kiện Genesys qua postMessage đến LWC cha.');
+                    window.parent.postMessage({
+                        source: 'genesys_host',
+                        eventType: eventType,
+                        data: data
+                    }, "*"); 
+                }
+            </script>
+        </body>
+    </html>
+</apex:page>

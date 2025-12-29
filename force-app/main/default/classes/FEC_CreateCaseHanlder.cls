@@ -1,3 +1,7 @@
+/** * Controller xử lý tạo Case tương tác từ Genesys
+* @created      : 2025/12/29 long.nguyen.50
+* @modified     : 
+*/
 public without sharing class FEC_CreateCaseHanlder {
     
     public class FEC_InteractionCaseDTO {
@@ -41,7 +45,13 @@ public without sharing class FEC_CreateCaseHanlder {
         public String subCodeId;
         public String remarks;
     }
-    
+
+    /** * Tạo Interaction Case từ dữ liệu Genesys
+    * @param dto Dữ liệu từ LWC
+    * @return FEC_InteractionCaseResponse
+    * @created: 2025/12/29 long.nguyen.50
+    */
+    @AuraEnabled 
     public static FEC_InteractionCaseResponse createInteractionCase(FEC_InteractionCaseDTO dto) {
         
         if (dto == null) {

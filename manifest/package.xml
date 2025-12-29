@@ -46,6 +46,11 @@
         <name>NamedCredential</name>
     </types>
 
+        <types>
+        <members>*</members>
+        <name>StaticResource</name>
+    </types>
+
     <types>
     <members>*</members>
     <name>CustomLabel</name>

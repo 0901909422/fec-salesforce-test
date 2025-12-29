@@ -1,15 +1,8 @@
 import { LightningElement, track } from 'lwc';
-import { createRecord } from 'lightning/uiRecordApi';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import CASE_OBJECT from '@salesforce/schema/Case';
 
-import SUBJECT_FIELD from '@salesforce/schema/Case.Subject';
-import STATUS_FIELD from '@salesforce/schema/Case.Status';
-import ORIGIN_FIELD from '@salesforce/schema/Case.Origin';
-import DESCRIPTION_FIELD from '@salesforce/schema/Case.Description';
-// Import các trường custom nếu bạn muốn điền thêm thông tin
-import PHONE_FIELD from '@salesforce/schema/Case.SuppliedPhone';
+import createInteractionCase from '@salesforce/apex/FEC_CreateCaseHanlder.createInteractionCase';
 
 export default class Fec_GenesysSoftphone  extends NavigationMixin(LightningElement) {
     @track callStatus = 'Đang khởi tạo IWS...';
@@ -61,7 +54,7 @@ export default class Fec_GenesysSoftphone  extends NavigationMixin(LightningElem
         switch (eventType) {
             case 'InboundRinging':
             case 'OutboundEstablished':
-                this.handleNewInteraction(data);
+                this.handleNewInteraction(eventType, data);
                 break;
             case 'WrapupCall':
                 this.handleWrapup(data);
@@ -72,32 +65,38 @@ export default class Fec_GenesysSoftphone  extends NavigationMixin(LightningElem
         }
     }
 
-    // Xử lý tạo Case cho cuộc gọi (thay thế cho logic cũ trong createInteractionCase)
-    handleNewInteraction(callData) {
+    /** * Xử lý khi có tương tác mới (Inbound Call)
+    * @param callData Dữ liệu từ IWS postMessage
+    */
+    handleNewInteraction(eventType, callData) {
         console.log("Dữ liệu cuộc gọi mới:", JSON.stringify(callData));
-        this.callerNumber = callData.DNIS;
 
-        // >>> GỌI APEX/UI RECORD API ĐỂ TẠO CASE <<<
-
-        const fields = {
-            [SUBJECT_FIELD.fieldApiName]: `${callData.AgentID} Call from ${callData.DNIS}`,
-            [PHONE_FIELD.fieldApiName]: callData.DNIS,
-            [STATUS_FIELD.fieldApiName]: 'New',
-            [ORIGIN_FIELD.fieldApiName]: 'Phone',
-            [DESCRIPTION_FIELD.fieldApiName]: `Genesys Interaction ID: ${callData.GenesysInteractionID}\nAttach Data: ${callData.AttachDataJSON}`
+        // 1. Chuẩn bị DTO mapping với FEC_InteractionCaseDTO trong Apex
+        const interactionDto = {
+            channel: 'Genesys',
+            subChannel: eventType,
+            phoneNumber: callData.DNIS,
+            externalInteractionId: callData.GenesysInteractionID, // ID từ Genesys
+            nationalId: callData.NationalID ,
+            accountNumber: callData.CardAccountNum ,
+            contractNumber: callData.ContractNum ,
+            transcription: "CPM interaction"
         };
 
-        const recordInput = { apiName: CASE_OBJECT.objectApiName, fields };
+        // 2. Gọi Apex để tạo record
+        createInteractionCase({ dto: interactionDto })
+            .then((result) => {
+                // result là đối tượng FEC_InteractionCaseResponse { caseId, linkId, caseNo }
+                this.currentInteractionCaseId = result.caseId;
+                
+                this.showToast('Thành công', `Đã tạo Case tương tác: ${result.caseNo || ''}`, 'success');
 
-        createRecord(recordInput)
-            .then(caseRecord => {
-                this.currentInteractionCaseId = caseRecord.id; // Lưu lại ID Case
-                this.showToast('Thành công', `Đã tạo Case: ${caseRecord.id}`, 'success');
-                this.navigateToRecord(caseRecord.id);
+                // 3. Tự động điều hướng đến Case vừa tạo
+                this.navigateToRecord(result.caseId);
             })
-            .catch(error => {
-                console.error('LỖI TẠO CASE:', JSON.stringify(error));
-                this.showToast('Lỗi', `Lỗi khi tạo Case: ${error.body?.message || 'Lỗi không xác định'}`, 'error');
+            .catch((error) => {
+                this.showToast('Lỗi tạo Case', error.body.message, 'error');
+                console.error('Error creating interaction case:', error);
             });
     }
 

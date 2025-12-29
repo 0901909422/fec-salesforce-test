@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>Đại diện cho một loại quy trình xử lý Case (tương ứng với một giá trị Request_Type__c).</description>
-    <label>Process Definition</label>
-    <pluralLabel>Process Definitions</pluralLabel>
-    <visibility>Public</visibility>
-</CustomObject>

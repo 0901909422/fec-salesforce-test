@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Next_Stage_Mappings__c</fullName>
-    <description>Lưu trữ logic rẽ nhánh, ví dụ: {&quot;ValueA&quot;: &quot;StageDevNameX&quot;, &quot;ValueB&quot;: &quot;StageDevNameY&quot;, &quot;_default&quot;: &quot;StageDevNameZ&quot;}.</description>
-    <fieldManageability>DeveloperControlled</fieldManageability>
-    <label>Next Stage Mappings</label>
-    <required>false</required>
-    <type>TextArea</type>
-</CustomField>
