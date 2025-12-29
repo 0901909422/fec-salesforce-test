@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Product_Type__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Product Type</label>
+    <referenceTo>FEC_Product_Type__c</referenceTo>
+    <relationshipLabel>FEC_Notification Settings</relationshipLabel>
+    <relationshipName>FEC_Notification_Settings</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Process_Definition__c</fullName>
+    <description>Liên kết Stage này thuộc về quy trình nào.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Process Definition</label>
+    <referenceTo>Process_Definition__mdt</referenceTo>
+    <relationshipLabel>Stage Definitions</relationshipLabel>
+    <relationshipName>Stage_Definitions</relationshipName>
+    <required>false</required>
+    <type>MetadataRelationship</type>
+    <unique>false</unique>
+</CustomField>

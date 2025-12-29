@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Notification_Type__c</fullName>
+    <label>Notification Type</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>SLA Extension</fullName>
+                <default>false</default>
+                <label>SLA Extension</label>
+            </value>
+            <value>
+                <fullName>TestFEMA</fullName>
+                <default>false</default>
+                <label>TestFEMA</label>
+            </value>
+            <value>
+                <fullName>FrontlineResolved</fullName>
+                <default>false</default>
+                <label>FrontlineResolved</label>
+            </value>
+            <value>
+                <fullName>Fraud</fullName>
+                <default>false</default>
+                <label>Fraud</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,17 @@
+<template>
+    <lightning-card title="Genesys Softphone" icon-name="standard:voice_call">
+        <div class="slds-p-around_medium">
+            <p><strong>Trạng thái:</strong> {callStatus}</p>
+            <p><strong>Từ số:</strong> {callerNumber}</p>
+            
+            <iframe 
+                src={IframeSrc}
+                width="100%" 
+                height="0px" 
+                frameborder="0" 
+                style="visibility:hidden; display:none;">
+            </iframe>
+
+        </div>
+    </lightning-card>
+</template>

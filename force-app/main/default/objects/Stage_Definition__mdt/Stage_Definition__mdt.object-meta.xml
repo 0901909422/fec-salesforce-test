@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Định nghĩa thuộc tính và hành vi cho từng Stage cụ thể trong một quy trình</description>
+    <label>Stage Definition</label>
+    <pluralLabel>Stage Definitions</pluralLabel>
+    <visibility>Public</visibility>
+</CustomObject>
