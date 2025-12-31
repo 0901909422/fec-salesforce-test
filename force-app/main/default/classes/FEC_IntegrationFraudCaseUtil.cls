@@ -1,0 +1,702 @@
+public with sharing class FEC_IntegrationFraudCaseUtil {
+    public static final Boolean DEBUG_LOG = true;
+
+    /**
+     * Represents a dynamic validation rule for a UI field that is configured
+     * through master integration data.
+     *
+     * Each instance describes how a specific field should be validated and
+     * interpreted by the fraud integration framework.
+     */
+    public class FieldRule {
+        public String fieldName;     // FEC_Source_Id__c → UI field name
+        public Boolean mandatory;    // FEC_Source_Is_Mandatory__c
+        public String sourceType;    // Product, CaseType, Category...
+        public String fieldType;     // string, number, list, boolean, datetime
+
+         /**
+         * Builds a FieldRule instance from a master data integration record.
+         *
+         * @param rec Configuration record defining the field's validation behavior.
+         */
+        public FieldRule(FEC_Master_Data_Integration__c rec) {
+            this.fieldName  = rec.FEC_Source_Id__c;
+            this.mandatory  = rec.FEC_Source_Is_Mandatory__c;
+            this.sourceType = rec.FEC_Source_Type__c;
+            this.fieldType  = rec.FEC_Source_Field_Type__c;
+        }
+    }
+
+    /**
+     * Wrapper class that represents the result of extracting a fraud payload.
+     *
+     * This object separates the incoming request into two independent parts:
+     *
+     * 1. **detail**  – Business metadata from the request (JSON content),
+     *                 with the embedded XML removed.
+     *
+     * 2. **xmlData** – The raw XML document extracted from the request,
+     *                 cleaned and ready for DOM parsing.
+     *
+     * Keeping these separated simplifies processing, validation,
+     * logging, and error handling in downstream services.
+     */
+    public class FraudExtractResult {
+        /**
+         * Clean business metadata extracted from the request.
+         * Contains no XML content.
+         */
+        public Map<String, Object> detail;
+
+         /**
+         * Pure, normalized XML content extracted from the request.
+         * Safe for DOM parsing.
+         */
+        public String xmlData;
+    }
+    
+    
+    
+    /**
+     * Custom exception type used for signaling validation failures
+     * in fraud integration processing.
+     */
+    public class ValidationException extends Exception {}
+
+    /**
+     * Creates an integration service log record for audit and debugging.
+     */
+    public static void logIntegrationService(
+        String serviceName,
+        String channel,
+        String integrationCaseId,
+        String serviceCaseId,
+        String requestData,
+        String responseData
+    ) {
+
+        FEC_Integration_Service_Log__c logRec =
+            new FEC_Integration_Service_Log__c();
+
+        logRec.Name                       = serviceName + ' - ' + System.now().format();
+        logRec.FEC_Service_Name__c        = serviceName;
+        logRec.FEC_Channel__c             = channel;
+        logRec.FEC_Integration_Case_Id__c = integrationCaseId;
+        logRec.FEC_Service_Case_Id__c     = serviceCaseId;
+        logRec.FEC_Request_Data__c        = safeText(requestData);
+        logRec.FEC_Response_Data__c       = safeText(responseData);
+
+        insert logRec;
+    }
+
+    /**
+     * Extracts the CaseID value from a response XML string.
+     *
+     * Expected XML format:
+     * <Response>
+     *     <Success>true</Success>
+     *     <CaseID>FH-167011</CaseID>
+     *     <Message>...</Message>
+     * </Response>
+     *
+     * @param xml  Raw XML response from the integration service
+     * @return     Extracted CaseID value, or null if not found or XML is invalid
+     */
+    public static String extractCaseIdFromResponse(String xml) {
+        if (String.isBlank(xml)) return null;
+    
+        try {
+            Dom.Document doc = new Dom.Document();
+            doc.load(xml);
+    
+            Dom.XmlNode root = doc.getRootElement();
+            Dom.XmlNode caseNode = root.getChildElement('CaseID', null);
+    
+            if (caseNode != null) {
+                return caseNode.getText();
+            }
+        } catch (Exception ex) {
+            log('extractCaseIdFromResponse error: ' + ex.getMessage());
+        }
+    
+        return null;
+    }
+
+    /**
+     * Ensures that large text values do not exceed Salesforce Long Text Area limits.
+     * Truncates input string safely to 32,768 characters if necessary.
+     *
+     * @param input  Raw text input
+     * @return       Original or truncated text within Salesforce limits
+     */
+    private static String safeText(String input) {
+        if (String.isBlank(input)) return input;
+        return input.length() > 32768 ? input.substring(0, 32768) : input;
+    }
+    /**
+     * Performs request validation for the specified operation type.
+     *
+     * This method executes common validation logic and allows for
+     * operation-specific validation extensions.
+     *
+     * @param operation The integration operation being performed.
+     * @param request   The inbound request object to be validated.
+     * @throws ValidationException when validation rules are violated.
+     */
+    public static void validate(String operation, Object request) {
+        validateRequest(request);
+        // Additional per-operation validation (optional)
+        if (operation == 'CreateFraudCase') {
+            // TODO: add field-level validation if needed
+        }
+        if (operation == 'CancelFraudCase') {
+            // TODO
+        }
+        if (operation == 'GetFraudMasterData') {
+            // TODO
+        }
+    }
+
+    /**
+     * Extracts business metadata and embedded XML from the incoming fraud payload.
+     *
+     * The incoming request contains JSON where the field `detail.data`
+     * itself holds a complete XML document as a string. This method:
+     *
+     * 1. Parses the JSON into a map.
+     * 2. Extracts the XML string from `detail.data`.
+     * 3. Normalizes the XML so it becomes safe for DOM parsing.
+     * 4. Removes the XML from the `detail` object, leaving only clean metadata.
+     * 5. Returns both pieces in a structured result object.
+     *
+     * This separation prevents XML parsing errors and simplifies downstream logic.
+     *
+     * @param rawJson  Raw JSON request body received from the integration endpoint.
+     * @return         FraudExtractResult containing:
+     *                 - detail  : Clean metadata map (no XML inside)
+     *                 - xmlData : Pure, parseable XML document
+     */
+    public static FraudExtractResult extractFraudPayload(String rawJson) {
+
+        Map<String, Object> root =
+            (Map<String, Object>) JSON.deserializeUntyped(rawJson);
+    
+        Map<String, Object> detail =
+            (Map<String, Object>) root.get('detail');
+    
+        // 1. Extract raw XML
+        String xml = (String) detail.get('data');
+    
+        // 2. Normalize XML safely
+        xml = normalizeXml(xml);
+    
+        // 3. Remove XML from detail
+        detail.remove('data');
+    
+        FraudExtractResult result = new FraudExtractResult();
+        result.detail = detail;
+        result.xmlData = xml;
+    
+        return result;
+    }
+    
+
+    // public static String normalizeXml(String xml) {
+    //     if (String.isBlank(xml)) return xml;
+    
+    //     // Remove surrounding quotes if exist
+    //     if (xml.startsWith('"') && xml.endsWith('"')) {
+    //         xml = xml.substring(1, xml.length() - 1);
+    //     }
+    
+    //     // Unescape JSON-escaped characters
+    //     xml = xml.replace('\\"', '"');
+    //     xml = xml.replace('\\\\', '\\');
+    
+    //     return xml.trim();
+    // }
+    
+    /**
+     * Cleans and normalizes an XML string that was extracted from a JSON payload.
+     *
+     * This method ensures the returned value is **pure, parseable XML** by:
+     * 1. Removing any characters before the first '<' character.
+     * 2. Removing any characters after the final '>' character.
+     * 3. Decoding common XML entities that may appear when XML is embedded in JSON.
+     * 4. Trimming any remaining leading or trailing whitespace.
+     *
+     * This prevents XML parsing errors such as:
+     * "in epilog non whitespace content is not allowed".
+     *
+     * @param xml  Raw XML string possibly contaminated with JSON quotes or extra characters.
+     * @return     Clean XML string safe for DOM parsing.
+     */
+    public static String normalizeXml(String xml) {
+        if (String.isBlank(xml)) return xml;
+    
+        // Remove everything before first '<'
+        Integer start = xml.indexOf('<');
+        if (start > 0) {
+            xml = xml.substring(start);
+        }
+    
+        // Remove everything after last '>'
+        Integer endT = xml.lastIndexOf('>');
+        if (endT != -1 && endT < xml.length() - 1) {
+            xml = xml.substring(0, endT + 1);
+        }
+    
+        // Decode XML entities if present
+        xml = xml.replace('&quot;', '"')
+                 .replace('&lt;', '<')
+                 .replace('&gt;', '>')
+                 .replace('&amp;', '&');
+        // Unescape JSON-escaped characters
+        xml = xml.replace('\\"', '"');
+        xml = xml.replace('\\\\', '\\');
+        return xml.trim();
+    }
+    
+    
+   
+    
+    /**
+     * Builds a successful XML response using DOM APIs and writes HTTP 200 headers.
+     *
+     * @param caseId  The processed fraud case identifier.
+     * @param message Human-readable success message.
+     * @return Root XML node representing the response payload.
+     */
+    public static Dom.XmlNode successResponseXml(String caseId, String message) {
+
+        RestContext.response.statusCode = 200;
+        RestContext.response.addHeader('Content-Type', 'application/xml; charset=UTF-8');
+    
+        Dom.Document doc = new Dom.Document();
+    
+        Dom.XmlNode responseNode = doc.createRootElement('Response', null, null);
+    
+        responseNode.addChildElement('Success', null, null)
+            .addTextNode('true');
+    
+        responseNode.addChildElement('CaseID', null, null)
+            .addTextNode(caseId);
+    
+        responseNode.addChildElement('Message', null, null)
+            .addTextNode(message);
+    
+        return responseNode;
+    }
+
+    /**
+     * Builds a successful XML response as a raw XML string and writes HTTP 200 headers.
+     *
+     * @param caseId  The processed fraud case identifier.
+     * @param message Human-readable success message.
+     * @return XML response string.
+     */
+    public static String successXml(String caseId, String message) {
+        RestContext.response.statusCode = 200;
+        RestContext.response.addHeader('Content-Type', 'application/xml; charset=UTF-8');
+    
+        return 
+            '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<Response>' +
+                '<Success>true</Success>' +
+                '<CaseID>' + escapeXml(caseId) + '</CaseID>' +
+                '<Message>' + escapeXml(message) + '</Message>' +
+            '</Response>';
+    }
+    
+    /**
+     * Builds an error XML response and writes HTTP 400 headers.
+     * All content is safely XML-escaped.
+     *
+     * @param msg Error message.
+     * @return XML error response string.
+     */
+    public static String errorXml(String msg) {
+        // Content-Type header MUST be XML
+        RestContext.response.statusCode = 400;
+        RestContext.response.addHeader('Content-Type', 'application/xml; charset=UTF-8');
+    
+        // Escape illegal XML characters
+        String safe = escapeXml(msg);
+    
+        return 
+            '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<Response>' +
+                '<Success>false</Success>' +
+                '<Message>' + safe + '</Message>' +
+            '</Response>';
+    }
+
+    /**
+     * Escapes illegal XML characters to prevent malformed XML output.
+     *
+     * @param s Input string.
+     * @return XML-safe string.
+     */
+    private static String escapeXml(String s) {
+        if (String.isBlank(s)) {
+            return '';
+        }
+            
+        s = s.replace('&', '&amp;');
+        s = s.replace('<', '&lt;');
+        s = s.replace('>', '&gt;');
+        s = s.replace('"', '&quot;');
+        s = s.replace('\'', '&apos;');
+        return s;
+    }
+    
+    
+
+    /**
+     * Builds a standard success result map for JSON-based responses.
+     */
+    public static Map<String,Object> success(String msg, Object data) {
+        return new Map<String,Object>{
+            'success' => true,
+            'message' => msg,
+            'caseId'  => data
+        };
+    }
+
+    /**
+     * Builds a standard error result map for JSON-based responses.
+     */
+    public static Map<String,Object> error(String msg) {        
+        return new Map<String,Object>{
+            'success' => false,
+            'message' => msg
+        };
+    }
+
+    /**
+     * Builds a minimal XML success response without DOM overhead.
+     */
+    public static String buildXmlSuccess(String caseId, String message) {
+        List<String> xmlParts = new List<String>();
+        xmlParts.add('<?xml version="1.0" encoding="UTF-8"?>');
+        xmlParts.add('<Response>');
+        xmlParts.add('<Success>true</Success>');
+        xmlParts.add('<CaseID>' + (caseId == null ? '' : caseId.escapeXml()) + '</CaseID>');
+        xmlParts.add('<Message>' + (message == null ? '' : message.escapeXml()) + '</Message>');
+        xmlParts.add('</Response>');
+
+        String xml = String.join(xmlParts, '');
+        return xml;
+    }
+
+
+    /**
+     * Builds a minimal XML error response without DOM overhead.
+     */
+    public static String buildXmlError(String errorMessage) {
+        List<String> xmlParts = new List<String>();
+        xmlParts.add('<?xml version="1.0" encoding="UTF-8"?>');
+        xmlParts.add('<Response>');
+        xmlParts.add('<Success>false</Success>');      
+        xmlParts.add('<Message>' + errorMessage.escapeXml() + '</Message>');
+        xmlParts.add('</Response>');
+        String xml = String.join(xmlParts, '');       
+        return xml;
+    }
+       
+
+    /**
+     * Recursively finds all XML nodes with the specified tag name.
+     */     
+     public static List<Dom.XmlNode> findAllDeep(Dom.XmlNode parent, String tag) {
+        List<Dom.XmlNode> out = new List<Dom.XmlNode>();
+        if (parent == null) return out;
+
+        for (Dom.XmlNode c : parent.getChildElements()) {
+            if (c.getName().endsWith(tag)) {
+                out.add(c);
+            }
+            // recursive
+            out.addAll(findAllDeep(c, tag));
+        }
+        return out;
+    }
+
+    // Validate full request null
+    private static void validateRequest(Object request) {
+
+        if (request == null) {
+            throw new ValidationException('Request cannot be null.');
+        }
+        
+    }
+   
+    /**
+     * Finds the first direct child node with the specified name.
+     */
+    public static Dom.XmlNode find(Dom.XmlNode node, String name) {
+            if (node == null) return null;
+            for (Dom.XmlNode child : node.getChildElements()) {
+                if (child.getName().endsWith(name)) return child;
+            }
+            return null;
+    }
+
+    /**
+     * Finds all direct child nodes with the specified name.
+     */
+    public static List<Dom.XmlNode> findAll(Dom.XmlNode node, String name) {
+        List<Dom.XmlNode> out = new List<Dom.XmlNode>();
+        if (node == null) return out;
+
+        for (Dom.XmlNode child : node.getChildElements()) {
+            if (child.getName().endsWith(name)) out.add(child);
+        }
+        return out;
+    }
+
+    /**
+     * Returns the text value of the first matching child node.
+     */
+    public static String val(Dom.XmlNode node, String name) {
+        Dom.XmlNode c = find(node, name);
+        return c != null ? c.getText() : null;
+    }
+
+     /**
+     * Validates the data type of a field value based on configured rules.
+     */
+     public static void validateFieldType(String fieldName, Object value, String type) {
+        try {
+            switch on type {
+                when 'string' {
+                    // always ok
+                }
+                when 'number' {
+                    Decimal d = Decimal.valueOf(String.valueOf(value));
+                }
+                when 'boolean' {
+                    Boolean b = Boolean.valueOf(String.valueOf(value));
+                }
+                when 'datetime' {
+                    Datetime dt = Datetime.valueOf(String.valueOf(value));
+                }
+                when 'file' {
+                    validateFile(fieldName, value);
+                }
+                when else {
+                    // no-op
+                }
+            }
+        } catch (Exception e) {
+            throw new ValidationException(
+                'Invalid value for field ' + fieldName + 
+                ' — expected type: ' + type
+            );
+        }
+    }
+     
+    /**
+     * Validates uploaded file structure, size limits, and allowed file types.
+     */
+     public static void validateFile(String fieldName, Object value) {
+
+        if (!(value instanceof Map<String, Object>)) {
+            throw new ValidationException(
+                'Invalid file structure for field: ' + fieldName
+            );
+        }
+
+        Map<String, Object> file = (Map<String, Object>)value;
+
+        // Required keys in file map
+        List<String> requiredKeys = new List<String>{
+            'filename', 'content', 'size', 'type'
+        };
+
+        for (String key : requiredKeys) {
+            if (!file.containsKey(key) || String.valueOf(file.get(key)).trim() == '') {
+                throw new ValidationException(
+                    'File field "' + fieldName + '" missing required attribute: ' + key
+                );
+            }
+        }
+
+        // Validate size limit (example 5MB)
+        Integer size = Integer.valueOf(String.valueOf(file.get('size')));
+        Integer maxSize = 5 * 1024 * 1024; // 5MB
+        if (size > maxSize) {
+            throw new ValidationException(
+                'File "' + file.get('filename') + '" exceeds maximum size of 5MB.'
+            );
+        }
+
+        // Validate allowed extensions
+        String filename = String.valueOf(file.get('filename')).toLowerCase();
+        List<String> allowedExt = new List<String>{
+            '.jpg','.jpeg','.png','.pdf','.doc','.docx'
+        };
+        Boolean valid = false;
+        for (String ext : allowedExt) {
+            if (filename.endsWith(ext)) { valid = true; break; }
+        }
+        if (!valid) {
+            throw new ValidationException(
+                'Invalid file type for "' + fieldName +
+                '". Allowed: ' + String.join(allowedExt, ', ')
+            );
+        }
+    }
+
+    /**
+     * Validates list-type fields against allowed enumerated values.
+     */
+    public static void validateListValue(String fieldName, Object value) {
+
+        List<String> allowed = new List<String>();
+
+        for (FEC_Master_Data_Integration__c rec : [
+            SELECT FEC_Source_Enum_Value__c
+            FROM FEC_Master_Data_Integration__c
+            WHERE FEC_Source_Parent_Id__c = :fieldName
+              AND FEC_Source_Enum_Value__c != null
+        ]) {
+            allowed.add(rec.FEC_Source_Enum_Value__c);
+        }
+
+        if (!allowed.isEmpty() && !allowed.contains(String.valueOf(value))) {
+            throw new ValidationException(
+                'Invalid value for ' + fieldName + 
+                '. Allowed values: ' + String.join(allowed, ', ')
+            );
+        }
+    }
+
+    /**
+     * Removes embedded XML content from raw request JSON for safe deserialization.
+     */
+    public static String cleanJson(String raw) {
+
+        if (String.isBlank(raw)) {
+            return raw;
+        }
+    
+        Integer dataKeyIdx = raw.indexOf('"data":');
+        if (dataKeyIdx == -1) {
+            return raw;
+        }
+    
+        // Find the first quote after "data":
+        Integer valueStart = raw.indexOf('"', dataKeyIdx + 7);
+        if (valueStart == -1) {
+            return raw;
+        }
+    
+        // We must find the END of the data value.
+        // Strategy:
+        //  - data is followed by , "messageTime"
+        Integer nextFieldIdx = raw.indexOf(',"messageTime"', valueStart);
+        if (nextFieldIdx == -1) {
+            return raw;
+        }
+    
+        // Replace the whole data value with empty string
+        String cleaned =
+            raw.substring(0, valueStart + 1) +
+            raw.substring(nextFieldIdx);
+    
+        // Ensure "data":""
+        cleaned = cleaned.replaceFirst('"data":"', '"data":""');
+    
+        return cleaned;
+    }
+
+    /**
+     * Extracts embedded XML content from the raw request payload.
+     */
+    public static String extractXml(String raw) {
+        Integer start = raw.indexOf('<');
+        Integer endT   = raw.lastIndexOf('>');
+
+        return (start >= 0 && endT >= 0) 
+            ? raw.substring(start, endT+1)
+            : null;
+    }
+
+    /**
+     * Maps external case status values to internal Salesforce case statuses.
+     */
+    public static final Map<String, String> STATUS_MAP = new Map<String, String>{
+        'Complete' => 'Resolved-Completed',
+        'Cancel'    => 'Resolved-Cancel'
+    };
+
+    /**
+     * Maps external case status values to internal Salesforce case statuses.
+     */
+    public static String mapCaseStatus(String inputStatus) {
+        if (String.isBlank(inputStatus)) return null;
+        return STATUS_MAP.containsKey(inputStatus)
+            ? STATUS_MAP.get(inputStatus)
+            : inputStatus; // return original if no mapping
+    }
+    
+    /**
+     * Formats a DateTime value into a UI-friendly string.
+     *
+     * Output format: dd/MM/yyyy HH:mm:ss
+     * Example: 25/12/2025 17:29:44
+     *
+     * @param  dt   The DateTime value to format
+     * @return      Formatted date-time string, or null if input is null
+     */
+    public static String formatDateTime(DateTime dt) {
+        return dt != null ? dt.format('dd/MM/yyyy HH:mm:ss') : null;
+    }
+
+
+    /**
+     * Converts a raw date string from YYYYMMDD format into DD/MM/YYYY.
+     *
+     * Validates that the input:
+     *   • Is not null or empty
+     *   • Has exactly 8 characters
+     *   • Contains only numeric characters
+     *
+     * Example:
+     *   Input:  "20251225"
+     *   Output: "25/12/2025"
+     *
+     * @param  rawDate   Date string in YYYYMMDD format
+     * @return           Formatted date string (DD/MM/YYYY), or null if invalid
+     */
+    public static String formatDDMMYYYY(String rawDate) {
+        // Null / length guard
+        if (String.isBlank(rawDate) || rawDate.length() != 8) {
+            return null;
+        }
+        // Ensure numeric
+        if (!rawDate.isNumeric()) {
+            return null;
+        }
+        return rawDate.substring(6, 8) + '/' +
+            rawDate.substring(4, 6) + '/' +
+            rawDate.substring(0, 4);
+    }
+
+     /**
+     * Writes a log message to the debug log if debugging is enabled.
+     *
+     * This method centralizes logging behavior and ensures that debug
+     * messages are only printed when the DEBUG_LOG flag is set to true.
+     * It helps control log noise and improves performance in production
+     * environments by avoiding unnecessary debug statements.
+     *
+     * @param msg The message to be written to the debug log.
+     */
+    private static void log(String msg) {
+        if (DEBUG_LOG) {
+            System.debug(LoggingLevel.INFO, msg);
+        }
+    }
+}
