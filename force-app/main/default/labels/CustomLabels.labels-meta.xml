@@ -1122,7 +1122,7 @@
         <value>Contract Number</value>
     </labels>
 
-    <labels>        
+    <labels>
         <fullName>Auto_Mapping</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -1284,6 +1284,7 @@
         <value>Category</value>
     </labels>
     <labels>
+
         <fullName>LBL_Channel_Col</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -1542,7 +1543,6 @@
         <shortDescription>Save mapping success message</shortDescription>
         <value>Mapping saved successfully</value>
     </labels>
-    
     <labels>
         <fullName>LBL_TotalRecords</fullName>
         <language>en_US</language>
@@ -1747,6 +1747,7 @@
         <value>Update fraud case success</value>
     </labels>
     <labels>
+
         <fullName>Save</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -1767,6 +1768,7 @@
         <shortDescription>Vietnamese Name</shortDescription>
         <value>Vietnamese Name</value>
     </labels>
+
     <labels>
         <fullName>LBL_SFT_Fraud_Task</fullName>
         <language>en_US</language>
@@ -2551,4 +2553,258 @@
         Import Failed
     </value>
 </labels>
+    <!-- ================= Fraud Case Detail UI ================= -->
+    <labels>
+        <fullName>LBL_CaseStatus</fullName>
+        <language>en_US</language>
+        <shortDescription>Case status</shortDescription>
+        <value>Case status</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CaseStatus</fullName>
+        <language>vi</language>
+        <shortDescription>Trạng thái hồ sơ</shortDescription>
+        <value>Trạng thái hồ sơ</value>
+    </labels>
+    <labels>
+        <fullName>LBL_AppID</fullName>
+        <language>en_US</language>
+        <shortDescription>App ID</shortDescription>
+        <value>App ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_AppID</fullName>
+        <language>vi</language>
+        <shortDescription>Mã ứng dụng</shortDescription>
+        <value>Mã ứng dụng</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ViolationType</fullName>
+        <language>en_US</language>
+        <shortDescription>Violation Type</shortDescription>
+        <value>Violation Type</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ViolationType</fullName>
+        <language>vi</language>
+        <shortDescription>Loại vi phạm</shortDescription>
+        <value>Loại vi phạm</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Creator</fullName>
+        <language>en_US</language>
+        <shortDescription>Creator</shortDescription>
+        <value>Creator</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Creator</fullName>
+        <language>vi</language>
+        <shortDescription>Người tạo</shortDescription>
+        <value>Người tạo</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskList</fullName>
+        <language>en_US</language>
+        <shortDescription>Task List</shortDescription>
+        <value>Task List</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskList</fullName>
+        <language>vi</language>
+        <shortDescription>Danh sách công việc</shortDescription>
+        <value>Danh sách công việc</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UIC</fullName>
+        <language>en_US</language>
+        <shortDescription>UIC</shortDescription>
+        <value>UIC</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UIC</fullName>
+        <language>vi</language>
+        <shortDescription>UIC</shortDescription>
+        <value>UIC</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Deadline</fullName>
+        <language>en_US</language>
+        <shortDescription>Deadline</shortDescription>
+        <value>Deadline</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Deadline</fullName>
+        <language>vi</language>
+        <shortDescription>Hạn xử lý</shortDescription>
+        <value>Hạn xử lý</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskID</fullName>
+        <language>en_US</language>
+        <shortDescription>Task ID</shortDescription>
+        <value>Task ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskID</fullName>
+        <language>vi</language>
+        <shortDescription>Mã công việc</shortDescription>
+        <value>Mã công việc</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Category</fullName>
+        <language>en_US</language>
+        <shortDescription>Category</shortDescription>
+        <value>Category</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Category</fullName>
+        <language>vi</language>
+        <shortDescription>Danh mục</shortDescription>
+        <value>Danh mục</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Conclusion</fullName>
+        <language>en_US</language>
+        <shortDescription>Conclusion</shortDescription>
+        <value>Conclusion From Fraud Team</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Conclusion</fullName>
+        <language>vi</language>
+        <shortDescription>Kết luận</shortDescription>
+        <value>Kết luận từ bộ phận gian lận</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTimeTask</fullName>
+        <language>en_US</language>
+        <shortDescription>Update Time</shortDescription>
+        <value>Update Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTimeTask</fullName>
+        <language>vi</language>
+        <shortDescription>Thời gian cập nhật</shortDescription>
+        <value>Thời gian cập nhật</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTime</fullName>
+        <language>en_US</language>
+        <shortDescription>Create Time</shortDescription>
+        <value>Create Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTime</fullName>
+        <language>vi</language>
+        <shortDescription>Thời gian tạo</shortDescription>
+        <value>Thời gian tạo</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTimeTask</fullName>
+        <language>en_US</language>
+        <shortDescription>Create Time</shortDescription>
+        <value>Create Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTimeTask</fullName>
+        <language>vi</language>
+        <shortDescription>Thời gian tạo</shortDescription>
+        <value>Thời gian tạo</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Remarks</fullName>
+        <language>en_US</language>
+        <shortDescription>Remarks</shortDescription>
+        <value>Remarks From Customer Service Team</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Remarks</fullName>
+        <language>vi</language>
+        <shortDescription>Ghi chú</shortDescription>
+        <value>Ghi chú từ bộ phận CSKH</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskStatus</fullName>
+        <language>en_US</language>
+        <shortDescription>Task Status</shortDescription>
+        <value>Task Status</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskStatus</fullName>
+        <language>vi</language>
+        <shortDescription>Trạng thái công việc</shortDescription>
+        <value>Trạng thái công việc</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCategory</fullName>
+        <language>en_US</language>
+        <shortDescription>Sub category</shortDescription>
+        <value>Sub category</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCategory</fullName>
+        <language>vi</language>
+        <shortDescription>Danh mục con</shortDescription>
+        <value>Danh mục con</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCode</fullName>
+        <language>en_US</language>
+        <shortDescription>Sub code</shortDescription>
+        <value>Sub code</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCode</fullName>
+        <language>vi</language>
+        <shortDescription>Mã con</shortDescription>
+        <value>Mã con</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskName</fullName>
+        <language>en_US</language>
+        <shortDescription>Task name</shortDescription>
+        <value>Task name</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskName</fullName>
+        <language>vi</language>
+        <shortDescription>Tên công việc</shortDescription>
+        <value>Tên công việc</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudTaskID</fullName>
+        <language>en_US</language>
+        <shortDescription>Fraud Task ID</shortDescription>
+        <value>Fraud Task ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudTaskID</fullName>
+        <language>vi</language>
+        <shortDescription>Mã công việc gian lận</shortDescription>
+        <value>Mã công việc gian lận</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTime</fullName>
+        <language>en_US</language>
+        <shortDescription>Update Time</shortDescription>
+        <value>Update Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTime</fullName>
+        <language>vi</language>
+        <shortDescription>Thời gian cập nhật</shortDescription>
+        <value>Thời gian cập nhật</value>
+    </labels>
+    <labels>
+        <fullName>LBL_DownloadFile</fullName>
+        <language>en_US</language>
+        <shortDescription>Download file</shortDescription>
+        <value>Download file</value>
+    </labels>
+    <labels>
+        <fullName>LBL_DownloadFile</fullName>
+        <language>vi</language>
+        <shortDescription>Tải tập tin</shortDescription>
+        <value>Tải tập tin</value>
+    </labels>
+
 </CustomLabels>

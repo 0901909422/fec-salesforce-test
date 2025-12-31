@@ -1,0 +1,191 @@
+<template>
+    <lightning-card title={labels.fraudCaseDetail} icon-name="standard:case">
+
+        <!-- ================= SPINNER ================= -->
+        <template if:true={loading}>
+            <lightning-spinner alternative-text={labels.loading}></lightning-spinner>
+        </template>
+
+        <!-- ================= ERROR ================= -->
+        <template if:true={error}>
+            <div class="slds-text-color_error slds-p-around_medium">
+                {error}
+            </div>
+        </template>
+
+        <!-- ================= CONTENT ================= -->
+        <template if:false={loading}>
+            <template if:true={mainCase}>
+
+                <!-- ===== HEADER ===== -->
+                <div class="slds-p-around_medium slds-border_bottom">
+                    <div class="slds-grid slds-wrap slds-text-title_bold">
+                        <div class="slds-col slds-size_1-of-6">{labels.fraudCaseId}</div>
+                        <div class="slds-col slds-size_1-of-6">{labels.caseStatus}</div>
+                        <div class="slds-col slds-size_1-of-6">{labels.creator}</div>
+                        <div class="slds-col slds-size_1-of-6">{labels.category}</div>
+                        <div class="slds-col slds-size_1-of-6">{labels.subCategory}</div>
+                        <div class="slds-col slds-size_1-of-6">{labels.subCode}</div>
+                    </div>
+
+                    <div class="slds-grid slds-wrap slds-m-top_x-small">
+                        <div class="slds-col slds-size_1-of-6">
+                            <a href={mainCase.caseUrl}>{mainCase.FEC_CaseID__c}</a>
+                        </div>
+                        <div class="slds-col slds-size_1-of-6">
+                            {mainCase.FEC_Case_Status__c}
+                        </div>
+                        <div class="slds-col slds-size_1-of-6">
+                            {mainCase.FEC_Creator_Email__c}
+                        </div>
+                        <div class="slds-col slds-size_1-of-6">
+                            {mainCase.FEC_Category__c}
+                        </div>
+                        <div class="slds-col slds-size_1-of-6">
+                            {mainCase.FEC_Sub_Category__c}
+                        </div>
+                        <div class="slds-col slds-size_1-of-6">
+                            {mainCase.FEC_Sub_Code__c}
+                        </div>
+                    </div>
+
+                    <div class="slds-grid slds-wrap slds-m-top_small">
+                        <div class="slds-col slds-size_1-of-6">
+                            <b>{labels.createTime}</b><br />
+                            {mainCase.CreatedDate}
+                        </div>
+                        <div class="slds-col slds-size_1-of-6">
+                            <b>{labels.updateTime}</b><br />
+                            {mainCase.LastModifiedDate}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== INFO (AUTO LEFT / RIGHT) ===== -->
+                <div class="slds-grid slds-wrap slds-p-around_medium">
+
+                    <!-- LEFT -->
+                    <div class="slds-col slds-size_1-of-2 slds-p-right_medium">
+                        <template for:each={leftInfos} for:item="info">
+                            <div key={info.id} class="slds-m-bottom_small">
+                                <b>{info.id}</b><br />
+                                {info.fileName} &nbsp;
+                                <!-- FILE TYPE -->
+                                <template if:true={info.isFile}>
+                                    <lightning-button
+                                        label={labels.downloadFile}
+                                        icon-name="utility:download"
+                                        variant="base"
+                                        data-base64={info.value}
+                                        onclick={handleFileDownload}>
+                                    </lightning-button>
+                                </template>
+                
+                                <!-- NORMAL TEXT -->
+                                <template if:false={info.isFile}>
+                                    {info.value}
+                                </template>
+                
+                            </div>
+                        </template>
+                    </div>
+                
+                    <!-- RIGHT -->
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_medium">
+                        <template for:each={rightInfos} for:item="info">
+                            <div key={info.id} class="slds-m-bottom_small">
+                                <b>{info.id}</b><br />
+                                {info.fileName} &nbsp;
+                
+                                <!-- FILE TYPE -->
+                                <template if:true={info.isFile}>
+                                <lightning-button
+                                    label={labels.downloadFile}
+                                    icon-name="utility:download"
+                                    variant="base"
+                                    data-base64={info.value}
+                                    onclick={handleFileDownload}>
+                                </lightning-button>
+                                </template>
+                
+                                <!-- NORMAL TEXT -->
+                                <template if:false={info.isFile}>
+                                    {info.value}
+                                </template>
+                
+                            </div>
+                        </template>
+                    </div>
+                
+                </div>
+                
+
+                <!-- ================= REMARKS ================= -->
+                <div class="slds-p-around_medium">
+                    <b>{labels.remarks}</b>
+                    <div class="slds-box slds-m-top_x-small slds-scrollable_y" style="max-height:200px">
+                        {customerRemarks}
+                    </div>
+                </div>
+
+                <!-- ================= CONCLUSION ================= -->
+                <div class="slds-p-around_medium">
+                    <b>{labels.conclusion}</b>
+                    <div class="slds-box slds-m-top_x-small slds-scrollable_y" style="max-height:200px">
+                        {fraudConclusion}
+                    </div>
+                </div>
+
+                <!-- ================= TASK LIST ================= -->
+                <div class="slds-p-around_medium">
+                    <b>{labels.taskList}</b>
+
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
+                        <thead>
+                            <tr>
+                                <th>{labels.taskId}</th>
+                                <th>{labels.fraudTaskId}</th>
+                                <th>{labels.taskName}</th>
+                                <th>{labels.uic}</th>
+                                <th>{labels.deadline}</th>
+                                <th>{labels.taskStatus}</th>
+                                <th>{labels.createTimeTask}</th>
+                                <th>{labels.updateTimeTask}</th>
+                                <th>{labels.appId}</th>
+                                <th>{labels.violationType}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={tasks} for:item="task">
+                                <tr key={task.Id}>
+                                    <td>{task.TaskId}</td>
+                                    <td>
+                                        <template if:true={task.FraudTaskUrl}>
+                                            <a href={task.FraudTaskUrl} target="_blank">
+                                                {task.FraudTaskId}
+                                            </a>
+                                        </template>
+
+                                        <template if:false={task.FraudTaskUrl}>
+                                            {task.FraudTaskId}
+                                        </template>
+                                    </td>
+                                    <td>{task.TaskName}</td>
+                                    <td>{task.UIC}</td>
+                                    <td>{task.Deadline}</td>
+                                    <td>{task.Status}</td>
+                                    <td>{task.CreatedDate}</td>
+                                    <td>{task.LastModifiedDate}</td>
+                                    <td>{task.AppId}</td>
+                                    <td>{task.ViolationType}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+            </template>
+        </template>
+
+    </lightning-card>
+</template>
