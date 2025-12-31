@@ -1,6 +1,7 @@
 global with sharing class FEC_IntegrationSearchFraudCaseController {
 
     public static final Boolean DEBUG_LOG = true;
+    public static final String FRAUD_HANDLING_CASE_DETAIL_PATH = 'integration_fraud_handling_case_detail';
     
 
     /**
@@ -251,7 +252,7 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
                 'CreatedDate'            => formatDateTime(c.CreatedDate),
                 'FEC_Sys_Channel__c'     => c.FEC_Sys_Channel__c,
                 
-                // ⭐ Correct Account Number from AdditionalInfo
+                //Correct Account Number from AdditionalInfo
                 'AccountNumber'          => accountNumberMap.containsKey(c.Id)
                                         ? accountNumberMap.get(c.Id)
                                         : null,
@@ -260,7 +261,10 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
 
                 // 🔗 Hyperlink for LWC
                 'ServiceCaseLink' => (c.FEC_Service_Case_ID__c != null ? '/' + c.FEC_Service_Case_ID__c : null),
-                'FraudCaseLink'        => '/' + c.Id
+                'FraudCaseLink'        => (c.FEC_CaseID__c != null && c.FEC_CaseID__c.startsWith('FH-'))
+                ? '/lightning/n/'+ FRAUD_HANDLING_CASE_DETAIL_PATH + '?c__caseId=' + c.FEC_CaseID__c
+                : null,
+                'FraudCaseDisplay'      => c.FEC_CaseID__c
             });
         }
 

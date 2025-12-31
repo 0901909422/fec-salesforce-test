@@ -1,0 +1,684 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>Auto_Mapping</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto Mapping Property</shortDescription>
+        <value>Auto Mapping Property</value>
+    </labels>
+    <labels>
+        <fullName>CSM_Property</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CSM Property</shortDescription>
+        <value>CSM Property</value>
+    </labels>
+    <labels>
+        <fullName>CSM_Property_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CSM Property Type</shortDescription>
+        <value>CSM Property Type</value>
+    </labels>
+    <labels>
+        <fullName>Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>Int_Category</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Category</shortDescription>
+        <value>Int Category</value>
+    </labels>
+    <labels>
+        <fullName>Int_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Channel</shortDescription>
+        <value>Int Channel</value>
+    </labels>
+    <labels>
+        <fullName>Int_Product_Line</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Product Line</shortDescription>
+        <value>Int Product Line</value>
+    </labels>
+    <labels>
+        <fullName>Int_Service_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Service Type</shortDescription>
+        <value>Int Service Type</value>
+    </labels>
+    <labels>
+        <fullName>Int_Sub_Category</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Sub Category</shortDescription>
+        <value>Int Sub Category</value>
+    </labels>
+    <labels>
+        <fullName>Int_Sub_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Sub Code</shortDescription>
+        <value>Int Sub Code</value>
+    </labels>
+    <labels>
+        <fullName>Int_User_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration User Type</shortDescription>
+        <value>Int User Type</value>
+    </labels>
+    <labels>
+        <fullName>Integrating_Property</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integrating Property</shortDescription>
+        <value>Integrating Property</value>
+    </labels>
+    <labels>
+        <fullName>Integrating_Property_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integrating Property Type</shortDescription>
+        <value>Integrating Property Type</value>
+    </labels>
+    <labels>
+        <fullName>Integration_Mapping_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Mapping title</shortDescription>
+        <value>Integration Mapping</value>
+    </labels>
+    <labels>
+        <fullName>LBL_AccountNumber</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Number label</shortDescription>
+        <value>Account Number</value>
+    </labels>
+    <labels>
+        <fullName>LBL_AccountNumber_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Number column label</shortDescription>
+        <value>Account Number</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ApplicationID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Application ID label</shortDescription>
+        <value>Application ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CaseIdRequired</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case ID is required</shortDescription>
+        <value>Case ID is required</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Channel_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel column label</shortDescription>
+        <value>Channel</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ClearBtn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear button label</shortDescription>
+        <value>Clear</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ContractNumber</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract Number label</shortDescription>
+        <value>Contract Number</value>
+    </labels>
+    <labels>
+        <fullName>LBL_DatabaseError</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Database error prefix</shortDescription>
+        <value>Database error:</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error title</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCaseDetail</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case Detail</shortDescription>
+        <value>Fraud Case Detail</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCaseID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case ID label</shortDescription>
+        <value>Fraud Case ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCaseID_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case ID column label</shortDescription>
+        <value>Fraud Case ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCategory_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Category column label</shortDescription>
+        <value>Fraud Category</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCreatedBy_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud case created by column label</shortDescription>
+        <value>Fraud case created by</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCreatedOn_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud case created on column label</shortDescription>
+        <value>Fraud case created on</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudStatus_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Status of Fraud Case column label</shortDescription>
+        <value>Status of Fraud Case</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudSubCategory_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Sub Category column label</shortDescription>
+        <value>Fraud Sub Category</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudSubCode_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Sub Code column label</shortDescription>
+        <value>Fraud Sub Code</value>
+    </labels>
+    <labels>
+        <fullName>LBL_HeaderRequired</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Header required fields message</shortDescription>
+        <value>Please select all required header fields.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_HelpSearch</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Help text for search</shortDescription>
+        <value>Enter any one value for search.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_LoadingFraudCase</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loading fraud case</shortDescription>
+        <value>Loading fraud case detail</value>
+    </labels>
+    <labels>
+        <fullName>LBL_MappingCreated</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Mapping created message</shortDescription>
+        <value>Integration mapping created successfully</value>
+    </labels>
+    <labels>
+        <fullName>LBL_MappingUpdated</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Mapping updated message</shortDescription>
+        <value>Integration mapping updated successfully</value>
+    </labels>
+    <labels>
+        <fullName>LBL_NationalID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>National ID label</shortDescription>
+        <value>National ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_NavigationMode</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Navigation Mode label</shortDescription>
+        <value>Navigation Mode</value>
+    </labels>
+    <labels>
+        <fullName>LBL_NextBtn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Next page button</shortDescription>
+        <value>Next</value>
+    </labels>
+    <labels>
+        <fullName>LBL_NoRecords</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No records found text</shortDescription>
+        <value>No records found.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_PayloadEmpty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payload empty error</shortDescription>
+        <value>Payload is empty</value>
+    </labels>
+    <labels>
+        <fullName>LBL_PhoneNumber</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Phone number label</shortDescription>
+        <value>Phone number</value>
+    </labels>
+    <labels>
+        <fullName>LBL_PrevBtn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Previous page button</shortDescription>
+        <value>Prev</value>
+    </labels>
+    <labels>
+        <fullName>LBL_RootCaseNotFound</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Root case not found</shortDescription>
+        <value>Root case not found</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SaveFailed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Save mapping failed message</shortDescription>
+        <value>Save failed</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SaveSuccess</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Save mapping success message</shortDescription>
+        <value>Mapping saved successfully</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SearchBtn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search button label</shortDescription>
+        <value>Search</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SearchFraudCaseScreen</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Screen title</shortDescription>
+        <value>Search Fraud Case Screen</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SearchHint</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hint text</shortDescription>
+        <value>Enter any one value for search.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SelectAtLeastOneRow</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No mapping row selected</shortDescription>
+        <value>Please select at least one property for mapping.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ServiceCaseID_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Service Case ID column label</shortDescription>
+        <value>Service Case ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SortBy</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sort by label</shortDescription>
+        <value>Sort by:</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success title</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UnexpectedError</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unexpected error message</shortDescription>
+        <value>Unexpected error occurred</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ValidationError</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Validation error title</shortDescription>
+        <value>Validation Error</value>
+    </labels>
+    <labels>
+        <fullName>Loading</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loading</shortDescription>
+        <value>Loading</value>
+    </labels>
+    <labels>
+        <fullName>Mandatory</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Mandatory</shortDescription>
+        <value>Mandatory</value>
+    </labels>
+    <labels>
+        <fullName>Save</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Save</shortDescription>
+        <value>Save</value>
+    </labels>
+    <labels>
+        <fullName>User_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User Type</shortDescription>
+        <value>User Type</value>
+    </labels>
+    <labels>
+        <fullName>Vietnamese_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Vietnamese Name</shortDescription>
+        <value>Vietnamese Name</value>
+    </labels>
+    <!-- ================= Fraud Case Detail UI ================= -->
+    <labels>
+        <fullName>LBL_CaseStatus</fullName>
+        <language>en_US</language>
+        <shortDescription>Case status</shortDescription>
+        <value>Case status</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CaseStatus</fullName>
+        <language>vi</language>
+        <shortDescription>Trạng thái hồ sơ</shortDescription>
+        <value>Trạng thái hồ sơ</value>
+    </labels>
+    <labels>
+        <fullName>LBL_AppID</fullName>
+        <language>en_US</language>
+        <shortDescription>App ID</shortDescription>
+        <value>App ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_AppID</fullName>
+        <language>vi</language>
+        <shortDescription>Mã ứng dụng</shortDescription>
+        <value>Mã ứng dụng</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ViolationType</fullName>
+        <language>en_US</language>
+        <shortDescription>Violation Type</shortDescription>
+        <value>Violation Type</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ViolationType</fullName>
+        <language>vi</language>
+        <shortDescription>Loại vi phạm</shortDescription>
+        <value>Loại vi phạm</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Creator</fullName>
+        <language>en_US</language>
+        <shortDescription>Creator</shortDescription>
+        <value>Creator</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Creator</fullName>
+        <language>vi</language>
+        <shortDescription>Người tạo</shortDescription>
+        <value>Người tạo</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskList</fullName>
+        <language>en_US</language>
+        <shortDescription>Task List</shortDescription>
+        <value>Task List</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskList</fullName>
+        <language>vi</language>
+        <shortDescription>Danh sách công việc</shortDescription>
+        <value>Danh sách công việc</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UIC</fullName>
+        <language>en_US</language>
+        <shortDescription>UIC</shortDescription>
+        <value>UIC</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UIC</fullName>
+        <language>vi</language>
+        <shortDescription>UIC</shortDescription>
+        <value>UIC</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Deadline</fullName>
+        <language>en_US</language>
+        <shortDescription>Deadline</shortDescription>
+        <value>Deadline</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Deadline</fullName>
+        <language>vi</language>
+        <shortDescription>Hạn xử lý</shortDescription>
+        <value>Hạn xử lý</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskID</fullName>
+        <language>en_US</language>
+        <shortDescription>Task ID</shortDescription>
+        <value>Task ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskID</fullName>
+        <language>vi</language>
+        <shortDescription>Mã công việc</shortDescription>
+        <value>Mã công việc</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Category</fullName>
+        <language>en_US</language>
+        <shortDescription>Category</shortDescription>
+        <value>Category</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Category</fullName>
+        <language>vi</language>
+        <shortDescription>Danh mục</shortDescription>
+        <value>Danh mục</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Conclusion</fullName>
+        <language>en_US</language>
+        <shortDescription>Conclusion</shortDescription>
+        <value>Conclusion From Fraud Team</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Conclusion</fullName>
+        <language>vi</language>
+        <shortDescription>Kết luận</shortDescription>
+        <value>Kết luận từ bộ phận gian lận</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTimeTask</fullName>
+        <language>en_US</language>
+        <shortDescription>Update Time</shortDescription>
+        <value>Update Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTimeTask</fullName>
+        <language>vi</language>
+        <shortDescription>Thời gian cập nhật</shortDescription>
+        <value>Thời gian cập nhật</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTime</fullName>
+        <language>en_US</language>
+        <shortDescription>Create Time</shortDescription>
+        <value>Create Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTime</fullName>
+        <language>vi</language>
+        <shortDescription>Thời gian tạo</shortDescription>
+        <value>Thời gian tạo</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTimeTask</fullName>
+        <language>en_US</language>
+        <shortDescription>Create Time</shortDescription>
+        <value>Create Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTimeTask</fullName>
+        <language>vi</language>
+        <shortDescription>Thời gian tạo</shortDescription>
+        <value>Thời gian tạo</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Remarks</fullName>
+        <language>en_US</language>
+        <shortDescription>Remarks</shortDescription>
+        <value>Remarks From Customer Service Team</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Remarks</fullName>
+        <language>vi</language>
+        <shortDescription>Ghi chú</shortDescription>
+        <value>Ghi chú từ bộ phận CSKH</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskStatus</fullName>
+        <language>en_US</language>
+        <shortDescription>Task Status</shortDescription>
+        <value>Task Status</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskStatus</fullName>
+        <language>vi</language>
+        <shortDescription>Trạng thái công việc</shortDescription>
+        <value>Trạng thái công việc</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCategory</fullName>
+        <language>en_US</language>
+        <shortDescription>Sub category</shortDescription>
+        <value>Sub category</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCategory</fullName>
+        <language>vi</language>
+        <shortDescription>Danh mục con</shortDescription>
+        <value>Danh mục con</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCode</fullName>
+        <language>en_US</language>
+        <shortDescription>Sub code</shortDescription>
+        <value>Sub code</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCode</fullName>
+        <language>vi</language>
+        <shortDescription>Mã con</shortDescription>
+        <value>Mã con</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskName</fullName>
+        <language>en_US</language>
+        <shortDescription>Task name</shortDescription>
+        <value>Task name</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskName</fullName>
+        <language>vi</language>
+        <shortDescription>Tên công việc</shortDescription>
+        <value>Tên công việc</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudTaskID</fullName>
+        <language>en_US</language>
+        <shortDescription>Fraud Task ID</shortDescription>
+        <value>Fraud Task ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudTaskID</fullName>
+        <language>vi</language>
+        <shortDescription>Mã công việc gian lận</shortDescription>
+        <value>Mã công việc gian lận</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTime</fullName>
+        <language>en_US</language>
+        <shortDescription>Update Time</shortDescription>
+        <value>Update Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTime</fullName>
+        <language>vi</language>
+        <shortDescription>Thời gian cập nhật</shortDescription>
+        <value>Thời gian cập nhật</value>
+    </labels>
+    <labels>
+        <fullName>LBL_DownloadFile</fullName>
+        <language>en_US</language>
+        <shortDescription>Download file</shortDescription>
+        <value>Download file</value>
+    </labels>
+    <labels>
+        <fullName>LBL_DownloadFile</fullName>
+        <language>vi</language>
+        <shortDescription>Tải tập tin</shortDescription>
+        <value>Tải tập tin</value>
+    </labels>
+
+</CustomLabels>

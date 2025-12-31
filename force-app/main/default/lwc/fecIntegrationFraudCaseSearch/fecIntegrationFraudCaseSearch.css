@@ -30,3 +30,12 @@
     margin-top: 0.5rem;
     color: #777;
 }
+.fh-link {
+    color: #0176d3;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.tk-text {
+    color: #181818;
+}

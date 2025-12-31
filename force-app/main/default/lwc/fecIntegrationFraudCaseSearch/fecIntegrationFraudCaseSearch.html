@@ -1,27 +1,29 @@
 <template>
-    <lightning-card title="Search Fraud Case Screen">
+    <lightning-card title={labels.screenTitle}>
 
         <!-- Search Filters -->
         <div class="search-grid">
-            <lightning-input label="Fraud Case ID" value={fraudCaseId} onchange={handleChange} data-field="fraudCaseId"></lightning-input>
-            <lightning-input label="National ID" value={nationalId} onchange={handleChange} data-field="nationalId"></lightning-input>
-            <lightning-input label="Phone number" value={phoneNumber} onchange={handleChange} data-field="phoneNumber"></lightning-input>
+            <lightning-input label={labels.fraudCaseId} value={fraudCaseId} onchange={handleChange} data-field="fraudCaseId"></lightning-input>
+            <lightning-input label={labels.nationalId} value={nationalId} onchange={handleChange} data-field="nationalId"></lightning-input>
+            <lightning-input label={labels.phoneNumber} value={phoneNumber} onchange={handleChange} data-field="phoneNumber"></lightning-input>
 
-            <lightning-input label="Application ID" value={applicationId} onchange={handleChange} data-field="applicationId"></lightning-input>
-            <lightning-input label="Contract Number" value={contractNumber} onchange={handleChange} data-field="contractNumber"></lightning-input>
-            <lightning-input label="Account Number" value={accountNumber} onchange={handleChange} data-field="accountNumber"></lightning-input>
+            <lightning-input label={labels.applicationId} value={applicationId} onchange={handleChange} data-field="applicationId"></lightning-input>
+            <lightning-input label={labels.contractNumber} value={contractNumber} onchange={handleChange} data-field="contractNumber"></lightning-input>
+            <lightning-input label={labels.accountNumber} value={accountNumber} onchange={handleChange} data-field="accountNumber"></lightning-input>
         </div>
 
+        <!-- Buttons -->
         <div class="button-row">
-            <lightning-button variant="brand" label="Search" onclick={doSearchFraudCase}></lightning-button>
-            <lightning-button class="slds-m-left_x-small" label="Clear" onclick={doClear}></lightning-button>
+            <lightning-button variant="brand" label={labels.searchBtn} onclick={doSearchFraudCase}></lightning-button>
+            <lightning-button class="slds-m-left_x-small" label={labels.clearBtn} onclick={doClear}></lightning-button>
         </div>
 
-        <p class="help-text">Enter any one value for search.</p>
+        <!-- Help Text -->
+        <p class="help-text">{labels.helpSearch}</p>
 
-        <!-- RESULTS TABLE -->
+        <!-- Results Table -->
         <template if:true={records.length}>
-           <lightning-datatable
+            <lightning-datatable
                 key-field="Id"
                 data={records}
                 columns={columns}
@@ -31,17 +33,17 @@
                 onsort={handleSort}>
             </lightning-datatable>
 
-
             <!-- Pagination -->
             <div class="pagination">
-                <lightning-button label="Prev" onclick={prevPage} disabled={isFirstPage}></lightning-button>
+                <lightning-button label={labels.prevBtn} onclick={prevPage} disabled={isFirstPage}></lightning-button>
                 <span class="page-label">Page {pageNumber} / {totalPages}</span>
-                <lightning-button label="Next" onclick={nextPage} disabled={isLastPage}></lightning-button>
+                <lightning-button label={labels.nextBtn} onclick={nextPage} disabled={isLastPage}></lightning-button>
             </div>
         </template>
 
+        <!-- No Results -->
         <template if:true={noResult}>
-            <p class="no-result">No records found.</p>
+            <p class="no-result">{labels.noRecords}</p>
         </template>
 
     </lightning-card>
