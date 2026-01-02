@@ -43,7 +43,11 @@ public without sharing class FEC_CreateCaseHanlder {
     * @modified: 2026/01/02 long.nguyen.50 - Thêm log chi tiết
     */
     @AuraEnabled 
-    public static FEC_InteractionCaseResponse createInteractionCase(FEC_InteractionCaseDTO dto) {
+    public static FEC_InteractionCaseResponse createInteractionCase(String jsonInput) {
+        System.debug('### [FEC] Raw JSON: ' + jsonInput);
+        // Tự ép kiểu để xem lỗi ở đâu
+        FEC_InteractionCaseDTO dto = (FEC_InteractionCaseDTO)JSON.deserialize(jsonInput, FEC_InteractionCaseDTO.class);
+        System.debug('### [FEC] DTO after manual deserialize: ' + dto);
         System.debug('### [FEC] Start createInteractionCase with DTO: ' + JSON.serialize(dto)); // Log Input Data
         
         if (dto == null) {

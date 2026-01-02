@@ -95,7 +95,7 @@ export default class fec_genesysSoftphone extends NavigationMixin(LightningEleme
         console.log("[fec_genesysSoftphone] handleNewInteraction: Preparing DTO for Apex...", JSON.stringify(callData));
 
         const interactionDto = {
-            channel: 'Genesys',
+            channel: 'Outbound',
             subChannel: eventType,
             phoneNumber: callData.DNIS || callData.ANI,
             externalInteractionId: callData.GenesysInteractionID,
@@ -107,7 +107,7 @@ export default class fec_genesysSoftphone extends NavigationMixin(LightningEleme
 
         console.log("[fec_genesysSoftphone] handleNewInteraction: Calling Apex createInteractionCase with DTO:", JSON.stringify(interactionDto));
 
-        createInteractionCase({ dto: interactionDto })
+        createInteractionCase({ jsonInput: JSON.stringify(interactionDto) })
             .then((result) => {
                 console.log("[fec_genesysSoftphone] Apex createInteractionCase Success:", JSON.stringify(result));
                 this.currentInteractionCaseId = result.caseId;
