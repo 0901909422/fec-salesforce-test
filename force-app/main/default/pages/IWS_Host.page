@@ -30,8 +30,43 @@
                         source: 'genesys_host',
                         eventType: eventType,
                         data: data
-                    }, "*"); 
+                    }, "*")
                 }
+
+                // 2. LẮNG NGHE LỆNH TỪ LWC GỬI XUỐNG
+                window.addEventListener('message', function(event) {
+                    // Kiểm tra origin nếu cần bảo mật
+                    const message = event.data;
+                    
+                    if (message.source === 'lwc_to_genesys') {
+                        const action = message.action;
+                        const payload = message.data;
+
+                        console.log('VF Host nhận lệnh từ LWC:', action, payload);
+
+                        try {
+                            switch(action) {
+                                case 'READY': Ready(); break;
+                                case 'NOT_READY': NotReady(payload.reasonCode || ''); break;
+                                case 'MAKE_CALL': 
+                                    // payload.number, payload.params (UserData)
+                                    MakeCall(payload.number, payload.params); 
+                                    break;
+                                case 'MARK_DONE': 
+                                    InteractionMarkDone(payload.interactionId); 
+                                    break;
+                                case 'ATTACH_DATA':
+                                    // Cập nhật attach data cho interaction
+                                    SetAttachdataById(payload.interactionId, payload.userData);
+                                    break;
+                                default:
+                                    console.warn('Action không xác định:', action);
+                            }
+                        } catch (e) {
+                            console.error('Lỗi khi thực thi lệnh Genesys SDK:', e);
+                        }
+                    }
+                });
             </script>
         </body>
     </html>

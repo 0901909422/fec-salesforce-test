@@ -1,0 +1,33 @@
+{
+    "PhoneNum": "",
+    "NationalID": "",
+    "GenesysInteractionID": "009F03A364C7B06A",
+    "GenesysConnectionID": "2e9d1da6-b600-44c7-9e8d-b2511dd1358a",
+    "ProductType": "",
+    "ProductSubType": "",
+    "CardAccountNum": "",
+    "MaskedCardNum": "",
+    "DisbursalDate": "",
+    "CardOpenDate": "",
+    "CardPlasticID": "",
+    "ContractNum": "",
+    "CampaignName": "",
+    "CallingList": "",
+    "AgentID": "TestColAgent2",
+    "ANI": "",
+    "DNIS": "84356614606",
+    "CallID": 16777322,
+    "Place": "Place27002",
+    "ThisQueue": "",
+    "CallUuid": "PPJQI397V54L935SRT1BJ8LNV400003A",
+    "Duration": 4.5606412999999995,
+    "TimeStamp": 1767007064.0848715,
+    "CSR_SKILL_TO_BU": "",
+    "IVRPath": "",
+    "AttachDataCALLUUID": "",
+    "AttachDataJSON": {
+        "IW_CaseUid": "fa28dbd5-a2f3-41c6-a4e2-f3da38513329",
+        "IW_BundleUid": "b982295e-9839-40b7-8e91-4556a33aeaaa",
+        "PhoneNumber": "0356614606"
+    }
+}
