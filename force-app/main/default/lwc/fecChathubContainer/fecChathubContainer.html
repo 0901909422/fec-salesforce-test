@@ -1,0 +1,35 @@
+<template>
+    <div class="slds-p-around_x-small">
+        <template if:true={isInitialized}>
+            <div class="button-group-chathub slds-grid slds-grid_align-end">
+                <lightning-button 
+                    label="ChatHub" 
+                    icon-name="utility:chat" 
+                    onclick={handleShowChatHub} 
+                    class="slds-m-left_x-small"
+                    title="Open ChatHub"
+                ></lightning-button>
+                
+                <c-fec-chathub-status
+                    options={agentStatusOptions}
+                    value={currentAgentStatus}
+                    onstatuschange={handleStatusChange}
+                ></c-fec-chathub-status>
+            </div>
+            
+            <template if:true={isChatHubVisible}>
+                <div class="chathub-iframe-wrapper slds-m-top_medium" style="height: 600px; width: 100%;">
+                    <iframe 
+                        src={chatHubUrl} 
+                        class="chathub-iframe" 
+                        style="height: 100%; width: 100%; border: none;"
+                        title="ChatHub"
+                    ></iframe>
+                </div>
+            </template>
+        </template>
+        <template if:false={isInitialized}>
+            <p>ChatHub is disabled or user access denied.</p>
+        </template>
+    </div>
+</template>

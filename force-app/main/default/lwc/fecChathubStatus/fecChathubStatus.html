@@ -1,0 +1,14 @@
+<template>
+    <div class="slds-p-left_small" if:false={isHidden}>
+        <lightning-combobox
+            name="progress"
+            label="Agent Status"
+            value={value}
+            placeholder="Select Status"
+            options={options}
+            onchange={handleChange}
+            variant="label-hidden"
+            class="slds-size_medium"
+        ></lightning-combobox>
+    </div>
+</template>

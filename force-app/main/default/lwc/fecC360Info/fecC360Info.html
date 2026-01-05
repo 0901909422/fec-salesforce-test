@@ -1,0 +1,28 @@
+<template>
+    <template if:true={isVisible}>
+        <lightning-card title="Interaction Info (C360)" icon-name="standard:case">
+            <div class="slds-grid slds-wrap slds-p-horizontal_medium">
+                <lightning-layout multiple-rows="true" class="slds-size_1-of-1">
+                    <lightning-layout-item size="6" padding="around-small">
+                        <div class="slds-form-element slds-form-element_horizontal">
+                            <label class="slds-form-element__label">Interaction Channel</label>
+                            <div class="slds-form-element__control">
+                                <span class="slds-form-element__output">{customerData.interactionChannel}</span>
+                            </div>
+                        </div>
+                    </lightning-layout-item>
+                    
+                    <lightning-layout-item size="6" padding="around-small">
+                        <div class="slds-form-element slds-form-element_horizontal">
+                            <label class="slds-form-element__label">External Interaction ID</label>
+                            <div class="slds-form-element__control">
+                                <span class="slds-form-element__output">{customerData.externalId}</span>
+                            </div>
+                        </div>
+                    </lightning-layout-item>
+
+                    </lightning-layout>
+            </div>
+        </lightning-card>
+    </template>
+</template>
