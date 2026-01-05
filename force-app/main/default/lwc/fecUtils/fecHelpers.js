@@ -16,3 +16,15 @@ export const sortData = (data, field, direction) => {
     });
     return parseData;
 };
+
+export const formatDateDDMMYYYY = (isoString) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    
+    // Lấy ngày, tháng, năm và đảm bảo luôn có 2 chữ số (padding 0)
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Tháng trong JS bắt đầu từ 0
+    const year = date.getFullYear();
+
+    return `${day}-${month}-${year}`;
+}

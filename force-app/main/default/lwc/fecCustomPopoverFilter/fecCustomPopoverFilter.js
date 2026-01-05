@@ -49,7 +49,6 @@ export default class Fec_CustomPopoverFilter extends LightningElement {
     handleClearFilter() {
         this.lstAllOptions = this.lstAllOptions.map(opt => ({...opt, isChecked: false}));
         this.strSearchKey = '';
-        this.dispatchEvent(new CustomEvent('clear'));
     }
 
     handleCancel() { this.dispatchEvent(new CustomEvent('close')); }

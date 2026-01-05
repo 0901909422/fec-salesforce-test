@@ -1,75 +1,111 @@
-import { LightningElement, track } from 'lwc';
-import { COLUMNS_PENDING, COLUMNS_PROCESSED, HISTORY_COLUMNS, DEFAULT_FORM_DATA } from 'c/fecUtils';
+import { LightningElement, track, wire } from 'lwc';
+import { HISTORY_COLUMNS, HEADER_ACTIONS } from 'c/fecUtils';
+import { refreshApex } from '@salesforce/apex';
+import getUploadedConfigs from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getUploadedConfigs';
+import getExistingConfigs from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getExistingConfigs';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class FecCustomerAdditionalInfoList extends LightningElement {
-    @track columnsProcessed = COLUMNS_PROCESSED;
-    @track columnsPending = COLUMNS_PENDING;
+    @track columnsProcessed = [
+        { 
+            label: 'Trường liên kết dữ liệu', fieldName: 'FEC_KeyIdentifier__c', type: 'text', sortable: true,
+            actions: HEADER_ACTIONS 
+        }, 
+        { 
+            label: 'Tên trường dữ liệu', fieldName: 'FEC_FieldName__c', type: 'text', sortable: true, wrapText: true, 
+            actions: HEADER_ACTIONS 
+        }, 
+        { 
+            label: 'Tình trạng yêu cầu', fieldName: 'FEC_Status__c', type: 'text', sortable: true,
+            actions: HEADER_ACTIONS 
+        },
+        { 
+            label: 'Khả dụng', fieldName: 'FEC_IsActive__c', type: 'boolean', sortable: true, 
+            actions: HEADER_ACTIONS 
+        },
+        { 
+            label: 'Ngày bắt đầu', fieldName: 'FEC_StartDate__c', type: 'text', sortable: true,
+            actions: HEADER_ACTIONS 
+        },
+        { 
+            label: 'End date', fieldName: 'FEC_EndDate__c', type: 'text', sortable: true,
+            actions: HEADER_ACTIONS 
+        },
+        { type: 'button', initialWidth: 100, typeAttributes: { label: 'Lịch sử', name: 'view_history', variant: 'brand-outline' }},
+        { type: 'button-icon', fixedWidth: 50, typeAttributes: { iconName: 'utility:edit', name: 'edit', variant: 'bare' }}
+    ];
     @track historyColumns = HISTORY_COLUMNS; 
+    @track columnsPending = [
+        { label: 'Trường liên kết dữ liệu', fieldName: 'FEC_KeyIdentifier__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
+        { label: 'Mã trường dữ liệu', fieldName: 'FEC_FieldID__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
+        { label: 'Tên trường dữ liệu', fieldName: 'FEC_FieldName__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
+        { label: 'Tình trạng yêu cầu', fieldName: 'FEC_Status__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
+        { label: 'Ngày bắt đầu', fieldName: 'FEC_StartDate__c', type: 'date', sortable: true, actions: HEADER_ACTIONS },
+        { label: 'Ngày kết thúc', fieldName: 'FEC_EndDate__c', type: 'date', sortable: true, actions: HEADER_ACTIONS },
+        
+        // CỘT HÀNH ĐỘNG 1: Edit Icon
+        { 
+            type: 'button-icon', 
+            fixedWidth: 50, 
+            typeAttributes: { 
+                iconName: 'utility:edit', 
+                name: 'edit', 
+                variant: 'bare', 
+                alternativeText: 'Chỉnh sửa'
+            } 
+        }
+    ];
+    @track DEFAULT_FORM_DATA = {
+        FEC_KeyIdentifier__c: '',
+        FEC_FieldID__c: '',
+        FEC_FieldName__c: '',
+        FEC_IsActive__c: true,
+        FEC_Status__c: 'New',
+        FEC_StartDate__c: new Date()
+    };
     
     @track uploadedData = []; 
     @track processedData = []; 
     @track historyData = [];
-
-    originalProcessedData = []; 
-    originalUploadedData = [];
-    originalHistoryData = [];
-
-    // Sort
-    @track processedSortedBy; @track processedSortDirection = 'asc';
-    @track uploadedSortedBy; @track uploadedSortDirection = 'asc';
-    @track historySortedBy; @track historySortDirection = 'asc';
-    
-    // Filter
-    @track currentFilterTable = ''; 
-    @track currentFilterColumn = ''; 
-    @track currentFilterLabel = ''; 
-    @track filterOptions = [];      
-    @track activeFilters = { processed: {}, uploaded: {}, history: {} }; 
     
     // Modal
     @track isHistoryModalOpen = false;
     @track isEditModalOpen = false;
     @track modalTitle = 'Thêm mới Trường Thông Tin';
-    @track formData = { ...DEFAULT_FORM_DATA };
+    @track formData = { ...this.DEFAULT_FORM_DATA };
+    @track isLoading = false;
+
+    wiredPendingResults;
+    wiredProcessedResults;
 
     connectedCallback() {
         this.generateMockData();
     }
 
     generateMockData() {
-        const mockProcessed = [
-            { id: '11', accountNumber: 'ACC-001', dataLabel: 'Age Proof', status: 'Processed', isActive: true, startDate: '28/11/2023', endDate: '' },
-            { id: '12', accountNumber: 'ACC-002', dataLabel: 'Cust Type', status: 'Pending', isActive: true, startDate: '26/11/2020', endDate: '' },
-            { id: '13', accountNumber: 'ACC-003', dataLabel: 'Income Proof', status: 'Reuploaded', isActive: false, startDate: '09/07/2025', endDate: '' },
-            { id: '14', accountNumber: 'ACC-001', dataLabel: 'Address Proof', status: 'Processed', isActive: true, startDate: '01/01/2023', endDate: '' },
-            { id: '15', accountNumber: 'ACC-004', dataLabel: 'ID Card', status: 'Processed', isActive: false, startDate: '01/01/2024', endDate: '' },
-        ];
-        this.processedData = this.originalProcessedData = [...mockProcessed]; 
-        
-        const mockUploaded = [
-            { id: '1', accountNumber: 'Temp-01', dataLabel: 'Temp Z', status: 'Uploaded'},
-            { id: '2', accountNumber: 'Temp-03', dataLabel: 'Temp A', status: 'Pending'},
-            { id: '3', accountNumber: 'Temp-02', dataLabel: 'Temp B', status: 'Uploaded'}
-        ];
-        this.uploadedData = this.originalUploadedData = [...mockUploaded];
-
         const mockHistory = [
             { id: 'h1', field: 'dataLabel', oldValue: 'Old Name', newValue: 'New Name', changedBy: 'Admin User', changeDate: '2025-12-15T10:00:00Z' },
             { id: 'h2', field: 'field', oldValue: 'isActive', newValue: 'False', changedBy: 'System', changeDate: '2025-12-14T09:30:00Z' }
         ];
         this.historyData = this.originalHistoryData = [...mockHistory];
-
-        this.existingFiles = [
-            { id: 'f1', name: 'document_v1.pdf', status: 'Hoàn tất', uploadedBy: 'Admin User', uploadTime: '15:30 15/12/2025' },
-            { id: 'f2', name: 'template_02.csv', status: 'Thất bại', uploadedBy: 'User A', uploadTime: '10:00 14/12/2025' }
-        ];
     }
 
-    get originalData() {
-        if (this.currentFilterTable === 'processed') return this.originalProcessedData;
-        if (this.currentFilterTable === 'uploaded') return this.originalUploadedData;
-        if (this.currentFilterTable === 'history') return this.originalHistoryData;
-        return [];
+    @wire(getUploadedConfigs)
+    wiredConfigs(result) {
+        this.wiredPendingResults = result;
+        if (result.data) {
+            this.uploadedData = result.data;
+        } else if (result.error) {
+            this.showToast('Error', 'Không thể tải dữ liệu', 'error');
+        }
+    }
+
+    @wire(getExistingConfigs)
+    wiredProcessed(result) {
+        this.wiredProcessedResults = result; // Lưu lại để refreshApex
+        if (result.data) {
+            this.processedData = result.data;
+        }
     }
 
      // Row Actions
@@ -88,35 +124,48 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
         }
     }
     
-    handleReload() { 
-        this.generateMockData(); 
-        this.activeFilters = { processed: {}, uploaded: {}, history: {} }; 
-        this.updateAllColumnsActionState();
-    }
-
-    updateAllColumnsActionState() {
-        const resetAction = (col) => col.actions ? { ...col, actions: col.actions.map(a => a.name === 'filter_action' ? { ...a, checked: false } : a)} : col;
-        this.columnsProcessed = this.columnsProcessed.map(resetAction);
-        this.columnsPending = this.columnsPending.map(resetAction);
-        this.historyColumns = this.historyColumns.map(resetAction);
+    async handleReload() {
+        this.isLoading = true;
+        try {
+            // Sử dụng Promise.all để refresh cả 2 song song cho nhanh
+            await Promise.all([
+                refreshApex(this.wiredPendingResults),
+                refreshApex(this.wiredProcessedResults)
+            ]);
+        } catch (error) {
+            console.error('Lỗi khi tải lại dữ liệu:', error);
+        } finally {
+            this.isLoading = false;
+        }
     }
 
     openHistoryModal(){ this.isHistoryModalOpen = true; }
     closeHistoryModal(){ this.isHistoryModalOpen = false; }
     handleAddNew() {
         this.modalTitle = 'Thêm mới Trường Thông Tin';
-        this.formData = { ...DEFAULT_FORM_DATA };
+        this.formData = { ...this.DEFAULT_FORM_DATA };
         this.isEditModalOpen = true;
     }
     openEditModal(row) {
-        this.modalTitle = 'Chỉnh sửa: ' + row.accountNumber;
-        this.formData = { ...row, accountLinkage: row.accountNumber.split('-')[1] };
+        this.modalTitle = 'Chỉnh sửa: ' + row.FEC_KeyIdentifier__c;
+        this.formData = {
+            Id: row.Id,
+            FEC_KeyIdentifier__c: row.FEC_KeyIdentifier__c,
+            FEC_FieldID__c: row.FEC_FieldID__c,
+            FEC_FieldName__c: row.FEC_FieldName__c,
+            FEC_IsActive__c: row.FEC_IsActive__c,
+            FEC_Status__c: row.FEC_Status__c,
+            FEC_StartDate__c: row.FEC_StartDate__c,
+            FEC_EndDate__c: row.FEC_EndDate__c
+        };
         this.isEditModalOpen = true;
     }
     handleCloseModal() { this.isEditModalOpen = false; }
-    handleSaveModal(event) {
-        const updatedData = event.detail; // Dữ liệu từ con gửi lên
-        console.log('Dữ liệu nhận được từ Modal:', JSON.stringify(updatedData));
+    async handleSaveModal() {
+        await this.handleReload();
         this.handleCloseModal();
+    }
+    showToast(title, message, variant) {
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 }

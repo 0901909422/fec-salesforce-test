@@ -3,22 +3,22 @@
         <div class="slds-p-around_small" style="max-height: 70vh; overflow-y: auto;">
                 <lightning-layout vertical-align="start" multiple-rows>
                     <lightning-layout-item size="6" padding="around-small">
-                        <lightning-combobox name="accountLinkage" label="Trường liên kết dữ liệu *" options={accountLinkageOptions} value={localData.accountLinkage} onchange={handleInputChange}></lightning-combobox>
+                        <lightning-combobox data-id="keyId" name="FEC_KeyIdentifier__c" label="Trường liên kết dữ liệu" options={accountLinkageOptions} value={localData.FEC_KeyIdentifier__c} required onchange={handleInputChange}></lightning-combobox>
                     </lightning-layout-item>
                     <lightning-layout-item size="6" padding="around-small">
-                        <lightning-input type="text" label="Mã số trường *" value={localData.fieldCode} onchange={handleInputChange} name="fieldCode"></lightning-input>
+                        <lightning-input data-id="fieldId" type="text" label="Mã số trường" value={localData.FEC_FieldID__c} onchange={handleInputChange} name="FEC_FieldID__c" required></lightning-input>
                     </lightning-layout-item>
                     <lightning-layout-item size="6" padding="around-small">
-                        <lightning-input type="text" label="Tên trường dữ liệu *" value={localData.dataLabel} onchange={handleInputChange} name="dataLabel"></lightning-input>
+                        <lightning-input type="text" label="Tên trường dữ liệu" value={localData.FEC_FieldName__c} onchange={handleInputChange} name="FEC_FieldName__c" required></lightning-input>
                     </lightning-layout-item>
                     <lightning-layout-item size="6" padding="around-small" class="slds-p-top_large">
-                        <lightning-input type="checkbox" label="Khả dụng?" checked={localData.isActive} onchange={handleInputChange} name="isActive"></lightning-input>
+                        <lightning-input type="checkbox" label="Khả dụng?" checked={localData.FEC_IsActive__c} onchange={handleInputChange} name="FEC_IsActive__c" required></lightning-input>
                     </lightning-layout-item>
                     <lightning-layout-item size="6" padding="around-small">
-                        <lightning-input type="date" label="Ngày bắt đầu *" value={localData.startDate} onchange={handleInputChange} name="startDate"></lightning-input>
+                        <lightning-input type="date" label="Ngày bắt đầu" value={localData.FEC_StartDate__c} onchange={handleInputChange} name="FEC_StartDate__c" required></lightning-input>
                     </lightning-layout-item>
                     <lightning-layout-item size="6" padding="around-small">
-                        <lightning-input type="date" label="Ngày hoàn tất" value={localData.endDate} onchange={handleInputChange} name="endDate"></lightning-input>
+                        <lightning-input type="date" label="Ngày kết thúc" value={localData.FEC_EndDate__c} onchange={handleInputChange} name="FEC_EndDate__c" required></lightning-input>
                     </lightning-layout-item>
                 </lightning-layout>
 
@@ -42,7 +42,7 @@
                         <lightning-button label="Tải lên" variant="success" onclick={handleUpload} disabled={isUploadDisabled}></lightning-button>
                     </lightning-layout-item>
                     <lightning-layout-item size="3" padding="around-small" class="slds-col_bump-left">
-                        <lightning-button label="Download template" variant="brand" onclick={handleDownloadTemplate}></lightning-button>
+                        <lightning-button label="Tải mẫu" variant="brand" onclick={handleDownloadTemplate}></lightning-button>
                     </lightning-layout-item>
                 </lightning-layout>
                 
@@ -50,32 +50,32 @@
 
                 <lightning-layout horizontal-align="space">
                     <lightning-layout-item size="3" padding="around-small">
-                        <p class="slds-text-title_bold">File Name</p>
+                        <p class="slds-text-title_bold">Tên File</p>
                     </lightning-layout-item>
                     <lightning-layout-item size="2" padding="around-small">
                         <p class="slds-text-title_bold">Tình trạng</p>
                     </lightning-layout-item>
                     <lightning-layout-item size="3" padding="around-small">
-                        <p class="slds-text-title_bold">Uploaded By</p>
+                        <p class="slds-text-title_bold">Tải lên bởi</p>
                     </lightning-layout-item>
                     <lightning-layout-item size="2" padding="around-small">
-                        <p class="slds-text-title_bold">Upload time</p>
+                        <p class="slds-text-title_bold">Tải lên lúc</p>
                     </lightning-layout-item>
                     <lightning-layout-item size="2" padding="around-small">
-                        <p class="slds-text-title_bold">Actions</p>
+                        <p class="slds-text-title_bold">Hành động</p>
                     </lightning-layout-item>
                 </lightning-layout>
                 
                 <template if:true={existingFiles.length}>
-                    <template for:each={existingFiles} for:item="file">
+                    <template for:each={processedExistingFiles} for:item="file">
                         <div key={file.id} class="slds-border_top slds-p-vertical_x-small">
                             <lightning-layout horizontal-align="space">
-                                <lightning-layout-item size="3"><a href="#" data-id={file.id} onclick={handleFileDownload}>{file.name}</a></lightning-layout-item>
+                                <lightning-layout-item size="3"><a href={file.downloadUrl} target="_blank">{file.name}</a></lightning-layout-item>
                                 <lightning-layout-item size="2"><span>{file.status}</span></lightning-layout-item>
                                 <lightning-layout-item size="3"><span>{file.uploadedBy}</span></lightning-layout-item>
-                                <lightning-layout-item size="2"><span>{file.uploadTime}</span></lightning-layout-item>
+                                <lightning-layout-item size="2"><span>{file.uploadedTime}</span></lightning-layout-item>
                                 <lightning-layout-item size="2">
-                                    <lightning-button-icon icon-name="utility:delete" variant="bare" data-id={file.id} onclick={handleDeleteFile}></lightning-button-icon>
+                                    <lightning-button-icon if:true={file.isProcessing} icon-name="utility:delete" variant="bare" data-id={file.id} onclick={handleDeleteFile}></lightning-button-icon>
                                 </lightning-layout-item>
                             </lightning-layout>
                         </div>
@@ -91,7 +91,7 @@
             </div>
             <div slot="footer">
                 <lightning-button label="Hủy bỏ" variant="neutral" onclick={handleClose} class="slds-m-right_small"></lightning-button>
-                <lightning-button label="Hoàn tất" variant="success" onclick={handleSave}></lightning-button>
+                <lightning-button label="Hoàn tất" variant="success" onclick={handleSave} disabled={isLoading}></lightning-button>
             </div>
         </c-fec-generic-modal>
 </template>

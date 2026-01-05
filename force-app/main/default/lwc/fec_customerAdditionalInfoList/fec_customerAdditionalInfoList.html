@@ -7,6 +7,9 @@
         </div>
 
         <div class="slds-p-around_medium">
+            <div if:true={isLoading} class="slds-is-relative">
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
             <div class="slds-m-bottom_large">
                 <div class="header-section slds-p-vertical_x-small slds-p-horizontal_small slds-theme_shade slds-border_top slds-border_bottom">
                     <h3 class="slds-text-heading_small"><strong>Tải lên thành công và chờ xử lý</strong></h3>
