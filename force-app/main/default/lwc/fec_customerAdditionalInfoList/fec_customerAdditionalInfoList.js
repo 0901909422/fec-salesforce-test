@@ -1,5 +1,5 @@
 import { LightningElement, track, wire } from 'lwc';
-import { HISTORY_COLUMNS, HEADER_ACTIONS } from 'c/fecUtils';
+import { HEADER_ACTIONS } from 'c/fecUtils';
 import { refreshApex } from '@salesforce/apex';
 import getUploadedConfigs from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getUploadedConfigs';
 import getExistingConfigs from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getExistingConfigs';
@@ -28,13 +28,12 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
             actions: HEADER_ACTIONS 
         },
         { 
-            label: 'End date', fieldName: 'FEC_EndDate__c', type: 'text', sortable: true,
+            label: 'Ngày kết thúc', fieldName: 'FEC_EndDate__c', type: 'text', sortable: true,
             actions: HEADER_ACTIONS 
         },
         { type: 'button', initialWidth: 100, typeAttributes: { label: 'Lịch sử', name: 'view_history', variant: 'brand-outline' }},
         { type: 'button-icon', fixedWidth: 50, typeAttributes: { iconName: 'utility:edit', name: 'edit', variant: 'bare' }}
     ];
-    @track historyColumns = HISTORY_COLUMNS; 
     @track columnsPending = [
         { label: 'Trường liên kết dữ liệu', fieldName: 'FEC_KeyIdentifier__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
         { label: 'Mã trường dữ liệu', fieldName: 'FEC_FieldID__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
@@ -73,22 +72,11 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
     @track isEditModalOpen = false;
     @track modalTitle = 'Thêm mới Trường Thông Tin';
     @track formData = { ...this.DEFAULT_FORM_DATA };
+    @track configId;
     @track isLoading = false;
 
     wiredPendingResults;
     wiredProcessedResults;
-
-    connectedCallback() {
-        this.generateMockData();
-    }
-
-    generateMockData() {
-        const mockHistory = [
-            { id: 'h1', field: 'dataLabel', oldValue: 'Old Name', newValue: 'New Name', changedBy: 'Admin User', changeDate: '2025-12-15T10:00:00Z' },
-            { id: 'h2', field: 'field', oldValue: 'isActive', newValue: 'False', changedBy: 'System', changeDate: '2025-12-14T09:30:00Z' }
-        ];
-        this.historyData = this.originalHistoryData = [...mockHistory];
-    }
 
     @wire(getUploadedConfigs)
     wiredConfigs(result) {
@@ -139,7 +127,10 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
         }
     }
 
-    openHistoryModal(){ this.isHistoryModalOpen = true; }
+    openHistoryModal(data){
+        this.configId = data.Id;
+        this.isHistoryModalOpen = true; 
+    }
     closeHistoryModal(){ this.isHistoryModalOpen = false; }
     handleAddNew() {
         this.modalTitle = 'Thêm mới Trường Thông Tin';

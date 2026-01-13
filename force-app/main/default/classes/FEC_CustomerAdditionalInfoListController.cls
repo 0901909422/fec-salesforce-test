@@ -23,29 +23,27 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
             if (lstFiles != null && !lstFiles.isEmpty()) {
                 List<ContentVersion> cvList = new List<ContentVersion>();
                 for(FEC_FileInfo file : lstFiles) {
-                    if(String.isNotBlank(file.base64Data)) {
-                        cvList.add(new ContentVersion(
-                            Title = file.name,
-                            PathOnClient = file.name,
-                            VersionData = EncodingUtil.base64Decode(file.base64Data),
-                            IsMajorVersion = false,
-                            Description = 'Uploaded',
-                            FEC_Comments__c = file.sheetXml
-                        ));
+                    if(String.isNotBlank(file.base64Data) && String.isNotBlank(file.sheetXml)) {
+                        ContentVersion cvExcel = new ContentVersion();
+                        cvExcel.Title = file.name; 
+                        cvExcel.PathOnClient = file.name;
+                        cvExcel.VersionData = EncodingUtil.base64Decode(file.base64Data);
+                        cvExcel.Description = 'Original_User_Upload';
+                        cvExcel.FEC_Comments__c = 'Uploaded';
+                        cvExcel.FirstPublishLocationId = objConfig.Id;
+                        cvList.add(cvExcel);
+
+                        ContentVersion cvJson = new ContentVersion();
+                        cvJson.Title = file.name + '.json';
+                        cvJson.PathOnClient = file.name + '.json';
+                        cvJson.VersionData = Blob.valueOf(file.sheetXml);
+                        cvJson.Description = 'JSON_Data_For_Processing';
+                        cvJson.FEC_Comments__c = 'Uploaded';
+                        cvJson.FirstPublishLocationId = objConfig.Id; 
+                        cvList.add(cvJson);
                     }
                 }
                 insert cvList;
-
-                // 3. Liên kết File với Config record
-                List<ContentDocumentLink> cdlList = new List<ContentDocumentLink>();
-                for(ContentVersion cv : [SELECT ContentDocumentId FROM ContentVersion WHERE Id IN :cvList]) {
-                    cdlList.add(new ContentDocumentLink(
-                        LinkedEntityId = objConfig.Id,
-                        ContentDocumentId = cv.ContentDocumentId,
-                        ShareType = 'V'
-                    ));
-                }
-                insert cdlList;
             }
             return 'Success';
         } catch (Exception e) {
@@ -93,16 +91,17 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
                ContentDocument.Title, 
                ContentDocument.CreatedBy.Name, 
                ContentDocument.LastModifiedDate,
-               ContentDocument.LatestPublishedVersion.Description
+               ContentDocument.LatestPublishedVersion.FEC_Comments__c
             FROM ContentDocumentLink 
             WHERE LinkedEntityId = :recordId
+            AND ContentDocument.LatestPublishedVersion.Description = 'Original_User_Upload'
         ]) {
             Map<String, Object> mapFile = new Map<String, Object>();
             mapFile.put('id', objLink.ContentDocumentId);
             mapFile.put('name', objLink.ContentDocument.Title);
             mapFile.put('uploadedBy', objLink.ContentDocument.CreatedBy.Name);
             mapFile.put('uploadedTime', objLink.ContentDocument.LastModifiedDate);
-            mapFile.put('status', objLink.ContentDocument.LatestPublishedVersion.Description);
+            mapFile.put('status', objLink.ContentDocument.LatestPublishedVersion.FEC_Comments__c);
             lstFiles.add(mapFile);
         }
         return lstFiles;
@@ -132,5 +131,29 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
         ];
         System.debug(System.LoggingLevel.DEBUG, 'FEC_CustomerAdditionalInfoConfig__c duplicated length: ' + count);
         return count > 0;
+    }
+
+    /**
+     * Lấy lịch sử thay đổi của một Config cụ thể
+     * @param configId ID của bản ghi Config
+     */
+    @AuraEnabled(cacheable=false)
+    public static List<FEC_CustomerDataConfigHistory__c> getConfigHistory(Id configId) {
+        return [
+            SELECT Id, 
+                   FEC_KeyIdentifier__c, 
+                   FEC_FieldID__c, 
+                   FEC_Status__c, 
+                   FEC_IsActive__c, 
+                   FEC_StartDate__c, 
+                   FEC_EndDate__c,
+                   CreatedDate, 
+                   CreatedBy.Name,
+                   LastModifiedDate,
+                   LastModifiedBy.Name
+            FROM FEC_CustomerDataConfigHistory__c
+            WHERE FEC_Customers_Data_Config__c = :configId
+            ORDER BY CreatedDate DESC
+        ];
     }
 }

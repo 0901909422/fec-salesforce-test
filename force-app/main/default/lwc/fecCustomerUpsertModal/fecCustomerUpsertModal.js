@@ -1,4 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
+import LightningConfirm from 'lightning/confirm';
 import USER_ID from '@salesforce/user/Id';
 import { getRecord } from 'lightning/uiRecordApi';
 import USER_NAME_FIELD from '@salesforce/schema/User.Name'
@@ -24,6 +25,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
     @track fileName = 'Chưa có tệp nào được chọn';
     @track isLoading = false;
     @track isUploadDisabled = true;
+    @track isEditting = false;
     @track pendingFiles = [];
     @track existingFiles = [];
     fileAccept = '.xlsx, .xls, .csv';
@@ -51,10 +53,12 @@ export default class FecCustomerUpsertModal extends LightningElement {
             FEC_StartDate__c: this.initialData.FEC_StartDate__c || new Date(),
             FEC_EndDate__c: this.initialData.FEC_EndDate__c || null,
         };
-        console.log("🚀 ~ FecCustomerUpsertModal ~ connectedCallback ~ this.localData:", JSON.stringify(this.localData))
 
         if (this.initialData.Id) {
             this.fetchExistingFiles(this.initialData.Id);
+            this.isEditting = true;
+        } else {
+            this.isEditting = false;
         }
         this.resetFileState();
     }
@@ -154,35 +158,29 @@ export default class FecCustomerUpsertModal extends LightningElement {
         if (!this.currentSelectedFile) return;
         this.isLoading = true;
         const file = this.currentSelectedFile;
-
+    
         try {
-            const isUnique = await this.validateUniqueInput();
-            if (!isUnique) return;
-            const excelResult = await this.processExcelFile(file);
+            await this.validateUniqueInput();
+    
+            const result = await this.processExcelFile(file);
             
-            const reader = new FileReader();
-            reader.onload = () => {
-                const base64 = reader.result.split(',')[1];
-                const newFileRecord = {
-                    id: 'temp-' + Date.now(),
-                    name: file.name,
-                    uploadedBy: this.currentUserName,
-                    status: 'Uploaded',
-                    uploadedTime: formatDateDDMMYYYY(new Date()),
-                    base64Data: base64,
-                    fileBlob: file,
-                    isProcessing: true,
-                    sheetXml: excelResult.jsonString
-                };
-
-                this.existingFiles = [...this.existingFiles, newFileRecord];
-                this.pendingFiles = [...this.pendingFiles, newFileRecord];
-                this.resetFileState();
+            const newFileRecord = {
+                id: 'temp-' + Date.now(),
+                name: file.name,
+                uploadedBy: this.currentUserName,
+                status: 'Uploaded',
+                uploadedTime: formatDateDDMMYYYY(new Date()),
+                base64Data: result.base64Data,
+                sheetXml: result.jsonString,
+                isProcessing: true
             };
-            reader.readAsDataURL(file);
-
+    
+            this.existingFiles = [...this.existingFiles, newFileRecord];
+            this.pendingFiles = [...this.pendingFiles, newFileRecord];
+            this.resetFileState();
+    
         } catch (error) {
-            this.showToast('Lỗi validate', error.message, 'error');
+            this.showToast('Lỗi', error.message, 'error');
         } finally {
             this.isLoading = false;
         }
@@ -252,13 +250,15 @@ export default class FecCustomerUpsertModal extends LightningElement {
     processExcelFile(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
+            // Đọc dưới dạng DataURL để lấy Base64 trước
             reader.onload = (e) => {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { 
-                        type: 'array',
-                        cellDates: true 
-                    });
+                    const base64WithHeader = e.target.result;
+                    const base64Data = base64WithHeader.split(',')[1]; // Lấy phần data sau dấu phẩy
+    
+                    // Chuyển từ base64 sang ArrayBuffer để SheetJS xử lý
+                    const data = new Uint8Array(atob(base64Data).split("").map(c => c.charCodeAt(0)));
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
                     
                     if (!workbook || !workbook.SheetNames.length) {
                         throw new Error('File không hợp lệ hoặc trống.');
@@ -266,61 +266,65 @@ export default class FecCustomerUpsertModal extends LightningElement {
                     
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-                    // 1. Validate Header ngay tại đây
+    
+                    // Validate Header
                     this.validateFileHeader(rawRows, file.name);
-
-                    // 2. Trả về kết quả kép: mảng thô (để dùng ngay) và JSON string (để gửi Server)
+    
+                    // Trả về tất cả kết quả xử lý
                     resolve({
-                        rawRows: rawRows,
-                        jsonString: JSON.stringify(rawRows)
+                        jsonString: JSON.stringify(rawRows),
+                        base64Data: base64Data
                     });
                 } catch (err) {
                     reject(err);
                 }
             };
             reader.onerror = (err) => reject(err);
-            reader.readAsArrayBuffer(file);
+            reader.readAsDataURL(file); // Đọc 1 lần lấy DataURL (Base64)
         });
     }
-    
-    // Hàm chuyển đổi mảng thô sang list SObject
-    mapRowsToSObject(lstRows, fileName) {
-        return lstRows.slice(1).map(lstCols => ({
-            sobjectType: 'FEC_CustomerAdditionalInfo__c',
-            FEC_KeyIDValue__c: lstCols[0] ? String(lstCols[0]).trim() : '',
-            FEC_FieldValue__c: lstCols[1] ? String(lstCols[1]).trim() : '',
-            FEC_IsActive__c: (lstCols[2] !== undefined) ? (String(lstCols[2]).toLowerCase() === 'true') : true,
-            FEC_LinkedFilename__c: fileName,
-        }));
-    }
 
+    /**
+     * Tải template dưới dạng Excel (.xlsx) sử dụng SheetJS
+     */
     handleDownloadTemplate() {
+        // Kiểm tra thư viện đã load chưa
+        if (!this.isLibraryLoaded || typeof XLSX === 'undefined') {
+            this.showToast('Cảnh báo', 'Thư viện Excel đang tải, vui lòng thử lại sau giây lát.', 'warning');
+            return;
+        }
+
         try {
-            // 1. Định nghĩa nội dung Header khớp chính xác với file template bạn gửi
-            const headers = ['<Key Identifier>', '<Field ID>', 'Is Active'];
-            const csvContent = headers.join(',') + '\n';
-            
-            // 2. Sử dụng BOM để hỗ trợ hiển thị tốt nhất trên Excel
-            const BOM = '\uFEFF';
-            const finalContent = BOM + csvContent;
-    
-            // 3. Chuyển đổi nội dung sang định dạng Base64 để tạo Data URI
-            // Cách này an toàn hơn Blob trong môi trường bật LWS
-            const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(finalContent);
-            
-            // 4. Tạo thẻ link ẩn và kích hoạt download
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "customer_additional_info_template.csv");
-            document.body.appendChild(link); // Bắt buộc thêm vào DOM để hoạt động ổn định
-            
-            link.click();
-            
-            // 5. Dọn dẹp DOM sau khi tải
-            document.body.removeChild(link);
+            const keyHeader = this.localData.FEC_KeyIdentifier__c 
+                ? this.localData.FEC_KeyIdentifier__c.trim() 
+                : '<Key Identifier>';
+                
+            const fieldHeader = this.localData.FEC_FieldID__c 
+                ? this.localData.FEC_FieldID__c.trim() 
+                : '<Field ID>';
+
+            const wsData = [
+                [keyHeader, fieldHeader, 'Is Active'] 
+            ];
+
+            // 3. Tạo Worksheet
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            ws['!cols'] = [
+                { wch: 30 },
+                { wch: 30 },
+                { wch: 15 }
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template_Import");
+
+            // 5. Xuất file (SheetJS tự xử lý Blob và download)
+            XLSX.writeFile(wb, 'Customer_Additional_Info_Template.xlsx');
+
         } catch (error) {
-            console.error('Lỗi khi tải template:', error);
+            console.error('Error generating template:', error);
+            this.showToast('Lỗi', 'Không thể tạo file template: ' + error.message, 'error');
         }
     }
 
@@ -335,6 +339,13 @@ export default class FecCustomerUpsertModal extends LightningElement {
                     this.showToast('Lỗi', 'Tối thiểu phải có một file excel!', 'error');
                     return;
                 }
+                const result = await LightningConfirm.open({
+                    message: `Bạn có chắc chắn muốn xóa không?`,
+                    variant: 'header',
+                    label: 'Xác nhận xóa',
+                    theme: 'error',
+                });
+                if (!result) return;
                 await deleteFile({ documentId: fileId });
             }
 
