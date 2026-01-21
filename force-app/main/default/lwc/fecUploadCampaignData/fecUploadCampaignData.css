@@ -1,0 +1,67 @@
+.custom-card {
+    border-radius: 8px !important;
+}
+
+.custom-icon-purple {
+    --slds-c-icon-color-background: #af52de;
+}
+
+.custom-header-title {
+    color: #004487;
+    font-weight: 700;
+}
+
+/* DB JOB INFO: Chữ to, đậm, màu nổi bật nhẹ */
+.db-job-announcement {
+    color: #2e2e2e;
+    font-size: 1rem; /* Chữ to hơn */
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+}
+
+.info-icon-bold {
+    --slds-c-icon-color-foreground: #0070d2;
+}
+
+/* Vùng xám Weekend */
+.schedule-section-gray {
+    background-color: #f3f3f3;
+    border: 1px solid #d8dde6;
+    border-radius: 4px;
+    padding: 16px 24px;
+}
+
+/* Nút Push Record */
+.custom-push-btn {
+    background-color: #0070d2;
+    color: white;
+    border: none;
+    padding: 8px 28px;
+    border-radius: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.custom-push-btn[disabled] {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+}
+
+/* Nút Upload */
+.custom-upload-btn {
+    background: white;
+    border: 1px solid #0070d2;
+    color: #0070d2;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.upload-icon-blue {
+    --slds-c-icon-color-foreground: #0070d2;
+}

@@ -37,3 +37,4 @@ export const sortData = Helpers.sortData;
 export const formatDateDDMMYYYY = Helpers.formatDateDDMMYYYY;
 export const formatString = Helpers.formatString;
 export const getTomorrowDate = Helpers.getTomorrowDate;
+export const convertExcelToTimestamp = Helpers.convertExcelToTimestamp;
