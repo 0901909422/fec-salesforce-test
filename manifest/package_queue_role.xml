@@ -13,14 +13,6 @@
 		<name>Layout</name>
 	</types>
 	<types>
-		<members>RD_IT_User_User_Management</members>
-		<name>PermissionSet</name>
-	</types>
-	<types>
-		<members>PSG_RD_IT_User</members>
-		<name>PermissionSetGroup</name>
-	</types>
-	<types>
         <members>FEC_Call_Collections_Operations_Support_Officer</members>
         <members>FEC_Call_Collections_Operations_Support_Specialist</members>
         <members>FEC_Call_Collections_Operations_Support_Team_Leader</members>
