@@ -27,12 +27,13 @@
                 key-field="Id"
                 data={records}
                 columns={columns}
+                row-class={rowClass}
                 hide-checkbox-column
                 sorted-by={sortBy}
                 sorted-direction={sortDirection}
-                onsort={handleSort}>
+                onsort={handleSort}
+                onrowaction={handleRowAction}>
             </lightning-datatable>
-
             <!-- Pagination -->
             <div class="pagination">
                 <lightning-button label={labels.prevBtn} onclick={prevPage} disabled={isFirstPage}></lightning-button>

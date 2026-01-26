@@ -1,5 +1,7 @@
 import { LightningElement, track } from 'lwc';
 import searchFraudCases from '@salesforce/apex/FEC_IntegrationSearchFraudCaseController.searchFraudCases';
+import getFraudSubCases from '@salesforce/apex/FEC_IntegrationSearchFraudCaseController.getFraudSubCases';
+
 
 // Screen / Input Labels
 import LBL_SearchFraudCaseScreen from '@salesforce/label/c.LBL_SearchFraudCaseScreen';
@@ -83,6 +85,62 @@ export default class IntegrationFraudCaseSearch extends LightningElement {
         colChannel: LBL_Channel_Col
     };
     
+    handleRowAction(event) {
+        const { action, row } = event.detail;
+    
+        if (action.name !== 'toggle') return;
+    
+        const index = this.records.findIndex(r => r.Id === row.Id);
+        if (index === -1) return;
+    
+        const record = this.records[index];
+    
+        // Do nothing if no children
+        if (!record.hasChildren) return;
+    
+        if (record.isExpanded) {
+            // COLLAPSE
+            this.records.splice(index + 1, record.childCount);
+            record.isExpanded = false;
+            record.expandIcon = 'utility:chevronright';
+        } else {
+            // EXPAND
+            this.loadSubCases(record).then(result => {
+                const children = result.pageRecords || [];
+                const childRows = children.map(child => ({
+                    ...child,
+                    isChild: true,
+                    hasChildren: false,
+                    isExpanded: false,
+                    expandIcon: '',
+                    FraudCaseUrl: child.FraudCaseLink,
+                    displayLabel: '    ↳ ' + child.FraudCaseDisplay,
+                }));
+    
+                this.records.splice(index + 1, 0, ...childRows);
+    
+                record.childCount = childRows.length;
+                record.isExpanded = true;
+                record.expandIcon = 'utility:chevrondown';
+    
+                //force re-render
+                this.records = [...this.records];
+            });
+            return; // important
+        }
+    
+        //force re-render for collapse
+        this.records = [...this.records];
+    }
+    
+    
+    loadSubCases(parentRow) {
+        //console.log('loadSubCases: ', JSON.stringify(parentRow));
+        return getFraudSubCases({ fraudCaseId: parentRow.FEC_CaseID__c });
+    }
+    rowClass(row) {
+        return row.isChild ? 'child-row' : '';
+    }
 
     // Sorting handler
     handleSort(event) {
@@ -107,13 +165,24 @@ export default class IntegrationFraudCaseSearch extends LightningElement {
     }
 
    columns = [
+        {
+            label: '',
+            type: 'button-icon',
+            initialWidth: 40,
+            typeAttributes: {
+                iconName: { fieldName: 'expandIcon' },
+                name: 'toggle',
+                variant: 'bare',
+                alternativeText: 'Expand'
+            }
+        },
         { 
             label: LBL_FraudCaseID_Col,
             fieldName: 'FraudCaseUrl',
             sortable: true,
             type: 'url',
             typeAttributes: {
-                label: { fieldName: 'FraudCaseDisplay' },
+                label: { fieldName: 'displayLabel' },
                 target: '_blank'
             }
         },
@@ -179,12 +248,19 @@ export default class IntegrationFraudCaseSearch extends LightningElement {
         })
         .then(result => {
             console.log("reaults: ", result);
+            const childCountMap = result.childCountMap || {};
             this.records = result.pageRecords.map(row => {        
-                const isFH = row.FEC_CaseID__c?.startsWith('FH-');               
+                const childCount = childCountMap[row.FEC_CaseID__c] || 0;
                 return {
                     ...row,
-                    FraudCaseUrl: isFH ? row.FraudCaseLink : row.FraudCaseDisplay,
-                    FraudCaseDisplay: row.FraudCaseDisplay
+                    FraudCaseUrl: row.FraudCaseLink,
+                    FraudCaseDisplay: row.FraudCaseDisplay,
+                    isExpanded: false,
+                    childCount: 0,
+                    hasChildren: childCount > 0,
+                    expandIcon: childCount > 0 ? 'utility:chevronright' : '',
+                    isChild: false,
+                    displayLabel: row.FraudCaseDisplay
                 };
             });
         

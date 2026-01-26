@@ -47,6 +47,116 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
 
 
     /**
+     * Returns all TK cases belonging to an FH case.
+     * Hierarchy: FH → BU → TK
+     * UI only displays TK cases, BU layer is hidden.
+     *
+     * @param fraudCaseId  FH case identifier (ex: FH-10001)
+     * @return Map<String, Object> containing:
+     *         - pageRecords : List<FEC_Integration_Case__c>  (TK cases)
+     *         - total       : Integer  (number of TK cases)
+     */
+    @AuraEnabled(cacheable=true)
+    public static Map<String,Object> getFraudSubCases(String fraudCaseId) {
+
+        log('getFraudSubCases called with fraudCaseId = ' + fraudCaseId);
+
+        if (String.isBlank(fraudCaseId)) {
+            log('fraudCaseId is blank — returning empty result');
+            return new Map<String,Object>{
+                'pageRecords' => new List<FEC_Integration_Case__c>(),
+                'total' => 0
+            };
+        }
+
+        // Step 1: Load BU under FH
+        List<FEC_Integration_Case__c> existParent = [
+            SELECT Id, FEC_CaseID__c
+            FROM FEC_Integration_Case__c
+            WHERE FEC_Parent_CaseID__c = :fraudCaseId 
+            AND FEC_CaseID__c LIKE 'BU-%'
+        ];
+
+        log('BU cases found: ' + existParent.size());
+
+        if (existParent.isEmpty()) {
+            log('No BU cases found — returning empty result');
+            return new Map<String,Object>{
+                'pageRecords' => new List<FEC_Integration_Case__c>(),
+                'total' => 0
+            };
+        }
+
+        // Step 2: Collect BU IDs
+        Set<String> buIds = new Set<String>();
+        for (FEC_Integration_Case__c bu : existParent) {
+            buIds.add(bu.FEC_CaseID__c);
+        }
+
+        log('BU ID set: ' + buIds);
+
+        // Step 3: Load TK under those BU       
+        List<FEC_Integration_Case__c> allRecords = [
+            SELECT 
+            Id, Name, FEC_CaseID__c, FEC_Service_Case_ID__c, FEC_Parent_CaseID__c,
+            FEC_Case_Status__c, FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c,
+            FEC_Remark__c, CreatedDate, FEC_Sys_Channel__c, FEC_Creator_Email__c, 
+            CreatedBy.Id, CreatedBy.Name, CreatedBy.Email 
+            FROM FEC_Integration_Case__c
+            WHERE FEC_Parent_CaseID__c IN :buIds
+            AND FEC_CaseID__c LIKE 'TK-%'
+            ORDER BY CreatedDate ASC
+            LIMIT 200
+        ];
+
+        log('TK cases found: ' + allRecords.size());
+
+        Integer total = allRecords.size();
+
+        // Step 4: Build page list
+        List<FEC_Integration_Case__c> pageList = new List<FEC_Integration_Case__c>();
+        for (FEC_Integration_Case__c rec : allRecords) {
+            pageList.add(rec);
+        }
+
+        log('pageList size: ' + pageList.size());
+
+        // Step 5: Load account numbers
+        Map<Id, String> accountNumberMap = new Map<Id, String>();
+
+        if (!pageList.isEmpty()) {
+            List<FEC_Integration_Case_Info__c> acctInfos = [
+                SELECT FEC_Parent_Case__c, FEC_Info_ID__c, FEC_Info_Value__c
+                FROM FEC_Integration_Case_Info__c
+                WHERE FEC_Parent_Case__c IN :pageList
+                AND FEC_Info_ID__c = 'AccountNumber'
+            ];
+
+            log('Account info records: ' + acctInfos.size());
+
+            for (FEC_Integration_Case_Info__c info : acctInfos) {
+                accountNumberMap.put(info.FEC_Parent_Case__c, info.FEC_Info_Value__c);
+            }
+        }
+
+        log('accountNumberMap size: ' + accountNumberMap.size());
+
+        // Step 6: Final response
+        Map<String,Object> response = getFormatResponseSearchIntegrationFraudCase(
+            pageList, 
+            accountNumberMap, 
+            total
+        );
+
+        log('Final response prepared: ' + response.keySet());
+
+        return response;
+    }
+
+
+
+
+    /**
      * Performs a paginated, searchable, and sortable query of Fraud Cases
      * with support for filtering on both parent case fields and related
      * Additional Info records.
@@ -106,10 +216,13 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
         List<String> parentWhere = new List<String>();
 
         if (String.isNotBlank(fraudCaseId)) {
+            String keyword = '%' + String.escapeSingleQuotes(fraudCaseId.trim()) + '%';
+        
             parentWhere.add(
-                'FEC_CaseID__c LIKE \'%' + String.escapeSingleQuotes(fraudCaseId) + '%\''
+                '(FEC_CaseID__c LIKE :keyword OR FEC_Service_Case_ID__c LIKE :keyword)'
             );
         }
+        
 
         // =====================================================
         // 2. Additional Info Filters (Apex filtering allowed)
@@ -163,7 +276,7 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             parentWhere.add('Id IN :matchedCaseIds');
         }
         // Always enforce FH / TK
-        parentWhere.add('(FEC_CaseID__c LIKE \'FH-%\' OR FEC_CaseID__c LIKE \'TK-%\')');
+        parentWhere.add('(FEC_CaseID__c LIKE \'FH-%\' OR FEC_CaseID__c LIKE \'TK-%\' OR FEC_CaseID__c LIKE \'SFT-%\' OR FEC_CaseID__c LIKE \'S-%\')');
 
         // =====================================================
         // 3. Sorting
@@ -221,10 +334,12 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
         // 6. Load Account Number from AdditionalInfo
         // =====================================================
         Map<Id, String> accountNumberMap = new Map<Id, String>();
-
+        Map<String, Integer> childCountMap = new Map<String, Integer>();
         if (!pageList.isEmpty()) {
+            /* ---------------- Account Numbers ---------------- */
+
             List<FEC_Integration_Case_Info__c> acctInfos = [
-                SELECT FEC_Parent_Case__c, FEC_Info_ID__c, FEC_Info_Value__c
+                SELECT FEC_Parent_Case__c, FEC_Info_Value__c
                 FROM FEC_Integration_Case_Info__c
                 WHERE FEC_Parent_Case__c IN :pageList
                 AND FEC_Info_ID__c = 'AccountNumber'
@@ -233,11 +348,76 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             for (FEC_Integration_Case_Info__c info : acctInfos) {
                 accountNumberMap.put(info.FEC_Parent_Case__c, info.FEC_Info_Value__c);
             }
-        }
 
-        // =====================================================
-        // 7. Prepare final rows for LWC
-        // =====================================================
+            /* ---------------- FH → BU → TK hierarchy ---------------- */
+            Set<String> fhCaseIds = new Set<String>();
+            for (FEC_Integration_Case__c c : pageList) {
+                if (c.FEC_CaseID__c != null && c.FEC_CaseID__c.startsWith('FH-')) {
+                    fhCaseIds.add(c.FEC_CaseID__c);
+                }
+            }
+            if (!fhCaseIds.isEmpty()) {
+                //Find BU children of FH
+                List<FEC_Integration_Case__c> buCases = [
+                    SELECT FEC_CaseID__c, FEC_Parent_CaseID__c
+                    FROM FEC_Integration_Case__c
+                    WHERE FEC_Parent_CaseID__c IN :fhCaseIds
+                    AND FEC_CaseID__c LIKE 'BU-%'
+                ];
+                Map<String, Set<String>> fhToBuMap = new Map<String, Set<String>>();
+                Set<String> allBuIds = new Set<String>();
+                for (FEC_Integration_Case__c bu : buCases) {
+                    if (!fhToBuMap.containsKey(bu.FEC_Parent_CaseID__c)) {
+                        fhToBuMap.put(bu.FEC_Parent_CaseID__c, new Set<String>());
+                    }
+                    fhToBuMap.get(bu.FEC_Parent_CaseID__c).add(bu.FEC_CaseID__c);
+                    allBuIds.add(bu.FEC_CaseID__c);
+                }
+                //Count TK under BU
+                if (!allBuIds.isEmpty()) {
+                    List<AggregateResult> tkCounts = [
+                        SELECT FEC_Parent_CaseID__c parentId, COUNT(Id) cnt
+                        FROM FEC_Integration_Case__c
+                        WHERE FEC_Parent_CaseID__c IN :allBuIds
+                        AND FEC_CaseID__c LIKE 'TK-%'
+                        GROUP BY FEC_Parent_CaseID__c
+                    ];
+
+                    Map<String, Integer> buToTkCount = new Map<String, Integer>();
+                    for (AggregateResult ar : tkCounts) {
+                        buToTkCount.put(
+                            (String) ar.get('parentId'),
+                            (Integer) ar.get('cnt')
+                        );
+                    }
+
+                    //Sum TK count per FH
+                    for (String fhId : fhToBuMap.keySet()) {
+                        Integer totalTk = 0;
+                        for (String buId : fhToBuMap.get(fhId)) {
+                            totalTk += buToTkCount.get(buId) != null ? buToTkCount.get(buId) : 0;
+                        }
+                        childCountMap.put(fhId, totalTk);
+                    }
+                }
+            }
+        }
+         // Step 7: Final response
+         Map<String,Object> response = getFormatResponseSearchIntegrationFraudCase(
+            pageList, 
+            accountNumberMap, 
+            total
+        );
+        
+
+        response.put('childCountMap', childCountMap);
+
+        log('Final response prepared: ' + response.keySet());
+        return response;
+       
+    }
+
+    private static Map<String,Object> getFormatResponseSearchIntegrationFraudCase(List<FEC_Integration_Case__c> pageList, Map<Id, String> accountNumberMap, Integer total) {
         List<Map<String,Object>> finalRows = new List<Map<String,Object>>();
 
         for (FEC_Integration_Case__c c : pageList) {
@@ -252,7 +432,7 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
                 'CreatedDate'            => formatDateTime(c.CreatedDate),
                 'FEC_Sys_Channel__c'     => c.FEC_Sys_Channel__c,
                 
-                //Correct Account Number from AdditionalInfo
+                // ⭐ Correct Account Number from AdditionalInfo
                 'AccountNumber'          => accountNumberMap.containsKey(c.Id)
                                         ? accountNumberMap.get(c.Id)
                                         : null,
@@ -260,8 +440,8 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
                 'CreatedByName'  => c.CreatedBy.Name,                                       
 
                 // 🔗 Hyperlink for LWC
-                'ServiceCaseLink' => (c.FEC_Service_Case_ID__c != null ? '/' + c.FEC_Service_Case_ID__c : null),
-                'FraudCaseLink'        => (c.FEC_CaseID__c != null && c.FEC_CaseID__c.startsWith('FH-'))
+                'ServiceCaseLink' => (c.FEC_Service_Case_ID__c != null ? '/lightning/n/Service_Fraud_Task_Case_Action?c__caseId=' + c.FEC_Service_Case_ID__c : null),
+                'FraudCaseLink'        => (c.FEC_CaseID__c != null && (c.FEC_CaseID__c.startsWith('FH-') || c.FEC_CaseID__c.startsWith('TK-')))
                 ? '/lightning/n/'+ FRAUD_HANDLING_CASE_DETAIL_PATH + '?c__caseId=' + c.FEC_CaseID__c
                 : null,
                 'FraudCaseDisplay'      => c.FEC_CaseID__c

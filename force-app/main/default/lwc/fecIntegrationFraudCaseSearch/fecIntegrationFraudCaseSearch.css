@@ -39,3 +39,26 @@
 .tk-text {
     color: #181818;
 }
+.child-row td:first-child {
+    padding-left: 2rem;
+    background: #f7f9fb;
+}
+.child-row {
+    background-color: #f3f6fb;
+}
+
+.child-row td:first-child {
+    padding-left: 2rem;
+}
+
+.child-row::before {
+    content: '↳ ';
+    color: #5c6f8a;
+}
+:host {
+    --child-color: #5c6f8a;
+}
+
+.child-indicator {
+    color: var(--child-color);
+}
