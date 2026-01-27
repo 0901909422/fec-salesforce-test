@@ -214,7 +214,7 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                 'FraudTaskId'      => c.FEC_Service_Case_ID__c,
                 'InvestigationConclusion' => c.FEC_Investigation_Conclusion__c,
                 'FraudTaskUrl'     => c.FEC_Service_Case_ID__c != null
-                        ? '/lightning/r/Case/' + c.FEC_Service_Case_ID__c + '/view'
+                        ? '/lightning/n/Service_Fraud_Task_Case_Action?c__caseId=' + c.FEC_Service_Case_ID__c
                         : null,
                 'TaskName'         => taskInfoMap.get('TaskName'),
                 'UIC'              => taskInfoMap.get('UIC'),

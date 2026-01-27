@@ -4,7 +4,7 @@ import getFraudCaseDetail from '@salesforce/apex/FEC_IntegrationFraudCaseDetailC
 
 import LBL_FraudCaseDetail from '@salesforce/label/c.LBL_FraudCaseDetail';
 import LBL_LoadingFraudCase from '@salesforce/label/c.LBL_LoadingFraudCase';
-import LBL_FraudCaseId from '@salesforce/label/c.LBL_FraudCaseId';
+import LBL_FraudCaseId from '@salesforce/label/c.LBL_FraudCaseID';
 import LBL_CaseStatus from '@salesforce/label/c.LBL_CaseStatus';
 import LBL_Creator from '@salesforce/label/c.LBL_Creator';
 import LBL_Category from '@salesforce/label/c.LBL_Category';
@@ -42,6 +42,7 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
 
     // Task list (for table)
     @track tasks = [];
+    isFraudCase = false;
 
     dataLoaded = false;
     labels = {
@@ -78,6 +79,9 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
     @wire(CurrentPageReference)
     handlePageRef(pageRef) {
         const caseId = pageRef?.state?.c__caseId;
+        if (caseId && caseId.startsWith('FH-')) {
+            this.isFraudCase = true;
+        }
         if (caseId && !this.dataLoaded) {
             this.caseId = caseId;
             this.dataLoaded = true;
@@ -91,26 +95,40 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
     loadData() {
         this.loading = true;
         this.error = null;
-
+    
         getFraudCaseDetail({ caseId: this.caseId })
             .then(res => {
-                console.log('Fraud case detail:', res);
+                //console.log('Fraud case detail:', res);
                 const hierarchy = res?.hierarchy || [];
-
-                // Map hierarchy
+    
                 this.hierarchy = hierarchy.map(item => ({
                     ...item,
                     caseUrl: `/lightning/r/FEC_Integration_Case__c/${item.Id}/view`,
-                    Infos: (item.Infos || []).map(info => ({
-                        id: info.FEC_Source_Id__c || info.id,
-                        value: info.FEC_Info_Value__c || info.value,
-                        fieldType: info.fileType,
-                        isFile: info.fileType === 'file',
-                        fileName: info.fileName
-                    }))
+                    Infos: (item.Infos || []).map(info => {
+                        
+                        let value = info.FEC_Info_Value__c || info.value;
+                        let fieldName = info.FEC_Source_Id__c || info.id;
+                        //console.log('fieldName: ', fieldName);
+                        //Format Deadline field
+                        if (fieldName === 'Deadline' && value) {
+                            const year = value.substring(0, 4);
+                            const month = value.substring(4, 6);
+                            const day = value.substring(6, 8);
+                            value = `${day}/${month}/${year}`;
+                            //console.log('Deadline: ', value);
+                        }
+                        //console.log('Deadline: ', value);
+    
+                        return {
+                            id: info.FEC_Source_Id__c || info.id,
+                            value,
+                            fieldType: info.fileType,
+                            isFile: info.fileType === 'file',
+                            fileName: info.fileName
+                        };
+                    })
                 }));
-                
-                // OPTIONAL: tasks if Apex returns them
+    
                 this.tasks = res?.tasks || [];
             })
             .catch(err => {
@@ -121,6 +139,7 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
                 this.loading = false;
             });
     }
+    
 
     // ===============================
     // MAIN CASE (ROOT CASE)
@@ -168,39 +187,70 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
     // ===============================
     // FILE DOWNLOAD (AUTO)
     // ===============================
-    handleFileDownload(event) {
-        const rawValue = event.currentTarget.dataset.base64;
-        console.log('handleFileDownload');
+    // handleFileDownload(event) {
+    //     const rawValue = event.currentTarget.dataset.base64;    
+    //     if (!rawValue) {
+    //         console.error('File value is empty');
+    //         return;
+    //     }
 
+    //     const parts = rawValue.split('|');
+    //     if (parts.length < 3) {
+    //         console.error('Invalid file format');
+    //         return;
+    //     }
+
+    //     const fileName = parts[0];
+    //     const extension = parts[1].toLowerCase();
+    //     const base64Data = parts[2];
+    //     console.log('fileName: ', fileName);
+    //     console.log('extension: ', extension);
+    //     const blob = this.base64ToBlob(
+    //         base64Data,
+    //         this.getMimeType(extension)
+    //     );
+
+    //     const url = URL.createObjectURL(blob);
+    //     console.log('url: ', url);
+    //     const a = document.createElement('a');
+    //     a.href = url;
+    //     a.download = fileName;
+    //     document.body.appendChild(a);
+    //     a.click();
+
+    //     setTimeout(() => {
+    //         document.body.removeChild(a);
+    //         URL.revokeObjectURL(url);
+    //     }, 100);
+    // }
+    handleFileDownload(event) {
+        console.log('dataset:', JSON.stringify(event.currentTarget.dataset));
+        const rawValue = event.currentTarget.dataset.base64; 
         if (!rawValue) {
             console.error('File value is empty');
             return;
         }
-
+    
         const parts = rawValue.split('|');
-        if (parts.length < 3) {
-            console.error('Invalid file format');
+        if (parts.length !== 3) {
+            console.error('Invalid file format', rawValue);
             return;
         }
-
+    
         const fileName = parts[0];
-        const extension = parts[1].toLowerCase();
-        const base64Data = parts[2];
-        
-        const blob = this.base64ToBlob(
-            base64Data,
-            this.getMimeType(extension)
-        );
-
-        const url = URL.createObjectURL(blob);
-        console.log('url: ', url);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
-
-        URL.revokeObjectURL(url);
+        const extension = parts[1];
+        const contentDocumentId = parts[2];
+    
+        console.log('fileName:', fileName);
+        console.log('extension:', extension);
+        console.log('contentDocumentId:', contentDocumentId);
+    
+        // Native Salesforce file download
+        const downloadUrl = `/sfc/servlet.shepherd/document/download/${contentDocumentId}`;
+    
+        window.open(downloadUrl, '_blank');
     }
+    
 
     base64ToBlob(base64, mimeType) {
         const byteCharacters = atob(base64);

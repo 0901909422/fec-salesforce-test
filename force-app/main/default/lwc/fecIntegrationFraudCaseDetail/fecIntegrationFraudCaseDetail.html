@@ -119,15 +119,15 @@
                 
                 </div>
                 
-
-                <!-- ================= REMARKS ================= -->
-                <div class="slds-p-around_medium">
-                    <b>{labels.remarks}</b>
-                    <div class="slds-box slds-m-top_x-small slds-scrollable_y" style="max-height:200px">
-                        {customerRemarks}
+                <template if:true={isFraudCase}>
+                    <!-- ================= REMARKS ================= -->
+                    <div class="slds-p-around_medium">
+                        <b>{labels.remarks}</b>
+                        <div class="slds-box slds-m-top_x-small slds-scrollable_y" style="max-height:200px">
+                            {customerRemarks}
+                        </div>
                     </div>
-                </div>
-
+                </template>                
                 <!-- ================= CONCLUSION ================= -->
                 <div class="slds-p-around_medium">
                     <b>{labels.conclusion}</b>
@@ -135,55 +135,55 @@
                         {fraudConclusion}
                     </div>
                 </div>
+                <template if:true={isFraudCase}>
+                    <!-- ================= TASK LIST ================= -->
+                    <div class="slds-p-around_medium">
+                        <b>{labels.taskList}</b>
 
-                <!-- ================= TASK LIST ================= -->
-                <div class="slds-p-around_medium">
-                    <b>{labels.taskList}</b>
-
-                    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
-                        <thead>
-                            <tr>
-                                <th>{labels.taskId}</th>
-                                <th>{labels.fraudTaskId}</th>
-                                <th>{labels.taskName}</th>
-                                <th>{labels.uic}</th>
-                                <th>{labels.deadline}</th>
-                                <th>{labels.taskStatus}</th>
-                                <th>{labels.createTimeTask}</th>
-                                <th>{labels.updateTimeTask}</th>
-                                <th>{labels.appId}</th>
-                                <th>{labels.violationType}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template for:each={tasks} for:item="task">
-                                <tr key={task.Id}>
-                                    <td>{task.TaskId}</td>
-                                    <td>
-                                        <template if:true={task.FraudTaskUrl}>
-                                            <a href={task.FraudTaskUrl} target="_blank">
-                                                {task.FraudTaskId}
-                                            </a>
-                                        </template>
-
-                                        <template if:false={task.FraudTaskUrl}>
-                                            {task.FraudTaskId}
-                                        </template>
-                                    </td>
-                                    <td>{task.TaskName}</td>
-                                    <td>{task.UIC}</td>
-                                    <td>{task.Deadline}</td>
-                                    <td>{task.Status}</td>
-                                    <td>{task.CreatedDate}</td>
-                                    <td>{task.LastModifiedDate}</td>
-                                    <td>{task.AppId}</td>
-                                    <td>{task.ViolationType}</td>
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
+                            <thead>
+                                <tr>
+                                    <th>{labels.taskId}</th>
+                                    <th>{labels.fraudTaskId}</th>
+                                    <th>{labels.taskName}</th>
+                                    <th>{labels.uic}</th>
+                                    <th>{labels.deadline}</th>
+                                    <th>{labels.taskStatus}</th>
+                                    <th>{labels.createTimeTask}</th>
+                                    <th>{labels.updateTimeTask}</th>
+                                    <th>{labels.appId}</th>
+                                    <th>{labels.violationType}</th>
                                 </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                <template for:each={tasks} for:item="task">
+                                    <tr key={task.Id}>
+                                        <td>{task.TaskId}</td>
+                                        <td>
+                                            <template if:true={task.FraudTaskUrl}>
+                                                <a href={task.FraudTaskUrl} target="_blank">
+                                                    {task.FraudTaskId}
+                                                </a>
+                                            </template>
 
+                                            <template if:false={task.FraudTaskUrl}>
+                                                {task.FraudTaskId}
+                                            </template>
+                                        </td>
+                                        <td>{task.TaskName}</td>
+                                        <td>{task.UIC}</td>
+                                        <td>{task.Deadline}</td>
+                                        <td>{task.Status}</td>
+                                        <td>{task.CreatedDate}</td>
+                                        <td>{task.LastModifiedDate}</td>
+                                        <td>{task.AppId}</td>
+                                        <td>{task.ViolationType}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
             </template>
         </template>
 
