@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
-    
+    <types>
+		<members>FEC_GetCustomerList</members>
+		<members>FEC_SearchController</members>
+		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>customDblclickCell</members>
+		<members>fec_Search</members>
+		<members>fec_SkipModal</members>
+		<members>fec_Spinner</members>
+		<members>maskedToggleCell</members>
+		<members>maskedToggleDatatable</members>
+		<name>LightningComponentBundle</name>
+	</types>
+	<types>
+		<members>FEC_CommonCss</members>
+		<name>StaticResource</name>
+	</types>
     <version>65.0</version>
 </Package>
