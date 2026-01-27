@@ -15,7 +15,6 @@ import {
     getFocusedTabInfo,
     refreshTab
 } from 'lightning/platformWorkspaceApi';
-import MyModal from 'c/fec_SendNotification';
 
 export default class Fec_Search extends NavigationMixin(LightningElement) {
     @api recordId;
