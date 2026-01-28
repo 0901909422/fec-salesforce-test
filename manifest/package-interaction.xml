@@ -109,6 +109,7 @@
 	</types>
 	<types>
 		<members>FEC_Service_UtilityBar</members>
+        <members>FEC_Interaction_Case_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
     <types>
