@@ -3,6 +3,8 @@
     <types>
 		<members>FEC_GetCustomerList</members>
 		<members>FEC_SearchController</members>
+        <members>FEC_CreateCaseHanlder</members>
+		<members>FEC_CreateInteractionGenesys</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
