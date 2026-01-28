@@ -101,7 +101,7 @@
         <name>sidebar</name>
         <type>Region</type>
     </flexiPageRegions>
-    <masterLabel>Temp</masterLabel>
+    <masterLabel>FEC Interaction Case Record Page</masterLabel>
     <sobjectType>Case</sobjectType>
     <template>
         <name>flexipage:recordHomeTemplateDesktop</name>
