@@ -37,6 +37,8 @@
 		<members>fec_CaseRemarks</members>
         <members>fec_CaseEditNOC</members>
         <members>fec_CommonUtils</members>
+        <members>fec_Modal</members>
+        <members>fec_ErrorPanel</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>

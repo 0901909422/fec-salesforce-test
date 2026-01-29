@@ -1,0 +1,59 @@
+<template>
+  <div class="error">
+    <button class="error__icon" onclick={handleToggle}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        height="20"
+        width="20"
+        viewBox="0 0 520 520"
+        fill="rgb(234, 0, 30)"
+      >
+        <path
+          d="M260 20C128 20 20 128 20 260s108 240 240 240 240-108 240-240S392 20 260 20zM80 260a180 180 0 0 1 284-147L113 364a176 176 0 0 1-33-104zm180 180c-39 0-75-12-104-33l251-251a180 180 0 0 1-147 284z"
+        />
+      </svg>
+    </button>
+
+    <div class="error__panel open">
+      <div class="error__panel__header">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          height="16"
+          width="16"
+          viewBox="0 0 520 520"
+          fill="rgb(234, 0, 30)"
+        >
+          <path
+            d="M260 20C128 20 20 128 20 260s108 240 240 240 240-108 240-240S392 20 260 20zM80 260a180 180 0 0 1 284-147L113 364a176 176 0 0 1-33-104zm180 180c-39 0-75-12-104-33l251-251a180 180 0 0 1-147 284z"
+          />
+        </svg>
+
+        <p class="error__panel__header__title">We hit a snag</p>
+
+        <svg
+          class="error__panel__header__close"
+          onclick={handleClose}
+          xmlns="http://www.w3.org/2000/svg"
+          height="16"
+          width="16"
+          viewBox="0 0 520 520"
+          fill="rgb(234, 0, 30)"
+        >
+          <path
+            d="m310 254 130-131c6-6 6-15 0-21l-20-21c-6-6-15-6-21 0L268 212a10 10 0 0 1-14 0L123 80c-6-6-15-6-21 0l-21 21c-6 6-6 15 0 21l131 131c4 4 4 10 0 14L80 399c-6 6-6 15 0 21l21 21c6 6 15 6 21 0l131-131a10 10 0 0 1 14 0l131 131c6 6 15 6 21 0l21-21c6-6 6-15 0-21L310 268a10 10 0 0 1 0-14z"
+          />
+        </svg>
+      </div>
+
+      <div class="error__panel__main">
+        <p>Review the errors on this page</p>
+
+        <ul>
+          <template for:each={errlst} for:item="item">
+            <li key={item.id}>{item.value}</li>
+          </template>
+        </ul>
+      </div>
+    </div>
+  </div>
+</template>
