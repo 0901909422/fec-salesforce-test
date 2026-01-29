@@ -10,6 +10,8 @@
         <members>FEC_GetAddressesList</members>
 		<members>FEC_GetCustomerInfoBasic</members>
 		<members>FEC_GetDocumentsList</members>
+        <members>FEC_ApplicationsListController</members>
+        <members>FEC_GetApplicationsList</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -20,6 +22,7 @@
 	<types>
 		<members>FEC_Address_Info__c</members>
         <members>FEC_Sensitive_Data__c</members>
+        <members>FEC_Application_List__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -29,6 +32,7 @@
     <types>
 		<members>fec_MainInfo</members>
 		<members>fec_SecondaryInfo</members>
+        <members>fec_ApplicationsList</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
