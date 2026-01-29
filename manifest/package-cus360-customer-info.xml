@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+		<members>FEC_SecondaryController</members>
+        <members>FEC_CommonUltils</members>
+		<members>FEC_GetContactsList</members>
+		<members>FEC_GetDigitalAccountStatus</members>
+		<members>FEC_GetRelativesList</members>
+		<members>FEC_MainInfoController</members>
+        <members>FEC_GetAddressesList</members>
+		<members>FEC_GetCustomerInfoBasic</members>
+		<members>FEC_GetDocumentsList</members>
+		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>FEC_Customer_History__c.FEC_API_Cache_Secondary_Demo__c</members>
+        <members>FEC_Customer_History__c.FEC_API_Cache__c</members>
+		<name>CustomField</name>
+	</types>
+	<types>
+		<members>FEC_Address_Info__c</members>
+        <members>FEC_Sensitive_Data__c</members>
+		<name>CustomObject</name>
+	</types>
+    <types>
+		<members>FEC_Interaction_Case_Record_Page</members>
+		<name>FlexiPage</name>
+	</types>
+    <types>
+		<members>fec_MainInfo</members>
+		<members>fec_SecondaryInfo</members>
+		<name>LightningComponentBundle</name>
+	</types>
+    <version>65.0</version>
+</Package>
