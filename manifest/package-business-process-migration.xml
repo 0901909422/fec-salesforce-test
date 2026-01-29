@@ -50,5 +50,11 @@
 		<members>FEC_User_Division_Group</members>
 		<name>GlobalValueSet</name>
 	</types>
+    <types>
+		<members>RD_IT_User_Interaction_Case_Service_Case</members>
+		<members>RD_IT_User_System_Management</members>
+		<members>RD_IT_User_User_Management</members>
+		<name>PermissionSet</name>
+	</types>
     <version>65.0</version>
 </Package>
