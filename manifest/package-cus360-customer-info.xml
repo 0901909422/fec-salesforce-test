@@ -31,5 +31,11 @@
 		<members>fec_SecondaryInfo</members>
 		<name>LightningComponentBundle</name>
 	</types>
+    <types>
+		<members>RD_IT_User_Customer_360</members>
+		<members>RD_IT_User_User_Management</members>
+        <members>RD_IT_User_System_Management</members>
+		<name>PermissionSet</name>
+	</types>
     <version>65.0</version>
 </Package>
