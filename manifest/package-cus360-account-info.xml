@@ -9,6 +9,10 @@
         <members>FEC_GetCardPlanInfo</members>
         <members>FEC_GetStatus</members>
         <members>FEC_GetCardSecInfo</members>
+        <members>FEC_MainInfoAccountController</members>
+		<members>FEC_SecondaryInfoAccountController</members>
+        <members>FEC_GetCustomerSaleDisburseInfoCallout</members>
+		<members>FEC_GetRewardEligibility</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -22,6 +26,9 @@
         <members>fec_CardPayment</members>
         <members>fec_RelatedListPaging</members>
         <members>fec_currencyUtils</members>
+        <members>fec_CommonRecordDetailSection</members>
+		<members>fec_MainInfoAccount</members>
+		<members>fec_SecondaryInfoAccount</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
