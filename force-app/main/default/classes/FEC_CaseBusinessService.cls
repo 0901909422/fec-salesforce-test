@@ -168,7 +168,7 @@ public with sharing class FEC_CaseBusinessService {
         //   String.isBlank(selectedCase.FEC_Current_Case_Stage__c) ||
         //   selectedCase.FEC_Current_Case_Stage__r?.FEC_Default_Stage__c
         // ) {
-        // FEC_MainInfoAccountController.refreshAccountInfo(selectedCase.Id);
+        FEC_MainInfoAccountController.refreshAccountInfo(selectedCase.Id);
         // }
       }
 
