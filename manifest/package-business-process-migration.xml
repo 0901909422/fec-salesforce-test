@@ -12,6 +12,7 @@
 		<members>fec_CaseBussiness</members>
 		<members>fec_CaseDetail_Customer</members>
 		<members>fec_CaseRemarks</members>
+        <members>fec_CaseEditNOC</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
