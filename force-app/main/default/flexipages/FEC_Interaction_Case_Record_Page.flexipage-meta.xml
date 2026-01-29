@@ -70,11 +70,51 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_TransactionsAccount</componentName>
+                <identifier>c_fec_TransactionsAccount</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-66a05567-1a16-4946-b91a-fd4c1f34a89e</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_StatementsAccount</componentName>
+                <identifier>c_fec_StatementsAccount</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-c5dnvuta64l</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_PaymentHistoryAcount</componentName>
+                <identifier>c_fec_PaymentHistoryAcount</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-2806976e-0e8f-492c-b610-decab9838975</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentName>fec_CardInfo</componentName>
                 <identifier>c_fec_CardInfo</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-a2139d84-5739-4684-af08-01fa6a6c554b</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_IPPDetails</componentName>
+                <identifier>c_fec_IPPDetails</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-3746c57e-d00e-4883-bf3a-dbc573c02947</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -120,6 +160,48 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
+                    <value>Facet-66a05567-1a16-4946-b91a-fd4c1f34a89e</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Transactions</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab7</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-c5dnvuta64l</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Statements</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab8</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-2806976e-0e8f-492c-b610-decab9838975</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Payment History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab9</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
                     <value>Facet-a2139d84-5739-4684-af08-01fa6a6c554b</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
@@ -128,6 +210,20 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab12</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-3746c57e-d00e-4883-bf3a-dbc573c02947</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>IPP</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab10</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>

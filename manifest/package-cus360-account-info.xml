@@ -13,12 +13,25 @@
 		<members>FEC_SecondaryInfoAccountController</members>
         <members>FEC_GetCustomerSaleDisburseInfoCallout</members>
 		<members>FEC_GetRewardEligibility</members>
+        <members>FEC_TransactionsController</members>
+        <members>FEC_PaymentHistoryController</members>
+		<members>FEC_StatementsAccountController</members>
+        <members>FEC_IPPController</members>
+        <members>FEC_GetIPPDetailsCallout</members>
+		<members>FEC_SalesInfoController</members>
+        <members>FEC_GetAppStatusCallout</members>
+        <members>FEC_GetBilledTransactions</members>
+		<members>FEC_GetCardFinancialTransactions</members>
+		<members>FEC_GetPaymentInfo</members>
+		<members>FEC_GetUnbilledTransactions</members>
         <name>ApexClass</name>
     </types>
 	<types>
 		<members>FEC_Card_Delivery__c</members>
         <members>FEC_Card_Payment__c</members>
 		<members>FEC_Other_Card__c</members>
+        <members>FEC_Transaction__c</members>
+        <members>FEC_Statement__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -29,8 +42,16 @@
         <members>fec_CommonRecordDetailSection</members>
 		<members>fec_MainInfoAccount</members>
 		<members>fec_SecondaryInfoAccount</members>
+        <members>fec_PaymentHistoryAcount</members>
+		<members>fec_StatementsAccount</members>
+		<members>fec_TransactionsAccount</members>
+        <members>fec_IPPDetails</members>
         <name>LightningComponentBundle</name>
     </types>
+	<types>
+		<members>FEC_IPP_Navigation</members>
+		<name>LightningMessageChannel</name>
+	</types>
 	<types>
         <members>FEC_Interaction_Case_Record_Page</members>
 		<name>FlexiPage</name>
