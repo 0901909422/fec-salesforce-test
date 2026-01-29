@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Channel for navigation between IPP Details and IPP Schedule components</description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <description>Action to perform (e.g., viewSalesInfo)</description>
+        <fieldName>action</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>IPP Plan Number</description>
+        <fieldName>planNumber</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Full record data as JSON string</description>
+        <fieldName>recordData</fieldName>
+    </lightningMessageFields>
+    <masterLabel>FEC IPP Navigation</masterLabel>
+</LightningMessageChannel>

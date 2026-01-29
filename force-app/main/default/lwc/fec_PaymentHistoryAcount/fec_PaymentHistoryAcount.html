@@ -1,0 +1,29 @@
+<template>
+    <div class="customer-info-container slds-card slds-p-around_small">
+        <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
+
+            <!-- Payment History -->
+            <lightning-accordion-section name="paymentHistory" label="Payment History">
+
+                <div class="slds-text-color_error slds-text-title_bold slds-m-bottom_small">
+                    Total Payment Amount: {totalPaymentAmount}
+                </div>
+
+                <c-fec_-related-list-paging records={paymentHistory} columns={paymentHistoryColumns}
+                    sorted-by="Payment History">
+                </c-fec_-related-list-paging>
+
+            </lightning-accordion-section>
+
+            <!-- Real-time Payment -->
+            <lightning-accordion-section name="realtimePayment" label="Real-time Payment">
+
+                <c-fec_-related-list-paging records={realtimePayments} columns={realtimePaymentColumns}
+                    sorted-by="Real-time Payment" show-refresh onrefresh={handleRefreshData}>
+                </c-fec_-related-list-paging>
+
+            </lightning-accordion-section>
+
+        </lightning-accordion>
+    </div>
+</template>
