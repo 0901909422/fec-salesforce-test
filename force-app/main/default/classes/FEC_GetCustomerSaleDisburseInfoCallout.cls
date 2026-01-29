@@ -1,5 +1,9 @@
 public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
     
+
+
+    private static final String ENDPOINT = '/cif_customersaledisburseinfo/GetCustomerSaleDisburseInfo';
+    private static final String MOCKUP_ENDPOINT = 'https://efd335c2-f883-4625-83c1-74ec1d81085d.mock.pstmn.io';
     //=============== REQUEST CLASSES ===============//
     
     public class CustomerSaleDisburseInfoRequest {
@@ -156,8 +160,12 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
         request.body = new Map<String, Object>();
         String requestBody = JSON.serialize(request);
         
+
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         HttpRequest req = new HttpRequest();
-        req.setEndpoint('https://efd335c2-f883-4625-83c1-74ec1d81085d.mock.pstmn.io'); // Named Credential
+
+        req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
+        // req.setEndpoint('https://efd335c2-f883-4625-83c1-74ec1d81085d.mock.pstmn.io'); // Named Credential
         req.setMethod('POST');
         req.setHeader('Content-Type', 'application/json');
         req.setBody(requestBody);
@@ -283,7 +291,7 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
         return result;
     }
     
-    //=============== MAIN METHOD WITH VALIDATION FOR LWC ===============//
+    //=============== MAIN METHOD WITH VALIDATION ===============//
     
     @AuraEnabled(cacheable=false)
     public static ResultWrapper getCustomerSaleDisburseInfoWithValidation(String applicationId) {
