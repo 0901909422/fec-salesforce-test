@@ -17,6 +17,10 @@
         <members>FEC_Additional_Field__c</members>
 		<members>FEC_Actual_Master_Data_Setting__c</members>
 		<members>FEC_Actual_Nature_of_Case__c</members>
+		<members>FEC_Routing_Action_History__c</members>
+		<members>FEC_Stage_Change__c</members>
+		<members>FEC_Stage_Screen__c</members>
+		<members>FEC_Action_Button__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
