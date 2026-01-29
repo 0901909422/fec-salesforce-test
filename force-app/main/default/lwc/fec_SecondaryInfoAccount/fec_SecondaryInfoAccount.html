@@ -1,0 +1,142 @@
+<template>
+    <template if:true={hasData}>
+        <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+            <c-fec_-common-record-detail-section section-title="Limit" fields={limitFields}
+                onbuttonclick={handleButtonClick}>
+            </c-fec_-common-record-detail-section>
+            <c-fec_-common-record-detail-section section-title="Main Card" fields={mainCardFields}
+                show-refresh-button="true" onrefresh={handleRefresh}>
+            </c-fec_-common-record-detail-section>
+            <c-fec_-common-record-detail-section section-title="PIN" fields={pinFields} show-refresh-button="true"
+                onrefresh={handleRefresh}>
+            </c-fec_-common-record-detail-section>
+            <c-fec_-common-record-detail-section section-title="Fee" fields={feeFields}>
+            </c-fec_-common-record-detail-section>
+            <c-fec_-common-record-detail-section section-title="Collections Info" fields={collectionsInfoFields}
+                show-refresh-button="true" onrefresh={handleRefresh}>
+            </c-fec_-common-record-detail-section>
+            <c-fec_-common-record-detail-section section-title="Sales Info" fields={salesInfoFields}
+                onbuttonclick={handleButtonClick}>
+            </c-fec_-common-record-detail-section>
+        </lightning-accordion>
+    </template>
+    <template if:false={hasData}>
+        <div class="slds-accordion">
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                Limit&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    Tải Dữ liệu Không Thành Công
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                Main Card&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    Tải Dữ liệu Không Thành Công
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                PIN&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    Tải Dữ liệu Không Thành Công
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                               Fee&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    Tải Dữ liệu Không Thành Công
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                               Collections Info&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    Tải Dữ liệu Không Thành Công
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                               Sales Info&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    Tải Dữ liệu Không Thành Công
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+        </div>
+    </template>
+
+</template>
