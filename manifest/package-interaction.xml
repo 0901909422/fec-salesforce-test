@@ -132,6 +132,12 @@
 		<name>Layout</name>
 	</types>
     <types>
+		<members>FEC_MSG_Create_Interaction_Error</members>
+		<members>FEC_MSG_Create_Interaction_Success</members>
+		<members>FEC_MSG_Genesys_Phone_Number_Null</members>
+		<members>FEC_MSG_Genesys_Request_Invalid_Type</members>
+		<members>FEC_MSG_Genesys_Request_Null</members>
+		<members>FEC_MSG_Genesys_Request_Type_Null</members>
 		<members>FEC_MSG_Interaction_Case_DTO_Null</members>
 		<name>CustomLabel</name>
 	</types>

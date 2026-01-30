@@ -1,6 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
+        <fullName>FEC_MSG_Create_Interaction_Error</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Interaction Error</shortDescription>
+        <value>Create Interaction failed: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Interaction_Success</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Interaction Success</shortDescription>
+        <value>Create Interaction successful</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Genesys_Phone_Number_Null</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Genesys Phone Number Null</shortDescription>
+        <value>PhoneNumber is required for Outbound call</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Genesys_Request_Invalid_Type</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Genesys Request Invalid Type</shortDescription>
+        <value>Invalid Type. Must be either OutboundEstablished or InboundRinging</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Genesys_Request_Null</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Genesys Request Null</shortDescription>
+        <value>Invalid request: Request body is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Genesys_Request_Type_Null</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Genesys Request Type Null</shortDescription>
+        <value>Type is required</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Interaction_Case_DTO_Null</fullName>
         <categories>Interaction</categories>
         <language>en_US</language>
