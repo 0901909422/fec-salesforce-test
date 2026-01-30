@@ -5,6 +5,8 @@
 		<members>FEC_SearchController</members>
         <members>FEC_CreateCaseHanlder</members>
 		<members>FEC_CreateInteractionGenesys</members>
+		<members>FEC_MockupEndpoint</members>
+		<members>FEC_ConstantCommon</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -86,7 +88,12 @@
         <members>FEC_IPP__c</members>
         <members>FEC_IPP_Schedule__c</members>
 		<members>FEC_Payment_History__c</members>
+        <members>FEC_API_Config__mdt</members>
 		<name>CustomObject</name>
+	</types>
+    <types>
+		<members>FEC_API_Config.FEC_Get_Customer_List</members>
+		<name>CustomMetadata</name>
 	</types>
     <types>
 		<members>Case.Interaction Process</members>
@@ -119,6 +126,14 @@
 		<members>FEC_Service_UtilityBar</members>
         <members>FEC_Interaction_Case_Record_Page</members>
 		<name>FlexiPage</name>
+	</types>
+	<types>
+		<members>FEC_API_Config__mdt-FEC API Config Layout</members>
+		<name>Layout</name>
+	</types>
+    <types>
+		<members>FEC_MSG_Interaction_Case_DTO_Null</members>
+		<name>CustomLabel</name>
 	</types>
     <types>
 		<members>feclogo</members>

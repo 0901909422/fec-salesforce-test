@@ -63,9 +63,6 @@ public with sharing class FEC_GetCustomerList {
         public String PropertyStatus;
     }
 
-    private static final String ENDPOINT = '/CIF_CustomerSearch';
-    private static final String MOCKUP_ENDPOINT = 'https://731059cf-33c6-4cf7-b251-898b563c112b.mock.pstmn.io';
-
     /* ================================
      * PUBLIC CALL METHOD
      * ================================ */
@@ -84,19 +81,20 @@ public with sharing class FEC_GetCustomerList {
     ) {
 
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_List');
         HttpRequest req = new HttpRequest();
         req.setEndpoint(
         apiSetting?.FEC_Call_Mock__c
-            ? MOCKUP_ENDPOINT
-            : (apiSetting?.FEC_Endpoint__c + ENDPOINT)
+            ? FEC_MockupEndpoint.GET_CUSTOMER_LIST_ENDPOINT_MOCKUP
+            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c)
         );
         req.setMethod('POST');
         req.setTimeout(120000);
-        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
-        req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CustomerSearch/GetCustomerList');
+        req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
+        req.setHeader('SOAPAction', apiConfig?.FEC_SOAP_Action__c);
 
         String transId = String.valueOf(UUID.randomUUID());
-        String dateTimeStr = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss.SSS');
+        String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT);
 
         validate(
             transId,

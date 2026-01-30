@@ -62,21 +62,22 @@ public without sharing class FEC_CreateCaseHanlder {
     public static FEC_InteractionCaseResponse createInteractionCase(FEC_InteractionCaseDTO dto) {
         
         if (dto == null) {
-            throw new IllegalArgumentException('InteractionCaseDTO cannot be null');
+            throw new IllegalArgumentException(System.Label.FEC_MSG_Interaction_Case_DTO_Null);
         }
-        Map<String, Id> rtMap = getRecordTypeIds();
+        Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+            .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
         Case interactionCase = new Case();
-        interactionCase.RecordTypeId = rtMap.get('Interaction');
+        interactionCase.RecordTypeId = interactionRecordTypeId;
         
         // ---------------------------
         // CHANNEL / STATUS
         // ---------------------------
         
         
-        if( dto.channel == 'InboundRinging' ) {
-            interactionCase.FEC_Channel__c = 'Inbound';
-        }else if ( dto.channel == 'OutboundEstablished' ) {
-            interactionCase.FEC_Channel__c = 'Outbound';
+        if( dto.channel == FEC_ConstantCommon.CHANNEL_INBOUND_API ) {
+            interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
+        }else if ( dto.channel == FEC_ConstantCommon.CHANNEL_OUTBOUND_API ) {
+            interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
         }
         if( dto.subChannel != null ) {
             interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
@@ -141,15 +142,16 @@ public without sharing class FEC_CreateCaseHanlder {
     public static Case createInteractionCaseGenesys(FEC_InteractionCaseGenesysDTO dto) {
         
         if (dto == null) {
-            throw new IllegalArgumentException('InteractionCaseDTO cannot be null');
+            throw new IllegalArgumentException(System.Label.FEC_MSG_Interaction_Case_DTO_Null);
         }
-        Map<String, Id> rtMap = getRecordTypeIds();
+        Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+            .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
         Case interactionCase = new Case();
-        interactionCase.RecordTypeId = rtMap.get('Interaction');
-        if( dto.type == 'InboundRinging' ) {
-            interactionCase.FEC_Channel__c = 'Inbound';
-        }else if ( dto.type == 'OutboundEstablished' ) {
-            interactionCase.FEC_Channel__c = 'Outbound';
+        interactionCase.RecordTypeId = interactionRecordTypeId;
+        if( dto.type == FEC_ConstantCommon.CHANNEL_INBOUND_API ) {
+            interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
+        }else if ( dto.type == FEC_ConstantCommon.CHANNEL_OUTBOUND_API ) {
+            interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
         }
         interactionCase.FEC_External_Interaction_ID__c = dto.genesysInteractionID;
         interactionCase.Status = 'Open';
@@ -190,9 +192,10 @@ public without sharing class FEC_CreateCaseHanlder {
         FEC_CustomerCaseDTO dto,
     Id interactionCaseId
     ) {
-        Map<String, Id> rtMap = getRecordTypeIds();
+        Id customerRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+            .get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME).getRecordTypeId();
         Case c = new Case();
-        c.RecordTypeId = rtMap.get('Customer_Case');
+        c.RecordTypeId = customerRecordTypeId;
         
         c.FEC_Customer_Name__c = dto.customerName;
         c.FEC_Phone_Number__c = dto.phoneNumber;
@@ -208,20 +211,6 @@ public without sharing class FEC_CreateCaseHanlder {
         
         insert c;
         return c;
-    }
-    
-    // -------------------------------------------
-    private static Map<String, Id> getRecordTypeIds() {
-        Map<String, Id> rtMap = new Map<String, Id>();
-        for (RecordType rt : [
-            SELECT Id, DeveloperName
-            FROM RecordType
-            WHERE SObjectType = 'Case'
-            AND DeveloperName IN ('Interaction', 'Customer_Case')
-        ]) {
-            rtMap.put(rt.DeveloperName, rt.Id);
-        }
-        return rtMap;
     }
     
 }

@@ -81,42 +81,17 @@ public without sharing class FEC_CreateInteractionGenesys {
         }
     }
     
-    @AuraEnabled
-    public static InteractionResult createDummyInteraction() {
-        try {
-            GenesysRequest request = new GenesysRequest();
-            request.phoneNumber = '1234567890';
-            request.nationalID = '123456789';
-            request.genesysInteractionID =UUID.randomUUID()
-                .toString()
-                .replace('-', '')
-                .substring(0, 20);
-            
-            request.contractNum = 'dummy_contract_num';
-            request.cardAccountNum = 'dummy_card_account_num';
-            request.agentID = 'dummy_id'+Math.random();
-            request.campaignName = 'dummy_campaign_name';
-            request.type = 'OutboundEstablished';
-            request.method = 'Auto';
-            InteractionResult result = createInteraction(request);
-            return result;
-        } catch (Exception e) {
-            System.debug('Error creating dummy interaction: ' + e.getMessage());
-            return new InteractionResult(false, 'Create Dummy Interaction failed: ' + e.getMessage(), null, null);
-        }
-    }
-    
     private static String validateRequest(GenesysRequest req) {
         
         if (req == null) return 'Invalid request: Request body is null';
         if (String.isBlank(req.type)) return 'Type is required';
 
-        if(req.type != 'OutboundEstablished' && req.type != 'InboundRinging') {
+        if(req.type != FEC_ConstantCommon.CHANNEL_OUTBOUND_API && req.type != FEC_ConstantCommon.CHANNEL_INBOUND_API) {
             return 'Invalid Type. Must be either OutboundEstablished or InboundRinging';
         }
         
         // Call channel must have phone number
-        if (( req.type == 'OutboundEstablished' )
+        if (( req.type == FEC_ConstantCommon.CHANNEL_OUTBOUND_API )
             && String.isBlank(req.phoneNumber))
         {
             return 'PhoneNumber is required for Outbound calls';
@@ -126,7 +101,4 @@ public without sharing class FEC_CreateInteractionGenesys {
         return null; // no error
     }
     
-    private static void errorResponse(String code, String status, String message) {
-        System.debug('Error Response - Code: ' + code + ', Status: ' + status + ', Message: ' + message);
-    }
 }
