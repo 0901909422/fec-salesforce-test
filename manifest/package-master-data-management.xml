@@ -14,7 +14,7 @@
 		<members>FEC_Sub_Category__c</members>
 		<members>FEC_Sub_Code__c</members>
 		<members>FEC_Case_Stage__c</members>
-        <members>FEC_Additional_Field__c</members>
+        <members>FEC_Additional_Info__c</members>
 		<members>FEC_Actual_Master_Data_Setting__c</members>
 		<members>FEC_Actual_Nature_of_Case__c</members>
 		<members>FEC_Routing_Action_History__c</members>
@@ -36,6 +36,7 @@
 	<types>
 		<members>Customer_Type</members>
 		<members>Target_Group</members>
+		<members>FEC_Verify_Information</members>
 		<name>GlobalValueSet</name>
 	</types>
     <version>65.0</version>
