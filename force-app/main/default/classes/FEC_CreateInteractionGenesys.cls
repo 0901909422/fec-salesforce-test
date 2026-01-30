@@ -74,30 +74,29 @@ public without sharing class FEC_CreateInteractionGenesys {
             response.campaignName = createdCase.FEC_Genesys_campaign_Name__c;
             response.type = createdCase.FEC_Channel__c;
 
-            return new InteractionResult(true, 'Create Interaction successful', createdCase.Id, response);
+            return new InteractionResult(true, System.Label.FEC_MSG_Create_Interaction_Success, createdCase.Id, response);
         } catch (Exception e) {
             System.debug('Error creating interaction: ' + e.getMessage());
-            return new InteractionResult(false, 'Create Interaction failed: ' + e.getMessage(), null, null);
+            return new InteractionResult(false, String.format(System.Label.FEC_MSG_Create_Interaction_Error, new List<String>{e.getMessage()}), null, null);
         }
     }
     
     private static String validateRequest(GenesysRequest req) {
         
-        if (req == null) return 'Invalid request: Request body is null';
-        if (String.isBlank(req.type)) return 'Type is required';
-
-        if(req.type != FEC_ConstantCommon.CHANNEL_OUTBOUND_API && req.type != FEC_ConstantCommon.CHANNEL_INBOUND_API) {
-            return 'Invalid Type. Must be either OutboundEstablished or InboundRinging';
+        if (req == null) {
+            return System.Label.FEC_MSG_Genesys_Request_Null;
         }
-        
+        if (String.isBlank(req.type)) {
+            return System.Label.FEC_MSG_Genesys_Request_Type_Null;
+        }
+        if(req.type != FEC_ConstantCommon.CHANNEL_OUTBOUND_API && req.type != FEC_ConstantCommon.CHANNEL_INBOUND_API) {
+            return System.Label.FEC_MSG_Genesys_Request_Invalid_Type;
+        }
         // Call channel must have phone number
         if (( req.type == FEC_ConstantCommon.CHANNEL_OUTBOUND_API )
-            && String.isBlank(req.phoneNumber))
-        {
-            return 'PhoneNumber is required for Outbound calls';
+                && String.isBlank(req.phoneNumber)) {
+            return System.Label.FEC_MSG_Genesys_Phone_Number_Null;
         }
-        
-        
         return null; // no error
     }
     
