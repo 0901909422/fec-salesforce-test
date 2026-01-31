@@ -1,5 +1,4 @@
 public with sharing class FEC_GetCustomerList {
-
     /* ================================
      * RESPONSE MODELS
      * ================================ */
@@ -79,20 +78,7 @@ public with sharing class FEC_GetCustomerList {
         String email,
         String personId
     ) {
-
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_List');
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(
-        apiSetting?.FEC_Call_Mock__c
-            ? FEC_MockupEndpoint.GET_CUSTOMER_LIST_ENDPOINT_MOCKUP
-            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c)
-        );
-        req.setMethod('POST');
-        req.setTimeout(120000);
-        req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
-        req.setHeader('SOAPAction', apiConfig?.FEC_SOAP_Action__c);
-
+        
         String transId = String.valueOf(UUID.randomUUID());
         String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT);
 
@@ -108,13 +94,37 @@ public with sharing class FEC_GetCustomerList {
             email,
             personId
         );
-        req.setBody(buildSoapBody(
-            transId, requestorId, dateTimeStr,
-            phoneNumber, isReferenceSearch,
-            fullName, nationalId, applicationId,
-            creditCardNumber, accountNumber,
-            contractNumber, email, personId
-        ));
+
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_List');
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(
+            apiSetting?.FEC_Call_Mock__c
+            ? FEC_MockupEndpoint.GET_CUSTOMER_LIST_ENDPOINT_MOCKUP
+            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c)
+        );
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
+        req.setHeader('SOAPAction', apiConfig?.FEC_SOAP_Action__c);
+
+        req.setBody(
+            buildSoapBody(
+                transId,
+                requestorId,
+                dateTimeStr,
+                phoneNumber,
+                isReferenceSearch,
+                fullName,
+                nationalId,
+                applicationId,
+                creditCardNumber,
+                accountNumber,
+                contractNumber,
+                email,
+                personId
+            )
+        );
 
         Http http = new Http();
         HttpResponse res = http.send(req);
@@ -143,49 +153,76 @@ public with sharing class FEC_GetCustomerList {
         String email,
         String personId
     ) {
+        Dom.Document doc = new Dom.Document();
 
-        String xml =
-            '<?xml version="1.0" encoding="utf-8"?>' +
-            '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-            'xmlns:cif="http://fecredit.com.vn/CIF_CustomerSearch">' +
-            '<soapenv:Header/>' +
-            '<soapenv:Body>' +
-            '<cif:GetCustomerList>' +
-            '<Sys>' +
-            '<TransID>' + transId + '</TransID>' +
-            '<RequestorID>' + requestorId + '</RequestorID>' +
-            '<DateTime>' + dateTimeStr + '</DateTime>' +
-            '</Sys>' +
-            '<Parameters>';
+        Dom.XmlNode envelope = doc.createRootElement(
+            'soapenv:Envelope',
+            'http://schemas.xmlsoap.org/soap/envelope/',
+            null
+        );
+        envelope.setAttribute(
+            'xmlns:cif',
+            'http://fecredit.com.vn/CIF_CustomerSearch'
+        );
+
+        envelope.addChildElement('soapenv:Header', null, null);
+
+        Dom.XmlNode body = envelope.addChildElement(
+            'soapenv:Body',
+            null,
+            null
+        );
+
+        Dom.XmlNode action = body.addChildElement(
+            'cif:GetCustomerList',
+            null,
+            null
+        );
+
+        Dom.XmlNode sys = action.addChildElement('Sys', null, null);
+        sys.addChildElement('TransID', null, null).addTextNode(transId);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+
+        Dom.XmlNode params = action.addChildElement('Parameters', null, null);
 
         if (String.isNotBlank(phoneNumber)) {
-            xml += '<PhoneNumber IsReferencesSearch="' +
-                String.valueOf(isReferenceSearch) + '">' +
-                phoneNumber + '</PhoneNumber>';
+            Dom.XmlNode phone = params.addChildElement('PhoneNumber', null, null);
+            phone.setAttribute(
+                'IsReferencesSearch',
+                String.valueOf(isReferenceSearch)
+            );
+            phone.addTextNode(phoneNumber);
         }
+
         if (String.isNotBlank(fullName))
-            xml += '<FullName>' + fullName + '</FullName>';
+            params.addChildElement('FullName', null, null).addTextNode(fullName);
+
         if (String.isNotBlank(nationalId))
-            xml += '<NationalID>' + nationalId + '</NationalID>';
+            params.addChildElement('NationalID', null, null).addTextNode(nationalId);
+
         if (String.isNotBlank(applicationId))
-            xml += '<ApplicationID>' + applicationId + '</ApplicationID>';
+            params.addChildElement('ApplicationID', null, null).addTextNode(applicationId);
+
         if (String.isNotBlank(creditCardNumber))
-            xml += '<CreditCardNumber>' + creditCardNumber + '</CreditCardNumber>';
+            params.addChildElement('CreditCardNumber', null, null)
+                  .addTextNode(creditCardNumber);
+
         if (String.isNotBlank(accountNumber))
-            xml += '<AccountNumber>' + accountNumber + '</AccountNumber>';
+            params.addChildElement('AccountNumber', null, null)
+                  .addTextNode(accountNumber);
+
         if (String.isNotBlank(contractNumber))
-            xml += '<ContractNumber>' + contractNumber + '</ContractNumber>';
+            params.addChildElement('ContractNumber', null, null)
+                  .addTextNode(contractNumber);
+
         if (String.isNotBlank(email))
-            xml += '<Email>' + email + '</Email>';
+            params.addChildElement('Email', null, null).addTextNode(email);
+
         if (String.isNotBlank(personId))
-            xml += '<PersonId>' + personId + '</PersonId>';
+            params.addChildElement('PersonId', null, null).addTextNode(personId);
 
-        xml += '</Parameters>' +
-               '</cif:GetCustomerList>' +
-               '</soapenv:Body>' +
-               '</soapenv:Envelope>';
-
-        return xml;
+        return doc.toXmlString();
     }
 
     /* ================================
