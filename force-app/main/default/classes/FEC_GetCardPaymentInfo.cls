@@ -11,12 +11,8 @@
 
  public with sharing class FEC_GetCardPaymentInfo {
 
-    private static final String SOAP_NS = 'http://schemas.xmlsoap.org/soap/envelope/';
     private static final String CIF_NS = 'http://fecredit.com.vn/CIF_CardInfo'; 
 
-    private static final String ENDPOINT = '/CIF_CardInfo';
-    private static final String MOCKUP_ENDPOINT = 'https://0ad0dbbf-693f-473e-a8db-d69d703f19a2.mock.pstmn.io/CIF_CardInfo';
-    
     // Cấu hình Validation
     private static final Integer MAX_ID_LEN = 36;
     private static final Integer MAX_ACCOUNT_LEN = 255;
@@ -60,9 +56,9 @@
             // C. TẠO REQUEST XML
             // ---------------------------------------------------------
             Dom.Document doc = new Dom.Document();
-            Dom.XmlNode envelope = doc.createRootElement('Envelope', SOAP_NS, 'soapenv');
-            envelope.addChildElement('Header', SOAP_NS, null);
-            Dom.XmlNode body = envelope.addChildElement('Body', SOAP_NS, null);
+            Dom.XmlNode envelope = doc.createRootElement('Envelope', FEC_ConstantCommon.SOAP_ENV, 'soapenv');
+            envelope.addChildElement('Header', FEC_ConstantCommon.SOAP_ENV, null);
+            Dom.XmlNode body = envelope.addChildElement('Body', FEC_ConstantCommon.SOAP_ENV, null);
             Dom.XmlNode requestNode = body.addChildElement('GetCardPaymentInfo', CIF_NS, 'cif');
             
             // Sys Block
@@ -75,23 +71,17 @@
             requestNode.addChildElement('AccountNumber', null, null).addTextNode(accountNumber);
             requestNode.addChildElement('Date', null, null).addTextNode(dateStr);
 
-            // Lấy cấu hình API từ Custom Setting
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-
             // ---------------------------------------------------------
             // D. GỬI CALLOUT
             // ---------------------------------------------------------
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
-            // req.setEndpoint('https://0ad0dbbf-693f-473e-a8db-d69d703f19a2.mock.pstmn.io/CIF_CardInfo'); 
-            req.setMethod('POST');
-            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
-            req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CardInfo/GetCardPaymentInfo'); 
-            req.setBodyDocument(doc);
-            
-            Http http = new Http();
-            HttpResponse res = http.send(req);
-            
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Payment_Info');
+
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_CARD_PAYMENT_INFO_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, doc, '');
+
             // ---------------------------------------------------------
             // E. XỬ LÝ RESPONSE
             // ---------------------------------------------------------
@@ -163,7 +153,7 @@
     private static CardPaymentResult parseResponse(Dom.Document doc) {
         CardPaymentResult result = new CardPaymentResult();
         Dom.XmlNode root = doc.getRootElement();
-        Dom.XmlNode body = root.getChildElement('Body', SOAP_NS);
+        Dom.XmlNode body = root.getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
         Dom.XmlNode responseNode = body.getChildElement('GetCardPaymentInfoResponse', CIF_NS);
         
         if (responseNode != null) {

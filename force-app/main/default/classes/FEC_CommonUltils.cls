@@ -117,4 +117,24 @@ public with sharing class FEC_CommonUltils {
       return null;
     }
   }
+
+  public static HttpResponse calloutApi(String endpoint, String method, String contentType, String soapAction, Dom.Document docBody, String body) {
+    HttpRequest req = new HttpRequest();
+    req.setEndpoint(endpoint);
+    req.setMethod(method);
+    req.setHeader('Content-Type', contentType);
+    if (String.isNotBlank(soapAction)) {
+      req.setHeader('SOAPAction', soapAction);
+    }
+    if (docBody != null) {
+      req.setBodyDocument(docBody);
+    } else {
+      req.setBody(body);
+    }
+    req.setTimeout(120000); // 120 seconds timeout
+
+    Http http = new Http();
+    HttpResponse res = http.send(req);
+    return res;
+  }
 }

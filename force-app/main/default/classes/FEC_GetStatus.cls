@@ -11,7 +11,6 @@
 
 public with sharing class FEC_GetStatus {
 
-    private static final String SOAP_NS = 'http://schemas.xmlsoap.org/soap/envelope/';
     private static final String SERVICE_NS = 'http://fecredit.com.vn/CMS_DeliveryCardStatusWS'; 
     
     private static final String ENDPOINT = '/CMS_DeliveryCardStatusWS';
@@ -52,9 +51,9 @@ public with sharing class FEC_GetStatus {
 
             // 3. TẠO REQUEST XML
             Dom.Document doc = new Dom.Document();
-            Dom.XmlNode envelope = doc.createRootElement('Envelope', SOAP_NS, 'soapenv');
-            envelope.addChildElement('Header', SOAP_NS, null);
-            Dom.XmlNode body = envelope.addChildElement('Body', SOAP_NS, null);
+            Dom.XmlNode envelope = doc.createRootElement('Envelope', FEC_ConstantCommon.SOAP_ENV, 'soapenv');
+            envelope.addChildElement('Header', FEC_ConstantCommon.SOAP_ENV, null);
+            Dom.XmlNode body = envelope.addChildElement('Body', FEC_ConstantCommon.SOAP_ENV, null);
             Dom.XmlNode requestNode = body.addChildElement('GetStatus', SERVICE_NS, 'cms');
             
             Dom.XmlNode sysNode = requestNode.addChildElement('Sys', null, null);
@@ -124,7 +123,7 @@ public with sharing class FEC_GetStatus {
     private static CardDeliveryInfo parseDeliveryResponse(Dom.Document doc) {
         CardDeliveryInfo info = new CardDeliveryInfo();
         Dom.XmlNode root = doc.getRootElement();
-        Dom.XmlNode body = root.getChildElement('Body', SOAP_NS);
+        Dom.XmlNode body = root.getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
         Dom.XmlNode responseNode = body.getChildElement('GetStatusResponse', SERVICE_NS);
         
         if (responseNode != null) {

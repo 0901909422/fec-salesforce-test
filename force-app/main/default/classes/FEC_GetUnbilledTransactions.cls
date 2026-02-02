@@ -157,7 +157,7 @@ public with sharing class FEC_GetUnbilledTransactions {
         Dom.XmlNode envelope = doc.getRootElement();
         Dom.XmlNode bodyNode = envelope.getChildElement(
             'Body',
-            'http://schemas.xmlsoap.org/soap/envelope/'
+            FEC_ConstantCommon.SOAP_ENV
         );
 
         Dom.XmlNode responseNode;

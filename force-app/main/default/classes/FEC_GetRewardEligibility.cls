@@ -11,13 +11,7 @@
 ****************************************************************************************/
 
 public with sharing class FEC_GetRewardEligibility {
-    /* =====================================================
-       CONSTANTS
-       ===================================================== 
-    */
-    private static final String ENDPOINT = '/CMS_RewardWS';
-    private static final String MOCKUP_ENDPOINT = 'https://ac989dc3-34ec-4c62-98cf-54ea477582c2.mock.pstmn.io';
-
+    
     // =========================================================================
     // PUBLIC METHOD
     // =========================================================================
@@ -29,15 +23,6 @@ public with sharing class FEC_GetRewardEligibility {
     ) {
         try {
             validateRequest(transId, requestorId, dateTimeStr, accountNumber);
-
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
-            req.setMethod('POST');
-            req.setTimeout(120000);
-            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
-            req.setHeader('SOAPAction', 'http://esbservice.fecredit.org/CMS_RewardWS/GetRewardEligibility');
 
             // ================= SOAP REQUEST BODY =================
             String soapBody =
@@ -57,9 +42,13 @@ public with sharing class FEC_GetRewardEligibility {
                     '</soapenv:Body>' +
                 '</soapenv:Envelope>';
 
-            req.setBody(soapBody);
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Reward_Eligibility');
 
-            HttpResponse res = new Http().send(req);
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_REWARD_ELIGIBILITY_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException('Reward service response is empty or invalid: '  + res.getStatusCode());
@@ -154,7 +143,7 @@ public with sharing class FEC_GetRewardEligibility {
         doc.load(xml);
 
         Dom.XmlNode bodyNode = doc.getRootElement()
-            .getChildElement('Body', 'http://schemas.xmlsoap.org/soap/envelope/');
+            .getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
 
         if (bodyNode == null) {
             throw new CalloutException('Invalid SOAP response: Body not found');

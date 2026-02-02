@@ -1,9 +1,5 @@
 public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
     
-
-
-    private static final String ENDPOINT = '/cif_customersaledisburseinfo/GetCustomerSaleDisburseInfo';
-    private static final String MOCKUP_ENDPOINT = 'https://efd335c2-f883-4625-83c1-74ec1d81085d.mock.pstmn.io';
     //=============== REQUEST CLASSES ===============//
     
     public class CustomerSaleDisburseInfoRequest {
@@ -160,19 +156,13 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
         request.body = new Map<String, Object>();
         String requestBody = JSON.serialize(request);
         
-
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        HttpRequest req = new HttpRequest();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_Sale_Disburse_Info');
 
-        req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
-        // req.setEndpoint('https://efd335c2-f883-4625-83c1-74ec1d81085d.mock.pstmn.io'); // Named Credential
-        req.setMethod('POST');
-        req.setHeader('Content-Type', 'application/json');
-        req.setBody(requestBody);
-        req.setTimeout(120000);
-        
-        Http http = new Http();
-        HttpResponse resp = http.send(req);
+        String endpoint = apiSetting?.FEC_Call_Mock__c
+            ? FEC_MockupEndpoint.GET_CUSTOMER_SALE_DISBURSE_INFO_ENDPOINT_MOCKUP
+            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE_JSON, '', null, requestBody);
 
         // Parse response
         CustomerSaleDisburseInfoResponse response;

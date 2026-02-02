@@ -1,8 +1,5 @@
 public with sharing class FEC_GetIPPDetailsCallout {
 
-    private static final String ENDPOINT =
-        'https://api-internal.fecredit.com.vn/EStatementService';
-
     //=============== VALIDATION CLASS ===============//
     
     public class ValidationResult {
@@ -138,18 +135,15 @@ public with sharing class FEC_GetIPPDetailsCallout {
         }
 
         // Step 3: Build and send request
-        HttpRequest req = new HttpRequest();
-        // req.setEndpoint(ENDPOINT);
-        req.setEndpoint('https://5fea0f8e-afdd-4820-aead-2a9a1fef654e.mock.pstmn.io');
-        req.setMethod('POST');
-        req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
-        req.setHeader('SOAPAction', 'GetIPPDetails');
-        req.setTimeout(120000);
+        String body = buildSoapRequest(reqData, transId, requestorId, dateTimeValue);
 
-        req.setBody(buildSoapRequest(reqData, transId, requestorId, dateTimeValue));
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_IPP_Detail');
 
-        Http http = new Http();
-        HttpResponse res = http.send(req);
+        String endpoint = apiSetting?.FEC_Call_Mock__c
+            ? FEC_MockupEndpoint.GET_IPP_DETAIL_ENDPOINT_MOCKUP
+            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, body);
 
         if (res.getStatusCode() != 200) {
             throw new CalloutException(

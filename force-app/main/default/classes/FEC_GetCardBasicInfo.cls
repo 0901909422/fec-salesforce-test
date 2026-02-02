@@ -12,13 +12,6 @@
 
 public with sharing class FEC_GetCardBasicInfo {
 
-    /* =====================================================
-       CONSTANTS
-       ===================================================== 
-    */
-    private static final String ENDPOINT = '/CIF_CardInfo';
-    private static final String MOCKUP_ENDPOINT = 'https://a37ae5f8-78f8-46ca-9500-1b5bf2b9f492.mock.pstmn.io';
-    
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -129,14 +122,6 @@ public with sharing class FEC_GetCardBasicInfo {
 
             validateRequest(transID, requestorId, dateTimeStr, accountNumber);
 
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
-            req.setMethod('POST');
-            req.setTimeout(120000);
-            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
-            req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CardInfo/GetCardBasicInfo');
-
             String soapBody =
                 '<?xml version="1.0" encoding="utf-8"?>' +
                 '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
@@ -154,10 +139,13 @@ public with sharing class FEC_GetCardBasicInfo {
                     '</soapenv:Body>' +
                 '</soapenv:Envelope>';
 
-            req.setBody(soapBody);
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Basic_Info');
 
-            Http http = new Http();
-            HttpResponse res = http.send(req);
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_CARD_BASIC_INFO_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse resp = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -251,7 +239,7 @@ public with sharing class FEC_GetCardBasicInfo {
         doc.load(xml);
 
         Dom.XmlNode bodyNode = doc.getRootElement()
-            .getChildElement('Body', 'http://schemas.xmlsoap.org/soap/envelope/');
+            .getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
 
         Dom.XmlNode responseNode;
         for (Dom.XmlNode n : bodyNode.getChildElements()) {

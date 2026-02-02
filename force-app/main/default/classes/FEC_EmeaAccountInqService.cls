@@ -13,13 +13,9 @@ public with sharing class FEC_EmeaAccountInqService {
     // ==========================================
     // CONSTANTS & CONFIGURATION
     // ==========================================
-    private static final String SOAP_NS = 'http://schemas.xmlsoap.org/soap/envelope/';
     private static final String SERVICE_NS = 'http://fecredit.com.vn/CMS_VMXIntegrationWS';
     private static final String WS_RESPONSE_NS = 'http://fecredit.com.vn/cms/ws/v2'; // Namespace cho WSResponse
  
-    private static final String ENDPOINT = '/CMS_VMXIntegrationWS';
-    private static final String MOCKUP_ENDPOINT = 'https://1cbfbf4e-b6d7-46c7-9717-79036857f118.mock.pstmn.io';
-
     // ==========================================
     // 1. INPUT DTO (Data Transfer Object)
     // ==========================================
@@ -88,9 +84,9 @@ public with sharing class FEC_EmeaAccountInqService {
 
             // 3. Construct XML Request
             Dom.Document doc = new Dom.Document();
-            Dom.XmlNode envelope = doc.createRootElement('Envelope', SOAP_NS, 'soapenv');
-            envelope.addChildElement('Header', SOAP_NS, null);
-            Dom.XmlNode body = envelope.addChildElement('Body', SOAP_NS, null);
+            Dom.XmlNode envelope = doc.createRootElement('Envelope', FEC_ConstantCommon.SOAP_ENV, 'soapenv');
+            envelope.addChildElement('Header', FEC_ConstantCommon.SOAP_ENV, null);
+            Dom.XmlNode body = envelope.addChildElement('Body', FEC_ConstantCommon.SOAP_ENV, null);
             
             // Root Element: M_CMS_EMEA_ACCOUNT_INQ
             Dom.XmlNode rootRequest = body.addChildElement('M_CMS_EMEA_ACCOUNT_INQ', SERVICE_NS, 'cms');
@@ -116,22 +112,14 @@ public with sharing class FEC_EmeaAccountInqService {
                 addTextNode(msgIn, 'DUAL_IND', input.dualInd);
             }
 
-             // Lấy cấu hình API từ Custom Setting
-             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            // Lấy cấu hình API từ Custom Setting
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Emea_Account_Inq');
 
-
-            // 4. Callout Configuration
-            HttpRequest req = new HttpRequest();
-            // req.setEndpoint('https://1cbfbf4e-b6d7-46c7-9717-79036857f118.mock.pstmn.io'); 
-            req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
-            req.setMethod('POST');
-            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
-            req.setHeader('SOAPAction', 'M_CMS_EMEA_ACCOUNT_INQ'); 
-            req.setBodyDocument(doc);
-            req.setTimeout(120000); // 120 seconds timeout
-
-            Http http = new Http();
-            HttpResponse res = http.send(req);
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.EMEA_ACCOUNT_INQ_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, doc, '');
 
             // 5. Process Response
             if (res.getStatusCode() == 200) {
@@ -194,7 +182,7 @@ public with sharing class FEC_EmeaAccountInqService {
             wsResponse = root;
         } else if (rootName == 'Envelope') {
             // Nếu là SOAP envelope, tìm Body -> WSResponse hoặc M_CMS_EMEA_ACCOUNT_INQResponse
-            Dom.XmlNode body = root.getChildElement('Body', SOAP_NS);
+            Dom.XmlNode body = root.getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
             if (body != null) {
                 // Thử tìm WSResponse trong Body
                 wsResponse = body.getChildElement('WSResponse', WS_RESPONSE_NS);

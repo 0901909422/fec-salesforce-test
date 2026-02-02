@@ -12,13 +12,6 @@
 
 public with sharing class FEC_GetCardFinancialTransactions {
 
-    /* =====================================================
-       CONSTANTS
-       ===================================================== 
-    */
-    private static final String ENDPOINT = '/CIF_CardInfo';
-    private static final String MOCKUP_ENDPOINT = 'https://9d19f455-8916-4c0f-873d-b9e022bcdc75.mock.pstmn.io';
-
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -70,14 +63,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
         try {
 
             validateRequest(transID, requestorId, dateTimeStr, accountNumber, fromDate,toDate);
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
-            req.setMethod('POST');
-            req.setTimeout(120000);
-            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
-            req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CardInfo/GetCardFinancialTransactions');
-
+            
             // ================= SOAP REQUEST BODY =================
             String soapBody =
                 '<?xml version="1.0" encoding="utf-8"?>' +
@@ -98,10 +84,13 @@ public with sharing class FEC_GetCardFinancialTransactions {
                     '</soapenv:Body>' +
                 '</soapenv:Envelope>';
 
-            req.setBody(soapBody);
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Financial_Transaction');
 
-            Http http = new Http();
-            HttpResponse res = http.send(req);
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_CARD_FINANCIAL_TRANSACTION_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse resp = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -208,7 +197,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
 
         Dom.XmlNode envelope = doc.getRootElement();
         Dom.XmlNode bodyNode =
-            envelope.getChildElement('Body', 'http://schemas.xmlsoap.org/soap/envelope/');
+            envelope.getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
 
         Dom.XmlNode responseNode;
         for (Dom.XmlNode n : bodyNode.getChildElements()) {

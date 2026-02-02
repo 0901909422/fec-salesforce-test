@@ -144,16 +144,13 @@ public without sharing class FEC_GetAppStatusCallout {
         
         String requestBodyJson = JSON.serialize(request);
         
-        // Build HTTP request
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint('https://02c8f939-7fcd-4ee0-944b-26af46ecb5ca.mock.pstmn.io'); // Named Credential - cần cấu hình trong Salesforce
-        req.setMethod('POST');
-        req.setHeader('Content-Type', 'application/json');
-        req.setBody(requestBodyJson);
-        req.setTimeout(120000); // 2 minutes timeout
-        
-        Http http = new Http();
-        HttpResponse resp = http.send(req);
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_App_Status');
+
+        String endpoint = apiSetting?.FEC_Call_Mock__c
+            ? FEC_MockupEndpoint.GET_APP_STATUS_ENDPOINT_MOCKUP
+            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+        HttpResponse resp = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE_JSON, '', null, requestBodyJson);
 
         // Parse response
         AppStatusResponse response;
