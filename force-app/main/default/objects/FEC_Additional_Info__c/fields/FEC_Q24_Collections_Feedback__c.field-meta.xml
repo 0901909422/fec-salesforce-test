@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Q24_Collections_Feedback__c</fullName>
+    <label>Q24 Collections Feedback</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Unsuitable Collection Channel</fullName>
+                <default>false</default>
+                <label>Unsuitable Collection Channel</label>
+            </value>
+            <value>
+                <fullName>Reason Not Disclosed</fullName>
+                <default>false</default>
+                <label>Reason Not Disclosed</label>
+            </value>
+            <value>
+                <fullName>No Improvement Needed</fullName>
+                <default>false</default>
+                <label>No Improvement Needed</label>
+            </value>
+            <value>
+                <fullName>Other Dissatisfaction</fullName>
+                <default>false</default>
+                <label>Other Dissatisfaction</label>
+            </value>
+            <value>
+                <fullName>Early Debt Reminder</fullName>
+                <default>false</default>
+                <label>Early Debt Reminder</label>
+            </value>
+            <value>
+                <fullName>Excessive Debt Reminders</fullName>
+                <default>false</default>
+                <label>Excessive Debt Reminders</label>
+            </value>
+            <value>
+                <fullName>Collection Staff Attitude</fullName>
+                <default>false</default>
+                <label>Collection Staff Attitude</label>
+            </value>
+            <value>
+                <fullName>Inappropriate Reminder Timing</fullName>
+                <default>false</default>
+                <label>Inappropriate Reminder Timing</label>
+            </value>
+            <value>
+                <fullName>Other (State reason)</fullName>
+                <default>false</default>
+                <label>Other (State reason)</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
