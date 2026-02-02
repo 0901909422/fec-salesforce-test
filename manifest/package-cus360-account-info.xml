@@ -24,6 +24,9 @@
 		<members>FEC_GetCardFinancialTransactions</members>
 		<members>FEC_GetPaymentInfo</members>
 		<members>FEC_GetUnbilledTransactions</members>
+        <members>FEC_CommonUltils</members>
+		<members>FEC_ConstantCommon</members>
+		<members>FEC_MockupEndpoint</members>
         <name>ApexClass</name>
     </types>
 	<types>
