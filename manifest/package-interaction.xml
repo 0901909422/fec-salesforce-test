@@ -132,13 +132,24 @@
 		<name>Layout</name>
 	</types>
     <types>
+		<members>FEC_MSG_AccountNumber_Invalid</members>
+		<members>FEC_MSG_ApplicationID_Invalid</members>
+		<members>FEC_MSG_ContractNumber_Invalid</members>
 		<members>FEC_MSG_Create_Interaction_Error</members>
 		<members>FEC_MSG_Create_Interaction_Success</members>
+		<members>FEC_MSG_Datetime_Invalid</members>
+		<members>FEC_MSG_Datetime_Null</members>
+		<members>FEC_MSG_Email_Invalid</members>
 		<members>FEC_MSG_Genesys_Phone_Number_Null</members>
 		<members>FEC_MSG_Genesys_Request_Invalid_Type</members>
 		<members>FEC_MSG_Genesys_Request_Null</members>
 		<members>FEC_MSG_Genesys_Request_Type_Null</members>
 		<members>FEC_MSG_Interaction_Case_DTO_Null</members>
+		<members>FEC_MSG_National_ID_Invalid</members>
+		<members>FEC_MSG_PersonID_Invalid</members>
+		<members>FEC_MSG_Phone_Number_Invalid</members>
+		<members>FEC_MSG_RequestorID_Null</members>
+		<members>FEC_MSG_TransID_Null</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
