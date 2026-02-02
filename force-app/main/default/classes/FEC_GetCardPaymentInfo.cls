@@ -43,12 +43,12 @@
             // ---------------------------------------------------------
             String transId = UUID.randomUUID().toString();
             String requestorId = UUID.randomUUID().toString(); 
-            String sysTime = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss');
+            String sysTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
             
             // Convert Date sang String format YYYY-MM-DD
             String dateStr = '';
             if (queryDate != null) {
-                dateStr = DateTime.newInstance(queryDate.year(), queryDate.month(), queryDate.day()).format('yyyy-MM-dd');
+                dateStr = DateTime.newInstance(queryDate.year(), queryDate.month(), queryDate.day()).format(FEC_ConstantCommon.DATE_FORMAT);
             }
 
             // ---------------------------------------------------------
@@ -85,7 +85,7 @@
             req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
             // req.setEndpoint('https://0ad0dbbf-693f-473e-a8db-d69d703f19a2.mock.pstmn.io/CIF_CardInfo'); 
             req.setMethod('POST');
-            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
             req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CardInfo/GetCardPaymentInfo'); 
             req.setBodyDocument(doc);
             
@@ -133,7 +133,7 @@
             throw new CalloutException('DateTime is null or invalid');
         }
         // Regex format: yyyy-MM-ddTHH:mm:ss
-        String sysTimePattern = '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}';
+        String sysTimePattern = FEC_ConstantCommon.PATTERN_SYS_TIME;
         if (!Pattern.matches(sysTimePattern, sysTime)) {
             throw new CalloutException('DateTime is null or invalid or wrong format');
         }
@@ -168,14 +168,14 @@
         
         if (responseNode != null) {
             Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
-            result.transId = getTextSafe(sysNode, 'TransID');
-            result.sysDateTime = getTextSafe(sysNode, 'DateTime'); 
-            result.responseCode = getTextSafe(sysNode, 'Code');
-            result.responseDesc = getTextSafe(sysNode, 'Description');
+            result.transId = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+            result.sysDateTime = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime'); 
+            result.responseCode = FEC_CommonUltils.getXmlValue(sysNode, 'Code');
+            result.responseDesc = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
             
             Dom.XmlNode paymentNode = responseNode.getChildElement('PaymentInfo', null);
             if (paymentNode != null) {
-                String amtStr = getTextSafe(paymentNode, 'FullPaymentAmount');
+                String amtStr = FEC_CommonUltils.getXmlValue(paymentNode, 'FullPaymentAmount');
                 if (String.isNotBlank(amtStr)) {
                     result.fullPaymentAmount = Decimal.valueOf(amtStr);
                 } else {
@@ -186,9 +186,4 @@
         return result;
     }
 
-    private static String getTextSafe(Dom.XmlNode parent, String childName) {
-        if (parent == null) return '';
-        Dom.XmlNode child = parent.getChildElement(childName, null);
-        return child != null ? child.getText() : '';
-    }
 }

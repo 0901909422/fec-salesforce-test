@@ -171,8 +171,8 @@ public with sharing class FEC_CardInfoController {
             System.debug('### Customer History ID: ' + customerHistoryId);
             try {
                 String transId = UUID.randomUUID().toString();
-                String requestorId = 'CRM';
-                String dateTimeStr = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss');
+                String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
+                String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
                 
                 FEC_GetCardSecInfo.ResponseWrapper response = 
                     FEC_GetCardSecInfo.callGetCardSecInfo(transId, requestorId, dateTimeStr, accountNumber);
@@ -304,7 +304,7 @@ public with sharing class FEC_CardInfoController {
         }
 
         try {
-            String maskedCardNumber = maskCardNumber(info.cardNumber);
+            String maskedCardNumber = FEC_CommonUltils.maskCardNumber(info.cardNumber);
             System.debug('### Masked Card Number: ' + maskedCardNumber);
             
             // Kiểm tra xem đã có record chưa (chỉ INSERT nếu chưa có)
@@ -347,22 +347,6 @@ public with sharing class FEC_CardInfoController {
         }
     }
 
-    /**
-     * Mask số thẻ: hiển thị 6 số đầu và 4 số cuối, các số còn lại là '*'
-     */
-    private static String maskCardNumber(String cardNumber) {
-        if (String.isBlank(cardNumber) || cardNumber.length() < 10) {
-            return cardNumber;
-        }
-        String first6 = cardNumber.substring(0, 6);
-        String last4 = cardNumber.substring(cardNumber.length() - 4);
-        String middle = '';
-        for (Integer i = 6; i < cardNumber.length() - 4; i++) {
-            middle += '*';
-        }
-        return first6 + middle + last4;
-    }
-    
     /**
      * Lưu dữ liệu Supplementary Cards từ API vào FEC_Other_Card__c (chỉ INSERT, không UPDATE)
      * Method này chỉ được gọi 1 lần duy nhất khi chưa có dữ liệu trong database
@@ -423,7 +407,7 @@ public with sharing class FEC_CardInfoController {
             record.FEC_Gender__c = item.Gender;
             
             // Ánh xạ các trường Date (CardIssueDate và CardActivationDate giờ là Date type, ExpiryDate vẫn là String)
-            record.FEC_Expiry_Date__c = convertDateSafeForOtherCard(item.ExpiryDate);
+            record.FEC_Expiry_Date__c = FEC_CommonUltils.convertDateSafeForOtherCard(item.ExpiryDate);
             record.FEC_Card_Activation_Date__c = item.CardActivationDate; // Đã là Date type
             record.FEC_Issue_Date__c = item.CardIssueDate; // Đã là Date type
             
@@ -448,35 +432,6 @@ public with sharing class FEC_CardInfoController {
         }
     }
     
-    /**
-     * Hàm phụ trợ chuyển đổi ngày tháng cho Other Card
-     * Format API trả về: yyyyMMdd (VD: 20281031) hoặc YYYY-MM-DD
-     * @param dateStr - Chuỗi ngày tháng từ API
-     * @return Đối tượng Date
-     */
-    private static Date convertDateSafeForOtherCard(String dateStr) {
-        if (String.isBlank(dateStr)) return null;
-        
-        // Loại bỏ trường hợp 00000000 (không có ngày)
-        if (dateStr == '00000000' || dateStr == '0') return null;
-        
-        try {
-            // Format API trả về: yyyyMMdd (VD: 20281031)
-            if (dateStr.length() == 8 && dateStr.isNumeric()) {
-                Integer year = Integer.valueOf(dateStr.substring(0, 4));
-                Integer month = Integer.valueOf(dateStr.substring(4, 6));
-                Integer day = Integer.valueOf(dateStr.substring(6, 8));
-                return Date.newInstance(year, month, day);
-            }
-            
-            // Fallback: Format YYYY-MM-DD
-            return Date.valueOf(dateStr); 
-        } catch (Exception e) {
-            System.debug('convertDateSafeForOtherCard error for "' + dateStr + '": ' + e.getMessage());
-            return null;
-        }
-    }
-
     /* =====================================================
      * CÁC METHOD ÁNH XẠ - CHUYỂN ĐỔI DTO
      * ===================================================== */

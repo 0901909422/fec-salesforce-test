@@ -83,7 +83,7 @@ public with sharing class FEC_EmeaAccountInqService {
             // 2. Prepare Sys Data (Auto-generated)
             String transId = UUID.randomUUID().toString();
             String requestorId = 'APS'; 
-            String reqTime = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss');
+            String reqTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
             String vmxVersion = '1.0'; 
 
             // 3. Construct XML Request
@@ -125,7 +125,7 @@ public with sharing class FEC_EmeaAccountInqService {
             // req.setEndpoint('https://1cbfbf4e-b6d7-46c7-9717-79036857f118.mock.pstmn.io'); 
             req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
             req.setMethod('POST');
-            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
             req.setHeader('SOAPAction', 'M_CMS_EMEA_ACCOUNT_INQ'); 
             req.setBodyDocument(doc);
             req.setTimeout(120000); // 120 seconds timeout
@@ -225,9 +225,9 @@ public with sharing class FEC_EmeaAccountInqService {
         // A. Parse Sys từ WSResponse
         Dom.XmlNode sysNode = wsResponse.getChildElement('Sys', null);
         if (sysNode != null) {
-            result.transId = getTextSafe(sysNode, 'TransID');
-            result.responseCode = getTextSafe(sysNode, 'Code');
-            result.responseDesc = getTextSafe(sysNode, 'Description');
+            result.transId = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+            result.responseCode = FEC_CommonUltils.getXmlValue(sysNode, 'Code');
+            result.responseDesc = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
         }
 
         // B. Parse M_CMS_EMEA_ACCOUNT_INQ từ WSResponse
@@ -237,25 +237,25 @@ public with sharing class FEC_EmeaAccountInqService {
             if (vmxRoot != null) {
                 Dom.XmlNode msgOut = vmxRoot.getChildElement('VMX_MSGOUT', null);
                 if (msgOut != null) {
-                    result.svcReturn = getTextSafe(msgOut, 'SVC_RETURN');
+                    result.svcReturn = FEC_CommonUltils.getXmlValue(msgOut, 'SVC_RETURN');
 
                     // C. Parse ACCT_BS_OUTPUT (Thông tin tài khoản chính)
                     Dom.XmlNode acctBs = msgOut.getChildElement('ACCT_BS_OUTPUT', null);
                     if (acctBs != null) {
-                        result.acctNbr = getTextSafe(acctBs, 'ACCT_NBR');
-                        result.shortName = getTextSafe(acctBs, 'SHORT_NAME');
-                        result.custNbr = getTextSafe(acctBs, 'CUST_NBR');
+                        result.acctNbr = FEC_CommonUltils.getXmlValue(acctBs, 'ACCT_NBR');
+                        result.shortName = FEC_CommonUltils.getXmlValue(acctBs, 'SHORT_NAME');
+                        result.custNbr = FEC_CommonUltils.getXmlValue(acctBs, 'CUST_NBR');
                         
                         // --- Parse Decimals ---
-                        result.currBal = getDecimalSafe(acctBs, 'CURR_BAL');
-                        result.income = getDecimalSafe(acctBs, 'INCOME');
-                        result.pmtTotAmtDue = getDecimalSafe(acctBs, 'PMT_TOT_AMT_DUE');
-                        result.pmtPastDue = getDecimalSafe(acctBs, 'PMT_PAST_DUE');
-                        result.loanBal = getDecimalSafe(acctBs, 'LOAN_BAL');
+                        result.currBal = FEC_CommonUltils.xmlValToDecimal(acctBs, 'CURR_BAL');
+                        result.income = FEC_CommonUltils.xmlValToDecimal(acctBs, 'INCOME');
+                        result.pmtTotAmtDue = FEC_CommonUltils.xmlValToDecimal(acctBs, 'PMT_TOT_AMT_DUE');
+                        result.pmtPastDue = FEC_CommonUltils.xmlValToDecimal(acctBs, 'PMT_PAST_DUE');
+                        result.loanBal = FEC_CommonUltils.xmlValToDecimal(acctBs, 'LOAN_BAL');
                         
                         // Memo Fields
-                        result.amtMemoDb = getDecimalSafe(acctBs, 'AMT_MEMO_DB');
-                        result.amtMemoCr = getDecimalSafe(acctBs, 'AMT_MEMO_CR');
+                        result.amtMemoDb = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_DB');
+                        result.amtMemoCr = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_CR');
                         
                         // --- Parse Dates ---
                         result.dtOpened = getDateSafe(acctBs, 'DT_OPENED');
@@ -267,10 +267,10 @@ public with sharing class FEC_EmeaAccountInqService {
                         if (naTbl != null) {
                             Dom.XmlNode naData = naTbl.getChildElement('NA_DATA', null);
                             if (naData != null) {
-                                result.naFirstName = getTextSafe(naData, 'NA_FIRST_NAME');
-                                result.naMobPh = getTextSafe(naData, 'NA_MOB_PH');
-                                result.naCity = getTextSafe(naData, 'NA_CITY');
-                                result.naEmp = getTextSafe(naData, 'NA_EMP');
+                                result.naFirstName = FEC_CommonUltils.getXmlValue(naData, 'NA_FIRST_NAME');
+                                result.naMobPh = FEC_CommonUltils.getXmlValue(naData, 'NA_MOB_PH');
+                                result.naCity = FEC_CommonUltils.getXmlValue(naData, 'NA_CITY');
+                                result.naEmp = FEC_CommonUltils.getXmlValue(naData, 'NA_EMP');
                             }
                         }
                     }
@@ -287,9 +287,9 @@ public with sharing class FEC_EmeaAccountInqService {
         // A. Parse Sys
         Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
         if (sysNode != null) {
-            result.transId = getTextSafe(sysNode, 'TransID');
-            result.responseCode = getTextSafe(sysNode, 'Code');
-            result.responseDesc = getTextSafe(sysNode, 'Description');
+            result.transId = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+            result.responseCode = FEC_CommonUltils.getXmlValue(sysNode, 'Code');
+            result.responseDesc = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
         }
 
         // B. Parse VMX_ROOT
@@ -297,25 +297,25 @@ public with sharing class FEC_EmeaAccountInqService {
         if (vmxRoot != null) {
             Dom.XmlNode msgOut = vmxRoot.getChildElement('VMX_MSGOUT', null);
             if (msgOut != null) {
-                result.svcReturn = getTextSafe(msgOut, 'SVC_RETURN');
+                result.svcReturn = FEC_CommonUltils.getXmlValue(msgOut, 'SVC_RETURN');
 
                 // C. Parse ACCT_BS_OUTPUT (Thông tin tài khoản chính)
                 Dom.XmlNode acctBs = msgOut.getChildElement('ACCT_BS_OUTPUT', null);
                 if (acctBs != null) {
-                    result.acctNbr = getTextSafe(acctBs, 'ACCT_NBR');
-                    result.shortName = getTextSafe(acctBs, 'SHORT_NAME');
-                    result.custNbr = getTextSafe(acctBs, 'CUST_NBR');
+                    result.acctNbr = FEC_CommonUltils.getXmlValue(acctBs, 'ACCT_NBR');
+                    result.shortName = FEC_CommonUltils.getXmlValue(acctBs, 'SHORT_NAME');
+                    result.custNbr = FEC_CommonUltils.getXmlValue(acctBs, 'CUST_NBR');
                     
                     // --- Parse Decimals ---
-                    result.currBal = getDecimalSafe(acctBs, 'CURR_BAL');
-                    result.income = getDecimalSafe(acctBs, 'INCOME');
-                    result.pmtTotAmtDue = getDecimalSafe(acctBs, 'PMT_TOT_AMT_DUE');
-                    result.pmtPastDue = getDecimalSafe(acctBs, 'PMT_PAST_DUE');
-                    result.loanBal = getDecimalSafe(acctBs, 'LOAN_BAL');
+                    result.currBal = FEC_CommonUltils.xmlValToDecimal(acctBs, 'CURR_BAL');
+                    result.income = FEC_CommonUltils.xmlValToDecimal(acctBs, 'INCOME');
+                    result.pmtTotAmtDue = FEC_CommonUltils.xmlValToDecimal(acctBs, 'PMT_TOT_AMT_DUE');
+                    result.pmtPastDue = FEC_CommonUltils.xmlValToDecimal(acctBs, 'PMT_PAST_DUE');
+                    result.loanBal = FEC_CommonUltils.xmlValToDecimal(acctBs, 'LOAN_BAL');
                     
                     // Memo Fields
-                    result.amtMemoDb = getDecimalSafe(acctBs, 'AMT_MEMO_DB');
-                    result.amtMemoCr = getDecimalSafe(acctBs, 'AMT_MEMO_CR');
+                    result.amtMemoDb = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_DB');
+                    result.amtMemoCr = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_CR');
                     
                     // --- Parse Dates ---
                     result.dtOpened = getDateSafe(acctBs, 'DT_OPENED');
@@ -327,10 +327,10 @@ public with sharing class FEC_EmeaAccountInqService {
                     if (naTbl != null) {
                         Dom.XmlNode naData = naTbl.getChildElement('NA_DATA', null);
                         if (naData != null) {
-                            result.naFirstName = getTextSafe(naData, 'NA_FIRST_NAME');
-                            result.naMobPh = getTextSafe(naData, 'NA_MOB_PH');
-                            result.naCity = getTextSafe(naData, 'NA_CITY');
-                            result.naEmp = getTextSafe(naData, 'NA_EMP');
+                            result.naFirstName = FEC_CommonUltils.getXmlValue(naData, 'NA_FIRST_NAME');
+                            result.naMobPh = FEC_CommonUltils.getXmlValue(naData, 'NA_MOB_PH');
+                            result.naCity = FEC_CommonUltils.getXmlValue(naData, 'NA_CITY');
+                            result.naEmp = FEC_CommonUltils.getXmlValue(naData, 'NA_EMP');
                         }
                     }
                 }
@@ -348,22 +348,9 @@ public with sharing class FEC_EmeaAccountInqService {
         parent.addChildElement(name, null, null).addTextNode(value == null ? '' : value);
     }
 
-    // Lấy Text an toàn (tránh Null Pointer)
-    private static String getTextSafe(Dom.XmlNode parent, String name) {
-        if (parent == null) return '';
-        Dom.XmlNode child = parent.getChildElement(name, null);
-        return child != null ? child.getText() : '';
-    }
-
-    // Lấy Decimal an toàn
-    private static Decimal getDecimalSafe(Dom.XmlNode parent, String name) {
-        String v = getTextSafe(parent, name);
-        return String.isNotBlank(v) ? Decimal.valueOf(v) : 0;
-    }
-
     // Lấy Date an toàn (Xử lý cả yyyyMMdd và yyyy-MM-dd)
     private static Date getDateSafe(Dom.XmlNode parent, String name) {
-        String v = getTextSafe(parent, name);
+        String v = FEC_CommonUltils.getXmlValue(parent, name);
         if (String.isBlank(v)) return null;
         try {
             // Case 1: Format yyyyMMdd (Không có dấu phân cách)

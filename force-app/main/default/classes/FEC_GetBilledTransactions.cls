@@ -91,7 +91,7 @@ public with sharing class FEC_GetBilledTransactions {
             req.setMethod('POST');
             req.setTimeout(120000);
 
-            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
             req.setHeader('SOAPAction', 'http://esbservice.fecredit.org/EStatementService/GetBilledTransactions');
 
             String soapBody =
@@ -161,7 +161,7 @@ public with sharing class FEC_GetBilledTransactions {
         }
 
         // ===================== REQUESTORID =====================
-        Set<String> validRequestorIds = new Set<String>{'CRM','PORTAL','MOBILE_APP'};
+        Set<String> validRequestorIds = new Set<String>{FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP};
         if (String.isBlank(requestorId) || !validRequestorIds.contains(requestorId)) {
             throw new CalloutException('RequestorID is null or invalid "' + requestorId + '" is not type of RequestorID');
         }
@@ -224,10 +224,10 @@ public with sharing class FEC_GetBilledTransactions {
         Dom.XmlNode sysNode = responseNode.getChildElement('SysResponse', null);
         if (sysNode != null) {
             result.Sys = new SysResponse();
-            result.Sys.TransID = getVal(sysNode, 'TransID');
-            result.Sys.DateTimeStr = getVal(sysNode, 'DateTime');
-            result.Sys.Code = toInteger(getVal(sysNode, 'Code'));
-            result.Sys.Description = getVal(sysNode, 'Description');
+            result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+            result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+            result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+            result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
         }
 
         // -------- ACCOUNT RECORD --------
@@ -257,19 +257,19 @@ public with sharing class FEC_GetBilledTransactions {
     // =========================================================================
     private static AccountRecord parseAccount(Dom.XmlNode acc) {
         AccountRecord a = new AccountRecord();
-        a.AccountNumber = getVal(acc, 'AccountNumber');
-        a.AccountStatus = getVal(acc, 'AccountStatus');
-        a.CustomerName = getVal(acc, 'CustomerName');
-        a.CreditLimit = getDec(acc, 'CreditLimit');
-        a.CurrentBalance = getDec(acc, 'CurrentBalance');
-        a.AvailableCredit = getDec(acc, 'AvailableCredit');
-        a.CashLimit = getDec(acc, 'CashLimit');
-        a.AvailableCashLimit = getDec(acc, 'AvailableCashLimit');
-        a.LastStatementDate = getVal(acc, 'LastStatementDate');
-        a.MinimumPaymentDue = getDec(acc, 'MinimumPaymentDue');
-        a.PaymentDueDate = getVal(acc, 'PaymentDueDate');
-        a.DateLastPayment = getVal(acc, 'DateLastPayment');
-        a.EmailAddress = getVal(acc, 'EmailAddress');
+        a.AccountNumber = FEC_CommonUltils.getXmlValue(acc, 'AccountNumber');
+        a.AccountStatus = FEC_CommonUltils.getXmlValue(acc, 'AccountStatus');
+        a.CustomerName = FEC_CommonUltils.getXmlValue(acc, 'CustomerName');
+        a.CreditLimit = FEC_CommonUltils.xmlValToDecimal(acc, 'CreditLimit');
+        a.CurrentBalance = FEC_CommonUltils.xmlValToDecimal(acc, 'CurrentBalance');
+        a.AvailableCredit = FEC_CommonUltils.xmlValToDecimal(acc, 'AvailableCredit');
+        a.CashLimit = FEC_CommonUltils.xmlValToDecimal(acc, 'CashLimit');
+        a.AvailableCashLimit = FEC_CommonUltils.xmlValToDecimal(acc, 'AvailableCashLimit');
+        a.LastStatementDate = FEC_CommonUltils.getXmlValue(acc, 'LastStatementDate');
+        a.MinimumPaymentDue = FEC_CommonUltils.xmlValToDecimal(acc, 'MinimumPaymentDue');
+        a.PaymentDueDate = FEC_CommonUltils.getXmlValue(acc, 'PaymentDueDate');
+        a.DateLastPayment = FEC_CommonUltils.getXmlValue(acc, 'DateLastPayment');
+        a.EmailAddress = FEC_CommonUltils.getXmlValue(acc, 'EmailAddress');
         return a;
     }
 
@@ -279,16 +279,16 @@ public with sharing class FEC_GetBilledTransactions {
 
         for (Dom.XmlNode txn : node.getChildElements()) {
             TransactionRecord t = new TransactionRecord();
-            t.TransactionDate = getVal(txn, 'TransactionDate');
-            t.PostingDate = getVal(txn, 'PostingDate');
-            t.Description = getVal(txn, 'Description');
-            t.Amount = getDec(txn, 'Amount');
-            t.CurrencyCode = getVal(txn, 'Currency');
-            t.ReferenceNumber = getVal(txn, 'ReferenceNumber');
-            t.TransactionType = getVal(txn, 'TransactionType');
-            t.MerchantName = getVal(txn, 'MerchantName');
-            t.MCC = getVal(txn, 'MCC');
-            t.Location = getVal(txn, 'Location');
+            t.TransactionDate = FEC_CommonUltils.getXmlValue(txn, 'TransactionDate');
+            t.PostingDate = FEC_CommonUltils.getXmlValue(txn, 'PostingDate');
+            t.Description = FEC_CommonUltils.getXmlValue(txn, 'Description');
+            t.Amount = FEC_CommonUltils.xmlValToDecimal(txn, 'Amount');
+            t.CurrencyCode = FEC_CommonUltils.getXmlValue(txn, 'Currency');
+            t.ReferenceNumber = FEC_CommonUltils.getXmlValue(txn, 'ReferenceNumber');
+            t.TransactionType = FEC_CommonUltils.getXmlValue(txn, 'TransactionType');
+            t.MerchantName = FEC_CommonUltils.getXmlValue(txn, 'MerchantName');
+            t.MCC = FEC_CommonUltils.getXmlValue(txn, 'MCC');
+            t.Location = FEC_CommonUltils.getXmlValue(txn, 'Location');
             txns.add(t);
         }
         return txns;
@@ -300,28 +300,11 @@ public with sharing class FEC_GetBilledTransactions {
 
         for (Dom.XmlNode ln : node.getChildElements()) {
             LoanRecord l = new LoanRecord();
-            l.LoanNumber = getVal(ln, 'LoanNumber');
-            l.OutstandingAmount = getDec(ln, 'OutstandingAmount');
+            l.LoanNumber = FEC_CommonUltils.getXmlValue(ln, 'LoanNumber');
+            l.OutstandingAmount = FEC_CommonUltils.xmlValToDecimal(ln, 'OutstandingAmount');
             loans.add(l);
         }
         return loans;
     }
 
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
-    private static String getVal(Dom.XmlNode node, String name) {
-        if (node == null) return null;
-        Dom.XmlNode c = node.getChildElement(name, null);
-        return c == null ? null : c.getText();
-    }
-
-    private static Decimal getDec(Dom.XmlNode node, String name) {
-        String v = getVal(node, name);
-        return String.isBlank(v) ? null : Decimal.valueOf(v);
-    }
-
-    private static Integer toInteger(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
-    }
 }

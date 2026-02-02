@@ -97,8 +97,8 @@ public with sharing class FEC_MainInfoAccountController {
         try {
             response = FEC_GetCardBasicInfo.callGetCardBasicInfo(
                 generateTransactionId(),
-                'CRM',
-                Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 '0001500010000000022'
             );
         } catch (Exception e) {
@@ -151,8 +151,8 @@ public with sharing class FEC_MainInfoAccountController {
             FEC_GetRewardEligibility.ResponseWrapper apiResponse = 
                 FEC_GetRewardEligibility.callGetRewardEligibility(
                     generateTransactionId(),
-                    'CRM',
-                    Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                     accountNumber
                 );
             
@@ -274,8 +274,8 @@ public with sharing class FEC_MainInfoAccountController {
         try {
             response = FEC_GetCardBasicInfo.callGetCardBasicInfo(
                 generateTransactionId(),
-                'CRM',
-                Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 '0001500010000000022'
             );
         } catch (Exception e) {

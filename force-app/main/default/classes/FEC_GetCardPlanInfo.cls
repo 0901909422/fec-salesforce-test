@@ -68,7 +68,7 @@
             // 1. CHUẨN BỊ DỮ LIỆU
             String transId = UUID.randomUUID().toString();
             String requestorId = UUID.randomUUID().toString(); 
-            String reqTime = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss');
+            String reqTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
 
             validateRequest(transId, requestorId, reqTime, accountNumber);
 
@@ -93,7 +93,7 @@
             req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
             // req.setEndpoint('https://0ad0dbbf-693f-473e-a8db-d69d703f19a2.mock.pstmn.io/CIF_CardInfo'); 
             req.setMethod('POST');
-            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
             req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CardInfo/GetCardPlanInfo');
             req.setBodyDocument(doc);
             
@@ -136,10 +136,10 @@
         
         if (responseNode != null) {
             Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
-            result.transId = getTextSafe(sysNode, 'TransID');
-            result.sysDateTime = getTextSafe(sysNode, 'DateTime'); 
-            result.responseCode = getTextSafe(sysNode, 'Code');
-            result.responseDesc = getTextSafe(sysNode, 'Description');
+            result.transId = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+            result.sysDateTime = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime'); 
+            result.responseCode = FEC_CommonUltils.getXmlValue(sysNode, 'Code');
+            result.responseDesc = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
             
             Dom.XmlNode planInfoNode = responseNode.getChildElement('CardPlanInfo', null);
             if (planInfoNode != null) {
@@ -150,32 +150,32 @@
                             CardPlan plan = new CardPlan();
                             
                             // Map String Fields
-                            plan.recordNumber = getTextSafe(planNode, 'RecordNumber');
-                            plan.planNumber = getTextSafe(planNode, 'PlanNumber');
-                            plan.openDate = getTextSafe(planNode, 'PlanOpenDate');
-                            plan.beginDate = getTextSafe(planNode, 'BeginDate');
-                            plan.refNumber = getTextSafe(planNode, 'REFNumber');
+                            plan.recordNumber = FEC_CommonUltils.getXmlValue(planNode, 'RecordNumber');
+                            plan.planNumber = FEC_CommonUltils.getXmlValue(planNode, 'PlanNumber');
+                            plan.openDate = FEC_CommonUltils.getXmlValue(planNode, 'PlanOpenDate');
+                            plan.beginDate = FEC_CommonUltils.getXmlValue(planNode, 'BeginDate');
+                            plan.refNumber = FEC_CommonUltils.getXmlValue(planNode, 'REFNumber');
                             
                             // Parse CloseFeelIndicator 
-                            plan.closeFeeIndicator = getTextSafe(planNode, 'CloseFeelIndicator'); 
+                            plan.closeFeeIndicator = FEC_CommonUltils.getXmlValue(planNode, 'CloseFeelIndicator'); 
 
                             // Map Decimal Fields
-                            plan.currentBalance = getDecimalSafe(planNode, 'PlanCurrentBalance');
-                            plan.baseRate = getDecimalSafe(planNode, 'BaseRate');
-                            plan.deferredInterest = getDecimalSafe(planNode, 'DeferredInterest');
-                            plan.accruedInterest = getDecimalSafe(planNode, 'AccruedInterest');
-                            plan.perDiem = getDecimalSafe(planNode, 'PerDiem');
-                            plan.ippInterest = getDecimalSafe(planNode, 'IPPInterest');
+                            plan.currentBalance = FEC_CommonUltils.xmlValToDecimal(planNode, 'PlanCurrentBalance');
+                            plan.baseRate = FEC_CommonUltils.xmlValToDecimal(planNode, 'BaseRate');
+                            plan.deferredInterest = FEC_CommonUltils.xmlValToDecimal(planNode, 'DeferredInterest');
+                            plan.accruedInterest = FEC_CommonUltils.xmlValToDecimal(planNode, 'AccruedInterest');
+                            plan.perDiem = FEC_CommonUltils.xmlValToDecimal(planNode, 'PerDiem');
+                            plan.ippInterest = FEC_CommonUltils.xmlValToDecimal(planNode, 'IPPInterest');
                             
                             // Parse CloseFeelIndicatorAmount 
-                            plan.closeFeeIndicatorAmt = getDecimalSafe(planNode, 'CloseFeelIndicatorAmount'); 
+                            plan.closeFeeIndicatorAmt = FEC_CommonUltils.xmlValToDecimal(planNode, 'CloseFeelIndicatorAmount'); 
                             
-                            plan.closeFeeAmount = getDecimalSafe(planNode, 'CloseFeeAmount');
-                            plan.totalPaymentAmount = getDecimalSafe(planNode, 'PlanPaymentAmount');
-                            plan.additionalAccruedInt = getDecimalSafe(planNode, 'AccruedInt');
+                            plan.closeFeeAmount = FEC_CommonUltils.xmlValToDecimal(planNode, 'CloseFeeAmount');
+                            plan.totalPaymentAmount = FEC_CommonUltils.xmlValToDecimal(planNode, 'PlanPaymentAmount');
+                            plan.additionalAccruedInt = FEC_CommonUltils.xmlValToDecimal(planNode, 'AccruedInt');
 
                             // Map Integer Fields
-                            String aggDays = getTextSafe(planNode, 'AggregateDays');
+                            String aggDays = FEC_CommonUltils.getXmlValue(planNode, 'AggregateDays');
                             plan.aggregateDays = String.isNotBlank(aggDays) ? Integer.valueOf(aggDays) : 0;
 
                             result.plans.add(plan);
@@ -187,14 +187,4 @@
         return result;
     }
 
-    private static String getTextSafe(Dom.XmlNode parent, String childName) {
-        if (parent == null) return '';
-        Dom.XmlNode child = parent.getChildElement(childName, null);
-        return child != null ? child.getText() : '';
-    }
-    
-    private static Decimal getDecimalSafe(Dom.XmlNode parent, String childName) {
-        String val = getTextSafe(parent, childName);
-        return String.isNotBlank(val) ? Decimal.valueOf(val) : 0;
-    }
 }

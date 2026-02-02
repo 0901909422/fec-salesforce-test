@@ -46,8 +46,8 @@ public with sharing class FEC_TransactionsController {
         FEC_GetUnbilledTransactions.ResponseWrapper uRes =
             FEC_GetUnbilledTransactions.callGetUnbilledTransactions(
                 String.valueOf(UUID.randomUUID()),
-                'CRM',
-                Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 accNumber
             );
 
@@ -62,8 +62,8 @@ public with sharing class FEC_TransactionsController {
         FEC_GetCardFinancialTransactions.ResponseWrapper fRes =
             FEC_GetCardFinancialTransactions.callGetCardFinancialTransactions(
                 String.valueOf(UUID.randomUUID()),
-                'CRM',
-                Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 accNumber,
                 Date.today().addMonths(-3),
                 Date.today()

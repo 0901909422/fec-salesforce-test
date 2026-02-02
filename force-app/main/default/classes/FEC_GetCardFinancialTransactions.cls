@@ -75,7 +75,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
             req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
             req.setMethod('POST');
             req.setTimeout(120000);
-            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
             req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CardInfo/GetCardFinancialTransactions');
 
             // ================= SOAP REQUEST BODY =================
@@ -148,7 +148,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
         }
 
         // ===================== REQUESTORID =====================
-        Set<String> validRequestorIds = new Set<String>{'CRM','PORTAL','MOBILE_APP'};
+        Set<String> validRequestorIds = new Set<String>{FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP};
         if (String.isBlank(requestorId) || !validRequestorIds.contains(requestorId)) {
             throw new CalloutException('RequestorID is null or invalid, "' + requestorId + '" is not type of RequestorID');
         }
@@ -222,10 +222,10 @@ public with sharing class FEC_GetCardFinancialTransactions {
         Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
         if (sysNode != null) {
             result.Sys = new SysResponse();
-            result.Sys.TransID = getVal(sysNode, 'TransID');
-            result.Sys.DateTimeStr = getVal(sysNode, 'DateTime');
-            result.Sys.Code = toInteger(getVal(sysNode, 'Code'));
-            result.Sys.Description = getVal(sysNode, 'Description');
+            result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+            result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+            result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+            result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
         }
 
         // ================= TRANSACTIONS =================
@@ -240,25 +240,25 @@ public with sharing class FEC_GetCardFinancialTransactions {
             if (txnNode.getName() != 'Transaction') continue;
 
             FinancialTransaction ft = new FinancialTransaction();
-            ft.TRNXDateAndTime = getVal(txnNode, 'TRNXDateAndTime');
-            ft.Description = getVal(txnNode, 'Description');
-            ft.CreditDebitFlag = getVal(txnNode, 'CreditDebitFlag');
-            ft.TransactionType = getVal(txnNode, 'TransactionType');
-            ft.Status = getVal(txnNode, 'Status');
-            ft.TRNXAmount = getDec(txnNode, 'TRNXAmount');
-            ft.TransactionCode = getVal(txnNode, 'TransactionCode');
-            ft.Fee = getDec(txnNode, 'Fee');
-            ft.PostingDate = getVal(txnNode, 'PostingDate');
-            ft.SettlementDate = getVal(txnNode, 'SettlementDate');
-            ft.Plan = getVal(txnNode, 'Plan');
-            ft.PlanType = getVal(txnNode, 'PlanType');
-            ft.RRN = getVal(txnNode, 'RRN');
-            ft.AuthCode = getVal(txnNode, 'AuthCode');
-            ft.MerchantName = getVal(txnNode, 'MerchantName');
-            ft.PaymentFlag = getVal(txnNode, 'PaymentFlag');
-            ft.IsCashTRNX = getVal(txnNode, 'IsCashTRNX');
-            ft.OTPSent = toInteger(getVal(txnNode, 'OTPSent'));
-            ft.LOGIC_MOD = getVal(txnNode, 'LOGIC_MOD');
+            ft.TRNXDateAndTime = FEC_CommonUltils.getXmlValue(txnNode, 'TRNXDateAndTime');
+            ft.Description = FEC_CommonUltils.getXmlValue(txnNode, 'Description');
+            ft.CreditDebitFlag = FEC_CommonUltils.getXmlValue(txnNode, 'CreditDebitFlag');
+            ft.TransactionType = FEC_CommonUltils.getXmlValue(txnNode, 'TransactionType');
+            ft.Status = FEC_CommonUltils.getXmlValue(txnNode, 'Status');
+            ft.TRNXAmount = FEC_CommonUltils.xmlValToDecimal(txnNode, 'TRNXAmount');
+            ft.TransactionCode = FEC_CommonUltils.getXmlValue(txnNode, 'TransactionCode');
+            ft.Fee = FEC_CommonUltils.xmlValToDecimal(txnNode, 'Fee');
+            ft.PostingDate = FEC_CommonUltils.getXmlValue(txnNode, 'PostingDate');
+            ft.SettlementDate = FEC_CommonUltils.getXmlValue(txnNode, 'SettlementDate');
+            ft.Plan = FEC_CommonUltils.getXmlValue(txnNode, 'Plan');
+            ft.PlanType = FEC_CommonUltils.getXmlValue(txnNode, 'PlanType');
+            ft.RRN = FEC_CommonUltils.getXmlValue(txnNode, 'RRN');
+            ft.AuthCode = FEC_CommonUltils.getXmlValue(txnNode, 'AuthCode');
+            ft.MerchantName = FEC_CommonUltils.getXmlValue(txnNode, 'MerchantName');
+            ft.PaymentFlag = FEC_CommonUltils.getXmlValue(txnNode, 'PaymentFlag');
+            ft.IsCashTRNX = FEC_CommonUltils.getXmlValue(txnNode, 'IsCashTRNX');
+            ft.OTPSent = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(txnNode, 'OTPSent'));
+            ft.LOGIC_MOD = FEC_CommonUltils.getXmlValue(txnNode, 'LOGIC_MOD');
 
             result.Transactions.add(ft);
         }
@@ -268,21 +268,4 @@ public with sharing class FEC_GetCardFinancialTransactions {
         return result;
     }
 
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
-    private static String getVal(Dom.XmlNode node, String name) {
-        if (node == null) return null;
-        Dom.XmlNode c = node.getChildElement(name, null);
-        return c == null ? null : c.getText();
-    }
-
-    private static Decimal getDec(Dom.XmlNode node, String name) {
-        String v = getVal(node, name);
-        return String.isBlank(v) ? null : Decimal.valueOf(v);
-    }
-
-    private static Integer toInteger(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
-    }
 }

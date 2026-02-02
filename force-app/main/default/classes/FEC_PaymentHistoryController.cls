@@ -55,8 +55,8 @@ public with sharing class FEC_PaymentHistoryController {
         try {
             apiRes = FEC_GetBilledTransactions.callGetBilledTransactions(
                 String.valueOf(UUID.randomUUID()),
-                'CRM',
-                Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 String.valueOf(customerHistoryId),
                 Datetime.now().format('MM/yyyy')
             );
@@ -85,7 +85,7 @@ public with sharing class FEC_PaymentHistoryController {
 
         for (FEC_GetBilledTransactions.TransactionRecord t : apiRes.Transactions) {
 
-            Date paymentDate = parseDate(t.TransactionDate);
+            Date paymentDate = FEC_CommonUltils.parseDate(t.TransactionDate);
             String key = paymentDate + '|' + t.ReferenceNumber;
 
             FEC_Payment_History__c r =
@@ -96,7 +96,7 @@ public with sharing class FEC_PaymentHistoryController {
                 );
 
             r.FEC_Payment_Date__c   = paymentDate;
-            r.FEC_Booking_Date__c   = parseDate(t.PostingDate);
+            r.FEC_Booking_Date__c   = FEC_CommonUltils.parseDate(t.PostingDate);
             r.FEC_Payment_Amount__c = t.Amount;
             r.FEC_Particulars__c    = t.ReferenceNumber;
 
@@ -174,8 +174,8 @@ public with sharing class FEC_PaymentHistoryController {
         try {
             apiRes = FEC_GetPaymentInfo.callGetPaymentInfo(
                 String.valueOf(UUID.randomUUID()),
-                'CRM',
-                Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 String.valueOf(customerHistoryId)
             );
         } catch (Exception e) {
@@ -202,7 +202,7 @@ public with sharing class FEC_PaymentHistoryController {
 
         for (FEC_GetPaymentInfo.PaymentInfo p : apiRes.Payments) {
 
-            Date paymentDate = parseDate(p.TransactionDate);
+            Date paymentDate = FEC_CommonUltils.parseDate(p.TransactionDate);
             String key = paymentDate + '|' + p.Username;
 
             FEC_Payment_History__c r =
@@ -259,16 +259,4 @@ public with sharing class FEC_PaymentHistoryController {
         return result;
     }
 
-    /* =====================================================
-       DATE PARSER
-       ===================================================== */
-    private static Date parseDate(String val) {
-        try {
-            return String.isBlank(val)
-                ? null
-                : Date.valueOf(val.substring(0, 10));
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }

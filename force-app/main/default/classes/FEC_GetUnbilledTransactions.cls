@@ -37,7 +37,7 @@ public with sharing class FEC_GetUnbilledTransactions {
             req.setMethod('POST');
             req.setTimeout(120000);
 
-            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
             req.setHeader('SOAPAction', 'http://esbservice.fecredit.org/EStatementService/GetUnbilledTransactions');
 
             // ================= SOAP REQUEST BODY =================
@@ -116,9 +116,9 @@ public with sharing class FEC_GetUnbilledTransactions {
         }
 
         Set<String> validRequestorIds = new Set<String>{
-            'CRM',
-            'PORTAL',
-            'MOBILE_APP'
+            FEC_ConstantCommon.REQUESTOR_CRM,
+            FEC_ConstantCommon.REQUESTOR_PORTAL,
+            FEC_ConstantCommon.REQUESTOR_MOBILE_APP
         };
         if (!validRequestorIds.contains(requestorId)) {
             throw new CalloutException('RequestorID is null or invalid, "' + requestorId + '" is not type of RequestorID');
@@ -171,10 +171,10 @@ public with sharing class FEC_GetUnbilledTransactions {
         // ================= SYS RESPONSE =================
         Dom.XmlNode sysNode = responseNode.getChildElement('SysResponse', null);
         result.Sys = new SysResponse();
-        result.Sys.TransID = getVal(sysNode, 'TransID');
-        result.Sys.DateTimeStr = getVal(sysNode, 'DateTime');
-        result.Sys.Code = toInteger(getVal(sysNode, 'Code'));
-        result.Sys.Description = getVal(sysNode, 'Description');
+        result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+        result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+        result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+        result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
 
         // ================= TRANSACTION RECORDS =================
         result.Transactions = new List<TransactionRecord>();
@@ -182,39 +182,21 @@ public with sharing class FEC_GetUnbilledTransactions {
         if (txnRecords != null) {
             for (Dom.XmlNode txn : txnRecords.getChildElements()) {
                 TransactionRecord tr = new TransactionRecord();
-                tr.TransactionDate = getVal(txn, 'TransactionDate');
-                tr.PostingDate = getVal(txn, 'PostingDate');
-                tr.Description = getVal(txn, 'Description');
-                tr.Amount = getDec(txn, 'Amount');
-                tr.CurrencyCode = getVal(txn, 'Number'); // Updated field name
-                tr.ReferenceNumber = getVal(txn, 'ReferenceNumber');
-                tr.TransactionType = getVal(txn, 'TransactionType');
-                tr.MerchantName = getVal(txn, 'MerchantName');
-                tr.MCC = getVal(txn, 'MCC');
-                tr.Location = getVal(txn, 'Location');
+                tr.TransactionDate = FEC_CommonUltils.getXmlValue(txn, 'TransactionDate');
+                tr.PostingDate = FEC_CommonUltils.getXmlValue(txn, 'PostingDate');
+                tr.Description = FEC_CommonUltils.getXmlValue(txn, 'Description');
+                tr.Amount = FEC_CommonUltils.xmlValToDecimal(txn, 'Amount');
+                tr.CurrencyCode = FEC_CommonUltils.getXmlValue(txn, 'Number'); // Updated field name
+                tr.ReferenceNumber = FEC_CommonUltils.getXmlValue(txn, 'ReferenceNumber');
+                tr.TransactionType = FEC_CommonUltils.getXmlValue(txn, 'TransactionType');
+                tr.MerchantName = FEC_CommonUltils.getXmlValue(txn, 'MerchantName');
+                tr.MCC = FEC_CommonUltils.getXmlValue(txn, 'MCC');
+                tr.Location = FEC_CommonUltils.getXmlValue(txn, 'Location');
                 result.Transactions.add(tr);
             }
         }
 
         return result;
-    }
-
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
-    private static String getVal(Dom.XmlNode node, String name) {
-        if (node == null) return null;
-        Dom.XmlNode c = node.getChildElement(name, null);
-        return c == null ? null : c.getText();
-    }
-
-    private static Decimal getDec(Dom.XmlNode node, String name) {
-        String v = getVal(node, name);
-        return String.isBlank(v) ? null : Decimal.valueOf(v);
-    }
-
-    private static Integer toInteger(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
     }
 
     // =========================================================================

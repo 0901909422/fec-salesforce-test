@@ -134,7 +134,7 @@ public with sharing class FEC_GetCardBasicInfo {
             req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
             req.setMethod('POST');
             req.setTimeout(120000);
-            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
             req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CardInfo/GetCardBasicInfo');
 
             String soapBody =
@@ -212,9 +212,9 @@ public with sharing class FEC_GetCardBasicInfo {
         }
 
         Set<String> validRequestorIds = new Set<String>{
-            'CRM',
-            'PORTAL',
-            'MOBILE_APP'
+            FEC_ConstantCommon.REQUESTOR_CRM,
+            FEC_ConstantCommon.REQUESTOR_PORTAL,
+            FEC_ConstantCommon.REQUESTOR_MOBILE_APP
         };
         if (!validRequestorIds.contains(requestorId)) {
             throw new CalloutException('RequestorID is null or invalid, "' + requestorId + '" is not type of RequestorID');
@@ -264,10 +264,10 @@ public with sharing class FEC_GetCardBasicInfo {
         // SYS
         Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
         result.Sys = new SysResponse();
-        result.Sys.TransID = getVal(sysNode, 'TransID');
-        result.Sys.DateTimeStr = getVal(sysNode, 'DateTime');
-        result.Sys.Code = toInt(getVal(sysNode, 'Code'));
-        result.Sys.Description = getVal(sysNode, 'Description');
+        result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+        result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+        result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+        result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
 
         Dom.XmlNode infoNode = responseNode.getChildElement('CardBasicInfo', null);
         if (infoNode == null) return result;
@@ -277,51 +277,51 @@ public with sharing class FEC_GetCardBasicInfo {
         Dom.XmlNode main = infoNode.getChildElement('MainCard', null);
         result.CardBasicInfo.MainCard = new MainCard();
 
-        result.CardBasicInfo.MainCard.Product               = getVal(main, 'Product');
-        result.CardBasicInfo.MainCard.CustomerSegment       = getVal(main, 'CustomerSegment');
-        result.CardBasicInfo.MainCard.PlasticIndicator      = getVal(main, 'PlasticIndicator');
-        result.CardBasicInfo.MainCard.ProductAssociation    = getVal(main, 'ProductAssociation');
-        result.CardBasicInfo.MainCard.Status                = getVal(main, 'Status');
-        result.CardBasicInfo.MainCard.IPPFlag               = getVal(main, 'IPPFlag');
-        result.CardBasicInfo.MainCard.InsuranceFlag         = getVal(main, 'InsuranceFlag');
+        result.CardBasicInfo.MainCard.Product               = FEC_CommonUltils.getXmlValue(main, 'Product');
+        result.CardBasicInfo.MainCard.CustomerSegment       = FEC_CommonUltils.getXmlValue(main, 'CustomerSegment');
+        result.CardBasicInfo.MainCard.PlasticIndicator      = FEC_CommonUltils.getXmlValue(main, 'PlasticIndicator');
+        result.CardBasicInfo.MainCard.ProductAssociation    = FEC_CommonUltils.getXmlValue(main, 'ProductAssociation');
+        result.CardBasicInfo.MainCard.Status                = FEC_CommonUltils.getXmlValue(main, 'Status');
+        result.CardBasicInfo.MainCard.IPPFlag               = FEC_CommonUltils.getXmlValue(main, 'IPPFlag');
+        result.CardBasicInfo.MainCard.InsuranceFlag         = FEC_CommonUltils.getXmlValue(main, 'InsuranceFlag');
 
-        result.CardBasicInfo.MainCard.ContractNumber        = getVal(main, 'ContractNumber');
-        result.CardBasicInfo.MainCard.AccountNumber         = getVal(main, 'AccountNumber');
-        result.CardBasicInfo.MainCard.SecurityAnswer        = getVal(main, 'SecurityAnswer');
+        result.CardBasicInfo.MainCard.ContractNumber        = FEC_CommonUltils.getXmlValue(main, 'ContractNumber');
+        result.CardBasicInfo.MainCard.AccountNumber         = FEC_CommonUltils.getXmlValue(main, 'AccountNumber');
+        result.CardBasicInfo.MainCard.SecurityAnswer        = FEC_CommonUltils.getXmlValue(main, 'SecurityAnswer');
         result.CardBasicInfo.MainCard.ExpiryDate             = getDate(main, 'ExpiryDate');
-        result.CardBasicInfo.MainCard.BillingCycle          = toInt(getVal(main, 'BillingCycle'));
-        result.CardBasicInfo.MainCard.ActivatedFlag         = getVal(main, 'ActivatedFlag');
+        result.CardBasicInfo.MainCard.BillingCycle          = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(main, 'BillingCycle'));
+        result.CardBasicInfo.MainCard.ActivatedFlag         = FEC_CommonUltils.getXmlValue(main, 'ActivatedFlag');
 
         /* ===== ACCOUNT STATUS ===== */
-        result.CardBasicInfo.MainCard.WarningCode           = getVal(main, 'WarningCode');
-        result.CardBasicInfo.MainCard.BlockCode1            = getVal(main, 'BlockCode1');
-        result.CardBasicInfo.MainCard.BlockCode2            = getVal(main, 'BlockCode2');
-        result.CardBasicInfo.MainCard.RsnBlockCode1          = getVal(main, 'RsnBlockCode1');
-        result.CardBasicInfo.MainCard.RsnBlockCode2          = getVal(main, 'RsnBlockCode2');
+        result.CardBasicInfo.MainCard.WarningCode           = FEC_CommonUltils.getXmlValue(main, 'WarningCode');
+        result.CardBasicInfo.MainCard.BlockCode1            = FEC_CommonUltils.getXmlValue(main, 'BlockCode1');
+        result.CardBasicInfo.MainCard.BlockCode2            = FEC_CommonUltils.getXmlValue(main, 'BlockCode2');
+        result.CardBasicInfo.MainCard.RsnBlockCode1          = FEC_CommonUltils.getXmlValue(main, 'RsnBlockCode1');
+        result.CardBasicInfo.MainCard.RsnBlockCode2          = FEC_CommonUltils.getXmlValue(main, 'RsnBlockCode2');
         result.CardBasicInfo.MainCard.AccountBlockCode1Date = getDate(main, 'AccountBlockCode1Date');
         result.CardBasicInfo.MainCard.AccountBlockCode2Date = getDate(main, 'AccountBlockCode2Date');
-        result.CardBasicInfo.MainCard.WarningCode360        = getVal(main, 'WarningCode360');
+        result.CardBasicInfo.MainCard.WarningCode360        = FEC_CommonUltils.getXmlValue(main, 'WarningCode360');
 
         /* ===== FINANCIAL ===== */
-        result.CardBasicInfo.MainCard.OTB                   = getDec(main, 'OTB');
-        result.CardBasicInfo.MainCard.HoldAmount            = getDec(main, 'HoldAmount');
-        result.CardBasicInfo.MainCard.CreditLimit           = getDec(main, 'Limit');
+        result.CardBasicInfo.MainCard.OTB                   = FEC_CommonUltils.xmlValToDecimal(main, 'OTB');
+        result.CardBasicInfo.MainCard.HoldAmount            = FEC_CommonUltils.xmlValToDecimal(main, 'HoldAmount');
+        result.CardBasicInfo.MainCard.CreditLimit           = FEC_CommonUltils.xmlValToDecimal(main, 'Limit');
         result.CardBasicInfo.MainCard.PaymentDate           = getDate(main, 'PaymentDate');
-        result.CardBasicInfo.MainCard.LastPaymentAmount     = getDec(main, 'LastPaymentAmount');
-        result.CardBasicInfo.MainCard.LoanBalance            = getDec(main, 'LoanBalance');
+        result.CardBasicInfo.MainCard.LastPaymentAmount     = FEC_CommonUltils.xmlValToDecimal(main, 'LastPaymentAmount');
+        result.CardBasicInfo.MainCard.LoanBalance            = FEC_CommonUltils.xmlValToDecimal(main, 'LoanBalance');
 
         /* ===== OTHER ===== */
-        result.CardBasicInfo.MainCard.MaskedCardNumber      = getVal(main, 'MaskedCardNumber');
-        result.CardBasicInfo.MainCard.PaymentHoliday        = getVal(main, 'PaymentHoliday');
-        result.CardBasicInfo.MainCard.DigitalCardIndicator  = getVal(main, 'DigitalCardIndicator');
-        result.CardBasicInfo.MainCard.MailingInd             = getVal(main, 'MailingInd');
+        result.CardBasicInfo.MainCard.MaskedCardNumber      = FEC_CommonUltils.getXmlValue(main, 'MaskedCardNumber');
+        result.CardBasicInfo.MainCard.PaymentHoliday        = FEC_CommonUltils.getXmlValue(main, 'PaymentHoliday');
+        result.CardBasicInfo.MainCard.DigitalCardIndicator  = FEC_CommonUltils.getXmlValue(main, 'DigitalCardIndicator');
+        result.CardBasicInfo.MainCard.MailingInd             = FEC_CommonUltils.getXmlValue(main, 'MailingInd');
 
         /// STATEMENT
         Dom.XmlNode stmt = infoNode.getChildElement('Statement', null);
         if (stmt != null) {
             result.CardBasicInfo.Statement = new StatementInfo();
             result.CardBasicInfo.Statement.StatementBalance =
-                getDec(stmt, 'StatemenBalance');
+                FEC_CommonUltils.xmlValToDecimal(stmt, 'StatemenBalance');
             result.CardBasicInfo.Statement.LastStatementDate =
                 getDate(stmt, 'LastStatementDate');
             result.CardBasicInfo.Statement.NextStatementDate =
@@ -329,13 +329,13 @@ public with sharing class FEC_GetCardBasicInfo {
             result.CardBasicInfo.Statement.LastStatementDueDate =
                 getDate(stmt, 'LastStatementDueDate');
             result.CardBasicInfo.Statement.LastStatementMPA =
-                getDec(stmt, 'LastStatementMPA');
+                FEC_CommonUltils.xmlValToDecimal(stmt, 'LastStatementMPA');
         }
 
         // PASS DUE
         Dom.XmlNode pass = infoNode.getChildElement('PassDUE', null);
         result.CardBasicInfo.PassDUE = new PassDue();
-        result.CardBasicInfo.PassDUE.DPD = toInt(getVal(pass, 'DPD'));
+        result.CardBasicInfo.PassDUE.DPD = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(pass, 'DPD'));
 
         /* STATEMENTS PERIOD */
         result.CardBasicInfo.Statements = new List<StatementPeriod>();
@@ -353,11 +353,11 @@ public with sharing class FEC_GetCardBasicInfo {
                 StatementPeriod sp = new StatementPeriod();
 
                 sp.BalanceBegin =
-                    getDec(s, 'BalanceForBeginningOfPeriod');
+                    FEC_CommonUltils.xmlValToDecimal(s, 'BalanceForBeginningOfPeriod');
                 sp.BalanceEnd =
-                    getDec(s, 'BalanceForEndOfPeriod');
+                    FEC_CommonUltils.xmlValToDecimal(s, 'BalanceForEndOfPeriod');
                 sp.MPA =
-                    getDec(s, 'MPA');
+                    FEC_CommonUltils.xmlValToDecimal(s, 'MPA');
                 sp.StatementDate =
                     getDate(s, 'STATEMENT_DATE'); 
 
@@ -373,7 +373,7 @@ public with sharing class FEC_GetCardBasicInfo {
 
                 TransactionInfo ti = new TransactionInfo();
 
-                String trxDT = getVal(t, 'TRNXDateAndTime');
+                String trxDT = FEC_CommonUltils.getXmlValue(t, 'TRNXDateAndTime');
                 if (!String.isBlank(trxDT)) {
                     ti.TRNXDateTime =
                         Datetime.valueOf(
@@ -381,23 +381,23 @@ public with sharing class FEC_GetCardBasicInfo {
                         );
                 }
 
-                ti.Description        = getVal(t, 'Description');
-                ti.CreditDebitFlag   = getVal(t, 'CreditDebitFlag');
-                ti.TransactionType   = getVal(t, 'TransactionType');
-                ti.Status            = getVal(t, 'Status');
-                ti.Amount            = getDec(t, 'TRNXAmount');
-                ti.TransactionCode   = getVal(t, 'TransactionCode');
-                ti.Fee               = getDec(t, 'Fee');
+                ti.Description        = FEC_CommonUltils.getXmlValue(t, 'Description');
+                ti.CreditDebitFlag   = FEC_CommonUltils.getXmlValue(t, 'CreditDebitFlag');
+                ti.TransactionType   = FEC_CommonUltils.getXmlValue(t, 'TransactionType');
+                ti.Status            = FEC_CommonUltils.getXmlValue(t, 'Status');
+                ti.Amount            = FEC_CommonUltils.xmlValToDecimal(t, 'TRNXAmount');
+                ti.TransactionCode   = FEC_CommonUltils.getXmlValue(t, 'TransactionCode');
+                ti.Fee               = FEC_CommonUltils.xmlValToDecimal(t, 'Fee');
                 ti.PostingDate       = getDate(t, 'PostingDate');
                 ti.SettlementDate    = getDate(t, 'SettlementDate');
-                ti.Plan              = getVal(t, 'Plan');
-                ti.RRN               = getVal(t, 'RRN');
-                ti.MerchantName      = getVal(t, 'MerchantName');
-                ti.PaymentFlag       = getVal(t, 'PaymentFlag');
-                ti.IsCashTRNX        = getVal(t, 'IsCashTRNX');
-                ti.PlanType          = getVal(t, 'PlanType');
-                ti.LogicMod          = getVal(t, 'LOGIC_MOD');
-                ti.OTPSent           = toInt(getVal(t, 'OTPSent'));
+                ti.Plan              = FEC_CommonUltils.getXmlValue(t, 'Plan');
+                ti.RRN               = FEC_CommonUltils.getXmlValue(t, 'RRN');
+                ti.MerchantName      = FEC_CommonUltils.getXmlValue(t, 'MerchantName');
+                ti.PaymentFlag       = FEC_CommonUltils.getXmlValue(t, 'PaymentFlag');
+                ti.IsCashTRNX        = FEC_CommonUltils.getXmlValue(t, 'IsCashTRNX');
+                ti.PlanType          = FEC_CommonUltils.getXmlValue(t, 'PlanType');
+                ti.LogicMod          = FEC_CommonUltils.getXmlValue(t, 'LOGIC_MOD');
+                ti.OTPSent           = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(t, 'OTPSent'));
 
                 result.CardBasicInfo.Transactions.add(ti);
             }
@@ -406,26 +406,8 @@ public with sharing class FEC_GetCardBasicInfo {
         return result;
     }
 
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
-    private static String getVal(Dom.XmlNode n, String name) {
-        if (n == null) return null;
-        Dom.XmlNode c = n.getChildElement(name, null);
-        return c == null ? null : c.getText();
-    }
-
-    private static Decimal getDec(Dom.XmlNode n, String name) {
-        String v = getVal(n, name);
-        return String.isBlank(v) ? null : Decimal.valueOf(v);
-    }
-
-    private static Integer toInt(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
-    }
-
      private static Date getDate(Dom.XmlNode n, String name) {
-        String v = getVal(n, name);
+        String v = FEC_CommonUltils.getXmlValue(n, name);
         if (String.isBlank(v)) return null;
 
         try {

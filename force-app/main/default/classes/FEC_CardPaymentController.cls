@@ -296,8 +296,8 @@ public with sharing class FEC_CardPaymentController {
         /* ===== 2. Gọi API GetCardBasicInfo để lấy Loan Balance ===== */
         try {
             String transId = UUID.randomUUID().toString();
-            String requestorId = 'CRM';
-            String dateTimeStr = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss');
+            String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
+            String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
             
             FEC_GetCardBasicInfo.ResponseWrapper basicInfoResult = 
                 FEC_GetCardBasicInfo.callGetCardBasicInfo(transId, requestorId, dateTimeStr, accountNumber);
@@ -611,8 +611,8 @@ public with sharing class FEC_CardPaymentController {
             record.FEC_REF_Number__c = p.refNumber;               // REFNumber
             
             // Map Date (Cần convert String -> Date)
-            record.FEC_Open_Date__c = convertDateSafe(p.openDate);    // PlanOpenDate
-            record.FEC_Begin_Date__c = convertDateSafe(p.beginDate);  // BeginDate
+            record.FEC_Open_Date__c = FEC_CommonUltils.convertDateSafe(p.openDate);    // PlanOpenDate
+            record.FEC_Begin_Date__c = FEC_CommonUltils.convertDateSafe(p.beginDate);  // BeginDate
             
             // Map Decimal
             Decimal currentBalance = p.currentBalance != null ? p.currentBalance : 0;
@@ -666,17 +666,4 @@ public with sharing class FEC_CardPaymentController {
         }
     }
     
-    /**
-     * Hàm phụ trợ convert ngày tháng
-     * @param dateStr - Date string format yyyy-MM-dd
-     * @return Date object
-     */
-    private static Date convertDateSafe(String dateStr) {
-        if (String.isBlank(dateStr)) return null;
-        try {
-            return Date.valueOf(dateStr); // Format yêu cầu: YYYY-MM-DD
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }

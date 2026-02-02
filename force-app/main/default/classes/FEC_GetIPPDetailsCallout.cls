@@ -89,7 +89,7 @@ public with sharing class FEC_GetIPPDetailsCallout {
         if (String.isBlank(dateTimeValue)) {
             return new ValidationResult(false, 'SysRequest.DateTime is required and cannot be empty.');
         }
-        if (!Pattern.matches('^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$', dateTimeValue)) {
+        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_DATE_TIME, dateTimeValue)) {
             return new ValidationResult(false, 'SysRequest.DateTime must be in ISO 8601 format (yyyy-MM-dd\'T\'HH:mm:ss). Current value: ' + dateTimeValue);
         }
         
@@ -127,7 +127,7 @@ public with sharing class FEC_GetIPPDetailsCallout {
         // Step 2: Generate and validate SysRequest headers
         String transId = String.valueOf(UUID.randomUUID());
         String requestorId = 'SD';
-        String dateTimeValue = Datetime.now().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss');
+        String dateTimeValue = Datetime.now().formatGmt(FEC_ConstantCommon.DATETIME_FORMAT);
         
         ValidationResult sysValidation = validateSysRequestHeaders(transId, requestorId, dateTimeValue);
         if (!sysValidation.isValid) {
@@ -142,7 +142,7 @@ public with sharing class FEC_GetIPPDetailsCallout {
         // req.setEndpoint(ENDPOINT);
         req.setEndpoint('https://5fea0f8e-afdd-4820-aead-2a9a1fef654e.mock.pstmn.io');
         req.setMethod('POST');
-        req.setHeader('Content-Type', 'text/xml; charset=UTF-8');
+        req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
         req.setHeader('SOAPAction', 'GetIPPDetails');
         req.setTimeout(120000);
 
@@ -210,14 +210,14 @@ public with sharing class FEC_GetIPPDetailsCallout {
             doc.load(xml);
 
             Dom.XmlNode envelope = doc.getRootElement();
-            Dom.XmlNode body = findChildByName(envelope, 'Body');
+            Dom.XmlNode body = FEC_CommonUltils.findChildByName(envelope, 'Body');
             
             if (body == null) {
                 throw new CalloutException('Invalid XML: Body element not found');
             }
 
             // Tìm GetIPPDetailsResponse - thử cả với namespace và không namespace
-            Dom.XmlNode response = findChildByName(body, 'GetIPPDetailsResponse');
+            Dom.XmlNode response = FEC_CommonUltils.findChildByName(body, 'GetIPPDetailsResponse');
             if (response == null) {
                 // Thử tìm child element đầu tiên
                 List<Dom.XmlNode> children = body.getChildElements();
@@ -233,81 +233,29 @@ public with sharing class FEC_GetIPPDetailsCallout {
             IPPDetailsResponse result = new IPPDetailsResponse();
 
             // SysResponse - tìm không cần namespace
-            Dom.XmlNode sysResp = findChildByName(response, 'SysResponse');
+            Dom.XmlNode sysResp = FEC_CommonUltils.findChildByName(response, 'SysResponse');
             if (sysResp != null) {
-                result.status      = getTextSafe(sysResp, 'Status');
-                result.sysMessage  = getTextSafe(sysResp, 'Description');
-                result.transId     = getTextSafe(sysResp, 'TransID');
-                result.responseTime= getTextSafe(sysResp, 'DateTime');
+                result.status      = FEC_CommonUltils.getXmlValue(sysResp, 'Status');
+                result.sysMessage  = FEC_CommonUltils.getXmlValue(sysResp, 'Description');
+                result.transId     = FEC_CommonUltils.getXmlValue(sysResp, 'TransID');
+                result.responseTime= FEC_CommonUltils.getXmlValue(sysResp, 'DateTime');
             }
 
             // Business fields - tìm không cần namespace
-            result.accountNumber      = getTextSafe(response, 'AccountNumber');
-            result.ippTerm            = getTextSafe(response, 'IPPTerm');  // String để hỗ trợ format "3 months"
-            result.principalAmount    = getDecimalSafe(response, 'PrincipalAmount');
-            result.installmentAmount  = getDecimalSafe(response, 'InstallmentAmount');
-            result.conversionFee      = getDecimalSafe(response, 'ConversionFee');
-            result.emi                = getDecimalSafe(response, 'EMI');
-            result.planNumber         = getTextSafe(response, 'PlanNumber');
-            result.interestRate       = getDecimalSafe(response, 'InterestRate');
-            result.description        = getTextSafe(response, 'Description');
+            result.accountNumber      = FEC_CommonUltils.getXmlValue(response, 'AccountNumber');
+            result.ippTerm            = FEC_CommonUltils.getXmlValue(response, 'IPPTerm');  // String để hỗ trợ format "3 months"
+            result.principalAmount    = FEC_CommonUltils.xmlValToDecimal(response, 'PrincipalAmount');
+            result.installmentAmount  = FEC_CommonUltils.xmlValToDecimal(response, 'InstallmentAmount');
+            result.conversionFee      = FEC_CommonUltils.xmlValToDecimal(response, 'ConversionFee');
+            result.emi                = FEC_CommonUltils.xmlValToDecimal(response, 'EMI');
+            result.planNumber         = FEC_CommonUltils.getXmlValue(response, 'PlanNumber');
+            result.interestRate       = FEC_CommonUltils.xmlValToDecimal(response, 'InterestRate');
+            result.description        = FEC_CommonUltils.getXmlValue(response, 'Description');
 
             return result;
         } catch (Exception e) {
             throw new CalloutException('Failed to parse XML: ' + e.getMessage());
         }
-    }
-
-    /**
-     * Helper: Tìm child node theo tên
-     */
-    private static Dom.XmlNode findChildByName(Dom.XmlNode parent, String nodeName) {
-        if (parent == null) return null;
-        for (Dom.XmlNode child : parent.getChildElements()) {
-            if (child.getName() == nodeName || child.getName().endsWith(':' + nodeName)) {
-                return child;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Helper: Lấy text từ child node
-     */
-    private static String getTextSafe(Dom.XmlNode parent, String name) {
-        if (parent == null) return null;
-        
-        // Tìm child element - thử cả với và không có namespace
-        Dom.XmlNode child = findChildByName(parent, name);
-        if (child == null) return null;
-        
-        // Lấy text content
-        String text = child.getText();
-        return text != null ? text.trim() : null;
-    }
-    
-    private static String getText(Dom.XmlNode parent, String name) {
-        Dom.XmlNode child = parent.getChildElement(name, null);
-        return child != null ? child.getText() : null;
-    }
-
-    /**
-     * Helper: Lấy Decimal từ child node
-     */
-    private static Decimal getDecimalSafe(Dom.XmlNode parent, String name) {
-        String val = getTextSafe(parent, name);
-        if (String.isBlank(val)) return null;
-        try {
-            return Decimal.valueOf(val);
-        } catch (Exception e) {
-            System.debug('Error parsing decimal for ' + name + ': ' + val + ' - ' + e.getMessage());
-            return null;
-        }
-    }
-    
-    private static Decimal getDecimal(Dom.XmlNode parent, String name) {
-        String val = getText(parent, name);
-        return String.isBlank(val) ? null : Decimal.valueOf(val);
     }
 
     /**

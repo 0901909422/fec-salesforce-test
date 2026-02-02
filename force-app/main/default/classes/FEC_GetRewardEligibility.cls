@@ -36,7 +36,7 @@ public with sharing class FEC_GetRewardEligibility {
             req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
             req.setMethod('POST');
             req.setTimeout(120000);
-            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
             req.setHeader('SOAPAction', 'http://esbservice.fecredit.org/CMS_RewardWS/GetRewardEligibility');
 
             // ================= SOAP REQUEST BODY =================
@@ -112,9 +112,9 @@ public with sharing class FEC_GetRewardEligibility {
         }
 
         Set<String> validRequestorIds = new Set<String>{
-            'CRM',
-            'PORTAL',
-            'MOBILE_APP'
+            FEC_ConstantCommon.REQUESTOR_CRM,
+            FEC_ConstantCommon.REQUESTOR_PORTAL,
+            FEC_ConstantCommon.REQUESTOR_MOBILE_APP
         };
         if (!validRequestorIds.contains(requestorId)) {
             throw new CalloutException('RequestorID is null or invalid, "' + requestorId + '" is not type of RequestorID' );
@@ -176,42 +176,42 @@ public with sharing class FEC_GetRewardEligibility {
         // ================= SYS RESPONSE =================
         Dom.XmlNode sysNode = responseNode.getChildElement('SysResponse', null);
         result.Sys = new SysResponse();
-        result.Sys.TransID = getChildValue(sysNode, 'TransID');
-        result.Sys.DateTimeStr = getChildValue(sysNode, 'DateTime');
-        result.Sys.Code = toInt(getChildValue(sysNode, 'Code'));
-        result.Sys.Description = getChildValue(sysNode, 'Description');
+        result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+        result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+        result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+        result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
 
         // ================= MAIN DATA =================
-        result.LMSAccount = getChildValue(responseNode, 'LMSAccount');
-        result.CustomerName = getChildValue(responseNode, 'CustomerName');
-        result.SchemeID = getChildValue(responseNode, 'SchemeID');
+        result.LMSAccount = FEC_CommonUltils.getXmlValue(responseNode, 'LMSAccount');
+        result.CustomerName = FEC_CommonUltils.getXmlValue(responseNode, 'CustomerName');
+        result.SchemeID = FEC_CommonUltils.getXmlValue(responseNode, 'SchemeID');
 
-        result.EarnedPoints = getDecimal(responseNode, 'EarnedPoints');
-        result.BoughtPoints = getDecimal(responseNode, 'BoughtPoints');
-        result.BonusPoints = getDecimal(responseNode, 'BonusPoints');
-        result.RedeemedPoints = getDecimal(responseNode, 'RedeemedPoints');
-        result.ClosedPoints = getDecimal(responseNode, 'ClosedPoints');
-        result.CalculatedClosedPoints = getDecimal(responseNode, 'CalculatedClosedPoints');
-        result.ExpiredPoints = getDecimal(responseNode, 'ExpiredPoints');
-        result.AdjustedInPoints = getDecimal(responseNode, 'AdjustedInPoints');
-        result.AdjustedOutPoints = getDecimal(responseNode, 'AdjustedOutPoints');
-        result.CTDGrace = getDecimal(responseNode, 'CTDGrace');
-        result.CTDTotal = getDecimal(responseNode, 'CTDTotal');
-        result.CTDSpendEarned = getDecimal(responseNode, 'CTDSpendEarned');
-        result.AvailablePoints = getDecimal(responseNode, 'AvailablePoints');
-        result.OutstandingTxn = getDecimal(responseNode, 'OutstandingTxn');
-        result.CustomerMobile = getChildValue(responseNode, 'CustomerMobile');
+        result.EarnedPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'EarnedPoints');
+        result.BoughtPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'BoughtPoints');
+        result.BonusPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'BonusPoints');
+        result.RedeemedPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'RedeemedPoints');
+        result.ClosedPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'ClosedPoints');
+        result.CalculatedClosedPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'CalculatedClosedPoints');
+        result.ExpiredPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'ExpiredPoints');
+        result.AdjustedInPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'AdjustedInPoints');
+        result.AdjustedOutPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'AdjustedOutPoints');
+        result.CTDGrace = FEC_CommonUltils.xmlValToDecimal(responseNode, 'CTDGrace');
+        result.CTDTotal = FEC_CommonUltils.xmlValToDecimal(responseNode, 'CTDTotal');
+        result.CTDSpendEarned = FEC_CommonUltils.xmlValToDecimal(responseNode, 'CTDSpendEarned');
+        result.AvailablePoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'AvailablePoints');
+        result.OutstandingTxn = FEC_CommonUltils.xmlValToDecimal(responseNode, 'OutstandingTxn');
+        result.CustomerMobile = FEC_CommonUltils.getXmlValue(responseNode, 'CustomerMobile');
 
         // ================= REDEMPTION OPTIONS =================
         Dom.XmlNode redemptionNode = responseNode.getChildElement('RedemptionOptions', null);
         if (redemptionNode != null) {
             result.RedemptionOptions = new RedemptionOptions();
             result.RedemptionOptions.EvoucherEligible =
-                Boolean.valueOf(getChildValue(redemptionNode, 'EvoucherEligible'));
+                Boolean.valueOf(FEC_CommonUltils.getXmlValue(redemptionNode, 'EvoucherEligible'));
             result.RedemptionOptions.CashbackEligible =
-                Boolean.valueOf(getChildValue(redemptionNode, 'CashbackEligible'));
+                Boolean.valueOf(FEC_CommonUltils.getXmlValue(redemptionNode, 'CashbackEligible'));
             result.RedemptionOptions.MvoucherEligible =
-                Boolean.valueOf(getChildValue(redemptionNode, 'MvoucherEligible'));
+                Boolean.valueOf(FEC_CommonUltils.getXmlValue(redemptionNode, 'MvoucherEligible'));
         }
 
         // ================= PRODUCTS =================
@@ -220,32 +220,14 @@ public with sharing class FEC_GetRewardEligibility {
             result.Products = new List<Product>();
             for (Dom.XmlNode pNode : productsNode.getChildElements()) {
                 Product p = new Product();
-                p.ProductCode = getChildValue(pNode, 'ProductCode');
-                p.ProductName = getChildValue(pNode, 'ProductName');
-                p.RequiredPoints = getDecimal(pNode, 'RequiredPoints');
+                p.ProductCode = FEC_CommonUltils.getXmlValue(pNode, 'ProductCode');
+                p.ProductName = FEC_CommonUltils.getXmlValue(pNode, 'ProductName');
+                p.RequiredPoints = FEC_CommonUltils.xmlValToDecimal(pNode, 'RequiredPoints');
                 result.Products.add(p);
             }
         }
 
         return result;
-    }
-
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
-    private static String getChildValue(Dom.XmlNode node, String name) {
-        if (node == null) return null;
-        Dom.XmlNode child = node.getChildElement(name, null);
-        return child == null ? null : child.getText();
-    }
-
-    private static Decimal getDecimal(Dom.XmlNode node, String name) {
-        String val = getChildValue(node, name);
-        return String.isBlank(val) ? null : Decimal.valueOf(val);
-    }
-
-    private static Integer toInt(String val) {
-        return String.isBlank(val) ? null : Integer.valueOf(val);
     }
 
     // =========================================================================

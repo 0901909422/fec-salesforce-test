@@ -92,8 +92,8 @@ public with sharing class FEC_SecondaryInfoAccountController {
             FEC_GetCardSecInfo.ResponseWrapper res =
                 FEC_GetCardSecInfo.callGetCardSecInfo(
                     generateTransactionId(),
-                    'CRM',
-                    Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                     c.FEC_Account_Number__c
                 );
 

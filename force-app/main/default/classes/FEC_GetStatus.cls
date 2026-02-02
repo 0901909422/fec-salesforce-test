@@ -45,7 +45,7 @@ public with sharing class FEC_GetStatus {
             // 1. CHUẨN BỊ DỮ LIỆU
             String transId = UUID.randomUUID().toString(); 
             String requestorId = UUID.randomUUID().toString(); 
-            String reqTime = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss');
+            String reqTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
             
             // 2. VALIDATION
             validateRequest(transId, requestorId, reqTime, accountNumber);
@@ -73,7 +73,7 @@ public with sharing class FEC_GetStatus {
             req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
             // req.setEndpoint('https://fa2dbdcc-9a32-4469-8fc0-d9ca8def9cdd.mock.pstmn.io/CMS_DeliveryCardStatusWS'); 
             req.setMethod('POST');
-            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
             req.setHeader('SOAPAction', 'http://fecredit.com.vn/CMS_DeliveryCardStatusWS/GetStatus'); 
             req.setBodyDocument(doc);
             
@@ -113,7 +113,7 @@ public with sharing class FEC_GetStatus {
         if (requestorId.length() > MAX_ID_LEN) throw new CalloutException('RequestorID is null or invalid'); 
 
         if (String.isBlank(dateTimeStr)) throw new CalloutException('DateTime is null or invalid');
-        String datePattern = '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}';
+        String datePattern = FEC_ConstantCommon.PATTERN_SYS_TIME;
         if (!Pattern.compile(datePattern).matcher(dateTimeStr).matches()) throw new CalloutException('DateTime is null or invalid or wrong format');
 
         if (String.isBlank(accountNumber)) throw new CalloutException('AccountNumber is null or invalid');
@@ -129,29 +129,24 @@ public with sharing class FEC_GetStatus {
         
         if (responseNode != null) {
             Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
-            info.transId = getTextSafe(sysNode, 'TransID');
-            info.sysDateTime = getTextSafe(sysNode, 'DateTime');
-            info.responseCode = getTextSafe(sysNode, 'Code');
-            info.responseDesc = getTextSafe(sysNode, 'Description');
+            info.transId = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+            info.sysDateTime = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+            info.responseCode = FEC_CommonUltils.getXmlValue(sysNode, 'Code');
+            info.responseDesc = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
             
             Dom.XmlNode infoNode = responseNode.getChildElement('Info', null);
             if (infoNode != null) {
-                info.accountNumber = getTextSafe(infoNode, 'AccountNumber');
-                info.cardNumber = getTextSafe(infoNode, 'CardNumber');        
-                info.trackingNo = getTextSafe(infoNode, 'TrackingNo');
-                info.issueDate = getTextSafe(infoNode, 'IssuelastUpdate');
-                info.status = getTextSafe(infoNode, 'Status');
-                info.description = getTextSafe(infoNode, 'Description');
-                info.deliveryNotes = getTextSafe(infoNode, 'Deliverynotes');
-                info.receiverName = getTextSafe(infoNode, 'ReceiverName');    
+                info.accountNumber = FEC_CommonUltils.getXmlValue(infoNode, 'AccountNumber');
+                info.cardNumber = FEC_CommonUltils.getXmlValue(infoNode, 'CardNumber');        
+                info.trackingNo = FEC_CommonUltils.getXmlValue(infoNode, 'TrackingNo');
+                info.issueDate = FEC_CommonUltils.getXmlValue(infoNode, 'IssuelastUpdate');
+                info.status = FEC_CommonUltils.getXmlValue(infoNode, 'Status');
+                info.description = FEC_CommonUltils.getXmlValue(infoNode, 'Description');
+                info.deliveryNotes = FEC_CommonUltils.getXmlValue(infoNode, 'Deliverynotes');
+                info.receiverName = FEC_CommonUltils.getXmlValue(infoNode, 'ReceiverName');    
             }
         }
         return info;
     }
 
-    private static String getTextSafe(Dom.XmlNode parent, String childName) {
-        if (parent == null) return '';
-        Dom.XmlNode child = parent.getChildElement(childName, null);
-        return child != null ? child.getText() : '';
-    }
 }

@@ -403,7 +403,7 @@ public without sharing class FEC_SalesInfoController {
     private static String getApplicationIdByAccountNumber(String accountNumber) {
         try {
             FEC_GetCustomerList.ResponseWrapper response = FEC_GetCustomerList.getCustomerList(
-                'CRM',              // requestorId
+                FEC_ConstantCommon.REQUESTOR_CRM,              // requestorId
                 null,               // phoneNumber
                 false,              // isReferenceSearch
                 null,               // fullName

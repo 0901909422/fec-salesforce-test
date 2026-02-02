@@ -59,7 +59,7 @@ public with sharing class FEC_GetPaymentInfo {
             req.setMethod('POST');
             req.setTimeout(120000);
 
-            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
             req.setHeader(
                 'SOAPAction',
                 'http://fecredit.com.vn/RepaymentInfo#GetPaymentInfo'
@@ -128,7 +128,7 @@ public with sharing class FEC_GetPaymentInfo {
         }
 
         // ===================== REQUESTORID =====================
-        Set<String> validRequestorIds = new Set<String>{'CRM','PORTAL','MOBILE_APP'};
+        Set<String> validRequestorIds = new Set<String>{FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP};
         if (String.isBlank(requestorId) || !validRequestorIds.contains(requestorId)) {
             throw new CalloutException('RequestorID is null or invalid, "' + requestorId + '" is not type of RequestorID');
         }
@@ -180,10 +180,10 @@ public with sharing class FEC_GetPaymentInfo {
         Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
         if (sysNode != null) {
             result.Sys = new SysResponse();
-            result.Sys.TransID = getVal(sysNode, 'TransID');
-            result.Sys.DateTimeStr = getVal(sysNode, 'DateTime');
-            result.Sys.Code = toInteger(getVal(sysNode, 'Code'));
-            result.Sys.Description = getVal(sysNode, 'Description');
+            result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+            result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+            result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+            result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
         }
 
         // ================= PAYMENTS =================
@@ -192,9 +192,9 @@ public with sharing class FEC_GetPaymentInfo {
         for (Dom.XmlNode payNode : responseNode.getChildElements()) {
             if (payNode.getName() == 'Payment') {
                 PaymentInfo p = new PaymentInfo();
-                p.AmountPaid = getDec(payNode, 'Amount_Paid');
-                p.TransactionDate = getVal(payNode, 'Transaction_Date');
-                p.Username = getVal(payNode, 'Username');
+                p.AmountPaid = FEC_CommonUltils.xmlValToDecimal(payNode, 'Amount_Paid');
+                p.TransactionDate = FEC_CommonUltils.getXmlValue(payNode, 'Transaction_Date');
+                p.Username = FEC_CommonUltils.getXmlValue(payNode, 'Username');
                 result.Payments.add(p);
             }
         }
@@ -202,21 +202,4 @@ public with sharing class FEC_GetPaymentInfo {
         return result;
     }
 
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
-    private static String getVal(Dom.XmlNode node, String name) {
-        if (node == null) return null;
-        Dom.XmlNode c = node.getChildElement(name, null);
-        return c == null ? null : c.getText();
-    }
-
-    private static Decimal getDec(Dom.XmlNode node, String name) {
-        String v = getVal(node, name);
-        return String.isBlank(v) ? null : Decimal.valueOf(v);
-    }
-
-    private static Integer toInteger(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
-    }
 }

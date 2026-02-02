@@ -134,7 +134,7 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
         
         // Generate header values
         String transactionId = String.valueOf(UUID.randomUUID());
-        String dateTimeValue = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX');
+        String dateTimeValue = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX);
         String requestorId = 'PEGA_CSM';
         
         // Validate request headers (TransID, DateTime, RequestorID)
@@ -221,7 +221,7 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
         // Validate DateTime format (ISO 8601: yyyy-MM-dd'T'HH:mm:ss.SSSXXX)
         try {
             // Check if DateTime matches expected pattern
-            Pattern dateTimePattern = Pattern.compile('^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$');
+            Pattern dateTimePattern = Pattern.compile(FEC_ConstantCommon.PATTERN_DATE_TIME_FULL);
             Matcher matcher = dateTimePattern.matcher(dateTimeValue);
             if (!matcher.matches()) {
                 return new ValidationResult(false, 'DateTime format is invalid. Expected format: yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX');

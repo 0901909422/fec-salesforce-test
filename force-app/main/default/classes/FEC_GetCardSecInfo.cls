@@ -164,8 +164,8 @@ public with sharing class FEC_GetCardSecInfo {
     // =========================================================================
     public static ResponseWrapper getCardSecInfo(String accountNumber) {
         String transId = UUID.randomUUID().toString();
-        String requestorId = 'CRM';
-        String dateTimeStr = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss');
+        String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
+        String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
         
         return callGetCardSecInfo(transId, requestorId, dateTimeStr, accountNumber);
     }
@@ -187,7 +187,7 @@ public with sharing class FEC_GetCardSecInfo {
         req.setEndpoint('https://d7f82a1e-a770-41e5-a1ea-0d684a148359.mock.pstmn.io');
         req.setMethod('POST');
         req.setTimeout(120000);
-        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+        req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
         req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CardInfo/GetCardSecInfo');
 
         String body =
@@ -250,10 +250,10 @@ public with sharing class FEC_GetCardSecInfo {
         // ===== SYS =====
         Dom.XmlNode sysNode = response.getChildElement('Sys', null);
         result.Sys = new SysResponse();
-        result.Sys.TransID = getVal(sysNode, 'TransID');
-        result.Sys.DateTime_x = getVal(sysNode, 'DateTime');
-        result.Sys.Code = toInt(getVal(sysNode, 'Code'));
-        result.Sys.Description = getVal(sysNode, 'Description');
+        result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+        result.Sys.DateTime_x = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+        result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+        result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
 
         // ===== CARD SEC INFO =====
         Dom.XmlNode infoNode = response.getChildElement('CardSecInfo', null);
@@ -265,60 +265,60 @@ public with sharing class FEC_GetCardSecInfo {
         Dom.XmlNode mcp = infoNode.getChildElement('MainCardProduct', null);
         if (mcp != null) {
             result.CardSecInfo.MainCardProduct = new MainCardProduct();
-            result.CardSecInfo.MainCardProduct.PurchaseLimit = getDec(mcp,'PurchaseLimit');
-            result.CardSecInfo.MainCardProduct.DailyRetailLimit = getDec(mcp,'DailyRetailLimit');
-            result.CardSecInfo.MainCardProduct.CashLimit = getDec(mcp,'CashLimit');
-            result.CardSecInfo.MainCardProduct.DailyCashLimit = getDec(mcp,'DailyCashLimit');
-            result.CardSecInfo.MainCardProduct.Rate = getDec(mcp,'Rate');
-            result.CardSecInfo.MainCardProduct.DailyCashNumber = toInt(getVal(mcp,'DailyCashNumber'));
-            result.CardSecInfo.MainCardProduct.DailyRetailNumber = toInt(getVal(mcp,'DailyRetailNumber'));
-            result.CardSecInfo.MainCardProduct.StatementNotificationType = getVal(mcp,'StatementNotificationType');
-            result.CardSecInfo.MainCardProduct.LastCreditLimitDate = toDate(getVal(mcp,'LastCreditLimitDate'));
-            result.CardSecInfo.MainCardProduct.LastCreditLimit = getDec(mcp,'LastCreditLimit');
-            result.CardSecInfo.MainCardProduct.LastDelinquencyDate = toDate(getVal(mcp,'LastDelinquencyDate'));
+            result.CardSecInfo.MainCardProduct.PurchaseLimit = FEC_CommonUltils.xmlValToDecimal(mcp,'PurchaseLimit');
+            result.CardSecInfo.MainCardProduct.DailyRetailLimit = FEC_CommonUltils.xmlValToDecimal(mcp,'DailyRetailLimit');
+            result.CardSecInfo.MainCardProduct.CashLimit = FEC_CommonUltils.xmlValToDecimal(mcp,'CashLimit');
+            result.CardSecInfo.MainCardProduct.DailyCashLimit = FEC_CommonUltils.xmlValToDecimal(mcp,'DailyCashLimit');
+            result.CardSecInfo.MainCardProduct.Rate = FEC_CommonUltils.xmlValToDecimal(mcp,'Rate');
+            result.CardSecInfo.MainCardProduct.DailyCashNumber = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(mcp,'DailyCashNumber'));
+            result.CardSecInfo.MainCardProduct.DailyRetailNumber = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(mcp,'DailyRetailNumber'));
+            result.CardSecInfo.MainCardProduct.StatementNotificationType = FEC_CommonUltils.getXmlValue(mcp,'StatementNotificationType');
+            result.CardSecInfo.MainCardProduct.LastCreditLimitDate = FEC_CommonUltils.toDate(FEC_CommonUltils.getXmlValue(mcp,'LastCreditLimitDate'));
+            result.CardSecInfo.MainCardProduct.LastCreditLimit = FEC_CommonUltils.xmlValToDecimal(mcp,'LastCreditLimit');
+            result.CardSecInfo.MainCardProduct.LastDelinquencyDate = FEC_CommonUltils.toDate(FEC_CommonUltils.getXmlValue(mcp,'LastDelinquencyDate'));
         }
 
         // CardFullPayment
         Dom.XmlNode cfp = infoNode.getChildElement('CardFullPayment', null);
         if (cfp != null) {
             result.CardSecInfo.CardFullPayment = new CardFullPayment();
-            result.CardSecInfo.CardFullPayment.DailyInterestCard = getDec(cfp,'DailyInterestCard');
-            result.CardSecInfo.CardFullPayment.CardPrincipal = getDec(cfp,'CardPrincipal');
-            result.CardSecInfo.CardFullPayment.DailyInterestIPP = getDec(cfp,'DailyInterestIPP');
-            result.CardSecInfo.CardFullPayment.IPPPrincipal = getDec(cfp,'IPPPrincipal');
-            result.CardSecInfo.CardFullPayment.IPPFee = getDec(cfp,'IPPFee');
+            result.CardSecInfo.CardFullPayment.DailyInterestCard = FEC_CommonUltils.xmlValToDecimal(cfp,'DailyInterestCard');
+            result.CardSecInfo.CardFullPayment.CardPrincipal = FEC_CommonUltils.xmlValToDecimal(cfp,'CardPrincipal');
+            result.CardSecInfo.CardFullPayment.DailyInterestIPP = FEC_CommonUltils.xmlValToDecimal(cfp,'DailyInterestIPP');
+            result.CardSecInfo.CardFullPayment.IPPPrincipal = FEC_CommonUltils.xmlValToDecimal(cfp,'IPPPrincipal');
+            result.CardSecInfo.CardFullPayment.IPPFee = FEC_CommonUltils.xmlValToDecimal(cfp,'IPPFee');
         }
 
         // MainCardPlastic
         Dom.XmlNode mcp2 = infoNode.getChildElement('MainCardPlastic', null);
         if (mcp2 != null) {
             result.CardSecInfo.MainCardPlastic = new MainCardPlastic();
-            result.CardSecInfo.MainCardPlastic.EmbossingName = getVal(mcp2,'EmbossingName');
-            result.CardSecInfo.MainCardPlastic.MaskedCardNumber = getVal(mcp2,'MaskedCardNumber');
-            result.CardSecInfo.MainCardPlastic.ActivationDate = getVal(mcp2,'ActivationDate');
-            result.CardSecInfo.MainCardPlastic.LastCodeChangeDate = getVal(mcp2,'LastCodeChangeDate');
+            result.CardSecInfo.MainCardPlastic.EmbossingName = FEC_CommonUltils.getXmlValue(mcp2,'EmbossingName');
+            result.CardSecInfo.MainCardPlastic.MaskedCardNumber = FEC_CommonUltils.getXmlValue(mcp2,'MaskedCardNumber');
+            result.CardSecInfo.MainCardPlastic.ActivationDate = FEC_CommonUltils.getXmlValue(mcp2,'ActivationDate');
+            result.CardSecInfo.MainCardPlastic.LastCodeChangeDate = FEC_CommonUltils.getXmlValue(mcp2,'LastCodeChangeDate');
             result.CardSecInfo.MainCardPlastic.EcomActiveFlag =
-                getVal(mcp2,'EcomActiveFlag') == '1';
+                FEC_CommonUltils.getXmlValue(mcp2,'EcomActiveFlag') == '1';
         }
 
         // MainCardBalance
         Dom.XmlNode mcb = infoNode.getChildElement('MainCardBalance', null);
         if (mcb != null) {
             result.CardSecInfo.MainCardBalance = new MainCardBalance();
-            result.CardSecInfo.MainCardBalance.RemainingCashLimit = getDec(mcb,'RemainingCashLimit');
-            result.CardSecInfo.MainCardBalance.RemainingRetailLimit = getDec(mcb,'RemainingRetailLimit');
-            result.CardSecInfo.MainCardBalance.DailyRemainingCashLimit = getDec(mcb,'DailyRemainingCashLimit');
-            result.CardSecInfo.MainCardBalance.CurrentBalance = getDec(mcb,'CurrentBalance');
-            result.CardSecInfo.MainCardBalance.TotalBalance = getDec(mcb,'TotalBalance');
+            result.CardSecInfo.MainCardBalance.RemainingCashLimit = FEC_CommonUltils.xmlValToDecimal(mcb,'RemainingCashLimit');
+            result.CardSecInfo.MainCardBalance.RemainingRetailLimit = FEC_CommonUltils.xmlValToDecimal(mcb,'RemainingRetailLimit');
+            result.CardSecInfo.MainCardBalance.DailyRemainingCashLimit = FEC_CommonUltils.xmlValToDecimal(mcb,'DailyRemainingCashLimit');
+            result.CardSecInfo.MainCardBalance.CurrentBalance = FEC_CommonUltils.xmlValToDecimal(mcb,'CurrentBalance');
+            result.CardSecInfo.MainCardBalance.TotalBalance = FEC_CommonUltils.xmlValToDecimal(mcb,'TotalBalance');
         }
 
         // PassDue
         Dom.XmlNode mcb3 = infoNode.getChildElement('PassDue', null);
         if (mcb3 != null) {
             result.CardSecInfo.PassDue = new PassDue();
-            result.CardSecInfo.PassDue.ResponsibleUnit = getVal(mcb3,'ResponsibleUnit');
-            result.CardSecInfo.PassDue.ResposiblePerson = getVal(mcb3,'ResposiblePerson');
-            result.CardSecInfo.PassDue.ResposiblePersonPhone = getVal(mcb3,'ResposiblePersonPhone');
+            result.CardSecInfo.PassDue.ResponsibleUnit = FEC_CommonUltils.getXmlValue(mcb3,'ResponsibleUnit');
+            result.CardSecInfo.PassDue.ResposiblePerson = FEC_CommonUltils.getXmlValue(mcb3,'ResposiblePerson');
+            result.CardSecInfo.PassDue.ResposiblePersonPhone = FEC_CommonUltils.getXmlValue(mcb3,'ResposiblePersonPhone');
         }
 
         // SupplementaryCards
@@ -333,20 +333,20 @@ public with sharing class FEC_GetCardSecInfo {
                 }
                 if (childName == 'SupplementaryCard') {
                     SupplementaryCard sup = new SupplementaryCard();
-                    sup.CardNumber = getVal(child, 'CardNumber');
-                    sup.EmbossingName = getVal(child, 'EmbossingName');
-                    sup.CustomerName = getVal(child, 'CustomerName');
-                    sup.CustomerRelation = getVal(child, 'CustomerRelation');
-                    sup.CardholderName = getVal(child, 'CardholderName');
-                    sup.Status = getVal(child, 'Status');
-                    sup.ExpiryDate = getVal(child, 'ExpiryDate');
-                    sup.ContactPhone = getVal(child, 'ContactPhone');
-                    sup.CardIssueDate = toDate(getVal(child, 'CardIssueDate'));
-                    sup.CardActivationDate = toDate(getVal(child, 'CardActivationDate'));
-                    sup.PlasticIndicator = getVal(child, 'PlasticIndicator');
-                    sup.BlockCode = getVal(child, 'BlockCode');
-                    sup.CardholderFlag = getVal(child, 'CardholderFlag');
-                    sup.Gender = getVal(child, 'Gender');
+                    sup.CardNumber = FEC_CommonUltils.getXmlValue(child, 'CardNumber');
+                    sup.EmbossingName = FEC_CommonUltils.getXmlValue(child, 'EmbossingName');
+                    sup.CustomerName = FEC_CommonUltils.getXmlValue(child, 'CustomerName');
+                    sup.CustomerRelation = FEC_CommonUltils.getXmlValue(child, 'CustomerRelation');
+                    sup.CardholderName = FEC_CommonUltils.getXmlValue(child, 'CardholderName');
+                    sup.Status = FEC_CommonUltils.getXmlValue(child, 'Status');
+                    sup.ExpiryDate = FEC_CommonUltils.getXmlValue(child, 'ExpiryDate');
+                    sup.ContactPhone = FEC_CommonUltils.getXmlValue(child, 'ContactPhone');
+                    sup.CardIssueDate = FEC_CommonUltils.toDate(FEC_CommonUltils.getXmlValue(child, 'CardIssueDate'));
+                    sup.CardActivationDate = FEC_CommonUltils.toDate(FEC_CommonUltils.getXmlValue(child, 'CardActivationDate'));
+                    sup.PlasticIndicator = FEC_CommonUltils.getXmlValue(child, 'PlasticIndicator');
+                    sup.BlockCode = FEC_CommonUltils.getXmlValue(child, 'BlockCode');
+                    sup.CardholderFlag = FEC_CommonUltils.getXmlValue(child, 'CardholderFlag');
+                    sup.Gender = FEC_CommonUltils.getXmlValue(child, 'Gender');
                     result.CardSecInfo.SupplementaryCards.add(sup);
                 }
             }
@@ -364,18 +364,18 @@ public with sharing class FEC_GetCardSecInfo {
                 }
                 if (childName == 'IPP') {
                     IPP ipp = new IPP();
-                    ipp.IPPPlan = getVal(child, 'IPPPlan');
-                    ipp.IPPBalance = getDec(child, 'IPPBalance');
-                    ipp.InterestRate = getDec(child, 'InterestRate');
-                    ipp.Term = getDec(child, 'CurrentTerm');
-                    ipp.IPPStartDate = getVal(child, 'IPPStartDate');
-                    ipp.IPPMatureDate = getVal(child, 'IPPMatureDate');
-                    ipp.IPPCurrentBalance = getDec(child, 'IPPCurrentBalance');
-                    ipp.PaymentAmount = getDec(child, 'PaymentAmount');
-                    ipp.IPPRecordNo = getVal(child, 'IPPRecordNo');
-                    ipp.OpeningBalance = getDec(child, 'OpeningBalance');
-                    ipp.MonthlyPrincipal = getDec(child, 'MonthlyPrincipal');
-                    ipp.MonthlyInterest = getDec(child, 'MonthlyInterest');
+                    ipp.IPPPlan = FEC_CommonUltils.getXmlValue(child, 'IPPPlan');
+                    ipp.IPPBalance = FEC_CommonUltils.xmlValToDecimal(child, 'IPPBalance');
+                    ipp.InterestRate = FEC_CommonUltils.xmlValToDecimal(child, 'InterestRate');
+                    ipp.Term = FEC_CommonUltils.xmlValToDecimal(child, 'CurrentTerm');
+                    ipp.IPPStartDate = FEC_CommonUltils.getXmlValue(child, 'IPPStartDate');
+                    ipp.IPPMatureDate = FEC_CommonUltils.getXmlValue(child, 'IPPMatureDate');
+                    ipp.IPPCurrentBalance = FEC_CommonUltils.xmlValToDecimal(child, 'IPPCurrentBalance');
+                    ipp.PaymentAmount = FEC_CommonUltils.xmlValToDecimal(child, 'PaymentAmount');
+                    ipp.IPPRecordNo = FEC_CommonUltils.getXmlValue(child, 'IPPRecordNo');
+                    ipp.OpeningBalance = FEC_CommonUltils.xmlValToDecimal(child, 'OpeningBalance');
+                    ipp.MonthlyPrincipal = FEC_CommonUltils.xmlValToDecimal(child, 'MonthlyPrincipal');
+                    ipp.MonthlyInterest = FEC_CommonUltils.xmlValToDecimal(child, 'MonthlyInterest');
                     result.CardSecInfo.IPPs.add(ipp);
                 }
             }
@@ -406,7 +406,7 @@ public with sharing class FEC_GetCardSecInfo {
             throw new CalloutException('RequestorID is null or invalid');
         }
 
-        Set<String> validRequestorIds = new Set<String>{ 'CRM', 'PORTAL', 'MOBILE_APP' };
+        Set<String> validRequestorIds = new Set<String>{ FEC_ConstantCommon.REQUESTOR_CRM, FEC_ConstantCommon.REQUESTOR_PORTAL, FEC_ConstantCommon.REQUESTOR_MOBILE_APP };
         if (!validRequestorIds.contains(requestorId)) {
             throw new CalloutException(
                 'RequestorID is null or invalid, "' + requestorId + '" is not type of RequestorID'
@@ -443,24 +443,4 @@ public with sharing class FEC_GetCardSecInfo {
         }
     }
 
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
-    private static String getVal(Dom.XmlNode n, String name) {
-        Dom.XmlNode c = n == null ? null : n.getChildElement(name, null);
-        return c == null ? null : c.getText();
-    }
-
-    private static Decimal getDec(Dom.XmlNode n, String name) {
-        String v = getVal(n, name);
-        return String.isBlank(v) ? null : Decimal.valueOf(v);
-    }
-
-    private static Integer toInt(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
-    }
-
-    private static Date toDate(String v) {
-        return String.isBlank(v) ? null : Date.valueOf(v);
-    }
 }

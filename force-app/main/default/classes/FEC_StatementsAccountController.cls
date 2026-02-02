@@ -76,8 +76,8 @@ public with sharing class FEC_StatementsAccountController {
         try {
             res = FEC_GetCardBasicInfo.callGetCardBasicInfo(
                 String.valueOf(UUID.randomUUID()),
-                'CRM',
-                Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 ch.FEC_Account_Number__c
             );
         } catch (Exception e) {

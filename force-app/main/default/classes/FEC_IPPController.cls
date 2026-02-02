@@ -413,7 +413,7 @@ public with sharing class FEC_IPPController {
             
             // Mapping fields từ GetCardPlanInfo
             ipp.FEC_IPP_Plan__c = dto.planNumber;           // PlanNumber → IPP Plan
-            ipp.FEC_IPP_Open_Date__c = parseDate(dto.openDate); // PlanOpenDate → IPP Open Date
+            ipp.FEC_IPP_Open_Date__c = FEC_CommonUltils.parseDate(dto.openDate); // PlanOpenDate → IPP Open Date
             ipp.FEC_IPP_Balance__c = dto.currentBalance;    // PlanCurrentBalance → IPP Balance
             
             // Merge dữ liệu từ GetCardSecInfo - Match theo thứ tự (index) vì plan number có thể khác nhau
@@ -429,8 +429,8 @@ public with sharing class FEC_IPPController {
             
             if (secIPP != null) {
                 // CHỈ dùng IPPStartDate, IPPMatureDate, IPPCurrentBalance, Term từ GetCardSecInfo
-                ipp.FEC_IPP_First_Due_Date__c = String.isNotBlank(secIPP.IPPStartDate) ? parseDate(secIPP.IPPStartDate) : null;
-                ipp.FEC_IPP_Mature_Date__c = String.isNotBlank(secIPP.IPPMatureDate) ? parseDate(secIPP.IPPMatureDate) : null;
+                ipp.FEC_IPP_First_Due_Date__c = String.isNotBlank(secIPP.IPPStartDate) ? FEC_CommonUltils.parseDate(secIPP.IPPStartDate) : null;
+                ipp.FEC_IPP_Mature_Date__c = String.isNotBlank(secIPP.IPPMatureDate) ? FEC_CommonUltils.parseDate(secIPP.IPPMatureDate) : null;
                 ipp.FEC_IPP_Current_Balance__c = secIPP.IPPCurrentBalance != null ? secIPP.IPPCurrentBalance : null;
                 ipp.FEC_IPP_Current_Term__c = secIPP.Term != null ? secIPP.Term : null;
                 // IPP Record No lấy từ GetCardSecInfo (1-36, dựa trên thứ tự OPENING_BALANCE_1, _2, ..., _36)
@@ -519,35 +519,6 @@ public with sharing class FEC_IPPController {
         }
     }
 
-    /**
-     * Parse date string từ yyyy-MM-dd sang Date
-     * @param dateStr - Date string format yyyy-MM-dd
-     * @return Date object
-     */
-    private static Date parseDate(String dateStr) {
-        if (String.isBlank(dateStr)) {
-            System.debug('### parseDate: dateStr is blank, returning null');
-            return null;
-        }
-        try {
-            List<String> parts = dateStr.split('-');
-            if (parts.size() == 3) {
-                Date result = Date.newInstance(
-                    Integer.valueOf(parts[0]), 
-                    Integer.valueOf(parts[1]), 
-                    Integer.valueOf(parts[2])
-                );
-                System.debug('### parseDate: parsed ' + dateStr + ' to ' + result);
-                return result;
-            } else {
-                System.debug('### parseDate: Invalid date format, expected yyyy-MM-dd, got: ' + dateStr + ' (parts.size()=' + parts.size() + ')');
-            }
-        } catch (Exception e) {
-            System.debug('### parseDate ERROR: ' + dateStr + ' - ' + e.getMessage());
-        }
-        return null;
-    }
-    
     // ==========================================
     // EXISTING METHODS
     // ==========================================

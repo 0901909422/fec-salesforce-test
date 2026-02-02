@@ -99,7 +99,7 @@ public without sharing class FEC_GetAppStatusCallout {
                 this.status = app.Status;
                 this.statusForSale = app.StatusForSale;
                 this.step = app.Step;
-                this.updatedDateTime = parseDateTime(app.UpdatedDateTime);
+                this.updatedDateTime = FEC_CommonUltils.parseDateTime(app.UpdatedDateTime);
             }
         }
     }
@@ -134,7 +134,7 @@ public without sharing class FEC_GetAppStatusCallout {
         
         request.headers = new Map<String, Object>{
             'TransID'      => transactionId,
-            'DateTime'     => Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX'),
+            'DateTime'     => Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX),
             'RequestorID'  => 'PegaCSM',
             'Content-Type' => 'application/json'
         };
@@ -314,24 +314,4 @@ public without sharing class FEC_GetAppStatusCallout {
         return result;
     }
     
-    //=============== UTILITY METHODS ===============//
-    
-    // Parse datetime string từ API response
-    private static Datetime parseDateTime(String dateTimeStr) {
-        if (String.isBlank(dateTimeStr)) {
-            return null;
-        }
-        
-        try {
-            // Format: 2025-10-31T14:00:10.491Z
-            dateTimeStr = dateTimeStr.replace('T', ' ').replace('Z', '');
-            if (dateTimeStr.contains('.')) {
-                dateTimeStr = dateTimeStr.substringBefore('.');
-            }
-            return Datetime.valueOf(dateTimeStr);
-        } catch (Exception e) {
-            System.debug('Failed to parse datetime: ' + dateTimeStr + ', Error: ' + e.getMessage());
-            return null;
-        }
-    }
 }
