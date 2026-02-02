@@ -12,8 +12,35 @@ import checkDuplicateConfig from '@salesforce/apex/FEC_CustomerAdditionalInfoLis
 import { loadScript } from 'lightning/platformResourceLoader';
 import FEC_SHEETJS from '@salesforce/resourceUrl/FEC_SheetJS';
 
+import lblDataLinkage from '@salesforce/label/c.FEC_Lbl_Data_Linkage';
+import lblFieldId from '@salesforce/label/c.FEC_Lbl_Field_ID';
+import lblFieldName from '@salesforce/label/c.FEC_Lbl_Field_Name';
+import lblIsActive from '@salesforce/label/c.FEC_Lbl_Is_Active';
+import lblStartDate from '@salesforce/label/c.FEC_Lbl_Start_Date';
+import lblEndDate from '@salesforce/label/c.FEC_Lbl_End_Date';
+import msgProcessEOD from '@salesforce/label/c.FEC_Msg_Process_End_Of_Day';
+import lblChooseFile from '@salesforce/label/c.FEC_Lbl_Choose_File';
+import btnUpload from '@salesforce/label/c.FEC_Btn_Upload';
+import btnDownloadTemplate from '@salesforce/label/c.FEC_Btn_Download_Template';
+import lblFileName from '@salesforce/label/c.FEC_Lbl_File_Name';
+import lblStatus from '@salesforce/label/c.FEC_Lbl_Status';
+import lblUploadedBy from '@salesforce/label/c.FEC_Lbl_Uploaded_By';
+import lblUploadedAt from '@salesforce/label/c.FEC_Lbl_Uploaded_At';
+import lblAction from '@salesforce/label/c.FEC_Lbl_Action';
+import msgNoContent from '@salesforce/label/c.FEC_Msg_No_Content';
+import btnCancel from '@salesforce/label/c.FEC_Btn_Cancel';
+import btnFinish from '@salesforce/label/c.FEC_Btn_Finish';
+
 export default class FecCustomerUpsertModal extends LightningElement {
-    @api title = 'Thêm mới/Cập nhật';
+    label = {
+        lblDataLinkage, lblFieldId, lblFieldName, lblIsActive,
+        lblStartDate, lblEndDate, msgProcessEOD, lblChooseFile,
+        btnUpload, btnDownloadTemplate, lblFileName, lblStatus,
+        lblUploadedBy, lblUploadedAt, lblAction, msgNoContent,
+        btnCancel, btnFinish
+    };
+
+    @api title;
     @api initialData = {}; 
 
     @track isLibraryLoaded = false

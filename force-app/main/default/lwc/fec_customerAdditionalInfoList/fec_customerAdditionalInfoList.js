@@ -5,52 +5,96 @@ import getUploadedConfigs from '@salesforce/apex/FEC_CustomerAdditionalInfoListC
 import getExistingConfigs from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getExistingConfigs';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
+// Import labels
+import customerDataManagement from '@salesforce/label/c.FEC_Customer_Data_Management';
+import addNew from '@salesforce/label/c.FEC_Btn_Add_New';
+import reload from '@salesforce/label/c.FEC_Btn_Reload';
+import titlePendingProcess from '@salesforce/label/c.FEC_Title_Pending_Process';
+import titleExistingFields from '@salesforce/label/c.FEC_Title_Existing_Fields';
+import LBL_ADD_NEW_MODAL_TITLE from '@salesforce/label/c.FEC_Lbl_Add_New_Modal_Title';
+import LBL_EDIT_TITLE from '@salesforce/label/c.FEC_Lbl_Edit_Title';
+import LBL_DATA_LINKAGE from '@salesforce/label/c.FEC_Lbl_Data_Linkage';
+import LBL_FIELD_ID from '@salesforce/label/c.FEC_Lbl_Field_ID';
+import LBL_FIELD_NAME from '@salesforce/label/c.FEC_Lbl_Field_Name';
+import LBL_STATUS from '@salesforce/label/c.FEC_Lbl_Status';
+import LBL_IS_ACTIVE from '@salesforce/label/c.FEC_Lbl_Is_Active';
+import LBL_START_DATE from '@salesforce/label/c.FEC_Lbl_Start_Date';
+import LBL_END_DATE from '@salesforce/label/c.FEC_Lbl_End_Date';
+import LBL_HISTORY from '@salesforce/label/c.FEC_Title_Change_History';
+
 export default class FecCustomerAdditionalInfoList extends LightningElement {
+    label = {
+        customerDataManagement,
+        addNew,
+        reload,
+        titlePendingProcess,
+        titleExistingFields
+    };
+
     @track columnsProcessed = [
         { 
-            label: 'Trường liên kết dữ liệu', fieldName: 'FEC_KeyIdentifier__c', type: 'text', sortable: true,
+            label: LBL_DATA_LINKAGE, // Dùng biến import
+            fieldName: 'FEC_KeyIdentifier__c', type: 'text', sortable: true,
             actions: HEADER_ACTIONS 
         }, 
         { 
-            label: 'Tên trường dữ liệu', fieldName: 'FEC_FieldName__c', type: 'text', sortable: true, wrapText: true, 
+            label: LBL_FIELD_NAME, 
+            fieldName: 'FEC_FieldName__c', type: 'text', sortable: true, wrapText: true, 
             actions: HEADER_ACTIONS 
         }, 
         { 
-            label: 'Tình trạng yêu cầu', fieldName: 'FEC_Status__c', type: 'text', sortable: true,
+            label: LBL_STATUS, 
+            fieldName: 'FEC_Status__c', type: 'text', sortable: true,
             actions: HEADER_ACTIONS 
         },
         { 
-            label: 'Khả dụng', fieldName: 'FEC_IsActive__c', type: 'boolean', sortable: true, 
+            label: LBL_IS_ACTIVE, 
+            fieldName: 'FEC_IsActive__c', type: 'boolean', sortable: true, 
             actions: HEADER_ACTIONS 
         },
         { 
-            label: 'Ngày bắt đầu', fieldName: 'FEC_StartDate__c', type: 'text', sortable: true,
+            label: LBL_START_DATE, 
+            fieldName: 'FEC_StartDate__c', type: 'text', sortable: true,
             actions: HEADER_ACTIONS 
         },
         { 
-            label: 'Ngày kết thúc', fieldName: 'FEC_EndDate__c', type: 'text', sortable: true,
+            label: LBL_END_DATE, 
+            fieldName: 'FEC_EndDate__c', type: 'text', sortable: true,
             actions: HEADER_ACTIONS 
         },
-        { type: 'button', initialWidth: 100, typeAttributes: { label: 'Lịch sử', name: 'view_history', variant: 'brand-outline' }},
-        { type: 'button-icon', fixedWidth: 50, typeAttributes: { iconName: 'utility:edit', name: 'edit', variant: 'bare' }}
-    ];
-    @track columnsPending = [
-        { label: 'Trường liên kết dữ liệu', fieldName: 'FEC_KeyIdentifier__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
-        { label: 'Mã trường dữ liệu', fieldName: 'FEC_FieldID__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
-        { label: 'Tên trường dữ liệu', fieldName: 'FEC_FieldName__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
-        { label: 'Tình trạng yêu cầu', fieldName: 'FEC_Status__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
-        { label: 'Ngày bắt đầu', fieldName: 'FEC_StartDate__c', type: 'date', sortable: true, actions: HEADER_ACTIONS },
-        { label: 'Ngày kết thúc', fieldName: 'FEC_EndDate__c', type: 'date', sortable: true, actions: HEADER_ACTIONS },
-        
-        // CỘT HÀNH ĐỘNG 1: Edit Icon
+        { 
+            type: 'button', 
+            initialWidth: 100, 
+            typeAttributes: { 
+                label: LBL_HISTORY, 
+                name: 'view_history', 
+                variant: 'brand-outline' 
+            }
+        },
         { 
             type: 'button-icon', 
             fixedWidth: 50, 
             typeAttributes: { 
                 iconName: 'utility:edit', 
                 name: 'edit', 
-                variant: 'bare', 
-                alternativeText: 'Chỉnh sửa'
+                variant: 'bare' 
+            }
+        }
+    ];
+    @track columnsPending = [
+        { label: LBL_DATA_LINKAGE, fieldName: 'FEC_KeyIdentifier__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
+        { label: LBL_FIELD_ID, fieldName: 'FEC_FieldID__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
+        { label: LBL_FIELD_NAME, fieldName: 'FEC_FieldName__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
+        { label: LBL_STATUS, fieldName: 'FEC_Status__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
+        { label: LBL_START_DATE, fieldName: 'FEC_StartDate__c', type: 'date', sortable: true, actions: HEADER_ACTIONS },
+        { label: LBL_END_DATE, fieldName: 'FEC_EndDate__c', type: 'date', sortable: true, actions: HEADER_ACTIONS },
+        { 
+            type: 'button-icon', 
+            fixedWidth: 50, 
+            typeAttributes: { 
+                iconName: 'utility:edit', 
+                name: 'edit', 
+                variant: 'bare'
             } 
         }
     ];
@@ -70,7 +114,7 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
     // Modal
     @track isHistoryModalOpen = false;
     @track isEditModalOpen = false;
-    @track modalTitle = 'Thêm mới Trường Thông Tin';
+    @track modalTitle = LBL_ADD_NEW_MODAL_TITLE;
     @track formData = { ...this.DEFAULT_FORM_DATA };
     @track configId;
     @track isLoading = false;
@@ -133,12 +177,12 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
     }
     closeHistoryModal(){ this.isHistoryModalOpen = false; }
     handleAddNew() {
-        this.modalTitle = 'Thêm mới Trường Thông Tin';
+        this.modalTitle = LBL_ADD_NEW_MODAL_TITLE;
         this.formData = { ...this.DEFAULT_FORM_DATA };
         this.isEditModalOpen = true;
     }
     openEditModal(row) {
-        this.modalTitle = 'Chỉnh sửa: ' + row.FEC_KeyIdentifier__c;
+        this.modalTitle = LBL_EDIT_TITLE + ': ' + row.FEC_KeyIdentifier__c;
         this.formData = {
             Id: row.Id,
             FEC_KeyIdentifier__c: row.FEC_KeyIdentifier__c,

@@ -1,9 +1,9 @@
 <template>
-    <lightning-card title="Quản lý dữ liệu khách hàng" icon-name="standard:customers" class="relative-container">
+    <lightning-card title={label.customerDataManagement} icon-name="standard:customers" class="relative-container">
         
         <div slot="actions">
-            <lightning-button label="Thêm mới" variant="success" class="slds-m-left_x-small" onclick={handleAddNew}></lightning-button>
-            <lightning-button label="Tải lại" variant="success" class="slds-m-left_x-small" onclick={handleReload}></lightning-button>
+            <lightning-button label={label.addNew} variant="success" class="slds-m-left_x-small" onclick={handleAddNew}></lightning-button>
+            <lightning-button label={label.reload} variant="success" class="slds-m-left_x-small" onclick={handleReload}></lightning-button>
         </div>
 
         <div class="slds-p-around_medium">
@@ -12,7 +12,7 @@
             </div>
             <div class="slds-m-bottom_large">
                 <div class="header-section slds-p-vertical_x-small slds-p-horizontal_small slds-theme_shade slds-border_top slds-border_bottom">
-                    <h3 class="slds-text-heading_small"><strong>Tải lên thành công và chờ xử lý</strong></h3>
+                    <h3 class="slds-text-heading_small"><strong>{label.titlePendingProcess}</strong></h3>
                 </div>
                 <c-fec-custom-datatable
                     hide-checkbox-column="true"
@@ -24,7 +24,7 @@
 
             <div class="slds-m-bottom_large">
                 <div class="header-section slds-p-vertical_x-small slds-p-horizontal_small slds-theme_shade slds-border_top slds-border_bottom">
-                    <h3 class="slds-text-heading_small"><strong>Trường Thông Tin Hiện Có</strong></h3>
+                    <h3 class="slds-text-heading_small"><strong>{label.titleExistingFields}</strong></h3>
                 </div>
                 <c-fec-custom-datatable
                     hide-checkbox-column="true"

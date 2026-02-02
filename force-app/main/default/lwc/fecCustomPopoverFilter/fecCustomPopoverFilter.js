@@ -1,5 +1,11 @@
 import { LightningElement, api, track } from 'lwc';
 
+import lblFilter from '@salesforce/label/c.FEC_Lbl_Filter';
+import btnClearFilter from '@salesforce/label/c.FEC_Btn_Clear_Filter';
+import btnApply from '@salesforce/label/c.FEC_Btn_Apply';
+import btnCancel from '@salesforce/label/c.FEC_Btn_Cancel';
+import msgNoContent from '@salesforce/label/c.FEC_Msg_No_Content';
+
 export default class Fec_CustomPopoverFilter extends LightningElement {
     @api strColumnLabel = '';
     @api strColumnField = '';
@@ -27,6 +33,14 @@ export default class Fec_CustomPopoverFilter extends LightningElement {
         return this.lstAllOptions.filter(opt => 
             opt.label.toLowerCase().includes(this.strSearchKey.toLowerCase())
         );
+    }
+
+    label = {
+        lblFilter,
+        btnClearFilter,
+        btnApply,
+        btnCancel,
+        msgNoContent
     }
 
     handleSearchChange(event) { this.strSearchKey = event.target.value; }

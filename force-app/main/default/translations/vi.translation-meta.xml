@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Translations xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customLabels>
+        <name>FEC_Customer_Data_Management</name>
+        <label>Quản lý dữ liệu khách hàng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Add_New</name>
+        <label>Thêm mới</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Reload</name>
+        <label>Tải lại</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Close</name>
+        <label>Đóng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Cancel</name>
+        <label>Hủy bỏ</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Finish</name>
+        <label>Hoàn tất</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Upload</name>
+        <label>Tải lên</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Download_Template</name>
+        <label>Tải mẫu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Title_Pending_Process</name>
+        <label>Tải lên thành công và chờ xử lý</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Title_Existing_Fields</name>
+        <label>Trường Thông Tin Hiện Có</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Title_Change_History</name>
+        <label>Lịch sử thay đổi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Data_Linkage</name>
+        <label>Trường liên kết dữ liệu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Field_ID</name>
+        <label>Mã số trường</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Field_Name</name>
+        <label>Tên trường dữ liệu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Is_Active</name>
+        <label>Khả dụng?</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Start_Date</name>
+        <label>Ngày bắt đầu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_End_Date</name>
+        <label>Ngày kết thúc</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Msg_Process_End_Of_Day</name>
+        <label>Tệp đã tải lên sẽ được xử lý vào cuối ngày</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Choose_File</name>
+        <label>Chọn tập tin</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_File_Name</name>
+        <label>Tên File</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Status</name>
+        <label>Tình trạng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Uploaded_By</name>
+        <label>Tải lên bởi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Uploaded_At</name>
+        <label>Tải lên lúc</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Action</name>
+        <label>Hành động</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Msg_No_Content</name>
+        <label>Không có dữ liệu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Filter</name>
+        <label>Lọc</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Clear_Filter</name>
+        <label>Xóa bộ lọc</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Apply</name>
+        <label>Áp dụng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Status_Request</name>
+        <label>Tình trạng yêu cầu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Is_Active_Table</name>
+        <label>Khả dụng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_History</name>
+        <label>Lịch sử</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Alt_Edit</name>
+        <label>Chỉnh sửa</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Created_By</name>
+        <label>Tạo bởi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Created_Date</name>
+        <label>Ngày tạo</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Modified_By</name>
+        <label>Sửa đổi bởi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Modified_Date</name>
+        <label>Ngày sửa đổi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_End_Date_Finish</name>
+        <label>Ngày hoàn tất</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Add_New_Modal_Title</name>
+        <label>Thêm mới Trường Thông Tin</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Edit_Title</name>
+        <label>Chỉnh sửa</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_Select</name>
+        <label>Chọn..</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_CIF</name>
+        <label>Số CIF</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_IDCard</name>
+        <label>Số CMND/CCCD</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_Contract</name>
+        <label>Số Hợp đồng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_Account</name>
+        <label>Số tài khoản</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_AppID</name>
+        <label>Mã hồ sơ</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_Phone</name>
+        <label>Số điện thoại chính</label>
+    </customLabels>
+</Translations>

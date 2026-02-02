@@ -5,8 +5,8 @@
         
         <div class="slds-popover__body slds-p-around_medium">
             <div class="clear-filter-container slds-grid slds-grid_align-spread slds-m-bottom_x-small">
-                <h2 class="slds-text-heading_small">Lọc: {strColumnLabel}</h2>
-                <a href="javascript:void(0);" onclick={handleClearFilter} class="slds-text-link">Clear Filter</a>
+                <h2 class="slds-text-heading_small">{label.lblFilter}: {strColumnLabel}</h2>
+                <a href="javascript:void(0);" onclick={handleClearFilter} class="slds-text-link">{label.btnClearFilter}</a>
             </div>
             
             <div class="slds-m-top_small slds-m-bottom_small filter-options-scroll">
@@ -27,7 +27,7 @@
                         </li>
                     </template>
                     <template if:false={lstVisibleOptions.length}>
-                        <p class="slds-text-align_center slds-text-color_weak slds-m-top_small">Không có dữ liệu</p>
+                        <p class="slds-text-align_center slds-text-color_weak slds-m-top_small">{label.msgNoContent}</p>
                     </template>
                 </ul>
             </div>
@@ -45,8 +45,8 @@
         </div>
 
         <footer class="slds-popover__footer slds-grid slds-grid_align-spread">
-            <lightning-button label="Apply" variant="brand" onclick={handleApply}></lightning-button>
-            <lightning-button label="Cancel" variant="neutral" onclick={handleCancel}></lightning-button>
+            <lightning-button label={label.btnApply} variant="brand" onclick={handleApply}></lightning-button>
+            <lightning-button label={label.btnCancel} variant="neutral" onclick={handleCancel}></lightning-button>
         </footer>
     </section>
     

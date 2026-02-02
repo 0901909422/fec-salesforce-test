@@ -1,5 +1,5 @@
 <template>
-    <c-fec-generic-modal title="Lịch sử thay đổi" size="large" onclose={handleClose}>
+    <c-fec-generic-modal title={label.titleChangeHistory} size="large" onclose={handleClose}>
         <div style="height: 400px;">
             <c-fec-custom-datatable
                 table-data={historyData}
@@ -9,7 +9,7 @@
         </div>
 
         <div slot="footer">
-            <lightning-button label="Đóng" variant="neutral" onclick={handleClose}></lightning-button>
+            <lightning-button label={label.btnClose} variant="neutral" onclick={handleClose}></lightning-button>
         </div>
     </c-fec-generic-modal>
 </template>
