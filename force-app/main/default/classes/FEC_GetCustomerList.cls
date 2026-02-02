@@ -157,7 +157,7 @@ public with sharing class FEC_GetCustomerList {
 
         Dom.XmlNode envelope = doc.createRootElement(
             'soapenv:Envelope',
-            'http://schemas.xmlsoap.org/soap/envelope/',
+            FEC_ConstantCommon.SOAP_ENV,
             null
         );
         envelope.setAttribute(
@@ -236,7 +236,7 @@ public with sharing class FEC_GetCustomerList {
     Dom.XmlNode body = doc.getRootElement()
         .getChildElement(
             'Body',
-            'http://schemas.xmlsoap.org/soap/envelope/'
+            FEC_ConstantCommon.SOAP_ENV
         );
 
     Dom.XmlNode resNode;
