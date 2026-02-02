@@ -1,6 +1,54 @@
 @RestResource(urlMapping='/fec/*')
 global with sharing class FEC_IntegrationFraudCaseApi {
-    public static final Boolean DEBUG_LOG = true;
+    public static final Boolean DEBUG_LOG = true;    
+    public static final String userLang = UserInfo.getLanguage();
+    // Error messages (from Custom Labels)  
+    public static final String MSG_MISSING_DETAIL =
+    System.Label.LBL_API_Missing_Detail;
+    public static final String MSG_CASEID_REQUIRED =
+    System.Label.LBL_API_CaseId_Required;
+    public static final String MSG_MISSING_XML =
+    System.Label.LBL_API_Missing_XML;
+    public static final String MSG_INVALID_CASE_FORMAT =
+    System.Label.LBL_API_Invalid_Case_Format;
+    public static final String MSG_FRAUD_UPDATE_SUCCESS =
+    System.Label.LBL_API_Invalid_Fraud_Case_Update_Success;
+    public static final String MSG_INVALID_FRAUD_NOT_FOUND =
+    System.Label.LBL_API_Invalid_Fraud_Case_Not_Found;
+
+    public static final String MSG_INVALID_CASE_EXISTING =
+    System.Label.LBL_API_Invalid_Service_Case_Existing;
+    public static final String MSG_INVALID_CASE_CUSTOMER_INFO =
+    System.Label.LBL_API_Invalid_Case_Customer_Info;
+    public static final String MSG_INVALID_CASE_CREATOR_INFO =
+    System.Label.LBL_API_Invalid_Case_Creator_Info;
+    public static final String MSG_INVALID_CASE_REQUEST_INFO =
+    System.Label.LBL_API_Invalid_Case_Request_Info;
+    public static final String MSG_INVALID_CASE_RESULT_INFO =
+    System.Label.LBL_API_Invalid_Case_Result_Info;
+    public static final String MSG_INVALID_PARENT_CASE =
+    System.Label.LBL_API_Invalid_Fraud_Case_Not_Found_Parent;
+    public static final String MSG_INVALID_CASE_ORIGINAL_REQUEST =
+    System.Label.LBL_API_Invalid_Fraud_Case_Original_Request;
+    
+    
+    
+   
+
+    public class IntegrationField {
+        public final String CASEFH = 'FH-';
+		public final String CASEBU = 'BU-';
+		public final String CASETK = 'TK-';
+        public final String UIC = 'UIC';
+		public final String UIC_VALUE = 'CS';
+		public final String RESULTDETAILCODE = 'RESULTDETAILCODE';
+		public final String RESULTDETAILCODE_VALUE = 'CUS';
+		public final String PHONE_FIELD = 'Phone';
+		public final String CONTRACT_NUMBER_FIELD = 'ContractNumbers';
+		public final String NATIONS_FIELD = 'NationalIDs';
+		public final String NATION_FIELD = 'NationalID';
+		public final String ACCOUNT_NUMBER_FIELD = 'AccountNumber';
+    }
 
     /**
      * Entry point for updating fraud case status from external systems.
@@ -16,85 +64,119 @@ global with sharing class FEC_IntegrationFraudCaseApi {
      */
     @HttpPost
     global static String UpdateFraudCaseStatus() {
-        String responseXml = null;
-        String requestBody = RestContext.request.requestBody.toString();
-        String caseId;
-        String sericeName = 'UpdateFraudCaseStatus';
-        String channelId = '';
-        String serviceCaseId;
-        try { 
 
-            // Map<String,Object> extractData = extractRequestData(
-            //     RestContext.request.requestBody.toString()
-            // );
+        Dom.Document responseDoc;
+        String responseStr;
+        IntegrationField caseField = new IntegrationField();
+    
+        String requestBody = RestContext.request.requestBody.toString();
+        String serviceName = 'UpdateFraudCaseStatus';
+    
+        String caseId;
+        String serviceCaseId;
+        String channelId = '';
+    
+        try {
             FEC_IntegrationFraudCaseUtil.FraudExtractResult extractData =
-            FEC_IntegrationFraudCaseUtil.extractFraudPayload(requestBody);
-        
+                FEC_IntegrationFraudCaseUtil.extractFraudPayload(requestBody);
+    
             Map<String, Object> detail = extractData.detail;
             String xmlData = extractData.xmlData;
-            
-            //log('FINAL DETAIL:\n' + JSON.serializePretty(detail));
-            //log('FINAL XML:\n' + xmlData);
-        
+    
+            //Validate detail
             if (detail == null) {
-                responseXml = FEC_IntegrationFraudCaseUtil.errorXml('Missing detail object');
-            }            
-             // extract business fields
-             caseId = (String) detail.get('caseID');
-             serviceCaseId = (String) detail.get('referenceID');
-             channelId = (String) detail.get('channelID');
+                responseDoc =
+                    FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                        MSG_MISSING_DETAIL,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    );
+                return responseDoc.toXmlString();
+            }
+    
+            // Extract fields
+            caseId        = (String) detail.get('caseID');
+            serviceCaseId = (String) detail.get('referenceID');
+            channelId     = (String) detail.get('channelID');
+    
+            //Validate caseId
             if (String.isBlank(caseId)) {
-                responseXml = FEC_IntegrationFraudCaseUtil.errorXml('caseID is required');
+                responseDoc =
+                    FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                        MSG_CASEID_REQUIRED,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    );
+                return responseDoc.toXmlString();
             }
-
+    
+            //Validate XML
             if (String.isBlank(xmlData)) {
-                responseXml = FEC_IntegrationFraudCaseUtil.errorXml('Missing XML data');
+                responseDoc =
+                    FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                        MSG_MISSING_XML,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    );
+                return responseDoc.toXmlString();
             }
-            
-            // Check FH, BU, TK case
+    
             String normalized = caseId.trim().toUpperCase();
-            String xmlInput = FEC_IntegrationFraudCaseUtil.normalizeXml(xmlData);
-           
-            log('xmlInput: '+ xmlInput);
-
-            if (normalized.startsWith('FH-')) {
-                responseXml = processFHCase(detail, xmlInput);
-
-            } else if (normalized.startsWith('BU-')) {
-                responseXml = processBUCase(detail, xmlInput);
-
-            } else if (normalized.startsWith('TK-')) {
-                responseXml = processTKCase(detail, xmlInput);  // TK same handling
-
+            String xmlInput   =
+                FEC_IntegrationFraudCaseUtil.normalizeXml(xmlData);
+    
+            //Route case
+            if (normalized.startsWith(caseField.CASEFH)) {
+                responseStr = processFHCase(detail, xmlInput);
+    
+            } else if (normalized.startsWith(caseField.CASEBU)) {
+                responseStr = processBUCase(detail, xmlInput);
+    
+            } else if (normalized.startsWith(caseField.CASETK)) {
+                responseStr = processTKCase(detail, xmlInput);
+    
             } else {
-                responseXml = FEC_IntegrationFraudCaseUtil.errorXml('Not found fraud case format');
+                responseDoc =
+                    FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                        MSG_INVALID_CASE_FORMAT,
+                        FEC_IntegrationFraudCaseUtil.NOT_FOUND
+                    );
+                responseStr = responseDoc.toXmlString();
             }
-            return responseXml;
-
+    
+            return responseStr;
+    
         } catch (Exception ex) {
             log('UpdateFraudCaseStatus - Exception: ' + ex.getMessage());
-            responseXml = FEC_IntegrationFraudCaseUtil.errorXml(ex.getMessage());
-            return responseXml;
-        }
-        finally {           
+    
+            responseDoc =
+                FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    ex.getMessage(),
+                    FEC_IntegrationFraudCaseUtil.SERVER_ERROR
+                );
+            return responseDoc.toXmlString();
+    
+        } finally {
             try {
-                // If request caseId missing, recover from response
-                if (String.isBlank(caseId) && !String.isBlank(responseXml)) {
-                    caseId = FEC_IntegrationFraudCaseUtil.extractCaseIdFromResponse(responseXml);
+    
+                if (String.isBlank(caseId) && responseStr != null) {
+                    caseId =
+                        FEC_IntegrationFraudCaseUtil.extractCaseIdFromResponse(
+                            responseStr
+                        );
                 }
+    
                 FEC_IntegrationFraudCaseUtil.logIntegrationService(
-                    sericeName,
+                    serviceName,
                     channelId,
                     caseId,
                     serviceCaseId,
                     requestBody,
-                    responseXml
+                    responseStr
                 );
             } catch (Exception logEx) {
                 log('Logging failed: ' + logEx.getMessage());
             }
         }
     }
+    
    
 
     /**
@@ -157,6 +239,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
      * @return XML response string indicating the processing result.
      */
     private static String processFHCase(Map<String,Object> detail, String xmlData) {
+        String msg = null;
         try {
             // 2) Parse XML
             Dom.Document doc = new Dom.Document();            
@@ -166,7 +249,36 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             Dom.XmlNode caseNode = FEC_IntegrationFraudCaseUtil.find(root, 'CaseResultInfo');
 
             if (caseNode == null)
-                return FEC_IntegrationFraudCaseUtil.errorXml('CaseResultInfo not found');
+            {
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_RESULT_INFO,
+                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();                
+            }                
+            Dom.XmlNode originalRequestNode = FEC_IntegrationFraudCaseUtil.find(caseNode, 'OriginalRequest');
+            Dom.XmlNode requestInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'RequestInfo');
+            if (requestInfoNode == null)
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_REQUEST_INFO,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();
+            
+            Dom.XmlNode creatorInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'CreatorInfo');
+            if (creatorInfoNode == null){
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_CREATOR_INFO,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();
+            }
+
+            Dom.XmlNode customerInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'CustomerInfo');
+            if (customerInfoNode == null) {
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_CUSTOMER_INFO,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();
+            }
+        
 
             String caseStatus     = (String) detail.get('caseStatus');
             String parentId       = (String) detail.get('parentID');
@@ -175,10 +287,15 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             String channelID      = (String) detail.get('channelID');
             //Check Service Case Existing
             if (parentId == null) {
-                String msg = 'Parent ID not found for CaseID=' + caseId +
-                            ', ServiceCase=' + referenceId + ', Channel= ' + channelID;
+                msg = String.format(
+                    MSG_INVALID_CASE_EXISTING,
+                    new List<String>{ caseId, referenceId, channelID }
+                );
                 log(msg);
-                return FEC_IntegrationFraudCaseUtil.errorXml(msg);
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    msg,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();
             }
             Long messageTime = (Long) detail.get('messageTime');
             Datetime messageDateTime = null;
@@ -193,6 +310,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             String xmlRemark      = FEC_IntegrationFraudCaseUtil.val(caseNode, 'Remarks');
             String xmlCreated     = FEC_IntegrationFraudCaseUtil.val(caseNode, 'CreatedTime');
             String xmlUpdated     = FEC_IntegrationFraudCaseUtil.val(caseNode, 'UpdatedTime');
+            String xmlCreatorEmail      = FEC_IntegrationFraudCaseUtil.val(creatorInfoNode, 'CreatorEmail');
 
             log('XML Fields:\ninvestigationConclusion='+investigationConclusion+'\nCreated='+xmlCreated+'\nUpdated='+xmlUpdated);
 
@@ -209,10 +327,15 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             ];
             //Check Fraud Case Existing
             if (exist.isEmpty()) {
-                String msg = 'Fraud case not found for CaseID: ' + caseId +
-                            ', ServiceCase: ' + referenceId + ', Channel: ' + channelID;
+                msg = String.format(
+                    MSG_INVALID_FRAUD_NOT_FOUND,
+                    new List<String>{ caseId, referenceId, channelID }
+                );
                 log(msg);
-                return FEC_IntegrationFraudCaseUtil.errorXml(msg);
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    msg,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();
             }
 
 
@@ -224,6 +347,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             rec.FEC_Service_Case_ID__c = referenceId;
             rec.FEC_Remark__c          = xmlRemark;
             rec.FEC_Sys_Channel__c = channelID;
+            rec.FEC_Sys_Creator_Email__c = xmlCreatorEmail;
 
             rec.FEC_Created_Time__c = parsePegaDatetime(xmlCreated);
             rec.FEC_Updated_Time__c = parsePegaDatetime(xmlUpdated);
@@ -278,35 +402,23 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                     ));
                 }        
 
-                // if (existingInfoMap.containsKey(idVal)) {
-                //     String fileType = getFileType(idVal, channelID);
-                //     //Update
-                //     FEC_Integration_Case_Info__c existing = existingInfoMap.get(idVal);
-                //     if (existing.FEC_Info_Value__c != valVal) {
-                //         Boolean isFile = (fileType != null && fileType.equalsIgnoreCase('file'));
-                //         if (!isFile) {
-                //             existing.FEC_Info_Value__c = valVal;
-                //             toUpdate.add(existing);
-                //         }
-                //     }
-                // } else {
-                //     //Insert
-                //     toInsert.add(new FEC_Integration_Case_Info__c(
-                //         FEC_Parent_Case__c = rec.Id,
-                //         FEC_Info_ID__c     = idVal,
-                //         FEC_Info_Value__c  = valVal
-                //     ));
-                // }
             }
 
-            if (!toInsert.isEmpty()) insert toInsert;
-            if (!toUpdate.isEmpty()) update toUpdate;            
-            log('Inserted: ' + toInsert.size() + ', Updated: ' + toUpdate.size());
-            
-           
-            return FEC_IntegrationFraudCaseUtil.successXml(caseId, 'Fraud case updated successfully');
+            if (!toInsert.isEmpty()) {
+                insert toInsert;
+            }
+            if (!toUpdate.isEmpty()) {
+                update toUpdate;      
+            }      
+            log('Inserted: ' + toInsert.size() + ', Updated: ' + toUpdate.size());           
+            return FEC_IntegrationFraudCaseUtil.successResponseXml(
+                caseId, MSG_FRAUD_UPDATE_SUCCESS ).toXmlString();
+
         } catch (Exception ex) {
-            return FEC_IntegrationFraudCaseUtil.errorXml(ex.getMessage());
+            return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                ex.getMessage(),
+                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+            ).toXmlString();
         }
         
 
@@ -364,6 +476,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
      */
     private static String processBUCase(Map<String,Object> detail, String xmlData) {
         log('Enter processBUCase');
+        String msg = null;
         try {
             // 2) Parse XML
             Dom.Document doc = new Dom.Document();
@@ -372,22 +485,38 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             Dom.XmlNode root = doc.getRootElement();
             Dom.XmlNode caseNode = FEC_IntegrationFraudCaseUtil.find(root, 'CaseResultInfo');
 
-            if (caseNode == null)
-                return FEC_IntegrationFraudCaseUtil.errorXml('CaseResultInfo not found');
-            
+            if (caseNode == null) {
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_RESULT_INFO,
+                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString(); 
+            }
+                        
             Dom.XmlNode originalRequestNode = FEC_IntegrationFraudCaseUtil.find(caseNode, 'OriginalRequest');
             Dom.XmlNode requestInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'RequestInfo');
-            if (requestInfoNode == null)
-                return FEC_IntegrationFraudCaseUtil.errorXml('RequestInfo not found');
-            
+            if (requestInfoNode == null) {
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_REQUEST_INFO,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();
+            }
+        
             Dom.XmlNode creatorInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'CreatorInfo');
-            if (creatorInfoNode == null)
-                return FEC_IntegrationFraudCaseUtil.errorXml('CreatorInfo not found');
+            if (creatorInfoNode == null) {
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_CREATOR_INFO,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();
+            }
 
             Dom.XmlNode customerInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'CustomerInfo');
-            if (customerInfoNode == null)
-                return FEC_IntegrationFraudCaseUtil.errorXml('CustomerInfo not found');
-
+            if (customerInfoNode == null) {
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_CUSTOMER_INFO,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();
+            }
+           
             String caseStatus     = (String) detail.get('caseStatus');
             String parentId       = (String) detail.get('parentID');
             String referenceId    = (String) detail.get('referenceID');
@@ -404,11 +533,16 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 LIMIT 1
             ];
             //Check Parent Case Existing
-            if (existParent.isEmpty()) {
-                String msg = 'Not found parentID: ' + parentId +
-                            ', Channel: ' + channelID;
+            if (existParent.isEmpty()) {               
+                msg = String.format(
+                    MSG_INVALID_PARENT_CASE,
+                    new List<String>{ parentId, channelID }
+                );
                 log(msg);
-                return FEC_IntegrationFraudCaseUtil.errorXml(msg);
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    msg,
+                        FEC_IntegrationFraudCaseUtil.NOT_FOUND
+                    ).toXmlString();
             }
             if (messageTime != null) {
                 Integer secondsInt = Integer.valueOf(messageTime / 1000);
@@ -443,7 +577,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             rec.FEC_Parent_CaseID__c   = parentId;
             rec.FEC_Service_Case_ID__c = referenceId;
             rec.FEC_Remark__c          = xmlRemark;
-            rec.FEC_Creator_Email__c   = xmlCreatorEmail;
+            rec.FEC_Sys_Creator_Email__c   = xmlCreatorEmail;
             rec.FEC_Case_Type__c       = xmlUserType;
             rec.FEC_Sys_Channel__c = channelID;
 
@@ -453,10 +587,13 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             rec.FEC_Investigation_Conclusion__c = investigationConclusion;
             upsert rec;
            
-            //log('infoToInsert = ' + infoToInsert.size());
-            return FEC_IntegrationFraudCaseUtil.successXml(caseId, 'Fraud case updated successfully');
+            return FEC_IntegrationFraudCaseUtil.successResponseXml(
+                caseId, MSG_FRAUD_UPDATE_SUCCESS ).toXmlString();
         } catch (Exception ex) {
-            return FEC_IntegrationFraudCaseUtil.errorXml(ex.getMessage());
+            return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                ex.getMessage(),
+                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+            ).toXmlString();
         }        
        
     }
@@ -481,194 +618,356 @@ global with sharing class FEC_IntegrationFraudCaseApi {
      * @param detail  Parsed request detail data from the inbound integration message.
      * @param xmlData Extracted XML content associated with the fraud case.
      * @return XML response string representing the processing outcome.
-     */
+     */    
+    
     private static String processTKCase(Map<String,Object> detail, String xmlData) {
         log('Enter processTKCase');
-        try {            
+        String msg = null;
+        IntegrationField caseField = new IntegrationField();
+        try {
             Boolean isUicCS = false;
             Boolean isResultDetailCode = false;
-            // 2) Parse XML
+    
+            // =======================
+            // 1. Parse XML
+            // =======================
             Dom.Document doc = new Dom.Document();
             doc.load(xmlData);
             Dom.XmlNode root = doc.getRootElement();
+    
             Dom.XmlNode caseNode = FEC_IntegrationFraudCaseUtil.find(root, 'CaseResultInfo');
-            if (caseNode == null)
-                return FEC_IntegrationFraudCaseUtil.errorXml('CaseResultInfo not found');
-            
+            if (caseNode == null) {
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_RESULT_INFO,
+                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();
+            }
+    
             Dom.XmlNode originalRequestNode = FEC_IntegrationFraudCaseUtil.find(caseNode, 'OriginalRequest');
+            if (originalRequestNode == null) {
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_ORIGINAL_REQUEST,
+                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR).toXmlString();
+            }
             Dom.XmlNode requestInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'RequestInfo');
-            if (requestInfoNode == null)
-                return FEC_IntegrationFraudCaseUtil.errorXml('RequestInfo not found');
-            
+            if (requestInfoNode == null) {
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_REQUEST_INFO,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();
+            }
+         
             Dom.XmlNode creatorInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'CreatorInfo');
-            if (creatorInfoNode == null)
-                return FEC_IntegrationFraudCaseUtil.errorXml('CreatorInfo not found');
-
+            if (creatorInfoNode == null) {
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_CREATOR_INFO,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();
+            }         
             Dom.XmlNode customerInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'CustomerInfo');
-            if (customerInfoNode == null)
-                return FEC_IntegrationFraudCaseUtil.errorXml('CustomerInfo not found');
-
-            String caseStatus     = (String) detail.get('caseStatus');
-            String parentId       = (String) detail.get('parentID');
-            String referenceId    = (String) detail.get('referenceID');
-            String caseId         = (String) detail.get('caseID');
-            String channelID      = (String) detail.get('channelID');
-            Long messageTime = (Long) detail.get('messageTime');            
-            Datetime messageDateTime = null;
-            //Check Parent Case Existing
+            if (customerInfoNode == null) {
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    MSG_INVALID_CASE_CUSTOMER_INFO,
+                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    ).toXmlString();
+            }
+            // =======================
+            // 2. Load input data
+            // =======================
+            String caseStatus  = (String) detail.get('caseStatus');
+            String parentId    = (String) detail.get('parentID');
+            String referenceId = (String) detail.get('referenceID');
+            String caseId      = (String) detail.get('caseID');
+            String channelID   = (String) detail.get('channelID');
+            Long messageTime   = (Long) detail.get('messageTime');
+            String investigationConclusion = (String) detail.get('investigationConclusion'); 
+    
+            Datetime messageDateTime;
+            if (messageTime != null && messageTime > 0) {
+                messageDateTime = Datetime.newInstance(1970,1,1,0,0,0)
+                    .addSeconds((Integer)(messageTime / 1000));
+            }
+    
+            // =======================
+            // 3. Validate parent
+            // =======================
             List<FEC_Integration_Case__c> existParent = [
                 SELECT Id, FEC_Parent_CaseID__c
-                FROM FEC_Integration_Case__c 
-                WHERE FEC_CaseID__c = :parentId                 
-                AND FEC_Sys_Channel__c = :channelID
+                FROM FEC_Integration_Case__c
+                WHERE FEC_CaseID__c = :parentId
+                  AND FEC_Sys_Channel__c = :channelID
                 LIMIT 1
             ];
+    
             if (existParent.isEmpty()) {
-                String msg = 'Not found parentID: ' + parentId +
-                            ', Channel: ' + channelID;
+                msg = String.format(
+                    MSG_INVALID_PARENT_CASE,
+                    new List<String>{ parentId, channelID }
+                );
                 log(msg);
-                return FEC_IntegrationFraudCaseUtil.errorXml(msg);
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    msg,
+                        FEC_IntegrationFraudCaseUtil.NOT_FOUND
+                    ).toXmlString();
             }
+    
             String fraudCaseFH = existParent[0].FEC_Parent_CaseID__c;
-            List<FEC_Integration_Case__c> existFraudCase = [
+            String fraudCaseFHId = null;
+             List<FEC_Integration_Case__c> existFraudCase = [
                 SELECT Id, 
                 FEC_Category__c, 
                 FEC_Sub_Category__c, 
                 FEC_Sub_Code__c, 
                 FEC_Product_Type__c, 
                 FEC_Case_Type__c
-                FROM FEC_Integration_Case__c 
-                WHERE FEC_CaseID__c = :fraudCaseFH                 
+                FROM FEC_Integration_Case__c
+                WHERE FEC_CaseID__c = :fraudCaseFH
                 AND FEC_Sys_Channel__c = :channelID
                 LIMIT 1
             ];
-            
-            if (messageTime != null) {
-                Integer secondsInt = Integer.valueOf(messageTime / 1000);
-                messageDateTime = Datetime.newInstance(1970, 1, 1, 0, 0, 0).addSeconds(secondsInt);
-            }
-
-            String investigationConclusion = (String) detail.get('investigationConclusion');   
-
-            // Parse XML fields
-            String xmlCreatorEmail      = FEC_IntegrationFraudCaseUtil.val(creatorInfoNode, 'CreatorEmail');
-            String xmlUserType      = FEC_IntegrationFraudCaseUtil.val(customerInfoNode, 'UserType');
-            String xmlRemark      = FEC_IntegrationFraudCaseUtil.val(requestInfoNode, 'Remarks');
-
-            String xmlCreated     = FEC_IntegrationFraudCaseUtil.val(caseNode, 'CreatedTime');
-            String xmlUpdated     = FEC_IntegrationFraudCaseUtil.val(caseNode, 'UpdatedTime');
-
-            log('XML Fields:\nRemark='+xmlRemark+'\nCreated='+xmlCreated+'\nUpdated='+xmlUpdated);
-
-            // 3) UPSERT parent
+    
+            // =======================
+            // 4. Parse XML values
+            // =======================
+            String xmlCreatorEmail = FEC_IntegrationFraudCaseUtil.val(creatorInfoNode, 'CreatorEmail');
+            String xmlUserType     = FEC_IntegrationFraudCaseUtil.val(customerInfoNode, 'UserType');
+            String xmlRemark       = FEC_IntegrationFraudCaseUtil.val(requestInfoNode, 'Remarks');
+            String xmlCreated      = FEC_IntegrationFraudCaseUtil.val(caseNode, 'CreatedTime');
+            String xmlUpdated      = FEC_IntegrationFraudCaseUtil.val(caseNode, 'UpdatedTime');
+    
+            // =======================
+            // 5. Upsert main record
+            // =======================
             FEC_Integration_Case__c rec;
-
-            List<FEC_Integration_Case__c> exist = [
-                SELECT Id,FEC_Service_Case_ID__c FROM FEC_Integration_Case__c WHERE FEC_CaseID__c = :caseId LIMIT 1
+            List<FEC_Integration_Case__c> exist = 
+            [ 
+                SELECT Id,FEC_Service_Case_ID__c 
+                FROM FEC_Integration_Case__c 
+                WHERE FEC_CaseID__c = :caseId 
+                AND FEC_Sys_Channel__c = :channelID
+                LIMIT 1 
             ];
-
+           
+    
+            Boolean isCreateSFTCase = true;
             rec = exist.isEmpty() ? new FEC_Integration_Case__c() : exist[0];
-            if (!exist.isEmpty() && exist[0].FEC_Service_Case_ID__c != null) {
+    
+            if (!exist.isEmpty() && rec.FEC_Service_Case_ID__c != null)
+            {
+                isCreateSFTCase = false;
                 rec.FEC_Service_Case_ID__c = exist[0].FEC_Service_Case_ID__c;
             }
-            if(!existFraudCase.isEmpty()) {
-                rec.FEC_Category__c = existFraudCase[0].FEC_Category__c;
-                rec.FEC_Sub_Category__c = existFraudCase[0].FEC_Sub_Category__c;
-                rec.FEC_Sub_Code__c = existFraudCase[0].FEC_Sub_Code__c;
+            if(!existFraudCase.isEmpty()) 
+            { 
+                rec.FEC_Category__c = existFraudCase[0].FEC_Category__c; 
+                rec.FEC_Sub_Category__c = existFraudCase[0].FEC_Sub_Category__c; 
+                rec.FEC_Sub_Code__c = existFraudCase[0].FEC_Sub_Code__c; 
+                fraudCaseFHId = existFraudCase[0].Id; 
             }
-
-            rec.FEC_CaseID__c          = caseId;
-            rec.FEC_Case_Status__c     = FEC_IntegrationFraudCaseUtil.mapCaseStatus(caseStatus);
-            rec.FEC_Parent_CaseID__c   = parentId;            
-            rec.FEC_Remark__c          = xmlRemark;
-            rec.FEC_Creator_Email__c   = xmlCreatorEmail;
-            rec.FEC_Case_Type__c       = xmlUserType;
-            rec.FEC_Sys_Channel__c = channelID;
+                
+    
+            rec.FEC_CaseID__c        = caseId;
+            rec.FEC_Case_Status__c  = FEC_IntegrationFraudCaseUtil.mapCaseStatus(caseStatus);
+            rec.FEC_Parent_CaseID__c= parentId;
+            rec.FEC_Remark__c       = xmlRemark;
+            rec.FEC_Creator_Email__c= xmlCreatorEmail;
+            rec.FEC_Sys_Creator_Email__c= xmlCreatorEmail;
+            rec.FEC_Case_Type__c    = xmlUserType;
+            rec.FEC_Sys_Channel__c  = channelID;
             rec.FEC_Created_Time__c = parsePegaDatetime(xmlCreated);
             rec.FEC_Updated_Time__c = parsePegaDatetime(xmlUpdated);
             rec.FEC_Message_Time__c = messageDateTime;
             rec.FEC_Investigation_Conclusion__c = investigationConclusion;
-            log('Record before UPSERT: ' + JSON.serializePretty(rec));
+    
             upsert rec;
-
-            //Update child info
-            Map<String, FEC_Integration_Case_Info__c> existingInfoMap = new Map<String, FEC_Integration_Case_Info__c>();
-
-            for (FEC_Integration_Case_Info__c info : [
+    
+            // =======================
+            // 6. Child records
+            // =======================
+            Map<String,FEC_Integration_Case_Info__c> existingInfoMap = new Map<String,FEC_Integration_Case_Info__c>();
+            for (FEC_Integration_Case_Info__c i : [
                 SELECT Id, FEC_Info_ID__c, FEC_Info_Value__c
                 FROM FEC_Integration_Case_Info__c
                 WHERE FEC_Parent_Case__c = :rec.Id
             ]) {
-                existingInfoMap.put(info.FEC_Info_ID__c, info);
+                existingInfoMap.put(i.FEC_Info_ID__c, i);
             }
-
+    
             List<FEC_Integration_Case_Info__c> toInsert = new List<FEC_Integration_Case_Info__c>();
             List<FEC_Integration_Case_Info__c> toUpdate = new List<FEC_Integration_Case_Info__c>();
-
-            List<Dom.XmlNode> additionalInfoNodes =
-                FEC_IntegrationFraudCaseUtil.findAllDeep(root, 'AdditionalInfo');
-
-            log('Found AdditionalInfo count = ' + additionalInfoNodes.size());
-
-            for (Dom.XmlNode ai : additionalInfoNodes) {
-
+            Set<String> processed = new Set<String>();
+    
+            for (Dom.XmlNode ai : FEC_IntegrationFraudCaseUtil.findAllDeep(root, 'AdditionalInfo')) {
+    
                 String idVal  = FEC_IntegrationFraudCaseUtil.val(ai, 'ID');
-                String valVal = FEC_IntegrationFraudCaseUtil.val(ai, 'Value');  
-                if (String.isBlank(idVal)) {
-                    continue; // nothing to process
+                String valVal = FEC_IntegrationFraudCaseUtil.val(ai, 'Value');
+    
+                if (String.isBlank(idVal) || processed.contains(idVal)) continue;
+                processed.add(idVal);
+    
+                String idUpper  = idVal.toUpperCase();
+                String valUpper = String.valueOf(valVal).toUpperCase();
+    
+                if (idUpper == caseField.UIC && valUpper == caseField.UIC_VALUE)
+                {
+                    isUicCS = true;
                 }
-                // Check SFT case                
-                if ('UIC'.equals(idVal == null ? null : idVal.toUpperCase()) &&
-                    'CS'.equals(valVal == null ? null : valVal.toUpperCase())) {
-                        isUicCS = true;
-                }
-                if ('RESULTDETAILCODE'.equals(idVal == null ? null : idVal.toUpperCase()) &&
-                    'CUS'.equals(valVal == null ? null : valVal.toUpperCase())) {
+                if (idUpper == caseField.RESULTDETAILCODE && valUpper == caseField.RESULTDETAILCODE_VALUE)
+                {
                     isResultDetailCode = true;
                 }
-
-                FEC_Integration_Case_Info__c existing = existingInfoMap.get(idVal);
-                if (existing != null) {
-                    // Update
-                    String fileType = getFileType(idVal, channelID);
-                    Boolean isFile = (fileType != null && fileType.equalsIgnoreCase('file'));
-            
-                    if (!isFile && existing.FEC_Info_Value__c != valVal) {
-                        existing.FEC_Info_Value__c = valVal;
-                        toUpdate.add(existing);
+    
+                if (existingInfoMap.containsKey(idVal)) {
+                    FEC_Integration_Case_Info__c e = existingInfoMap.get(idVal);
+                    if (e.FEC_Info_Value__c != valVal) {
+                        e.FEC_Info_Value__c = valVal;
+                        toUpdate.add(e);
                     }
-            
                 } else {
-                    // Insert
                     toInsert.add(new FEC_Integration_Case_Info__c(
                         FEC_Parent_Case__c = rec.Id,
-                        FEC_Info_ID__c     = idVal,
-                        FEC_Info_Value__c  = valVal
+                        FEC_Info_ID__c = idVal,
+                        FEC_Info_Value__c = valVal
                     ));
                 }
             }
-
-            if (!toInsert.isEmpty()) insert toInsert;
-            if (!toUpdate.isEmpty()) update toUpdate;
-
-            //Process SFT Case
-            if(isUicCS && isResultDetailCode) {
-                processSFTCase(caseId);
+    
+            if (!toInsert.isEmpty()) {
+                insert toInsert;
             }
-            
-            return FEC_IntegrationFraudCaseUtil.successXml(caseId, 'Fraud case updated successfully');
-        } catch (Exception ex) {
-            return FEC_IntegrationFraudCaseUtil.errorXml(ex.getMessage());
+            if (!toUpdate.isEmpty()) {
+                update toUpdate;
+            }
+    
+            // =======================
+            // 7. SFT Case
+            // =======================
+            if (isCreateSFTCase && isUicCS && isResultDetailCode) {
+                List<FEC_Integration_Case_Info__c> getFHCaseInfo = 
+                [ 
+                    SELECT Id,FEC_Info_ID__c, FEC_Parent_Case__c, FEC_Info_Value__c 
+                    FROM FEC_Integration_Case_Info__c 
+                    WHERE FEC_Parent_Case__c = :fraudCaseFHId                     
+                ];
+                processSFTCase(caseId, rec, getFHCaseInfo);
+            }
+            return FEC_IntegrationFraudCaseUtil.successResponseXml(
+                caseId, MSG_FRAUD_UPDATE_SUCCESS ).toXmlString();
+        }
+        catch (Exception ex) {
+            return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                ex.getMessage(),
+                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+            ).toXmlString();
         }
     }
     
-    private static String processSFTCase(String caseId) {
+    
+    /**
+     * Creates an SFT Interaction Case in Salesforce from Fraud Integration data.
+     *
+     * This method:
+     *  1. Builds an InteractionCaseDTO from the parent integration record
+     *  2. Calls the Interaction Case service to create the Case
+     *  3. Stores the created Service Case Id back to the parent integration record
+     *
+     * @param caseId    External fraud case identifier
+     * @param parentRec Parent integration case record
+     * @param newInfos  Newly inserted integration info records
+     * @return          Success or error XML response
+     */
+    private static String processSFTCase(
+        String caseId,
+        FEC_Integration_Case__c parentRec,
+        List<FEC_Integration_Case_Info__c> newInfos
+    ) {
+        IntegrationField caseField = new IntegrationField();
         try {
-            log('processSFTCase = ');
-            return FEC_IntegrationFraudCaseUtil.successXml(caseId, 'Fraud case updated successfully');            
-        } catch (Exception ex) {
-            return FEC_IntegrationFraudCaseUtil.errorXml(ex.getMessage());
+            log('==================== processSFTCase START ====================');
+            log('Input caseId        = ' + caseId);
+            log('Parent record Id   = ' + parentRec.Id);
+            log('Channel            = ' + parentRec.FEC_Sys_Channel__c);
+
+            // ==========================================================
+            // 1. Build Interaction DTO from integration data
+            // ==========================================================
+            FEC_CreateCaseHanlder.FEC_InteractionCaseDTO dto =
+                new FEC_CreateCaseHanlder.FEC_InteractionCaseDTO();
+
+            // Required: integration channel
+            dto.channel = parentRec.FEC_Sys_Channel__c;
+
+            // Optional customer & contract data
+            String phoneNumber = null;
+            String nationId = null;
+            String accountNumber = null;
+            String contractNumber = null;
+            for (FEC_Integration_Case_Info__c i : newInfos) {
+                if (i.FEC_Info_ID__c == caseField.PHONE_FIELD) {
+                    phoneNumber = i.FEC_Info_Value__c;
+                }
+                if (i.FEC_Info_ID__c == caseField.CONTRACT_NUMBER_FIELD) {
+                    contractNumber = i.FEC_Info_Value__c;
+                }
+                if (i.FEC_Info_ID__c == caseField.NATIONS_FIELD || i.FEC_Info_ID__c == caseField.NATION_FIELD) {
+                    nationId = i.FEC_Info_Value__c;
+                }
+                if (i.FEC_Info_ID__c == caseField.ACCOUNT_NUMBER_FIELD) {
+                    accountNumber = i.FEC_Info_Value__c;
+                }
+            }
+            dto.phoneNumber    = phoneNumber;
+            dto.nationalId     = nationId;
+            dto.accountNumber  = accountNumber;
+            dto.contractNumber = contractNumber;
+ 
+
+            log('DTO prepared: ' + JSON.serializePretty(dto));
+
+            // ==========================================================
+            // 2. Create Interaction Case
+            // ==========================================================
+            log('Calling createInteractionCase...');
+            //FEC_CreateCaseHanlder.FEC_InteractionCaseResponse response =
+            //FEC_CreateCaseHanlder.createInteractionCase(dto);
+            //Mockup response data
+            FEC_CreateCaseHanlder.FEC_InteractionCaseResponse resultData = new FEC_CreateCaseHanlder.FEC_InteractionCaseResponse();
+            resultData.caseNo = randomSFTCaseId();
+            log('Interaction Case created');
+            log('New Case Id  = ' + resultData.caseNo);
+            //log('Case Link Id = ' + response.linkId);
+            //log('Case Number  = ' + response.caseNo);
+
+            // ==========================================================
+            // 3. Link new SFT Case back to integration record
+            // ==========================================================
+            parentRec.FEC_Service_Case_ID__c = resultData.caseNo;
+            update parentRec;
+
+            log('Parent integration record updated with Service Case Id');
+
+            log('==================== processSFTCase SUCCESS ====================');
+           
+            return FEC_IntegrationFraudCaseUtil.successResponseXml(
+                resultData.caseNo, MSG_FRAUD_UPDATE_SUCCESS ).toXmlString();
         }
+        catch (Exception ex) {
+            log('==================== processSFTCase ERROR ====================');
+            log('Error message: ' + ex.getMessage());
+            log('Stack trace  : ' + ex.getStackTraceString());
+            return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                ex.getMessage(),
+                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+            ).toXmlString();
+            
+        }
+    }
+
+
+    private static String randomSFTCaseId() {
+        Integer raw = Math.abs(Crypto.getRandomInteger());
+        Integer rnd = Math.mod(raw, 1000000);  // 0–999999, no error
+        return 'SFT-' + String.valueOf(rnd).leftPad(6, '0');
     }
 
 
