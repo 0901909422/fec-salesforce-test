@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Q14_Reason_for_Office_Visit__c</fullName>
+    <description>Lý do KH đến văn phòng</description>
+    <label>Q14 Reason for Office Visit</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Other channels failed to resolve</fullName>
+                <default>false</default>
+                <label>Other channels failed to resolve</label>
+            </value>
+            <value>
+                <fullName>Did not know how to contact other channels</fullName>
+                <default>false</default>
+                <label>Did not know how to contact other channels</label>
+            </value>
+            <value>
+                <fullName>Did not want to have phone charges</fullName>
+                <default>false</default>
+                <label>Did not want to have phone charges</label>
+            </value>
+            <value>
+                <fullName>Prefer in-person consultancy</fullName>
+                <default>false</default>
+                <label>Prefer in-person consultancy</label>
+            </value>
+            <value>
+                <fullName>Sales or Collections&apos; Staff instructions</fullName>
+                <default>false</default>
+                <label>Sales or Collections&apos; Staff instructions</label>
+            </value>
+            <value>
+                <fullName>Office Staff more enthusiastic than other channels</fullName>
+                <default>false</default>
+                <label>Office Staff more enthusiastic than other channels</label>
+            </value>
+            <value>
+                <fullName>Call Center Agent instructions</fullName>
+                <default>false</default>
+                <label>Call Center Agent instructions</label>
+            </value>
+            <value>
+                <fullName>Convenient location</fullName>
+                <default>false</default>
+                <label>Convenient location</label>
+            </value>
+            <value>
+                <fullName>Faster and more effective solutions</fullName>
+                <default>false</default>
+                <label>Faster and more effective solutions</label>
+            </value>
+            <value>
+                <fullName>N/A</fullName>
+                <default>false</default>
+                <label>N/A</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
