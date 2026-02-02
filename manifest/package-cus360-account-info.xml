@@ -77,6 +77,33 @@
 		<name>CustomMetadata</name>
 	</types>
     <types>
+		<members>FEC_Card_Delivery_Label</members>
+		<members>FEC_Other_Card_Label</members>
+		<members>FEC_Card_Payment_Label</members>
+		<members>FEC_MSG_Card_Payment_Refresh</members>
+		<members>FEC_Full_Payment_Amount_Label</members>
+		<members>FEC_Loan_Balance_Label</members>
+		<members>FEC_Full_Payment_Without_IPP_Label</members>
+		<members>FEC_Full_IPP_Payment_Amount_Label</members>
+		<members>FEC_Account_Label</members>
+		<members>FEC_Account_Status_Label</members>
+		<members>FEC_Card_Label</members>
+		<members>FEC_Card_Status_Label</members>
+		<members>FEC_Debt_Sale_Label</members>
+		<members>FEC_MSG_Error_API_Label</members>
+		<members>FEC_Limit_Label</members>
+		<members>FEC_Main_Card_Label</members>
+		<members>FEC_PIN_Label</members>
+		<members>FEC_Fee_Label</members>
+		<members>FEC_Collections_Info_Label</members>
+		<members>FEC_Sales_Info_Label</members>
+		<members>FEC_Total_Payment_Amount_Label</members>
+		<members>FEC_IPP_Details_Label</members>
+		<members>FEC_Total_IPP_Balance_Label</members>
+		<members>FEC_Total_IPP_Current_Balance_Label</members>
+		<name>CustomLabel</name>
+	</types>
+    <types>
 		<members>RD_IT_User_Customer_360</members>
         <members>RD_IT_User_System_Management</members>
 		<name>PermissionSet</name>

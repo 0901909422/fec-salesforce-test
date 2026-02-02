@@ -14,6 +14,8 @@ import loadPaymentHistory
 import loadRealtimePayment
     from '@salesforce/apex/FEC_PaymentHistoryController.loadRealtimePayment';
 
+import FEC_Total_Payment_Amount_Label from '@salesforce/label/c.FEC_Total_Payment_Amount_Label';
+
 export default class Fec_PaymentHistoryAccount extends LightningElement {
 
     /* ================= STATE ================= */
@@ -58,6 +60,10 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
         },
         { label: 'Payment Channel', fieldName: 'paymentChannel', type: 'text' }
     ];
+
+    customLabel = {
+        totalPaymentAmountLabel: FEC_Total_Payment_Amount_Label,
+    }
 
     /* ================= RECORD ID ================= */
     @api

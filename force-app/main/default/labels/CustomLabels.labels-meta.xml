@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>FEC_Account_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Label</shortDescription>
+        <value>Account</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Account_Status_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Status Label</shortDescription>
+        <value>Account Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Card_Delivery_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Card Delivery Label</shortDescription>
+        <value>Card Delivery</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Card_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Card Label</shortDescription>
+        <value>Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Card_Payment_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Card Payment Label</shortDescription>
+        <value>Card Payment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Card_Status_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Card Status Label</shortDescription>
+        <value>Card Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Collections_Info_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Collections Info Label</shortDescription>
+        <value>Collections Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Debt_Sale_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Debt Sale Label</shortDescription>
+        <value>Debt Sale</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Fee_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fee Label</shortDescription>
+        <value>Fee</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Full_IPP_Payment_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Full IPP Payment Amount Label</shortDescription>
+        <value>Full IPP Payment Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Full_Payment_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Full Payment Amount Label</shortDescription>
+        <value>Full Payment Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Full_Payment_Without_IPP_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Full Payment Without IPP Label</shortDescription>
+        <value>Full Payment Without IPP</value>
+    </labels>
+    <labels>
+        <fullName>FEC_IPP_Details_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP Details Label</shortDescription>
+        <value>IPP Details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Limit_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Limit Label</shortDescription>
+        <value>Limit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Loan_Balance_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loan Balance Label</shortDescription>
+        <value>Loan Balance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Card_Payment_Refresh</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Card Payment Refresh</shortDescription>
+        <value>Vui lòng nhấn &lt;strong&gt;Refresh&lt;/strong&gt; ở mục &lt;strong&gt;Account&lt;/strong&gt; trong tab &lt;strong&gt;Main Info&lt;/strong&gt; để tải dữ liệu mới nhất</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Error_API_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Error API Label</shortDescription>
+        <value>Tải Dữ liệu Không Thành Công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Main_Card_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Main Card Label</shortDescription>
+        <value>Main Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Other_Card_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Other Card Label</shortDescription>
+        <value>Other Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PIN_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PIN Label</shortDescription>
+        <value>PIN</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sales_Info_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sales Info Label</shortDescription>
+        <value>Sales Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_IPP_Balance_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total IPP Balance Label</shortDescription>
+        <value>Total IPP Balance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_IPP_Current_Balance_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total IPP Current Balance Label</shortDescription>
+        <value>Total IPP Current Balance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_Payment_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Payment Amount Label</shortDescription>
+        <value>Total Payment Amount</value>
+    </labels>
+</CustomLabels>

@@ -3,6 +3,12 @@ import loadAccountInfo from '@salesforce/apex/FEC_MainInfoAccountController.load
 import refreshAccountInfo from '@salesforce/apex/FEC_MainInfoAccountController.refreshAccountInfo';
 import checkRewardEligibility from '@salesforce/apex/FEC_MainInfoAccountController.checkRewardEligibility';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import FEC_Account_Label from '@salesforce/label/c.FEC_Account_Label';
+import FEC_Account_Status_Label from '@salesforce/label/c.FEC_Account_Status_Label';
+import FEC_Card_Label from '@salesforce/label/c.FEC_Card_Label';
+import FEC_Card_Status_Label from '@salesforce/label/c.FEC_Card_Status_Label';
+import FEC_Debt_Sale_Label from '@salesforce/label/c.FEC_Debt_Sale_Label';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 
 export default class FEC_MainInfoAccount extends LightningElement {
     /* ================= INPUT ================= */
@@ -22,6 +28,15 @@ export default class FEC_MainInfoAccount extends LightningElement {
     };
 
     activeSections = ['Account', 'Account Status', 'Card Status', 'Debt Sale','Card'];
+
+    customLabel = {
+        accountLabel: FEC_Account_Label,
+        accountStatusLabel: FEC_Account_Status_Label,
+        cardLabel: FEC_Card_Label,
+        cardStatusLabel: FEC_Card_Status_Label,
+        debtSaleLabel: FEC_Debt_Sale_Label,
+        msgErrorAPI: FEC_MSG_Error_API_Label,
+    }
 
     /* ================= LIFECYCLE ================= */
 
