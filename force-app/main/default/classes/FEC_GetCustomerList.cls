@@ -257,13 +257,13 @@ public with sharing class FEC_GetCustomerList {
     /* ===== SYS ===== */
     Dom.XmlNode sysNode = resNode.getChildElement('Sys', null);
     res.Sys = new SysResponse();
-    res.Sys.TransID     = getVal(sysNode, 'TransID');
-    res.Sys.DateTime_x  = toDatetime(getVal(sysNode, 'DateTime'));
-    res.Sys.Code        = getVal(sysNode, 'Code');
-    res.Sys.Description = getVal(sysNode, 'Description');
+    res.Sys.TransID     = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+    res.Sys.DateTime_x  = FEC_CommonUltils.toDatetime(FEC_CommonUltils.getXmlValue(sysNode, 'DateTime'));
+    res.Sys.Code        = FEC_CommonUltils.getXmlValue(sysNode, 'Code');
+    res.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
 
     /* ===== COUNT ===== */
-    res.Count = toInt(getVal(resNode, 'Count'));
+    res.Count = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(resNode, 'Count'));
 
     /* ===== CUSTOMERS ===== */
     Dom.XmlNode customersNode = resNode.getChildElement('Customers', null);
@@ -271,12 +271,12 @@ public with sharing class FEC_GetCustomerList {
             for (Dom.XmlNode cNode : customersNode.getChildElements()) {
 
                 Customer c = new Customer();
-                c.CIFNumber   = getVal(cNode, 'CIFNumber');
-                c.FullName    = getVal(cNode, 'FullName');
-                c.LastName    = getVal(cNode, 'LastName');
-                c.FirstName   = getVal(cNode, 'FirstName');
-                c.NationalID  = getVal(cNode, 'NationalID');
-                c.DateOfBirth = toDate(getVal(cNode, 'DateOfBirth'));
+                c.CIFNumber   = FEC_CommonUltils.getXmlValue(cNode, 'CIFNumber');
+                c.FullName    = FEC_CommonUltils.getXmlValue(cNode, 'FullName');
+                c.LastName    = FEC_CommonUltils.getXmlValue(cNode, 'LastName');
+                c.FirstName   = FEC_CommonUltils.getXmlValue(cNode, 'FirstName');
+                c.NationalID  = FEC_CommonUltils.getXmlValue(cNode, 'NationalID');
+                c.DateOfBirth = FEC_CommonUltils.toDate(FEC_CommonUltils.getXmlValue(cNode, 'DateOfBirth'));
 
                 /* ===== PHONES ===== */
                 Dom.XmlNode phonesNode = cNode.getChildElement('Phones', null);
@@ -284,8 +284,8 @@ public with sharing class FEC_GetCustomerList {
                     c.Phones = new List<Phone>();
                     for (Dom.XmlNode p : phonesNode.getChildElements()) {
                         Phone ph = new Phone();
-                        ph.Type  = getVal(p, 'Type');
-                        ph.Phone = getVal(p, 'Phone');
+                        ph.Type  = FEC_CommonUltils.getXmlValue(p, 'Type');
+                        ph.Phone = FEC_CommonUltils.getXmlValue(p, 'Phone');
                         c.Phones.add(ph);
                     }
                 }
@@ -296,13 +296,13 @@ public with sharing class FEC_GetCustomerList {
                     c.Applications = new List<Application>();
                     for (Dom.XmlNode a : appsNode.getChildElements()) {
                         Application app = new Application();
-                        app.ApplicationID  = getVal(a, 'ApplicationID');
-                        app.AccountNumber  = getVal(a, 'AccountNumber');
-                        app.ContractNumber = getVal(a, 'ContractNumber');
-                        app.Status         = getVal(a, 'Status');
-                        app.Product        = getVal(a, 'Product');
-                        app.SchemeID       = getVal(a, 'SchemeID');
-                        app.SchemeDesc     = getVal(a, 'SchemeDesc');
+                        app.ApplicationID  = FEC_CommonUltils.getXmlValue(a, 'ApplicationID');
+                        app.AccountNumber  = FEC_CommonUltils.getXmlValue(a, 'AccountNumber');
+                        app.ContractNumber = FEC_CommonUltils.getXmlValue(a, 'ContractNumber');
+                        app.Status         = FEC_CommonUltils.getXmlValue(a, 'Status');
+                        app.Product        = FEC_CommonUltils.getXmlValue(a, 'Product');
+                        app.SchemeID       = FEC_CommonUltils.getXmlValue(a, 'SchemeID');
+                        app.SchemeDesc     = FEC_CommonUltils.getXmlValue(a, 'SchemeDesc');
                         c.Applications.add(app);
                     }
                 }
@@ -324,17 +324,17 @@ public with sharing class FEC_GetCustomerList {
                     c.Addresses = new List<Address>();
                     for (Dom.XmlNode a : addrNode.getChildElements()) {
                         Address ad = new Address();
-                        ad.AddressType = getVal(a, 'AddressType');
-                        ad.HouseNumber = getVal(a, 'Number');
-                        ad.Building    = getVal(a, 'Building');
-                        ad.Street      = getVal(a, 'Street');
-                        ad.Ward        = getVal(a, 'Ward');
-                        ad.District    = getVal(a, 'District');
-                        ad.City        = getVal(a, 'City');
-                        ad.CountryCode = getVal(a, 'CountryCode');
-                        ad.CountryName = getVal(a, 'CountryName');
-                        ad.ZipCode     = getVal(a, 'ZipCode');
-                        ad.PropertyStatus = getVal(a, 'PropertyStatus');
+                        ad.AddressType = FEC_CommonUltils.getXmlValue(a, 'AddressType');
+                        ad.HouseNumber = FEC_CommonUltils.getXmlValue(a, 'Number');
+                        ad.Building    = FEC_CommonUltils.getXmlValue(a, 'Building');
+                        ad.Street      = FEC_CommonUltils.getXmlValue(a, 'Street');
+                        ad.Ward        = FEC_CommonUltils.getXmlValue(a, 'Ward');
+                        ad.District    = FEC_CommonUltils.getXmlValue(a, 'District');
+                        ad.City        = FEC_CommonUltils.getXmlValue(a, 'City');
+                        ad.CountryCode = FEC_CommonUltils.getXmlValue(a, 'CountryCode');
+                        ad.CountryName = FEC_CommonUltils.getXmlValue(a, 'CountryName');
+                        ad.ZipCode     = FEC_CommonUltils.getXmlValue(a, 'ZipCode');
+                        ad.PropertyStatus = FEC_CommonUltils.getXmlValue(a, 'PropertyStatus');
                         c.Addresses.add(ad);
                     }
                 }
@@ -345,30 +345,6 @@ public with sharing class FEC_GetCustomerList {
 
         return res;
     }
-
-    /* ================================
-     * HELPERS
-     * ================================ */
-    private static String getVal(Dom.XmlNode n, String name) {
-        Dom.XmlNode c = (n == null) ? null : n.getChildElement(name, null);
-        return (c == null) ? null : c.getText();
-    }
-
-    private static Integer toInt(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
-    }
-
-    private static Date toDate(String v) {
-        return String.isBlank(v) ? null : Date.valueOf(v);
-    }
-
-    private static Datetime toDatetime(String v) {
-        return String.isBlank(v) ? null : Datetime.valueOf(v.replace('T', ' '));
-    }
-
-    private static final Set<String> VALID_REQUESTORS = new Set<String>{
-        'CRM', 'CORE', 'MOBILE', 'PORTAL','PEGA'
-    };
 
     public static void validate(
         String transId,
@@ -382,88 +358,88 @@ public with sharing class FEC_GetCustomerList {
         String email,
         String personId
     ) {
-
+        Set<String> validRequestors = new Set<String>{'CRM', 'CORE', 'MOBILE', 'PORTAL','PEGA'};
         /* ================= TransID ================= */
         if (String.isBlank(transId) || transId.length() > 36) {
             throw new CalloutException(
-                'TransID is null or no longer than 36 characters'
+                System.Label.FEC_MSG_TransID_Null
             );
         }
 
         /* ================= RequestorID ================= */
-        if (String.isBlank(requestorId) || !VALID_REQUESTORS.contains(requestorId)) {
+        if (String.isBlank(requestorId) || !validRequestors.contains(requestorId)) {
             throw new CalloutException(
-                'RequestorID is null or invalid'
+                System.Label.FEC_MSG_RequestorID_Null
             );
         }
         // ===================== DATETIME =====================
         if (String.isBlank(dateTimeStr)) {
-            throw new CalloutException('DateTime is null or invalid');
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
         }
         try {
             Datetime.valueOfGmt(dateTimeStr.replace('T',' '));
         } catch(Exception e) {
-            throw new CalloutException('DateTime is null or invalid "' + dateTimeStr + '" is not type of Datetime');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeStr}));
         }
 
         /* ================= Phone ================= */
         if (String.isNotBlank(phoneNumber) &&
-            !Pattern.matches('^(0\\d{9}|84\\d{9})$', phoneNumber)) {
+            !Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, phoneNumber)) {
             throw new CalloutException(
-                'Phone number must start with 0 (10 digits) or 84 (11 digits)'
+                System.Label.FEC_MSG_Phone_Number_Invalid
             );
         }
 
         /* ================= NationalID ================= */
         if (String.isNotBlank(nationalId) &&
-            !Pattern.matches('^(\\d{9}|\\d{12})$', nationalId)) {
+            !Pattern.matches(FEC_ConstantCommon.PATTERN_NATIONAL_ID, nationalId)) {
             throw new CalloutException(
-                'National ID must be 9 characters or 12 characters'
+                System.Label.FEC_MSG_National_ID_Invalid
             );
         }
 
         /* ================= ApplicationID ================= */
         if (String.isNotBlank(applicationId) &&
-            !Pattern.matches('^(\\d{6}|\\d{8}|\\d{9})$', applicationId)) {
+            !Pattern.matches(FEC_ConstantCommon.PATTERN_APPLICATION_ID, applicationId)) {
             throw new CalloutException(
-                'ApplicationID must be 6 characters or 8 characters or 9 characters'
+                System.Label.FEC_MSG_ApplicationID_Invalid
             );
         }
 
         /* ================= AccountNumber ================= */
         if (String.isNotBlank(accountNumber) &&
-            !Pattern.matches('^(\\d{16}|\\d{19})$', accountNumber)) {
+            !Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, accountNumber)) {
             throw new CalloutException(
-                'AccountNumber must be 16 characters or 19 characters'
+                System.Label.FEC_MSG_AccountNumber_Invalid
             );
         }
 
         /* ================= ContractNumber ================= */
         if (String.isNotBlank(contractNumber) &&
             !Pattern.matches(
-                '^(\\d{8}-\\d{6}-\\d{4}|\\d{8}-\\d{7}-\\d{3}|\\d{8}-\\d{7}-\\d{2}|\\d{8}-\\d{7}-\\d{1}|\\d{8}-\\d{7}|\\d{2}-\\d{2}-\\d{2}-\\d{2})$',
+                FEC_ConstantCommon.PATTERN_CONTRACT_NUMBER,
                 contractNumber
             )) {
             throw new CalloutException(
-                'ContractNumber must be one of: (8)-(6)-(4) | (8)-(7)-(3) | (8)-(7)-(2) | (8)-(7)-(1) | (8)-(7) | (2)-(2)-(2)-(2) digits'
+                System.Label.FEC_MSG_ContractNumber_Invalid
             );
         }
 
         /* ================= Email ================= */
         if (String.isNotBlank(email) &&
             !Pattern.matches(
-                '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,5}(\\.[A-Za-z]{2,5})?$',
+                FEC_ConstantCommon.PATTERN_EMAIL,
                 email
             )) {
             throw new CalloutException(
-                'Email must be one of (randomString1)@(randomString2).(2-5 chars) or (randomString1)@(randomString2).(2-5 chars).(2-5 chars)'
+                System.Label.FEC_MSG_Email_Invalid
             );
         }
 
         /* ================= PersonID ================= */
         if (String.isNotBlank(personId) && !isValidPersonId(personId)) {
             throw new CalloutException(
-                'PersonID is invalid'
+                System.Label.FEC_MSG_PersonID_Invalid
             );
         }
     }
