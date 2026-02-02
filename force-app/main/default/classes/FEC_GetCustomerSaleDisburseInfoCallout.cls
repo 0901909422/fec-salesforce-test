@@ -162,7 +162,7 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
         String endpoint = apiSetting?.FEC_Call_Mock__c
             ? FEC_MockupEndpoint.GET_CUSTOMER_SALE_DISBURSE_INFO_ENDPOINT_MOCKUP
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE_JSON, '', null, requestBody);
+        HttpResponse resp = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE_JSON, '', null, requestBody);
 
         // Parse response
         CustomerSaleDisburseInfoResponse response;

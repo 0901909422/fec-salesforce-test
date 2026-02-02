@@ -12,13 +12,6 @@
 
 public with sharing class FEC_GetUnbilledTransactions {
 
-    /* =====================================================
-       CONSTANTS
-       ===================================================== 
-    */
-    private static final String ENDPOINT = '/EStatementService';
-    private static final String MOCKUP_ENDPOINT = 'https://82338791-908c-4531-95b3-3d8e5ab19fe7.mock.pstmn.io';
-
     // =========================================================================
     // PUBLIC METHOD
     // =========================================================================
@@ -31,15 +24,7 @@ public with sharing class FEC_GetUnbilledTransactions {
         try {
 
             validateRequest(transID, requestorId, dateTimeStr, accountNumber);
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
-            req.setMethod('POST');
-            req.setTimeout(120000);
-
-            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
-            req.setHeader('SOAPAction', 'http://esbservice.fecredit.org/EStatementService/GetUnbilledTransactions');
-
+            
             // ================= SOAP REQUEST BODY =================
             String soapBody =
                 '<?xml version="1.0" encoding="utf-8"?>' +
@@ -58,10 +43,13 @@ public with sharing class FEC_GetUnbilledTransactions {
                     '</soapenv:Body>' +
                 '</soapenv:Envelope>';
 
-            req.setBody(soapBody);
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Unbilled_Transaction');
 
-            Http http = new Http();
-            HttpResponse res = http.send(req);
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(

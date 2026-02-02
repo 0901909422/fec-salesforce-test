@@ -13,9 +13,6 @@ public with sharing class FEC_GetStatus {
 
     private static final String SERVICE_NS = 'http://fecredit.com.vn/CMS_DeliveryCardStatusWS'; 
     
-    private static final String ENDPOINT = '/CMS_DeliveryCardStatusWS';
-    private static final String MOCKUP_ENDPOINT = 'https://fa2dbdcc-9a32-4469-8fc0-d9ca8def9cdd.mock.pstmn.io/CIF_CardInfo';
-    
     private static final Integer MAX_ID_LEN = 36; 
     private static final Integer MAX_ACCOUNT_LEN = 255;
 
@@ -63,22 +60,15 @@ public with sharing class FEC_GetStatus {
             
             requestNode.addChildElement('AccountNumber', null, null).addTextNode(accountNumber);
             
-            // Lấy cấu hình API từ Custom Setting
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-
             // 4. GỬI REQUEST
-            HttpRequest req = new HttpRequest();
-            // Cập nhật endpoint thực tế của bạn hoặc dùng Mock
-            req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
-            // req.setEndpoint('https://fa2dbdcc-9a32-4469-8fc0-d9ca8def9cdd.mock.pstmn.io/CMS_DeliveryCardStatusWS'); 
-            req.setMethod('POST');
-            req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
-            req.setHeader('SOAPAction', 'http://fecredit.com.vn/CMS_DeliveryCardStatusWS/GetStatus'); 
-            req.setBodyDocument(doc);
-            
-            Http http = new Http();
-            HttpResponse res = http.send(req);
-            
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Status');
+
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_STATUS_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, doc, '');
+
             if (res.getStatusCode() == 200) {
                 // Parse kết quả và trả về wrapper
                 CardDeliveryInfo info = parseDeliveryResponse(res.getBodyDocument());

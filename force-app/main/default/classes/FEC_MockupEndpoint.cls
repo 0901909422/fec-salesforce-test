@@ -13,4 +13,6 @@ public with sharing class FEC_MockupEndpoint {
     public static final String GET_IPP_DETAIL_ENDPOINT_MOCKUP = 'https://5fea0f8e-afdd-4820-aead-2a9a1fef654e.mock.pstmn.io';
     public static final String GET_PAYMENT_INFO_ENDPOINT_MOCKUP = 'https://d5f058dd-9fcf-4479-9fdd-a66463dde620.mock.pstmn.io';
     public static final String GET_REWARD_ELIGIBILITY_ENDPOINT_MOCKUP = 'https://ac989dc3-34ec-4c62-98cf-54ea477582c2.mock.pstmn.io';
+    public static final String GET_STATUS_ENDPOINT_MOCKUP = 'https://fa2dbdcc-9a32-4469-8fc0-d9ca8def9cdd.mock.pstmn.io/CIF_CardInfo';
+    public static final String GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP = 'https://82338791-908c-4531-95b3-3d8e5ab19fe7.mock.pstmn.io';
 }
