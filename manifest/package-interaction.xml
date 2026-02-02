@@ -150,6 +150,8 @@
 		<members>FEC_MSG_Phone_Number_Invalid</members>
 		<members>FEC_MSG_RequestorID_Null</members>
 		<members>FEC_MSG_TransID_Null</members>
+		<members>FEC_MSG_Create_Customer_History_Error</members>
+		<members>FEC_MSG_Create_Customer_History_Field_Null</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

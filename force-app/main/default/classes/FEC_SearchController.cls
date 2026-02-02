@@ -33,7 +33,7 @@ public with sharing class FEC_SearchController {
     public static void createHistory(String value, String fieldName, Id caseId) {
         // Return early if no value or field name
         if (value == null || value.trim() == '' || fieldName == null || fieldName.trim() == '') {
-            throw new AuraHandledException('Value and fieldName must be provided.');
+            throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
         }
         // Build record
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
@@ -55,7 +55,7 @@ public with sharing class FEC_SearchController {
         Database.SaveResult sr = Database.insert(rec);
         if (!sr.isSuccess()) {
             Database.Error err = (sr.getErrors() != null && !sr.getErrors().isEmpty()) ? sr.getErrors()[0] : null;
-            throw new AuraHandledException(err != null ? err.getMessage() : 'Failed to create FEC_Customer_History__c.');
+            throw new AuraHandledException(err != null ? err.getMessage() : System.Label.FEC_MSG_Create_Customer_History_Error);
         } else {
             Case objCase = new Case(
                 Id = caseId,
