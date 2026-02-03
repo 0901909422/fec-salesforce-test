@@ -1,0 +1,137 @@
+<template>
+  <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
+
+  <template if:true={data}>
+    <div class="slds-card">
+      <div class="slds-card__body slds-card__body_inner">
+        <div class="slds-grid slds-gutters">
+          <!-- Column 1: Customer Sentiment (Emoji) -->
+          <div class="slds-col slds-size_2-of-12 slds-p-bottom_none">
+            <div class="slds-text-align_center slds-p-vertical_medium">
+              <template if:true={iconUrl}>
+                <div class="slds-m-bottom_small">
+                  <img src={iconUrl} alt={categoryLabel} class="emoticon-image" onerror={handleImageError} />
+                </div>
+              </template>
+              <div class="slds-text-body_regular">{categoryLabel}</div>
+            </div>
+          </div>
+
+          <!-- Column 2: Customer Information -->
+          <div class="slds-col slds-size_5-of-12 slds-p-bottom_none">
+            <div class="slds-p-left_medium">
+              <h2 class="slds-text-heading_small slds-text-color_default section-title">Customer Information</h2>
+              <dl class="slds-dl_horizontal slds-m-top_small">
+                <dt class="slds-dl_horizontal__label">
+                  <p>Customer Name:</p>
+                </dt>
+                <dd class="slds-dl_horizontal__detail">
+                  <p>{customerName}</p>
+                </dd>
+
+                <dt class="slds-dl_horizontal__label">
+                  <p>National ID/Passport ID:</p>
+                </dt>
+                <dd class="slds-dl_horizontal__detail">
+                  <p>
+                    <span>{maskedNationalId}</span>
+                    <lightning-icon icon-name={nationalIdEyeIcon} size="x-small" class="slds-m-left_x-small eye-icon"
+                      onclick={handleToggleNationalId} alternative-text="Toggle visibility">
+                    </lightning-icon>
+                  </p>
+                </dd>
+
+                <dt class="slds-dl_horizontal__label">
+                  <p>Gender:</p>
+                </dt>
+                <dd class="slds-dl_horizontal__detail">
+                  <p>{gender}</p>
+                </dd>
+
+                <dt class="slds-dl_horizontal__label">
+                  <p>Date of Birth:</p>
+                </dt>
+                <dd class="slds-dl_horizontal__detail">
+                  <p>{dateOfBirth}</p>
+                </dd>
+
+                <dt class="slds-dl_horizontal__label">
+                  <p>Primary Phone:</p>
+                </dt>
+                <dd class="slds-dl_horizontal__detail">
+                  <p>
+                    <span>{maskedPhone}</span>
+                    <lightning-icon icon-name={eyeIcon} size="x-small" class="slds-m-left_x-small eye-icon"
+                      onclick={handleTogglePhone} alternative-text="Toggle visibility">
+                    </lightning-icon>
+                  </p>
+                </dd>
+
+                <dt class="slds-dl_horizontal__label">
+                  <p>Email:</p>
+                </dt>
+                <dd class="slds-dl_horizontal__detail">
+                  <p>{email}</p>
+                </dd>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Column 3: Interaction Information -->
+          <div class="slds-col slds-size_5-of-12 slds-p-bottom_none">
+            <div class="slds-p-left_medium">
+              <h2 class="slds-text-heading_small slds-text-color_default section-title">Interaction Information</h2>
+              <dl class="slds-dl_horizontal slds-m-top_small">
+                <dt class="slds-dl_horizontal__label">
+                  <p>Interaction ID:</p>
+                </dt>
+                <dd class="slds-dl_horizontal__detail">
+                  <template if:true={interactionId}>
+                    <lightning-formatted-rich-text value={interactionId} class="interaction-id-link">
+                    </lightning-formatted-rich-text>
+                  </template>
+                </dd>
+
+                <dt class="slds-dl_horizontal__label">
+                  <p>Interaction Channel:</p>
+                </dt>
+                <dd class="slds-dl_horizontal__detail">
+                  <p>{interactionChannel}</p>
+                </dd>
+
+                <dt class="slds-dl_horizontal__label">
+                  <p>Interaction Sub Channel:</p>
+                </dt>
+                <dd class="slds-dl_horizontal__detail">
+                  <p>{interactionSubStatus}</p>
+                </dd>
+
+                <dt class="slds-dl_horizontal__label">
+                  <p>Interaction Status:</p>
+                </dt>
+                <dd class="slds-dl_horizontal__detail">
+                  <p>{interactionStatus}</p>
+                </dd>
+
+                <dt class="slds-dl_horizontal__label">
+                  <p>Last Updated On:</p>
+                </dt>
+                <dd class="slds-dl_horizontal__detail">
+                  <p>{lastUpdatedOn}</p>
+                </dd>
+
+                <dt class="slds-dl_horizontal__label">
+                  <p>Last Updated By:</p>
+                </dt>
+                <dd class="slds-dl_horizontal__detail">
+                  <p>{lastUpdatedBy}</p>
+                </dd>
+
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+</template>

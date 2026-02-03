@@ -1,0 +1,67 @@
+<template>
+  <article class="slds-card">
+    <div class="slds-card__header slds-grid">
+      <header class="slds-media slds-media_center">
+        <div class="slds-media__figure">
+          <lightning-icon icon-name="standard:case" size="small"></lightning-icon>
+        </div>
+        <div class="slds-media__body">
+          <h2 class="slds-card__header-title">
+            Case List ({total})
+          </h2>
+        </div>
+      </header>
+
+    </div>
+    <div class="slds-p-horizontal_medium slds-p-vertical_small">
+      <lightning-accordion allow-multiple-sections-open>
+        <template for:each={caseList} for:item="c">
+          <section key={c.Id} class="accordion-card">
+
+            <!-- HEADER -->
+            <div class="accordion-header" data-id={c.Id} onclick={toggle}>
+              <!-- <lightning-formatted-url value={c.url} label={c.FEC_Case_ID__c} target="_self">
+                        </lightning-formatted-url> -->
+
+              <lightning-formatted-rich-text value={c.FEC_Case_ID__c}></lightning-formatted-rich-text>
+
+              <lightning-icon icon-name="utility:chevrondown" size="x-small">
+              </lightning-icon>
+            </div>
+
+            <!-- BODY -->
+            <template if:true={c.open}>
+              <div class="accordion-body">
+                <p><b>Case Status:</b> {c.FEC_Case_Status__c}</p>
+                <p><b>Sub Category:</b> {c.subCategoryName}</p>
+                <p><b>Sub Code:</b> {c.subCodeName}</p>
+              </div>
+            </template>
+
+          </section>
+        </template>
+      </lightning-accordion>
+
+      <!-- View All -->
+      <template if:true={showViewAll}>
+        <lightning-button variant="base" label="View All" onclick={handleViewAll}>
+        </lightning-button>
+      </template>
+
+    </div>
+    <hr class="slds-card__header slds-grid" />
+    <div class="slds-card__body">
+      <lightning-tabset variant="scoped">
+        <lightning-tab label={interactionTabLabel}>
+          <c-fec-relevant-interaction-card record-id={recordId}>
+          </c-fec-relevant-interaction-card>
+        </lightning-tab>
+
+        <lightning-tab label={caseTabLabel}>
+          <c-fec-relevant-case-card record-id={recordId}>
+          </c-fec-relevant-case-card>
+        </lightning-tab>
+      </lightning-tabset>
+    </div>
+  </article>
+</template>

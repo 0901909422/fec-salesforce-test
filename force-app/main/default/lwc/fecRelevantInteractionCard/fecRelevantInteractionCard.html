@@ -1,0 +1,50 @@
+<template>
+    <section class="slds-p-around_small">
+
+        <!-- Header + View All -->
+        <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+            <span class="slds-text-title_bold">
+                Relevant Interactions ({total})
+            </span>
+
+            <template if:true={showViewAll}>
+                <lightning-button-icon icon-name="utility:chevrondown" variant="bare">
+                </lightning-button-icon>
+            </template>
+        </div>
+
+        <!-- Accordion -->
+        <lightning-accordion allow-multiple-sections-open>
+            <template for:each={interactions} for:item="i">
+                <section key={i.Id} class="accordion-card">
+
+                    <!-- HEADER -->
+                    <div class="accordion-header" data-id={i.Id} onclick={toggle}>
+                        <!-- <lightning-formatted-url value={i.url} label={i.FEC_Interaction_ID__c} target="_self">
+                        </lightning-formatted-url> -->
+
+                        <lightning-formatted-rich-text value={i.FEC_Interaction_ID__c}></lightning-formatted-rich-text>
+
+                        <lightning-icon icon-name="utility:chevrondown" size="x-small">
+                        </lightning-icon>
+                    </div>
+
+                    <!-- BODY -->
+                    <template if:true={i.open}>
+                        <div class="accordion-body">
+                            <p><b>Interaction Channel:</b> {i.FEC_Channel__c}</p>
+                            <p><b>Interaction Created On:</b> {i.formattedCreatedOn}</p>
+                        </div>
+                    </template>
+
+                </section>
+            </template>
+        </lightning-accordion>
+        <!-- View All -->
+        <template if:true={showViewAll}>
+            <lightning-button variant="base" label="View All" onclick={handleViewAll}>
+            </lightning-button>
+        </template>
+
+    </section>
+</template>

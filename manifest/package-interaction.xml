@@ -8,6 +8,8 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CommonUltils</members>
+		<members>FEC_AccountOrContractPicklistHanlder</members>
+		<members>FEC_InteractionInforHandler</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -17,6 +19,17 @@
 		<members>fec_Spinner</members>
 		<members>maskedToggleCell</members>
 		<members>maskedToggleDatatable</members>
+
+		<members>fecInteractionCreationHighlight</members>
+		<members>fecInteractionInfo</members>
+		<members>fecRelevantInteractionCard</members>
+		<members>fecRelevantInteractionCase</members>
+		<members>fec_AccountOrContractPicklistInteraction</members>
+		<members>fec_InteractionHighlight</members>
+		<members>fec_InteractionHighlightMain</members>
+		<members>fec_RelevantCaseListViewAll</members>
+		<members>fec_RelevantInteractionCaseListViewAll</members>
+		<members>fec_RelevantInteractionListViewAll</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -125,7 +138,9 @@
 	</types>
 	<types>
 		<members>FEC_Service_UtilityBar</members>
+		<members>FEC_Customer_Case_Record_Page</members>
         <members>FEC_Interaction_Case_Record_Page</members>
+		<members>Assignment_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
