@@ -1,6 +1,8 @@
-import { LightningElement, api, track, wire } from "lwc";
-import getCaseList from "@salesforce/apex/FEC_InteractionInforHandler.getCaseList";
-import getCaseTotal from "@salesforce/apex/FEC_InteractionInforHandler.getCaseTotal";
+import { LightningElement, api, wire } from "lwc";
+import getRelevantCases from "@salesforce/apex/FEC_InteractionInforHandler.getRelevantCases";
+import getRelevantCasesViewAllCount from "@salesforce/apex/FEC_InteractionInforHandler.getRelevantCasesViewAllCount";
+// import getSubCategory from "@salesforce/apex/FEC_InteractionInforHandler.getSubCategory";
+// import getSubCode from "@salesforce/apex/FEC_InteractionInforHandler.getSubCode";
 import { NavigationMixin } from "lightning/navigation";
 import {
   getFocusedTabInfo,
@@ -29,22 +31,20 @@ const COLUMNS = [
     fieldName: "subCodeName",
   },
 ];
-export default class FecRelevantInteractionCase extends NavigationMixin(
+
+export default class FecRelevantCaseCard extends NavigationMixin(
   LightningElement,
 ) {
   @api recordId;
-
-  caseList = [];
-  total = 0;
   columns = COLUMNS;
-  interactionTabLabel = "Relevant Interactions";
-  caseTabLabel = "Relevant Cases";
+  cases = [];
+  total = 0;
 
-  @wire(getCaseList, { recordId: "$recordId" })
+  @wire(getRelevantCases, { recordId: "$recordId" })
   wiredData({ data }) {
-    console.log("wiredData - data:", data);
     if (data) {
-      this.caseList = data.map((c) => ({
+      console.log("relevant cases raw data:", data);
+      this.cases = data.map((c) => ({
         ...c,
         caseUrl: `/${c.Id}`,
         caseIdText: this.getPlainCaseId(c.FEC_Case_ID__c),
@@ -53,13 +53,14 @@ export default class FecRelevantInteractionCase extends NavigationMixin(
         subCodeName: c.FEC_SubCode__r?.FEC_Name_VN__c,
         subCodeCode: c.FEC_SubCode__r?.FEC_Code__c,
       }));
-      console.log("list cases data:", this.caseList);
+      console.log("relevant cases data:", this.cases);
     }
   }
 
-  @wire(getCaseTotal, { recordId: "$recordId" })
-  wiredCaseTotal({ data, error }) {
+  @wire(getRelevantCasesViewAllCount, { recordId: "$recordId" })
+  wiredRelevantCasesViewAllCount({ data, error }) {
     if (data !== undefined) {
+      console.log("relevant cases view all count:", data);
       this.total = data;
     } else if (error) {
       console.error("Error loading case total:", error);
@@ -74,7 +75,7 @@ export default class FecRelevantInteractionCase extends NavigationMixin(
     console.log("toggle called");
     console.log(event.currentTarget.dataset.id);
     const id = event.currentTarget.dataset.id;
-    this.caseList = this.caseList.map((i) =>
+    this.cases = this.cases.map((i) =>
       i.Id === id ? { ...i, open: !i.open } : i,
     );
   }
@@ -93,38 +94,16 @@ export default class FecRelevantInteractionCase extends NavigationMixin(
   }
 
   async handleViewAll() {
+    console.log("View All Relevant Cases clicked");
     const focusedTab = await getFocusedTabInfo();
     console.log("focusedTab:", JSON.stringify(focusedTab));
 
     const subtabId = await openSubtab(focusedTab.tabId, {
-      // pageReference: {
-      //   type: "standard__appPage",
-      //   attributes: {
-      //     appPageName: "FEC_View_All_Relevant_Interaction_Cases",
-      //   },
-      //   state: {
-      //     c__recordId: this.recordId,
-      //   },
-      // },
-      // focus: true,
-      url: `/lightning/cmp/c__fec_RelevantInteractionCaseListViewAll?c__recordId=${this.recordId}`,
+      url: `/lightning/cmp/c__fec_RelevantCaseListViewAll?c__recordId=${this.recordId}`,
       focus: true,
     });
-    await setTabLabel(subtabId, "Cases List - View All");
+    await setTabLabel(subtabId, "Relevant Cases - View All");
     await setTabIcon(subtabId, "standard:case", "Cases");
-
-    // await openSubtab(focusedTab.tabId, {
-    //   pageReference: {
-    //     type: "standard__appPage",
-    //     attributes: {
-    //       appPageName: "FEC_View_All_Relevant_Interaction_Cases",
-    //     },
-    //     state: {
-    //       recordId: this.recordId,
-    //     },
-    //   },
-    //   focus: true,
-    // });
   }
 
   // ===== Utils =====

@@ -14,22 +14,19 @@
 
     </div>
     <div class="slds-p-horizontal_medium slds-p-vertical_small">
-      <lightning-accordion allow-multiple-sections-open>
+      <lightning-datatable key-field="Id" data={caseList} columns={columns} hide-checkbox-column>
+      </lightning-datatable>
+
+      <!-- <lightning-accordion allow-multiple-sections-open>
         <template for:each={caseList} for:item="c">
           <section key={c.Id} class="accordion-card">
 
-            <!-- HEADER -->
             <div class="accordion-header" data-id={c.Id} onclick={toggle}>
-              <!-- <lightning-formatted-url value={c.url} label={c.FEC_Case_ID__c} target="_self">
-                        </lightning-formatted-url> -->
-
               <lightning-formatted-rich-text value={c.FEC_Case_ID__c}></lightning-formatted-rich-text>
-
               <lightning-icon icon-name="utility:chevrondown" size="x-small">
               </lightning-icon>
             </div>
 
-            <!-- BODY -->
             <template if:true={c.open}>
               <div class="accordion-body">
                 <p><b>Case Status:</b> {c.FEC_Case_Status__c}</p>
@@ -40,7 +37,7 @@
 
           </section>
         </template>
-      </lightning-accordion>
+      </lightning-accordion> -->
 
       <!-- View All -->
       <template if:true={showViewAll}>

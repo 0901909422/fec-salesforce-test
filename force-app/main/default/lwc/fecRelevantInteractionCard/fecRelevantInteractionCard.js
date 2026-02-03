@@ -9,6 +9,23 @@ import {
   setTabIcon,
 } from "lightning/platformWorkspaceApi";
 
+const COLUMNS = [
+  {
+    label: "Interaction ID",
+    fieldName: "caseUrl",
+    type: "url",
+    typeAttributes: {
+      label: { fieldName: "caseIdText" },
+      target: "_self",
+    },
+  },
+  { label: "Interaction Channel", fieldName: "FEC_Channel__c" },
+  {
+    label: "Interaction Created On",
+    fieldName: "formattedCreatedOn",
+  },
+];
+
 export default class FecRelevantInteractionCard extends NavigationMixin(
   LightningElement,
 ) {
@@ -16,13 +33,15 @@ export default class FecRelevantInteractionCard extends NavigationMixin(
 
   interactions = [];
   total = 0;
-
+  columns = COLUMNS;
   @wire(getRelevantInteractions, { recordId: "$recordId" })
   wiredData({ data }) {
     if (data) {
       console.log("relevant interactions data:", data);
       this.interactions = data.map((i) => ({
         ...i,
+        caseUrl: `/${i.Id}`,
+        caseIdText: this.getPlainCaseId(i.FEC_Interaction_ID__c),
         formattedCreatedOn: this.formatDate(i.FEC_Created_On__c),
       }));
     }
@@ -38,7 +57,7 @@ export default class FecRelevantInteractionCard extends NavigationMixin(
   }
 
   get showViewAll() {
-    return this.total >= 5;
+    return this.total > 0;
   }
 
   toggle(event) {
@@ -74,5 +93,12 @@ export default class FecRelevantInteractionCard extends NavigationMixin(
     });
     await setTabLabel(subtabId, "Relevant Interactions - View All");
     await setTabIcon(subtabId, "standard:case", "Cases");
+  }
+
+  getPlainCaseId(htmlString) {
+    if (!htmlString) return "";
+    const div = document.createElement("div");
+    div.innerHTML = htmlString;
+    return div.textContent || div.innerText || "";
   }
 }
