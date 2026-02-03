@@ -58,7 +58,7 @@ public with sharing class FEC_PaymentHistoryController {
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 String.valueOf(customerHistoryId),
-                Datetime.now().format('MM/yyyy')
+                Datetime.now().format(FEC_ConstantCommon.DATE_FORMAT_MMYYYY)
             );
         } catch (Exception e) {
             apiRes = null; 

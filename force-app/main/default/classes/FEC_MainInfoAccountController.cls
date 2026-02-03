@@ -96,7 +96,7 @@ public with sharing class FEC_MainInfoAccountController {
 
         try {
             response = FEC_GetCardBasicInfo.callGetCardBasicInfo(
-                generateTransactionId(),
+                FEC_CommonUltils.generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 c.FEC_Account_Number__c
@@ -150,7 +150,7 @@ public with sharing class FEC_MainInfoAccountController {
             
             FEC_GetRewardEligibility.ResponseWrapper apiResponse = 
                 FEC_GetRewardEligibility.callGetRewardEligibility(
-                    generateTransactionId(),
+                    FEC_CommonUltils.generateTransactionId(),
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                     accountNumber
@@ -179,7 +179,7 @@ public with sharing class FEC_MainInfoAccountController {
             result.message = isEligible 
                 ? 'Reward eligibility check successful' 
                 : 'Reward eligibility check failed';
-            result.availablePoints = formatCurrency(apiResponse.AvailablePoints, 0);
+            result.availablePoints = FEC_CommonUltils.formatCurrency(apiResponse.AvailablePoints, 0);
             result.remark = remark;
             
             return result;
@@ -273,7 +273,7 @@ public with sharing class FEC_MainInfoAccountController {
 
         try {
             response = FEC_GetCardBasicInfo.callGetCardBasicInfo(
-                generateTransactionId(),
+                FEC_CommonUltils.generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 c.FEC_Account_Number__c
@@ -297,30 +297,30 @@ public with sharing class FEC_MainInfoAccountController {
         dto.contractNumber  = acc.FEC_Contract_Number__c;
         dto.accountStatus   = acc.FEC_Account_Status__c;
         dto.applicationId   = acc.FEC_Application_ID__c;
-        dto.accountOpenDate = formatDate(acc.FEC_Account_Open_Date__c);
-        dto.accountCloseDate= formatDate(acc.FEC_Account_Close_Date__c);
+        dto.accountOpenDate = FEC_CommonUltils.formatDate(acc.FEC_Account_Open_Date__c);
+        dto.accountCloseDate= FEC_CommonUltils.formatDate(acc.FEC_Account_Close_Date__c);
         dto.eSignStatus     = acc.FEC_E_sign_Status__c;
-        dto.creditLimit     = formatCurrency(acc.FEC_Credit_Limit__c, 0);
-        dto.otb             = formatCurrency(acc.FEC_OTB__c, 0);
-        dto.currentBalance  = formatCurrency(acc.FEC_Current_Balance__c, 2);
-        dto.holdAmount      = formatCurrency(acc.FEC_Hold_Amount__c, 0);
-        dto.totalBalance    = formatCurrency(acc.FEC_Total_Balance__c, 2);
+        dto.creditLimit     = FEC_CommonUltils.formatCurrency(acc.FEC_Credit_Limit__c, 0);
+        dto.otb             = FEC_CommonUltils.formatCurrency(acc.FEC_OTB__c, 0);
+        dto.currentBalance  = FEC_CommonUltils.formatCurrency(acc.FEC_Current_Balance__c, 2);
+        dto.holdAmount      = FEC_CommonUltils.formatCurrency(acc.FEC_Hold_Amount__c, 0);
+        dto.totalBalance    = FEC_CommonUltils.formatCurrency(acc.FEC_Total_Balance__c, 2);
         dto.isFromAccount   = true;
         /* ===== ACCOUNT STATUS  ===== */
         dto.warningCode = acc.FEC_Warning_Code__c;
         dto.blockCode1  = acc.FEC_Block_Code_1__c;
-        dto.blockDate1  = formatDate(acc.FEC_Block_Date_1__c);
+        dto.blockDate1  = FEC_CommonUltils.formatDate(acc.FEC_Block_Date_1__c);
         dto.reason1     = acc.FEC_Reason_1__c;
         dto.blockCode2  = acc.FEC_Block_Code_2__c;
-        dto.blockDate2  = formatDate(acc.FEC_Block_Date_2__c);
+        dto.blockDate2  = FEC_CommonUltils.formatDate(acc.FEC_Block_Date_2__c);
         dto.reason2     = acc.FEC_Reason_2__c;
-        dto.daysPastDue = decimalToString(acc.FEC_Days_Past_Due__c);
+        dto.daysPastDue = FEC_CommonUltils.decimalToString(acc.FEC_Days_Past_Due__c);
         /* ===== CARD ===== */
         dto.cardNumber  = acc.FEC_Card_Number__c;
         dto.cardType    = acc.FEC_Card_Type__c;
         dto.plasticID   = acc.FEC_Plastic_ID__c;
         dto.digitalCardID = acc.FEC_Digital_Card_ID__c;
-        dto.expiryDate    = formatDate(acc.FEC_Expiry_Date__c);
+        dto.expiryDate    = FEC_CommonUltils.formatDate(acc.FEC_Expiry_Date__c);
         dto.schemeID    = acc.FEC_Scheme_ID__c;
         dto.schemeDesc  = acc.FEC_Scheme_Desc__c;
         dto.customerSegment = acc.FEC_Customer_Segment__c;
@@ -328,21 +328,21 @@ public with sharing class FEC_MainInfoAccountController {
         dto.insuranceFlag    = acc.FEC_Insurance_Flag__c;
         /* ===== CARD STATUS ===== */
         dto.cardBlockCode        = acc.FEC_Block_Code__c;
-        dto.cardBlockDate        = formatDate(acc.FEC_Block_Date__c);
+        dto.cardBlockDate        = FEC_CommonUltils.formatDate(acc.FEC_Block_Date__c);
         dto.blockedBy            = acc.FEC_Blocked_By__c;
         dto.cardActivationStatus = acc.FEC_Card_Activation_Status__c;
-        dto.cardActivationDate   = formatDate(acc.FEC_Card_Activation_Date__c);
+        dto.cardActivationDate   = FEC_CommonUltils.formatDate(acc.FEC_Card_Activation_Date__c);
         dto.eCommerceStatus      = acc.FEC_E_Commerce_Status__c;
         dto.fraudMonitorFlag     = acc.FEC_Fraud_Monitor_Flag__c;
-        dto.fraudMonitorDate     = formatDate(acc.FEC_Fraud_Monitor_Date__c);
+        dto.fraudMonitorDate     = FEC_CommonUltils.formatDate(acc.FEC_Fraud_Monitor_Date__c);
         dto.localUse             = acc.FEC_Local_Use__c;
-        dto.availablePoints      = formatCurrency(acc.FEC_Available_Points__c, 0);
+        dto.availablePoints      = FEC_CommonUltils.formatCurrency(acc.FEC_Available_Points__c, 0);
         dto.remark               = acc.FEC_Remark__c;
         /* ===== DEBT SALE ===== */
         dto.debtSaleCompanyName = acc.FEC_Company_Name__c;
-        dto.debtSoldDate        = formatDate(acc.FEC_Sold_Date__c);
-        dto.principalSold       = formatCurrency(acc.FEC_Principal_Sold__c, 2);
-        dto.interestSold        = formatCurrency(acc.FEC_Interest_Sold__c, 2);
+        dto.debtSoldDate        = FEC_CommonUltils.formatDate(acc.FEC_Sold_Date__c);
+        dto.principalSold       = FEC_CommonUltils.formatCurrency(acc.FEC_Principal_Sold__c, 2);
+        dto.interestSold        = FEC_CommonUltils.formatCurrency(acc.FEC_Interest_Sold__c, 2);
         dto.soldNote            = acc.FEC_Sold_Note__c;
         dto.debtSaleType        = acc.FEC_Debt_Sale_Type__c;
         return dto;
@@ -500,21 +500,4 @@ public with sharing class FEC_MainInfoAccountController {
         return result;
     }
 
-    private static String generateTransactionId() {
-        return Datetime.now().getTime() + '_' +
-               String.valueOf(Math.abs(Crypto.getRandomInteger())).substring(0, 6);
-    }
-
-    private static String formatDate(Date d) {
-        if (d == null) return '';
-        return d.format();
-    }
-
-    private static String formatCurrency(Decimal amount, Integer scale) {
-        if (amount == null) return '';
-        return amount.setScale(scale).format();
-    }
-    private static String decimalToString(Decimal d) {
-        return d == null ? '' : d.format();
-    }
 }

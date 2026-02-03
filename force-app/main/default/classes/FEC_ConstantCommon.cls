@@ -8,6 +8,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String STR_DATETIME_FORMAT_XXX = 'yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX';
     public static final String DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss';
     public static final String DATE_FORMAT = 'yyyy-MM-dd';
+    public static final String DATE_FORMAT_MMYYYY = 'MM/yyyy';
 
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';

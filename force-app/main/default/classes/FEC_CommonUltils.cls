@@ -117,4 +117,22 @@ public with sharing class FEC_CommonUltils {
     HttpResponse res = http.send(req);
     return res;
   }
+
+  public static String generateTransactionId() {
+    return Datetime.now().getTime() + '_' + String.valueOf(Math.abs(Crypto.getRandomInteger())).substring(0, 6);
+  }
+
+  public static String formatCurrency(Decimal amount, Integer scale) {
+    if (amount == null) return '';
+    return amount.setScale(scale).format();
+  }
+
+  public static String formatDate(Date d) {
+    if (d == null) return '';
+    return d.format();
+  }
+
+  public static String decimalToString(Decimal d) {
+    return d == null ? '' : d.format();
+  }
 }
