@@ -96,7 +96,7 @@
                 
                 return result;
             } else {
-                throw new CalloutException('API Error: ' + res.getStatus() + ' - ' + res.getBody());
+                throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{res.getStatus() + ' - ' + res.getBody()}));
             }
         } catch (Exception e) {
             System.debug('Error: ' + e.getMessage());

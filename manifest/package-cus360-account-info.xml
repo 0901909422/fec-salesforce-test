@@ -101,6 +101,16 @@
 		<members>FEC_IPP_Details_Label</members>
 		<members>FEC_Total_IPP_Balance_Label</members>
 		<members>FEC_Total_IPP_Current_Balance_Label</members>
+        <members>FEC_MSG_Positive_Number_Error</members>
+		<members>FEC_MSG_ApplicationID_must_number</members>
+		<members>FEC_MSG_Response_Null</members>
+		<members>FEC_MSG_HTTP_Error</members>
+		<members>FEC_MSG_API_Error</members>
+		<members>FEC_MSG_Param_Required</members>
+		<members>FEC_MSG_Param_Date_Format_Invalid</members>
+		<members>FEC_MSG_Param_Date_Value_Invalid</members>
+		<members>FEC_MSG_Param_Datetime_Format_Invalid</members>
+		<members>FEC_MSG_Response_Sys_Null</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

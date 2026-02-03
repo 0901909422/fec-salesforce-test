@@ -141,7 +141,7 @@
             throw new CalloutException('Date is null or invalid or must have format YYYY-MM-DD');
         }
         // Regex format: YYYY-MM-DD
-        String datePattern = '^\\d{4}-\\d{2}-\\d{2}$';
+        String datePattern = FEC_ConstantCommon.PATTERN_DATE;
         if (!Pattern.matches(datePattern, dateStr)) {
             throw new CalloutException('Date is null or invalid or must have format YYYY-MM-DD');
         }

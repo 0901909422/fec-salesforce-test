@@ -102,7 +102,7 @@ public with sharing class FEC_MainInfoAccountController {
                 '0001500010000000022'
             );
         } catch (Exception e) {
-            throw new AuraHandledException('API ERROR: ' + e.getMessage());
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
         }
 
         FEC_Customer_History__c acc = createAccountFromAPI(response,caseId);
