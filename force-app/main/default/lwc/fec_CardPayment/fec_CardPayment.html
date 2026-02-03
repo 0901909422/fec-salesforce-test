@@ -10,7 +10,7 @@
                             class="slds-m-right_x-small">
                         </lightning-icon>
                         <span>
-                            Card Payment
+                            {customLabel.cardPaymentLabel}
                             <template if:true={hasError}>
                                 <span class="error-text"> - {ERROR_MESSAGE}</span>
                             </template>
@@ -21,7 +21,7 @@
             <div class={cardPaymentContentClass}>
                 <!-- Refresh Instruction -->
                 <div class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
-                    Vui lòng nhấn <strong>Refresh</strong> ở mục <strong>Account</strong> trong tab <strong>Main Info</strong> để tải dữ liệu mới nhất
+                    {customLabel.msgCardPaymentRefresh}
                 </div>
                 
                 <!-- Payment Summary - Chỉ hiển thị khi không có lỗi -->
@@ -31,7 +31,7 @@
                             <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
                                 <div class="slds-col slds-text-color_default">
                                     <div class="slds-text-title_bold slds-text-color_error">
-                                        Full Payment Amount
+                                        {customLabel.fullPaymentAmountLabel}
                                     </div>
                                 </div>
                                 <div class="slds-col slds-text-align_right slds-text-heading_small">
@@ -42,7 +42,7 @@
                             <div class="slds-grid slds-grid_vertical-align-center">
                                 <div class="slds-col slds-text-color_default">
                                     <div class="slds-text-title_bold payment-field-label-gray">
-                                        Loan Balance
+                                        {customLabel.loanBalanceLabel}
                                     </div>
                                 </div>
                                 <div class="slds-col slds-text-align_right slds-text-heading_small">
@@ -55,7 +55,7 @@
                             <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
                                 <div class="slds-col slds-text-color_default">
                                     <div class="slds-text-title_bold payment-field-label-gray">
-                                        Full Payment Without IPP
+                                        {customLabel.fullPaymentWithoutIPPLabel}
                                     </div>
                                 </div>
                                 <div class="slds-col slds-text-align_right slds-text-heading_small">
@@ -66,7 +66,7 @@
                             <div class="slds-grid slds-grid_vertical-align-center">
                                 <div class="slds-col slds-text-color_default">
                                     <div class="slds-text-title_bold payment-field-label-gray">
-                                        Full IPP Payment Amount
+                                        {customLabel.fullIPPPaymentAmountLabel}
                                     </div>
                                 </div>
                                 <div class="slds-col slds-text-align_right slds-text-heading_small">

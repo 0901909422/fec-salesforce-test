@@ -6,8 +6,13 @@ public with sharing class FEC_CommonUltils {
   }
 
   public static Decimal xmlValToDecimal(Dom.XmlNode n, String name) {
-    String v = FEC_CommonUltils.getXmlValue(n, name);
+    String v = getXmlValue(n, name);
     return String.isBlank(v) ? null : Decimal.valueOf(v);
+  }
+
+  public static Date xmlValToDate(Dom.XmlNode n, String name) {
+    String v = getXmlValue(n, name);
+    return parseDate(v);
   }
 
   public static Dom.XmlNode findChildByName(Dom.XmlNode parent, String nodeName) {
@@ -49,12 +54,11 @@ public with sharing class FEC_CommonUltils {
   }
   
   /**
-   * Hàm phụ trợ chuyển đổi ngày tháng cho Other Card
    * Format API trả về: yyyyMMdd (VD: 20281031) hoặc YYYY-MM-DD
    * @param dateStr - Chuỗi ngày tháng từ API
    * @return Đối tượng Date
    */
-  public static Date convertDateSafeForOtherCard(String dateStr) {
+  public static Date parseDate(String dateStr) {
     if (String.isBlank(dateStr)) return null;
     
     // Loại bỏ trường hợp 00000000 (không có ngày)
@@ -77,20 +81,6 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
-  /**
-   * Hàm phụ trợ convert ngày tháng
-   * @param dateStr - Date string format yyyy-MM-dd
-   * @return Date object
-   */
-  public static Date convertDateSafe(String dateStr) {
-    if (String.isBlank(dateStr)) return null;
-    try {
-      return Date.valueOf(dateStr); // Format yêu cầu: YYYY-MM-DD
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
   public static Datetime parseDateTime(String dateTimeStr) {
     if (String.isBlank(dateTimeStr)) {
       return null;
@@ -104,16 +94,6 @@ public with sharing class FEC_CommonUltils {
       return Datetime.valueOf(dateTimeStr);
     } catch (Exception e) {
       System.debug('Failed to parse datetime: ' + dateTimeStr + ', Error: ' + e.getMessage());
-      return null;
-    }
-  }
-
-  public static Date parseDate(String val) {
-    try {
-      return String.isBlank(val)
-        ? null
-        : Date.valueOf(val.substring(0, 10));
-    } catch (Exception e) {
       return null;
     }
   }
@@ -136,5 +116,23 @@ public with sharing class FEC_CommonUltils {
     Http http = new Http();
     HttpResponse res = http.send(req);
     return res;
+  }
+
+  public static String generateTransactionId() {
+    return Datetime.now().getTime() + '_' + String.valueOf(Math.abs(Crypto.getRandomInteger())).substring(0, 6);
+  }
+
+  public static String formatCurrency(Decimal amount, Integer scale) {
+    if (amount == null) return '';
+    return amount.setScale(scale).format();
+  }
+
+  public static String formatDate(Date d) {
+    if (d == null) return '';
+    return d.format();
+  }
+
+  public static String decimalToString(Decimal d) {
+    return d == null ? '' : d.format();
   }
 }

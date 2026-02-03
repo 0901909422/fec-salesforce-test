@@ -179,7 +179,7 @@ public without sharing class FEC_SalesInfoController {
             }
 
             // Bước 2: Validate AccountNumber format trước khi gọi API
-            if (!isValidAccountNumber(accountNumber)) {
+            if (!Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, accountNumber)) {
                 result.errorCode = 'VALIDATION_ERROR';
                 result.errorMessage = 'AccountNumber không hợp lệ. AccountNumber phải có 16 hoặc 19 chữ số. Giá trị hiện tại: ' + accountNumber;
                 return result;
@@ -383,19 +383,6 @@ public without sharing class FEC_SalesInfoController {
                 System.debug('Error saving SalesInfo to DB: ' + e.getMessage());
             }
         }
-    
-    //=============== PRIVATE HELPER METHODS ===============//
-    
-    /**
-     * Kiểm tra AccountNumber có hợp lệ không (16 hoặc 19 chữ số)
-     */
-    private static Boolean isValidAccountNumber(String accountNumber) {
-        if (String.isBlank(accountNumber)) {
-            return false;
-        }
-        // AccountNumber phải có 16 hoặc 19 chữ số theo requirement của API GetCustomerList
-        return Pattern.matches('^\\d{16}$', accountNumber) || Pattern.matches('^\\d{19}$', accountNumber);
-    }
     
     /**
      * Gọi GetCustomerList để lấy ApplicationID từ AccountNumber

@@ -20,45 +20,45 @@ public with sharing class FEC_GetIPPDetailsCallout {
      */
     public static ValidationResult validateRequest(IPPRequest reqData) {
         if (reqData == null) {
-            return new ValidationResult(false, 'Request data is required and cannot be null.');
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Request data'}));
         }
         
         // Validate AccountNumber (required, 16 or 19 digits)
         if (String.isBlank(reqData.accountNumber)) {
-            return new ValidationResult(false, 'AccountNumber is required and cannot be empty.');
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
         }
-        if (!Pattern.matches('^\\d{16}$|^\\d{19}$', reqData.accountNumber)) {
-            return new ValidationResult(false, 'AccountNumber must be 16 or 19 digits. Current value: ' + reqData.accountNumber);
+        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, reqData.accountNumber)) {
+            return new ValidationResult(false, System.Label.FEC_MSG_AccountNumber_Invalid);
         }
         
         // Validate EffectiveDate (required, format yyyy-MM-dd)
         if (String.isBlank(reqData.effectiveDate)) {
-            return new ValidationResult(false, 'EffectiveDate is required and cannot be empty.');
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'EffectiveDate'}));
         }
-        if (!Pattern.matches('^\\d{4}-\\d{2}-\\d{2}$', reqData.effectiveDate)) {
-            return new ValidationResult(false, 'EffectiveDate must be in format yyyy-MM-dd. Current value: ' + reqData.effectiveDate);
+        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_DATE, reqData.effectiveDate)) {
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{'EffectiveDate', reqData.effectiveDate}));
         }
         if (!isValidDate(reqData.effectiveDate)) {
-            return new ValidationResult(false, 'EffectiveDate is not a valid date. Current value: ' + reqData.effectiveDate);
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Date_Value_Invalid, new List<String>{'EffectiveDate', reqData.effectiveDate}));
         }
         
         // Validate Amount (required, must be positive number)
         if (reqData.amount == null) {
-            return new ValidationResult(false, 'Amount is required and cannot be null.');
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Amount'}));
         }
         if (reqData.amount <= 0) {
-            return new ValidationResult(false, 'Amount must be a positive number. Current value: ' + reqData.amount);
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Positive_Number_Error, new List<String>{'Amount'}));
         }
         
         // Validate PostingDate (required, format yyyy-MM-dd)
         if (String.isBlank(reqData.postingDate)) {
-            return new ValidationResult(false, 'PostingDate is required and cannot be empty.');
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'PostingDate'}));
         }
-        if (!Pattern.matches('^\\d{4}-\\d{2}-\\d{2}$', reqData.postingDate)) {
-            return new ValidationResult(false, 'PostingDate must be in format yyyy-MM-dd. Current value: ' + reqData.postingDate);
+        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_DATE, reqData.postingDate)) {
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{'PostingDate', reqData.postingDate}));
         }
         if (!isValidDate(reqData.postingDate)) {
-            return new ValidationResult(false, 'PostingDate is not a valid date. Current value: ' + reqData.postingDate);
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Date_Value_Invalid, new List<String>{'PostingDate', reqData.postingDate}));
         }
         
         return new ValidationResult(true, null);
@@ -71,23 +71,23 @@ public with sharing class FEC_GetIPPDetailsCallout {
     public static ValidationResult validateSysRequestHeaders(String transId, String requestorId, String dateTimeValue) {
         // Validate TransID (required, max 36 characters for UUID)
         if (String.isBlank(transId)) {
-            return new ValidationResult(false, 'SysRequest.TransID is required and cannot be empty.');
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'TransID'}));
         }
         if (transId.length() > 36) {
-            return new ValidationResult(false, 'SysRequest.TransID must not exceed 36 characters.');
+            return new ValidationResult(false, System.Label.FEC_MSG_TransID_Null);
         }
         
         // Validate RequestorID (required)
         if (String.isBlank(requestorId)) {
-            return new ValidationResult(false, 'SysRequest.RequestorID is required and cannot be empty.');
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'RequestorID'}));
         }
         
         // Validate DateTime (required, ISO 8601 format)
         if (String.isBlank(dateTimeValue)) {
-            return new ValidationResult(false, 'SysRequest.DateTime is required and cannot be empty.');
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'SysRequest.DateTime'}));
         }
         if (!Pattern.matches(FEC_ConstantCommon.PATTERN_DATE_TIME, dateTimeValue)) {
-            return new ValidationResult(false, 'SysRequest.DateTime must be in ISO 8601 format (yyyy-MM-dd\'T\'HH:mm:ss). Current value: ' + dateTimeValue);
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Datetime_Format_Invalid, new List<String>{'SysRequest.DateTime', dateTimeValue}));
         }
         
         return new ValidationResult(true, null);

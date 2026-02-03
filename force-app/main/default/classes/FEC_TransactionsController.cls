@@ -210,7 +210,7 @@ public with sharing class FEC_TransactionsController {
 
         for (FEC_GetUnbilledTransactions.TransactionRecord u : uList) {
 
-            Date postDate = safeDate(u.PostingDate);
+            Date postDate = FEC_CommonUltils.toDate(u.PostingDate);
             if (postDate == null || u.Amount == null) continue;
 
             String key = postDate + '_' + u.Amount;
@@ -220,7 +220,7 @@ public with sharing class FEC_TransactionsController {
                 : new FEC_Transaction__c(FEC_Customer_History__c = customerHistoryId);
 
             // ===== UNBILLED =====
-            rec.FEC_Effective_Date__c = safeDate(u.TransactionDate);
+            rec.FEC_Effective_Date__c = FEC_CommonUltils.toDate(u.TransactionDate);
             rec.FEC_Post_Date__c = postDate;
             rec.FEC_Transaction_Amount__c = u.Amount;
             rec.FEC_Merchant_Description__c = u.Description;
@@ -231,7 +231,7 @@ public with sharing class FEC_TransactionsController {
             for (FEC_GetCardFinancialTransactions.FinancialTransaction f : fList) {
                 if (f.TRNXAmount == null) continue;
                 if (Math.abs(f.TRNXAmount - u.Amount) > 1) continue;
-                if (safeDate(f.PostingDate) != null && safeDate(f.PostingDate) != postDate) continue;
+                if (FEC_CommonUltils.toDate(f.PostingDate) != null && FEC_CommonUltils.toDate(f.PostingDate) != postDate) continue;
 
                 rec.FEC_Transaction_Code__c = f.TransactionCode;
                 rec.FEC_Credit_Debit_Flag__c = f.CreditDebitFlag;
@@ -251,14 +251,4 @@ public with sharing class FEC_TransactionsController {
         }
     }
 
-    /* =====================================================
-       HELPERS
-       ===================================================== */
-    private static Date safeDate(String s) {
-        try {
-            return String.isBlank(s) ? null : Date.valueOf(s);
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }

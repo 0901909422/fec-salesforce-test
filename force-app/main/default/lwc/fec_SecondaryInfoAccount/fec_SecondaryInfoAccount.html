@@ -1,21 +1,21 @@
 <template>
     <template if:true={hasData}>
         <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
-            <c-fec_-common-record-detail-section section-title="Limit" fields={limitFields}
+            <c-fec_-common-record-detail-section section-title={customLabel.limitLabel} fields={limitFields}
                 onbuttonclick={handleButtonClick}>
             </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title="Main Card" fields={mainCardFields}
+            <c-fec_-common-record-detail-section section-title={customLabel.mainCardLabel} fields={mainCardFields}
                 show-refresh-button="true" onrefresh={handleRefresh}>
             </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title="PIN" fields={pinFields} show-refresh-button="true"
+            <c-fec_-common-record-detail-section section-title={customLabel.pinLabel} fields={pinFields} show-refresh-button="true"
                 onrefresh={handleRefresh}>
             </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title="Fee" fields={feeFields}>
+            <c-fec_-common-record-detail-section section-title={customLabel.feeLabel} fields={feeFields}>
             </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title="Collections Info" fields={collectionsInfoFields}
+            <c-fec_-common-record-detail-section section-title={customLabel.collectionsInfoLabel} fields={collectionsInfoFields}
                 show-refresh-button="true" onrefresh={handleRefresh}>
             </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title="Sales Info" fields={salesInfoFields}
+            <c-fec_-common-record-detail-section section-title={customLabel.salesInfoLabel} fields={salesInfoFields}
                 onbuttonclick={handleButtonClick}>
             </c-fec_-common-record-detail-section>
         </lightning-accordion>
@@ -29,9 +29,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                Limit&nbsp;-&nbsp;
+                                {customLabel.limitLabel}&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    Tải Dữ liệu Không Thành Công
+                                    {customLabel.msgErrorAPI}
                                 </span>
                             </span>
 
@@ -48,9 +48,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                Main Card&nbsp;-&nbsp;
+                                {customLabel.mainCardLabel}&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    Tải Dữ liệu Không Thành Công
+                                    {customLabel.msgErrorAPI}
                                 </span>
                             </span>
 
@@ -67,9 +67,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                PIN&nbsp;-&nbsp;
+                                {customLabel.pinLabel}&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    Tải Dữ liệu Không Thành Công
+                                    {customLabel.msgErrorAPI}
                                 </span>
                             </span>
 
@@ -86,9 +86,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                               Fee&nbsp;-&nbsp;
+                               {customLabel.feeLabel}&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    Tải Dữ liệu Không Thành Công
+                                    {customLabel.msgErrorAPI}
                                 </span>
                             </span>
 
@@ -105,9 +105,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                               Collections Info&nbsp;-&nbsp;
+                               {customLabel.collectionsInfoLabel}&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    Tải Dữ liệu Không Thành Công
+                                    {customLabel.msgErrorAPI}
                                 </span>
                             </span>
 
@@ -124,9 +124,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                               Sales Info&nbsp;-&nbsp;
+                               {customLabel.salesInfoLabel}&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    Tải Dữ liệu Không Thành Công
+                                    {customLabel.msgErrorAPI}
                                 </span>
                             </span>
 

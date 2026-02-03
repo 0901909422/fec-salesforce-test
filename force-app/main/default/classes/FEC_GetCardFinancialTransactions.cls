@@ -94,17 +94,15 @@ public with sharing class FEC_GetCardFinancialTransactions {
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
-                    'GetCardFinancialTransactions service returned HTTP error: ' + res.getStatusCode()
+                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode()})
                 );
             }
 
             ResponseWrapper response = parseResponse(res.getBody());
 
-            if (response.Sys == null || response.Sys.Code != 1) {
+            if (response.Sys != null && response.Sys.Code != 1) {
                 throw new CalloutException(
-                    response.Sys != null
-                    ? response.Sys.Description
-                    : 'GetCardFinancialTransactions service returned error'
+                    String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
                 );
             }
             
@@ -129,39 +127,32 @@ public with sharing class FEC_GetCardFinancialTransactions {
     ) {
 
         // ===================== TRANSID =====================
-        if (String.isBlank(transId)) {
-            throw new CalloutException('TransID is null or invalid');
-        }
-        if (transId.length() > 36) {
-            throw new CalloutException('TransID is null or invalid or no longer than 36 characters');
+        if (String.isBlank(transId) || transId.length() > 36) {
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
         }
 
         // ===================== REQUESTORID =====================
         Set<String> validRequestorIds = new Set<String>{FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP};
         if (String.isBlank(requestorId) || !validRequestorIds.contains(requestorId)) {
-            throw new CalloutException('RequestorID is null or invalid, "' + requestorId + '" is not type of RequestorID');
+            throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
 
         // ===================== DATETIME =====================
         if (String.isBlank(dateTimeStr)) {
-            throw new CalloutException('DateTime is null or invalid');
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
         }
         try {
             Datetime.valueOfGmt(dateTimeStr.replace('T',' '));
         } catch(Exception e) {
-            throw new CalloutException('DateTime is null or invalid, "' + dateTimeStr + '" is not type of Datetime');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeStr}));
         }
 
         // ===================== ACCOUNT NUMBER =====================
         if (String.isBlank(accountNumber)) {
-            throw new CalloutException('AccountNumber is null or invalid');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
         }
         if (accountNumber.length() > 255) {
-            throw new CalloutException('AccountNumber is null or invalid or no longer than 255 characters');
-        }
-        Boolean accountExists = true;
-        if (!accountExists) {
-            throw new CalloutException('AccountNumber is null or invalid');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'AccountNumber', '255'}));
         }
 
         // ===================== FROM DATE =====================
@@ -169,7 +160,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
             try {
                 String test = fromDate.format(); // YYYY-MM-DD
             } catch(Exception e) {
-                throw new CalloutException('FromDate is null or invalid or must have format YYYY-MM-DD');
+                throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{'FromDate', fromDate}));
             }
         }
 
@@ -178,11 +169,11 @@ public with sharing class FEC_GetCardFinancialTransactions {
             try {
                 String test = toDate.format(); // YYYY-MM-DD
             } catch(Exception e) {
-                throw new CalloutException('ToDate is null or invalid or must have format YYYY-MM-DD');
+                throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{'ToDate', toDate}));
             }
 
             if (fromDate != null && toDate < fromDate) {
-                throw new CalloutException('ToDate is null or invalid or must be after FromDate');
+                throw new CalloutException(String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{'ToDate', 'FromDate'}));
             }
         }
     }

@@ -82,7 +82,7 @@ public with sharing class FEC_GetStatus {
                 
                 return info;
             } else {
-                throw new CalloutException('API Error: ' + res.getStatus() + ' Body: ' + res.getBody());
+                throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{res.getStatus() + ' Body: ' + res.getBody()}));
             }
 
         } catch (Exception e) {

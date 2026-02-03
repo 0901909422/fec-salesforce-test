@@ -3,6 +3,12 @@ import { NavigationMixin } from 'lightning/navigation';
 import getCardPaymentRecords from '@salesforce/apex/FEC_CardPaymentController.getCardPaymentRecords';
 import getCardPaymentTotals from '@salesforce/apex/FEC_CardPaymentController.getCardPaymentTotals';
 import { formatCurrency, isNegative, autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
+import FEC_Card_Payment_Label from '@salesforce/label/c.FEC_Card_Payment_Label';
+import FEC_MSG_Card_Payment_Refresh from '@salesforce/label/c.FEC_MSG_Card_Payment_Refresh';
+import FEC_Full_Payment_Amount_Label from '@salesforce/label/c.FEC_Full_Payment_Amount_Label';
+import FEC_Loan_Balance_Label from '@salesforce/label/c.FEC_Loan_Balance_Label';
+import FEC_Full_Payment_Without_IPP_Label from '@salesforce/label/c.FEC_Full_Payment_Without_IPP_Label';
+import FEC_Full_IPP_Payment_Amount_Label from '@salesforce/label/c.FEC_Full_IPP_Payment_Amount_Label';
 
 // Error message constant
 const ERROR_MESSAGE = 'Tải dữ liệu không thành công';
@@ -27,6 +33,15 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
             this.loadTotals();
             this.loadCardPaymentData();
         }
+    }
+
+    customLabel = {
+        cardPaymentLabel: FEC_Card_Payment_Label,
+        msgCardPaymentRefresh: FEC_MSG_Card_Payment_Refresh,
+        fullPaymentAmountLabel: FEC_Full_Payment_Amount_Label,
+        loanBalanceLabel: FEC_Loan_Balance_Label,
+        fullPaymentWithoutIPPLabel: FEC_Full_Payment_Without_IPP_Label,
+        fullIPPPaymentAmountLabel: FEC_Full_IPP_Payment_Amount_Label
     }
     
     // Format dữ liệu percent: chia cho 100 và thêm ký hiệu %

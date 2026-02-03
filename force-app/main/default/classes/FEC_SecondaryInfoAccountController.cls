@@ -91,7 +91,7 @@ public with sharing class FEC_SecondaryInfoAccountController {
         try {
             FEC_GetCardSecInfo.ResponseWrapper res =
                 FEC_GetCardSecInfo.callGetCardSecInfo(
-                    generateTransactionId(),
+                    FEC_CommonUltils.generateTransactionId(),
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                     c.FEC_Account_Number__c
@@ -236,7 +236,5 @@ public with sharing class FEC_SecondaryInfoAccountController {
         }
         return m;
     }
-    private static String generateTransactionId() {
-        return String.valueOf(Datetime.now().getTime());
-    }
+    
 }
