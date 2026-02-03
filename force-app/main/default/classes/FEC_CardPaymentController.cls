@@ -10,7 +10,7 @@ public with sharing class FEC_CardPaymentController {
     @AuraEnabled(cacheable=false)
     public static List<Map<String, Object>> loadCardPaymentInfo(Id caseId) {
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         /* ===== TẢI CASE ===== */
@@ -211,7 +211,7 @@ public with sharing class FEC_CardPaymentController {
     @AuraEnabled(cacheable=false)
     public static Map<String, Decimal> loadCardPaymentTotals(Id caseId) {
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         Map<String, Decimal> totals = new Map<String, Decimal>();
@@ -430,7 +430,7 @@ public with sharing class FEC_CardPaymentController {
             } else {
                 // Nếu không có trong database (do lưu thất bại) → trả về lỗi
                 System.debug('### ERROR: No data in database after save, throwing exception');
-                throw new AuraHandledException('Tải dữ liệu không thành công');
+                throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
             }
         } catch (AuraHandledException e) {
             // Re-throw AuraHandledException để LWC có thể hiển thị lỗi
@@ -439,7 +439,7 @@ public with sharing class FEC_CardPaymentController {
         } catch (Exception e) {
             // Nếu có exception khác → cũng trả về lỗi
             System.debug('### Reload Card Payment Totals from DB FAILED: ' + e.getMessage());
-            throw new AuraHandledException('Tải dữ liệu không thành công');
+            throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
         }
 
         return totals;
@@ -659,7 +659,7 @@ public with sharing class FEC_CardPaymentController {
                 System.debug('Đã insert thành công ' + recordsToInsert.size() + ' Card Payment records vào DB.');
             } catch (Exception e) {
                 System.debug('Lỗi khi lưu DB: ' + e.getMessage());
-                throw new AuraHandledException('Lỗi lưu dữ liệu: ' + e.getMessage());
+                throw new AuraHandledException(e.getMessage());
             }
         } else {
             System.debug('Không có records mới để insert!');

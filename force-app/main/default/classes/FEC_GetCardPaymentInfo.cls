@@ -88,7 +88,7 @@
             if (res.getStatusCode() == 200) {
                 return parseResponse(res.getBodyDocument());
             } else {
-                throw new CalloutException('SOAP API Error: ' + res.getStatus() + ' - ' + res.getBody());
+                throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{res.getStatus() + ' - ' + res.getBody()}));
             }
 
         } catch (Exception e) {
@@ -103,11 +103,8 @@
     private static void validateRequest(String transId, String requestorId, String sysTime, String accountNumber, String dateStr) {
         
         // 1 & 2. Validate TransID
-        if (String.isBlank(transId)) {
-            throw new CalloutException('TransID is null or invalid');
-        }
-        if (transId.length() > MAX_ID_LEN) {
-            throw new CalloutException('TransID is null or invalid or no longer than 36 characters');
+        if (String.isBlank(transId) || transId.length() > MAX_ID_LEN) {
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
         }
 
         // 1 & 3. Validate RequestorID

@@ -47,7 +47,7 @@ public with sharing class FEC_CardInfoController {
     @AuraEnabled(cacheable=false)
     public static CardInfoDTO loadCardInfo(Id caseId, Boolean forceRefresh) {
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         /* ===== TẢI CASE ===== */
@@ -359,7 +359,7 @@ public with sharing class FEC_CardInfoController {
         
         if (customerHistoryId == null) {
             System.debug('### ERROR: Customer History ID is null, cannot save Supplementary Cards');
-            throw new AuraHandledException('Customer History ID is required to save Supplementary Cards');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Customer History ID'}));
         }
         
         System.debug('### Using Customer History ID: ' + customerHistoryId);
@@ -425,7 +425,7 @@ public with sharing class FEC_CardInfoController {
             } catch (Exception e) {
                 System.debug('### Save Supplementary Cards FAILED: ' + e.getMessage());
                 System.debug('### Stack trace: ' + e.getStackTraceString());
-                throw new AuraHandledException('Lỗi lưu dữ liệu: ' + e.getMessage());
+                throw new AuraHandledException(e.getMessage());
             }
         } else {
             System.debug('### No new Other Card records to insert');
