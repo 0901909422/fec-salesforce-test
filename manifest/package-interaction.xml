@@ -8,6 +8,7 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CommonUltils</members>
+		<members>FEC_CloseInterationSchedulerBatch</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -90,6 +91,7 @@
         <members>FEC_IPP_Schedule__c</members>
 		<members>FEC_Payment_History__c</members>
         <members>FEC_API_Config__mdt</members>
+		<members>FEC_Case_Remarks__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
