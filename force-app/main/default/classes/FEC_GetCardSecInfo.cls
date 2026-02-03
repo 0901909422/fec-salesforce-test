@@ -41,6 +41,7 @@ public with sharing class FEC_GetCardSecInfo {
         public PassDue PassDue;
         public List<CardInsurance> CardsInsurances;
         public List<SupplementaryCard> SupplementaryCards;
+        public List<CardsDelivery> CardsDeliveries;
         public List<IPP> IPPs;
     }
 
@@ -51,7 +52,7 @@ public with sharing class FEC_GetCardSecInfo {
         public String IPPPlan;
         public Decimal IPPBalance;
         public Decimal InterestRate;
-        public Decimal Term;
+        public Decimal currentTerm;
         public String IPPStartDate;
         public String IPPMatureDate;
         public Decimal IPPCurrentBalance;
@@ -153,6 +154,15 @@ public with sharing class FEC_GetCardSecInfo {
     }
 
     // =========================================================================
+    // CARDS DELIVERY
+    // =========================================================================
+    public class CardsDelivery {
+        public String CardNumber; // Card Number
+        public String KindOfIssue; // Type of Issue
+        public String DeliveryDate; // Delivery Date
+    }
+
+    // =========================================================================
     // PUBLIC CALL METHOD - Simplified version for easy usage
     // =========================================================================
     public static ResponseWrapper getCardSecInfo(String accountNumber) {
@@ -175,22 +185,32 @@ public with sharing class FEC_GetCardSecInfo {
 
         validateRequest(transID, requestorId, dateTimeStr, accountNumber);
         
-        String body =
-            '<?xml version="1.0" encoding="utf-8"?>' +
-            '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-            'xmlns:cif="http://fecredit.com.vn/CIF_CardInfo">' +
-                '<soapenv:Header/>' +
-                '<soapenv:Body>' +
-                    '<cif:GetCardSecInfo>' +
-                        '<Sys>' +
-                            '<TransID>' + transID + '</TransID>' +
-                            '<RequestorID>' + requestorId + '</RequestorID>' +
-                            '<DateTime>' + dateTimeStr + '</DateTime>' +
-                        '</Sys>' +
-                        '<AccountNumber>' + accountNumber + '</AccountNumber>' +
-                    '</cif:GetCardSecInfo>' +
-                '</soapenv:Body>' +
-            '</soapenv:Envelope>';
+        // Build SOAP request using Dom.XmlNode
+        Dom.Document doc = new Dom.Document();
+        
+        // Create Envelope with namespaces
+        Dom.XmlNode envelope = doc.createRootElement('Envelope', FEC_ConstantCommon.SOAP_ENV, 'soapenv');
+        envelope.setNamespace('cif', 'http://fecredit.com.vn/CIF_CardInfo');
+        
+        // Create Header
+        envelope.addChildElement('Header', FEC_ConstantCommon.SOAP_ENV, 'soapenv');
+        
+        // Create Body
+        Dom.XmlNode body = envelope.addChildElement('Body', FEC_ConstantCommon.SOAP_ENV, 'soapenv');
+        
+        // Create GetCardSecInfo
+        Dom.XmlNode getCardSecInfo = body.addChildElement('GetCardSecInfo', 'http://fecredit.com.vn/CIF_CardInfo', 'cif');
+        
+        // Create Sys node
+        Dom.XmlNode sys = getCardSecInfo.addChildElement('Sys', null, null);
+        sys.addChildElement('TransID', null, null).addTextNode(transID);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+        
+        // Create AccountNumber
+        getCardSecInfo.addChildElement('AccountNumber', null, null).addTextNode(accountNumber);
+        
+        String requestBody = doc.toXmlString();
 
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Sec_Info');
@@ -198,7 +218,7 @@ public with sharing class FEC_GetCardSecInfo {
         String endpoint = apiSetting?.FEC_Call_Mock__c
             ? FEC_MockupEndpoint.GET_CARD_SEC_INFO_ENDPOINT_MOCKUP
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, body);
+        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, requestBody);
 
         if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
             throw new CalloutException('HTTP error ' + res.getStatusCode());
@@ -339,6 +359,26 @@ public with sharing class FEC_GetCardSecInfo {
                 }
             }
         }
+        
+        // CardsDeliveries
+        Dom.XmlNode deliveriesNode = infoNode.getChildElement('CardsDeliveries', null);
+        if (deliveriesNode != null) {
+            result.CardSecInfo.CardsDeliveries = new List<CardsDelivery>();
+            for (Dom.XmlNode child : deliveriesNode.getChildElements()) {
+                String childName = child.getName();
+                // Bỏ qua namespace prefix nếu có
+                if (childName.contains(':')) {
+                    childName = childName.substring(childName.indexOf(':') + 1);
+                }
+                if (childName == 'CardsDelivery') {
+                    CardsDelivery delivery = new CardsDelivery();
+                    delivery.CardNumber = FEC_CommonUltils.getXmlValue(child, 'CardNumber');
+                    delivery.KindOfIssue = FEC_CommonUltils.getXmlValue(child, 'KindOfIssue');
+                    delivery.DeliveryDate = FEC_CommonUltils.getXmlValue(child, 'DeliveryDate');
+                    result.CardSecInfo.CardsDeliveries.add(delivery);
+                }
+            }
+        }
 
         // IPPs
         Dom.XmlNode ippsNode = infoNode.getChildElement('IPPs', null);
@@ -355,7 +395,7 @@ public with sharing class FEC_GetCardSecInfo {
                     ipp.IPPPlan = FEC_CommonUltils.getXmlValue(child, 'IPPPlan');
                     ipp.IPPBalance = FEC_CommonUltils.xmlValToDecimal(child, 'IPPBalance');
                     ipp.InterestRate = FEC_CommonUltils.xmlValToDecimal(child, 'InterestRate');
-                    ipp.Term = FEC_CommonUltils.xmlValToDecimal(child, 'CurrentTerm');
+                    ipp.currentTerm = FEC_CommonUltils.xmlValToDecimal(child, 'CurrentTerm');
                     ipp.IPPStartDate = FEC_CommonUltils.getXmlValue(child, 'IPPStartDate');
                     ipp.IPPMatureDate = FEC_CommonUltils.getXmlValue(child, 'IPPMatureDate');
                     ipp.IPPCurrentBalance = FEC_CommonUltils.xmlValToDecimal(child, 'IPPCurrentBalance');
@@ -371,6 +411,79 @@ public with sharing class FEC_GetCardSecInfo {
 
         return result;
     }
+
+    /**
+     * Một <IPP> có thể có OPENING_BALANCE_1, _2, ... _36 (nhiều kỳ) hoặc chỉ OpeningBalance (1 kỳ).
+     * Trả về danh sách IPP (1 item per kỳ) để lưu nhiều bản ghi IPP Schedule.
+     */
+    private static List<IPP> expandIPPToScheduleItems(Dom.XmlNode ippNode) {
+        List<IPP> listOut = new List<IPP>();
+        if (ippNode == null) return listOut;
+
+        String ippPlan = FEC_CommonUltils.getXmlValue(ippNode, 'IPPPlan');
+        String ippRecordNoFromXml = FEC_CommonUltils.getXmlValue(ippNode, 'IPPRecordNo');
+        if (String.isBlank(ippRecordNoFromXml)) {
+            throw new CalloutException('GetCardSecInfo response missing IPPRecordNo for an IPP');
+        }
+        String ippRecordNo = ippRecordNoFromXml.trim();
+        Decimal ippBalance = FEC_CommonUltils.xmlValToDecimal(ippNode, 'IPPBalance');
+        Decimal interestRate = FEC_CommonUltils.xmlValToDecimal(ippNode, 'InterestRate');
+        Decimal currentTerm = FEC_CommonUltils.xmlValToDecimal(ippNode, 'CurrentTerm');
+        String ippStartDate = FEC_CommonUltils.getXmlValue(ippNode, 'IPPStartDate');
+        String ippMatureDate = FEC_CommonUltils.getXmlValue(ippNode, 'IPPMatureDate');
+        Decimal ippCurrentBalance = FEC_CommonUltils.xmlValToDecimal(ippNode, 'IPPCurrentBalance');
+        Decimal paymentAmount = FEC_CommonUltils.xmlValToDecimal(ippNode, 'PaymentAmount');
+        Decimal monthlyPrincipal = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MonthlyPrincipal');
+        Decimal monthlyInterest = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MonthlyInterest');
+
+        // Mỗi kỳ (1-36): OPENING_BALANCE_k, PAYMENT_AMT_k, MONTHLY_PRINCIPAL_k, MONTHLY_INTEREST_k
+        for (Integer k = 1; k <= 36; k++) {
+            String keyOpening = 'OPENING_BALANCE_' + k;
+            String valOpening = FEC_CommonUltils.getXmlValue(ippNode, keyOpening);
+            if (String.isNotBlank(valOpening) && valOpening.trim() != '') {
+                try {
+                    Decimal openingK = Decimal.valueOf(valOpening.trim());
+                    Decimal paymentK = FEC_CommonUltils.xmlValToDecimal(ippNode, 'PAYMENT_AMT_' + k);
+                    Decimal principalK = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MONTHLY_PRINCIPAL_' + k);
+                    Decimal interestK = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MONTHLY_INTEREST_' + k);
+                    IPP ipp = new IPP();
+                    ipp.IPPPlan = ippPlan;
+                    ipp.IPPRecordNo = ippRecordNo;
+                    ipp.IPPBalance = ippBalance;
+                    ipp.InterestRate = interestRate;
+                    ipp.CurrentTerm = currentTerm;
+                    ipp.IPPStartDate = ippStartDate;
+                    ipp.IPPMatureDate = ippMatureDate;
+                    ipp.IPPCurrentBalance = ippCurrentBalance;
+                    ipp.PaymentAmount = paymentK != null ? paymentK : paymentAmount;
+                    ipp.MonthlyPrincipal = principalK != null ? principalK : monthlyPrincipal;
+                    ipp.MonthlyInterest = interestK != null ? interestK : monthlyInterest;
+                    ipp.OpeningBalance = openingK;
+                    listOut.add(ipp);
+                } catch (Exception e) { /* skip invalid number */ }
+            }
+        }
+
+        if (listOut.isEmpty()) {
+            Decimal openingBalance = FEC_CommonUltils.xmlValToDecimal(ippNode, 'OpeningBalance');
+            IPP ipp = new IPP();
+            ipp.IPPPlan = ippPlan;
+            ipp.IPPRecordNo = ippRecordNo;
+            ipp.IPPBalance = ippBalance;
+            ipp.InterestRate = interestRate;
+            ipp.CurrentTerm = currentTerm;
+            ipp.IPPStartDate = ippStartDate;
+            ipp.IPPMatureDate = ippMatureDate;
+            ipp.IPPCurrentBalance = ippCurrentBalance;
+            ipp.PaymentAmount = paymentAmount;
+            ipp.MonthlyPrincipal = monthlyPrincipal;
+            ipp.MonthlyInterest = monthlyInterest;
+            ipp.OpeningBalance = openingBalance != null ? openingBalance : 0;
+            listOut.add(ipp);
+        }
+        return listOut;
+    }
+
 
     // =========================================================================
     // VALIDATION (KEEP FULL)
