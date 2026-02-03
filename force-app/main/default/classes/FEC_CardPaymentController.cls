@@ -1,5 +1,16 @@
 public with sharing class FEC_CardPaymentController {
     
+    /* =====================================================
+     * DTO
+     * ===================================================== */
+    public class CardPaymentTotalsDTO {
+        @AuraEnabled public Map<String, String> helpTexts;
+        @AuraEnabled public Decimal fullPaymentAmount;
+        @AuraEnabled public Decimal loanBalance;
+        @AuraEnabled public Decimal fullPaymentWithoutIPP;
+        @AuraEnabled public Decimal fullIPPPaymentAmount;
+    }
+    
     /**
      * Tải thông tin Card Payment - Method chính
      * Luồng: Query database trước, chỉ call API nếu không có dữ liệu (và chỉ 1 lần duy nhất)
@@ -76,7 +87,7 @@ public with sharing class FEC_CardPaymentController {
                 records.add(record);
             }
         } catch (Exception e) {
-            System.debug('### Load Card Payment Records FAILED: ' + e.getMessage());
+            // Ignore query exception
         }
 
         /* =====================================================
@@ -87,17 +98,13 @@ public with sharing class FEC_CardPaymentController {
 
         // Nếu đã có dữ liệu → return luôn (không gọi API nữa)
         if (hasCardPaymentData) {
-            System.debug('### Found Card Payment data in database, returning without API call');
             return records;
         }
 
         /* =====================================================
          * BƯỚC 3: KHÔNG CÓ DỮ LIỆU → GỌI API (CHỈ 1 LẦN DUY NHẤT)
          * ===================================================== */
-        System.debug('### No Card Payment data found in database, calling API...');
-
         if (String.isBlank(accountNumber)) {
-            System.debug('### Account Number is blank, cannot call API');
             return records;
         }
 
@@ -161,7 +168,7 @@ public with sharing class FEC_CardPaymentController {
                 records.add(record);
             }
         } catch (Exception e) {
-            System.debug('### Reload Card Payment Records FAILED: ' + e.getMessage());
+            // Ignore query exception
         }
 
         return records;
@@ -206,19 +213,20 @@ public with sharing class FEC_CardPaymentController {
      * Luồng: Query database trước, chỉ call API nếu không có dữ liệu (và chỉ 1 lần duy nhất)
      * Sau khi có dữ liệu trong database, sẽ không gọi API nữa
      * @param caseId - ID của Case record
-     * @return Map chứa payment totals
+     * @return CardPaymentTotalsDTO chứa payment totals và help texts
      */
     @AuraEnabled(cacheable=false)
-    public static Map<String, Decimal> loadCardPaymentTotals(Id caseId) {
+    public static CardPaymentTotalsDTO loadCardPaymentTotals(Id caseId) {
         if (caseId == null) {
             throw new AuraHandledException('CaseId is required');
         }
 
-        Map<String, Decimal> totals = new Map<String, Decimal>();
-        totals.put('fullPaymentAmount', 0);
-        totals.put('loanBalance', 0);
-        totals.put('fullPaymentWithoutIPP', 0);
-        totals.put('fullIPPPaymentAmount', 0);
+        CardPaymentTotalsDTO dto = new CardPaymentTotalsDTO();
+        dto.fullPaymentAmount = 0;
+        dto.loanBalance = 0;
+        dto.fullPaymentWithoutIPP = 0;
+        dto.fullIPPPaymentAmount = 0;
+        dto.helpTexts = buildHelpTextMap();
 
         /* ===== TẢI CASE ===== */
         Case c = [
@@ -233,8 +241,7 @@ public with sharing class FEC_CardPaymentController {
         String accountNumber = getAccountNumber(c);
 
         if (customerHistoryId == null) {
-            System.debug('### Customer History not found for Case: ' + caseId);
-            return totals;
+            return dto;
         }
 
         /* =====================================================
@@ -254,26 +261,22 @@ public with sharing class FEC_CardPaymentController {
             if (!cardPayments.isEmpty()) {
                 // Có dữ liệu → return luôn (không gọi API)
                 FEC_Card_Payment__c payment = cardPayments[0];
-                totals.put('fullPaymentAmount', payment.FEC_Full_Payment_Amount__c != null ? payment.FEC_Full_Payment_Amount__c : 0);
-                totals.put('loanBalance', payment.FEC_Loan_Balance__c != null ? payment.FEC_Loan_Balance__c : 0);
-                totals.put('fullPaymentWithoutIPP', payment.FEC_Full_Payment_Without_IPP__c != null ? payment.FEC_Full_Payment_Without_IPP__c : 0);
-                totals.put('fullIPPPaymentAmount', payment.FEC_Full_IPP_Payment_Amount__c != null ? payment.FEC_Full_IPP_Payment_Amount__c : 0);
-                System.debug('### Found Card Payment Totals in database, returning without API call');
-                return totals;
+                dto.fullPaymentAmount = payment.FEC_Full_Payment_Amount__c != null ? payment.FEC_Full_Payment_Amount__c : 0;
+                dto.loanBalance = payment.FEC_Loan_Balance__c != null ? payment.FEC_Loan_Balance__c : 0;
+                dto.fullPaymentWithoutIPP = payment.FEC_Full_Payment_Without_IPP__c != null ? payment.FEC_Full_Payment_Without_IPP__c : 0;
+                dto.fullIPPPaymentAmount = payment.FEC_Full_IPP_Payment_Amount__c != null ? payment.FEC_Full_IPP_Payment_Amount__c : 0;
+                return dto;
             }
         } catch (Exception e) {
-            System.debug('### Load Card Payment Totals from DB FAILED: ' + e.getMessage());
+            // Ignore query exception
         }
 
         /* =====================================================
          * BƯỚC 2: KHÔNG CÓ DỮ LIỆU → GỌI API (CHỈ 1 LẦN DUY NHẤT)
          * Lưu ý: Tất cả các API chỉ được gọi 1 lần duy nhất ở đây
          * ===================================================== */
-        System.debug('### No Card Payment Totals found in database, calling API (ONLY ONCE)...');
-
         if (String.isBlank(accountNumber)) {
-            System.debug('### Account Number is blank, cannot call API');
-            return totals;
+            return dto;
         }
 
         Decimal fullPaymentAmount = 0;
@@ -288,16 +291,15 @@ public with sharing class FEC_CardPaymentController {
             if (paymentResult != null && paymentResult.fullPaymentAmount != null) {
                 fullPaymentAmount = paymentResult.fullPaymentAmount;
             }
-            System.debug('Full Payment Amount from API: ' + fullPaymentAmount);
         } catch (Exception e) {
-            System.debug('### GetCardPaymentInfo API FAILED: ' + e.getMessage());
+            System.debug('GetCardPaymentInfo API error: ' + e.getMessage());
         }
 
         /* ===== 2. Gọi API GetCardBasicInfo để lấy Loan Balance ===== */
         try {
             String transId = UUID.randomUUID().toString();
-            String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
-            String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
+            String requestorId = 'CRM';
+            String dateTimeStr = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss');
             
             FEC_GetCardBasicInfo.ResponseWrapper basicInfoResult = 
                 FEC_GetCardBasicInfo.callGetCardBasicInfo(transId, requestorId, dateTimeStr, accountNumber);
@@ -308,9 +310,8 @@ public with sharing class FEC_CardPaymentController {
                 basicInfoResult.CardBasicInfo.MainCard.LoanBalance != null) {
                 loanBalance = basicInfoResult.CardBasicInfo.MainCard.LoanBalance;
             }
-            System.debug('Loan Balance from API: ' + loanBalance);
         } catch (Exception e) {
-            System.debug('### GetCardBasicInfo API FAILED: ' + e.getMessage());
+            System.debug('GetCardBasicInfo API error: ' + e.getMessage());
         }
 
         /* ===== 3. Tính Full Payment Without IPP từ 3 API ===== */
@@ -333,11 +334,9 @@ public with sharing class FEC_CardPaymentController {
                     Decimal amtMemoDb = emeaResult.amtMemoDb != null ? emeaResult.amtMemoDb : 0;
                     Decimal amtMemoCr = emeaResult.amtMemoCr != null ? emeaResult.amtMemoCr : 0;
                     onlineTotalBalance = currBal + amtMemoDb - amtMemoCr;
-                    System.debug('OnlineTotalBalance from M_CMS_EMEA_ACCOUNT_INQ: ' + onlineTotalBalance + 
-                                ' (CURR_BAL=' + currBal + ', AMT_MEMO_DB=' + amtMemoDb + ', AMT_MEMO_CR=' + amtMemoCr + ')');
                 }
             } catch (Exception e) {
-                System.debug('### M_CMS_EMEA_ACCOUNT_INQ API FAILED: ' + e.getMessage());
+                System.debug('M_CMS_EMEA_ACCOUNT_INQ API error: ' + e.getMessage());
             }
 
             // 3.2. Gọi API GetCardPlanInfo để lấy TotalDeferredInterestPlan, TotalAccuredInterestPlan, TotalPerDiemPlan
@@ -369,22 +368,16 @@ public with sharing class FEC_CardPaymentController {
                             }
                         }
                     }
-                    System.debug('TotalDeferredInterestPlan: ' + totalDeferredInterestPlan);
-                    System.debug('TotalAccuredInterestPlan: ' + totalAccuredInterestPlan);
-                    System.debug('TotalPerDiemPlan: ' + totalPerDiemPlan);
                 }
             } catch (Exception e) {
-                System.debug('### GetCardPlanInfo API FAILED for Full Payment Without IPP: ' + e.getMessage());
+                System.debug('GetCardPlanInfo API error: ' + e.getMessage());
             }
 
             // 3.3. Tính Full Payment Without IPP
             // = OnlineTotalBalance + TotalDeferredInterestPlan + TotalAccuredInterestPlan + TotalPerDiemPlan - LoanBalance
             fullPaymentWithoutIPP = onlineTotalBalance + totalDeferredInterestPlan + totalAccuredInterestPlan + totalPerDiemPlan - loanBalance;
-            System.debug('Full Payment Without IPP calculated: ' + fullPaymentWithoutIPP + 
-                        ' = ' + onlineTotalBalance + ' + ' + totalDeferredInterestPlan + ' + ' + 
-                        totalAccuredInterestPlan + ' + ' + totalPerDiemPlan + ' - ' + loanBalance);
         } catch (Exception e) {
-            System.debug('### Calculate Full Payment Without IPP FAILED: ' + e.getMessage());
+            System.debug('Calculate Full Payment Without IPP error: ' + e.getMessage());
         }
 
         /* ===== 4. Tính Full IPP Payment Amount ===== */
@@ -392,8 +385,6 @@ public with sharing class FEC_CardPaymentController {
         if (fullPaymentAmount != 0 && fullPaymentWithoutIPP != 0) {
             // Full IPP Payment Amount = Full Payment Amount - Full Payment Without IPP
             fullIPPPaymentAmount = fullPaymentAmount - fullPaymentWithoutIPP;
-            System.debug('Full IPP Payment Amount calculated: ' + fullIPPPaymentAmount + 
-                        ' = ' + fullPaymentAmount + ' - ' + fullPaymentWithoutIPP);
         }
 
         /* =====================================================
@@ -401,7 +392,6 @@ public with sharing class FEC_CardPaymentController {
          * Lưu ý: Method này chỉ được gọi 1 lần sau khi gọi API
          * ===================================================== */
         if (fullPaymentAmount != 0 || loanBalance != 0 || fullPaymentWithoutIPP != 0 || fullIPPPaymentAmount != 0) {
-            System.debug('### Saving Card Payment Totals to database (ONLY ONCE)...');
             saveCardPaymentTotalsToDatabase(customerHistoryId, fullPaymentAmount, loanBalance, fullPaymentWithoutIPP, fullIPPPaymentAmount);
         }
 
@@ -422,37 +412,31 @@ public with sharing class FEC_CardPaymentController {
 
             if (!cardPayments.isEmpty()) {
                 FEC_Card_Payment__c payment = cardPayments[0];
-                totals.put('fullPaymentAmount', payment.FEC_Full_Payment_Amount__c != null ? payment.FEC_Full_Payment_Amount__c : 0);
-                totals.put('loanBalance', payment.FEC_Loan_Balance__c != null ? payment.FEC_Loan_Balance__c : 0);
-                totals.put('fullPaymentWithoutIPP', payment.FEC_Full_Payment_Without_IPP__c != null ? payment.FEC_Full_Payment_Without_IPP__c : 0);
-                totals.put('fullIPPPaymentAmount', payment.FEC_Full_IPP_Payment_Amount__c != null ? payment.FEC_Full_IPP_Payment_Amount__c : 0);
-                System.debug('### Reloaded Card Payment Totals from database after API call');
+                dto.fullPaymentAmount = payment.FEC_Full_Payment_Amount__c != null ? payment.FEC_Full_Payment_Amount__c : 0;
+                dto.loanBalance = payment.FEC_Loan_Balance__c != null ? payment.FEC_Loan_Balance__c : 0;
+                dto.fullPaymentWithoutIPP = payment.FEC_Full_Payment_Without_IPP__c != null ? payment.FEC_Full_Payment_Without_IPP__c : 0;
+                dto.fullIPPPaymentAmount = payment.FEC_Full_IPP_Payment_Amount__c != null ? payment.FEC_Full_IPP_Payment_Amount__c : 0;
             } else {
                 // Nếu không có trong database (do lưu thất bại) → trả về lỗi
-                System.debug('### ERROR: No data in database after save, throwing exception');
                 throw new AuraHandledException('Tải dữ liệu không thành công');
             }
         } catch (AuraHandledException e) {
-            // Re-throw AuraHandledException để LWC có thể hiển thị lỗi
-            System.debug('### Reload Card Payment Totals from DB FAILED: ' + e.getMessage());
             throw e;
         } catch (Exception e) {
-            // Nếu có exception khác → cũng trả về lỗi
-            System.debug('### Reload Card Payment Totals from DB FAILED: ' + e.getMessage());
             throw new AuraHandledException('Tải dữ liệu không thành công');
         }
 
-        return totals;
+        return dto;
     }
 
     /**
      * Get Card Payment totals
      * Method này wrapper của loadCardPaymentTotals() để backward compatibility
      * @param caseId - The Case record ID
-     * @return Map containing payment totals
+     * @return CardPaymentTotalsDTO containing payment totals and help texts
      */
     @AuraEnabled(cacheable=false)
-    public static Map<String, Decimal> getCardPaymentTotals(String caseId) {
+    public static CardPaymentTotalsDTO getCardPaymentTotals(String caseId) {
         // Sử dụng loadCardPaymentTotals() - method này tự động query database và gọi API nếu cần
         return loadCardPaymentTotals(caseId);
     }
@@ -468,7 +452,6 @@ public with sharing class FEC_CardPaymentController {
      */
     private static void saveCardPaymentTotalsToDatabase(Id customerHistoryId, Decimal fullPaymentAmount, Decimal loanBalance, Decimal fullPaymentWithoutIPP, Decimal fullIPPPaymentAmount) {
         if (customerHistoryId == null) {
-            System.debug('Customer History ID is null, cannot save totals');
             return;
         }
 
@@ -491,7 +474,6 @@ public with sharing class FEC_CardPaymentController {
                 
                 // Kiểm tra xem đã có dữ liệu chưa (nếu có → không update)
                 if (paymentToUpdate.FEC_Full_Payment_Amount__c != null || paymentToUpdate.FEC_Loan_Balance__c != null || paymentToUpdate.FEC_Full_Payment_Without_IPP__c != null || paymentToUpdate.FEC_Full_IPP_Payment_Amount__c != null) {
-                    System.debug('### Card Payment Totals đã tồn tại trong database, không update');
                     return;
                 }
             } else {
@@ -506,25 +488,21 @@ public with sharing class FEC_CardPaymentController {
             if (paymentToUpdate.FEC_Full_Payment_Amount__c == null && fullPaymentAmount != 0) {
                 paymentToUpdate.FEC_Full_Payment_Amount__c = fullPaymentAmount;
                 needsUpdate = true;
-                System.debug('Setting Full Payment Amount: ' + fullPaymentAmount);
             }
 
             if (paymentToUpdate.FEC_Loan_Balance__c == null && loanBalance != 0) {
                 paymentToUpdate.FEC_Loan_Balance__c = loanBalance;
                 needsUpdate = true;
-                System.debug('Setting Loan Balance: ' + loanBalance);
             }
 
             if (paymentToUpdate.FEC_Full_Payment_Without_IPP__c == null && fullPaymentWithoutIPP != 0) {
                 paymentToUpdate.FEC_Full_Payment_Without_IPP__c = fullPaymentWithoutIPP;
                 needsUpdate = true;
-                System.debug('Setting Full Payment Without IPP: ' + fullPaymentWithoutIPP);
             }
 
             if (paymentToUpdate.FEC_Full_IPP_Payment_Amount__c == null && fullIPPPaymentAmount != 0) {
                 paymentToUpdate.FEC_Full_IPP_Payment_Amount__c = fullIPPPaymentAmount;
                 needsUpdate = true;
-                System.debug('Setting Full IPP Payment Amount: ' + fullIPPPaymentAmount);
             }
 
             if (needsUpdate) {
@@ -533,10 +511,9 @@ public with sharing class FEC_CardPaymentController {
                 } else {
                     insert paymentToUpdate;
                 }
-                System.debug('Đã lưu Card Payment Totals vào database');
             }
         } catch (Exception e) {
-            System.debug('Lỗi khi lưu Card Payment Totals: ' + e.getMessage());
+            System.debug('Save Card Payment Totals error: ' + e.getMessage());
             // Không throw exception để không làm gián đoạn flow chính
         }
     }
@@ -552,7 +529,6 @@ public with sharing class FEC_CardPaymentController {
         // Ưu tiên dùng Customer History ID từ Case
         // Nếu không có, mới tìm từ Account Number
         if (customerHistoryId == null) {
-            System.debug('Customer History ID từ Case là null, tìm từ Account Number...');
             List<FEC_Customer_History__c> histories = [
                 SELECT Id FROM FEC_Customer_History__c 
                 WHERE FEC_Account_Number__c = :accountNumber 
@@ -560,14 +536,10 @@ public with sharing class FEC_CardPaymentController {
             ];
             if (!histories.isEmpty()) {
                 customerHistoryId = histories[0].Id;
-                System.debug('Found Customer History ID từ Account Number: ' + customerHistoryId);
             }
-        } else {
-            System.debug('Sử dụng Customer History ID từ Case: ' + customerHistoryId);
         }
         
         if (customerHistoryId == null) {
-            System.debug('Không tìm thấy Customer History với Account Number: ' + accountNumber);
             return;
         }
         
@@ -586,8 +558,6 @@ public with sharing class FEC_CardPaymentController {
             existingKeys.add(key);
         }
         
-        System.debug('🔍 Found ' + existingRecords.size() + ' existing records in DB');
-        
         List<FEC_Card_Payment__c> recordsToInsert = new List<FEC_Card_Payment__c>();
 
         for (FEC_GetCardPlanInfo.CardPlan p : planList) {
@@ -597,7 +567,6 @@ public with sharing class FEC_CardPaymentController {
             
             // Nếu key đã tồn tại → bỏ qua (không insert, không update)
             if (existingKeys.contains(key)) {
-                System.debug('### Card Payment record already exists: Rec=' + p.recordNumber + ', Plan=' + p.planNumber + ', skipping insert');
                 continue;
             }
             
@@ -611,8 +580,8 @@ public with sharing class FEC_CardPaymentController {
             record.FEC_REF_Number__c = p.refNumber;               // REFNumber
             
             // Map Date (Cần convert String -> Date)
-            record.FEC_Open_Date__c = FEC_CommonUltils.convertDateSafe(p.openDate);    // PlanOpenDate
-            record.FEC_Begin_Date__c = FEC_CommonUltils.convertDateSafe(p.beginDate);  // BeginDate
+            record.FEC_Open_Date__c = convertDateSafe(p.openDate);    // PlanOpenDate
+            record.FEC_Begin_Date__c = convertDateSafe(p.beginDate);  // BeginDate
             
             // Map Decimal
             Decimal currentBalance = p.currentBalance != null ? p.currentBalance : 0;
@@ -648,22 +617,44 @@ public with sharing class FEC_CardPaymentController {
             record.FEC_Plan_Payment_Amount__c = planPaymentAmount;
 
             recordsToInsert.add(record);
-            System.debug('Creating new Card Payment record: Rec=' + p.recordNumber + ', Plan=' + p.planNumber);
         }
-
-        System.debug('Total records to insert: ' + recordsToInsert.size());
 
         if (!recordsToInsert.isEmpty()) {
             try {
                 insert recordsToInsert;
-                System.debug('Đã insert thành công ' + recordsToInsert.size() + ' Card Payment records vào DB.');
             } catch (Exception e) {
-                System.debug('Lỗi khi lưu DB: ' + e.getMessage());
                 throw new AuraHandledException('Lỗi lưu dữ liệu: ' + e.getMessage());
             }
-        } else {
-            System.debug('Không có records mới để insert!');
         }
     }
     
+    /**
+     * Hàm phụ trợ convert ngày tháng
+     * @param dateStr - Date string format yyyy-MM-dd
+     * @return Date object
+     */
+    private static Date convertDateSafe(String dateStr) {
+        if (String.isBlank(dateStr)) return null;
+        try {
+            return Date.valueOf(dateStr); // Format yêu cầu: YYYY-MM-DD
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    /**
+     * Build help text map from FEC_Card_Payment__c fields
+     * @return Map of field API name to help text
+     */
+    private static Map<String, String> buildHelpTextMap() {
+        Map<String, String> m = new Map<String, String>();
+        for (Schema.SObjectField f :
+            FEC_Card_Payment__c.SObjectType.getDescribe().fields.getMap().values()
+        ) {
+            if (String.isNotBlank(f.getDescribe().getInlineHelpText())) {
+                m.put(f.getDescribe().getName(), f.getDescribe().getInlineHelpText());
+            }
+        }
+        return m;
+    }
 }
