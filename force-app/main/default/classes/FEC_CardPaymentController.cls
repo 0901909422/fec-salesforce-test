@@ -611,8 +611,8 @@ public with sharing class FEC_CardPaymentController {
             record.FEC_REF_Number__c = p.refNumber;               // REFNumber
             
             // Map Date (Cần convert String -> Date)
-            record.FEC_Open_Date__c = FEC_CommonUltils.convertDateSafe(p.openDate);    // PlanOpenDate
-            record.FEC_Begin_Date__c = FEC_CommonUltils.convertDateSafe(p.beginDate);  // BeginDate
+            record.FEC_Open_Date__c = FEC_CommonUltils.parseDate(p.openDate);    // PlanOpenDate
+            record.FEC_Begin_Date__c = FEC_CommonUltils.parseDate(p.beginDate);  // BeginDate
             
             // Map Decimal
             Decimal currentBalance = p.currentBalance != null ? p.currentBalance : 0;

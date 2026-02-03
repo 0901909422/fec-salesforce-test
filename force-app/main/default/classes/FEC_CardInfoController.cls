@@ -407,7 +407,7 @@ public with sharing class FEC_CardInfoController {
             record.FEC_Gender__c = item.Gender;
             
             // Ánh xạ các trường Date (CardIssueDate và CardActivationDate giờ là Date type, ExpiryDate vẫn là String)
-            record.FEC_Expiry_Date__c = FEC_CommonUltils.convertDateSafeForOtherCard(item.ExpiryDate);
+            record.FEC_Expiry_Date__c = FEC_CommonUltils.parseDate(item.ExpiryDate);
             record.FEC_Card_Activation_Date__c = item.CardActivationDate; // Đã là Date type
             record.FEC_Issue_Date__c = item.CardIssueDate; // Đã là Date type
             

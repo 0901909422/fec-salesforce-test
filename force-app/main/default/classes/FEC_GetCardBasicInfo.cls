@@ -276,7 +276,7 @@ public with sharing class FEC_GetCardBasicInfo {
         result.CardBasicInfo.MainCard.ContractNumber        = FEC_CommonUltils.getXmlValue(main, 'ContractNumber');
         result.CardBasicInfo.MainCard.AccountNumber         = FEC_CommonUltils.getXmlValue(main, 'AccountNumber');
         result.CardBasicInfo.MainCard.SecurityAnswer        = FEC_CommonUltils.getXmlValue(main, 'SecurityAnswer');
-        result.CardBasicInfo.MainCard.ExpiryDate             = getDate(main, 'ExpiryDate');
+        result.CardBasicInfo.MainCard.ExpiryDate             = FEC_CommonUltils.xmlValToDate(main, 'ExpiryDate');
         result.CardBasicInfo.MainCard.BillingCycle          = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(main, 'BillingCycle'));
         result.CardBasicInfo.MainCard.ActivatedFlag         = FEC_CommonUltils.getXmlValue(main, 'ActivatedFlag');
 
@@ -286,15 +286,15 @@ public with sharing class FEC_GetCardBasicInfo {
         result.CardBasicInfo.MainCard.BlockCode2            = FEC_CommonUltils.getXmlValue(main, 'BlockCode2');
         result.CardBasicInfo.MainCard.RsnBlockCode1          = FEC_CommonUltils.getXmlValue(main, 'RsnBlockCode1');
         result.CardBasicInfo.MainCard.RsnBlockCode2          = FEC_CommonUltils.getXmlValue(main, 'RsnBlockCode2');
-        result.CardBasicInfo.MainCard.AccountBlockCode1Date = getDate(main, 'AccountBlockCode1Date');
-        result.CardBasicInfo.MainCard.AccountBlockCode2Date = getDate(main, 'AccountBlockCode2Date');
+        result.CardBasicInfo.MainCard.AccountBlockCode1Date = FEC_CommonUltils.xmlValToDate(main, 'AccountBlockCode1Date');
+        result.CardBasicInfo.MainCard.AccountBlockCode2Date = FEC_CommonUltils.xmlValToDate(main, 'AccountBlockCode2Date');
         result.CardBasicInfo.MainCard.WarningCode360        = FEC_CommonUltils.getXmlValue(main, 'WarningCode360');
 
         /* ===== FINANCIAL ===== */
         result.CardBasicInfo.MainCard.OTB                   = FEC_CommonUltils.xmlValToDecimal(main, 'OTB');
         result.CardBasicInfo.MainCard.HoldAmount            = FEC_CommonUltils.xmlValToDecimal(main, 'HoldAmount');
         result.CardBasicInfo.MainCard.CreditLimit           = FEC_CommonUltils.xmlValToDecimal(main, 'Limit');
-        result.CardBasicInfo.MainCard.PaymentDate           = getDate(main, 'PaymentDate');
+        result.CardBasicInfo.MainCard.PaymentDate           = FEC_CommonUltils.xmlValToDate(main, 'PaymentDate');
         result.CardBasicInfo.MainCard.LastPaymentAmount     = FEC_CommonUltils.xmlValToDecimal(main, 'LastPaymentAmount');
         result.CardBasicInfo.MainCard.LoanBalance            = FEC_CommonUltils.xmlValToDecimal(main, 'LoanBalance');
 
@@ -311,11 +311,11 @@ public with sharing class FEC_GetCardBasicInfo {
             result.CardBasicInfo.Statement.StatementBalance =
                 FEC_CommonUltils.xmlValToDecimal(stmt, 'StatemenBalance');
             result.CardBasicInfo.Statement.LastStatementDate =
-                getDate(stmt, 'LastStatementDate');
+                FEC_CommonUltils.xmlValToDate(stmt, 'LastStatementDate');
             result.CardBasicInfo.Statement.NextStatementDate =
-                getDate(stmt, 'NextStatementDate');
+                FEC_CommonUltils.xmlValToDate(stmt, 'NextStatementDate');
             result.CardBasicInfo.Statement.LastStatementDueDate =
-                getDate(stmt, 'LastStatementDueDate');
+                FEC_CommonUltils.xmlValToDate(stmt, 'LastStatementDueDate');
             result.CardBasicInfo.Statement.LastStatementMPA =
                 FEC_CommonUltils.xmlValToDecimal(stmt, 'LastStatementMPA');
         }
@@ -347,7 +347,7 @@ public with sharing class FEC_GetCardBasicInfo {
                 sp.MPA =
                     FEC_CommonUltils.xmlValToDecimal(s, 'MPA');
                 sp.StatementDate =
-                    getDate(s, 'STATEMENT_DATE'); 
+                    FEC_CommonUltils.xmlValToDate(s, 'STATEMENT_DATE'); 
 
                 result.CardBasicInfo.Statements.add(sp);
             }
@@ -376,8 +376,8 @@ public with sharing class FEC_GetCardBasicInfo {
                 ti.Amount            = FEC_CommonUltils.xmlValToDecimal(t, 'TRNXAmount');
                 ti.TransactionCode   = FEC_CommonUltils.getXmlValue(t, 'TransactionCode');
                 ti.Fee               = FEC_CommonUltils.xmlValToDecimal(t, 'Fee');
-                ti.PostingDate       = getDate(t, 'PostingDate');
-                ti.SettlementDate    = getDate(t, 'SettlementDate');
+                ti.PostingDate       = FEC_CommonUltils.xmlValToDate(t, 'PostingDate');
+                ti.SettlementDate    = FEC_CommonUltils.xmlValToDate(t, 'SettlementDate');
                 ti.Plan              = FEC_CommonUltils.getXmlValue(t, 'Plan');
                 ti.RRN               = FEC_CommonUltils.getXmlValue(t, 'RRN');
                 ti.MerchantName      = FEC_CommonUltils.getXmlValue(t, 'MerchantName');
@@ -394,25 +394,4 @@ public with sharing class FEC_GetCardBasicInfo {
         return result;
     }
 
-     private static Date getDate(Dom.XmlNode n, String name) {
-        String v = FEC_CommonUltils.getXmlValue(n, name);
-        if (String.isBlank(v)) return null;
-
-        try {
-            if (v.contains('-')) {
-                return Date.valueOf(v);
-            }
-
-            if (v.length() == 8) {
-                Integer year  = Integer.valueOf(v.substring(0, 4));
-                Integer month = Integer.valueOf(v.substring(4, 6));
-                Integer day   = Integer.valueOf(v.substring(6, 8));
-                return Date.newInstance(year, month, day);
-            }
-        } catch (Exception e) {
-            System.debug('### INVALID DATE FORMAT: ' + v);
-        }
-
-        return null;
-    }
 }
