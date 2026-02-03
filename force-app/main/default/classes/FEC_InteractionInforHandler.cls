@@ -144,19 +144,18 @@ public without sharing class FEC_InteractionInforHandler {
         whereConditions.add('(' + String.join(matchConditions, ' OR ') + ')');
         
         if (archiveThreshold != null) {
-            whereConditions.add('FEC_Interaction_End_On__c  >= :archiveThreshold');
+            whereConditions.add('ClosedDate >= :archiveThreshold');
         }
-        
         
         // SOQL cuối cùng
         String soql =
             'SELECT Id, ' +
-            '       FEC_Interaction_ID__c, ' +
+            '       FEC_Interaction_ID__c,FEC_Interaction_Status__c, ' +
             '       FEC_Channel__c, ' +
-            '       FEC_Created_On__c ' +
+            '       FEC_Created_On__c,FEC_Created_by__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC ' +
+            'ORDER BY FEC_Last_Updated_On__c DESC '+
             'LIMIT 5';
         System.debug('SOQL: ' + soql);
         return Database.query(soql);
@@ -273,8 +272,8 @@ public without sharing class FEC_InteractionInforHandler {
         String soql =
             'SELECT COUNT() ' +
             'FROM Case ' +
-            'WHERE ' + String.join(whereConditions, ' AND ') + ' '; 
-            
+            'WHERE ' + String.join(whereConditions, ' AND ') + ' ';
+        
         System.debug('SOQL COUNT: ' + soql);
         
         return Database.countQuery(soql);
