@@ -8,7 +8,9 @@ import {
   setTabLabel,
   setTabIcon,
 } from "lightning/platformWorkspaceApi";
+import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 
+import ISCLOSED from "@salesforce/schema/Case.IsClosed";
 const COLUMNS = [
   {
     label: "Case ID",
@@ -39,6 +41,20 @@ export default class FecRelevantInteractionCase extends NavigationMixin(
   columns = COLUMNS;
   interactionTabLabel = "Relevant Interactions";
   caseTabLabel = "Relevant Cases";
+  
+  closedStatus = false;
+
+  @wire(getRecord, {
+    recordId: "$recordId",
+    fields: [ISCLOSED],
+  })
+  wiredClosedStatus({ data, error }) {
+    if (data) {
+      this.closedStatus = getFieldValue(data, ISCLOSED);
+    } else if (error) {
+      console.error("Load error", error);
+    }
+  }
 
   @wire(getCaseList, { recordId: "$recordId" })
   wiredData({ data }) {

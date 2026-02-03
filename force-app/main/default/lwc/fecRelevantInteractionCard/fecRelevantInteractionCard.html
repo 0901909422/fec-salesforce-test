@@ -7,10 +7,10 @@
                 Relevant Interactions ({total})
             </span>
         </div>
-
-        <lightning-datatable key-field="Id" data={interactions} columns={columns} hide-checkbox-column>
-        </lightning-datatable>
-        <!-- <lightning-accordion allow-multiple-sections-open>
+        <template if:true={showViewAll}>
+            <lightning-datatable key-field="Id" data={interactions} columns={columns} hide-checkbox-column>
+            </lightning-datatable>
+            <!-- <lightning-accordion allow-multiple-sections-open>
             <template for:each={interactions} for:item="i">
                 <section key={i.Id} class="accordion-card">
 
@@ -30,8 +30,8 @@
                 </section>
             </template>
         </lightning-accordion> -->
-        <!-- View All -->
-        <template if:true={showViewAll}>
+            <!-- View All -->
+
             <lightning-button variant="base" label="View All" onclick={handleViewAll}>
             </lightning-button>
         </template>

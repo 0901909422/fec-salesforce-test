@@ -14,10 +14,11 @@
 
     </div>
     <div class="slds-p-horizontal_medium slds-p-vertical_small">
-      <lightning-datatable key-field="Id" data={caseList} columns={columns} hide-checkbox-column>
-      </lightning-datatable>
+      <template if:true={showViewAll}>
+        <lightning-datatable key-field="Id" data={caseList} columns={columns} hide-checkbox-column>
+        </lightning-datatable>
 
-      <!-- <lightning-accordion allow-multiple-sections-open>
+        <!-- <lightning-accordion allow-multiple-sections-open>
         <template for:each={caseList} for:item="c">
           <section key={c.Id} class="accordion-card">
 
@@ -39,26 +40,29 @@
         </template>
       </lightning-accordion> -->
 
-      <!-- View All -->
-      <template if:true={showViewAll}>
+        <!-- View All -->
+
         <lightning-button variant="base" label="View All" onclick={handleViewAll}>
         </lightning-button>
       </template>
 
     </div>
-    <hr class="slds-card__header slds-grid" />
-    <div class="slds-card__body">
-      <lightning-tabset variant="scoped">
-        <lightning-tab label={interactionTabLabel}>
-          <c-fec-relevant-interaction-card record-id={recordId}>
-          </c-fec-relevant-interaction-card>
-        </lightning-tab>
+    <template if:false={closedStatus}>
+      <hr class="slds-card__header slds-grid" />
+      <div class="slds-card__body">
+        <lightning-tabset variant="scoped">
+          <lightning-tab label={interactionTabLabel}>
+            <c-fec-relevant-interaction-card record-id={recordId}>
+            </c-fec-relevant-interaction-card>
+          </lightning-tab>
 
-        <lightning-tab label={caseTabLabel}>
-          <c-fec-relevant-case-card record-id={recordId}>
-          </c-fec-relevant-case-card>
-        </lightning-tab>
-      </lightning-tabset>
-    </div>
+          <lightning-tab label={caseTabLabel}>
+            <c-fec-relevant-case-card record-id={recordId}>
+            </c-fec-relevant-case-card>
+          </lightning-tab>
+        </lightning-tabset>
+      </div>
+    </template>
+
   </article>
 </template>

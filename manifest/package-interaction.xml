@@ -30,7 +30,6 @@
 		<members>fec_RelevantCaseListViewAll</members>
 		<members>fec_RelevantInteractionCaseListViewAll</members>
 		<members>fec_RelevantInteractionListViewAll</members>
-		<members>fec_GenesysSoftphone</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>

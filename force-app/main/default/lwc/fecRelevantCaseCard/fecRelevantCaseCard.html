@@ -7,9 +7,10 @@
                 Relevant Cases ({total})
             </span>
         </div>
-        <lightning-datatable key-field="Id" data={cases} columns={columns} hide-checkbox-column>
-        </lightning-datatable>
-        <!-- <lightning-accordion allow-multiple-sections-open>
+        <template if:true={showViewAll}>
+            <lightning-datatable key-field="Id" data={cases} columns={columns} hide-checkbox-column>
+            </lightning-datatable>
+            <!-- <lightning-accordion allow-multiple-sections-open>
             <template for:each={cases} for:item="c">
                 <section key={c.Id} class="accordion-card">
 
@@ -33,7 +34,7 @@
                 </section>
             </template>
         </lightning-accordion> -->
-        <template if:true={showViewAll}>
+
             <lightning-button variant="base" label="View All" onclick={handleViewAll}>
             </lightning-button>
         </template>
