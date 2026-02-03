@@ -94,7 +94,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
-                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode()})
+                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()})
                 );
             }
 
@@ -160,7 +160,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
             try {
                 String test = fromDate.format(); // YYYY-MM-DD
             } catch(Exception e) {
-                throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{'FromDate', fromDate}));
+                throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{'FromDate', String.valueOf(fromDate)}));
             }
         }
 
@@ -169,7 +169,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
             try {
                 String test = toDate.format(); // YYYY-MM-DD
             } catch(Exception e) {
-                throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{'ToDate', toDate}));
+                throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{'ToDate', String.valueOf(toDate)}));
             }
 
             if (fromDate != null && toDate < fromDate) {

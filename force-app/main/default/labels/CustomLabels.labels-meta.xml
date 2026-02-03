@@ -153,12 +153,28 @@
         <value>Tải Dữ liệu Không Thành Công</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_From_To_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG From To Invalid</shortDescription>
+        <value>{0} must be greater than {1}</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_HTTP_Error</fullName>
         <categories>API</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG HTTP Error</shortDescription>
         <value>HTTP Error: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Not_Account_Linked</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Not Account Linked</shortDescription>
+        <value>No account linked to this case</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Param_Date_Format_Invalid</fullName>
@@ -185,12 +201,36 @@
         <value>{0} must be in format yyyy-MM-ddTHH:mm:ss. Current value: {1}</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Param_Format_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Param Format Invalid</shortDescription>
+        <value>{0} must have format {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Param_Maxlength</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Param Maxlength</shortDescription>
+        <value>{0} no longer than {1} characters</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Param_Required</fullName>
         <categories>API</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Param Required</shortDescription>
         <value>{0} is required and cannot be empty.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Parse_XML_Error</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Parse XML Error</shortDescription>
+        <value>Failed to parse XML: {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Positive_Number_Error</fullName>

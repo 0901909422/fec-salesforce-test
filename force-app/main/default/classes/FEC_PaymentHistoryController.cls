@@ -31,7 +31,7 @@ public with sharing class FEC_PaymentHistoryController {
 
         if (c.FEC_Account_or_Contract__c == null) {
             throw new AuraHandledException(
-                'Case does not have Account / Contract'
+                System.Label.FEC_MSG_Not_Account_Linked
             );
         }
         return c.FEC_Account_or_Contract__c;

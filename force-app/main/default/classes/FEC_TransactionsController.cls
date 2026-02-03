@@ -130,7 +130,7 @@ public with sharing class FEC_TransactionsController {
     public static TransactionDisplayRecord loadTransactionDetail(Id transactionId) {
 
         if (transactionId == null) {
-            throw new AuraHandledException('Transaction Id is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'TransactionId'}));
         }
 
         FEC_Transaction__c tx = [
@@ -176,7 +176,7 @@ public with sharing class FEC_TransactionsController {
         ];
 
         if (c.FEC_Account_or_Contract__c == null) {
-            throw new AuraHandledException('Case chưa có Customer History');
+            throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
         }
 
         return [

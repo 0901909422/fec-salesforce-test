@@ -147,7 +147,7 @@ public with sharing class FEC_GetIPPDetailsCallout {
 
         if (res.getStatusCode() != 200) {
             throw new CalloutException(
-                'SOAP call failed: ' + res.getStatus() + ' ' + res.getBody()
+                String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatus() + ' ' + res.getBody()})
             );
         }
 
@@ -207,7 +207,7 @@ public with sharing class FEC_GetIPPDetailsCallout {
             Dom.XmlNode body = FEC_CommonUltils.findChildByName(envelope, 'Body');
             
             if (body == null) {
-                throw new CalloutException('Invalid XML: Body element not found');
+                throw new CalloutException(System.Label.FEC_MSG_Response_Null);
             }
 
             // Tìm GetIPPDetailsResponse - thử cả với namespace và không namespace
@@ -221,7 +221,7 @@ public with sharing class FEC_GetIPPDetailsCallout {
             }
 
             if (response == null) {
-                throw new CalloutException('Invalid XML: GetIPPDetailsResponse not found');
+                throw new CalloutException(System.Label.FEC_MSG_Response_Null);
             }
 
             IPPDetailsResponse result = new IPPDetailsResponse();
@@ -248,7 +248,7 @@ public with sharing class FEC_GetIPPDetailsCallout {
 
             return result;
         } catch (Exception e) {
-            throw new CalloutException('Failed to parse XML: ' + e.getMessage());
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Parse_XML_Error, new List<String>{e.getMessage()}));
         }
     }
 

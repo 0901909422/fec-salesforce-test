@@ -71,7 +71,7 @@ public with sharing class FEC_MainInfoAccountController {
     public static MainInfoDTO loadAccountInfo(Id caseId) {
 
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         Case c = [
@@ -118,7 +118,7 @@ public with sharing class FEC_MainInfoAccountController {
     public static RewardEligibilityResult checkRewardEligibility(Id caseId) {
         try {
             if (caseId == null) {
-                throw new AuraHandledException('Case ID is required');
+                throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
             }
             
             Case c = [
@@ -129,7 +129,7 @@ public with sharing class FEC_MainInfoAccountController {
             ];
             
             if (c.FEC_Account_or_Contract__c == null) {
-                throw new AuraHandledException('No account linked to this case');
+                throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
             }
             
             FEC_Customer_History__c acc = [
@@ -145,7 +145,7 @@ public with sharing class FEC_MainInfoAccountController {
             }
             
             if (String.isBlank(accountNumber)) {
-                throw new AuraHandledException('Account number not found');
+                throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
             }
             
             FEC_GetRewardEligibility.ResponseWrapper apiResponse = 
@@ -185,7 +185,7 @@ public with sharing class FEC_MainInfoAccountController {
             return result;
             
         } catch (Exception e) {
-            throw new AuraHandledException('Error: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
 
@@ -259,7 +259,7 @@ public with sharing class FEC_MainInfoAccountController {
     public static MainInfoDTO refreshAccountInfo(Id caseId) {
 
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         Case c = [

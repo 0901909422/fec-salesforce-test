@@ -50,7 +50,7 @@ public with sharing class FEC_IPPController {
     @AuraEnabled(cacheable=false)
     public static List<FEC_IPP__c> loadIPPInfo(Id caseId) {
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         /* ===== TẢI CASE ===== */
@@ -485,7 +485,7 @@ public with sharing class FEC_IPPController {
                 System.debug('Đã insert thành công ' + recordsToInsert.size() + ' IPP records vào DB với đầy đủ dữ liệu từ tất cả API.');
             } catch (Exception e) {
                 System.debug('Lỗi khi lưu DB: ' + e.getMessage());
-                throw new AuraHandledException('Lỗi lưu dữ liệu: ' + e.getMessage());
+                throw new AuraHandledException(e.getMessage());
             }
         } else {
             System.debug('Không có records mới để insert!');
@@ -629,7 +629,7 @@ public with sharing class FEC_IPPController {
             
             return totals;
         } catch (Exception e) {
-            throw new AuraHandledException('Error fetching IPP totals: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
 

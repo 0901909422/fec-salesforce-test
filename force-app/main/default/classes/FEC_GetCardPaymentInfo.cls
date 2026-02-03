@@ -108,39 +108,36 @@
         }
 
         // 1 & 3. Validate RequestorID
-        if (String.isBlank(requestorId)) {
-            throw new CalloutException('RequestorID is null or invalid');
-        }
-        if (requestorId.length() > MAX_ID_LEN) {
-            throw new CalloutException('RequestorID is null or invalid');
+        if (String.isBlank(requestorId) || requestorId.length() > MAX_ID_LEN) {
+            throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
 
         // 1 & 4. Validate Sys.DateTime
         if (String.isBlank(sysTime)) {
-            throw new CalloutException('DateTime is null or invalid');
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
         }
         // Regex format: yyyy-MM-ddTHH:mm:ss
         String sysTimePattern = FEC_ConstantCommon.PATTERN_SYS_TIME;
         if (!Pattern.matches(sysTimePattern, sysTime)) {
-            throw new CalloutException('DateTime is null or invalid or wrong format');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{sysTime}));
         }
 
         // 1 & 5. Validate AccountNumber
         if (String.isBlank(accountNumber)) {
-            throw new CalloutException('AccountNumber is null or invalid');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
         }
         if (accountNumber.length() > MAX_ACCOUNT_LEN) {
-            throw new CalloutException('AccountNumber is null or invalid or no longer than 255 characters');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'AccountNumber', '255'}));
         }
 
         // 1 & 6. Validate Date (Query Date)
         if (String.isBlank(dateStr)) {
-            throw new CalloutException('Date is null or invalid or must have format YYYY-MM-DD');
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
         }
         // Regex format: YYYY-MM-DD
         String datePattern = FEC_ConstantCommon.PATTERN_DATE;
         if (!Pattern.matches(datePattern, dateStr)) {
-            throw new CalloutException('Date is null or invalid or must have format YYYY-MM-DD');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Format_Invalid, new List<String>{'Date', FEC_ConstantCommon.DATE_FORMAT}));
         }
     }
 
