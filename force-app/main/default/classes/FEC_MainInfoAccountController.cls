@@ -99,7 +99,7 @@ public with sharing class FEC_MainInfoAccountController {
                 generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                '0001500010000000022'
+                c.FEC_Account_Number__c
             );
         } catch (Exception e) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
@@ -276,7 +276,7 @@ public with sharing class FEC_MainInfoAccountController {
                 generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                '0001500010000000022'
+                c.FEC_Account_Number__c
             );
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
