@@ -84,7 +84,7 @@ export default class fec_genesysSoftphone extends NavigationMixin(
 
   handleNewInteraction(eventType, callData) {
 
-    const genesysResposnse = {
+    const genesysResponse = {
       type: eventType,
       phoneNumber: callData.DNIS || callData.ANI,
       genesysInteractionID: callData.GenesysInteractionID,
@@ -96,32 +96,35 @@ export default class fec_genesysSoftphone extends NavigationMixin(
       method: "Genesys",
     };
 
-    createInteraction({ request: genesysResposnse })
-      .then((result) => {
-        if (result.isSuccess) {
-          this.currentInteractionCaseId = result.recordId;
-          this.showToast(
-            "Thành công",
-            `Đã tạo Case: ${result.recordId || ""}`,
-            "success",
-          );
-          this.navigateToRecord(result.recordId);
+    createInteraction({ request: genesysResponse })
+    .then((result) => {
+        if (result && result.isSuccess && result.recordId) {
+            this.currentInteractionCaseId = result.recordId;
+            console.info(`Đã tạo case: ${result.recordId}`);
+            this.navigateToRecord(result.recordId);
         } else {
-          this.showToast("Cảnh báo", result.message, "warning");
+            console.warn(result?.message || 'Create interaction failed.');
         }
-      })
-      .catch((error) => {
-        const strErrorMessage = error.body ? error.body.message : error.message;
-        this.showToast("Lỗi hệ thống", strErrorMessage, "error");
-      });
+    })
+    .catch((error) => {
+        let errorMessage = 'Unexpected error occurred.';
+        
+        if (error?.body) {
+            errorMessage = Array.isArray(error.body)
+                ? error.body.map(e => e.message).join(', ')
+                : error.body.message;
+        } else if (error?.message) {
+            errorMessage = error.message;
+        }
+
+        console.error(errorMessage);
+    });
   }
 
   handleWrapup(wrapupData) {
-    this.showToast(
-      "Wrap-up",
-      `Đã gửi dữ liệu Wrap-up (${wrapupData.BusinessResult})`,
-      "info",
-    );
+    console.info(
+		`Wrap-up - Đã gửi dữ liệu Wrap-up (${wrapupData?.BusinessResult || ''})`
+	);
     this.currentInteractionCaseId = null;
   }
 
