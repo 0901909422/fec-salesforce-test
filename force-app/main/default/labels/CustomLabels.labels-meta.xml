@@ -1,6 +1,169 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
+        <fullName>FEC_MSG_AccountNumber_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG AccountNumber Invalid</shortDescription>
+        <value>AccountNumber must be 16 characters or 19 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ApplicationID_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG ApplicationID Invalid</shortDescription>
+        <value>ApplicationID must be 6 characters or 8 characters or 9 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractNumber_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG ContractNumber Invalid</shortDescription>
+        <value>ContractNumber must be one of: (8)-(6)-(4) | (8)-(7)-(3) | (8)-(7)-(2) | (8)-(7)-(1) | (8)-(7) | (2)-(2)-(2)-(2) digits</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Customer_History_Error</fullName>
+        <categories>Customer History</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Customer History Error</shortDescription>
+        <value>Failed to create Customer History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Customer_History_Field_Null</fullName>
+        <categories>Customer History</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Customer History Field Null</shortDescription>
+        <value>Value and fieldName must be provided.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Interaction_Error</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Interaction Error</shortDescription>
+        <value>Create Interaction failed: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Interaction_Success</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Interaction Success</shortDescription>
+        <value>Create Interaction successful</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Datetime_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Datetime Invalid</shortDescription>
+        <value>DateTime invalid: {0} is not type of Datetime</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Datetime_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Datetime Null</shortDescription>
+        <value>DateTime is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Email_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Email Invalid</shortDescription>
+        <value>Email must be one of (randomString1)@(randomString2).(2-5 chars) or (randomString1)@(randomString2).(2-5 chars).(2-5 chars)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Genesys_Phone_Number_Null</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Genesys Phone Number Null</shortDescription>
+        <value>PhoneNumber is required for Outbound call</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Genesys_Request_Invalid_Type</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Genesys Request Invalid Type</shortDescription>
+        <value>Invalid Type. Must be either OutboundEstablished or InboundRinging</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Genesys_Request_Null</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Genesys Request Null</shortDescription>
+        <value>Invalid request: Request body is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Genesys_Request_Type_Null</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Genesys Request Type Null</shortDescription>
+        <value>Type is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Interaction_Case_DTO_Null</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Interaction Case DTO Null</shortDescription>
+        <value>InteractionCaseDTO cannot be null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_National_ID_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG National ID Invalid</shortDescription>
+        <value>National ID must be 9 characters or 12 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_PersonID_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG PersonID Invalid</shortDescription>
+        <value>PersonID is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Phone_Number_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Phone Number Invalid</shortDescription>
+        <value>Phone number must start with 0 (10 digits) or 84 (11 digits)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_RequestorID_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG RequestorID Null</shortDescription>
+        <value>RequestorID is null or invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_TransID_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG TransID Null</shortDescription>
+        <value>TransID is null or no longer than 36 characters</value>
+    </labels>
+</CustomLabels>
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
         <fullName>FEC_Account_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>

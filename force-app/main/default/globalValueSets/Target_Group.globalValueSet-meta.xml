@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customValue>
+        <fullName>Customer</fullName>
+        <default>false</default>
+        <label>Customer</label>
+    </customValue>
+    <customValue>
+        <fullName>Internal User</fullName>
+        <default>false</default>
+        <label>Internal User</label>
+    </customValue>
+    <masterLabel>Target Group</masterLabel>
+    <sorted>false</sorted>
+</GlobalValueSet>
