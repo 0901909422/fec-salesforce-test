@@ -1,6 +1,7 @@
 public with sharing class FEC_IntegrationFraudCaseUtil {
     private static final Boolean DEBUG_LOG = true;
     public static final String SYSTEM_CHANNEL = 'PEGACSM';
+    public static final String DEFAULT_CHANNEL_INTEGRATION_CODE = 'FIMA';
     public static final Integer SUCCESSFULL = 200;
     public static final Integer CLIENT_ERROR = 400;
     public static final Integer NOT_FOUND = 404;
@@ -9,6 +10,8 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
     public static final Integer CONFLICT = 409;
     public static final Integer SERVER_ERROR = 500;    
     public static final Integer UNPROCESSABLE_ENTITY = 522;
+
+    public static final String FRAUD_SERVICE_SOAP_ENDPOINT = 'http://cf-webapp-uat02.deltavn.vn:3033/Soap/SCLService.svc';
     
     
 
@@ -153,6 +156,41 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         logRec.FEC_Response_Data__c       = safeText(responseData);
 
         insert logRec;
+    }
+    /**
+     * Converts a Pega-formatted ISO 8601 datetime string into a Salesforce Datetime value.
+     *
+     * This method normalizes the incoming datetime string by:
+     * 1. Removing the trailing 'Z' (UTC designator).
+     * 2. Replacing the 'T' separator with a space.
+     * 3. Stripping off millisecond precision.
+     * 4. Parsing the cleaned value as a GMT-based Salesforce Datetime.
+     *
+     * Example:
+     *   Input : 2025-09-10T10:07:22.263Z
+     *   Output: 2025-09-10 10:07:22 (GMT)
+     *
+     * @param reqDt The datetime string received from the Pega system.
+     * @return Parsed Salesforce Datetime value in GMT, or null if input is blank.
+     */
+    public static Datetime parsePegaDatetime(String reqDt) {
+        if (String.isBlank(reqDt)) return null;
+    
+        // Example input: 2025-09-10T10:07:22.263Z → remove Z
+        String cleaned = reqDt.replace('Z','');
+    
+        // Replace "T" with space
+        cleaned = cleaned.replace('T', ' ');
+    
+        // Remove milliseconds (.263)
+        Integer dotIndex = cleaned.indexOf('.');
+        if (dotIndex > 0) {
+            cleaned = cleaned.substring(0, dotIndex);
+        }
+    
+        log('Cleaned datetime for Salesforce = ' + cleaned);
+    
+        return Datetime.valueOfGmt(cleaned);
     }
 
     /**

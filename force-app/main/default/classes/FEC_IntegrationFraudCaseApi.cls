@@ -48,6 +48,12 @@ global with sharing class FEC_IntegrationFraudCaseApi {
 		public final String NATIONS_FIELD = 'NationalIDs';
 		public final String NATION_FIELD = 'NationalID';
 		public final String ACCOUNT_NUMBER_FIELD = 'AccountNumber';
+		public final String CASE_RESULT_INFO = 'CaseResultInfo';		
+		public final String ORIGINAL_REQUEST = 'OriginalRequest';
+		public final String REQUEST_INFO = 'RequestInfo';
+		public final String CREATOR_INFO = 'CreatorInfo';
+		public final String CUSTOMER_INFO = 'CustomerInfo';
+		public final String ADDITIONAL_INFO = 'AdditionalInfo';
     }
 
     /**
@@ -240,13 +246,14 @@ global with sharing class FEC_IntegrationFraudCaseApi {
      */
     private static String processFHCase(Map<String,Object> detail, String xmlData) {
         String msg = null;
+        IntegrationField caseField = new IntegrationField();
         try {
             // 2) Parse XML
             Dom.Document doc = new Dom.Document();            
             doc.load(xmlData);
 
             Dom.XmlNode root = doc.getRootElement();
-            Dom.XmlNode caseNode = FEC_IntegrationFraudCaseUtil.find(root, 'CaseResultInfo');
+            Dom.XmlNode caseNode = FEC_IntegrationFraudCaseUtil.find(root, caseField.CASE_RESULT_INFO);
 
             if (caseNode == null)
             {
@@ -255,15 +262,15 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                     FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
                     ).toXmlString();                
             }                
-            Dom.XmlNode originalRequestNode = FEC_IntegrationFraudCaseUtil.find(caseNode, 'OriginalRequest');
-            Dom.XmlNode requestInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'RequestInfo');
+            Dom.XmlNode originalRequestNode = FEC_IntegrationFraudCaseUtil.find(caseNode, caseField.ORIGINAL_REQUEST);
+            Dom.XmlNode requestInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, caseField.REQUEST_INFO);
             if (requestInfoNode == null)
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_REQUEST_INFO,
                         FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
                     ).toXmlString();
             
-            Dom.XmlNode creatorInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'CreatorInfo');
+            Dom.XmlNode creatorInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, caseField.CREATOR_INFO);
             if (creatorInfoNode == null){
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_CREATOR_INFO,
@@ -271,7 +278,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                     ).toXmlString();
             }
 
-            Dom.XmlNode customerInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'CustomerInfo');
+            Dom.XmlNode customerInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, caseField.CUSTOMER_INFO);
             if (customerInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_CUSTOMER_INFO,
@@ -349,8 +356,8 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             rec.FEC_Sys_Channel__c = channelID;
             rec.FEC_Sys_Creator_Email__c = xmlCreatorEmail;
 
-            rec.FEC_Created_Time__c = parsePegaDatetime(xmlCreated);
-            rec.FEC_Updated_Time__c = parsePegaDatetime(xmlUpdated);
+            rec.FEC_Created_Time__c = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlCreated);
+            rec.FEC_Updated_Time__c = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlUpdated);
             rec.FEC_Message_Time__c = messageDateTime;
             rec.FEC_Investigation_Conclusion__c = investigationConclusion;
 
@@ -371,7 +378,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             List<FEC_Integration_Case_Info__c> toUpdate = new List<FEC_Integration_Case_Info__c>();
 
             List<Dom.XmlNode> additionalInfoNodes =
-                FEC_IntegrationFraudCaseUtil.findAllDeep(root, 'AdditionalInfo');
+                FEC_IntegrationFraudCaseUtil.findAllDeep(root, caseField.ADDITIONAL_INFO);
 
             log('Found AdditionalInfo count = ' + additionalInfoNodes.size());
 
@@ -477,13 +484,14 @@ global with sharing class FEC_IntegrationFraudCaseApi {
     private static String processBUCase(Map<String,Object> detail, String xmlData) {
         log('Enter processBUCase');
         String msg = null;
+        IntegrationField caseField = new IntegrationField();
         try {
             // 2) Parse XML
             Dom.Document doc = new Dom.Document();
             doc.load(xmlData);
 
             Dom.XmlNode root = doc.getRootElement();
-            Dom.XmlNode caseNode = FEC_IntegrationFraudCaseUtil.find(root, 'CaseResultInfo');
+            Dom.XmlNode caseNode = FEC_IntegrationFraudCaseUtil.find(root, caseField.CASE_RESULT_INFO);
 
             if (caseNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
@@ -492,8 +500,8 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                     ).toXmlString(); 
             }
                         
-            Dom.XmlNode originalRequestNode = FEC_IntegrationFraudCaseUtil.find(caseNode, 'OriginalRequest');
-            Dom.XmlNode requestInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'RequestInfo');
+            Dom.XmlNode originalRequestNode = FEC_IntegrationFraudCaseUtil.find(caseNode, caseField.ORIGINAL_REQUEST);
+            Dom.XmlNode requestInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, caseField.REQUEST_INFO);
             if (requestInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_REQUEST_INFO,
@@ -501,7 +509,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                     ).toXmlString();
             }
         
-            Dom.XmlNode creatorInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'CreatorInfo');
+            Dom.XmlNode creatorInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, caseField.CREATOR_INFO);
             if (creatorInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_CREATOR_INFO,
@@ -509,7 +517,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                     ).toXmlString();
             }
 
-            Dom.XmlNode customerInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'CustomerInfo');
+            Dom.XmlNode customerInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, caseField.CUSTOMER_INFO);
             if (customerInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_CUSTOMER_INFO,
@@ -581,8 +589,8 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             rec.FEC_Case_Type__c       = xmlUserType;
             rec.FEC_Sys_Channel__c = channelID;
 
-            rec.FEC_Created_Time__c = parsePegaDatetime(xmlCreated);
-            rec.FEC_Updated_Time__c = parsePegaDatetime(xmlUpdated);
+            rec.FEC_Created_Time__c = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlCreated);
+            rec.FEC_Updated_Time__c = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlUpdated);
             rec.FEC_Message_Time__c = messageDateTime;
             rec.FEC_Investigation_Conclusion__c = investigationConclusion;
             upsert rec;
@@ -635,7 +643,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             doc.load(xmlData);
             Dom.XmlNode root = doc.getRootElement();
     
-            Dom.XmlNode caseNode = FEC_IntegrationFraudCaseUtil.find(root, 'CaseResultInfo');
+            Dom.XmlNode caseNode = FEC_IntegrationFraudCaseUtil.find(root, caseField.CASE_RESULT_INFO);
             if (caseNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_RESULT_INFO,
@@ -643,13 +651,13 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                     ).toXmlString();
             }
     
-            Dom.XmlNode originalRequestNode = FEC_IntegrationFraudCaseUtil.find(caseNode, 'OriginalRequest');
+            Dom.XmlNode originalRequestNode = FEC_IntegrationFraudCaseUtil.find(caseNode, caseField.ORIGINAL_REQUEST);
             if (originalRequestNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_ORIGINAL_REQUEST,
                     FEC_IntegrationFraudCaseUtil.CLIENT_ERROR).toXmlString();
             }
-            Dom.XmlNode requestInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'RequestInfo');
+            Dom.XmlNode requestInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, caseField.REQUEST_INFO);
             if (requestInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_REQUEST_INFO,
@@ -657,14 +665,14 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                     ).toXmlString();
             }
          
-            Dom.XmlNode creatorInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'CreatorInfo');
+            Dom.XmlNode creatorInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, caseField.CREATOR_INFO);
             if (creatorInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_CREATOR_INFO,
                         FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
                     ).toXmlString();
             }         
-            Dom.XmlNode customerInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, 'CustomerInfo');
+            Dom.XmlNode customerInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, caseField.CUSTOMER_INFO);
             if (customerInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_CUSTOMER_INFO,
@@ -774,8 +782,8 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             rec.FEC_Sys_Creator_Email__c= xmlCreatorEmail;
             rec.FEC_Case_Type__c    = xmlUserType;
             rec.FEC_Sys_Channel__c  = channelID;
-            rec.FEC_Created_Time__c = parsePegaDatetime(xmlCreated);
-            rec.FEC_Updated_Time__c = parsePegaDatetime(xmlUpdated);
+            rec.FEC_Created_Time__c = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlCreated);
+            rec.FEC_Updated_Time__c = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlUpdated);
             rec.FEC_Message_Time__c = messageDateTime;
             rec.FEC_Investigation_Conclusion__c = investigationConclusion;
     
@@ -797,7 +805,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             List<FEC_Integration_Case_Info__c> toUpdate = new List<FEC_Integration_Case_Info__c>();
             Set<String> processed = new Set<String>();
     
-            for (Dom.XmlNode ai : FEC_IntegrationFraudCaseUtil.findAllDeep(root, 'AdditionalInfo')) {
+            for (Dom.XmlNode ai : FEC_IntegrationFraudCaseUtil.findAllDeep(root, caseField.ADDITIONAL_INFO)) {
     
                 String idVal  = FEC_IntegrationFraudCaseUtil.val(ai, 'ID');
                 String valVal = FEC_IntegrationFraudCaseUtil.val(ai, 'Value');
@@ -971,41 +979,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
     }
 
 
-    /**
-     * Converts a Pega-formatted ISO 8601 datetime string into a Salesforce Datetime value.
-     *
-     * This method normalizes the incoming datetime string by:
-     * 1. Removing the trailing 'Z' (UTC designator).
-     * 2. Replacing the 'T' separator with a space.
-     * 3. Stripping off millisecond precision.
-     * 4. Parsing the cleaned value as a GMT-based Salesforce Datetime.
-     *
-     * Example:
-     *   Input : 2025-09-10T10:07:22.263Z
-     *   Output: 2025-09-10 10:07:22 (GMT)
-     *
-     * @param reqDt The datetime string received from the Pega system.
-     * @return Parsed Salesforce Datetime value in GMT, or null if input is blank.
-     */
-    private static Datetime parsePegaDatetime(String reqDt) {
-        if (String.isBlank(reqDt)) return null;
     
-        // Example input: 2025-09-10T10:07:22.263Z → remove Z
-        String cleaned = reqDt.replace('Z','');
-    
-        // Replace "T" with space
-        cleaned = cleaned.replace('T', ' ');
-    
-        // Remove milliseconds (.263)
-        Integer dotIndex = cleaned.indexOf('.');
-        if (dotIndex > 0) {
-            cleaned = cleaned.substring(0, dotIndex);
-        }
-    
-        log('Cleaned datetime for Salesforce = ' + cleaned);
-    
-        return Datetime.valueOfGmt(cleaned);
-    }
     
 
     /**
