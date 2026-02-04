@@ -80,7 +80,7 @@ public with sharing class FEC_GetApplicationsList {
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
-                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode()})
+                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()})
                 );
             }
 
