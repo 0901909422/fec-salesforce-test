@@ -11,14 +11,6 @@
 ****************************************************************************************/
 public with sharing class FEC_GetDocumentsList {
 
-    /* =====================================================
-       CONSTANTS
-       ===================================================== 
-    */
-    private static final String ENDPOINT = '/CIF_CustomerInfo';
-    private static final String MOCKUP_ENDPOINT = 'https://241aef91-9cc1-4b9c-9618-629c9b022c47.mock.pstmn.io';
-
-
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -57,15 +49,7 @@ public with sharing class FEC_GetDocumentsList {
         try {
 
             validateRequest(transId, requestorId, dateTimeStr, cifNumber);
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
-            req.setMethod('POST');
-            req.setTimeout(120000);
-
-            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
-            req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CustomerInfo/GetDocumentsList');
-
+            
             String soapBody =
                 '<?xml version="1.0" encoding="utf-8"?>' +
                 '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
@@ -83,10 +67,13 @@ public with sharing class FEC_GetDocumentsList {
                     '</soapenv:Body>' +
                 '</soapenv:Envelope>';
 
-            req.setBody(soapBody);
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Documents_List');
 
-            Http http = new Http();
-            HttpResponse res = http.send(req);
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_DOCUMENTS_LIST_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -187,7 +174,7 @@ public with sharing class FEC_GetDocumentsList {
         Dom.XmlNode bodyNode =
             envelope.getChildElement(
                 'Body',
-                'http://schemas.xmlsoap.org/soap/envelope/'
+                FEC_ConstantCommon.SOAP_ENV
             );
 
         Dom.XmlNode responseNode;

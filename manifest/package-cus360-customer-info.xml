@@ -43,5 +43,15 @@
         <members>RD_IT_User_System_Management</members>
 		<name>PermissionSet</name>
 	</types>
+	<types>
+		<members>FEC_API_Config.FEC_Get_Addresses_List</members>
+		<members>FEC_API_Config.FEC_Get_Applications_List</members>
+		<members>FEC_API_Config.FEC_Get_Contacts_List</members>
+		<members>FEC_API_Config.FEC_Get_Customer_Info_Basic</members>
+		<members>FEC_API_Config.FEC_Get_Digital_Account_Status</members>
+		<members>FEC_API_Config.FEC_Get_Documents_List</members>
+		<members>FEC_API_Config.FEC_Get_Relatives_List</members>
+		<name>CustomMetadata</name>
+	</types>
     <version>65.0</version>
 </Package>

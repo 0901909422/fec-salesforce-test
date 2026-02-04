@@ -12,13 +12,6 @@
 
 public with sharing class FEC_GetRelativesList {
 
-    /* =====================================================
-       CONSTANTS
-       ===================================================== 
-    */
-    private static final String ENDPOINT = '/CIF_CustomerInfo';
-    private static final String MOCKUP_ENDPOINT = 'https://4fe9b5aa-83ad-47f8-801a-eba4fd18faf3.mock.pstmn.io';
-
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -59,14 +52,6 @@ public with sharing class FEC_GetRelativesList {
 
             validateRequest(transID, requestorId, dateTimeStr, cifNumber);
 
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
-            req.setMethod('POST');
-            req.setTimeout(120000);
-            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
-            req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CustomerInfo/GetRelativesList');
-
             String soapBody =
                 '<?xml version="1.0" encoding="utf-8"?>' +
                 '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
@@ -84,11 +69,13 @@ public with sharing class FEC_GetRelativesList {
                     '</soapenv:Body>' +
                 '</soapenv:Envelope>';
 
-            req.setBody(soapBody);
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Relatives_List');
 
-            Http http = new Http();
-            HttpResponse res = http.send(req);
-            System.debug('### ENDPOINT USED: ' + req.getEndpoint());
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_RELATIVES_LIST_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -172,7 +159,7 @@ public with sharing class FEC_GetRelativesList {
         doc.load(xml);
 
         Dom.XmlNode bodyNode = doc.getRootElement()
-            .getChildElement('Body', 'http://schemas.xmlsoap.org/soap/envelope/');
+            .getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
 
         Dom.XmlNode responseNode;
         for (Dom.XmlNode n : bodyNode.getChildElements()) {
