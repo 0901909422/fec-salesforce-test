@@ -1,0 +1,142 @@
+<template>
+    <template if:true={hasData}>
+        <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+            <c-fec_-common-record-detail-section section-title={customLabel.limitLabel} fields={limitFields}
+                onbuttonclick={handleButtonClick}>
+            </c-fec_-common-record-detail-section>
+            <c-fec_-common-record-detail-section section-title={customLabel.mainCardLabel} fields={mainCardFields}
+                show-refresh-button="true" onrefresh={handleRefresh}>
+            </c-fec_-common-record-detail-section>
+            <c-fec_-common-record-detail-section section-title={customLabel.pinLabel} fields={pinFields} show-refresh-button="true"
+                onrefresh={handleRefresh}>
+            </c-fec_-common-record-detail-section>
+            <c-fec_-common-record-detail-section section-title={customLabel.feeLabel} fields={feeFields}>
+            </c-fec_-common-record-detail-section>
+            <c-fec_-common-record-detail-section section-title={customLabel.collectionsInfoLabel} fields={collectionsInfoFields}
+                show-refresh-button="true" onrefresh={handleRefresh}>
+            </c-fec_-common-record-detail-section>
+            <c-fec_-common-record-detail-section section-title={customLabel.salesInfoLabel} fields={salesInfoFields}
+                onbuttonclick={handleButtonClick}>
+            </c-fec_-common-record-detail-section>
+        </lightning-accordion>
+    </template>
+    <template if:false={hasData}>
+        <div class="slds-accordion">
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                {customLabel.limitLabel}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorAPI}
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                {customLabel.mainCardLabel}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorAPI}
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                {customLabel.pinLabel}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorAPI}
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                               {customLabel.feeLabel}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorAPI}
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                               {customLabel.collectionsInfoLabel}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorAPI}
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                               {customLabel.salesInfoLabel}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorAPI}
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+        </div>
+    </template>
+
+</template>

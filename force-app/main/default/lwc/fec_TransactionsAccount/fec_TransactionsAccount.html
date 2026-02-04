@@ -1,0 +1,22 @@
+<template>
+    <div class="customer-info-container slds-card slds-p-around_small">
+        <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
+            <lightning-accordion-section name="unbilledTransactions" label="Unbilled Transactions">
+
+                <c-fec_-related-list-paging records={unbilledTransactions}
+                 data-section="unbilled"
+                    columns={unbilledTransactionsColumns} sorted-by="Unbilled Transactions" onrowselect={handleTransactionSelect}>
+                </c-fec_-related-list-paging>
+
+            </lightning-accordion-section>
+            <lightning-accordion-section name="pendingTransactions" label="Pending Transactions">
+
+                <c-fec_-related-list-paging records={pendingTransactions}
+                 data-section="pending"
+                    columns={pendingTransactionsColumns} sorted-by="Pending Transactions" onrowselect={handleTransactionSelect}>
+                </c-fec_-related-list-paging>
+
+            </lightning-accordion-section>
+        </lightning-accordion>
+    </div>
+</template>
