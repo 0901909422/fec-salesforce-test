@@ -108,11 +108,18 @@
     // VALIDATION LOGIC (Giữ nguyên)
     // ==========================================
     public static void validateRequest(String transId, String requestorId, String dateTimeStr, String accountNumber) {
-        if (String.isBlank(transId)) throw new CalloutException('TransID invalid');
-        if (transId.length() > MAX_ID_LEN) throw new CalloutException('TransID too long');
-        if (String.isBlank(requestorId)) throw new CalloutException('RequestorID invalid');
-        if (String.isBlank(dateTimeStr)) throw new CalloutException('DateTime invalid');
-        if (String.isBlank(accountNumber)) throw new CalloutException('AccountNumber invalid');
+        if (String.isBlank(transId) || transId.length() > MAX_ID_LEN) {
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
+        }
+        if (String.isBlank(requestorId)) {
+            throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
+        }
+        if (String.isBlank(dateTimeStr)) {
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
+        }
+        if (String.isBlank(accountNumber)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
+        }
     }
 
     // ==========================================

@@ -111,6 +111,11 @@
 		<members>FEC_MSG_Param_Date_Value_Invalid</members>
 		<members>FEC_MSG_Param_Datetime_Format_Invalid</members>
 		<members>FEC_MSG_Response_Sys_Null</members>
+        <members>FEC_MSG_Param_Maxlength</members>
+		<members>FEC_MSG_Param_Format_Invalid</members>
+		<members>FEC_MSG_Parse_XML_Error</members>
+		<members>FEC_MSG_Not_Account_Linked</members>
+		<members>FEC_MSG_From_To_Invalid</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

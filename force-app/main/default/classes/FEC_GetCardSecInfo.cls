@@ -221,15 +221,14 @@ public with sharing class FEC_GetCardSecInfo {
         HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, requestBody);
 
         if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
-            throw new CalloutException('HTTP error ' + res.getStatusCode());
+            throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
         }
 
         ResponseWrapper wrapper = parseResponse(res.getBody());
 
-        if (wrapper.Sys == null || wrapper.Sys.Code != 1) {
-            throw new CalloutException(wrapper.Sys != null
-                ? wrapper.Sys.Description
-                : 'Unknown service error'
+        if (wrapper.Sys != null && wrapper.Sys.Code != 1) {
+            throw new CalloutException(
+                String.format(System.Label.FEC_MSG_API_Error, new List<String>{wrapper.Sys.Description})
             );
         }
 
@@ -495,53 +494,43 @@ public with sharing class FEC_GetCardSecInfo {
         String accountNumber
     ) {
 
-        if (String.isBlank(transID)) {
-            throw new CalloutException('TransID is null or invalid');
-        }
-
-        if (transID.length() > 36) {
-            throw new CalloutException('TransID is null or invalid or no longer than 36 characters');
+        if (String.isBlank(transID) || transID.length() > 36) {
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
         }
 
         if (String.isBlank(requestorId)) {
-            throw new CalloutException('RequestorID is null or invalid');
+            throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
 
         Set<String> validRequestorIds = new Set<String>{ FEC_ConstantCommon.REQUESTOR_CRM, FEC_ConstantCommon.REQUESTOR_PORTAL, FEC_ConstantCommon.REQUESTOR_MOBILE_APP };
         if (!validRequestorIds.contains(requestorId)) {
             throw new CalloutException(
-                'RequestorID is null or invalid, "' + requestorId + '" is not type of RequestorID'
+                System.Label.FEC_MSG_RequestorID_Null
             );
         }
 
         if (String.isBlank(dateTimeStr)) {
-            throw new CalloutException('DateTime is null or invalid');
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
         }
 
         try {
             Datetime.valueOfGmt(dateTimeStr.replace('T',' ').replace('Z',''));
         } catch (Exception e) {
             throw new CalloutException(
-                'DateTime is null or invalid, "' + dateTimeStr + '" is not type of Datetime'
+                String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeStr})
             );
         }
 
         if (String.isBlank(accountNumber)) {
-            throw new CalloutException('AccountNumber is null or invalid');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
         }
 
         if (accountNumber.length() > 255) {
             throw new CalloutException(
-                'AccountNumber is null or invalid or no longer than 255 characters'
+                String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'AccountNumber', '255'})
             );
         }
 
-        Boolean accountExists = true;
-        if (!accountExists) {
-            throw new CalloutException(
-                'AccountNumber is null or invalid or no longer than 255 characters'
-            );
-        }
     }
 
 }

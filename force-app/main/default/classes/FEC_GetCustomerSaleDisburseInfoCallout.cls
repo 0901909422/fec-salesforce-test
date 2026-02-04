@@ -131,7 +131,7 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
         // Generate header values
         String transactionId = String.valueOf(UUID.randomUUID());
         String dateTimeValue = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX);
-        String requestorId = 'PEGA_CSM';
+        String requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
         
         // Validate request headers (TransID, DateTime, RequestorID)
         ValidationResult headerValidation = validateRequestHeaders(transactionId, dateTimeValue, requestorId);
@@ -149,7 +149,7 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
             'TransID'      => transactionId,
             'DateTime'     => dateTimeValue,
             'RequestorID'  => requestorId,
-            'Content-Type' => 'application/json'
+            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
         };
         
         request.parameters = new List<String>{ applicationId };
