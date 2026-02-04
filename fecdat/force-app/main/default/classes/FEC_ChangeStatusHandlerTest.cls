@@ -1,7 +1,7 @@
 /**
  * @description Test class cho FEC_ProcessChangeStatusTriggerHandler.
  * Kiểm tra việc tự động cập nhật Process_Change_Status__c và sinh ExternalID__c.
- * @author Senior Salesforce Developer
+ * @author DAT NGO
  * @date 2026-01-27
  */
 @isTest

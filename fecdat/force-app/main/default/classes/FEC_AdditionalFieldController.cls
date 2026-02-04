@@ -4,7 +4,8 @@
  * @author DAT NGO
  */
 public with sharing class FEC_AdditionalFieldController {
-    @TestVisible private static Boolean forceException = false;
+    // Use centralized constants from FEC_Constants (messages still backed by Custom Labels)
+    // Refer to FEC_Constants.OPERATION_SUCCESS, FEC_Constants.QUERY_LIMIT, etc.
     
     /**
      * @description Xóa bản ghi Additional Field.
@@ -16,9 +17,9 @@ public with sharing class FEC_AdditionalFieldController {
         try {
             FEC_MDM_Additional_Field__c recordToDelete = new FEC_MDM_Additional_Field__c(Id = recordId);
             delete recordToDelete;
-            return 'Success';
+            return FEC_Constants.OPERATION_SUCCESS;
         } catch (Exception e) {
-            throw new AuraHandledException('Error deleting record: ' + e.getMessage());
+            throw new AuraHandledException(FEC_Constants.ERROR_DELETE_RECORD_PREFIX + e.getMessage());
         }
     }
     
@@ -44,7 +45,7 @@ public with sharing class FEC_AdditionalFieldController {
             ORDER BY 
                 CreatedDate DESC 
             LIMIT 
-                500
+                :FEC_Constants.QUERY_LIMIT
             ];
         
         return fields;
@@ -64,9 +65,9 @@ public with sharing class FEC_AdditionalFieldController {
     public static String deleteFieldListValue(Id recordId) {
         try {
             delete [SELECT Id FROM FEC_MDM_Additional_Field_List_Value__c WHERE Id = :recordId];
-            return 'Success';
+            return FEC_Constants.OPERATION_SUCCESS;
         } catch (Exception e) {
-            throw new AuraHandledException('Error deleting Field List Value: ' + e.getMessage());
+            throw new AuraHandledException(FEC_Constants.ERROR_DELETE_FIELDLIST_PREFIX + e.getMessage());
         }
     }
 }
