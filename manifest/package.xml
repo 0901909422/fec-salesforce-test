@@ -2,17 +2,24 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 
     <types>
-        <members>FEC_CreateCaseHanlder</members> 
-        <name>ApexClass</name>
-    </types>
-
-    <types>
         <members>fec_GenesysSoftphone</members>
         <name>LightningComponentBundle</name>
     </types>
-    
-    <version>61.0</version>
 
+    <types>
+        <members>IWS_Host</members>
+        <name>ApexPage</name>
+    </types>
 
-    <version>59.0</version>
+    <types>
+        <members>Genesys</members>
+        <name>RemoteSiteSetting</name>
+    </types>
+
+    <types>
+        <members>IWSConnectorBundle</members>
+        <name>StaticResource</name>
+    </types>
+    <version>65.0</version>
 </Package>
+ 
