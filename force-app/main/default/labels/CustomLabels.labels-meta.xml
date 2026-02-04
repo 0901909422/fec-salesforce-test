@@ -160,9 +160,6 @@
         <shortDescription>MSG TransID Null</shortDescription>
         <value>TransID is null or no longer than 36 characters</value>
     </labels>
-</CustomLabels>
-<?xml version="1.0" encoding="UTF-8"?>
-<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
         <fullName>FEC_Account_Label</fullName>
         <categories>Account Info</categories>
