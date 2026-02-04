@@ -135,8 +135,8 @@ public without sharing class FEC_GetAppStatusCallout {
         request.headers = new Map<String, Object>{
             'TransID'      => transactionId,
             'DateTime'     => Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX),
-            'RequestorID'  => 'PegaCSM',
-            'Content-Type' => 'application/json'
+            'RequestorID'  => FEC_ConstantCommon.REQUESTOR_PEGA_CSM,
+            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
         };
         
         request.parameters = new List<String>();

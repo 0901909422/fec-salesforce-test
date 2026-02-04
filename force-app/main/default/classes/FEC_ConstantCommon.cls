@@ -9,6 +9,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss';
     public static final String DATE_FORMAT = 'yyyy-MM-dd';
     public static final String DATE_FORMAT_MMYYYY = 'MM/yyyy';
+    public static final String DATETIME_FORMAT_OUTPUT = 'dd/MM/yyyy HH:mm:ss';
 
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
@@ -33,4 +34,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_CRM = 'CRM';
     public static final String REQUESTOR_PORTAL = 'PORTAL';
     public static final String REQUESTOR_MOBILE_APP = 'MOBILE_APP';
+    public static final String REQUESTOR_PEGA_CSM = 'PegaCSM';
+    public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
+    public static final String REQUESTOR_APS = 'APS';
+    public static final String REQUESTOR_SD = 'SD';
 }

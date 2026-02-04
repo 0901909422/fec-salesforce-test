@@ -78,7 +78,7 @@ public with sharing class FEC_EmeaAccountInqService {
 
             // 2. Prepare Sys Data (Auto-generated)
             String transId = UUID.randomUUID().toString();
-            String requestorId = 'APS'; 
+            String requestorId = FEC_ConstantCommon.REQUESTOR_APS; 
             String reqTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
             String vmxVersion = '1.0'; 
 

@@ -123,7 +123,7 @@ public with sharing class FEC_GetIPPDetailsCallout {
         
         // Step 2: Generate and validate SysRequest headers
         String transId = String.valueOf(UUID.randomUUID());
-        String requestorId = 'SD';
+        String requestorId = FEC_ConstantCommon.REQUESTOR_SD;
         String dateTimeValue = Datetime.now().formatGmt(FEC_ConstantCommon.DATETIME_FORMAT);
         
         ValidationResult sysValidation = validateSysRequestHeaders(transId, requestorId, dateTimeValue);

@@ -118,7 +118,7 @@ public with sharing class FEC_TransactionsController {
         res.accountNumber = accNumber;
         res.transactions = records;
         res.totalCount = records.size();
-        res.lastRefreshTime = Datetime.now().format('dd/MM/yyyy HH:mm:ss');
+        res.lastRefreshTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT_OUTPUT);
 
         return res;
     }
