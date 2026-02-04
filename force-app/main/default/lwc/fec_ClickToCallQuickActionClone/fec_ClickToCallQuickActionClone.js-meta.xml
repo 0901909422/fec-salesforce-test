@@ -3,14 +3,10 @@
     <apiVersion>65.0</apiVersion>
     <isExposed>true</isExposed>
     <targets>
-<<<<<<<< HEAD:force-app/main/default/lwc/fec_TransactionsAccount/fec_TransactionsAccount.js-meta.xml
-        <target>lightning__RecordPage</target>
         <target>lightning__AppPage</target>
         <target>lightning__HomePage</target>
-========
         <target>lightning__RecordAction</target>
         <target>lightning__RecordPage</target>
->>>>>>>> review-sit:force-app/main/default/lwc/fec_ClickToCallQuickActionClone/fec_ClickToCallQuickActionClone.js-meta.xml
     </targets>
     <targetConfigs>
         <targetConfig targets="lightning__RecordAction">
