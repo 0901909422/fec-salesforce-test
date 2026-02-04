@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Emea Account Inq</label>
+    <protected>false</protected>
+    <values>
+        <field>FEC_Endpoint__c</field>
+        <value xsi:type="xsd:string">/CMS_VMXIntegrationWS</value>
+    </values>
+    <values>
+        <field>FEC_SOAP_Action__c</field>
+        <value xsi:type="xsd:string">M_CMS_EMEA_ACCOUNT_INQ</value>
+    </values>
+</CustomMetadata>

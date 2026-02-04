@@ -1,0 +1,52 @@
+/* Info text styling */
+.slds-text-body_small {
+    padding: 8px 0;
+}
+
+/* Loading spinner container */
+.slds-is-relative {
+    min-height: 100px;
+}
+
+/* Currency negative value styling - highlight negative values in red */
+.currency-negative,
+.slds-text-color_error {
+    color: #c23934 !important;
+}
+
+/* Custom Accordion Styling */
+.slds-accordion__summary {
+    cursor: pointer;
+    user-select: none;
+}
+
+.slds-accordion__summary:hover {
+    background-color: #f3f2f2;
+}
+
+/* Error text styling - highlight phần "Tải dữ liệu không thành công" màu đỏ */
+.error-text {
+    color: #c23934 !important;
+    font-weight: 600;
+}
+
+
+:host(.fec-ipp-details) .custom-table tbody tr td:nth-child(6),
+:host(.fec-ipp-details) .custom-table tbody tr td:nth-child(7),
+:host .custom-table tbody tr td:nth-child(6),
+:host .custom-table tbody tr td:nth-child(7) {
+    white-space: nowrap !important;
+    word-wrap: normal !important;
+    overflow-wrap: normal !important;
+    word-break: keep-all !important;
+    min-width: 150px !important;
+    text-align: right !important;
+}
+
+/* Đảm bảo tất cả cell currency (cả positive và negative) không bị wrap */
+:host .custom-table td.currency-negative {
+    white-space: nowrap !important;
+    word-wrap: normal !important;
+    overflow-wrap: normal !important;
+    word-break: keep-all !important;
+}
