@@ -77,18 +77,15 @@ public with sharing class FEC_GetDocumentsList {
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
-                    'GetDocumentsList service returned HTTP error: ' +
-                    res.getStatusCode()
+                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode()})
                 );
             }
 
             ResponseWrapper response = parseResponse(res.getBody());
 
-            if (response.Sys == null || response.Sys.Code != 1) {
+            if (response.Sys != null && response.Sys.Code != 1) {
                 throw new CalloutException(
-                    response.Sys != null
-                        ? response.Sys.Description
-                        : 'GetDocumentsList service returned error'
+                    String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
                 );
             }
 
@@ -111,55 +108,42 @@ public with sharing class FEC_GetDocumentsList {
     ) {
 
         // ===================== TRANSID =====================
-        if (String.isBlank(transId)) {
-            throw new CalloutException('TransID is null or invalid');
+        if (String.isBlank(transId) || transId.length() > 36) {
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
         }
-        if (transId.length() > 36) {
-            throw new CalloutException(
-                'TransID is null or invalid or no longer than 36 characters'
-            );
-        }
-
+        
         // ===================== REQUESTORID =====================
         Set<String> validRequestorIds = new Set<String>{ FEC_ConstantCommon.REQUESTOR_APS, FEC_ConstantCommon.REQUESTOR_CRM, FEC_ConstantCommon.REQUESTOR_PORTAL };
         if (String.isBlank(requestorId)
             || !validRequestorIds.contains(requestorId)) {
 
             throw new CalloutException(
-                'RequestorID is null or invalid, "' +
-                requestorId +
-                '" is not type of RequestorID'
+                System.Label.FEC_MSG_RequestorID_Null
             );
         }
 
         // ===================== DATETIME =====================
         if (String.isBlank(dateTimeStr)) {
-            throw new CalloutException('DateTime is null or invalid');
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
         }
         try {
             Datetime.valueOfGmt(dateTimeStr.replace('T', ' '));
         } catch (Exception e) {
             throw new CalloutException(
-                'DateTime is null or invalid, "' +
-                dateTimeStr +
-                '" is not type of Datetime'
+                String.format(System.Label.FEC_MSG_Param_Datetime_Format_Invalid, new List<String>{dateTimeStr})
             );
         }
 
         // ===================== CIF NUMBER =====================
         if (String.isBlank(cifNumber)) {
-            throw new CalloutException('CIFNumber is null or invalid');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
         }
         if (cifNumber.length() > 255) {
             throw new CalloutException(
-                'CIFNumber is null or invalid or no longer than 255 characters'
+                String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'CifNumber', '255'})
             );
         }
 
-        Boolean cifExists = true;
-        if (!cifExists) {
-            throw new CalloutException('CIFNumber is null or invalid');
-        }
     }
 
     // =========================================================================
@@ -189,14 +173,14 @@ public with sharing class FEC_GetDocumentsList {
         Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
         if (sysNode != null) {
             result.Sys = new SysResponse();
-            result.Sys.TransID = getVal(sysNode, 'TransID');
-            result.Sys.DateTimeStr = getVal(sysNode, 'DateTime');
-            result.Sys.Code = toInteger(getVal(sysNode, 'Code'));
-            result.Sys.Description = getVal(sysNode, 'Description');
+            result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+            result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+            result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+            result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
         }
 
         // ================= CIF NUMBER =================
-        result.CIFNumber = getVal(responseNode, 'CIFNumber');
+        result.CIFNumber = FEC_CommonUltils.getXmlValue(responseNode, 'CIFNumber');
 
         // ================= DOCUMENTS =================
         result.Documents = new List<DocumentInfo>();
@@ -208,12 +192,12 @@ public with sharing class FEC_GetDocumentsList {
             for (Dom.XmlNode dNode : documentsNode.getChildElements()) {
                 if (dNode.getName() == 'Document') {
                     DocumentInfo d = new DocumentInfo();
-                    d.DocumentID = getVal(dNode, 'DocumentID');
-                    d.DocumentType = getVal(dNode, 'DocumentType');
-                    d.IssueDate = toDate(getVal(dNode, 'IssueDate'));
-                    d.IDDocumentNumber = getVal(dNode, 'IDDocumentNumber');
-                    d.IssuePlace = getVal(dNode, 'IssuePlace');
-                    d.OmnidocsLink = getVal(dNode, 'OmnidocsLink');
+                    d.DocumentID = FEC_CommonUltils.getXmlValue(dNode, 'DocumentID');
+                    d.DocumentType = FEC_CommonUltils.getXmlValue(dNode, 'DocumentType');
+                    d.IssueDate = FEC_CommonUltils.toDate(FEC_CommonUltils.getXmlValue(dNode, 'IssueDate'));
+                    d.IDDocumentNumber = FEC_CommonUltils.getXmlValue(dNode, 'IDDocumentNumber');
+                    d.IssuePlace = FEC_CommonUltils.getXmlValue(dNode, 'IssuePlace');
+                    d.OmnidocsLink = FEC_CommonUltils.getXmlValue(dNode, 'OmnidocsLink');
                     result.Documents.add(d);
                 }
             }
@@ -222,20 +206,4 @@ public with sharing class FEC_GetDocumentsList {
         return result;
     }
 
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
-    private static String getVal(Dom.XmlNode node, String name) {
-        if (node == null) return null;
-        Dom.XmlNode c = node.getChildElement(name, null);
-        return c == null ? null : c.getText();
-    }
-
-    private static Integer toInteger(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
-    }
-
-    private static Date toDate(String v) {
-        return String.isBlank(v) ? null : Date.valueOf(v);
-    }
 }

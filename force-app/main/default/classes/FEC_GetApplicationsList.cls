@@ -80,18 +80,15 @@ public with sharing class FEC_GetApplicationsList {
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
-                    'GetApplicationsList service returned HTTP error: ' +
-                    res.getStatusCode()
+                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode()})
                 );
             }
 
             ResponseWrapper response = parseResponse(res.getBody());
 
-            if (response.Sys == null || response.Sys.Code != 1) {
+            if (response.Sys != null && response.Sys.Code != 1) {
                 throw new CalloutException(
-                    response.Sys != null
-                    ? response.Sys.Description
-                    : 'GetApplicationsList service returned error'
+                    String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
                 );
             }
 
@@ -112,23 +109,17 @@ public with sharing class FEC_GetApplicationsList {
         String dateTimeStr,
         String cifNumber
     ) {
-        if (String.isBlank(transID)) {
-            throw new CalloutException('TransID is null or invalid');
+        if (String.isBlank(transID) || transID.length() > 36) {
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
         }
         if (String.isBlank(requestorId)) {
-            throw new CalloutException('RequestorID is null or invalid');
+            throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
         if (String.isBlank(dateTimeStr)) {
-            throw new CalloutException('DateTime is null or invalid');
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
         }
         if (String.isBlank(cifNumber)) {
-            throw new CalloutException('CIFNumber is null or invalid');
-        }
-
-        if (transID.length() > 36) {
-            throw new CalloutException(
-                'TransID must not exceed 36 characters'
-            );
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
         }
 
         Set<String> validRequestorIds = new Set<String>{
@@ -139,7 +130,7 @@ public with sharing class FEC_GetApplicationsList {
         };
         if (!validRequestorIds.contains(requestorId)) {
             throw new CalloutException(
-                'RequestorID is invalid: ' + requestorId
+                System.Label.FEC_MSG_RequestorID_Null
             );
         }
 
@@ -147,7 +138,7 @@ public with sharing class FEC_GetApplicationsList {
             Datetime.valueOfGmt(dateTimeStr.replace('T', ' '));
         } catch (Exception e) {
             throw new CalloutException(
-                'DateTime is invalid ISO format: ' + dateTimeStr
+                String.format(System.Label.FEC_MSG_Param_Datetime_Format_Invalid, new List<String>{dateTimeStr})
             );
         }
     }
@@ -174,13 +165,13 @@ public with sharing class FEC_GetApplicationsList {
         // SYS
         Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
         result.Sys = new SysResponse();
-        result.Sys.TransID = getVal(sysNode, 'TransID');
-        result.Sys.DateTimeStr = getVal(sysNode, 'DateTime');
-        result.Sys.Code = toInt(getVal(sysNode, 'Code'));
-        result.Sys.Description = getVal(sysNode, 'Description');
+        result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+        result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+        result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+        result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
 
         // CIF NUMBER
-        result.CIFNumber = getVal(responseNode, 'CIFNumber');
+        result.CIFNumber = FEC_CommonUltils.getXmlValue(responseNode, 'CIFNumber');
 
         // APPLICATIONS
         result.Applications = new List<ApplicationInfo>();
@@ -190,15 +181,15 @@ public with sharing class FEC_GetApplicationsList {
         if (appsNode != null) {
             for (Dom.XmlNode a : appsNode.getChildElements()) {
                 ApplicationInfo app = new ApplicationInfo();
-                app.ApplicationID = getVal(a, 'ApplicationID');
-                app.ProductGroup = getVal(a, 'ProductGroup');
-                app.DateStatus = getVal(a, 'DateStatus');
-                app.LastStatus = getVal(a, 'LastStatus');
-                app.SaleName = getVal(a, 'SaleName');
-                app.SaleUnitCode = getVal(a, 'SaleUnitCode');
-                app.SalePhoneNumber = getVal(a, 'SalePhoneNumber');
-                app.PersonId = getVal(a, 'PersonId');
-                app.SystemId = getVal(a, 'SystemId');
+                app.ApplicationID = FEC_CommonUltils.getXmlValue(a, 'ApplicationID');
+                app.ProductGroup = FEC_CommonUltils.getXmlValue(a, 'ProductGroup');
+                app.DateStatus = FEC_CommonUltils.getXmlValue(a, 'DateStatus');
+                app.LastStatus = FEC_CommonUltils.getXmlValue(a, 'LastStatus');
+                app.SaleName = FEC_CommonUltils.getXmlValue(a, 'SaleName');
+                app.SaleUnitCode = FEC_CommonUltils.getXmlValue(a, 'SaleUnitCode');
+                app.SalePhoneNumber = FEC_CommonUltils.getXmlValue(a, 'SalePhoneNumber');
+                app.PersonId = FEC_CommonUltils.getXmlValue(a, 'PersonId');
+                app.SystemId = FEC_CommonUltils.getXmlValue(a, 'SystemId');
                 result.Applications.add(app);
             }
         }
@@ -206,16 +197,5 @@ public with sharing class FEC_GetApplicationsList {
         return result;
     }
 
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
-    private static String getVal(Dom.XmlNode n, String name) {
-        if (n == null) return null;
-        Dom.XmlNode c = n.getChildElement(name, null);
-        return c == null ? null : c.getText();
-    }
 
-    private static Integer toInt(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
-    }
 }

@@ -53,5 +53,9 @@
 		<members>FEC_API_Config.FEC_Get_Relatives_List</members>
 		<name>CustomMetadata</name>
 	</types>
+	<types>
+        <members>FEC_MSG_Param_Must_Number</members>
+        <name>CustomLabel</name>
+    </types>
     <version>65.0</version>
 </Package>

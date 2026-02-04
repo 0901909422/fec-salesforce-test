@@ -140,10 +140,12 @@ public with sharing class FEC_GetCustomerInfoBasic {
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
 
-            if (res.getStatusCode() != 200)
-                throw new CalloutException('HTTP_ERROR: ' + res.getStatusCode());
-            if (String.isBlank(res.getBody()))
-                throw new CalloutException('Empty response body');
+            if (res.getStatusCode() != 200) {
+                throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode()}));
+            }
+            if (String.isBlank(res.getBody())) {
+                throw new CalloutException(System.Label.FEC_MSG_Response_Null);
+            }
 
             return parseResponse(res.getBody());
         }
@@ -162,43 +164,39 @@ public with sharing class FEC_GetCustomerInfoBasic {
         String dateTimeStr,
         String cifNumber
     ) {
-    if (String.isBlank(transId)) {
-            throw new CalloutException('TransID is null or invalid');
-    }
-    if (transId.length() > 36) {
-            throw new CalloutException('TransID must not exceed 36 characters');
-    }
-
-    if (String.isBlank(requestorId)) {
-        throw new CalloutException('RequestorID is null or invalid');
-    }
+        if (String.isBlank(transId) || transId.length() > 36) {
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
+        }
+        if (String.isBlank(requestorId)) {
+            throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
+        }
 
         Set<String> validRequestorIds = new Set<String>{ FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP };
-    if (!validRequestorIds.contains(requestorId)) {
-        throw new CalloutException(
-            'RequestorID "' + requestorId + '" is not valid'
-        );
-    }
+        if (!validRequestorIds.contains(requestorId)) {
+            throw new CalloutException(
+                System.Label.FEC_MSG_RequestorID_Null
+            );
+        }
 
-    if (String.isBlank(dateTimeStr)) {
-        throw new CalloutException('DateTime is null or invalid');
-    }
+        if (String.isBlank(dateTimeStr)) {
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
+        }
         try {
             Datetime.valueOfGmt(dateTimeStr.replace('T', ' '));
         } catch (Exception e) {
-        throw new CalloutException(
-            'DateTime "' + dateTimeStr + '" is not valid Datetime'
-        );
+            throw new CalloutException(
+                String.format(System.Label.FEC_MSG_Param_Datetime_Format_Invalid, new List<String>{dateTimeStr})
+            );
         }
 
-    if (String.isBlank(cifNumber)) {
-            throw new CalloutException('CIFNumber is null or invalid');
-    }
+        if (String.isBlank(cifNumber)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
+        }
 
-    if (!Pattern.matches('\\d+', cifNumber)) {
-            throw new CalloutException('CIFNumber must be numeric');
+        if (!cifNumber.isNumeric()) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Must_Number, new List<String>{'CifNumber'}));
+        }
     }
-}
 
 
     /* =====================================================
@@ -218,7 +216,7 @@ public with sharing class FEC_GetCustomerInfoBasic {
             bodyNode.getChildElement('GetCustomerInfoBasicResponse', null);
 
         if (responseNode == null)
-            throw new CalloutException('Missing GetCustomerInfoBasicResponse');
+            throw new CalloutException(System.Label.FEC_MSG_Response_Null);
 
         ResponseWrapper r = new ResponseWrapper();
 
@@ -227,37 +225,37 @@ public with sharing class FEC_GetCustomerInfoBasic {
             responseNode.getChildElement('Sys', null);
 
         if (sysNode == null)
-            throw new CalloutException('Missing Sys node');
+            throw new CalloutException(System.Label.FEC_MSG_Response_Sys_Null);
 
         r.Sys = new SysResponse();
-        r.Sys.TransID = getVal(sysNode, 'TransID', null);
-        r.Sys.DateTime_x = getVal(sysNode, 'DateTime', null);
-        r.Sys.Code = getVal(sysNode, 'Code', null);
-        r.Sys.Description = getVal(sysNode, 'Description', null);
+        r.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID', null);
+        r.Sys.DateTime_x = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime', null);
+        r.Sys.Code = FEC_CommonUltils.getXmlValue(sysNode, 'Code', null);
+        r.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description', null);
 
         if (r.Sys.Code != '1')
-            throw new CalloutException('API FAIL: ' + r.Sys.Description);
+            throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{r.Sys.Description}));
 
         /* ===== CUSTOMER ===== */
         Dom.XmlNode c =
             responseNode.getChildElement('CustomerBasicInfo', null);
 
         r.CustomerBasicInfo = new CustomerBasicInfo();
-        r.CustomerBasicInfo.CIFNumber = getVal(c, 'CIFNumber', null);
-        r.CustomerBasicInfo.CIFDWH = getVal(c, 'CIFDWH', null);
-        r.CustomerBasicInfo.FirstName = getVal(c, 'FirstName', null);
-        r.CustomerBasicInfo.MiddleName = getVal(c, 'MiddleName', null);
-        r.CustomerBasicInfo.LastName = getVal(c, 'LastName', null);
-        r.CustomerBasicInfo.FullName = getVal(c, 'FullName', null);
-        r.CustomerBasicInfo.ShortName = getVal(c, 'ShortName', null);
-        r.CustomerBasicInfo.Title = getVal(c, 'Title', null);
-        r.CustomerBasicInfo.Birthday = getDate(c, 'Birthday', null);
-        r.CustomerBasicInfo.Gender = getVal(c, 'Gender', null);
-        r.CustomerBasicInfo.Citizenship = getVal(c, 'Citizenship', null);
-        r.CustomerBasicInfo.SocialStatus = getVal(c, 'SocialStatus', null);
-        r.CustomerBasicInfo.MaritalStatus = getVal(c, 'MaritalStatus', null);
-        r.CustomerBasicInfo.CustomerStatus = getVal(c, 'CustomerStatus', null);
-        r.CustomerBasicInfo.CustomerValue = getVal(c, 'CustomerValue', null);
+        r.CustomerBasicInfo.CIFNumber = FEC_CommonUltils.getXmlValue(c, 'CIFNumber', null);
+        r.CustomerBasicInfo.CIFDWH = FEC_CommonUltils.getXmlValue(c, 'CIFDWH', null);
+        r.CustomerBasicInfo.FirstName = FEC_CommonUltils.getXmlValue(c, 'FirstName', null);
+        r.CustomerBasicInfo.MiddleName = FEC_CommonUltils.getXmlValue(c, 'MiddleName', null);
+        r.CustomerBasicInfo.LastName = FEC_CommonUltils.getXmlValue(c, 'LastName', null);
+        r.CustomerBasicInfo.FullName = FEC_CommonUltils.getXmlValue(c, 'FullName', null);
+        r.CustomerBasicInfo.ShortName = FEC_CommonUltils.getXmlValue(c, 'ShortName', null);
+        r.CustomerBasicInfo.Title = FEC_CommonUltils.getXmlValue(c, 'Title', null);
+        r.CustomerBasicInfo.Birthday = FEC_CommonUltils.xmlValToDate(c, 'Birthday');
+        r.CustomerBasicInfo.Gender = FEC_CommonUltils.getXmlValue(c, 'Gender', null);
+        r.CustomerBasicInfo.Citizenship = FEC_CommonUltils.getXmlValue(c, 'Citizenship', null);
+        r.CustomerBasicInfo.SocialStatus = FEC_CommonUltils.getXmlValue(c, 'SocialStatus', null);
+        r.CustomerBasicInfo.MaritalStatus = FEC_CommonUltils.getXmlValue(c, 'MaritalStatus', null);
+        r.CustomerBasicInfo.CustomerStatus = FEC_CommonUltils.getXmlValue(c, 'CustomerStatus', null);
+        r.CustomerBasicInfo.CustomerValue = FEC_CommonUltils.getXmlValue(c, 'CustomerValue', null);
 
         r.CustomerBasicInfo.CurrentAddresses = new List<CurrentAddress>();
         Dom.XmlNode currAddrsNode = c.getChildElement('CurrentAddresses', null);
@@ -266,19 +264,19 @@ public with sharing class FEC_GetCustomerInfoBasic {
                 if (addrNode.getName() != 'Address') continue;
                 CurrentAddress ca = new CurrentAddress();
                 ca.Address = new Address();
-                ca.Address.AddressId = getVal(addrNode, 'AddressId', null);
-                ca.Address.AddressType = getVal(addrNode, 'AddressType', null);
-                ca.Address.HouseNumber = getVal(addrNode, 'Number', null);
-                ca.Address.Street = getVal(addrNode, 'Street', null);
-                ca.Address.Ward = getVal(addrNode, 'Ward', null);
-                ca.Address.District = getVal(addrNode, 'District', null);
-                ca.Address.City = getVal(addrNode, 'City', null);
-                ca.Address.CountryCode = getVal(addrNode, 'CountryCode', null);
-                ca.Address.CountryName = getVal(addrNode, 'CountryName', null);
-                ca.Address.ZipCode = getVal(addrNode, 'ZipCode', null);
-                ca.Address.PropertyStatus = getVal(addrNode, 'PropertyStatus', null);
-                ca.Address.Years = toInt(getVal(addrNode, 'Years', null));
-                ca.Address.Months = toInt(getVal(addrNode, 'Months', null));
+                ca.Address.AddressId = FEC_CommonUltils.getXmlValue(addrNode, 'AddressId', null);
+                ca.Address.AddressType = FEC_CommonUltils.getXmlValue(addrNode, 'AddressType', null);
+                ca.Address.HouseNumber = FEC_CommonUltils.getXmlValue(addrNode, 'Number', null);
+                ca.Address.Street = FEC_CommonUltils.getXmlValue(addrNode, 'Street', null);
+                ca.Address.Ward = FEC_CommonUltils.getXmlValue(addrNode, 'Ward', null);
+                ca.Address.District = FEC_CommonUltils.getXmlValue(addrNode, 'District', null);
+                ca.Address.City = FEC_CommonUltils.getXmlValue(addrNode, 'City', null);
+                ca.Address.CountryCode = FEC_CommonUltils.getXmlValue(addrNode, 'CountryCode', null);
+                ca.Address.CountryName = FEC_CommonUltils.getXmlValue(addrNode, 'CountryName', null);
+                ca.Address.ZipCode = FEC_CommonUltils.getXmlValue(addrNode, 'ZipCode', null);
+                ca.Address.PropertyStatus = FEC_CommonUltils.getXmlValue(addrNode, 'PropertyStatus', null);
+                ca.Address.Years = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(addrNode, 'Years', null));
+                ca.Address.Months = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(addrNode, 'Months', null));
                 r.CustomerBasicInfo.CurrentAddresses.add(ca);
             }
         }
@@ -290,11 +288,11 @@ public with sharing class FEC_GetCustomerInfoBasic {
                 if (ctNode.getName() != 'Contact') continue;
                 PreferredContact pc = new PreferredContact();
                 pc.Contact = new Contact();
-                pc.Contact.ContactId = getVal(ctNode, 'ContactId', null);
-                pc.Contact.Channel = getVal(ctNode, 'Channel', null);
-                pc.Contact.CommunicationType = getVal(ctNode, 'CommunicationType', null);
-                pc.Contact.ContactString = getVal(ctNode, 'ContactString', null);
-                pc.Contact.OfficeExtension = getVal(ctNode, 'OfficeExtension', null);
+                pc.Contact.ContactId = FEC_CommonUltils.getXmlValue(ctNode, 'ContactId', null);
+                pc.Contact.Channel = FEC_CommonUltils.getXmlValue(ctNode, 'Channel', null);
+                pc.Contact.CommunicationType = FEC_CommonUltils.getXmlValue(ctNode, 'CommunicationType', null);
+                pc.Contact.ContactString = FEC_CommonUltils.getXmlValue(ctNode, 'ContactString', null);
+                pc.Contact.OfficeExtension = FEC_CommonUltils.getXmlValue(ctNode, 'OfficeExtension', null);
                 r.CustomerBasicInfo.PreferredContacts.add(pc);
             }
         }
@@ -305,13 +303,13 @@ public with sharing class FEC_GetCustomerInfoBasic {
             for (Dom.XmlNode rNode : relativesNode.getChildElements()) {
                 if (rNode.getName() != 'Relative') continue;
                 Relative rel = new Relative();
-                rel.RelationType = getVal(rNode, 'RelationType', null);
-                rel.FullName = getVal(rNode, 'FullName', null);
-                rel.PhoneNumber = getVal(rNode, 'PhoneNumber', null);
-                rel.HouseNumber = getVal(rNode, 'Number', null);
-                rel.Street = getVal(rNode, 'Street', null);
-                rel.Ward = getVal(rNode, 'Ward', null);
-                rel.City = getVal(rNode, 'City', null);
+                rel.RelationType = FEC_CommonUltils.getXmlValue(rNode, 'RelationType', null);
+                rel.FullName = FEC_CommonUltils.getXmlValue(rNode, 'FullName', null);
+                rel.PhoneNumber = FEC_CommonUltils.getXmlValue(rNode, 'PhoneNumber', null);
+                rel.HouseNumber = FEC_CommonUltils.getXmlValue(rNode, 'Number', null);
+                rel.Street = FEC_CommonUltils.getXmlValue(rNode, 'Street', null);
+                rel.Ward = FEC_CommonUltils.getXmlValue(rNode, 'Ward', null);
+                rel.City = FEC_CommonUltils.getXmlValue(rNode, 'City', null);
                 r.CustomerBasicInfo.Relatives.add(rel);
             }
         }
@@ -320,22 +318,4 @@ public with sharing class FEC_GetCustomerInfoBasic {
         return r;
     }
 
-    /* =====================================================
-       HELPERS
-       ===================================================== */
-
-    private static String getVal(Dom.XmlNode n, String name, String ns) {
-        if (n == null) return null;
-        Dom.XmlNode c = n.getChildElement(name, ns);
-        return c == null ? null : c.getText();
-    }
-
-    private static Integer toInt(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
-    }
-
-    private static Date getDate(Dom.XmlNode n, String name, String ns) {
-        String v = getVal(n, name, ns);
-        return String.isBlank(v) ? null : Date.valueOf(v);
-    }
 }

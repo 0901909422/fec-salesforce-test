@@ -83,17 +83,15 @@ public with sharing class FEC_GetAddressesList {
 
         if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
             throw new CalloutException(
-                'GetAddressesList returned HTTP ' + res.getStatusCode()
+                String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode()})
             );
         }
 
         ResponseWrapper response = parseResponse(res.getBody());
 
-        if (response.Sys == null || response.Sys.Code != 1) {
+        if (response.Sys != null && response.Sys.Code != 1) {
             throw new CalloutException(
-                response.Sys != null
-                    ? response.Sys.Description
-                    : 'GetAddressesList service error'
+                String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
             );
         }
 
@@ -110,16 +108,16 @@ public with sharing class FEC_GetAddressesList {
         String cifNumber
     ) {
         if (String.isBlank(transID) || transID.length() > 36) {
-            throw new CalloutException('TransID is invalid');
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
         }
         if (String.isBlank(requestorId)) {
-            throw new CalloutException('RequestorID is invalid');
+            throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
         if (String.isBlank(dateTimeStr)) {
-            throw new CalloutException('DateTime is invalid');
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
         }
         if (String.isBlank(cifNumber)) {
-            throw new CalloutException('CIFNumber is invalid');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
         }
 
         Set<String> validRequestors = new Set<String>{
@@ -127,7 +125,7 @@ public with sharing class FEC_GetAddressesList {
         };
         if (!validRequestors.contains(requestorId)) {
             throw new CalloutException(
-                'Invalid RequestorID: ' + requestorId
+                System.Label.FEC_MSG_RequestorID_Null
             );
         }
 
@@ -135,7 +133,7 @@ public with sharing class FEC_GetAddressesList {
             Datetime.valueOfGmt(dateTimeStr.replace('T', ' '));
         } catch (Exception e) {
             throw new CalloutException(
-                'DateTime must be ISO-8601 format'
+                String.format(System.Label.FEC_MSG_Param_Datetime_Format_Invalid, new List<String>{dateTimeStr})
             );
         }
     }
@@ -165,13 +163,13 @@ public with sharing class FEC_GetAddressesList {
         // SYS
         Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
         result.Sys = new SysResponse();
-        result.Sys.TransID = getVal(sysNode, 'TransID');
-        result.Sys.DateTimeStr = getVal(sysNode, 'DateTime');
-        result.Sys.Code = toInt(getVal(sysNode, 'Code'));
-        result.Sys.Description = getVal(sysNode, 'Description');
+        result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+        result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+        result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+        result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
 
         // CIF NUMBER
-        result.CIFNumber = getVal(responseNode, 'CIFNumber');
+        result.CIFNumber = FEC_CommonUltils.getXmlValue(responseNode, 'CIFNumber');
 
         // ADDRESSES
         result.Addresses = new List<AddressInfo>();
@@ -179,20 +177,20 @@ public with sharing class FEC_GetAddressesList {
         if (addrNode != null) {
             for (Dom.XmlNode a : addrNode.getChildElements()) {
                 AddressInfo ad = new AddressInfo();
-                ad.AddressId = getVal(a, 'AddressId');
-                ad.AddressType = getVal(a, 'AddressType');
-                ad.NumberStr = getVal(a, 'Number');
-                ad.Building = getVal(a, 'Building');
-                ad.Street = getVal(a, 'Street');
-                ad.Ward = getVal(a, 'Ward');
-                ad.District = getVal(a, 'District');
-                ad.City = getVal(a, 'City');
-                ad.CountryCode = getVal(a, 'CountryCode');
-                ad.CountryName = getVal(a, 'CountryName');
-                ad.ZipCode = getVal(a, 'ZipCode');
-                ad.PropertyStatus = getVal(a, 'PropertyStatus');
-                ad.Years = toInt(getVal(a, 'Years'));
-                ad.Months = toInt(getVal(a, 'Months'));
+                ad.AddressId = FEC_CommonUltils.getXmlValue(a, 'AddressId');
+                ad.AddressType = FEC_CommonUltils.getXmlValue(a, 'AddressType');
+                ad.NumberStr = FEC_CommonUltils.getXmlValue(a, 'Number');
+                ad.Building = FEC_CommonUltils.getXmlValue(a, 'Building');
+                ad.Street = FEC_CommonUltils.getXmlValue(a, 'Street');
+                ad.Ward = FEC_CommonUltils.getXmlValue(a, 'Ward');
+                ad.District = FEC_CommonUltils.getXmlValue(a, 'District');
+                ad.City = FEC_CommonUltils.getXmlValue(a, 'City');
+                ad.CountryCode = FEC_CommonUltils.getXmlValue(a, 'CountryCode');
+                ad.CountryName = FEC_CommonUltils.getXmlValue(a, 'CountryName');
+                ad.ZipCode = FEC_CommonUltils.getXmlValue(a, 'ZipCode');
+                ad.PropertyStatus = FEC_CommonUltils.getXmlValue(a, 'PropertyStatus');
+                ad.Years = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(a, 'Years'));
+                ad.Months = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(a, 'Months'));
                 result.Addresses.add(ad);
             }
         }
@@ -200,16 +198,4 @@ public with sharing class FEC_GetAddressesList {
         return result;
     }
 
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
-    private static String getVal(Dom.XmlNode n, String name) {
-        if (n == null) return null;
-        Dom.XmlNode c = n.getChildElement(name, null);
-        return c == null ? null : c.getText();
-    }
-
-    private static Integer toInt(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
-    }
 }

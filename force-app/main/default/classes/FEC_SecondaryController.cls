@@ -26,7 +26,7 @@ public with sharing class FEC_SecondaryController {
     public static SecondaryInfoDTO loadSecondaryInfo(Id caseId) {
 
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         /* ===== LOAD CASE ===== */
@@ -38,7 +38,7 @@ public with sharing class FEC_SecondaryController {
         ];
 
         if (c.FEC_Account_or_Contract__c == null) {
-            throw new AuraHandledException('Customer History not found');
+            throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
         }
 
         /* ===== LOAD CUSTOMER HISTORY ===== */

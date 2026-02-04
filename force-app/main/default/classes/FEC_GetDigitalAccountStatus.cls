@@ -80,18 +80,15 @@ public with sharing class FEC_GetDigitalAccountStatus {
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
-                    'GetDigitalAccountStatus service returned HTTP error: ' +
-                    res.getStatusCode()
+                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode()})
                 );
             }
 
             ResponseWrapper response = parseResponse(res.getBody());
 
-            if (response.Sys == null || response.Sys.Code != 1) {
+            if (response.Sys != null && response.Sys.Code != 1) {
                 throw new CalloutException(
-                    response.Sys != null
-                        ? response.Sys.Description
-                        : 'GetDigitalAccountStatus service returned error'
+                    String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
                 );
             }
 
@@ -117,13 +114,8 @@ public with sharing class FEC_GetDigitalAccountStatus {
     ) {
 
         // ===================== TRANSID =====================
-        if (String.isBlank(transId)) {
-            throw new CalloutException('TransID is null or invalid');
-        }
-        if (transId.length() > 36) {
-            throw new CalloutException(
-                'TransID is null or invalid or no longer than 36 characters'
-            );
+        if (String.isBlank(transId) || transId.length() > 36) {
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
         }
 
         // ===================== REQUESTORID =====================
@@ -134,52 +126,44 @@ public with sharing class FEC_GetDigitalAccountStatus {
             || !validRequestorIds.contains(requestorId)) {
 
             throw new CalloutException(
-                'RequestorID is null or invalid, "' +
-                requestorId +
-                '" is not type of RequestorID'
+                System.Label.FEC_MSG_RequestorID_Null
             );
         }
 
         // ===================== DATETIME =====================
         if (String.isBlank(dateTimeStr)) {
-            throw new CalloutException('DateTime is null or invalid');
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
         }
         try {
             Datetime.valueOfGmt(dateTimeStr.replace('T', ' '));
         } catch (Exception e) {
             throw new CalloutException(
-                'DateTime is null or invalid, "' +
-                dateTimeStr +
-                '" is not type of Datetime'
+                String.format(System.Label.FEC_MSG_Param_Datetime_Format_Invalid, new List<String>{dateTimeStr})
             );
         }
 
         // ===================== PHONE =====================
         if (String.isBlank(phone)) {
-            throw new CalloutException('Phone is null or invalid');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'PhoneNumber'}));
         }
         if (String.isNotBlank(phone) &&
-            !Pattern.matches('^(0\\d{9}|84\\d{9})$', phone)) {
+            !Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, phone)) {
 
             throw new CalloutException(
-                'Phone number must start with 0 (10 digits) or 84 (11 digits)'
+                System.Label.FEC_MSG_Phone_Number_Invalid
             );
         }
 
         // ===================== CIF NUMBER =====================
         if (String.isBlank(cifNumber)) {
-            throw new CalloutException('CIFNumber is null or invalid');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
         }
         if (cifNumber.length() > 255) {
             throw new CalloutException(
-                'CIFNumber is null or invalid or no longer than 255 characters'
+                String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'CifNumber', '255'})
             );
         }
 
-        Boolean cifExists = true;
-        if (!cifExists) {
-            throw new CalloutException('CIFNumber is null or invalid');
-        }
     }
 
     // =========================================================================
@@ -209,10 +193,10 @@ public with sharing class FEC_GetDigitalAccountStatus {
         Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
         if (sysNode != null) {
             result.Sys = new SysResponse();
-            result.Sys.TransID = getVal(sysNode, 'TransID');
-            result.Sys.DateTimeStr = getVal(sysNode, 'DateTime');
-            result.Sys.Code = toInteger(getVal(sysNode, 'Code'));
-            result.Sys.Description = getVal(sysNode, 'Description');
+            result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+            result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+            result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+            result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
         }
 
         // ================= DIGITAL ACCOUNTS =================
@@ -225,8 +209,8 @@ public with sharing class FEC_GetDigitalAccountStatus {
             for (Dom.XmlNode dNode : accountStatusNode.getChildElements()) {
                 if (dNode.getName() == 'DigitalAccount') {
                     DigitalAccountInfo d = new DigitalAccountInfo();
-                    d.Type = getVal(dNode, 'Type');
-                    d.Status = getVal(dNode, 'Status');
+                    d.Type = FEC_CommonUltils.getXmlValue(dNode, 'Type');
+                    d.Status = FEC_CommonUltils.getXmlValue(dNode, 'Status');
                     result.DigitalAccounts.add(d);
                 }
             }
@@ -235,16 +219,5 @@ public with sharing class FEC_GetDigitalAccountStatus {
         return result;
     }
 
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
-    private static String getVal(Dom.XmlNode node, String name) {
-        if (node == null) return null;
-        Dom.XmlNode c = node.getChildElement(name, null);
-        return c == null ? null : c.getText();
-    }
 
-    private static Integer toInteger(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
-    }
 }

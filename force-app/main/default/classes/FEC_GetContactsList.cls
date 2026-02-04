@@ -59,17 +59,15 @@ public with sharing class FEC_GetContactsList {
 
         if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
             throw new CalloutException(
-                'GetContactsList HTTP error: ' + res.getStatusCode()
+                String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode()})
             );
         }
 
         ResponseWrapper response = parseResponse(res.getBody());
 
-        if (response.Sys == null || response.Sys.Code != 1) {
+        if (response.Sys != null && response.Sys.Code != 1) {
             throw new CalloutException(
-                response.Sys != null
-                    ? response.Sys.Description
-                    : 'GetContactsList returned error'
+                String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
             );
         }
 
@@ -87,7 +85,7 @@ public with sharing class FEC_GetContactsList {
     ) {
 
         if (String.isBlank(transId) || transId.length() > 36) {
-            throw new CalloutException('Invalid TransID');
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
         }
 
         Set<String> validRequestorIds =
@@ -95,17 +93,21 @@ public with sharing class FEC_GetContactsList {
 
         if (String.isBlank(requestorId)
             || !validRequestorIds.contains(requestorId)) {
-            throw new CalloutException('Invalid RequestorID');
+            throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
 
         try {
             Datetime.valueOfGmt(dateTimeStr.replace('T', ' '));
         } catch (Exception e) {
-            throw new CalloutException('Invalid DateTime');
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Datetime_Format_Invalid, new List<String>{dateTimeStr}));
         }
 
-        if (String.isBlank(cifNumber) || cifNumber.length() > 255) {
-            throw new CalloutException('Invalid CIFNumber');
+        if (String.isBlank(cifNumber)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
+        }
+
+        if (cifNumber.length() > 255) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'CifNumber', '255'}));
         }
     }
 
@@ -128,7 +130,7 @@ public with sharing class FEC_GetContactsList {
         }
 
         if (responseNode == null) {
-            throw new CalloutException('SOAP Body empty');
+            throw new CalloutException(System.Label.FEC_MSG_Response_Null);
         }
 
         Dom.XmlNode resultNode = getChild(responseNode, 'GetContactsListResult');
@@ -142,14 +144,14 @@ public with sharing class FEC_GetContactsList {
         Dom.XmlNode sysNode = getChild(resultNode, 'Sys');
         if (sysNode != null) {
             result.Sys = new SysResponse();
-            result.Sys.TransID     = getVal(sysNode, 'TransID');
-            result.Sys.DateTimeStr = getVal(sysNode, 'DateTime');
-            result.Sys.Code        = Integer.valueOf(getVal(sysNode, 'Code'));
-            result.Sys.Description = getVal(sysNode, 'Description');
+            result.Sys.TransID     = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+            result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+            result.Sys.Code        = Integer.valueOf(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+            result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
         }
 
         /* ===== CIF ===== */
-        result.CIFNumber = getVal(resultNode, 'CIFNumber');
+        result.CIFNumber = FEC_CommonUltils.getXmlValue(resultNode, 'CIFNumber');
 
         /* ===== CONTACTS ===== */
         result.Contacts = new List<ContactInfo>();
@@ -159,11 +161,11 @@ public with sharing class FEC_GetContactsList {
             for (Dom.XmlNode cNode : contactsNode.getChildElements()) {
                 if (cNode.getName().endsWith('Contact')) {
                     ContactInfo c = new ContactInfo();
-                    c.ContactId         = getVal(cNode, 'ContactId');
-                    c.Channel           = getVal(cNode, 'Channel');
-                    c.CommunicationType = getVal(cNode, 'CommunicationType');
-                    c.ContactString     = getVal(cNode, 'ContactString');
-                    c.OfficeExtension   = getVal(cNode, 'OfficeExtension');
+                    c.ContactId         = FEC_CommonUltils.getXmlValue(cNode, 'ContactId');
+                    c.Channel           = FEC_CommonUltils.getXmlValue(cNode, 'Channel');
+                    c.CommunicationType = FEC_CommonUltils.getXmlValue(cNode, 'CommunicationType');
+                    c.ContactString     = FEC_CommonUltils.getXmlValue(cNode, 'ContactString');
+                    c.OfficeExtension   = FEC_CommonUltils.getXmlValue(cNode, 'OfficeExtension');
                     result.Contacts.add(c);
                 }
             }
@@ -183,11 +185,6 @@ public with sharing class FEC_GetContactsList {
             }
         }
         return null;
-    }
-
-    private static String getVal(Dom.XmlNode node, String name) {
-        Dom.XmlNode c = getChild(node, name);
-        return c == null ? null : c.getText();
     }
 
     private static String buildSoapBody(
