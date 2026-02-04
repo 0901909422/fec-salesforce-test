@@ -68,7 +68,8 @@ public with sharing class FEC_MainInfoController {
                    FEC_Date_of_Issue__c,
                    FEC_Place_of_Issue__c,
                    FEC_Primary_Phone__c,
-                   FEC_API_Cache__c
+                   FEC_API_Cache__c,
+                   FEC_CIF_Number__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
@@ -90,10 +91,10 @@ public with sharing class FEC_MainInfoController {
         try {
             FEC_GetCustomerInfoBasic.ResponseWrapper basicRes =
                 FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
-                    'APS',
-                    'PORTAL',
-                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
-                    '4111111111111111'
+                    FEC_ConstantCommon.REQUESTOR_APS,
+                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    hist.FEC_CIF_Number__c
                 );
 
             if (basicRes != null && basicRes.CustomerBasicInfo != null) {
@@ -114,10 +115,10 @@ public with sharing class FEC_MainInfoController {
         try {
             FEC_GetDocumentsList.ResponseWrapper docRes =
                 FEC_GetDocumentsList.callGetDocumentsList(
-                    'APS',
-                    'PORTAL',
-                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
-                    '1233'
+                    FEC_ConstantCommon.REQUESTOR_APS,
+                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    hist.FEC_CIF_Number__c
                 );
 
             if (docRes != null && docRes.Documents != null && !docRes.Documents.isEmpty()) {
@@ -199,7 +200,7 @@ public with sharing class FEC_MainInfoController {
     private static String getPrimaryPhoneOnly() {
         FEC_GetCustomerList.ResponseWrapper res =
             FEC_GetCustomerList.getCustomerList(
-                'PORTAL', null, false,
+                FEC_ConstantCommon.REQUESTOR_PORTAL, null, false,
                 null, null, null, null, null, null, null, null
             );
 
@@ -219,8 +220,8 @@ public with sharing class FEC_MainInfoController {
         System.debug('### CIF BEFORE ADDRESS API = ' + hist.FEC_CIF_Number__c);
         FEC_GetAddressesList.ResponseWrapper res =
             FEC_GetAddressesList.callGetAddressesList(
-                'APS','PORTAL',
-                Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
+                FEC_ConstantCommon.REQUESTOR_APS,FEC_ConstantCommon.REQUESTOR_PORTAL,
+                Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
                 hist.FEC_CIF_Number__c
             );
 

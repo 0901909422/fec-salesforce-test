@@ -49,7 +49,8 @@ public with sharing class FEC_SecondaryController {
                    FEC_Mobile_App_Account__c,
                    FEC_Email__c,
                    FEC_Work_Phone__c,
-                   FEC_API_Cache_Secondary_Demo__c
+                   FEC_API_Cache_Secondary_Demo__c,
+                   FEC_CIF_Number__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
@@ -73,22 +74,22 @@ public with sharing class FEC_SecondaryController {
         try {
             FEC_GetDigitalAccountStatus.ResponseWrapper digitalRes =
                 FEC_GetDigitalAccountStatus.callGetDigitalAccountStatus(
-                    'APS',
-                    'PORTAL',
-                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
-                    '0347776208',
-                    '123456789'
+                    FEC_ConstantCommon.REQUESTOR_APS,
+                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    hist.FEC_Work_Phone__c,
+                    hist.FEC_CIF_Number__c
                 );
 
             if (digitalRes != null && digitalRes.DigitalAccounts != null) {
                 hist.FEC_Zalo_Follower__c =
-                    getStatusByType(digitalRes.DigitalAccounts, 'ZALO');
+                    getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_ZALO);
 
                 hist.FEC_Website_Account__c =
-                    getStatusByType(digitalRes.DigitalAccounts, 'WEBSITE');
+                    getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_WEBSITE);
 
                 hist.FEC_Mobile_App_Account__c =
-                    getStatusByType(digitalRes.DigitalAccounts, 'FEMOBILEAPP');
+                    getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_FE_MOBILE_APP);
             }
         } catch (Exception e) {
             System.debug('### DigitalAccountStatus FAILED: ' + e.getMessage());
@@ -98,10 +99,10 @@ public with sharing class FEC_SecondaryController {
         try {
             FEC_GetContactsList.ResponseWrapper contactRes =
                 FEC_GetContactsList.callGetContactsList(
-                    'APS',
-                    'PORTAL',
-                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
-                    '123456'
+                    FEC_ConstantCommon.REQUESTOR_APS,
+                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    hist.FEC_CIF_Number__c
                 );
 
             if (contactRes != null && contactRes.Contacts != null) {
@@ -117,10 +118,10 @@ public with sharing class FEC_SecondaryController {
         try {
             relativesRes =
                 FEC_GetRelativesList.callGetRelativesList(
-                    'APS',
-                    'PORTAL',
-                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
-                    '12333333'
+                    FEC_ConstantCommon.REQUESTOR_APS,
+                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    hist.FEC_CIF_Number__c
                 );
         } catch (Exception e) {
             System.debug('### GetRelativesList FAILED: ' + e.getMessage());

@@ -132,10 +132,10 @@ public with sharing class FEC_GetApplicationsList {
         }
 
         Set<String> validRequestorIds = new Set<String>{
-            'APS',
-            'CRM',
-            'PORTAL',
-            'MOBILE_APP'
+            FEC_ConstantCommon.REQUESTOR_APS,
+            FEC_ConstantCommon.REQUESTOR_CRM,
+            FEC_ConstantCommon.REQUESTOR_PORTAL,
+            FEC_ConstantCommon.REQUESTOR_MOBILE_APP
         };
         if (!validRequestorIds.contains(requestorId)) {
             throw new CalloutException(

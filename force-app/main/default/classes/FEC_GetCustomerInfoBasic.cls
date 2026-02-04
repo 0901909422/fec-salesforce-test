@@ -173,7 +173,7 @@ public with sharing class FEC_GetCustomerInfoBasic {
         throw new CalloutException('RequestorID is null or invalid');
     }
 
-        Set<String> validRequestorIds = new Set<String>{ 'CRM','PORTAL','MOBILE_APP' };
+        Set<String> validRequestorIds = new Set<String>{ FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP };
     if (!validRequestorIds.contains(requestorId)) {
         throw new CalloutException(
             'RequestorID "' + requestorId + '" is not valid'

@@ -123,7 +123,7 @@ public with sharing class FEC_GetAddressesList {
         }
 
         Set<String> validRequestors = new Set<String>{
-            'APS', 'CRM', 'PORTAL', 'MOBILE_APP'
+            FEC_ConstantCommon.REQUESTOR_APS, FEC_ConstantCommon.REQUESTOR_CRM, FEC_ConstantCommon.REQUESTOR_PORTAL, FEC_ConstantCommon.REQUESTOR_MOBILE_APP
         };
         if (!validRequestors.contains(requestorId)) {
             throw new CalloutException(

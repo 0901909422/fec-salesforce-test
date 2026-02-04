@@ -121,7 +121,7 @@ public with sharing class FEC_GetDocumentsList {
         }
 
         // ===================== REQUESTORID =====================
-        Set<String> validRequestorIds = new Set<String>{ 'APS', 'CRM', 'PORTAL' };
+        Set<String> validRequestorIds = new Set<String>{ FEC_ConstantCommon.REQUESTOR_APS, FEC_ConstantCommon.REQUESTOR_CRM, FEC_ConstantCommon.REQUESTOR_PORTAL };
         if (String.isBlank(requestorId)
             || !validRequestorIds.contains(requestorId)) {
 

@@ -128,7 +128,7 @@ public with sharing class FEC_GetDigitalAccountStatus {
 
         // ===================== REQUESTORID =====================
         Set<String> validRequestorIds =
-            new Set<String>{ 'APS', 'CRM', 'PORTAL', 'PEGA' };
+            new Set<String>{ FEC_ConstantCommon.REQUESTOR_APS, FEC_ConstantCommon.REQUESTOR_CRM, FEC_ConstantCommon.REQUESTOR_PORTAL, FEC_ConstantCommon.REQUESTOR_PEGA };
 
         if (String.isBlank(requestorId)
             || !validRequestorIds.contains(requestorId)) {
