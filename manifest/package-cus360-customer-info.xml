@@ -12,6 +12,9 @@
 		<members>FEC_GetDocumentsList</members>
         <members>FEC_ApplicationsListController</members>
         <members>FEC_GetApplicationsList</members>
+		<members>FEC_CommonUltils</members>
+		<members>FEC_ConstantCommon</members>
+		<members>FEC_MockupEndpoint</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
