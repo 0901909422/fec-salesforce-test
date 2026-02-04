@@ -43,4 +43,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_SD = 'SD';
     public static final String REQUESTOR_RES = 'RES';
     public static final String REQUESTOR_PEGA = 'PEGA';
+
+    public static final String ADDRESS_TYPE_CURRES = 'CURRES';
+    public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
+    public static final String ADDRESS_TYPE_OFFICE = 'OFFICE';
 }
