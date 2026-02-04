@@ -55,6 +55,31 @@
 	</types>
 	<types>
         <members>FEC_MSG_Param_Must_Number</members>
+        <members>FEC_Registration_Info_Label</members>
+        <members>FEC_Customer_Number_Label</members>
+        <members>FEC_Addresses_List_Label</members>
+        <members>FEC_Customer_Name_Label</members>
+        <members>FEC_Last_Name_Label</members>
+        <members>FEC_Middle_Name_Label</members>
+        <members>FEC_First_Name_Label</members>
+        <members>FEC_Date_of_Birth_Label</members>
+        <members>FEC_Gender_Label</members>
+        <members>FEC_National_ID_Passport_ID_Label</members>
+        <members>FEC_Date_of_Issue_Label</members>
+        <members>FEC_Place_of_Issue_Label</members>
+        <members>FEC_Marital_Status_Label</members>
+        <members>FEC_Primary_Phone_Label</members>
+        <members>FEC_CIF_Number_Label</members>
+        <members>FEC_PID_Number_Label</members>
+        <members>FEC_Self_Service_Channel_Label</members>
+        <members>FEC_Contact_List_Label</members>
+        <members>FEC_Reference_Info_Label</members>
+        <members>FEC_Zalo_Follower_Label</members>
+        <members>FEC_Mobile_App_Account_Label</members>
+        <members>FEC_Website_Account_Label</members>
+        <members>FEC_Email_Label</members>
+        <members>FEC_Work_Phone_Label</members>
+        <members>FEC_Demographic_Label</members>
         <name>CustomLabel</name>
     </types>
     <version>65.0</version>

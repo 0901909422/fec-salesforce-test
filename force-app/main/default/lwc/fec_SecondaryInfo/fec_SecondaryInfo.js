@@ -1,6 +1,15 @@
 import { LightningElement, api, track } from 'lwc';
 import loadSecondaryInfo from '@salesforce/apex/FEC_SecondaryController.loadSecondaryInfo';
 import logSensitiveFromSecondaryInfo from '@salesforce/apex/FEC_SecondaryController.logSensitiveFromSecondaryInfo';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_Self_Service_Channel_Label from '@salesforce/label/c.FEC_Self_Service_Channel_Label';
+import FEC_Contact_List_Label from '@salesforce/label/c.FEC_Contact_List_Label';
+import FEC_Reference_Info_Label from '@salesforce/label/c.FEC_Reference_Info_Label';
+import FEC_Zalo_Follower_Label from '@salesforce/label/c.FEC_Zalo_Follower_Label';
+import FEC_Mobile_App_Account_Label from '@salesforce/label/c.FEC_Mobile_App_Account_Label';
+import FEC_Website_Account_Label from '@salesforce/label/c.FEC_Website_Account_Label';
+import FEC_Email_Label from '@salesforce/label/c.FEC_Email_Label';
+import FEC_Work_Phone_Label from '@salesforce/label/c.FEC_Work_Phone_Label';
 
 export default class Fec_SecondaryInfo extends LightningElement {
 
@@ -27,6 +36,18 @@ export default class Fec_SecondaryInfo extends LightningElement {
         { label: 'Phone Number', fieldName: 'phoneNumber', type: 'eye',
         eye: true },
     ];
+
+    customLabel = {
+        msgErrorApiLabel: FEC_MSG_Error_API_Label,
+        selfServiceChannelLabel: FEC_Self_Service_Channel_Label,
+        contactListLabel: FEC_Contact_List_Label,
+        referenceInfoLabel: FEC_Reference_Info_Label,
+        zaloFollowerLabel: FEC_Zalo_Follower_Label,
+        mobileAppAccountLabel: FEC_Mobile_App_Account_Label,
+        websiteAccountLabel: FEC_Website_Account_Label,
+        emailLabel: FEC_Email_Label,
+        workPhoneLabel: FEC_Work_Phone_Label
+    }
 
     connectedCallback() {
         this.loadData();

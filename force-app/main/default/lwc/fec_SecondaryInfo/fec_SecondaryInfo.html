@@ -9,7 +9,7 @@
             <!-- ================= Self-service Channels ================= -->
             <lightning-accordion-section
                 name="selfService"
-                label="Self-service Channels">
+                label={customLabel.selfServiceChannelLabel}>
 
                 <div class="slds-form slds-p-horizontal_small">
 
@@ -21,7 +21,7 @@
                             <div class="slds-border_bottom slds-p-vertical_small">
                                 <div class="slds-grid slds-grid_vertical-align-center">
                                     <div class="slds-col slds-size_1-of-3 slds-text-title_bold">
-                                        Zalo Follower
+                                        {customLabel.zaloFollowerLabel}
                                     </div>
                                     <div class="slds-col slds-size_2-of-3 slds-text-color_weak">
                                         {zaloFollower}
@@ -35,7 +35,7 @@
                             <div class="slds-border_bottom slds-p-vertical_small">
                                 <div class="slds-grid slds-grid_vertical-align-center">
                                     <div class="slds-col slds-size_1-of-3 slds-text-title_bold">
-                                        Mobile App Account
+                                        {customLabel.mobileAppAccountLabel}
                                     </div>
                                     <div class="slds-col slds-size_2-of-3 slds-text-color_weak">
                                         {mobileAppAccount}
@@ -54,7 +54,7 @@
                             <div class="slds-border_bottom slds-p-vertical_small">
                                 <div class="slds-grid slds-grid_vertical-align-center">
                                     <div class="slds-col slds-size_1-of-3 slds-text-title_bold">
-                                        Website Account
+                                        {customLabel.websiteAccountLabel}
                                     </div>
                                     <div class="slds-col slds-size_2-of-3 slds-text-color_weak">
                                         {websiteAccount}
@@ -74,7 +74,7 @@
             <!-- ================= Contact List ================= -->
             <lightning-accordion-section
                 name="contactList"
-                label="Contact List">
+                label={customLabel.contactListLabel}>
 
                 <div class="slds-form slds-p-horizontal_small">
 
@@ -85,7 +85,7 @@
                             <div class="slds-border_bottom slds-p-vertical_small">
                                 <div class="slds-grid slds-grid_vertical-align-center">
                                     <div class="slds-col slds-size_1-of-3 slds-text-title_bold">
-                                        Email
+                                        {customLabel.emailLabel}
                                     </div>
                                     <div class="slds-col slds-size_2-of-3 slds-text-color_weak">
                                         {email}
@@ -103,7 +103,7 @@
                                     <!-- Label + Value -->
                                     <div class="slds-grid slds-size_10-of-12">
                                         <div class="slds-col slds-size_1-of-3 slds-text-title_bold">
-                                            Work Phone
+                                            {customLabel.workPhoneLabel}
                                         </div>
                                         <div class="slds-col slds-size_2-of-3 slds-text-color_weak">
                                             {displayWorkPhone}
@@ -132,7 +132,7 @@
             <!-- ================= Reference Info ================= -->
             <lightning-accordion-section
                 name="reference"
-                label="Reference Info">
+                label={customLabel.referenceInfoLabel}>
 
                 <c-fec_-related-list-paging
                     records={reference}
@@ -161,9 +161,9 @@
                                 class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                Self-service Channels – 
+                                {customLabel.selfServiceChannelLabel} – 
                                 <span class="sync-fail-text">
-                                    Tải Dữ liệu Không Thành Công
+                                    {customLabel.msgErrorApiLabel}
                                 </span>
                             </span>
                         </span>
@@ -182,9 +182,9 @@
                                 class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                Contact List – 
+                                {customLabel.contactListLabel} – 
                                 <span class="sync-fail-text">
-                                    Tải Dữ liệu Không Thành Công
+                                    {customLabel.msgErrorApiLabel}
                                 </span>
                             </span>
                         </span>
@@ -203,9 +203,9 @@
                                 class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                Reference Info – 
+                                {customLabel.referenceInfoLabel} – 
                                 <span class="sync-fail-text">
-                                    Tải Dữ liệu Không Thành Công
+                                    {customLabel.msgErrorApiLabel}
                                 </span>
                             </span>
                         </span>

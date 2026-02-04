@@ -9,6 +9,9 @@ import refreshApplications
 import getApplications
     from '@salesforce/apex/FEC_ApplicationsListController.getApplicationsForUI';
 
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_Registration_Info_Label from '@salesforce/label/c.FEC_Registration_Info_Label';
+
 export default class Fec_ApplicationsList extends NavigationMixin(LightningElement) {
 
     @api recordId;
@@ -47,6 +50,11 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
         { label: 'Last Status', fieldName: 'lastStatus' },
         { label: 'Update Date', fieldName: 'updateDate' }
     ];
+
+    customLabel = {
+        msgErrorApiLabel: FEC_MSG_Error_API_Label,
+        registrationInfoLabel: FEC_Registration_Info_Label
+    }
 
     connectedCallback() {
         loadStyle(this, COMMON_STYLES)

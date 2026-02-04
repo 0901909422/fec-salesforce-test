@@ -5,7 +5,7 @@
             <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
 
                 <!-- ================= Demographic ================= -->
-                <lightning-accordion-section name="demographic" label="Demographic">
+                <lightning-accordion-section name="demographic" label={customLabel.demographicLabel}>
 
                     <div class="slds-grid slds-wrap slds-gutters_small">
 
@@ -13,7 +13,7 @@
                         <div class="slds-col slds-size_1-of-2">
                             <div class="detail-row">
                                 <span class="detail-label">
-                                    Customer Name
+                                    {customLabel.customerNameLabel}
                                     <template if:true={helpTextMap.fec_customer_name__c}>
                                         <lightning-helptext content={helpTextMap.fec_customer_name__c}>
                                         </lightning-helptext>
@@ -24,7 +24,7 @@
 
                             <div class="detail-row">
                                 <span class="detail-label">
-                                    Last Name
+                                   {customLabel.lastNameLabel}
                                     <template if:true={helpTextMap.fec_last_name__c}>
                                         <lightning-helptext content={helpTextMap.fec_last_name__c}>
                                         </lightning-helptext>
@@ -35,7 +35,7 @@
 
                             <div class="detail-row">
                                 <span class="detail-label">
-                                    Middle Name
+                                    {customLabel.middleNameLabel}
                                     <template if:true={helpTextMap.fec_middle_name__c}>
                                         <lightning-helptext content={helpTextMap.fec_middle_name__c}>
                                         </lightning-helptext>
@@ -46,7 +46,7 @@
 
                             <div class="detail-row">
                                 <span class="detail-label">
-                                    First Name
+                                    {customLabel.firstNameLabel}
                                     <template if:true={helpTextMap.fec_first_name__c}>
                                         <lightning-helptext content={helpTextMap.fec_first_name__c}>
                                         </lightning-helptext>
@@ -57,7 +57,7 @@
 
                             <div class="detail-row">
                                 <span class="detail-label">
-                                    Date of Birth
+                                    {customLabel.dateOfBirthLabel}
                                     <template if:true={helpTextMap.fec_date_of_birth__c}>
                                         <lightning-helptext content={helpTextMap.fec_date_of_birth__c}>
                                         </lightning-helptext>
@@ -68,7 +68,7 @@
 
                             <div class="detail-row">
                                 <span class="detail-label">
-                                    Gender
+                                    {customLabel.genderLabel}
                                     <template if:true={helpTextMap.fec_gender__c}>
                                         <lightning-helptext content={helpTextMap.fec_gender__c}>
                                         </lightning-helptext>
@@ -84,7 +84,7 @@
 
                             <div class="detail-row">
                                 <span class="detail-label">
-                                    National ID/ Passport ID
+                                    {customLabel.nationalIDPassportIDLabel}
                                     <template if:true={helpTextMap.fec_national_id__passport_id__c}>
                                         <lightning-helptext content={helpTextMap.fec_national_id__passport_id__c}>
                                         </lightning-helptext>
@@ -101,7 +101,7 @@
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">
-                                    Date of Issue
+                                    {customLabel.dateOfIssueLabel}
                                     <template if:true={helpTextMap.fec_date_of_issue__c}>
                                         <lightning-helptext content={helpTextMap.fec_date_of_issue__c}>
                                         </lightning-helptext>
@@ -111,7 +111,7 @@
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">
-                                    Place of Issue
+                                    {customLabel.placeOfIssueLabel}
                                     <template if:true={helpTextMap.fec_place_of_issue__c}>
                                         <lightning-helptext content={helpTextMap.fec_place_of_issue__c}>
                                         </lightning-helptext>
@@ -121,7 +121,7 @@
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">
-                                    Marital Status
+                                    {customLabel.maritalStatusLabel}
                                     <template if:true={helpTextMap.fec_marital_status__c}>
                                         <lightning-helptext content={helpTextMap.fec_marital_status__c}>
                                         </lightning-helptext>
@@ -131,7 +131,7 @@
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">
-                                    Primary Phone
+                                    {customLabel.primaryPhoneLabel}
                                     <template if:true={helpTextMap.fec_primary_phone__c}>
                                         <lightning-helptext content={helpTextMap.fec_primary_phone__c}>
                                         </lightning-helptext>
@@ -150,14 +150,14 @@
                 </lightning-accordion-section>
 
                 <!-- ================= Customer Number ================= -->
-                <lightning-accordion-section name="customerNumber" label="Customer Number">
+                <lightning-accordion-section name="customerNumber" label={customLabel.customerNumberLabel}>
 
                     <div class="slds-grid slds-wrap slds-gutters_small">
 
                         <div class="slds-col slds-size_1-of-2">
                             <div class="detail-row">
                                 <span class="detail-label">
-                                    CIF Number
+                                    {customLabel.cifNumberLabel}
                                     <template if:true={helpTextMap.fec_cif_number__c}>
                                         <lightning-helptext content={helpTextMap.fec_cif_number__c}>
                                         </lightning-helptext>
@@ -169,7 +169,7 @@
 
                         <div class="slds-col slds-size_1-of-2">
                             <div class="detail-row">
-                                <span class="detail-label">PID Number</span>
+                                <span class="detail-label">{customLabel.pidNumberLabel}</span>
                                 <span class="detail-value">{pidNumber}</span>
                             </div>
                         </div>
@@ -178,7 +178,7 @@
                 </lightning-accordion-section>
 
                 <!-- ================= Addresses ================= -->
-                <lightning-accordion-section name="addresses" label="Addresses List">
+                <lightning-accordion-section name="addresses" label={customLabel.addressesListLabel}>
 
                     <c-fec_-related-list-paging records={addresses} columns={addressColumns}
                         sorted-by="Address">
@@ -201,9 +201,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                Demographic&nbsp;-&nbsp;
+                                {customLabel.demographicLabel}&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    Tải Dữ liệu Không Thành Công
+                                    {customLabel.msgErrorApiLabel}
                                 </span>
                             </span>
 
@@ -222,9 +222,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                Customer Number&nbsp;-&nbsp;
+                                {customLabel.customerNumberLabel}&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    Tải Dữ liệu Không Thành Công
+                                    {customLabel.msgErrorApiLabel}
                                 </span>
                             </span>
                         </span>
@@ -242,9 +242,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                Addresses List&nbsp;-&nbsp;
+                                {customLabel.addressesListLabel}&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    Tải Dữ liệu Không Thành Công
+                                    {customLabel.msgErrorApiLabel}
                                 </span>
                             </span>
                         </span>

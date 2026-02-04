@@ -1,11 +1,211 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
+        <fullName>FEC_Addresses_List_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Addresses List Label</shortDescription>
+        <value>Addresses List</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CIF_Number_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CIF Number Label</shortDescription>
+        <value>CIF Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Contact_List_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contact List Label</shortDescription>
+        <value>Contact List</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Customer_Name_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Name Label</shortDescription>
+        <value>Customer Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Customer_Number_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Number Label</shortDescription>
+        <value>Customer Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Date_of_Birth_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Date of Birth Label</shortDescription>
+        <value>Date of Birth</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Date_of_Issue_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Date of Issue Label</shortDescription>
+        <value>Date of Issue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Demographic_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Demographic Label</shortDescription>
+        <value>Demographic</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Label</shortDescription>
+        <value>Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_First_Name_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>First Name Label</shortDescription>
+        <value>First Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Gender_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Gender Label</shortDescription>
+        <value>Gender</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Last_Name_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Name Label</shortDescription>
+        <value>Last Name</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Param_Must_Number</fullName>
         <categories>API</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Param Must Number</shortDescription>
         <value>{0} must be numeric</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Marital_Status_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Marital Status Label</shortDescription>
+        <value>Marital Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Middle_Name_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Middle Name Label</shortDescription>
+        <value>Middle Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Mobile_App_Account_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Mobile App Account Label</shortDescription>
+        <value>Mobile App Account</value>
+    </labels>
+    <labels>
+        <fullName>FEC_National_ID_Passport_ID_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>National ID Passport ID Label</shortDescription>
+        <value>National ID/ Passport ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PID_Number_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PID Number Label</shortDescription>
+        <value>PID Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Place_of_Issue_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Place of Issue Label</shortDescription>
+        <value>Place of Issue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Primary_Phone_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Primary Phone Label</shortDescription>
+        <value>Primary Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reference_Info_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reference Info Label</shortDescription>
+        <value>Reference Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Registration_Info_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Registration Info Label</shortDescription>
+        <value>Registration Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Self_Service_Channel_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Self Service Channel Label</shortDescription>
+        <value>Self-service Channels</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Website_Account_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Website Account Label</shortDescription>
+        <value>Website Account</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Work_Phone_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Work Phone Label</shortDescription>
+        <value>Work Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Zalo_Follower_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Zalo Follower Label</shortDescription>
+        <value>Zalo Follower</value>
     </labels>
 </CustomLabels>
