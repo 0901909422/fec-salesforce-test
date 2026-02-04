@@ -1,4 +1,5 @@
 import { LightningElement, api, track } from 'lwc';
+import { maskWorkPhone } from 'c/fec_CommonUtils';
 import loadSecondaryInfo from '@salesforce/apex/FEC_SecondaryController.loadSecondaryInfo';
 import logSensitiveFromSecondaryInfo from '@salesforce/apex/FEC_SecondaryController.logSensitiveFromSecondaryInfo';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
@@ -102,7 +103,7 @@ export default class Fec_SecondaryInfo extends LightningElement {
             return this.workPhone;
         }
 
-        return this.maskWorkPhone(this.workPhone);
+        return maskWorkPhone(this.workPhone);
     }
 
 
@@ -134,16 +135,5 @@ export default class Fec_SecondaryInfo extends LightningElement {
             console.error('Sensitive log failed', e);
         });
     }
-
-    /* ===== MASK LOGIC ===== */
-    maskWorkPhone(phone) {
-        if (phone.length < 7) {
-            return phone;
-        }
-
-        let first = phone.substring(0, 4);
-        let last  = phone.substring(phone.length - 3);
-
-        return first + '***' + last;
-    }
+    
 }
