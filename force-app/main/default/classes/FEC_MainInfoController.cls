@@ -68,8 +68,7 @@ public with sharing class FEC_MainInfoController {
                    FEC_Date_of_Issue__c,
                    FEC_Place_of_Issue__c,
                    FEC_Primary_Phone__c,
-                   FEC_API_Cache__c,
-                   FEC_CIF_Number__c
+                   FEC_API_Cache__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
