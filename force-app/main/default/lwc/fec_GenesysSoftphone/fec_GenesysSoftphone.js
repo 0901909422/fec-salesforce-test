@@ -3,12 +3,11 @@
 */
 import { LightningElement, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
-import { ShowToastEvent } from "lightning/platformShowToastEvent";
-
 import createInteraction from "@salesforce/apex/FEC_CreateInteractionGenesys.createInteraction";
 
 import { subscribe, MessageContext } from "lightning/messageService";
 import GENESYS_CHANNEL from "@salesforce/messageChannel/GenesysCall__c";
+import { FEC_GENESYS_CONST } from './fec_genesysUtils';
 
 export default class fec_genesysSoftphone extends NavigationMixin(
   LightningElement,
@@ -38,7 +37,7 @@ export default class fec_genesysSoftphone extends NavigationMixin(
       this.messageContext,
       GENESYS_CHANNEL,
       (message) => {
-        if (message.action === "MAKE_CALL") {
+        if (message.action === FEC_GENESYS_CONST.ACTION_MAKE_CALL) {
           this.handleMakeCall(message.payload.number);
         }
       },
@@ -60,7 +59,7 @@ export default class fec_genesysSoftphone extends NavigationMixin(
 
   handlePostMessage(event) {
     const message = event.data;
-    if (message.source === "genesys_host" && message.eventType) {
+    if (message.source === FEC_GENESYS_CONST.SOURCE_GENESYS_HOST && message.eventType) {
       const { eventType, data } = message;
       this.processGenesysEvent(eventType, data);
     }
@@ -68,23 +67,23 @@ export default class fec_genesysSoftphone extends NavigationMixin(
 
   processGenesysEvent(eventType, data) {
     switch (eventType) {
-      case "InboundRinging":
-      case "OutboundEstablished":
+      case FEC_GENESYS_CONST.EVENT_INBOUND:
+      case FEC_GENESYS_CONST.EVENT_OUTBOUND:
         this.handleNewInteraction(eventType, data);
         break;
-      case "WrapupCall":
+      case FEC_GENESYS_CONST.EVENT_WRAPUP:
         this.handleWrapup(data);
         break;
       default:
         console.warn(
-          `[fec_genesysSoftphone] Event ${eventType} is not implemented.`,
+          `[fec_genesysSoftphone] Event ${eventType} is not implemented.`
         );
     }
   }
 
   handleNewInteraction(eventType, callData) {
 
-    const genesysResponse = {
+    const genesysResposnse = {
       type: eventType,
       phoneNumber: callData.DNIS || callData.ANI,
       genesysInteractionID: callData.GenesysInteractionID,
@@ -93,38 +92,25 @@ export default class fec_genesysSoftphone extends NavigationMixin(
       contractNum: callData.ContractNum,
       agentID: callData.agentID,
       campaignName: callData.campaignName,
-      method: "Genesys",
+      method: FEC_GENESYS_CONST.CHANNEL_GENESYS
     };
 
-    createInteraction({ request: genesysResponse })
-    .then((result) => {
-        if (result && result.isSuccess && result.recordId) {
-            this.currentInteractionCaseId = result.recordId;
-            console.info(`Đã tạo case: ${result.recordId}`);
-            this.navigateToRecord(result.recordId);
+    createInteraction({ request: genesysResposnse })
+      .then((result) => {
+        if (result.isSuccess) {
+          this.currentInteractionCaseId = result.recordId;
+          this.navigateToRecord(result.recordId);
         } else {
-            console.warn(result?.message || 'Create interaction failed.');
+          console.warn(`warning ${result.message}.`);
         }
-    })
-    .catch((error) => {
-        let errorMessage = 'Unexpected error occurred.';
-        
-        if (error?.body) {
-            errorMessage = Array.isArray(error.body)
-                ? error.body.map(e => e.message).join(', ')
-                : error.body.message;
-        } else if (error?.message) {
-            errorMessage = error.message;
-        }
-
-        console.error(errorMessage);
-    });
+      })
+      .catch((error) => {
+        const strErrorMessage = error.body ? error.body.message : error.message;
+        console.warn(`error ${strErrorMessage}.`);
+      });
   }
 
   handleWrapup(wrapupData) {
-    console.info(
-		`Wrap-up - Đã gửi dữ liệu Wrap-up (${wrapupData?.BusinessResult || ''})`
-	);
     this.currentInteractionCaseId = null;
   }
 
@@ -139,10 +125,6 @@ export default class fec_genesysSoftphone extends NavigationMixin(
     });
   }
 
-  showToast(title, message, variant) {
-    this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
-  }
-
   sendEventToGenesys(strAction, objPayload) {
     const iframe = this.template.querySelector(".iws-iframe");
 
@@ -153,7 +135,7 @@ export default class fec_genesysSoftphone extends NavigationMixin(
 
     if (iframe && iframe.contentWindow) {
       const message = {
-        source: "lwc_to_genesys",
+        source: FEC_GENESYS_CONST.SOURCE_LWC_TO_GENESYS,
         action: strAction,
         data: objPayload,
       };
@@ -161,27 +143,8 @@ export default class fec_genesysSoftphone extends NavigationMixin(
     }
   }
 
-  handleCallClick() {
-    const inputFields = this.template.querySelector(".fec-phone-input");
-    const strPhoneNumber = inputFields ? inputFields.value : "";
-
-    if (strPhoneNumber) {
-      this.handleMakeCall(strPhoneNumber);
-    } else {
-      this.showToast(
-        "Thông báo",
-        "Vui lòng nhập số điện thoại để thực hiện cuộc gọi.",
-        "warning",
-      );
-    }
-  }
-
-  handleSetReady() {
-    this.sendEventToGenesys("READY", {});
-  }
-
   handleMakeCall(phoneNumber) {
-    this.sendEventToGenesys("MAKE_CALL", {
+    this.sendEventToGenesys(FEC_GENESYS_CONST.ACTION_MAKE_CALL, {
       number: phoneNumber,
       params: null,
     });
