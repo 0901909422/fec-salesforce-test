@@ -10,6 +10,22 @@ global with sharing class FEC_IntegrationFraudService {
     public static final String FIELD_TYPE_AVAILABELVAL = 'AvailableValues';
 	public static final String FIELD_TYPE_ADDITIONALPROPERTY = 'AdditionalProperty';
 
+    public class IntegrationFraudField {
+        public final String GET_FRAUD_MASTER_DATA_RESPONSE = 'GetFraudMasterDataResponse';
+		public final String MASTER_DATA_ITEMS = 'MasterDataItems';
+		public final String MASTER_DATA_ID = 'ID';
+		public final String MASTER_DATA_NAME = 'Name';
+		public final String MASTER_DATA_NAMEVN = 'NameVN';
+		public final String MASTER_DATA_TYPE = 'Type';
+		public final String MASTER_DATA_APPLY_TO = 'ApplyTo';
+		public final String MASTER_DATA_POST_ORDER = 'PosOrder';
+		public final String MASTER_DATA_ADDITIONAL_PROPERTIES = 'AdditionalProperties';
+		public final String MASTER_DATA_CHILDRENT = 'Children';
+		public final String MASTER_DATA_MANDATORY = 'Mandatory';
+    }
+
+    IntegrationFraudField masterDataField = new IntegrationFraudField();
+
     /**
      * Synchronizes Fraud Master Data from the external integration source into Salesforce.
      *
@@ -22,6 +38,7 @@ global with sharing class FEC_IntegrationFraudService {
      * @return The total number of records inserted or updated.
      */
     public static Integer syncMasterDataIntegration() {
+        
         String integrationChannelId = getIntegrationChannelCode(DEFAULT_CHANNEL_INTEGRATION_CODE);
         // 1) Load ALL existing mapping records into a map for upsert comparison
         Map<String, FEC_Master_Data_Integration__c> existingMap = loadExisting(integrationChannelId);        
@@ -33,13 +50,13 @@ global with sharing class FEC_IntegrationFraudService {
 
         Dom.XmlNode root = doc.getRootElement();
         Dom.XmlNode body = getChildIgnoreNS(root, 'Body');
-        Dom.XmlNode response = findChildByEndsWith(body, 'GetFraudMasterDataResponse');
+        Dom.XmlNode response = findChildByEndsWith(body, masterDataField.GET_FRAUD_MASTER_DATA_RESPONSE);
 
         // Data to upsert
         Map<String, FEC_Master_Data_Integration__c> toUpsert = new Map<String, FEC_Master_Data_Integration__c>();
 
         for (Dom.XmlNode mdi : response.getChildElements()) {
-            if (mdi.getName() == 'MasterDataItems') {
+            if (mdi.getName() == masterDataField.MASTER_DATA_ITEMS) {
                 processMasterDataItem(mdi, null, '', toUpsert, existingMap, integrationChannelId);
             }
         }
@@ -100,14 +117,14 @@ global with sharing class FEC_IntegrationFraudService {
         Map<String, FEC_Master_Data_Integration__c> existingMap,
         String integrationChannelId
     ) {
-        String id = text(node, 'ID');
-        String name = text(node, 'Name');
-        String nameVN = text(node, 'NameVN');
-        String type = text(node, 'Type');
+        String id = text(node, masterDataField.MASTER_DATA_ID);
+        String name = text(node, masterDataField.MASTER_DATA_NAME);
+        String nameVN = text(node, masterDataField.MASTER_DATA_NAMEVN);
+        String type = text(node, masterDataField.MASTER_DATA_TYPE);
         String newPath = (path == '' ? name : path + ' > ' + name);
-        String applyTo = text(node, 'ApplyTo');
+        String applyTo = text(node, masterDataField.MASTER_DATA_APPLY_TO);
         applyTo = String.isBlank(applyTo) ? null : applyTo;
-        String posOrderStr = text(node, 'PosOrder');
+        String posOrderStr = text(node, masterDataField.MASTER_DATA_POST_ORDER);
         Integer posOrder = (posOrderStr != null && posOrderStr.trim() != '') ? Integer.valueOf(posOrderStr) : null;
 
         if (type != null && (
@@ -125,14 +142,14 @@ global with sharing class FEC_IntegrationFraudService {
 
         // AdditionalProperties
         for (Dom.XmlNode child : node.getChildElements()) {
-            if (child.getName() == 'AdditionalProperties') {
+            if (child.getName() == masterDataField.MASTER_DATA_ADDITIONAL_PROPERTIES) {
                 processAdditionalProperty(child, id, newPath, upsertMap, existingMap, integrationChannelId);
             }
         }
 
         // Children
         for (Dom.XmlNode child : node.getChildElements()) {
-            if (child.getName() == 'Children') {
+            if (child.getName() == masterDataField.MASTER_DATA_CHILDRENT) {
                 processMasterDataItem(child, id, newPath, upsertMap, existingMap, integrationChannelId);
             }
         }
@@ -163,15 +180,15 @@ global with sharing class FEC_IntegrationFraudService {
         Map<String, FEC_Master_Data_Integration__c> existingMap,
         String integrationChannelId
     ) {
-        String fieldId = text(node, 'ID');
-        String fieldName = text(node, 'Name');
-        String nameVN = text(node, 'NameVN');
-        String type = text(node, 'Type');
-        String mandStr = text(node, 'Mandatory');
+        String fieldId = text(node, masterDataField.MASTER_DATA_ID);
+        String fieldName = text(node, masterDataField.MASTER_DATA_NAME);
+        String nameVN = text(node, masterDataField.MASTER_DATA_NAMEVN);
+        String type = text(node, masterDataField.MASTER_DATA_TYPE);
+        String mandStr = text(node, masterDataField.MASTER_DATA_MANDATORY);
         Boolean mandatory = (mandStr != null && mandStr.toLowerCase() == 'true') ? true : false;
-        String applyTo = text(node, 'ApplyTo');
+        String applyTo = text(node, masterDataField.MASTER_DATA_APPLY_TO);
         applyTo = String.isBlank(applyTo) ? null : applyTo;
-        String posOrderStr = text(node, 'PosOrder');
+        String posOrderStr = text(node, masterDataField.MASTER_DATA_POST_ORDER);
         Integer posOrder = (posOrderStr != null && posOrderStr.trim() != '') ? Integer.valueOf(posOrderStr) : null;
 
 
@@ -186,12 +203,12 @@ global with sharing class FEC_IntegrationFraudService {
         // Available Values
         for (Dom.XmlNode child : node.getChildElements()) {
             if (child.getName() == FIELD_TYPE_AVAILABELVAL) {
-                String valId = text(child, 'ID');
-                String valName = text(child, 'Name');
-                String valNameVN = text(child, 'NameVN');
-                applyTo = text(child, 'ApplyTo');
+                String valId = text(child, masterDataField.MASTER_DATA_ID);
+                String valName = text(child, masterDataField.MASTER_DATA_NAME);
+                String valNameVN = text(child, masterDataField.MASTER_DATA_NAMEVN);
+                applyTo = text(child, masterDataField.MASTER_DATA_APPLY_TO);
                 applyTo = String.isBlank(applyTo) ? null : applyTo;
-                posOrderStr = text(child, 'PosOrder');
+                posOrderStr = text(child, masterDataField.MASTER_DATA_POST_ORDER);
                 posOrder = (posOrderStr != null && posOrderStr.trim() != '') ? Integer.valueOf(posOrderStr) : null;
 
                 upsertNode(
