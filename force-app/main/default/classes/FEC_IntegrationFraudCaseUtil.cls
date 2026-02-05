@@ -11,9 +11,37 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
     public static final Integer SERVER_ERROR = 500;    
     public static final Integer UNPROCESSABLE_ENTITY = 522;
 
+    public static final String MIME_PDF  = 'application/pdf';
+    public static final String MIME_DOC  = 'application/msword';
+    public static final String MIME_DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    public static final String MIME_XLS  = 'application/vnd.ms-excel';
+    public static final String MIME_XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    public static final String MIME_PNG  = 'image/png';
+    public static final String MIME_JPG  = 'image/jpeg';
+    public static final String MIME_DEFAULT = 'application/octet-stream';
+
     public static final String FRAUD_SERVICE_SOAP_ENDPOINT = 'http://cf-webapp-uat02.deltavn.vn:3033/Soap/SCLService.svc';
     
-    
+    public class IntegrationField {
+        public final String CASEFH = 'FH-';
+		public final String CASEBU = 'BU-';
+		public final String CASETK = 'TK-';
+        public final String UIC = 'UIC';
+		public final String UIC_VALUE = 'CS';
+		public final String RESULTDETAILCODE = 'RESULTDETAILCODE';
+		public final String RESULTDETAILCODE_VALUE = 'CUS';
+		public final String PHONE_FIELD = 'Phone';
+		public final String CONTRACT_NUMBER_FIELD = 'ContractNumbers';
+		public final String NATIONS_FIELD = 'NationalIDs';
+		public final String NATION_FIELD = 'NationalID';
+		public final String ACCOUNT_NUMBER_FIELD = 'AccountNumber';
+		public final String CASE_RESULT_INFO = 'CaseResultInfo';		
+		public final String ORIGINAL_REQUEST = 'OriginalRequest';
+		public final String REQUEST_INFO = 'RequestInfo';
+		public final String CREATOR_INFO = 'CreatorInfo';
+		public final String CUSTOMER_INFO = 'CustomerInfo';
+		public final String ADDITIONAL_INFO = 'AdditionalInfo';
+    }
 
     /**
      * Represents a dynamic validation rule for a UI field that is configured
@@ -124,6 +152,39 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         public String xmlData;
     }
     
+    // Mapping between file extensions and their corresponding MIME types
+    // Key   : file extension (without dot)
+    // Value : MIME type constant
+    public static final Map<String, String> MIME_BY_EXT = new Map<String, String>{
+        'pdf'  => MIME_PDF,
+        'doc'  => MIME_DOC,
+        'docx' => MIME_DOCX,
+        'xls'  => MIME_XLS,
+        'xlsx' => MIME_XLSX,
+        'png'  => MIME_PNG,
+        'jpg'  => MIME_JPG,
+        'jpeg' => MIME_JPG
+    };
+
+    /**
+     * Returns the MIME type based on a file extension.
+     *
+     * @param ext File extension (e.g. "pdf", "jpg", "docx")
+     * @return Corresponding MIME type if found; otherwise returns MIME_DEFAULT
+     */
+    public static String getMimeType(String ext) {
+        // If extension is null, empty, or whitespace → return default MIME type
+        if (String.isBlank(ext)) {
+            return MIME_DEFAULT;
+        }
+
+        // Convert extension to lowercase to make lookup case-insensitive
+        // If the extension exists in the map, return its MIME type
+        // Otherwise, fall back to the default MIME type
+        return MIME_BY_EXT.get(ext.toLowerCase()) != null
+            ? MIME_BY_EXT.get(ext.toLowerCase())
+            : MIME_DEFAULT;
+    }
     
     
     /**

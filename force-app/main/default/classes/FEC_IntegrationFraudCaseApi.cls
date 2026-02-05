@@ -35,26 +35,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
     
    
 
-    public class IntegrationField {
-        public final String CASEFH = 'FH-';
-		public final String CASEBU = 'BU-';
-		public final String CASETK = 'TK-';
-        public final String UIC = 'UIC';
-		public final String UIC_VALUE = 'CS';
-		public final String RESULTDETAILCODE = 'RESULTDETAILCODE';
-		public final String RESULTDETAILCODE_VALUE = 'CUS';
-		public final String PHONE_FIELD = 'Phone';
-		public final String CONTRACT_NUMBER_FIELD = 'ContractNumbers';
-		public final String NATIONS_FIELD = 'NationalIDs';
-		public final String NATION_FIELD = 'NationalID';
-		public final String ACCOUNT_NUMBER_FIELD = 'AccountNumber';
-		public final String CASE_RESULT_INFO = 'CaseResultInfo';		
-		public final String ORIGINAL_REQUEST = 'OriginalRequest';
-		public final String REQUEST_INFO = 'RequestInfo';
-		public final String CREATOR_INFO = 'CreatorInfo';
-		public final String CUSTOMER_INFO = 'CustomerInfo';
-		public final String ADDITIONAL_INFO = 'AdditionalInfo';
-    }
+    
 
     /**
      * Entry point for updating fraud case status from external systems.
@@ -73,7 +54,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
 
         Dom.Document responseDoc;
         String responseStr;
-        IntegrationField caseField = new IntegrationField();
+        FEC_IntegrationFraudCaseUtil.IntegrationField caseField = new FEC_IntegrationFraudCaseUtil.IntegrationField();
     
         String requestBody = RestContext.request.requestBody.toString();
         String serviceName = 'UpdateFraudCaseStatus';
@@ -246,7 +227,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
      */
     private static String processFHCase(Map<String,Object> detail, String xmlData) {
         String msg = null;
-        IntegrationField caseField = new IntegrationField();
+        FEC_IntegrationFraudCaseUtil.IntegrationField caseField = new FEC_IntegrationFraudCaseUtil.IntegrationField();
         try {
             // 2) Parse XML
             Dom.Document doc = new Dom.Document();            
@@ -484,7 +465,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
     private static String processBUCase(Map<String,Object> detail, String xmlData) {
         log('Enter processBUCase');
         String msg = null;
-        IntegrationField caseField = new IntegrationField();
+        FEC_IntegrationFraudCaseUtil.IntegrationField caseField = new FEC_IntegrationFraudCaseUtil.IntegrationField();
         try {
             // 2) Parse XML
             Dom.Document doc = new Dom.Document();
@@ -631,7 +612,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
     private static String processTKCase(Map<String,Object> detail, String xmlData) {
         log('Enter processTKCase');
         String msg = null;
-        IntegrationField caseField = new IntegrationField();
+        FEC_IntegrationFraudCaseUtil.IntegrationField caseField = new FEC_IntegrationFraudCaseUtil.IntegrationField();
         try {
             Boolean isUicCS = false;
             Boolean isResultDetailCode = false;
@@ -889,7 +870,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
         FEC_Integration_Case__c parentRec,
         List<FEC_Integration_Case_Info__c> newInfos
     ) {
-        IntegrationField caseField = new IntegrationField();
+        FEC_IntegrationFraudCaseUtil.IntegrationField caseField = new FEC_IntegrationFraudCaseUtil.IntegrationField();
         try {
             log('==================== processSFTCase START ====================');
             log('Input caseId        = ' + caseId);
