@@ -216,24 +216,24 @@ public with sharing class FEC_UpdateCustomerContact {
     String transId,
     String timestamp
   ) {
-    if (String.isBlank(transId)) {
-      throw new FEC_APIServiceException('Transaction ID is required.');
+    if (String.isBlank(transId) || transId.length() > 36) {
+      throw new FEC_APIServiceException(System.Label.FEC_MSG_TransID_Null);
     }
 
     if (String.isBlank(timestamp)) {
-      throw new FEC_APIServiceException('DateTime is required.');
+      throw new FEC_APIServiceException(System.Label.FEC_MSG_Datetime_Null);
     }
 
     if (String.isBlank(req.CIFNumber)) {
-      throw new FEC_APIServiceException('CIFNumber is required.');
+      throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CIFNumber'}));
     } else if (!FEC_CommonUltils.isLengthValid(req.CIFNumber, 255)) {
       throw new FEC_APIServiceException(
-        'CIFNumber exceeds maximum length of 255 characters.'
+        String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'CIFNumber', '255'})
       );
     }
 
     if (String.isBlank(req.Channel)) {
-      throw new FEC_APIServiceException('Channel is required.');
+      throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Channel'}));
     } else {
       List<FEC_CommonUltils.PicklistOption> channelOptionlst = FEC_CommonUltils.getPicklistOptions(
         'Case',
@@ -246,17 +246,17 @@ public with sharing class FEC_UpdateCustomerContact {
       }
 
       if (!validChannellst.contains(req.Channel)) {
-        throw new FEC_APIServiceException('Channel is invalid.');
+        throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'Channel'}));
       }
     }
 
     if (String.isBlank(req.CommunicationType)) {
-      throw new FEC_APIServiceException('CommunicationType is required.');
+      throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CommunicationType'}));
     } else {
       Set<String> validTypelst = new Set<String>{ 'Primary Phone', 'Email' };
 
       if (!validTypelst.contains(req.CommunicationType)) {
-        throw new FEC_APIServiceException('CommunicationType is invalid.');
+        throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'CommunicationType'}));
       }
 
       if (
@@ -267,7 +267,7 @@ public with sharing class FEC_UpdateCustomerContact {
       ) {
         // valid
         throw new FEC_APIServiceException(
-          'ContactString must be a valid phone number or email address.'
+          String.format(System.Label.FEC_MSG_Invalid, new List<String>{'ContactString'})
         );
       }
     }
@@ -286,8 +286,9 @@ public with sharing class FEC_UpdateCustomerContact {
       WHERE Id = :caseId
     ];
 
-    if (caselst.isEmpty())
-      throw new FEC_APIServiceException('Case Id is invalid.');
+    if (caselst.isEmpty()) {
+      throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Case Id'}));
+    }
 
     Case selectedCase = caselst.get(0);
     CustomerContactRequest req = new CustomerContactRequest();

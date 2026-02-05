@@ -98,7 +98,7 @@ public with sharing class FEC_InteractionHighlightController {
             
             return result;
         } catch (Exception e) {
-            throw new AuraHandledException('Error retrieving interaction highlight data: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
     

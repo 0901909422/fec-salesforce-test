@@ -63,5 +63,10 @@
 		<members>FEC_API_Config.FEC_Update_Customer_Contact</members>
 		<name>CustomMetadata</name>
 	</types>
+	<types>
+        <members>FEC_MSG_Not_Found</members>
+        <members>FEC_MSG_Invalid</members>
+        <name>CustomLabel</name>
+    </types>
     <version>65.0</version>
 </Package>

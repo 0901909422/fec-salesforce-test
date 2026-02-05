@@ -168,11 +168,12 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
   // VALIDATION HELPERS
   // ==========================================
   private static void validateInput(CustomerBasicInfo info) {
-    if (info == null)
-      throw new FEC_APIServiceException('Data is required.');
+    if (info == null) {
+      throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Request Data'}));
+    }
 
     if (String.isBlank(info.cifNumber)) {
-      throw new FEC_APIServiceException('CIFNumber is required.');
+      throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
     }
 
     if (String.isNotBlank(info.gender)) {
@@ -187,7 +188,7 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
       }
 
       if (!validGenderlst.contains(info.gender)) {
-        throw new FEC_APIServiceException('Gender is invalid.');
+        throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'Gender'}));
       }
     }
 
@@ -200,7 +201,7 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
       !FEC_CommonUltils.isValidDateByFormat(info.birthday)
     ) {
       throw new FEC_APIServiceException(
-        'Birthday must be in the format YYYY-MM-DD.'
+        String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{'Birthday', info.birthday})
       );
     }
 
@@ -229,10 +230,7 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
   ) {
     if (String.isNotBlank(value) && value.length() > length) {
       throw new FEC_APIServiceException(
-        fieldName +
-          ' exceeds maximum length of ' +
-          String.valueOf(length) +
-          ' characters.'
+        String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{fieldName, String.valueOf(length)})
       );
     }
   }
@@ -345,8 +343,9 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
       WHERE Id = :caseId
     ];
 
-    if (caselst.isEmpty())
-      throw new FEC_APIServiceException('Case Id is invalid.');
+    if (caselst.isEmpty()) {
+      throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Case Id'}));
+    }
 
     Case selectedCase = caselst.get(0);
 

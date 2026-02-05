@@ -629,8 +629,9 @@ public with sharing class FEC_CaseBusinessService {
         WHERE Id = :caseId
       ];
 
-      if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+      if (caselst.isEmpty()) {
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Case Id'}));
+      }
 
       Case updatedCase = caselst.get(0);
 
@@ -669,7 +670,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (changelst.isEmpty()) {
-        throw new CaseBusinessServiceException('Cannot find Stage Change.');
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Stage Change'}));
       }
 
       FEC_Stage_Change__c selectedChange = changelst.get(0);
@@ -723,8 +724,9 @@ public with sharing class FEC_CaseBusinessService {
         WHERE Id = :caseId
       ];
 
-      if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+      if (caselst.isEmpty()) {
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Case Id'}));
+      }
 
       Case updatedCase = caselst.get(0);
 
@@ -818,8 +820,9 @@ public with sharing class FEC_CaseBusinessService {
       WHERE Id = :natureOfCaseId
     ];
 
-    if (sourcelst.isEmpty())
-      throw new CaseBusinessServiceException('Nature of Case Id is invalid.');
+    if (sourcelst.isEmpty()) {
+      throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Nature of Case'}));
+    }
 
     FEC_Nature_of_Case__c src = sourcelst.get(0);
 
@@ -870,8 +873,9 @@ public with sharing class FEC_CaseBusinessService {
       // AND FEC_Stage_Name__c = :stageNameId
     ];
 
-    if (sourcelst.isEmpty())
-      throw new CaseBusinessServiceException('No Master Data Setting found.');
+    if (sourcelst.isEmpty()) {
+      throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Master Data Setting'}));
+    }
 
     List<FEC_Actual_Master_Data_Setting__c> targetlst = new List<FEC_Actual_Master_Data_Setting__c>();
 
