@@ -2,6 +2,7 @@ public with sharing class FEC_ConstantCommon {
     
     public static final String API_CONTENT_TYPE = 'text/xml; charset=utf-8';
     public static final String API_CONTENT_TYPE_JSON = 'application/json';
+    public static final String API_METHOD_POST = 'POST';
     public static final String SOAP_ENV = 'http://schemas.xmlsoap.org/soap/envelope/';
 
     public static final String STR_DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS';
@@ -18,6 +19,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
     public static final String CHANNEL_INBOUND_NAME = 'Inbound';
     public static final String CHANNEL_OUTBOUND_NAME = 'Outbound';
+    public static final String CHANNEL_ZALO = 'ZALO';
+    public static final String CHANNEL_WEBSITE = 'WEBSITE';
+    public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
 
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
@@ -38,4 +42,12 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
     public static final String REQUESTOR_APS = 'APS';
     public static final String REQUESTOR_SD = 'SD';
+    public static final String REQUESTOR_RES = 'RES';
+    public static final String REQUESTOR_PEGA = 'PEGA';
+
+    public static final String ADDRESS_TYPE_CURRES = 'CURRES';
+    public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
+    public static final String ADDRESS_TYPE_OFFICE = 'OFFICE';
+
+    public static final String TEXT_YES = 'Yes';
 }
