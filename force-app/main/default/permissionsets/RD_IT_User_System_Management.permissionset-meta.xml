@@ -9,6 +9,14 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_CommonUltils</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ConstantCommon</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CardInfoController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -142,6 +150,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_MainInfoController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_MockupEndpoint</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
