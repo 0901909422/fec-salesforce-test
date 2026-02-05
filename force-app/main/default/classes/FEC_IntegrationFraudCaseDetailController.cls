@@ -52,6 +52,7 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
         log('[START] getFraudCaseDetail');
         log('Input caseId = ' + caseId);
         log('==============================');
+        FEC_IntegrationFraudCaseUtil.IntegrationField caseField = new FEC_IntegrationFraudCaseUtil.IntegrationField();
 
         if (String.isBlank(caseId)) {
             throw new AuraHandledException(ERR_CASEID_REQUIRED);
@@ -198,7 +199,7 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
 
         for (FEC_Integration_Case__c c : hierarchy) {
 
-            if (!c.FEC_CaseID__c.startsWith('TK-')) continue;
+            if (!c.FEC_CaseID__c.startsWith(caseField.CASETK)) continue;
 
             Map<String, String> taskInfoMap = new Map<String, String>();
 

@@ -2,6 +2,7 @@ import { LightningElement, wire, track } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 import getFraudCaseDetail from '@salesforce/apex/FEC_IntegrationFraudCaseDetailController.getFraudCaseDetail';
 
+
 import LBL_FraudCaseDetail from '@salesforce/label/c.LBL_FraudCaseDetail';
 import LBL_LoadingFraudCase from '@salesforce/label/c.LBL_LoadingFraudCase';
 import LBL_FraudCaseId from '@salesforce/label/c.LBL_FraudCaseID';
@@ -184,45 +185,7 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
     get fraudConclusion() {        
         return this.mainCase?.FEC_Investigation_Conclusion__c || '';
     }
-    // ===============================
-    // FILE DOWNLOAD (AUTO)
-    // ===============================
-    // handleFileDownload(event) {
-    //     const rawValue = event.currentTarget.dataset.base64;    
-    //     if (!rawValue) {
-    //         console.error('File value is empty');
-    //         return;
-    //     }
-
-    //     const parts = rawValue.split('|');
-    //     if (parts.length < 3) {
-    //         console.error('Invalid file format');
-    //         return;
-    //     }
-
-    //     const fileName = parts[0];
-    //     const extension = parts[1].toLowerCase();
-    //     const base64Data = parts[2];
-    //     console.log('fileName: ', fileName);
-    //     console.log('extension: ', extension);
-    //     const blob = this.base64ToBlob(
-    //         base64Data,
-    //         this.getMimeType(extension)
-    //     );
-
-    //     const url = URL.createObjectURL(blob);
-    //     console.log('url: ', url);
-    //     const a = document.createElement('a');
-    //     a.href = url;
-    //     a.download = fileName;
-    //     document.body.appendChild(a);
-    //     a.click();
-
-    //     setTimeout(() => {
-    //         document.body.removeChild(a);
-    //         URL.revokeObjectURL(url);
-    //     }, 100);
-    // }
+   
     handleFileDownload(event) {
         console.log('dataset:', JSON.stringify(event.currentTarget.dataset));
         const rawValue = event.currentTarget.dataset.base64; 
@@ -241,9 +204,9 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
         const extension = parts[1];
         const contentDocumentId = parts[2];
     
-        console.log('fileName:', fileName);
-        console.log('extension:', extension);
-        console.log('contentDocumentId:', contentDocumentId);
+        //console.log('fileName:', fileName);
+        //console.log('extension:', extension);
+        //console.log('contentDocumentId:', contentDocumentId);
     
         // Native Salesforce file download
         const downloadUrl = `/sfc/servlet.shepherd/document/download/${contentDocumentId}`;
@@ -261,28 +224,6 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
         }
 
         return new Blob([byteNumbers], { type: mimeType });
-    }
-
-    getMimeType(ext) {
-        switch (ext) {
-            case 'pdf':
-                return 'application/pdf';
-            case 'doc':
-                return 'application/msword';
-            case 'docx':
-                return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-            case 'xls':
-                return 'application/vnd.ms-excel';
-            case 'xlsx':
-                return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-            case 'png':
-                return 'image/png';
-            case 'jpg':
-            case 'jpeg':
-                return 'image/jpeg';
-            default:
-                return 'application/octet-stream';
-        }
     }
 
 }
