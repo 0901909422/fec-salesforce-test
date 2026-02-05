@@ -254,14 +254,14 @@ public with sharing class FEC_MainInfoController {
             }
 
             addr.FEC_Address__c = buildFullAddress(ai);
-            addr.FEC_Mailing_Address__c = 'Yes';
+            addr.FEC_Mailing_Address__c = FEC_ConstantCommon.TEXT_YES;
 
             result.toUpdate.add(addr);
 
             AddressDTO dto = new AddressDTO();
             dto.addressType = type;
             dto.address = addr.FEC_Address__c;
-            dto.mailingAddress = 'Yes';
+            dto.mailingAddress = FEC_ConstantCommon.TEXT_YES;
             result.dtoList.add(dto);
         }
 

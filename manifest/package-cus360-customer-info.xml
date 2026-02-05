@@ -36,6 +36,7 @@
 		<members>fec_SecondaryInfo</members>
         <members>fec_ApplicationsList</members>
         <members>fec_CommonUtils</members>
+		<members>fec_CommonConst</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>

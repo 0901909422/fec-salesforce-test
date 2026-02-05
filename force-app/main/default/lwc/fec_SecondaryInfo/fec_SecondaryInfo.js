@@ -2,6 +2,7 @@ import { LightningElement, api, track } from 'lwc';
 import { maskWorkPhone } from 'c/fec_CommonUtils';
 import loadSecondaryInfo from '@salesforce/apex/FEC_SecondaryController.loadSecondaryInfo';
 import logSensitiveFromSecondaryInfo from '@salesforce/apex/FEC_SecondaryController.logSensitiveFromSecondaryInfo';
+
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 import FEC_Self_Service_Channel_Label from '@salesforce/label/c.FEC_Self_Service_Channel_Label';
 import FEC_Contact_List_Label from '@salesforce/label/c.FEC_Contact_List_Label';
@@ -12,6 +13,8 @@ import FEC_Website_Account_Label from '@salesforce/label/c.FEC_Website_Account_L
 import FEC_Email_Label from '@salesforce/label/c.FEC_Email_Label';
 import FEC_Work_Phone_Label from '@salesforce/label/c.FEC_Work_Phone_Label';
 
+import { STR_NA } from 'c/fec_CommonConst';
+
 export default class Fec_SecondaryInfo extends LightningElement {
 
     @api recordId;
@@ -19,11 +22,11 @@ export default class Fec_SecondaryInfo extends LightningElement {
     @track hasData = false;
     @track error;
 
-    @track zaloFollower = 'N/A';
-    @track websiteAccount = 'N/A';
-    @track mobileAppAccount = 'N/A';
-    @track email = 'N/A';
-    @track workPhone = 'N/A';
+    @track zaloFollower = STR_NA;
+    @track websiteAccount = STR_NA;
+    @track mobileAppAccount = STR_NA;
+    @track email = STR_NA;
+    @track workPhone = STR_NA;
     @track reference = [];
 
     /* ===== MASK STATE ===== */
@@ -57,11 +60,11 @@ export default class Fec_SecondaryInfo extends LightningElement {
     loadData() {
         loadSecondaryInfo({ caseId: this.recordId })
             .then(res => {
-                this.zaloFollower     = res.zaloFollower || 'N/A';
-                this.websiteAccount   = res.websiteAccount || 'N/A';
-                this.mobileAppAccount = res.mobileAppAccount || 'N/A';
-                this.email            = res.email || 'N/A';
-                this.workPhone        = res.workPhone || 'N/A';
+                this.zaloFollower     = res.zaloFollower || STR_NA;
+                this.websiteAccount   = res.websiteAccount || STR_NA;
+                this.mobileAppAccount = res.mobileAppAccount || STR_NA;
+                this.email            = res.email || STR_NA;
+                this.workPhone        = res.workPhone || STR_NA;
                  this.reference       = res.references || [];
                 this.hasData = true;
             })
@@ -95,7 +98,7 @@ export default class Fec_SecondaryInfo extends LightningElement {
 
     /* ===== DISPLAY VALUE ===== */
     get displayWorkPhone() {
-        if (!this.workPhone || this.workPhone === 'N/A') {
+        if (!this.workPhone || this.workPhone === STR_NA) {
             return this.workPhone;
         }
 
