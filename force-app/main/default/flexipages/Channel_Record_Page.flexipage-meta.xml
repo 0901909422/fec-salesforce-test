@@ -7,6 +7,30 @@
                     <name>uiBehavior</name>
                     <value>required</value>
                 </fieldInstanceProperties>
+                <fieldItem>Record.Name</fieldItem>
+                <identifier>RecordNameField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>required</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Channel_Vietnamese_name__c</fieldItem>
+                <identifier>RecordFEC_Channel_Vietnamese_name_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <name>Facet-05d60a3a-82a9-469d-b50e-2ef5f573c5ae</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>required</value>
+                </fieldInstanceProperties>
                 <fieldItem>Record.FEC_Channel_ID__c</fieldItem>
                 <identifier>RecordFEC_Channel_ID_cField</identifier>
             </fieldInstance>
@@ -29,30 +53,6 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.FEC_Self_Service_Flag__c</fieldItem>
                 <identifier>RecordFEC_Self_Service_Flag_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <name>Facet-05d60a3a-82a9-469d-b50e-2ef5f573c5ae</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.Name</fieldItem>
-                <identifier>RecordNameField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>required</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Channel_Vietnamese_name__c</fieldItem>
-                <identifier>RecordFEC_Channel_Vietnamese_name_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-00661732-d406-459a-9d1c-23bbb3c59540</name>
@@ -283,6 +283,10 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
+                <componentInstanceProperties>
+                    <name>label</name>
+                    <value>Tabs</value>
+                </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>tabs</name>
                     <value>maintabs</value>

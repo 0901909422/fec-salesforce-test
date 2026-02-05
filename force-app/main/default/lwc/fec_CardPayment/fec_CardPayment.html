@@ -1,0 +1,99 @@
+<template>
+    <div class="slds-accordion">
+        <section class={sectionClass}>
+            <div class="slds-accordion__summary" onclick={handleCardPaymentToggle}>
+                <h3 class="slds-accordion__summary-heading">
+                    <span class="slds-accordion__summary-content slds-grid">
+                        <lightning-icon 
+                            icon-name={cardPaymentIconName} 
+                            size="x-small" 
+                            class="slds-m-right_x-small">
+                        </lightning-icon>
+                        <span>
+                            {customLabel.cardPaymentLabel}
+                            <template if:true={hasError}>
+                                <span class="error-text"> - {ERROR_MESSAGE}</span>
+                            </template>
+                        </span>
+                    </span>
+                </h3>
+            </div>
+            <div class={cardPaymentContentClass}>
+                <!-- Refresh Instruction -->
+                <div class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
+                    {customLabel.msgCardPaymentRefresh}
+                </div>
+                
+                <!-- Payment Summary - Chỉ hiển thị khi không có lỗi -->
+                <template if:true={showPaymentSummary}>
+                    <div class="slds-grid slds-wrap slds-gutters_small slds-m-bottom_medium">
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
+                                <div class="slds-col slds-text-color_default">
+                                    <div class="slds-text-title_bold slds-text-color_error">
+                                        {customLabel.fullPaymentAmountLabel}
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-text-align_right slds-text-heading_small">
+                                    <span class={isFullPaymentAmountNegative}>{formattedFullPaymentAmount}</span>
+                                </div>
+                            </div>
+
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <div class="slds-col slds-text-color_default">
+                                    <div class="slds-text-title_bold payment-field-label-gray">
+                                        {customLabel.loanBalanceLabel}
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-text-align_right slds-text-heading_small">
+                                    <span class={isLoanBalanceNegative}>{formattedLoanBalance}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
+                                <div class="slds-col slds-text-color_default">
+                                    <div class="slds-text-title_bold payment-field-label-gray">
+                                        {customLabel.fullPaymentWithoutIPPLabel}
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-text-align_right slds-text-heading_small">
+                                    <span class={isFullPaymentWithoutIPPNegative}>{formattedFullPaymentWithoutIPP}</span>
+                                </div>
+                            </div>
+
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <div class="slds-col slds-text-color_default">
+                                    <div class="slds-text-title_bold payment-field-label-gray">
+                                        {customLabel.fullIPPPaymentAmountLabel}
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-text-align_right slds-text-heading_small">
+                                    <span class={isFullIPPPaymentAmountNegative}>{formattedFullIPPPaymentAmount}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                
+                <!-- Loading Spinner -->
+                <template if:true={isLoading}>
+                    <div class="slds-is-relative slds-m-vertical_large">
+                        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                    </div>
+                </template>
+                
+                <!-- Card Payment Table with Pagination -->
+                <template if:false={isLoading}>
+                    <c-fec_-related-list-paging
+                        columns={columns}
+                        records={cardPaymentData}
+                        updated-time={updatedTime}
+                        hide-row-number={hideRowNumber}>
+                    </c-fec_-related-list-paging>
+                </template>
+            </div>
+        </section>
+    </div>
+</template>

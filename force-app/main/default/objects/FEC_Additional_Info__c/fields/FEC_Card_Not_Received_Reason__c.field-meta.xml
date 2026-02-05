@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Card_Not_Received_Reason__c</fullName>
+    <description>Lý do không đồng ý giữ thẻ</description>
+    <label>Card Not Received Reason</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Borrowing from Other Provider</fullName>
+                <default>false</default>
+                <label>Borrowing from Other Provider</label>
+            </value>
+            <value>
+                <fullName>After Business Hours Only</fullName>
+                <default>false</default>
+                <label>After Business Hours Only</label>
+            </value>
+            <value>
+                <fullName>Do Not Want Card</fullName>
+                <default>false</default>
+                <label>Do Not Want Card</label>
+            </value>
+            <value>
+                <fullName>Cannot Take Calls During Work</fullName>
+                <default>false</default>
+                <label>Cannot Take Calls During Work</label>
+            </value>
+            <value>
+                <fullName>Pickup at Post Office/Branch</fullName>
+                <default>false</default>
+                <label>Pickup at Post Office/Branch</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
