@@ -24,7 +24,7 @@ global with sharing class FEC_IntegrationFraudService {
 		public final String MASTER_DATA_MANDATORY = 'Mandatory';
     }
 
-    IntegrationFraudField masterDataField = new IntegrationFraudField();
+    
 
     /**
      * Synchronizes Fraud Master Data from the external integration source into Salesforce.
@@ -38,8 +38,8 @@ global with sharing class FEC_IntegrationFraudService {
      * @return The total number of records inserted or updated.
      */
     public static Integer syncMasterDataIntegration() {
-        
-        String integrationChannelId = getIntegrationChannelCode(DEFAULT_CHANNEL_INTEGRATION_CODE);
+        IntegrationFraudField masterDataField = new IntegrationFraudField();
+        String integrationChannelId = getIntegrationChannelCode(FEC_IntegrationFraudCaseUtil.DEFAULT_CHANNEL_INTEGRATION_CODE);
         // 1) Load ALL existing mapping records into a map for upsert comparison
         Map<String, FEC_Master_Data_Integration__c> existingMap = loadExisting(integrationChannelId);        
 
@@ -117,6 +117,7 @@ global with sharing class FEC_IntegrationFraudService {
         Map<String, FEC_Master_Data_Integration__c> existingMap,
         String integrationChannelId
     ) {
+        IntegrationFraudField masterDataField = new IntegrationFraudField();
         String id = text(node, masterDataField.MASTER_DATA_ID);
         String name = text(node, masterDataField.MASTER_DATA_NAME);
         String nameVN = text(node, masterDataField.MASTER_DATA_NAMEVN);
@@ -180,6 +181,7 @@ global with sharing class FEC_IntegrationFraudService {
         Map<String, FEC_Master_Data_Integration__c> existingMap,
         String integrationChannelId
     ) {
+        IntegrationFraudField masterDataField = new IntegrationFraudField();
         String fieldId = text(node, masterDataField.MASTER_DATA_ID);
         String fieldName = text(node, masterDataField.MASTER_DATA_NAME);
         String nameVN = text(node, masterDataField.MASTER_DATA_NAMEVN);
