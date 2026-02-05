@@ -1,5 +1,5 @@
 import { LightningElement, api, track } from 'lwc';
-import { sortData } from 'c/fecUtils';
+import { sortData, FILTER_ACTION } from 'c/fecUtils';
 
 export default class FecCustomDatatable extends LightningElement {
     @api keyField = 'id';
@@ -69,7 +69,7 @@ export default class FecCustomDatatable extends LightningElement {
     handleHeaderAction(event) {
         const actionName = event.detail.action.name;
         const colDef = event.detail.columnDefinition;
-        if (actionName === 'filter_action') {
+        if (actionName === FILTER_ACTION) {
             this.currentFilterColumn = colDef.fieldName;
             this.currentFilterLabel = colDef.label;
             this.prepareOptions(colDef.fieldName);
@@ -144,7 +144,7 @@ export default class FecCustomDatatable extends LightningElement {
                 return {
                     ...col,
                     actions: col.actions.map(a => 
-                        a.name === 'filter_action' ? { ...a, checked: isFiltered } : a
+                        a.name === FILTER_ACTION ? { ...a, checked: isFiltered } : a
                     )
                 };
             }

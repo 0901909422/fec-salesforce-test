@@ -81,6 +81,10 @@
         <label>Tên File</label>
     </customLabels>
     <customLabels>
+        <name>FEC_Lbl_No_File_Chosen</name>
+        <label>Chưa có tệp nào được chọn</label>
+    </customLabels>
+    <customLabels>
         <name>FEC_Lbl_Status</name>
         <label>Tình trạng</label>
     </customLabels>

@@ -1,5 +1,5 @@
 import { LightningElement, track, wire } from 'lwc';
-import { HEADER_ACTIONS } from 'c/fecUtils';
+import { HEADER_ACTIONS, VIEW_HISTORY_ACTION, EDIT_ACTION } from 'c/fecUtils';
 import { refreshApex } from '@salesforce/apex';
 import getUploadedConfigs from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getUploadedConfigs';
 import getExistingConfigs from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getExistingConfigs';
@@ -33,7 +33,7 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
 
     @track columnsProcessed = [
         { 
-            label: LBL_DATA_LINKAGE, // Dùng biến import
+            label: LBL_DATA_LINKAGE, 
             fieldName: 'FEC_KeyIdentifier__c', type: 'text', sortable: true,
             actions: HEADER_ACTIONS 
         }, 
@@ -67,7 +67,7 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
             initialWidth: 100, 
             typeAttributes: { 
                 label: LBL_HISTORY, 
-                name: 'view_history', 
+                name: VIEW_HISTORY_ACTION, 
                 variant: 'brand-outline' 
             }
         },
@@ -76,7 +76,7 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
             fixedWidth: 50, 
             typeAttributes: { 
                 iconName: 'utility:edit', 
-                name: 'edit', 
+                name: EDIT_ACTION, 
                 variant: 'bare' 
             }
         }
@@ -93,7 +93,7 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
             fixedWidth: 50, 
             typeAttributes: { 
                 iconName: 'utility:edit', 
-                name: 'edit', 
+                name: EDIT_ACTION, 
                 variant: 'bare'
             } 
         }
@@ -134,7 +134,7 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
 
     @wire(getExistingConfigs)
     wiredProcessed(result) {
-        this.wiredProcessedResults = result; // Lưu lại để refreshApex
+        this.wiredProcessedResults = result;
         if (result.data) {
             this.processedData = result.data;
         }
@@ -144,14 +144,14 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
     handleProcessedRowAction(event) {
         const action = event.detail.action.name;
         const row = event.detail.row;
-        if (action === 'view_history') this.openHistoryModal(row);
-        else if (action === 'edit') this.openEditModal(row);
+        if (action === VIEW_HISTORY_ACTION) this.openHistoryModal(row);
+        else if (action === EDIT_ACTION) this.openEditModal(row);
     }
     
     handleUploadedRowAction(event) {
         const action = event.detail.action.name;
         const row = event.detail.row;
-        if (action === 'edit') {
+        if (action === EDIT_ACTION) {
             this.openEditModal(row);
         }
     }

@@ -14,7 +14,7 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
         return Database.getQueryLocator([
             SELECT Id, FEC_KeyIdentifier__c, FEC_FieldID__c 
             FROM FEC_CustomerAdditionalInfoConfig__c 
-            WHERE FEC_Status__c = 'Uploaded'
+            WHERE FEC_Status__c = :FEC_ConstantCommon.UPLOADED_STATUS
         ]);
     }
 
@@ -33,7 +33,7 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
                            ContentDocument.LatestPublishedVersion.Description
                     FROM ContentDocumentLink 
                     WHERE LinkedEntityId = :config.Id 
-                    AND ContentDocument.LatestPublishedVersion.FEC_Comments__c = 'Uploaded'
+                    AND ContentDocument.LatestPublishedVersion.FEC_Comments__c = :FEC_ConstantCommon.UPLOADED_STATUS
                 ];
 
                 ContentVersion jsonFileToProcess = null;
@@ -42,13 +42,13 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
                 for (ContentDocumentLink link : links) {
                     ContentVersion cv = link.ContentDocument.LatestPublishedVersion;
                     
-                    if (cv.Description == 'JSON_Data_For_Processing') {
+                    if (cv.Description == FEC_ConstantCommon.JSON_DATA_FOR_PROCESSING) {
                         jsonFileToProcess = cv;
                         jsonDocId = link.ContentDocumentId;
                     } else {
                         lstCVToUpdate.add(new ContentVersion(
                             Id = cv.Id,
-                            FEC_Comments__c = 'Processed'
+                            FEC_Comments__c = FEC_ConstantCommon.PROCESSED_STATUS
                         ));
                     }
                 }
@@ -68,7 +68,7 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
                             FEC_FieldID__c = config.FEC_FieldID__c,
                             FEC_KeyIDValue__c = String.valueOf(cols[0]),
                             FEC_FieldValue__c = String.valueOf(cols[1]),
-                            FEC_IsActive__c = cols[2] == 'Yes',
+                            FEC_IsActive__c = cols[2] == FEC_ConstantCommon.YES_VALUE,
                             FEC_LinkedFilename__c = jsonFileToProcess.Title
                         );
                         
@@ -86,7 +86,7 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
                         insert batchToInsert;
                         totalRecordsProcessed += batchToInsert.size();
                     }
-                    config.FEC_Status__c = 'Processed';
+                    config.FEC_Status__c = FEC_ConstantCommon.PROCESSED_STATUS;
                     contentDocIdsToDelete.add(jsonDocId);
                 } else {
                     System.debug('Cảnh báo: Không tìm thấy file JSON data cho Config ' + config.Id);

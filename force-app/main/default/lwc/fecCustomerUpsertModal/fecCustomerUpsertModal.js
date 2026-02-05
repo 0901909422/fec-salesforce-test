@@ -11,6 +11,7 @@ import deleteFile from '@salesforce/apex/FEC_CustomerAdditionalInfoListControlle
 import checkDuplicateConfig from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.checkDuplicateConfig';
 import { loadScript } from 'lightning/platformResourceLoader';
 import FEC_SHEETJS from '@salesforce/resourceUrl/FEC_SheetJS';
+import { FILE_ACCEPT } from 'c/fecUtils';
 
 import lblDataLinkage from '@salesforce/label/c.FEC_Lbl_Data_Linkage';
 import lblFieldId from '@salesforce/label/c.FEC_Lbl_Field_ID';
@@ -20,6 +21,7 @@ import lblStartDate from '@salesforce/label/c.FEC_Lbl_Start_Date';
 import lblEndDate from '@salesforce/label/c.FEC_Lbl_End_Date';
 import msgProcessEOD from '@salesforce/label/c.FEC_Msg_Process_End_Of_Day';
 import lblChooseFile from '@salesforce/label/c.FEC_Lbl_Choose_File';
+import lblNoFileChosen from '@salesforce/label/c.FEC_Lbl_No_File_Chosen';
 import btnUpload from '@salesforce/label/c.FEC_Btn_Upload';
 import btnDownloadTemplate from '@salesforce/label/c.FEC_Btn_Download_Template';
 import lblFileName from '@salesforce/label/c.FEC_Lbl_File_Name';
@@ -35,7 +37,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
     label = {
         lblDataLinkage, lblFieldId, lblFieldName, lblIsActive,
         lblStartDate, lblEndDate, msgProcessEOD, lblChooseFile,
-        btnUpload, btnDownloadTemplate, lblFileName, lblStatus,
+        btnUpload, btnDownloadTemplate, lblFileName, lblNoFileChosen, lblStatus,
         lblUploadedBy, lblUploadedAt, lblAction, msgNoContent,
         btnCancel, btnFinish
     };
@@ -49,13 +51,13 @@ export default class FecCustomerUpsertModal extends LightningElement {
     @track fileInfo = {
         name: '',
     };
-    @track fileName = 'Chưa có tệp nào được chọn';
+    @track fileName = this.label.lblNoFileChosen;
     @track isLoading = false;
     @track isUploadDisabled = true;
     @track isEditting = false;
     @track pendingFiles = [];
     @track existingFiles = [];
-    fileAccept = '.xlsx, .xls, .csv';
+    fileAccept = FILE_ACCEPT;
     fileObject;
     base64Data;
     currentUserName;
@@ -116,7 +118,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
     }
 
     resetFileState() {
-        this.fileName = 'Chưa có tệp nào được chọn';
+        this.fileName = this.label.lblNoFileChosen;
         this.isUploadDisabled = true;
         this.currentSelectedFile = null;
     }

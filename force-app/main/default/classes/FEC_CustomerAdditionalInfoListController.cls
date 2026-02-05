@@ -15,11 +15,9 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
     ) {
         Savepoint sp = Database.setSavepoint();
         try {
-            // 1. Lưu Header Config (Status mặc định là New)
-            objConfig.FEC_Status__c = 'Uploaded'; 
+            objConfig.FEC_Status__c = FEC_ConstantCommon.UPLOADED_STATUS; 
             upsert objConfig;
 
-            // 2. Lưu File vào ContentVersion
             if (lstFiles != null && !lstFiles.isEmpty()) {
                 List<ContentVersion> cvList = new List<ContentVersion>();
                 for(FEC_FileInfo file : lstFiles) {
@@ -28,24 +26,24 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
                         cvExcel.Title = file.name; 
                         cvExcel.PathOnClient = file.name;
                         cvExcel.VersionData = EncodingUtil.base64Decode(file.base64Data);
-                        cvExcel.Description = 'Original_User_Upload';
-                        cvExcel.FEC_Comments__c = 'Uploaded';
+                        cvExcel.Description = FEC_ConstantCommon.ORIGINAL_USER_UPLOAD;
+                        cvExcel.FEC_Comments__c = FEC_ConstantCommon.UPLOADED_STATUS;
                         cvExcel.FirstPublishLocationId = objConfig.Id;
                         cvList.add(cvExcel);
 
                         ContentVersion cvJson = new ContentVersion();
-                        cvJson.Title = file.name + '.json';
-                        cvJson.PathOnClient = file.name + '.json';
+                        cvJson.Title = file.name + FEC_ConstantCommon.JSON_EXTENSION;
+                        cvJson.PathOnClient = file.name + FEC_ConstantCommon.JSON_EXTENSION;
                         cvJson.VersionData = Blob.valueOf(file.sheetXml);
-                        cvJson.Description = 'JSON_Data_For_Processing';
-                        cvJson.FEC_Comments__c = 'Uploaded';
+                        cvJson.Description = FEC_ConstantCommon.JSON_DATA_FOR_PROCESSING;
+                        cvJson.FEC_Comments__c = FEC_ConstantCommon.UPLOADED_STATUS;
                         cvJson.FirstPublishLocationId = objConfig.Id; 
                         cvList.add(cvJson);
                     }
                 }
                 insert cvList;
             }
-            return 'Success';
+            return FEC_ConstantCommon.SUCCESS_MESSAGE;
         } catch (Exception e) {
             Database.rollback(sp);
             throw new AuraHandledException(e.getMessage());
@@ -62,7 +60,7 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
                    FEC_StartDate__c, FEC_EndDate__c, FEC_Status__c, FEC_IsActive__c,
                    CreatedDate, CreatedBy.Name
             FROM FEC_CustomerAdditionalInfoConfig__c
-            WHERE FEC_Status__c = 'Uploaded' 
+            WHERE FEC_Status__c = :FEC_ConstantCommon.UPLOADED_STATUS 
             ORDER BY CreatedDate DESC
         ];
     }
@@ -71,7 +69,7 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
     public static List<FEC_CustomerAdditionalInfoConfig__c> getExistingConfigs() {
         return [SELECT Id, FEC_KeyIdentifier__c, FEC_FieldID__c, FEC_FieldName__c, FEC_Status__c, FEC_IsActive__c, FEC_StartDate__c, FEC_EndDate__c 
                 FROM FEC_CustomerAdditionalInfoConfig__c 
-                WHERE FEC_Status__c = 'Processed' 
+                WHERE FEC_Status__c = :FEC_ConstantCommon.PROCESSED_STATUS 
                 ORDER BY CreatedDate DESC];
     }
 
@@ -94,14 +92,14 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
                ContentDocument.LatestPublishedVersion.FEC_Comments__c
             FROM ContentDocumentLink 
             WHERE LinkedEntityId = :recordId
-            AND ContentDocument.LatestPublishedVersion.Description = 'Original_User_Upload'
+            AND ContentDocument.LatestPublishedVersion.Description = :FEC_ConstantCommon.ORIGINAL_USER_UPLOAD
         ]) {
             Map<String, Object> mapFile = new Map<String, Object>();
-            mapFile.put('id', objLink.ContentDocumentId);
-            mapFile.put('name', objLink.ContentDocument.Title);
-            mapFile.put('uploadedBy', objLink.ContentDocument.CreatedBy.Name);
-            mapFile.put('uploadedTime', objLink.ContentDocument.LastModifiedDate);
-            mapFile.put('status', objLink.ContentDocument.LatestPublishedVersion.FEC_Comments__c);
+            mapFile.put(FEC_ConstantCommon.KEY_ID, objLink.ContentDocumentId);
+            mapFile.put(FEC_ConstantCommon.KEY_NAME, objLink.ContentDocument.Title);
+            mapFile.put(FEC_ConstantCommon.KEY_UPLOADED_BY, objLink.ContentDocument.CreatedBy.Name);
+            mapFile.put(FEC_ConstantCommon.KEY_UPLOADED_TIME, objLink.ContentDocument.LastModifiedDate);
+            mapFile.put(FEC_ConstantCommon.KEY_STATUS, objLink.ContentDocument.LatestPublishedVersion.FEC_Comments__c);
             lstFiles.add(mapFile);
         }
         return lstFiles;
@@ -111,7 +109,6 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
     public static void deleteFile(Id documentId) {
         try {
             if (documentId != null) {
-                // Xóa ContentDocument sẽ tự động xóa các ContentVersion và Link liên quan
                 delete [SELECT Id FROM ContentDocument WHERE Id = :documentId];
             }
         } catch (Exception e) {
@@ -121,7 +118,6 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
 
     @AuraEnabled(cacheable=false)
     public static Boolean checkDuplicateConfig(String keyId, String fieldId, Id currentConfigId) {
-        // Tìm kiếm các bản ghi có cùng Key và Field, loại trừ bản ghi hiện tại nếu đang ở chế độ Edit
         Integer count = [
             SELECT count() 
             FROM FEC_CustomerAdditionalInfoConfig__c 
@@ -129,7 +125,6 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
             AND FEC_FieldID__c = :fieldId 
             AND Id != :currentConfigId
         ];
-        System.debug(System.LoggingLevel.DEBUG, 'FEC_CustomerAdditionalInfoConfig__c duplicated length: ' + count);
         return count > 0;
     }
 

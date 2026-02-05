@@ -6,9 +6,13 @@ import LBL_OPT_ACCOUNT from '@salesforce/label/c.FEC_Opt_Account';
 import LBL_OPT_APP_ID from '@salesforce/label/c.FEC_Opt_AppID';
 import LBL_OPT_PHONE from '@salesforce/label/c.FEC_Opt_Phone';
 
-// 1. Actions dùng chung cho Header
+export const VIEW_HISTORY_ACTION = 'view_history';
+export const FILTER_ACTION = 'filter_action';
+export const EDIT_ACTION = 'edit';
+export const FILE_ACCEPT = '.xlsx, .xls, .csv';
+
 export const HEADER_ACTIONS = [
-    { label: 'Lọc', name: 'filter_action' }
+    { label: 'Lọc', name: FILTER_ACTION }
 ];
 
 export const ACCOUNT_LINKAGE_OPTIONS = [
