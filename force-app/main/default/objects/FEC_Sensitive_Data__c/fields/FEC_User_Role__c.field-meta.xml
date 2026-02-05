@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_User_Role__c</fullName>
+    <description>Role của User xem data tại thời điểm xem
+(không dùng đc formula vì khi User đổi role thì không đc cập nhật mà chỉ ghi nhận tại thời điểm xem dữ liệu)</description>
+    <externalId>false</externalId>
+    <label>User Role</label>
+    <length>255</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
