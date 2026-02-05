@@ -12,6 +12,10 @@ public with sharing class FEC_AdditionalFieldController {
             throw new AuraHandledException(FEC_Constants.ERROR_DELETE_RECORD_PREFIX + ' Invalid Id');
         }
         try {
+            Schema.SObjectType t = FEC_MDM_Additional_Field__c.SObjectType;
+            if (!t.getDescribe().isDeletable()) {
+                throw new AuraHandledException(System.Label.FEC_Error_No_Delete_Permission);
+            }
             delete new FEC_MDM_Additional_Field__c(Id = recordId);
             return FEC_Constants.OPERATION_SUCCESS;
         } catch (Exception e) {
@@ -27,7 +31,6 @@ public with sharing class FEC_AdditionalFieldController {
                    FEC_Field_Status__c, FEC_Field_Mandatory__c, Process_Change_Status__c, CreatedDate
             FROM FEC_MDM_Additional_Field__c
             ORDER BY CreatedDate DESC
-            LIMIT :FEC_Constants.QUERY_LIMIT
         ];
         // Enforce field-level security before returning
         List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, fields).getRecords();
@@ -42,7 +45,6 @@ public with sharing class FEC_AdditionalFieldController {
             FROM FEC_MDM_Additional_Field_List_Value__c
             WHERE FEC_Additional_Field__c = :selectedFieldId
             ORDER BY FEC_Order__c ASC NULLS LAST
-            LIMIT :FEC_Constants.QUERY_LIMIT
         ];
         List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, values).getRecords();
         return (List<FEC_MDM_Additional_Field_List_Value__c>) safe;
@@ -54,6 +56,10 @@ public with sharing class FEC_AdditionalFieldController {
             throw new AuraHandledException(FEC_Constants.ERROR_DELETE_FIELDLIST_PREFIX + ' Invalid Id');
         }
         try {
+            Schema.SObjectType t = FEC_MDM_Additional_Field_List_Value__c.SObjectType;
+            if (!t.getDescribe().isDeletable()) {
+                throw new AuraHandledException(System.Label.FEC_Error_No_Delete_Permission);
+            }
             delete [SELECT Id FROM FEC_MDM_Additional_Field_List_Value__c WHERE Id = :recordId];
             return FEC_Constants.OPERATION_SUCCESS;
         } catch (Exception e) {

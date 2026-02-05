@@ -104,8 +104,10 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
                     query += ', FEC_Additional_Field__r.ExternalID__c';
                 }
             }
-            query += ' FROM ' + mdmObjName + ' WHERE ' + FEC_Constants.FIELD_PROCESS_CHANGE_STATUS + ' != \'" + FEC_Constants.PROCESS_STATUS_SYNCED + "\'';
+            query += ' FROM ' + mdmObjName + ' WHERE ' + FEC_Constants.FIELD_PROCESS_CHANGE_STATUS + ' != \'' + String.escapeSingleQuotes(FEC_Constants.PROCESS_STATUS_SYNCED) + '\'';
             
+            // Prevent empty field list
+            if (String.isBlank(queryFields)) continue;
             List<SObject> mdmRecords = Database.query(query);
             if (mdmRecords.isEmpty()) continue;
             
@@ -118,29 +120,54 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
                 
                 switch on mdmObjName {
                     when FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING {
-                        copyValidFields(target, mdm, validFieldsForThisObj, fieldMap);
-                        setLookup(target, mdm, FEC_Constants.REL_NATURE_OF_CASE, FEC_Constants.OBJ_NATURE_OF_CASE);
-                        setLookup(target, mdm, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_ADDITIONAL_FIELD);
-                        setLookup(target, mdm, FEC_Constants.REL_STAGE_NAME, FEC_Constants.OBJ_CASE_STAGE);
+                        try {
+                            FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
+                            FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_NATURE_OF_CASE, FEC_Constants.OBJ_NATURE_OF_CASE, uniqueErrors);
+                            FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_ADDITIONAL_FIELD, uniqueErrors);
+                            FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_STAGE_NAME, FEC_Constants.OBJ_CASE_STAGE, uniqueErrors);
+                        } catch (Exception ex) {
+                            uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
+                            continue;
+                        }
                     }
                     when FEC_Constants.OBJ_MDM_NATURE_OF_CASE {
-                        copyValidFields(target, mdm, validFieldsForThisObj, fieldMap);
-                        setLookup(target, mdm, FEC_Constants.REL_PRODUCT_TYPE_NAME, FEC_Constants.OBJ_PRODUCT_TYPE);
-                        setLookup(target, mdm, FEC_Constants.REL_BUSINESS_PROCESS_NAME, FEC_Constants.OBJ_BUSINESS_PROCESS);
-                        setLookup(target, mdm, FEC_Constants.REL_CATEGORY_NAME, FEC_Constants.OBJ_CATEGORY);
-                        setLookup(target, mdm, FEC_Constants.REL_SUB_CATEGORY_NAME, FEC_Constants.OBJ_SUB_CATEGORY);
-                        setLookup(target, mdm, FEC_Constants.REL_SUB_CODE_NAME, FEC_Constants.OBJ_SUB_CODE);
+                        try {
+                            FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
+                            FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_PRODUCT_TYPE_NAME, FEC_Constants.OBJ_PRODUCT_TYPE, uniqueErrors);
+                            FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_BUSINESS_PROCESS_NAME, FEC_Constants.OBJ_BUSINESS_PROCESS, uniqueErrors);
+                            FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_CATEGORY_NAME, FEC_Constants.OBJ_CATEGORY, uniqueErrors);
+                            FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_SUB_CATEGORY_NAME, FEC_Constants.OBJ_SUB_CATEGORY, uniqueErrors);
+                            FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_SUB_CODE_NAME, FEC_Constants.OBJ_SUB_CODE, uniqueErrors);
+                        } catch (Exception ex) {
+                            uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
+                            continue;
+                        }
                     }
                     when FEC_Constants.OBJ_MDM_CASE_STAGE {
-                        copyValidFields(target, mdm, validFieldsForThisObj, fieldMap);
-                        setLookup(target, mdm, FEC_Constants.REL_BUSINESS_PROCESS_NAME.replace('_Name__r','__r'), FEC_Constants.OBJ_BUSINESS_PROCESS);
+                        try {
+                            FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
+                            FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_BUSINESS_PROCESS_NAME.replace('_Name__r','__r'), FEC_Constants.OBJ_BUSINESS_PROCESS, uniqueErrors);
+                        } catch (Exception ex) {
+                            uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
+                            continue;
+                        }
                     }
                     when FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE {
-                        copyValidFields(target, mdm, validFieldsForThisObj, fieldMap);
-                        setLookup(target, mdm, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_ADDITIONAL_FIELD);
+                        try {
+                            FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
+                            FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_ADDITIONAL_FIELD, uniqueErrors);
+                        } catch (Exception ex) {
+                            uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
+                            continue;
+                        }
                     }
                     when else {
-                        copyValidFields(target, mdm, validFieldsForThisObj, fieldMap);
+                        try {
+                            FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
+                        } catch (Exception ex) {
+                            uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
+                            continue;
+                        }
                     }
                 }
                 targetList.add(target);
@@ -163,49 +190,6 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
                 }
                 if (!mdmToUpdate.isEmpty()) update mdmToUpdate;
                 FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = true;
-            }
-        }
-    }
-    
-    private void setLookup(SObject target, SObject mdm, String relName, String parentObjName) {
-        try {
-            SObject parentMDM = mdm.getSObject(relName);
-            if (parentMDM != null) {
-                String extId = (String)parentMDM.get(FEC_Constants.FIELD_EXTERNAL_ID);
-                if (String.isNotBlank(extId)) {
-                    SObject parentLive = Schema.getGlobalDescribe().get(parentObjName).newSObject();
-                    parentLive.put(FEC_Constants.FIELD_EXTERNAL_ID, extId);
-                    target.putSObject(relName, parentLive);
-                }
-            }
-        } catch(Exception e) {
-            uniqueErrors.add(FEC_Constants.ERROR_LOOKUP_PREFIX + relName + ': ' + e.getMessage());
-        }
-    }
-    
-    private void copyCommonFields(SObject target, SObject mdm, String targetObjName) {
-        for (String f : commonFieldMap.keySet()) {
-            try {
-                // Chỉ gán nếu trường đó tồn tại trên bản ghi MDM vừa query được
-                target.put(commonFieldMap.get(f), mdm.get(f));
-            } catch(Exception ex) {
-                uniqueErrors.add(FEC_Constants.ERROR_COMMON_FIELD_PREFIX + f + ': ' + ex.getMessage());
-            }
-        }
-    }
-    
-    private void copyValidFields(SObject target, SObject mdm, List<String> validFields, Map<String, Schema.SObjectField> fieldMap) {
-        for (String mdmField : validFields) {
-            String targetField = commonFieldMap.get(mdmField);
-            if (fieldMap.containsKey(targetField)) {
-                // KIỂM TRA: Chỉ gán nếu trường cho phép edit (không phải Auto-number/Formula)
-                if (fieldMap.get(targetField).getDescribe().isUpdateable()) {
-                    try {
-                        target.put(targetField, mdm.get(mdmField));
-                    } catch(Exception ex) {
-                        uniqueErrors.add(FEC_Constants.ERROR_DATA_PREFIX + mdmField + ' - ' + ex.getMessage());
-                    }
-                }
             }
         }
     }

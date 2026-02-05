@@ -2,7 +2,7 @@ public with sharing class FEC_FecServiceTypeMappingController {
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> getServiceTypeTree() {
         Map<Id, FEC_MDM_Business_Process__c> bpMap = new Map<Id, FEC_MDM_Business_Process__c>(
-            [SELECT Id, Name FROM FEC_MDM_Business_Process__c ORDER BY Name LIMIT :FEC_Constants.QUERY_LIMIT]
+            [SELECT Id, Name FROM FEC_MDM_Business_Process__c ORDER BY Name]
             );
         
         List<FEC_MDM_Master_Data_Setting__c> allSettings = [
@@ -12,7 +12,6 @@ public with sharing class FEC_FecServiceTypeMappingController {
             WHERE FEC_Nature_Of_Case__r.FEC_Business_Process_Name__c IN :bpMap.keySet()
             AND FEC_Additional_Field__c != null
             ORDER BY Name
-            LIMIT :FEC_Constants.QUERY_LIMIT
         ];
         
         Map<Id, List<Map<String, Object>>> bpToProperties = new Map<Id, List<Map<String, Object>>>();
@@ -49,14 +48,32 @@ public with sharing class FEC_FecServiceTypeMappingController {
     @AuraEnabled
     public static void savePropertyMapping(Id settingId, String newRef) {
         if (settingId == null) throw new AuraHandledException(FEC_Constants.ERROR_INVALID_ID);
-         try {
-             update new FEC_MDM_Master_Data_Setting__c(
-                 Id = settingId,
-             Property_Reference__c = newRef
-                 );
-         } catch (Exception e) {
-             System.debug('FEC_FecServiceTypeMappingController.savePropertyMapping error: ' + e);
-            throw new AuraHandledException(FEC_Constants.ERROR_SYSTEM);
-         }
+        try {
+            // Check update permission on the object/field
+            Schema.SObjectType t = FEC_MDM_Master_Data_Setting__c.SObjectType;
+            // Check update permission on the object/field using FEC_Constants
+            Schema.SObjectType t = FEC_MDM_Master_Data_Setting__c.SObjectType;
+            Schema.DescribeSObjectResult dsr = t.getDescribe();
+            if (!dsr.isUpdateable()) {
+                throw new AuraHandledException(FEC_Constants.ERROR_NO_UPDATE_PERMISSION);
+            }
+            Schema.SObjectField sf = dsr.fields.getMap().get(FEC_Constants.FIELD_PROPERTY_REFERENCE);
+            if (sf == null) {
+                throw new AuraHandledException(FEC_Constants.ERROR_INVALID_FIELD);
+            }
+            if (!sf.getDescribe().isUpdateable()) {
+                throw new AuraHandledException(FEC_Constants.ERROR_NO_FIELD_UPDATE_PERMISSION);
+            }
+            update new FEC_MDM_Master_Data_Setting__c(
+                Id = settingId,
+                Property_Reference__c = newRef
+            );
+        } catch (AuraHandledException ae) {
+            throw ae;
+        } catch (Exception e) {
+            // Log minimal details, return friendly message
+            System.debug('FEC_FecServiceTypeMappingController.savePropertyMapping error: ' + e);
+            throw new AuraHandledException(System.Label.FEC_Error_Save_Property_Mapping);
+        }
      }
  }

@@ -6,21 +6,22 @@ public final class FEC_Constants {
     // Prevent instantiation
     private FEC_Constants() {}
 
-    // Messages (use literal defaults instead of System.Label)
-    public static final String OPERATION_SUCCESS = 'Success';
-    public static final String ERROR_DELETE_RECORD_PREFIX = 'Error deleting record:';
-    public static final String ERROR_DELETE_FIELDLIST_PREFIX = 'Error deleting Field List Value:';
+    // Messages (moved to Custom Labels for i18n)
+    public static final String OPERATION_SUCCESS = System.Label.FEC_Operation_Success;
+    public static final String ERROR_DELETE_RECORD_PREFIX = System.Label.FEC_Error_Delete_Record_Prefix;
+    public static final String ERROR_DELETE_FIELDLIST_PREFIX = System.Label.FEC_Error_Delete_FieldList_Prefix;
 
-    // Additional message labels (literal defaults)
-    public static final String ERROR_GENERIC_PREFIX = 'Lỗi:';
-    public static final String ERROR_CANNOT_START_SYNC = 'Không thể bắt đầu tiến trình đồng bộ: ';
-    public static final String ERROR_CANNOT_START_PUSH = 'Lỗi khi bắt đầu đồng bộ: ';
-    public static final String ERROR_INVALID_ID = 'Invalid Id';
+    // Additional message labels (use generic error title label as fallback)
+    public static final String ERROR_GENERIC_PREFIX = System.Label.FEC_Error_Title;
+    public static final String ERROR_CANNOT_START_SYNC = System.Label.FEC_Error_Title;
+    public static final String ERROR_CANNOT_START_PUSH = System.Label.FEC_Error_Title;
+    public static final String ERROR_INVALID_ID = System.Label.FEC_Error_Title;
 
     // Default UI labels / messages
-    public static final String LABEL_NONE = '-- None --';
-    public static final String ERROR_INVALID_SOBJECT_PREFIX = 'Invalid sObject API name: ';
-    public static final String ERROR_DML_PREFIX = 'Lỗi DML: ';
+    // UI labels (moved to Custom Labels for i18n)
+    public static final String LABEL_NONE = System.Label.FEC_Label_None;
+    public static final String ERROR_INVALID_SOBJECT_PREFIX = System.Label.FEC_Error_Invalid_SObject_Prefix;
+    public static final String ERROR_DML_PREFIX = System.Label.FEC_Error_DML_Prefix;
     public static final String PROCESS_STATUS_NEW = 'New';
     public static final String PROCESS_STATUS_UPDATE = 'Update';
 
@@ -41,10 +42,6 @@ public final class FEC_Constants {
     public static final String FIELD_CHANNEL_STATUS = 'FEC_Channel_Status__c';
     public static final String FIELD_CHANNEL_VI_NAME = 'FEC_Channel_Vietnamese_name__c';
     public static final String FIELD_PROPERTY_REFERENCE = 'Property_Reference__c';
-
-    // Technical configuration
-    public static final Integer QUERY_LIMIT = 500;
-    public static final Integer QUERY_LIMIT_LARGE = 1000;
 
     // Object API name constants (centralized)
     public static final String OBJ_PRODUCT_TYPE = 'FEC_Product_Type__c';
@@ -105,10 +102,10 @@ public final class FEC_Constants {
     public static final String MAP_VALUE = 'value';
 
     // UI labels used in comparisons
-    public static final String LABEL_CHANNEL = 'Channel';
-    public static final String LABEL_SECTION = 'Section';
-    public static final String LABEL_MANDATORY = 'Mandatory';
-    public static final String LABEL_PROPERTY_NAME = 'Property Name';
+    public static final String LABEL_CHANNEL = System.Label.FEC_Label_Channel;
+    public static final String LABEL_SECTION = System.Label.FEC_Label_Section;
+    public static final String LABEL_MANDATORY = System.Label.FEC_Label_Mandatory;
+    public static final String LABEL_PROPERTY_NAME = System.Label.FEC_Label_Property_Name;
 
     // UI placeholders / css
     public static final String PLACEHOLDER_EMPTY = '--';
@@ -133,8 +130,7 @@ public final class FEC_Constants {
     public static final String ALIAS_SCC_ID = 'sccId';
     public static final String ALIAS_SCC_CODE = 'sccCode';
 
-    // Field name constants used as keys in mapping requests
-    public static final String FIELD_ID = 'Id';
+    // Field name constants used as keys in mapping requests (unique declarations only)
     public static final String FIELD_NATURE_OF_CASE = 'FEC_Nature_Of_Case__c';
     public static final String FIELD_STAGE_NAME = 'FEC_Stage_Name__c';
     public static final String FIELD_FIELD_MANDATORY = 'FEC_Field_Mandatory__c';
@@ -149,12 +145,12 @@ public final class FEC_Constants {
     public static final String FIELD_FIELD_ORDER_DISPLAY = 'FEC_Field_Order_Display__c';
     public static final String FIELD_FIELD_STATUS = 'FEC_Field_Status__c';
 
-    // Additional UI labels
-    public static final String LABEL_PRODUCT_TYPE = 'Product Type';
-    public static final String LABEL_BUSINESS_PROCESS = 'Business Process';
-    public static final String LABEL_CATEGORY = 'Category';
-    public static final String LABEL_SUB_CATEGORY = 'Sub Category';
-    public static final String LABEL_SUB_CODE = 'Sub Code';
+    // Additional UI labels (use Custom Labels)
+    public static final String LABEL_PRODUCT_TYPE = System.Label.FEC_Label_Product_Type;
+    public static final String LABEL_BUSINESS_PROCESS = System.Label.FEC_Label_Business_Process;
+    public static final String LABEL_CATEGORY = System.Label.FEC_Label_Category;
+    public static final String LABEL_SUB_CATEGORY = System.Label.FEC_Label_Sub_Category;
+    public static final String LABEL_SUB_CODE = System.Label.FEC_Label_Sub_Code;
 
     // Prefixes
     public static final String PT_PREFIX = 'PT_';

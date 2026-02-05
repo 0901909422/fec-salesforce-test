@@ -92,211 +92,22 @@ public with sharing class FEC_NatureOfCaseTreeController {
                         FEC_Sub_Code__r.FEC_Status__c,
                         FEC_Sub_Code__r.Process_Change_Status__c
 
-                    FROM 
-                        FEC_MDM_Nature_Of_Case__c
-                    ORDER BY 
-                        FEC_Product_Type_Name__r.FEC_Pos_Order__c ASC,
-                        FEC_Business_Process_Name__r.FEC_Pos_Order__c ASC,
-                        FEC_Category_Name__r.FEC_Pos_Order__c ASC,
-                        FEC_Sub_Category_Name__r.FEC_Pos_Order__c ASC,
-                        FEC_Sub_Code__r.FEC_Pos_Order__c ASC
-                LIMIT :FEC_Constants.QUERY_LIMIT
+                     FROM 
+                         FEC_MDM_Nature_Of_Case__c
+                     ORDER BY 
+                         FEC_Product_Type_Name__r.FEC_Pos_Order__c ASC,
+                         FEC_Business_Process_Name__r.FEC_Pos_Order__c ASC,
+                         FEC_Category_Name__r.FEC_Pos_Order__c ASC,
+                         FEC_Sub_Category_Name__r.FEC_Pos_Order__c ASC,
+                         FEC_Sub_Code__r.FEC_Pos_Order__c ASC
+                
             ];
             
-            Map<String, NatureOfCaseTreeItem> mapProductType = new Map<String, NatureOfCaseTreeItem>();
+            // Enforce FLS: strip inaccessible fields before usage/return
+            listNOC = (List<FEC_MDM_Nature_Of_Case__c>) Security.stripInaccessible(AccessType.READABLE, listNOC).getRecords();
             
-            for (FEC_MDM_Nature_Of_Case__c noc : listNOC) {
-                String productTypeCode = noc.FEC_Product_Type_Name__r?.FEC_Code__c;
-                String businessProcessCode = noc.FEC_Business_Process_Name__r?.FEC_Code__c;
-                String categoryCode = noc.FEC_Category_Name__r?.FEC_Code__c;
-                String subCategoryCode = noc.FEC_Sub_Category_Name__r?.FEC_Code__c;
-                String subCodeCode = noc.FEC_Sub_Code__r?.FEC_Code__c;
-                
-                String ptId = noc.FEC_Product_Type_Name__c;
-                String bpId = noc.FEC_Business_Process_Name__c;
-                String catId = noc.FEC_Category_Name__c;
-                String scatId = noc.FEC_Sub_Category_Name__c;
-                String scodeId = noc.FEC_Sub_Code__c;
-                
-                String ptKey = FEC_Constants.PT_PREFIX + ptId;
-                String bpsKey = FEC_Constants.BP_PREFIX + ptId + '_' + bpId;
-                String cataKey = FEC_Constants.CAT_PREFIX + ptId + '_' + bpId + '_' + catId;
-                String scatKey = FEC_Constants.SCAT_PREFIX + ptId + '_' + bpId + '_' + catId + '_' + scatId;
-                String scodeKey = FEC_Constants.SCODE_PREFIX + ptId + '_' + bpId + '_' + catId + '_' + scatId + '_' + scodeId;
-                
-                // 1. Product Type Node (Root)
-                NatureOfCaseTreeItem ptNode;
-                if (productTypeCode != null) {
-                    if (!mapProductType.containsKey(productTypeCode)) {
-                        // 🚨 Gán các trường chi tiết cho Product Type
-                        ptNode = new NatureOfCaseTreeItem(
-                            productTypeCode,
-                        ptKey,
-                        new List<NatureOfCaseTreeItem>(),
-                        noc.FEC_Product_Type_Name__r.FEC_Alias__c,
-                        noc.FEC_Product_Type_Name__r.FEC_Code__c,
-                        noc.FEC_Product_Type_Name__r.FEC_Name_VN__c,
-                        noc.FEC_Product_Type_Name__r.FEC_Pos_Order__c,
-                        noc.FEC_Product_Type_Name__r.FEC_Status__c,
-                        noc.FEC_Product_Type_Name__r.Process_Change_Status__c,
-                        noc.FEC_Product_Type_Name__r.Name,
-                        noc.FEC_Product_Type__c,
-                        noc.FEC_Customer_Type__c,
-                        noc.Id,
-                        FEC_Constants.LABEL_PRODUCT_TYPE
-                            );
-                        mapProductType.put(productTypeCode, ptNode);
-                    } else {
-                        ptNode = mapProductType.get(productTypeCode);
-                    }
-                    if (noc.FEC_Product_Type_Name__r.FEC_Status__c == false) {
-                        continue;
-                    }
-                } else {
-                    continue;
-                }
-                
-                // 2. Business Process Node
-                NatureOfCaseTreeItem bpNode;
-                if (businessProcessCode != null) {
-                    String bpKey = productTypeCode + '_' + businessProcessCode;
-                    if (ptNode.mapChilds == null) ptNode.mapChilds = new Map<String, NatureOfCaseTreeItem>();
-                    
-                    if (!ptNode.mapChilds.containsKey(bpKey)) {
-                        // 🚨 Gán các trường chi tiết cho Business Process
-                        bpNode = new NatureOfCaseTreeItem(
-                            businessProcessCode,
-                        bpsKey,
-                        new List<NatureOfCaseTreeItem>(),
-                        noc.FEC_Business_Process_Name__r.FEC_Alias__c,
-                        noc.FEC_Business_Process_Name__r.FEC_Code__c,
-                        noc.FEC_Business_Process_Name__r.FEC_Name_VN__c,
-                        noc.FEC_Business_Process_Name__r.FEC_Pos_Order__c,
-                        noc.FEC_Business_Process_Name__r.FEC_Status__c,
-                        noc.FEC_Business_Process_Name__r.Process_Change_Status__c,
-                        noc.FEC_Business_Process_Name__r.Name,
-                        noc.FEC_Business_Process_Name__c,
-                        noc.FEC_Customer_Type__c,
-                        noc.Id,
-                        FEC_Constants.LABEL_BUSINESS_PROCESS
-                            );
-                        ptNode.mapChilds.put(bpKey, bpNode);
-                    } else {
-                        bpNode = ptNode.mapChilds.get(bpKey);
-                    }
-                    if (noc.FEC_Business_Process_Name__r.FEC_Status__c == false) {
-                        continue;
-                    }
-                } else {
-                    continue;
-                }
-                
-                // 3. Category Node
-                NatureOfCaseTreeItem catNode;
-                if (categoryCode != null) {
-                    String catKey = bpNode.code + '_' + categoryCode;
-                    if (bpNode.mapChilds == null) bpNode.mapChilds = new Map<String, NatureOfCaseTreeItem>();
-                    
-                    if (!bpNode.mapChilds.containsKey(catKey)) {
-                        // 🚨 Gán các trường chi tiết cho Category
-                        catNode = new NatureOfCaseTreeItem(
-                            categoryCode,
-                        cataKey,
-                        new List<NatureOfCaseTreeItem>(),
-                        noc.FEC_Category_Name__r.FEC_Alias__c,
-                        noc.FEC_Category_Name__r.FEC_Code__c,
-                        noc.FEC_Category_Name__r.FEC_Name_VN__c,
-                        noc.FEC_Category_Name__r.FEC_Pos_Order__c,
-                        noc.FEC_Category_Name__r.FEC_Status__c,
-                        noc.FEC_Category_Name__r.Process_Change_Status__c,
-                        noc.FEC_Category_Name__r.Name,
-                        noc.FEC_Category_Name__c,
-                        noc.FEC_Customer_Type__c,
-                        noc.Id,
-                        FEC_Constants.LABEL_CATEGORY
-                            );
-                        bpNode.mapChilds.put(catKey, catNode);
-                    } else {
-                        catNode = bpNode.mapChilds.get(catKey);
-                    }
-                    if (noc.FEC_Category_Name__r.FEC_Status__c == false) {
-                        continue;
-                    }
-                } else {
-                    continue;
-                }
-                
-                // 4. Sub Category Node
-                NatureOfCaseTreeItem subCatNode;
-                if (subCategoryCode != null) {
-                    String subCatKey = catNode.code + '_' + subCategoryCode;
-                    if (catNode.mapChilds == null) catNode.mapChilds = new Map<String, NatureOfCaseTreeItem>();
-                    
-                    if (!catNode.mapChilds.containsKey(subCatKey)) {
-                        // 🚨 Gán các trường chi tiết cho Sub Category
-                        subCatNode = new NatureOfCaseTreeItem(
-                            subCategoryCode,
-                        scatKey,
-                        new List<NatureOfCaseTreeItem>(),
-                        noc.FEC_Sub_Category_Name__r.FEC_Alias__c,
-                        noc.FEC_Sub_Category_Name__r.FEC_Code__c,
-                        noc.FEC_Sub_Category_Name__r.FEC_Name_VN__c,
-                        noc.FEC_Sub_Category_Name__r.FEC_Pos_Order__c,
-                        noc.FEC_Sub_Category_Name__r.FEC_Status__c,
-                        noc.FEC_Sub_Category_Name__r.Process_Change_Status__c,
-                        noc.FEC_Sub_Category_Name__r.Name,
-                        noc.FEC_Sub_Category_Name__c,
-                        noc.FEC_Customer_Type__c,
-                        noc.Id,
-                        FEC_Constants.LABEL_SUB_CATEGORY
-                            );
-                        catNode.mapChilds.put(subCatKey, subCatNode);
-                    } else {
-                        subCatNode = catNode.mapChilds.get(subCatKey);
-                    }
-                    if (noc.FEC_Sub_Category_Name__r.FEC_Status__c == false) {
-                        continue;
-                    }
-                } else {
-                    continue;
-                }
-                
-                // 5. Sub Code Node (Leaf Node)
-                if (subCodeCode != null) {
-                    String scKey = subCatNode.code + '_' + subCodeCode;
-                    if (subCatNode.mapChilds == null) subCatNode.mapChilds = new Map<String, NatureOfCaseTreeItem>();
-                    
-                    if (!subCatNode.mapChilds.containsKey(scKey)) {
-                        // 🚨 Gán các trường chi tiết cho Sub Code
-                        NatureOfCaseTreeItem scNode = new NatureOfCaseTreeItem(
-                            subCodeCode,
-                        scodeKey, // Dùng ID Sub Code
-                        null,
-                        noc.FEC_Sub_Code__r.FEC_Alias__c,
-                        noc.FEC_Sub_Code__r.FEC_Code__c,
-                        noc.FEC_Sub_Code__r.FEC_Name_VN__c,
-                        noc.FEC_Sub_Code__r.FEC_Pos_Order__c,
-                        noc.FEC_Sub_Code__r.FEC_Status__c,
-                        noc.FEC_Sub_Code__r.Process_Change_Status__c,
-                        noc.FEC_Sub_Code__r.Name,
-                        noc.FEC_Sub_Code__c,
-                        noc.FEC_Customer_Type__c,
-                        noc.Id,
-                        FEC_Constants.LABEL_SUB_CODE
-                            );
-                        subCatNode.mapChilds.put(scKey, scNode);
-                    }
-                    if (noc.FEC_Sub_Code__r.FEC_Status__c == false) {
-                        continue;
-                    }
-                }
-            }
-            
-            // Chuyển đổi Map sang List cho Node gốc
-            for (NatureOfCaseTreeItem ptItem : mapProductType.values()) {
-                ptItem.convertMapToList();
-                treeItems.add(ptItem);
-            }
+            // Build tree with helper to improve readability and testability
+            treeItems = buildTree(listNOC);
         } catch (Exception e) {
             System.debug('FEC_NatureOfCaseTreeController.getNatureOfCaseTreeData error: ' + e);
             // Return empty list on failure to avoid throwing raw exceptions to UI
@@ -329,7 +140,8 @@ public with sharing class FEC_NatureOfCaseTreeController {
         @AuraEnabled public List<NatureOfCaseTreeItem> items; // Các node con
         
         // Dùng transient map để dễ dàng xây dựng cấu trúc tree (Quy tắc: Tái sử dụng/Thao tác Dữ liệu bằng Map)
-        @AuraEnabled public transient Map<String, NatureOfCaseTreeItem> mapChilds;
+-        @AuraEnabled public transient Map<String, NatureOfCaseTreeItem> mapChilds;
++        public transient Map<String, NatureOfCaseTreeItem> mapChilds;
         
         // 🚨 CẬP NHẬT CONSTRUCTOR
         public NatureOfCaseTreeItem(String label, String name, List<NatureOfCaseTreeItem> items,
@@ -415,19 +227,25 @@ public with sharing class FEC_NatureOfCaseTreeController {
             ? labelToApiMap.get(strObjectType)
             : strObjectType;
         
-        SObject newRecord;
-        Schema.SObjectType targetSObjectType = Schema.getGlobalDescribe().get(apiName);
-        newRecord = targetSObjectType.newSObject();
-        newRecord.put(FEC_Constants.FIELD_ALIAS, strAlias);
-        newRecord.put(FEC_Constants.FIELD_CODE, strCode);
-        newRecord.put(FEC_Constants.FIELD_NAME_VN, strNameVN);
-        newRecord.put(FEC_Constants.FIELD_STATUS, isStatus);
-        newRecord.put(FEC_Constants.FIELD_NAME, strName);
-        
-        Map<String, Schema.SObjectField> fieldMap = newRecord.getSobjectType().getDescribe().fields.getMap();
-        if (fieldMap.containsKey(FEC_Constants.FIELD_POS_ORDER)) {
-            newRecord.put(FEC_Constants.FIELD_POS_ORDER, intPosOrder);
+        // Validate target SObject and create permission
+        Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
+        if (!gd.containsKey(apiName)) {
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Invalid object type: ' + apiName);
         }
+        Schema.SObjectType targetSObjectType = gd.get(apiName);
+        Schema.DescribeSObjectResult dsr = targetSObjectType.getDescribe();
+        if (!dsr.isCreateable()) {
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Create not allowed for object: ' + apiName);
+        }
+        
+        SObject newRecord = targetSObjectType.newSObject();
+        Map<String, Schema.SObjectField> fieldMap = dsr.fields.getMap();
+        if (fieldMap.containsKey(FEC_Constants.FIELD_ALIAS)) newRecord.put(FEC_Constants.FIELD_ALIAS, strAlias);
+        if (fieldMap.containsKey(FEC_Constants.FIELD_CODE)) newRecord.put(FEC_Constants.FIELD_CODE, strCode);
+        if (fieldMap.containsKey(FEC_Constants.FIELD_NAME_VN)) newRecord.put(FEC_Constants.FIELD_NAME_VN, strNameVN);
+        if (fieldMap.containsKey(FEC_Constants.FIELD_STATUS)) newRecord.put(FEC_Constants.FIELD_STATUS, isStatus);
+        if (fieldMap.containsKey(FEC_Constants.FIELD_NAME)) newRecord.put(FEC_Constants.FIELD_NAME, strName);
+        if (fieldMap.containsKey(FEC_Constants.FIELD_POS_ORDER)) newRecord.put(FEC_Constants.FIELD_POS_ORDER, intPosOrder);
         
         try {
             Database.insert(newRecord);
@@ -439,6 +257,11 @@ public with sharing class FEC_NatureOfCaseTreeController {
         try {
             String objectTypeUpper = apiName.toUpperCase();
             System.debug('objectTypeUpper: ' + objectTypeUpper);
+            
+            // Ensure creation allowed on mapping object
+            if (!Schema.getGlobalDescribe().containsKey('FEC_MDM_Nature_Of_Case__c') || !FEC_MDM_Nature_Of_Case__c.sObjectType.getDescribe().isCreateable()) {
+                throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Cannot create Nature of Case mapping record.');
+            }
             
             FEC_MDM_Nature_Of_Case__c nocRecord = new FEC_MDM_Nature_Of_Case__c(
                 Name = strCode,
@@ -458,9 +281,9 @@ public with sharing class FEC_NatureOfCaseTreeController {
                 System.debug('Querying parentNocs with parentNocField=' + parentNocField + ', strParentId=' + strParentId);
                 
                 List<FEC_MDM_Nature_Of_Case__c> parentNocs = Database.query(
-                    'SELECT ' + queryFields + ' FROM FEC_MDM_Nature_Of_Case__c WHERE ' + parentNocField + ' = :strParentId LIMIT 1'
-                    );
-                if (parentNocs.isEmpty()) {
+                    'SELECT ' + queryFields + ' FROM FEC_MDM_Nature_Of_Case__c WHERE ' + parentNocField + ' = :strParentId'
+                     );
+                if (parentNocs == null || parentNocs.isEmpty()) {
                     throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Could not find Parent Nature of Case record: ' + strParentId);
                 }
                 FEC_MDM_Nature_Of_Case__c parentNoc = parentNocs[0];
@@ -543,8 +366,22 @@ public with sharing class FEC_NatureOfCaseTreeController {
     }
     
     private static void deleteRecords(String objName, Set<Id> ids) {
-        String dmlQuery = 'SELECT Id FROM ' + objName + ' WHERE Id IN :ids';
-        delete Database.query(dmlQuery);
++        // No-op if nothing to delete
++        if (ids == null || ids.isEmpty()) return;
++        
++        Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
++        if (!gd.containsKey(objName)) {
++            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Invalid object for delete: ' + objName);
++        }
++        Schema.DescribeSObjectResult dsr = gd.get(objName).getDescribe();
++        if (!dsr.isDeletable()) {
++            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Delete not allowed for object: ' + objName);
++        }
++        String dmlQuery = 'SELECT Id FROM ' + objName + ' WHERE Id IN :ids';
++        List<SObject> toDelete = Database.query(dmlQuery);
++        if (!toDelete.isEmpty()) {
++            Database.delete(toDelete);
++        }
     }
     
     @AuraEnabled
@@ -621,12 +458,27 @@ public with sharing class FEC_NatureOfCaseTreeController {
                 }
             }
             
-            // 3. Thực thi DML hàng loạt
-            if (!ptUpdates.isEmpty()) update ptUpdates;
-            if (!bpUpdates.isEmpty()) update bpUpdates;
-            if (!catUpdates.isEmpty()) update catUpdates;
-            if (!scatUpdates.isEmpty()) update scatUpdates;
-            if (!scodeUpdates.isEmpty()) update scodeUpdates;
+            // 3. Thực thi DML hàng loạt - ensure update permission
+            if (!ptUpdates.isEmpty()) {
+                if (!FEC_MDM_Product_Type__c.sObjectType.getDescribe().isUpdateable()) throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Update not allowed on Product Type');
+                update ptUpdates;
+            }
+            if (!bpUpdates.isEmpty()) {
+                if (!FEC_MDM_Business_Process__c.sObjectType.getDescribe().isUpdateable()) throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Update not allowed on Business Process');
+                update bpUpdates;
+            }
+            if (!catUpdates.isEmpty()) {
+                if (!FEC_MDM_Category__c.sObjectType.getDescribe().isUpdateable()) throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Update not allowed on Category');
+                update catUpdates;
+            }
+            if (!scatUpdates.isEmpty()) {
+                if (!FEC_MDM_Sub_Category__c.sObjectType.getDescribe().isUpdateable()) throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Update not allowed on Sub Category');
+                update scatUpdates;
+            }
+            if (!scodeUpdates.isEmpty()) {
+                if (!FEC_MDM_Sub_Code__c.sObjectType.getDescribe().isUpdateable()) throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Update not allowed on Sub Code');
+                update scodeUpdates;
+            }
             
         } catch (Exception e) {
             throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
@@ -641,7 +493,7 @@ public with sharing class FEC_NatureOfCaseTreeController {
         String IdNOC = (String)updateData.get(FEC_Constants.PAYLOAD_ID);
         String nodeId = (String)updateData.get(FEC_Constants.PAYLOAD_IDTYPE);
         String nodeType = (String)updateData.get(FEC_Constants.PAYLOAD_TYPE);
-        SObject targetSObject;
+        SObject targetSObject = null;
         
         if (nodeType == FEC_Constants.LABEL_PRODUCT_TYPE) {
             targetSObject = [SELECT Id FROM FEC_MDM_Product_Type__c WHERE Id = :nodeId LIMIT 1];
@@ -653,15 +505,26 @@ public with sharing class FEC_NatureOfCaseTreeController {
             targetSObject = [SELECT Id FROM FEC_MDM_Sub_Category__c WHERE Id = :nodeId LIMIT 1];
         } else if (nodeType == FEC_Constants.LABEL_SUB_CODE) {
             targetSObject = [SELECT Id FROM FEC_MDM_Sub_Code__c WHERE Id = :nodeId LIMIT 1];
+        } else {
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Unknown node type: ' + nodeType);
         }
         
-        // Gán các giá trị chung
-        targetSObject.put(FEC_Constants.FIELD_ALIAS, (String)updateData.get(FEC_Constants.PAYLOAD_ALIAS));
-        targetSObject.put(FEC_Constants.FIELD_CODE, (String)updateData.get(FEC_Constants.PAYLOAD_CODE));
-        targetSObject.put(FEC_Constants.FIELD_NAME_VN, (String)updateData.get(FEC_Constants.PAYLOAD_NAMEVN));
-        targetSObject.put(FEC_Constants.FIELD_STATUS, (Boolean)updateData.get(FEC_Constants.PAYLOAD_STATUS));
-        targetSObject.put(FEC_Constants.FIELD_NAME, (String)updateData.get(FEC_Constants.PAYLOAD_NAMEEN));
-        targetSObject.put(FEC_Constants.FIELD_POS_ORDER, (Decimal)updateData.get(FEC_Constants.PAYLOAD_POSORDER));
+        if (targetSObject == null) {
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Record not found: ' + nodeId);
+        }
+        
+        if (!targetSObject.getSObjectType().getDescribe().isUpdateable()) {
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Update not allowed for this record type');
+        }
+        
+        // Gán các giá trị chung - only set fields if updateable
+        Map<String, Schema.SObjectField> fm = targetSObject.getSobjectType().getDescribe().fields.getMap();
+        if (fm.containsKey(FEC_Constants.FIELD_ALIAS) && fm.get(FEC_Constants.FIELD_ALIAS).getDescribe().isUpdateable()) targetSObject.put(FEC_Constants.FIELD_ALIAS, (String)updateData.get(FEC_Constants.PAYLOAD_ALIAS));
+        if (fm.containsKey(FEC_Constants.FIELD_CODE) && fm.get(FEC_Constants.FIELD_CODE).getDescribe().isUpdateable()) targetSObject.put(FEC_Constants.FIELD_CODE, (String)updateData.get(FEC_Constants.PAYLOAD_CODE));
+        if (fm.containsKey(FEC_Constants.FIELD_NAME_VN) && fm.get(FEC_Constants.FIELD_NAME_VN).getDescribe().isUpdateable()) targetSObject.put(FEC_Constants.FIELD_NAME_VN, (String)updateData.get(FEC_Constants.PAYLOAD_NAMEVN));
+        if (fm.containsKey(FEC_Constants.FIELD_STATUS) && fm.get(FEC_Constants.FIELD_STATUS).getDescribe().isUpdateable()) targetSObject.put(FEC_Constants.FIELD_STATUS, (Boolean)updateData.get(FEC_Constants.PAYLOAD_STATUS));
+        if (fm.containsKey(FEC_Constants.FIELD_NAME) && fm.get(FEC_Constants.FIELD_NAME).getDescribe().isUpdateable()) targetSObject.put(FEC_Constants.FIELD_NAME, (String)updateData.get(FEC_Constants.PAYLOAD_NAMEEN));
+        if (fm.containsKey(FEC_Constants.FIELD_POS_ORDER) && fm.get(FEC_Constants.FIELD_POS_ORDER).getDescribe().isUpdateable()) targetSObject.put(FEC_Constants.FIELD_POS_ORDER, (Decimal)updateData.get(FEC_Constants.PAYLOAD_POSORDER));
         
         try {
             update targetSObject;
@@ -675,57 +538,259 @@ public with sharing class FEC_NatureOfCaseTreeController {
      */
     @AuraEnabled(cacheable=true)
     public static List<FEC_MDM_Nature_Of_Case__c> getMasterDataMappings() {
-        return [
-                SELECT 
-                    Id, Name, 
-                    FEC_Product_Type_Name__c, 
-                    FEC_Product_Type_Name__r.Name, 
-                    FEC_Product_Type_Name__r.FEC_Name_VN__c, 
-                    // THÊM CÁC TRƯỜNG MỚI CHO Product Line
-                    FEC_Product_Type_Name__r.FEC_Alias__c, 
-                    FEC_Product_Type_Name__r.FEC_Code__c, 
-                    FEC_Product_Type_Name__r.FEC_Pos_Order__c, 
-                    FEC_Product_Type_Name__r.FEC_Status__c,
-                    
-                    FEC_Business_Process_Name__c, 
-                    FEC_Business_Process_Name__r.Name, 
-                    FEC_Business_Process_Name__r.FEC_Name_VN__c,
-                    // THÊM CÁC TRƯỜNG MỚI CHO Service Type
-                    FEC_Business_Process_Name__r.FEC_Alias__c,
-                    FEC_Business_Process_Name__r.FEC_Code__c,
-                    FEC_Business_Process_Name__r.FEC_Pos_Order__c,
-                    FEC_Business_Process_Name__r.FEC_Status__c,
+-        return [
++        List<FEC_MDM_Nature_Of_Case__c> result = [
+                 SELECT 
+                     Id, Name, 
+                     FEC_Product_Type_Name__c, 
+                     FEC_Product_Type_Name__r.Name, 
+                     FEC_Product_Type_Name__r.FEC_Name_VN__c, 
+                     // THÊM CÁC TRƯỜNG MỚI CHO Product Line
+                     FEC_Product_Type_Name__r.FEC_Alias__c, 
+                     FEC_Product_Type_Name__r.FEC_Code__c, 
+                     FEC_Product_Type_Name__r.FEC_Pos_Order__c, 
+                     FEC_Product_Type_Name__r.FEC_Status__c,
+                     
+                     FEC_Business_Process_Name__c, 
+                     FEC_Business_Process_Name__r.Name, 
+                     FEC_Business_Process_Name__r.FEC_Name_VN__c,
+                     // THÊM CÁC TRƯỜNG MỚI CHO Service Type
+                     FEC_Business_Process_Name__r.FEC_Alias__c,
+                     FEC_Business_Process_Name__r.FEC_Code__c,
+                     FEC_Business_Process_Name__r.FEC_Pos_Order__c,
+                     FEC_Business_Process_Name__r.FEC_Status__c,
 
-                    FEC_Category_Name__c, 
-                    FEC_Category_Name__r.Name, 
-                    FEC_Category_Name__r.FEC_Name_VN__c,
-                    // THÊM CÁC TRƯỜNG MỚI CHO Category
-                    FEC_Category_Name__r.FEC_Alias__c,
-                    FEC_Category_Name__r.FEC_Code__c,
-                    FEC_Category_Name__r.FEC_Pos_Order__c,
-                    FEC_Category_Name__r.FEC_Status__c,
+                     FEC_Category_Name__c, 
+                     FEC_Category_Name__r.Name, 
+                     FEC_Category_Name__r.FEC_Name_VN__c,
+                     // THÊM CÁC TRƯỜNG MỚI CHO Category
+                     FEC_Category_Name__r.FEC_Alias__c,
+                     FEC_Category_Name__r.FEC_Code__c,
+                     FEC_Category_Name__r.FEC_Pos_Order__c,
+                     FEC_Category_Name__r.FEC_Status__c,
 
-                    FEC_Sub_Category_Name__c, 
-                    FEC_Sub_Category_Name__r.Name, 
-                    FEC_Sub_Category_Name__r.FEC_Name_VN__c,
-                    // THÊM CÁC TRƯỜNG MỚI CHO Sub Category
-                    FEC_Sub_Category_Name__r.FEC_Alias__c,
-                    FEC_Sub_Category_Name__r.FEC_Code__c,
-                    FEC_Sub_Category_Name__r.FEC_Pos_Order__c,
-                    FEC_Sub_Category_Name__r.FEC_Status__c,
+                     FEC_Sub_Category_Name__c, 
+                     FEC_Sub_Category_Name__r.Name, 
+                     FEC_Sub_Category_Name__r.FEC_Name_VN__c,
+                     // THÊM CÁC TRƯỜNG MỚI CHO Sub Category
+                     FEC_Sub_Category_Name__r.FEC_Alias__c,
+                     FEC_Sub_Category_Name__r.FEC_Code__c,
+                     FEC_Sub_Category_Name__r.FEC_Pos_Order__c,
+                     FEC_Sub_Category_Name__r.FEC_Status__c,
 
-                    FEC_Sub_Code__c, 
-                    FEC_Sub_Code__r.Name, 
-                    FEC_Sub_Code__r.FEC_Name_VN__c,
-                    // THÊM CÁC TRƯỜNG MỚI CHO Action
-                    FEC_Sub_Code__r.FEC_Alias__c,
-                    FEC_Sub_Code__r.FEC_Code__c,
-                    FEC_Sub_Code__r.FEC_Pos_Order__c,
-                    FEC_Sub_Code__r.FEC_Status__c
-                FROM FEC_MDM_Nature_Of_Case__c
-                ORDER BY FEC_Product_Type_Name__r.Name, FEC_Business_Process_Name__r.Name, 
-                        FEC_Category_Name__r.Name, FEC_Sub_Category_Name__r.Name, FEC_Sub_Code__r.Name
-             LIMIT :FEC_Constants.QUERY_LIMIT
-         ];
-     }
- }
+                     FEC_Sub_Code__c, 
+                     FEC_Sub_Code__r.Name, 
+                     FEC_Sub_Code__r.FEC_Name_VN__c,
+                     // THÊM CÁC TRƯỜNG MỚI CHO Action
+                     FEC_Sub_Code__r.FEC_Alias__c,
+                     FEC_Sub_Code__r.FEC_Code__c,
+                     FEC_Sub_Code__r.FEC_Pos_Order__c,
+                     FEC_Sub_Code__r.FEC_Status__c
+                 FROM FEC_MDM_Nature_Of_Case__c
+                 ORDER BY FEC_Product_Type_Name__r.Name, FEC_Business_Process_Name__r.Name, 
+                         FEC_Category_Name__r.Name, FEC_Sub_Category_Name__r.Name, FEC_Sub_Code__r.Name
+           
+-          ];
++          ];
++        // Enforce FLS before returning
++        result = (List<FEC_MDM_Nature_Of_Case__c>) Security.stripInaccessible(AccessType.READABLE, result).getRecords();
++        return result;
+      }
+  
+    // Helper: build the tree data structure from the stripped list of NOC mappings
+    private static List<NatureOfCaseTreeItem> buildTree(List<FEC_MDM_Nature_Of_Case__c> listNOC) {
+        List<NatureOfCaseTreeItem> treeItems = new List<NatureOfCaseTreeItem>();
+        if (listNOC == null || listNOC.isEmpty()) return treeItems;
+        
+        Map<String, NatureOfCaseTreeItem> mapProductType = new Map<String, NatureOfCaseTreeItem>();
+        
+        for (FEC_MDM_Nature_Of_Case__c noc : listNOC) {
+            String productTypeCode = noc.FEC_Product_Type_Name__r?.FEC_Code__c;
+            String businessProcessCode = noc.FEC_Business_Process_Name__r?.FEC_Code__c;
+            String categoryCode = noc.FEC_Category_Name__r?.FEC_Code__c;
+            String subCategoryCode = noc.FEC_Sub_Category_Name__r?.FEC_Code__c;
+            String subCodeCode = noc.FEC_Sub_Code__r?.FEC_Code__c;
+            
+            String ptId = noc.FEC_Product_Type_Name__c;
+            String bpId = noc.FEC_Business_Process_Name__c;
+            String catId = noc.FEC_Category_Name__c;
+            String scatId = noc.FEC_Sub_Category_Name__c;
+            String scodeId = noc.FEC_Sub_Code__c;
+            
+            String ptKey = FEC_Constants.PT_PREFIX + ptId;
+            String bpsKey = FEC_Constants.BP_PREFIX + ptId + '_' + bpId;
+            String cataKey = FEC_Constants.CAT_PREFIX + ptId + '_' + bpId + '_' + catId;
+            String scatKey = FEC_Constants.SCAT_PREFIX + ptId + '_' + bpId + '_' + catId + '_' + scatId;
+            String scodeKey = FEC_Constants.SCODE_PREFIX + ptId + '_' + bpId + '_' + catId + '_' + scatId + '_' + scodeId;
+            
+            // 1. Product Type Node (Root)
+            NatureOfCaseTreeItem ptNode;
+            if (productTypeCode != null) {
+                if (!mapProductType.containsKey(productTypeCode)) {
+                    ptNode = new NatureOfCaseTreeItem(
+                        productTypeCode,
+                        ptKey,
+                        new List<NatureOfCaseTreeItem>(),
+                        noc.FEC_Product_Type_Name__r.FEC_Alias__c,
+                        noc.FEC_Product_Type_Name__r.FEC_Code__c,
+                        noc.FEC_Product_Type_Name__r.FEC_Name_VN__c,
+                        noc.FEC_Product_Type_Name__r.FEC_Pos_Order__c,
+                        noc.FEC_Product_Type_Name__r.FEC_Status__c,
+                        noc.FEC_Product_Type_Name__r.Process_Change_Status__c,
+                        noc.FEC_Product_Type_Name__r.Name,
+                        noc.FEC_Product_Type__c,
+                        noc.FEC_Customer_Type__c,
+                        noc.Id,
+                        FEC_Constants.LABEL_PRODUCT_TYPE
+                    );
+                    mapProductType.put(productTypeCode, ptNode);
+                } else {
+                    ptNode = mapProductType.get(productTypeCode);
+                }
+                if (noc.FEC_Product_Type_Name__r.FEC_Status__c == false) {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+            
+            // 2. Business Process Node
+            NatureOfCaseTreeItem bpNode;
+            if (businessProcessCode != null) {
+                String bpKey = productTypeCode + '_' + businessProcessCode;
+                if (ptNode.mapChilds == null) ptNode.mapChilds = new Map<String, NatureOfCaseTreeItem>();
+                
+                if (!ptNode.mapChilds.containsKey(bpKey)) {
+                    bpNode = new NatureOfCaseTreeItem(
+                        businessProcessCode,
+                        bpsKey,
+                        new List<NatureOfCaseTreeItem>(),
+                        noc.FEC_Business_Process_Name__r.FEC_Alias__c,
+                        noc.FEC_Business_Process_Name__r.FEC_Code__c,
+                        noc.FEC_Business_Process_Name__r.FEC_Name_VN__c,
+                        noc.FEC_Business_Process_Name__r.FEC_Pos_Order__c,
+                        noc.FEC_Business_Process_Name__r.FEC_Status__c,
+                        noc.FEC_Business_Process_Name__r.Process_Change_Status__c,
+                        noc.FEC_Business_Process_Name__r.Name,
+                        noc.FEC_Business_Process_Name__c,
+                        noc.FEC_Customer_Type__c,
+                        noc.Id,
+                        FEC_Constants.LABEL_BUSINESS_PROCESS
+                    );
+                    ptNode.mapChilds.put(bpKey, bpNode);
+                } else {
+                    bpNode = ptNode.mapChilds.get(bpKey);
+                }
+                if (noc.FEC_Business_Process_Name__r.FEC_Status__c == false) {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+            
+            // 3. Category Node
+            NatureOfCaseTreeItem catNode;
+            if (categoryCode != null) {
+                String catKey = bpNode.code + '_' + categoryCode;
+                if (bpNode.mapChilds == null) bpNode.mapChilds = new Map<String, NatureOfCaseTreeItem>();
+                
+                if (!bpNode.mapChilds.containsKey(catKey)) {
+                    catNode = new NatureOfCaseTreeItem(
+                        categoryCode,
+                        cataKey,
+                        new List<NatureOfCaseTreeItem>(),
+                        noc.FEC_Category_Name__r.FEC_Alias__c,
+                        noc.FEC_Category_Name__r.FEC_Code__c,
+                        noc.FEC_Category_Name__r.FEC_Name_VN__c,
+                        noc.FEC_Category_Name__r.FEC_Pos_Order__c,
+                        noc.FEC_Category_Name__r.FEC_Status__c,
+                        noc.FEC_Category_Name__r.Process_Change_Status__c,
+                        noc.FEC_Category_Name__r.Name,
+                        noc.FEC_Category_Name__c,
+                        noc.FEC_Customer_Type__c,
+                        noc.Id,
+                        FEC_Constants.LABEL_CATEGORY
+                    );
+                    bpNode.mapChilds.put(catKey, catNode);
+                } else {
+                    catNode = bpNode.mapChilds.get(catKey);
+                }
+                if (noc.FEC_Category_Name__r.FEC_Status__c == false) {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+            
+            // 4. Sub Category Node
+            NatureOfCaseTreeItem subCatNode;
+            if (subCategoryCode != null) {
+                String subCatKey = catNode.code + '_' + subCategoryCode;
+                if (catNode.mapChilds == null) catNode.mapChilds = new Map<String, NatureOfCaseTreeItem>();
+                
+                if (!catNode.mapChilds.containsKey(subCatKey)) {
+                    subCatNode = new NatureOfCaseTreeItem(
+                        subCategoryCode,
+                        scatKey,
+                        new List<NatureOfCaseTreeItem>(),
+                        noc.FEC_Sub_Category_Name__r.FEC_Alias__c,
+                        noc.FEC_Sub_Category_Name__r.FEC_Code__c,
+                        noc.FEC_Sub_Category_Name__r.FEC_Name_VN__c,
+                        noc.FEC_Sub_Category_Name__r.FEC_Pos_Order__c,
+                        noc.FEC_Sub_Category_Name__r.FEC_Status__c,
+                        noc.FEC_Sub_Category_Name__r.Process_Change_Status__c,
+                        noc.FEC_Sub_Category_Name__r.Name,
+                        noc.FEC_Sub_Category_Name__c,
+                        noc.FEC_Customer_Type__c,
+                        noc.Id,
+                        FEC_Constants.LABEL_SUB_CATEGORY
+                    );
+                    catNode.mapChilds.put(subCatKey, subCatNode);
+                } else {
+                    subCatNode = catNode.mapChilds.get(subCatKey);
+                }
+                if (noc.FEC_Sub_Category_Name__r.FEC_Status__c == false) {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+            
+            // 5. Sub Code Node (Leaf Node)
+            if (subCodeCode != null) {
+                String scKey = subCatNode.code + '_' + subCodeCode;
+                if (subCatNode.mapChilds == null) subCatNode.mapChilds = new Map<String, NatureOfCaseTreeItem>();
+                
+                if (!subCatNode.mapChilds.containsKey(scKey)) {
+                    NatureOfCaseTreeItem scNode = new NatureOfCaseTreeItem(
+                        subCodeCode,
+                        scodeKey, // Dùng ID Sub Code
+                        null,
+                        noc.FEC_Sub_Code__r.FEC_Alias__c,
+                        noc.FEC_Sub_Code__r.FEC_Code__c,
+                        noc.FEC_Sub_Code__r.FEC_Name_VN__c,
+                        noc.FEC_Sub_Code__r.FEC_Pos_Order__c,
+                        noc.FEC_Sub_Code__r.FEC_Status__c,
+                        noc.FEC_Sub_Code__r.Process_Change_Status__c,
+                        noc.FEC_Sub_Code__r.Name,
+                        noc.FEC_Sub_Code__c,
+                        noc.FEC_Customer_Type__c,
+                        noc.Id,
+                        FEC_Constants.LABEL_SUB_CODE
+                    );
+                    subCatNode.mapChilds.put(scKey, scNode);
+                }
+                if (noc.FEC_Sub_Code__r.FEC_Status__c == false) {
+                    continue;
+                }
+            }
+        }
+        
+        // Convert map to list
+        for (NatureOfCaseTreeItem ptItem : mapProductType.values()) {
+            ptItem.convertMapToList();
+            treeItems.add(ptItem);
+        }
+        return treeItems;
+    }
+}

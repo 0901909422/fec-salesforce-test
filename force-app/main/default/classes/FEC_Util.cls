@@ -30,8 +30,9 @@ public with sharing class FEC_Util {
      * @param sObjType Loại SObject cần kiểm tra.
      */
     public static void checkDeletable(SObjectType sObjType) {
+        if (sObjType == null) throw new AuraHandledException(System.Label.FEC_Error_Invalid_SObject_Prefix);
         if (!sObjType.getDescribe().isDeletable()) {
-            throw new AuraHandledException('Bạn không có quyền xóa bản ghi này.');
+            throw new AuraHandledException(System.Label.FEC_Error_No_Delete_Permission);
         }
     }
 
@@ -42,6 +43,20 @@ public with sharing class FEC_Util {
      * @return Id của RecordType.
      */
     public static Id getRecordTypeId(String sObjName, String developerName) {
-        return Schema.getGlobalDescribe().get(sObjName).getDescribe().getRecordTypeInfosByDeveloperName().get(developerName).getRecordTypeId();
+        if (String.isBlank(sObjName)) return null;
+        Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
+        if (!gd.containsKey(sObjName)) {
+            throw new AuraHandledException(System.Label.FEC_Error_Invalid_SObject_Prefix + ' ' + sObjName);
+        }
+        Schema.SObjectType t = gd.get(sObjName);
+        try {
+            Schema.DescribeSObjectResult dr = t.getDescribe();
+            Map<String, Schema.RecordTypeInfo> rtMap = dr.getRecordTypeInfosByDeveloperName();
+            if (!rtMap.containsKey(developerName)) return null;
+            return rtMap.get(developerName).getRecordTypeId();
+        } catch (Exception e) {
+            log('getRecordTypeId', 'Failed to fetch record type for ' + sObjName + ' developerName=' + developerName + ' error=' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_Invalid_RecordType);
+        }
     }
 }

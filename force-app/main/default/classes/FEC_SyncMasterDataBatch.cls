@@ -71,8 +71,12 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
             String targetObjName = mdmToOriginalMap.get(mdmObjName);
             
             // 1. Lấy danh sách MDM đang chờ Reset (Status = New hoặc Update)
+            // Validate object exists
+            Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
+            if (!gd.containsKey(mdmObjName) || !gd.containsKey(targetObjName)) continue;
+            
             String mdmQuery = 'SELECT Id, ' + FEC_Constants.FIELD_EXTERNAL_ID + ', ' + FEC_Constants.FIELD_PROCESS_CHANGE_STATUS + ' FROM ' + mdmObjName +
-                ' WHERE ' + FEC_Constants.FIELD_PROCESS_CHANGE_STATUS + ' IN (\'' + FEC_Constants.PROCESS_STATUS_NEW + '\', \'' + FEC_Constants.PROCESS_STATUS_UPDATE + '\')';
+                ' WHERE ' + FEC_Constants.FIELD_PROCESS_CHANGE_STATUS + ' IN (\'' + String.escapeSingleQuotes(FEC_Constants.PROCESS_STATUS_NEW) + '\', \'' + String.escapeSingleQuotes(FEC_Constants.PROCESS_STATUS_UPDATE) + '\')';
             List<SObject> mdmList = Database.query(mdmQuery);
             if (mdmList.isEmpty()) continue;
             
@@ -108,7 +112,6 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
                         queryFieldsSet.add('FEC_Business_Process__r.' + FEC_Constants.FIELD_EXTERNAL_ID);
                     }
                     when FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING {
-                        // queryFieldsSet.add('FEC_Channel__r.ExternalID__c');
                         queryFieldsSet.add(FEC_Constants.REL_NATURE_OF_CASE + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
                         queryFieldsSet.add(FEC_Constants.REL_ADDITIONAL_FIELD + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
                         queryFieldsSet.add(FEC_Constants.REL_STAGE_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
@@ -117,11 +120,16 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
                         queryFieldsSet.add(FEC_Constants.REL_ADDITIONAL_FIELD + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
                     }
                 }
+                // Build safe IN list literal for dynamic SOQL
+                Set<String> mdmIds = mdmToUpdateMap.keySet();
+                List<String> quoted = new List<String>();
+                for (String idStr : mdmIds) quoted.add('\'' + String.escapeSingleQuotes(idStr) + '\'');
+                String inLiteral = '(' + String.join(quoted, ',') + ')';
+                
                 String liveQuery = 'SELECT ' + String.join(new List<String>(queryFieldsSet), ', ') +
                     ' FROM ' + targetObjName +
-                    ' WHERE ' + FEC_Constants.FIELD_EXTERNAL_ID + ' IN :mdmIds'; // Dùng biến bind để an toàn hơn
+                    ' WHERE ' + FEC_Constants.FIELD_EXTERNAL_ID + ' IN ' + inLiteral;
                 
-                Set<String> mdmIds = mdmToUpdateMap.keySet();
                 List<SObject> liveRecords = Database.query(liveQuery);
                 
                 List<SObject> mdmToUpdate = new List<SObject>();
@@ -131,66 +139,44 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
                     mdm.put(FEC_Constants.FIELD_PROCESS_CHANGE_STATUS, FEC_Constants.PROCESS_STATUS_SYNCED);
                     
                     // Mapping trường chung
-                    copyFieldsToMDM(mdm, live, mdmFields);
+                    FEC_BatchUtils.copyFieldsToMDM(mdm, live, mdmFields, commonFieldMap);
                     
                     // Mapping Lookup đặc thù (Revert)
                     switch on mdmObjName {
                         when FEC_Constants.OBJ_MDM_NATURE_OF_CASE {
-                            revertLookup(mdm, live, FEC_Constants.REL_PRODUCT_TYPE_NAME, FEC_Constants.OBJ_MDM_PRODUCT_TYPE);
-                            revertLookup(mdm, live, FEC_Constants.REL_BUSINESS_PROCESS_NAME, FEC_Constants.OBJ_MDM_BUSINESS_PROCESS);
-                            revertLookup(mdm, live, FEC_Constants.REL_CATEGORY_NAME, FEC_Constants.OBJ_MDM_CATEGORY);
-                            revertLookup(mdm, live, FEC_Constants.REL_SUB_CATEGORY_NAME, FEC_Constants.OBJ_MDM_SUB_CATEGORY);
-                            revertLookup(mdm, live, FEC_Constants.REL_SUB_CODE_NAME, FEC_Constants.OBJ_MDM_SUB_CODE);
+                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_PRODUCT_TYPE_NAME, FEC_Constants.OBJ_MDM_PRODUCT_TYPE, null);
+                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_BUSINESS_PROCESS_NAME, FEC_Constants.OBJ_MDM_BUSINESS_PROCESS, null);
+                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_CATEGORY_NAME, FEC_Constants.OBJ_MDM_CATEGORY, null);
+                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_SUB_CATEGORY_NAME, FEC_Constants.OBJ_MDM_SUB_CATEGORY, null);
+                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_SUB_CODE_NAME, FEC_Constants.OBJ_MDM_SUB_CODE, null);
                         }
                         when FEC_Constants.OBJ_MDM_CASE_STAGE {
-                            revertLookup(mdm, live, FEC_Constants.REL_BUSINESS_PROCESS_NAME.replace('_Name__r','__r'), FEC_Constants.OBJ_MDM_BUSINESS_PROCESS);
+                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_BUSINESS_PROCESS_NAME.replace('_Name__r','__r'), FEC_Constants.OBJ_MDM_BUSINESS_PROCESS, null);
                         }
                         when FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING {
-                            revertLookup(mdm, live, FEC_Constants.REL_NATURE_OF_CASE, FEC_Constants.OBJ_MDM_NATURE_OF_CASE);
-                            revertLookup(mdm, live, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD);
-                            revertLookup(mdm, live, FEC_Constants.REL_STAGE_NAME, FEC_Constants.OBJ_MDM_CASE_STAGE);
+                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_NATURE_OF_CASE, FEC_Constants.OBJ_MDM_NATURE_OF_CASE, null);
+                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD, null);
+                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_STAGE_NAME, FEC_Constants.OBJ_MDM_CASE_STAGE, null);
                         }
                         when FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE {
-                            revertLookup(mdm, live, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD);
+                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD, null);
                         }
                      }
                      mdmToUpdate.add(mdm);
                  }
                 
-                if (!mdmToUpdate.isEmpty()) {
-                    FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = false;
-                    update mdmToUpdate;
-                    FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = true;
-                }
-            }
-        }
-    }
-    
-    private void copyFieldsToMDM(SObject mdm, SObject live, Map<String, Schema.SObjectField> mdmFields) {
-        for (String mdmF : commonFieldMap.keySet()) {
-            String liveF = commonFieldMap.get(mdmF);
-            // Kiểm tra MDM có field đó và có quyền Edit không (tránh lỗi Auto-number trên MDM nếu có)
-            if (mdmFields.containsKey(mdmF) && mdmFields.get(mdmF).getDescribe().isUpdateable()) {
-                try {
-                    mdm.put(mdmF, live.get(liveF));
-                } catch(Exception e) { }
-            }
-        }
-    }
-    
-    private void revertLookup(SObject mdm, SObject live, String relName, String parentMdmObjName) {
-        try {
-            SObject parentLive = live.getSObject(relName);
-            if (parentLive != null) {
-                String extId = (String)parentLive.get(FEC_Constants.FIELD_EXTERNAL_ID);
-                if (String.isNotBlank(extId)) {
-                    SObject parentMdmRef = Schema.getGlobalDescribe().get(parentMdmObjName).newSObject();
-                    parentMdmRef.put(FEC_Constants.FIELD_EXTERNAL_ID, extId);
-                    mdm.putSObject(relName, parentMdmRef);
-                }
-            }
-        } catch(Exception e) { }
-    }
+                 if (!mdmToUpdate.isEmpty()) {
+                    Boolean prev = FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled;
+                    try {
+                        FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = false;
+                        update mdmToUpdate;
+                    } finally {
+                        FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = prev;
+                    }
+                 }
+             }
+         }
+     }
     
     public void finish(Database.BatchableContext bc) {
         System.debug('>>> MDM Reset Sync Completed.');

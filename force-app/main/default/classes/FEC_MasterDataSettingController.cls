@@ -36,7 +36,7 @@ public with sharing class FEC_MasterDataSettingController {
 
         String finalQuery = baseQuery + ' ORDER BY FEC_Field_Order_Display__c ASC NULLS LAST, Name ASC';
         
-        List<FEC_MDM_Master_Data_Setting__c> settings = Database.query(finalQuery + ' LIMIT ' + String.valueOf(FEC_Constants.QUERY_LIMIT));
+        List<FEC_MDM_Master_Data_Setting__c> settings = Database.query(finalQuery);
         // Enforce FLS
         List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, settings).getRecords();
         return (List<FEC_MDM_Master_Data_Setting__c>) safe;
@@ -45,7 +45,7 @@ public with sharing class FEC_MasterDataSettingController {
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getChannels() {
         List<Map<String, String>> options = new List<Map<String, String>>();
-        List<FEC_MDM_Channel__c> channels = [SELECT Name FROM FEC_MDM_Channel__c ORDER BY Name LIMIT :FEC_Constants.QUERY_LIMIT];
+        List<FEC_MDM_Channel__c> channels = [SELECT Name FROM FEC_MDM_Channel__c ORDER BY Name];
         List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, channels).getRecords();
         for (FEC_MDM_Channel__c c : (List<FEC_MDM_Channel__c>) safe) {
             options.add(new Map<String, String>{FEC_Constants.MAP_LABEL => c.Name, FEC_Constants.MAP_VALUE => c.Name});
@@ -56,7 +56,7 @@ public with sharing class FEC_MasterDataSettingController {
      @AuraEnabled(cacheable=true)
      public static List<Map<String, String>> getUserRoles() {
          List<Map<String, String>> options = new List<Map<String, String>>();
-         List<UserRole> roles = [SELECT Name FROM UserRole ORDER BY Name LIMIT :FEC_Constants.QUERY_LIMIT];
+         List<UserRole> roles = [SELECT Name FROM UserRole ORDER BY Name];
          List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, roles).getRecords();
          for (UserRole r : (List<UserRole>) safe) {
             options.add(new Map<String, String>{FEC_Constants.MAP_LABEL => r.Name, FEC_Constants.MAP_VALUE => r.Name});
@@ -77,31 +77,30 @@ public with sharing class FEC_MasterDataSettingController {
         FROM FEC_Case_Stage__c 
         WITH SECURITY_ENFORCED 
         ORDER BY Name ASC
-    LIMIT :FEC_Constants.QUERY_LIMIT
     ];
-        for (FEC_Case_Stage__c stage : stages) {
-            options.add(new Map<String, Object>{
-                FEC_Constants.MAP_LABEL => stage.Name,
-                FEC_Constants.MAP_VALUE => stage.Id
-            });
-        }
-        return options;
+         for (FEC_Case_Stage__c stage : stages) {
+             options.add(new Map<String, Object>{
+                 FEC_Constants.MAP_LABEL => stage.Name,
+                 FEC_Constants.MAP_VALUE => stage.Id
+             });
+         }
+         return options;
     }
     
-    @AuraEnabled(cacheable=true)
-    public static List<Map<String, Object>> getLookupOptions(String sObjectName) {
-        List<Map<String, Object>> options = new List<Map<String, Object>>();
-        options.add(new Map<String, Object>{FEC_Constants.MAP_LABEL => FEC_Constants.LABEL_NONE, FEC_Constants.MAP_VALUE => ''});
-        Schema.SObjectType targetType = Schema.getGlobalDescribe().get(sObjectName);
-        if (targetType == null) {
-            throw new AuraHandledException(FEC_Constants.ERROR_INVALID_SOBJECT_PREFIX + sObjectName);
-        }
-        String query = 'SELECT Id, Name FROM ' + sObjectName + ' WITH SECURITY_ENFORCED ORDER BY Name ASC LIMIT ' + String.valueOf(FEC_Constants.QUERY_LIMIT);
-        List<SObject> records = Database.query(query);
-        for (SObject rec : records) {
-            options.add(new Map<String, Object>{FEC_Constants.MAP_LABEL => (String)rec.get('Name'), FEC_Constants.MAP_VALUE => (String)rec.get('Id')});
-        }
-        return options;
+     @AuraEnabled(cacheable=true)
+     public static List<Map<String, Object>> getLookupOptions(String sObjectName) {
+         List<Map<String, Object>> options = new List<Map<String, Object>>();
+         options.add(new Map<String, Object>{FEC_Constants.MAP_LABEL => FEC_Constants.LABEL_NONE, FEC_Constants.MAP_VALUE => ''});
+         Schema.SObjectType targetType = Schema.getGlobalDescribe().get(sObjectName);
+         if (targetType == null) {
+             throw new AuraHandledException(FEC_Constants.ERROR_INVALID_SOBJECT_PREFIX + sObjectName);
+         }
+         String query = 'SELECT Id, Name FROM ' + sObjectName + ' WITH SECURITY_ENFORCED ORDER BY Name ASC';
+         List<SObject> records = Database.query(query);
+         for (SObject rec : records) {
+             options.add(new Map<String, Object>{FEC_Constants.MAP_LABEL => (String)rec.get('Name'), FEC_Constants.MAP_VALUE => (String)rec.get('Id')});
+         }
+         return options;
     }
     
     private static String getOptionalId(Map<String, Object> mappingReq, String fieldName) {
@@ -198,15 +197,14 @@ public with sharing class FEC_MasterDataSettingController {
         FROM FEC_MDM_Case_Stage__c
         WHERE FEC_Business_Process__c = :businessProcessId 
         ORDER BY FEC_Pos_Order__c ASC
-        LIMIT :FEC_Constants.QUERY_LIMIT
     ];
-        List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, stages).getRecords();
-        for (FEC_MDM_Case_Stage__c stage : (List<FEC_MDM_Case_Stage__c>) safe) {
-            options.add(new Map<String, String>{
-                FEC_Constants.MAP_LABEL => stage.Name,
-                FEC_Constants.MAP_VALUE => stage.Id
-            });
-        }
-         return options;
-     }
+         List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, stages).getRecords();
+         for (FEC_MDM_Case_Stage__c stage : (List<FEC_MDM_Case_Stage__c>) safe) {
+             options.add(new Map<String, String>{
+                 FEC_Constants.MAP_LABEL => stage.Name,
+                 FEC_Constants.MAP_VALUE => stage.Id
+             });
+         }
+          return options;
+      }
  }

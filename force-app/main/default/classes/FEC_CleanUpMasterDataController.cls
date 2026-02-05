@@ -35,7 +35,7 @@ public with sharing class FEC_CleanUpMasterDataController {
             List<FEC_Nature_Of_Case__c> nocList = [
                 SELECT Id, Name, ExternalID__c, FEC_Product_Type_Name__r.Name, FEC_Business_Process_Name__r.Name, 
                        FEC_Category_Name__r.Name, FEC_Sub_Category_Name__r.Name,FEC_Sub_Code__r.Name, Process_Change_Status__c 
-                FROM FEC_Nature_Of_Case__c LIMIT :FEC_Constants.QUERY_LIMIT_LARGE
+                FROM FEC_Nature_Of_Case__c
             ];
             System.debug(FEC_Constants.DEBUG_NOC_LIST_PREFIX + nocList);
             List<NatureOfCaseWrapper> nocWrapperList = new List<NatureOfCaseWrapper>();
@@ -84,7 +84,7 @@ public with sharing class FEC_CleanUpMasterDataController {
             List<FEC_MDM_Nature_Of_Case__c> nocList = [
                 SELECT Id, ExternalID__c, Name, FEC_Customer_Type__c, FEC_Product_Type_Name__r.Name, FEC_Business_Process_Name__r.Name, 
                        FEC_Category_Name__r.Name, FEC_Sub_Category_Name__r.Name,FEC_Sub_Code__r.Name, Process_Change_Status__c 
-                FROM FEC_MDM_Nature_Of_Case__c LIMIT :FEC_Constants.QUERY_LIMIT_LARGE
+                FROM FEC_MDM_Nature_Of_Case__c
             ];
             System.debug(FEC_Constants.DEBUG_NOC_LIST_PREFIX + nocList);
             List<NatureOfCaseMDMWrapper> nocWrapperList = new List<NatureOfCaseMDMWrapper>();
@@ -177,5 +177,17 @@ public with sharing class FEC_CleanUpMasterDataController {
             FEC_Sub_Code = noc.FEC_Sub_Code__r != null ? noc.FEC_Sub_Code__r.Name : null;
             Process_Change_Status = noc.Process_Change_Status__c;
         }
+    }
+    private static void deleteRecords(String objName, Set<Id> ids) {
+        if (ids == null || ids.isEmpty()) return;
+        Schema.SObjectType t = Schema.getGlobalDescribe().get(objName);
+        if (t == null) {
+            throw new AuraHandledException(FEC_Constants.ERROR_INVALID_SOBJECT_PREFIX + objName);
+        }
+        if (!t.getDescribe().isDeletable()) {
+            throw new AuraHandledException(System.Label.FEC_Error_No_Delete_Permission);
+        }
+        String dmlQuery = 'SELECT Id FROM ' + objName + ' WHERE Id IN :ids';
+        delete Database.query(dmlQuery);
     }
 }

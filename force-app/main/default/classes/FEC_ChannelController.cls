@@ -5,7 +5,6 @@ public with sharing class FEC_ChannelController {
             SELECT Id, Name, FEC_Channel_ID__c, FEC_Channel_Vietnamese_name__c, FEC_Channel_Status__c
             FROM FEC_MDM_Channel__c
             ORDER BY CreatedDate DESC
-            LIMIT :FEC_Constants.QUERY_LIMIT
         ];
         List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, results).getRecords();
         return (List<FEC_MDM_Channel__c>) safe;
@@ -17,6 +16,11 @@ public with sharing class FEC_ChannelController {
             throw new AuraHandledException(FEC_Constants.ERROR_DELETE_RECORD_PREFIX + ' Invalid Id');
         }
         try {
+            // Permission check
+            Schema.SObjectType t = FEC_MDM_Channel__c.SObjectType;
+            if (!t.getDescribe().isDeletable()) {
+                throw new AuraHandledException(System.Label.FEC_Error_No_Delete_Permission);
+            }
             FEC_MDM_Channel__c rec = new FEC_MDM_Channel__c(Id = recordId);
             Database.DeleteResult dr = Database.delete(rec, false);
             if (!dr.isSuccess()) {
