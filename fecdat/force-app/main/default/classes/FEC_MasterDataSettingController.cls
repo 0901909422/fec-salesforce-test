@@ -18,67 +18,51 @@ public with sharing class FEC_MasterDataSettingController {
         // Kiểm tra input cơ bản
         if (String.isBlank(selectedNodeId)) return new List<FEC_MDM_Master_Data_Setting__c>();
         
-        String query = 'SELECT ' +
-            'Id, Name, ' +
-            'FEC_Section__c, ' +
-            'FEC_Field_Status__c, ' +
-            'FEC_Field_ReadOnly__c, ' +
-            'FEC_Field_Order_Display__c, ' +
-            'FEC_Field_Object_Name__c, ' +
-            'FEC_Field_Mandatory__c, ' +
-        'FEC_Applicable_Role__c, ' +
-            'Process_Change_Status__c, ' +
-        'FEC_Data_Integration_Mapping__c, ' + // ID của Mapping Fraud
-            
-        // Các trường quan hệ (Parent Fields)
-        'FEC_Additional_Field__r.Name, ' +
-            'FEC_Stage_Name__r.Name, ' +
-            'FEC_Nature_Of_Case__r.Name, ' +
-            'FEC_Channel__c, ' +
-            'FEC_Case_Channel__r.Name ' +
-            'FROM FEC_MDM_Master_Data_Setting__c ' +
-            'WHERE FEC_Nature_Of_Case__c = :selectedNodeId ';
-        
-        // Lọc theo Stage nếu có truyền vào
+        // Build field list and assemble SOQL succinctly
+        List<String> fields = new List<String>{
+            'Id','Name','FEC_Section__c','FEC_Field_Status__c','FEC_Field_ReadOnly__c',
+            'FEC_Field_Order_Display__c','FEC_Field_Object_Name__c','FEC_Field_Mandatory__c',
+            'FEC_Applicable_Role__c','Process_Change_Status__c','FEC_Data_Integration_Mapping__c',
+            'FEC_Additional_Field__r.Name','FEC_Stage_Name__r.Name','FEC_Nature_Of_Case__r.Name','FEC_Channel__c','FEC_Case_Channel__r.Name'
+        };
+
+        String baseQuery = 'SELECT ' + String.join(fields, ', ') + ' FROM FEC_MDM_Master_Data_Setting__c WHERE FEC_Nature_Of_Case__c = :selectedNodeId ';
         if (String.isNotBlank(selectedStageId)) {
-            query += ' AND FEC_Stage_Name__c = :selectedStageId ';
+            baseQuery += ' AND FEC_Stage_Name__c = :selectedStageId ';
         }
-        
-        // PHÂN LOẠI TAB:
-        // Nếu isIntegration = true -> Lấy những record có gắn với Fraud Mapping
-        // Nếu isIntegration = false -> Lấy những record cấu hình Property thông thường
         if (isIntegration != null) {
-            if (isIntegration) {
-                query += ' AND FEC_Data_Integration_Mapping__c != NULL ';
-            } else {
-                query += ' AND FEC_Data_Integration_Mapping__c = NULL ';
-            }
+            baseQuery += isIntegration ? ' AND FEC_Data_Integration_Mapping__c != NULL ' : ' AND FEC_Data_Integration_Mapping__c = NULL ';
         }
+
+        String finalQuery = baseQuery + ' ORDER BY FEC_Field_Order_Display__c ASC NULLS LAST, Name ASC';
         
-        query += ' ORDER BY FEC_Field_Order_Display__c ASC NULLS LAST, Name ASC LIMIT 500';
-        
-        List<FEC_MDM_Master_Data_Setting__c> settings = Database.query(query);
-        
-        return settings;
+        List<FEC_MDM_Master_Data_Setting__c> settings = Database.query(finalQuery + ' LIMIT ' + String.valueOf(FEC_Constants.QUERY_LIMIT));
+        // Enforce FLS
+        List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, settings).getRecords();
+        return (List<FEC_MDM_Master_Data_Setting__c>) safe;
     }
     
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getChannels() {
         List<Map<String, String>> options = new List<Map<String, String>>();
-        for (FEC_MDM_Channel__c c : [SELECT Name FROM FEC_MDM_Channel__c ORDER BY Name]) {
-            options.add(new Map<String, String>{'label' => c.Name, 'value' => c.Name});
+        List<FEC_MDM_Channel__c> channels = [SELECT Name FROM FEC_MDM_Channel__c ORDER BY Name LIMIT :FEC_Constants.QUERY_LIMIT];
+        List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, channels).getRecords();
+        for (FEC_MDM_Channel__c c : (List<FEC_MDM_Channel__c>) safe) {
+            options.add(new Map<String, String>{FEC_Constants.MAP_LABEL => c.Name, FEC_Constants.MAP_VALUE => c.Name});
         }
         return options;
-    }
-    
-    @AuraEnabled(cacheable=true)
-    public static List<Map<String, String>> getUserRoles() {
-        List<Map<String, String>> options = new List<Map<String, String>>();
-        for (UserRole r : [SELECT Name FROM UserRole ORDER BY Name]) {
-            options.add(new Map<String, String>{'label' => r.Name, 'value' => r.Name});
-        }
-        return options;
-    }
+     }
+     
+     @AuraEnabled(cacheable=true)
+     public static List<Map<String, String>> getUserRoles() {
+         List<Map<String, String>> options = new List<Map<String, String>>();
+         List<UserRole> roles = [SELECT Name FROM UserRole ORDER BY Name LIMIT :FEC_Constants.QUERY_LIMIT];
+         List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, roles).getRecords();
+         for (UserRole r : (List<UserRole>) safe) {
+            options.add(new Map<String, String>{FEC_Constants.MAP_LABEL => r.Name, FEC_Constants.MAP_VALUE => r.Name});
+         }
+         return options;
+     }
     
     /**
      * @description Lấy danh sách các Stage Name (FEC_Case_Stage__c) cho Combobox.
@@ -87,126 +71,96 @@ public with sharing class FEC_MasterDataSettingController {
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> getStageOptions() {
         List<Map<String, Object>> options = new List<Map<String, Object>>();
-        
-        // Thêm tùy chọn trống (None) để người dùng có thể chọn bỏ trống
-        options.add(new Map<String, Object>{'label' => '-- None --', 'value' => ''});
-        
-        // Truy vấn các bản ghi Stage (chỉ khoảng 5 bản ghi nên truy vấn này là hiệu quả)
+        options.add(new Map<String, Object>{FEC_Constants.MAP_LABEL => FEC_Constants.LABEL_NONE, FEC_Constants.MAP_VALUE => ''});
         List<FEC_Case_Stage__c> stages = [
         SELECT Id, Name 
         FROM FEC_Case_Stage__c 
         WITH SECURITY_ENFORCED 
         ORDER BY Name ASC
+    LIMIT :FEC_Constants.QUERY_LIMIT
     ];
-        
-        // Chuyển đổi sang định dạng Combobox: {label: Name, value: Id}
         for (FEC_Case_Stage__c stage : stages) {
             options.add(new Map<String, Object>{
-                'label' => stage.Name,
-                'value' => stage.Id // Giá trị là ID của bản ghi Lookup
+                FEC_Constants.MAP_LABEL => stage.Name,
+                FEC_Constants.MAP_VALUE => stage.Id
             });
         }
         return options;
     }
     
-    /**
-     * @description Hàm chung để lấy danh sách các tùy chọn Lookup từ bất kỳ Object nào có trường Name/Id.
-     * @param sObjectName Tên API của Object (ví dụ: 'FEC_Case_Stage__c').
-     * @return List<Map<String, Object>> Danh sách các tùy chọn dưới dạng {label: Name, value: Id}.
-     */
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> getLookupOptions(String sObjectName) {
         List<Map<String, Object>> options = new List<Map<String, Object>>();
-        
-        // Thêm tùy chọn trống (None)
-        options.add(new Map<String, Object>{'label' => '-- None --', 'value' => ''});
-        
-        // 1. Kiểm tra tính hợp lệ của Object API Name
+        options.add(new Map<String, Object>{FEC_Constants.MAP_LABEL => FEC_Constants.LABEL_NONE, FEC_Constants.MAP_VALUE => ''});
         Schema.SObjectType targetType = Schema.getGlobalDescribe().get(sObjectName);
-        // 3. Tạo Dynamic SOQL Query
-        String query = 'SELECT Id, Name FROM ' + sObjectName + ' WITH SECURITY_ENFORCED ORDER BY Name ASC';
-        
-        // 4. Thực thi Dynamic SOQL
+        if (targetType == null) {
+            throw new AuraHandledException(FEC_Constants.ERROR_INVALID_SOBJECT_PREFIX + sObjectName);
+        }
+        String query = 'SELECT Id, Name FROM ' + sObjectName + ' WITH SECURITY_ENFORCED ORDER BY Name ASC LIMIT ' + String.valueOf(FEC_Constants.QUERY_LIMIT);
         List<SObject> records = Database.query(query);
-        
-        // 5. Chuyển đổi sang định dạng Combobox
         for (SObject rec : records) {
-            options.add(new Map<String, Object>{
-                'label' => (String)rec.get('Name'),
-                'value' => (String)rec.get('Id')
-            });
+            options.add(new Map<String, Object>{FEC_Constants.MAP_LABEL => (String)rec.get('Name'), FEC_Constants.MAP_VALUE => (String)rec.get('Id')});
         }
         return options;
     }
     
-    /**
-     * @description Hàm tiện ích để kiểm tra và trả về ID hoặc null.
-     * @param mappingReq Map dữ liệu gửi từ LWC.
-     * @param fieldName Tên trường Lookup cần kiểm tra.
-     * @return String ID hợp lệ hoặc null.
-     */
     private static String getOptionalId(Map<String, Object> mappingReq, String fieldName) {
         String value = (String)mappingReq.get(fieldName);
-        // Trả về ID nếu nó không rỗng (và không null). Ngược lại, trả về null.
         return String.isNotBlank(value) ? value : null;
     }
     
     @AuraEnabled
     public static Id saveMasterDataSetting(Map<String, Object> mappingReq) {
         System.debug('--- START saveMasterDataSetting ---');
-        
-        String recordId = (String)mappingReq.get('Id');
+        String recordId = (String)mappingReq.get(FEC_Constants.FIELD_ID);
         FEC_MDM_Master_Data_Setting__c recordToSave = String.isNotBlank(recordId)
             ? new FEC_MDM_Master_Data_Setting__c(Id = recordId)
             : new FEC_MDM_Master_Data_Setting__c();
-        
         try {
             if (String.isBlank(recordId)) {
-                recordToSave.Process_Change_Status__c = 'New';
-                // Map thêm các trường bắt buộc cho bản ghi mới tại đây...
-                recordToSave.FEC_Nature_Of_Case__c = getOptionalId(mappingReq, 'FEC_Nature_Of_Case__c');
-                recordToSave.FEC_Stage_Name__c = getOptionalId(mappingReq, 'FEC_Stage_Name__c');
-                recordToSave.FEC_Field_Mandatory__c = (Boolean)mappingReq.get('FEC_Field_Mandatory__c');
-                recordToSave.FEC_Field_ReadOnly__c = (Boolean)mappingReq.get('FEC_Field_ReadOnly__c');
-                recordToSave.FEC_Section__c = (String)mappingReq.get('FEC_Section__c');
-                recordToSave.FEC_Field_Object_Name__c = (String)mappingReq.get('FEC_Field_Object_Name__c');
-                recordToSave.FEC_Additional_Field__c = (String)mappingReq.get('FEC_Additional_Field__c');
-                recordToSave.FEC_Applicable_Role__c = getOptionalId(mappingReq, 'FEC_Applicable_Role__c'); // <-- TRƯ
-                recordToSave.FEC_Field_ReadOnly__c = (Boolean)mappingReq.get('FEC_Field_ReadOnly__c');
-                recordToSave.FEC_Channel__c = getOptionalId(mappingReq, 'FEC_Channel__c');
-                recordToSave.FEC_Case_Channel__c = getOptionalId(mappingReq, 'FEC_Case_Channel__c');
-                recordToSave.FEC_Data_Integration_Mapping__c = getOptionalId(mappingReq, 'FEC_Data_Integration_Mapping__c');
-                
-                Object orderValue = mappingReq.get('FEC_Field_Order_Display__c');
+                recordToSave.Process_Change_Status__c = FEC_Constants.PROCESS_STATUS_NEW;
+                recordToSave.FEC_Nature_Of_Case__c = getOptionalId(mappingReq, FEC_Constants.FIELD_NATURE_OF_CASE);
+                recordToSave.FEC_Stage_Name__c = getOptionalId(mappingReq, FEC_Constants.FIELD_STAGE_NAME);
+                recordToSave.FEC_Field_Mandatory__c = (Boolean)mappingReq.get(FEC_Constants.FIELD_FIELD_MANDATORY);
+                recordToSave.FEC_Field_ReadOnly__c = (Boolean)mappingReq.get(FEC_Constants.FIELD_FIELD_READONLY);
+                recordToSave.FEC_Section__c = (String)mappingReq.get(FEC_Constants.FIELD_SECTION);
+                recordToSave.FEC_Field_Object_Name__c = (String)mappingReq.get(FEC_Constants.FIELD_FIELD_OBJECT_NAME);
+                recordToSave.FEC_Additional_Field__c = (String)mappingReq.get(FEC_Constants.FIELD_ADDITIONAL_FIELD);
+                recordToSave.FEC_Applicable_Role__c = getOptionalId(mappingReq, FEC_Constants.FIELD_APPLICABLE_ROLE);
+                recordToSave.FEC_Field_ReadOnly__c = (Boolean)mappingReq.get(FEC_Constants.FIELD_FIELD_READONLY);
+                recordToSave.FEC_Channel__c = getOptionalId(mappingReq, FEC_Constants.FIELD_CHANNEL);
+                recordToSave.FEC_Case_Channel__c = getOptionalId(mappingReq, FEC_Constants.FIELD_CASE_CHANNEL);
+                recordToSave.FEC_Data_Integration_Mapping__c = getOptionalId(mappingReq, FEC_Constants.FIELD_DATA_INTEGRATION_MAPPING);
+                Object orderValue = mappingReq.get(FEC_Constants.FIELD_FIELD_ORDER_DISPLAY);
                 recordToSave.FEC_Field_Order_Display__c = (orderValue != null)
                     ? Integer.valueOf(String.valueOf(orderValue)) : null;
             }
-            
-            if (mappingReq.containsKey('FEC_Field_Status__c')) {
-                recordToSave.FEC_Field_Status__c = (Boolean)mappingReq.get('FEC_Field_Status__c');
+            if (mappingReq.containsKey(FEC_Constants.FIELD_FIELD_STATUS)) {
+                recordToSave.FEC_Field_Status__c = (Boolean)mappingReq.get(FEC_Constants.FIELD_FIELD_STATUS);
             }
-            
-            // 3. Thực hiện DML (Sử dụng insert khi đã xác định là Add mode)
             upsert recordToSave;
             System.debug('--- END saveMasterDataSetting Success: ' + recordToSave.Id + ' ---');
             return recordToSave.Id;
         } catch (DmlException dml) {
-            throw new AuraHandledException('Lỗi DML saveMasterDataSetting cls: ' + dml.getDmlMessage(0));
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' ' + dml.getDmlMessage(0));
         } catch (Exception e) {
-            throw new AuraHandledException('Lỗi Chung Apex saveMasterDataSetting cls: ' + e.getMessage());
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
         }
     }
     
-    /**
-     * @description Xóa bản ghi Master Data Setting.
-     * @param recordId ID của bản ghi cần xóa.
-     * @return String 'Success' hoặc thông báo lỗi.
-     */
     @AuraEnabled
     public static String deleteRecord(Id recordId) {
-        FEC_MDM_Master_Data_Setting__c recordToDelete = new FEC_MDM_Master_Data_Setting__c(Id = recordId);
-        delete recordToDelete;
-        return 'Success';
+        if (recordId == null) {
+            throw new AuraHandledException(FEC_Constants.ERROR_DELETE_RECORD_PREFIX + ' ' + FEC_Constants.ERROR_INVALID_ID);
+        }
+        try {
+             FEC_MDM_Master_Data_Setting__c recordToDelete = new FEC_MDM_Master_Data_Setting__c(Id = recordId);
+             delete recordToDelete;
+             return FEC_Constants.OPERATION_SUCCESS;
+         } catch (Exception e) {
+             System.debug('FEC_MasterDataSettingController.deleteRecord error: ' + e);
+            throw new AuraHandledException(FEC_Constants.ERROR_SYSTEM + ' ' + e.getMessage());
+         }
     }
     
     @AuraEnabled
@@ -232,24 +186,27 @@ public with sharing class FEC_MasterDataSettingController {
             insert stage;
             return stage.Id;
         } catch (Exception e) {
-            throw new AuraHandledException('Lỗi Apex: ' + e.getMessage());
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
         }
     }
     
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getCaseStageOptionsByBP(String businessProcessId) {
         List<Map<String, String>> options = new List<Map<String, String>>();
-        for (FEC_MDM_Case_Stage__c stage : [
+        List<FEC_MDM_Case_Stage__c> stages = [
         SELECT Id, Name 
         FROM FEC_MDM_Case_Stage__c
         WHERE FEC_Business_Process__c = :businessProcessId 
         ORDER BY FEC_Pos_Order__c ASC
-    ]) {
+        LIMIT :FEC_Constants.QUERY_LIMIT
+    ];
+        List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, stages).getRecords();
+        for (FEC_MDM_Case_Stage__c stage : (List<FEC_MDM_Case_Stage__c>) safe) {
             options.add(new Map<String, String>{
-                'label' => stage.Name,
-                'value' => stage.Id
+                FEC_Constants.MAP_LABEL => stage.Name,
+                FEC_Constants.MAP_VALUE => stage.Id
             });
         }
-        return options;
-    }
-}
+         return options;
+     }
+ }

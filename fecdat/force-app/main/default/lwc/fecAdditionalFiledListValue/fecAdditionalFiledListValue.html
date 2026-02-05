@@ -1,0 +1,78 @@
+<template>
+    <div class="slds-m-around_small">
+        <div class="button-group slds-m-bottom_small">
+            <lightning-button label={labelNewListValue} icon-name="utility:add" onclick={openAddEditModal} variant="brand"
+                class="slds-m-bottom_medium" title={labelNewListValue}>
+            </lightning-button>
+        </div>
+        <div class="datatable-container">
+            <template if:true={listValues}>
+                <lightning-datatable key-field="Id" data={listValues} columns={columns} hide-checkbox-column
+                    onrowaction={handleRowAction} aria-label="List of Additional Field Values">
+                </lightning-datatable>
+            </template>
+        </div>
+        <template if:true={isLoading}>
+            <lightning-layout class="slds-align_absolute-center">
+                <lightning-spinner alternative-text="Loading list values" size="small"></lightning-spinner>
+            </lightning-layout>
+        </template>
+    </div>
+
+    <!-- Modal for Add/Edit List Value -->
+    <template if:true={isAddEditModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        onclick={closeAddEditModal} title="Close dialog" aria-label="Close dialog">
+                        <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
+                    </button>
+                    <h2 id="modal-heading" class="slds-modal__title">{listValueModalTitle}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-record-edit-form object-api-name={OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE}
+                         record-id={listValueRecordIdForEdit} onsuccess={handleFormSuccess} onerror={handleFormError} oncancel={closeAddEditModal}>
+
+                        <lightning-input-field field-name={FIELD_NAME} required aria-label={labelListValueName}></lightning-input-field>
+                        <lightning-input-field field-name={FIELD_NAME_VN} required aria-label={labelListValueNameVN}></lightning-input-field>
+                        <lightning-input-field field-name={FIELD_ORDER} aria-label={labelOrder}></lightning-input-field>
+
+                        <lightning-input-field field-name={FIELD_PARENT_FIELD} value={parentFieldId}
+                            class="slds-hidden" aria-hidden="true">
+                        </lightning-input-field>
+
+                        <div class="slds-m-top_medium slds-align_absolute-center">
+                            <lightning-button label={labelCancel} onclick={closeAddEditModal} class="slds-m-right_x-small" title={labelCancel}></lightning-button>
+                            <lightning-button type="submit" label={labelSave} variant="brand" title={labelSave}></lightning-button>
+                        </div>
+                     </lightning-record-edit-form>
+                 </div>
+             </div>
+         </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- Custom Delete Confirmation Modal -->
+    <template if:true={isDeleteModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="delete-modal-heading" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        onclick={closeDeleteModal} title="Close dialog" aria-label="Close dialog">
+                        <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
+                    </button>
+                    <h2 id="delete-modal-heading" class="slds-modal__title">{labelConfirmDeleteTitle}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p>{labelConfirmDeleteMsg}</p>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label={labelCancel} onclick={closeDeleteModal} class="slds-m-right_x-small" title={labelCancel}></lightning-button>
+                    <lightning-button label={labelDelete} variant="destructive" onclick={confirmDelete} title={labelDelete}></lightning-button>
+                 </footer>
+             </div>
+         </section>
+         <div class="slds-backdrop slds-backdrop_open"></div>
+     </template>
+ </template>

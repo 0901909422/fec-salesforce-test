@@ -12,10 +12,10 @@ public with sharing class FEC_ProcessChangeStatusTriggerHandler {
     public static void handleStatusBeforeInsert(List<SObject> newList) {
         if (!isTriggerEnabled) return;
         for (SObject record : newList) {
-            record.put('Process_Change_Status__c', 'New');
+            record.put(FEC_Constants.FIELD_PROCESS_CHANGE_STATUS, FEC_Constants.PROCESS_STATUS_NEW);
             Long ts = DateTime.now().getTime();
             Integer rand = Integer.valueOf(Math.random() * 1000);
-            record.put('ExternalID__c', ts + '-' + rand);
+            record.put(FEC_Constants.FIELD_EXTERNAL_ID, ts + '-' + rand);
         }
     }
     
@@ -27,13 +27,13 @@ public with sharing class FEC_ProcessChangeStatusTriggerHandler {
     public static void handleStatusBeforeUpdate(List<SObject> newList, Map<Id, SObject> oldMap) {
         if (!isTriggerEnabled) return;
         for (SObject record : newList) {
-            SObject oldRecord = oldMap.get((Id)record.get('Id'));
-            String oldStatus = (String)oldRecord.get('Process_Change_Status__c');
+            SObject oldRecord = oldMap.get((Id)record.get(FEC_Constants.FIELD_ID));
+            String oldStatus = (String)oldRecord.get(FEC_Constants.FIELD_PROCESS_CHANGE_STATUS);
             
-            if (oldStatus == 'New') {
-                record.put('Process_Change_Status__c', 'New');
+            if (oldStatus == FEC_Constants.PROCESS_STATUS_NEW) {
+                record.put(FEC_Constants.FIELD_PROCESS_CHANGE_STATUS, FEC_Constants.PROCESS_STATUS_NEW);
             } else {
-                record.put('Process_Change_Status__c', 'Update');
+                record.put(FEC_Constants.FIELD_PROCESS_CHANGE_STATUS, FEC_Constants.PROCESS_STATUS_UPDATE);
             }
         }
     }

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
-    <deploymentStatus>Deployed</deploymentStatus>
-    <description>Platform Event để trigger refresh Card Info từ API</description>
-    <eventType>HighVolume</eventType>
-    <label>FEC Card Info Refresh</label>
-    <pluralLabel>FEC Card Info Refreshes</pluralLabel>
-    <publishBehavior>PublishAfterCommit</publishBehavior>
-</CustomObject>

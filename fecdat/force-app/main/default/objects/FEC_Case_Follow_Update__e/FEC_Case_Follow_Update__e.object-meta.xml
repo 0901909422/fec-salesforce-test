@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
-    <deploymentStatus>Deployed</deploymentStatus>
-    <description>Platform Event để thông báo khi có thay đổi follow/unfollow trên Case</description>
-    <eventType>HighVolume</eventType>
-    <label>FEC Case Follow Update</label>
-    <pluralLabel>FEC Case Follow Updates</pluralLabel>
-    <publishBehavior>PublishAfterCommit</publishBehavior>
-</CustomObject>

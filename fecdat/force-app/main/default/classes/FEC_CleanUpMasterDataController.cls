@@ -1,16 +1,16 @@
 public with sharing class FEC_CleanUpMasterDataController {
     // Mapping giữa Object Nguồn và Object MDM Đích
     private static final Map<String, String> SYNC_MAP = new Map<String, String>{
-        'FEC_Product_Type__c' => 'FEC_MDM_Product_Type__c',
-        'FEC_Business_Process__c' => 'FEC_MDM_Business_Process__c',
-        'FEC_Category__c' => 'FEC_MDM_Category__c',
-        'FEC_Sub_Category__c' => 'FEC_MDM_Sub_Category__c',
-        'FEC_Sub_Code__c' => 'FEC_MDM_Sub_Code__c',
-        'FEC_Master_Data_Setting__c' => 'FEC_MDM_Master_Data_Setting__c',
-        'FEC_Nature_Of_Case__c' => 'FEC_MDM_Nature_Of_Case__c',
-        'FEC_Additional_Field__c' => 'FEC_MDM_Additional_Field__c',
-        'FEC_Additional_Field_List_Value__c' => 'FEC_MDM_Additional_Field_List_Value__c',
-        'FEC_Case_Stage__c' => 'FEC_MDM_Case_Stage__c'
+        FEC_Constants.OBJ_PRODUCT_TYPE => FEC_Constants.OBJ_MDM_PRODUCT_TYPE,
+        FEC_Constants.OBJ_BUSINESS_PROCESS => FEC_Constants.OBJ_MDM_BUSINESS_PROCESS,
+        FEC_Constants.OBJ_CATEGORY => FEC_Constants.OBJ_MDM_CATEGORY,
+        FEC_Constants.OBJ_SUB_CATEGORY => FEC_Constants.OBJ_MDM_SUB_CATEGORY,
+        FEC_Constants.OBJ_SUB_CODE => FEC_Constants.OBJ_MDM_SUB_CODE,
+        FEC_Constants.OBJ_MASTER_DATA_SETTING => FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING,
+        FEC_Constants.OBJ_NATURE_OF_CASE => FEC_Constants.OBJ_MDM_NATURE_OF_CASE,
+        FEC_Constants.OBJ_ADDITIONAL_FIELD => FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD,
+        FEC_Constants.OBJ_ADDITIONAL_FIELD_LIST_VALUE => FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE,
+        FEC_Constants.OBJ_CASE_STAGE => FEC_Constants.OBJ_MDM_CASE_STAGE
     };
     
     @AuraEnabled(cacheable=true)
@@ -19,45 +19,45 @@ public with sharing class FEC_CleanUpMasterDataController {
         
         try {
             // --- 5 Tabs cũ ---
-            masterDataMap.put('ProductType', [SELECT Id, Name, ExternalID__c, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_Product_Type__c ORDER BY Name]);
-            masterDataMap.put('BusinessProcess', [SELECT Id, Name, ExternalID__c, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_Business_Process__c ORDER BY Name]);
-            masterDataMap.put('Category', [SELECT Id, Name, ExternalID__c, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_Category__c ORDER BY Name]);
-            masterDataMap.put('SubCategory', [SELECT Id, Name, ExternalID__c, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_Sub_Category__c ORDER BY Name]);
-            masterDataMap.put('SubCode', [SELECT Id, Name, ExternalID__c, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_Sub_Code__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_PRODUCT_TYPE, [SELECT Id, Name, ExternalID__c, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_Product_Type__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_BUSINESS_PROCESS, [SELECT Id, Name, ExternalID__c, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_Business_Process__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_CATEGORY, [SELECT Id, Name, ExternalID__c, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_Category__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_SUB_CATEGORY, [SELECT Id, Name, ExternalID__c, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_Sub_Category__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_SUB_CODE, [SELECT Id, Name, ExternalID__c, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_Sub_Code__c ORDER BY Name]);
 
             // --- 4 Tabs mới thêm ---
             // 6. Master Data Setting
-            masterDataMap.put('MasterSetting', [SELECT Id, Name, ExternalID__c, FEC_Additional_Field__c, FEC_Stage_Name__c, FEC_Channel__c, FEC_Applicable_Role__c, FEC_Data_Integration_Mapping__c, Process_Change_Status__c FROM FEC_Master_Data_Setting__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_MASTER_SETTING, [SELECT Id, Name, ExternalID__c, FEC_Additional_Field__c, FEC_Stage_Name__c, FEC_Channel__c, FEC_Applicable_Role__c, FEC_Data_Integration_Mapping__c, Process_Change_Status__c FROM FEC_Master_Data_Setting__c ORDER BY Name]);
             
-            masterDataMap.put('Channel', [SELECT Id, Name, ExternalID__c, Process_Change_Status__c FROM FEC_Channel__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_CHANNEL, [SELECT Id, Name, ExternalID__c, Process_Change_Status__c FROM FEC_Channel__c ORDER BY Name]);
             
             // 7. Nature Of Case (trả về wrapper)
             List<FEC_Nature_Of_Case__c> nocList = [
                 SELECT Id, Name, ExternalID__c, FEC_Product_Type_Name__r.Name, FEC_Business_Process_Name__r.Name, 
                        FEC_Category_Name__r.Name, FEC_Sub_Category_Name__r.Name,FEC_Sub_Code__r.Name, Process_Change_Status__c 
-                FROM FEC_Nature_Of_Case__c LIMIT 1000
+                FROM FEC_Nature_Of_Case__c LIMIT :FEC_Constants.QUERY_LIMIT_LARGE
             ];
-            System.debug('NOC Wrapper List nocList: ' + nocList);
+            System.debug(FEC_Constants.DEBUG_NOC_LIST_PREFIX + nocList);
             List<NatureOfCaseWrapper> nocWrapperList = new List<NatureOfCaseWrapper>();
             for (FEC_Nature_Of_Case__c noc : nocList) {
                 nocWrapperList.add(new NatureOfCaseWrapper(noc));
             }
-            System.debug('NOC Wrapper List nocWrapperList: ' + nocWrapperList);
-            masterDataMap.put('NatureOfCase', nocWrapperList);
+            System.debug(FEC_Constants.DEBUG_NOC_WRAPPER_PREFIX + nocWrapperList);
+            masterDataMap.put(FEC_Constants.KEY_NATURE_OF_CASE, nocWrapperList);
             
             // 8. Additional Field
-            masterDataMap.put('AdditionalField', [SELECT Id, Name, ExternalID__c, FEC_Type__c, FEC_Name_VN__c, Process_Change_Status__c FROM FEC_Additional_Field__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_ADDITIONAL_FIELD, [SELECT Id, Name, ExternalID__c, FEC_Type__c, FEC_Name_VN__c, Process_Change_Status__c FROM FEC_Additional_Field__c ORDER BY Name]);
             
             // 8.1 Additional Field List Value
-            masterDataMap.put('AdditionalFieldList', [SELECT Id, Name, ExternalID__c, FEC_Name_VN__c, Process_Change_Status__c FROM FEC_Additional_Field_List_Value__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_ADDITIONAL_FIELD_LIST, [SELECT Id, Name, ExternalID__c, FEC_Name_VN__c, Process_Change_Status__c FROM FEC_Additional_Field_List_Value__c ORDER BY Name]);
             
             
             // 9. Case Stage
-            masterDataMap.put('CaseStage', [SELECT Id, Name, ExternalID__c,FEC_Business_Process__c, Process_Change_Status__c FROM FEC_Case_Stage__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_CASE_STAGE, [SELECT Id, Name, ExternalID__c,FEC_Business_Process__c, Process_Change_Status__c FROM FEC_Case_Stage__c ORDER BY Name]);
             
             
         } catch (Exception e) {
-            throw new AuraHandledException('Lỗi: ' + e.getMessage());
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
         }
         return masterDataMap;
     }
@@ -68,45 +68,45 @@ public with sharing class FEC_CleanUpMasterDataController {
         
         try {
             // --- 5 Tabs cũ ---
-            masterDataMap.put('ProductType', [SELECT Id, ExternalID__c, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_MDM_Product_Type__c ORDER BY Name]);
-            masterDataMap.put('BusinessProcess', [SELECT Id, ExternalID__c, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_MDM_Business_Process__c ORDER BY Name]);
-            masterDataMap.put('Category', [SELECT Id, ExternalID__c, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_MDM_Category__c ORDER BY Name]);
-            masterDataMap.put('SubCategory', [SELECT Id, ExternalID__c, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_MDM_Sub_Category__c ORDER BY Name]);
-            masterDataMap.put('SubCode', [SELECT Id, ExternalID__c, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_MDM_Sub_Code__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_PRODUCT_TYPE, [SELECT Id, ExternalID__c, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_MDM_Product_Type__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_BUSINESS_PROCESS, [SELECT Id, ExternalID__c, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_MDM_Business_Process__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_CATEGORY, [SELECT Id, ExternalID__c, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_MDM_Category__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_SUB_CATEGORY, [SELECT Id, ExternalID__c, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_MDM_Sub_Category__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_SUB_CODE, [SELECT Id, ExternalID__c, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Pos_Order__c, FEC_Status__c, Process_Change_Status__c FROM FEC_MDM_Sub_Code__c ORDER BY Name]);
 
             // --- 4 Tabs mới thêm ---
             // 6. Master Data Setting
-            masterDataMap.put('MasterSetting', [SELECT Id, ExternalID__c, Name, FEC_Customer_Type__c, FEC_Additional_Field__c, FEC_Stage_Name__c, FEC_Channel__c, FEC_Applicable_Role__c, FEC_Data_Integration_Mapping__c, Process_Change_Status__c FROM FEC_MDM_Master_Data_Setting__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_MASTER_SETTING, [SELECT Id, ExternalID__c, Name, FEC_Customer_Type__c, FEC_Additional_Field__c, FEC_Stage_Name__c, FEC_Channel__c, FEC_Applicable_Role__c, FEC_Data_Integration_Mapping__c, Process_Change_Status__c FROM FEC_MDM_Master_Data_Setting__c ORDER BY Name]);
             // Channel
-            masterDataMap.put('Channel', [SELECT Id, ExternalID__c, Name, Process_Change_Status__c FROM FEC_MDM_Channel__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_CHANNEL, [SELECT Id, ExternalID__c, Name, Process_Change_Status__c FROM FEC_MDM_Channel__c ORDER BY Name]);
             
             // 7. Nature Of Case (trả về wrapper)
             List<FEC_MDM_Nature_Of_Case__c> nocList = [
                 SELECT Id, ExternalID__c, Name, FEC_Customer_Type__c, FEC_Product_Type_Name__r.Name, FEC_Business_Process_Name__r.Name, 
                        FEC_Category_Name__r.Name, FEC_Sub_Category_Name__r.Name,FEC_Sub_Code__r.Name, Process_Change_Status__c 
-                FROM FEC_MDM_Nature_Of_Case__c LIMIT 1000
+                FROM FEC_MDM_Nature_Of_Case__c LIMIT :FEC_Constants.QUERY_LIMIT_LARGE
             ];
-            System.debug('NOC Wrapper List nocList: ' + nocList);
+            System.debug(FEC_Constants.DEBUG_NOC_LIST_PREFIX + nocList);
             List<NatureOfCaseMDMWrapper> nocWrapperList = new List<NatureOfCaseMDMWrapper>();
             for (FEC_MDM_Nature_Of_Case__c noc : nocList) {
                 nocWrapperList.add(new NatureOfCaseMDMWrapper(noc));
             }
-            System.debug('NOC Wrapper List nocWrapperList: ' + nocWrapperList);
-            masterDataMap.put('NatureOfCase', nocWrapperList);
+            System.debug(FEC_Constants.DEBUG_NOC_WRAPPER_PREFIX + nocWrapperList);
+            masterDataMap.put(FEC_Constants.KEY_NATURE_OF_CASE, nocWrapperList);
             
             // 8. Additional Field
-            masterDataMap.put('AdditionalField', [SELECT Id, ExternalID__c, Name, FEC_Type__c, FEC_Name_VN__c, Process_Change_Status__c FROM FEC_MDM_Additional_Field__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_ADDITIONAL_FIELD, [SELECT Id, ExternalID__c, Name, FEC_Type__c, FEC_Name_VN__c, Process_Change_Status__c FROM FEC_MDM_Additional_Field__c ORDER BY Name]);
             
             // 8.1 Additional Field List Value
-            masterDataMap.put('AdditionalFieldList', [SELECT Id, Name, ExternalID__c, FEC_Name_VN__c, Process_Change_Status__c FROM FEC_MDM_Additional_Field_List_Value__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_ADDITIONAL_FIELD_LIST, [SELECT Id, Name, ExternalID__c, FEC_Name_VN__c, Process_Change_Status__c FROM FEC_MDM_Additional_Field_List_Value__c ORDER BY Name]);
             
             
             // 9. Case Stage
-            masterDataMap.put('CaseStage', [SELECT Id, ExternalID__c, Name,FEC_Business_Process__c, Process_Change_Status__c FROM FEC_MDM_Case_Stage__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_CASE_STAGE, [SELECT Id, ExternalID__c, Name,FEC_Business_Process__c, Process_Change_Status__c FROM FEC_MDM_Case_Stage__c ORDER BY Name]);
             
             
         } catch (Exception e) {
-            throw new AuraHandledException('Lỗi: ' + e.getMessage());
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
         }
         return masterDataMap;
     }
@@ -118,7 +118,7 @@ public with sharing class FEC_CleanUpMasterDataController {
             // Khởi chạy Batch với size = 1 để mỗi Object xử lý trong 1 Transaction riêng biệt
             Database.executeBatch(new FEC_SyncMasterDataBatch(), 1);
         } catch (Exception e) {
-            throw new AuraHandledException('Không thể bắt đầu tiến trình đồng bộ: ' + e.getMessage());
+            throw new AuraHandledException(FEC_Constants.ERROR_CANNOT_START_SYNC + ' ' + e.getMessage());
         }
     }
     
@@ -128,7 +128,7 @@ public with sharing class FEC_CleanUpMasterDataController {
             // Chạy Batch với scope 1 để đảm bảo an toàn CPU cho từng Object
             Database.executeBatch(new FEC_PushMDMToLiveBatch(), 1);
         } catch (Exception e) {
-            throw new AuraHandledException('Lỗi khi bắt đầu đồng bộ: ' + e.getMessage());
+            throw new AuraHandledException(FEC_Constants.ERROR_CANNOT_START_PUSH + ' ' + e.getMessage());
         }
     }
     

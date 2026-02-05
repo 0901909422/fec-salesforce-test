@@ -1,0 +1,1093 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>FEC_Operation_Success</fullName>
+        <value>Success</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Delete_Record_Prefix</fullName>
+        <value>Error deleting record: </value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Delete_FieldList_Prefix</fullName>
+        <value>Error deleting Field List Value: </value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Cancel</fullName>
+        <value>Cancel</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Cancel_Title</fullName>
+        <value>Cancel and close form</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Save</fullName>
+        <value>Save</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Save_Title</fullName>
+        <value>Save changes</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Success_Title</fullName>
+        <value>Success</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Save_Success_Message</fullName>
+        <value>Record saved.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Success_Message</fullName>
+        <value>Record saved successfully. ID: {0}</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Success_Title</fullName>
+        <value>Success</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Success_Message</fullName>
+        <value>Mapping information has been updated.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Error_Title</fullName>
+        <value>Error</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Error_Message</fullName>
+        <value>An error occurred while saving.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Title</fullName>
+        <value>Error</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Success_Message</fullName>
+        <value>Record deleted successfully.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Retrieve_Additional_Fields</fullName>
+        <value>Could not retrieve additional fields: </value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Warning_Type_Not_List</fullName>
+        <value>FEC Type of field '{0}' is not 'List'.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Warning_Title</fullName>
+        <value>Warning</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Additional_Fields_List_Title</fullName>
+        <value>FEC Additional Fields List</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Additional_Field</fullName>
+        <value>New Additional Field</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Confirm_Delete_Title</fullName>
+        <value>Confirm Delete</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Confirm_Delete_Message</fullName>
+        <value>Are you sure you want to delete this record?</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Cancel</fullName>
+        <value>Cancel</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Delete</fullName>
+        <value>Delete</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Close</fullName>
+        <value>Close</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_New_List_Value</fullName>
+        <value>New List Value</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_List_Value_Modal_Close_Title</fullName>
+        <value>Close dialog</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_List_Value_Cancel</fullName>
+        <value>Cancel</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_List_Value_Save</fullName>
+        <value>Save</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_List_Value_Confirm_Delete_Title</fullName>
+        <value>Confirm Delete</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_List_Value_Confirm_Delete_Message</fullName>
+        <value>Are you sure you want to delete this list value?</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_AllMasterData_Title</fullName>
+        <value>FEC Comprehensive Master Data</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Refresh_Data</fullName>
+        <value>Refresh Data</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Reset_MDM</fullName>
+        <value>Reset MDM</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Push_MDM_To_Live</fullName>
+        <value>Push MDM to Live</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Product_Type</fullName>
+        <value>Product Type</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Business_Process</fullName>
+        <value>Business Process</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Category</fullName>
+        <value>Category</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Sub_Category</fullName>
+        <value>Sub Category</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Sub_Code</fullName>
+        <value>Sub Code</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Master_Setting</fullName>
+        <value>Master Setting</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Channel</fullName>
+        <value>Channel</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Nature_Of_Case</fullName>
+        <value>Nature Of Case</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Additional_Field</fullName>
+        <value>Additional Field</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Additional_Field_List_Value</fullName>
+        <value>Additional Field List Value</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Case_Stage</fullName>
+        <value>Case Stage</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_ID</fullName>
+        <value>ID</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_ExternalID</fullName>
+        <value>ExternalID</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Name</fullName>
+        <value>Name</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Alias</fullName>
+        <value>Alias</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Code</fullName>
+        <value>Code</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Name_VN</fullName>
+        <value>Name VN</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Order</fullName>
+        <value>Order</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Status</fullName>
+        <value>Status</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Process_Status</fullName>
+        <value>Process Status</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Refresh_Success</fullName>
+        <value>Data refreshed successfully</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Refresh_Error</fullName>
+        <value>Failed to refresh data</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Confirm_Sync_Question</fullName>
+        <value>System will run background sync (Batch). Do you want to start?</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Notify_Sync_Started</fullName>
+        <value>Background sync started. Please wait a few minutes and refresh the page.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Confirm_Push_Question</fullName>
+        <value>Business data will be updated from MDM. Are you sure?</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Notify_Push_Started</fullName>
+        <value>Push to Live started.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Error</fullName>
+        <value>Error</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_NOC_Product_Type</fullName>
+        <value>NOC Product Type</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_NOC_Business_Process</fullName>
+        <value>NOC Business Process</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_NOC_Category</fullName>
+        <value>NOC Category</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_NOC_Sub_Category</fullName>
+        <value>NOC Sub Category</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_NOC_Sub_Code</fullName>
+        <value>NOC Sub Code</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Type</fullName>
+        <value>Type</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Business_Process</fullName>
+        <value>Business Process</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Additional_Field</fullName>
+        <value>Additional Field</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Channel</fullName>
+        <value>Channel</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Applicable_Role</fullName>
+        <value>Applicable Role</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Property_Name</fullName>
+        <value>Property Name</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Section</fullName>
+        <value>Section</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Order</fullName>
+        <value>Order</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Status</fullName>
+        <value>Status</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_New_Setting</fullName>
+        <value>New Setting</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Action_Edit</fullName>
+        <value>Edit</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Action_Delete</fullName>
+        <value>Delete</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Confirm_Delete_Property</fullName>
+        <value>Are you sure you want to delete this record?</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Deleted_Success</fullName>
+        <value>Deleted successfully</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Success</fullName>
+        <value>Saved successfully</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Update_Status_Success</fullName>
+        <value>Status updated</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Flow_Stages_Title</fullName>
+        <value>Flow Stages</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Add_Stage</fullName>
+        <value>Add Stage</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Stage</fullName>
+        <value>Stage</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Alt_Edit</fullName>
+        <value>Edit</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Alt_Remove</fullName>
+        <value>Remove</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Prompt_Enter_New_Stage_Name</fullName>
+        <value>Enter new stage name:</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Flow_Control_Title</fullName>
+        <value>Flow Control Data View</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Control_Field</fullName>
+        <value>Control Field</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Config_Value</fullName>
+        <value>Config Value</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Prompt_Select_Node_Flow_Control</fullName>
+        <value>Select a Node to view Flow Control configuration</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Control_Name</fullName>
+        <value>Control Name</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Business_Code</fullName>
+        <value>Business Code</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Mapping_Alias</fullName>
+        <value>Mapping Alias</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_Segment</fullName>
+        <value>Customer Segment</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Execution_Order</fullName>
+        <value>Execution Order</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Status_Control</fullName>
+        <value>Status Control</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Localized_Name</fullName>
+        <value>Localized Name</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_MasterData_Title</fullName>
+        <value>FEC Master Data Management</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Save_All</fullName>
+        <value>Save All</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Spinner_Saving</fullName>
+        <value>Saving...</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Notify_Cancel_Node_Changes</fullName>
+        <value>Temporary changes for this node have been canceled.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Node_Details</fullName>
+        <value>Node Details</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Master_Data_Settings</fullName>
+        <value>Master Data Settings</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Success</fullName>
+        <value>Success</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Error</fullName>
+        <value>Error</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Info</fullName>
+        <value>Info</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Notify_Save_All</fullName>
+        <value>Saved {0} records successfully</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Alias</fullName>
+        <value>Alias</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Name_EN</fullName>
+        <value>English Name</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Name_VN</fullName>
+        <value>Vietnamese Name</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Order</fullName>
+        <value>Order</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Status</fullName>
+        <value>Status</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_SaveAndNew</fullName>
+        <value>Save &amp; New</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Spinner_Loading_Node_Details</fullName>
+        <value>Loading node details...</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Error</fullName>
+        <value>Error</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Prompt_Select_Node_Detail</fullName>
+        <value>Please select a node to view details.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Node_Product_Line</fullName>
+        <value>Product Line</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Node_Service_Type</fullName>
+        <value>Service Type</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Node_Category</fullName>
+        <value>Category</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Node_Sub_Category</fullName>
+        <value>Sub Category</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Node_Action</fullName>
+        <value>Action</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Child_Service_Types</fullName>
+        <value>Service Types</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Child_Categories</fullName>
+        <value>Categories</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Child_Sub_Categories</fullName>
+        <value>Sub Categories</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Child_Actions</fullName>
+        <value>Actions</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Record_ID</fullName>
+        <value>Record ID</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Name_VN_Display</fullName>
+        <value>Name (Vietnamese)</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Type_Display</fullName>
+        <value>Type</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Updated_Success</fullName>
+        <value>Updated successfully</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Please_Fill_All</fullName>
+        <value>Please fill in all required fields.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_ReadOnly</fullName>
+        <value>ReadOnly</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Mandatory</fullName>
+        <value>Mandatory</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Action</fullName>
+        <value>Action</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Property_Configuration</fullName>
+        <value>Property Configuration</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Fraud_Integration_Mapping</fullName>
+        <value>Fraud Integration Mapping</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Default_Channel_Name</fullName>
+        <value>New CSM</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Modal_New_Property_Title</fullName>
+        <value>New Property Configuration</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Modal_Edit_Property_Title</fullName>
+        <value>Edit Property Configuration</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Add_Integration</fullName>
+        <value>Add Integration</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Active</fullName>
+        <value>Active</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Inactive</fullName>
+        <value>Inactive</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tooltip_Click_To_Deactivate</fullName>
+        <value>Click to Deactivate</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tooltip_Click_To_Activate</fullName>
+        <value>Click to Activate</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Default_Product_Line</fullName>
+        <value>Card Transaction</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Default_Service_Type</fullName>
+        <value>FraudHandling</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Default_Category</fullName>
+        <value>Fraud Transaction</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Default_Sub_Category</fullName>
+        <value>OTP Compromised</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Channel_Multiselect</fullName>
+        <value>FEC Channel (Multi-select)</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Applicable_Roles</fullName>
+        <value>Applicable Roles</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_CustomerType_Existing</fullName>
+        <value>Existing</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_CustomerType_NonExisting</fullName>
+        <value>Non-existing</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_CustomerType_All</fullName>
+        <value>All</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Field_Object_Name</fullName>
+        <value>Field Object Name</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Property_Name</fullName>
+        <value>Property Name</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Section</fullName>
+        <value>Section</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Order_Display</fullName>
+        <value>Order Display</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Editable_Role</fullName>
+        <value>Editable Role</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Applicable_Role</fullName>
+        <value>Applicable Role</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Stage_Name</fullName>
+        <value>Stage Name</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Status</fullName>
+        <value>Status</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Mandatory</fullName>
+        <value>Mandatory</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_ReadOnly</fullName>
+        <value>Read Only</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Editable</fullName>
+        <value>Editable</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Cancel</fullName>
+        <value>Cancel</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Save</fullName>
+        <value>Save</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Parent_Nature_Info</fullName>
+        <value>Parent Nature Of Case ID (Assigned automatically):</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_Property</fullName>
+        <value>Select Property Name</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_CaseStage</fullName>
+        <value>Select Case Stage</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Validation_Title</fullName>
+        <value>Validation Error</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Validation_Message</fullName>
+        <value>Please complete all required fields.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Error</fullName>
+        <value>Save failed</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_MasterDataReview_Title</fullName>
+        <value>Master Data Setting Review</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Query</fullName>
+        <value>Query</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_CustomerType</fullName>
+        <value>Customer Type</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Product</fullName>
+        <value>Product</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Biz_Process</fullName>
+        <value>Biz Process</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Category</fullName>
+        <value>Category</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Sub_Cat</fullName>
+        <value>Sub Cat</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Sub_Code</fullName>
+        <value>Sub Code</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_CustomerType</fullName>
+        <value>Select Customer Type</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_Product</fullName>
+        <value>Select Product</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_Biz</fullName>
+        <value>Select Biz</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_Category</fullName>
+        <value>Select Category</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_SubCat</fullName>
+        <value>Select Sub Cat</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_SubCode</fullName>
+        <value>Select Sub Code</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_New_Records</fullName>
+        <value>NEW RECORDS</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Updated_Records</fullName>
+        <value>UPDATED RECORDS</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Synced_Records</fullName>
+        <value>SYNCED RECORDS</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Expand_All</fullName>
+        <value>Expand All</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Collapse_All</fullName>
+        <value>Collapse All</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_NoData_Message</fullName>
+        <value>Please select codes and press Query.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Tree_Title</fullName>
+        <value>Nature of Case Tree Structure</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Search_Tree</fullName>
+        <value>Enter keyword...</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Show_Field</fullName>
+        <value>Show field</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Add_Root</fullName>
+        <value>Add Root</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Add_Node</fullName>
+        <value>Add Node</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Message_No_Items</fullName>
+        <value>No items found.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Message_Loading_Tree</fullName>
+        <value>Loading tree structure...</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Aria_Tree_Label</fullName>
+        <value>Nature of Case Tree Structure</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Aria_Add_Node</fullName>
+        <value>Add new node to Nature of Case tree</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Display_Code</fullName>
+        <value>Code</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Display_Alias</fullName>
+        <value>Alias</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Display_Name_VN</fullName>
+        <value>Name VN</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Display_Name_EN</fullName>
+        <value>Name EN</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Status_ALL</fullName>
+        <value>ALL</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Status_ACTIVE</fullName>
+        <value>Active</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Status_INACTIVE</fullName>
+        <value>Inactive</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Add_Child</fullName>
+        <value>+ Add Child</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_ServiceTypes</fullName>
+        <value>Service Types</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_ServiceTypeMapping_Title</fullName>
+        <value>ServiceType's Property references</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_TableHeader_PropertyName</fullName>
+        <value>Property Name (Additional Field)</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_TableHeader_Reference</fullName>
+        <value>Service Type Property Reference</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Mapping_Reference</fullName>
+        <value>Enter mapping reference...</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>FEC_Message_Select_Property</fullName>
+        <value>Please select a Property on the left to configure mapping.</value>
+        <protected>false</protected>
+    </labels>
+</CustomLabels>
