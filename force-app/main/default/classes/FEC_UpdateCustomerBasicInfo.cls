@@ -15,11 +15,7 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
   public static final String DOB_UPDATE = 'Date of Birth Update';
   public static final String GENDER_UPDATE = 'Gender Update';
 
-  private static final String SOAP_NS = 'http://schemas.xmlsoap.org/soap/envelope/';
   private static final String CIF_NS = 'http://fecredit.com.vn/CIF_CustomerInfoUpdate';
-
-  private static final String ENDPOINT = '/CIF_CustomerInfoUpdate';
-  private static final String MOCKUP_ENDPOINT = 'https://0b78db69-eb98-4c57-9924-dc958e4388df.mock.pstmn.io/CIF_CustomerInfoUpdate';
 
   // Wrapper Input & Output giữ nguyên như cũ...
   public class CustomerBasicInfo {
@@ -74,18 +70,18 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
       validateInput(info);
 
       String transId = UUID.randomUUID().toString();
-      String timestamp = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss');
+      String timestamp = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
 
       // Bước 1: Tạo Request XML
       Dom.Document doc = new Dom.Document();
       Dom.XmlNode envelope = doc.createRootElement(
         'Envelope',
-        SOAP_NS,
+        FEC_ConstantCommon.SOAP_ENV,
         'soapenv'
       );
-      envelope.addChildElement('Header', SOAP_NS, null);
+      envelope.addChildElement('Header', FEC_ConstantCommon.SOAP_ENV, null);
 
-      Dom.XmlNode body = envelope.addChildElement('Body', SOAP_NS, null);
+      Dom.XmlNode body = envelope.addChildElement('Body', FEC_ConstantCommon.SOAP_ENV, null);
       Dom.XmlNode requestNode = body.addChildElement(
         'UpdateCustomerBasicInfo',
         CIF_NS,
@@ -133,23 +129,15 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
       // addTextNodeSafe(custNode, 'NationalID', info.nationalId);
       // addTextNodeSafe(custNode, 'Email', info.email);
 
-      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-
-      // Bước 2: Callout
-      HttpRequest req = new HttpRequest();
-      req.setEndpoint(
-        apiSetting?.FEC_Call_Mock__c
-          ? MOCKUP_ENDPOINT
-          : (apiSetting?.FEC_Endpoint__c + ENDPOINT)
-      );
-      req.setMethod('POST');
-      req.setHeader('Content-Type', 'text/xml; charset=utf-8');
-      // req.setHeader('SOAPAction', 'UpdateCustomerBasicInfo');
-      req.setBodyDocument(doc);
       UpdateResult finalResult = new UpdateResult();
       try {
-        Http http = new Http();
-        HttpResponse res = http.send(req);
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Update_Customer_Basic_Info');
+
+        String endpoint = apiSetting?.FEC_Call_Mock__c
+            ? FEC_MockupEndpoint.UPDATE_CUSTOMER_BASIC_INFO_ENDPOINT_MOCKUP
+            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, doc, '');
 
         Integer status = (res == null) ? null : res.getStatusCode();
         String resBody = (res == null) ? null : res.getBody();

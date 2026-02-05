@@ -41,17 +41,12 @@ public with sharing class FEC_UpdateCustomerContact {
     public Decimal actionCount;
   }
 
-  // Change to your Named Credential (preferred) or hardcoded URL
-  private static final String ENDPOINT = '/CIF_CustomerInfoUpdate';
-  private static final String MOCKUP_ENDPOINT = 'https://0b78db69-eb98-4c57-9924-dc958e4388df.mock.pstmn.io/CIF_CustomerInfoUpdate';
-  private static final String REQUESTOR_ID = 'APS';
-
   public static String generateTransId() {
     return String.valueOf(UUID.randomUUID());
   }
 
   public static String formatTimestamp() {
-    return Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss');
+    return Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
   }
 
   private static String escapeXml(String s) {
@@ -78,7 +73,7 @@ public with sharing class FEC_UpdateCustomerContact {
     env += '<cif:UpdateCustomerContact>';
     env += '<Sys>';
     env += '<TransID>' + escapeXml(transId) + '</TransID>';
-    env += '<RequestorID>' + escapeXml(REQUESTOR_ID) + '</RequestorID>';
+    env += '<RequestorID>' + escapeXml(FEC_ConstantCommon.REQUESTOR_APS) + '</RequestorID>';
     env += '<DateTime>' + escapeXml(timestamp) + '</DateTime>';
     env += '</Sys>';
     env += '<CIFNumber>' + escapeXml(req.CIFNumber) + '</CIFNumber>';
@@ -117,19 +112,13 @@ public with sharing class FEC_UpdateCustomerContact {
 
   public static HttpResponse sendRequest(String envelope) {
     FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+    FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Update_Customer_Contact');
 
-    HttpRequest req = new HttpRequest();
-    req.setEndpoint(
-      apiSetting?.FEC_Call_Mock__c
-        ? MOCKUP_ENDPOINT
-        : (apiSetting?.FEC_Endpoint__c + ENDPOINT)
-    );
-    req.setMethod('POST');
-    req.setHeader('Content-Type', 'text/xml; charset=utf-8');
-    // req.setHeader('SOAPAction', 'UpdateCustomerContact');
-    req.setBody(envelope);
-    Http http = new Http();
-    return http.send(req);
+    String endpoint = apiSetting?.FEC_Call_Mock__c
+        ? FEC_MockupEndpoint.UPDATE_CUSTOMER_CONTACT_ENDPOINT_MOCKUP
+        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+    HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, envelope);
+    return res;
   }
 
   public static UpdateContactResult parseResponse(
@@ -233,10 +222,6 @@ public with sharing class FEC_UpdateCustomerContact {
 
     if (String.isBlank(timestamp)) {
       throw new FEC_APIServiceException('DateTime is required.');
-    }
-
-    if (String.isBlank(REQUESTOR_ID)) {
-      throw new FEC_APIServiceException('RequestorID ID is required.');
     }
 
     if (String.isBlank(req.CIFNumber)) {

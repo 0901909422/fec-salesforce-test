@@ -8,6 +8,8 @@
 		<members>FEC_UpdateCustomerContact</members>
         <members>FEC_APIServiceException</members>
         <members>FEC_CaseEditNOCController</members>
+		<members>FEC_MockupEndpoint</members>
+		<members>FEC_ConstantCommon</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -55,6 +57,11 @@
 		<members>RD_IT_User_System_Management</members>
 		<members>RD_IT_User_User_Management</members>
 		<name>PermissionSet</name>
+	</types>
+	<types>
+		<members>FEC_API_Config.FEC_Update_Customer_Basic_Info</members>
+		<members>FEC_API_Config.FEC_Update_Customer_Contact</members>
+		<name>CustomMetadata</name>
 	</types>
     <version>65.0</version>
 </Package>
