@@ -6,6 +6,8 @@ import submitRemark from "@salesforce/apex/FEC_CaseRemarkController.submitRemark
 
 import { formatDate } from "c/fec_CommonUtils";
 
+import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
+
 export default class Fec_CaseRemarks extends LightningElement {
   @api caseId;
 
@@ -20,6 +22,10 @@ export default class Fec_CaseRemarks extends LightningElement {
   ];
 
   loadRemarklst = false;
+
+  customLabel = {
+    caseRemarkLabel: FEC_Case_Remark_Label,
+  }
 
   connectedCallback() {
     getRemarklst({ caseId: this.caseId })

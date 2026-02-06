@@ -28,7 +28,7 @@
           />
         </svg>
 
-        <p class="error__panel__header__title">We hit a snag</p>
+        <p class="error__panel__header__title">{customLabel.errorPanelTitle}</p>
 
         <svg
           class="error__panel__header__close"
@@ -46,7 +46,7 @@
       </div>
 
       <div class="error__panel__main">
-        <p>Review the errors on this page</p>
+        <p>{customLabel.errorPanelBody}</p>
 
         <ul>
           <template for:each={errlst} for:item="item">

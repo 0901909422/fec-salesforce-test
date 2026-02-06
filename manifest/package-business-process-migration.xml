@@ -66,6 +66,17 @@
 	<types>
         <members>FEC_MSG_Not_Found</members>
         <members>FEC_MSG_Invalid</members>
+        <members>FEC_MSG_Error_Panel_Title</members>
+        <members>FEC_MSG_Error_Panel_Body</members>
+        <members>FEC_Case_Remark_Label</members>
+        <members>FEC_Button_Save_Close</members>
+        <members>FEC_Button_Submit</members>
+        <members>FEC_Reason_Label</members>
+        <members>FEC_Routing_Action_Label</members>
+        <members>FEC_Action_Label</members>
+        <members>FEC_Team_Label</members>
+        <members>FEC_Queue_Label</members>
+        <members>FEC_Decision_Label</members>
         <name>CustomLabel</name>
     </types>
     <version>65.0</version>
