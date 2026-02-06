@@ -10,12 +10,9 @@
 
 public with sharing class FEC_IPPController {
 
-    // TODO: Move to Custom Settings or Custom Metadata Type
-    // private static final Integer MAX_IPP_DETAILS_CALLOUTS = 50;
 
     // =========================================================================
     // DTO trả về cho LWC
-    // LWC đọc record.recordNo hoặc record.FEC_IPP_Record_No__c để hỗ trợ cả API và DB
     // =========================================================================
     public class IPPRecordDTO {
         @AuraEnabled public String Id { get; set; }
@@ -131,11 +128,8 @@ public with sharing class FEC_IPPController {
     }
 
     /**
-     * Gọi 3 API: GetCardSecInfo, GetCardPlanInfo, GetIPPDetails. Merge theo key = CardPlan.PlanNumber (IPP Plan).
-     */
-    /**
-     * Tách thành các methods nhỏ hơn để dễ đọc hơn
-     * Lấy danh sách IPP records bằng cách gọi 3 APIs: GetCardSecInfo, GetCardPlanInfo, GetIPPDetails
+     * Lấy danh sách IPP records: gọi 3 API (GetCardSecInfo, GetCardPlanInfo, GetIPPDetails),
+     * merge theo key = CardPlan.PlanNumber (IPP Plan).
      */
     private static List<IPPRecordDTO> fetchIPPRecordsFromAPI(String caseId, String accountNumber) {
         // Step 1: Get card security info and build lookup maps
@@ -168,6 +162,7 @@ public with sharing class FEC_IPPController {
     
     /**
      * Xây dựng các lookup maps cho dữ liệu IPP từ GetCardSecInfo
+     * Chỉ lấy 1 IPP record duy nhất cho mỗi Plan/RecordNo (bỏ qua schedule items duplicate)
      */
     private static void buildIPPLookupMaps(
         FEC_GetCardSecInfo.ResponseWrapper secWrapper,
@@ -176,7 +171,21 @@ public with sharing class FEC_IPPController {
     ) {
         if (secWrapper?.CardSecInfo?.IPPs == null) return;
         
+        // Group by Plan/RecordNo to avoid duplicates from schedule items
+        Map<String, FEC_GetCardSecInfo.IPP> uniqueIPPs = new Map<String, FEC_GetCardSecInfo.IPP>();
+        
         for (FEC_GetCardSecInfo.IPP ipp : secWrapper.CardSecInfo.IPPs) {
+            String key = (ipp.IPPRecordNo != null ? ipp.IPPRecordNo.trim() : '') + '_' + 
+                        (ipp.IPPPlan != null ? ipp.IPPPlan.trim() : '');
+            
+            // Chỉ lấy IPP đầu tiên cho mỗi Plan/RecordNo combination
+            if (!uniqueIPPs.containsKey(key)) {
+                uniqueIPPs.put(key, ipp);
+            }
+        }
+        
+        // Build lookup maps from unique IPPs
+        for (FEC_GetCardSecInfo.IPP ipp : uniqueIPPs.values()) {
             // Map by plan number
             if (ipp.IPPPlan != null && String.isNotBlank(ipp.IPPPlan.trim())) {
                 if (!planNumberToIpp.containsKey(ipp.IPPPlan.trim())) {
@@ -222,7 +231,7 @@ public with sharing class FEC_IPPController {
         Integer calloutCount = 0;
         
         for (FEC_GetCardPlanInfo.CardPlan cardPlan : cardPlans) {
-            if (calloutCount >= 50) { // MAX_IPP_DETAILS_CALLOUTS
+            if (calloutCount >= 50) { 
                 break;
             }
             if (String.isBlank(cardPlan.planNumber)) {
@@ -416,15 +425,23 @@ public with sharing class FEC_IPPController {
         if (c.FEC_Account_or_Contract__c != null) {
             return c.FEC_Account_or_Contract__c;
         }
-        if (String.isBlank(c.FEC_Account_Number__c)) {
-            return null;
+        if (String.isNotBlank(c.FEC_Account_Number__c)) {
+            List<FEC_Customer_History__c> histories = [
+                SELECT Id FROM FEC_Customer_History__c
+                WHERE FEC_Account_Number__c = :c.FEC_Account_Number__c
+                LIMIT 1
+            ];
+            if (!histories.isEmpty()) {
+                return histories[0].Id;
+            }
         }
-        List<FEC_Customer_History__c> histories = [
+        // Fallback: tìm Customer History qua FEC_Case__c (cho Interaction record type)
+        List<FEC_Customer_History__c> historiesByCase = [
             SELECT Id FROM FEC_Customer_History__c
-            WHERE FEC_Account_Number__c = :c.FEC_Account_Number__c
+            WHERE FEC_Case__c = :caseId
             LIMIT 1
         ];
-        return (histories.isEmpty()) ? null : histories[0].Id;
+        return (historiesByCase.isEmpty()) ? null : historiesByCase[0].Id;
     }
 
     private static void sortByOpenDate(List<IPPRecordDTO> listToSort) {

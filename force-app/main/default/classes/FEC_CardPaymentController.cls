@@ -21,7 +21,7 @@ public with sharing class FEC_CardPaymentController {
     @AuraEnabled(cacheable=false)
     public static List<Map<String, Object>> loadCardPaymentInfo(Id caseId) {
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         /* ===== TẢI CASE ===== */
@@ -298,8 +298,8 @@ public with sharing class FEC_CardPaymentController {
         /* ===== 2. Gọi API GetCardBasicInfo để lấy Loan Balance ===== */
         try {
             String transId = UUID.randomUUID().toString();
-            String requestorId = 'CRM';
-            String dateTimeStr = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss');
+            String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
+            String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
             
             FEC_GetCardBasicInfo.ResponseWrapper basicInfoResult = 
                 FEC_GetCardBasicInfo.callGetCardBasicInfo(transId, requestorId, dateTimeStr, accountNumber);
