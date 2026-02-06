@@ -1,9 +1,5 @@
 <template>
-  <lightning-textarea
-    name="remark"
-    label="Case Remarks"
-    if:true={isEdit}
-  ></lightning-textarea>
+  <lightning-textarea name="remark" label={customLabel.caseRemarkLabel} if:true={isEdit}></lightning-textarea>
 
   <c-fec_-related-list-addresses-paging
     if:true={loadRemarklst}
@@ -11,5 +7,5 @@
     columns={remarkColumnlst}
     sorted-by="Registration"
   >
-  </c-fec_-related-list-addresses-paging>
+  </c-fec_-related-list-paging>
 </template>

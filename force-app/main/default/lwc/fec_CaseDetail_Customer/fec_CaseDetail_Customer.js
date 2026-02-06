@@ -9,6 +9,10 @@ import {
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 
+import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
+import FEC_Button_Save_Close from "@salesforce/label/c.FEC_Button_Save_Close";
+import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
+
 const REQUIRED_MSG = "{0} can't be Blank";
 
 export default class Fec_CaseDetail_Customer extends LightningElement {
@@ -27,6 +31,12 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   get hasError() {
     return this.errlst && this.errlst.length > 0;
+  }
+
+  customLabel = {
+    caseRemarkLabel: FEC_Case_Remark_Label,
+    btnSaveClose: FEC_Button_Save_Close,
+    btnSubmit: FEC_Button_Submit
   }
 
   connectedCallback() {

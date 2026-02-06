@@ -10,23 +10,24 @@
     allow-multiple-sections-open
     active-section-name={activeSections}
   >
-    <lightning-accordion-section name="case-remark" label="Case Remark">
-      <c-fec_-case-remarks
-        case-id={recordId}
-        is-edit={modeEditCase}
-      ></c-fec_-case-remarks>
+    <lightning-accordion-section
+      name="case-remark"
+      label={customLabel.caseRemarkLabel}
+      if:true={modeEditCase}
+    >
+      <c-fec_-case-remarks case-id={recordId}></c-fec_-case-remarks>
     </lightning-accordion-section>
   </lightning-accordion>
 
   <div class="case-footer" if:true={modeEditCase}>
     <lightning-button
-      label="Save & Close"
+      label={customLabel.btnSaveClose}
       onclick={handleSave}
     ></lightning-button>
 
     <lightning-button
       variant="brand"
-      label="Submit"
+      label={customLabel.btnSubmit}
       onclick={handleSubmit}
     ></lightning-button>
 

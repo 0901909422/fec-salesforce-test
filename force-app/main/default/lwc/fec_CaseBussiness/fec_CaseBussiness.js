@@ -5,6 +5,13 @@ import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightControl
 
 import { mask } from "c/fec_CommonUtils";
 
+import FEC_Reason_Label from "@salesforce/label/c.FEC_Reason_Label";
+import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
+import FEC_Action_Label from "@salesforce/label/c.FEC_Action_Label";
+import FEC_Team_Label from "@salesforce/label/c.FEC_Team_Label";
+import FEC_Queue_Label from "@salesforce/label/c.FEC_Queue_Label";
+import FEC_Decision_Label from "@salesforce/label/c.FEC_Decision_Label";
+
 const ACTION_PHONE_UPDATE = "Phone Update";
 const ACTION_EMAIL_UPDATE = "Email Update";
 const ACTION_FULLNAME_UPDATE = "Full Name Update";
@@ -92,6 +99,15 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   get finalShowProcessAction() {
     return this.showProcessAction && this.isProcessActionValid && this.isEdit;
+  }
+
+  customLabel = {
+    reasonLabel: FEC_Reason_Label,
+    routingActionLabel: FEC_Routing_Action_Label,
+    actionLabel: FEC_Action_Label,
+    teamLabel: FEC_Team_Label,
+    queueLabel: FEC_Queue_Label,
+    decisionLabel: FEC_Decision_Label,
   }
 
   connectedCallback() {
@@ -506,7 +522,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           caseId: this.recordId
         };
         break;
-
+        
       default:
         break;
     }

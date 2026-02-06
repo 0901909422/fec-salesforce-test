@@ -5,6 +5,7 @@ public with sharing class FEC_CaseBusinessService {
   public static final String ESCALATE = 'Escalate';
   public static final String REJECT = 'Reject';
   public static final String RESOLVE = 'Resolve';
+
   public static final String PHONE_UPDATE = 'Phone Update';
   public static final String EMAIL_UPDATE = 'Email Update';
   public static final String FULLNAME_UPDATE = 'Full Name Update';
@@ -38,6 +39,7 @@ public with sharing class FEC_CaseBusinessService {
     RESOLVE => Method.RESOLVE,
     REVERT => Method.REVERT,
     ESCALATE => Method.ESCALATE,
+    REVERT => Method.REVERT,
     PHONE_UPDATE => Method.PHONE_UPDATE,
     EMAIL_UPDATE => Method.EMAIL_UPDATE,
     FULLNAME_UPDATE => Method.FULLNAME_UPDATE,
@@ -185,7 +187,7 @@ public with sharing class FEC_CaseBusinessService {
         //   String.isBlank(selectedCase.FEC_Current_Case_Stage__c) ||
         //   selectedCase.FEC_Current_Case_Stage__r?.FEC_Default_Stage__c
         // ) {
-        // FEC_MainInfoAccountController.refreshAccountInfo(selectedCase.Id);
+        FEC_MainInfoAccountController.refreshAccountInfo(selectedCase.Id);
         // }
       }
 
@@ -589,12 +591,17 @@ public with sharing class FEC_CaseBusinessService {
     try {
       Method selectedMethod = METHOD_MAP.get(method);
       String caseId;
+
       if(params != null) {
         caseId = (String) params.get('caseId');
       }
 
       switch on selectedMethod {
         when ROUTE_TO {
+
+      switch on selectedMethod {
+        when ROUTE_TO {
+          String caseId = (String) params.get('caseId');
           String queueId = (String) params.get('queueId');
           String natureOfCaseId = (String) params.get('natureOfCaseId');
           String actionId = (String) params.get('actionId');
@@ -628,6 +635,16 @@ public with sharing class FEC_CaseBusinessService {
           return FEC_UpdateCustomerContact.updateValue(caseId, EMAIL_UPDATE);
         }
         when FULLNAME_UPDATE {
+          revert(caseId);
+          return null;
+        }
+        when PHONE_UPDATE {
+          return FEC_UpdateCustomerContact.updateValue(caseId, PHONE_UPDATE);
+        }
+        when EMAIL_UPDATE {
+          return FEC_UpdateCustomerContact.updateValue(caseId, EMAIL_UPDATE);
+        }
+        when FULLNAME_UPDATE {
           return FEC_UpdateCustomerBasicInfo.updateValue(
             caseId,
             FULLNAME_UPDATE
@@ -640,7 +657,10 @@ public with sharing class FEC_CaseBusinessService {
           return FEC_UpdateCustomerBasicInfo.updateValue(caseId, GENDER_UPDATE);
         }
         when OC_001 {
-          System.debug(OC_001);
+          return FEC_UpdateCustomerBasicInfo.updateValue(caseId, DOB_UPDATE);
+        }
+        when GENDER_UPDATE {
+          return FEC_UpdateCustomerBasicInfo.updateValue(caseId, GENDER_UPDATE);
         }
         when else {
           // throw new CaseBusinessServiceException('Method not found.');
@@ -649,7 +669,6 @@ public with sharing class FEC_CaseBusinessService {
 
       Case selectedCase = new Case(Id = caseId, FEC_Is_Submited__c = true);
       update selectedCase;
-
       return null;
     } catch (CaseBusinessServiceException e) {
       throw new AuraHandledException(e.getMessage());
@@ -678,8 +697,9 @@ public with sharing class FEC_CaseBusinessService {
         WHERE Id = :caseId
       ];
 
-      if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+      if (caselst.isEmpty()) {
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Case Id'}));
+      }
 
       Case updatedCase = caselst.get(0);
 
@@ -718,7 +738,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (changelst.isEmpty()) {
-        throw new CaseBusinessServiceException('Cannot find Stage Change.');
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Stage Change'}));
       }
 
       FEC_Stage_Change__c selectedChange = changelst.get(0);
@@ -880,8 +900,9 @@ public with sharing class FEC_CaseBusinessService {
         WHERE Id = :caseId
       ];
 
-      if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+      if (caselst.isEmpty()) {
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Case Id'}));
+      }
 
       Case updatedCase = caselst.get(0);
 
@@ -975,8 +996,9 @@ public with sharing class FEC_CaseBusinessService {
       WHERE Id = :natureOfCaseId
     ];
 
-    if (sourcelst.isEmpty())
-      throw new CaseBusinessServiceException('Nature of Case Id is invalid.');
+    if (sourcelst.isEmpty()) {
+      throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Nature of Case'}));
+    }
 
     FEC_Nature_of_Case__c src = sourcelst.get(0);
 
@@ -1027,8 +1049,9 @@ public with sharing class FEC_CaseBusinessService {
       // AND FEC_Stage_Name__c = :stageNameId
     ];
 
-    if (sourcelst.isEmpty())
-      throw new CaseBusinessServiceException('No Master Data Setting found.');
+    if (sourcelst.isEmpty()) {
+      throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Master Data Setting'}));
+    }
 
     List<FEC_Actual_Master_Data_Setting__c> targetlst = new List<FEC_Actual_Master_Data_Setting__c>();
 
@@ -1648,6 +1671,7 @@ public with sharing class FEC_CaseBusinessService {
     }
   }
 
+<<<<<<< force-app/main/default/classes/FEC_CaseBusinessService.cls
   @AuraEnabled
   public static void recall(Id caseId) {
       Id currentUserId = UserInfo.getUserId();
@@ -1690,6 +1714,8 @@ public with sharing class FEC_CaseBusinessService {
       }
   }
 
+=======
+>>>>>>> force-app/main/default/classes/FEC_CaseBusinessService.cls
   private static Error phoneUpdateValidate(Id cHistoryId) {
     List<String> validStatuslst = new List<String>{ '8', '9', 'Z' };
     List<String> validBlockCodelst = new List<String>{ 'C' };
@@ -1728,22 +1754,21 @@ public with sharing class FEC_CaseBusinessService {
 
     if (cHistorylst.isEmpty()) {
       errorlst.add('Customer History is invalid');
-    } else {
-      FEC_Customer_History__c selectedHistory = cHistorylst.get(0);
-
-      if (validStatuslst.contains(selectedHistory.FEC_Account_Status__c))
-        errorlst.add(
-          'Account Status = ' + selectedHistory.FEC_Account_Status__c
-        );
-
-      if (validBlockCode1lst.contains(selectedHistory.FEC_Block_Code_1__c))
-        errorlst.add('Block Code 1 = ' + selectedHistory.FEC_Block_Code_1__c);
-
-      if (validBlockCode2lst.contains(selectedHistory.FEC_Block_Code_2__c))
-        errorlst.add('Block Code 2 = ' + selectedHistory.FEC_Block_Code_2__c);
-      if (validBlockCodelst.contains(selectedHistory.FEC_Block_Code__c))
-        errorlst.add('Block Code = ' + selectedHistory.FEC_Block_Code__c);
     }
+
+    FEC_Customer_History__c selectedHistory = cHistorylst.get(0);
+
+    if (validStatuslst.contains(selectedHistory.FEC_Account_Status__c))
+      errorlst.add('Account Status = ' + selectedHistory.FEC_Account_Status__c);
+
+    if (validBlockCodelst.contains(selectedHistory.FEC_Block_Code__c))
+      errorlst.add('Block Code = ' + selectedHistory.FEC_Block_Code__c);
+
+    if (validBlockCode1lst.contains(selectedHistory.FEC_Block_Code_1__c))
+      errorlst.add('Block Code 1 = ' + selectedHistory.FEC_Block_Code_1__c);
+
+    if (validBlockCode2lst.contains(selectedHistory.FEC_Block_Code_2__c))
+      errorlst.add('Block Code 2 = ' + selectedHistory.FEC_Block_Code_2__c);
 
     if (errorlst.isEmpty())
       return new Error();

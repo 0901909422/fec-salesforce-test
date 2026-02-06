@@ -15,7 +15,7 @@
       >
         <div class="error" if:true={section.hasError}>
           <p>{section.error.label}</p>
-          <p>Lý do:</p>
+          <p>{customLabel.reasonLabel}:</p>
           <template for:each={section.error.errorPanellst} for:item="item">
             <p key={item.id}>{item.value}</p>
           </template>
@@ -146,13 +146,13 @@
     <lightning-accordion-section
       if:true={business.hasRoutingAction}
       name="routing-action"
-      label="Routing Action"
+      label={customLabel.routingActionLabel}
     >
       <div class="slds-grid slds-wrap slds-m-top--small">
         <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
           <lightning-select
             data-id="routing-action"
-            label="Action"
+            label={customLabel.actionLabel}
             value={actionValue}
             options={business.routingActionlst}
             onchange={handleChangeAction}
@@ -167,14 +167,14 @@
           <div
             class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
           >
-            <p class="label">Team</p>
+            <p class="label">{customLabel.teamLabel}</p>
             <p class="value">{business.nextTeam}</p>
           </div>
 
           <div
             class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
           >
-            <p class="label">Queue</p>
+            <p class="label">{customLabel.queueLabel}</p>
             <p class="value">{business.nextQueue.label}</p>
           </div>
         </div>
@@ -186,7 +186,7 @@
           <div
             class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
           >
-            <p class="label">Decision</p>
+            <p class="label">{customLabel.decisionLabel}</p>
             <p class="value">{business.lastUser}</p>
           </div>
         </div>
