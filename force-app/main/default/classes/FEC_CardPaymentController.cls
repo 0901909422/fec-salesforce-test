@@ -218,7 +218,7 @@ public with sharing class FEC_CardPaymentController {
     @AuraEnabled(cacheable=false)
     public static CardPaymentTotalsDTO loadCardPaymentTotals(Id caseId) {
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         CardPaymentTotalsDTO dto = new CardPaymentTotalsDTO();
