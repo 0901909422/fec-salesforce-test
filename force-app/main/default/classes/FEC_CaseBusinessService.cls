@@ -1714,8 +1714,6 @@ public with sharing class FEC_CaseBusinessService {
       }
   }
 
-=======
->>>>>>> force-app/main/default/classes/FEC_CaseBusinessService.cls
   private static Error phoneUpdateValidate(Id cHistoryId) {
     List<String> validStatuslst = new List<String>{ '8', '9', 'Z' };
     List<String> validBlockCodelst = new List<String>{ 'C' };
