@@ -1,7 +1,6 @@
 import { LightningElement, api, track } from 'lwc';
 import getMasterDataMappings from '@salesforce/apex/FEC_NatureOfCaseTreeController.getMasterDataMappings';
 import updateNode from '@salesforce/apex/FEC_NatureOfCaseTreeController.updateNode';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { showLog } from 'c/fecUtils'; // Import hàm chung
 import LABEL_ALIAS from '@salesforce/label/c.FEC_Label_Alias';
 import LABEL_NAME_EN from '@salesforce/label/c.FEC_Label_Name_EN';
@@ -41,11 +40,19 @@ const NODE_ACTION = 'Action';
  * @author DAT NGO
  */
 export default class FecMasterDataItemDetail extends LightningElement {
-    @api item; // item from parent
+    // Use accessor for @api item (defined below). Initialize reactive state and helper properties.
     @track editedItem = {};
     @track loading = false;
-    @track hasError = false;
-    @track errorMessage = '';
+    // Error object (server responses) -- getters at bottom will surface message
+    error = null;
+
+    // runtime caches / helpers
+    mappingRecords = [];
+    wiredMappingsResult = null;
+    objectMap = {}; // optional mapping prefix -> object label (populate in consuming code)
+    selectedNodePrefix = null;
+    _item = null;
+    _originalItem = null;
 
     // expose labels
     labelAlias = LABEL_ALIAS;
@@ -59,8 +66,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
     labelPromptSelectNode = LABEL_PROMPT_SELECT_NODE_DETAIL;
 
     // Wire the node details - only when item.id exists
-    wiredNodeDetailsResult;
-    wiredMappingsResult;
 
     get nodeId() {
         return this.item?.id;
@@ -76,6 +81,8 @@ export default class FecMasterDataItemDetail extends LightningElement {
         if (result.data) {
             this.processMappingData(result.data);
         } else if (result.error) {
+            // Keep error object for UI getters
+            this.error = result.error;
             console.error('Error loading mappings:', result.error);
         }
     }
@@ -121,10 +128,14 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
     @api
     set item(value) {
-        // Tạo bản sao sâu (deep clone)
+        // Deep clone for local edits
         this._item = value;
         this.editedItem = value ? JSON.parse(JSON.stringify(value)) : {};
         this._originalItem = value ? JSON.parse(JSON.stringify(value)) : {};
+        // Precompute selectedNodePrefix from name (pure side-effect in setter)
+        const name = this.editedItem?.name || '';
+        const parts = name ? name.split('_') : [];
+        this.selectedNodePrefix = parts.length > 1 ? parts[0] : null;
         showLog('set editedItem', this.editedItem);
     }
     get item() {
@@ -132,18 +143,10 @@ export default class FecMasterDataItemDetail extends LightningElement {
     }
 
     get targetObjectType() {
-        const name = this.editedItem.name;
-        console.log('name :', name);
-        const parts = name.split('_');
-        console.log('parts :', parts);
-        if (parts.length > 1) {
-            this.selectedNodePrefix = parts[0]; // 👈 LƯU PREFIX VÀO BIẾN @track
-        } else {
-            this.selectedNodePrefix = null;
-        }
         const prefix = this.selectedNodePrefix;
-        return this.objectMap[prefix] + ' ID: ' + this.editedItem.Code;
-
+        const label = this.objectMap && this.objectMap[prefix] ? this.objectMap[prefix] : '';
+        const code = this.editedItem?.Code || '';
+        return (label ? label + ' ID: ' : '') + code;
     }
 
     validateForm() {
@@ -387,7 +390,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
         // 2. Logic refresh local của bạn (ví dụ gán lại editedItem = item)
         this.editedItem = { ...this.item };
-        this.showLog('handleRefresh - Restored to original data');
+        showLog('handleRefresh - Restored to original data');
     }
 
     // Watch for item changes to reprocess mapping data
@@ -400,16 +403,18 @@ export default class FecMasterDataItemDetail extends LightningElement {
     connectedCallback() {
         // Watch for item changes
         if (this.item?.id) {
-            this.processMappingData(this.mappingRecords);
+            // If mappings already loaded, reprocess using cached data
+            const mappings = this.wiredMappingsResult?.data || [];
+            this.processMappingData(mappings);
         }
     }
 
     // Error display helpers
     get hasError() {
-        return this.error && this.error.body?.message;
+        return !!(this.error && (this.error.body?.message || this.error.message));
     }
 
     get errorMessage() {
-        return this.error?.body?.message || 'An error occurred while loading node details.';
+        return this.error?.body?.message || this.error?.message || 'An error occurred while loading node details.';
     }
 }
