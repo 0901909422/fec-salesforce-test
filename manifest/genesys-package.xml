@@ -20,6 +20,12 @@
         <members>IWSConnectorBundle</members>
         <name>StaticResource</name>
     </types>
+
+    <types>
+        <members>FEC_Service_UtilityBar</members>
+        <name>FlexiPage</name>
+    </types>
+
     <version>65.0</version>
 </Package>
  
