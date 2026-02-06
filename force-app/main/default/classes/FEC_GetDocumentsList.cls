@@ -11,6 +11,10 @@
 ****************************************************************************************/
 public with sharing class FEC_GetDocumentsList {
 
+    private static final String CIF_NS  = 'http://fecredit.com.vn/CIF_CustomerInfo';
+    private static final String ENDPOINT = '/CIF_CustomerInfo';
+    private static final String MOCKUP_ENDPOINT = 'https://f7589df3-646e-4406-92b4-d6bc1964e063.mock.pstmn.io';
+
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -46,34 +50,22 @@ public with sharing class FEC_GetDocumentsList {
         String cifNumber
     ) {
 
-        try {
 
-            validateRequest(transId, requestorId, dateTimeStr, cifNumber);
-            
-            String soapBody =
-                '<?xml version="1.0" encoding="utf-8"?>' +
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-                'xmlns:cif="http://fecredit.com.vn/CIF_CustomerInfo">' +
-                    '<soapenv:Header/>' +
-                    '<soapenv:Body>' +
-                        '<cif:GetDocumentsList>' +
-                            '<Sys>' +
-                                '<TransID>' + transId + '</TransID>' +
-                                '<RequestorID>' + requestorId + '</RequestorID>' +
-                                '<DateTime>' + dateTimeStr + '</DateTime>' +
-                            '</Sys>' +
-                            '<CIFNumber>' + cifNumber + '</CIFNumber>' +
-                        '</cif:GetDocumentsList>' +
-                    '</soapenv:Body>' +
-                '</soapenv:Envelope>';
+        validateRequest(transId, requestorId, dateTimeStr, cifNumber);
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
+        req.setMethod('POST');
+        req.setTimeout(120000);
 
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Documents_List');
+        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+        req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CustomerInfo/GetDocumentsList');
 
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_DOCUMENTS_LIST_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+        req.setBody(
+            buildSoapBody(transId, requestorId, dateTimeStr, cifNumber)
+        );
+
+        HttpResponse res = new Http().send(req);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -89,12 +81,52 @@ public with sharing class FEC_GetDocumentsList {
                 );
             }
 
-            return response;
+        return response;
+    }
 
-        } catch (Exception ex) {
-            System.debug('### GET DOCUMENTS LIST ERROR: ' + ex.getMessage());
-            throw ex;
-        }
+    // =========================================================================
+    // BUILD SOAP BODY
+    // =========================================================================
+    private static String buildSoapBody(
+        String transId,
+        String requestorId,
+        String dateTimeStr,
+        String cifNumber
+    ) {
+
+        Dom.Document doc = new Dom.Document();
+
+        Dom.XmlNode envelope =
+            doc.createRootElement(
+                'soapenv:Envelope',
+                FEC_ConstantCommon.SOAP_ENV,
+                'soapenv'
+            );
+
+        envelope.setAttribute('xmlns:cif', CIF_NS);
+
+        envelope.addChildElement('soapenv:Header', null, null);
+
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+
+        Dom.XmlNode action =
+            body.addChildElement('cif:GetDocumentsList', null, null);
+
+        Dom.XmlNode sys =
+            action.addChildElement('Sys', null, null);
+
+        sys.addChildElement('TransID', null, null)
+            .addTextNode(transId);
+        sys.addChildElement('RequestorID', null, null)
+            .addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null)
+            .addTextNode(dateTimeStr);
+
+        action.addChildElement('CIFNumber', null, null)
+            .addTextNode(cifNumber);
+
+        return doc.toXmlString();
     }
 
     // =========================================================================

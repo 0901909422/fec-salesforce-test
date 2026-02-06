@@ -13,7 +13,9 @@
 public with sharing class FEC_GetCustomerInfoBasic {
 
     private static final String CIF_NS ='http://fecredit.com.vn/CIF_CustomerInfo';
-    
+    private static final String ENDPOINT = '/CIF_CustomerInfo';
+    private static final String MOCKUP_ENDPOINT = 'https://e1deb092-933c-4192-bafc-3728c3770c84.mock.pstmn.io';
+
     /* =====================================================
        RESPONSE MODELS
        ===================================================== */
@@ -110,35 +112,24 @@ public with sharing class FEC_GetCustomerInfoBasic {
         String dateTimeStr,
         String cifNumber
     ) {
-        try {
-
-            // FIX typo duy nhất
+       
             validateRequest(transId, requestorId, dateTimeStr, cifNumber);
 
-            String soapBody =
-                '<?xml version="1.0" encoding="utf-8"?>' +
-                '<soapenv:Envelope xmlns:soapenv="' + FEC_ConstantCommon.SOAP_ENV + '" ' +
-                'xmlns:cif="' + CIF_NS + '">' +
-                    '<soapenv:Header/>' +
-                    '<soapenv:Body>' +
-                        '<cif:GetCustomerInfoBasic>' +
-                            '<Sys>' +
-                                '<TransID>' + transId + '</TransID>' +
-                                '<RequestorID>' + requestorId + '</RequestorID>' +
-                                '<DateTime>' + dateTimeStr + '</DateTime>' +
-                            '</Sys>' +
-                            '<CIFNumber>' + cifNumber + '</CIFNumber>' +
-                        '</cif:GetCustomerInfoBasic>' +
-                    '</soapenv:Body>' +
-                '</soapenv:Envelope>';
-
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_Info_Basic');
 
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_CUSTOMER_INFO_BASIC_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint(apiSetting?.FEC_Call_Mock__c
+                ? MOCKUP_ENDPOINT
+                : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
+            req.setMethod('POST');
+            req.setTimeout(120000);
+            req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+            req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CardInfo/GetCardBasicInfo');
+            req.setBody(
+                buildSoapBody(transId, requestorId, dateTimeStr, cifNumber)
+            );
+
+            HttpResponse res = new Http().send(req);
 
             if (res.getStatusCode() != 200) {
                 throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
@@ -148,11 +139,50 @@ public with sharing class FEC_GetCustomerInfoBasic {
             }
 
             return parseResponse(res.getBody());
-        }
-        catch (Exception ex) {
-            System.debug('### GET CUSTOMER INFO BASIC ERROR: ' + ex.getMessage());
-            throw ex;
-        }
+        
+    }
+
+    /* =====================================================
+       BUILD SOAP BODY 
+       ===================================================== */
+    private static String buildSoapBody(
+        String transId,
+        String requestorId,
+        String dateTimeStr,
+        String cifNumber
+    ) {
+        Dom.Document doc = new Dom.Document();
+
+        Dom.XmlNode envelope = doc.createRootElement(
+            'soapenv:Envelope',
+            FEC_ConstantCommon.SOAP_ENV,
+            'soapenv'
+        );
+
+        envelope.setAttribute(
+            'xmlns:cif',
+            CIF_NS
+        );
+
+        envelope.addChildElement('soapenv:Header', null, null);
+
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+
+        Dom.XmlNode action =
+            body.addChildElement('cif:GetCustomerInfoBasic', null, null);
+
+        Dom.XmlNode sys =
+            action.addChildElement('Sys', null, null);
+
+        sys.addChildElement('TransID', null, null).addTextNode(transId);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+
+        action.addChildElement('CIFNumber', null, null)
+            .addTextNode(cifNumber);
+
+        return doc.toXmlString();
     }
 
     // =========================================================================

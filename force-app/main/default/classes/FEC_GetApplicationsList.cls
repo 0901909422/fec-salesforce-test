@@ -12,9 +12,12 @@
 
 public with sharing class FEC_GetApplicationsList {
 
-    // =========================================================================
-    // RESPONSE MODELS
-    // =========================================================================
+    private static final String ENDPOINT = '/CIF_CustomerInfo';
+    private static final String MOCKUP_ENDPOINT = 'https://fd9aa4d8-7d69-4390-8d25-79e29d6669c3.mock.pstmn.io';
+
+    /* =====================================================
+       RESPONSE MODELS
+       ===================================================== */
     public class ResponseWrapper {
         public SysResponse Sys;
         public String CIFNumber;
@@ -49,34 +52,36 @@ public with sharing class FEC_GetApplicationsList {
         String dateTimeStr,
         String cifNumber
     ) {
-        try {
 
-            validateRequest(transID, requestorId, dateTimeStr, cifNumber);
+        validateRequest(transID, requestorId, dateTimeStr, cifNumber);
 
-            String soapBody =
-                '<?xml version="1.0" encoding="utf-8"?>' +
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-                'xmlns:cif="http://fecredit.com.vn/CIF_CustomerInfo">' +
-                    '<soapenv:Header/>' +
-                    '<soapenv:Body>' +
-                        '<cif:GetApplicationsList>' +
-                            '<Sys>' +
-                                '<TransID>' + transID + '</TransID>' +
-                                '<RequestorID>' + requestorId + '</RequestorID>' +
-                                '<DateTime>' + dateTimeStr + '</DateTime>' +
-                            '</Sys>' +
-                            '<CIFNumber>' + cifNumber + '</CIFNumber>' +
-                        '</cif:GetApplicationsList>' +
-                    '</soapenv:Body>' +
-                '</soapenv:Envelope>';
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
 
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Applications_List');
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(
+            apiSetting?.FEC_Call_Mock__c
+                ? MOCKUP_ENDPOINT
+                : apiSetting.FEC_Endpoint__c + ENDPOINT
+        );
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+        req.setHeader(
+            'SOAPAction',
+            'http://fecredit.com.vn/CIF_CustomerInfo/GetApplicationsList'
+        );
 
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_APPLICATIONS_LIST_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+        req.setBody(
+            buildSoapBody(
+                transID,
+                requestorId,
+                dateTimeStr,
+                cifNumber
+            )
+        );
+
+        Http http = new Http();
+        HttpResponse res = http.send(req);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -92,55 +97,54 @@ public with sharing class FEC_GetApplicationsList {
                 );
             }
 
-            return response;
-
-        } catch (Exception ex) {
-            System.debug('### GET APPLICATIONS LIST ERROR: ' + ex.getMessage());
-            throw ex;
-        }
+        return response;
     }
 
-    // =========================================================================
-    // REQUEST VALIDATION
-    // =========================================================================
-    private static void validateRequest(
+    /* =====================================================
+       SOAP BODY BUILDER
+       ===================================================== */
+    private static String buildSoapBody(
         String transID,
         String requestorId,
         String dateTimeStr,
         String cifNumber
     ) {
-        if (String.isBlank(transID) || transID.length() > 36) {
-            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
-        }
-        if (String.isBlank(requestorId)) {
-            throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
-        }
-        if (String.isBlank(dateTimeStr)) {
-            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
-        }
-        if (String.isBlank(cifNumber)) {
-            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
-        }
 
-        Set<String> validRequestorIds = new Set<String>{
-            FEC_ConstantCommon.REQUESTOR_APS,
-            FEC_ConstantCommon.REQUESTOR_CRM,
-            FEC_ConstantCommon.REQUESTOR_PORTAL,
-            FEC_ConstantCommon.REQUESTOR_MOBILE_APP
-        };
-        if (!validRequestorIds.contains(requestorId)) {
-            throw new CalloutException(
-                System.Label.FEC_MSG_RequestorID_Null
-            );
-        }
+        Dom.Document doc = new Dom.Document();
 
-        try {
-            Datetime.valueOfGmt(dateTimeStr.replace('T', ' '));
-        } catch (Exception e) {
-            throw new CalloutException(
-                String.format(System.Label.FEC_MSG_Param_Datetime_Format_Invalid, new List<String>{dateTimeStr})
-            );
-        }
+        Dom.XmlNode envelope = doc.createRootElement(
+            'soapenv:Envelope',
+            FEC_ConstantCommon.SOAP_ENV,
+            null
+        );
+        envelope.setAttribute(
+            'xmlns:cif',
+            'http://fecredit.com.vn/CIF_CustomerInfo'
+        );
+
+        envelope.addChildElement('soapenv:Header', null, null);
+
+        Dom.XmlNode body = envelope.addChildElement(
+            'soapenv:Body',
+            null,
+            null
+        );
+
+        Dom.XmlNode action = body.addChildElement(
+            'cif:GetApplicationsList',
+            null,
+            null
+        );
+
+        Dom.XmlNode sys = action.addChildElement('Sys', null, null);
+        sys.addChildElement('TransID', null, null).addTextNode(transID);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+
+        action.addChildElement('CIFNumber', null, null)
+              .addTextNode(cifNumber);
+
+        return doc.toXmlString();
     }
 
     // =========================================================================
@@ -197,5 +201,26 @@ public with sharing class FEC_GetApplicationsList {
         return result;
     }
 
-
+    /* =====================================================
+       VALIDATION
+       ===================================================== */
+    private static void validateRequest(
+        String transID,
+        String requestorId,
+        String dateTimeStr,
+        String cifNumber
+    ) {
+        if (String.isBlank(transID) || transID.length() > 36) {
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
+        }
+        if (String.isBlank(requestorId)) {
+            throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
+        }
+        if (String.isBlank(dateTimeStr)) {
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
+        }
+        if (String.isBlank(cifNumber)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
+        }
+    }
 }

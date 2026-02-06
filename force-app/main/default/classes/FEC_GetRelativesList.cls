@@ -12,6 +12,9 @@
 
 public with sharing class FEC_GetRelativesList {
 
+    private static final String ENDPOINT = '/CIF_CustomerInfo';
+    private static final String MOCKUP_ENDPOINT = 'https://402b743b-c2fe-4963-9461-82c1aa9ad5ea.mock.pstmn.io';
+
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -48,34 +51,22 @@ public with sharing class FEC_GetRelativesList {
         String dateTimeStr,
         String cifNumber
     ) {
-        try {
+       
 
-            validateRequest(transID, requestorId, dateTimeStr, cifNumber);
+        validateRequest(transID, requestorId, dateTimeStr, cifNumber);
 
-            String soapBody =
-                '<?xml version="1.0" encoding="utf-8"?>' +
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-                'xmlns:cif="http://fecredit.com.vn/CIF_CustomerInfo">' +
-                    '<soapenv:Header/>' +
-                    '<soapenv:Body>' +
-                        '<cif:GetRelativesList>' +
-                            '<Sys>' +
-                                '<TransID>' + transID + '</TransID>' +
-                                '<RequestorID>' + requestorId + '</RequestorID>' +
-                                '<DateTime>' + dateTimeStr + '</DateTime>' +
-                            '</Sys>' +
-                            '<CIFNumber>' + cifNumber + '</CIFNumber>' +
-                        '</cif:GetRelativesList>' +
-                    '</soapenv:Body>' +
-                '</soapenv:Envelope>';
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+        req.setHeader('SOAPAction', 'http://fecredit.com.vn/CIF_CustomerInfo/GetRelativesList');
+        req.setBody(
+            buildSoapBody(transID, requestorId, dateTimeStr, cifNumber)
+        );
 
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Relatives_List');
-
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_RELATIVES_LIST_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+        HttpResponse res = new Http().send(req);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -91,12 +82,51 @@ public with sharing class FEC_GetRelativesList {
                 );
             }
 
-            return response;
+        return response;
 
-        } catch (Exception ex) {
-            System.debug('### GET RELATIVES LIST ERROR: ' + ex.getMessage());
-            throw ex;
-        }
+    }
+
+    /* =====================================================
+       SOAP BODY
+       ===================================================== */
+    private static String buildSoapBody(
+        String transID,
+        String requestorId,
+        String dateTimeStr,
+        String cifNumber
+    ) {
+        Dom.Document doc = new Dom.Document();
+
+        Dom.XmlNode envelope = doc.createRootElement(
+            'soapenv:Envelope',
+            FEC_ConstantCommon.SOAP_ENV,
+            null
+        );
+
+        envelope.setAttribute(
+            'xmlns:cif',
+            'http://fecredit.com.vn/CIF_CustomerInfo'
+        );
+
+        envelope.addChildElement('soapenv:Header', null, null);
+
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+
+        Dom.XmlNode action =
+            body.addChildElement('cif:GetRelativesList', null, null);
+
+        Dom.XmlNode sys =
+            action.addChildElement('Sys', null, null);
+
+        sys.addChildElement('TransID', null, null).addTextNode(transID);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+
+        action.addChildElement('cifNumber', null, null)
+              .addTextNode(cifNumber);
+
+        return doc.toXmlString();
     }
 
     // =========================================================================

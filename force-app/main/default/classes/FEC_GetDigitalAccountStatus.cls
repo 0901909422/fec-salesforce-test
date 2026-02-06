@@ -11,6 +11,10 @@
 ****************************************************************************************/
 public with sharing class FEC_GetDigitalAccountStatus {
 
+    private static final String DIG_NS = 'http://fecredit.com.vn/DigitalChannelWS';
+    private static final String ENDPOINT = '/DigitalChannelWS';
+    private static final String MOCKUP_ENDPOINT = 'https://221bb737-1095-498e-a236-b7f290153eb5.mock.pstmn.io';
+
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -42,41 +46,42 @@ public with sharing class FEC_GetDigitalAccountStatus {
         String cifNumber
     ) {
 
-        try {
+        validateRequest(
+            transId,
+            requestorId,
+            dateTimeStr,
+            phone,
+            cifNumber
+        );
 
-            validateRequest(
+        FEC_API_Setting__c apiSetting =
+            FEC_API_Setting__c.getOrgDefaults();
+
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(
+            apiSetting?.FEC_Call_Mock__c
+                ? MOCKUP_ENDPOINT
+                : (apiSetting?.FEC_Endpoint__c + ENDPOINT)
+        );
+        req.setMethod('POST');
+        req.setTimeout(120000);
+
+        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+        req.setHeader(
+            'SOAPAction',
+            'http://fecredit.com.vn/DigitalChannelWS/GetDigitalAccountStatus'
+        );
+        req.setBody(
+            buildSoapBody(
                 transId,
                 requestorId,
                 dateTimeStr,
                 phone,
                 cifNumber
-            );
+            )
+        );
 
-            String soapBody =
-                '<?xml version="1.0" encoding="utf-8"?>' +
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-                'xmlns:dig="http://fecredit.com.vn/DigitalChannelWS">' +
-                    '<soapenv:Header/>' +
-                    '<soapenv:Body>' +
-                        '<dig:GetDigitalAccountStatus>' +
-                            '<Sys>' +
-                                '<TransID>' + transId + '</TransID>' +
-                                '<RequestorID>' + requestorId + '</RequestorID>' +
-                                '<DateTime>' + dateTimeStr + '</DateTime>' +
-                            '</Sys>' +
-                            '<Phone>' + phone + '</Phone>' +
-                            '<CIFNumber>' + cifNumber + '</CIFNumber>' +
-                        '</dig:GetDigitalAccountStatus>' +
-                    '</soapenv:Body>' +
-                '</soapenv:Envelope>';
-
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Digital_Account_Status');
-
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_DIGITAL_ACCOUNT_STATUS_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+        HttpResponse res = new Http().send(req);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -92,18 +97,64 @@ public with sharing class FEC_GetDigitalAccountStatus {
                 );
             }
 
-            return response;
-
-        } catch (Exception ex) {
-            System.debug(
-                '### GET DIGITAL ACCOUNT STATUS ERROR: ' + ex.getMessage()
-            );
-            throw ex;
-        }
+        return response;
     }
 
     // =========================================================================
-    // REQUEST VALIDATION (GIỮ ĐÚNG STYLE CLASS MẪU)
+    // BUILD SOAP BODY 
+    // =========================================================================
+    private static String buildSoapBody(
+        String transId,
+        String requestorId,
+        String dateTimeStr,
+        String phone,
+        String cifNumber
+    ) {
+
+        Dom.Document doc = new Dom.Document();
+
+        Dom.XmlNode envelope =
+            doc.createRootElement(
+                'soapenv:Envelope',
+                FEC_ConstantCommon.SOAP_ENV,
+                'soapenv'
+            );
+
+        envelope.setAttribute('xmlns:dig', DIG_NS);
+
+        envelope.addChildElement('soapenv:Header', null, null);
+
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+
+        Dom.XmlNode action =
+            body.addChildElement(
+                'dig:GetDigitalAccountStatus',
+                null,
+                null
+            );
+
+        Dom.XmlNode sys =
+            action.addChildElement('Sys', null, null);
+
+        sys.addChildElement('TransID', null, null)
+            .addTextNode(transId);
+        sys.addChildElement('RequestorID', null, null)
+            .addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null)
+            .addTextNode(dateTimeStr);
+
+        action.addChildElement('Phone', null, null)
+            .addTextNode(phone);
+
+        action.addChildElement('CIFNumber', null, null)
+            .addTextNode(cifNumber);
+
+        return doc.toXmlString();
+    }
+
+    // =========================================================================
+    // REQUEST VALIDATION 
     // =========================================================================
     private static void validateRequest(
         String transId,
