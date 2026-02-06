@@ -129,7 +129,7 @@ public with sharing class FEC_UpdateCustomerContact {
     result.httpStatus = httpStatus;
     result.rawResponse = xml;
     if (xml == null) {
-      result.errorMessage = 'Empty response body';
+      result.errorMessage = System.Label.FEC_MSG_Response_Null;
       result.success = false;
       return result;
     }
@@ -142,7 +142,7 @@ public with sharing class FEC_UpdateCustomerContact {
         'http://schemas.xmlsoap.org/soap/envelope/'
       );
       if (body == null) {
-        result.errorMessage = 'No SOAP Body';
+        result.errorMessage = System.Label.FEC_MSG_Response_Null;
         result.success = false;
         return result;
       }
@@ -159,7 +159,7 @@ public with sharing class FEC_UpdateCustomerContact {
         }
       }
       if (responseNode == null) {
-        result.errorMessage = 'No UpdateCustomerContactResponse found';
+        result.errorMessage = System.Label.FEC_MSG_Response_Null;
         result.success = false;
         return result;
       }
@@ -175,11 +175,11 @@ public with sharing class FEC_UpdateCustomerContact {
         result.description = (d != null) ? d.getText() : null;
         result.success = (result.code == '0' || result.code == '4');
       } else {
-        result.errorMessage = 'No Sys node in response';
+        result.errorMessage = System.Label.FEC_MSG_Response_Sys_Null;
         result.success = false;
       }
     } catch (Exception ex) {
-      result.errorMessage = 'XML parse error: ' + ex.getMessage();
+      result.errorMessage = String.format(System.Label.FEC_MSG_Parse_XML_Error, new List<String>{ex.getMessage()});
       result.success = false;
     }
     return result;
@@ -205,7 +205,7 @@ public with sharing class FEC_UpdateCustomerContact {
       if (finalResult.rawResponse == null)
         finalResult.rawResponse = body;
     } catch (Exception ex) {
-      finalResult.errorMessage = 'Callout error: ' + ex.getMessage();
+      finalResult.errorMessage = ex.getMessage();
       finalResult.success = false;
     }
     return finalResult;
