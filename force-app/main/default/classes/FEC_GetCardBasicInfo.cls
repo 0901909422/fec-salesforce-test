@@ -12,9 +12,12 @@
 
 public with sharing class FEC_GetCardBasicInfo {
 
-    // =========================================================================
-    // RESPONSE MODELS
-    // =========================================================================
+    private static final String ENDPOINT = '/CIF_CardInfo';
+    private static final String MOCKUP_ENDPOINT ='https://1d899e3a-18af-403a-a989-fcdb8e64a2c8.mock.pstmn.io';
+
+    /* =====================================================
+       RESPONSE MODELS
+       ===================================================== */
     public class ResponseWrapper {
         public SysResponse Sys;
         public CardBasicInfo CardBasicInfo;
@@ -118,34 +121,36 @@ public with sharing class FEC_GetCardBasicInfo {
         String dateTimeStr,
         String accountNumber
     ) {
-        try {
 
-            validateRequest(transID, requestorId, dateTimeStr, accountNumber);
+        validateRequest(transID, requestorId, dateTimeStr, accountNumber);
 
-            String soapBody =
-                '<?xml version="1.0" encoding="utf-8"?>' +
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-                'xmlns:cif="http://fecredit.com.vn/CIF_CardInfo">' +
-                    '<soapenv:Header/>' +
-                    '<soapenv:Body>' +
-                        '<cif:GetCardBasicInfo>' +
-                            '<Sys>' +
-                                '<TransID>' + transID + '</TransID>' +
-                                '<RequestorID>' + requestorId + '</RequestorID>' +
-                                '<DateTime>' + dateTimeStr + '</DateTime>' +
-                            '</Sys>' +
-                            '<AccountNumber>' + accountNumber + '</AccountNumber>' +
-                        '</cif:GetCardBasicInfo>' +
-                    '</soapenv:Body>' +
-                '</soapenv:Envelope>';
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
 
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Basic_Info');
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(
+            apiSetting?.FEC_Call_Mock__c
+                ? MOCKUP_ENDPOINT
+                : apiSetting.FEC_Endpoint__c + ENDPOINT
+        );
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+        req.setHeader(
+            'SOAPAction',
+            'http://fecredit.com.vn/CIF_CardInfo/GetCardBasicInfo'
+        );
 
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_CARD_BASIC_INFO_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+        req.setBody(
+            buildSoapBody(
+                transID,
+                requestorId,
+                dateTimeStr,
+                accountNumber
+            )
+        );
+
+        Http http = new Http();
+        HttpResponse res = http.send(req);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -160,13 +165,51 @@ public with sharing class FEC_GetCardBasicInfo {
                     String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
                 );
             }
-            
-            return response;
 
-        } catch (Exception ex) {
-            System.debug('### GET CARD BASIC INFO ERROR: ' + ex.getMessage());
-            throw ex;
-        }
+        return response;
+    }
+
+    /* =====================================================
+       SOAP BODY
+       ===================================================== */
+    private static String buildSoapBody(
+        String transID,
+        String requestorId,
+        String dateTimeStr,
+        String accountNumber
+    ) {
+        Dom.Document doc = new Dom.Document();
+
+        Dom.XmlNode envelope = doc.createRootElement(
+            'soapenv:Envelope',
+            FEC_ConstantCommon.SOAP_ENV,
+            null
+        );
+
+        envelope.setAttribute(
+            'xmlns:cif',
+            'http://fecredit.com.vn/CIF_CardInfo'
+        );
+
+        envelope.addChildElement('soapenv:Header', null, null);
+
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+
+        Dom.XmlNode action =
+            body.addChildElement('cif:GetCardBasicInfo', null, null);
+
+        Dom.XmlNode sys =
+            action.addChildElement('Sys', null, null);
+
+        sys.addChildElement('TransID', null, null).addTextNode(transID);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+
+        action.addChildElement('AccountNumber', null, null)
+              .addTextNode(accountNumber);
+
+        return doc.toXmlString();
     }
 
     // =========================================================================
@@ -333,8 +376,7 @@ public with sharing class FEC_GetCardBasicInfo {
                 sp.MPA =
                     FEC_CommonUltils.xmlValToDecimal(s, 'MPA');
                 sp.StatementDate =
-                    FEC_CommonUltils.xmlValToDate(s, 'STATEMENT_DATE'); 
-
+                    FEC_CommonUltils.xmlGetDateYYYYMMDD(s, 'STATEMENT_DATE'); 
                 result.CardBasicInfo.Statements.add(sp);
             }
         }
@@ -380,4 +422,39 @@ public with sharing class FEC_GetCardBasicInfo {
         return result;
     }
 
+    // =========================================================================
+    // HELPERS
+    // =========================================================================
+    private static String getVal(Dom.XmlNode n, String name) {
+        if (n == null) return null;
+        Dom.XmlNode c = n.getChildElement(name, null);
+        return c == null ? null : c.getText();
+    }
+
+    private static Decimal getDec(Dom.XmlNode n, String name) {
+        String v = getVal(n, name);
+        return String.isBlank(v) ? null : Decimal.valueOf(v);
+    }
+
+    private static Integer toInt(String v) {
+        return String.isBlank(v) ? null : Integer.valueOf(v);
+    }
+
+    private static Date getDate(Dom.XmlNode n, String name) {
+        String v = getVal(n, name);
+        return String.isBlank(v) ? null : Date.valueOf(v);
+    }
+    private static Date getDateYYYYMMDD(Dom.XmlNode n, String name) {
+        String v = getVal(n, name);
+        if (String.isBlank(v)) return null;
+
+        if (v.length() == 8) {
+            String yyyy = v.substring(0, 4);
+            String mm   = v.substring(4, 6);
+            String dd   = v.substring(6, 8);
+            return Date.valueOf(yyyy + '-' + mm + '-' + dd);
+        }
+
+        return null;
+    }
 }

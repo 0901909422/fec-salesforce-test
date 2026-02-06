@@ -12,6 +12,9 @@
 
 public with sharing class FEC_GetCardFinancialTransactions {
 
+    private static final String ENDPOINT = '/CIF_CardInfo';
+    private static final String MOCKUP_ENDPOINT = 'https://ca5bd91c-5793-4fb9-b103-1d8029b62e5e.mock.pstmn.io';
+
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -60,37 +63,38 @@ public with sharing class FEC_GetCardFinancialTransactions {
         Date fromDate,
         Date toDate
     ) {
-        try {
 
-            validateRequest(transID, requestorId, dateTimeStr, accountNumber, fromDate,toDate);
-            
-            // ================= SOAP REQUEST BODY =================
-            String soapBody =
-                '<?xml version="1.0" encoding="utf-8"?>' +
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-                'xmlns:cif="http://fecredit.com.vn/CIF_CardInfo">' +
-                    '<soapenv:Header/>' +
-                    '<soapenv:Body>' +
-                        '<cif:GetCardFinancialTransactions>' +
-                            '<Sys>' +
-                                '<TransID>' + transId + '</TransID>' +
-                                '<RequestorID>' + requestorId + '</RequestorID>' +
-                                '<DateTime>' + dateTimeStr + '</DateTime>' +
-                            '</Sys>' +
-                            '<AccountNumber>' + accountNumber + '</AccountNumber>' +
-                            '<FromDate>' + fromDate.format() + '</FromDate>' +
-                            '<ToDate>' + toDate.format() + '</ToDate>' +
-                        '</cif:GetCardFinancialTransactions>' +
-                    '</soapenv:Body>' +
-                '</soapenv:Envelope>';
+        validateRequest(transId, requestorId, dateTimeStr, accountNumber, fromDate, toDate);
 
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Financial_Transaction');
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
 
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_CARD_FINANCIAL_TRANSACTION_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(
+            apiSetting?.FEC_Call_Mock__c
+                ? MOCKUP_ENDPOINT
+                : apiSetting.FEC_Endpoint__c + ENDPOINT
+        );
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+        req.setHeader(
+            'SOAPAction',
+            'http://fecredit.com.vn/CIF_CardInfo/GetCardFinancialTransactions'
+        );
+
+        req.setBody(
+            buildSoapBody(
+                transId,
+                requestorId,
+                dateTimeStr,
+                accountNumber,
+                fromDate,
+                toDate
+            )
+        );
+
+        Http http = new Http();
+        HttpResponse res = http.send(req);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -105,13 +109,65 @@ public with sharing class FEC_GetCardFinancialTransactions {
                     String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
                 );
             }
-            
-            return response;
 
-        } catch (Exception ex) {
-            System.debug('### FIN TXN ERROR: ' + ex.getMessage());
-            throw ex;
+        return response;
+    }
+
+    // =========================================================================
+    // SOAP BODY – DOM XML 
+    // =========================================================================
+    private static String buildSoapBody(
+        String transId,
+        String requestorId,
+        String dateTimeStr,
+        String accountNumber,
+        Date fromDate,
+        Date toDate
+    ) {
+
+        Dom.Document doc = new Dom.Document();
+
+        Dom.XmlNode envelope = doc.createRootElement(
+            'soapenv:Envelope',
+           FEC_ConstantCommon.SOAP_ENV,
+            null
+        );
+        envelope.setAttribute(
+            'xmlns:cif',
+            'http://fecredit.com.vn/CIF_CardInfo'
+        );
+
+        envelope.addChildElement('soapenv:Header', null, null);
+
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+
+        Dom.XmlNode action =
+            body.addChildElement(
+                'cif:GetCardFinancialTransactions',
+                null,
+                null
+            );
+
+        Dom.XmlNode sys = action.addChildElement('Sys', null, null);
+        sys.addChildElement('TransID', null, null).addTextNode(transId);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+
+        action.addChildElement('AccountNumber', null, null)
+              .addTextNode(accountNumber);
+
+        if (fromDate != null) {
+            action.addChildElement('FromDate', null, null)
+                  .addTextNode(fromDate.format());
         }
+
+        if (toDate != null) {
+            action.addChildElement('ToDate', null, null)
+                  .addTextNode(toDate.format());
+        }
+
+        return doc.toXmlString();
     }
 
     // =========================================================================

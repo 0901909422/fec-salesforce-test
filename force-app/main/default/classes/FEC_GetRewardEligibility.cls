@@ -11,7 +11,10 @@
 ****************************************************************************************/
 
 public with sharing class FEC_GetRewardEligibility {
-    
+
+    private static final String ENDPOINT = '/CMS_RewardWS';
+    private static final String MOCKUP_ENDPOINT = 'https://ca80d761-922f-45e5-8acf-df61ce52156b.mock.pstmn.io';
+
     // =========================================================================
     // PUBLIC METHOD
     // =========================================================================
@@ -21,34 +24,22 @@ public with sharing class FEC_GetRewardEligibility {
         String dateTimeStr,
         String accountNumber
     ) {
-        try {
-            validateRequest(transId, requestorId, dateTimeStr, accountNumber);
+        
+        validateRequest(transId, requestorId, dateTimeStr, accountNumber);
 
-            // ================= SOAP REQUEST BODY =================
-            String soapBody =
-                '<?xml version="1.0" encoding="utf-8"?>' +
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-                'xmlns:ns1="http://esbservice.fecredit.org/CMS_RewardWS/">' +
-                    '<soapenv:Header/>' +
-                    '<soapenv:Body>' +
-                        '<ns1:GetRewardEligibility>' +
-                            '<SysRequest>' +
-                                '<TransID>' + transId + '</TransID>' +
-                                '<RequestorID>' + requestorId + '</RequestorID>' +
-                                '<DateTime>' + dateTimeStr + '</DateTime>' +
-                            '</SysRequest>' +
-                            '<AccountNumber>' + accountNumber + '</AccountNumber>' +
-                        '</ns1:GetRewardEligibility>' +
-                    '</soapenv:Body>' +
-                '</soapenv:Envelope>';
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
 
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Reward_Eligibility');
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+        req.setHeader('SOAPAction', 'http://esbservice.fecredit.org/CMS_RewardWS/GetRewardEligibility');
+        req.setBody(
+            buildSoapBody(transId, requestorId, dateTimeStr, accountNumber)
+        );
 
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_REWARD_ELIGIBILITY_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+        HttpResponse res = new Http().send(req);
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
@@ -62,12 +53,51 @@ public with sharing class FEC_GetRewardEligibility {
                 );
             }
 
-            return response;
+        return response;
+       
+    }
 
-        } catch (Exception ex) {
-            System.debug('### REWARD ERROR: ' + ex.getMessage());
-            throw ex;
-        }
+    /* =====================================================
+       SOAP BODY
+       ===================================================== */
+    private static String buildSoapBody(
+        String transId,
+        String requestorId,
+        String dateTimeStr,
+        String accountNumber
+    ) {
+        Dom.Document doc = new Dom.Document();
+
+        Dom.XmlNode envelope = doc.createRootElement(
+            'soapenv:Envelope',
+            FEC_ConstantCommon.SOAP_ENV,
+            null
+        );
+
+        envelope.setAttribute(
+            'xmlns:ns1',
+            'http://esbservice.fecredit.org/CMS_RewardWS/'
+        );
+
+        envelope.addChildElement('soapenv:Header', null, null);
+
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+
+        Dom.XmlNode action =
+            body.addChildElement('ns1:GetRewardEligibility', null, null);
+
+        Dom.XmlNode sys =
+            action.addChildElement('Sys', null, null);
+
+        sys.addChildElement('transId', null, null).addTextNode(transId);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+
+        action.addChildElement('accountNumber', null, null)
+              .addTextNode(accountNumber);
+
+        return doc.toXmlString();
     }
 
     // =========================================================================

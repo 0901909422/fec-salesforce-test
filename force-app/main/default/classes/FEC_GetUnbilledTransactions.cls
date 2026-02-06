@@ -12,6 +12,9 @@
 
 public with sharing class FEC_GetUnbilledTransactions {
 
+    private static final String ENDPOINT = '/EStatementService';
+    private static final String MOCKUP_ENDPOINT = 'https://04ec0d97-7ca2-4180-9caf-ce49a8dc0abe.mock.pstmn.io';
+
     // =========================================================================
     // PUBLIC METHOD
     // =========================================================================
@@ -21,56 +24,77 @@ public with sharing class FEC_GetUnbilledTransactions {
         String dateTimeStr,
         String accountNumber
     ) {
-        try {
+       
+        validateRequest(transID, requestorId, dateTimeStr, accountNumber);
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
+        req.setMethod('POST');
+        req.setTimeout(120000);
+        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
+        req.setHeader('SOAPAction', 'http://esbservice.fecredit.org/EStatementService/GetUnbilledTransactions');
+        req.setBody(
+            buildSoapBody(transId, requestorId, dateTimeStr, accountNumber)
+        );
 
-            validateRequest(transID, requestorId, dateTimeStr, accountNumber);
-            
-            // ================= SOAP REQUEST BODY =================
-            String soapBody =
-                '<?xml version="1.0" encoding="utf-8"?>' +
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-                'xmlns:est="http://esbservice.fecredit.org/EStatementService/">' +
-                    '<soapenv:Header/>' +
-                    '<soapenv:Body>' +
-                        '<est:GetUnbilledTransactions>' +
-                            '<est:SysRequest>' +
-                                '<TransID>' + transId + '</TransID>' +
-                                '<RequestorID>' + requestorId + '</RequestorID>' +
-                                '<DateTime>' + dateTimeStr + '</DateTime>' +
-                            '</est:SysRequest>' +
-                            '<AccountNumber>' + accountNumber + '</AccountNumber>' +
-                        '</est:GetUnbilledTransactions>' +
-                    '</soapenv:Body>' +
-                '</soapenv:Envelope>';
+        HttpResponse res = new Http().send(req);
 
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Unbilled_Transaction');
-
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
-
-            if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
-                throw new CalloutException(
-                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()})
-                );
-            }
-
-             ResponseWrapper response = parseResponse(res.getBody());
-
-            if (response.Sys != null && response.Sys.Code != 1) {
-                throw new CalloutException(
-                    String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
-                );
-            }
-
-            return response;
-
-        } catch (Exception ex) {
-            System.debug('### UNBILLED TXN ERROR: ' + ex.getMessage());
-            throw ex;
+        if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
         }
+        
+        ResponseWrapper response = parseResponse(res.getBody());
+        
+        if (response.Sys != null && response.Sys.Status != 0) {
+            throw new CalloutException(
+                String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
+            );
+        }
+        
+        return response;
+    }
+
+    /* =====================================================
+       SOAP BODY
+       ===================================================== */
+    private static String buildSoapBody(
+        String transId,
+        String requestorId,
+        String dateTimeStr,
+        String accountNumber
+    ) {
+        Dom.Document doc = new Dom.Document();
+
+        Dom.XmlNode envelope = doc.createRootElement(
+            'soapenv:Envelope',
+            FEC_ConstantCommon.SOAP_ENV,
+            null
+        );
+
+        envelope.setAttribute(
+            'xmlns:est',
+            'http://esbservice.fecredit.org/EStatementService/'
+        );
+
+        envelope.addChildElement('soapenv:Header', null, null);
+
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+
+        Dom.XmlNode action =
+            body.addChildElement('est:GetUnbilledTransactions', null, null);
+
+        Dom.XmlNode sys =
+            action.addChildElement('Sys', null, null);
+
+        sys.addChildElement('transId', null, null).addTextNode(transId);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+
+        action.addChildElement('accountNumber', null, null)
+              .addTextNode(accountNumber);
+
+        return doc.toXmlString();
     }
 
     // =========================================================================
@@ -147,7 +171,7 @@ public with sharing class FEC_GetUnbilledTransactions {
         result.Sys = new SysResponse();
         result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
         result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
-        result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
+        result.Sys.Status = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Status'));
         result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
 
         // ================= TRANSACTION RECORDS =================
@@ -184,7 +208,7 @@ public with sharing class FEC_GetUnbilledTransactions {
     public class SysResponse {
         public String TransID;
         public String DateTimeStr;
-        public Integer Code;
+        public Integer Status;
         public String Description;
     }
 
