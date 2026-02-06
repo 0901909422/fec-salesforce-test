@@ -154,7 +154,7 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>Case Stage</label>
+    <label>Case Stage MDM</label>
     <nameField>
         <label>Case Stage Name</label>
         <trackHistory>false</trackHistory>

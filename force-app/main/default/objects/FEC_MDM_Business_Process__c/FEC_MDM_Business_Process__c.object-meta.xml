@@ -154,7 +154,7 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>Business Process</label>
+    <label>Business Process MDM</label>
     <nameField>
         <label>Business Process Name</label>
         <trackHistory>false</trackHistory>

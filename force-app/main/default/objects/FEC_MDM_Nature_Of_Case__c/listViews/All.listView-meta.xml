@@ -9,6 +9,7 @@
     <columns>FEC_Stage_Name__c</columns>
     <columns>FEC_Sub_Category_Name__c</columns>
     <columns>FEC_Sub_Code__c</columns>
+    <columns>FEC_Customer_Type__c</columns>
     <filterScope>Everything</filterScope>
     <label>All</label>
 </ListView>

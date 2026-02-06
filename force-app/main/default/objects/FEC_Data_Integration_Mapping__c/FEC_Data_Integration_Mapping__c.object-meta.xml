@@ -140,27 +140,25 @@
         <formFactor>Small</formFactor>
         <type>Default</type>
     </actionOverrides>
-    <allowInChatterGroups>true</allowInChatterGroups>
+    <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
-    <description>Là danh mục trong bộ Nature of Case</description>
-    <enableActivities>true</enableActivities>
+    <enableActivities>false</enableActivities>
     <enableBulkApi>true</enableBulkApi>
     <enableFeeds>false</enableFeeds>
-    <enableHistory>true</enableHistory>
+    <enableHistory>false</enableHistory>
     <enableLicensing>false</enableLicensing>
-    <enableReports>true</enableReports>
-    <enableSearch>true</enableSearch>
+    <enableReports>false</enableReports>
+    <enableSearch>false</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>Category MDM</label>
+    <label>FEC Data Integration Mapping</label>
     <nameField>
-        <label>Category Name</label>
-        <trackHistory>false</trackHistory>
+        <label>FEC Data Integration Mapping Name</label>
         <type>Text</type>
     </nameField>
-    <pluralLabel>Categories</pluralLabel>
+    <pluralLabel>FEC Data Integration Mappings</pluralLabel>
     <searchLayouts></searchLayouts>
     <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>

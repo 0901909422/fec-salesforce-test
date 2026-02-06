@@ -155,7 +155,7 @@ Thông qua MyCase API, các hệ thống như Mobile App, Vymo, Pega có thể t
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>Channel</label>
+    <label>Channel MDM</label>
     <nameField>
         <label>Channel Name</label>
         <trackHistory>true</trackHistory>

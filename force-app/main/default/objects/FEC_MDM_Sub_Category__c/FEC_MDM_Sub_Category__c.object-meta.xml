@@ -153,7 +153,7 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>FEC_Sub Category</label>
+    <label>FEC_Sub Category MDM</label>
     <nameField>
         <label>Sub Category  Name</label>
         <type>Text</type>
