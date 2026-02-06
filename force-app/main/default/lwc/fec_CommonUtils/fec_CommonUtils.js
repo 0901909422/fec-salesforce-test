@@ -24,4 +24,69 @@ const mask = (s, keep = 4) => {
   return s.slice(0, keep) + "***" + s.slice(-keep);
 };
 
-export { formatDate, mask };
+const formatDateVNI = (d) => {
+  if (!d) return '';
+  const date = new Date(d);
+  return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+}
+
+const maskWorkPhone = (phone) => {
+    if (phone.length < 7) {
+        return phone;
+    }
+
+    let first = phone.substring(0, 4);
+    let last  = phone.substring(phone.length - 3);
+
+    return first + '***' + last;
+}
+
+const maskValue = (value, showFull) => {
+  if (!value) return '';
+  if (showFull) return value;
+
+  const v = value.trim();
+
+  /* =====================
+  * PASSPORT ID (bắt đầu bằng chữ)
+  * Hiển thị: 2 ký tự đầu + 3 ký tự cuối
+  * ===================== */
+  if (/^[A-Za-z]/.test(v)) {
+    if (v.length <= 5) return v;
+    return (
+      v.substring(0, 2) +
+      '*'.repeat(v.length - 5) +
+      v.slice(-3)
+    );
+  }
+
+  /* =====================
+  * PHONE NUMBER (10 số)
+  * Hiển thị: 4 số đầu + 3 số cuối
+  * Ví dụ: 0906***678
+  * ===================== */
+  if (/^\d{10}$/.test(v)) {
+    return (
+      v.substring(0, 4) +
+      '*'.repeat(v.length - 7) +
+      v.slice(-3)
+    );
+  }
+
+  /* =====================
+  * CCCD (toàn số, > 6)
+  * Hiển thị: 3 số đầu + 3 số cuối
+  * ===================== */
+  if (/^\d+$/.test(v)) {
+    if (v.length <= 6) return v;
+    return (
+      v.substring(0, 3) +
+      '*'.repeat(v.length - 6) +
+      v.slice(-3)
+    );
+  }
+
+  return v;
+}
+
+export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue };
