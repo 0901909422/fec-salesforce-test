@@ -27,6 +27,7 @@
         <members>FEC_CommonUltils</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_MockupEndpoint</members>
+		<members>FEC_MFASOUTSTANDINGAUTHINQ</members>
         <name>ApexClass</name>
     </types>
 	<types>
