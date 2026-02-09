@@ -12,6 +12,8 @@ import LABEL_LIST_VALUE_CONFIRM_DELETE_TITLE from '@salesforce/label/c.FEC_List_
 import LABEL_LIST_VALUE_CONFIRM_DELETE_MSG from '@salesforce/label/c.FEC_List_Value_Confirm_Delete_Message';
 import LABEL_DELETE from '@salesforce/label/c.FEC_Button_Delete';
 import LABEL_CANCEL from '@salesforce/label/c.FEC_Button_Cancel';
+import LABEL_SUCCESS_SAVE from '@salesforce/label/c.LABEL_SUCCESS_SAVE';
+import LABEL_SUCCESS_DELETE from '@salesforce/label/c.LABEL_SUCCESS_DELETE';
 
 const COLUMNS = [
     { label: 'Name EN', fieldName: 'Name', type: 'text' },
@@ -104,7 +106,7 @@ export default class FecAdditionalFiledListValue extends LightningElement {
     }
 
     async handleFormSuccess() {
-        this.showToast('Success', 'Dữ liệu đã được lưu', 'success');
+        this.showToast('Success', LABEL_SUCCESS_SAVE, 'success');
         this.closeAddEditModal();
         this.isLoading = true;
         try {
@@ -126,7 +128,7 @@ export default class FecAdditionalFiledListValue extends LightningElement {
         this.isLoading = true;
         try {
             await deleteFieldListValue({ recordId: this.recordIdToDelete });
-            this.showToast('Success', 'Đã xóa thành công', 'success');
+            this.showToast('Success', LABEL_SUCCESS_DELETE, 'success');
             await refreshApex(this.wiredListValuesResult);
         } catch (error) {
             let message = 'Lỗi khi xóa';

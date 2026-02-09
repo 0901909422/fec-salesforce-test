@@ -19,6 +19,7 @@ import LABEL_CONFIRM_DELETE_CHANNEL from '@salesforce/label/c.FEC_Confirm_Delete
 import LABEL_TOAST_SAVE_SUCCESS from '@salesforce/label/c.FEC_Toast_Save_Success';
 import LABEL_TOAST_DELETE_SUCCESS from '@salesforce/label/c.FEC_Toast_Delete_Success';
 import LABEL_TOAST_ERROR_GENERIC from '@salesforce/label/c.FEC_Toast_Error_Generic';
+import LABEL_ERROR_INVALID_RECORD_ID from '@salesforce/label/c.LABEL_ERROR_INVALID_RECORD_ID';
 
 const COLUMNS = [
     { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
@@ -106,7 +107,7 @@ export default class FecChannelManager extends LightningElement {
 
     async handleDelete(id) {
         if (!id) {
-            this.showToast('Lỗi', 'ID bản ghi không hợp lệ', 'error');
+            this.showToast('Lỗi', LABEL_ERROR_INVALID_RECORD_ID, 'error');
             return;
         }
         // Disable UI or show spinner here if desired

@@ -21,6 +21,12 @@ import LABEL_DISPLAY_NAME_EN from '@salesforce/label/c.FEC_Label_Display_Name_EN
 import LABEL_STATUS_ALL from '@salesforce/label/c.FEC_Label_Status_ALL';
 import LABEL_STATUS_ACTIVE from '@salesforce/label/c.FEC_Label_Status_ACTIVE';
 import LABEL_STATUS_INACTIVE from '@salesforce/label/c.FEC_Label_Status_INACTIVE';
+import LABEL_ERROR_ADD_SUB_CODE from '@salesforce/label/c.LABEL_ERROR_ADD_SUB_CODE';
+import LABEL_ERROR_DELETE_RECORD from '@salesforce/label/c.LABEL_ERROR_DELETE_RECORD';
+import LABEL_SUCCESS_ADD from '@salesforce/label/c.LABEL_SUCCESS_ADD';
+import LABEL_ERROR_INVALID_RECORD from '@salesforce/label/c.LABEL_ERROR_INVALID_RECORD';
+import LABEL_SUCCESS_DELETE from '@salesforce/label/c.LABEL_SUCCESS_DELETE';
+import LABEL_WARNING_DELETE_NODE from '@salesforce/label/c.LABEL_WARNING_DELETE_NODE';
 import { OBJ_PRODUCT_TYPE, OBJ_BUSINESS_PROCESS, OBJ_CATEGORY, OBJ_SUB_CATEGORY, OBJ_SUB_CODE, TAG_NATURE_TREE, PREFIX_SUB_CODE, PREFIX_PT, PREFIX_BP, PREFIX_CAT, DISPLAY_FIELD_CODE, DISPLAY_FIELD_ALIAS, DISPLAY_FIELD_NAME_VN, DISPLAY_FIELD_NAME_EN, STATUS_ALL, STATUS_ACTIVE, STATUS_INACTIVE, TITLE_CLASS_BASE, TITLE_CLASS_SELECTED_SUFFIX } from 'c/fecConstants';
 
 export default class FecNatureOfCaseTree extends LightningElement {
@@ -273,7 +279,7 @@ export default class FecNatureOfCaseTree extends LightningElement {
         const targetObjectType = this.objectMap[prefix];
 
         if (!targetObjectType) {
-            this.showToast('Lỗi', 'Không thể thêm Node con vào cấp cuối cùng (Sub Code).', 'error');
+            this.showToast('Lỗi', LABEL_ERROR_ADD_SUB_CODE, 'error');
             return;
         }
 
@@ -307,7 +313,7 @@ export default class FecNatureOfCaseTree extends LightningElement {
                     this.treeKey = true; // Kích hoạt render lại toàn bộ
                 }, 0);
 
-                this.showToast('Thành công', 'Thêm thành công!', 'success');
+                this.showToast('Thành công', LABEL_SUCCESS_ADD, 'success');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -401,12 +407,10 @@ export default class FecNatureOfCaseTree extends LightningElement {
 
     handleDisplayFieldChange(event) {
         this.selectedDisplayField = event.detail.value;
-        showLog('Selected Display Field:', this.selectedDisplayField);
     }
 
     handleStatusChange(event) {
         this.selectedStatusFilter = event.detail.value;
-        showLog('Selected Status Filter:', this.selectedStatusFilter);
         // Re-apply filter to current raw data
         this.treeItems = this.applyFilterAndExpand(this.fecRawData, this.searchTerm, this.selectedNodeName);
     }
@@ -424,7 +428,6 @@ export default class FecNatureOfCaseTree extends LightningElement {
         // 2. Phân loại hành động dựa trên biến 'type' từ Component con gửi lên
         if (type === 'same') {
             // Nếu là "Add" (Same Level) -> Gọi hàm xử lý cùng cấp
-            console.log('Action: Add Same Level for parent:', parentId);
             this.handleOpenModalForSameLevel(fullItem, parentId);
         } else {
             // Nếu là "Add Child" (hoặc mặc định) -> Gọi hàm xử lý thêm con
@@ -447,9 +450,7 @@ export default class FecNatureOfCaseTree extends LightningElement {
     // Sửa lại hàm này để tránh lỗi "objectType is not defined"
     async handleOpenModalForSameLevel(fullItem, parentId) {
         const currentPrefix = fullItem.name.split('_')[0];
-        showLog('handleOpenModalForSameLevel - currentPrefix:', fullItem);
         const targetObjectType = this.objectMapRoot[currentPrefix];
-        showLog('handleOpenModalForSameLevel - targetObjectType:', targetObjectType);
 
         this.openAddNodeModal(parentId, targetObjectType, 'Same Level', this.selectedNodeCustomerType);
     }
@@ -465,12 +466,10 @@ export default class FecNatureOfCaseTree extends LightningElement {
         console.log('Processed Delete fullItem:', fullItem);
 
         if (!idType || !type) {
-            this.showToast('Lỗi', 'Không thể xác định thông tin bản ghi để xóa.', 'error');
+            this.showToast('Lỗi', LABEL_ERROR_DELETE_RECORD, 'error');
             return;
         }
-        const msg = `CẢNH BÁO: Bạn đang xóa node ${code} loại "${type}".
-        Tất cả các node con sẽ bị xóa. 
-        Bạn có chắc chắn muốn tiếp tục?`;
+        const msg = LABEL_WARNING_DELETE_NODE.replace('{0}', code).replace('{1}', type);
 
         const confirmed = confirm(msg);
         if (!confirmed) return;
@@ -483,10 +482,10 @@ export default class FecNatureOfCaseTree extends LightningElement {
                 typeName: type
             });
 
-            this.showToast('Thành công', 'Đã xóa bản ghi và các mapping liên quan.', 'success');
+            this.showToast('Thành công', LABEL_SUCCESS_DELETE, 'success');
             await this.refreshTreeData();
         } catch (error) {
-            this.showToast('Không thể xóa', error.body?.message || 'Lỗi hệ thống', 'error');
+            this.showToast('Lỗi', LABEL_ERROR_DELETE_RECORD, 'error');
         } finally {
             this.loading = false;
         }

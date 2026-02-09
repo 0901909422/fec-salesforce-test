@@ -69,117 +69,117 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
     }
     
     public void execute(Database.BatchableContext bc, List<String> scope) {
-        for (String mdmObjName : scope) {
-            String targetObjName = mdmToOriginalMap.get(mdmObjName);
+        // Assuming scope always contains exactly one value
+        String mdmObjName = scope[0];
+        String targetObjName = mdmToOriginalMap.get(mdmObjName);
+        
+        // --- BƯỚC 1: LẤY DANH SÁCH TRƯỜNG THỰC TẾ TỒN TẠI TRÊN MDM ---
+        Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(mdmObjName).getDescribe().fields.getMap();
+        List<String> validFieldsForThisObj = new List<String>();
+        for (String f : commonFieldMap.keySet()) {
+            if (fieldMap.containsKey(f)) validFieldsForThisObj.add(f);
+        }
+        
+        String queryFields = String.join(validFieldsForThisObj, ',');
+        String query = 'SELECT ' + queryFields;
+        
+        // --- BƯỚC 2: XÂY DỰNG QUERY DÙNG IF/ELSE ---
+        if (mdmObjName == FEC_Constants.OBJ_MDM_NATURE_OF_CASE) {
+            query += ', FEC_Product_Type_Name__r.FEC_Code__c, ' +
+                'FEC_Business_Process_Name__r.FEC_Code__c, ' +
+                'FEC_Category_Name__r.FEC_Code__c, ' +
+                'FEC_Sub_Category_Name__r.FEC_Code__c, ' +
+                'FEC_Sub_Code__r.FEC_Code__c';
+        } else if (mdmObjName == FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING) {
+            query += ', FEC_Nature_Of_Case__r.FEC_Code__c, ' +
+                'FEC_Additional_Field__r.FEC_Code__c, ' +
+                'FEC_Stage_Name__r.FEC_Code__c';
+        } else if (mdmObjName == FEC_Constants.OBJ_MDM_CASE_STAGE) {
+            query += ', FEC_Business_Process__r.FEC_Code__c';
+        } else if (mdmObjName == FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE) {
+            query += ', FEC_Additional_Field__r.FEC_Code__c';
+        }
+        String statusLiteral = '\'' + String.escapeSingleQuotes(FEC_Constants.PROCESS_STATUS_SYNCED) + '\'';
+        query += ' FROM ' + mdmObjName + ' WHERE ' + FEC_Constants.FIELD_PROCESS_CHANGE_STATUS + ' != ' + statusLiteral;
+        
+        // Prevent empty field list
+        if (String.isBlank(queryFields)) return;
+        List<SObject> mdmRecords = Database.query(query);
+        if (mdmRecords.isEmpty()) return;
+        
+        List<SObject> targetList = new List<SObject>();
+        
+        // --- BƯỚC 3: MAPPING DÙNG IF/ELSE ---
+        for (SObject mdm : mdmRecords) {
+            SObject target = Schema.getGlobalDescribe().get(targetObjName).newSObject();
+            target.put(FEC_Constants.FIELD_PROCESS_CHANGE_STATUS, FEC_Constants.PROCESS_STATUS_SYNCED);
             
-            // --- BƯỚC 1: LẤY DANH SÁCH TRƯỜNG THỰC TẾ TỒN TẠI TRÊN MDM ---
-            Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(mdmObjName).getDescribe().fields.getMap();
-            List<String> validFieldsForThisObj = new List<String>();
-            for(String f : commonFieldMap.keySet()) {
-                if(fieldMap.containsKey(f)) validFieldsForThisObj.add(f);
-            }
-            
-            String queryFields = String.join(validFieldsForThisObj, ',');
-            String query = 'SELECT ' + queryFields;
-            
-            // --- BƯỚC 2: XÂY DỰNG QUERY DÙNG IF/ELSE ---
-            if (mdmObjName == FEC_Constants.OBJ_MDM_NATURE_OF_CASE) {
-                query += ', FEC_Product_Type_Name__r.FEC_Code__c, ' +
-                    'FEC_Business_Process_Name__r.FEC_Code__c, ' +
-                    'FEC_Category_Name__r.FEC_Code__c, ' +
-                    'FEC_Sub_Category_Name__r.FEC_Code__c, ' +
-                    'FEC_Sub_Code__r.FEC_Code__c';
-            } else if (mdmObjName == FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING) {
-                query += ', FEC_Nature_Of_Case__r.FEC_Code__c, ' +
-                    'FEC_Additional_Field__r.FEC_Code__c, ' +
-                    'FEC_Stage_Name__r.FEC_Code__c';
+            if (mdmObjName == FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING) {
+                try {
+                    FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
+                    FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_NATURE_OF_CASE, FEC_Constants.OBJ_NATURE_OF_CASE, uniqueErrors);
+                    FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_ADDITIONAL_FIELD, uniqueErrors);
+                    FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_STAGE_NAME, FEC_Constants.OBJ_CASE_STAGE, uniqueErrors);
+                } catch (Exception ex) {
+                    uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
+                    continue;
+                }
+            } else if (mdmObjName == FEC_Constants.OBJ_MDM_NATURE_OF_CASE) {
+                try {
+                    FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
+                    FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_PRODUCT_TYPE_NAME, FEC_Constants.OBJ_PRODUCT_TYPE, uniqueErrors);
+                    FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_BUSINESS_PROCESS_NAME, FEC_Constants.OBJ_BUSINESS_PROCESS, uniqueErrors);
+                    FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_CATEGORY_NAME, FEC_Constants.OBJ_CATEGORY, uniqueErrors);
+                    FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_SUB_CATEGORY_NAME, FEC_Constants.OBJ_SUB_CATEGORY, uniqueErrors);
+                    FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_SUB_CODE_NAME, FEC_Constants.OBJ_SUB_CODE, uniqueErrors);
+                } catch (Exception ex) {
+                    uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
+                    continue;
+                }
             } else if (mdmObjName == FEC_Constants.OBJ_MDM_CASE_STAGE) {
-                query += ', FEC_Business_Process__r.FEC_Code__c';
+                try {
+                    FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
+                    FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_BUSINESS_PROCESS_NAME.replace('_Name__r','__r'), FEC_Constants.OBJ_BUSINESS_PROCESS, uniqueErrors);
+                } catch (Exception ex) {
+                    uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
+                    continue;
+                }
             } else if (mdmObjName == FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE) {
-                query += ', FEC_Additional_Field__r.FEC_Code__c';
+                try {
+                    FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
+                    FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_ADDITIONAL_FIELD, uniqueErrors);
+                } catch (Exception ex) {
+                    uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
+                    continue;
+                }
+            } else {
+                try {
+                    FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
+                } catch (Exception ex) {
+                    uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
+                    continue;
+                }
             }
-            String statusLiteral = '\'' + String.escapeSingleQuotes(FEC_Constants.PROCESS_STATUS_SYNCED) + '\'';
-            query += ' FROM ' + mdmObjName + ' WHERE ' + FEC_Constants.FIELD_PROCESS_CHANGE_STATUS + ' != ' + statusLiteral;
+            targetList.add(target);
+        }
+        
+        // --- BƯỚC 4: UPSERT ---
+        if (!targetList.isEmpty()) {
+            FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = false;
+            Schema.SObjectField extIdField = Schema.getGlobalDescribe().get(targetObjName).getDescribe().fields.getMap().get(FEC_Constants.FIELD_EXTERNAL_ID);
+            Database.UpsertResult[] results = Database.upsert(targetList, extIdField, false);
             
-            // Prevent empty field list
-            if (String.isBlank(queryFields)) continue;
-            List<SObject> mdmRecords = Database.query(query);
-            if (mdmRecords.isEmpty()) continue;
-            
-            List<SObject> targetList = new List<SObject>();
-            
-            // --- BƯỚC 3: MAPPING DÙNG IF/ELSE ---
-            for (SObject mdm : mdmRecords) {
-                SObject target = Schema.getGlobalDescribe().get(targetObjName).newSObject();
-                target.put(FEC_Constants.FIELD_PROCESS_CHANGE_STATUS, FEC_Constants.PROCESS_STATUS_SYNCED);
-                
-                if (mdmObjName == FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING) {
-                    try {
-                        FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
-                        FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_NATURE_OF_CASE, FEC_Constants.OBJ_NATURE_OF_CASE, uniqueErrors);
-                        FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_ADDITIONAL_FIELD, uniqueErrors);
-                        FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_STAGE_NAME, FEC_Constants.OBJ_CASE_STAGE, uniqueErrors);
-                    } catch (Exception ex) {
-                        uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
-                        continue;
-                    }
-                } else if (mdmObjName == FEC_Constants.OBJ_MDM_NATURE_OF_CASE) {
-                    try {
-                        FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
-                        FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_PRODUCT_TYPE_NAME, FEC_Constants.OBJ_PRODUCT_TYPE, uniqueErrors);
-                        FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_BUSINESS_PROCESS_NAME, FEC_Constants.OBJ_BUSINESS_PROCESS, uniqueErrors);
-                        FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_CATEGORY_NAME, FEC_Constants.OBJ_CATEGORY, uniqueErrors);
-                        FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_SUB_CATEGORY_NAME, FEC_Constants.OBJ_SUB_CATEGORY, uniqueErrors);
-                        FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_SUB_CODE_NAME, FEC_Constants.OBJ_SUB_CODE, uniqueErrors);
-                    } catch (Exception ex) {
-                        uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
-                        continue;
-                    }
-                } else if (mdmObjName == FEC_Constants.OBJ_MDM_CASE_STAGE) {
-                    try {
-                        FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
-                        FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_BUSINESS_PROCESS_NAME.replace('_Name__r','__r'), FEC_Constants.OBJ_BUSINESS_PROCESS, uniqueErrors);
-                    } catch (Exception ex) {
-                        uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
-                        continue;
-                    }
-                } else if (mdmObjName == FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE) {
-                    try {
-                        FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
-                        FEC_BatchUtils.setLookup(target, mdm, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_ADDITIONAL_FIELD, uniqueErrors);
-                    } catch (Exception ex) {
-                        uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
-                        continue;
-                    }
+            List<SObject> mdmToUpdate = new List<SObject>();
+            for (Integer i = 0; i < results.size(); i++) {
+                if (results[i].isSuccess()) {
+                    mdmRecords[i].put(FEC_Constants.FIELD_PROCESS_CHANGE_STATUS, FEC_Constants.PROCESS_STATUS_SYNCED);
+                    mdmToUpdate.add(mdmRecords[i]);
                 } else {
-                    try {
-                        FEC_BatchUtils.copyValidFields(target, mdm, validFieldsForThisObj, fieldMap, commonFieldMap, uniqueErrors);
-                    } catch (Exception ex) {
-                        uniqueErrors.add('[Mapping ' + mdmObjName + '] ' + ex.getMessage());
-                        continue;
-                    }
+                    uniqueErrors.add('[' + targetObjName + '] Upsert Error: ' + results[i].getErrors()[0].getMessage());
                 }
-                targetList.add(target);
             }
-            
-            // --- BƯỚC 4: UPSERT ---
-            if (!targetList.isEmpty()) {
-                FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = false;
-                Schema.SObjectField extIdField = Schema.getGlobalDescribe().get(targetObjName).getDescribe().fields.getMap().get(FEC_Constants.FIELD_EXTERNAL_ID);
-                Database.UpsertResult[] results = Database.upsert(targetList, extIdField, false);
-                
-                List<SObject> mdmToUpdate = new List<SObject>();
-                for (Integer i = 0; i < results.size(); i++) {
-                    if (results[i].isSuccess()) {
-                        mdmRecords[i].put(FEC_Constants.FIELD_PROCESS_CHANGE_STATUS, FEC_Constants.PROCESS_STATUS_SYNCED);
-                        mdmToUpdate.add(mdmRecords[i]);
-                    } else {
-                        uniqueErrors.add('[' + targetObjName + '] Upsert Error: ' + results[i].getErrors()[0].getMessage());
-                    }
-                }
-                if (!mdmToUpdate.isEmpty()) update mdmToUpdate;
-                FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = true;
-            }
+            if (!mdmToUpdate.isEmpty()) update mdmToUpdate;
+            FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = true;
         }
     }
     
@@ -188,32 +188,27 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
                         TotalJobItems, CreatedBy.Email
                         FROM AsyncApexJob WHERE Id = :bc.getJobId()];
         
-        // 2. Tạo nội dung email
+        // 2. Create email content using an email template
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-        mail.setToAddresses(new String[] {job.CreatedBy.Email}); // Gửi về mail người thực hiện
-        mail.setSubject('Kết quả Push MDM to Live: ' + job.Status);
-        
-        String body = 'Kết quả chạy Batch Push MDM To Live:\n' +
-            '------------------------------------------\n' +
-            'Trạng thái: ' + job.Status + '\n' +
-            'Số lượng Batch Item: ' + job.JobItemsProcessed + '/' + job.TotalJobItems + '\n' +
-            'Số lỗi kỹ thuật: ' + job.NumberOfErrors + '\n\n';
-        
-        if (!uniqueErrors.isEmpty()) {
-            body += 'CHI TIẾT LỖI NGHIỆP VỤ:\n';
-            body += String.join(new List<String>(uniqueErrors), '\n');
-        } else {
-            body += 'Chúc mừng! Không có lỗi nghiệp vụ nào xảy ra.';
-        }
-        
-        mail.setPlainTextBody(body);
-        
-        
-        // 3. Gửi mail
-        if(!Test.isRunningTest()) {
+        mail.setToAddresses(new String[] {job.CreatedBy.Email}); // Send to the job creator's email
+        mail.setTemplateId('YOUR_EMAIL_TEMPLATE_ID'); // Replace with the actual email template ID
+
+        // Set merge fields for the email template
+        Map<String, Object> templateMergeFields = new Map<String, Object>{
+            'JobStatus' => job.Status,
+            'JobItemsProcessed' => job.JobItemsProcessed,
+            'TotalJobItems' => job.TotalJobItems,
+            'NumberOfErrors' => job.NumberOfErrors,
+            'UniqueErrors' => String.join(new List<String>(uniqueErrors), '\n')
+        };
+        mail.setWhatId(null); // Set if the template requires a related record ID
+        mail.setTemplateMergeFields(templateMergeFields);
+
+        // 3. Send email
+        if (!Test.isRunningTest()) {
             Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
         }
-        
+
         if (!uniqueErrors.isEmpty()) {
             String allErrors = String.join(new List<String>(uniqueErrors), '\n');
             throw new FEC_BatchException(FEC_Constants.ERROR_SYNC_FAILED_PREFIX + allErrors);

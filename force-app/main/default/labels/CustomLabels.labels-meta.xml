@@ -1786,4 +1786,87 @@
         <shortDescription>Undo Button</shortDescription>
         <value>Undo</value>
     </labels>
+    <labels>
+        <fullName>LABEL_ERROR_ADD_SUB_CODE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for adding sub code</shortDescription>
+        <value>Cannot add a child node to the last level (Sub Code).</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ERROR_DELETE_RECORD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for deleting a record</shortDescription>
+        <value>Cannot determine the record information to delete.</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ERROR_SAVE_LOOKUP</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for saving a lookup record</shortDescription>
+        <value>Error saving lookup record</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ERROR_LINK_NATURE_OF_CASE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for linking Nature of Case</shortDescription>
+        <value>Unidentified error occurred while linking FEC_MDM_Nature_Of_Case__c</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SUCCESS_SAVE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message for saving data</shortDescription>
+        <value>Data has been saved successfully</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SUCCESS_DELETE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message for deleting data</shortDescription>
+        <value>Deleted successfully</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ERROR_INVALID_RECORD_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for invalid record ID</shortDescription>
+        <value>Invalid record ID</value>
+    </labels>
+        <labels>
+        <fullName>LABEL_SUCCESS_ADD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message for adding data</shortDescription>
+        <value>Data added successfully</value>
+    </labels>
+        <labels>
+        <fullName>LABEL_ERROR_DELETE_RECORD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for deleting a record</shortDescription>
+        <value>Cannot determine the record information to delete.</value>
+    </labels>
+        <labels>
+        <fullName>LABEL_SUCCESS_DELETE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message for deleting data</shortDescription>
+        <value>Deleted successfully</value>
+    </labels>    <labels>
+        <fullName>LABEL_SUCCESS_DELETE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message for deleting data</shortDescription>
+        <value>Deleted successfully</value>
+    </labels>
+        <labels>
+        <fullName>LABEL_WARNING_DELETE_NODE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Warning message for deleting a node</shortDescription>
+        <value>WARNING: You are deleting node {0} of type "{1}". All child nodes will be deleted. Are you sure you want to continue?</value>
+    </labels>
 </CustomLabels>
