@@ -1,13 +1,6 @@
 public with sharing class FEC_CaseBusinessService {
   public static final String CASE_ID = 'Case Id';
   public static final String CUSTOMER_HISTORY = 'Customer History';
-  public static final String CASE_ID = 'Case Id';
-  public static final String CASE_ID = 'Case Id';
-  public static final String CASE_ID = 'Case Id';
-  public static final String CASE_ID = 'Case Id';
-  public static final String CASE_ID = 'Case Id';
-  public static final String CASE_ID = 'Case Id';
-  public static final String CASE_ID = 'Case Id';
 
   public static final String ROUTE_TO = 'Route to';
   public static final String REVERT = 'Revert';
