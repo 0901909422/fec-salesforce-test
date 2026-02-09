@@ -22,4 +22,6 @@ public with sharing class FEC_MockupEndpoint {
     public static final String GET_DIGITAL_ACCOUNT_STATUS_ENDPOINT_MOCKUP = 'https://87eaeec6-b7ab-4552-997b-6aa7b7e55628.mock.pstmn.io';
     public static final String GET_DOCUMENTS_LIST_ENDPOINT_MOCKUP = 'https://241aef91-9cc1-4b9c-9618-629c9b022c47.mock.pstmn.io';
     public static final String GET_RELATIVES_LIST_ENDPOINT_MOCKUP = 'https://4fe9b5aa-83ad-47f8-801a-eba4fd18faf3.mock.pstmn.io';
+    public static final String UPDATE_CUSTOMER_BASIC_INFO_ENDPOINT_MOCKUP = 'https://0b78db69-eb98-4c57-9924-dc958e4388df.mock.pstmn.io/CIF_CustomerInfoUpdate';
+    public static final String UPDATE_CUSTOMER_CONTACT_ENDPOINT_MOCKUP = 'https://0b78db69-eb98-4c57-9924-dc958e4388df.mock.pstmn.io/CIF_CustomerInfoUpdate';
 }
