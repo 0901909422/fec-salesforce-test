@@ -27,8 +27,8 @@
     </types>
 
     <types>
-        <members>vi</members>
-        <name>Translations</name>
+        <members>FEC_SheetJS</members>
+        <name>StaticResource</name>
     </types>
 
     <types>
