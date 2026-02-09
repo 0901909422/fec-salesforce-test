@@ -7,17 +7,13 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
     }
     
     
-    @AuraEnabled(cacheable=false)
+    @AuraEnabled(cacheable=true)
     public static List<GetProductsListResponse> GetProductsListByCif(String cifNumber){
         
-        String cif = '';
         
         if (String.isBlank(cifNumber)) {
-            cif = '22475420';
-        }else{
-            cif = cifNumber;
+            throw new AuraHandledException('CIF number is required');
         }
-        
         
         List<GetProductsListResponse> results = new List<GetProductsListResponse>();
         FEC_GetProductListCallout.CIF_GetProductsListResponse res =
@@ -43,15 +39,15 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
                 
                 GetProductsListResponse item = new GetProductsListResponse();
                 item.productType = p.productType;
-                if (p.productType == 'Insurance') {
+                if (p.productType == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE) {
                     item.accountContractNumber = p.contractNumber;
                     item.productType = p.productType;
                     item.productName = p.productName;
-                } else if (p.productType == 'Loan') {
+                } else if (p.productType == FEC_ConstantCommon.PRODUCT_TYPE_LOAN) {
                     item.accountContractNumber = p.contractNumber;
                     item.productType = p.productType;
                     item.productName = p.productName;
-                } else if (p.productType == 'Card') {
+                } else if (p.productType == FEC_ConstantCommon.PRODUCT_TYPE_CARD) {
                     item.accountContractNumber = p.cardNumber;
                     item.productType = p.productType;
                     item.productName = p.productName;

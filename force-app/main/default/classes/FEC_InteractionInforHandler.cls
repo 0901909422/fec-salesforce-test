@@ -9,7 +9,10 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Created_by__c,
                FEC_External_Interaction_ID__c,
                FEC_Last_Updated_On__c,
-               FEC_Last_Updated_By__c
+               FEC_Last_Updated_By__c,
+               FEC_Outcome_Code__c,
+               FEC_Interaction_Remarks__c, 
+               IsClosed
         FROM Case
         WHERE Id = :recordId
     ];
@@ -57,33 +60,33 @@ public without sharing class FEC_InteractionInforHandler {
     
     
     @AuraEnabled
-    public static String  updateInteractionPhone(Id recordId, String phone) {
-        Case c = new Case(
+    public static String updateInteractionPhone(Id recordId, String phone) {
+        
+        if (!FEC_CommonUltils.isPhone(phone)) {
+            throw new AuraHandledException('Invalid phone number format');
+        }
+        
+        update new Case(
             Id = recordId,
         FEC_Phone_Number__c = phone
             );
-        update c;
         
-        // return masked phone
-        return maskPhone(phone);
+        return FEC_CommonUltils.maskPhone(phone);
     }
     
     
-    private static String maskPhone(String phone) {
-        if (String.isBlank(phone)) {
-            return phone;
-        }
-        
-        Integer len = phone.length();
-        
-        // Nếu quá ngắn thì không mask
-        if (len <= 7) {
-            return phone;
-        }
-        
-        return phone.substring(0, 4)
-            + '***'
-            + phone.substring(len - 3);
+    
+    
+    
+    @AuraEnabled(cacheable=true)
+    public static Id getInteractionIdFromCustomerCase(Id caseId) {
+        Case c = [
+        SELECT FEC_Interaction__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+    ];
+        return c.FEC_Interaction__c;
     }
     
     @AuraEnabled(cacheable=true)
@@ -139,7 +142,7 @@ public without sharing class FEC_InteractionInforHandler {
         // 5. BUILD WHERE CONDITIONS (DYNAMIC)
         // =====================================================
         List<String> whereConditions = new List<String>();
-        whereConditions.add('RecordType.DeveloperName = \'Interaction\'');
+        whereConditions.add('RecordType.DeveloperName = \'' + FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME + '\'');
         whereConditions.add('Id != :recordId');
         whereConditions.add('(' + String.join(matchConditions, ' OR ') + ')');
         
@@ -199,7 +202,7 @@ public without sharing class FEC_InteractionInforHandler {
         // 5. BUILD WHERE CONDITIONS (DYNAMIC)
         // =====================================================
         List<String> whereConditions = new List<String>();
-        whereConditions.add('RecordType.DeveloperName = \'Interaction\'');
+        whereConditions.add('RecordType.DeveloperName = \'' + FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME + '\'');
         whereConditions.add('Id != :recordId');
         whereConditions.add('(' + String.join(matchConditions, ' OR ') + ')');
         
@@ -258,7 +261,7 @@ public without sharing class FEC_InteractionInforHandler {
         // 5. BUILD WHERE CONDITIONS (DYNAMIC)
         // =====================================================
         List<String> whereConditions = new List<String>();
-        whereConditions.add('RecordType.DeveloperName = \'Interaction\'');
+        whereConditions.add('RecordType.DeveloperName = \'' + FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME + '\'');
         whereConditions.add('Id != :recordId');
         whereConditions.add('(' + String.join(matchConditions, ' OR ') + ')');
         
@@ -388,7 +391,7 @@ public without sharing class FEC_InteractionInforHandler {
         // 5. BUILD WHERE CONDITIONS (DYNAMIC)
         // =====================================================
         List<String> whereConditions = new List<String>();
-        whereConditions.add('RecordType.DeveloperName != \'Interaction\'');
+        whereConditions.add('RecordType.DeveloperName != \'' + FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME + '\'');
         whereConditions.add('Id != :recordId');
         whereConditions.add('(' + String.join(matchConditions, ' OR ') + ')');
         
@@ -409,7 +412,7 @@ public without sharing class FEC_InteractionInforHandler {
             '   FEC_SubCategory__r.FEC_Name_VN__c, ' +
             '   FEC_SubCode__c, ' +
             '   FEC_SubCode__r.FEC_Code__c, ' +
-            '   FEC_SubCode__r.FEC_Name_VN__c ' +
+            '   FEC_SubCode__r.FEC_Name_VN__c, FEC_Account_or_Contract__r.FEC_Account_Number__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
             'ORDER BY FEC_Last_Updated_On__c DESC ' +
@@ -468,7 +471,7 @@ public without sharing class FEC_InteractionInforHandler {
         // 5. BUILD WHERE CONDITIONS (DYNAMIC)
         // =====================================================
         List<String> whereConditions = new List<String>();
-        whereConditions.add('RecordType.DeveloperName != \'Interaction\'');
+        whereConditions.add('RecordType.DeveloperName != \'' + FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME + '\'');
         whereConditions.add('Id != :recordId');
         whereConditions.add('(' + String.join(matchConditions, ' OR ') + ')');
         
@@ -488,7 +491,7 @@ public without sharing class FEC_InteractionInforHandler {
             '   FEC_SubCategory__r.FEC_Code__c, ' +
             '   FEC_SubCategory__r.FEC_Name_VN__c, ' +
             '   FEC_SubCode__c, ' +
-            '   FEC_SubCode__r.FEC_Code__c, ' +
+            '   FEC_SubCode__r.FEC_Code__c, FEC_Account_or_Contract__r.FEC_Account_Number__c,' +
             '   FEC_SubCode__r.FEC_Name_VN__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
@@ -548,7 +551,7 @@ public without sharing class FEC_InteractionInforHandler {
         // 5. BUILD WHERE CONDITIONS (DYNAMIC)
         // =====================================================
         List<String> whereConditions = new List<String>();
-        whereConditions.add('RecordType.DeveloperName != \'Interaction\'');
+        whereConditions.add('RecordType.DeveloperName != \'' + FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME + '\'');
         whereConditions.add('Id != :recordId');
         whereConditions.add('(' + String.join(matchConditions, ' OR ') + ')');
         
@@ -604,6 +607,44 @@ public without sharing class FEC_InteractionInforHandler {
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static List<FEC_Sensitive_Data__c> getSensitiveDataViewAll(Id recordId, Integer pageSize, Integer pageNumber) {
+        try {
+            
+            if (pageSize == null || pageSize <= 0) pageSize = 10;
+            if (pageNumber == null || pageNumber < 1) pageNumber = 1;
+            
+            Integer offsetSize = (pageNumber - 1) * pageSize;
+            
+            List<FEC_Sensitive_Data__c> sensitiveDataList = [
+                SELECT ID, FEC_Case_ID__c, 
+                       FEC_Section__c, 
+                       Name, 
+                       FEC_User__c, 
+                       FEC_User_Role__c, 
+                       CreatedDate 
+                FROM FEC_Sensitive_Data__c
+                WHERE FEC_Related_Case__c = :recordId
+                ORDER BY CreatedDate DESC
+                LIMIT :pageSize
+                OFFSET :offsetSize
+               
+            ];
+            return sensitiveDataList;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static Integer countSensitiveData(Id recordId) {
+        return [
+        SELECT COUNT()
+        FROM FEC_Sensitive_Data__c
+        WHERE FEC_Related_Case__c = :recordId
+    ];
     }
     
     @AuraEnabled
