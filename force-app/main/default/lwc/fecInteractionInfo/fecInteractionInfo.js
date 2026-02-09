@@ -1,80 +1,170 @@
-import { LightningElement, api, track } from "lwc";
-import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInteraction";
-import getInteractionPhoneReveal from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionPhoneReveal";
-import updateInteractionPhone from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionPhone";
+import { LightningElement, api, track, wire } from "lwc";
+import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 
-// FIELD IMPORTS
-import PHONE from "@salesforce/schema/Case.FEC_Phone_Number__c";
-import CHANNEL from "@salesforce/schema/Case.FEC_Channel__c";
-import SUB_CHANNEL from "@salesforce/schema/Case.FEC_Interaction_Subchannel__c";
-import CREATED_ON from "@salesforce/schema/Case.FEC_Created_On__c";
-import CREATED_BY from "@salesforce/schema/Case.FEC_Created_by__c";
-import EXTERNAL_ID from "@salesforce/schema/Case.FEC_External_Interaction_ID__c";
-import LAST_UPDATED_BY from "@salesforce/schema/Case.FEC_Last_Updated_By__c";
-import LAST_UPDATED_ON from "@salesforce/schema/Case.FEC_Last_Updated_On__c";
+// ================= APEX =================
+import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInteraction";
+import getInteractionPhoneReveal from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionPhoneReveal";
+import updateInteractionPhone from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionPhone";
+import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
+import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionIdFromCustomerCase";
 
+// ================= SCHEMA =================
+import ISCLOSED from "@salesforce/schema/Case.IsClosed";
+import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
+import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 
-const FIELDS = [
-  PHONE,
-  CHANNEL,
-  SUB_CHANNEL,
-  CREATED_ON,
-  CREATED_BY,
-  EXTERNAL_ID,
-  LAST_UPDATED_BY,
-  LAST_UPDATED_ON
-];
+//==================== LABELED CONSTANTS ====================
+import FEC_INTERACTION_PHONE_LABEL from "@salesforce/label/c.FEC_Interaction_Phone_Label";
+import FEC_INTERACTION_CREATED_ON_LABEL from "@salesforce/label/c.FEC_Interaction_Created_On_Label";
+import FEC_INTERACTION_CREATED_BY_LABEL from "@salesforce/label/c.FEC_Interaction_Created_By_Label";
+import FEC_OUTCOME_CODE_LABEL from "@salesforce/label/c.FEC_Outcome_Code_Label";
+import FEC_REMARKS_LABEL from "@salesforce/label/c.FEC_Interaction_Remark_Label";
+import FEC_EXTERNAL_ID_LABEL from "@salesforce/label/c.FEC_External_Interaction_ID_Label";
+import FEC_INTERACTION_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_Channel_Label";
+import FEC_INTERACTION_SUB_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_Sub_Channel_Label";
+
 export default class FecInteractionInfo extends LightningElement {
+  labels = {
+    interactionPhone: FEC_INTERACTION_PHONE_LABEL,
+    interactionCreatedOn: FEC_INTERACTION_CREATED_ON_LABEL,
+    interactionCreatedBy: FEC_INTERACTION_CREATED_BY_LABEL,
+    outcomeCode: FEC_OUTCOME_CODE_LABEL,
+    remarks: FEC_REMARKS_LABEL,
+    externalId: FEC_EXTERNAL_ID_LABEL,
+    channel: FEC_INTERACTION_CHANNEL_LABEL,
+    subChannel: FEC_INTERACTION_SUB_CHANNEL_LABEL,
+   
+  };
+  // ================= API =================
   @api recordId;
+
+  // ================= STATE =================
   @track record;
   @track revealedPhone;
-  @track isEditingPhone = false;
   @track phoneDraft;
-  @api isLoaded = false;
-  @track isMasked = true;
+
+  isLoaded = false;
+  isMasked = true;
+  isEditingPhone = false;
+
+  isClosed = false;
+  viewMode;
+  recordTypeId;
+  recordTypeDevName;
+
+  interactionId; // 🔥 ID dùng thực sự để load Interaction
+
   activeSections = ["interactionInfo"];
 
+  // ================= WIRE: CASE CONTEXT =================
+  @wire(getRecord, {
+    recordId: "$recordId",
+    fields: [ISCLOSED, VIEW_MODE, RECORDTYPE_ID],
+  })
+  async wiredCase({ data, error }) {
+    if (data) {
+      this.isClosed = getFieldValue(data, ISCLOSED);
+      this.viewMode = getFieldValue(data, VIEW_MODE);
+      this.recordTypeId = getFieldValue(data, RECORDTYPE_ID);
+
+      await this.resolveRecordType();
+      await this.resolveInteractionId();
+
+      this.loadInteraction();
+    } else if (error) {
+      console.error("getRecord error", error);
+    }
+  }
+
+  // ================= LIFECYCLE =================
   connectedCallback() {
     this.loadStyles();
-    this.loadRecord();
   }
 
-  // ===============================
-  // LOAD STYLES
-  // ===============================
   loadStyles() {
-    loadStyle(this, COMMON_STYLES)
-      .then(() => {
-        console.log("Common styles loaded");
-      })
-      .catch((error) => {
-        console.error("Style load error", error);
-      });
+    loadStyle(this, COMMON_STYLES).catch((e) =>
+      console.error("Load style error", e),
+    );
   }
 
-  // ===============================
-  // LOAD RECORD (IMPERATIVE)
-  // ===============================
-  loadRecord() {
-    if (!this.recordId) return;
+  // ================= RECORD TYPE =================
+  async resolveRecordType() {
+    if (!this.recordTypeId) return;
 
-    getInteraction({ recordId: this.recordId })
+    try {
+      this.recordTypeDevName = await getRecordTypeName({
+        recordId: this.recordId,
+      });
+    } catch (e) {
+      console.error("getRecordTypeName error", e);
+    }
+  }
+
+  // ================= INTERACTION ID =================
+  async resolveInteractionId() {
+    if (this.isInteractionCase) {
+      this.interactionId = this.recordId;
+    } else if (this.isCustomerCase) {
+      try {
+        this.interactionId = await getInteractionIdFromCustomerCase({
+          caseId: this.recordId,
+        });
+      } catch (e) {
+        console.error("getInteractionIdFromCustomerCase error", e);
+      }
+    }
+  }
+
+  // ================= LOAD INTERACTION =================
+  loadInteraction() {
+    if (!this.interactionId) return;
+
+    getInteraction({ recordId: this.interactionId })
       .then((result) => {
         this.record = result;
         this.isLoaded = true;
       })
       .catch((error) => {
-        console.error("Record load error", error);
+        console.error("getInteraction error", error);
       });
   }
 
-  // ===============================
-  // GETTERS
-  // ===============================
-  get maskedPhone() {
-    return this.record?.FEC_Interaction_Masked_Phone__c;
+  // ================= GETTERS =================
+  get isInteractionCase() {
+    return this.recordTypeDevName === "Interaction";
+  }
+
+  get isCustomerCase() {
+    return this.recordTypeDevName === "Customer_Case";
+  }
+
+  get isReview() {
+    return this.viewMode === "review";
+  }
+
+  get showField() {
+    return this.isReview && this.isClosed;
+  }
+
+  get hasPhone() {
+    return !!(
+      this.record?.FEC_Phone_Number__c ||
+      this.record?.FEC_Interaction_Masked_Phone__c
+    );
+  }
+
+  get displayPhone() {
+    if (!this.hasPhone) return null;
+
+    return this.isMasked
+      ? this.record?.FEC_Interaction_Masked_Phone__c
+      : this.revealedPhone;
+  }
+
+  get eyeIcon() {
+    return this.isMasked ? "utility:hide" : "utility:preview";
   }
 
   get channel() {
@@ -85,12 +175,14 @@ export default class FecInteractionInfo extends LightningElement {
     return this.record?.FEC_Interaction_Subchannel__c;
   }
 
-  get createdOn() {
-    // return this.record?.FEC_Created_On__c;
+  get externalId() {
+    return this.record?.FEC_External_Interaction_ID__c;
+  }
 
+  get createdOn() {
     if (!this.record?.FEC_Created_On__c) return "";
 
-    const d = new Date(this.record?.FEC_Created_On__c);
+    const d = new Date(this.record.FEC_Created_On__c);
     return d.toLocaleString("en-GB", {
       day: "2-digit",
       month: "2-digit",
@@ -101,13 +193,10 @@ export default class FecInteractionInfo extends LightningElement {
     });
   }
 
-
- get lastUpdatedOn() {
-    // return this.record?.FEC_Last_Updated_On__c;
-
+  get lastUpdatedOn() {
     if (!this.record?.FEC_Last_Updated_On__c) return "";
 
-    const d = new Date(this.record?.FEC_Last_Updated_On__c);
+    const d = new Date(this.record.FEC_Last_Updated_On__c);
     return d.toLocaleString("en-GB", {
       day: "2-digit",
       month: "2-digit",
@@ -116,45 +205,28 @@ export default class FecInteractionInfo extends LightningElement {
       minute: "2-digit",
       hour12: false,
     });
-  }
-
-  get lastUpdatedBy() {
-    return this.record?.FEC_Last_Updated_By__c;
   }
 
   get createdBy() {
     return this.record?.FEC_Created_by__c;
   }
 
-  get externalId() {
-    return this.record?.FEC_External_Interaction_ID__c;
+  get lastUpdatedBy() {
+    return this.record?.FEC_Last_Updated_By__c;
   }
 
-  get hasPhone() {
-    return !!(
-      this.record?.FEC_Phone_Number__c ||
-      this.record?.FEC_Interaction_Masked_Phone__c
-    );
+  get outcomeCode() {
+    return this.record?.FEC_Outcome_Code__c;
   }
 
-  // ===============================
-  // MASKING
-  // ===============================
-  get displayPhone() {
-    if (!this.hasPhone) return null;
-
-    return this.isMasked
-      ? this.record?.FEC_Interaction_Masked_Phone__c
-      : this.revealedPhone;
+  get interactionRemark() {
+    return this.record?.FEC_Interaction_Remarks__c;
   }
 
-  get eyeIcon() {
-    return this.isMasked ? "utility:preview" : "utility:hide";
-  }
-
+  // ================= PHONE ACTIONS =================
   handleToggleMask() {
     if (this.isMasked) {
-      this.revealPhone(); // 👈 chỉ gọi khi đang masked
+      this.revealPhone();
     } else {
       this.isMasked = true;
     }
@@ -169,34 +241,11 @@ export default class FecInteractionInfo extends LightningElement {
     this.phoneDraft = event.target.value;
   }
 
-  // handleSavePhone() {
-  //   if (!this.phoneDraft) return;
-
-  //   updateInteractionPhone({
-  //     recordId: this.recordId,
-  //     phone: this.phoneDraft,
-  //   })
-  //     .then(() => {
-  //       // reset state
-  //       this.isEditingPhone = false;
-  //       this.isMasked = true;
-
-  //       // cập nhật record local (CLONE)
-  //       this.record = {
-  //         ...this.record,
-  //         FEC_Phone_Number__c: this.phoneDraft,
-  //       };
-  //     })
-  //     .catch((error) => {
-  //       console.error("Update phone error", error);
-  //     });
-  // }
-
   handleSavePhone() {
-    if (!this.phoneDraft) return;
+    if (!this.phoneDraft || !this.interactionId) return;
 
     updateInteractionPhone({
-      recordId: this.recordId,
+      recordId: this.interactionId,
       phone: this.phoneDraft,
     })
       .then((maskedPhone) => {
@@ -210,17 +259,18 @@ export default class FecInteractionInfo extends LightningElement {
         this.phoneDraft = null;
       })
       .catch((error) => {
-        console.error("Update phone error", error);
+        console.error("updateInteractionPhone error", error);
       });
   }
 
-  // ===============================
-  // REVEAL PHONE
-  // ===============================
   revealPhone() {
-    getInteractionPhoneReveal({ recordId: this.recordId }).then((result) => {
-      this.revealedPhone = result;
-      this.isMasked = false;
-    });
+    if (!this.interactionId) return;
+
+    getInteractionPhoneReveal({ recordId: this.interactionId })
+      .then((result) => {
+        this.revealedPhone = result;
+        this.isMasked = false;
+      })
+      .catch((e) => console.error("revealPhone error", e));
   }
 }
