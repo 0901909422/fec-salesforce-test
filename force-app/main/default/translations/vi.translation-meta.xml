@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Translations xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customLabels>
+        <name>FEC_Customer_Data_Management</name>
+        <label>Quản lý dữ liệu khách hàng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Add_New</name>
+        <label>Thêm mới</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Reload</name>
+        <label>Tải lại</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Close</name>
+        <label>Đóng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Cancel</name>
+        <label>Hủy bỏ</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Finish</name>
+        <label>Hoàn tất</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Upload</name>
+        <label>Tải lên</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Download_Template</name>
+        <label>Tải mẫu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Title_Pending_Process</name>
+        <label>Tải lên thành công và chờ xử lý</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Title_Existing_Fields</name>
+        <label>Trường Thông Tin Hiện Có</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Title_Change_History</name>
+        <label>Lịch sử thay đổi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Data_Linkage</name>
+        <label>Trường liên kết dữ liệu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Field_ID</name>
+        <label>Mã số trường</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Field_Name</name>
+        <label>Tên trường dữ liệu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Is_Active</name>
+        <label>Khả dụng?</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Start_Date</name>
+        <label>Ngày bắt đầu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_End_Date</name>
+        <label>Ngày kết thúc</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Msg_Process_End_Of_Day</name>
+        <label>Tệp đã tải lên sẽ được xử lý vào cuối ngày</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Choose_File</name>
+        <label>Chọn tập tin</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_File_Name</name>
+        <label>Tên File</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Error_Deleting_File</name>
+        <label>Lỗi khi xóa file trên hệ thống:</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_No_File_Chosen</name>
+        <label>Chưa có tệp nào được chọn</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Status</name>
+        <label>Tình trạng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Uploaded_By</name>
+        <label>Tải lên bởi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Uploaded_At</name>
+        <label>Tải lên lúc</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Action</name>
+        <label>Hành động</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Msg_No_Content</name>
+        <label>Không có dữ liệu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Filter</name>
+        <label>Lọc</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Clear_Filter</name>
+        <label>Xóa bộ lọc</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Apply</name>
+        <label>Áp dụng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Status_Request</name>
+        <label>Tình trạng yêu cầu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Is_Active_Table</name>
+        <label>Khả dụng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_History</name>
+        <label>Lịch sử</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Alt_Edit</name>
+        <label>Chỉnh sửa</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Created_By</name>
+        <label>Tạo bởi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Created_Date</name>
+        <label>Ngày tạo</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Modified_By</name>
+        <label>Sửa đổi bởi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Modified_Date</name>
+        <label>Ngày sửa đổi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_End_Date_Finish</name>
+        <label>Ngày hoàn tất</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Add_New_Modal_Title</name>
+        <label>Thêm mới Trường Thông Tin</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Edit_Title</name>
+        <label>Chỉnh sửa</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_Select</name>
+        <label>Chọn..</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_CIF</name>
+        <label>Số CIF</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_IDCard</name>
+        <label>Số CMND/CCCD</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_Contract</name>
+        <label>Số Hợp đồng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_Account</name>
+        <label>Số tài khoản</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_AppID</name>
+        <label>Mã hồ sơ</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Opt_Phone</name>
+        <label>Số điện thoại chính</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Message_Deleting_File</name>
+        <label>Lỗi khi xóa file trên hệ thống</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Empty</name>
+        <label>Trống</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Search_Text</name>
+        <label>Tìm kiếm</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Load_Excel_Lib</name>
+        <label>Không tải được thư viện xử lý Excel</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Has_No_Data</name>
+        <label>File không có dữ liệu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Expected_Key</name>
+        <label>Cột A: Mong muốn {0}, Thực tế {1}</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Expected_Value</name>
+        <label>Cột B: Mong muốn {0}, Thực tế {1}</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Duplicated_KeyId_FieldId</name>
+        <label>Cấu hình với cặp Key Identifier và Field ID này đã tồn tại</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Required_Fields</name>
+        <label>Vui lòng kiểm tra lại thông tin bắt buộc</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Upload_At_Least_Excel_File</name>
+        <label>Vui lòng tải ít nhất một file Excel</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Deleted_File</name>
+        <label>Đã xóa file</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Saved_Data</name>
+        <label>Đã lưu dữ liệu!</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_File_Invalid</name>
+        <label>File không hợp lệ hoặc trống</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Create_Template</name>
+        <label>Không thể tạo file template</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Delete_Confirmation_Title</name>
+        <label>Xác nhận xóa?</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Delete_Confirmation_Msg</name>
+        <label>Bạn có chắc muốn xóa không?</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Cannot_Delete_File</name>
+        <label>Không thể xóa file</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Cannot_Refresh_Data</name>
+        <label>Không thể tải dữ liệu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Success_Title</name>
+        <label>Thành công</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Fail_Title</name>
+        <label>Lỗi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Warning_Title</name>
+        <label>Cảnh báo</label>
+    </customLabels>
+</Translations>

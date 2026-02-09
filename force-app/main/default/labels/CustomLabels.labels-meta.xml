@@ -806,4 +806,487 @@
         <shortDescription>Total Payment Amount Label</shortDescription>
         <value>Total Payment Amount</value>
     </labels>
+    <labels>   
+        <fullName>FEC_Customer_Data_Management</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Data Management</shortDescription>
+        <value>Customer Data Management</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Add_New</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Add New Button</shortDescription>
+        <value>Add New</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Reload</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reload Button</shortDescription>
+        <value>Reload</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Close</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Close Button</shortDescription>
+        <value>Close</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Button</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Finish</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Finish Button</shortDescription>
+        <value>Finish</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Upload</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Upload Button</shortDescription>
+        <value>Upload</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Download_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Download Template Button</shortDescription>
+        <value>Download Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Title_Pending_Process</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Pending Process Section Title</shortDescription>
+        <value>Successfully Uploaded &amp; Pending Processing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Title_Existing_Fields</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Existing Fields Section Title</shortDescription>
+        <value>Existing Information Fields</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Title_Change_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Change History Modal Title</shortDescription>
+        <value>Change History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Data_Linkage</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Data Linkage Field Label</shortDescription>
+        <value>Data Linkage Field</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Field_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Field ID Label</shortDescription>
+        <value>Field ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Field_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Field Name Label</shortDescription>
+        <value>Data Field Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Is_Active</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Is Active Checkbox Label</shortDescription>
+        <value>Is Active?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Start_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Start Date Label</shortDescription>
+        <value>Start Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_End_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>End Date Label</shortDescription>
+        <value>End Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Msg_Process_End_Of_Day</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>EOD Process Info Message</shortDescription>
+        <value>Uploaded files will be processed at the end of the day</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Choose_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Choose File Label</shortDescription>
+        <value>Choose File</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_File_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>File Name Column</shortDescription>
+        <value>File Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Error_Deleting_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when deleting files on the system:</shortDescription>
+        <value>Error when deleting files on the system:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_No_File_Chosen</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No File Chosen</shortDescription>
+        <value>No File Chosen</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Status Column</shortDescription>
+        <value>Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Uploaded_By</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Uploaded By Column</shortDescription>
+        <value>Uploaded By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Uploaded_At</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Uploaded Time Column</shortDescription>
+        <value>Uploaded At</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Action</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Action Column</shortDescription>
+        <value>Action</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Msg_No_Content</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Content Message</shortDescription>
+        <value>No data available</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Filter</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Filter Popover Title</shortDescription>
+        <value>Filter</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Clear_Filter</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Filter Link</shortDescription>
+        <value>Clear Filter</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Apply</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Apply Button</shortDescription>
+        <value>Apply</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Status_Request</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Status Request</shortDescription>
+        <value>Request Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Is_Active_Table</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Is Active Table Column</shortDescription>
+        <value>Is Active</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>History Button</shortDescription>
+        <value>History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Alt_Edit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Alternative text for Edit</shortDescription>
+        <value>Edit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Created_By</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Created By</shortDescription>
+        <value>Created By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Created_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Created Date</shortDescription>
+        <value>Created Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Modified_By</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Modified By</shortDescription>
+        <value>Modified By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Modified_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Modified Date</shortDescription>
+        <value>Modified Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_End_Date_Finish</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>End Date or Finish Date</shortDescription>
+        <value>Finish Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Add_New_Modal_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Add new Information</shortDescription>
+        <value>Add new Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Edit_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Edit</shortDescription>
+        <value>Edit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Opt_Select</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select placeholder</shortDescription>
+        <value>Select..</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Opt_CIF</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CIF Number</shortDescription>
+        <value>CIF Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Opt_IDCard</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ID Card Number</shortDescription>
+        <value>ID Card / Citizen ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Opt_Contract</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract Number</shortDescription>
+        <value>Contract Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Opt_Account</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Number</shortDescription>
+        <value>Account Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Opt_AppID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Application ID</shortDescription>
+        <value>Application ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Opt_Phone</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Primary Phone Number</shortDescription>
+        <value>Primary Phone Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Message_Deleting_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when deleting files on the system</shortDescription>
+        <value>Error when deleting files on the system</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Empty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty</shortDescription>
+        <value>Empty</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Search_Text</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search Text</shortDescription>
+        <value>Search Text</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Load_Excel_Lib</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unable to load Excel processing library</shortDescription>
+        <value>Unable to load Excel processing library</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Has_No_Data</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>File has no data</shortDescription>
+        <value>File has no data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Expected_Key</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Column A: Expected {0}, Actual {1}</shortDescription>
+        <value>Column A: Expected {0}, Actual {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Expected_Value</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Column B: Expected {0}, Actual {1}</shortDescription>
+        <value>Column B: Expected {0}, Actual {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Duplicated_KeyId_FieldId</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>A configuration with this Key Identifier and Field ID pair already exists</shortDescription>
+        <value>A configuration with this Key Identifier and Field ID pair already exists</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Required_Fields</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>The required fields is missing</shortDescription>
+        <value>The required fields is missing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Upload_At_Least_Excel_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please upload at least one Excel file</shortDescription>
+        <value>Please upload at least one Excel file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Deleted_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Deleted file</shortDescription>
+        <value>Deleted file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Saved_Data</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Saved data!</shortDescription>
+        <value>Saved data!</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_File_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>File is invalid or empty</shortDescription>
+        <value>File is invalid or empty</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Create_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unable to create template file</shortDescription>
+        <value>Unable to create template file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Confirmation_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirm deletion</shortDescription>
+        <value>Confirm deletion</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Confirmation_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Are you sure you want to delete?</shortDescription>
+        <value>Are you sure you want to delete?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Cannot_Delete_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cannot delete file</shortDescription>
+        <value>Cannot delete file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Cannot_Refresh_Data</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unable to load data</shortDescription>
+        <value>Unable to load data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Success_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Fail_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fail</shortDescription>
+        <value>Fail</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Warning_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Warning</shortDescription>
+        <value>Warning</value>
+    </labels>
 </CustomLabels>
