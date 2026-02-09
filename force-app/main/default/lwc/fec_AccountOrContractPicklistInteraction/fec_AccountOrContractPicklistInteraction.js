@@ -3,7 +3,15 @@ import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import HAS_ACCOUNT_OR_CONTACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
 import GetProductsListByCif from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.GetProductsListByCif";
 
+import FEC_ACCOUNT_CONTRACT_NUMBER_LABEL from "@salesforce/label/c.FEC_Account_Contract_Number_Label";
+
+
 export default class Fec_AccountOrContractPicklistInteraction extends LightningElement {
+
+  labels = {
+    accountContractNumber: FEC_ACCOUNT_CONTRACT_NUMBER_LABEL,
+  };
+
   @api recordId;
 
   selectedValue = "0001500010000123456";
@@ -24,13 +32,42 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     },
     { label: "Product", fieldName: "product" },
     {
-      label: "Account/Contract Number",
+      label: FEC_ACCOUNT_CONTRACT_NUMBER_LABEL,
       fieldName: "accountContractNumber",
     },
     { label: "Product Name", fieldName: "productName" },
   ];
 
-  data = [];
+  data = [
+    {
+      id: "row-001",
+      product: "Loan",
+      accountContractNumber: "ACC-100001",
+      productName: "Personal Loan",
+      isSelected: false,
+    },
+    {
+      id: "row-002",
+      product: "Credit Card",
+      accountContractNumber: "CC-200045",
+      productName: "Platinum Credit Card",
+      isSelected: false, // selected row
+    },
+    {
+      id: "row-003",
+      product: "Insurance",
+      accountContractNumber: "INS-330021",
+      productName: "Health Insurance Plus",
+      isSelected: false,
+    },
+    {
+      id: "row-004",
+      product: "UBank",
+      accountContractNumber: "UBank",
+      productName: "UBank",
+      isSelected: false,
+    },
+  ];
 
   /* =======================
    * WIRE

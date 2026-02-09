@@ -2,7 +2,7 @@
     <template if:true={hasAccountOrContact}>
         <div class="account-contract-wrapper">
             <div class="slds-text-title_caps slds-m-bottom_x-small">
-                Account / Contract Number
+                {labels.accountContractNumber}
             </div>
             <!-- Trigger -->
             <div class="account-contract-trigger" onclick={toggle}>
@@ -17,10 +17,6 @@
                     <lightning-datatable key-field="id" data={data} columns={columns}
                         onrowselection={handleRowSelection} selected-rows={selectedRows}
                         max-row-selection="1"></lightning-datatable>
-                    <!-- <div class="slds-m-top_small">
-                        <lightning-button label="UBANK" variant="base" onclick={handleUbankClick} class="ubank-link">
-                        </lightning-button>
-                    </div> -->
                 </section>
             </template>
         </div>
