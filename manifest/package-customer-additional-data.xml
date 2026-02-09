@@ -4,7 +4,7 @@
         <members>FEC_FileInfo</members>
         <members>FEC_CustomerAdditionalInfoListController</members>
         <members>FEC_ProcessCustomerDataBatch</members>
-        <members>FEC_CustomerAdditionalConfigHandler</members>
+        <members>FEC_CustomerAdditionalHistoryHandler</members>
         <members>FEC_InsertCustomerDataQueueable</members>
         <members>FEC_ConstantCommon</members>
         <name>ApexClass</name>
