@@ -299,15 +299,15 @@ public without sharing class FEC_GetAppStatusCallout {
         } catch (CalloutException e) {
             result.isSuccess = false;
             result.errorCode = 'CALLOUT_ERROR';
-            result.errorMessage = 'Callout failed: ' + e.getMessage();
+            result.errorMessage = String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{e.getMessage()});
         } catch (JSONException e) {
             result.isSuccess = false;
             result.errorCode = 'JSON_PARSE_ERROR';
-            result.errorMessage = 'Failed to parse response: ' + e.getMessage();
+            result.errorMessage = String.format(System.Label.FEC_MSG_Parse_JSON_Error, new List<String>{e.getMessage()});
         } catch (Exception e) {
             result.isSuccess = false;
             result.errorCode = 'UNKNOWN_ERROR';
-            result.errorMessage = 'Unexpected error: ' + e.getMessage();
+            result.errorMessage = e.getMessage();
         }
         
         return result;
