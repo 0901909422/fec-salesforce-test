@@ -57,7 +57,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
         FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
     
         String requestBody = RestContext.request.requestBody.toString();
-        String serviceName = 'UpdateFraudCaseStatus';
+        String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_SERVICE_NAME;
     
         String caseId;
         String serviceCaseId;

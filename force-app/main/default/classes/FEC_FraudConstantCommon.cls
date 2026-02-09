@@ -5,6 +5,8 @@ public with sharing class FEC_FraudConstantCommon {
 	
 	public static final String FRAUD_X_API_KEY = 'RkVDX1NBTEVTRk9SQ0U';
 	public static final String CLIENT_ENDPOINT_XF = 'callout:FimaFraudService';
+	public static final String FRAUD_CASE_SERVICE_NAME = 'UpdateFraudCaseStatus';
+	
 
 	
 
