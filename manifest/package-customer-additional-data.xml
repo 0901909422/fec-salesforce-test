@@ -39,6 +39,11 @@
     </types>
 
     <types>
+        <members>ContentVersion.FEC_Comments__c</members>
+        <name>CustomField</name>
+    </types>
+
+    <types>
         <members>*</members>
         <name>CustomLabel</name>
     </types>
