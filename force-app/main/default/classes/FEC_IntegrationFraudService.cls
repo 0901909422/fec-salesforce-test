@@ -1,7 +1,9 @@
 global with sharing class FEC_IntegrationFraudService {
 
     public static final Boolean DEBUG_LOG = true;
-    public static final String DEFAULT_CHANNEL_INTEGRATION_CODE = 'FIMA';
+	public static final Integer BATCH_SIZE = 150;
+	public static final String XML_NODE_BODY = 'Body';
+	public static final String MADATORY_STR = 'true';   
     public static final String FIELD_TYPE_PRODUCT = 'Product';
 	public static final String FIELD_TYPE_CASE_TYPE = 'CaseType';
 	public static final String FIELD_TYPE_CATEGORY = 'Category';
@@ -9,6 +11,8 @@ global with sharing class FEC_IntegrationFraudService {
 	public static final String FIELD_TYPE_SUBCODE = 'SubCode';
     public static final String FIELD_TYPE_AVAILABELVAL = 'AvailableValues';
 	public static final String FIELD_TYPE_ADDITIONALPROPERTY = 'AdditionalProperty';
+    private static final String TEMPLATE_NAME =
+        'Integration_MasterData_Job_Notification';
 
     public class IntegrationFraudField {
         public final String GET_FRAUD_MASTER_DATA_RESPONSE = 'GetFraudMasterDataResponse';
@@ -39,17 +43,23 @@ global with sharing class FEC_IntegrationFraudService {
      */
     public static Integer syncMasterDataIntegration() {
         IntegrationFraudField masterDataField = new IntegrationFraudField();
-        String integrationChannelId = getIntegrationChannelCode(FEC_IntegrationFraudCaseUtil.DEFAULT_CHANNEL_INTEGRATION_CODE);
+        String integrationChannelId = getIntegrationChannelCode(FEC_FraudConstantCommon.DEFAULT_CHANNEL_INTEGRATION_CODE);
         // 1) Load ALL existing mapping records into a map for upsert comparison
         Map<String, FEC_Master_Data_Integration__c> existingMap = loadExisting(integrationChannelId);        
-
+        Boolean isConnectisConnected  = isConnectFraudSystem();
+        if(isConnectisConnected) {
+            String getMasterData = getFraudMasterData();
+            log('LOG-XML_MASTER_DATA: ' + getMasterData);
+        }
+      
         // 2) Parse XML
+       
         String xml = FEC_FraudCaseMockData.getFraudMasterData();
         Dom.Document doc = new Dom.Document();
         doc.load(xml);
 
         Dom.XmlNode root = doc.getRootElement();
-        Dom.XmlNode body = getChildIgnoreNS(root, 'Body');
+        Dom.XmlNode body = getChildIgnoreNS(root, XML_NODE_BODY);
         Dom.XmlNode response = findChildByEndsWith(body, masterDataField.GET_FRAUD_MASTER_DATA_RESPONSE);
 
         // Data to upsert
@@ -83,7 +93,7 @@ global with sharing class FEC_IntegrationFraudService {
         for (FEC_Master_Data_Integration__c rec : toUpsert.values()) {
             batch.add(rec);
 
-            if (batch.size() == 150) {
+            if (batch.size() == BATCH_SIZE) {
                 upsert batch;
                 batch.clear();
             }
@@ -187,7 +197,7 @@ global with sharing class FEC_IntegrationFraudService {
         String nameVN = text(node, masterDataField.MASTER_DATA_NAMEVN);
         String type = text(node, masterDataField.MASTER_DATA_TYPE);
         String mandStr = text(node, masterDataField.MASTER_DATA_MANDATORY);
-        Boolean mandatory = (mandStr != null && mandStr.toLowerCase() == 'true') ? true : false;
+        Boolean mandatory = (mandStr != null && mandStr.toLowerCase() == MADATORY_STR) ? true : false;
         String applyTo = text(node, masterDataField.MASTER_DATA_APPLY_TO);
         applyTo = String.isBlank(applyTo) ? null : applyTo;
         String posOrderStr = text(node, masterDataField.MASTER_DATA_POST_ORDER);
@@ -407,6 +417,179 @@ global with sharing class FEC_IntegrationFraudService {
             if (c.FEC_Code__c == code) return c.FEC_Code__c;
         }
         return null;
+    }
+
+    public static void sendJobEmail(
+        String status,
+        String jobName,
+        String triggerId,
+        String cronExpr,
+        Datetime nextRun,
+        Integer importedCount,
+        String durationText,
+        Exception ex,
+        List<String> recipients
+    ) {
+        EmailTemplate tpl = [
+            SELECT Subject, Body
+            FROM EmailTemplate
+            WHERE DeveloperName = :TEMPLATE_NAME
+            LIMIT 1
+        ];
+
+        String errorBlock = '';
+        if (ex != null) {
+            errorBlock =
+                'ERROR:\n' + ex.getMessage() + '\n\n' +
+                ex.getStackTraceString();
+        }
+
+        String subject = tpl.Subject
+            .replace('{{STATUS}}', status)
+            .replace('{{JOB_NAME}}', jobName);
+
+        String body = tpl.Body
+            .replace('{{JOB_NAME}}', jobName)
+            .replace('{{TRIGGER_ID}}', triggerId)
+            .replace('{{CRON}}', cronExpr)
+            .replace('{{NEXT_RUN}}', String.valueOf(nextRun))
+            .replace('{{STATUS}}', status)
+            .replace('{{IMPORTED_COUNT}}',
+                importedCount == null ? 'N/A' : String.valueOf(importedCount))
+            .replace('{{DURATION}}', durationText)
+            .replace('{{ERROR_BLOCK}}', errorBlock);
+
+        sendEmail(subject, body, recipients);
+    }
+    private static void sendEmail(String subject, String body, List<String> toAddresses) {
+        try {
+            Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+            email.setToAddresses(toAddresses);
+            email.setSubject(subject);
+            email.setPlainTextBody(body);
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
+        } catch (Exception e) {
+            System.debug('Email send failed: ' + e.getMessage());
+        }
+    }
+    public static List<String> getAdminRecipients() {
+        List<String> emails = new List<String>();
+    
+        for (FEC_Integration_Admin_Recipient__mdt rec :
+            [SELECT FEC_Email__c FROM FEC_Integration_Admin_Recipient__mdt]
+        ) {
+            if (String.isNotBlank(rec.FEC_Email__c)) {
+                emails.add(rec.FEC_Email__c);
+            }
+        }
+        return emails;
+    }
+
+   /**
+     * Calls CIF_CustomerInfo SOAP service to retrieve fraud master data.
+     *
+     * @return SOAP response body as String
+     * @throws CalloutException if HTTP callout fails
+     */
+    public static String getFraudMasterData() {
+
+        Http http = new Http();
+        HttpRequest request = new HttpRequest();
+    
+        try {
+            request.setEndpoint(FEC_FraudConstantCommon.SET_ENPOINT_FRAUD_SERVICE);
+            request.setMethod('POST');
+            request.setHeader(
+                FEC_FraudConstantCommon.MIME_CONTENT_TYPE,
+                FEC_FraudConstantCommon.MIME_TEXT_UTF8
+            );
+            request.setHeader(
+                'SOAPAction',
+                FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_ENDPOINT
+            );
+    
+            // ---------------------------------------------------------
+            // Build SOAP XML body
+            // ---------------------------------------------------------
+            String xmlBody =
+                '<?xml version="1.0" encoding="UTF-8"?>' +
+                '<soapenv:Envelope ' +
+                    'xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
+                    'xmlns:urn="urn:PegaRULES:SOAP:FraudCase:Services">' +
+                    '<soapenv:Header/>' +
+                    '<soapenv:Body>' +
+                        '<urn:GetFraudMasterDataRequest>' +
+                            '<urn:Sys>' +
+                                '<urn:Channel>' +
+                                    FEC_FraudConstantCommon.SYSTEM_CHANNEL +
+                                '</urn:Channel>' +
+                                '<urn:TransactionID>' +
+                                    FEC_IntegrationFraudCaseUtil.generateUUID() +
+                                '</urn:TransactionID>' +
+                                '<urn:DateTime>' +
+                                    Datetime.now().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss') +
+                                '</urn:DateTime>' +
+                            '</urn:Sys>' +
+                        '</urn:GetFraudMasterDataRequest>' +
+                    '</soapenv:Body>' +
+                '</soapenv:Envelope>';
+    
+            request.setBody(xmlBody);
+    
+            // ---------------------------------------------------------
+            // Callout
+            // ---------------------------------------------------------
+            HttpResponse response = http.send(request);
+    
+            // ---------------------------------------------------------
+            // Return success response
+            // ---------------------------------------------------------
+            return response.getBody();
+    
+        } catch (CalloutException ce) {
+            log('CalloutException in getFraudMasterData: ' + ce.getMessage()
+            );
+            return '<ERROR>' + ce.getMessage() + '</ERROR>';
+           
+    
+        } catch (Exception ex) {
+            log(
+                'Unexpected error in getFraudMasterData: ' + ex.getMessage()
+            );
+            return '<ERROR>' + ex.getMessage() + '</ERROR>';
+           
+        }
+    }
+    
+
+
+    public static Boolean isConnectFraudSystem() {
+        Http http = new Http();
+        HttpRequest request = new HttpRequest();        
+        // 1. Set Endpoint và Method        
+        request.setEndpoint(FEC_FraudConstantCommon.SET_ENPOINT_FRAUD_HEALTH);        
+        request.setMethod('GET');        
+        request.setHeader('X-API-KEY', FEC_FraudConstantCommon.FRAUD_X_API_KEY);        
+        request.setTimeout(20000); // Tăng timeout lên 20s        
+        try {
+            HttpResponse response = http.send(request);
+            log('STATUS CODE: ' + response.getStatusCode());
+            log('BODY: ' + response.getBody());        
+            if (response.getStatusCode() == 200) {
+                log('Kết nối thành công!');
+                return true;
+            
+            } else {
+                log('Lỗi từ Server: ' + response.getStatus());
+                return false;
+        
+            }
+        
+        } catch (Exception e) {
+            log('Lỗi kết nối (Timeout/DNS): ' + e.getMessage());
+            return false;
+        
+        }
     }
 
     /**
