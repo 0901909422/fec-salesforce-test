@@ -9,9 +9,16 @@ import {
   setTabIcon,
 } from "lightning/platformWorkspaceApi";
 
+//============================== Labels ==============================
+import FEC_VIEW_ALL_BTN_LABEL from "@salesforce/label/c.FEC_View_All_Btn_Label";
+import FEC_RELEVANT_INTERACTION_LABEL from "@salesforce/label/c.FEC_Relevant_Interactions_Label";
+import FEC_INTERACTION_ID_LABEL from "@salesforce/label/c.FEC_Interaction_ID";
+import FEC_INTERACTION_CREATED_ON_LABEL from "@salesforce/label/c.FEC_Interaction_Created_On_Label";
+import FEC_INTERACTION_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_Channel_Label";
+
 const COLUMNS = [
   {
-    label: "Interaction ID",
+    label: FEC_INTERACTION_ID_LABEL,
     fieldName: "caseUrl",
     type: "url",
     typeAttributes: {
@@ -19,9 +26,9 @@ const COLUMNS = [
       target: "_self",
     },
   },
-  { label: "Interaction Channel", fieldName: "FEC_Channel__c" },
+  { label: FEC_INTERACTION_CHANNEL_LABEL, fieldName: "FEC_Channel__c" },
   {
-    label: "Interaction Created On",
+    label: FEC_INTERACTION_CREATED_ON_LABEL,
     fieldName: "formattedCreatedOn",
   },
 ];
@@ -29,6 +36,12 @@ const COLUMNS = [
 export default class FecRelevantInteractionCard extends NavigationMixin(
   LightningElement,
 ) {
+
+  labels = {
+    viewAllBtn: FEC_VIEW_ALL_BTN_LABEL,
+    relevantInteraction: FEC_RELEVANT_INTERACTION_LABEL,
+  };
+
   @api recordId;
 
   interactions = [];
@@ -37,7 +50,6 @@ export default class FecRelevantInteractionCard extends NavigationMixin(
   @wire(getRelevantInteractions, { recordId: "$recordId" })
   wiredData({ data }) {
     if (data) {
-      console.log("relevant interactions data:", data);
       this.interactions = data.map((i) => ({
         ...i,
         caseUrl: `/${i.Id}`,
@@ -61,7 +73,6 @@ export default class FecRelevantInteractionCard extends NavigationMixin(
   }
 
   toggle(event) {
-    console.log("toggle called");
     console.log(event.currentTarget.dataset.id);
     const id = event.currentTarget.dataset.id;
     this.interactions = this.interactions.map((i) =>
@@ -83,7 +94,6 @@ export default class FecRelevantInteractionCard extends NavigationMixin(
   }
 
   async handleViewAll() {
-    console.log("View All Relevant Interactions clicked");
     const focusedTab = await getFocusedTabInfo();
     console.log("focusedTab:", JSON.stringify(focusedTab));
 

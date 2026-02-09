@@ -11,9 +11,17 @@ import {
   setTabIcon,
 } from "lightning/platformWorkspaceApi";
 
+//============================== Labels ==============================
+import FEC_RELEVANT_CASES_LABEL from "@salesforce/label/c.FEC_Relevant_Cases_Label";
+import FEC_CASE_ID_LABEL from "@salesforce/label/c.FEC_Case_List_Label";
+import FEC_CASE_STATUS_LABEL from "@salesforce/label/c.FEC_Case_Status_Label";
+import FEC_SUB_CATEGORY_LABEL from "@salesforce/label/c.FEC_Sub_Category_Label";
+import FEC_SUB_CODE_LABEL from "@salesforce/label/c.FEC_Sub_Code_Label";
+import FEC_VIEW_ALL_BTN_LABEL from "@salesforce/label/c.FEC_View_All_Btn_Label";
+
 const COLUMNS = [
   {
-    label: "Case ID",
+    label: FEC_CASE_ID_LABEL,
     fieldName: "caseUrl",
     type: "url",
     typeAttributes: {
@@ -21,13 +29,13 @@ const COLUMNS = [
       target: "_self",
     },
   },
-  { label: "Case Status", fieldName: "FEC_Case_Status__c" },
+  { label: FEC_CASE_STATUS_LABEL, fieldName: "FEC_Case_Status__c" },
   {
-    label: "Sub Category",
+    label: FEC_SUB_CATEGORY_LABEL,
     fieldName: "subCategoryName",
   },
   {
-    label: "Sub Code",
+    label: FEC_SUB_CODE_LABEL,
     fieldName: "subCodeName",
   },
 ];
@@ -35,6 +43,11 @@ const COLUMNS = [
 export default class FecRelevantCaseCard extends NavigationMixin(
   LightningElement,
 ) {
+  labels = {
+    caseList: FEC_RELEVANT_CASES_LABEL,
+    viewAllBtn: FEC_VIEW_ALL_BTN_LABEL,
+  };
+
   @api recordId;
   columns = COLUMNS;
   cases = [];

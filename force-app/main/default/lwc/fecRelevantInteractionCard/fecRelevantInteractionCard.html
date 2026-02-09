@@ -4,35 +4,15 @@
         <!-- Header + View All -->
         <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
             <span class="slds-text-title_bold">
-                Relevant Interactions ({total})
+                {labels.relevantInteraction} ({total})
             </span>
         </div>
         <template if:true={showViewAll}>
             <lightning-datatable key-field="Id" data={interactions} columns={columns} hide-checkbox-column>
             </lightning-datatable>
-            <!-- <lightning-accordion allow-multiple-sections-open>
-            <template for:each={interactions} for:item="i">
-                <section key={i.Id} class="accordion-card">
-
-                    <div class="accordion-header" data-id={i.Id} onclick={toggle}>
-                        <lightning-formatted-rich-text value={i.FEC_Interaction_ID__c}></lightning-formatted-rich-text>
-                        <lightning-icon icon-name="utility:chevrondown" size="x-small">
-                        </lightning-icon>
-                    </div>
-                    
-                    <template if:true={i.open}>
-                        <div class="accordion-body">
-                            <p><b>Interaction Channel:</b> {i.FEC_Channel__c}</p>
-                            <p><b>Interaction Created On:</b> {i.formattedCreatedOn}</p>
-                        </div>
-                    </template>
-
-                </section>
-            </template>
-        </lightning-accordion> -->
             <!-- View All -->
 
-            <lightning-button variant="base" label="View All" onclick={handleViewAll}>
+            <lightning-button variant="base" label={labels.viewAllBtn} onclick={handleViewAll}>
             </lightning-button>
         </template>
 

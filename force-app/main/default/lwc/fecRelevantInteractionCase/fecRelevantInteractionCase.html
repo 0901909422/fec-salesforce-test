@@ -7,42 +7,17 @@
         </div>
         <div class="slds-media__body">
           <h2 class="slds-card__header-title">
-            Case List ({total})
+            {labels.caseList} ({total})
           </h2>
         </div>
       </header>
-
     </div>
     <div class="slds-p-horizontal_medium slds-p-vertical_small">
       <template if:true={showViewAll}>
         <lightning-datatable key-field="Id" data={caseList} columns={columns} hide-checkbox-column>
         </lightning-datatable>
-
-        <!-- <lightning-accordion allow-multiple-sections-open>
-        <template for:each={caseList} for:item="c">
-          <section key={c.Id} class="accordion-card">
-
-            <div class="accordion-header" data-id={c.Id} onclick={toggle}>
-              <lightning-formatted-rich-text value={c.FEC_Case_ID__c}></lightning-formatted-rich-text>
-              <lightning-icon icon-name="utility:chevrondown" size="x-small">
-              </lightning-icon>
-            </div>
-
-            <template if:true={c.open}>
-              <div class="accordion-body">
-                <p><b>Case Status:</b> {c.FEC_Case_Status__c}</p>
-                <p><b>Sub Category:</b> {c.subCategoryName}</p>
-                <p><b>Sub Code:</b> {c.subCodeName}</p>
-              </div>
-            </template>
-
-          </section>
-        </template>
-      </lightning-accordion> -->
-
         <!-- View All -->
-
-        <lightning-button variant="base" label="View All" onclick={handleViewAll}>
+        <lightning-button variant="base" label={labels.viewAllBtn} onclick={handleViewAll}>
         </lightning-button>
       </template>
 

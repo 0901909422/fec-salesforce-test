@@ -11,9 +11,21 @@ import {
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 
 import ISCLOSED from "@salesforce/schema/Case.IsClosed";
+
+//============================== Lablels ==============================
+import FEC_CASE_LIST_LABEL from "@salesforce/label/c.FEC_Case_List_Label";
+import FEC_RELEVANT_CASES_LABEL from "@salesforce/label/c.FEC_Relevant_Cases_Label";
+import FEC_RELEVANT_INTERACTION_LABEL from "@salesforce/label/c.FEC_Relevant_Interactions_Label";
+
+import FEC_CASE_ID_LABEL from "@salesforce/label/c.FEC_Case_List_Label";
+import FEC_CASE_STATUS_LABEL from "@salesforce/label/c.FEC_Case_Status_Label";
+import FEC_SUB_CATEGORY_LABEL from "@salesforce/label/c.FEC_Sub_Category_Label";
+import FEC_SUB_CODE_LABEL from "@salesforce/label/c.FEC_Sub_Code_Label";
+import FEC_VIEW_ALL_BTN_LABEL from "@salesforce/label/c.FEC_View_All_Btn_Label";
+
 const COLUMNS = [
   {
-    label: "Case ID",
+    label: FEC_CASE_ID_LABEL,
     fieldName: "caseUrl",
     type: "url",
     typeAttributes: {
@@ -21,27 +33,32 @@ const COLUMNS = [
       target: "_self",
     },
   },
-  { label: "Case Status", fieldName: "FEC_Case_Status__c" },
+  { label: FEC_CASE_STATUS_LABEL, fieldName: "FEC_Case_Status__c" },
   {
-    label: "Sub Category",
+    label: FEC_SUB_CATEGORY_LABEL,
     fieldName: "subCategoryName",
   },
   {
-    label: "Sub Code",
+    label: FEC_SUB_CODE_LABEL,
     fieldName: "subCodeName",
   },
 ];
 export default class FecRelevantInteractionCase extends NavigationMixin(
   LightningElement,
 ) {
+
+  labels = {
+    caseList: FEC_CASE_LIST_LABEL,
+    viewAllBtn: FEC_VIEW_ALL_BTN_LABEL,
+  };
   @api recordId;
 
   caseList = [];
   total = 0;
   columns = COLUMNS;
-  interactionTabLabel = "Relevant Interactions";
-  caseTabLabel = "Relevant Cases";
-  
+  interactionTabLabel = FEC_RELEVANT_INTERACTION_LABEL;
+  caseTabLabel = FEC_RELEVANT_CASES_LABEL;
+
   closedStatus = false;
 
   @wire(getRecord, {
@@ -113,34 +130,11 @@ export default class FecRelevantInteractionCase extends NavigationMixin(
     console.log("focusedTab:", JSON.stringify(focusedTab));
 
     const subtabId = await openSubtab(focusedTab.tabId, {
-      // pageReference: {
-      //   type: "standard__appPage",
-      //   attributes: {
-      //     appPageName: "FEC_View_All_Relevant_Interaction_Cases",
-      //   },
-      //   state: {
-      //     c__recordId: this.recordId,
-      //   },
-      // },
-      // focus: true,
       url: `/lightning/cmp/c__fec_RelevantInteractionCaseListViewAll?c__recordId=${this.recordId}`,
       focus: true,
     });
     await setTabLabel(subtabId, "Cases List - View All");
     await setTabIcon(subtabId, "standard:case", "Cases");
-
-    // await openSubtab(focusedTab.tabId, {
-    //   pageReference: {
-    //     type: "standard__appPage",
-    //     attributes: {
-    //       appPageName: "FEC_View_All_Relevant_Interaction_Cases",
-    //     },
-    //     state: {
-    //       recordId: this.recordId,
-    //     },
-    //   },
-    //   focus: true,
-    // });
   }
 
   // ===== Utils =====
