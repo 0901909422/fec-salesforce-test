@@ -33,6 +33,8 @@ import LBL_FraudStatus_Col from '@salesforce/label/c.LBL_FraudStatus_Col';
 import LBL_FraudCreatedOn_Col from '@salesforce/label/c.LBL_FraudCreatedOn_Col';
 import LBL_FraudCreatedBy_Col from '@salesforce/label/c.LBL_FraudCreatedBy_Col';
 import LBL_Channel_Col from '@salesforce/label/c.LBL_Channel_Col';
+import LBL_TotalRecords from '@salesforce/label/c.LBL_TotalRecords';
+import LBL_Search_RecordPerPage from '@salesforce/label/c.LBL_Search_RecordPerPage';
 
 
 
@@ -55,6 +57,12 @@ export default class IntegrationFraudCaseSearch extends LightningElement {
 
     sortBy = 'CreatedDate';
     sortDirection = 'DESC';
+    pageSizeOptions = [
+        { label: '10', value: '10' },
+        { label: '20', value: '20' },
+        { label: '30', value: '30' },
+        { label: '50', value: '50' }
+    ];
     labels = {
         screenTitle: LBL_SearchFraudCaseScreen,
         fraudCaseId: LBL_FraudCaseID,
@@ -71,6 +79,8 @@ export default class IntegrationFraudCaseSearch extends LightningElement {
         noRecords: LBL_NoRecords,
         sortBy: LBL_SortBy,
         navigationMode: LBL_NavigationMode,
+        totalRecords: LBL_TotalRecords,
+        recordsPerPage: LBL_Search_RecordPerPage,
 
         // Table columns
         colFraudCaseID: LBL_FraudCaseID_Col,
@@ -84,6 +94,12 @@ export default class IntegrationFraudCaseSearch extends LightningElement {
         colFraudCreatedBy: LBL_FraudCreatedBy_Col,
         colChannel: LBL_Channel_Col
     };
+
+    handlePageSizeChange(event) {
+        this.pageSize = event.detail.value; // keep string
+        this.pageNumber = 1;
+        this.loadData();
+    }
     
     handleRowAction(event) {
         const { action, row } = event.detail;

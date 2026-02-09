@@ -1,9 +1,6 @@
 global with sharing class FEC_IntegrationSearchFraudCaseController {
 
     public static final Boolean DEBUG_LOG = true;
-    public static final String FRAUD_HANDLING_CASE_DETAIL_PATH = 'integration_fraud_handling_case_detail';
-    
-
     /**
      * Searches fraud cases with flexible filtering, sorting, and pagination.
      *
@@ -58,7 +55,9 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
      */
     @AuraEnabled(cacheable=true)
     public static Map<String,Object> getFraudSubCases(String fraudCaseId) {
-
+        FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
+        String likeBUValue = caseField.CASEBU + '%';
+        String likeTKValue = caseField.CASETK + '%';
         log('getFraudSubCases called with fraudCaseId = ' + fraudCaseId);
 
         if (String.isBlank(fraudCaseId)) {
@@ -74,7 +73,7 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             SELECT Id, FEC_CaseID__c
             FROM FEC_Integration_Case__c
             WHERE FEC_Parent_CaseID__c = :fraudCaseId 
-            AND FEC_CaseID__c LIKE 'BU-%'
+            AND FEC_CaseID__c LIKE :likeBUValue
         ];
 
         log('BU cases found: ' + existParent.size());
@@ -104,9 +103,8 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             CreatedBy.Id, CreatedBy.Name, CreatedBy.Email 
             FROM FEC_Integration_Case__c
             WHERE FEC_Parent_CaseID__c IN :buIds
-            AND FEC_CaseID__c LIKE 'TK-%'
+            AND FEC_CaseID__c LIKE :likeTKValue
             ORDER BY CreatedDate ASC
-            LIMIT 200
         ];
 
         log('TK cases found: ' + allRecords.size());
@@ -129,7 +127,7 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
                 SELECT FEC_Parent_Case__c, FEC_Info_ID__c, FEC_Info_Value__c
                 FROM FEC_Integration_Case_Info__c
                 WHERE FEC_Parent_Case__c IN :pageList
-                AND FEC_Info_ID__c = 'AccountNumber'
+                AND FEC_Info_ID__c = :FEC_FraudConstantCommon.INFO_ACCOUNT_NUMBER
             ];
 
             log('Account info records: ' + acctInfos.size());
@@ -152,8 +150,6 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
 
         return response;
     }
-
-
 
 
     /**
@@ -193,95 +189,253 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
      *         - 'pageRecords' : List of UI-ready record maps for the requested page
      */
     private static Map<String,Object> searchIntegrationFraudCase(
-        String fraudCaseId,        
-        String nationalId,
-        String phoneNumber,
-        String applicationId,
-        String contractNumber,
-        String accountNumber,
-        Integer pageNumber,
-        Integer pageSize,
-        String sortBy,
-        String sortDirection
-    ) {
-        log('START searchFraudCases');
+    String fraudCaseId,
+    String nationalId,
+    String phoneNumber,
+    String applicationId,
+    String contractNumber,
+    String accountNumber,
+    Integer pageNumber,
+    Integer pageSize,
+    String sortBy,
+    String sortDirection) {
 
-        // Paging defaults
-        if (pageNumber == null || pageNumber < 1) pageNumber = 1;
-        if (pageSize == null || pageSize < 1) pageSize = 10;
-
-        // =====================================================
-        // 1. Parent Case Filters
-        // =====================================================
-        List<String> parentWhere = new List<String>();
-
-        if (String.isNotBlank(fraudCaseId)) {
-            String keyword = '%' + String.escapeSingleQuotes(fraudCaseId.trim()) + '%';
-        
-            parentWhere.add(
-                '(FEC_CaseID__c LIKE :keyword OR FEC_Service_Case_ID__c LIKE :keyword)'
-            );
-        }
-        
-
-        // =====================================================
-        // 2. Additional Info Filters (Apex filtering allowed)
-        // =====================================================
-        Map<String,String> infoFilters = new Map<String,String>{
-            'nationalId'     => nationalId,
-            'phoneNumber'    => phoneNumber,
-            'applicationId'  => applicationId,
-            'contractNumber' => contractNumber,
-            'accountNumber'  => accountNumber
-        };
-
-        Set<Id> matchedCaseIds = new Set<Id>();
-        Integer activeFilterCount = 0;
-
-        for (String key : infoFilters.keySet()) {
-            String val = infoFilters.get(key);
-            if (String.isNotBlank(val)) {
-
-                activeFilterCount++;
-                log('Filtering AdditionalInfo field: ' + key + ' LIKE %' + val + '%');
-
-                // Step 1 — Filter by Info ID (allowed SOQL filter)
-                List<FEC_Integration_Case_Info__c> rows = [
-                    SELECT FEC_Parent_Case__c, FEC_Info_ID__c, FEC_Info_Value__c
-                    FROM FEC_Integration_Case_Info__c
-                    WHERE FEC_Info_ID__c = :key
-                ];
-
-                // Step 2 — Apex filtering for text contains
-                for (FEC_Integration_Case_Info__c r : rows) {
-                    if (r.FEC_Info_Value__c != null &&
-                        r.FEC_Info_Value__c.contains(val)) {
-
-                        matchedCaseIds.add(r.FEC_Parent_Case__c);
-                    }
-                }
-            }
-        }
-
-        log('AdditionalInfo matchedCaseIds before combining: ' + matchedCaseIds);
-
-        if (activeFilterCount > 0 && matchedCaseIds.isEmpty()) {
+        Integer pageNum  = normalizePageNumber(pageNumber);
+        pageSize = normalizePageSize(pageSize);
+        List<String> parentWhere = buildParentWhere(fraudCaseId);
+    
+        Map<String, List<String>> infoFilterMap =
+            buildInfoFilterMap(nationalId, phoneNumber, applicationId, contractNumber, accountNumber);
+    
+        log('infoFilterMap: ' + infoFilterMap);
+        Set<Id> matchedIds = findMatchedCaseIdsFromInfo(infoFilterMap);
+        log('matchedIds: ' + matchedIds);
+        if (!infoFilterMap.isEmpty() && matchedIds.isEmpty()) {
             return new Map<String,Object>{
                 'total' => 0,
                 'pageRecords' => new List<Map<String,Object>>()
             };
         }
-
-        if (!matchedCaseIds.isEmpty()) {
-            parentWhere.add('Id IN :matchedCaseIds');
+    
+        applyMatchedCaseIds(parentWhere, matchedIds);
+        applyCaseTypeGuard(parentWhere);
+        String sortField = normalizeSortBy(sortBy);
+        String sortDir   = normalizeSortDirection(sortDirection);
+    
+        List<FEC_Integration_Case__c> all =
+            executeParentQuery(parentWhere, sortField, sortDir);
+    
+        List<FEC_Integration_Case__c> page =
+            paginate(all, pageNum, pageSize);
+    
+        Map<Id, String> accountMap = loadAccountNumbers(page);
+        Map<String, Integer> childCountMap = buildChildCountMap(page);
+    
+        Map<String,Object> response =
+            getFormatResponseSearchIntegrationFraudCase(page, accountMap, all.size());
+    
+        response.put('childCountMap', childCountMap);
+        return response;
+    }
+    
+    /**
+     * Ensures the page number is always valid.
+     * - Defaults to 1 if the input is null or less than 1
+     * - Prevents invalid pagination values
+     */
+    private static Integer normalizePageNumber(Integer pageNumber) {
+        return (pageNumber == null || pageNumber < 1) ? 1 : pageNumber;
+    }
+    
+    /**
+     * Ensures the page size is always valid.
+     * - Defaults to 10 if the input is null or less than 1
+     * - Helps avoid invalid LIMIT values in SOQL
+     */
+    private static Integer normalizePageSize(Integer pageSize) {
+        return (pageSize == null || pageSize < 1) ? 10 : pageSize;
+    }
+    
+    /**
+     * Builds WHERE conditions for searching parent fraud cases.
+     * - Matches the keyword against both Case ID fields
+     * - Escapes single quotes to prevent SOQL injection
+     * - Uses LIKE with wildcards for partial matching
+     *
+     * @param fraudCaseId Search keyword entered by the user
+     * @return List of WHERE clause conditions to be joined later
+     */
+    private static List<String> buildParentWhere(String fraudCaseId) {
+        List<String> whereList = new List<String>();
+    
+        if (String.isNotBlank(fraudCaseId)) {
+            String keyword =
+                '%' + String.escapeSingleQuotes(fraudCaseId.trim()) + '%';
+    
+            whereList.add(
+                '(FEC_CaseID__c LIKE \'' + keyword +
+                '\' OR FEC_Service_Case_ID__c LIKE \'' + keyword + '\')'
+            );
         }
-        // Always enforce FH / TK
-        parentWhere.add('(FEC_CaseID__c LIKE \'FH-%\' OR FEC_CaseID__c LIKE \'TK-%\' OR FEC_CaseID__c LIKE \'SFT-%\' OR FEC_CaseID__c LIKE \'S-%\')');
+    
+        return whereList;
+    }
+    
+    
+    /**
+     * Builds a mapping between search values and their corresponding Info IDs.
+     *
+     * Each non-blank input value (national ID, phone number, etc.)
+     * is used as a key in the map, and maps to a list of Info Type IDs
+     * that should be matched against that value.
+     *
+     * This structure allows dynamic filtering where:
+     * - One search value can be applied to multiple info types
+     * - Only provided (non-blank) filters are included
+     *
+     * @param nationalId     National ID entered by the user
+     * @param phoneNumber    Phone number entered by the user
+     * @param applicationId  Application ID entered by the user
+     * @param contractNumber Contract number entered by the user
+     * @param accountNumber  Account number entered by the user
+     * @return Map of search value → list of related Info Type IDs
+     */
+    private static Map<String, List<String>> buildInfoFilterMap(
+        String nationalId,
+        String phoneNumber,
+        String applicationId,
+        String contractNumber,
+        String accountNumber
+    ) {
+        Map<String, List<String>> mapValueToInfoIds = new Map<String, List<String>>();
+    
+        if (String.isNotBlank(nationalId)) {
+            mapValueToInfoIds.put(nationalId, new List<String>{
+                FEC_FraudConstantCommon.INFO_NATION_ID,
+                FEC_FraudConstantCommon.INFO_NATION_IDS
+            });
+        }
+    
+        if (String.isNotBlank(applicationId)) {
+            mapValueToInfoIds.put(applicationId, new List<String>{
+                FEC_FraudConstantCommon.INFO_APPLICATION_ID,
+                FEC_FraudConstantCommon.INFO_APPLICATION_IDS
+            });
+        }
+    
+        if (String.isNotBlank(phoneNumber)) {
+            mapValueToInfoIds.put(phoneNumber, new List<String>{
+                FEC_FraudConstantCommon.INFO_PHONE_NUMBER
+            });
+        }
+    
+        if (String.isNotBlank(contractNumber)) {
+            mapValueToInfoIds.put(contractNumber, new List<String>{
+                FEC_FraudConstantCommon.INFO_CONTRACT_NUMBER
+            });
+        }
+    
+        if (String.isNotBlank(accountNumber)) {
+            mapValueToInfoIds.put(accountNumber, new List<String>{
+                FEC_FraudConstantCommon.INFO_ACCOUNT_NUMBER
+            });
+        }
+    
+        return mapValueToInfoIds;
+    }
+    
+    /**
+     * Finds parent case IDs that match all provided Info filters.
+     *
+     * For each search value:
+     * - Query case info records by Info ID
+     * - Check if the stored info value contains the search value
+     * - Collect matching parent case IDs
+     *
+     * Multiple filters are combined using AND logic
+     * (intersection of matched case IDs).
+     *
+     * @param valueToInfoIds Map of search value → list of Info IDs
+     * @return Set of parent case IDs matching all filters
+     */
+    private static Set<Id> findMatchedCaseIdsFromInfo(
+        Map<String, List<String>> valueToInfoIds
+    ) {
+        Set<Id> matchedCaseIds = new Set<Id>();
+        Boolean isFirstFilter = true;
+        log('findMatchedCaseIdsFromInfo: valueToInfoIds: ' + valueToInfoIds);
+    
+    
+        for (String value : valueToInfoIds.keySet()) {
+            List<String> infoIds = valueToInfoIds.get(value);
+    
+            List<FEC_Integration_Case_Info__c> rows = [
+                SELECT FEC_Parent_Case__c, FEC_Info_Value__c
+                FROM FEC_Integration_Case_Info__c
+                WHERE FEC_Info_ID__c = :infoIds
+            ];
+            log('findMatchedCaseIdsFromInfo: infoIds: ' + infoIds);
+    
+            Set<Id> currentMatches = new Set<Id>();
+            for (FEC_Integration_Case_Info__c r : rows) {
+                if (r.FEC_Info_Value__c != null &&
+                    r.FEC_Info_Value__c.contains(value)) {
+                    currentMatches.add(r.FEC_Parent_Case__c);
+                }
+            }
+            log('findMatchedCaseIdsFromInfo: currentMatches: ' + currentMatches);
+            if (isFirstFilter) {
+                matchedCaseIds.addAll(currentMatches);
+                isFirstFilter = false;
+            } else {
+                matchedCaseIds.retainAll(currentMatches);
+            }
+            log('findMatchedCaseIdsFromInfo: matchedCaseIds: ' + matchedCaseIds);
+            if (matchedCaseIds.isEmpty()) break;
+        }
+    
+        return matchedCaseIds;
+    }
+    
+    /**
+     * Adds a WHERE condition to filter parent cases by matched case IDs.
+     *
+     * Converts the Set<Id> into an IN clause and appends it
+     * to the existing parent WHERE conditions.
+     *
+     * @param parentWhere     List of parent WHERE clauses
+     * @param matchedCaseIds  Case IDs matched from info filtering
+     */
+    private static void applyMatchedCaseIds(
+        List<String> parentWhere,
+        Set<Id> matchedCaseIds
+    ) {
+        // parentWhere.add('Id IN :matchedCaseIds
+        if (!matchedCaseIds.isEmpty()) {
+            List<String> idStrings = new List<String>();
+                for (Id caseId : matchedCaseIds) {
+                    idStrings.add(String.valueOf(caseId));
+                }
 
-        // =====================================================
-        // 3. Sorting
-        // =====================================================
-        Set<String> allowedSortFields = new Set<String>{
+                parentWhere.add(
+                    'Id IN (\'' + String.join(idStrings, '\',\'') + '\')'
+                );
+
+
+        }
+    }
+    
+    /**
+     * Validates and normalizes the sort field.
+     *
+     * Only allows predefined, safe fields to prevent SOQL injection.
+     * Defaults to CreatedDate if the input is invalid.
+     *
+     * @param sortBy Requested sort field
+     * @return Safe sort field name
+     */
+    private static String normalizeSortBy(String sortBy) {
+        Set<String> allowed = new Set<String>{
             'FEC_CaseID__c',
             'FEC_Service_Case_ID__c',
             'FEC_Category__c',
@@ -290,136 +444,260 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             'FEC_Case_Status__c',
             'CreatedDate'
         };
-
-        if (String.isBlank(sortBy) || !allowedSortFields.contains(sortBy))
-            sortBy = 'CreatedDate';
-
-        if (sortDirection != 'ASC' && sortDirection != 'DESC')
-            sortDirection = 'DESC';
-
-        // =====================================================
-        // 4. Build Final SOQL query
-        // =====================================================
-        String query =
-            'SELECT Id, Name, FEC_CaseID__c, FEC_Service_Case_ID__c, FEC_Parent_CaseID__c,' +
-            'FEC_Case_Status__c, FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c,' +
-            'FEC_Remark__c, CreatedDate, FEC_Sys_Channel__c, FEC_Creator_Email__c, ' +
-            'CreatedBy.Id, CreatedBy.Name, CreatedBy.Email ' +
-            'FROM FEC_Integration_Case__c ';
-
-        if (!parentWhere.isEmpty()) {
-            query += ' WHERE ' + String.join(parentWhere, ' AND ');
-        }
-        
-
-        query += ' ORDER BY ' + sortBy + ' ' + sortDirection;
-
-        log('FINAL QUERY: ' + query);
-
-        List<FEC_Integration_Case__c> allRecords = Database.query(query);
-        Integer total = allRecords.size();
-
-        // =====================================================
-        // 5. Paging
-        // =====================================================
-        Integer startIdx = (pageNumber - 1) * pageSize;
-        Integer endIdx   = Math.min(startIdx + pageSize, total);
-
-        List<FEC_Integration_Case__c> pageList = new List<FEC_Integration_Case__c>();
-        for (Integer i = startIdx; i < endIdx; i++) {
-            pageList.add(allRecords[i]);
-        }
-
-        // =====================================================
-        // 6. Load Account Number from AdditionalInfo
-        // =====================================================
-        Map<Id, String> accountNumberMap = new Map<Id, String>();
-        Map<String, Integer> childCountMap = new Map<String, Integer>();
-        if (!pageList.isEmpty()) {
-            /* ---------------- Account Numbers ---------------- */
-
-            List<FEC_Integration_Case_Info__c> acctInfos = [
-                SELECT FEC_Parent_Case__c, FEC_Info_Value__c
-                FROM FEC_Integration_Case_Info__c
-                WHERE FEC_Parent_Case__c IN :pageList
-                AND FEC_Info_ID__c = 'AccountNumber'
-            ];
-
-            for (FEC_Integration_Case_Info__c info : acctInfos) {
-                accountNumberMap.put(info.FEC_Parent_Case__c, info.FEC_Info_Value__c);
-            }
-
-            /* ---------------- FH → BU → TK hierarchy ---------------- */
-            Set<String> fhCaseIds = new Set<String>();
-            for (FEC_Integration_Case__c c : pageList) {
-                if (c.FEC_CaseID__c != null && c.FEC_CaseID__c.startsWith('FH-')) {
-                    fhCaseIds.add(c.FEC_CaseID__c);
-                }
-            }
-            if (!fhCaseIds.isEmpty()) {
-                //Find BU children of FH
-                List<FEC_Integration_Case__c> buCases = [
-                    SELECT FEC_CaseID__c, FEC_Parent_CaseID__c
-                    FROM FEC_Integration_Case__c
-                    WHERE FEC_Parent_CaseID__c IN :fhCaseIds
-                    AND FEC_CaseID__c LIKE 'BU-%'
-                ];
-                Map<String, Set<String>> fhToBuMap = new Map<String, Set<String>>();
-                Set<String> allBuIds = new Set<String>();
-                for (FEC_Integration_Case__c bu : buCases) {
-                    if (!fhToBuMap.containsKey(bu.FEC_Parent_CaseID__c)) {
-                        fhToBuMap.put(bu.FEC_Parent_CaseID__c, new Set<String>());
-                    }
-                    fhToBuMap.get(bu.FEC_Parent_CaseID__c).add(bu.FEC_CaseID__c);
-                    allBuIds.add(bu.FEC_CaseID__c);
-                }
-                //Count TK under BU
-                if (!allBuIds.isEmpty()) {
-                    List<AggregateResult> tkCounts = [
-                        SELECT FEC_Parent_CaseID__c parentId, COUNT(Id) cnt
-                        FROM FEC_Integration_Case__c
-                        WHERE FEC_Parent_CaseID__c IN :allBuIds
-                        AND FEC_CaseID__c LIKE 'TK-%'
-                        GROUP BY FEC_Parent_CaseID__c
-                    ];
-
-                    Map<String, Integer> buToTkCount = new Map<String, Integer>();
-                    for (AggregateResult ar : tkCounts) {
-                        buToTkCount.put(
-                            (String) ar.get('parentId'),
-                            (Integer) ar.get('cnt')
-                        );
-                    }
-
-                    //Sum TK count per FH
-                    for (String fhId : fhToBuMap.keySet()) {
-                        Integer totalTk = 0;
-                        for (String buId : fhToBuMap.get(fhId)) {
-                            totalTk += buToTkCount.get(buId) != null ? buToTkCount.get(buId) : 0;
-                        }
-                        childCountMap.put(fhId, totalTk);
-                    }
-                }
-            }
-        }
-         // Step 7: Final response
-         Map<String,Object> response = getFormatResponseSearchIntegrationFraudCase(
-            pageList, 
-            accountNumberMap, 
-            total
-        );
-        
-
-        response.put('childCountMap', childCountMap);
-
-        log('Final response prepared: ' + response.keySet());
-        return response;
-       
+    
+        return allowed.contains(sortBy) ? sortBy : 'CreatedDate';
     }
 
+    /**
+     * Enforces allowed case type prefixes.
+     *
+     * Ensures that only FH / TK / SFT / Service cases
+     * are included in the parent case query.
+     *
+     * This guard is always applied regardless of user filters.
+     *
+     * @param parentWhere List of parent WHERE clauses
+     */
+    private static void applyCaseTypeGuard(
+        List<String> parentWhere
+    ) {
+        FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
+       
+        // Always enforce FH / TK / SFT / Service       
+        parentWhere.add(
+            '(FEC_CaseID__c LIKE \'' + caseField.CASEFH + '%\' ' +
+            'OR FEC_CaseID__c LIKE \'' + caseField.CASETK + '%\' ' +
+            'OR FEC_CaseID__c LIKE \'' + caseField.CASESFT + '%\' ' +
+            'OR FEC_CaseID__c LIKE \'' + caseField.CASE_SERVICE + '%\')'
+        );
+
+    }
+    
+    /**
+     * Normalizes sort direction.
+     *
+     * Only allows ASC explicitly; defaults to DESC
+     * for any other value to ensure safety.
+     *
+     * @param direction Requested sort direction
+     * @return Normalized sort direction
+     */
+    private static String normalizeSortDirection(String direction) {
+        return (direction == 'ASC') ? 'ASC' : 'DESC';
+    }
+    
+
+    /**
+     * Executes the dynamic SOQL query for parent cases.
+     *
+     * - Applies all WHERE conditions
+     * - Applies sorting
+     *
+     * @param parentWhere   List of WHERE clauses
+     * @param sortBy        Sort field
+     * @param sortDirection Sort direction
+     * @return List of matching parent cases
+     */
+    private static List<FEC_Integration_Case__c> executeParentQuery(
+        List<String> parentWhere,
+        String sortBy,
+        String sortDirection
+    ) {
+        String soql =
+            'SELECT Id, Name, FEC_CaseID__c, FEC_Service_Case_ID__c, ' +
+            'FEC_Parent_CaseID__c, FEC_Case_Status__c, FEC_Category__c, ' +
+            'FEC_Sub_Category__c, FEC_Sub_Code__c, FEC_Remark__c, ' +
+            'CreatedDate, FEC_Sys_Channel__c, FEC_Creator_Email__c, ' +
+            'CreatedBy.Id, CreatedBy.Name, CreatedBy.Email ' +
+            'FROM FEC_Integration_Case__c';
+    
+        if (!parentWhere.isEmpty()) {
+            soql += ' WHERE ' + String.join(parentWhere, ' AND ');
+        }
+    
+        soql += ' ORDER BY ' + sortBy + ' ' + sortDirection;
+    
+        return Database.query(soql);
+    }
+    
+    
+    /**
+     * Returns a sublist of records for the requested page.
+     *
+     * @param allRecords Full result list
+     * @param pageNumber Current page number (1-based)
+     * @param pageSize   Number of records per page
+     * @return Records for the current page
+     */
+    private static List<FEC_Integration_Case__c> paginate(
+        List<FEC_Integration_Case__c> allRecords,
+        Integer pageNumber,
+        Integer pageSize
+    ) {
+        Integer startIdx = (pageNumber - 1) * pageSize;
+        Integer endIdx = Math.min(startIdx + pageSize, allRecords.size());
+    
+        List<FEC_Integration_Case__c> page = new List<FEC_Integration_Case__c>();
+        for (Integer i = startIdx; i < endIdx; i++) {
+            page.add(allRecords[i]);
+        }
+        return page;
+    }
+
+    /**
+     * Loads account numbers for the given parent cases.
+     *
+     * Queries account number info records and maps them
+     * to their corresponding parent case IDs.
+     *
+     * @param pageList List of parent cases on the current page
+     * @return Map of Case ID → Account Number
+     */
+    private static Map<Id, String> loadAccountNumbers(
+        List<FEC_Integration_Case__c> pageList
+    ) {
+        Map<Id, String> accountNumberMap = new Map<Id, String>();
+
+        if (pageList == null || pageList.isEmpty()) {
+            return accountNumberMap;
+        }
+
+        List<FEC_Integration_Case_Info__c> acctInfos = [
+            SELECT FEC_Parent_Case__c, FEC_Info_Value__c
+            FROM FEC_Integration_Case_Info__c
+            WHERE FEC_Parent_Case__c IN :pageList
+            AND FEC_Info_ID__c = :FEC_FraudConstantCommon.INFO_ACCOUNT_NUMBER
+        ];
+
+        for (FEC_Integration_Case_Info__c info : acctInfos) {
+            accountNumberMap.put(
+                info.FEC_Parent_Case__c,
+                info.FEC_Info_Value__c
+            );
+        }
+
+        return accountNumberMap;
+    }
+      
+        
+    /**
+     * Builds a map of FH case ID → total number of TK child cases.
+     *
+     * Hierarchy handled:
+     *   FH (parent)
+     *    └── BU (child)
+     *          └── TK (grandchild)
+     *
+     * For each FH case in the current page:
+     * - Find BU cases under that FH
+     * - Count TK cases under each BU
+     * - Sum all TK counts per FH
+     *
+     * @param pageList List of parent cases on the current page
+     * @return Map of FH Case ID → total TK child count
+     */
+    private static Map<String, Integer> buildChildCountMap(
+    List<FEC_Integration_Case__c> pageList
+    ) {
+        FEC_FraudConstantCommon.IntegrationField fraudConstant = new FEC_FraudConstantCommon.IntegrationField();
+        
+        String likeBUValue = fraudConstant.CASEBU + '%';
+        String likeTKValue = fraudConstant.CASETK + '%';
+        Map<String, Integer> childCountMap = new Map<String, Integer>();
+
+        if (pageList == null || pageList.isEmpty()) {
+            return childCountMap;
+        }
+
+        /* ================= FH cases ================= */
+        Set<String> fhCaseIds = new Set<String>();
+        for (FEC_Integration_Case__c c : pageList) {
+            if (c.FEC_CaseID__c != null && c.FEC_CaseID__c.startsWith(fraudConstant.CASEFH)) {
+                fhCaseIds.add(c.FEC_CaseID__c);
+            }
+        }
+
+        if (fhCaseIds.isEmpty()) {
+            return childCountMap;
+        }
+
+        /* ================= BU under FH ================= */
+        List<FEC_Integration_Case__c> buCases = [
+            SELECT FEC_CaseID__c, FEC_Parent_CaseID__c
+            FROM FEC_Integration_Case__c
+            WHERE FEC_Parent_CaseID__c IN :fhCaseIds
+            AND FEC_CaseID__c LIKE :likeBUValue
+        ];
+
+        Map<String, Set<String>> fhToBuMap = new Map<String, Set<String>>();
+        Set<String> allBuIds = new Set<String>();
+
+        for (FEC_Integration_Case__c bu : buCases) {
+            //Apex-safe replacement for computeIfAbsent
+            if (!fhToBuMap.containsKey(bu.FEC_Parent_CaseID__c)) {
+                fhToBuMap.put(bu.FEC_Parent_CaseID__c, new Set<String>());
+            }
+
+            fhToBuMap.get(bu.FEC_Parent_CaseID__c).add(bu.FEC_CaseID__c);
+            allBuIds.add(bu.FEC_CaseID__c);
+        }
+
+        if (allBuIds.isEmpty()) {
+            return childCountMap;
+        }
+
+        /* ================= TK count per BU ================= */
+        List<AggregateResult> tkCounts = [
+            SELECT FEC_Parent_CaseID__c parentId, COUNT(Id) cnt
+            FROM FEC_Integration_Case__c
+            WHERE FEC_Parent_CaseID__c IN :allBuIds
+            AND FEC_CaseID__c LIKE :likeTKValue
+            GROUP BY FEC_Parent_CaseID__c
+        ];
+
+        Map<String, Integer> buToTkCount = new Map<String, Integer>();
+        for (AggregateResult ar : tkCounts) {
+            buToTkCount.put(
+                (String) ar.get('parentId'),
+                (Integer) ar.get('cnt')
+            );
+        }
+
+        /* ================= Sum TK per FH ================= */
+        for (String fhId : fhToBuMap.keySet()) {
+            Integer totalTk = 0;
+
+            for (String buId : fhToBuMap.get(fhId)) {
+                totalTk += buToTkCount.containsKey(buId)
+                    ? buToTkCount.get(buId)
+                    : 0;
+            }
+
+            childCountMap.put(fhId, totalTk);
+        }
+
+        return childCountMap;
+    }
+
+
+
+    /**
+     * Formats the search result response for Integration Fraud Case search.
+     *
+     * Converts raw case records into a UI-friendly structure used by LWC:
+     * - Flattens case fields
+     * - Formats dates
+     * - Injects derived fields (account number, links)
+     * - Wraps results with pagination metadata
+     *
+     * @param pageList         List of cases for the current page
+     * @param accountNumberMap Map of Case ID → Account Number
+     * @param total            Total number of matched records
+     * @return Response map containing total count and formatted page records
+     */
     private static Map<String,Object> getFormatResponseSearchIntegrationFraudCase(List<FEC_Integration_Case__c> pageList, Map<Id, String> accountNumberMap, Integer total) {
         List<Map<String,Object>> finalRows = new List<Map<String,Object>>();
-
+        FEC_FraudConstantCommon.IntegrationField fraudConstant = new FEC_FraudConstantCommon.IntegrationField();
         for (FEC_Integration_Case__c c : pageList) {
             finalRows.add(new Map<String,Object>{
                 'Id'                     => c.Id,
@@ -429,20 +707,20 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
                 'FEC_Sub_Category__c'    => c.FEC_Sub_Category__c,
                 'FEC_Sub_Code__c'        => c.FEC_Sub_Code__c,
                 'FEC_Case_Status__c'     => c.FEC_Case_Status__c,
-                'CreatedDate'            => formatDateTime(c.CreatedDate),
+                'CreatedDate'            => FEC_IntegrationFraudCaseUtil.formatDateTime(c.CreatedDate),
                 'FEC_Sys_Channel__c'     => c.FEC_Sys_Channel__c,
                 
-                // ⭐ Correct Account Number from AdditionalInfo
+                //Correct Account Number from AdditionalInfo
                 'AccountNumber'          => accountNumberMap.containsKey(c.Id)
                                         ? accountNumberMap.get(c.Id)
                                         : null,
                 'CreatedByEmail' => c.FEC_Creator_Email__c,
                 'CreatedByName'  => c.CreatedBy.Name,                                       
 
-                // 🔗 Hyperlink for LWC
-                'ServiceCaseLink' => (c.FEC_Service_Case_ID__c != null ? '/lightning/n/Service_Fraud_Task_Case_Action?c__caseId=' + c.FEC_Service_Case_ID__c : null),
-                'FraudCaseLink'        => (c.FEC_CaseID__c != null && (c.FEC_CaseID__c.startsWith('FH-') || c.FEC_CaseID__c.startsWith('TK-')))
-                ? '/lightning/n/'+ FRAUD_HANDLING_CASE_DETAIL_PATH + '?c__caseId=' + c.FEC_CaseID__c
+                //Hyperlink for LWC
+                'ServiceCaseLink' => (c.FEC_Service_Case_ID__c != null ? FEC_FraudConstantCommon.SERVICE_CASE_LINK + c.FEC_Service_Case_ID__c : null),
+                'FraudCaseLink'        => (c.FEC_CaseID__c != null && (c.FEC_CaseID__c.startsWith(fraudConstant.CASEFH) || c.FEC_CaseID__c.startsWith(fraudConstant.CASETK)))
+                ? '/lightning/n/'+ FEC_FraudConstantCommon.FRAUD_HANDLING_CASE_DETAIL_PATH + '?c__caseId=' + c.FEC_CaseID__c
                 : null,
                 'FraudCaseDisplay'      => c.FEC_CaseID__c
             });
@@ -454,22 +732,7 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
         };
     }
 
-    /**
-     * Formats a DateTime value into a human-readable string.
-     *
-     * This helper method standardizes date-time display across the application
-     * using the format: dd/MM/yyyy HH:mm:ss
-     *
-     * Example output:
-     *  24/12/2025 09:15:30
-     *
-     * @param dt The DateTime value to be formatted
-     * @return   Formatted date-time string, or null if input is null
-     */
-    private static String formatDateTime(DateTime dt) {
-        return dt != null ? dt.format('dd/MM/yyyy HH:mm:ss') : null;
-    }
-
+   
     /**
      * Writes a log message to the debug log if debugging is enabled.
      *

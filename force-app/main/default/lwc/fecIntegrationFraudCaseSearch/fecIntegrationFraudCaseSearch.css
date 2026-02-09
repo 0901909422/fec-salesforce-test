@@ -62,3 +62,17 @@
 .child-indicator {
     color: var(--child-color);
 }
+
+.table-toolbar {
+    margin-bottom: 0.75rem;
+}
+
+.total-records,
+.page-label {
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.page-size-combobox {
+    min-width: 140px;
+}

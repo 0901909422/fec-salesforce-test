@@ -23,6 +23,56 @@
 
         <!-- Results Table -->
         <template if:true={records.length}>
+            <!-- TOOLBAR -->
+            <div class="table-toolbar slds-grid slds-grid_align-center slds-grid_vertical-align-center slds-wrap">
+                <div class="pagination slds-grid slds-grid_vertical-align-center">
+                    <!-- Total records -->
+                    <span class="total-records slds-m-right_medium">
+                        {labels.totalRecords}: {totalRecords}
+                    </span>
+                
+                    <!-- Records per page -->
+                    <lightning-combobox
+                        class="page-size-combobox slds-m-right_medium"
+                        label={labels.recordsPerPage}
+                        variant="label-hidden"
+                        placeholder={labels.recordsPerPage}
+                        name="pageSize"
+                        field-name="pageSize"
+                        type="number"
+                        min="1"
+                        max={maxPageSize}
+                        step="1"
+                        value={pageSize}
+                        options={pageSizeOptions}
+                        onchange={handlePageSizeChange}>
+                    </lightning-combobox>
+                </div>
+            
+                <!-- Pagination -->
+                <div class="pagination slds-grid slds-grid_vertical-align-center">
+                    <lightning-button
+                        label={labels.prevBtn}
+                        onclick={prevPage}
+                        disabled={isFirstPage}>
+                    </lightning-button>
+            
+                    <span class="page-label slds-m-horizontal_medium">
+                        Page {pageNumber} / {totalPages}
+                    </span>
+            
+                    <lightning-button
+                        label={labels.nextBtn}
+                        onclick={nextPage}
+                        disabled={isLastPage}>
+                    </lightning-button>
+                </div>
+            
+            </div>
+                      
+            
+        
+            <!-- TABLE -->
             <lightning-datatable
                 key-field="Id"
                 data={records}
@@ -34,13 +84,7 @@
                 onsort={handleSort}
                 onrowaction={handleRowAction}>
             </lightning-datatable>
-            <!-- Pagination -->
-            <div class="pagination">
-                <lightning-button label={labels.prevBtn} onclick={prevPage} disabled={isFirstPage}></lightning-button>
-                <span class="page-label">Page {pageNumber} / {totalPages}</span>
-                <lightning-button label={labels.nextBtn} onclick={nextPage} disabled={isLastPage}></lightning-button>
-            </div>
-        </template>
+        </template>        
 
         <!-- No Results -->
         <template if:true={noResult}>
