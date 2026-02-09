@@ -623,7 +623,7 @@ public with sharing class FEC_CardPaymentController {
             try {
                 insert recordsToInsert;
             } catch (Exception e) {
-                throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
+                throw new AuraHandledException(e.getMessage());
             }
         }
     }
