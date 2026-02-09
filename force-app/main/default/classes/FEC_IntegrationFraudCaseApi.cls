@@ -54,7 +54,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
 
         Dom.Document responseDoc;
         String responseStr;
-        FEC_IntegrationFraudCaseUtil.IntegrationField caseField = new FEC_IntegrationFraudCaseUtil.IntegrationField();
+        FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
     
         String requestBody = RestContext.request.requestBody.toString();
         String serviceName = 'UpdateFraudCaseStatus';
@@ -81,9 +81,9 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             }
     
             // Extract fields
-            caseId        = (String) detail.get('caseID');
-            serviceCaseId = (String) detail.get('referenceID');
-            channelId     = (String) detail.get('channelID');
+            caseId        = (String) detail.get(caseField.CASEID_FIELD);
+            serviceCaseId = (String) detail.get(caseField.REFERENCE_FIELD);
+            channelId     = (String) detail.get(caseField.CHANNEL_ID_FIELD);
     
             //Validate caseId
             if (String.isBlank(caseId)) {
@@ -227,7 +227,8 @@ global with sharing class FEC_IntegrationFraudCaseApi {
      */
     private static String processFHCase(Map<String,Object> detail, String xmlData) {
         String msg = null;
-        FEC_IntegrationFraudCaseUtil.IntegrationField caseField = new FEC_IntegrationFraudCaseUtil.IntegrationField();
+        FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
+        FEC_FraudConstantCommon.IntegrationFieldType caseFileType = new FEC_FraudConstantCommon.IntegrationFieldType();
         try {
             // 2) Parse XML
             Dom.Document doc = new Dom.Document();            
@@ -268,11 +269,11 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             }
         
 
-            String caseStatus     = (String) detail.get('caseStatus');
-            String parentId       = (String) detail.get('parentID');
-            String referenceId    = (String) detail.get('referenceID');
-            String caseId         = (String) detail.get('caseID');
-            String channelID      = (String) detail.get('channelID');
+            String caseStatus     = (String) detail.get(caseField.CASE_STATUS_FIELD);
+            String parentId       = (String) detail.get(caseField.PARENT_ID_FIELD);
+            String referenceId    = (String) detail.get(caseField.REFERENCE_FIELD);
+            String caseId         = (String) detail.get(caseField.CASEID_FIELD);
+            String channelID      = (String) detail.get(caseField.CHANNEL_ID_FIELD);
             //Check Service Case Existing
             if (parentId == null) {
                 msg = String.format(
@@ -285,20 +286,20 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                         FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
                     ).toXmlString();
             }
-            Long messageTime = (Long) detail.get('messageTime');
+            Long messageTime = (Long) detail.get(caseField.MESSAGE_TIME);
             Datetime messageDateTime = null;
             if (messageTime != null) {
                 Integer secondsInt = Integer.valueOf(messageTime / 1000);
                 messageDateTime = Datetime.newInstance(1970, 1, 1, 0, 0, 0).addSeconds(secondsInt);
             }
 
-            String investigationConclusion = (String) detail.get('investigationConclusion');   
+            String investigationConclusion = (String) detail.get(caseField.INVESTIGATION_CONCLUSION_FIELD);   
 
             // Parse XML fields
-            String xmlRemark      = FEC_IntegrationFraudCaseUtil.val(caseNode, 'Remarks');
-            String xmlCreated     = FEC_IntegrationFraudCaseUtil.val(caseNode, 'CreatedTime');
-            String xmlUpdated     = FEC_IntegrationFraudCaseUtil.val(caseNode, 'UpdatedTime');
-            String xmlCreatorEmail      = FEC_IntegrationFraudCaseUtil.val(creatorInfoNode, 'CreatorEmail');
+            String xmlRemark      = FEC_IntegrationFraudCaseUtil.val(caseNode, caseField.REMARKS_FIELD);
+            String xmlCreated     = FEC_IntegrationFraudCaseUtil.val(caseNode, caseField.CREATEDTIME_FIELD);
+            String xmlUpdated     = FEC_IntegrationFraudCaseUtil.val(caseNode, caseField.UPDATEDTIME_FIELD);
+            String xmlCreatorEmail      = FEC_IntegrationFraudCaseUtil.val(creatorInfoNode, caseField.CREATOR_EMAIL_FIELD);
 
             log('XML Fields:\ninvestigationConclusion='+investigationConclusion+'\nCreated='+xmlCreated+'\nUpdated='+xmlUpdated);
 
@@ -364,9 +365,8 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             log('Found AdditionalInfo count = ' + additionalInfoNodes.size());
 
             for (Dom.XmlNode ai : additionalInfoNodes) {
-
-                String idVal  = FEC_IntegrationFraudCaseUtil.val(ai, 'ID');
-                String valVal = FEC_IntegrationFraudCaseUtil.val(ai, 'Value');     
+                String idVal  = FEC_IntegrationFraudCaseUtil.val(ai, caseField.ID_FIELD);
+                String valVal = FEC_IntegrationFraudCaseUtil.val(ai, caseField.VALUE_FIELD);  
                 if (String.isBlank(idVal)) {
                     continue; // nothing to process
                 }
@@ -374,7 +374,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 if (existing != null) {
                     // Update
                     String fileType = getFileType(idVal, channelID);
-                    Boolean isFile = (fileType != null && fileType.equalsIgnoreCase('file'));
+                    Boolean isFile = (fileType != null && fileType.equalsIgnoreCase(caseFileType.TYPE_FILE));
             
                     if (!isFile && existing.FEC_Info_Value__c != valVal) {
                         existing.FEC_Info_Value__c = valVal;
@@ -465,7 +465,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
     private static String processBUCase(Map<String,Object> detail, String xmlData) {
         log('Enter processBUCase');
         String msg = null;
-        FEC_IntegrationFraudCaseUtil.IntegrationField caseField = new FEC_IntegrationFraudCaseUtil.IntegrationField();
+        FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
         try {
             // 2) Parse XML
             Dom.Document doc = new Dom.Document();
@@ -505,13 +505,12 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                         FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
                     ).toXmlString();
             }
-           
-            String caseStatus     = (String) detail.get('caseStatus');
-            String parentId       = (String) detail.get('parentID');
-            String referenceId    = (String) detail.get('referenceID');
-            String caseId         = (String) detail.get('caseID');
-            String channelID      = (String) detail.get('channelID');
-            Long messageTime = (Long) detail.get('messageTime');
+            String caseStatus     = (String) detail.get(caseField.CASE_STATUS_FIELD);
+            String parentId       = (String) detail.get(caseField.PARENT_ID_FIELD);
+            String referenceId    = (String) detail.get(caseField.REFERENCE_FIELD);
+            String caseId         = (String) detail.get(caseField.CASEID_FIELD);
+            String channelID      = (String) detail.get(caseField.CHANNEL_ID_FIELD);
+            Long messageTime = (Long) detail.get(caseField.MESSAGE_TIME);
             Datetime messageDateTime = null;
 
             List<FEC_Integration_Case__c> existParent = [
@@ -538,15 +537,17 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 messageDateTime = Datetime.newInstance(1970, 1, 1, 0, 0, 0).addSeconds(secondsInt);
             }
 
-            String investigationConclusion = (String) detail.get('investigationConclusion');   
+            String investigationConclusion = (String) detail.get(caseField.INVESTIGATION_CONCLUSION_FIELD);   
 
             // Parse XML fields
-            String xmlCreatorEmail      = FEC_IntegrationFraudCaseUtil.val(creatorInfoNode, 'CreatorEmail');
-            String xmlUserType      = FEC_IntegrationFraudCaseUtil.val(customerInfoNode, 'UserType');
-            String xmlRemark      = FEC_IntegrationFraudCaseUtil.val(requestInfoNode, 'Remarks');
+            String xmlCreatorEmail      = FEC_IntegrationFraudCaseUtil.val(creatorInfoNode, caseField.CREATOR_EMAIL_FIELD);
+            String xmlUserType      = FEC_IntegrationFraudCaseUtil.val(customerInfoNode, caseField.USER_TYPE_FIELD);
+          
+            String xmlRemark      = FEC_IntegrationFraudCaseUtil.val(requestInfoNode, caseField.REMARKS_FIELD);
 
-            String xmlCreated     = FEC_IntegrationFraudCaseUtil.val(caseNode, 'CreatedTime');
-            String xmlUpdated     = FEC_IntegrationFraudCaseUtil.val(caseNode, 'UpdatedTime');
+
+            String xmlCreated     = FEC_IntegrationFraudCaseUtil.val(caseNode, caseField.CREATEDTIME_FIELD);
+            String xmlUpdated     = FEC_IntegrationFraudCaseUtil.val(caseNode, caseField.UPDATEDTIME_FIELD);
 
             log('XML Fields:\nRemark='+xmlRemark+'\nCreated='+xmlCreated+'\nUpdated='+xmlUpdated);
             
@@ -612,7 +613,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
     private static String processTKCase(Map<String,Object> detail, String xmlData) {
         log('Enter processTKCase');
         String msg = null;
-        FEC_IntegrationFraudCaseUtil.IntegrationField caseField = new FEC_IntegrationFraudCaseUtil.IntegrationField();
+        FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
         try {
             Boolean isUicCS = false;
             Boolean isResultDetailCode = false;
@@ -663,13 +664,15 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             // =======================
             // 2. Load input data
             // =======================
-            String caseStatus  = (String) detail.get('caseStatus');
-            String parentId    = (String) detail.get('parentID');
-            String referenceId = (String) detail.get('referenceID');
-            String caseId      = (String) detail.get('caseID');
-            String channelID   = (String) detail.get('channelID');
-            Long messageTime   = (Long) detail.get('messageTime');
-            String investigationConclusion = (String) detail.get('investigationConclusion'); 
+          
+            String investigationConclusion = (String) detail.get(caseField.INVESTIGATION_CONCLUSION_FIELD); 
+            String caseStatus     = (String) detail.get(caseField.CASE_STATUS_FIELD);
+            String parentId       = (String) detail.get(caseField.PARENT_ID_FIELD);
+            String referenceId    = (String) detail.get(caseField.REFERENCE_FIELD);
+            String caseId         = (String) detail.get(caseField.CASEID_FIELD);
+            String channelID      = (String) detail.get(caseField.CHANNEL_ID_FIELD);
+            Long messageTime = (Long) detail.get(caseField.MESSAGE_TIME);
+
     
             Datetime messageDateTime;
             if (messageTime != null && messageTime > 0) {
@@ -718,11 +721,11 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             // =======================
             // 4. Parse XML values
             // =======================
-            String xmlCreatorEmail = FEC_IntegrationFraudCaseUtil.val(creatorInfoNode, 'CreatorEmail');
-            String xmlUserType     = FEC_IntegrationFraudCaseUtil.val(customerInfoNode, 'UserType');
-            String xmlRemark       = FEC_IntegrationFraudCaseUtil.val(requestInfoNode, 'Remarks');
-            String xmlCreated      = FEC_IntegrationFraudCaseUtil.val(caseNode, 'CreatedTime');
-            String xmlUpdated      = FEC_IntegrationFraudCaseUtil.val(caseNode, 'UpdatedTime');
+            String xmlRemark      = FEC_IntegrationFraudCaseUtil.val(requestInfoNode, caseField.REMARKS_FIELD);
+            String xmlCreated     = FEC_IntegrationFraudCaseUtil.val(caseNode, caseField.CREATEDTIME_FIELD);
+            String xmlUpdated     = FEC_IntegrationFraudCaseUtil.val(caseNode, caseField.UPDATEDTIME_FIELD);
+            String xmlCreatorEmail = FEC_IntegrationFraudCaseUtil.val(creatorInfoNode, caseField.CREATOR_EMAIL_FIELD);
+            String xmlUserType     = FEC_IntegrationFraudCaseUtil.val(customerInfoNode, caseField.USER_TYPE_FIELD);
     
             // =======================
             // 5. Upsert main record
@@ -870,7 +873,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
         FEC_Integration_Case__c parentRec,
         List<FEC_Integration_Case_Info__c> newInfos
     ) {
-        FEC_IntegrationFraudCaseUtil.IntegrationField caseField = new FEC_IntegrationFraudCaseUtil.IntegrationField();
+        FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
         try {
             log('==================== processSFTCase START ====================');
             log('Input caseId        = ' + caseId);

@@ -1,47 +1,6 @@
 public with sharing class FEC_IntegrationFraudCaseUtil {
     private static final Boolean DEBUG_LOG = true;
-    public static final String SYSTEM_CHANNEL = 'PEGACSM';
-    public static final String DEFAULT_CHANNEL_INTEGRATION_CODE = 'FIMA';
-    public static final Integer SUCCESSFULL = 200;
-    public static final Integer CLIENT_ERROR = 400;
-    public static final Integer NOT_FOUND = 404;
-    public static final Integer UNAUTHORIZED = 401;
-    public static final Integer FORBIDDEN = 403;
-    public static final Integer CONFLICT = 409;
-    public static final Integer SERVER_ERROR = 500;    
-    public static final Integer UNPROCESSABLE_ENTITY = 522;
-
-    public static final String MIME_PDF  = 'application/pdf';
-    public static final String MIME_DOC  = 'application/msword';
-    public static final String MIME_DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-    public static final String MIME_XLS  = 'application/vnd.ms-excel';
-    public static final String MIME_XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-    public static final String MIME_PNG  = 'image/png';
-    public static final String MIME_JPG  = 'image/jpeg';
-    public static final String MIME_DEFAULT = 'application/octet-stream';
-
-    public static final String FRAUD_SERVICE_SOAP_ENDPOINT = 'http://cf-webapp-uat02.deltavn.vn:3033/Soap/SCLService.svc';
     
-    public class IntegrationField {
-        public final String CASEFH = 'FH-';
-		public final String CASEBU = 'BU-';
-		public final String CASETK = 'TK-';
-        public final String UIC = 'UIC';
-		public final String UIC_VALUE = 'CS';
-		public final String RESULTDETAILCODE = 'RESULTDETAILCODE';
-		public final String RESULTDETAILCODE_VALUE = 'CUS';
-		public final String PHONE_FIELD = 'Phone';
-		public final String CONTRACT_NUMBER_FIELD = 'ContractNumbers';
-		public final String NATIONS_FIELD = 'NationalIDs';
-		public final String NATION_FIELD = 'NationalID';
-		public final String ACCOUNT_NUMBER_FIELD = 'AccountNumber';
-		public final String CASE_RESULT_INFO = 'CaseResultInfo';		
-		public final String ORIGINAL_REQUEST = 'OriginalRequest';
-		public final String REQUEST_INFO = 'RequestInfo';
-		public final String CREATOR_INFO = 'CreatorInfo';
-		public final String CUSTOMER_INFO = 'CustomerInfo';
-		public final String ADDITIONAL_INFO = 'AdditionalInfo';
-    }
 
     /**
      * Represents a dynamic validation rule for a UI field that is configured
@@ -156,14 +115,14 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
     // Key   : file extension (without dot)
     // Value : MIME type constant
     public static final Map<String, String> MIME_BY_EXT = new Map<String, String>{
-        'pdf'  => MIME_PDF,
-        'doc'  => MIME_DOC,
-        'docx' => MIME_DOCX,
-        'xls'  => MIME_XLS,
-        'xlsx' => MIME_XLSX,
-        'png'  => MIME_PNG,
-        'jpg'  => MIME_JPG,
-        'jpeg' => MIME_JPG
+        'pdf'  => FEC_FraudConstantCommon.MIME_PDF,
+        'doc'  => FEC_FraudConstantCommon.MIME_DOC,
+        'docx' => FEC_FraudConstantCommon.MIME_DOCX,
+        'xls'  => FEC_FraudConstantCommon.MIME_XLS,
+        'xlsx' => FEC_FraudConstantCommon.MIME_XLSX,
+        'png'  => FEC_FraudConstantCommon.MIME_PNG,
+        'jpg'  => FEC_FraudConstantCommon.MIME_JPG,
+        'jpeg' => FEC_FraudConstantCommon.MIME_JPG
     };
 
     /**
@@ -175,7 +134,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
     public static String getMimeType(String ext) {
         // If extension is null, empty, or whitespace → return default MIME type
         if (String.isBlank(ext)) {
-            return MIME_DEFAULT;
+            return FEC_FraudConstantCommon.MIME_DEFAULT;
         }
 
         // Convert extension to lowercase to make lookup case-insensitive
@@ -183,7 +142,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         // Otherwise, fall back to the default MIME type
         return MIME_BY_EXT.get(ext.toLowerCase()) != null
             ? MIME_BY_EXT.get(ext.toLowerCase())
-            : MIME_DEFAULT;
+            : FEC_FraudConstantCommon.MIME_DEFAULT;
     }
     
     
@@ -298,29 +257,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         if (String.isBlank(input)) return input;
         return input.length() > 32768 ? input.substring(0, 32768) : input;
     }
-    /**
-     * Performs request validation for the specified operation type.
-     *
-     * This method executes common validation logic and allows for
-     * operation-specific validation extensions.
-     *
-     * @param operation The integration operation being performed.
-     * @param request   The inbound request object to be validated.
-     * @throws ValidationException when validation rules are violated.
-     */
-    public static void validate(String operation, Object request) {
-        validateRequest(request);
-        // Additional per-operation validation (optional)
-        if (operation == 'CreateFraudCase') {
-            // TODO: add field-level validation if needed
-        }
-        if (operation == 'CancelFraudCase') {
-            // TODO
-        }
-        if (operation == 'GetFraudMasterData') {
-            // TODO
-        }
-    }
+   
 
     /**
      * Extracts business metadata and embedded XML from the incoming fraud payload.
@@ -366,20 +303,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
     }
     
 
-    // public static String normalizeXml(String xml) {
-    //     if (String.isBlank(xml)) return xml;
     
-    //     // Remove surrounding quotes if exist
-    //     if (xml.startsWith('"') && xml.endsWith('"')) {
-    //         xml = xml.substring(1, xml.length() - 1);
-    //     }
-    
-    //     // Unescape JSON-escaped characters
-    //     xml = xml.replace('\\"', '"');
-    //     xml = xml.replace('\\\\', '\\');
-    
-    //     return xml.trim();
-    // }
     
     /**
      * Cleans and normalizes an XML string that was extracted from a JSON payload.
@@ -437,8 +361,8 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         if (RestContext.response != null) {
             RestContext.response.statusCode = 200;
             RestContext.response.addHeader(
-                'Content-Type',
-                'application/xml; charset=UTF-8'
+                FEC_FraudConstantCommon.MIME_CONTENT_TYPE,
+                FEC_FraudConstantCommon.MIME_XML_UTF8
             );
         }
     
@@ -462,8 +386,8 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         if (RestContext.response != null) {
             RestContext.response.statusCode = statusCode != null ? statusCode : 400;
             RestContext.response.addHeader(
-                'Content-Type',
-                'application/xml; charset=UTF-8'
+                FEC_FraudConstantCommon.MIME_CONTENT_TYPE,
+                FEC_FraudConstantCommon.MIME_XML_UTF8
             );
         }
     
@@ -514,7 +438,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
     public static String errorXml(String msg) {
         // Content-Type header MUST be XML
         RestContext.response.statusCode = 400;
-        RestContext.response.addHeader('Content-Type', 'application/xml; charset=UTF-8');
+        RestContext.response.addHeader(FEC_FraudConstantCommon.MIME_CONTENT_TYPE, FEC_FraudConstantCommon.MIME_XML_UTF8);
     
         // Escape illegal XML characters
         String safe = escapeXml(msg);
@@ -658,115 +582,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         Dom.XmlNode c = find(node, name);
         return c != null ? c.getText() : null;
     }
-
-     /**
-     * Validates the data type of a field value based on configured rules.
-     */
-     public static void validateFieldType(String fieldName, Object value, String type) {
-        try {
-            switch on type {
-                when 'string' {
-                    // always ok
-                }
-                when 'number' {
-                    Decimal d = Decimal.valueOf(String.valueOf(value));
-                }
-                when 'boolean' {
-                    Boolean b = Boolean.valueOf(String.valueOf(value));
-                }
-                when 'datetime' {
-                    Datetime dt = Datetime.valueOf(String.valueOf(value));
-                }
-                when 'file' {
-                    validateFile(fieldName, value);
-                }
-                when else {
-                    // no-op
-                }
-            }
-        } catch (Exception e) {
-            throw new ValidationException(
-                'Invalid value for field ' + fieldName + 
-                ' — expected type: ' + type
-            );
-        }
-    }
-     
-    /**
-     * Validates uploaded file structure, size limits, and allowed file types.
-     */
-     public static void validateFile(String fieldName, Object value) {
-
-        if (!(value instanceof Map<String, Object>)) {
-            throw new ValidationException(
-                'Invalid file structure for field: ' + fieldName
-            );
-        }
-
-        Map<String, Object> file = (Map<String, Object>)value;
-
-        // Required keys in file map
-        List<String> requiredKeys = new List<String>{
-            'filename', 'content', 'size', 'type'
-        };
-
-        for (String key : requiredKeys) {
-            if (!file.containsKey(key) || String.valueOf(file.get(key)).trim() == '') {
-                throw new ValidationException(
-                    'File field "' + fieldName + '" missing required attribute: ' + key
-                );
-            }
-        }
-
-        // Validate size limit (example 5MB)
-        Integer size = Integer.valueOf(String.valueOf(file.get('size')));
-        Integer maxSize = 5 * 1024 * 1024; // 5MB
-        if (size > maxSize) {
-            throw new ValidationException(
-                'File "' + file.get('filename') + '" exceeds maximum size of 5MB.'
-            );
-        }
-
-        // Validate allowed extensions
-        String filename = String.valueOf(file.get('filename')).toLowerCase();
-        List<String> allowedExt = new List<String>{
-            '.jpg','.jpeg','.png','.pdf','.doc','.docx'
-        };
-        Boolean valid = false;
-        for (String ext : allowedExt) {
-            if (filename.endsWith(ext)) { valid = true; break; }
-        }
-        if (!valid) {
-            throw new ValidationException(
-                'Invalid file type for "' + fieldName +
-                '". Allowed: ' + String.join(allowedExt, ', ')
-            );
-        }
-    }
-
-    /**
-     * Validates list-type fields against allowed enumerated values.
-     */
-    public static void validateListValue(String fieldName, Object value) {
-
-        List<String> allowed = new List<String>();
-
-        for (FEC_Master_Data_Integration__c rec : [
-            SELECT FEC_Source_Enum_Value__c
-            FROM FEC_Master_Data_Integration__c
-            WHERE FEC_Source_Parent_Id__c = :fieldName
-              AND FEC_Source_Enum_Value__c != null
-        ]) {
-            allowed.add(rec.FEC_Source_Enum_Value__c);
-        }
-
-        if (!allowed.isEmpty() && !allowed.contains(String.valueOf(value))) {
-            throw new ValidationException(
-                'Invalid value for ' + fieldName + 
-                '. Allowed values: ' + String.join(allowed, ', ')
-            );
-        }
-    }
+   
 
     /**
      * Removes embedded XML content from raw request JSON for safe deserialization.
@@ -823,38 +639,39 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
      * Maps external case status values to internal Salesforce case statuses.
      */   
     public static final Map<String, String> STATUS_MAP = new Map<String, String>{
-    // SEC Investigating
-    'Allocating'        => 'SEC Investigating',
-    'Allocating_PIC'    => 'SEC Investigating',
-    'Allocating_TL'     => 'SEC Investigating',
-    'Investigating'     => 'SEC Investigating',
-    'Pending'           => 'SEC Investigating',
-    'Reporting'         => 'SEC Investigating',
-    'Reporting_Head'    => 'SEC Investigating',
-    'Reporting_TL'      => 'SEC Investigating',
-    'SE_Reviewing'      => 'SEC Investigating',
-    'Update_Report'     => 'SEC Investigating',
-
-    // Fraud Investigating
-    'Evaluating'        => 'Fraud Investigating',
-    'Resulting'         => 'Fraud Investigating',
-    'Reviewing_Report' => 'Fraud Investigating',
-    'Updating'         => 'Fraud Investigating',
-
-    // Mixed / Special
-    'Initial'           => 'Fraud/SEC Investigating',
-    'New'               => 'Fraud/SEC Investigating',
-    'Re-initial'        => 'Fraud review',
-
-    // Final states
-    'End'               => 'Resolved-Completed',
-    'Policing'          => 'Resolved-Completed',
-    'Canceled'          => 'Resolved-Cancel',
-    'Pre_Cancel'        => 'Resolved-Cancel',
-
-    // CS
-    'CS_Updating'       => 'Provide Information'
-};
+        // SEC Investigating
+        FEC_FraudConstantCommon.IntegrationMappingStatus.ALLOCATING       => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.ALLOCATING_PIC   => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.ALLOCATING_TL    => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.INVESTIGATING    => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.PENDING          => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.REPORTING        => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.REPORTING_HEAD   => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.REPORTING_TL     => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.SE_REVIEWING     => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.UPDATE_REPORT    => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
+    
+        // Fraud Investigating
+        FEC_FraudConstantCommon.IntegrationMappingStatus.EVALUATING        => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.RESULTING         => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.REVIEWING_REPORT  => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.UPDATING          => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_INVESTIGATING,
+    
+        // Mixed / Special
+        FEC_FraudConstantCommon.IntegrationMappingStatus.INITIAL     => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.NEW_STATUS         => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.RE_INITIAL  => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_REVIEW,
+    
+        // Final states
+        FEC_FraudConstantCommon.IntegrationMappingStatus.END_STATUS        => FEC_FraudConstantCommon.IntegrationMappingStatus.RESOLVED_COMPLETED,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.POLICING   => FEC_FraudConstantCommon.IntegrationMappingStatus.RESOLVED_COMPLETED,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.CANCELED   => FEC_FraudConstantCommon.IntegrationMappingStatus.RESOLVED_CANCEL,
+        FEC_FraudConstantCommon.IntegrationMappingStatus.PRE_CANCEL => FEC_FraudConstantCommon.IntegrationMappingStatus.RESOLVED_CANCEL,
+    
+        // CS
+        FEC_FraudConstantCommon.IntegrationMappingStatus.CS_UPDATING => FEC_FraudConstantCommon.IntegrationMappingStatus.PROVIDE_INFORMATION
+    };
+    
 
 
     /**
@@ -877,7 +694,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
      * @return      Formatted date-time string, or null if input is null
      */
     public static String formatDateTime(DateTime dt) {
-        return dt != null ? dt.format('dd/MM/yyyy HH:mm:ss') : null;
+        return dt != null ? dt.format(FEC_FraudConstantCommon.DATETIME_FORMAT_DDMMYYYHHMMSS) : null;
     }
 
 
