@@ -1,4 +1,14 @@
 public with sharing class FEC_CaseBusinessService {
+  public static final String CASE_ID = 'Case Id';
+  public static final String CUSTOMER_HISTORY = 'Customer History';
+  public static final String CASE_ID = 'Case Id';
+  public static final String CASE_ID = 'Case Id';
+  public static final String CASE_ID = 'Case Id';
+  public static final String CASE_ID = 'Case Id';
+  public static final String CASE_ID = 'Case Id';
+  public static final String CASE_ID = 'Case Id';
+  public static final String CASE_ID = 'Case Id';
+
   public static final String ROUTE_TO = 'Route to';
   public static final String REVERT = 'Revert';
   public static final String CANCEL = 'Cancel';
@@ -698,7 +708,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty()) {
-        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Case Id'}));
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CASE_ID }));
       }
 
       Case updatedCase = caselst.get(0);
@@ -789,10 +799,10 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CASE_ID }));
 
       Case updatedCase = caselst.get(0);
-      updatedCase.Status = 'Resolved-Cancelled';
+      updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
 
       update updatedCase;
     } catch (Exception e) {
@@ -809,10 +819,10 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CASE_ID }));
 
       Case updatedCase = caselst.get(0);
-      updatedCase.Status = 'Resolved-Rejected';
+      updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED;
 
       update updatedCase;
     } catch (Exception e) {
@@ -829,10 +839,10 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CASE_ID }));
 
       Case updatedCase = caselst.get(0);
-      updatedCase.Status = 'Resolved-Completed';
+      updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
 
       update updatedCase;
     } catch (Exception e) {
@@ -856,7 +866,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty()) {
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CASE_ID }));
       }
 
       Case updatedCase = caselst.get(0);
@@ -870,12 +880,12 @@ public with sharing class FEC_CaseBusinessService {
           updatedCase.OwnerId = ownerUser.ManagerId;
         } else {
           throw new CaseBusinessServiceException(
-            'Manager not found for the current User owner.'
+            Label.FEC_CaseBusinessService_Msg_001
           );
         }
       } else {
         throw new CaseBusinessServiceException(
-          'Current owner is a Queue; escalation to a Manager is not possible.'
+          Label.FEC_CaseBusinessService_Msg_002
         );
       }
 
@@ -883,7 +893,7 @@ public with sharing class FEC_CaseBusinessService {
     } catch (Exception e) {
       // It's better practice to include the original exception as a cause if your custom exception supports it
       throw new CaseBusinessServiceException(
-        'Escalation failed: ' + e.getMessage()
+        String.format(Label.FEC_CaseBusinessService_Msg_003, new List<String>{ e.getMessage() })
       );
     }
   }
@@ -901,7 +911,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty()) {
-        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Case Id'}));
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CASE_ID }));
       }
 
       Case updatedCase = caselst.get(0);
@@ -1693,13 +1703,13 @@ public with sharing class FEC_CaseBusinessService {
           ];
           System.debug('historyList: ' + historyList);
           if (historyList.isEmpty()) {
-               throw new AuraHandledException('Không tìm thấy lịch sử Routing Action để thực hiện Recall.');
+               throw new AuraHandledException(Label.FEC_CaseBusinessService_Msg_004);
           }
           
           FEC_Routing_Action_History__c lastAction = historyList[0];
           System.debug('lastAction: ' + lastAction);
           if (lastAction.FEC_Updated_User_Queue_ID__c != currentUserId) {
-            throw new AuraHandledException('Bạn không phải người thực hiện Routing Action gần nhất.');          
+            throw new AuraHandledException(Label.FEC_CaseBusinessService_Msg_005);          
           }
       try {
           if (c.Owner.Type == 'Queue' && c.OwnerId == lastAction.FEC_Updated_User_Queue_ID__c) {
@@ -1751,7 +1761,7 @@ public with sharing class FEC_CaseBusinessService {
     List<String> errorlst = new List<String>();
 
     if (cHistorylst.isEmpty()) {
-      errorlst.add('Customer History is invalid');
+      errorlst.add(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CUSTOMER_HISTORY }));
     }
 
     FEC_Customer_History__c selectedHistory = cHistorylst.get(0);
@@ -1771,7 +1781,7 @@ public with sharing class FEC_CaseBusinessService {
     if (errorlst.isEmpty())
       return new Error();
 
-    return new Error('Không đủ điều kiện cập nhật số điện thoại.', errorlst);
+    return new Error(Label.FEC_CaseBusinessService_Msg_006, errorlst);
   }
 
   private static void phoneUpdate(Case selectedCase) {

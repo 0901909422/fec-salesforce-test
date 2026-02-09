@@ -50,4 +50,14 @@ public with sharing class FEC_ConstantCommon {
     public static final String ADDRESS_TYPE_OFFICE = 'OFFICE';
 
     public static final String TEXT_YES = 'Yes';
+
+    public static final String PRODUCT_TYPE_INSURANCE = 'Insurance';
+    public static final String PRODUCT_TYPE_LOAN = 'Loan';
+    public static final String PRODUCT_TYPE_CARD = 'Card';
+
+    public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
+    public static final String CASE_STATUS_RESOLVED_REJECTED = 'Resolved-Rejected';
+    public static final String CASE_STATUS_RESOLVED_COMPLETED = 'Resolved-Completed';
+    public static final String CASE_STATUS_AUTO_CANCELLED = 'Resolved-AutoCancelled';
+    public static final String CASE_STATUS_AUTO_CLOSED = 'Auto-Closed';
 }
