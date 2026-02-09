@@ -1,20 +1,48 @@
 import { LightningElement, api, wire } from "lwc";
+import { IsConsoleNavigation, openTab } from "lightning/platformWorkspaceApi";
+import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
-import getInteractionHighlightData
-  from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionHighlightData";
-import resetViewMode
-  from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
+import getInteractionHighlightData from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionHighlightData";
+import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
+import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
+import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 
-import VIEW_MODE
-  from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
+import FEC_INTERACTION_ID_LABEL from "@salesforce/label/c.FEC_Interaction_ID";
+import FEC_INTERACTION_STATUS_LABEL from "@salesforce/label/c.FEC_Interaction_Status_Label";
+import FEC_INTERACTION_DURATION_LABEL from "@salesforce/label/c.FEC_Interaction_Duration_Label";
+import FEC_LAST_UPDATED_BY_LABEL from "@salesforce/label/c.FEC_Last_Updated_By_Label";
+import FEC_LAST_UPDATED_ON_LABEL from "@salesforce/label/c.FEC_Last_Updated_On_Label";
+import FEC_EXECUTE_LABEL from "@salesforce/label/c.FEC_Execute_Label";
+import FEC_CREATE_CASE_BTN_LABEL from "@salesforce/label/c.FEC_Create_Case_Btn_Label";
+import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
 
-export default class FecInteractionCreationHighlight extends LightningElement {
+export default class FecInteractionCreationHighlight extends NavigationMixin(
+  LightningElement,
+) {
+  labels = {
+    interactionId: FEC_INTERACTION_ID_LABEL,
+    interactionStatus: FEC_INTERACTION_STATUS_LABEL,
+    interactionDuration: FEC_INTERACTION_DURATION_LABEL,
+    lastUpdatedBy: FEC_LAST_UPDATED_BY_LABEL,
+    lastUpdatedOn: FEC_LAST_UPDATED_ON_LABEL,
+    execute: FEC_EXECUTE_LABEL,
+    createCase: FEC_CREATE_CASE_BTN_LABEL,
+    wrapUp: FEC_WRAP_UP_BTN_LABEL,
+  };
+
   @api recordId;
 
   record;
   viewMode; // handling | review
   _resetDone = false;
+  isOpen = false;
+
+  // ===============================
+  // CONSOLE CHECK
+  // ===============================
+  @wire(IsConsoleNavigation)
+  isConsoleNavigation;
 
   // ===============================
   // LOAD VIEW MODE (LDS)
@@ -26,6 +54,10 @@ export default class FecInteractionCreationHighlight extends LightningElement {
   wiredViewMode({ data, error }) {
     if (data) {
       this.viewMode = getFieldValue(data, VIEW_MODE);
+      let hasAccountOrContract = getFieldValue(data, HAS_ACCOUNT_OR_CONTRACT);
+      // if (hasAccountOrContract == false) {
+
+      // }
       this.tryResetViewMode();
     } else if (error) {
       console.error("ViewMode load error", error);
@@ -38,6 +70,9 @@ export default class FecInteractionCreationHighlight extends LightningElement {
   tryResetViewMode() {
     if (this.viewMode === "handling" && !this._resetDone) {
       this._resetDone = true;
+      console.log(
+        "Reset viewMode to review in FecInteractionCreationHighlight",
+      );
       resetViewMode({
         recordId: this.recordId,
         viewMode: "review",
@@ -115,25 +150,47 @@ export default class FecInteractionCreationHighlight extends LightningElement {
 
   // }
   async handleExecute() {
-      try {
-          await resetViewMode({ 
-              recordId: this.recordId, 
-              viewMode: "handling" 
-          });
-  
-          await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
-          this.viewMode = "handling";
-          this._resetDone = false;
-  
-          console.log("Update viewMode to handling successfully");
-      } catch (error) {
-          console.error("Error in handleExecute:", error);
-      }
-    }
+    try {
+      await resetViewMode({
+        recordId: this.recordId,
+        viewMode: "handling",
+      });
 
-  handleCreateCase() {
-    this.template
-      .querySelector("c-fec_-interaction-s-l-a")
-      ?.handleCreateCase?.();
+      await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+      this.viewMode = "handling";
+      this._resetDone = false;
+
+      console.log("Update viewMode to handling successfully");
+    } catch (error) {
+      console.error("Error in handleExecute:", error);
+    }
+  }
+
+  async handleCreateCase() {
+    // this.template
+    //   .querySelector("c-fec_-interaction-s-l-a")
+    //   ?.handleCreateCase?.();
+    console.log("handleCreateCase from creation highlight");
+    this.isOpen = true;
+    // if (this.isConsoleNavigation) {
+    //   await openTab({
+    //     url: `/lightning/cmp/c__fec_InteractionCreateCase?c__recordId=${this.recordId}`,
+    //     focus: true
+    //   });
+    // } else {
+    //   this[NavigationMixin.Navigate]({
+    //     type: "standard__component",
+    //     attributes: {
+    //       componentName: "c__fec_InteractionCreateCase"
+    //     },
+    //     state: {
+    //       c__recordId: this.recordId
+    //     }
+    //   });
+    // }
+  }
+
+  close() {
+    this.isOpen = false;
   }
 }

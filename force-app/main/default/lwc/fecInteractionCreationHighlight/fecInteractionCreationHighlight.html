@@ -21,57 +21,28 @@
           </div>
         </div>
         <div class="slds-border_bottom"></div>
-
-        <!-- <div class="slds-grid slds-gutters slds-p-around_xxx-small">
-
-          <div class="slds-col slds-size_8-of-12 slds-p-bottom_none">
-            <ul class="slds-grid slds-wrap slds-m-top_small">
-              <li class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
-                <span class="slds-text-title"><b>Interaction ID</b></span><br />
-                <span class="slds-text-body_regular">
-                  <lightning-formatted-rich-text value={interactionId}></lightning-formatted-rich-text>
-                </span>
-              </li>
-
-              <li class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
-                <span class="slds-text-title"><b>Interaction Status</b></span><br />
-                <span class="slds-text-body_regular">{status}</span>
-              </li>
-
-              <li class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
-                <span class="slds-text-title"><b>Last Updated On</b></span><br />
-                <span class="slds-text-body_regular">{lastUpdated}</span>
-              </li>
-
-              <li class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
-                <span class="slds-text-title"><b>Last Updated By</b></span><br />
-                <span class="slds-text-body_regular">{updatedBy}</span>
-              </li>
-            </ul>
-          </div>
-        </div> -->
         <div class="slds-grid slds-gutters slds-p-around_xxx-small">
           <ul class="slds-grid slds-wrap slds-size_1-of-1 slds-m-top_small">
 
             <li class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
-              <span class="slds-text-title"><b>Interaction ID</b></span><br />
+              <span class="slds-text-title"><b>{labels.interactionId}</b></span><br />
               <span class="slds-text-body_regular">
                 <lightning-formatted-rich-text value={interactionId}></lightning-formatted-rich-text>
               </span>
             </li>
 
             <li class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
-              <span class="slds-text-title"><b>Interaction Status</b></span><br />
+              <span class="slds-text-title"><b>{labels.interactionStatus}</b></span><br />
               <span class="slds-text-body_regular">{status}</span>
             </li>
 
             <li class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
-              <span class="slds-text-title"><b>Last Updated On</b></span><br />
+              <span class="slds-text-title"><b>{labels.lastUpdatedOn}</b></span><br />
               <span class="slds-text-body_regular">{lastUpdated}</span>
             </li>
 
             <li class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
-              <span class="slds-text-title"><b>Last Updated By</b></span><br />
+              <span class="slds-text-title"><b>{labels.lastUpdatedBy}</b></span><br />
               <span class="slds-text-body_regular">{updatedBy}</span>
             </li>
 
@@ -89,17 +60,17 @@
         <!-- Header -->
         <div class="slds-page-header slds-page-header_object-home">
           <div class="slds-grid slds-grid_align-spread">
-            <h1 class="slds-page-header__title">Interaction Duration</h1>
+            <h1 class="slds-page-header__title">{labels.interactionDuration}</h1>
             <div>
               <template if:true={isHandling}>
-                <button class="slds-button slds-button_neutral" onclick={handleWrapUpClick}>Wrap-up</button>
+                <button class="slds-button slds-button_neutral" onclick={handleWrapUpClick}>{labels.wrapUp}</button>
               </template>
               <!-- Chỉ có nút Execute khi ở trạng thái review -->
               <template if:false={isHandling}>
-                <button class="slds-button slds-button_neutral" onclick={handleExecute}>Execute</button>
+                <button class="slds-button slds-button_neutral" onclick={handleExecute}>{labels.execute}</button>
               </template>
               <template if:true={isHandling}>
-                <button class="slds-button slds-button_neutral" onclick={handleCreateCase}>Create Case</button>
+                <button class="slds-button slds-button_neutral" onclick={handleCreateCase}>{labels.createCase}</button>
               </template>
 
             </div>
@@ -116,4 +87,34 @@
       </div>
     </div>
   </div>
+
+  <template if:true={isOpen}>
+    <!-- BACKDROP -->
+    <div class="slds-backdrop slds-backdrop_open"></div>
+
+    <!-- MODAL -->
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open" aria-modal="true">
+      <div class="slds-modal__container">
+        <!-- HEADER -->
+        <header class="slds-modal__header">
+          <button class="slds-button slds-button_icon slds-modal__close" title="Close" onclick={close}>
+            <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+          </button>
+          <h2 class="slds-text-heading_medium">{labels.createCase}</h2>
+        </header>
+
+        <!-- BODY -->
+        <div class="slds-modal__content slds-p-around_medium">
+          <c-fec_-create-case-non-existing-customer record-id={recordId}></c-fec_-create-case-non-existing-customer>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="slds-modal__footer">
+
+        </footer>
+      </div>
+    </section>
+  </template>
+
+
 </template>
