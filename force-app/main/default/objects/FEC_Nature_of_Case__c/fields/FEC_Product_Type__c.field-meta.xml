@@ -3,11 +3,22 @@
     <fullName>FEC_Product_Type__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Thông tin loại sản phẩm</description>
+    <externalId>false</externalId>
     <label>Product Type</label>
+    <lookupFilter>
+        <active>true</active>
+        <filterItems>
+            <field>FEC_Product_Type__c.FEC_Active__c</field>
+            <operation>equals</operation>
+            <value>True</value>
+        </filterItems>
+        <isOptional>false</isOptional>
+    </lookupFilter>
     <referenceTo>FEC_Product_Type__c</referenceTo>
+    <relationshipLabel>Nature of Cases</relationshipLabel>
     <relationshipName>Nature_of_Case</relationshipName>
     <required>false</required>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>
