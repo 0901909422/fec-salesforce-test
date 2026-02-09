@@ -28,3 +28,9 @@ export const formatDateDDMMYYYY = (isoString) => {
 
     return `${day}-${month}-${year}`;
 }
+
+export const formatString = (str, ...args) => {
+    return str.replace(/{(\d+)}/g, (match, number) => {
+        return typeof args[number] !== 'undefined' ? args[number] : match;
+    });
+}

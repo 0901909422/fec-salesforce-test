@@ -821,6 +821,13 @@
         <value>File Name</value>
     </labels>
     <labels>
+        <fullName>FEC_Lbl_Error_Deleting_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when deleting files on the system:</shortDescription>
+        <value>Error when deleting files on the system:</value>
+    </labels>
+    <labels>
         <fullName>FEC_Lbl_No_File_Chosen</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -1008,5 +1015,152 @@
         <protected>false</protected>
         <shortDescription>Primary Phone Number</shortDescription>
         <value>Primary Phone Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Message_Deleting_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when deleting files on the system</shortDescription>
+        <value>Error when deleting files on the system</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Empty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty</shortDescription>
+        <value>Empty</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Search_Text</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search Text</shortDescription>
+        <value>Search Text</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Load_Excel_Lib</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unable to load Excel processing library</shortDescription>
+        <value>Unable to load Excel processing library</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Has_No_Data</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>File has no data</shortDescription>
+        <value>File has no data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Expected_Key</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Column A: Expected {0}, Actual {1}</shortDescription>
+        <value>Column A: Expected {0}, Actual {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Expected_Value</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Column B: Expected {0}, Actual {1}</shortDescription>
+        <value>Column B: Expected {0}, Actual {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Duplicated_KeyId_FieldId</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>A configuration with this Key Identifier and Field ID pair already exists</shortDescription>
+        <value>A configuration with this Key Identifier and Field ID pair already exists</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Required_Fields</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>The required fields is missing</shortDescription>
+        <value>The required fields is missing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Upload_At_Least_Excel_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please upload at least one Excel file</shortDescription>
+        <value>Please upload at least one Excel file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Deleted_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Deleted file</shortDescription>
+        <value>Deleted file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Saved_Data</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Saved data!</shortDescription>
+        <value>Saved data!</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_File_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>File is invalid or empty</shortDescription>
+        <value>File is invalid or empty</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Create_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unable to create template file</shortDescription>
+        <value>Unable to create template file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Confirmation_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirm deletion</shortDescription>
+        <value>Confirm deletion</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Confirmation_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Are you sure you want to delete?</shortDescription>
+        <value>Are you sure you want to delete?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Cannot_Delete_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cannot delete file</shortDescription>
+        <value>Cannot delete file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Cannot_Refresh_Data</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unable to load data</shortDescription>
+        <value>Unable to load data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Success_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Fail_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fail</shortDescription>
+        <value>Fail</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Warning_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Warning</shortDescription>
+        <value>Warning</value>
     </labels>
 </CustomLabels>

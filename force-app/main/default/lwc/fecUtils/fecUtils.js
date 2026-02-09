@@ -13,3 +13,4 @@ export const FILE_ACCEPT = Constants.FILE_ACCEPT;
 // Export Helpers
 export const sortData = Helpers.sortData;
 export const formatDateDDMMYYYY = Helpers.formatDateDDMMYYYY;
+export const formatString = Helpers.formatString;

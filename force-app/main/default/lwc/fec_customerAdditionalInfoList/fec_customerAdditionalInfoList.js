@@ -11,6 +11,7 @@ import addNew from '@salesforce/label/c.FEC_Btn_Add_New';
 import reload from '@salesforce/label/c.FEC_Btn_Reload';
 import titlePendingProcess from '@salesforce/label/c.FEC_Title_Pending_Process';
 import titleExistingFields from '@salesforce/label/c.FEC_Title_Existing_Fields';
+import cannotRefreshDataMsg from '@salesforce/label/c.FEC_Cannot_Refresh_Data';
 import LBL_ADD_NEW_MODAL_TITLE from '@salesforce/label/c.FEC_Lbl_Add_New_Modal_Title';
 import LBL_EDIT_TITLE from '@salesforce/label/c.FEC_Lbl_Edit_Title';
 import LBL_DATA_LINKAGE from '@salesforce/label/c.FEC_Lbl_Data_Linkage';
@@ -128,7 +129,7 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
         if (result.data) {
             this.uploadedData = result.data;
         } else if (result.error) {
-            this.showToast('Error', 'Không thể tải dữ liệu', 'error');
+            this.showToast('Error', cannotRefreshDataMsg, 'error');
         }
     }
 

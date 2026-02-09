@@ -1,116 +1,125 @@
-/**
- * Batch xử lý tổng hợp: Quét Config New, Parse Excel và Update trạng thái
- * @created      : 2025/12/31 trung.bui.4
- */
 global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>, Database.Stateful, Schedulable {
     
-    private Integer totalRecordsProcessed = 0;
+    private Integer totalConfigsPushed = 0;
 
     global void execute(SchedulableContext sc) {
-        Database.executeBatch(new FEC_ProcessCustomerDataBatch(), 1); 
+        Database.executeBatch(new FEC_ProcessCustomerDataBatch()); 
     }
 
     global Database.QueryLocator start(Database.BatchableContext bc) {
         return Database.getQueryLocator([
-            SELECT Id, FEC_KeyIdentifier__c, FEC_FieldID__c 
+            SELECT Id, FEC_KeyIdentifier__c, FEC_FieldID__c, FEC_Status__c 
             FROM FEC_CustomerAdditionalInfoConfig__c 
             WHERE FEC_Status__c = :FEC_ConstantCommon.UPLOADED_STATUS
         ]);
     }
 
     global void execute(Database.BatchableContext bc, List<FEC_CustomerAdditionalInfoConfig__c> scope) {
-        List<ContentVersion> lstCVToUpdate = new List<ContentVersion>();
-        List<FEC_CustomerAdditionalInfoConfig__c> lstConfigToUpdate = new List<FEC_CustomerAdditionalInfoConfig__c>();
-        Set<Id> contentDocIdsToDelete = new Set<Id>();
+        Map<Id, FEC_CustomerAdditionalInfoConfig__c> mapConfigs = new Map<Id, FEC_CustomerAdditionalInfoConfig__c>(scope);
+        Set<Id> configIds = mapConfigs.keySet();
+
+        List<ContentDocumentLink> allLinks = [
+            SELECT ContentDocumentId, LinkedEntityId,
+                   ContentDocument.LatestPublishedVersionId, 
+                   ContentDocument.LatestPublishedVersion.VersionData,
+                   ContentDocument.LatestPublishedVersion.Title,
+                   ContentDocument.LatestPublishedVersion.Description,
+                   ContentDocument.LatestPublishedVersion.FEC_Comments__c
+            FROM ContentDocumentLink 
+            WHERE LinkedEntityId IN :configIds
+            AND ContentDocument.LatestPublishedVersion.FEC_Comments__c = :FEC_ConstantCommon.UPLOADED_STATUS
+        ];
+
+        Map<Id, List<ContentVersion>> mapJsonFiles = new Map<Id, List<ContentVersion>>();
+        Map<Id, List<Id>> mapJsonDocIds = new Map<Id, List<Id>>();
+        Map<Id, List<Id>> mapConfigToExcelIds = new Map<Id, List<Id>>();
+
+        for (ContentDocumentLink link : allLinks) {
+            ContentVersion cv = link.ContentDocument.LatestPublishedVersion;
+            Id cfgId = link.LinkedEntityId;
+            
+            if (cv.Description == FEC_ConstantCommon.JSON_DATA_FOR_PROCESSING) {
+                if (!mapJsonFiles.containsKey(cfgId)) mapJsonFiles.put(cfgId, new List<ContentVersion>());
+                if (!mapJsonDocIds.containsKey(cfgId)) mapJsonDocIds.put(cfgId, new List<Id>());
+                
+                mapJsonFiles.get(cfgId).add(cv);
+                mapJsonDocIds.get(cfgId).add(link.ContentDocumentId);
+            } else {
+                if (!mapConfigToExcelIds.containsKey(cfgId)) {
+                    mapConfigToExcelIds.put(cfgId, new List<Id>());
+                }
+                mapConfigToExcelIds.get(cfgId).add(cv.Id);
+            }
+        }
+
+        List<FEC_CustomerAdditionalInfo__c> masterDataList = new List<FEC_CustomerAdditionalInfo__c>();
+        Set<Id> validConfigIds = new Set<Id>();
+        Set<Id> validJsonDocIds = new Set<Id>();
+        List<Id> allExcelIdsToQueue = new List<Id>();
+        List<FEC_CustomerAdditionalInfoConfig__c> configsToUpdateStatus = new List<FEC_CustomerAdditionalInfoConfig__c>();
 
         for (FEC_CustomerAdditionalInfoConfig__c config : scope) {
             try {
-                List<ContentDocumentLink> links = [
-                    SELECT ContentDocumentId, 
-                           ContentDocument.LatestPublishedVersionId, 
-                           ContentDocument.LatestPublishedVersion.VersionData,
-                           ContentDocument.LatestPublishedVersion.Title,
-                           ContentDocument.LatestPublishedVersion.Description
-                    FROM ContentDocumentLink 
-                    WHERE LinkedEntityId = :config.Id 
-                    AND ContentDocument.LatestPublishedVersion.FEC_Comments__c = :FEC_ConstantCommon.UPLOADED_STATUS
-                ];
+                List<ContentVersion> jsonFileList = mapJsonFiles.get(config.Id);
+                
+                if (jsonFileList != null && !jsonFileList.isEmpty()) {
+                    for (ContentVersion jsonCV : jsonFileList) {
+                        String jsonString = jsonCV.VersionData.toString(); 
+                        List<Object> rows = (List<Object>) JSON.deserializeUntyped(jsonString);
 
-                ContentVersion jsonFileToProcess = null;
-                Id jsonDocId = null;
+                        for (Integer i = 1; i < rows.size(); i++) {
+                            List<Object> cols = (List<Object>) rows[i];
+                            if (cols.size() < 3) continue; 
 
-                for (ContentDocumentLink link : links) {
-                    ContentVersion cv = link.ContentDocument.LatestPublishedVersion;
-                    
-                    if (cv.Description == FEC_ConstantCommon.JSON_DATA_FOR_PROCESSING) {
-                        jsonFileToProcess = cv;
-                        jsonDocId = link.ContentDocumentId;
-                    } else {
-                        lstCVToUpdate.add(new ContentVersion(
-                            Id = cv.Id,
-                            FEC_Comments__c = FEC_ConstantCommon.PROCESSED_STATUS
-                        ));
-                    }
-                }
-
-                if (jsonDocId != null && jsonFileToProcess != null) {
-                    String jsonString = jsonFileToProcess.VersionData.toString(); 
-                    List<Object> rows = (List<Object>) JSON.deserializeUntyped(jsonString);
-                    List<FEC_CustomerAdditionalInfo__c> batchToInsert = new List<FEC_CustomerAdditionalInfo__c>();
-
-                    for (Integer i = 1; i < rows.size(); i++) {
-                        List<Object> cols = (List<Object>) rows[i];
-                        if (cols.size() < 3) continue; 
-
-                        FEC_CustomerAdditionalInfo__c detail = new FEC_CustomerAdditionalInfo__c(
-                            FEC_Config__c = config.Id,
-                            FEC_KeyIdentifier__c = config.FEC_KeyIdentifier__c,
-                            FEC_FieldID__c = config.FEC_FieldID__c,
-                            FEC_KeyIDValue__c = String.valueOf(cols[0]),
-                            FEC_FieldValue__c = String.valueOf(cols[1]),
-                            FEC_IsActive__c = cols[2] == FEC_ConstantCommon.YES_VALUE,
-                            FEC_LinkedFilename__c = jsonFileToProcess.Title
-                        );
-                        
-                        batchToInsert.add(detail);
-
-                        // Chunking nếu file chứa hơn 2000 rows
-                        if (batchToInsert.size() >= 2000) {
-                            insert batchToInsert;
-                            totalRecordsProcessed += batchToInsert.size();
-                            batchToInsert.clear();
+                            masterDataList.add(new FEC_CustomerAdditionalInfo__c(
+                                FEC_Config__c = config.Id,
+                                FEC_KeyIdentifier__c = config.FEC_KeyIdentifier__c,
+                                FEC_FieldID__c = config.FEC_FieldID__c,
+                                FEC_KeyIDValue__c = String.valueOf(cols[0]),
+                                FEC_FieldValue__c = String.valueOf(cols[1]),
+                                FEC_IsActive__c = (cols[2] == FEC_ConstantCommon.YES_VALUE),
+                                FEC_LinkedFilename__c = jsonCV.Title
+                            ));
                         }
                     }
 
-                    if (!batchToInsert.isEmpty()) {
-                        insert batchToInsert;
-                        totalRecordsProcessed += batchToInsert.size();
+                    validConfigIds.add(config.Id);
+                    
+                    if (mapJsonDocIds.containsKey(config.Id)) {
+                        validJsonDocIds.addAll(mapJsonDocIds.get(config.Id));
                     }
-                    config.FEC_Status__c = FEC_ConstantCommon.PROCESSED_STATUS;
-                    contentDocIdsToDelete.add(jsonDocId);
-                } else {
-                    System.debug('Cảnh báo: Không tìm thấy file JSON data cho Config ' + config.Id);
-                }
 
+                    if (mapConfigToExcelIds.containsKey(config.Id)) {
+                        allExcelIdsToQueue.addAll(mapConfigToExcelIds.get(config.Id));
+                    }
+                    
+                    config.FEC_Status__c = 'Processing';
+                    configsToUpdateStatus.add(config);
+                    
+                } else {
+                    System.debug('Config ' + config.Id + ' không có file JSON hợp lệ.');
+                }
             } catch (Exception e) {
-                System.debug('Lỗi Batch Config ' + config.Id + ': ' + e.getMessage() + '\n' + e.getStackTraceString());
+                config.FEC_Status__c = 'Failed';
+                configsToUpdateStatus.add(config); 
+                System.debug('Lỗi parse Config ' + config.Id + ': ' + e.getMessage());
             }
-            
-            lstConfigToUpdate.add(config);
         }
 
-        if (!lstCVToUpdate.isEmpty()) update lstCVToUpdate;
-        if (!lstConfigToUpdate.isEmpty()) update lstConfigToUpdate;
-        if (!contentDocIdsToDelete.isEmpty()) {
-            List<ContentDocument> docsToDelete = new List<ContentDocument>();
-            for(Id docId : contentDocIdsToDelete) {
-                docsToDelete.add(new ContentDocument(Id = docId));
-            }
-            delete docsToDelete;
+        if (!configsToUpdateStatus.isEmpty()) update configsToUpdateStatus;
+
+        if (!masterDataList.isEmpty() || !validConfigIds.isEmpty()) {
+            System.enqueueJob(new FEC_InsertCustomerDataQueueable(
+                masterDataList, 
+                validConfigIds, 
+                allExcelIdsToQueue, 
+                validJsonDocIds
+            ));
+            totalConfigsPushed += validConfigIds.size();
         }
     }
 
     global void finish(Database.BatchableContext bc) {
-        System.debug('Batch hoàn tất. Tổng số dòng data đã tạo: ' + totalRecordsProcessed);
+        System.debug('Batch hoàn tất. Configs đã push: ' + totalConfigsPushed);
     }
 }

@@ -5,6 +5,7 @@ import btnClearFilter from '@salesforce/label/c.FEC_Btn_Clear_Filter';
 import btnApply from '@salesforce/label/c.FEC_Btn_Apply';
 import btnCancel from '@salesforce/label/c.FEC_Btn_Cancel';
 import msgNoContent from '@salesforce/label/c.FEC_Msg_No_Content';
+import searchText from '@salesforce/label/c.FEC_Search_Text';
 
 export default class Fec_CustomPopoverFilter extends LightningElement {
     @api strColumnLabel = '';
@@ -40,7 +41,8 @@ export default class Fec_CustomPopoverFilter extends LightningElement {
         btnClearFilter,
         btnApply,
         btnCancel,
-        msgNoContent
+        msgNoContent,
+        searchText
     }
 
     handleSearchChange(event) { this.strSearchKey = event.target.value; }

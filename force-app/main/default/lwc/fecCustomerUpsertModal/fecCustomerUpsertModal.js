@@ -11,7 +11,7 @@ import deleteFile from '@salesforce/apex/FEC_CustomerAdditionalInfoListControlle
 import checkDuplicateConfig from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.checkDuplicateConfig';
 import { loadScript } from 'lightning/platformResourceLoader';
 import FEC_SHEETJS from '@salesforce/resourceUrl/FEC_SheetJS';
-import { FILE_ACCEPT } from 'c/fecUtils';
+import { FILE_ACCEPT, formatString } from 'c/fecUtils';
 
 import lblDataLinkage from '@salesforce/label/c.FEC_Lbl_Data_Linkage';
 import lblFieldId from '@salesforce/label/c.FEC_Lbl_Field_ID';
@@ -32,6 +32,24 @@ import lblAction from '@salesforce/label/c.FEC_Lbl_Action';
 import msgNoContent from '@salesforce/label/c.FEC_Msg_No_Content';
 import btnCancel from '@salesforce/label/c.FEC_Btn_Cancel';
 import btnFinish from '@salesforce/label/c.FEC_Btn_Finish';
+import errorLoadExcelLib from '@salesforce/label/c.FEC_Load_Excel_Lib';
+import fileHasNoDataMsg from '@salesforce/label/c.FEC_Has_No_Data';
+import errorExpectedKey from '@salesforce/label/c.FEC_Error_Expected_Key';
+import errorExpectedValue from '@salesforce/label/c.FEC_Error_Expected_Value';
+import errorFileInvalid from '@salesforce/label/c.FEC_Error_File_Invalid';
+import emptyMsg from '@salesforce/label/c.FEC_Empty';
+import errorDuplicatedKeyIdFieldId from '@salesforce/label/c.FEC_Error_Duplicated_KeyId_FieldId';
+import errorRequiredFields from '@salesforce/label/c.FEC_Error_Required_Fields';
+import errorUploadAtLeastExcelFile from '@salesforce/label/c.FEC_Error_Upload_At_Least_Excel_File';
+import deletedFileMsg from '@salesforce/label/c.FEC_Deleted_File';
+import savedDataMsg from '@salesforce/label/c.FEC_Saved_Data';
+import errorCreateTemplate from '@salesforce/label/c.FEC_Error_Create_Template';
+import deleteConfirmationTitle from '@salesforce/label/c.FEC_Delete_Confirmation_Title';
+import deleteConfirmationMsg from '@salesforce/label/c.FEC_Delete_Confirmation_Msg';
+import cannotDeleteFileMsg from '@salesforce/label/c.FEC_Cannot_Delete_File';
+import successTitle from '@salesforce/label/c.FEC_Success_Title';
+import failTitle from '@salesforce/label/c.FEC_Fail_Title';
+import warningTitle from '@salesforce/label/c.FEC_Warning_Title';
 
 export default class FecCustomerUpsertModal extends LightningElement {
     label = {
@@ -107,7 +125,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
             })
             .catch(error => {
                 console.error('Error loading FEC_SheetJS', error);
-                this.showToast('Lỗi', 'Không tải được thư viện xử lý Excel', 'error');
+                this.showToast(failTitle, errorLoadExcelLib, 'error');
             });
     }
 
@@ -144,24 +162,30 @@ export default class FecCustomerUpsertModal extends LightningElement {
      */
     validateFileHeader(lstRows, fileName) {
         if (!lstRows || lstRows.length === 0) {
-            throw new Error(`File ${fileName} không có dữ liệu.`);
+            throw new Error(fileHasNoDataMsg);
         }
-
-        const fileHeader = lstRows[0]; // Dòng tiêu đề đầu tiên
+    
+        const fileHeader = lstRows[0];
         const fieldId = this.localData.FEC_FieldID__c;
         const keyId = this.localData.FEC_KeyIdentifier__c;
-
-        // So sánh không phân biệt hoa thường và loại bỏ khoảng trắng thừa
+    
         const isKeyMatch = fileHeader[0] && String(fileHeader[0]).trim().toUpperCase() === String(keyId).trim().toUpperCase();
         const isFieldMatch = fileHeader[1] && String(fileHeader[1]).trim().toUpperCase() === String(fieldId).trim().toUpperCase();
-
+    
         if (!isKeyMatch || !isFieldMatch) {
-            let errorMsg = `File "${fileName}" không khớp cấu trúc đã chọn: \n`;
-            if (!isKeyMatch) errorMsg += `- Cột A: Mong muốn "${keyId}", Thực tế "${fileHeader[0] || 'Trống'}" \n`;
-            if (!isFieldMatch) errorMsg += `- Cột B: Mong muốn "${fieldId}", Thực tế "${fileHeader[1] || 'Trống'}"`;
+            let errorMsg = '';
+            
+            if (!isKeyMatch) {
+                errorMsg += formatString(errorExpectedKey, keyId, fileHeader[0] || emptyMsg) + '\n';
+            }
+            
+            if (!isFieldMatch) {
+                errorMsg += formatString(errorExpectedValue, fieldId, fileHeader[1] || emptyMsg);
+            }
+            
             throw new Error(errorMsg);
         }
-
+    
         return true;
     }
 
@@ -177,8 +201,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
         });
 
         if (isDuplicate) {
-            const errorMsg = 'Cấu hình với cặp Key Identifier và Field ID này đã tồn tại.';
-            throw new Error(errorMsg);
+            throw new Error(errorDuplicatedKeyIdFieldId);
         } 
         return true;
     }
@@ -209,7 +232,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
             this.resetFileState();
     
         } catch (error) {
-            this.showToast('Lỗi', error.message, 'error');
+            this.showToast(failTitle, error.message, 'error');
         } finally {
             this.isLoading = false;
         }
@@ -229,12 +252,12 @@ export default class FecCustomerUpsertModal extends LightningElement {
                       }, true);
 
         if (!allValid) {
-            this.showToast('Lỗi', 'Vui lòng kiểm tra lại thông tin bắt buộc', 'error');
+            this.showToast(failTitle, errorRequiredFields, 'error');
             return;
         }
 
         if (this.existingFiles.length === 0) {
-            this.showToast('Lỗi', 'Vui lòng tải ít nhất một file Excel', 'error');
+            this.showToast(failTitle, errorUploadAtLeastExcelFile, 'error');
             return;
         }
         
@@ -260,12 +283,12 @@ export default class FecCustomerUpsertModal extends LightningElement {
             });
 
             if (result === 'Success') {
-                this.showToast('Thành công', 'Đã lưu dữ liệu!', 'success');
+                this.showToast(successTitle, savedDataMsg, 'success');
                 this.dispatchEvent(new CustomEvent('save'));
                 this.handleClose();
             }
         } catch (error) {
-            this.showToast('Lỗi', error.body?.message || error.message, 'error');
+            this.showToast(failTitle, error.body?.message || error.message, 'error');
         } finally {
             this.isLoading = false;
         }
@@ -290,7 +313,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
                     const workbook = XLSX.read(data, { type: 'array', cellDates: true });
                     
                     if (!workbook || !workbook.SheetNames.length) {
-                        throw new Error('File không hợp lệ hoặc trống.');
+                        throw new Error(errorFileInvalid);
                     }
                     
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -319,7 +342,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
     handleDownloadTemplate() {
         // Kiểm tra thư viện đã load chưa
         if (!this.isLibraryLoaded || typeof XLSX === 'undefined') {
-            this.showToast('Cảnh báo', 'Thư viện Excel đang tải, vui lòng thử lại sau giây lát.', 'warning');
+            this.showToast(warningTitle, errorLoadExcelLib, 'warning');
             return;
         }
 
@@ -353,7 +376,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
 
         } catch (error) {
             console.error('Error generating template:', error);
-            this.showToast('Lỗi', 'Không thể tạo file template: ' + error.message, 'error');
+            this.showToast(failTitle, errorCreateTemplate + error.message, 'error');
         }
     }
 
@@ -365,13 +388,13 @@ export default class FecCustomerUpsertModal extends LightningElement {
 
             if (!fileId.startsWith('temp-')) {
                 if (this.existingFiles.length < 2) {
-                    this.showToast('Lỗi', 'Tối thiểu phải có một file excel!', 'error');
+                    this.showToast(failTitle, errorUploadAtLeastExcelFile, 'error');
                     return;
                 }
                 const result = await LightningConfirm.open({
-                    message: `Bạn có chắc chắn muốn xóa không?`,
+                    message: deleteConfirmationMsg,
                     variant: 'header',
-                    label: 'Xác nhận xóa',
+                    label: deleteConfirmationTitle,
                     theme: 'error',
                 });
                 if (!result) return;
@@ -380,9 +403,9 @@ export default class FecCustomerUpsertModal extends LightningElement {
 
             this.existingFiles = this.existingFiles.filter(f => f.id !== fileId);
             this.pendingFiles = this.pendingFiles.filter(f => f.id !== fileId);
-            this.showToast('Thành công', 'Đã xóa file', 'success');
+            this.showToast(successTitle, deletedFileMsg, 'success');
         } catch (error) {
-            this.showToast('Lỗi', 'Không thể xóa file: ' + (error.body?.message || error.message), 'error');
+            this.showToast(failTitle, cannotDeleteFileMsg + (error.body?.message || error.message), 'error');
         } finally {
             this.isLoading = false;
         }

@@ -112,7 +112,7 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
                 delete [SELECT Id FROM ContentDocument WHERE Id = :documentId];
             }
         } catch (Exception e) {
-            throw new AuraHandledException('Lỗi khi xóa file trên hệ thống: ' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_Message_Deleting_File + e.getMessage());
         }
     }
 

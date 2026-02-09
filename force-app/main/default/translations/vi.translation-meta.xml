@@ -81,6 +81,10 @@
         <label>Tên File</label>
     </customLabels>
     <customLabels>
+        <name>FEC_Lbl_Error_Deleting_File</name>
+        <label>Lỗi khi xóa file trên hệ thống:</label>
+    </customLabels>
+    <customLabels>
         <name>FEC_Lbl_No_File_Chosen</name>
         <label>Chưa có tệp nào được chọn</label>
     </customLabels>
@@ -187,5 +191,89 @@
     <customLabels>
         <name>FEC_Opt_Phone</name>
         <label>Số điện thoại chính</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Message_Deleting_File</name>
+        <label>Lỗi khi xóa file trên hệ thống</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Empty</name>
+        <label>Trống</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Search_Text</name>
+        <label>Tìm kiếm</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Load_Excel_Lib</name>
+        <label>Không tải được thư viện xử lý Excel</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Has_No_Data</name>
+        <label>File không có dữ liệu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Expected_Key</name>
+        <label>Cột A: Mong muốn {0}, Thực tế {1}</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Expected_Value</name>
+        <label>Cột B: Mong muốn {0}, Thực tế {1}</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Duplicated_KeyId_FieldId</name>
+        <label>Cấu hình với cặp Key Identifier và Field ID này đã tồn tại</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Required_Fields</name>
+        <label>Vui lòng kiểm tra lại thông tin bắt buộc</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Upload_At_Least_Excel_File</name>
+        <label>Vui lòng tải ít nhất một file Excel</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Deleted_File</name>
+        <label>Đã xóa file</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Saved_Data</name>
+        <label>Đã lưu dữ liệu!</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_File_Invalid</name>
+        <label>File không hợp lệ hoặc trống</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Error_Create_Template</name>
+        <label>Không thể tạo file template</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Delete_Confirmation_Title</name>
+        <label>Xác nhận xóa?</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Delete_Confirmation_Msg</name>
+        <label>Bạn có chắc muốn xóa không?</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Cannot_Delete_File</name>
+        <label>Không thể xóa file</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Cannot_Refresh_Data</name>
+        <label>Không thể tải dữ liệu</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Success_Title</name>
+        <label>Thành công</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Fail_Title</name>
+        <label>Lỗi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Warning_Title</name>
+        <label>Cảnh báo</label>
     </customLabels>
 </Translations>

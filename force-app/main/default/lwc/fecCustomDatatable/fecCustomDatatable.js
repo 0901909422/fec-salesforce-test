@@ -1,6 +1,8 @@
 import { LightningElement, api, track } from 'lwc';
 import { sortData, FILTER_ACTION } from 'c/fecUtils';
 
+import LBL_EMPTY from '@salesforce/label/c.FEC_Empty';
+
 export default class FecCustomDatatable extends LightningElement {
     @api keyField = 'id';
     @api hideCheckboxColumn = false;
@@ -84,7 +86,7 @@ export default class FecCustomDatatable extends LightningElement {
         const currentSelected = this.activeFilters[fieldName] || [];
         
         this.filterOptions = values.map(val => ({
-            label: val || '(Trống)',
+            label: val || `(${LBL_EMPTY})`,
             value: String(val),
             checked: currentSelected.includes(String(val))
         }));
