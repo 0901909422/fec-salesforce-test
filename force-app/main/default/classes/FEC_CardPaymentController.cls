@@ -226,7 +226,7 @@ public with sharing class FEC_CardPaymentController {
         dto.loanBalance = 0;
         dto.fullPaymentWithoutIPP = 0;
         dto.fullIPPPaymentAmount = 0;
-        dto.helpTexts = buildHelpTextMap();
+        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(Schema.SObjectType.FEC_Card_Payment__c);
 
         /* ===== TẢI CASE ===== */
         Case c = [
@@ -418,12 +418,12 @@ public with sharing class FEC_CardPaymentController {
                 dto.fullIPPPaymentAmount = payment.FEC_Full_IPP_Payment_Amount__c != null ? payment.FEC_Full_IPP_Payment_Amount__c : 0;
             } else {
                 // Nếu không có trong database (do lưu thất bại) → trả về lỗi
-                throw new AuraHandledException('Tải dữ liệu không thành công');
+                throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
             }
         } catch (AuraHandledException e) {
             throw e;
         } catch (Exception e) {
-            throw new AuraHandledException('Tải dữ liệu không thành công');
+            throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
         }
 
         return dto;
@@ -580,8 +580,8 @@ public with sharing class FEC_CardPaymentController {
             record.FEC_REF_Number__c = p.refNumber;               // REFNumber
             
             // Map Date (Cần convert String -> Date)
-            record.FEC_Open_Date__c = convertDateSafe(p.openDate);    // PlanOpenDate
-            record.FEC_Begin_Date__c = convertDateSafe(p.beginDate);  // BeginDate
+            record.FEC_Open_Date__c = FEC_CommonUltils.parseDate(p.openDate);    // PlanOpenDate
+            record.FEC_Begin_Date__c = FEC_CommonUltils.parseDate(p.beginDate);  // BeginDate
             
             // Map Decimal
             Decimal currentBalance = p.currentBalance != null ? p.currentBalance : 0;
@@ -623,38 +623,10 @@ public with sharing class FEC_CardPaymentController {
             try {
                 insert recordsToInsert;
             } catch (Exception e) {
-                throw new AuraHandledException('Lỗi lưu dữ liệu: ' + e.getMessage());
+                throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
             }
         }
     }
     
-    /**
-     * Hàm phụ trợ convert ngày tháng
-     * @param dateStr - Date string format yyyy-MM-dd
-     * @return Date object
-     */
-    private static Date convertDateSafe(String dateStr) {
-        if (String.isBlank(dateStr)) return null;
-        try {
-            return Date.valueOf(dateStr); // Format yêu cầu: YYYY-MM-DD
-        } catch (Exception e) {
-            return null;
-        }
-    }
     
-    /**
-     * Build help text map from FEC_Card_Payment__c fields
-     * @return Map of field API name to help text
-     */
-    private static Map<String, String> buildHelpTextMap() {
-        Map<String, String> m = new Map<String, String>();
-        for (Schema.SObjectField f :
-            FEC_Card_Payment__c.SObjectType.getDescribe().fields.getMap().values()
-        ) {
-            if (String.isNotBlank(f.getDescribe().getInlineHelpText())) {
-                m.put(f.getDescribe().getName(), f.getDescribe().getInlineHelpText());
-            }
-        }
-        return m;
-    }
 }
