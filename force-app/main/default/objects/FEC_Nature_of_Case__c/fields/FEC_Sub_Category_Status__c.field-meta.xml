@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_Active__c</fullName>
-    <defaultValue>false</defaultValue>
-    <description>Trạng thái của bộ NOC</description>
+    <fullName>FEC_Sub_Category_Status__c</fullName>
     <externalId>false</externalId>
-    <label>Active</label>
-    <trackHistory>true</trackHistory>
+    <formula>FEC_Sub_Category__r.FEC_Active__c</formula>
+    <label>Sub Category Status</label>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

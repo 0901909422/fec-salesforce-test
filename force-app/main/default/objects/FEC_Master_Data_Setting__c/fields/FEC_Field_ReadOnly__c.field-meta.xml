@@ -3,8 +3,9 @@
     <fullName>FEC_Field_ReadOnly__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Tùy chọn trường Read Only trên màn hình Case</description>
+    <externalId>false</externalId>
     <label>Field ReadOnly</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>
