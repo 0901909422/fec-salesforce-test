@@ -64,61 +64,38 @@
                 <!-- ===== INFO (AUTO LEFT / RIGHT) ===== -->
                 <div class="slds-grid slds-wrap slds-p-around_medium">
 
-                    <!-- LEFT -->
-                    <div class="slds-col slds-size_1-of-2 slds-p-right_medium">
-                        <template for:each={leftInfos} for:item="info">
-                            <div key={info.id} class="slds-m-bottom_small">
-                                <b>{info.id}</b><br />
-                                {info.fileName} &nbsp;
-                                <!-- FILE TYPE -->
-                                <template if:true={info.isFile}>
-                                    <lightning-button
-                                        label={labels.downloadFile}
-                                        icon-name="utility:download"
-                                        variant="base"
-                                        data-base64={info.value}
-                                        onclick={handleFileDownload}>
-                                    </lightning-button>
-                                </template>
+                    <template for:each={getLayoutColumns} for:item="col">
+                        <div
+                            key={col.key}
+                            class="slds-col slds-size_1-of-4 slds-p-horizontal_small"
+                        >
+                            <template for:each={col.items} for:item="info">
+                                <div key={info.id} class="slds-m-bottom_small">
+                                    <b>{info.id}</b><br />
+                                    {info.fileName} &nbsp;
                 
-                                <!-- NORMAL TEXT -->
-                                <template if:false={info.isFile}>
-                                    {info.value}
-                                </template>
+                                    <!-- FILE TYPE -->
+                                    <template if:true={info.isFile}>
+                                        <lightning-button
+                                            label={labels.downloadFile}
+                                            icon-name="utility:download"
+                                            variant="base"
+                                            data-base64={info.value}
+                                            onclick={handleFileDownload}>
+                                        </lightning-button>
+                                    </template>
                 
-                            </div>
-                        </template>
-                    </div>
-                
-                    <!-- RIGHT -->
-                    <div class="slds-col slds-size_1-of-2 slds-p-left_medium">
-                        <template for:each={rightInfos} for:item="info">
-                            <div key={info.id} class="slds-m-bottom_small">
-                                <b>{info.id}</b><br />
-                                {info.fileName} &nbsp;
-                
-                                <!-- FILE TYPE -->
-                                <template if:true={info.isFile}>
-                                <lightning-button
-                                    label={labels.downloadFile}
-                                    icon-name="utility:download"
-                                    variant="base"
-                                    data-base64={info.value}
-                                    onclick={handleFileDownload}>
-                                </lightning-button>
-                                </template>
-                
-                                <!-- NORMAL TEXT -->
-                                <template if:false={info.isFile}>
-                                    {info.value}
-                                </template>
-                
-                            </div>
-                        </template>
-                    </div>
+                                    <!-- NORMAL TEXT -->
+                                    <template if:false={info.isFile}>
+                                        {info.value}
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
                 
                 </div>
-                
+                                
                 <template if:true={isFraudCase}>
                     <!-- ================= REMARKS ================= -->
                     <div class="slds-p-around_medium">

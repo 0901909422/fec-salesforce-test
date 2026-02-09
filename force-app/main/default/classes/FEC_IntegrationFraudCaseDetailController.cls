@@ -1,152 +1,256 @@
+/**
+ * Controller responsible for loading Fraud Case detail data
+ * including hierarchy (Root → BU → TK), tasks, and case infos
+ * for Lightning Web Components.
+ */
 global with sharing class FEC_IntegrationFraudCaseDetailController {
 
+    /** Enable / disable debug logging centrally */
     public static final Boolean DEBUG_LOG = true;
+
+    /** Current user language (can be used for localization later) */
     public static final String userLang = UserInfo.getLanguage();
+
+    /** Error message when CaseId is missing */
     private static final String ERR_CASEID_REQUIRED = System.Label.LBL_CaseIdRequired;
+
+    /** Error message when root case cannot be found */
     private static final String ERR_ROOT_NOT_FOUND  = System.Label.LBL_RootCaseNotFound;
 
-
     /**
-     * Retrieves detailed information of a Fraud Case by Case ID.
+     * Entry point for LWC.
+     * Returns full fraud case detail including hierarchy and tasks.
      *
-     * This method is exposed to LWC and is cacheable for better performance.
-     * It acts as a public API wrapper that delegates the actual business logic
-     * to the internal service method.
-     *
-     * @param caseId  The Fraud Case ID to retrieve information for
-     * @return        A map containing Fraud Case details and related data
+     * @param caseId Root case identifier
+     * @return Map containing hierarchy and task list
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled(cacheable = true)
     public static Map<String, Object> getFraudCaseDetail(String caseId) {
         return getFraudHandlingCaseDetail(caseId);
     }
 
     /**
-     * Retrieves full Fraud Case details and builds the complete case hierarchy.
-     *
-     * This method loads and constructs the Fraud Case structure in the following order:
-     *   1. Root case (FH-*)
-     *   2. Business unit cases (BU-*)
-     *   3. Task cases (TK-*)
-     *
-     * It then:
-     *   • Builds the hierarchical tree: FH → BU → TK
-     *   • Loads all related information records (FEC_Integration_Case_Info__c)
-     *   • Constructs a task list from TK cases only
-     *   • Formats all data into a UI-ready response structure
-     *
-     * The final response contains:
-     *   - "hierarchy": ordered case hierarchy with full case and info details
-     *   - "tasks": list of TK tasks with display fields and hyperlinks
-     *
-     * @param  caseId   The root Fraud Case ID (expected format: FH-*)
-     * @return          A map containing:
-     *                    • hierarchy → structured case data
-     *                    • tasks     → list of task objects
-     *
-     * @throws AuraHandledException if caseId is blank or root case cannot be found
+     * Returns mapping between case prefix and integration case field name.
+     * Used by frontend to determine case type (FH, BU, TK, etc.).
+     */
+    @AuraEnabled(cacheable = true)
+    public static Map<String, String> getCasePrefixes() {
+        FEC_FraudConstantCommon.IntegrationField caseField =
+            new FEC_FraudConstantCommon.IntegrationField();
+
+        return new Map<String, String>{
+            'FH'  => caseField.CASEFH,
+            'TK'  => caseField.CASETK,
+            'SFT' => caseField.CASESFT
+        };
+    }
+
+    /**
+     * Returns supported integration field data types.
+     * Used by UI to render values correctly (file, text, date, etc.).
+     */
+    @AuraEnabled(cacheable = true)
+    public static Map<String, String> getIntegrationFieldTypes() {
+        FEC_FraudConstantCommon.IntegrationFieldType fieldType =
+            new FEC_FraudConstantCommon.IntegrationFieldType();
+
+        return new Map<String, String>{
+            'FILE'     => fieldType.TYPE_FILE,
+            'TEXT'     => fieldType.TYPE_TEXT,
+            'STRING'   => fieldType.TYPE_STRING,
+            'NUMBER'   => fieldType.TYPE_NUMBER,
+            'DATE'     => fieldType.TYPE_DATE,
+            'DATETIME' => fieldType.TYPE_DATETIME,
+            'BOOLEAN'  => fieldType.TYPE_BOOLEAN,
+            'OBJECT'   => fieldType.TYPE_OBJECT,
+            'ARRAY'    => fieldType.TYPE_ARRAY
+        };
+    }
+
+    /**
+     * Core orchestration method.
+     * - Validates input
+     * - Loads root / BU / TK cases
+     * - Builds hierarchy
+     * - Loads case infos
+     * - Prepares task list and response payload
      */
     private static Map<String, Object> getFraudHandlingCaseDetail(String caseId) {
 
-        log('==============================');
-        log('[START] getFraudCaseDetail');
-        log('Input caseId = ' + caseId);
-        log('==============================');
-        FEC_IntegrationFraudCaseUtil.IntegrationField caseField = new FEC_IntegrationFraudCaseUtil.IntegrationField();
+        validateCaseId(caseId);
 
+        FEC_FraudConstantCommon.IntegrationField caseField =
+            new FEC_FraudConstantCommon.IntegrationField();
+        FEC_FraudConstantCommon.IntegrationFieldType fileTypeConstant =
+            new FEC_FraudConstantCommon.IntegrationFieldType();
+
+        // Load root case and BU cases
+        RootAndBuResult rootAndBu = loadRootAndBuCases(caseId);
+
+        // Load TK cases under BU cases
+        List<FEC_Integration_Case__c> tkCases =
+            loadTkCases(rootAndBu.buCaseIds);
+
+        // Build hierarchical order: Root → BU → TK
+        List<FEC_Integration_Case__c> hierarchy =
+            buildHierarchy(
+                caseId,
+                rootAndBu.rootCase,
+                rootAndBu.allCases,
+                tkCases
+            );
+
+        // Load info records grouped by case Id
+        Map<Id, List<FEC_Integration_Case_Info__c>> infoByCaseId =
+            loadCaseInfos(hierarchy);
+
+        // Build list of TK tasks for UI
+        List<Map<String, Object>> taskList =
+            buildTaskList(hierarchy, infoByCaseId, caseField);
+
+        // Build hierarchy response for UI
+        List<Map<String, Object>> hierarchyResponse =
+            buildHierarchyResponse(
+                hierarchy,
+                infoByCaseId,
+                fileTypeConstant
+            );
+
+        log('[END] getFraudCaseDetail');
+
+        return new Map<String, Object>{
+            'hierarchy' => hierarchyResponse,
+            'tasks'     => taskList
+        };
+    }
+
+    /**
+     * Validates that caseId is provided.
+     * Throws AuraHandledException for LWC handling.
+     */
+    private static void validateCaseId(String caseId) {
         if (String.isBlank(caseId)) {
             throw new AuraHandledException(ERR_CASEID_REQUIRED);
         }
+    }
 
-        // =====================================================
-        // 1) LOAD ROOT (FH) + BU
-        // =====================================================
+    /**
+     * Wrapper object holding:
+     * - Root case
+     * - BU case IDs
+     * - All related cases
+     */
+    private class RootAndBuResult {
+        FEC_Integration_Case__c rootCase;
+        Set<String> buCaseIds = new Set<String>();
+        List<FEC_Integration_Case__c> allCases;
+    }
+
+    /**
+     * Loads root case and direct BU child cases.
+     *
+     * @param caseId Root case ID
+     * @return RootAndBuResult with root + BU case data
+     */
+    private static RootAndBuResult loadRootAndBuCases(String caseId) {
+
         log('Query ROOT + BU cases');
 
-        List<FEC_Integration_Case__c> rootAndBu = [
+        List<FEC_Integration_Case__c> records = [
             SELECT Id,
-                FEC_CaseID__c,
-                FEC_Parent_CaseID__c,
-                FEC_Service_Case_ID__c,
-                FEC_Case_Status__c,
-                FEC_Category__c,
-                FEC_Sub_Category__c,
-                FEC_Sub_Code__c,
-                FEC_Remark__c,
-                FEC_CS_Remark__c,
-                FEC_Investigation_Conclusion__c,
-                FEC_Sys_Channel__c,
-                FEC_Creator_Email__c,
-                CreatedDate,
-                LastModifiedDate
+                   FEC_CaseID__c,
+                   FEC_Parent_CaseID__c,
+                   FEC_Service_Case_ID__c,
+                   FEC_Case_Status__c,
+                   FEC_Category__c,
+                   FEC_Sub_Category__c,
+                   FEC_Sub_Code__c,
+                   FEC_Remark__c,
+                   FEC_CS_Remark__c,
+                   FEC_Investigation_Conclusion__c,
+                   FEC_Sys_Channel__c,
+                   FEC_Creator_Email__c,
+                   CreatedDate,
+                   LastModifiedDate
             FROM FEC_Integration_Case__c
             WHERE FEC_CaseID__c = :caseId
-            OR FEC_Parent_CaseID__c = :caseId
+               OR FEC_Parent_CaseID__c = :caseId
             ORDER BY CreatedDate
         ];
 
-        log('rootAndBu size = ' + rootAndBu.size());
+        RootAndBuResult result = new RootAndBuResult();
+        result.allCases = records;
 
-        // =====================================================
-        // 2) COLLECT BU CASE IDs
-        // =====================================================
-        Set<String> buCaseIds = new Set<String>();
-        FEC_Integration_Case__c rootCase;
-
-        for (FEC_Integration_Case__c c : rootAndBu) {
+        // Identify root and BU cases
+        for (FEC_Integration_Case__c c : records) {
             if (c.FEC_CaseID__c == caseId) {
-                rootCase = c;
+                result.rootCase = c;
             } else if (c.FEC_Parent_CaseID__c == caseId) {
-                buCaseIds.add(c.FEC_CaseID__c);
+                result.buCaseIds.add(c.FEC_CaseID__c);
             }
         }
 
-        if (rootCase == null) {
-            throw new AuraHandledException(ERR_ROOT_NOT_FOUND + ': ' + caseId);
+        // Root case must exist
+        if (result.rootCase == null) {
+            throw new AuraHandledException(
+                ERR_ROOT_NOT_FOUND + ': ' + caseId
+            );
         }
 
-        log('BU CaseIDs = ' + buCaseIds);
+        log('BU CaseIDs = ' + result.buCaseIds);
+        return result;
+    }
 
-        // =====================================================
-        // 3) LOAD TK (CHILDREN OF BU)
-        // =====================================================
-        List<FEC_Integration_Case__c> tkCases = new List<FEC_Integration_Case__c>();
+    /**
+     * Loads TK cases that belong to BU cases.
+     */
+    private static List<FEC_Integration_Case__c> loadTkCases(Set<String> buCaseIds) {
 
-        if (!buCaseIds.isEmpty()) {
-            log('Query TK cases');
-
-            tkCases = [
-                SELECT Id,
-                    FEC_CaseID__c,
-                    FEC_Parent_CaseID__c,
-                    FEC_Service_Case_ID__c,
-                    FEC_Case_Status__c,
-                    FEC_Category__c,
-                    FEC_Sub_Category__c,
-                    FEC_Sub_Code__c,
-                    FEC_Remark__c,
-                    FEC_CS_Remark__c,
-                    FEC_Sys_Channel__c,
-                    FEC_Creator_Email__c,
-                    FEC_Investigation_Conclusion__c,
-                    CreatedDate,
-                    LastModifiedDate
-                FROM FEC_Integration_Case__c
-                WHERE FEC_Parent_CaseID__c IN :buCaseIds
-                ORDER BY CreatedDate
-            ];
+        if (buCaseIds.isEmpty()) {
+            return new List<FEC_Integration_Case__c>();
         }
 
-        log('tkCases size = ' + tkCases.size());
+        log('Query TK cases');
 
-        // =====================================================
-        // 4) BUILD HIERARCHY (FH → BU → TK)
-        // =====================================================
-        List<FEC_Integration_Case__c> hierarchy = new List<FEC_Integration_Case__c>();
+        return [
+            SELECT Id,
+                   FEC_CaseID__c,
+                   FEC_Parent_CaseID__c,
+                   FEC_Service_Case_ID__c,
+                   FEC_Case_Status__c,
+                   FEC_Category__c,
+                   FEC_Sub_Category__c,
+                   FEC_Sub_Code__c,
+                   FEC_Remark__c,
+                   FEC_CS_Remark__c,
+                   FEC_Sys_Channel__c,
+                   FEC_Creator_Email__c,
+                   FEC_Investigation_Conclusion__c,
+                   CreatedDate,
+                   LastModifiedDate
+            FROM FEC_Integration_Case__c
+            WHERE FEC_Parent_CaseID__c IN :buCaseIds
+            ORDER BY CreatedDate
+        ];
+    }
+
+    /**
+     * Builds ordered hierarchy list:
+     * Root → BU → TK
+     */
+    private static List<FEC_Integration_Case__c> buildHierarchy(
+        String rootCaseId,
+        FEC_Integration_Case__c rootCase,
+        List<FEC_Integration_Case__c> rootAndBu,
+        List<FEC_Integration_Case__c> tkCases
+    ) {
+        List<FEC_Integration_Case__c> hierarchy =
+            new List<FEC_Integration_Case__c>();
+
         hierarchy.add(rootCase);
 
         for (FEC_Integration_Case__c bu : rootAndBu) {
-            if (bu.FEC_Parent_CaseID__c == caseId) {
+            if (bu.FEC_Parent_CaseID__c == rootCaseId) {
                 hierarchy.add(bu);
 
                 for (FEC_Integration_Case__c tk : tkCases) {
@@ -156,51 +260,60 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                 }
             }
         }
+        return hierarchy;
+    }
 
-        log('Hierarchy order:');
-        for (FEC_Integration_Case__c c : hierarchy) {
-            log('   • ' + c.FEC_CaseID__c);
-        }
+    /**
+     * Loads case info records and groups them by parent case Id.
+     */
+    private static Map<Id, List<FEC_Integration_Case_Info__c>>
+        loadCaseInfos(List<FEC_Integration_Case__c> hierarchy) {
 
-        // =====================================================
-        // 5) LOAD ALL INFO RECORDS FOR HIERARCHY
-        // =====================================================
         log('Query FEC_Integration_Case_Info__c');
 
-        Map<Id, List<FEC_Integration_Case_Info__c>> infoByCaseId =
+        Map<Id, List<FEC_Integration_Case_Info__c>> result =
             new Map<Id, List<FEC_Integration_Case_Info__c>>();
 
-        List<FEC_Integration_Case_Info__c> infoRecords = [
+        List<FEC_Integration_Case_Info__c> infos = [
             SELECT Id,
-                FEC_Info_ID__c,
-                FEC_Info_Value__c,
-                FEC_Parent_Case__c
+                   FEC_Info_ID__c,
+                   FEC_Info_Value__c,
+                   FEC_Parent_Case__c
             FROM FEC_Integration_Case_Info__c
             WHERE FEC_Parent_Case__c IN :hierarchy
             ORDER BY FEC_Parent_Case__c, FEC_Info_ID__c
         ];
 
-        log('Info records size = ' + infoRecords.size());
-
-        for (FEC_Integration_Case_Info__c inf : infoRecords) {
-            if (!infoByCaseId.containsKey(inf.FEC_Parent_Case__c)) {
-                infoByCaseId.put(inf.FEC_Parent_Case__c,
-                    new List<FEC_Integration_Case_Info__c>());
+        for (FEC_Integration_Case_Info__c inf : infos) {
+            if (!result.containsKey(inf.FEC_Parent_Case__c)) {
+                result.put(
+                    inf.FEC_Parent_Case__c,
+                    new List<FEC_Integration_Case_Info__c>()
+                );
             }
-            infoByCaseId.get(inf.FEC_Parent_Case__c).add(inf);
+            result.get(inf.FEC_Parent_Case__c).add(inf);
         }
+        return result;
+    }
 
-        // =====================================================
-        // 6) BUILD TASK LIST (TK-* ONLY)
-        // =====================================================
-        log('Build task list');
-
-        List<Map<String, Object>> taskList = new List<Map<String, Object>>();
+    /**
+     * Builds task list from TK cases only.
+     * Used for task panel in UI.
+     */
+    private static List<Map<String, Object>> buildTaskList(
+        List<FEC_Integration_Case__c> hierarchy,
+        Map<Id, List<FEC_Integration_Case_Info__c>> infoByCaseId,
+        FEC_FraudConstantCommon.IntegrationField caseField
+    ) {
+        List<Map<String, Object>> tasks =
+            new List<Map<String, Object>>();
 
         for (FEC_Integration_Case__c c : hierarchy) {
 
-            if (!c.FEC_CaseID__c.startsWith(caseField.CASETK)) continue;
-
+            // Only TK cases are considered tasks
+            if (!c.FEC_CaseID__c.startsWith(caseField.CASETK)) {
+                continue;
+            }
             Map<String, String> taskInfoMap = new Map<String, String>();
 
             if (infoByCaseId.containsKey(c.Id)) {
@@ -209,110 +322,155 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                 }
             }
 
-            taskList.add(new Map<String, Object>{
-                'Id'               => c.Id,
-                'TaskId'           => c.FEC_CaseID__c,
-                'FraudTaskId'      => c.FEC_Service_Case_ID__c,
-                'InvestigationConclusion' => c.FEC_Investigation_Conclusion__c,
-                'FraudTaskUrl'     => c.FEC_Service_Case_ID__c != null
-                        ? '/lightning/n/Service_Fraud_Task_Case_Action?c__caseId=' + c.FEC_Service_Case_ID__c
+            tasks.add(new Map<String, Object>{
+                FEC_FraudConstantCommon.KEY_ID =>
+                    c.Id,
+            
+                FEC_FraudConstantCommon.KEY_TASK_ID =>
+                    c.FEC_CaseID__c,
+            
+                FEC_FraudConstantCommon.KEY_FRAUD_TASK_ID =>
+                    c.FEC_Service_Case_ID__c,
+            
+                FEC_FraudConstantCommon.KEY_INVESTIGATION_CONCLUSION =>
+                    c.FEC_Investigation_Conclusion__c,
+            
+                FEC_FraudConstantCommon.KEY_FRAUD_TASK_URL =>
+                    c.FEC_Service_Case_ID__c != null
+                        ? FEC_FraudConstantCommon.SERVICE_CASE_LINK + c.FEC_Service_Case_ID__c
                         : null,
-                'TaskName'         => taskInfoMap.get('TaskName'),
-                'UIC'              => taskInfoMap.get('UIC'),
-                'AppId'            => taskInfoMap.get('AppID'),
-                'ViolationType'    => taskInfoMap.get('ViolationType'),                
-                'Status'           => c.FEC_Case_Status__c,
-                'Deadline'         => FEC_IntegrationFraudCaseUtil.formatDDMMYYYY(taskInfoMap.get('Deadline')),
-                'CreatedDate'      => FEC_IntegrationFraudCaseUtil.formatDateTime(c.CreatedDate),
-                'LastModifiedDate' => FEC_IntegrationFraudCaseUtil.formatDateTime(c.LastModifiedDate)
+            
+                FEC_FraudConstantCommon.TASK_NAME =>
+                    taskInfoMap.get(FEC_FraudConstantCommon.TASK_NAME),
+            
+                FEC_FraudConstantCommon.INFO_UIC =>
+                    taskInfoMap.get(FEC_FraudConstantCommon.INFO_UIC),
+            
+                FEC_FraudConstantCommon.INFO_APPLICATION_ID =>
+                    taskInfoMap.get(FEC_FraudConstantCommon.INFO_APPLICATION_ID),
+            
+                FEC_FraudConstantCommon.INFO_VIOLATIONTYPE =>
+                    taskInfoMap.get(FEC_FraudConstantCommon.INFO_VIOLATIONTYPE),
+            
+                FEC_FraudConstantCommon.KEY_STATUS =>
+                    c.FEC_Case_Status__c,
+            
+                FEC_FraudConstantCommon.KEY_DEADLINE =>
+                    FEC_IntegrationFraudCaseUtil.formatDDMMYYYY(
+                        taskInfoMap.get(FEC_FraudConstantCommon.KEY_DEADLINE)
+                    ),
+            
+                FEC_FraudConstantCommon.KEY_CREATED_DATE =>
+                    FEC_IntegrationFraudCaseUtil.formatDateTime(c.CreatedDate),
+            
+                FEC_FraudConstantCommon.KEY_LAST_MODIFIED_DATE =>
+                    FEC_IntegrationFraudCaseUtil.formatDateTime(c.LastModifiedDate)
+                    
             });
         }
+            
+        return tasks;
+    }
 
-        log('📊 taskList size = ' + taskList.size());
-
-        // =====================================================
-        // 7) BUILD FINAL HIERARCHY RESPONSE
-        // =====================================================
-        List<Map<String, Object>> hierarchyResponse = new List<Map<String, Object>>();
+    /**
+     * Builds full hierarchy response with case info list.
+     */
+    private static List<Map<String, Object>> buildHierarchyResponse(
+        List<FEC_Integration_Case__c> hierarchy,
+        Map<Id, List<FEC_Integration_Case_Info__c>> infoByCaseId,
+        FEC_FraudConstantCommon.IntegrationFieldType fileTypeConstant
+    ) {
+        List<Map<String, Object>> response =
+            new List<Map<String, Object>>();
 
         for (FEC_Integration_Case__c c : hierarchy) {
+            response.add(new Map<String, Object>{
+                'Id'                          => c.Id,
+                'FEC_CaseID__c'               => c.FEC_CaseID__c,
+                'FEC_Service_Case_ID__c'      => c.FEC_Service_Case_ID__c,
+                'FEC_Case_Status__c'          => c.FEC_Case_Status__c,
+                'FEC_Creator_Email__c'        => c.FEC_Creator_Email__c,
+                'FEC_Category__c'             => c.FEC_Category__c,
+                'FEC_Sub_Category__c'         => c.FEC_Sub_Category__c,
+                'FEC_Sub_Code__c'             => c.FEC_Sub_Code__c,
+                'FEC_CS_Remark__c'            => c.FEC_CS_Remark__c,
+                'FEC_Investigation_Conclusion__c'
+                                             => c.FEC_Investigation_Conclusion__c,
+                'CreatedDate'                 => c.CreatedDate,
+                'LastModifiedDate'            => c.LastModifiedDate,
+                'Infos'        => buildInfoList(
+                    c,
+                    infoByCaseId,
+                    fileTypeConstant
+                )
+            });
+        }
+        return response;
+    }
 
-            List<Map<String, String>> infos = new List<Map<String, String>>();
+    /**
+     * Builds info list for a case.
+     * Handles file-type info parsing (file name extraction).
+     */
+    private static List<Map<String, String>> buildInfoList(
+        FEC_Integration_Case__c caseRec,
+        Map<Id, List<FEC_Integration_Case_Info__c>> infoByCaseId,
+        FEC_FraudConstantCommon.IntegrationFieldType fileTypeConstant
+    ) {
+        List<Map<String, String>> infos =
+            new List<Map<String, String>>();
 
-            if (infoByCaseId.containsKey(c.Id)) {
-                for (FEC_Integration_Case_Info__c inf : infoByCaseId.get(c.Id)) {
-                    //FEC_Source_Id__c='ApproDoc' AND FEC_Source_Parent_Id__c='CC02-06'                    
-                    List<FEC_Master_Data_Integration__c> exist = [
-                        SELECT FEC_Source_Field_Type__c FROM FEC_Master_Data_Integration__c WHERE FEC_Source_Id__c = :inf.FEC_Info_ID__c LIMIT 1
-                        //SELECT FEC_Source_Field_Type__c FROM FEC_Master_Data_Integration__c WHERE FEC_Source_Id__c = :inf.FEC_Info_ID__c AND FEC_Source_Parent_Id__c = :c.FEC_Sub_Code__c  LIMIT 1
-                    ];
-                    String fileType = null;
-                    String fileName = null;                    
-                    if (!exist.isEmpty()) {
-                        fileType = exist[0].FEC_Source_Field_Type__c;
-                    }
-                    if (fileType == 'file' && String.isNotBlank(inf.FEC_Info_Value__c)) {
+        if (!infoByCaseId.containsKey(caseRec.Id)) {
+            return infos;
+        }
 
-                        String rawValue = inf.FEC_Info_Value__c;
-                    
-                        Integer firstSep = rawValue.indexOf('|');
-                        Integer secondSep = rawValue.indexOf('|', firstSep + 1);
-                    
-                        if (firstSep > -1 && secondSep > -1) {
-                            fileName = rawValue.substring(0, firstSep);
-                        }
-                    }
-                    infos.add(new Map<String, String>{
-                        'id'    => inf.FEC_Info_ID__c,
-                        'value' => inf.FEC_Info_Value__c,
-                        'fileType' => fileType,
-                        'fileName' => fileName
-                    });
+        for (FEC_Integration_Case_Info__c inf :
+            infoByCaseId.get(caseRec.Id)) {
+
+            String fileType;
+            String fileName;
+
+            // Determine field type from master data
+            List<FEC_Master_Data_Integration__c> exist = [
+                SELECT FEC_Source_Field_Type__c
+                FROM FEC_Master_Data_Integration__c
+                WHERE FEC_Source_Id__c = :inf.FEC_Info_ID__c
+                LIMIT 1
+            ];
+
+            if (!exist.isEmpty()) {
+                fileType = exist[0].FEC_Source_Field_Type__c;
+            }
+
+            // Extract file name if info represents a file
+            if (fileType == fileTypeConstant.TYPE_FILE &&
+                String.isNotBlank(inf.FEC_Info_Value__c)) {
+
+                String rawValue = inf.FEC_Info_Value__c;
+                Integer firstSep  = rawValue.indexOf('|');
+                Integer secondSep = rawValue.indexOf('|', firstSep + 1);
+
+                if (firstSep > -1 && secondSep > -1) {
+                    fileName = rawValue.substring(0, firstSep);
                 }
             }
 
-            hierarchyResponse.add(new Map<String, Object>{
-                'Id'                     => c.Id,
-                'FEC_CaseID__c'          => c.FEC_CaseID__c,
-                'FEC_Parent_CaseID__c'   => c.FEC_Parent_CaseID__c,
-                'FEC_Service_Case_ID__c' => c.FEC_Service_Case_ID__c,
-                'FEC_Case_Status__c'     => c.FEC_Case_Status__c,
-                'FEC_Category__c'        => c.FEC_Category__c,
-                'FEC_Sub_Category__c'    => c.FEC_Sub_Category__c,
-                'FEC_Sub_Code__c'        => c.FEC_Sub_Code__c,
-                'FEC_Remark__c'          => c.FEC_Remark__c,
-                'FEC_CS_Remark__c'          => c.FEC_CS_Remark__c,                
-                'FEC_Investigation_Conclusion__c' => c.FEC_Investigation_Conclusion__c,
-                'FEC_Sys_Channel__c'     => c.FEC_Sys_Channel__c,
-                'FEC_Creator_Email__c'   => c.FEC_Creator_Email__c,
-                'CreatedDate'            => FEC_IntegrationFraudCaseUtil.formatDateTime(c.CreatedDate),
-                'LastModifiedDate'       => FEC_IntegrationFraudCaseUtil.formatDateTime(c.LastModifiedDate),
-                'Infos'                  => infos
+            infos.add(new Map<String, String>{
+                'id'        => inf.FEC_Info_ID__c,
+                'value'     => inf.FEC_Info_Value__c,
+                'fileType'  => fileType,
+                'fileName'  => fileName
             });
         }
-
-        log('[END] getFraudCaseDetail');
-
-        return new Map<String, Object>{
-            'hierarchy' => hierarchyResponse,
-            'tasks'     => taskList
-        };
+        return infos;
     }
-    
+
     /**
-     * Writes a log message to the debug log if debugging is enabled.
-     *
-     * This method centralizes logging behavior and ensures that debug
-     * messages are only printed when the DEBUG_LOG flag is set to true.
-     * It helps control log noise and improves performance in production
-     * environments by avoiding unnecessary debug statements.
-     *
-     * @param msg The message to be written to the debug log.
+     * Centralized logging helper.
      */
     private static void log(String msg) {
         if (DEBUG_LOG) {
             System.debug(LoggingLevel.INFO, msg);
         }
     }
-    
 }
