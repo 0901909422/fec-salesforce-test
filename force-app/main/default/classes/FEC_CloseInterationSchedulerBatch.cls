@@ -69,12 +69,12 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
     for (Case item : scope) {
       if (interationToServiceCaseMap.containsKey(item.Id)) {
         for (Case child : interationToServiceCaseMap.get(item.Id)) {
-          child.Status = 'Resolved-Cancelled';
+          child.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED;
 
           updatedlst.add(child);
 
           FEC_Case_Remarks__c caseRemark = new FEC_Case_Remarks__c();
-          caseRemark.FEC_Case_Remarks__c = 'Yêu cầu được tự động chuyển trạng thái Resolved-AutoCancelled theo quy trình tự động kết thúc tương tác cuối ngày';
+          caseRemark.FEC_Case_Remarks__c = Label.FEC_RemarkMsg;
           caseRemark.FEC_User__c = emailId;
           caseRemark.FEC_User_Role__c = roleName;
           caseRemark.FEC_Stage_Name__c = child.FEC_Stage_Name__c;
@@ -84,7 +84,7 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
         }
       }
 
-      item.Status = 'Auto-Closed';
+      item.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CLOSED;
       updatedlst.add(item);
     }
 
