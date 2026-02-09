@@ -20,17 +20,17 @@
           <!-- Column 2: Customer Information -->
           <div class="slds-col slds-size_5-of-12 slds-p-bottom_none">
             <div class="slds-p-left_medium">
-              <h2 class="slds-text-heading_small slds-text-color_default section-title">Customer Information</h2>
+              <h2 class="slds-text-heading_small slds-text-color_default section-title">{label.customerInformation}</h2>
               <dl class="slds-dl_horizontal slds-m-top_small">
                 <dt class="slds-dl_horizontal__label">
-                  <p>Customer Name:</p>
+                  <p>{label.customerName}:</p>
                 </dt>
                 <dd class="slds-dl_horizontal__detail">
                   <p>{customerName}</p>
                 </dd>
 
                 <dt class="slds-dl_horizontal__label">
-                  <p>National ID/Passport ID:</p>
+                  <p>{label.nationalId}:</p>
                 </dt>
                 <dd class="slds-dl_horizontal__detail">
                   <p>
@@ -42,21 +42,21 @@
                 </dd>
 
                 <dt class="slds-dl_horizontal__label">
-                  <p>Gender:</p>
+                  <p>{label.gender}:</p>
                 </dt>
                 <dd class="slds-dl_horizontal__detail">
                   <p>{gender}</p>
                 </dd>
 
                 <dt class="slds-dl_horizontal__label">
-                  <p>Date of Birth:</p>
+                  <p>{label.dateOfBirth}:</p>
                 </dt>
                 <dd class="slds-dl_horizontal__detail">
                   <p>{dateOfBirth}</p>
                 </dd>
 
                 <dt class="slds-dl_horizontal__label">
-                  <p>Primary Phone:</p>
+                  <p>{label.primaryPhone}:</p>
                 </dt>
                 <dd class="slds-dl_horizontal__detail">
                   <p>
@@ -68,7 +68,7 @@
                 </dd>
 
                 <dt class="slds-dl_horizontal__label">
-                  <p>Email:</p>
+                  <p>{label.email}:</p>
                 </dt>
                 <dd class="slds-dl_horizontal__detail">
                   <p>{email}</p>
@@ -80,10 +80,10 @@
           <!-- Column 3: Interaction Information -->
           <div class="slds-col slds-size_5-of-12 slds-p-bottom_none">
             <div class="slds-p-left_medium">
-              <h2 class="slds-text-heading_small slds-text-color_default section-title">Interaction Information</h2>
+              <h2 class="slds-text-heading_small slds-text-color_default section-title">{label.interactionInformation}</h2>
               <dl class="slds-dl_horizontal slds-m-top_small">
                 <dt class="slds-dl_horizontal__label">
-                  <p>Interaction ID:</p>
+                  <p>{label.interactionId}:</p>
                 </dt>
                 <dd class="slds-dl_horizontal__detail">
                   <template if:true={interactionId}>
@@ -93,35 +93,35 @@
                 </dd>
 
                 <dt class="slds-dl_horizontal__label">
-                  <p>Interaction Channel:</p>
+                  <p>{label.interactionChannel}:</p>
                 </dt>
                 <dd class="slds-dl_horizontal__detail">
                   <p>{interactionChannel}</p>
                 </dd>
 
                 <dt class="slds-dl_horizontal__label">
-                  <p>Interaction Sub Channel:</p>
+                  <p>{label.interactionSubChannel}:</p>
                 </dt>
                 <dd class="slds-dl_horizontal__detail">
                   <p>{interactionSubStatus}</p>
                 </dd>
 
                 <dt class="slds-dl_horizontal__label">
-                  <p>Interaction Status:</p>
+                  <p>{label.interactionStatus}:</p>
                 </dt>
                 <dd class="slds-dl_horizontal__detail">
                   <p>{interactionStatus}</p>
                 </dd>
 
                 <dt class="slds-dl_horizontal__label">
-                  <p>Last Updated On:</p>
+                  <p>{label.lastUpdatedOn}:</p>
                 </dt>
                 <dd class="slds-dl_horizontal__detail">
                   <p>{lastUpdatedOn}</p>
                 </dd>
 
                 <dt class="slds-dl_horizontal__label">
-                  <p>Last Updated By:</p>
+                  <p>{label.lastUpdatedBy}:</p>
                 </dt>
                 <dd class="slds-dl_horizontal__detail">
                   <p>{lastUpdatedBy}</p>

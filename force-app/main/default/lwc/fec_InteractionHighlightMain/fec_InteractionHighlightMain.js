@@ -6,10 +6,13 @@ import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 
+import FIRST_ACCESS from "@salesforce/schema/Case.FEC_First_Access__c";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
+import ISCLOSED from "@salesforce/schema/Case.IsClosed";
+import ISOWNER from "@salesforce/schema/Case.FEC_Is_Owner__c";
 import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
-
+import INTERACTION_RECORD_ID from "@salesforce/schema/Case.FEC_Interaction__c";
 import {
   publish,
   subscribe,
@@ -20,12 +23,32 @@ import {
 
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 
+import FEC_INTERACTION_ID_LABEL from "@salesforce/label/c.FEC_Interaction_ID";
+import FEC_INTERACTION_STATUS_LABEL from "@salesforce/label/c.FEC_Interaction_Status_Label";
+import FEC_INTERACTION_DURATION_LABEL from "@salesforce/label/c.FEC_Interaction_Duration_Label";
+import FEC_LAST_UPDATED_BY_LABEL from "@salesforce/label/c.FEC_Last_Updated_By_Label";
+import FEC_LAST_UPDATED_ON_LABEL from "@salesforce/label/c.FEC_Last_Updated_On_Label";
+import FEC_EXECUTE_LABEL from "@salesforce/label/c.FEC_Execute_Label";
+import FEC_CREATE_CASE_BTN_LABEL from "@salesforce/label/c.FEC_Create_Case_Btn_Label";
+import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
+
 export default class Fec_InteractionHighlightMain extends NavigationMixin(
-  LightningElement
+  LightningElement,
 ) {
+  labels = {
+    interactionId: FEC_INTERACTION_ID_LABEL,
+    interactionStatus: FEC_INTERACTION_STATUS_LABEL,
+    interactionDuration: FEC_INTERACTION_DURATION_LABEL,
+    lastUpdatedBy: FEC_LAST_UPDATED_BY_LABEL,
+    lastUpdatedOn: FEC_LAST_UPDATED_ON_LABEL,
+    execute: FEC_EXECUTE_LABEL,
+    createCase: FEC_CREATE_CASE_BTN_LABEL,
+    wrapUp: FEC_WRAP_UP_BTN_LABEL,
+  };
+
   @wire(MessageContext)
   messageContext;
-
+  @track interactionRecordId;
   @api recordId;
   @api isModeEdit = false;
 
@@ -33,6 +56,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   @track customerSegment = "";
 
   viewMode; // handling | review
+  firstAccess;
   recordTypeId;
   recordTypeDevName;
   hasAccountOrContract;
@@ -44,24 +68,38 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   @wire(IsConsoleNavigation)
   isConsoleNavigation;
 
+  isCaseClosed = false;
+  isOwner = false;
+
   // ===============================
   // LOAD CASE DATA
   // ===============================
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [VIEW_MODE, RECORDTYPE_ID, HAS_ACCOUNT_OR_CONTRACT],
+    fields: [
+      VIEW_MODE,
+      RECORDTYPE_ID,
+      HAS_ACCOUNT_OR_CONTRACT,
+      ISCLOSED,
+      ISOWNER,
+      INTERACTION_RECORD_ID,
+    ],
   })
   wiredCase({ data, error }) {
     if (data) {
+      this.firstAccess = getFieldValue(data, FIRST_ACCESS);
+      this.interactionRecordId = getFieldValue(data, INTERACTION_RECORD_ID);
       this.viewMode = getFieldValue(data, VIEW_MODE);
       this.recordTypeId = getFieldValue(data, RECORDTYPE_ID);
       this.hasAccountOrContract = getFieldValue(data, HAS_ACCOUNT_OR_CONTRACT);
+      this.isCaseClosed = getFieldValue(data, ISCLOSED);
+      this.isOwner = getFieldValue(data, ISOWNER);
 
       if (this.recordTypeId) {
         this.loadRecordType();
       }
-      this.tryResetViewMode();
 
+      this.tryResetViewMode();
     } else if (error) {
       console.error("getRecord error:", error);
     }
@@ -73,7 +111,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   async loadRecordType() {
     try {
       this.recordTypeDevName = await getRecordTypeName({
-        recordId: this.recordId
+        recordId: this.recordId,
       });
     } catch (e) {
       console.error("getRecordTypeName error:", e);
@@ -87,8 +125,22 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     return this.viewMode === "handling";
   }
 
+  get showExecute() {
+    return !this.isHandling && !this.isCaseClosed && this.isOwner;
+  }
+
   get isInteractionCase() {
     return this.recordTypeDevName === "Interaction";
+  }
+
+  get createCaseSourceId() {
+    // Nếu là Interaction → dùng record hiện tại
+    if (this.isInteractionCase) {
+      return this.recordId;
+    }
+
+    // Nếu là Customer Case → dùng Interaction Id
+    return this.interactionRecordId || this.recordId;
   }
 
   // ===============================
@@ -100,12 +152,18 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       if (this.viewMode === "handling") {
         resetViewMode({
           recordId: this.recordId,
-          viewMode: "review"
-        }).then(() => {
-          this.viewMode = "review";
-        }).catch(error => {
-          console.error("resetViewMode error:", error);
-        });
+          viewMode: "review",
+        })
+          .then((res) => {
+            this.viewMode = res;
+            console.log(
+              "Update viewMode to review successfully in Fec_InteractionHighlightMain",
+            );
+            this.handlePublishMode(this.viewMode === "handling");
+          })
+          .catch((error) => {
+            console.error("resetViewMode error:", error);
+          });
       }
     }
   }
@@ -135,57 +193,62 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   // ===============================
   handleWrapUpClick() {
     const slaComponent = this.template.querySelector(
-      "c-fec_-interaction-s-l-a"
+      "c-fec_-interaction-s-l-a",
     );
     slaComponent?.handleWrapUpClick?.();
   }
 
   handleExecute() {
-    resetViewMode({ recordId: this.recordId, viewMode: "handling" }).then(() => {
-      this.viewMode = "handling";
-      this._resetDone = false;
-    }).catch(error => {
-      console.error("resetViewMode error:", error);
-    });
-    
+    resetViewMode({ recordId: this.recordId, viewMode: "handling" })
+      .then(() => {
+        this.viewMode = "handling";
+        //this._resetDone = false;
+        console.log(
+          "Update viewMode to handling successfully in Fec_InteractionHighlightMain handleExecute",
+        );
+      })
+      .catch((error) => {
+        console.error("resetViewMode error:", error);
+      });
 
     this.handlePublishMode(true);
   }
 
   async handleCreateCase() {
+    console.log("handleCreateCase from creation highlight");
     if (this.isConsoleNavigation) {
       await openTab({
-        url: `/lightning/cmp/c__fec_InteractionCreateCase?c__recordId=${this.recordId}`,
-        focus: true
+        url: `/lightning/cmp/c__fec_InteractionCreateCase?c__recordId=${this.createCaseSourceId}`,
+        focus: true,
       });
     } else {
       this[NavigationMixin.Navigate]({
         type: "standard__component",
         attributes: {
-          componentName: "c__fec_InteractionCreateCase"
+          componentName: "c__fec_InteractionCreateCase",
         },
         state: {
-          c__recordId: this.recordId
-        }
+          c__recordId: this.createCaseSourceId,
+        },
       });
     }
   }
 
   async handlePublishMode(isEdit) {
     const payload = {
-      isModeEdit: isEdit
+      isModeEdit: isEdit,
     };
 
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
 
-  // subscription = null; 
+  // subscription = null;
 
   // ===============================
   // LIFECYCLE HOOKS (SUBSCRIBE)
   // ===============================
   connectedCallback() {
-    console.log('connectedCallback');
+    console.log("connectedCallback");
   }
 
   // disconnectedCallback() {
