@@ -44,7 +44,6 @@ private class FEC_MasterDataReviewControllerTest {
 
         // 4. Tạo Setting Live (Bản cũ - Non MDM Object)
         FEC_Master_Data_Setting__c live = new FEC_Master_Data_Setting__c(
-            ExternalID__c = 'EXT_SYNC', 
             FEC_Channel__c = 'Web',
             FEC_Field_Mandatory__c = false
         );
@@ -80,7 +79,7 @@ private class FEC_MasterDataReviewControllerTest {
 
         Test.startTest();
         // Gọi các hàm AggregateResult
-        Assert.isNotNull(FEC_MasterDataReviewController.getProductOptions());
+        Assert.isNotNull(FEC_MasterDataReviewController.getCustomerTypeOptions());
         Assert.isNotNull(FEC_MasterDataReviewController.getBizOptions(prod.Id));
         Assert.isNotNull(FEC_MasterDataReviewController.getCategoryOptions(prod.Id, biz.Id));
         Assert.isNotNull(FEC_MasterDataReviewController.getSubCatOptions(prod.Id, biz.Id, cat.Id));

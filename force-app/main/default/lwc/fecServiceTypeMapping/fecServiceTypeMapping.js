@@ -8,7 +8,7 @@ import LABEL_TOAST_SAVE_SUCCESS_MESSAGE from '@salesforce/label/c.FEC_Toast_Save
 import LABEL_TOAST_SAVE_ERROR_TITLE from '@salesforce/label/c.FEC_Toast_Save_Error_Title';
 import LABEL_TOAST_SAVE_ERROR_MESSAGE from '@salesforce/label/c.FEC_Toast_Save_Error_Message';
 import LABEL_BUTTON_SAVE from '@salesforce/label/c.FEC_Button_Save';
-import { VARIANT_SUCCESS, VARIANT_ERROR } from 'c/fecConstants/fecConstants';
+import { VARIANT_SUCCESS, VARIANT_ERROR } from 'c/fecConstants';
 import LABEL_SERVICE_TYPES from '@salesforce/label/c.FEC_Label_ServiceTypes';
 import LABEL_SERVICETYP_MAPP_TITLE from '@salesforce/label/c.FEC_ServiceTypeMapping_Title';
 import LABEL_TABLE_HEADER_PROPERTY from '@salesforce/label/c.FEC_TableHeader_PropertyName';

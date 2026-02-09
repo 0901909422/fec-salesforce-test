@@ -48,7 +48,7 @@ public with sharing class FEC_NatureOfCaseTreeController {
          } catch (Exception e) {
              System.debug('FEC_NatureOfCaseTreeController.getNatureOfCaseTreeData error: ' + e);
              // Return empty list on failure to avoid throwing raw exceptions to UI
-             return new List<NatureOfCaseTreeItem>();
+             return new List<FEC_NatureOfCaseTreeItem>();
          }
 
          return treeItems;

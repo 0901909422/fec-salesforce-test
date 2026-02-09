@@ -1,5 +1,5 @@
-import { LightningElement, api, track } from 'lwc';
-import getMasterDataMappings from '@salesforce/apex/FEC_NatureOfCaseTreeController.getMasterDataMappings';
+import { LightningElement, api, track, wire } from 'lwc';
+import fetchAllMasterDataMappings from '@salesforce/apex/FEC_NatureOfCaseTreeService.fetchAllMasterDataMappings';
 import updateNode from '@salesforce/apex/FEC_NatureOfCaseTreeController.updateNode';
 import { showLog } from 'c/fecUtils'; // Import hàm chung
 import LABEL_ALIAS from '@salesforce/label/c.FEC_Label_Alias';
@@ -25,7 +25,7 @@ import LABEL_NAME_VN_DISPLAY from '@salesforce/label/c.FEC_Label_Name_VN_Display
 import LABEL_TYPE_DISPLAY from '@salesforce/label/c.FEC_Label_Type_Display';
 import LABEL_UPDATED_SUCCESS from '@salesforce/label/c.FEC_Updated_Success';
 import LABEL_PLEASE_FILL_ALL from '@salesforce/label/c.FEC_Please_Fill_All';
-import { VARIANT_SUCCESS, VARIANT_ERROR, ICON_MAP, ICON_FALLBACK, TYPE_TEXT } from 'c/fecConstants/fecConstants';
+import { VARIANT_SUCCESS, VARIANT_ERROR, ICON_MAP, ICON_FALLBACK, TYPE_TEXT } from 'c/fecConstants';
 
 // Node type keys used in data/model
 const NODE_PRODUCT_LINE = 'Product_Line';
@@ -49,7 +49,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
     // runtime caches / helpers
     mappingRecords = [];
     wiredMappingsResult = null;
-    objectMap = {}; // optional mapping prefix -> object label (populate in consuming code)
+    objectMap = {};
     selectedNodePrefix = null;
     _item = null;
     _originalItem = null;
@@ -65,8 +65,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
     labelError = LABEL_ERROR;
     labelPromptSelectNode = LABEL_PROMPT_SELECT_NODE_DETAIL;
 
-    // Wire the node details - only when item.id exists
-
     get nodeId() {
         return this.item?.id;
     }
@@ -75,7 +73,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
         return this.item?.type;
     }
 
-    @wire(getMasterDataMappings)
+    @wire(fetchAllMasterDataMappings)
     wiredMappings(result) {
         this.wiredMappingsResult = result;
         if (result.data) {

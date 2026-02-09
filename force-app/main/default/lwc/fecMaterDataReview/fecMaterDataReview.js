@@ -26,7 +26,7 @@ import LABEL_SYNCED_RECORDS from '@salesforce/label/c.FEC_Label_Synced_Records';
 import LABEL_BUTTON_EXPAND_ALL from '@salesforce/label/c.FEC_Button_Expand_All';
 import LABEL_BUTTON_COLLAPSE_ALL from '@salesforce/label/c.FEC_Button_Collapse_All';
 import LABEL_NODATA_MESSAGE from '@salesforce/label/c.FEC_NoData_Message';
-import { ICON_NEW, ICON_UPDATED, ICON_SYNCED, ICON_CHEVRON_DOWN, ICON_CHEVRON_RIGHT, TITLE_CLASS_SUCCESS, TITLE_CLASS_ERROR, TITLE_CLASS_WEAK, SECTION_NEW, SECTION_UPDATED, SECTION_SYNCED } from 'c/fecConstants/fecConstants';
+import { ICON_NEW, ICON_UPDATED, ICON_SYNCED, ICON_CHEVRON_DOWN, ICON_CHEVRON_RIGHT, TITLE_CLASS_SUCCESS, TITLE_CLASS_ERROR, TITLE_CLASS_WEAK, SECTION_NEW, SECTION_UPDATED, SECTION_SYNCED } from 'c/fecConstants';
 
 export default class FecMasterDataReview extends LightningElement {
     @track isLoading = false;

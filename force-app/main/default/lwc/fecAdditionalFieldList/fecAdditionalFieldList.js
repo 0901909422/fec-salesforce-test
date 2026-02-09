@@ -5,7 +5,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 
 // Shared constants and labels
-import { FIELD_FEC_UNIQUE_ID, FIELD_NAME, FIELD_NAME_VN, FIELD_FEC_TYPE, FIELD_FIELD_STATUS, FIELD_FIELD_MANDATORY, FIELD_PROCESS_CHANGE_STATUS, FIELD_EXTERNAL_ID } from 'c/fecConstants/fecConstants';
+import { FIELD_FEC_UNIQUE_ID, FIELD_NAME, FIELD_NAME_VN, FIELD_FEC_TYPE, FIELD_FIELD_STATUS, FIELD_FIELD_MANDATORY, FIELD_PROCESS_CHANGE_STATUS, FIELD_EXTERNAL_ID } from 'c/fecConstants';
 import LABEL_EDIT from '@salesforce/label/c.FEC_Edit';
 import LABEL_DELETE from '@salesforce/label/c.FEC_Delete';
 import LABEL_MANAGE_LIST_VALUES from '@salesforce/label/c.FEC_Manage_List_Values';

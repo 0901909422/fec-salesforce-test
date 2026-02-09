@@ -3,7 +3,7 @@ import getFieldListValues from '@salesforce/apex/FEC_AdditionalFieldController.g
 import deleteFieldListValue from '@salesforce/apex/FEC_AdditionalFieldController.deleteFieldListValue';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
-import { OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE, FIELD_ORDER, FIELD_PARENT_FIELD } from 'c/fecConstants/fecConstants';
+import { OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE, FIELD_ORDER, FIELD_PARENT_FIELD } from 'c/fecConstants';
 import LABEL_NEW_LIST_VALUE from '@salesforce/label/c.FEC_New_List_Value';
 import LABEL_LIST_VALUE_CLOSE from '@salesforce/label/c.FEC_List_Value_Modal_Close_Title';
 import LABEL_LIST_VALUE_CANCEL from '@salesforce/label/c.FEC_List_Value_Cancel';

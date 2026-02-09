@@ -11,7 +11,7 @@ import LABEL_SAVE_SUCCESS_MSG from '@salesforce/label/c.FEC_Save_Success_Message
 import LABEL_ERROR_TITLE from '@salesforce/label/c.FEC_Error_Title';
 
 // Shared constants
-import { OBJECT_MDM_ADDITIONAL_FIELD, FIELD_FEC_UNIQUE_ID, FIELD_NAME, FIELD_NAME_VN, FIELD_FEC_TYPE, FIELD_FIELD_STATUS, FIELD_FIELD_MANDATORY } from 'c/fecConstants/fecConstants';
+import { OBJECT_MDM_ADDITIONAL_FIELD, FIELD_FEC_UNIQUE_ID, FIELD_NAME, FIELD_NAME_VN, FIELD_FEC_TYPE, FIELD_FIELD_STATUS, FIELD_FIELD_MANDATORY } from 'c/fecConstants';
 
 /**
  * FecAdditionalFieldForm

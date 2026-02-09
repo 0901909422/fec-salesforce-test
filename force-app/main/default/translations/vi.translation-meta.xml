@@ -1,795 +1,479 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Translations xmlns="http://soap.sforce.com/2006/04/metadata" language="vi">
-    <labels>
-        <fullName>FEC_Cancel</fullName>
-        <value>Hủy</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Cancel_Title</fullName>
-        <value>Hủy và đóng form</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Save</fullName>
-        <value>Lưu</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Save_Title</fullName>
-        <value>Lưu thay đổi</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Success_Title</fullName>
-        <value>Thành công</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Save_Success_Message</fullName>
-        <value>Bản ghi đã được lưu.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Error_Title</fullName>
-        <value>Lỗi</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Operation_Success</fullName>
-        <value>Thành công</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Error_Delete_Record_Prefix</fullName>
-        <value>Lỗi khi xóa bản ghi: </value>
-    </labels>
-    <labels>
-        <fullName>FEC_Error_Delete_FieldList_Prefix</fullName>
-        <value>Lỗi khi xóa Field List Value: </value>
-    </labels>
-    <labels>
-        <fullName>FEC_Delete_Success_Message</fullName>
-        <value>Bản ghi đã bị xóa.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Error_Retrieve_Additional_Fields</fullName>
-        <value>Không thể lấy danh sách Additional Fields: </value>
-    </labels>
-    <labels>
-        <fullName>FEC_Warning_Type_Not_List</fullName>
-        <value>FEC Type của trường '{0}' không phải là 'List'.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Warning_Title</fullName>
-        <value>Cảnh báo</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Additional_Fields_List_Title</fullName>
-        <value>Danh sách Additional Field</value>
-    </labels>
-    <labels>
-        <fullName>FEC_New_Additional_Field</fullName>
-        <value>Thêm trường mới</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Confirm_Delete_Title</fullName>
-        <value>Xác nhận xóa</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Confirm_Delete_Message</fullName>
-        <value>Bạn có chắc muốn xóa bản ghi này?</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_Cancel</fullName>
-        <value>Hủy</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_Add_Child</fullName>
-        <value>+ Thêm Con</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_Delete</fullName>
-        <value>Xóa</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_Close</fullName>
-        <value>Đóng</value>
-    </labels>
-    <labels>
-        <fullName>FEC_New_List_Value</fullName>
-        <value>Thêm giá trị</value>
-    </labels>
-    <labels>
-        <fullName>FEC_List_Value_Modal_Close_Title</fullName>
-        <value>Đóng dialog</value>
-    </labels>
-    <labels>
-        <fullName>FEC_List_Value_Cancel</fullName>
-        <value>Hủy</value>
-    </labels>
-    <labels>
-        <fullName>FEC_List_Value_Save</fullName>
-        <value>Lưu</value>
-    </labels>
-    <labels>
-        <fullName>FEC_List_Value_Confirm_Delete_Title</fullName>
-        <value>Xác nhận xóa</value>
-    </labels>
-    <labels>
-        <fullName>FEC_List_Value_Confirm_Delete_Message</fullName>
-        <value>Bạn có chắc muốn xóa giá trị này?</value>
-    </labels>
-    <labels>
-        <fullName>FEC_AllMasterData_Title</fullName>
-        <value>Toàn bộ Master Data FEC</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Refresh_Data</fullName>
-        <value>Làm mới dữ liệu</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Reset_MDM</fullName>
-        <value>Đặt lại MDM</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Push_MDM_To_Live</fullName>
-        <value>Đẩy MDM lên Live</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Product_Type</fullName>
-        <value>Loại sản phẩm</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Business_Process</fullName>
-        <value>Quy trình nghiệp vụ</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Category</fullName>
-        <value>Danh mục</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Sub_Category</fullName>
-        <value>Danh mục con</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Sub_Code</fullName>
-        <value>Mã con</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Master_Setting</fullName>
-        <value>Cài đặt chính</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Channel</fullName>
-        <value>Kênh</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Nature_Of_Case</fullName>
-        <value>Bản chất vụ việc</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Additional_Field</fullName>
-        <value>Trường bổ sung</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Additional_Field_List_Value</fullName>
-        <value>Giá trị danh sách</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Case_Stage</fullName>
-        <value>Giai đoạn</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Node_Details</fullName>
-        <value>Chi tiết Node</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Master_Data_Settings</fullName>
-        <value>Cấu hình Master Data</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_ID</fullName>
-        <value>ID</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_ExternalID</fullName>
-        <value>ExternalID</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Name</fullName>
-        <value>Tên</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Alias</fullName>
-        <value>Bí danh</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Code</fullName>
-        <value>Mã</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Name_VN</fullName>
-        <value>Tên (VN)</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Order</fullName>
-        <value>Thứ tự</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Status</fullName>
-        <value>Trạng thái</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Process_Status</fullName>
-        <value>Trạng thái xử lý</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Refresh_Success</fullName>
-        <value>Dữ liệu đã được làm mới</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Refresh_Error</fullName>
-        <value>Không thể làm mới dữ liệu</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Confirm_Sync_Question</fullName>
-        <value>Hệ thống sẽ chạy đồng bộ ngầm (Batch). Bạn có muốn bắt đầu không?</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Notify_Sync_Started</fullName>
-        <value>Tiến trình đồng bộ đã bắt đầu. Vui lòng đợi vài phút và làm mới trang.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Confirm_Push_Question</fullName>
-        <value>Dữ liệu nghiệp vụ sẽ được cập nhật từ MDM. Bạn có chắc chắn?</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Notify_Push_Started</fullName>
-        <value>Tiến trình đẩy dữ liệu về bảng nghiệp vụ đã bắt đầu.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Error</fullName>
-        <value>Lỗi</value>
-    </labels>
-    <labels>
-        <fullName>FEC_NOC_Product_Type</fullName>
-        <value>Loại sản phẩm NOC</value>
-    </labels>
-    <labels>
-        <fullName>FEC_NOC_Business_Process</fullName>
-        <value>Quy trình NOC</value>
-    </labels>
-    <labels>
-        <fullName>FEC_NOC_Category</fullName>
-        <value>Danh mục NOC</value>
-    </labels>
-    <labels>
-        <fullName>FEC_NOC_Sub_Category</fullName>
-        <value>Danh mục con NOC</value>
-    </labels>
-    <labels>
-        <fullName>FEC_NOC_Sub_Code</fullName>
-        <value>Mã con NOC</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Type</fullName>
-        <value>Loại</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Business_Process</fullName>
-        <value>Quy trình nghiệp vụ</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Additional_Field</fullName>
-        <value>Trường bổ sung</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Channel</fullName>
-        <value>Kênh</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Applicable_Role</fullName>
-        <value>Vai trò áp dụng</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Property_Name</fullName>
-        <value>Tên thuộc tính</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Section</fullName>
-        <value>Phần</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Order</fullName>
-        <value>Thứ tự</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Status</fullName>
-        <value>Trạng thái</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_New_Setting</fullName>
-        <value>Thiết lập mới</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Action_Edit</fullName>
-        <value>Sửa</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Action_Delete</fullName>
-        <value>Xóa</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Confirm_Delete_Property</fullName>
-        <value>Bạn có chắc muốn xóa bản ghi này?</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Deleted_Success</fullName>
-        <value>Đã xóa</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Save_Success</fullName>
-        <value>Đã lưu thành công</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Update_Status_Success</fullName>
-        <value>Đã cập nhật trạng thái</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Flow_Stages_Title</fullName>
-        <value>Các giai đoạn luồng</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Add_Stage</fullName>
-        <value>Thêm giai đoạn</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Stage</fullName>
-        <value>Giai đoạn</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Alt_Edit</fullName>
-        <value>Sửa</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Alt_Remove</fullName>
-        <value>Xóa</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Prompt_Enter_New_Stage_Name</fullName>
-        <value>Nhập tên giai đoạn mới:</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Flow_Control_Title</fullName>
-        <value>Xem cấu hình Flow Control</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Control_Field</fullName>
-        <value>Trường điều khiển</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Col_Config_Value</fullName>
-        <value>Giá trị cấu hình</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Prompt_Select_Node_Flow_Control</fullName>
-        <value>Chọn Node để xem cấu hình Flow Control</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Control_Name</fullName>
-        <value>Tên điều khiển</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Business_Code</fullName>
-        <value>Mã nghiệp vụ</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Mapping_Alias</fullName>
-        <value>Bí danh mapping</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Customer_Segment</fullName>
-        <value>Phân đoạn khách hàng</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Execution_Order</fullName>
-        <value>Thứ tự thực thi</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Status_Control</fullName>
-        <value>Trạng thái</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Localized_Name</fullName>
-        <value>Tên địa phương</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MasterData_Title</fullName>
-        <value>Quản lý Master Data FEC</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_Save_All</fullName>
-        <value>Lưu tất cả</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Spinner_Saving</fullName>
-        <value>Đang lưu...</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Notify_Cancel_Node_Changes</fullName>
-        <value>Đã hủy thay đổi tạm thời cho node này.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Success</fullName>
-        <value>Thành công</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Error</fullName>
-        <value>Lỗi</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Info</fullName>
-        <value>Thông báo</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Notify_Save_All</fullName>
-        <value>Đã lưu {0} bản ghi thành công</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Alias</fullName>
-        <value>Alias</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Name_EN</fullName>
-        <value>Tên tiếng Anh</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Name_VN</fullName>
-        <value>Tên tiếng Việt</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Order</fullName>
-        <value>Thứ tự</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Status</fullName>
-        <value>Trạng thái</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_Undo</fullName>
-        <value>Hoàn tác</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Spinner_Loading_Node_Details</fullName>
-        <value>Đang tải chi tiết node...</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Error</fullName>
-        <value>Lỗi</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Prompt_Select_Node_Detail</fullName>
-        <value>Vui lòng chọn một node để xem chi tiết.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Node_Product_Line</fullName>
-        <value>Dòng sản phẩm</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Node_Service_Type</fullName>
-        <value>Loại dịch vụ</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Node_Category</fullName>
-        <value>Loại</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Node_Sub_Category</fullName>
-        <value>Tiểu loại</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Node_Action</fullName>
-        <value>Hành động</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Child_Service_Types</fullName>
-        <value>Loại dịch vụ</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Child_Categories</fullName>
-        <value>Danh mục</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Child_Sub_Categories</fullName>
-        <value>Tiểu danh mục</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Child_Actions</fullName>
-        <value>Hành động</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Record_ID</fullName>
-        <value>ID bản ghi</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Name_VN_Display</fullName>
-        <value>Tên (Tiếng Việt)</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Type_DISPLAY</fullName>
-        <value>Loại</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Updated_Success</fullName>
-        <value>Cập nhật thành công</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Please_Fill_All</fullName>
-        <value>Vui lòng điền đầy đủ các trường bắt buộc.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_ReadOnly</fullName>
-        <value>Chỉ đọc</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Mandatory</fullName>
-        <value>Bắt buộc</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Action</fullName>
-        <value>Hành động</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Property_Configuration</fullName>
-        <value>Cấu hình thuộc tính</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tab_Fraud_Integration_Mapping</fullName>
-        <value>Bản đồ tích hợp Fraud</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Default_Channel_Name</fullName>
-        <value>New CSM</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Modal_New_Property_Title</fullName>
-        <value>Thiết lập thuộc tính mới</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Modal_Edit_Property_Title</fullName>
-        <value>Sửa cấu hình thuộc tính</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_Add_Integration</fullName>
-        <value>Thêm Integration</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Active</fullName>
-        <value>Đang hoạt động</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Inactive</fullName>
-        <value>Ngưng hoạt động</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tooltip_Click_To_Deactivate</fullName>
-        <value>Nhấn để tắt</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tooltip_Click_To_Activate</fullName>
-        <value>Nhấn để bật</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Default_Product_Line</fullName>
-        <value>Giao dịch thẻ</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Default_Service_TYPE</fullName>
-        <value>Xử lý gian lận</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Default_Category</fullName>
-        <value>Giao dịch gian lận</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Default_Sub_Category</fullName>
-        <value>OTP bị xâm phạm</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Channel_Multiselect</fullName>
-        <value>Kênh (Chọn nhiều)</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Applicable_Roles</fullName>
-        <value>Vai trò áp dụng</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_CustomerType_Existing</fullName>
-        <value>Đã tồn tại</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_CustomerType_NonExisting</fullName>
-        <value>Chưa tồn tại</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_CustomerType_All</fullName>
-        <value>Tất cả</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Field_Object_Name</fullName>
-        <value>Tên đối tượng trường</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Property_Name</fullName>
-        <value>Tên thuộc tính</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Section</fullName>
-        <value>Mục</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Order_Display</fullName>
-        <value>Thứ tự hiển thị</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Editable_Role</fullName>
-        <value>Vai trò có thể chỉnh sửa</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Applicable_Role</fullName>
-        <value>Vai trò áp dụng</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Stage_Name</fullName>
-        <value>Tên giai đoạn</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Status</fullName>
-        <value>Trạng thái</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Mandatory</fullName>
-        <value>Bắt buộc</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_ReadOnly</fullName>
-        <value>Chỉ đọc</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Editable</fullName>
-        <value>Có thể chỉnh sửa</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_Cancel</fullName>
-        <value>Hủy</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_Save</fullName>
-        <value>Lưu</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Parent_Nature_Info</fullName>
-        <value>ID Nature Of Case cha (Gán tự động):</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Placeholder_Select_Property</fullName>
-        <value>Chọn Tên Thuộc Tính</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Placeholder_Select_CaseStage</fullName>
-        <value>Chọn Giai Đoạn</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Validation_Title</fullName>
-        <value>Lỗi hợp lệ</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Validation_Message</fullName>
-        <value>Vui lòng điền đầy đủ các trường bắt buộc.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Save_Success_Title</fullName>
-        <value>Thành công</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Save_Success_Message</fullName>
-        <value>Thông tin Mapping đã được cập nhật.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Save_Error_Title</fullName>
-        <value>Lỗi</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Save_Error_Message</fullName>
-        <value>Có lỗi xảy ra khi lưu.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_Save</fullName>
-        <value>Lưu</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_SaveAndNew</fullName>
-        <value>Lưu &amp; Tạo mới</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Tree_Title</fullName>
-        <value>Cấu trúc Nature of Case</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Placeholder_Search_Tree</fullName>
-        <value>Nhập từ khóa...</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Show_Field</fullName>
-        <value>Hiển thị trường</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_Add_Root</fullName>
-        <value>Thêm bản ghi gốc</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Button_Add_Node</fullName>
-        <value>Thêm Node</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Message_No_Items</fullName>
-        <value>Không tìm thấy mục.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Message_Loading_Tree</fullName>
-        <value>Đang tải cấu trúc cây...</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Aria_Tree_Label</fullName>
-        <value>Cấu trúc Nature of Case</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Aria_Add_Node</fullName>
-        <value>Thêm node mới vào cây Nature of Case</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Display_Code</fullName>
-        <value>Mã</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Display_Alias</fullName>
-        <value>Bí danh</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Display_Name_VN</fullName>
-        <value>Tên VN</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Display_Name_EN</fullName>
-        <value>Tên EN</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Status_ALL</fullName>
-        <value>TẤT CẢ</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Status_ACTIVE</fullName>
-        <value>Đang hoạt động</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Status_INACTIVE</fullName>
-        <value>Không hoạt động</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_ServiceTypes</fullName>
-        <value>Loại dịch vụ</value>
-    </labels>
-    <labels>
-        <fullName>FEC_ServiceTypeMapping_Title</fullName>
-        <value>Tham chiếu thuộc tính ServiceType</value>
-    </labels>
-    <labels>
-        <fullName>FEC_TableHeader_PropertyName</fullName>
-        <value>Tên thuộc tính (Additional Field)</value>
-    </labels>
-    <labels>
-        <fullName>FEC_TableHeader_Reference</fullName>
-        <value>Tham chiếu thuộc tính Service Type</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Placeholder_Mapping_Reference</fullName>
-        <value>Nhập tham chiếu mapping...</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Message_Select_Property</fullName>
-        <value>Chọn một Property bên trái để cấu hình Mapping.</value>
-    </labels>
+        <customLabels>
+            <name>FEC_Cancel</name>
+            <label>Hủy</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Cancel_Title</name>
+            <label>Hủy và đóng form</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Save</name>
+            <label>Lưu</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Save_Title</name>
+            <label>Lưu thay đổi</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Success_Title</name>
+            <label>Thành công</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Save_Success_Message</name>
+            <label>Bản ghi đã được lưu.</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Error_Title</name>
+            <label>Lỗi</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Operation_Success</name>
+            <label>Thành công</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Error_Delete_Record_Prefix</name>
+            <label>Lỗi khi xóa bản ghi: </label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Error_Delete_FieldList_Prefix</name>
+            <label>Lỗi khi xóa Field List label: </label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Delete_Success_Message</name>
+            <label>Bản ghi đã bị xóa.</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Error_Retrieve_Additional_Fields</name>
+            <label>Không thể lấy danh sách Additional Fields: </label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Warning_Type_Not_List</name>
+            <label>FEC Type của trường '{0}' không phải là 'List'.</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Warning_Title</name>
+            <label>Cảnh báo</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Additional_Fields_List_Title</name>
+            <label>Danh sách Additional Field</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_New_Additional_Field</name>
+            <label>Thêm trường mới</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Confirm_Delete_Title</name>
+            <label>Xác nhận xóa</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Confirm_Delete_Message</name>
+            <label>Bạn có chắc muốn xóa bản ghi này?</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Button_Cancel</name>
+            <label>Hủy</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Button_Add_Child</name>
+            <label>+ Thêm Con</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Button_Delete</name>
+            <label>Xóa</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Button_Close</name>
+            <label>Đóng</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_New_List_Value</name>
+            <label>Thêm giá trị</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_List_Value_Modal_Close_Title</name>
+            <label>Đóng dialog</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_List_Value_Cancel</name>
+            <label>Hủy</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_List_Value_Save</name>
+            <label>Lưu</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_List_Value_Confirm_Delete_Title</name>
+            <label>Xác nhận xóa</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_List_Value_Confirm_Delete_Message</name>
+            <label>Bạn có chắc muốn xóa giá trị này?</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_AllMasterData_Title</name>
+            <label>Toàn bộ Master Data FEC</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Refresh_Data</name>
+            <label>Làm mới dữ liệu</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Reset_MDM</name>
+            <label>Đặt lại MDM</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Push_MDM_To_Live</name>
+            <label>Đẩy MDM lên Live</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Product_Type</name>
+            <label>Loại sản phẩm</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Business_Process</name>
+            <label>Quy trình nghiệp vụ</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Category</name>
+            <label>Danh mục</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Sub_Category</name>
+            <label>Danh mục con</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Sub_Code</name>
+            <label>Mã con</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Master_Setting</name>
+            <label>Cài đặt chính</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Channel</name>
+            <label>Kênh</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Nature_Of_Case</name>
+            <label>Bản chất vụ việc</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Additional_Field</name>
+            <label>Trường bổ sung</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Additional_Field_List_Value</name>
+            <label>Giá trị danh sách</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Case_Stage</name>
+            <label>Giai đoạn</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Node_Details</name>
+            <label>Chi tiết Node</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Tab_Master_Data_Settings</name>
+            <label>Cấu hình Master Data</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_ID</name>
+            <label>ID</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_ExternalID</name>
+            <label>ExternalID</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Name</name>
+            <label>Tên</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Alias</name>
+            <label>Bí danh</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Code</name>
+            <label>Mã</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Name_VN</name>
+            <label>Tên (VN)</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Order</name>
+            <label>Thứ tự</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Process_Status</name>
+            <label>Trạng thái xử lý</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Toast_Refresh_Success</name>
+            <label>Dữ liệu đã được làm mới</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Toast_Refresh_Error</name>
+            <label>Không thể làm mới dữ liệu</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Confirm_Sync_Question</name>
+            <label>Hệ thống sẽ chạy đồng bộ ngầm (Batch). Bạn có muốn bắt đầu không?</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Notify_Sync_Started</name>
+            <label>Tiến trình đồng bộ đã bắt đầu. Vui lòng đợi vài phút và làm mới trang.</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Confirm_Push_Question</name>
+            <label>Dữ liệu nghiệp vụ sẽ được cập nhật từ MDM. Bạn có chắc chắn?</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Notify_Push_Started</name>
+            <label>Tiến trình đẩy dữ liệu về bảng nghiệp vụ đã bắt đầu.</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Toast_Error</name>
+            <label>Lỗi</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_NOC_Product_Type</name>
+            <label>Loại sản phẩm NOC</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_NOC_Business_Process</name>
+            <label>Quy trình NOC</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_NOC_Category</name>
+            <label>Danh mục NOC</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_NOC_Sub_Category</name>
+            <label>Danh mục con NOC</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_NOC_Sub_Code</name>
+            <label>Mã con NOC</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Additional_Field</name>
+            <label>Trường bổ sung</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Channel</name>
+            <label>Kênh</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Applicable_Role</name>
+            <label>Vai trò áp dụng</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Property_Name</name>
+            <label>Tên thuộc tính</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Section</name>
+            <label>Phần</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Status</name>
+            <label>Trạng thái</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Button_New_Setting</name>
+            <label>Thiết lập mới</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Action_Edit</name>
+            <label>Sửa</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Action_Delete</name>
+            <label>Xóa</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Confirm_Delete_Property</name>
+            <label>Bạn có chắc muốn xóa bản ghi này?</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Toast_Deleted_Success</name>
+            <label>Đã xóa</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Toast_Save_Success</name>
+            <label>Đã lưu thành công</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Toast_Update_Status_Success</name>
+            <label>Đã cập nhật trạng thái</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Flow_Stages_Title</name>
+            <label>Các giai đoạn luồng</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Add_Stage</name>
+            <label>Thêm giai đoạn</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_name_Stage</name>
+            <label>Giai đoạn</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Alt_Edit</name>
+            <label>Sửa</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Alt_Remove</name>
+            <label>Xóa</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Prompt_Enter_New_Stage_Name</name>
+            <label>Nhập tên giai đoạn mới:</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Flow_Control_Title</name>
+            <label>Xem cấu hình Flow Control</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Control_Field</name>
+            <label>Trường điều khiển</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Col_Config_Value</name>
+            <label>Giá trị cấu hình</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Prompt_Select_Node_Flow_Control</name>
+            <label>Chọn Node để xem cấu hình Flow Control</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_name_Control_name</name>
+            <label>Tên điều khiển</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_MasterData_Title</name>
+            <label>Quản lý Master Data FEC</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Button_Save_All</name>
+            <label>Lưu tất cả</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Spinner_Saving</name>
+            <label>Đang lưu...</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Notify_Cancel_Node_Changes</name>
+            <label>Đã hủy thay đổi tạm thời cho node này.</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Toast_Success</name>
+            <label>Thành công</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Toast_Info</name>
+            <label>Thông báo</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Notify_Save_All</name>
+            <label>Đã lưu {0} bản ghi thành công</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Button_Undo</name>
+            <label>Hoàn tác</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Spinner_Loading_Node_Details</name>
+            <label>Đang tải chi tiết node...</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Prompt_Select_Node_Detail</name>
+            <label>Vui lòng chọn một node để xem chi tiết.</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Node_Product_Line</name>
+            <label>Dòng sản phẩm</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Node_Service_Type</name>
+            <label>Loại dịch vụ</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Node_Category</name>
+            <label>Loại</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Node_Sub_Category</name>
+            <label>Tiểu loại</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Node_Action</name>
+            <label>Hành động</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Child_Service_Types</name>
+            <label>Loại dịch vụ</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Child_Categories</name>
+            <label>Danh mục</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Child_Sub_Categories</name>
+            <label>Tiểu danh mục</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Child_Actions</name>
+            <label>Hành động</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Label_Display_Name_VN</name>
+            <label>Tên VN</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Label_Display_Name_EN</name>
+            <label>Tên EN</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Label_Status_ALL</name>
+            <label>TẤT CẢ</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Label_Status_ACTIVE</name>
+            <label>Đang hoạt động</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Label_Status_INACTIVE</name>
+            <label>Không hoạt động</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Label_ServiceTypes</name>
+            <label>Loại dịch vụ</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_ServiceTypeMapping_Title</name>
+            <label>Tham chiếu thuộc tính ServiceType</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_TableHeader_PropertyName</name>
+            <label>Tên thuộc tính (Additional Field)</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_TableHeader_Reference</name>
+            <label>Tham chiếu thuộc tính Service Type</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Placeholder_Mapping_Reference</name>
+            <label>Nhập tham chiếu mapping...</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Message_Select_Property</name>
+            <label>Bạn có chắc muốn xóa giá trị này?</label>
+        </customLabels>
 </Translations>

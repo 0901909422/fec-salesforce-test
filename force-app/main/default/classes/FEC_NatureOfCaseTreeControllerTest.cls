@@ -60,7 +60,7 @@ private class FEC_NatureOfCaseTreeControllerTest {
     }
 
     @isTest static void testGetNatureOfCaseTreeData() {
-        List<FEC_NatureOfCaseTreeController.NatureOfCaseTreeItem> tree = FEC_NatureOfCaseTreeController.getNatureOfCaseTreeData();
+        List<FEC_NatureOfCaseTreeItem> tree = FEC_NatureOfCaseTreeController.getNatureOfCaseTreeData();
         System.assert(!tree.isEmpty());
     }
 
@@ -121,7 +121,7 @@ private class FEC_NatureOfCaseTreeControllerTest {
     }
 
     @isTest static void testGetMasterDataMappings() {
-        List<FEC_MDM_Nature_Of_Case__c> mappings = FEC_NatureOfCaseTreeController.getMasterDataMappings();
+        List<FEC_MDM_Nature_Of_Case__c> mappings = FEC_NatureOfCaseTreeService.fetchAllMasterDataMappings();
         System.assert(!mappings.isEmpty());
     }
 

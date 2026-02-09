@@ -4,7 +4,7 @@ import deleteChannel from '@salesforce/apex/FEC_ChannelController.deleteChannel'
 import { refreshApex } from '@salesforce/apex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { showLog } from 'c/fecUtils'; // Tận dụng fecUtils của bạn
-import { FIELD_CHANNEL_ID, FIELD_CHANNEL_VN_NAME, FIELD_CHANNEL_STATUS, FIELD_NAME, VARIANT_SUCCESS, VARIANT_ERROR, OBJECT_MDM_CHANNEL, FIELD_CHANNEL_VN_NAME as UNUSED } from 'c/fecConstants/fecConstants';
+import { FIELD_CHANNEL_ID, FIELD_CHANNEL_VN_NAME, FIELD_CHANNEL_STATUS, FIELD_NAME, VARIANT_SUCCESS, VARIANT_ERROR, OBJECT_MDM_CHANNEL, FIELD_CHANNEL_VN_NAME as UNUSED } from 'c/fecConstants';
 import LABEL_COL_CHANNEL_ID from '@salesforce/label/c.FEC_Col_Channel_ID';
 import LABEL_COL_CHANNEL_VN_NAME from '@salesforce/label/c.FEC_Col_Channel_VN_Name';
 import LABEL_COL_CHANNEL_STATUS from '@salesforce/label/c.FEC_Col_Channel_Status';

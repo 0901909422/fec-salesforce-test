@@ -4,43 +4,43 @@
 
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
                 <lightning-input label={LABEL_FIELD_OBJECT_NAME} name={FIELD_FIELD_OBJECT_NAME}
-                    value={formData[FIELD_FIELD_OBJECT_NAME]} onchange={handleInputChange} required>
+                    value="\{formData[FIELD_FIELD_OBJECT_NAME]}" onchange={handleInputChange} required>
                 </lightning-input>
             </div>
 
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
                 <lightning-combobox name={FIELD_FIELD_API_NAME} label={LABEL_PROPERTY_NAME}
-                    value={formData[FIELD_FIELD_API_NAME]} placeholder={LABEL_PLACEHOLDER_PROPERTY}
+                    value="\{formData[FIELD_FIELD_API_NAME]}" placeholder={LABEL_PLACEHOLDER_PROPERTY}
                     options={fieldApiNameOptions} onchange={handleInputChange} required>
                 </lightning-combobox>
             </div>
 
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                <lightning-input label={LABEL_SECTION} name={FIELD_SECTION} value={formData[FIELD_SECTION]}
+                <lightning-input label={LABEL_SECTION} name={FIELD_SECTION} value="\{formData[FIELD_SECTION]}"
                     onchange={handleInputChange}>
                 </lightning-input>
             </div>
 
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
                 <lightning-input label={LABEL_ORDER_DISPLAY} name={FIELD_FIELD_ORDER_DISPLAY} type="number"
-                    value={formData[FIELD_FIELD_ORDER_DISPLAY]} onchange={handleInputChange}>
+                    value="\{formData[FIELD_FIELD_ORDER_DISPLAY]}" onchange={handleInputChange}>
                 </lightning-input>
             </div>
 
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                <lightning-input label={LABEL_EDITABLE_ROLE} name={FIELD_EDITABLE_ROLE} value={formData[FIELD_EDITABLE_ROLE]}
+                <lightning-input label={LABEL_EDITABLE_ROLE} name={FIELD_EDITABLE_ROLE} value="\{formData[FIELD_EDITABLE_ROLE]}"
                     onchange={handleInputChange}>
                 </lightning-input>
             </div>
 
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
                 <lightning-input label={LABEL_APPLICABLE_ROLE} name={FIELD_APPLICABLE_ROLE}
-                    value={formData[FIELD_APPLICABLE_ROLE]} onchange={handleInputChange}>
+                    value="\{formData[FIELD_APPLICABLE_ROLE]}" onchange={handleInputChange}>
                 </lightning-input>
             </div>
 
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                <lightning-combobox name={FIELD_STAGE_NAME} label={LABEL_STAGE_NAME} value={formData[FIELD_STAGE_NAME]}
+                <lightning-combobox name={FIELD_STAGE_NAME} label={LABEL_STAGE_NAME} value="\{formData[FIELD_STAGE_NAME]}"
                     placeholder={LABEL_PLACEHOLDER_CASE_STAGE} options={stageOptions} onchange={handleInputChange} required>
                 </lightning-combobox>
             </div>
@@ -50,25 +50,25 @@
 
                     <div class="slds-col slds-size_1-of-4 slds-medium-size_1-of-4">
                         <lightning-input label={LABEL_STATUS} name={FIELD_FIELD_STATUS} type="checkbox"
-                            checked={formData[FIELD_FIELD_STATUS]} onchange={handleInputChange}>
+                            checked="\{formData[FIELD_FIELD_STATUS]}" onchange={handleInputChange}>
                         </lightning-input>
                     </div>
 
                     <div class="slds-col slds-size_1-of-4 slds-medium-size_1-of-4">
                         <lightning-input label={LABEL_MANDATORY} name={FIELD_FIELD_MANDATORY} type="checkbox"
-                            checked={formData[FIELD_FIELD_MANDATORY]} onchange={handleInputChange}>
+                            checked="\{formData[FIELD_FIELD_MANDATORY]}" onchange={handleInputChange}>
                         </lightning-input>
                     </div>
 
                     <div class="slds-col slds-size_1-of-4 slds-medium-size_1-of-4">
                         <lightning-input label={LABEL_READONLY} name={FIELD_FIELD_READONLY} type="checkbox"
-                            checked={formData[FIELD_FIELD_READONLY]} onchange={handleInputChange}>
+                            checked="\{formData[FIELD_FIELD_READONLY]}" onchange={handleInputChange}>
                         </lightning-input>
                     </div>
 
                     <div class="slds-col slds-size_1-of-4 slds-medium-size_1-of-4">
                         <lightning-input label={LABEL_EDITABLE} name={FIELD_FIELD_EDITABLE} type="checkbox"
-                            checked={formData[FIELD_FIELD_EDITABLE]} onchange={handleInputChange}>
+                            checked="\{formData[FIELD_FIELD_EDITABLE]}" onchange={handleInputChange}>
                         </lightning-input>
                     </div>
                 </div>

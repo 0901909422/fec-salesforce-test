@@ -49,9 +49,6 @@ public with sharing class FEC_FecServiceTypeMappingController {
     public static void savePropertyMapping(Id settingId, String newRef) {
         if (settingId == null) throw new AuraHandledException(FEC_Constants.ERROR_INVALID_ID);
         try {
-            // Check update permission on the object/field
-            Schema.SObjectType t = FEC_MDM_Master_Data_Setting__c.SObjectType;
-            // Check update permission on the object/field using FEC_Constants
             Schema.SObjectType t = FEC_MDM_Master_Data_Setting__c.SObjectType;
             Schema.DescribeSObjectResult dsr = t.getDescribe();
             if (!dsr.isUpdateable()) {

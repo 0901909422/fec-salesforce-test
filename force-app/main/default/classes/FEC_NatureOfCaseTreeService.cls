@@ -359,4 +359,21 @@ public with sharing class FEC_NatureOfCaseTreeService {
             throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
         }
     }
+
+    // Mapping of object types to their respective child and parent fields
+    private static final Map<String, List<String>> NOC_MAPPING = new Map<String, List<String>>{
+        FEC_Constants.KEY_MDM_BUSINESS_PROCESS => new List<String>{FEC_Constants.NOC_FIELD_BUSINESS_PROCESS, FEC_Constants.NOC_FIELD_PRODUCT_TYPE},
+        FEC_Constants.KEY_MDM_CATEGORY => new List<String>{FEC_Constants.NOC_FIELD_CATEGORY, FEC_Constants.NOC_FIELD_BUSINESS_PROCESS},
+        FEC_Constants.KEY_MDM_SUB_CATEGORY => new List<String>{FEC_Constants.NOC_FIELD_SUB_CATEGORY, FEC_Constants.NOC_FIELD_CATEGORY},
+        FEC_Constants.KEY_MDM_SUB_CODE => new List<String>{FEC_Constants.NOC_FIELD_SUB_CODE, FEC_Constants.NOC_FIELD_SUB_CATEGORY}
+    };
+
+    // List of all lookup fields for Nature of Case
+    private static final List<String> ALL_NOC_LOOKUP_FIELDS = new List<String>{
+        FEC_Constants.NOC_FIELD_PRODUCT_TYPE,
+        FEC_Constants.NOC_FIELD_BUSINESS_PROCESS,
+        FEC_Constants.NOC_FIELD_CATEGORY,
+        FEC_Constants.NOC_FIELD_SUB_CATEGORY,
+        FEC_Constants.NOC_FIELD_SUB_CODE
+    };
 }

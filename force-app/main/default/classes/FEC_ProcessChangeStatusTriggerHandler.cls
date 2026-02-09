@@ -13,9 +13,18 @@ public with sharing class FEC_ProcessChangeStatusTriggerHandler {
         if (!isTriggerEnabled || newList == null) return;
         // Use timestamp + user suffix for low-collision ExternalID (avoids unsafe casts)
         Long ts = DateTime.now().getTime();
-        String userSuffix = (UserInfo.getUserId() != null && UserInfo.getUserId().length() >= 3)
-            ? UserInfo.getUserId().substring(0,3)
-            : String.valueOf(Math.abs((Integer) (DateTime.now().getTime() % 1000)));
+        String userSuffix;
+        String uid = UserInfo.getUserId();
+        if (uid != null && uid.length() >= 3) {
+            userSuffix = uid.substring(0,3);
+        } else {
+            String tsStr = String.valueOf(DateTime.now().getTime());
+            if (tsStr.length() > 3) {
+                userSuffix = tsStr.substring(tsStr.length() - 3);
+            } else {
+                userSuffix = tsStr;
+            }
+        }
         for (SObject record : newList) {
             record.put(FEC_Constants.FIELD_PROCESS_CHANGE_STATUS, FEC_Constants.PROCESS_STATUS_NEW);
             record.put(FEC_Constants.FIELD_EXTERNAL_ID, String.valueOf(ts) + '-' + userSuffix);

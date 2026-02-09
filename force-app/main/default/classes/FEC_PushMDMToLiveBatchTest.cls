@@ -70,8 +70,7 @@ private class FEC_PushMDMToLiveBatchTest {
         // Optionally, insert a conflicting live record to cause an upsert error
         FEC_Product_Type__c liveProd = new FEC_Product_Type__c(
             Name = 'Live Prod',
-            FEC_Code__c = 'DUPLICATE_CODE',
-            ExternalID__c = 'ERROR-001'
+            FEC_Code__c = 'DUPLICATE_CODE'
         );
         insert liveProd;
 

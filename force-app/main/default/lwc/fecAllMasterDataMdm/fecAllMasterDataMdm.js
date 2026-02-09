@@ -3,7 +3,7 @@ import { refreshApex } from '@salesforce/apex'; // 1. Import refreshApex
 import { ShowToastEvent } from 'lightning/platformShowToastEvent'; // Cần import để dùng Toast
 import getAllMasterDataMDM from '@salesforce/apex/FEC_CleanUpMasterDataController.getAllMasterDataMDM';
 // Shared constants and labels
-import { FIELD_ID, FIELD_EXTERNAL_ID, FIELD_NAME, FIELD_ALIAS, FIELD_CODE, FIELD_NAME_VN, FIELD_POS_ORDER, FIELD_STATUS, FIELD_PROCESS_STATUS, FIELD_ADDITIONAL_FIELD, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, FIELD_STAGE_NAME, FIELD_DATA_INTEGRATION_MAPPING, FIELD_PRODUCT_TYPE_NAME, FIELD_BUSINESS_PROCESS_NAME, FIELD_CATEGORY_NAME, FIELD_SUB_CATEGORY_NAME, FIELD_SUB_CODE, FIELD_FEC_TYPE, FIELD_ORDER_GENERIC } from 'c/fecConstants/fecConstants';
+import { FIELD_ID, FIELD_EXTERNAL_ID, FIELD_NAME, FIELD_ALIAS, FIELD_CODE, FIELD_NAME_VN, FIELD_POS_ORDER, FIELD_STATUS, FIELD_PROCESS_STATUS, FIELD_ADDITIONAL_FIELD, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, FIELD_STAGE_NAME, FIELD_DATA_INTEGRATION_MAPPING, FIELD_PRODUCT_TYPE_NAME, FIELD_BUSINESS_PROCESS_NAME, FIELD_CATEGORY_NAME, FIELD_SUB_CATEGORY_NAME, FIELD_SUB_CODE, FIELD_FEC_TYPE, FIELD_ORDER_GENERIC } from 'c/fecConstants';
 import LABEL_COL_ID from '@salesforce/label/c.FEC_Col_ID';
 import LABEL_COL_EXTERNALID from '@salesforce/label/c.FEC_Col_ExternalID';
 import LABEL_COL_NAME from '@salesforce/label/c.FEC_Col_Name';
@@ -27,9 +27,9 @@ import LABEL_TYPE from '@salesforce/label/c.FEC_Label_Type';
 import LABEL_TOAST_REFRESH_SUCCESS from '@salesforce/label/c.FEC_Toast_Refresh_Success';
 import LABEL_TOAST_REFRESH_ERROR from '@salesforce/label/c.FEC_Toast_Refresh_Error';
 import LABEL_TOAST_ERROR from '@salesforce/label/c.FEC_Toast_Error';
-import { TYPE_NUMBER, VARIANT_SUCCESS, VARIANT_ERROR } from 'c/fecConstants/fecConstants';
+import { TYPE_NUMBER, VARIANT_SUCCESS, VARIANT_ERROR } from 'c/fecConstants';
 import LABEL_COL_CUSTOMER_TYPE from '@salesforce/label/c.FEC_Col_Customer_Type';
-import { FIELD_CUSTOMER_TYPE, FIELD_CUSTOMER_TYPE_FLAT } from 'c/fecConstants/fecConstants';
+import { FIELD_CUSTOMER_TYPE, FIELD_CUSTOMER_TYPE_FLAT } from 'c/fecConstants';
 import LABEL_TITLE from '@salesforce/label/c.FEC_AllMasterData_Title';
 import LABEL_REFRESH from '@salesforce/label/c.FEC_Refresh_Data';
 import LABEL_TAB_PRODUCT from '@salesforce/label/c.FEC_Tab_Product_Type';

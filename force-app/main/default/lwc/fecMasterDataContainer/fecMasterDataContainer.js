@@ -1,7 +1,7 @@
 import { LightningElement, track, api } from 'lwc';
 import updateMultipleNodes from '@salesforce/apex/FEC_NatureOfCaseTreeController.updateMultipleNodes';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { VARIANT_SUCCESS, VARIANT_ERROR, VARIANT_INFO, EVENT_REFRESH_ALL } from 'c/fecConstants/fecConstants';
+import { VARIANT_SUCCESS, VARIANT_ERROR, VARIANT_INFO, EVENT_REFRESH_ALL } from 'c/fecConstants';
 import LABEL_MASTERDATA_TITLE from '@salesforce/label/c.FEC_MasterData_Title';
 import LABEL_BUTTON_SAVE_ALL from '@salesforce/label/c.FEC_Button_Save_All';
 import LABEL_SPINNER_SAVING from '@salesforce/label/c.FEC_Spinner_Saving';

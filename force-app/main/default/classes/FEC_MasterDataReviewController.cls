@@ -89,13 +89,12 @@ public with sharing class FEC_MasterDataReviewController {
         }
         Map<String, FEC_Master_Data_Setting__c> liveMap = new Map<String, FEC_Master_Data_Setting__c>();
         if(!mdmExtIds.isEmpty()) {
-            List<FEC_Master_Data_Setting__c> liveQuery = [SELECT Name, ExternalID__c, FEC_Channel__c, FEC_Stage_Name__c, 
-                                                   FEC_Section__c, FEC_Field_Mandatory__c, FEC_Additional_Field__r.Name 
-                                                   FROM FEC_Master_Data_Setting__c WHERE ExternalID__c IN :mdmExtIds];
+            List<FEC_Master_Data_Setting__c> liveQuery = [SELECT Name, FEC_Channel__c, FEC_Stage_Name__c, 
+                                                   FEC_Section__c, FEC_Field_Mandatory__c 
+                                                   FROM FEC_Master_Data_Setting__c];
             List<SObject> safeLive = Security.stripInaccessible(AccessType.READABLE, liveQuery).getRecords();
             for (SObject s : safeLive) {
                 FEC_Master_Data_Setting__c live = (FEC_Master_Data_Setting__c)s;
-                liveMap.put(live.ExternalID__c, live);
             }
         }
         for (SObject s : safeSettings) {
@@ -128,7 +127,6 @@ public with sharing class FEC_MasterDataReviewController {
             compare(live?.FEC_Channel__c, mdm.FEC_Channel__c, FEC_Constants.LABEL_CHANNEL);
             compare(live?.FEC_Section__c, mdm.FEC_Section__c, FEC_Constants.LABEL_SECTION);
             compare(String.valueOf(live?.FEC_Field_Mandatory__c), String.valueOf(mdm.FEC_Field_Mandatory__c), FEC_Constants.LABEL_MANDATORY);
-            compare(live?.FEC_Additional_Field__r?.Name, mdm.FEC_Additional_Field__r?.Name, FEC_Constants.LABEL_PROPERTY_NAME);
          }
          
          private void compare(String vOld, String vNew, String label) {

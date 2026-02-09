@@ -43,7 +43,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         noc.FEC_Product_Type_Name__r.FEC_Status__c,
                         noc.FEC_Product_Type_Name__r.Process_Change_Status__c,
                         noc.FEC_Product_Type_Name__r.Name,
-                        noc.FEC_Product_Type__c,
+                        noc.FEC_Product_Type_Name__c,
                         noc.FEC_Customer_Type__c,
                         noc.Id,
                         FEC_Constants.LABEL_PRODUCT_TYPE

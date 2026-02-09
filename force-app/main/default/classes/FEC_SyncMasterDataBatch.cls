@@ -100,25 +100,20 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
                     if(mdmFields.containsKey(mdmF)) queryFieldsSet.add(commonFieldMap.get(mdmF));
                 }
                 
-                switch on mdmObjName {
-                    when FEC_Constants.OBJ_MDM_NATURE_OF_CASE {
-                        queryFieldsSet.add(FEC_Constants.REL_PRODUCT_TYPE_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
-                        queryFieldsSet.add(FEC_Constants.REL_BUSINESS_PROCESS_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
-                        queryFieldsSet.add(FEC_Constants.REL_CATEGORY_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
-                        queryFieldsSet.add(FEC_Constants.REL_SUB_CATEGORY_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
-                        queryFieldsSet.add(FEC_Constants.REL_SUB_CODE_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
-                    }
-                    when FEC_Constants.OBJ_MDM_CASE_STAGE {
-                        queryFieldsSet.add('FEC_Business_Process__r.' + FEC_Constants.FIELD_EXTERNAL_ID);
-                    }
-                    when FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING {
-                        queryFieldsSet.add(FEC_Constants.REL_NATURE_OF_CASE + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
-                        queryFieldsSet.add(FEC_Constants.REL_ADDITIONAL_FIELD + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
-                        queryFieldsSet.add(FEC_Constants.REL_STAGE_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
-                    }
-                    when FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE {
-                        queryFieldsSet.add(FEC_Constants.REL_ADDITIONAL_FIELD + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
-                    }
+                if (mdmObjName == FEC_Constants.OBJ_MDM_NATURE_OF_CASE) {
+                    queryFieldsSet.add(FEC_Constants.REL_PRODUCT_TYPE_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
+                    queryFieldsSet.add(FEC_Constants.REL_BUSINESS_PROCESS_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
+                    queryFieldsSet.add(FEC_Constants.REL_CATEGORY_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
+                    queryFieldsSet.add(FEC_Constants.REL_SUB_CATEGORY_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
+                    queryFieldsSet.add(FEC_Constants.REL_SUB_CODE_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
+                } else if (mdmObjName == FEC_Constants.OBJ_MDM_CASE_STAGE) {
+                    queryFieldsSet.add('FEC_Business_Process__r.' + FEC_Constants.FIELD_EXTERNAL_ID);
+                } else if (mdmObjName == FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING) {
+                    queryFieldsSet.add(FEC_Constants.REL_NATURE_OF_CASE + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
+                    queryFieldsSet.add(FEC_Constants.REL_ADDITIONAL_FIELD + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
+                    queryFieldsSet.add(FEC_Constants.REL_STAGE_NAME + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
+                } else if (mdmObjName == FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE) {
+                    queryFieldsSet.add(FEC_Constants.REL_ADDITIONAL_FIELD + '.' + FEC_Constants.FIELD_EXTERNAL_ID);
                 }
                 // Build safe IN list literal for dynamic SOQL
                 Set<String> mdmIds = mdmToUpdateMap.keySet();
@@ -142,26 +137,21 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
                     FEC_BatchUtils.copyFieldsToMDM(mdm, live, mdmFields, commonFieldMap);
                     
                     // Mapping Lookup đặc thù (Revert)
-                    switch on mdmObjName {
-                        when FEC_Constants.OBJ_MDM_NATURE_OF_CASE {
-                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_PRODUCT_TYPE_NAME, FEC_Constants.OBJ_MDM_PRODUCT_TYPE, null);
-                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_BUSINESS_PROCESS_NAME, FEC_Constants.OBJ_MDM_BUSINESS_PROCESS, null);
-                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_CATEGORY_NAME, FEC_Constants.OBJ_MDM_CATEGORY, null);
-                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_SUB_CATEGORY_NAME, FEC_Constants.OBJ_MDM_SUB_CATEGORY, null);
-                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_SUB_CODE_NAME, FEC_Constants.OBJ_MDM_SUB_CODE, null);
-                        }
-                        when FEC_Constants.OBJ_MDM_CASE_STAGE {
-                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_BUSINESS_PROCESS_NAME.replace('_Name__r','__r'), FEC_Constants.OBJ_MDM_BUSINESS_PROCESS, null);
-                        }
-                        when FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING {
-                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_NATURE_OF_CASE, FEC_Constants.OBJ_MDM_NATURE_OF_CASE, null);
-                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD, null);
-                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_STAGE_NAME, FEC_Constants.OBJ_MDM_CASE_STAGE, null);
-                        }
-                        when FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE {
-                            FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD, null);
-                        }
-                     }
+                    if (mdmObjName == FEC_Constants.OBJ_MDM_NATURE_OF_CASE) {
+                        FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_PRODUCT_TYPE_NAME, FEC_Constants.OBJ_MDM_PRODUCT_TYPE, null);
+                        FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_BUSINESS_PROCESS_NAME, FEC_Constants.OBJ_MDM_BUSINESS_PROCESS, null);
+                        FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_CATEGORY_NAME, FEC_Constants.OBJ_MDM_CATEGORY, null);
+                        FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_SUB_CATEGORY_NAME, FEC_Constants.OBJ_MDM_SUB_CATEGORY, null);
+                        FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_SUB_CODE_NAME, FEC_Constants.OBJ_MDM_SUB_CODE, null);
+                    } else if (mdmObjName == FEC_Constants.OBJ_MDM_CASE_STAGE) {
+                        FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_BUSINESS_PROCESS_NAME.replace('_Name__r','__r'), FEC_Constants.OBJ_MDM_BUSINESS_PROCESS, null);
+                    } else if (mdmObjName == FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING) {
+                        FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_NATURE_OF_CASE, FEC_Constants.OBJ_MDM_NATURE_OF_CASE, null);
+                        FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD, null);
+                        FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_STAGE_NAME, FEC_Constants.OBJ_MDM_CASE_STAGE, null);
+                    } else if (mdmObjName == FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE) {
+                        FEC_BatchUtils.revertLookup(mdm, live, FEC_Constants.REL_ADDITIONAL_FIELD, FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD, null);
+                    }
                      mdmToUpdate.add(mdm);
                  }
                 

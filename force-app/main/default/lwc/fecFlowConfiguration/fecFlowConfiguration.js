@@ -8,7 +8,7 @@ import LABEL_STAGE_PREFIX from '@salesforce/label/c.FEC_Label_Stage';
 import LABEL_ALT_EDIT from '@salesforce/label/c.FEC_Alt_Edit';
 import LABEL_ALT_REMOVE from '@salesforce/label/c.FEC_Alt_Remove';
 import LABEL_PROMPT_ENTER_NEW_STAGE_NAME from '@salesforce/label/c.FEC_Prompt_Enter_New_Stage_Name';
-import { EVENT_HANDLE_STAGE_CLICK, EVENT_SAVE_CONFIG, CSS_STAGE_BOX, CSS_STAGE_BOX_ACTIVE } from 'c/fecConstants/fecConstants';
+import { EVENT_HANDLE_STAGE_CLICK, EVENT_SAVE_CONFIG, CSS_STAGE_BOX, CSS_STAGE_BOX_ACTIVE } from 'c/fecConstants';
 
 
 export default class FecFlowConfiguration extends LightningElement {

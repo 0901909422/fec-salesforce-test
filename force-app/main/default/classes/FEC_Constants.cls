@@ -2,7 +2,7 @@
  * FEC_Constants
  * Centralized constants for FEC module.
  */
-public final class FEC_Constants {
+public class FEC_Constants {
     // Prevent instantiation
     private FEC_Constants() {}
 
@@ -17,13 +17,18 @@ public final class FEC_Constants {
     public static final String ERROR_CANNOT_START_PUSH = System.Label.FEC_Error_Title;
     public static final String ERROR_INVALID_ID = System.Label.FEC_Error_Title;
 
-    // Default UI labels / messages
+    // Additional permission/field error labels
+    public static final String ERROR_NO_UPDATE_PERMISSION = System.Label.FEC_Error_No_Update_Permission;
+    public static final String ERROR_INVALID_FIELD = System.Label.FEC_Error_Invalid_Field;
+    public static final String ERROR_NO_FIELD_UPDATE_PERMISSION = System.Label.FEC_Error_No_Field_Update_Permission;
+
     // UI labels (moved to Custom Labels for i18n)
     public static final String LABEL_NONE = System.Label.FEC_Label_None;
     public static final String ERROR_INVALID_SOBJECT_PREFIX = System.Label.FEC_Error_Invalid_SObject_Prefix;
     public static final String ERROR_DML_PREFIX = System.Label.FEC_Error_DML_Prefix;
     public static final String PROCESS_STATUS_NEW = 'New';
     public static final String PROCESS_STATUS_UPDATE = 'Update';
+    public static final String PROCESS_STATUS_SYNCED = 'Synced';
 
     // Field API names
     public static final String FIELD_ALIAS = 'FEC_Alias__c';
@@ -152,7 +157,7 @@ public final class FEC_Constants {
     public static final String LABEL_SUB_CATEGORY = System.Label.FEC_Label_Sub_Category;
     public static final String LABEL_SUB_CODE = System.Label.FEC_Label_Sub_Code;
 
-    // Prefixes
+    // PrefixesFEC_Label_Sub_CategoryFEC_Label_Sub_Category
     public static final String PT_PREFIX = 'PT_';
     public static final String BP_PREFIX = 'BP_';
     public static final String CAT_PREFIX = 'CAT_';
@@ -174,15 +179,6 @@ public final class FEC_Constants {
     public static final String NOC_FIELD_CATEGORY = 'FEC_Category_Name__c';
     public static final String NOC_FIELD_SUB_CATEGORY = 'FEC_Sub_Category_Name__c';
     public static final String NOC_FIELD_SUB_CODE = 'FEC_Sub_Code__c';
-
-    // Field API names used when creating/updating records
-    public static final String FIELD_ALIAS = 'FEC_Alias__c';
-    public static final String FIELD_CODE = 'FEC_Code__c';
-    public static final String FIELD_NAME_VN = 'FEC_Name_VN__c';
-    public static final String FIELD_STATUS = 'FEC_Status__c';
-    public static final String FIELD_POS_ORDER = 'FEC_Pos_Order__c';
-    public static final String FIELD_NAME = 'Name';
-    public static final String FIELD_ID = 'Id';
 
     // Payload keys used in client-server map
     public static final String PAYLOAD_TYPE = 'type';
