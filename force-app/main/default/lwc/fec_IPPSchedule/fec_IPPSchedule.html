@@ -1,0 +1,50 @@
+<template>
+    <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
+        <lightning-accordion-section name="ippSchedule" label="IPP Schedule">
+            <!-- Total Summary -->
+            <div class="slds-grid slds-wrap slds-gutters_small slds-m-bottom_medium">
+                <div class="slds-col slds-size_1-of-2">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-border_bottom slds-p-bottom_x-small">
+                        <div class="slds-col slds-text-title_bold slds-text-color_error">Total IPP Payment Amount</div>
+                        <div class="slds-col slds-text-align_left slds-text-heading_small">
+                            <span class={isTotalPaymentAmountNegative}>{formattedTotalPaymentAmount}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-col slds-size_1-of-2">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_small slds-border_bottom slds-p-bottom_x-small">
+                        <div class="slds-col slds-text-title_bold total-label-gray">Total IPP Monthly Principal</div>
+                        <div class="slds-col slds-text-align_left slds-text-heading_small">
+                            <span class={isTotalMonthlyPrincipalNegative}>{formattedTotalMonthlyPrincipal}</span>
+                        </div>
+                    </div>
+                    <div class="slds-grid slds-grid_vertical-align-center slds-border_bottom slds-p-bottom_x-small">
+                        <div class="slds-col slds-text-title_bold total-label-gray">Total IPP Monthly Interest</div>
+                        <div class="slds-col slds-text-align_left slds-text-heading_small">
+                            <span class={isTotalMonthlyInterestNegative}>{formattedTotalMonthlyInterest}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <div class="slds-is-relative slds-m-vertical_large">
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </div>
+        </template>
+        
+        <!-- IPP Schedule Table with CustomTablePaging -->
+        <template if:false={isLoading}>
+            <c-fec_-custom-table-paging
+                columns={columns}
+                records={formattedScheduleData}
+                page-size={pageSize}
+                updated-time={updatedTime}
+                has-error={hasError}>
+            </c-fec_-custom-table-paging>
+        </template>
+        </lightning-accordion-section>
+
+    </lightning-accordion>
+</template>

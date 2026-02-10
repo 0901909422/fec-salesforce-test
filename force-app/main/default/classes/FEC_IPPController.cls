@@ -227,7 +227,7 @@ public with sharing class FEC_IPPController {
         Map<String, FEC_GetCardSecInfo.IPP> recordNoToIpp
     ) {
         List<IPPRecordDTO> result = new List<IPPRecordDTO>();
-        String todayStr = Datetime.now().formatGmt(FEC_ConstantCommon.DATE_FORMAT);
+        String todayStr = Datetime.now().formatGmt('yyyy-MM-dd');
         Integer calloutCount = 0;
         
         for (FEC_GetCardPlanInfo.CardPlan cardPlan : cardPlans) {
@@ -289,14 +289,14 @@ public with sharing class FEC_IPPController {
         // Dữ liệu chính từ CardPlan
         dto.planNumber = planNumberKey;
         dto.Id = 'api-' + dto.planNumber + '-' + (ipp != null && ipp.IPPRecordNo != null ? ipp.IPPRecordNo : '');
-        dto.openDate = FEC_CommonUltils.parseDate(cardPlan.openDate);
+        dto.openDate = parseDateSafe(cardPlan.openDate);
         dto.ippBalance = (cardPlan.currentBalance != null) ? cardPlan.currentBalance : 0;
         
         // Dữ liệu từ GetCardSecInfo IPP (nếu match)
         if (ipp != null) {
             dto.recordNo = (ipp.IPPRecordNo != null) ? ipp.IPPRecordNo.trim() : '';
-            dto.firstDueDate = FEC_CommonUltils.parseDate(ipp.IPPStartDate);
-            dto.matureDate = FEC_CommonUltils.parseDate(ipp.IPPMatureDate);
+            dto.firstDueDate = parseDateSafe(ipp.IPPStartDate);
+            dto.matureDate = parseDateSafe(ipp.IPPMatureDate);
             dto.currentBalance = (ipp.IPPCurrentBalance != null) ? ipp.IPPCurrentBalance : 0;
             dto.currentTerm = ipp.CurrentTerm;
         } else {
@@ -533,12 +533,54 @@ public with sharing class FEC_IPPController {
         return c.FEC_Account_Number__c;
     }
 
+    private static Date parseDateSafe(String dateStr) {
+        if (String.isBlank(dateStr)) {
+            return null;
+        }
+        String s = dateStr.trim();
+        try {
+            if (s.length() == 10 && s.indexOf('-') >= 0) {
+                return Date.valueOf(s);
+            }
+            if (s.length() >= 10 && s.indexOf('/') >= 0) {
+                List<String> parts = s.split('/');
+                if (parts.size() == 3) {
+                    Integer y = Integer.valueOf(parts[2]);
+                    Integer m = Integer.valueOf(parts[1]);
+                    Integer d = Integer.valueOf(parts[0]);
+                    return Date.newInstance(y, m, d);
+                }
+            }
+        } catch (Exception e) {
+            System.debug('parseDateSafe failed for: ' + s + ' - ' + e.getMessage());
+        }
+        return null;
+    }
+
     /**
      * Build help text map from FEC_IPP__c object field metadata
      * Returns Map<fieldApiName, helpText> for LWC consumption
      */
     @AuraEnabled(cacheable=true)
     public static Map<String, String> getIPPHelpTextMap() {
-        return FEC_CommonUltils.buildHelpTextMap(Schema.SObjectType.FEC_IPP__c);
+        Map<String, String> helpTextMap = new Map<String, String>();
+        
+        try {
+            Schema.DescribeSObjectResult objectDescribe = Schema.SObjectType.FEC_IPP__c;
+            Map<String, Schema.SObjectField> fields = objectDescribe.fields.getMap();
+            
+            for (String fieldName : fields.keySet()) {
+                Schema.DescribeFieldResult fieldDescribe = fields.get(fieldName).getDescribe();
+                String helpText = fieldDescribe.getInlineHelpText();
+                
+                if (String.isNotBlank(helpText)) {
+                    helpTextMap.put(fieldDescribe.getName(), helpText);
+                }
+            }
+        } catch (Exception e) {
+            System.debug('FEC_IPPController.getIPPHelpTextMap error: ' + e.getMessage());
+        }
+        
+        return helpTextMap;
     }
 }

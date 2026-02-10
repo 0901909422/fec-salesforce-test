@@ -1,0 +1,126 @@
+<template>
+    <lightning-accordion 
+        active-section-name={activeSections} 
+        allow-multiple-sections-open
+        onsectiontoggle={handleAccordionToggle}>
+        <lightning-accordion-section name="salesInfo" label={sectionLabel} class={sectionClass}>
+            
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <div class="slds-is-relative slds-p-vertical_large">
+                    <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                </div>
+            </template>
+            
+            <!-- Error Message -->
+            <template if:true={hasError}>
+                <template if:false={isLoading}>
+                    <div class="slds-p-around_medium slds-text-color_error">
+                        <lightning-icon icon-name="utility:error" size="small" class="slds-m-right_x-small"></lightning-icon>
+                        {errorMessage}
+                    </div>
+                </template>
+            </template>
+            
+            <!-- Sales Info Content -->
+            <template if:true={hasData}>
+                <template if:false={isLoading}>
+                <div class="slds-p-around_medium">
+                    <div class="slds-grid slds-wrap slds-gutters">
+                        <!-- Row 1: Application ID, CC Code, DSA Code, TSA Code -->
+                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label slds-text-color_weak">Application ID</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-text-body_regular">{applicationId}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label slds-text-color_weak">CC Code</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-text-body_regular">{ccCode}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label slds-text-color_weak">DSA Code</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-text-body_regular">{dsaCode}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label slds-text-color_weak">TSA Code</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-text-body_regular">{tsaCode}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Row 2: Disbursement Channel, CC Name, DSA Name, TSA Name -->
+                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label slds-text-color_weak">Disbursement Channel</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-text-body_regular">{disbursementChannel}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label slds-text-color_weak">CC Name</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-text-body_regular">{ccName}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label slds-text-color_weak">DSA Name</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-text-body_regular">{dsaName}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label slds-text-color_weak">TSA Name</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-text-body_regular">{tsaName}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Row 3: Origination Channel (centered) -->
+                        <div class="slds-col slds-size_1-of-1 slds-p-bottom_small">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label slds-text-color_weak">Origination Channel</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-text-body_regular">{originationChannel}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </template>
+            </template>
+            
+            <!-- No Data Message -->
+            <template if:false={hasData}>
+                <template if:false={isLoading}>
+                    <template if:false={hasError}>
+                        <div class="slds-p-around_medium slds-text-color_weak">
+                            <lightning-icon icon-name="utility:info" size="small" class="slds-m-right_x-small"></lightning-icon>
+                            Không có dữ liệu Sales Info
+                        </div>
+                    </template>
+                </template>
+            </template>
+            
+        </lightning-accordion-section>
+    </lightning-accordion>
+</template>
