@@ -70,12 +70,52 @@
         <profile>Admin</profile>
     </profileActionOverrides>
     <tabs>standard-Case</tabs>
-    <tabs>Customer_Data_Management</tabs>
+    <tabs>FEC_Product_Type__c</tabs>
+    <tabs>FEC_Category__c</tabs>
+    <tabs>FEC_Sub_Category__c</tabs>
+    <tabs>FEC_Sub_Code__c</tabs>
+    <tabs>FEC_Nature_of_Case__c</tabs>
+    <tabs>FEC_Business_Process__c</tabs>
+    <tabs>FEC_Case_Stage__c</tabs>
+    <tabs>FEC_Stage_Change__c</tabs>
+    <tabs>FEC_Stage_Screen__c</tabs>
+    <tabs>FEC_Action_Button__c</tabs>
+    <tabs>FEC_Master_Data_Setting__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
         <mappings>
-            <tab>Customer_Data_Management</tab>
+            <tab>FEC_Action_Button__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Business_Process__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Case_Stage__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Category__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Master_Data_Setting__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Nature_of_Case__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Product_Type__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Stage_Change__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Stage_Screen__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Sub_Category__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Sub_Code__c</tab>
         </mappings>
         <mappings>
             <tab>standard-Case</tab>
