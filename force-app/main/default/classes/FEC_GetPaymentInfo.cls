@@ -1,21 +1,17 @@
 /****************************************************************************************
- * File Name    : FEC_GetPaymentInfo
- * Author       : Quangdv7
- * Date         : 2025-12-16
- * Description  : Get data for API service
- * ===============================================================
- * Ver      Date           Author              Modification
- * ===============================================================
+* File Name    : FEC_GetPaymentInfo
+* Author       : Quangdv7
+* Date         : 2025-12-16
+* Description  : Get data for API service
+* ===============================================================
+* Ver      Date           Author              Modification
+* ===============================================================
    1.0      2025-12-16     Quangdv7             Create
  
 ****************************************************************************************/
-
+ 
 public with sharing class FEC_GetPaymentInfo {
-   
-    private static final String ENDPOINT = '/RepaymentInfo';
-    private static final String MOCKUP_ENDPOINT = 'https://3a8edd17-dba1-4faa-9413-96a8c69491a6.mock.pstmn.io';
-
-
+    
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -23,20 +19,20 @@ public with sharing class FEC_GetPaymentInfo {
         public SysResponse Sys;
         public List<PaymentInfo> Payments;
     }
-
+ 
     public class SysResponse {
         public String TransID;
         public String DateTimeStr;
         public Integer Code;
         public String Description;
     }
-
+ 
     public class PaymentInfo {
         public Decimal AmountPaid;
         public String TransactionDate;
         public String Username;
     }
-
+ 
     // =========================================================================
     // PUBLIC METHOD
     // =========================================================================
@@ -46,43 +42,48 @@ public with sharing class FEC_GetPaymentInfo {
         String dateTimeStr,
         String contractNo
     ) {
-
-        validateRequest(transId, requestorId, dateTimeStr, contractNo);
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(apiSetting?.FEC_Call_Mock__c ? MOCKUP_ENDPOINT : (apiSetting?.FEC_Endpoint__c + ENDPOINT));
-        req.setMethod('POST');
-        req.setTimeout(120000);
-
-        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
-        req.setHeader(
-            'SOAPAction',
-            'http://fecredit.com.vn/RepaymentInfo#GetPaymentInfo'
-        );
-
-        req.setBody(
-            buildSoapBody(transId, requestorId, dateTimeStr, contractNo)
-        );
-
-        HttpResponse res = new Http().send(req);
-
+        try {
+ 
+            validateRequest(transId, requestorId, dateTimeStr, contractNo);
+            
+            // ================= SOAP REQUEST BODY =================
+            String soapBody = buildSoapBody(
+                transId, 
+                requestorId,
+                dateTimeStr, 
+                contractNo
+                );
+                
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Payment_Info');
+ 
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_PAYMENT_INFO_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+ 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
             }
             ResponseWrapper response = parseResponse(res.getBody());
-
+ 
             if (response.Sys != null && response.Sys.Code != 1) {
                 throw new CalloutException(
                     String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
                 );
             }
-        return response;
+ 
+            return response;
+ 
+        } catch (Exception ex) {
+            System.debug('### PAYMENT INFO ERROR: ' + ex.getMessage());
+            throw ex;
+        }
         
     }
 
     /* =====================================================
-       SOAP BODY
+       BUILD SOAP REQUEST
        ===================================================== */
     private static String buildSoapBody(
         String transID,
@@ -133,18 +134,18 @@ public with sharing class FEC_GetPaymentInfo {
         String dateTimeStr,
         String contractNo
     ) {
-
+ 
         // ===================== TRANSID =====================
         if (String.isBlank(transId) || transId.length() > 36) {
             throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
         }
-
+ 
         // ===================== REQUESTORID =====================
         Set<String> validRequestorIds = new Set<String>{FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP};
         if (String.isBlank(requestorId) || !validRequestorIds.contains(requestorId)) {
             throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
-
+ 
         // ===================== DATETIME =====================
         if (String.isBlank(dateTimeStr)) {
             throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
@@ -154,7 +155,7 @@ public with sharing class FEC_GetPaymentInfo {
         } catch(Exception e) {
             throw new CalloutException(String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeStr}));
         }
-
+ 
         // ===================== Contract NUMBER =====================
         if (String.isBlank(contractNo)) {
             throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'ContractNo'}));
@@ -163,27 +164,27 @@ public with sharing class FEC_GetPaymentInfo {
             throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'ContractNo', '255'}));
         }
     }
-
+ 
     // =========================================================================
     // SOAP RESPONSE PARSER
     // =========================================================================
     private static ResponseWrapper parseResponse(String xml) {
-
+ 
         Dom.Document doc = new Dom.Document();
         doc.load(xml);
-
+ 
         Dom.XmlNode envelope = doc.getRootElement();
         Dom.XmlNode bodyNode =
             envelope.getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
-
+ 
         Dom.XmlNode responseNode;
         for (Dom.XmlNode n : bodyNode.getChildElements()) {
             responseNode = n;
             break;
         }
-
+ 
         ResponseWrapper result = new ResponseWrapper();
-
+ 
         // ================= SYS =================
         Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
         if (sysNode != null) {
@@ -193,10 +194,10 @@ public with sharing class FEC_GetPaymentInfo {
             result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
             result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
         }
-
+ 
         // ================= PAYMENTS =================
         result.Payments = new List<PaymentInfo>();
-
+ 
         for (Dom.XmlNode payNode : responseNode.getChildElements()) {
             if (payNode.getName() == 'Payment') {
                 PaymentInfo p = new PaymentInfo();
@@ -206,8 +207,8 @@ public with sharing class FEC_GetPaymentInfo {
                 result.Payments.add(p);
             }
         }
-
+ 
         return result;
     }
-
+ 
 }

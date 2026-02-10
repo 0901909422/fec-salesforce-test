@@ -12,8 +12,6 @@
 
 public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
 
-    private static final String ENDPOINT = '/CMS_VMXIntegrationWS';
-    private static final String MOCKUP_ENDPOINT  = 'https://561b3c66-0333-4085-8f42-7221b338aaa3.mock.pstmn.io';
     private static final String NS_VMX  = 'http://fecredit.com.vn/cms/ws/v2';
 
     /* =====================================================
@@ -72,25 +70,24 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
     ) {
         validateRequest(transID, requestorId, dateTimeStr, context, signOnName, org, acct);
 
+        String soapBody = buildSoapBody(
+                transID, 
+                requestorId, 
+                dateTimeStr, 
+                vmxVersion,
+                context,
+                signOnName,
+                org,
+                acct
+                );
+
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(
-            apiSetting?.FEC_Call_Mock__c
-            ? MOCKUP_ENDPOINT
-            : apiSetting.FEC_Endpoint__c + ENDPOINT
-        );
-        req.setMethod('POST');
-        req.setTimeout(120000);
-        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
-        req.setHeader('SOAPAction', NS_VMX + ENDPOINT);
-        req.setBody(buildSoapRequest(
-            transID, requestorId, dateTimeStr, vmxVersion,
-            context, signOnName, org, acct
-        ));
-
-        Http http = new Http();
-        HttpResponse res = http.send(req);
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_MFASOUTSTANDINGAUTHINQ');
+        
+        String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
 
         if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
             throw new CalloutException( String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
@@ -122,21 +119,18 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
     ) {
         Dom.Document doc = new Dom.Document();
 
-        // Envelope (soapenv)
         Dom.XmlNode envelope = doc.createRootElement(
             'Envelope',
             FEC_ConstantCommon.SOAP_ENV,
             'soapenv'
         );
 
-        // Body
         Dom.XmlNode body = envelope.addChildElement(
             'Body',
             FEC_ConstantCommon.SOAP_ENV,
             'soapenv'
         );
 
-        // WSRequest (ns)
         Dom.XmlNode wsRequest = body.addChildElement(
             'WSRequest',
             NS_VMX,
@@ -299,18 +293,5 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         if (String.isBlank(acct) || acct.length() > 30) {
             throw new CalloutException(System.Label.FEC_MSG_Acct_Null);
         }
-    }
-    
-    /* =====================================================
-       HELPERS
-       ===================================================== */
-    private static String getVal(Dom.XmlNode n, String name) {
-        if (n == null) return null;
-        Dom.XmlNode c = n.getChildElement(name, NS_VMX);
-        return c == null ? null : c.getText();
-    }
-
-    private static Integer toInt(String v) {
-        return String.isBlank(v) ? null : Integer.valueOf(v);
     }
 }

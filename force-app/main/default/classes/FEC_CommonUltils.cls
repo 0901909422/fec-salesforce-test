@@ -14,19 +14,6 @@ public with sharing class FEC_CommonUltils {
     String v = getXmlValue(n, name);
     return parseDate(v);
   }
-  public static Date xmlGetDateYYYYMMDD(Dom.XmlNode n, String name) {
-        String v = getXmlValue(n, name);
-        if (String.isBlank(v)) return null;
-
-        if (v.length() == 8) {
-            String yyyy = v.substring(0, 4);
-            String mm   = v.substring(4, 6);
-            String dd   = v.substring(6, 8);
-            return Date.valueOf(yyyy + '-' + mm + '-' + dd);
-        }
-
-        return null;
-    }
 
   public static Dom.XmlNode findChildByName(Dom.XmlNode parent, String nodeName) {
     if (parent == null) return null;

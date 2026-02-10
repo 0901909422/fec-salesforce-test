@@ -1,20 +1,17 @@
 /****************************************************************************************
- * File Name    : FEC_GetCardFinancialTransactions
- * Author       : Quangdv7
- * Date         : 2025-12-16
- * Description  : Get data for API service
- * ===============================================================
- * Ver      Date           Author              Modification
- * ===============================================================
+* File Name    : FEC_GetCardFinancialTransactions
+* Author       : Quangdv7
+* Date         : 2025-12-16
+* Description  : Get data for API service
+* ===============================================================
+* Ver      Date           Author              Modification
+* ===============================================================
    1.0      2025-12-16     Quangdv7             Create
  
 ****************************************************************************************/
-
+ 
 public with sharing class FEC_GetCardFinancialTransactions {
-
-    private static final String ENDPOINT = '/CIF_CardInfo';
-    private static final String MOCKUP_ENDPOINT = 'https://ca5bd91c-5793-4fb9-b103-1d8029b62e5e.mock.pstmn.io';
-
+ 
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -22,14 +19,14 @@ public with sharing class FEC_GetCardFinancialTransactions {
         public SysResponse Sys;
         public List<FinancialTransaction> Transactions;
     }
-
+ 
     public class SysResponse {
         public String TransID;
         public String DateTimeStr;
         public Integer Code;
         public String Description;
     }
-
+ 
     public class FinancialTransaction {
         public String TRNXDateAndTime;
         public String Description;
@@ -51,7 +48,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
         public Integer OTPSent;
         public String LOGIC_MOD;
     }
-
+ 
     // =========================================================================
     // PUBLIC METHOD
     // =========================================================================
@@ -63,58 +60,51 @@ public with sharing class FEC_GetCardFinancialTransactions {
         Date fromDate,
         Date toDate
     ) {
-
-        validateRequest(transId, requestorId, dateTimeStr, accountNumber, fromDate, toDate);
-
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(
-            apiSetting?.FEC_Call_Mock__c
-                ? MOCKUP_ENDPOINT
-                : apiSetting.FEC_Endpoint__c + ENDPOINT
-        );
-        req.setMethod('POST');
-        req.setTimeout(120000);
-        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
-        req.setHeader(
-            'SOAPAction',
-            'http://fecredit.com.vn/CIF_CardInfo/GetCardFinancialTransactions'
-        );
-
-        req.setBody(
-            buildSoapBody(
+        try {
+ 
+            validateRequest(transID, requestorId, dateTimeStr, accountNumber, fromDate,toDate);
+            
+            String soapBody = buildSoapBody(
                 transId,
                 requestorId,
                 dateTimeStr,
                 accountNumber,
                 fromDate,
                 toDate
-            )
-        );
-
-        Http http = new Http();
-        HttpResponse res = http.send(req);
-
+            );
+                
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Financial_Transaction');
+ 
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_CARD_FINANCIAL_TRANSACTION_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+ 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
                     String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()})
                 );
             }
-
+ 
             ResponseWrapper response = parseResponse(res.getBody());
-
+ 
             if (response.Sys != null && response.Sys.Code != 1) {
                 throw new CalloutException(
                     String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
                 );
             }
-
-        return response;
+            
+            return response;
+ 
+        } catch (Exception ex) {
+            System.debug('### FIN TXN ERROR: ' + ex.getMessage());
+            throw ex;
+        }
     }
 
     // =========================================================================
-    // SOAP BODY – DOM XML 
+    // BUILD SOAP REQUEST
     // =========================================================================
     private static String buildSoapBody(
         String transId,
@@ -169,7 +159,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
 
         return doc.toXmlString();
     }
-
+ 
     // =========================================================================
     // REQUEST VALIDATION
     // =========================================================================
@@ -181,18 +171,18 @@ public with sharing class FEC_GetCardFinancialTransactions {
         Date fromDate,
         Date toDate
     ) {
-
+ 
         // ===================== TRANSID =====================
         if (String.isBlank(transId) || transId.length() > 36) {
             throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
         }
-
+ 
         // ===================== REQUESTORID =====================
         Set<String> validRequestorIds = new Set<String>{FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP};
         if (String.isBlank(requestorId) || !validRequestorIds.contains(requestorId)) {
             throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
-
+ 
         // ===================== DATETIME =====================
         if (String.isBlank(dateTimeStr)) {
             throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
@@ -202,7 +192,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
         } catch(Exception e) {
             throw new CalloutException(String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeStr}));
         }
-
+ 
         // ===================== ACCOUNT NUMBER =====================
         if (String.isBlank(accountNumber)) {
             throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
@@ -210,7 +200,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
         if (accountNumber.length() > 255) {
             throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'AccountNumber', '255'}));
         }
-
+ 
         // ===================== FROM DATE =====================
         if (fromDate != null) {
             try {
@@ -219,7 +209,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
                 throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{'FromDate', String.valueOf(fromDate)}));
             }
         }
-
+ 
         // ===================== TO DATE =====================
         if (toDate != null) {
             try {
@@ -227,33 +217,33 @@ public with sharing class FEC_GetCardFinancialTransactions {
             } catch(Exception e) {
                 throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{'ToDate', String.valueOf(toDate)}));
             }
-
+ 
             if (fromDate != null && toDate < fromDate) {
                 throw new CalloutException(String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{'ToDate', 'FromDate'}));
             }
         }
     }
-
+ 
     // =========================================================================
     // SOAP RESPONSE PARSER
     // =========================================================================
     private static ResponseWrapper parseResponse(String xml) {
-
+ 
         Dom.Document doc = new Dom.Document();
         doc.load(xml);
-
+ 
         Dom.XmlNode envelope = doc.getRootElement();
         Dom.XmlNode bodyNode =
             envelope.getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
-
+ 
         Dom.XmlNode responseNode;
         for (Dom.XmlNode n : bodyNode.getChildElements()) {
             responseNode = n;
             break;
         }
-
+ 
         ResponseWrapper result = new ResponseWrapper();
-
+ 
         // ================= SYS =================
         Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
         if (sysNode != null) {
@@ -263,18 +253,17 @@ public with sharing class FEC_GetCardFinancialTransactions {
             result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
             result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
         }
-
-        // ================= TRANSACTIONS =================
+ 
         // ================= TRANSACTIONS =================
     result.Transactions = new List<FinancialTransaction>();
-
+ 
     Dom.XmlNode txnsNode = responseNode.getChildElement('Transactions', null);
     if (txnsNode != null) {
-
+ 
         for (Dom.XmlNode txnNode : txnsNode.getChildElements()) {
-
+ 
             if (txnNode.getName() != 'Transaction') continue;
-
+ 
             FinancialTransaction ft = new FinancialTransaction();
             ft.TRNXDateAndTime = FEC_CommonUltils.getXmlValue(txnNode, 'TRNXDateAndTime');
             ft.Description = FEC_CommonUltils.getXmlValue(txnNode, 'Description');
@@ -295,13 +284,12 @@ public with sharing class FEC_GetCardFinancialTransactions {
             ft.IsCashTRNX = FEC_CommonUltils.getXmlValue(txnNode, 'IsCashTRNX');
             ft.OTPSent = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(txnNode, 'OTPSent'));
             ft.LOGIC_MOD = FEC_CommonUltils.getXmlValue(txnNode, 'LOGIC_MOD');
-
+ 
             result.Transactions.add(ft);
         }
-
+ 
         }
-
+ 
         return result;
     }
-
 }

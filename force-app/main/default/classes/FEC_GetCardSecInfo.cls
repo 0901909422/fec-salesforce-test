@@ -1,17 +1,17 @@
 /****************************************************************************************
- * File Name    : FEC_GetCardSecInfo
- * Author       : Quangdv7
- * Date         : 2025-12-16
- * Description  : Get data for API service
- * ===============================================================
- * Ver      Date           Author              Modification
- * ===============================================================
+* File Name    : FEC_GetCardSecInfo
+* Author       : Quangdv7
+* Date         : 2025-12-16
+* Description  : Get data for API service
+* ===============================================================
+* Ver      Date           Author              Modification
+* ===============================================================
    1.0      2025-12-16     Quangdv7             Create
  
 ****************************************************************************************/
-
+ 
 public with sharing class FEC_GetCardSecInfo {
-
+ 
     // =========================================================================
     // RESPONSE WRAPPER
     // =========================================================================
@@ -19,7 +19,7 @@ public with sharing class FEC_GetCardSecInfo {
         public SysResponse Sys;
         public CardSecInfo CardSecInfo;
     }
-
+ 
     // =========================================================================
     // SYS
     // =========================================================================
@@ -29,7 +29,7 @@ public with sharing class FEC_GetCardSecInfo {
         public Integer Code;
         public String Description;
     }
-
+ 
     // =========================================================================
     // CARD SEC INFO
     // =========================================================================
@@ -44,7 +44,7 @@ public with sharing class FEC_GetCardSecInfo {
         public List<CardsDelivery> CardsDeliveries;
         public List<IPP> IPPs;
     }
-
+ 
     // =========================================================================
     // IPP
     // =========================================================================
@@ -52,7 +52,7 @@ public with sharing class FEC_GetCardSecInfo {
         public String IPPPlan;
         public Decimal IPPBalance;
         public Decimal InterestRate;
-        public Decimal CurrentTerm;
+        public Decimal currentTerm;
         public String IPPStartDate;
         public String IPPMatureDate;
         public Decimal IPPCurrentBalance;
@@ -62,7 +62,7 @@ public with sharing class FEC_GetCardSecInfo {
         public Decimal MonthlyPrincipal;
         public Decimal MonthlyInterest;
     }
-
+ 
     // =========================================================================
     // MAIN CARD PRODUCT
     // =========================================================================
@@ -79,7 +79,7 @@ public with sharing class FEC_GetCardSecInfo {
         public Decimal LastCreditLimit;
         public Date LastDelinquencyDate;
     }
-
+ 
     // =========================================================================
     // CARD FULL PAYMENT
     // =========================================================================
@@ -90,7 +90,7 @@ public with sharing class FEC_GetCardSecInfo {
         public Decimal IPPPrincipal;
         public Decimal IPPFee;
     }
-
+ 
     // =========================================================================
     // MAIN CARD PLASTIC
     // =========================================================================
@@ -101,7 +101,7 @@ public with sharing class FEC_GetCardSecInfo {
         public String LastCodeChangeDate;
         public Boolean EcomActiveFlag;
     }
-
+ 
     // =========================================================================
     // MAIN CARD BALANCE
     // =========================================================================
@@ -112,7 +112,7 @@ public with sharing class FEC_GetCardSecInfo {
         public Decimal CurrentBalance;
         public Decimal TotalBalance;
     }
-
+ 
     // =========================================================================
     // PASS DUE
     // =========================================================================
@@ -121,7 +121,7 @@ public with sharing class FEC_GetCardSecInfo {
         public String ResposiblePerson;
         public String ResposiblePersonPhone;
     }
-
+ 
     // =========================================================================
     // INSURANCE
     // =========================================================================
@@ -132,7 +132,7 @@ public with sharing class FEC_GetCardSecInfo {
         public Date InsuranceStartDate;
         public Date InsuranceEndDate;
     }
-
+ 
     // =========================================================================
     // SUPPLEMENTARY CARD
     // =========================================================================
@@ -152,19 +152,19 @@ public with sharing class FEC_GetCardSecInfo {
         public String CardholderFlag;
         public String Gender;
     }
-
+ 
     // =========================================================================
-    // PUBLIC CALL METHOD - Simplified version for easy usage
+    // CARDS DELIVERY
     // =========================================================================
     public class CardsDelivery {
         public String CardNumber; // Card Number
         public String KindOfIssue; // Type of Issue
         public String DeliveryDate; // Delivery Date
     }
-
-    /* =====================================================
-       PUBLIC SHORT METHOD
-       ===================================================== */
+ 
+    // =========================================================================
+    // PUBLIC CALL METHOD - Simplified version for easy usage
+    // =========================================================================
     public static ResponseWrapper getCardSecInfo(String accountNumber) {
         String transId = UUID.randomUUID().toString();
         String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
@@ -172,7 +172,7 @@ public with sharing class FEC_GetCardSecInfo {
         
         return callGetCardSecInfo(transId, requestorId, dateTimeStr, accountNumber);
     }
-
+ 
     // =========================================================================
     // PUBLIC CALL METHOD - Full version with all parameters
     // =========================================================================
@@ -182,145 +182,78 @@ public with sharing class FEC_GetCardSecInfo {
         String dateTimeStr,
         String accountNumber
     ) {
-
+ 
         validateRequest(transID, requestorId, dateTimeStr, accountNumber);
+        
+        // Build SOAP request using Dom.XmlNode
+        Dom.Document doc = new Dom.Document();
+        
+        // Create Envelope with namespaces
+        Dom.XmlNode envelope = doc.createRootElement('Envelope', FEC_ConstantCommon.SOAP_ENV, 'soapenv');
+        envelope.setNamespace('cif', 'http://fecredit.com.vn/CIF_CardInfo');
+        
+        // Create Header
+        envelope.addChildElement('Header', FEC_ConstantCommon.SOAP_ENV, 'soapenv');
+        
+        // Create Body
+        Dom.XmlNode body = envelope.addChildElement('Body', FEC_ConstantCommon.SOAP_ENV, 'soapenv');
+        
+        // Create GetCardSecInfo
+        Dom.XmlNode getCardSecInfo = body.addChildElement('GetCardSecInfo', 'http://fecredit.com.vn/CIF_CardInfo', 'cif');
+        
+        // Create Sys node
+        Dom.XmlNode sys = getCardSecInfo.addChildElement('Sys', null, null);
+        sys.addChildElement('TransID', null, null).addTextNode(transID);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+        
+        // Create AccountNumber
+        getCardSecInfo.addChildElement('AccountNumber', null, null).addTextNode(accountNumber);
+        
+        String requestBody = doc.toXmlString();
+ 
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Sec_Info');
-        HttpRequest req = new HttpRequest();
-        //  req.setEndpoint(
-        //     apiSetting?.FEC_Call_Mock__c
-        //         ? MOCKUP_ENDPOINT
-        //         : apiSetting.FEC_Endpoint__c + ENDPOINT
-        // );
-        req.setEndpoint('https://d7f82a1e-a770-41e5-a1ea-0d684a148359.mock.pstmn.io');
-        req.setMethod('POST');
-        req.setTimeout(120000);
-        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
-        req.setHeader(
-            'SOAPAction',
-            'http://fecredit.com.vn/CIF_CardInfo/GetCardSecInfo'
-        );
-
-        req.setBody(
-            buildSoapBody(transID, requestorId, dateTimeStr, accountNumber)
-        );
-
-        HttpResponse res = new Http().send(req);
-
+ 
+        String endpoint = apiSetting?.FEC_Call_Mock__c
+            ? FEC_MockupEndpoint.GET_CARD_SEC_INFO_ENDPOINT_MOCKUP
+            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, requestBody);
+ 
         if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
             throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
         }
-
+ 
         ResponseWrapper wrapper = parseResponse(res.getBody());
-
+ 
         if (wrapper.Sys != null && wrapper.Sys.Code != 1) {
             throw new CalloutException(
                 String.format(System.Label.FEC_MSG_API_Error, new List<String>{wrapper.Sys.Description})
             );
         }
-
+ 
         return wrapper;
     }
-
-    /* =====================================================
-       SOAP REQUEST
-       ===================================================== */
-    private static String buildSoapBody(
-        String transID,
-        String requestorId,
-        String dateTimeStr,
-        String accountNumber
-    ) {
-        Dom.Document doc = new Dom.Document();
-
-        Dom.XmlNode env = doc.createRootElement(
-            'soapenv:Envelope',
-            FEC_ConstantCommon.SOAP_ENV,
-            null
-        );
-        env.setAttribute('xmlns:cif', 'http://fecredit.com.vn/CIF_CardInfo');
-
-        env.addChildElement('soapenv:Header', null, null);
-        Dom.XmlNode body = env.addChildElement('soapenv:Body', null, null);
-        Dom.XmlNode act = body.addChildElement('cif:GetCardSecInfo', null, null);
-
-        Dom.XmlNode sys = act.addChildElement('Sys', null, null);
-        sys.addChildElement('TransID', null, null).addTextNode(transID);
-        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
-        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
-
-        act.addChildElement('AccountNumber', null, null)
-           .addTextNode(accountNumber);
-
-        return doc.toXmlString();
-    }
-
-    /* =====================================================
-       VALIDATION
-       ===================================================== */
-    private static void validateRequest(
-        String transID,
-        String requestorId,
-        String dateTimeStr,
-        String accountNumber
-    ) {
-
-        if (String.isBlank(transID) || transID.length() > 36) {
-            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
-                if (String.isBlank(requestorId)) {
-                throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
-            }
-        }
-
-        Set<String> validRequestorIds = new Set<String>{ FEC_ConstantCommon.REQUESTOR_CRM, FEC_ConstantCommon.REQUESTOR_PORTAL, FEC_ConstantCommon.REQUESTOR_MOBILE_APP };
-        if (!validRequestorIds.contains(requestorId)) {
-            throw new CalloutException(
-                System.Label.FEC_MSG_RequestorID_Null
-            );
-        }
-
-        if (String.isBlank(dateTimeStr)) {
-            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
-        }
-
-        try {
-            Datetime.valueOfGmt(dateTimeStr.replace('T',' ').replace('Z',''));
-        } catch (Exception e) {
-            throw new CalloutException(
-                String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeStr})
-            );
-        }
-
-        if (String.isBlank(accountNumber)) {
-            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
-
-        } 
-        if (accountNumber.length() > 255) {
-            throw new CalloutException(
-                String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'AccountNumber', '255'})
-            );
-        }
-    }
-
+ 
     // =========================================================================
     // SOAP PARSER
     // =========================================================================
     private static ResponseWrapper parseResponse(String xml) {
-
+ 
         Dom.Document doc = new Dom.Document();
         doc.load(xml);
-
+ 
         Dom.XmlNode body = doc.getRootElement()
             .getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
-
+ 
         Dom.XmlNode response;
         for (Dom.XmlNode n : body.getChildElements()) {
             response = n;
             break;
         }
-
+ 
         ResponseWrapper result = new ResponseWrapper();
-
+ 
         // ===== SYS =====
         Dom.XmlNode sysNode = response.getChildElement('Sys', null);
         result.Sys = new SysResponse();
@@ -328,13 +261,13 @@ public with sharing class FEC_GetCardSecInfo {
         result.Sys.DateTime_x = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
         result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
         result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
-
+ 
         // ===== CARD SEC INFO =====
         Dom.XmlNode infoNode = response.getChildElement('CardSecInfo', null);
         if (infoNode == null) return result;
-
+ 
         result.CardSecInfo = new CardSecInfo();
-
+ 
         // MainCardProduct
         Dom.XmlNode mcp = infoNode.getChildElement('MainCardProduct', null);
         if (mcp != null) {
@@ -351,7 +284,7 @@ public with sharing class FEC_GetCardSecInfo {
             result.CardSecInfo.MainCardProduct.LastCreditLimit = FEC_CommonUltils.xmlValToDecimal(mcp,'LastCreditLimit');
             result.CardSecInfo.MainCardProduct.LastDelinquencyDate = FEC_CommonUltils.toDate(FEC_CommonUltils.getXmlValue(mcp,'LastDelinquencyDate'));
         }
-
+ 
         // CardFullPayment
         Dom.XmlNode cfp = infoNode.getChildElement('CardFullPayment', null);
         if (cfp != null) {
@@ -362,7 +295,7 @@ public with sharing class FEC_GetCardSecInfo {
             result.CardSecInfo.CardFullPayment.IPPPrincipal = FEC_CommonUltils.xmlValToDecimal(cfp,'IPPPrincipal');
             result.CardSecInfo.CardFullPayment.IPPFee = FEC_CommonUltils.xmlValToDecimal(cfp,'IPPFee');
         }
-
+ 
         // MainCardPlastic
         Dom.XmlNode mcp2 = infoNode.getChildElement('MainCardPlastic', null);
         if (mcp2 != null) {
@@ -374,7 +307,7 @@ public with sharing class FEC_GetCardSecInfo {
             result.CardSecInfo.MainCardPlastic.EcomActiveFlag =
                 FEC_CommonUltils.getXmlValue(mcp2,'EcomActiveFlag') == '1';
         }
-
+ 
         // MainCardBalance
         Dom.XmlNode mcb = infoNode.getChildElement('MainCardBalance', null);
         if (mcb != null) {
@@ -385,7 +318,7 @@ public with sharing class FEC_GetCardSecInfo {
             result.CardSecInfo.MainCardBalance.CurrentBalance = FEC_CommonUltils.xmlValToDecimal(mcb,'CurrentBalance');
             result.CardSecInfo.MainCardBalance.TotalBalance = FEC_CommonUltils.xmlValToDecimal(mcb,'TotalBalance');
         }
-
+ 
         // PassDue
         Dom.XmlNode mcb3 = infoNode.getChildElement('PassDue', null);
         if (mcb3 != null) {
@@ -394,7 +327,7 @@ public with sharing class FEC_GetCardSecInfo {
             result.CardSecInfo.PassDue.ResposiblePerson = FEC_CommonUltils.getXmlValue(mcb3,'ResposiblePerson');
             result.CardSecInfo.PassDue.ResposiblePersonPhone = FEC_CommonUltils.getXmlValue(mcb3,'ResposiblePersonPhone');
         }
-
+ 
         // SupplementaryCards
         Dom.XmlNode suppCardsNode = infoNode.getChildElement('SupplementaryCards', null);
         if (suppCardsNode != null) {
@@ -425,7 +358,7 @@ public with sharing class FEC_GetCardSecInfo {
                 }
             }
         }
-
+        
         // CardsDeliveries
         Dom.XmlNode deliveriesNode = infoNode.getChildElement('CardsDeliveries', null);
         if (deliveriesNode != null) {
@@ -445,8 +378,8 @@ public with sharing class FEC_GetCardSecInfo {
                 }
             }
         }
-
-        // IPPs – hỗ trợ nhiều bản ghi schedule: nhiều <IPP> hoặc OPENING_BALANCE_1, _2, ... trong 1 <IPP>
+ 
+        // IPPs
         Dom.XmlNode ippsNode = infoNode.getChildElement('IPPs', null);
         if (ippsNode != null) {
             result.CardSecInfo.IPPs = new List<IPP>();
@@ -457,14 +390,27 @@ public with sharing class FEC_GetCardSecInfo {
                     childName = childName.substring(childName.indexOf(':') + 1);
                 }
                 if (childName == 'IPP') {
-                    result.CardSecInfo.IPPs.addAll(expandIPPToScheduleItems(child));
+                    IPP ipp = new IPP();
+                    ipp.IPPPlan = FEC_CommonUltils.getXmlValue(child, 'IPPPlan');
+                    ipp.IPPBalance = FEC_CommonUltils.xmlValToDecimal(child, 'IPPBalance');
+                    ipp.InterestRate = FEC_CommonUltils.xmlValToDecimal(child, 'InterestRate');
+                    ipp.currentTerm = FEC_CommonUltils.xmlValToDecimal(child, 'CurrentTerm');
+                    ipp.IPPStartDate = FEC_CommonUltils.getXmlValue(child, 'IPPStartDate');
+                    ipp.IPPMatureDate = FEC_CommonUltils.getXmlValue(child, 'IPPMatureDate');
+                    ipp.IPPCurrentBalance = FEC_CommonUltils.xmlValToDecimal(child, 'IPPCurrentBalance');
+                    ipp.PaymentAmount = FEC_CommonUltils.xmlValToDecimal(child, 'PaymentAmount');
+                    ipp.IPPRecordNo = FEC_CommonUltils.getXmlValue(child, 'IPPRecordNo');
+                    ipp.OpeningBalance = FEC_CommonUltils.xmlValToDecimal(child, 'OpeningBalance');
+                    ipp.MonthlyPrincipal = FEC_CommonUltils.xmlValToDecimal(child, 'MonthlyPrincipal');
+                    ipp.MonthlyInterest = FEC_CommonUltils.xmlValToDecimal(child, 'MonthlyInterest');
+                    result.CardSecInfo.IPPs.add(ipp);
                 }
             }
         }
-
+ 
         return result;
     }
-
+ 
     /**
      * Một <IPP> có thể có OPENING_BALANCE_1, _2, ... _36 (nhiều kỳ) hoặc chỉ OpeningBalance (1 kỳ).
      * Trả về danh sách IPP (1 item per kỳ) để lưu nhiều bản ghi IPP Schedule.
@@ -472,23 +418,23 @@ public with sharing class FEC_GetCardSecInfo {
     private static List<IPP> expandIPPToScheduleItems(Dom.XmlNode ippNode) {
         List<IPP> listOut = new List<IPP>();
         if (ippNode == null) return listOut;
-
+ 
         String ippPlan = FEC_CommonUltils.getXmlValue(ippNode, 'IPPPlan');
         String ippRecordNoFromXml = FEC_CommonUltils.getXmlValue(ippNode, 'IPPRecordNo');
         if (String.isBlank(ippRecordNoFromXml)) {
             throw new CalloutException('GetCardSecInfo response missing IPPRecordNo for an IPP');
         }
         String ippRecordNo = ippRecordNoFromXml.trim();
-        Decimal ippBalance =  FEC_CommonUltils.xmlValToDecimal(ippNode, 'IPPBalance');
-        Decimal interestRate =  FEC_CommonUltils.xmlValToDecimal(ippNode, 'InterestRate');
-        Decimal currentTerm =  FEC_CommonUltils.xmlValToDecimal(ippNode, 'CurrentTerm');
+        Decimal ippBalance = FEC_CommonUltils.xmlValToDecimal(ippNode, 'IPPBalance');
+        Decimal interestRate = FEC_CommonUltils.xmlValToDecimal(ippNode, 'InterestRate');
+        Decimal currentTerm = FEC_CommonUltils.xmlValToDecimal(ippNode, 'CurrentTerm');
         String ippStartDate = FEC_CommonUltils.getXmlValue(ippNode, 'IPPStartDate');
         String ippMatureDate = FEC_CommonUltils.getXmlValue(ippNode, 'IPPMatureDate');
-        Decimal ippCurrentBalance =  FEC_CommonUltils.xmlValToDecimal(ippNode, 'IPPCurrentBalance');
-        Decimal paymentAmount =  FEC_CommonUltils.xmlValToDecimal(ippNode, 'PaymentAmount');
-        Decimal monthlyPrincipal =  FEC_CommonUltils.xmlValToDecimal(ippNode, 'MonthlyPrincipal');
-        Decimal monthlyInterest =  FEC_CommonUltils.xmlValToDecimal(ippNode, 'MonthlyInterest');
-
+        Decimal ippCurrentBalance = FEC_CommonUltils.xmlValToDecimal(ippNode, 'IPPCurrentBalance');
+        Decimal paymentAmount = FEC_CommonUltils.xmlValToDecimal(ippNode, 'PaymentAmount');
+        Decimal monthlyPrincipal = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MonthlyPrincipal');
+        Decimal monthlyInterest = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MonthlyInterest');
+ 
         // Mỗi kỳ (1-36): OPENING_BALANCE_k, PAYMENT_AMT_k, MONTHLY_PRINCIPAL_k, MONTHLY_INTEREST_k
         for (Integer k = 1; k <= 36; k++) {
             String keyOpening = 'OPENING_BALANCE_' + k;
@@ -496,9 +442,9 @@ public with sharing class FEC_GetCardSecInfo {
             if (String.isNotBlank(valOpening) && valOpening.trim() != '') {
                 try {
                     Decimal openingK = Decimal.valueOf(valOpening.trim());
-                    Decimal paymentK =  FEC_CommonUltils.xmlValToDecimal(ippNode, 'PAYMENT_AMT_' + k);
-                    Decimal principalK =  FEC_CommonUltils.xmlValToDecimal(ippNode, 'MONTHLY_PRINCIPAL_' + k);
-                    Decimal interestK =  FEC_CommonUltils.xmlValToDecimal(ippNode, 'MONTHLY_INTEREST_' + k);
+                    Decimal paymentK = FEC_CommonUltils.xmlValToDecimal(ippNode, 'PAYMENT_AMT_' + k);
+                    Decimal principalK = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MONTHLY_PRINCIPAL_' + k);
+                    Decimal interestK = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MONTHLY_INTEREST_' + k);
                     IPP ipp = new IPP();
                     ipp.IPPPlan = ippPlan;
                     ipp.IPPRecordNo = ippRecordNo;
@@ -516,9 +462,9 @@ public with sharing class FEC_GetCardSecInfo {
                 } catch (Exception e) { /* skip invalid number */ }
             }
         }
-
+ 
         if (listOut.isEmpty()) {
-            Decimal openingBalance =  FEC_CommonUltils.xmlValToDecimal(ippNode, 'OpeningBalance');
+            Decimal openingBalance = FEC_CommonUltils.xmlValToDecimal(ippNode, 'OpeningBalance');
             IPP ipp = new IPP();
             ipp.IPPPlan = ippPlan;
             ipp.IPPRecordNo = ippRecordNo;
@@ -536,5 +482,56 @@ public with sharing class FEC_GetCardSecInfo {
         }
         return listOut;
     }
-
+ 
+ 
+    // =========================================================================
+    // VALIDATION (KEEP FULL)
+    // =========================================================================
+    private static void validateRequest(
+        String transID,
+        String requestorId,
+        String dateTimeStr,
+        String accountNumber
+    ) {
+ 
+        if (String.isBlank(transID) || transID.length() > 36) {
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
+        }
+ 
+        if (String.isBlank(requestorId)) {
+            throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
+        }
+ 
+        Set<String> validRequestorIds = new Set<String>{ FEC_ConstantCommon.REQUESTOR_CRM, FEC_ConstantCommon.REQUESTOR_PORTAL, FEC_ConstantCommon.REQUESTOR_MOBILE_APP };
+        if (!validRequestorIds.contains(requestorId)) {
+            throw new CalloutException(
+                System.Label.FEC_MSG_RequestorID_Null
+            );
+        }
+ 
+        if (String.isBlank(dateTimeStr)) {
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
+        }
+ 
+        try {
+            Datetime.valueOfGmt(dateTimeStr.replace('T',' ').replace('Z',''));
+        } catch (Exception e) {
+            throw new CalloutException(
+                String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeStr})
+            );
+        }
+ 
+        if (String.isBlank(accountNumber)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
+        }
+ 
+        if (accountNumber.length() > 255) {
+            throw new CalloutException(
+                String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'AccountNumber', '255'})
+            );
+        }
+ 
+    }
+ 
 }
+ 
