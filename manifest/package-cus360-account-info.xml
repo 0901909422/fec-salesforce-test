@@ -49,6 +49,9 @@
 		<members>fec_StatementsAccount</members>
 		<members>fec_TransactionsAccount</members>
         <members>fec_IPPDetails</members>
+		<members>fec_CommonDetailView</members>
+		<members>fec_StatementsAccountTabView</members>
+		<members>fec_TransactionsAccountTabView</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -126,6 +129,11 @@
 	<types>
 		<members>PSG_RD_IT_User</members>
 		<name>PermissionSetGroup</name>
+	</types>
+	<types>
+		<members>Transactions</members>
+		<members>statements</members>
+		<name>CustomTab</name>
 	</types>
     <version>65.0</version>
 </Package>

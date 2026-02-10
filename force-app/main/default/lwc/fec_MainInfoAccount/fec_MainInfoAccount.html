@@ -1,22 +1,22 @@
 <template>
     <template if:true={hasData}>
         <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
-            <c-fec_-common-record-detail-section section-title={customLabel.accountLabel} fields={accountFields}
-                show-refresh-button="true" onrefresh={handleRefresh}>
-            </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title={customLabel.accountStatusLabel} fields={accountStatusFields}
-                show-refresh-button="true" onrefresh={handleRefresh}>
-            </c-fec_-common-record-detail-section>
-             <c-fec_-common-record-detail-section section-title={customLabel.cardLabel} fields={cardFields}
-                buttons={cardButtons}>
-            </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title={customLabel.cardStatusLabel} fields={cardStatusFields}
+            <c-fec_-commom-record-detail-section section-title="Account" fields={accountFields}
+                show-refresh-button="true" onrefresh={handleRefresh} columns="3">
+            </c-fec_-commom-record-detail-section>
+            <c-fec_-commom-record-detail-section section-title="Account Status" fields={accountStatusFields}
+                show-refresh-button="true" onrefresh={handleRefresh} columns="3">
+            </c-fec_-commom-record-detail-section>
+             <c-fec_-commom-record-detail-section section-title="Card" fields={cardFields}
+                buttons={cardButtons} columns="3">
+            </c-fec_-commom-record-detail-section>
+            <c-fec_-commom-record-detail-section section-title="Card Status" fields={cardStatusFields}
                 buttons={cardStatusButtons} show-refresh-button="true" onrefresh={handleRefresh}
-                onbuttonclick={handleButtonClick}>
-            </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title={customLabel.debtSaleLabel} fields={debtSaleFields}
-                onbuttonclick={handleButtonClick}>
-            </c-fec_-common-record-detail-section>
+                onbuttonclick={handleButtonClick} columns="3">
+            </c-fec_-commom-record-detail-section>
+            <c-fec_-commom-record-detail-section section-title="Debt Sale" fields={debtSaleFields}
+                onbuttonclick={handleButtonClick} columns="3">
+            </c-fec_-commom-record-detail-section>
         </lightning-accordion>
     </template>
     <template if:false={hasData}>
@@ -28,9 +28,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                {customLabel.accountLabel}&nbsp;-&nbsp;
+                                Account&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
+                                    Tải Dữ liệu Không Thành Công
                                 </span>
                             </span>
 
@@ -47,9 +47,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                {customLabel.accountStatusLabel}&nbsp;-&nbsp;
+                                Account Status&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
+                                    Tải Dữ liệu Không Thành Công
                                 </span>
                             </span>
 
@@ -66,9 +66,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                {customLabel.cardStatusLabel}&nbsp;-&nbsp;
+                                Card Status&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
+                                    Tải Dữ liệu Không Thành Công
                                 </span>
                             </span>
 
@@ -85,9 +85,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                {customLabel.debtSaleLabel}&nbsp;-&nbsp;
+                                Debt Sale&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
+                                    Tải Dữ liệu Không Thành Công
                                 </span>
                             </span>
 

@@ -3,18 +3,22 @@
         <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
             <lightning-accordion-section name="unbilledTransactions" label="Unbilled Transactions">
 
-                <c-fec_-related-list-paging records={unbilledTransactions}
+                <c-fec_-related-list-addresses-paging records={unbilledTransactions}
                  data-section="unbilled"
-                    columns={unbilledTransactionsColumns} sorted-by="Unbilled Transactions" onrowselect={handleTransactionSelect}>
-                </c-fec_-related-list-paging>
+                    columns={unbilledTransactionsColumns} 
+                    sorted-by="effectiveDate"
+                    onrowselect={handleTransactionSelect}>
+                </c-fec_-related-list-addresses-paging>
 
             </lightning-accordion-section>
             <lightning-accordion-section name="pendingTransactions" label="Pending Transactions">
 
-                <c-fec_-related-list-paging records={pendingTransactions}
-                 data-section="pending"
-                    columns={pendingTransactionsColumns} sorted-by="Pending Transactions" onrowselect={handleTransactionSelect}>
-                </c-fec_-related-list-paging>
+                <c-fec_-related-list-addresses-paging records={pendingTransactions}
+                    data-section="pending"
+                    columns={pendingTransactionsColumns} 
+                    sorted-by="effectiveDate" 
+                    onrowselect={handleTransactionSelect}>
+                </c-fec_-related-list-addresses-paging>
 
             </lightning-accordion-section>
         </lightning-accordion>

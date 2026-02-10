@@ -1,4 +1,17 @@
-public with sharing class FEC_SecondaryInfoAccountController {
+/****************************************************************************************
+ * File Name    : FEC_SecondaryInfoAccountController.Apex
+ * Author       : Quangdv7
+ * Date         : 2025-01-10
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-10     Quangdv7             Create
+ 
+****************************************************************************************/
+
+public without sharing class FEC_SecondaryInfoAccountController {
 
     /* ===================== DTO ===================== */
     public class SecondaryAccountDTO {
@@ -91,9 +104,9 @@ public with sharing class FEC_SecondaryInfoAccountController {
         try {
             FEC_GetCardSecInfo.ResponseWrapper res =
                 FEC_GetCardSecInfo.callGetCardSecInfo(
-                    FEC_CommonUltils.generateTransactionId(),
-                    FEC_ConstantCommon.REQUESTOR_CRM,
-                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                    generateTransactionId(),
+                    'CRM',
+                    Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
                     c.FEC_Account_Number__c
                 );
 
@@ -236,5 +249,7 @@ public with sharing class FEC_SecondaryInfoAccountController {
         }
         return m;
     }
-    
+    private static String generateTransactionId() {
+        return String.valueOf(Datetime.now().getTime());
+    }
 }

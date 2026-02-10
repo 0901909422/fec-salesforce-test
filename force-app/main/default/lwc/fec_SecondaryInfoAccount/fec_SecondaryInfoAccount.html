@@ -1,23 +1,18 @@
 <template>
     <template if:true={hasData}>
         <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
-            <c-fec_-common-record-detail-section section-title={customLabel.limitLabel} fields={limitFields}
-                onbuttonclick={handleButtonClick}>
-            </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title={customLabel.mainCardLabel} fields={mainCardFields}
-                show-refresh-button="true" onrefresh={handleRefresh}>
-            </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title={customLabel.pinLabel} fields={pinFields} show-refresh-button="true"
-                onrefresh={handleRefresh}>
-            </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title={customLabel.feeLabel} fields={feeFields}>
-            </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title={customLabel.collectionsInfoLabel} fields={collectionsInfoFields}
-                show-refresh-button="true" onrefresh={handleRefresh}>
-            </c-fec_-common-record-detail-section>
-            <c-fec_-common-record-detail-section section-title={customLabel.salesInfoLabel} fields={salesInfoFields}
-                onbuttonclick={handleButtonClick}>
-            </c-fec_-common-record-detail-section>
+            <c-fec_-commom-record-detail-section section-title="Limit" fields={limitFields}
+                onbuttonclick={handleButtonClick} columns="3">
+            </c-fec_-commom-record-detail-section>
+            <c-fec_-commom-record-detail-section section-title="Main Card" fields={mainCardFields}
+                show-refresh-button="true" onrefresh={handleRefresh} columns="3">
+            </c-fec_-commom-record-detail-section>
+            <c-fec_-commom-record-detail-section section-title="Collections Info" fields={collectionsInfoFields}
+                show-refresh-button="true" onrefresh={handleRefresh} columns="3">
+            </c-fec_-commom-record-detail-section>
+            <c-fec_-commom-record-detail-section section-title="Sales Info" fields={salesInfoFields}
+                onbuttonclick={handleButtonClick} columns="3">
+            </c-fec_-commom-record-detail-section>
         </lightning-accordion>
     </template>
     <template if:false={hasData}>
@@ -29,9 +24,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                {customLabel.limitLabel}&nbsp;-&nbsp;
+                                Limit&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
+                                    Tải Dữ liệu Không Thành Công
                                 </span>
                             </span>
 
@@ -48,9 +43,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                {customLabel.mainCardLabel}&nbsp;-&nbsp;
+                                Main Card&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
+                                    Tải Dữ liệu Không Thành Công
                                 </span>
                             </span>
 
@@ -67,9 +62,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                {customLabel.pinLabel}&nbsp;-&nbsp;
+                               Collections Info&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
+                                    Tải Dữ liệu Không Thành Công
                                 </span>
                             </span>
 
@@ -86,47 +81,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                               {customLabel.feeLabel}&nbsp;-&nbsp;
+                               Sales Info&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
-                                </span>
-                            </span>
-
-                        </span>
-                    </h3>
-                </div>
-                <div class="slds-accordion__content slds-hide">
-                </div>
-            </section>
-            <section class="slds-accordion__section slds-is-open">
-                <div class="slds-accordion__summary">
-                    <h3 class="slds-accordion__summary-heading">
-                        <span class="slds-accordion__summary-content slds-grid">
-                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
-                            </lightning-icon>
-                            <span>
-                               {customLabel.collectionsInfoLabel}&nbsp;-&nbsp;
-                                <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
-                                </span>
-                            </span>
-
-                        </span>
-                    </h3>
-                </div>
-                <div class="slds-accordion__content slds-hide">
-                </div>
-            </section>
-            <section class="slds-accordion__section slds-is-open">
-                <div class="slds-accordion__summary">
-                    <h3 class="slds-accordion__summary-heading">
-                        <span class="slds-accordion__summary-content slds-grid">
-                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
-                            </lightning-icon>
-                            <span>
-                               {customLabel.salesInfoLabel}&nbsp;-&nbsp;
-                                <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
+                                    Tải Dữ liệu Không Thành Công
                                 </span>
                             </span>
 

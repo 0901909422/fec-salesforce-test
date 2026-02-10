@@ -1,10 +1,21 @@
+/****************************************************************************************
+ * File Name    : Fec_TransactionsAccount.js
+ * Author       : Quangdv7
+ * Date         : 2025-01-16
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-16     Quangdv7             Create
+ 
+****************************************************************************************/
+
 import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
-import loadUnbilledTransactions
-    from '@salesforce/apex/FEC_TransactionsController.loadUnbilledTransactions';
+import loadTransactions from '@salesforce/apex/FEC_TransactionsController.loadTransactions';
 
-export default class Fec_TransactionsAccount
-    extends NavigationMixin(LightningElement) {
+export default class Fec_TransactionsAccount extends NavigationMixin(LightningElement) {
 
     /* ================= API ================= */
     @api recordId;
@@ -27,15 +38,51 @@ export default class Fec_TransactionsAccount
             type: 'link',
             recordIdField: 'Id',
             hoverTitle: 'Unbilled Transactions',
+            cellAlign: 'center',
             hoverFields: [
-                { label: 'Transaction Code', fieldName: 'transactionCode' }
+                { label: 'Transaction Code', fieldName: 'transactionCode' },
+                { label: 'Transaction Plan', fieldName: 'transactionPlan' },
+                { label: 'Effective Date', fieldName: 'effectiveDate' },
+                { label: 'Authorization Code', fieldName: 'authorizationCode' },
+                { label: 'Post Date', fieldName: 'postDate' },
+                { label: 'Credit Debit Flag', fieldName: 'creditDebitFlag' },
+                { label: 'Transaction Amount', fieldName: 'transactionAmount' },
+                { label: 'Currency Code', fieldName: 'currencyCode' },
+                { label: 'Merchant Description', fieldName: 'merchantDescription' },
+                { label: 'OTP Sent', fieldName: 'otpSent' },
+                { label: 'Merchant Category Code', fieldName: 'merchantCategoryCode' }
             ]
         },
-        { label: 'Effective Date', fieldName: 'effectiveDate', type: 'text' },
-        { label: 'Post Date', fieldName: 'postDate', type: 'text' },
-        { label: 'Transaction Amount', fieldName: 'transactionAmount', type: 'text' },
-        { label: 'Merchant Description', fieldName: 'merchantDescription', type: 'text' },
-        { label: 'Credit Debit Flag', fieldName: 'creditDebitFlag', type: 'text' }
+        {
+            label: 'Effective Date',
+            fieldName: 'effectiveDate',
+            type: 'text',
+            cellAlign: 'center'
+        },
+        {
+            label: 'Post Date',
+            fieldName: 'postDate',
+            type: 'text',
+            cellAlign: 'center'
+        },
+        {
+            label: 'Transaction Amount',
+            fieldName: 'transactionAmount',
+            type: 'text',
+            cellAlign: 'right'
+        },
+        {
+            label: 'Merchant Description',
+            fieldName: 'merchantDescription',
+            type: 'text',
+            width: '240px'
+        },
+        {
+            label: 'Credit Debit Flag',
+            fieldName: 'creditDebitFlag',
+            type: 'text',
+            cellAlign: 'center'
+        }
     ];
 
     pendingTransactionsColumns = [
@@ -45,15 +92,38 @@ export default class Fec_TransactionsAccount
             type: 'link',
             recordIdField: 'Id',
             hoverTitle: 'Pending Transactions',
+            cellAlign: 'center',
             hoverFields: [
-                { label: 'Transaction Code', fieldName: 'transactionCode' }
+                { label: 'Transaction Code', fieldName: 'transactionCode' },
+                { label: 'Transaction Plan', fieldName: 'transactionPlan' },
+                { label: 'Effective Date', fieldName: 'effectiveDate' },
+                { label: 'Authorization Code', fieldName: 'authorizationCode' },
+                { label: 'Transaction Amount', fieldName: 'transactionAmount' },
+                { label: 'Authorization Response', fieldName: 'authorizationResponse' },
+                { label: 'Merchant Description', fieldName: 'merchantDescription' },
+                { label: 'Currency Code', fieldName: 'currencyCode' },
+                { label: 'Merchant Category Code', fieldName: 'merchantCategoryCode' },
+                { label: 'Decline Description', fieldName: 'declineDescription' },
+                { label: 'Approval Code', fieldName: 'approvalCode' }
             ]
         },
-        { label: 'Effective Date', fieldName: 'effectiveDate', type: 'text' },
-        { label: 'Post Date', fieldName: 'postDate', type: 'text' },
-        { label: 'Transaction Amount', fieldName: 'transactionAmount', type: 'text' },
-        { label: 'Merchant Description', fieldName: 'merchantDescription', type: 'text' },
-        { label: 'Credit Debit Flag', fieldName: 'creditDebitFlag', type: 'text' }
+        {
+            label: 'Effective Date',
+            fieldName: 'effectiveDate',
+            type: 'text',
+            cellAlign: 'center'
+        },
+        {
+            label: 'Transaction Amount',
+            fieldName: 'transactionAmount',
+            type: 'text',
+            cellAlign: 'right'
+        },
+        {
+            label: 'Merchant Description',
+            fieldName: 'merchantDescription',
+            type: 'text'
+        }
     ];
 
     /* ================= LIFECYCLE ================= */
@@ -70,23 +140,23 @@ export default class Fec_TransactionsAccount
 
         this.isLoading = true;
 
-        loadUnbilledTransactions({
-            caseId: this.recordId,
-            fromDate: null,
-            toDate: null
-        })
+        loadTransactions({ caseId: this.recordId })
             .then(res => {
-                console.log('[FEC] RAW res ===>', JSON.stringify(res));
-
-                const rows = Array.isArray(res?.transactions)
-                    ? res.transactions
+                const unbilled = Array.isArray(res?.unbilledTransactions)
+                    ? res.unbilledTransactions
                     : [];
 
-                const mapped = rows.map(tx => this.mapTransaction(tx));
+                const pending = Array.isArray(res?.pendingTransactions)
+                    ? res.pendingTransactions
+                    : [];
 
-                // NOTE: hiện backend chưa phân loại
-                this.unbilledTransactions = mapped;
-                this.pendingTransactions = mapped;
+                this.unbilledTransactions = unbilled.map(tx =>
+                    this.mapUnbilled(tx)
+                );
+
+                this.pendingTransactions = pending.map(tx =>
+                    this.mapPending(tx)
+                );
             })
             .catch(err => {
                 console.error('[FEC] loadTransactions error', err);
@@ -99,25 +169,45 @@ export default class Fec_TransactionsAccount
     }
 
     /* ================= DATA MAPPER ================= */
-    mapTransaction(tx) {
+   mapUnbilled(tx) {
         return {
-            // Preserve raw fields
             ...tx,
-
-            // Required for table
             Id: tx.Id,
 
-            // Display fields
-            transactionCode: tx.transactionCode ?? '',
-            merchantDescription: tx.merchantDescription ?? '',
-            creditDebitFlag: tx.creditDebitFlag ?? '',
+            transactionCode: tx.transactionCode || '',
+            merchantDescription: tx.merchantDescription || '',
+            creditDebitFlag: tx.creditDebitFlag || '',
 
             effectiveDate: this.formatDate(tx.effectiveDate),
-            postDate: this.formatDate(tx.postDate || tx.postingDate),
+            postDate: this.formatDate(tx.postingDate),
+            transactionAmount: this.formatNumber(tx.transactionAmount),
 
-            transactionAmount: this.formatNumber(
-                tx.transactionAmount ?? tx.amount
-            )
+            transactionPlan: tx.transactionPlan || '',
+            authorizationCode: tx.authorizationCode || '',
+            currencyCode: tx.currencyCode || '',
+            merchantCategoryCode: tx.merchantCategoryCode || '',
+            otpSent: tx.otpSent || ''
+        };
+    }
+
+    mapPending(tx) {
+        return {
+            Id: tx.Id,
+
+            transactionCode: tx.transactionCode || '',
+            merchantDescription: tx.merchantDescription || '',
+
+            effectiveDate: this.formatDate(tx.effectiveDate),
+            transactionAmount: this.formatNumber(tx.transactionAmount),
+            transactionPlan: tx.transactionPlan || '',
+            authorizationCode: tx.authorizationCode || '',
+            merchantCategoryCode: tx.merchantCategoryCode || '',
+            currencyCode: tx.currencyCode || '',
+
+            authorizationResponse: tx.authorizationResponse || '',
+            declineDescription: tx.declineDescription || '',
+            declineReasonCode: tx.declineReasonCode || '',
+            approvalCode: tx.approvalCode || ''
         };
     }
 
@@ -148,9 +238,6 @@ export default class Fec_TransactionsAccount
         if (!recordId) return;
 
         const sectionType = event.currentTarget?.dataset?.section;
-
-        console.log('[FEC] recordId ===>', recordId);
-        console.log('[FEC] sectionType ===>', sectionType);
 
         this[NavigationMixin.Navigate]({
             type: 'standard__navItemPage',
