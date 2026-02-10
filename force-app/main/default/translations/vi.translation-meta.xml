@@ -476,4 +476,24 @@
             <name>FEC_Message_Select_Property</name>
             <label>Bạn có chắc muốn xóa giá trị này?</label>
         </customLabels>
+        <customLabels>
+            <name>FEC_Unknown_Error</name>
+            <label>Lỗi không xác định</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Error_Details</name>
+            <label>Chi tiết lỗi</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Error_Unknown_Node_Type</name>
+            <label>Loại node không xác định: {0}</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Warning_Select_Node</name>
+            <label>Vui lòng chọn một node trước.</label>
+        </customLabels>
+        <customLabels>
+            <name>FEC_Toast_Warning</name>
+            <label>Cảnh báo</label>
+        </customLabels>
 </Translations>
