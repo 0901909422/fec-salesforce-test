@@ -15,18 +15,18 @@
         <value>Cancel</value>
     </labels>
     <labels>
-        <fullName>CSM_Property</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>CSM Property</shortDescription>
-        <value>CSM Property</value>
-    </labels>
-    <labels>
         <fullName>CSM_Property_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>CSM Property Type</shortDescription>
         <value>CSM Property Type</value>
+    </labels>
+    <labels>
+        <fullName>CSM_Property</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CSM Property</shortDescription>
+        <value>CSM Property</value>
     </labels>
     <labels>
         <fullName>Err_Missing_Fraud_Case</fullName>
@@ -243,18 +243,18 @@
         <value>Add Root</value>
     </labels>
     <labels>
-        <fullName>FEC_Button_Cancel</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Cancel</value>
-    </labels>
-    <labels>
         <fullName>FEC_Button_Cancel_Edit</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Button label for canceling edit</shortDescription>
         <value>Cancel Edit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Cancel</value>
     </labels>
     <labels>
         <fullName>FEC_Button_Close</fullName>
@@ -299,13 +299,6 @@
         <value>Query</value>
     </labels>
     <labels>
-        <fullName>FEC_Button_Save</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Save</value>
-    </labels>
-    <labels>
         <fullName>FEC_Button_Save_All</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -326,6 +319,13 @@
         <protected>false</protected>
         <shortDescription>Button Save Close</shortDescription>
         <value>Save &amp; Close</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Save</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Save</value>
     </labels>
     <labels>
         <fullName>FEC_Button_SaveAndNew</fullName>
@@ -351,18 +351,18 @@
         <value>Undo</value>
     </labels>
     <labels>
-        <fullName>FEC_Cancel</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Cancel</value>
-    </labels>
-    <labels>
         <fullName>FEC_Cancel_Title</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Cancel and close form</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Cancel</value>
     </labels>
     <labels>
         <fullName>FEC_Cannot_Delete_File</fullName>
@@ -476,13 +476,6 @@
         <value>Applicable Role</value>
     </labels>
     <labels>
-        <fullName>FEC_Col_Channel</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Channel</value>
-    </labels>
-    <labels>
         <fullName>FEC_Col_Channel_ID</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -502,6 +495,13 @@
         <protected>false</protected>
         <shortDescription>Column label for Channel VN Name</shortDescription>
         <value>Channel VN Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Channel</value>
     </labels>
     <labels>
         <fullName>FEC_Col_Code</fullName>
@@ -553,18 +553,18 @@
         <value>Integration</value>
     </labels>
     <labels>
-        <fullName>FEC_Col_Name</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Name</value>
-    </labels>
-    <labels>
         <fullName>FEC_Col_Name_VN</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Name VN</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Name</value>
     </labels>
     <labels>
         <fullName>FEC_Col_Order</fullName>
@@ -757,13 +757,6 @@
         <value>OTP Compromised</value>
     </labels>
     <labels>
-        <fullName>FEC_Delete</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Delete action label</shortDescription>
-        <value>Delete</value>
-    </labels>
-    <labels>
         <fullName>FEC_Delete_Confirmation_Msg</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -783,6 +776,13 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Record deleted successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Delete action label</shortDescription>
+        <value>Delete</value>
     </labels>
     <labels>
         <fullName>FEC_Deleted_File</fullName>
@@ -1130,18 +1130,18 @@
         <value>Category</value>
     </labels>
     <labels>
-        <fullName>FEC_Label_Channel</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Channel</value>
-    </labels>
-    <labels>
         <fullName>FEC_Label_Channel_Multiselect</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>FEC Channel (Multi-select)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Channel</value>
     </labels>
     <labels>
         <fullName>FEC_Label_Control_Name</fullName>
@@ -1156,13 +1156,6 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Customer Segment</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_CustomerType</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Customer Type</value>
     </labels>
     <labels>
         <fullName>FEC_Label_CustomerType_All</fullName>
@@ -1184,6 +1177,13 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Non-existing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_CustomerType</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Customer Type</value>
     </labels>
     <labels>
         <fullName>FEC_Label_Display_Alias</fullName>
@@ -1214,18 +1214,18 @@
         <value>Name VN</value>
     </labels>
     <labels>
-        <fullName>FEC_Label_Editable</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Editable</value>
-    </labels>
-    <labels>
         <fullName>FEC_Label_Editable_Role</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Editable Role</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Editable</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Editable</value>
     </labels>
     <labels>
         <fullName>FEC_Label_Error</fullName>
@@ -1298,18 +1298,18 @@
         <value>Mapping Alias</value>
     </labels>
     <labels>
-        <fullName>FEC_Label_Name</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Name label</shortDescription>
-        <value>Name</value>
-    </labels>
-    <labels>
         <fullName>FEC_Label_Name_EN</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>English Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Name_VN_Display</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Name (Vietnamese)</value>
     </labels>
     <labels>
         <fullName>FEC_Label_Name_VN</fullName>
@@ -1319,11 +1319,11 @@
         <value>Vietnamese Name</value>
     </labels>
     <labels>
-        <fullName>FEC_Label_Name_VN_Display</fullName>
+        <fullName>FEC_Label_Name</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Name (Vietnamese)</value>
+        <shortDescription>Name label</shortDescription>
+        <value>Name</value>
     </labels>
     <labels>
         <fullName>FEC_Label_New_Records</fullName>
@@ -1340,18 +1340,18 @@
         <value>None</value>
     </labels>
     <labels>
-        <fullName>FEC_Label_Order</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Order</value>
-    </labels>
-    <labels>
         <fullName>FEC_Label_Order_Display</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Order Display</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Order</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Order</value>
     </labels>
     <labels>
         <fullName>FEC_Label_Parent_Nature_Info</fullName>
@@ -1368,18 +1368,18 @@
         <value>Process Status</value>
     </labels>
     <labels>
-        <fullName>FEC_Label_Product</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Product</value>
-    </labels>
-    <labels>
         <fullName>FEC_Label_Product_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Product Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Product</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Product</value>
     </labels>
     <labels>
         <fullName>FEC_Label_Property_Name</fullName>
@@ -1431,13 +1431,6 @@
         <value>Show field</value>
     </labels>
     <labels>
-        <fullName>FEC_Label_Stage</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Stage</value>
-    </labels>
-    <labels>
         <fullName>FEC_Label_Stage_Name</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -1445,11 +1438,11 @@
         <value>Stage Name</value>
     </labels>
     <labels>
-        <fullName>FEC_Label_Status</fullName>
+        <fullName>FEC_Label_Stage</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
-        <value>Status</value>
+        <value>Stage</value>
     </labels>
     <labels>
         <fullName>FEC_Label_Status_ACTIVE</fullName>
@@ -1480,6 +1473,13 @@
         <value>Inactive</value>
     </labels>
     <labels>
+        <fullName>FEC_Label_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Status</value>
+    </labels>
+    <labels>
         <fullName>FEC_Label_Sub_Cat</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -1508,14 +1508,14 @@
         <value>SYNCED RECORDS</value>
     </labels>
     <labels>
-        <fullName>FEC_Label_Type</fullName>
+        <fullName>FEC_Label_Type_Display</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Type</value>
     </labels>
     <labels>
-        <fullName>FEC_Label_Type_Display</fullName>
+        <fullName>FEC_Label_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
@@ -1593,18 +1593,18 @@
         <value>Edit</value>
     </labels>
     <labels>
-        <fullName>FEC_Lbl_End_Date</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>End Date Label</shortDescription>
-        <value>End Date</value>
-    </labels>
-    <labels>
         <fullName>FEC_Lbl_End_Date_Finish</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>End Date or Finish Date</shortDescription>
         <value>Finish Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_End_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>End Date Label</shortDescription>
+        <value>End Date</value>
     </labels>
     <labels>
         <fullName>FEC_Lbl_Error_Deleting_File</fullName>
@@ -1642,18 +1642,18 @@
         <value>Filter</value>
     </labels>
     <labels>
-        <fullName>FEC_Lbl_Is_Active</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Is Active Checkbox Label</shortDescription>
-        <value>Is Active?</value>
-    </labels>
-    <labels>
         <fullName>FEC_Lbl_Is_Active_Table</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Is Active Table Column</shortDescription>
         <value>Is Active</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Is_Active</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Is Active Checkbox Label</shortDescription>
+        <value>Is Active?</value>
     </labels>
     <labels>
         <fullName>FEC_Lbl_Modified_By</fullName>
@@ -1684,18 +1684,18 @@
         <value>Start Date</value>
     </labels>
     <labels>
-        <fullName>FEC_Lbl_Status</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Status Column</shortDescription>
-        <value>Status</value>
-    </labels>
-    <labels>
         <fullName>FEC_Lbl_Status_Request</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Status Request</shortDescription>
         <value>Request Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Status Column</shortDescription>
+        <value>Status</value>
     </labels>
     <labels>
         <fullName>FEC_Lbl_Uploaded_At</fullName>
@@ -2634,13 +2634,6 @@
         <value>Sales Info</value>
     </labels>
     <labels>
-        <fullName>FEC_Save</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Save</value>
-    </labels>
-    <labels>
         <fullName>FEC_Save_Success_Message</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -2653,6 +2646,13 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Save changes</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Save</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Save</value>
     </labels>
     <labels>
         <fullName>FEC_Saved_Data</fullName>
@@ -2705,18 +2705,18 @@
         <value>Success</value>
     </labels>
     <labels>
-        <fullName>FEC_Tab_Additional_Field</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Additional Field</value>
-    </labels>
-    <labels>
         <fullName>FEC_Tab_Additional_Field_List_Value</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Additional Field List Value</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Additional_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Additional Field</value>
     </labels>
     <labels>
         <fullName>FEC_Tab_Business_Process</fullName>
@@ -2867,18 +2867,18 @@
         <value>Deleted successfully</value>
     </labels>
     <labels>
-        <fullName>FEC_Toast_Error</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Error</value>
-    </labels>
-    <labels>
         <fullName>FEC_Toast_Error_Generic</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Generic error toast message</shortDescription>
         <value>An error occurred. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error</value>
     </labels>
     <labels>
         <fullName>FEC_Toast_Info</fullName>
@@ -2902,13 +2902,6 @@
         <value>Data refreshed successfully</value>
     </labels>
     <labels>
-        <fullName>FEC_Toast_Save_Error</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Save failed</value>
-    </labels>
-    <labels>
         <fullName>FEC_Toast_Save_Error_Message</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -2923,11 +2916,11 @@
         <value>Error</value>
     </labels>
     <labels>
-        <fullName>FEC_Toast_Save_Success</fullName>
+        <fullName>FEC_Toast_Save_Error</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
-        <value>Saved successfully</value>
+        <value>Save failed</value>
     </labels>
     <labels>
         <fullName>FEC_Toast_Save_Success_Message</fullName>
@@ -2942,6 +2935,13 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Saved successfully</value>
     </labels>
     <labels>
         <fullName>FEC_Toast_Success</fullName>
@@ -3132,18 +3132,18 @@
         <value>Int User Type</value>
     </labels>
     <labels>
-        <fullName>Integrating_Property</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Integrating Property</shortDescription>
-        <value>Integrating Property</value>
-    </labels>
-    <labels>
         <fullName>Integrating_Property_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Integrating Property Type</shortDescription>
         <value>Integrating Property Type</value>
+    </labels>
+    <labels>
+        <fullName>Integrating_Property</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integrating Property</shortDescription>
+        <value>Integrating Property</value>
     </labels>
     <labels>
         <fullName>Integration_Mapping_Title</fullName>
@@ -3158,13 +3158,6 @@
         <protected>false</protected>
         <shortDescription>Error message for adding sub code</shortDescription>
         <value>Cannot add a child node to the last level (Sub Code).</value>
-    </labels>
-    <labels>
-        <fullName>LABEL_ERROR_DELETE_RECORD</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Error message for deleting a record</shortDescription>
-        <value>Cannot determine the record information to delete.</value>
     </labels>
     <labels>
         <fullName>LABEL_ERROR_DELETE_RECORD</fullName>
@@ -3223,17 +3216,17 @@
         <value>WARNING: You are deleting node {0} of type "{1}". All child nodes will be deleted. Are you sure you want to continue?</value>
     </labels>
     <labels>
-        <fullName>LBL_AccountNumber</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Account Number label</shortDescription>
-        <value>Account Number</value>
-    </labels>
-    <labels>
         <fullName>LBL_AccountNumber_Col</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Account Number column label</shortDescription>
+        <value>Account Number</value>
+    </labels>
+    <labels>
+        <fullName>LBL_AccountNumber</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Number label</shortDescription>
         <value>Account Number</value>
     </labels>
     <labels>
@@ -3279,17 +3272,6 @@
         <value>Missing CaseResultInfo in request</value>
     </labels>
     <labels>
-    <fullName>LBL_API_Invalid_Fraud_Case_Not_Found</fullName>
-    <language>en_US</language>
-    <protected>false</protected>
-    <shortDescription>
-        Fraud case not found for CaseID, ServiceCase, Channel
-    </shortDescription>
-    <value>
-        Fraud case not found for CaseID={0}, ServiceCase={1}, Channel={2}
-    </value>
-</labels>
-    <labels>
     <fullName>LBL_API_Invalid_Fraud_Case_Not_Found_Parent</fullName>
     <language>en_US</language>
     <protected>false</protected>
@@ -3298,6 +3280,17 @@
     </shortDescription>
     <value>
         Could not find Parent ID={0}, Channel={1}
+    </value>
+</labels>
+    <labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Not_Found</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Fraud case not found for CaseID, ServiceCase, Channel
+    </shortDescription>
+    <value>
+        Fraud case not found for CaseID={0}, ServiceCase={1}, Channel={2}
     </value>
 </labels>
     <labels>
@@ -3467,17 +3460,17 @@
         <value>Fraud Case Detail</value>
     </labels>
     <labels>
-        <fullName>LBL_FraudCaseID</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Fraud Case ID label</shortDescription>
-        <value>Fraud Case ID</value>
-    </labels>
-    <labels>
         <fullName>LBL_FraudCaseID_Col</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Fraud Case ID column label</shortDescription>
+        <value>Fraud Case ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCaseID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case ID label</shortDescription>
         <value>Fraud Case ID</value>
     </labels>
     <labels>
@@ -3734,20 +3727,6 @@
     <labels><fullName>LBL_SFT_Account_Owner</fullName><language>vi</language><protected>false</protected><shortDescription>Account owner</shortDescription><value>Chủ tài khoản</value></labels>
     <labels><fullName>LBL_SFT_Actual_Delivery_Time</fullName><language>en_US</language><protected>false</protected><shortDescription>Actual Delivery Time</shortDescription><value>Actual Delivery Time</value></labels>
     <labels><fullName>LBL_SFT_Actual_Delivery_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Actual Delivery Time</shortDescription><value>Thời gian nhận thực tế</value></labels>
-    <labels>
-        <fullName>LBL_SFT_Application_ID</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Application ID</shortDescription>
-        <value>Application ID</value>
-    </labels>
-    <labels>
-        <fullName>LBL_SFT_Application_ID</fullName>
-        <language>vi</language>
-        <protected>false</protected>
-        <shortDescription>Application ID</shortDescription>
-        <value>Mã hồ sơ</value>
-    </labels>
     <labels><fullName>LBL_SFT_Application_ID</fullName><language>en_US</language><protected>false</protected><shortDescription>Application ID</shortDescription><value>Application ID</value></labels>
     <labels><fullName>LBL_SFT_Application_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Application ID</shortDescription><value>Mã hồ sơ</value></labels>
     <labels>
@@ -3775,8 +3754,6 @@
     </labels>
     <labels><fullName>LBL_SFT_Case_Id</fullName><language>en_US</language><protected>false</protected><shortDescription>Case ID</shortDescription><value>Case ID</value></labels>
     <labels><fullName>LBL_SFT_Case_Id</fullName><language>vi</language><protected>false</protected><shortDescription>Case ID</shortDescription><value>Mã hồ sơ</value></labels>
-    <labels><fullName>LBL_SFT_Case_Status</fullName><language>en_US</language><protected>false</protected><shortDescription>Case Status</shortDescription><value>Case Status</value></labels>
-    <labels><fullName>LBL_SFT_Case_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Case Status</shortDescription><value>Trạng thái hồ sơ</value></labels>
     <labels><fullName>LBL_SFT_Case_Status</fullName><language>en_US</language><protected>false</protected><shortDescription>Case Status</shortDescription><value>Case Status</value></labels>
     <labels><fullName>LBL_SFT_Case_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Case Status</shortDescription><value>Trạng thái hồ sơ</value></labels>
     <labels><fullName>LBL_SFT_Case_Type</fullName><language>en_US</language><protected>false</protected><shortDescription>Case Type</shortDescription><value>Case Type</value></labels>
@@ -3813,24 +3790,18 @@
     </labels>
     <labels><fullName>LBL_SFT_Create_Time</fullName><language>en_US</language><protected>false</protected><shortDescription>Create Time</shortDescription><value>Create Time</value></labels>
     <labels><fullName>LBL_SFT_Create_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Create Time</shortDescription><value>Thời gian tạo</value></labels>
-    <labels><fullName>LBL_SFT_Created</fullName><language>en_US</language><protected>false</protected><shortDescription>Created</shortDescription><value>Created</value></labels>
-    <labels><fullName>LBL_SFT_Created</fullName><language>vi</language><protected>false</protected><shortDescription>Created</shortDescription><value>Ngày tạo</value></labels>
     <labels><fullName>LBL_SFT_Created_By</fullName><language>en_US</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Created by</value></labels>
     <labels><fullName>LBL_SFT_Created_By</fullName><language>vi</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Người tạo</value></labels>
-    <labels><fullName>LBL_SFT_Created_By</fullName><language>en_US</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Created By</value></labels>
-    <labels><fullName>LBL_SFT_Created_By</fullName><language>vi</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Người tạo</value></labels>
-    <labels><fullName>LBL_SFT_Created_By</fullName><language>en_US</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Created By</value></labels>
-    <labels><fullName>LBL_SFT_Created_By</fullName><language>vi</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Người tạo</value></labels>
-    <labels><fullName>LBL_SFT_Created_By</fullName><language>en_US</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Created by</value></labels>
-    <labels><fullName>LBL_SFT_Created_By</fullName><language>vi</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Người tạo</value></labels>
-    <labels><fullName>LBL_SFT_Created_Date</fullName><language>en_US</language><protected>false</protected><shortDescription>Created Date</shortDescription><value>Created</value></labels>
-    <labels><fullName>LBL_SFT_Created_Date</fullName><language>vi</language><protected>false</protected><shortDescription>Created Date</shortDescription><value>Ngày tạo</value></labels>
     <labels><fullName>LBL_SFT_Created_Date_Time</fullName><language>en_US</language><protected>false</protected><shortDescription>Created Date Time</shortDescription><value>Created Date Time</value></labels>
     <labels><fullName>LBL_SFT_Created_Date_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Created Date Time</shortDescription><value>Thời gian tạo</value></labels>
+    <labels><fullName>LBL_SFT_Created_Date</fullName><language>en_US</language><protected>false</protected><shortDescription>Created Date</shortDescription><value>Created</value></labels>
+    <labels><fullName>LBL_SFT_Created_Date</fullName><language>vi</language><protected>false</protected><shortDescription>Created Date</shortDescription><value>Ngày tạo</value></labels>
     <labels><fullName>LBL_SFT_Created_In_Channel</fullName><language>en_US</language><protected>false</protected><shortDescription>Created In Channel</shortDescription><value>Created In Channel</value></labels>
     <labels><fullName>LBL_SFT_Created_In_Channel</fullName><language>vi</language><protected>false</protected><shortDescription>Created In Channel</shortDescription><value>Kênh tạo</value></labels>
     <labels><fullName>LBL_SFT_Created_On</fullName><language>en_US</language><protected>false</protected><shortDescription>Created On</shortDescription><value>Created On</value></labels>
     <labels><fullName>LBL_SFT_Created_On</fullName><language>vi</language><protected>false</protected><shortDescription>Created On</shortDescription><value>Ngày tạo</value></labels>
+    <labels><fullName>LBL_SFT_Created</fullName><language>en_US</language><protected>false</protected><shortDescription>Created</shortDescription><value>Created</value></labels>
+    <labels><fullName>LBL_SFT_Created</fullName><language>vi</language><protected>false</protected><shortDescription>Created</shortDescription><value>Ngày tạo</value></labels>
     <labels><fullName>LBL_SFT_Creator</fullName><language>en_US</language><protected>false</protected><shortDescription>Creator</shortDescription><value>Creator</value></labels>
     <labels><fullName>LBL_SFT_Creator</fullName><language>vi</language><protected>false</protected><shortDescription>Creator</shortDescription><value>Người tạo</value></labels>
     <labels><fullName>LBL_SFT_Customer_Care</fullName><language>en_US</language><protected>false</protected><shortDescription>Customer Care</shortDescription><value>Customer care</value></labels>
@@ -3863,10 +3834,10 @@
         <shortDescription>Customer Name</shortDescription>
         <value>Tên khách hàng</value>
     </labels>
-    <labels><fullName>LBL_SFT_Deadline</fullName><language>en_US</language><protected>false</protected><shortDescription>Deadline</shortDescription><value>Deadline</value></labels>
-    <labels><fullName>LBL_SFT_Deadline</fullName><language>vi</language><protected>false</protected><shortDescription>Deadline</shortDescription><value>Hạn xử lý</value></labels>
     <labels><fullName>LBL_SFT_Deadline_Date</fullName><language>en_US</language><protected>false</protected><shortDescription>Deadline date</shortDescription><value>Deadline date</value></labels>
     <labels><fullName>LBL_SFT_Deadline_Date</fullName><language>vi</language><protected>false</protected><shortDescription>Deadline date</shortDescription><value>Hạn chót</value></labels>
+    <labels><fullName>LBL_SFT_Deadline</fullName><language>en_US</language><protected>false</protected><shortDescription>Deadline</shortDescription><value>Deadline</value></labels>
+    <labels><fullName>LBL_SFT_Deadline</fullName><language>vi</language><protected>false</protected><shortDescription>Deadline</shortDescription><value>Hạn xử lý</value></labels>
     <labels><fullName>LBL_SFT_Decision</fullName><language>en_US</language><protected>false</protected><shortDescription>Decision</shortDescription><value>Decision</value></labels>
     <labels><fullName>LBL_SFT_Decision</fullName><language>vi</language><protected>false</protected><shortDescription>Decision</shortDescription><value>Quyết định</value></labels>
     <labels><fullName>LBL_SFT_Delivery_Status</fullName><language>en_US</language><protected>false</protected><shortDescription>Delivery Status</shortDescription><value>Delivery Status</value></labels>
@@ -3878,8 +3849,6 @@
         <shortDescription>Enter investigation notes</shortDescription>
         <value>Enter investigation notes here...</value>
     </labels>
-    <labels><fullName>LBL_SFT_Fraud_Case_ID</fullName><language>en_US</language><protected>false</protected><shortDescription>Fraud Case ID</shortDescription><value>Fraud Case ID</value></labels>
-    <labels><fullName>LBL_SFT_Fraud_Case_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Case ID</shortDescription><value>Mã vụ gian lận</value></labels>
     <labels><fullName>LBL_SFT_Fraud_Case_ID</fullName><language>en_US</language><protected>false</protected><shortDescription>Fraud Case ID</shortDescription><value>Fraud Case ID</value></labels>
     <labels><fullName>LBL_SFT_Fraud_Case_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Case ID</shortDescription><value>Mã hồ sơ gian lận</value></labels>
     <labels>
@@ -4032,10 +4001,6 @@
         <shortDescription>Related Service Cases</shortDescription>
         <value>Vụ việc liên quan</value>
     </labels>
-    <labels><fullName>LBL_SFT_Remarks</fullName><language>en_US</language><protected>false</protected><shortDescription>Remarks</shortDescription><value>Remarks</value></labels>
-    <labels><fullName>LBL_SFT_Remarks</fullName><language>vi</language><protected>false</protected><shortDescription>Remarks</shortDescription><value>Ghi chú</value></labels>
-    <labels><fullName>LBL_SFT_Remarks</fullName><language>en_US</language><protected>false</protected><shortDescription>Remarks</shortDescription><value>Remarks</value></labels>
-    <labels><fullName>LBL_SFT_Remarks</fullName><language>vi</language><protected>false</protected><shortDescription>Remarks</shortDescription><value>Ghi chú</value></labels>
     <labels>
         <fullName>LBL_SFT_Remarks_History</fullName>
         <language>en_US</language>
@@ -4050,6 +4015,8 @@
         <shortDescription>Remarks History</shortDescription>
         <value>Lịch sử ghi chú</value>
     </labels>
+    <labels><fullName>LBL_SFT_Remarks</fullName><language>en_US</language><protected>false</protected><shortDescription>Remarks</shortDescription><value>Remarks</value></labels>
+    <labels><fullName>LBL_SFT_Remarks</fullName><language>vi</language><protected>false</protected><shortDescription>Remarks</shortDescription><value>Ghi chú</value></labels>
     <labels><fullName>LBL_SFT_Resolved_By</fullName><language>en_US</language><protected>false</protected><shortDescription>Resolved By</shortDescription><value>Resolved By</value></labels>
     <labels><fullName>LBL_SFT_Resolved_By</fullName><language>vi</language><protected>false</protected><shortDescription>Resolved By</shortDescription><value>Người xử lý</value></labels>
     <labels><fullName>LBL_SFT_Resolved_On</fullName><language>en_US</language><protected>false</protected><shortDescription>Resolved On</shortDescription><value>Resolved On</value></labels>
@@ -4058,26 +4025,14 @@
     <labels><fullName>LBL_SFT_Sent_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Sent Time</shortDescription><value>Thời gian gửi</value></labels>
     <labels><fullName>LBL_SFT_Service_Case_ID</fullName><language>en_US</language><protected>false</protected><shortDescription>Service Case ID</shortDescription><value>Service Case ID</value></labels>
     <labels><fullName>LBL_SFT_Service_Case_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Service Case ID</shortDescription><value>Mã hồ sơ dịch vụ</value></labels>
-    <labels>
-        <fullName>LBL_SFT_Status</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Status</shortDescription>
-        <value>Status</value>
-    </labels>
-    <labels>
-        <fullName>LBL_SFT_Status</fullName>
-        <language>vi</language>
-        <protected>false</protected>
-        <shortDescription>Status</shortDescription>
-        <value>Trạng thái</value>
-    </labels>
     <labels><fullName>LBL_SFT_Status</fullName><language>en_US</language><protected>false</protected><shortDescription>Status</shortDescription><value>Status</value></labels>
     <labels><fullName>LBL_SFT_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Status</shortDescription><value>Trạng thái</value></labels>
     <labels><fullName>LBL_SFT_Sub_Category</fullName><language>en_US</language><protected>false</protected><shortDescription>Sub Category</shortDescription><value>Sub Category</value></labels>
     <labels><fullName>LBL_SFT_Sub_Category</fullName><language>vi</language><protected>false</protected><shortDescription>Sub Category</shortDescription><value>Danh mục con</value></labels>
     <labels><fullName>LBL_SFT_Sub_Code</fullName><language>en_US</language><protected>false</protected><shortDescription>Sub Code</shortDescription><value>Sub Code</value></labels>
     <labels><fullName>LBL_SFT_Sub_Code</fullName><language>vi</language><protected>false</protected><shortDescription>Sub Code</shortDescription><value>Mã phụ</value></labels>
+    <labels><fullName>LBL_SFT_Submit_By_Department</fullName><language>en_US</language><protected>false</protected><shortDescription>Submit by department</shortDescription><value>Submit by department</value></labels>
+    <labels><fullName>LBL_SFT_Submit_By_Department</fullName><language>vi</language><protected>false</protected><shortDescription>Submit by department</shortDescription><value>Phòng ban gửi</value></labels>
     <labels>
         <fullName>LBL_SFT_Submit</fullName>
         <language>en_US</language>
@@ -4085,8 +4040,6 @@
         <shortDescription>Submit</shortDescription>
         <value>Submit</value>
     </labels>
-    <labels><fullName>LBL_SFT_Submit_By_Department</fullName><language>en_US</language><protected>false</protected><shortDescription>Submit by department</shortDescription><value>Submit by department</value></labels>
-    <labels><fullName>LBL_SFT_Submit_By_Department</fullName><language>vi</language><protected>false</protected><shortDescription>Submit by department</shortDescription><value>Phòng ban gửi</value></labels>
     <labels><fullName>LBL_SFT_Task_Case_ID</fullName><language>en_US</language><protected>false</protected><shortDescription>Task Case ID</shortDescription><value>Task Case ID</value></labels>
     <labels><fullName>LBL_SFT_Task_Case_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Task Case ID</shortDescription><value>Mã hồ sơ tác vụ</value></labels>
     <labels>
