@@ -103,7 +103,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
             Database.insert(newRecord);
             newRecordId = (String)newRecord.get(FEC_Constants.FIELD_ID);
         } catch (DmlException e) {
-            throw new AuraHandledException(Label.LABEL_ERROR_SAVE_LOOKUP + ' (' + strObjectType + '). Chi tiết lỗi: ' + e.getMessage());
+            throw new AuraHandledException(Label.LABEL_ERROR_SAVE_LOOKUP + ' (' + strObjectType + '). ' + Label.FEC_Error_Details + ': ' + e.getMessage());
         }
         
         try {
@@ -334,7 +334,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
         } else if (nodeType == FEC_Constants.LABEL_SUB_CODE) {
             targetSObject = [SELECT Id FROM FEC_MDM_Sub_Code__c WHERE Id = :nodeId LIMIT 1];
         } else {
-            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' Unknown node type: ' + nodeType);
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' ' + String.format(Label.FEC_Error_Unknown_Node_Type, new List<String>{nodeType}));
         }
 
         if (targetSObject == null) {

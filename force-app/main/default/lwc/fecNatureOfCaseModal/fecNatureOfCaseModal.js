@@ -18,6 +18,14 @@ import LABEL_CUSTOMERTYPE_ALL from '@salesforce/label/c.FEC_Label_CustomerType_A
 import LABEL_MODAL_ADD_NEW_NODE from '@salesforce/label/c.FEC_Label_Add_New_Node';
 import LABEL_FOR from '@salesforce/label/c.FEC_Label_For';
 import LABEL_ROOT from '@salesforce/label/c.FEC_Label_Root';
+import LABEL_SUCCESS_ADD from '@salesforce/label/c.LABEL_SUCCESS_ADD';
+import LABEL_ERROR_SAVE_LOOKUP from '@salesforce/label/c.LABEL_ERROR_SAVE_LOOKUP';
+import LABEL_TOAST_VALIDATION_TITLE from '@salesforce/label/c.FEC_Toast_Validation_Title';
+import LABEL_TOAST_VALIDATION_MESSAGE from '@salesforce/label/c.FEC_Toast_Validation_Message';
+import LABEL_TOAST_SAVE_SUCCESS_TITLE from '@salesforce/label/c.FEC_Toast_Save_Success_Title';
+import LABEL_BUTTON_CANCEL from '@salesforce/label/c.FEC_Button_Cancel';
+import LABEL_BUTTON_SAVE from '@salesforce/label/c.FEC_Button_Save';
+import LABEL_UNKNOWN_ERROR from '@salesforce/label/c.FEC_Unknown_Error';
 import { FIELD_CODE, FIELD_ALIAS, FIELD_NAME, FIELD_NAME_VN, FIELD_POS_ORDER, FIELD_STATUS, FIELD_CUSTOMER_TYPE, CUST_TYPE_ALL, CUST_TYPE_EXISTING, CUST_TYPE_NON_EXISTING, VARIANT_SUCCESS, VARIANT_ERROR, FIELD_PRODUCT_TYPE_NAME, FIELD_BUSINESS_PROCESS_NAME, FIELD_CATEGORY_NAME, FIELD_SUB_CATEGORY_NAME, OBJ_PRODUCT_TYPE, OBJ_BUSINESS_PROCESS, OBJ_CATEGORY, OBJ_SUB_CATEGORY, OBJ_SUB_CODE } from 'c/fecConstants';
 
 /**
@@ -50,6 +58,8 @@ export default class FecNatureOfCaseModal extends LightningModal {
     labelModalAddNew = LABEL_MODAL_ADD_NEW_NODE;
     labelFor = LABEL_FOR;
     labelRoot = LABEL_ROOT;
+    labelCancel = LABEL_BUTTON_CANCEL;
+    labelSave = LABEL_BUTTON_SAVE;
 
     connectedCallback() {
         this.isRootNode = (this.objectType === OBJ_PRODUCT_TYPE);
@@ -132,31 +142,47 @@ export default class FecNatureOfCaseModal extends LightningModal {
      * @author DAT NGO
      */
     handleInputChange(event) {
-        const field = event.target.dataset.fieldname;
-        let value = event.target.value;
+        // Get the input element from the event
+        const inputElement = event.currentTarget;
+        const fieldName = inputElement.dataset.field; // Sử dụng data-field
+        
+        let field;
+        let value;
 
-        switch (field) {
-            case FIELD_NAME:
-                this.strName = value;
-                break;
-            case FIELD_ALIAS:
-                this.strAlias = value;
-                break;
-            case FIELD_CODE:
-                this.strCode = value;
-                break;
-            case FIELD_NAME_VN:
-                this.strNameVN = value;
-                break;
-            case FIELD_POS_ORDER:
-                this.intPosOrder = parseInt(value, 10) || 0;
-                break;
-            case FIELD_STATUS:
-                this.isStatus = event.target.checked;
-                break;
-            default:
-                break;
+        // Map the element to identify which field it is
+        if (fieldName === 'inputCode') {
+            field = FIELD_CODE;
+            value = event.detail.value;
+            this.strCode = value;
+            showLog('Updated strCode to:', this.strCode);
+        } else if (fieldName === 'inputAlias') {
+            field = FIELD_ALIAS;
+            value = event.detail.value;
+            this.strAlias = value;
+            showLog('Updated strAlias to:', this.strAlias);
+        } else if (fieldName === 'inputName') {
+            field = FIELD_NAME;
+            value = event.detail.value;
+            this.strName = value;
+            showLog('Updated strName to:', this.strName);
+        } else if (fieldName === 'inputNameVN') {
+            field = FIELD_NAME_VN;
+            value = event.detail.value;
+            this.strNameVN = value;
+            showLog('Updated strNameVN to:', this.strNameVN);
+        } else if (fieldName === 'inputOrder') {
+            field = FIELD_POS_ORDER;
+            value = event.detail.value;
+            this.intPosOrder = parseInt(value, 10) || 0;
+            showLog('Updated intPosOrder to:', this.intPosOrder);
+        } else if (fieldName === 'inputStatus') {
+            field = FIELD_STATUS;
+            value = inputElement.checked;
+            this.isStatus = value;
+            showLog('Updated isStatus to:', this.isStatus);
         }
+
+        showLog(`handleInputChange - field: ${field}, value:`, value);
     }
 
     handleSaveAndNew() {
@@ -182,9 +208,39 @@ export default class FecNatureOfCaseModal extends LightningModal {
         if (!isValid) {
             return;
         }
+        showLog('Validation passed, proceeding to save');
+        showLog('Preparing to save new lookup node with values:', {
+            strName: this.strName,
+            strAlias: this.strAlias,
+            strCode: this.strCode,
+            strNameVN: this.strNameVN
+        });
+
+        // Additional validation: Check for empty required fields
+        if (!this.strName || !this.strAlias || !this.strCode || !this.strNameVN) {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: LABEL_TOAST_VALIDATION_TITLE,
+                    message: LABEL_TOAST_VALIDATION_MESSAGE,
+                    variant: VARIANT_ERROR
+                })
+            );
+            return;
+        }
+
+        // Map display label to API object name
+        const objectTypeMap = {
+            [OBJ_PRODUCT_TYPE]: 'FEC_MDM_Product_Type__c',
+            [OBJ_BUSINESS_PROCESS]: 'FEC_MDM_Business_Process__c',
+            [OBJ_CATEGORY]: 'FEC_MDM_Category__c',
+            [OBJ_SUB_CATEGORY]: 'FEC_MDM_Sub_Category__c',
+            [OBJ_SUB_CODE]: 'FEC_MDM_Sub_Code__c'
+        };
+        
+        const apiObjectType = objectTypeMap[this.objectType] || this.objectType;
 
         const saveNewLookupNodeFields = {
-            strObjectType: this.objectType,
+            strObjectType: apiObjectType,
             strCustomerType: this.customerTypeValue,
             strParentId: this.parentId,
             strName: this.strName,
@@ -197,7 +253,7 @@ export default class FecNatureOfCaseModal extends LightningModal {
         showLog('Calling saveNewLookupNode with fields:', saveNewLookupNodeFields);
 
         saveNewLookupNode({
-            strObjectType: this.objectType,
+            strObjectType: apiObjectType,
             strCustomerType: this.customerTypeValue,
             strParentId: this.parentId,
             strName: this.strName,
@@ -210,8 +266,8 @@ export default class FecNatureOfCaseModal extends LightningModal {
             .then(result => {
                 this.dispatchEvent(
                     new ShowToastEvent({
-                        title: 'Success',
-                        message: `New Node (ID: ${result}) created for ${this.objectType}!`,
+                        title: LABEL_TOAST_SAVE_SUCCESS_TITLE,
+                        message: `${LABEL_SUCCESS_ADD} (ID: ${result})`,
                         variant: VARIANT_SUCCESS
                     })
                 );
@@ -232,8 +288,8 @@ export default class FecNatureOfCaseModal extends LightningModal {
             .catch(error => {
                 this.dispatchEvent(
                     new ShowToastEvent({
-                        title: 'Error creating Lookup Node',
-                        message: error.body && error.body.message ? error.body.message : 'Unknown error',
+                        title: LABEL_ERROR_SAVE_LOOKUP,
+                        message: error.body && error.body.message ? error.body.message : LABEL_UNKNOWN_ERROR,
                         variant: VARIANT_ERROR
                     })
                 );

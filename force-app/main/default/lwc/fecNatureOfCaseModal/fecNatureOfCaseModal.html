@@ -13,45 +13,75 @@
 
             <lightning-layout-item size="12" medium-device-size="12"
                 class="slds-p-horizontal_small slds-m-bottom_small">
-                <lightning-input label={labelFieldId} data-fieldname={FIELD_CODE} onchange={handleInputChange} required
-                    value={strCode}></lightning-input>
+                <lightning-input 
+                    data-field="inputCode"
+                    label={labelFieldId} 
+                    onchange={handleInputChange} 
+                    required
+                    value={strCode}>
+                </lightning-input>
             </lightning-layout-item>
 
             <lightning-layout-item size="12" medium-device-size="12"
                 class="slds-p-horizontal_small slds-m-bottom_small">
-                <lightning-input label={labelAlias} data-fieldname={FIELD_ALIAS} onchange={handleInputChange} required
-                    value={strAlias}></lightning-input>
+                <lightning-input 
+                    data-field="inputAlias"
+                    label={labelAlias} 
+                    onchange={handleInputChange} 
+                    required
+                    value={strAlias}>
+                </lightning-input>
             </lightning-layout-item>
 
             <lightning-layout-item size="12" medium-device-size="12"
                 class="slds-p-horizontal_small slds-m-bottom_small">
-                <lightning-input label={labelNameEn} data-fieldname={FIELD_NAME} onchange={handleInputChange} required
-                    value={strName}></lightning-input>
+                <lightning-input 
+                    data-field="inputName"
+                    label={labelNameEn} 
+                    onchange={handleInputChange} 
+                    required
+                    value={strName}>
+                </lightning-input>
             </lightning-layout-item>
 
             <lightning-layout-item size="12" medium-device-size="12"
                 class="slds-p-horizontal_small slds-m-bottom_small">
-                <lightning-input label={labelNameVn} data-fieldname={FIELD_NAME_VN} onchange={handleInputChange}
-                    required value={strNameVN}></lightning-input>
+                <lightning-input 
+                    data-field="inputNameVN"
+                    label={labelNameVn} 
+                    onchange={handleInputChange}
+                    required 
+                    value={strNameVN}>
+                </lightning-input>
             </lightning-layout-item>
 
             <lightning-layout-item size="12" medium-device-size="1" class="slds-p-horizontal_small slds-m-bottom_small">
-                <lightning-input label={labelOrder} data-fieldname={FIELD_POS_ORDER} type="number"
-                    onchange={handleInputChange} value={intPosOrder}></lightning-input>
+                <lightning-input 
+                    data-field="inputOrder"
+                    label={labelOrder} 
+                    type="number"
+                    onchange={handleInputChange} 
+                    value={intPosOrder}>
+                </lightning-input>
             </lightning-layout-item>
 
             <lightning-layout-item size="12" medium-device-size="6" class="slds-p-horizontal_small slds-m-bottom_small">
                 <div class="slds-m-top_large">
-                    <lightning-input label={labelStatus} data-fieldname={FIELD_STATUS} type="checkbox"
-                        onchange={handleInputChange} checked={isStatus}></lightning-input>
+                    <lightning-input 
+                        data-field="inputStatus"
+                        label={labelStatus} 
+                        type="checkbox"
+                        onchange={handleInputChange} 
+                        checked={isStatus}>
+                    </lightning-input>
                 </div>
             </lightning-layout-item>
         </lightning-layout>
     </lightning-modal-body>
 
     <lightning-modal-footer>
-        <lightning-button label="Cancel" onclick={handleClose}></lightning-button>
-        <lightning-button variant="brand" label="Save" onclick={handleSave}></lightning-button>
+        <lightning-button label={labelCancel} onclick={handleClose}></lightning-button>
+        <lightning-button variant="brand" label={labelSave} onclick={handleSave}></lightning-button>
         <lightning-button variant="brand" label={labelSaveAndNew} onclick={handleSaveAndNew}></lightning-button>
     </lightning-modal-footer>
 </template>

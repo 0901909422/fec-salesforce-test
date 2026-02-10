@@ -24,8 +24,13 @@ import LABEL_STATUS_INACTIVE from '@salesforce/label/c.FEC_Label_Status_INACTIVE
 import LABEL_ERROR_ADD_SUB_CODE from '@salesforce/label/c.LABEL_ERROR_ADD_SUB_CODE';
 import LABEL_ERROR_DELETE_RECORD from '@salesforce/label/c.LABEL_ERROR_DELETE_RECORD';
 import LABEL_SUCCESS_ADD from '@salesforce/label/c.LABEL_SUCCESS_ADD';
+import LABEL_TOAST_ERROR from '@salesforce/label/c.FEC_Toast_Error';
+import LABEL_TOAST_SUCCESS from '@salesforce/label/c.FEC_Toast_Success';
+import LABEL_TOAST_WARNING from '@salesforce/label/c.FEC_Toast_Warning';
+import LABEL_TOAST_SAVE_SUCCESS_TITLE from '@salesforce/label/c.FEC_Toast_Save_Success_Title';
 import LABEL_SUCCESS_DELETE from '@salesforce/label/c.LABEL_SUCCESS_DELETE';
 import LABEL_WARNING_DELETE_NODE from '@salesforce/label/c.LABEL_WARNING_DELETE_NODE';
+import LABEL_WARNING_SELECT_NODE from '@salesforce/label/c.FEC_Warning_Select_Node';
 import { OBJ_PRODUCT_TYPE, OBJ_BUSINESS_PROCESS, OBJ_CATEGORY, OBJ_SUB_CATEGORY, OBJ_SUB_CODE, TAG_NATURE_TREE, PREFIX_SUB_CODE, PREFIX_PT, PREFIX_BP, PREFIX_CAT, DISPLAY_FIELD_CODE, DISPLAY_FIELD_ALIAS, DISPLAY_FIELD_NAME_VN, DISPLAY_FIELD_NAME_EN, STATUS_ALL, STATUS_ACTIVE, STATUS_INACTIVE, TITLE_CLASS_BASE, TITLE_CLASS_SELECTED_SUFFIX } from 'c/fecConstants';
 
 export default class FecNatureOfCaseTree extends LightningElement {
@@ -79,7 +84,7 @@ export default class FecNatureOfCaseTree extends LightningElement {
             this.fecRawData = data;
         } else if (result.error) {
             console.error('Error fetching tree data:', result.error);
-            this.showToast('Error Loading Data', result.error.body.message, 'error');
+            this.showToast(LABEL_TOAST_ERROR, result.error.body.message, 'error');
         }
     }
 
@@ -312,7 +317,7 @@ export default class FecNatureOfCaseTree extends LightningElement {
                     this.treeKey = true; // Kích hoạt render lại toàn bộ
                 }, 0);
 
-                this.showToast('Thành công', LABEL_SUCCESS_ADD, 'success');
+                this.showToast(LABEL_TOAST_SAVE_SUCCESS_TITLE, LABEL_SUCCESS_ADD, 'success');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -465,7 +470,7 @@ export default class FecNatureOfCaseTree extends LightningElement {
         console.log('Processed Delete fullItem:', fullItem);
 
         if (!idType || !type) {
-            this.showToast('Lỗi', LABEL_ERROR_DELETE_RECORD, 'error');
+            this.showToast(LABEL_TOAST_ERROR, LABEL_ERROR_DELETE_RECORD, 'error');
             return;
         }
         const msg = LABEL_WARNING_DELETE_NODE.replace('{0}', code).replace('{1}', type);
@@ -481,12 +486,35 @@ export default class FecNatureOfCaseTree extends LightningElement {
                 typeName: type
             });
 
-            this.showToast('Thành công', LABEL_SUCCESS_DELETE, 'success');
+            this.showToast(LABEL_TOAST_SUCCESS, LABEL_SUCCESS_DELETE, 'success');
             await this.refreshTreeData();
         } catch (error) {
-            this.showToast('Lỗi', LABEL_ERROR_DELETE_RECORD, 'error');
+            this.showToast(LABEL_TOAST_ERROR, LABEL_ERROR_DELETE_RECORD, 'error');
         } finally {
             this.loading = false;
+        }
+    }
+
+    async handleEditNode() {
+        if (!this.selectedNodeId) {
+            this.showToast(LABEL_TOAST_WARNING, LABEL_WARNING_SELECT_NODE, 'warning');
+            return;
+        }
+
+        // 1. Phân loại đối tượng dựa trên prefix
+        const prefix = this.selectedNodePrefix;
+        const targetObjectType = this.objectMap[prefix] || OBJ_PRODUCT_TYPE; // Fallback cho root
+
+        // 2. Mở Modal
+        const result = await FECNatureOfCaseModal.open({
+            size: 'small',
+            parentId: this.selectedNodeId,
+            objectType: targetObjectType,
+            parentLabel: this.selectedNodeLabel || 'Root'
+        });
+
+        if (result) {
+            await this.refreshTreeData();
         }
     }
 }

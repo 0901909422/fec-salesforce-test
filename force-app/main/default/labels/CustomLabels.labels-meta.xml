@@ -1856,4 +1856,39 @@
         <shortDescription>Warning message for deleting a node</shortDescription>
         <value>WARNING: You are deleting node {0} of type "{1}". All child nodes will be deleted. Are you sure you want to continue?</value>
     </labels>
+    <labels>
+        <fullName>FEC_Unknown_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Unknown error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Details</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Unknown_Node_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Unknown node type: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Warning_Select_Node</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Please select a node first.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Warning</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Warning</value>
+    </labels>
 </CustomLabels>
