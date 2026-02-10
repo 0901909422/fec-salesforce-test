@@ -1,0 +1,90 @@
+<template>
+    <lightning-card title={labelListTitle} icon-name="standard:list_view">
+        <lightning-button label={labelNewField} icon-name="utility:add" slot="actions"
+            onclick={openNewFieldModal} variant="brand">
+        </lightning-button>
+
+        <div class="slds-m-around_medium">
+            <template if:true={fieldList}>
+                <lightning-datatable key-field="Id" data={fieldList} columns={columns} hide-checkbox-column
+                    show-row-number-column onsort={handleSort} onrowaction={handleRowAction}
+                    sorted-direction={sortDirection} sorted-by={sortedBy}>
+                </lightning-datatable>
+            </template>
+
+            <template if:true={isLoading}>
+                <lightning-layout class="slds-align_absolute-center">
+                    <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                </lightning-layout>
+            </template>
+
+            <template if:true={error}>
+                <div class="slds-text-color_error">Error loading data: {error}</div>
+            </template>
+            <template if:true={showDeleteConfirm}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-delete-confirm"
+            class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 id="modal-heading-delete-confirm" class="slds-modal__title slds-hyphenate">{labelConfirmDeleteTitle}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p>{labelConfirmDeleteMsg}</p>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label={labelButtonCancel} onclick={cancelDelete}></lightning-button>
+                    <lightning-button variant="destructive" label={labelButtonDelete} onclick={confirmDelete} class="slds-m-left_small"></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+        </div>
+    </lightning-card>
+
+    <template if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-03" aria-describedby="modal-desc-03"
+            class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={closeSettingModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="Close" variant="inverse"
+                            size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-03" class="slds-modal__title slds-hyphenate">{modalTitle}</h2>
+                </header>
+                <div id="modal-desc-03" class="slds-modal__content slds-p-around_medium">
+                    <c-fec-additional-field-form record-id={recordIdForEdit} onsuccess={handleSuccess}
+                        onsave={closeModal} oncancel={closeModal}>
+                    </c-fec-additional-field-form>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={isListValueModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-list-value" aria-describedby="modal-desc-list-value"
+            class="slds-modal slds-fade-in-open slds-modal_medium">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={closeListValueModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="Close" variant="inverse"
+                            size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-list-value" class="slds-modal__title slds-hyphenate">{modalTitle}</h2>
+                </header>
+                <div id="modal-desc-list-value" class="slds-modal__content slds-p-around_medium">
+                    <c-fec-additional-filed-list-value 
+                        field-record={selectedFieldRecord}>
+                    </c-fec-additional-filed-list-value>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

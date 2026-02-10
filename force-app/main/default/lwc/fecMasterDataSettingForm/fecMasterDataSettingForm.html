@@ -1,0 +1,72 @@
+<template>
+    <lightning-record-edit-form object-api-name={objectApiName} record-id={recordId}
+        onsuccess={handleSuccess} onerror={handleError} onsubmit={handleSubmit} class="compact-form">
+
+        <lightning-messages></lightning-messages>
+        
+        <div class="slds-grid slds-wrap">
+            <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xxx-small">
+                <div class="slds-form-element">
+                    <lightning-input-field field-name={fieldAdditionalField} variant="label-stacked"
+                        required></lightning-input-field>
+                </div>
+            </div>
+
+            <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xxx-small">
+                <div class="slds-form-element">
+                    <lightning-input-field field-name={fieldSection} variant="label-stacked"></lightning-input-field>
+                </div>
+            </div>
+
+            <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xxx-small">
+                <lightning-combobox label={labelChannelMultiselect} data-name={dataNameChannels} options={channelOptions}
+                    onchange={handleSelectCustom}>
+                </lightning-combobox>
+                <div class="slds-m-top_xx-small">
+                    <template for:each={selectedChannels} for:item="val">
+                        <lightning-pill key={val} label={val} name={val} data-name={dataNameChannels}
+                            onremove={handleRemoveCustom}></lightning-pill>
+                    </template>
+                </div>
+            </div>
+
+            <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xxx-small">
+                <lightning-combobox label={labelApplicableRoles} data-name={dataNameRoles} options={roleOptions}
+                    onchange={handleSelectCustom}>
+                </lightning-combobox>
+                <div class="slds-m-top_xx-small">
+                    <template for:each={selectedRoles} for:item="val">
+                        <lightning-pill key={val} label={val} name={val} data-name={dataNameRoles}
+                            onremove={handleRemoveCustom}></lightning-pill>
+                    </template>
+                </div>
+            </div>
+
+            <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xxx-small">
+                <div class="slds-form-element">
+                    <lightning-input-field field-name={fieldOrder} variant="label-stacked"
+                        value={displayOrder}> </lightning-input-field>
+                </div>
+            </div>
+
+            <div class="slds-col slds-size_1-of-1 slds-p-around_x-small">
+                <div class="slds-grid slds-box slds-box_xx-small custom-checkbox-row">
+                    <div class="slds-col slds-size_1-of-3">
+                        <lightning-input-field field-name={fieldStatus}></lightning-input-field>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <lightning-input-field field-name={fieldReadOnly}></lightning-input-field>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <lightning-input-field field-name={fieldMandatory}></lightning-input-field>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slds-m-top_small slds-align_absolute-center">
+            <lightning-button label={labelCancel} onclick={handleCancel} class="slds-m-right_x-small"></lightning-button>
+            <lightning-button type="submit" variant="brand" label={labelSave}></lightning-button>
+        </div>
+    </lightning-record-edit-form>
+</template>

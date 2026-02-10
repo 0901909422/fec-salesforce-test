@@ -1,0 +1,252 @@
+.flow-config-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Card Title Styling */
+.card-title,
+.config-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.title-icon {
+    color: #0176d3;
+}
+
+.title-text {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #080707;
+}
+
+/* Compact Flow Wrapper */
+.compact-flow-wrapper {
+    padding: 1.5rem 1rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 0.25rem;
+}
+
+.flow-stages {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+}
+
+/* Stage Wrapper */
+.stage-wrapper {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Stage Box - Compact Design */
+.stage-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+    height: 80px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem;
+    overflow: hidden;
+}
+
+.stage-box:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+}
+
+.stage-box.active {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+    border: 2px solid #fff;
+}
+
+/* Stage Number Badge */
+.stage-number {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 20px;
+    height: 20px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+}
+
+.stage-name {
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    word-wrap: break-word;
+    max-width: 90px;
+}
+
+/* Hover Actions */
+.stage-hover-actions {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.stage-box:hover .stage-hover-actions {
+    opacity: 1;
+}
+
+/* Stage Connector Arrow */
+.stage-connector {
+    flex-shrink: 0;
+    color: #667eea;
+    margin: 0 -5px;
+    z-index: 1;
+}
+
+/* Stage Configuration Section */
+.stage-config-section {
+    margin-top: 1rem;
+}
+
+.config-tabs {
+    min-height: 400px;
+}
+
+.tab-content-wrapper {
+    padding: 1rem;
+}
+
+/* SLA Configuration */
+.sla-config {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sla-header {
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 1rem;
+}
+
+.sla-header h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #080707;
+}
+
+.sla-description {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.sla-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+/* Config Footer */
+.config-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem 0;
+}
+
+/* Scrollbar Styling */
+.flow-stages::-webkit-scrollbar {
+    height: 8px;
+}
+
+.flow-stages::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.flow-stages::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 4px;
+}
+
+.flow-stages::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.8);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .compact-flow-wrapper {
+        padding: 1rem 0.5rem;
+    }
+
+    .flow-stages {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .stage-wrapper {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .stage-box {
+        width: 100%;
+        min-width: unset;
+        height: 60px;
+    }
+
+    .stage-connector {
+        transform: rotate(90deg);
+        margin: -8px 0;
+    }
+
+    .sla-inputs {
+        grid-template-columns: 1fr;
+    }
+
+    .stage-hover-actions {
+        opacity: 1;
+    }
+}
+
+/* Animation for new stages */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.stage-box {
+    animation: slideIn 0.3s ease-out;
+}
