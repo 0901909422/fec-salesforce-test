@@ -24,6 +24,20 @@
 		<name>CustomObject</name>
 	</types>
 	<types>
+		<members>FEC_Action_Button__c</members>
+		<members>FEC_Business_Process__c</members>
+		<members>FEC_Case_Stage__c</members>
+		<members>FEC_Category__c</members>
+		<members>FEC_Master_Data_Setting__c</members>
+		<members>FEC_Nature_of_Case__c</members>
+		<members>FEC_Product_Type__c</members>
+		<members>FEC_Stage_Change__c</members>
+		<members>FEC_Stage_Screen__c</members>
+		<members>FEC_Sub_Category__c</members>
+		<members>FEC_Sub_Code__c</members>
+		<name>CustomTab</name>
+	</types>
+	<types>
 		<members>Category_Record_Page</members>
 		<members>FEC_Notification_Channel_Record_Page</members>
 		<members>Product_Type_Record_Page</members>
