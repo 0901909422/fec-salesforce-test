@@ -31,6 +31,13 @@
 		<members>Sub_Code_Record_Page</members>
         <members>Channel_Record_Page</members>
 		<members>Process_Action_Record_Page</members>
+		<members>Action_Button_Record_Page</members>
+		<members>Business_Process_Record_Page</members>
+		<members>Case_Stage_Record_Page</members>
+		<members>Master_Data_Setting_Record_Page</members>
+		<members>Nature_of_Cases_Record_Page</members>
+		<members>Stage_Change_Record_Page</members>
+		<members>Stage_Screen_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>

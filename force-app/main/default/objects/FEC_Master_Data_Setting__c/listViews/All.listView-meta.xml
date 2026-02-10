@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ListView xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>All</fullName>
+    <columns>NAME</columns>
+    <columns>FEC_Nature_Of_Case__c</columns>
+    <columns>FEC_Field_Object_Name__c</columns>
+    <columns>FEC_Section__c</columns>
+    <columns>FEC_Field_API_Name__c</columns>
+    <columns>FEC_Field_Mandatory__c</columns>
+    <columns>FEC_Field_ReadOnly__c</columns>
+    <columns>FEC_Field_Editable__c</columns>
+    <columns>FEC_Editable_User_Group__c</columns>
+    <columns>FEC_Field_Status__c</columns>
+    <columns>FEC_Field_Order_Display__c</columns>
+    <columns>FEC_Channel__c</columns>
+    <columns>FEC_Stage_Name__c</columns>
     <filterScope>Everything</filterScope>
-    <label>All</label>
+    <label>All Master Data Setting</label>
 </ListView>

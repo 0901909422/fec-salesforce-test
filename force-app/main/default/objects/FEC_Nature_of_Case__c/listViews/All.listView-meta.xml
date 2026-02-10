@@ -6,6 +6,12 @@
     <columns>FEC_Category__c</columns>
     <columns>FEC_Sub_Category__c</columns>
     <columns>FEC_Sub_Code__c</columns>
+    <columns>FEC_Business_Process__c</columns>
+    <columns>FEC_Active__c</columns>
+    <columns>FEC_User_Group__c</columns>
+    <columns>FEC_Customer_Type__c</columns>
+    <columns>LAST_UPDATE</columns>
+    <columns>UPDATEDBY_USER</columns>
     <filterScope>Everything</filterScope>
-    <label>All</label>
+    <label>All Nature of Cases</label>
 </ListView>
