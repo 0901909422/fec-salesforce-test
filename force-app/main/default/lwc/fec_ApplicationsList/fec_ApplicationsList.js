@@ -1,7 +1,19 @@
+/****************************************************************************************
+ * File Name    : Fec_ApplicationsList.js
+ * Author       : Quangdv7
+ * Date         : 2025-01-17
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-17     Quangdv7             Create
+ 
+****************************************************************************************/
+
 import { LightningElement, api, track } from 'lwc';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import { NavigationMixin } from 'lightning/navigation';
-import { maskValue } from 'c/fec_CommonUtils';
 
 import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
 
@@ -9,9 +21,6 @@ import refreshApplications
     from '@salesforce/apex/FEC_ApplicationsListController.loadApplicationInfo';
 import getApplications
     from '@salesforce/apex/FEC_ApplicationsListController.getApplicationsForUI';
-
-import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
-import FEC_Registration_Info_Label from '@salesforce/label/c.FEC_Registration_Info_Label';
 
 export default class Fec_ApplicationsList extends NavigationMixin(LightningElement) {
 
@@ -28,34 +37,42 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
             fieldName: 'applicationId',
             type: 'link',
             recordIdField: 'Id',
-            hoverTitle: 'Registration',
             hoverFields: [
-                { label: 'Application ID', fieldName: 'applicationId' },
-                { label: 'Product Group', fieldName: 'productGroup' },
-                { label: 'National/ Passport ID', fieldName: 'nationalPassportIDMasked' },
-                { label: 'Registration Phone', fieldName: 'registrationPhoneMasked' },
-                { label: 'Registration Email', fieldName: 'registrationEmail' },
-                { label: 'Current Address', fieldName: 'currentAddress' },
-                { label: 'Permanent Address', fieldName: 'permanentAddress' },
-                { label: 'Office Address', fieldName: 'officeAddress' },
-                { label: 'CC Code', fieldName: 'ccCode' },
-                { label: 'CC Name', fieldName: 'ccName' },
-                { label: 'DSA Code', fieldName: 'dSACode' },
-                { label: 'DSA Name', fieldName: 'dSAName' },
-                { label: 'TSA Code', fieldName: 'tSACode' },
-                { label: 'TSA Name', fieldName: 'tSAName' }
+                {
+                      section: 'Registration Info',
+                      items: [
+                            { label: 'Application ID', fieldName: 'applicationId' },
+                            { label: 'National/ Passport ID', fieldName: 'nationalPassportIDMasked' },
+                            { label: 'Account Number', fieldName: 'accountNumber' },
+                            { label: 'Registration Phone', fieldName: 'registrationPhoneMasked' },
+                            { label: 'Contract Number', fieldName: 'contractNumber' }, 
+                            { label: 'Registration Email', fieldName: 'registrationEmail' },
+                            { label: 'Last Status', fieldName: 'lastStatus' },
+                            { label: 'Current Address', fieldName: 'currentAddress' },
+                            { label: 'Updated Date', fieldName: 'updateDate' },
+                            { label: 'Permanent Address', fieldName: 'permanentAddress' },
+                            { label: 'Product Group', fieldName: 'productGroup' },
+                            { label: 'Office Address', fieldName: 'officeAddress' },
+                      ]
+                },
+               {
+                  section: 'Sales',
+                    items: [
+                        { label: 'CC Code', fieldName: 'ccCode' },
+                        { label: 'CC Name', fieldName: 'ccName' },
+                        { label: 'DSA Code', fieldName: 'dSACode' },
+                        { label: 'DSA Name', fieldName: 'dSAName' },
+                        { label: 'TSA Code', fieldName: 'tSACode' },
+                        { label: 'TSA Name', fieldName: 'tSAName' }
+                    ]
+               },
             ]
         },
         { label: 'Account Number', fieldName: 'accountNumber' },
         { label: 'Contract Number', fieldName: 'contractNumber' },
         { label: 'Last Status', fieldName: 'lastStatus' },
-        { label: 'Update Date', fieldName: 'updateDate' }
+        { label: 'Update Date', fieldName: 'updateDate',cellAlign: 'center' }
     ];
-
-    customLabel = {
-        msgErrorApiLabel: FEC_MSG_Error_API_Label,
-        registrationInfoLabel: FEC_Registration_Info_Label
-    }
 
     connectedCallback() {
         loadStyle(this, COMMON_STYLES)
@@ -82,13 +99,13 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
                 accountNumber: row.accountNumber,
                 contractNumber: row.contractNumber,
                 lastStatus: row.lastStatus,
-                updateDate: row.updateDate,
+                updateDate: this.formatDateDDMMYYYY(row.updateDate),
                 productGroup: row.productGroup,
                 nationalPassportID: row.nationalPassportID,
                 registrationPhone: row.registrationPhone,
                 // ====== MASKED (dùng để hiển thị)
-                nationalPassportIDMasked: maskValue(row.nationalPassportID, false),
-                registrationPhoneMasked: maskValue(row.registrationPhone, false),
+                nationalPassportIDMasked: this.maskValue(row.nationalPassportID, false),
+                registrationPhoneMasked: this.maskValue(row.registrationPhone, false),
                 registrationEmail: row.registrationEmail,
                 currentAddress: row.currentAddress,
                 permanentAddress: row.permanentAddress,
@@ -111,6 +128,78 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
         } finally {
             this.isLoading = false;
         }
+    }
+
+    maskValue(value, showFull) {
+        if (!value) return '';
+        if (showFull) return value;
+
+        const v = value.trim();
+
+        /* =====================
+        * PASSPORT ID (bắt đầu bằng chữ)
+        * Hiển thị: 2 ký tự đầu + 3 ký tự cuối
+        * ===================== */
+        if (/^[A-Za-z]/.test(v)) {
+            if (v.length <= 5) return v;
+            return (
+                v.substring(0, 2) +
+                '*'.repeat(v.length - 5) +
+                v.slice(-3)
+            );
+        }
+
+        /* =====================
+        * PHONE NUMBER: 84xxxxxxxxx
+        * Hiển thị: 5 số đầu + 3 số cuối
+        * Ví dụ: 84901***678
+        * ===================== */
+        if (/^84\d{9}$/.test(v)) {
+            return (
+                v.substring(0, 5) +
+                '*'.repeat(v.length - 8) +
+                v.slice(-3)
+            );
+        }
+
+        /* =====================
+        * PHONE NUMBER (10 số)
+        * Hiển thị: 4 số đầu + 3 số cuối
+        * Ví dụ: 0906***678
+        * ===================== */
+        if (/^\d{10}$/.test(v)) {
+            return (
+                v.substring(0, 4) +
+                '*'.repeat(v.length - 7) +
+                v.slice(-3)
+            );
+        }
+
+        /* =====================
+        * CCCD (toàn số, > 6)
+        * Hiển thị: 3 số đầu + 3 số cuối
+        * ===================== */
+        if (/^\d+$/.test(v)) {
+            if (v.length <= 6) return v;
+            return (
+                v.substring(0, 3) +
+                '*'.repeat(v.length - 6) +
+                v.slice(-3)
+            );
+        }
+
+        return v;
+    }
+
+    formatDateDDMMYYYY(value) {
+        if (!value) return '-';
+
+        // Expect yyyy-mm-dd
+        const parts = value.split('-');
+        if (parts.length !== 3) return value;
+
+        const [yyyy, mm, dd] = parts;
+        return `${dd}/${mm}/${yyyy}`;
     }
 
     handleRegistrationSelect(event) {

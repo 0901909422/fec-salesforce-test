@@ -1,25 +1,20 @@
-import { LightningElement, api, track, wire } from 'lwc';
+/****************************************************************************************
+ * File Name    : Fec_MainInfo.js
+ * Author       : Quangdv7
+ * Date         : 2025-01-10
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-10     Quangdv7             Create
+ 
+****************************************************************************************/
+
+import { LightningElement, api, track } from 'lwc';
 import loadMainInfo from '@salesforce/apex/FEC_MainInfoController.loadMainInfo';
 import logSensitiveFromMainInfo from '@salesforce/apex/FEC_MainInfoController.logSensitiveFromMainInfo';
 import { loadStyle } from 'lightning/platformResourceLoader';
-import { formatDateVNI, maskValue } from 'c/fec_CommonUtils';
-import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
-import FEC_Demographic_Label from '@salesforce/label/c.FEC_Demographic_Label';
-import FEC_Customer_Number_Label from '@salesforce/label/c.FEC_Customer_Number_Label';
-import FEC_Addresses_List_Label from '@salesforce/label/c.FEC_Addresses_List_Label';
-import FEC_Customer_Name_Label from '@salesforce/label/c.FEC_Customer_Name_Label';
-import FEC_Last_Name_Label from '@salesforce/label/c.FEC_Last_Name_Label';
-import FEC_Middle_Name_Label from '@salesforce/label/c.FEC_Middle_Name_Label';
-import FEC_First_Name_Label from '@salesforce/label/c.FEC_First_Name_Label';
-import FEC_Date_of_Birth_Label from '@salesforce/label/c.FEC_Date_of_Birth_Label';
-import FEC_Gender_Label from '@salesforce/label/c.FEC_Gender_Label';
-import FEC_National_ID_Passport_ID_Label from '@salesforce/label/c.FEC_National_ID_Passport_ID_Label';
-import FEC_Date_of_Issue_Label from '@salesforce/label/c.FEC_Date_of_Issue_Label';
-import FEC_Place_of_Issue_Label from '@salesforce/label/c.FEC_Place_of_Issue_Label';
-import FEC_Marital_Status_Label from '@salesforce/label/c.FEC_Marital_Status_Label';
-import FEC_Primary_Phone_Label from '@salesforce/label/c.FEC_Primary_Phone_Label';
-import FEC_CIF_Number_Label from '@salesforce/label/c.FEC_CIF_Number_Label';
-import FEC_PID_Number_Label from '@salesforce/label/c.FEC_PID_Number_Label';
 
 import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
 
@@ -43,26 +38,6 @@ export default class Fec_MainInfo extends LightningElement {
         { label: 'Mailing Address', fieldName: 'mailingAddress' }
     ];
 
-    customLabel = {
-        msgErrorApiLabel: FEC_MSG_Error_API_Label,
-        demographicLabel: FEC_Demographic_Label,
-        customerNumberLabel: FEC_Customer_Number_Label,
-        addressesListLabel: FEC_Addresses_List_Label,
-        customerNameLabel: FEC_Customer_Name_Label,
-        lastNameLabel: FEC_Last_Name_Label,
-        middleNameLabel: FEC_Middle_Name_Label,
-        firstNameLabel: FEC_First_Name_Label,
-        dateOfBirthLabel: FEC_Date_of_Birth_Label,
-        genderLabel: FEC_Gender_Label,
-        nationalIDPassportIDLabel: FEC_National_ID_Passport_ID_Label,
-        dateOfIssueLabel: FEC_Date_of_Issue_Label,
-        placeOfIssueLabel: FEC_Place_of_Issue_Label,
-        maritalStatusLabel: FEC_Marital_Status_Label,
-        primaryPhoneLabel: FEC_Primary_Phone_Label,
-        cifNumberLabel: FEC_CIF_Number_Label,
-        pidNumberLabel: FEC_PID_Number_Label
-    }
-
     /* ================= LIFECYCLE ================= */
 
     connectedCallback() {
@@ -85,7 +60,6 @@ export default class Fec_MainInfo extends LightningElement {
         loadMainInfo({ caseId: this.recordId })
             .then(res => {
                 this.data = res;
-                console.log('his.data ====>', JSON.stringify(this.data));
                 this.error = undefined;
             })
             .catch(err => {
@@ -117,9 +91,24 @@ export default class Fec_MainInfo extends LightningElement {
     get placeOfIssue() { return this.data?.placeOfIssue || ''; }
 
     get dateOfBirth() {
-        return formatDateVNI(this.data?.birthDate);
+        return this.formatDate(this.data?.birthDate);
     }
 
+    /* ================= HELP TEXT ================= */
+    get helpTextMap() {
+        return this.data?.helpTexts || {};
+    }
+
+    /**
+     * Generic help text getter
+     * @param {String} fieldApiName ex: FEC_First_Name__c
+     */
+    getHelpText(fieldApiName) {
+        return fieldApiName
+            ? this.helpTextMap[fieldApiName.toLowerCase()]
+            : null;
+    }
+    
     getMaskingConfig(key) {
         const configs = {
             phone: {
@@ -159,15 +148,76 @@ export default class Fec_MainInfo extends LightningElement {
         this[stateName] = !this[stateName];
     }
 
+    maskValue(value, showFull) {
+        if (!value) return '';
+        if (showFull) return value;
+
+        const v = value.trim();
+
+        /* =====================
+        * PASSPORT ID (bắt đầu bằng chữ)
+        * Hiển thị: 2 ký tự đầu + 3 ký tự cuối
+        * ===================== */
+        if (/^[A-Za-z]/.test(v)) {
+            if (v.length <= 5) return v;
+            return (
+                v.substring(0, 2) +
+                '*'.repeat(v.length - 5) +
+                v.slice(-3)
+            );
+        }
+
+        /* =====================
+        * PHONE NUMBER: 84xxxxxxxxx
+        * Hiển thị: 5 số đầu + 3 số cuối
+        * Ví dụ: 84901***678
+        * ===================== */
+        if (/^84\d{9}$/.test(v)) {
+            return (
+                v.substring(0, 5) +
+                '*'.repeat(v.length - 8) +
+                v.slice(-3)
+            );
+        }
+
+        /* =====================
+        * PHONE NUMBER (10 số)
+        * Hiển thị: 4 số đầu + 3 số cuối
+        * Ví dụ: 0906***678
+        * ===================== */
+        if (/^\d{10}$/.test(v)) {
+            return (
+                v.substring(0, 4) +
+                '*'.repeat(v.length - 7) +
+                v.slice(-3)
+            );
+        }
+
+        /* =====================
+        * CCCD (toàn số, > 6)
+        * Hiển thị: 3 số đầu + 3 số cuối
+        * ===================== */
+        if (/^\d+$/.test(v)) {
+            if (v.length <= 6) return v;
+            return (
+                v.substring(0, 3) +
+                '*'.repeat(v.length - 6) +
+                v.slice(-3)
+            );
+        }
+
+        return v;
+    }
+
     get maskedPhone() {
-        return maskValue(
+        return this.maskValue(
             this.data?.primaryPhone,
             this.primaryPhone
         );
     }
 
     get maskedNationalIDPassportID() {
-        return maskValue(
+        return this.maskValue(
             this.data?.nationalIDPassportID,
             this.nationalIDPassportID
         );
@@ -201,4 +251,10 @@ export default class Fec_MainInfo extends LightningElement {
     }
 
 
+    formatDate(d) {
+        if (!d) return '';
+        const date = new Date(d);
+        return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')
+            }/${date.getFullYear()}`;
+    }
 }

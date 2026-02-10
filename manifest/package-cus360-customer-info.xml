@@ -14,6 +14,7 @@
         <members>FEC_GetApplicationsList</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_MockupEndpoint</members>
+        <members>FEC_PaymentHistoryController</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -37,6 +38,8 @@
         <members>fec_ApplicationsList</members>
         <members>fec_CommonUtils</members>
 		<members>fec_CommonConst</members>
+        <members>fec_PaymentHistoryAcount</members>
+         <members>fec_RelatedListAddressesPaging</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -84,5 +87,9 @@
         <members>FEC_Demographic_Label</members>
         <name>CustomLabel</name>
     </types>
+    <types>
+		<members>ApplicationList</members>
+		<name>CustomTab</name>
+	</types>
     <version>65.0</version>
 </Package>

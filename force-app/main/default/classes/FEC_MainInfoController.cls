@@ -1,4 +1,17 @@
-public with sharing class FEC_MainInfoController {
+/****************************************************************************************
+ * File Name    : FEC_MainInfoController.Apex
+ * Author       : Quangdv7
+ * Date         : 2025-01-10
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-10     Quangdv7             Create
+ 
+****************************************************************************************/
+
+public without sharing class FEC_MainInfoController {
 
     /* =====================================================
      * DTO
@@ -38,7 +51,7 @@ public with sharing class FEC_MainInfoController {
     public static MainInfoDTO loadMainInfo(Id caseId) {
 
         if (caseId == null) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
+            throw new AuraHandledException('CaseId is required');
         }
 
         /* ===== LOAD CASE ===== */
@@ -50,7 +63,7 @@ public with sharing class FEC_MainInfoController {
         ];
 
         if (c.FEC_Account_or_Contract__c == null) {
-            throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
+            throw new AuraHandledException('Customer History is not linked');
         }
 
         /* ===== LOAD CUSTOMER HISTORY ===== */
@@ -90,10 +103,10 @@ public with sharing class FEC_MainInfoController {
         try {
             FEC_GetCustomerInfoBasic.ResponseWrapper basicRes =
                 FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
-                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                    hist.FEC_CIF_Number__c
+                    'APS',
+                    'PORTAL',
+                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
+                    '4111111111111111'
                 );
 
             if (basicRes != null && basicRes.CustomerBasicInfo != null) {
@@ -114,10 +127,10 @@ public with sharing class FEC_MainInfoController {
         try {
             FEC_GetDocumentsList.ResponseWrapper docRes =
                 FEC_GetDocumentsList.callGetDocumentsList(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
-                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                    hist.FEC_CIF_Number__c
+                    'APS',
+                    'PORTAL',
+                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
+                    '1233'
                 );
 
             if (docRes != null && docRes.Documents != null && !docRes.Documents.isEmpty()) {
@@ -199,7 +212,7 @@ public with sharing class FEC_MainInfoController {
     private static String getPrimaryPhoneOnly() {
         FEC_GetCustomerList.ResponseWrapper res =
             FEC_GetCustomerList.getCustomerList(
-                FEC_ConstantCommon.REQUESTOR_PORTAL, null, false,
+                'PORTAL', null, false,
                 null, null, null, null, null, null, null, null
             );
 
@@ -219,8 +232,8 @@ public with sharing class FEC_MainInfoController {
         System.debug('### CIF BEFORE ADDRESS API = ' + hist.FEC_CIF_Number__c);
         FEC_GetAddressesList.ResponseWrapper res =
             FEC_GetAddressesList.callGetAddressesList(
-                FEC_ConstantCommon.REQUESTOR_APS,FEC_ConstantCommon.REQUESTOR_PORTAL,
-                Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                'APS','PORTAL',
+                Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
                 hist.FEC_CIF_Number__c
             );
 
@@ -254,14 +267,14 @@ public with sharing class FEC_MainInfoController {
             }
 
             addr.FEC_Address__c = buildFullAddress(ai);
-            addr.FEC_Mailing_Address__c = FEC_ConstantCommon.TEXT_YES;
+            addr.FEC_Mailing_Address__c = 'Yes';
 
             result.toUpdate.add(addr);
 
             AddressDTO dto = new AddressDTO();
             dto.addressType = type;
             dto.address = addr.FEC_Address__c;
-            dto.mailingAddress = FEC_ConstantCommon.TEXT_YES;
+            dto.mailingAddress = 'Yes';
             result.dtoList.add(dto);
         }
 

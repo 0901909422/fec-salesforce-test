@@ -4,9 +4,9 @@
             <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
                 <!-- ================= Registration Info ================= -->
                   <lightning-accordion-section name="registration" label="Registration Info ">
-                     <c-fec_-related-list-paging records={registration} columns={registrationColumns}
-                        sorted-by="Registration" onrowselect={handleRegistrationSelect}>
-                    </c-fec_-related-list-paging>
+                     <c-fec_-related-list-addresses-paging records={registration} columns={registrationColumns}
+                        sorted-by="updateDate" onrowselect={handleRegistrationSelect}>
+                    </c-fec_-related-list-addresses-paging>
                   </lightning-accordion-section>
             </lightning-accordion>
          </div>
@@ -22,9 +22,9 @@
                             <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
                             </lightning-icon>
                             <span>
-                                {customLabel.registrationInfoLabel}&nbsp;-&nbsp;
+                                Registration Info&nbsp;-&nbsp;
                                 <span class="sync-fail-text">
-                                    {customLabel.msgErrorApiLabel}
+                                    Tải Dữ liệu Không Thành Công
                                 </span>
                             </span>
 

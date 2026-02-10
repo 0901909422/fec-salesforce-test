@@ -1,7 +1,20 @@
-public with sharing class FEC_SecondaryController {
+/****************************************************************************************
+ * File Name    : FEC_SecondaryController.Apex
+ * Author       : Quangdv7
+ * Date         : 2025-01-10
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-10     Quangdv7             Create
+ 
+****************************************************************************************/
+
+public without sharing class FEC_SecondaryController {
 
     /* =====================================================
-     * DTOs
+     * DTO
      * ===================================================== */
 
     public class ReferenceDTO {
@@ -10,13 +23,19 @@ public with sharing class FEC_SecondaryController {
         @AuraEnabled public String phoneNumber;
     }
 
+    public class ContactDTO {
+        @AuraEnabled public String channel;
+        @AuraEnabled public String communicationType;
+        @AuraEnabled public String contactString;
+    }
+
     public class SecondaryInfoDTO {
         @AuraEnabled public String zaloFollower;
         @AuraEnabled public String websiteAccount;
         @AuraEnabled public String mobileAppAccount;
-        @AuraEnabled public String email;
-        @AuraEnabled public String workPhone;
+        @AuraEnabled public List<ContactDTO> contactList;
         @AuraEnabled public List<ReferenceDTO> references;
+        @AuraEnabled public Map<String, String> helpTexts;
     }
 
     /* =====================================================
@@ -26,7 +45,7 @@ public with sharing class FEC_SecondaryController {
     public static SecondaryInfoDTO loadSecondaryInfo(Id caseId) {
 
         if (caseId == null) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
+            throw new AuraHandledException('CaseId is required');
         }
 
         /* ===== LOAD CASE ===== */
@@ -38,32 +57,35 @@ public with sharing class FEC_SecondaryController {
         ];
 
         if (c.FEC_Account_or_Contract__c == null) {
-            throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
+            throw new AuraHandledException('Customer History not found');
         }
 
         /* ===== LOAD CUSTOMER HISTORY ===== */
         FEC_Customer_History__c hist = [
             SELECT Id,
+                    FEC_CIF_Number__c,
                    FEC_Zalo_Follower__c,
                    FEC_Website_Account__c,
                    FEC_Mobile_App_Account__c,
-                   FEC_Email__c,
-                   FEC_Work_Phone__c,
-                   FEC_API_Cache_Secondary_Demo__c,
-                   FEC_CIF_Number__c
+                   FEC_API_Cache_Secondary_Demo__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
         ];
 
         /* =====================================================
-         * CACHE HIT → KHÔNG CALL API
+         * CACHE HIT 
          * ===================================================== */
         if (String.isNotBlank(hist.FEC_API_Cache_Secondary_Demo__c)) {
-            return (SecondaryInfoDTO) JSON.deserialize(
-                hist.FEC_API_Cache_Secondary_Demo__c,
-                SecondaryInfoDTO.class
-            );
+            SecondaryInfoDTO dto =
+                (SecondaryInfoDTO) JSON.deserialize(
+                    hist.FEC_API_Cache_Secondary_Demo__c,
+                    SecondaryInfoDTO.class
+                );
+
+            dto.helpTexts = buildHelpTextMap();
+
+            return dto;
         }
 
         /* =====================================================
@@ -74,40 +96,55 @@ public with sharing class FEC_SecondaryController {
         try {
             FEC_GetDigitalAccountStatus.ResponseWrapper digitalRes =
                 FEC_GetDigitalAccountStatus.callGetDigitalAccountStatus(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
-                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                    hist.FEC_Work_Phone__c,
-                    hist.FEC_CIF_Number__c
+                    'APS',
+                    'PORTAL',
+                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
+                    '0347776208',
+                    '123456789'
                 );
 
             if (digitalRes != null && digitalRes.DigitalAccounts != null) {
                 hist.FEC_Zalo_Follower__c =
-                    getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_ZALO);
+                    getStatusByType(digitalRes.DigitalAccounts, 'ZALO');
 
                 hist.FEC_Website_Account__c =
-                    getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_WEBSITE);
+                    getStatusByType(digitalRes.DigitalAccounts, 'WEBSITE');
 
                 hist.FEC_Mobile_App_Account__c =
-                    getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_FE_MOBILE_APP);
+                    getStatusByType(digitalRes.DigitalAccounts, 'FEMOBILEAPP');
             }
         } catch (Exception e) {
             System.debug('### DigitalAccountStatus FAILED: ' + e.getMessage());
         }
 
         /* ---------- 2. CONTACT LIST ---------- */
+         List<FEC_Contact_List__c> contactsToInsert = new List<FEC_Contact_List__c>();
+
         try {
-            FEC_GetContactsList.ResponseWrapper contactRes =
-                FEC_GetContactsList.callGetContactsList(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
-                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                    hist.FEC_CIF_Number__c
+            FEC_GetCustomerInfoBasic.ResponseWrapper contactRes =
+                FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
+                    'TRANS-' + Datetime.now().getTime(),
+                    'PORTAL',
+                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
+                    '1222222'
                 );
 
-            if (contactRes != null && contactRes.Contacts != null) {
-                hist.FEC_Email__c      = extractEmail(contactRes.Contacts);
-                hist.FEC_Work_Phone__c = extractWorkPhone(contactRes.Contacts);
+            if (contactRes != null
+                && contactRes.CustomerBasicInfo != null
+                && contactRes.CustomerBasicInfo.PreferredContacts != null
+            ) {
+                for (FEC_GetCustomerInfoBasic.PreferredContact pc :
+                    contactRes.CustomerBasicInfo.PreferredContacts) {
+
+                    if (pc == null || pc.Contact == null) continue;
+
+                    contactsToInsert.add(new FEC_Contact_List__c(
+                        FEC_Customer_History__c   = hist.Id,
+                        FEC_Channel__c            = pc.Contact.Channel,
+                        FEC_Communication_Type__c = pc.Contact.CommunicationType,
+                        FEC_Contact_String__c     = pc.Contact.ContactString
+                    ));
+                }
             }
         } catch (Exception e) {
             System.debug('### GetContactsList FAILED: ' + e.getMessage());
@@ -118,10 +155,10 @@ public with sharing class FEC_SecondaryController {
         try {
             relativesRes =
                 FEC_GetRelativesList.callGetRelativesList(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
-                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                    hist.FEC_CIF_Number__c
+                    'APS',
+                    'PORTAL',
+                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
+                    '12333333'
                 );
         } catch (Exception e) {
             System.debug('### GetRelativesList FAILED: ' + e.getMessage());
@@ -130,8 +167,13 @@ public with sharing class FEC_SecondaryController {
         /* =====================================================
          * BUILD DTO
          * ===================================================== */
+         if (!contactsToInsert.isEmpty()) {
+            insert contactsToInsert;
+        }
         SecondaryInfoDTO dto = mapToDTO(hist);
         dto.references = buildReferenceDTO(relativesRes);
+        dto.contactList = buildContactDTO(hist.Id);
+        dto.helpTexts = buildHelpTextMap();
 
         /* =====================================================
          * SAVE CACHE
@@ -207,6 +249,23 @@ public with sharing class FEC_SecondaryController {
         }
         return null;
     }
+    private static Map<String, String> buildHelpTextMap() {
+        Map<String, String> m = new Map<String, String>();
+
+        for (Schema.SObjectField f :
+            FEC_Customer_History__c.SObjectType
+                .getDescribe()
+                .fields
+                .getMap()
+                .values()
+        ) {
+            Schema.DescribeFieldResult d = f.getDescribe();
+            if (String.isNotBlank(d.getInlineHelpText())) {
+                m.put(d.getName().toLowerCase(), d.getInlineHelpText());
+            }
+        }
+        return m;
+    }
 
     private static List<ReferenceDTO> buildReferenceDTO(
         FEC_GetRelativesList.ResponseWrapper res
@@ -224,6 +283,33 @@ public with sharing class FEC_SecondaryController {
         return result;
     }
 
+   private static List<ContactDTO> buildContactDTO(Id customerHistoryId) {
+
+        List<ContactDTO> result = new List<ContactDTO>();
+
+        if (customerHistoryId == null) {
+            return result;
+        }
+
+        List<FEC_Contact_List__c> contactRecords = [
+            SELECT FEC_Channel__c,
+                FEC_Communication_Type__c,
+                FEC_Contact_String__c
+            FROM FEC_Contact_List__c
+            WHERE FEC_Customer_History__c = :customerHistoryId
+        ];
+
+        for (FEC_Contact_List__c c : contactRecords) {
+            ContactDTO dto = new ContactDTO();
+            dto.channel = c.FEC_Channel__c;
+            dto.communicationType = c.FEC_Communication_Type__c;
+            dto.contactString = c.FEC_Contact_String__c;
+            result.add(dto);
+        }
+
+        return result;
+    }
+
     private static SecondaryInfoDTO mapToDTO(
         FEC_Customer_History__c h
     ) {
@@ -231,8 +317,6 @@ public with sharing class FEC_SecondaryController {
         dto.zaloFollower     = h.FEC_Zalo_Follower__c;
         dto.websiteAccount   = h.FEC_Website_Account__c;
         dto.mobileAppAccount = h.FEC_Mobile_App_Account__c;
-        dto.email            = h.FEC_Email__c;
-        dto.workPhone        = h.FEC_Work_Phone__c;
         return dto;
     }
 }

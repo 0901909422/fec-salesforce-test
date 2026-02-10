@@ -1,4 +1,17 @@
-public with sharing class FEC_ApplicationsListController {
+/****************************************************************************************
+ * File Name    : FEC_ApplicationsListController.Apex
+ * Author       : Quangdv7
+ * Date         : 2025-01-12
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-12     Quangdv7             Create
+ 
+****************************************************************************************/
+
+public without sharing class FEC_ApplicationsListController {
 
     /* =====================================================
      * DTO 
@@ -24,6 +37,7 @@ public with sharing class FEC_ApplicationsListController {
         @AuraEnabled public String dSAName;
         @AuraEnabled public String tSACode;
         @AuraEnabled public String tSAName;
+        @AuraEnabled public Map<String, String> helpTexts;
     }
 
     /* =====================================================
@@ -74,7 +88,7 @@ public with sharing class FEC_ApplicationsListController {
         FEC_GetCustomerList.ResponseWrapper cusRes;
         try {
             cusRes = FEC_GetCustomerList.getCustomerList(
-                FEC_ConstantCommon.REQUESTOR_CRM, null, false,
+                'CRM', null, false,
                 null, null, null, null, null, null, null, null
             );
         } catch (Exception e) {
@@ -96,10 +110,10 @@ public with sharing class FEC_ApplicationsListController {
             try {
                 statusRes =
                     FEC_GetApplicationsList.callGetApplicationsList(
-                        FEC_ConstantCommon.REQUESTOR_RES,
-                        FEC_ConstantCommon.REQUESTOR_CRM,
-                        Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                        cif
+                        'RES',
+                        'CRM',
+                        Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
+                        '26525477'
                     );
             } catch (Exception e) {
                 statusRes = null;
@@ -112,10 +126,10 @@ public with sharing class FEC_ApplicationsListController {
             try {
                 addrRes =
                     FEC_GetAddressesList.callGetAddressesList(
-                        FEC_ConstantCommon.REQUESTOR_RES,
-                        FEC_ConstantCommon.REQUESTOR_CRM,
-                        Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                        cif
+                        'RES',
+                        'CRM',
+                        Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
+                        '26525477'
                     );
             } catch (Exception e) {
                 addrRes = null;
@@ -166,19 +180,19 @@ public with sharing class FEC_ApplicationsListController {
                     for (FEC_GetAddressesList.AddressInfo ad
                         : addrRes.Addresses) {
 
-                        if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_CURRES) {
+                        if (ad.AddressType == 'CURRES') {
                             row.put(
                                 'currentAddress',
                                 formatAddress(ad)
                             );
                         }
-                        if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
+                        if (ad.AddressType == 'PERMNENT') {
                             row.put(
                                 'permanentAddress',
                                 formatAddress(ad)
                             );
                         }
-                        if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_OFFICE) {
+                        if (ad.AddressType == 'OFFICE') {
                             row.put(
                                 'officeAddress',
                                 formatAddress(ad)
@@ -193,7 +207,7 @@ public with sharing class FEC_ApplicationsListController {
                 * ===================================================== */
                 FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleDisburseInfoResponse saleRes;
                 try {
-                    saleRes = FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo(app.ApplicationID);
+                    saleRes = FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo('APP123456');
                     if (saleRes != null &&
                         saleRes.CustomerSaleInfos != null &&
                         !saleRes.CustomerSaleInfos.isEmpty()) {
@@ -251,6 +265,7 @@ public with sharing class FEC_ApplicationsListController {
             );
 
         dto.id = rec.Id;
+        dto.helpTexts = buildHelpTextMap();
         if (rec.FEC_Customer_History__c != null) {
             List<Case> cases = [
                 SELECT Id,FEC_Account_or_Contract__c
@@ -309,13 +324,35 @@ public with sharing class FEC_ApplicationsListController {
                     ApplicationRowDTO.class
                 );
             dto.id = rec.Id;
+            dto.helpTexts = buildHelpTextMap();
             result.add(dto);
         }
 
         return result;
     }
 
-     /* =====================================================
+    private static Map<String, String> buildHelpTextMap() {
+        Map<String, String> result = new Map<String, String>();
+
+        Map<String, Schema.SObjectField> fieldMap =
+            FEC_Application_List__c.SObjectType
+                .getDescribe()
+                .fields.getMap();
+
+        for (String fieldName : fieldMap.keySet()) {
+            String helpText =
+                fieldMap.get(fieldName)
+                        .getDescribe()
+                        .getInlineHelpText();
+
+            if (String.isNotBlank(helpText)) {
+                result.put(fieldName.toLowerCase(), helpText);
+            }
+        }
+        return result;
+    }
+
+    /* =====================================================
      * LOG SENSITIVE
      * ===================================================== */
     @AuraEnabled

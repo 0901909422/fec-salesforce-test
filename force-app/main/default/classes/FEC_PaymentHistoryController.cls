@@ -1,4 +1,17 @@
-public with sharing class FEC_PaymentHistoryController {
+/****************************************************************************************
+ * File Name    : FEC_PaymentHistoryController.Apex
+ * Author       : Quangdv7
+ * Date         : 2025-01-20
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-20     Quangdv7             Create
+ 
+****************************************************************************************/
+
+public without sharing class FEC_PaymentHistoryController {
 
     /* =====================================================
        DTOs 
@@ -31,14 +44,14 @@ public with sharing class FEC_PaymentHistoryController {
 
         if (c.FEC_Account_or_Contract__c == null) {
             throw new AuraHandledException(
-                System.Label.FEC_MSG_Not_Account_Linked
+                'Case does not have Account / Contract'
             );
         }
         return c.FEC_Account_or_Contract__c;
     }
 
     /* =====================================================
-       ================= BILLING PAYMENT =================
+        BILLING PAYMENT
        ===================================================== */
     @AuraEnabled
     public static void syncPaymentHistory(Id caseId) {
@@ -55,10 +68,10 @@ public with sharing class FEC_PaymentHistoryController {
         try {
             apiRes = FEC_GetBilledTransactions.callGetBilledTransactions(
                 String.valueOf(UUID.randomUUID()),
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                'CRM',
+                Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
                 String.valueOf(customerHistoryId),
-                Datetime.now().format(FEC_ConstantCommon.DATE_FORMAT_MMYYYY)
+                Datetime.now().format('MM/yyyy')
             );
         } catch (Exception e) {
             apiRes = null; 
@@ -85,7 +98,7 @@ public with sharing class FEC_PaymentHistoryController {
 
         for (FEC_GetBilledTransactions.TransactionRecord t : apiRes.Transactions) {
 
-            Date paymentDate = FEC_CommonUltils.parseDate(t.TransactionDate);
+            Date paymentDate = parseDate(t.TransactionDate);
             String key = paymentDate + '|' + t.ReferenceNumber;
 
             FEC_Payment_History__c r =
@@ -96,7 +109,7 @@ public with sharing class FEC_PaymentHistoryController {
                 );
 
             r.FEC_Payment_Date__c   = paymentDate;
-            r.FEC_Booking_Date__c   = FEC_CommonUltils.parseDate(t.PostingDate);
+            r.FEC_Booking_Date__c   = parseDate(t.PostingDate);
             r.FEC_Payment_Amount__c = t.Amount;
             r.FEC_Particulars__c    = t.ReferenceNumber;
 
@@ -158,7 +171,7 @@ public with sharing class FEC_PaymentHistoryController {
     }
 
     /* =====================================================
-       ================= REALTIME PAYMENT =================
+        REALTIME PAYMENT 
        ===================================================== */
     @AuraEnabled
     public static void syncRealtimePayment(Id caseId) {
@@ -174,8 +187,8 @@ public with sharing class FEC_PaymentHistoryController {
         try {
             apiRes = FEC_GetPaymentInfo.callGetPaymentInfo(
                 String.valueOf(UUID.randomUUID()),
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                'CRM',
+                Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
                 String.valueOf(customerHistoryId)
             );
         } catch (Exception e) {
@@ -202,7 +215,7 @@ public with sharing class FEC_PaymentHistoryController {
 
         for (FEC_GetPaymentInfo.PaymentInfo p : apiRes.Payments) {
 
-            Date paymentDate = FEC_CommonUltils.parseDate(p.TransactionDate);
+            Date paymentDate = parseDate(p.TransactionDate);
             String key = paymentDate + '|' + p.Username;
 
             FEC_Payment_History__c r =
@@ -259,4 +272,16 @@ public with sharing class FEC_PaymentHistoryController {
         return result;
     }
 
+    /* =====================================================
+       DATE PARSER
+       ===================================================== */
+    private static Date parseDate(String val) {
+        try {
+            return String.isBlank(val)
+                ? null
+                : Date.valueOf(val.substring(0, 10));
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

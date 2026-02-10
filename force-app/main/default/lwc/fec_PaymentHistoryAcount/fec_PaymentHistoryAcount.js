@@ -1,20 +1,23 @@
+/****************************************************************************************
+ * File Name    : Fec_RelatedListAddressesPaging.js
+ * Author       : Quangdv7
+ * Date         : 2025-01-10
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-10     Quangdv7             Create
+ 
+****************************************************************************************/
+
 import { LightningElement, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
-/* ================= APEX ================= */
-import syncPaymentHistory
-    from '@salesforce/apex/FEC_PaymentHistoryController.syncPaymentHistory';
-
-import syncRealtimePayment
-    from '@salesforce/apex/FEC_PaymentHistoryController.syncRealtimePayment';
-
-import loadPaymentHistory
-    from '@salesforce/apex/FEC_PaymentHistoryController.loadPaymentHistory';
-
-import loadRealtimePayment
-    from '@salesforce/apex/FEC_PaymentHistoryController.loadRealtimePayment';
-
-import FEC_Total_Payment_Amount_Label from '@salesforce/label/c.FEC_Total_Payment_Amount_Label';
+import syncPaymentHistory from '@salesforce/apex/FEC_PaymentHistoryController.syncPaymentHistory';
+import syncRealtimePayment from '@salesforce/apex/FEC_PaymentHistoryController.syncRealtimePayment';
+import loadPaymentHistory from '@salesforce/apex/FEC_PaymentHistoryController.loadPaymentHistory';
+import loadRealtimePayment from '@salesforce/apex/FEC_PaymentHistoryController.loadRealtimePayment';
 
 export default class Fec_PaymentHistoryAccount extends LightningElement {
 
@@ -33,26 +36,29 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
 
     /* ================= COLUMNS FOR CUSTOM COMPONENT ================= */
     paymentHistoryColumns = [
-        { label: 'Payment Date', fieldName: 'paymentDate', type: 'text' },
-        { label: 'Booking Date', fieldName: 'bookingDate', type: 'text' },
+        { label: 'Payment No.', fieldName: 'paymentNo', type: 'text'},
+        { label: 'Payment Date', fieldName: 'paymentDate', type: 'text',cellAlign: 'center' },
+        { label: 'Booking Date', fieldName: 'bookingDate', type: 'text', cellAlign: 'center'},
         {
             label: 'Payment Amount',
             fieldName: 'paymentAmountDisplay',
             type: 'text',
+            cellAlign: 'right',
             cellAttributes: { 
                 alignment: 'right',
                 class: { fieldName: 'amountColorClass' }
             }
         },
-        { label: 'Particulars', fieldName: 'particulars', type: 'text' }
+        { label: 'Particulars', fieldName: 'particulars', type: 'text',width: '250px'}
     ];
 
     realtimePaymentColumns = [
-        { label: 'Payment Date', fieldName: 'paymentDate', type: 'text' },
+        { label: 'Payment Date', fieldName: 'paymentDate', type: 'text',cellAlign: 'center' },
         {
             label: 'Payment Amount',
             fieldName: 'paymentAmountDisplay',
             type: 'text',
+            cellAlign: 'right',
             cellAttributes: { 
                 alignment: 'right',
                 class: { fieldName: 'amountColorClass' }
@@ -60,10 +66,6 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
         },
         { label: 'Payment Channel', fieldName: 'paymentChannel', type: 'text' }
     ];
-
-    customLabel = {
-        totalPaymentAmountLabel: FEC_Total_Payment_Amount_Label,
-    }
 
     /* ================= RECORD ID ================= */
     @api
@@ -119,19 +121,21 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
                 caseId: this._recordId
             });
 
-            this.paymentHistory = (data || []).map(row => 
-                this.transformRow(row)
+            this.paymentHistory = (data || []).map((row, index) => {
+                return {
+                    paymentNo: index + 1,
+                    ...this.transformRow(row)
+                   
+                };
+            });
+
+            this.totalPaymentAmount = this.paymentHistory.reduce(
+                (sum, row) => sum + (Number(row.paymentAmount) || 0),
+                0
             );
-
-            this.totalPaymentAmount =
-                this.paymentHistory.length
-                    ? this.paymentHistory[0].totalPaymentAmount
-                    : null;
-
         } catch (e) {
             this.paymentHistory = [];
             this.totalPaymentAmount = null;
-            console.warn('Load billing failed', e);
         }
     }
 
@@ -150,7 +154,6 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
 
         } catch (e) {
             this.realtimePayments = [];
-            console.warn('Load realtime failed', e);
         }
     }
 
@@ -191,12 +194,10 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
         const absAmount = Math.abs(amount);
         const formattedAmount = absAmount.toLocaleString('en-US');
 
-        // Thêm dấu - cho số âm
         const displayAmount = amount < 0 
             ? `-${formattedAmount}` 
             : formattedAmount;
 
-        // Class màu đỏ và bold cho số âm
         const colorClass = amount < 0 
             ? 'slds-text-color_error slds-text-title_bold' 
             : '';
@@ -231,22 +232,18 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
     }
 
     /* =====================================================
-       FORMAT TOTAL AMOUNT (for display in template)
+       FORMAT TOTAL AMOUNT
        ===================================================== */
     get formattedTotalAmount() {
         if (this.totalPaymentAmount === null || this.totalPaymentAmount === undefined) {
             return '';
         }
-        
+
         const amount = Number(this.totalPaymentAmount) || 0;
         const absAmount = Math.abs(amount);
         const formatted = absAmount.toLocaleString('en-US');
-        
+
         return amount < 0 ? `-${formatted}` : formatted;
     }
 
-    get totalAmountClass() {
-        const amount = Number(this.totalPaymentAmount) || 0;
-        return amount < 0 ? 'slds-text-color_error slds-text-title_bold' : '';
-    }
 }
