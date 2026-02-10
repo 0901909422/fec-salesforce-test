@@ -1804,15 +1804,15 @@
         <fullName>LABEL_ERROR_SAVE_LOOKUP</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Error message for saving a lookup record</shortDescription>
-        <value>Error saving lookup record</value>
+        <shortDescription>Error message for saving lookup</shortDescription>
+        <value>Error occurred while saving lookup.</value>
     </labels>
     <labels>
         <fullName>LABEL_ERROR_LINK_NATURE_OF_CASE</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Error message for linking Nature of Case</shortDescription>
-        <value>Unidentified error occurred while linking FEC_MDM_Nature_Of_Case__c</value>
+        <shortDescription>Error message for linking nature of case</shortDescription>
+        <value>Error occurred while linking nature of case.</value>
     </labels>
     <labels>
         <fullName>LABEL_SUCCESS_SAVE</fullName>
@@ -1835,34 +1835,21 @@
         <shortDescription>Error message for invalid record ID</shortDescription>
         <value>Invalid record ID</value>
     </labels>
-        <labels>
+    <labels>
         <fullName>LABEL_SUCCESS_ADD</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Success message for adding data</shortDescription>
         <value>Data added successfully</value>
     </labels>
-        <labels>
+    <labels>
         <fullName>LABEL_ERROR_DELETE_RECORD</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Error message for deleting a record</shortDescription>
         <value>Cannot determine the record information to delete.</value>
     </labels>
-        <labels>
-        <fullName>LABEL_SUCCESS_DELETE</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Success message for deleting data</shortDescription>
-        <value>Deleted successfully</value>
-    </labels>    <labels>
-        <fullName>LABEL_SUCCESS_DELETE</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Success message for deleting data</shortDescription>
-        <value>Deleted successfully</value>
-    </labels>
-        <labels>
+    <labels>
         <fullName>LABEL_WARNING_DELETE_NODE</fullName>
         <language>en_US</language>
         <protected>false</protected>

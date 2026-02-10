@@ -185,26 +185,42 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
     
     public void finish(Database.BatchableContext bc) {
         AsyncApexJob job = [SELECT Id, Status, NumberOfErrors, JobItemsProcessed,
-                        TotalJobItems, CreatedBy.Email
+                        TotalJobItems, CreatedBy.Email, CreatedById
                         FROM AsyncApexJob WHERE Id = :bc.getJobId()];
         
-        // 2. Create email content using an email template
+        // Create email using email template
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-        mail.setToAddresses(new String[] {job.CreatedBy.Email}); // Send to the job creator's email
-        mail.setTemplateId('YOUR_EMAIL_TEMPLATE_ID'); // Replace with the actual email template ID
+        mail.setToAddresses(new String[] {job.CreatedBy.Email});
+        
+        // Get the email template - you can customize the developer name
+        EmailTemplate template = [SELECT Id FROM EmailTemplate 
+                                  WHERE DeveloperName = 'FEC_PushMDM_Batch_Completion' 
+                                  LIMIT 1];
+        
+        if (template != null) {
+            // Use email template
+            mail.setTemplateId(template.Id);
+            mail.setTargetObjectId(job.CreatedById);
+            mail.setWhatId(null);
+        } else {
+            // Fallback: Create plain text email if template doesn't exist
+            mail.setSubject('FEC PushMDM Batch Job Completion Report');
+            
+            String emailBody = 'Batch Job Status Report\n\n';
+            emailBody += 'Job Status: ' + job.Status + '\n';
+            emailBody += 'Job Items Processed: ' + job.JobItemsProcessed + '\n';
+            emailBody += 'Total Job Items: ' + job.TotalJobItems + '\n';
+            emailBody += 'Number of Errors: ' + job.NumberOfErrors + '\n';
+            
+            if (!uniqueErrors.isEmpty()) {
+                emailBody += '\nErrors Encountered:\n';
+                emailBody += String.join(new List<String>(uniqueErrors), '\n');
+            }
+            
+            mail.setPlainTextBody(emailBody);
+        }
 
-        // Set merge fields for the email template
-        Map<String, Object> templateMergeFields = new Map<String, Object>{
-            'JobStatus' => job.Status,
-            'JobItemsProcessed' => job.JobItemsProcessed,
-            'TotalJobItems' => job.TotalJobItems,
-            'NumberOfErrors' => job.NumberOfErrors,
-            'UniqueErrors' => String.join(new List<String>(uniqueErrors), '\n')
-        };
-        mail.setWhatId(null); // Set if the template requires a related record ID
-        mail.setTemplateMergeFields(templateMergeFields);
-
-        // 3. Send email
+        // Send email
         if (!Test.isRunningTest()) {
             Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
         }

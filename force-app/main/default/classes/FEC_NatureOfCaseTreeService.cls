@@ -103,7 +103,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
             Database.insert(newRecord);
             newRecordId = (String)newRecord.get(FEC_Constants.FIELD_ID);
         } catch (DmlException e) {
-            throw new AuraHandledException(Label.c.LABEL_ERROR_SAVE_LOOKUP + ' (' + strObjectType + '). Chi tiết lỗi: ' + e.getMessage());
+            throw new AuraHandledException(Label.LABEL_ERROR_SAVE_LOOKUP + ' (' + strObjectType + '). Chi tiết lỗi: ' + e.getMessage());
         }
         
         try {
@@ -145,7 +145,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
             
             Database.insert(nocRecord);
         } catch (Exception e) {
-            throw new AuraHandledException(Label.c.LABEL_ERROR_LINK_NATURE_OF_CASE + ': ' + e.getMessage());
+            throw new AuraHandledException(Label.LABEL_ERROR_LINK_NATURE_OF_CASE + ': ' + e.getMessage());
         }
         return newRecordId;
     }
