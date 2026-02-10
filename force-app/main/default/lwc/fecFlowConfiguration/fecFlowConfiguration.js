@@ -1,7 +1,7 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import createCaseStage from '@salesforce/apex/FEC_MasterDataSettingController.createCaseStage';
 import getCaseStageOptionsByBP from '@salesforce/apex/FEC_MasterDataSettingController.getCaseStageOptionsByBP';
-import { showLog } from 'c/fecUtils';
+import { showLog } from 'c/fecMDMUtils';
 import LABEL_FLOW_STAGES_TITLE from '@salesforce/label/c.FEC_Flow_Stages_Title';
 import LABEL_ADD_STAGE from '@salesforce/label/c.FEC_Add_Stage';
 import LABEL_STAGE_PREFIX from '@salesforce/label/c.FEC_Label_Stage';

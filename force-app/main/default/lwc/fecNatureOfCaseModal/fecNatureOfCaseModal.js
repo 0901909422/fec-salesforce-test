@@ -3,7 +3,7 @@ import LightningModal from 'lightning/modal'; // 👈 Sử dụng LightningModal
 import saveNewLookupNode from '@salesforce/apex/FEC_NatureOfCaseTreeController.saveNewLookupNode';
 import getNextPosOrder from '@salesforce/apex/FEC_NatureOfCaseTreeController.getNextPosOrder'; // Import mới
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { showLog } from 'c/fecUtils';
+import { showLog } from 'c/fecMDMUtils';
 import LABEL_LABEL_CUSTOMERTYPE from '@salesforce/label/c.FEC_Label_CustomerType';
 import LABEL_FIELD_ID from '@salesforce/label/c.FEC_Label_Field_ID';
 import LABEL_ALIAS from '@salesforce/label/c.FEC_Label_Alias';

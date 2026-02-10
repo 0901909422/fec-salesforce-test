@@ -1,7 +1,7 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import fetchAllMasterDataMappings from '@salesforce/apex/FEC_NatureOfCaseTreeService.fetchAllMasterDataMappings';
 import updateNode from '@salesforce/apex/FEC_NatureOfCaseTreeController.updateNode';
-import { showLog } from 'c/fecUtils'; // Import hàm chung
+import { showLog } from 'c/fecMDMUtils';
 import LABEL_ALIAS from '@salesforce/label/c.FEC_Label_Alias';
 import LABEL_NAME_EN from '@salesforce/label/c.FEC_Label_Name_EN';
 import LABEL_NAME_VN from '@salesforce/label/c.FEC_Label_Name_VN';

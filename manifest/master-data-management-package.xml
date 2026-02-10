@@ -486,7 +486,7 @@
         <members>fecNatureOfCaseTree</members>
         <members>fecNatureOfCaseTreeItem</members>
         <members>fecServiceTypeMapping</members>
-        <members>fecUtils</members>
+        <members>fecMDMUtils</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

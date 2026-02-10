@@ -1,4 +1,4 @@
-import { showLog } from 'c/fecUtils';
+import { showLog } from 'c/fecMDMUtils';
 import { LightningElement, api, track } from 'lwc';
 import LABEL_BUTTON_ADD_CHILD from '@salesforce/label/c.FEC_Button_Add_Child';
 import LABEL_BUTTON_DELETE from '@salesforce/label/c.FEC_Button_Delete';

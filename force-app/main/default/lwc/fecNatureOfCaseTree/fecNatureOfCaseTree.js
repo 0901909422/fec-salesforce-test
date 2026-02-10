@@ -4,7 +4,7 @@ import deleteNodeApex from '@salesforce/apex/FEC_NatureOfCaseTreeController.dele
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 import FECNatureOfCaseModal from 'c/fecNatureOfCaseModal';
-import { showLog } from 'c/fecUtils';
+import { showLog } from 'c/fecMDMUtils';
 import LABEL_TREE_TITLE from '@salesforce/label/c.FEC_Tree_Title';
 import LABEL_PLACEHOLDER_SEARCH_TREE from '@salesforce/label/c.FEC_Placeholder_Search_Tree';
 import LABEL_SHOW_FIELD from '@salesforce/label/c.FEC_Label_Show_Field';

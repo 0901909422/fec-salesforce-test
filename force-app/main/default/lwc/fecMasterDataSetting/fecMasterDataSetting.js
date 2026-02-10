@@ -4,7 +4,7 @@ import deleteMasterDataSetting from '@salesforce/apex/FEC_MasterDataSettingContr
 import saveMasterDataSetting from '@salesforce/apex/FEC_MasterDataSettingController.saveMasterDataSetting';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
-import { showLog } from 'c/fecUtils';
+import { showLog } from 'c/fecMDMUtils';
 import LABEL_COL_CHANNEL from '@salesforce/label/c.FEC_Col_Channel';
 import LABEL_COL_APPLICABLE_ROLE from '@salesforce/label/c.FEC_Col_Applicable_Role';
 import LABEL_COL_PROPERTY_NAME from '@salesforce/label/c.FEC_Col_Property_Name';

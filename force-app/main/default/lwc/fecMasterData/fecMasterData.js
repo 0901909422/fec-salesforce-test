@@ -1,7 +1,7 @@
 import { LightningElement } from 'lwc';
 import LightningConfirm from 'lightning/confirm';
 import LightningAlert from 'lightning/alert';
-import { showLog } from 'c/fecUtils';
+import { showLog } from 'c/fecMDMUtils';
 
 export default class FecMasterData extends LightningElement {
     selectedItem = {};
