@@ -1,7 +1,10 @@
 import { LightningElement, wire, track } from "lwc";
 import { CurrentPageReference } from "lightning/navigation";
 import getCaseListViewAll from "@salesforce/apex/FEC_InteractionInforHandler.getCaseListViewAll";
+import PAGINATION_PAGE_OF from "@salesforce/label/c.Pagination_Page_Of_Label";
 
+import NEXT_BTN from "@salesforce/label/c.FEC_Next_Btn_Label";
+import PREV_BTN from "@salesforce/label/c.FEC_Previous_Btn_Label";
 const COLUMNS = [
   {
     label: "Case ID",
@@ -35,7 +38,10 @@ const COLUMNS = [
 export default class Fec_RelevantInteractionCaseListViewAll extends LightningElement {
   // ===== Datatable =====
   columns = COLUMNS;
-
+  labels = {
+    next: NEXT_BTN,
+    prev: PREV_BTN,
+  };
   // ===== Data =====
   @track data = []; // full data
   @track pagedData = []; // data hiển thị theo page
@@ -112,6 +118,13 @@ export default class Fec_RelevantInteractionCaseListViewAll extends LightningEle
 
   get isLastPage() {
     return this.currentPage === this.totalPages;
+  }
+
+  get pageInfoLabel() {
+    return PAGINATION_PAGE_OF.replace("{0}", this.currentPage).replace(
+      "{1}",
+      this.totalPages,
+    );
   }
 
   // ===== Utils =====

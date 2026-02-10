@@ -1,7 +1,10 @@
 import { LightningElement, wire, track } from "lwc";
 import { CurrentPageReference } from "lightning/navigation";
 import getRelevantCasesViewAll from "@salesforce/apex/FEC_InteractionInforHandler.getRelevantCasesViewAll";
+import PAGINATION_PAGE_OF from "@salesforce/label/c.Pagination_Page_Of_Label";
 
+import NEXT_BTN from "@salesforce/label/c.FEC_Next_Btn_Label";
+import PREV_BTN from "@salesforce/label/c.FEC_Previous_Btn_Label";
 const COLUMNS = [
   {
     label: "Case ID",
@@ -13,10 +16,10 @@ const COLUMNS = [
     },
   },
   { label: "Case Status", fieldName: "FEC_Case_Status__c" },
-//   {
-//     label: "Account / Contract Number",
-//     fieldName: "accountContractNumber",
-//   },
+  {
+    label: "Account / Contract Number",
+    fieldName: "accountContractNumber",
+  },
   { label: "Sub Category", fieldName: "subCategory" },
   { label: "Sub Code", fieldName: "subCode" },
   {
@@ -34,6 +37,10 @@ const COLUMNS = [
 
 export default class Fec_RelevantCaseListViewAll extends LightningElement {
   columns = COLUMNS;
+  labels = {
+    next: NEXT_BTN,
+    prev: PREV_BTN,
+  };
   @track data = []; // full data
   @track pagedData = []; // data hiển thị theo page
   recordId;
@@ -53,6 +60,13 @@ export default class Fec_RelevantCaseListViewAll extends LightningElement {
     }
   }
 
+  get pageInfoLabel() {
+    return PAGINATION_PAGE_OF.replace("{0}", this.currentPage).replace(
+      "{1}",
+      this.totalPages,
+    );
+  }
+
   // ===== Fetch data =====
   async fetchData() {
     try {
@@ -66,8 +80,8 @@ export default class Fec_RelevantCaseListViewAll extends LightningElement {
         subCode: c.FEC_SubCode__r?.FEC_Name_VN__c,
         createdDate: c.FEC_Case_Created_On__c,
         createdBy: c.FEC_Case_Created_By__c,
-        // accountContractNumber:
-        //   c.FEC_Account_or_Contract__r?.FEC_Account_Number__c,
+        accountContractNumber:
+          c.FEC_Account_or_Contract__r?.FEC_Account_Number__c,
       }));
 
       this.data = mapped;

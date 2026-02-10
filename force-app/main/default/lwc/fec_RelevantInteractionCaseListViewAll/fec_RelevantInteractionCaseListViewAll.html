@@ -6,14 +6,14 @@
         <!-- Pagination -->
         <div class="slds-m-top_small slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
             <div>
-                Page {currentPage} of {totalPages}
+                {pageInfoLabel}
             </div>
 
             <div>
-                <lightning-button label="Previous" onclick={handlePrev} disabled={isFirstPage}>
+                <lightning-button label={labels.prev} onclick={handlePrev} disabled={isFirstPage}>
                 </lightning-button>
 
-                <lightning-button class="slds-m-left_x-small" label="Next" onclick={handleNext} disabled={isLastPage}>
+                <lightning-button class="slds-m-left_x-small" label={labels.next} onclick={handleNext} disabled={isLastPage}>
                 </lightning-button>
             </div>
         </div>
