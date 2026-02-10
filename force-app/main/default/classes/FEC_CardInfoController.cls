@@ -6,7 +6,6 @@ public with sharing class FEC_CardInfoController {
     public class CardInfoDTO {
         @AuraEnabled public List<CardDeliveryDTO> cardDeliveries;
         @AuraEnabled public List<OtherCardDTO> otherCards;
-        @AuraEnabled public Map<String, String> helpTexts;
     }
 
     public class CardDeliveryDTO {
@@ -41,13 +40,12 @@ public with sharing class FEC_CardInfoController {
      * Luồng: Query database trước, chỉ call API nếu không có dữ liệu (và chỉ 1 lần duy nhất)
      * Sau khi có dữ liệu trong database, sẽ không gọi API nữa
      * @param caseId - ID của Case record
-     * @param forceRefresh - Nếu true, sẽ xóa dữ liệu cũ và force gọi API lại
      * @return CardInfoDTO chứa card deliveries và other cards
      */
     @AuraEnabled(cacheable=false)
-    public static CardInfoDTO loadCardInfo(Id caseId, Boolean forceRefresh) {
+    public static CardInfoDTO loadCardInfo(Id caseId) {
         if (caseId == null) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
+            throw new AuraHandledException('CaseId is required');
         }
 
         /* ===== TẢI CASE ===== */
@@ -64,7 +62,6 @@ public with sharing class FEC_CardInfoController {
         
         // Tìm Customer History từ Account Number nếu customerHistoryId null (chỉ tìm 1 lần ở đầu)
         if (customerHistoryId == null && String.isNotBlank(accountNumber)) {
-            System.debug('### Customer History ID is null, trying to find by Account Number: ' + accountNumber);
             List<FEC_Customer_History__c> histories = [
                 SELECT Id FROM FEC_Customer_History__c 
                 WHERE FEC_Account_Number__c = :accountNumber 
@@ -72,7 +69,6 @@ public with sharing class FEC_CardInfoController {
             ];
             if (!histories.isEmpty()) {
                 customerHistoryId = histories[0].Id;
-                System.debug('### Found Customer History by Account Number: ' + customerHistoryId);
             }
         }
 
@@ -94,11 +90,9 @@ public with sharing class FEC_CardInfoController {
                     WHERE FEC_Customer_History__c = :customerHistoryId
                     ORDER BY FEC_Issue_Date__c DESC
                 ]);
-            } else {
-                System.debug('### Customer History ID is null, cannot query Card Delivery');
             }
         } catch (Exception e) {
-            System.debug('### Load Card Deliveries FAILED: ' + e.getMessage());
+            System.debug('Load Card Deliveries error: ' + e.getMessage());
         }
 
         /* ===== TẢI OTHER CARDS TỪ DATABASE ===== */
@@ -112,11 +106,9 @@ public with sharing class FEC_CardInfoController {
                     WHERE FEC_Customer_History__c = :customerHistoryId
                     ORDER BY FEC_Expiry_Date__c DESC
                 ]);
-            } else {
-                System.debug('### Customer History ID is null, cannot query Other Cards');
             }
         } catch (Exception e) {
-            System.debug('### Load Other Cards FAILED: ' + e.getMessage());
+            System.debug('Load Other Cards error: ' + e.getMessage());
         }
 
         /* =====================================================
@@ -126,97 +118,104 @@ public with sharing class FEC_CardInfoController {
         Boolean hasCardDeliveryData = dto.cardDeliveries != null && dto.cardDeliveries.size() > 0;
         Boolean hasOtherCardData = dto.otherCards != null && dto.otherCards.size() > 0;
 
-        // Nếu đã có cả 2 loại dữ liệu thì return luôn (không gọi API nữa)
-        if (hasCardDeliveryData && hasOtherCardData) {
-            System.debug('### Found all data in database, returning without API call');
-            return dto;
-        }
-
         /* =====================================================
          * BƯỚC 3: GỌI API CHO TỪNG LOẠI DỮ LIỆU CÒN THIẾU (CHỈ 1 LẦN DUY NHẤT)
+         * Chỉ gọi API nếu chưa có dữ liệu, sau đó chỉ INSERT (không UPSERT)
          * ===================================================== */
-        if (String.isBlank(accountNumber)) {
-            System.debug('### Account Number is blank, cannot call API');
+        if (String.isBlank(accountNumber) || customerHistoryId == null) {
             return dto;
         }
 
-        /* ===== 1. GetStatus API - Card Delivery (chỉ gọi nếu chưa có dữ liệu) ===== */
-        if (!hasCardDeliveryData && customerHistoryId != null) {
-            System.debug('### No Card Delivery data found, calling GetStatus API...');
-            System.debug('### Account Number: ' + accountNumber);
-            System.debug('### Customer History ID: ' + customerHistoryId);
+        // Chỉ gọi API khi CHƯA CÓ dữ liệu (cả Card Delivery hoặc Other Cards)
+        if (!hasCardDeliveryData || !hasOtherCardData) {
             try {
-                FEC_GetStatus.CardDeliveryInfo cardDeliveryInfo = 
-                    FEC_GetStatus.getDeliveryStatus(accountNumber);
-                System.debug('### GetStatus API Response Code: ' + (cardDeliveryInfo != null ? cardDeliveryInfo.responseCode : 'NULL'));
-                if (cardDeliveryInfo != null && cardDeliveryInfo.responseCode == '1') {
-                    System.debug('### Saving Card Delivery to database...');
-                    saveCardDeliveryToDatabase(cardDeliveryInfo, caseId, customerHistoryId);
-                    System.debug('### Card Delivery saved successfully');
-                } else {
-                    System.debug('### GetStatus API returned invalid response or responseCode != 1');
-                }
-            } catch (Exception e) {
-                System.debug('### GetStatus API FAILED: ' + e.getMessage());
-                System.debug('### Stack trace: ' + e.getStackTraceString());
-            }
-        } else if (!hasCardDeliveryData && customerHistoryId == null) {
-            System.debug('### Cannot call GetStatus API: Customer History ID is null');
-        }
-
-        /* ===== 2. GetCardSecInfo API - Other Cards (chỉ gọi nếu chưa có dữ liệu) ===== */
-        if (!hasOtherCardData && customerHistoryId != null) {
-            System.debug('### No Other Card data found, calling GetCardSecInfo API...');
-            System.debug('### Account Number: ' + accountNumber);
-            System.debug('### Customer History ID: ' + customerHistoryId);
-            try {
-                String transId = UUID.randomUUID().toString();
-                String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
-                String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
-                
                 FEC_GetCardSecInfo.ResponseWrapper response = 
-                    FEC_GetCardSecInfo.callGetCardSecInfo(transId, requestorId, dateTimeStr, accountNumber);
-                String responseCodeStr = (response != null && response.Sys != null) ? String.valueOf(response.Sys.Code) : 'NULL';
-                System.debug('### GetCardSecInfo API Response Code: ' + responseCodeStr);
-                System.debug('### Supplementary Cards count: ' + (response != null && response.CardSecInfo != null && response.CardSecInfo.SupplementaryCards != null ? response.CardSecInfo.SupplementaryCards.size() : 0));
-                if (response != null && response.Sys != null && response.Sys.Code == 1 && 
-                    response.CardSecInfo != null && response.CardSecInfo.SupplementaryCards != null &&
-                    !response.CardSecInfo.SupplementaryCards.isEmpty()) {
-                    System.debug('### Saving Supplementary Cards to database...');
-                    saveSupplementaryCardsToDatabase(
-                        response.CardSecInfo.SupplementaryCards, 
-                        accountNumber, 
-                        customerHistoryId
-                    );
-                    System.debug('### Supplementary Cards saved successfully');
-                } else {
-                    System.debug('### GetCardSecInfo API returned no data or failed');
-                    if (response == null) {
-                        System.debug('### response is NULL');
-                    } else if (response.Sys == null) {
-                        System.debug('### response.Sys is NULL');
-                    } else if (response.Sys.Code != 1) {
-                        System.debug('### response.Sys.Code != 1, actual: ' + response.Sys.Code);
-                    } else if (response.CardSecInfo == null) {
-                        System.debug('### response.CardSecInfo is NULL');
-                    } else if (response.CardSecInfo.SupplementaryCards == null || response.CardSecInfo.SupplementaryCards.isEmpty()) {
-                        System.debug('### SupplementaryCards is null or empty');
+                    FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
+                    
+                if (response != null && response.Sys != null && response.Sys.Code == 1 && response.CardSecInfo != null) {
+                    /* ===== Card Deliveries - CHỈ INSERT NẾU CHƯA CÓ ===== */
+                    if (!hasCardDeliveryData) {
+                        // Gọi GetStatus API để lấy thông tin cơ bản
+                        try {
+                            FEC_GetStatus.CardDeliveryInfo cardDeliveryInfo = 
+                                FEC_GetStatus.getDeliveryStatus(accountNumber, caseId);
+                            if (cardDeliveryInfo != null && cardDeliveryInfo.responseCode == '1') {
+                                // INSERT Card Delivery từ GetStatus
+                                FEC_Card_Delivery__c insertedCard = insertCardDeliveryFromGetStatus(
+                                    cardDeliveryInfo, 
+                                    caseId, 
+                                    customerHistoryId
+                                );
+                                
+                                // UPDATE Type of Issue và Delivery Date từ CardSecInfo
+                                // Match theo cardNumber nếu có, nếu không thì lấy delivery đầu tiên
+                                if (insertedCard != null && response.CardSecInfo.CardsDeliveries != null && !response.CardSecInfo.CardsDeliveries.isEmpty()) {
+                                    Boolean needsUpdate = false;
+                                    FEC_GetCardSecInfo.CardsDelivery matchedDelivery = null;
+                                    
+                                    // Tìm delivery matching với card number
+                                    for (FEC_GetCardSecInfo.CardsDelivery delivery : response.CardSecInfo.CardsDeliveries) {
+                                        Boolean isMatch = false;
+                                        if (String.isNotBlank(delivery.CardNumber)) {
+                                            isMatch = compareCardNumbers(insertedCard.FEC_Card_Number__c, delivery.CardNumber);
+                                        }
+                                        
+                                        if (isMatch) {
+                                            matchedDelivery = delivery;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // Nếu không match được theo CardNumber, lấy delivery đầu tiên
+                                    if (matchedDelivery == null && !response.CardSecInfo.CardsDeliveries.isEmpty()) {
+                                        matchedDelivery = response.CardSecInfo.CardsDeliveries[0];
+                                    }
+                                    
+                                    // Update fields từ matched delivery
+                                    if (matchedDelivery != null) {
+                                        if (String.isNotBlank(matchedDelivery.KindOfIssue)) {
+                                            insertedCard.FEC_Type_of_Issue__c = matchedDelivery.KindOfIssue;
+                                            needsUpdate = true;
+                                        }
+                                        if (String.isNotBlank(matchedDelivery.DeliveryDate)) {
+                                            try {
+                                                insertedCard.FEC_Delivery_Date__c = parseDeliveryDate(matchedDelivery.DeliveryDate);
+                                                needsUpdate = true;
+                                            } catch (Exception e) {
+                                                System.debug('Parse delivery date error: ' + e.getMessage());
+                                            }
+                                        }
+                                    }
+                                    
+                                    if (needsUpdate) {
+                                        update insertedCard;
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            System.debug('GetStatus API error: ' + e.getMessage());
+                        }
+                    }
+                    
+                    /* ===== Other Cards - CHỈ INSERT NẾU CHƯA CÓ ===== */
+                    if (!hasOtherCardData && response.CardSecInfo.SupplementaryCards != null && !response.CardSecInfo.SupplementaryCards.isEmpty()) {
+                        insertSupplementaryCards(
+                            response.CardSecInfo.SupplementaryCards, 
+                            customerHistoryId
+                        );
                     }
                 }
             } catch (Exception e) {
-                System.debug('### GetCardSecInfo API FAILED: ' + e.getMessage());
-                System.debug('### Stack trace: ' + e.getStackTraceString());
+                System.debug('CardSecInfo API error: ' + e.getMessage());
             }
-        } else if (!hasOtherCardData && customerHistoryId == null) {
-            System.debug('### Cannot call GetCardSecInfo API: Customer History ID is null');
         }
 
         /* =====================================================
-         * BƯỚC 4: QUERY LẠI DATABASE SAU KHI CALL API
+         * BƯỚC 4: QUERY LẠI DATABASE SAU KHI CALL API ĐỂ LẤY DỮ LIỆU MỚI NHẤT
          * ===================================================== */
-        /* ===== TẢI LẠI CARD DELIVERIES ===== */
-        try {
-            if (customerHistoryId != null) {
+        /* ===== TẢI LẠI CARD DELIVERIES SAU KHI INSERT/UPDATE ===== */
+        if (!hasCardDeliveryData && customerHistoryId != null) {
+            try {
                 List<FEC_Card_Delivery__c> cardDeliveryRecords = [
                     SELECT FEC_Card_Number__c, FEC_Issue_Date__c, FEC_Type_of_Issue__c,
                            FEC_Delivery_Status__c, FEC_Delivery_Date__c, FEC_Recipient__c,
@@ -225,19 +224,15 @@ public with sharing class FEC_CardInfoController {
                     WHERE FEC_Customer_History__c = :customerHistoryId
                     ORDER BY FEC_Issue_Date__c DESC
                 ];
-                System.debug('### Reload Card Deliveries: Found ' + cardDeliveryRecords.size() + ' records');
                 dto.cardDeliveries = mapCardDeliveriesToDTO(cardDeliveryRecords);
-            } else {
-                System.debug('### Customer History ID is null, cannot reload Card Delivery');
+            } catch (Exception e) {
+                System.debug('Reload Card Deliveries error: ' + e.getMessage());
             }
-        } catch (Exception e) {
-            System.debug('### Reload Card Deliveries FAILED: ' + e.getMessage());
-            System.debug('### Stack trace: ' + e.getStackTraceString());
         }
 
-        /* ===== TẢI LẠI OTHER CARDS ===== */
-        try {
-            if (customerHistoryId != null) {
+        /* ===== TẢI LẠI OTHER CARDS SAU KHI INSERT ===== */
+        if (!hasOtherCardData && customerHistoryId != null) {
+            try {
                 List<FEC_Other_Card__c> otherCardRecords = [
                     SELECT FEC_Cardholder__c, FEC_Card_Number__c, FEC_Plastic_ID__c,
                            FEC_Expiry_Date__c, FEC_Embossing_Name__c, FEC_Card_Activation_Date__c,
@@ -246,14 +241,10 @@ public with sharing class FEC_CardInfoController {
                     WHERE FEC_Customer_History__c = :customerHistoryId
                     ORDER BY FEC_Expiry_Date__c DESC
                 ];
-                System.debug('### Reload Other Cards: Found ' + otherCardRecords.size() + ' records');
                 dto.otherCards = mapOtherCardsToDTO(otherCardRecords);
-            } else {
-                System.debug('### Customer History ID is null, cannot reload Other Cards');
+            } catch (Exception e) {
+                System.debug('Reload Other Cards error: ' + e.getMessage());
             }
-        } catch (Exception e) {
-            System.debug('### Reload Other Cards FAILED: ' + e.getMessage());
-            System.debug('### Stack trace: ' + e.getStackTraceString());
         }
 
         return dto;
@@ -272,52 +263,47 @@ public with sharing class FEC_CardInfoController {
      */
     private static String getAccountNumber(Case c) {
         if (c.FEC_Account_or_Contract__c != null) {
-            FEC_Customer_History__c h = [
+            List<FEC_Customer_History__c> histories = [
                 SELECT FEC_Account_Number__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :c.FEC_Account_or_Contract__c
                 LIMIT 1
             ];
-            if (String.isNotBlank(h.FEC_Account_Number__c)) {
-                return h.FEC_Account_Number__c;
+            if (!histories.isEmpty() && String.isNotBlank(histories[0].FEC_Account_Number__c)) {
+                return histories[0].FEC_Account_Number__c;
             }
         }
         return c.FEC_Account_Number__c;
     }
     
     /**
-     * Lưu dữ liệu Card Delivery vào database (chỉ INSERT, không UPDATE)
+     * INSERT Card Delivery từ GetStatus API (chỉ INSERT, không UPDATE)
      * Method này chỉ được gọi 1 lần duy nhất khi chưa có dữ liệu trong database
-     * @param info - Thông tin Card Delivery từ API
+     * @param info - Thông tin Card Delivery từ GetStatus API
      * @param caseId - ID của Case record
      * @param customerHistoryId - ID của Customer History record (required field)
      */
-    private static void saveCardDeliveryToDatabase(FEC_GetStatus.CardDeliveryInfo info, String caseId, Id customerHistoryId) {
-        if (String.isBlank(info.cardNumber)) {
-            System.debug('### Card Number is blank, cannot save Card Delivery');
-            return;
-        }
-        
-        if (customerHistoryId == null) {
-            System.debug('### Customer History ID is null, cannot save Card Delivery');
-            return;
+    private static FEC_Card_Delivery__c insertCardDeliveryFromGetStatus(FEC_GetStatus.CardDeliveryInfo info, String caseId, Id customerHistoryId) {
+        if (String.isBlank(info.cardNumber) || customerHistoryId == null) {
+            return null;
         }
 
         try {
             String maskedCardNumber = FEC_CommonUltils.maskCardNumber(info.cardNumber);
-            System.debug('### Masked Card Number: ' + maskedCardNumber);
             
             // Kiểm tra xem đã có record chưa (chỉ INSERT nếu chưa có)
             List<FEC_Card_Delivery__c> existing = [
-                SELECT Id FROM FEC_Card_Delivery__c 
+                SELECT Id, FEC_Card_Number__c, FEC_Issue_Date__c, FEC_Type_of_Issue__c,
+                       FEC_Delivery_Status__c, FEC_Delivery_Date__c, FEC_Recipient__c,
+                       FEC_Tracking_Number__c, FEC_Delivery_Note__c
+                FROM FEC_Card_Delivery__c 
                 WHERE FEC_Card_Number__c = :maskedCardNumber AND FEC_Customer_History__c = :customerHistoryId
                 LIMIT 1
             ];
 
-            // Nếu đã có record → không làm gì (không update)
+            // Nếu đã có record → return existing record (không update)
             if (!existing.isEmpty()) {
-                System.debug('### Card Delivery record already exists, skipping insert');
-                return;
+                return existing[0];
             }
 
             // Chỉ INSERT record mới
@@ -334,69 +320,127 @@ public with sharing class FEC_CardInfoController {
                 try {
                     record.FEC_Issue_Date__c = Date.valueOf(info.issueDate);
                 } catch (Exception e) {
-                    System.debug('### Invalid issueDate format: ' + info.issueDate);
+                    // Invalid date format
                 }
             }
             
-            System.debug('### Inserting Card Delivery record...');
             insert record;
-            System.debug('### Card Delivery record inserted successfully, ID: ' + record.Id);
+            return record;
         } catch (Exception e) {
-            System.debug('### Save Card Delivery FAILED: ' + e.getMessage());
-            System.debug('### Stack trace: ' + e.getStackTraceString());
+            System.debug('Save Card Delivery error: ' + e.getMessage());
+            return null;
         }
     }
 
+
+
     /**
-     * Lưu dữ liệu Supplementary Cards từ API vào FEC_Other_Card__c (chỉ INSERT, không UPDATE)
-     * Method này chỉ được gọi 1 lần duy nhất khi chưa có dữ liệu trong database
-     * @param suppList - Danh sách SupplementaryCard từ API
-     * @param accountNumber - Số tài khoản
-     * @param customerHistoryId - ID Customer History từ Case (ưu tiên dùng ID này)
+     * Parse delivery date từ nhiều format khác nhau
+     * Hỗ trợ: 1/1/2024, 01/01/2024, 2024-01-01, yyyyMMdd, etc.
+     * Tái sử dụng FEC_CommonUltils.parseDate cho format yyyyMMdd và yyyy-MM-dd.
      */
-    private static void saveSupplementaryCardsToDatabase(List<FEC_GetCardSecInfo.SupplementaryCard> suppList, String accountNumber, Id customerHistoryId) {
-        System.debug('### saveSupplementaryCardsToDatabase called with ' + suppList.size() + ' cards');
+    private static Date parseDeliveryDate(String dateStr) {
+        if (String.isBlank(dateStr)) return null;
         
-        if (customerHistoryId == null) {
-            System.debug('### ERROR: Customer History ID is null, cannot save Supplementary Cards');
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Customer History ID'}));
+        try {
+            // Format có dấu /: M/d/yyyy hoặc MM/dd/yyyy (1/1/2024 hoặc 01/01/2024)
+            if (dateStr.contains('/')) {
+                List<String> parts = dateStr.split('/');
+                if (parts.size() == 3) {
+                    Integer month = Integer.valueOf(parts[0]);
+                    Integer day = Integer.valueOf(parts[1]);
+                    Integer year = Integer.valueOf(parts[2]);
+                    return Date.newInstance(year, month, day);
+                }
+            }
+            
+            // Format yyyyMMdd, yyyy-MM-dd, 00000000: dùng chung FEC_CommonUltils.parseDate
+            return FEC_CommonUltils.parseDate(dateStr);
+        } catch (Exception e) {
+            System.debug('parseDeliveryDate error for "' + dateStr + '": ' + e.getMessage());
         }
         
-        System.debug('### Using Customer History ID: ' + customerHistoryId);
+        return null;
+    }
+    
+    /**
+     * So sánh 2 card numbers (có thể masked với format khác nhau)
+     * Chỉ compare 6 số đầu và 4 số cuối (bỏ qua phần mask)
+     * @param card1 - Card number 1 (có thể masked hoặc full)
+     * @param card2 - Card number 2 (có thể masked hoặc full)
+     * @return true nếu 6 số đầu và 4 số cuối giống nhau
+     */
+    private static Boolean compareCardNumbers(String card1, String card2) {
+        if (String.isBlank(card1) || String.isBlank(card2)) {
+            return false;
+        }
         
-        // Query các records cũ để kiểm tra (chỉ INSERT nếu chưa có)
-        List<FEC_Other_Card__c> existingRecords = [
-            SELECT Id, FEC_Card_Number__c, FEC_Customer_History__c
-            FROM FEC_Other_Card__c 
+        // Remove spaces and convert to uppercase
+        card1 = card1.replaceAll('\\s+', '').toUpperCase();
+        card2 = card2.replaceAll('\\s+', '').toUpperCase();
+        
+        // Both cards must be at least 10 characters
+        if (card1.length() < 10 || card2.length() < 10) {
+            return false;
+        }
+        
+        // Extract first 6 digits and last 4 digits
+        String card1First6 = card1.substring(0, 6);
+        String card1Last4 = card1.substring(card1.length() - 4);
+        
+        String card2First6 = card2.substring(0, 6);
+        String card2Last4 = card2.substring(card2.length() - 4);
+        
+        // Compare only digits (ignore X, *, or other mask characters)
+        return card1First6.equals(card2First6) && card1Last4.equals(card2Last4);
+    }
+    
+    /**
+     * INSERT Supplementary Cards từ CardSecInfo API (chỉ INSERT, không UPDATE)
+     * Method này chỉ được gọi 1 lần duy nhất khi chưa có dữ liệu trong database
+     * @param suppList - Danh sách SupplementaryCard từ API
+     * @param customerHistoryId - ID Customer History từ Case
+     */
+    private static List<FEC_Other_Card__c> insertSupplementaryCards(List<FEC_GetCardSecInfo.SupplementaryCard> suppList, Id customerHistoryId) {
+        if (customerHistoryId == null) {
+            throw new AuraHandledException('Customer History ID is required to save Supplementary Cards');
+        }
+        
+        // Query tất cả existing Other Cards trong database
+        List<FEC_Other_Card__c> existingCards = [
+            SELECT FEC_Card_Number__c
+            FROM FEC_Other_Card__c
             WHERE FEC_Customer_History__c = :customerHistoryId
         ];
         
-        System.debug('### Found ' + existingRecords.size() + ' existing Other Card records');
-        
-        // Tạo Set để kiểm tra nhanh CardNumber đã tồn tại chưa
+        // Build Set để check duplicate nhanh
         Set<String> existingCardNumbers = new Set<String>();
-        for (FEC_Other_Card__c existing : existingRecords) {
-            if (String.isNotBlank(existing.FEC_Card_Number__c)) {
-                existingCardNumbers.add(existing.FEC_Card_Number__c);
+        for (FEC_Other_Card__c card : existingCards) {
+            if (String.isNotBlank(card.FEC_Card_Number__c)) {
+                existingCardNumbers.add(card.FEC_Card_Number__c);
             }
         }
         
         List<FEC_Other_Card__c> recordsToInsert = new List<FEC_Other_Card__c>();
+        Set<String> processedCardNumbers = new Set<String>(); // Tránh duplicate TRONG response
 
         for (FEC_GetCardSecInfo.SupplementaryCard item: suppList) {
             // Validate: Phải có số thẻ mới lưu
             if (String.isBlank(item.CardNumber)) {
-                System.debug('### Skipping card with blank CardNumber');
                 continue;
             }
 
-            // Nếu CardNumber đã tồn tại → bỏ qua (không insert, không update)
+            // Tránh duplicate CardNumber TRONG database (đã tồn tại)
             if (existingCardNumbers.contains(item.CardNumber)) {
-                System.debug('### Other Card already exists: ' + item.CardNumber + ', skipping insert');
+                continue;
+            }
+
+            // Tránh duplicate CardNumber TRONG response (nếu API trả về duplicate)
+            if (processedCardNumbers.contains(item.CardNumber)) {
                 continue;
             }
             
-            // Chỉ INSERT record mới (CardNumber chưa tồn tại)
+            // INSERT record mới
             FEC_Other_Card__c record = new FEC_Other_Card__c();
             record.FEC_Customer_History__c = customerHistoryId;
             record.FEC_Card_Number__c = item.CardNumber;
@@ -406,35 +450,64 @@ public with sharing class FEC_CardInfoController {
             record.FEC_Block_Code__c = item.BlockCode;
             record.FEC_Gender__c = item.Gender;
             
-            // Ánh xạ các trường Date (CardIssueDate và CardActivationDate giờ là Date type, ExpiryDate vẫn là String)
-            record.FEC_Expiry_Date__c = FEC_CommonUltils.parseDate(item.ExpiryDate);
+            // Ánh xạ các trường Date
+            record.FEC_Expiry_Date__c = convertDateSafeForOtherCard(item.ExpiryDate);
             record.FEC_Card_Activation_Date__c = item.CardActivationDate; // Đã là Date type
             record.FEC_Issue_Date__c = item.CardIssueDate; // Đã là Date type
             
             recordsToInsert.add(record);
-            System.debug('### Creating new Other Card: ' + item.CardNumber);
+            processedCardNumbers.add(item.CardNumber); // Đánh dấu đã xử lý
         }
-        
-        System.debug('### Total records to insert: ' + recordsToInsert.size());
         
         if (!recordsToInsert.isEmpty()) {
             try {
-                System.debug('### Inserting ' + recordsToInsert.size() + ' Other Card records...');
                 insert recordsToInsert;
-                System.debug('### Other Card records inserted successfully');
+                return recordsToInsert;
             } catch (Exception e) {
-                System.debug('### Save Supplementary Cards FAILED: ' + e.getMessage());
-                System.debug('### Stack trace: ' + e.getStackTraceString());
-                throw new AuraHandledException(e.getMessage());
+                System.debug('Insert Supplementary Cards error: ' + e.getMessage());
+                throw new AuraHandledException('Lỗi lưu dữ liệu: ' + e.getMessage());
             }
-        } else {
-            System.debug('### No new Other Card records to insert');
         }
+        
+        return new List<FEC_Other_Card__c>();
     }
     
     /* =====================================================
      * CÁC METHOD ÁNH XẠ - CHUYỂN ĐỔI DTO
      * ===================================================== */
+
+    /**
+     * Chuyển đổi chuỗi date từ API sang Date object cho Other Cards
+     * Hỗ trợ các format: yyyyMMdd, yyyy-MM-dd, MM/dd/yyyy.
+     * Tái sử dụng FEC_CommonUltils.parseDate cho format yyyyMMdd và yyyy-MM-dd.
+     * @param dateStr - Chuỗi date từ API
+     * @return Date object hoặc null nếu không parse được
+     */
+    private static Date convertDateSafeForOtherCard(String dateStr) {
+        if (String.isBlank(dateStr)) {
+            return null;
+        }
+        
+        try {
+            // Format MM/dd/yyyy hoặc M/d/yyyy (thứ tự month/day/year)
+            if (dateStr.contains('/')) {
+                List<String> parts = dateStr.split('/');
+                if (parts.size() == 3) {
+                    Integer month = Integer.valueOf(parts[0]);
+                    Integer day = Integer.valueOf(parts[1]);
+                    Integer year = Integer.valueOf(parts[2]);
+                    return Date.newInstance(year, month, day);
+                }
+            }
+            
+            // Format yyyyMMdd, yyyy-MM-dd, 00000000: dùng chung FEC_CommonUltils.parseDate
+            return FEC_CommonUltils.parseDate(dateStr);
+        } catch (Exception e) {
+            System.debug('convertDateSafeForOtherCard error for "' + dateStr + '": ' + e.getMessage());
+        }
+        
+        return null;
+    }
 
     /**
      * Ánh xạ Card Delivery records sang DTO

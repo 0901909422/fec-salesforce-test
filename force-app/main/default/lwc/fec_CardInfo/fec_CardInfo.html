@@ -11,7 +11,7 @@
                             class="slds-m-right_x-small">
                         </lightning-icon>
                         <span>
-                            {customLabel.cardDeliveryLabel}
+                            Card Delivery
                             <template if:true={hasCardDeliveryError}>
                                 <span class="error-text"> - {ERROR_MESSAGE}</span>
                             </template>
@@ -27,16 +27,20 @@
                 </template>
                 
                 <template if:false={isCardDeliveryLoading}>
-                    <c-fec_-related-list-paging
+                    <c-fec_-related-list-addresses-paging
                         columns={cardDeliveryColumns}
                         records={cardDeliveryData}
-                        updated-time={cardDeliveryUpdatedTime}>
-                    </c-fec_-related-list-paging>
+                        updated-time={cardDeliveryUpdatedTime}
+                        default-sorted-by="FEC_Issue_Date_Formatted__c"
+                        default-sort-direction="desc"
+                        hide-row-number={hideCardDeliveryRowNumber}
+                        hide-updated-time={hideCardDeliveryRowNumber}>
+                    </c-fec_-related-list-addresses-paging>
                 </template>
             </div>
         </section>
 
-        <!-- Other Card Section -->
+        <!-- Other Cards Section -->
         <section class={otherCardSectionClass}>
             <div class="slds-accordion__summary" onclick={handleOtherCardToggle}>
                 <h3 class="slds-accordion__summary-heading">
@@ -47,7 +51,7 @@
                             class="slds-m-right_x-small">
                         </lightning-icon>
                         <span>
-                            {customLabel.otherCardLabel}
+                            Other Cards
                             <template if:true={hasOtherCardError}>
                                 <span class="error-text"> - {ERROR_MESSAGE}</span>
                             </template>
@@ -63,11 +67,18 @@
                 </template>
                 
                 <template if:false={isOtherCardLoading}>
-                    <c-fec_-related-list-paging
-                        columns={otherCardColumns}
-                        records={otherCardData}
-                        updated-time={otherCardUpdatedTime}>
-                    </c-fec_-related-list-paging>
+                    <template if:false={hasOtherCardError}>
+                        <template if:true={otherCardDataLoaded}>
+                            <c-fec_-related-list-addresses-paging
+                                columns={otherCardColumns}
+                                records={otherCardData}
+                                updated-time={otherCardUpdatedTime}
+                                default-sorted-by="FEC_Issue_Date_Formatted__c"
+                                default-sort-direction="desc"
+                                hide-updated-time={hideCardDeliveryRowNumber}>
+                            </c-fec_-related-list-addresses-paging>
+                        </template>
+                    </template>
                 </template>
             </div>
         </section>

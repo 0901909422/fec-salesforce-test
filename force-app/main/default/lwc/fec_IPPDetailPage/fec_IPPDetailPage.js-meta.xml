@@ -3,13 +3,13 @@
     <apiVersion>65.0</apiVersion>
     <isExposed>true</isExposed>
     <targets>
+        <target>lightning__AppPage</target>
         <target>lightning__RecordPage</target>
+        <target>lightning__HomePage</target>
     </targets>
     <targetConfigs>
-        <targetConfig targets="lightning__RecordPage">
-            <objects>
-                <object>FEC_IPP__c</object>
-            </objects>
+        <targetConfig targets="lightning__AppPage,lightning__RecordPage,lightning__HomePage">
+            <property name="recordId" type="String" label="Record ID" description="IPP Record ID"/>
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>
