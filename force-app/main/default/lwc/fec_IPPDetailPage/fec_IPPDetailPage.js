@@ -27,6 +27,13 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     // Help text map for field inline help (giống IPPDetails / Card Payment)
     helpTextMap = {};
     
+    // Flag để đảm bảo chỉ load schedule 1 lần
+    _scheduleLoaded = false;
+    
+    // Retry counter cho việc load schedules
+    _scheduleRetryCount = 0;
+    _maxRetries = 1; // Retry tối đa 1 lần
+    
     connectedCallback() {
         this.loadHelpText();
     }
@@ -51,17 +58,16 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
             if (recordDataStr) {
                 try {
                     this.ippRecord = JSON.parse(recordDataStr);
-                    // Defer để state/recordId đã commit; tránh lần đầu wire chạy sớm mà schedule chưa load
+                    // Load IPP Schedule ngay khi có đủ recordId và chưa load
                     // Sales Info hiển thị ngay vì lấy từ recordData (state), Schedule cần gọi getIPPScheduleData
-                    setTimeout(() => {
-                        if (this.recordId) {
-                            this.loadIPPSchedules();
-                        } else {
-                            this.isLoading = false;
-                        }
-                    }, 0);
+                    if (this.recordId && !this._scheduleLoaded) {
+                        this._scheduleLoaded = true;
+                        this.loadIPPSchedules();
+                    } else if (!this.recordId) {
+                        this.isLoading = false;
+                    } else {
+                    }
                 } catch (e) {
-                    console.error('Error parsing record data:', e);
                     this.isLoading = false;
                 }
             } else {
@@ -77,9 +83,23 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
             return;
         }
         
+
         getIPPScheduleData({ ippId: this.recordId })
             .then(data => {
                 const schedules = (data && data.schedules) ? data.schedules : [];
+                
+                // Nếu không có schedules và chưa retry, đợi 1s rồi retry (API đã insert nhưng query chưa kịp thấy)
+                if (schedules.length === 0 && this._scheduleRetryCount < this._maxRetries) {
+                    this._scheduleRetryCount++;
+                    setTimeout(() => {
+                        this.retryLoadSchedules();
+                    }, 1000);
+                    return; // Không set isLoading = false, giữ spinner
+                }
+                
+                if (schedules.length === 0) {
+                }
+                
                 if (schedules.length > 0) {
                     this.ippSchedules = schedules.map(schedule => {
                         const formattedSchedule = {
@@ -115,6 +135,79 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
                     this.ippSchedules = [];
                 }
                 // Cập nhật totals + Sales Info từ API/DB (getIPPScheduleData đã query DB và gọi API Sales Info nếu thiếu)
+                if (this.ippRecord && data) {
+                    const rec = data.ippRecord || {};
+                    this.ippRecord = {
+                        ...this.ippRecord,
+                        totalIPPPaymentAmount: data.totalPaymentAmount,
+                        totalIPPMonthlyPrincipal: data.totalMonthlyPrincipal,
+                        totalIPPMonthlyInterest: data.totalMonthlyInterest,
+                        applicationId: rec.FEC_Application_ID__c ?? this.ippRecord.applicationId,
+                        ccCode: rec.FEC_CC_Code__c ?? this.ippRecord.ccCode,
+                        ccName: rec.FEC_CC_Name__c ?? this.ippRecord.ccName,
+                        dsaCode: rec.FEC_DSA_Code__c ?? this.ippRecord.dsaCode,
+                        dsaName: rec.FEC_DSA_Name__c ?? this.ippRecord.dsaName,
+                        tsaCode: rec.FEC_TSA_Code__c ?? this.ippRecord.tsaCode,
+                        tsaName: rec.FEC_TSA_Name__c ?? this.ippRecord.tsaName,
+                        originationChannel: rec.FEC_Origination_Channel__c ?? this.ippRecord.originationChannel,
+                        disbursementChannel: rec.FEC_Disbursement_Channel__c ?? this.ippRecord.disbursementChannel
+                    };
+                }
+                this.isLoading = false;
+            })
+            .catch(error => {
+                this.ippSchedules = [];
+                this.isLoading = false;
+            });
+    }
+    
+    // Retry loading schedules - gọi lại API để query DB sau khi API đã insert xong
+    retryLoadSchedules() {
+        if (!this.recordId) {
+            this.isLoading = false;
+            return;
+        }
+        
+        getIPPScheduleData({ ippId: this.recordId })
+            .then(data => {
+                const schedules = (data && data.schedules) ? data.schedules : [];
+                
+                if (schedules.length > 0) {
+                    this.ippSchedules = schedules.map(schedule => {
+                        const formattedSchedule = {
+                            Id: schedule.Id,
+                            paymentNo: schedule.FEC_IPP_Payment_No__c,
+                            openingBalance: formatCurrency(schedule.FEC_IPP_Opening_Balance__c || 0, 0),
+                            paymentAmount: formatCurrency(schedule.FEC_IPP_Payment_Amount__c || 0, 0),
+                            monthlyPrincipal: formatCurrency(schedule.FEC_IPP_Monthly_Principal__c || 0, 0),
+                            monthlyInterest: formatCurrency(schedule.FEC_IPP_Monthly_Interest__c || 0, 0),
+                            openingBalanceRaw: schedule.FEC_IPP_Opening_Balance__c || 0,
+                            paymentAmountRaw: schedule.FEC_IPP_Payment_Amount__c || 0,
+                            monthlyPrincipalRaw: schedule.FEC_IPP_Monthly_Principal__c || 0,
+                            monthlyInterestRaw: schedule.FEC_IPP_Monthly_Interest__c || 0
+                        };
+                        const processedSchedule = autoHighlightNegativeCurrency(formattedSchedule);
+                        const fieldClassMapping = {
+                            'openingBalanceRawClass': 'openingBalanceClass',
+                            'paymentAmountRawClass': 'paymentAmountClass',
+                            'monthlyPrincipalRawClass': 'monthlyPrincipalClass',
+                            'monthlyInterestRawClass': 'monthlyInterestClass'
+                        };
+                        Object.keys(fieldClassMapping).forEach(fullFieldName => {
+                            if (processedSchedule[fullFieldName]) {
+                                const className = processedSchedule[fullFieldName];
+                                formattedSchedule[fieldClassMapping[fullFieldName]] = className === 'currency-negative'
+                                    ? 'slds-text-color_error'
+                                    : className;
+                            }
+                        });
+                        return formattedSchedule;
+                    });
+                } else {
+                    this.ippSchedules = [];
+                }
+                
+                // Cập nhật totals + Sales Info
                 if (this.ippRecord && data) {
                     const rec = data.ippRecord || {};
                     this.ippRecord = {
