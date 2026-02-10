@@ -29,11 +29,17 @@ export default class Fec_IPPSchedule extends LightningElement {
     // Error state
     hasError = false;
     
-    // Updated time for CustomTablePaging
+    // Updated time for RelatedListAddressesPaging
     updatedTime;
     
-    // Page size for CustomTablePaging
+    // Page size for RelatedListAddressesPaging
     pageSize = 12;
+    
+    // RelatedListAddressesPaging: default sort và tùy chọn hiển thị
+    defaultSortedBy = 'FEC_IPP_Payment_No__c';
+    defaultSortDirection = 'asc';
+    hideRowNumber = false;
+    hideUpdatedTime = false;
     
     columns = [
         { label: 'IPP Payment No.', fieldName: 'FEC_IPP_Payment_No__c', type: 'number', typeAttributes: { minimumFractionDigits: 0, maximumFractionDigits: 0 } },
@@ -164,7 +170,7 @@ export default class Fec_IPPSchedule extends LightningElement {
     
     /**
      * Format schedule data: highlight negative currency values
-     * Giữ original number values để CustomTablePaging sort đúng và format currency
+     * Giữ original number values để RelatedListAddressesPaging sort đúng; component hiển thị giá trị ô theo fieldName
      */
     formatScheduleData() {
         if (!this.scheduleData || this.scheduleData.length === 0) {

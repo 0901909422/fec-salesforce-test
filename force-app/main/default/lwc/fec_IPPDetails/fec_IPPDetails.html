@@ -60,7 +60,7 @@
                         <div class="no-data error">{ERROR_MESSAGE}</div>
                     </template>
                     <template if:true={showTable}>
-                        <c-fec_-related-list-addresses-paging
+                        <c-fec_-related-list-paging
                             columns={columns}
                             records={ippData}
                             page-size={pageSize}
@@ -69,7 +69,7 @@
                             default-sorted-by={defaultSortBy}
                             default-sort-direction={defaultSortDirection}
                             onrowselect={handleRowSelect}>
-                        </c-fec_-related-list-addresses-paging>
+                        </c-fec_-related-list-paging>
                     </template>
                 </template>
                 <template if:true={isLoading}>

@@ -20,6 +20,12 @@
     color: #c23934;
 }
 
+/* Error message when load data failed */
+.no-data-error {
+    color: #c23934;
+    font-weight: 500;
+}
+
 /* Wrap text mặc định cho các cột trong bảng */
 :host lightning-datatable .slds-cell-wrap {
     white-space: normal !important;

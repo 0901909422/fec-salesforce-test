@@ -27,7 +27,7 @@
                 </template>
                 
                 <template if:false={isCardDeliveryLoading}>
-                    <c-fec_-related-list-addresses-paging
+                    <c-fec_-related-list-paging
                         columns={cardDeliveryColumns}
                         records={cardDeliveryData}
                         updated-time={cardDeliveryUpdatedTime}
@@ -35,7 +35,7 @@
                         default-sort-direction="desc"
                         hide-row-number={hideCardDeliveryRowNumber}
                         hide-updated-time={hideCardDeliveryRowNumber}>
-                    </c-fec_-related-list-addresses-paging>
+                    </c-fec_-related-list-paging>
                 </template>
             </div>
         </section>
@@ -69,14 +69,14 @@
                 <template if:false={isOtherCardLoading}>
                     <template if:false={hasOtherCardError}>
                         <template if:true={otherCardDataLoaded}>
-                            <c-fec_-related-list-addresses-paging
+                            <c-fec_-related-list-paging
                                 columns={otherCardColumns}
                                 records={otherCardData}
                                 updated-time={otherCardUpdatedTime}
                                 default-sorted-by="FEC_Issue_Date_Formatted__c"
                                 default-sort-direction="desc"
                                 hide-updated-time={hideCardDeliveryRowNumber}>
-                            </c-fec_-related-list-addresses-paging>
+                            </c-fec_-related-list-paging>
                         </template>
                     </template>
                 </template>

@@ -34,15 +34,23 @@
             </div>
         </template>
         
-        <!-- IPP Schedule Table with CustomTablePaging -->
+        <!-- IPP Schedule Table with RelatedListAddressesPaging -->
+        <template if:true={hasError}>
+            <div class="slds-m-top_small no-data-error">Tải dữ liệu không thành công</div>
+        </template>
         <template if:false={isLoading}>
-            <c-fec_-custom-table-paging
-                columns={columns}
-                records={formattedScheduleData}
-                page-size={pageSize}
-                updated-time={updatedTime}
-                has-error={hasError}>
-            </c-fec_-custom-table-paging>
+            <template if:false={hasError}>
+                <c-fec_-related-list-paging
+                    columns={columns}
+                    records={formattedScheduleData}
+                    page-size={pageSize}
+                    updated-time={updatedTime}
+                    default-sorted-by={defaultSortedBy}
+                    default-sort-direction={defaultSortDirection}
+                    hide-row-number={hideRowNumber}
+                    hide-updated-time={hideUpdatedTime}>
+                </c-fec_-related-list-paging>
+            </template>
         </template>
         </lightning-accordion-section>
 

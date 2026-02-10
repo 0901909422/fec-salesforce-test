@@ -117,14 +117,14 @@
                             
                             <!-- Schedule Table -->
                             <template if:true={hasSchedules}>
-                                <c-fec_-related-list-addresses-paging
+                                <c-fec_-related-list-paging
                                     records={ippSchedules}
                                     columns={scheduleColumns}
                                     page-size="10"
                                     hide-row-number={hideRowNumber}
                                     default-sorted-by="paymentNo"
                                     default-sort-direction="asc">
-                                </c-fec_-related-list-addresses-paging>
+                                </c-fec_-related-list-paging>
                             </template>
                             <template if:false={hasSchedules}>
                                 <div class="slds-text-align_center slds-p-around_medium">
