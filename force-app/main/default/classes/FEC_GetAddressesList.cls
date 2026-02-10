@@ -1,19 +1,16 @@
 /****************************************************************************************
- * File Name    : FEC_GetAddressesList
- * Author       : Quangdv7
- * Date         : 2026-01-21
- * Description  : Get data for API service 
- * ===============================================================
- * Ver      Date           Author              Modification
- * ===============================================================
+* File Name    : FEC_GetAddressesList
+* Author       : Quangdv7
+* Date         : 2026-01-21
+* Description  : Get data for API service
+* ===============================================================
+* Ver      Date           Author              Modification
+* ===============================================================
    1.0      2026-01-21    Quangdv7             Create
+ 
 ****************************************************************************************/
 public with sharing class FEC_GetAddressesList {
-
-    private static final String ENDPOINT = '/CIF_CustomerInfo';
-    private static final String MOCKUP_ENDPOINT = 'https://b55b8c1e-6fce-4a0f-958e-8223b8daee39.mock.pstmn.io';
-    private static final String CIF_NS = 'http://fecredit.com.vn/CIF_CustomerInfo';
-
+ 
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -22,14 +19,14 @@ public with sharing class FEC_GetAddressesList {
         public String CIFNumber;
         public List<AddressInfo> Addresses;
     }
-
+ 
     public class SysResponse {
         public String TransID;
         public String DateTimeStr;
         public Integer Code;
         public String Description;
     }
-
+ 
     public class AddressInfo {
         public String AddressId;
         public String AddressType;
@@ -46,7 +43,7 @@ public with sharing class FEC_GetAddressesList {
         public Integer Years;
         public Integer Months;
     }
-
+ 
     // =========================================================================
     // PUBLIC METHOD
     // =========================================================================
@@ -56,56 +53,43 @@ public with sharing class FEC_GetAddressesList {
         String dateTimeStr,
         String cifNumber
     ) {
-
+ 
         validateRequest(transID, requestorId, dateTimeStr, cifNumber);
-
+ 
+        String soapBody = buildSoapRequest(
+            transID,
+            requestorId,
+            dateTimeStr,
+            cifNumber
+        );
+           
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(
-            apiSetting?.FEC_Call_Mock__c
-                ? MOCKUP_ENDPOINT
-                : apiSetting.FEC_Endpoint__c + ENDPOINT
-        );
-        req.setMethod('POST');
-        req.setTimeout(120000);
-        req.setHeader('Content-Type', 'text/xml; charset=utf-8');
-        req.setHeader(
-            'SOAPAction',
-            'http://fecredit.com.vn/CIF_CustomerInfo/GetAddressesList'
-        );
-
-        req.setBody(
-            buildSoapRequest(
-                transID,
-                requestorId,
-                dateTimeStr,
-                cifNumber
-            )
-        );
-
-        Http http = new Http();
-        HttpResponse res = http.send(req);
-
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Addresses_List');
+ 
+        String endpoint = apiSetting?.FEC_Call_Mock__c
+            ? FEC_MockupEndpoint.GET_ADDRESSES_LIST_ENDPOINT_MOCKUP
+            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+ 
         if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
             throw new CalloutException(
                 String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()})
             );
         }
-
+ 
         ResponseWrapper response = parseResponse(res.getBody());
-
+ 
         if (response.Sys != null && response.Sys.Code != 1) {
             throw new CalloutException(
                 String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
             );
         }
-
+ 
         return response;
     }
 
     // =========================================================================
-    // SOAP REQUEST BUILDER
+    // BUILD SOAP REQUEST
     // =========================================================================
     private static String buildSoapRequest(
         String transID,
@@ -120,35 +104,36 @@ public with sharing class FEC_GetAddressesList {
             FEC_ConstantCommon.SOAP_ENV,
             null
         );
-        envelope.setAttribute('xmlns:cif', CIF_NS);
+
+        envelope.setAttribute(
+            'xmlns:cif',
+            'http://fecredit.com.vn/CIF_CustomerInfo'
+        );
 
         envelope.addChildElement('soapenv:Header', null, null);
 
-        Dom.XmlNode body = envelope.addChildElement(
-            'soapenv:Body',
-            null,
-            null
-        );
+        Dom.XmlNode body = envelope.addChildElement('soapenv:Body', null, null);
 
-        Dom.XmlNode action = body.addChildElement(
+        Dom.XmlNode getAddresses = body.addChildElement(
             'cif:GetAddressesList',
             null,
             null
         );
 
-        Dom.XmlNode sys = action.addChildElement('Sys', null, null);
+        Dom.XmlNode sys = getAddresses.addChildElement('Sys', null, null);
         sys.addChildElement('TransID', null, null).addTextNode(transID);
         sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
         sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
 
-        action.addChildElement('CIFNumber', null, null)
-              .addTextNode(cifNumber);
+        getAddresses
+            .addChildElement('CIFNumber', null, null)
+            .addTextNode(cifNumber);
 
         return doc.toXmlString();
     }
-
+ 
     // =========================================================================
-    // REQUEST VALIDATION
+    // REQUEST VALIDATION (reuse pattern)
     // =========================================================================
     private static void validateRequest(
         String transID,
@@ -168,7 +153,7 @@ public with sharing class FEC_GetAddressesList {
         if (String.isBlank(cifNumber)) {
             throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
         }
-
+ 
         Set<String> validRequestors = new Set<String>{
             FEC_ConstantCommon.REQUESTOR_APS, FEC_ConstantCommon.REQUESTOR_CRM, FEC_ConstantCommon.REQUESTOR_PORTAL, FEC_ConstantCommon.REQUESTOR_MOBILE_APP
         };
@@ -177,7 +162,7 @@ public with sharing class FEC_GetAddressesList {
                 System.Label.FEC_MSG_RequestorID_Null
             );
         }
-
+ 
         try {
             Datetime.valueOfGmt(dateTimeStr.replace('T', ' '));
         } catch (Exception e) {
@@ -186,29 +171,29 @@ public with sharing class FEC_GetAddressesList {
             );
         }
     }
-
+ 
     // =========================================================================
     // RESPONSE PARSER
     // =========================================================================
     private static ResponseWrapper parseResponse(String xml) {
-
+ 
         Dom.Document doc = new Dom.Document();
         doc.load(xml);
-
+ 
         Dom.XmlNode bodyNode = doc.getRootElement()
             .getChildElement(
                 'Body',
                 FEC_ConstantCommon.SOAP_ENV
             );
-
+ 
         Dom.XmlNode responseNode;
         for (Dom.XmlNode n : bodyNode.getChildElements()) {
             responseNode = n;
             break;
         }
-
+ 
         ResponseWrapper result = new ResponseWrapper();
-
+ 
         // SYS
         Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
         result.Sys = new SysResponse();
@@ -216,10 +201,10 @@ public with sharing class FEC_GetAddressesList {
         result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
         result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
         result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
-
+ 
         // CIF NUMBER
         result.CIFNumber = FEC_CommonUltils.getXmlValue(responseNode, 'CIFNumber');
-
+ 
         // ADDRESSES
         result.Addresses = new List<AddressInfo>();
         Dom.XmlNode addrNode = responseNode.getChildElement('Addresses', null);
@@ -243,8 +228,8 @@ public with sharing class FEC_GetAddressesList {
                 result.Addresses.add(ad);
             }
         }
-
+ 
         return result;
     }
-
+ 
 }
