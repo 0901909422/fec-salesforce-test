@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Queue xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Team Queue</description>
+    <doesSendEmailToMembers>false</doesSendEmailToMembers>
+    <name>Card Risk Monitoring</name>
+    <queueMembers>
+        <roles>
+            <role>FEC_Card_Risk_Monitoring_Specialist</role>
+            <role>FEC_Customer_Service_Operations_Manager</role>
+            <role>FEC_Head_of_Quality_Control_Ops_Management_Department</role>
+            <role>FEC_Senior_Card_Risk_Monitoring_Specialist</role>
+            <role>FEC_Unit_Head_of_Customer_Service_Operations_Management</role>
+        </roles>
+    </queueMembers>
+    <queueSobject>
+        <sobjectType>Case</sobjectType>
+    </queueSobject>
+</Queue>
