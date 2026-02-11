@@ -16,7 +16,6 @@ public without sharing class FEC_StatementsAccountController {
     /* =====================================================
        DTO
        ===================================================== */
-
     public class GeneralStatementInfoDTO {
         @AuraEnabled public Map<String, String> helpTexts;
         @AuraEnabled public Id statementId;
@@ -67,7 +66,7 @@ public without sharing class FEC_StatementsAccountController {
     public static void syncStatementFromAPI(Id caseId) {
 
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+           throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         /* ================= LOAD CASE ================= */
@@ -88,9 +87,9 @@ public without sharing class FEC_StatementsAccountController {
         /* ================= CALL API ================= */
         FEC_GetCardBasicInfo.ResponseWrapper res =
             FEC_GetCardBasicInfo.callGetCardBasicInfo(
-                String.valueOf(UUID.randomUUID()),
-                'CRM',
-                Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                FEC_CommonUltils.generateTransactionId(),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 ch.FEC_Account_Number__c
             );
 

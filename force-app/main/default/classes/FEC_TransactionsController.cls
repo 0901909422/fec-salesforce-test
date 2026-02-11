@@ -165,13 +165,13 @@ public without sharing class FEC_TransactionsController {
         try {
             FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper res =
                 FEC_MFASOUTSTANDINGAUTHINQ.callService(
-                    String.valueOf(UUID.randomUUID()),
-                    'CRM',
-                    Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
-                    '2.0',
-                    'CRM',
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                    FEC_ConstantCommon.REQUESTOR_VMXVERSION,
+                    FEC_ConstantCommon.REQUESTOR_CONTEXT,
                     UserInfo.getUserName(),
-                    'FEC',
+                    FEC_ConstantCommon.REQUESTOR_ORG,
                     accNumber
                 );
 
@@ -331,9 +331,9 @@ public without sharing class FEC_TransactionsController {
         try {
             FEC_GetUnbilledTransactions.ResponseWrapper res =
                 FEC_GetUnbilledTransactions.callGetUnbilledTransactions(
-                    String.valueOf(UUID.randomUUID()),
-                    'CRM',
-                    Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                     acc
                 );
             return res != null && res.Transactions != null
@@ -349,9 +349,9 @@ public without sharing class FEC_TransactionsController {
         try {
             FEC_GetCardFinancialTransactions.ResponseWrapper res =
                 FEC_GetCardFinancialTransactions.callGetCardFinancialTransactions(
-                    String.valueOf(UUID.randomUUID()),
-                    'CRM',
-                    Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                   FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                     acc,
                     Date.today().addMonths(-3),
                     Date.today()
@@ -374,7 +374,7 @@ public without sharing class FEC_TransactionsController {
             WHERE Id = :caseId
         ];
         if (c.FEC_Account_or_Contract__c == null)
-            throw new AuraHandledException('Case chưa có Customer History');
+            throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
 
         return [
             SELECT Id, FEC_Account_Number__c

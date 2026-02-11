@@ -15,6 +15,11 @@ import { LightningElement, api, track } from 'lwc';
 import loadSecondaryAccount from '@salesforce/apex/FEC_SecondaryInfoAccountController.loadSecondaryAccount';
 import refreshSecondaryAccount from '@salesforce/apex/FEC_SecondaryInfoAccountController.refreshSecondaryAccount';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_Limit_Label from '@salesforce/label/c.FEC_Limit_Label';
+import FEC_Main_Card_Label from '@salesforce/label/c.FEC_Main_Card_Label';
+import FEC_Collections_Info_Label from '@salesforce/label/c.FEC_Collections_Info_Label';
+import FEC_Sales_Info_Label from '@salesforce/label/c.FEC_Sales_Info_Label';
 
 export default class Fec_SecondaryInfoAccount extends LightningElement {
 
@@ -42,6 +47,14 @@ export default class Fec_SecondaryInfoAccount extends LightningElement {
         'Collections Info': 'NONE',
         'Sales Info': 'NONE'
     };
+
+    customLabel = {
+        msgErrorAPI: FEC_MSG_Error_API_Label,
+        limitLabel: FEC_Limit_Label,
+        mainCardLabel: FEC_Main_Card_Label,
+        collectionsInfoLabel: FEC_Collections_Info_Label,
+        salesInfoLabel: FEC_Sales_Info_Label
+    }
 
     /* ================= LIFECYCLE ================= */
 

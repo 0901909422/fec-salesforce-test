@@ -104,9 +104,9 @@ public without sharing class FEC_SecondaryInfoAccountController {
         try {
             FEC_GetCardSecInfo.ResponseWrapper res =
                 FEC_GetCardSecInfo.callGetCardSecInfo(
-                    generateTransactionId(),
-                    'CRM',
-                    Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                     c.FEC_Account_Number__c
                 );
 
@@ -137,7 +137,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
                 }
             }
         } catch (Exception e) {
-            System.debug('Card API failed: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
 
         /* ===== SALE API ===== */
@@ -164,7 +164,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
                 acc.FEC_TSA_Name__c = s.TSA_NAME;
             }
         } catch (Exception e) {
-            System.debug('Sale API failed: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
 
         update acc;
@@ -248,8 +248,5 @@ public without sharing class FEC_SecondaryInfoAccountController {
             }
         }
         return m;
-    }
-    private static String generateTransactionId() {
-        return String.valueOf(Datetime.now().getTime());
     }
 }
