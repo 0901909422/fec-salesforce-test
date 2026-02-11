@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Name_VN__c</fullName>
     <externalId>false</externalId>
-    <label>Name VN</label>
+    <label>FEC_Name VN</label>
     <length>255</length>
     <required>false</required>
     <trackTrending>false</trackTrending>
