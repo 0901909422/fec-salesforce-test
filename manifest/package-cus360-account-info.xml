@@ -75,6 +75,8 @@
 		<members>FEC_API_Config.FEC_Get_Reward_Eligibility</members>
 		<members>FEC_API_Config.FEC_Get_Status</members>
 		<members>FEC_API_Config.FEC_Get_Unbilled_Transaction</members>
+		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<name>CustomMetadata</name>
 		<name>CustomMetadata</name>
 	</types>
     <types>
