@@ -70,7 +70,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
     ) {
         validateRequest(transID, requestorId, dateTimeStr, context, signOnName, org, acct);
 
-        String soapBody = buildSoapBody(
+        String soapBody = buildSoapRequest(
                 transID, 
                 requestorId, 
                 dateTimeStr, 
@@ -275,23 +275,35 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         }
 
         // ===================== CONTEXT =====================
-        if (String.isBlank(context) || context.length() > 50) {
-            throw new CalloutException(System.Label.FEC_MSG_Context_Null);
+        if (String.isBlank(context)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CONTEXT'}));
+        }
+        if (context.length() > 50) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'CONTEXT', '50'}));
         }
 
         // ===================== SIGNON_NAME =====================
-        if (String.isBlank(signOnName) || signOnName.length() > 50) {
-            throw new CalloutException(System.Label.FEC_MSG_SignOnName_Null);
+        if (String.isBlank(signOnName)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'SIGN ON NAME'}));
+        }
+        if (signOnName.length() > 50) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'SIGN ON NAME', '50'}));
         }
 
         // ===================== ORG =====================
-        if (String.isBlank(org) || org.length() > 10) {
-            throw new CalloutException(System.Label.FEC_MSG_Org_Null);
+        if (String.isBlank(org)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'ORG'}));
+        }
+        if (org.length() > 10) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'ORG', '10'}));
         }
 
         // ===================== ACCT =====================
-        if (String.isBlank(acct) || acct.length() > 30) {
-            throw new CalloutException(System.Label.FEC_MSG_Acct_Null);
+        if (String.isBlank(acct)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'ACCT'}));
+        }
+        if (acct.length() > 30) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'ACCT', '30'}));
         }
     }
 }

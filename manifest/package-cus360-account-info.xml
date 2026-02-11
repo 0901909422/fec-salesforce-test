@@ -118,6 +118,7 @@
 		<members>FEC_MSG_Parse_XML_Error</members>
 		<members>FEC_MSG_Not_Account_Linked</members>
 		<members>FEC_MSG_From_To_Invalid</members>
+        <members>FEC_MSG_Parse_JSON_Error</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
