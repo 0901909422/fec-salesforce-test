@@ -1,7 +1,6 @@
 public with sharing class FEC_IntegrationFraudCaseUtil {
     private static final Boolean DEBUG_LOG = true;
     
-
     /**
      * Represents a dynamic validation rule for a UI field that is configured
      * through master integration data.
@@ -227,6 +226,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
      * @return     Extracted CaseID value, or null if not found or XML is invalid
      */
     public static String extractCaseIdFromResponse(String xml) {
+        FEC_FraudConstantCommon.IntegrationMappingField caseField = new FEC_FraudConstantCommon.IntegrationMappingField();
         if (String.isBlank(xml)) return null;
     
         try {
@@ -234,7 +234,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
             doc.load(xml);
     
             Dom.XmlNode root = doc.getRootElement();
-            Dom.XmlNode caseNode = root.getChildElement('CaseID', null);
+            Dom.XmlNode caseNode = root.getChildElement(caseField.SOURCE_CASEID, null);
     
             if (caseNode != null) {
                 return caseNode.getText();
@@ -255,9 +255,9 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
      */
     private static String safeText(String input) {
         if (String.isBlank(input)) return input;
-        return input.length() > 32768 ? input.substring(0, 32768) : input;
+        return input.length() > FEC_FraudConstantCommon.NUMBER_MAX_LENGTH ? input.substring(0, FEC_FraudConstantCommon.NUMBER_MAX_LENGTH) : input;
     }
-   
+    
 
     /**
      * Extracts business metadata and embedded XML from the incoming fraud payload.
@@ -279,21 +279,21 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
      *                 - xmlData : Pure, parseable XML document
      */
     public static FraudExtractResult extractFraudPayload(String rawJson) {
-
+        FEC_FraudConstantCommon.IntegrationMappingField caseField = new FEC_FraudConstantCommon.IntegrationMappingField();
         Map<String, Object> root =
             (Map<String, Object>) JSON.deserializeUntyped(rawJson);
     
         Map<String, Object> detail =
-            (Map<String, Object>) root.get('detail');
+            (Map<String, Object>) root.get(caseField.SOURCE_DETAIL);
     
         // 1. Extract raw XML
-        String xml = (String) detail.get('data');
+        String xml = (String) detail.get(caseField.SOURCE_DATA);
     
         // 2. Normalize XML safely
         xml = normalizeXml(xml);
     
         // 3. Remove XML from detail
-        detail.remove('data');
+        detail.remove(caseField.SOURCE_DATA);
     
         FraudExtractResult result = new FraudExtractResult();
         result.detail = detail;
@@ -359,32 +359,32 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
     public static Dom.Document successResponseXml(String caseId, String message) {
 
         if (RestContext.response != null) {
-            RestContext.response.statusCode = 200;
+            RestContext.response.statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
             RestContext.response.addHeader(
                 FEC_FraudConstantCommon.MIME_CONTENT_TYPE,
                 FEC_FraudConstantCommon.MIME_XML_UTF8
             );
         }
-    
+        FEC_FraudConstantCommon.IntegrationMappingField caseField = new FEC_FraudConstantCommon.IntegrationMappingField();
         Dom.Document doc = new Dom.Document();
-        Dom.XmlNode responseNode = doc.createRootElement('Response', null, null);
+        Dom.XmlNode responseNode = doc.createRootElement(caseField.NODE_RESPONSE, null, null);
     
-        responseNode.addChildElement('Success', null, null)
-            .addTextNode('true');
+        responseNode.addChildElement(caseField.NODE_SUCCESS, null, null)
+            .addTextNode(caseField.NODE_TRUE);
     
-        responseNode.addChildElement('CaseId', null, null)
+        responseNode.addChildElement(caseField.NODE_CASEID, null, null)
             .addTextNode(escapeXml(caseId));
     
-        responseNode.addChildElement('Message', null, null)
+        responseNode.addChildElement(caseField.NODE_MESSAGE, null, null)
             .addTextNode(escapeXml(message));
     
         return doc;
     }
 
     public static Dom.Document errorResponseXml(String message, Integer statusCode) {
-
+        FEC_FraudConstantCommon.IntegrationMappingField caseField = new FEC_FraudConstantCommon.IntegrationMappingField();
         if (RestContext.response != null) {
-            RestContext.response.statusCode = statusCode != null ? statusCode : 400;
+            RestContext.response.statusCode = statusCode != null ? statusCode : FEC_FraudConstantCommon.CLIENT_ERROR;
             RestContext.response.addHeader(
                 FEC_FraudConstantCommon.MIME_CONTENT_TYPE,
                 FEC_FraudConstantCommon.MIME_XML_UTF8
@@ -392,64 +392,23 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         }
     
         Dom.Document doc = new Dom.Document();
-        Dom.XmlNode responseNode = doc.createRootElement('Response', null, null);
+        Dom.XmlNode responseNode = doc.createRootElement(caseField.NODE_RESPONSE, null, null);
     
-        responseNode.addChildElement('Success', null, null)
-            .addTextNode('false');
+        responseNode.addChildElement(caseField.NODE_SUCCESS, null, null)
+            .addTextNode(caseField.NODE_FALSE);
     
-        responseNode.addChildElement('Message', null, null)
-            .addTextNode(escapeXml(message));
+        responseNode.addChildElement(caseField.NODE_MESSAGE, null, null)
+        .addTextNode(escapeXml(message));
     
         return doc;
     }
     
     
 
-    /**
-     * Builds a successful XML response as a raw XML string and writes HTTP 200 headers.
-     *
-     * @param caseId  The processed fraud case identifier.
-     * @param message Human-readable success message.
-     * @return XML response string.
-     */
-    public static String successXml(String caseId, String message) {
-        RestContext.response.statusCode = 200;
-        RestContext.response.addHeader('Content-Type', 'application/xml; charset=UTF-8');
     
-        return 
-            '<?xml version="1.0" encoding="UTF-8"?>' +
-            '<Response>' +
-                '<Success>true</Success>' +
-                '<CaseID>' + escapeXml(caseId) + '</CaseID>' +
-                '<Message>' + escapeXml(message) + '</Message>' +
-            '</Response>';
-    }
-
+    
+    
    
-    
-    
-    /**
-     * Builds an error XML response and writes HTTP 400 headers.
-     * All content is safely XML-escaped.
-     *
-     * @param msg Error message.
-     * @return XML error response string.
-     */
-    public static String errorXml(String msg) {
-        // Content-Type header MUST be XML
-        RestContext.response.statusCode = 400;
-        RestContext.response.addHeader(FEC_FraudConstantCommon.MIME_CONTENT_TYPE, FEC_FraudConstantCommon.MIME_XML_UTF8);
-    
-        // Escape illegal XML characters
-        String safe = escapeXml(msg);
-    
-        return 
-            '<?xml version="1.0" encoding="UTF-8"?>' +
-            '<Response>' +
-                '<Success>false</Success>' +
-                '<Message>' + safe + '</Message>' +
-            '</Response>';
-    }
 
     /**
      * Escapes illegal XML characters to prevent malformed XML output.
@@ -470,60 +429,6 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         return s;
     }
     
-    
-
-    /**
-     * Builds a standard success result map for JSON-based responses.
-     */
-    public static Map<String,Object> success(String msg, Object data) {
-        return new Map<String,Object>{
-            'success' => true,
-            'message' => msg,
-            'caseId'  => data
-        };
-    }
-
-    /**
-     * Builds a standard error result map for JSON-based responses.
-     */
-    public static Map<String,Object> error(String msg) {        
-        return new Map<String,Object>{
-            'success' => false,
-            'message' => msg
-        };
-    }
-
-    /**
-     * Builds a minimal XML success response without DOM overhead.
-     */
-    public static String buildXmlSuccess(String caseId, String message) {
-        List<String> xmlParts = new List<String>();
-        xmlParts.add('<?xml version="1.0" encoding="UTF-8"?>');
-        xmlParts.add('<Response>');
-        xmlParts.add('<Success>true</Success>');
-        xmlParts.add('<CaseID>' + (caseId == null ? '' : caseId.escapeXml()) + '</CaseID>');
-        xmlParts.add('<Message>' + (message == null ? '' : message.escapeXml()) + '</Message>');
-        xmlParts.add('</Response>');
-
-        String xml = String.join(xmlParts, '');
-        return xml;
-    }
-
-
-    /**
-     * Builds a minimal XML error response without DOM overhead.
-     */
-    public static String buildXmlError(String errorMessage) {
-        List<String> xmlParts = new List<String>();
-        xmlParts.add('<?xml version="1.0" encoding="UTF-8"?>');
-        xmlParts.add('<Response>');
-        xmlParts.add('<Success>false</Success>');      
-        xmlParts.add('<Message>' + errorMessage.escapeXml() + '</Message>');
-        xmlParts.add('</Response>');
-        String xml = String.join(xmlParts, '');       
-        return xml;
-    }
-       
 
     /**
      * Recursively finds all XML nodes with the specified tag name.
@@ -542,14 +447,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         return out;
     }
 
-    // Validate full request null
-    private static void validateRequest(Object request) {
-
-        if (request == null) {
-            throw new ValidationException('Request cannot be null.');
-        }
-        
-    }
+  
    
     /**
      * Finds the first direct child node with the specified name.
@@ -582,6 +480,10 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         Dom.XmlNode c = find(node, name);
         return c != null ? c.getText() : null;
     }
+
+    
+    
+
    
 
     /**
@@ -639,38 +541,49 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
      * Maps external case status values to internal Salesforce case statuses.
      */   
     public static final Map<String, String> STATUS_MAP = new Map<String, String>{
+        // ===============================
         // SEC Investigating
-        FEC_FraudConstantCommon.IntegrationMappingStatus.ALLOCATING       => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.ALLOCATING_PIC   => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.ALLOCATING_TL    => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.INVESTIGATING    => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.PENDING          => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.REPORTING        => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.REPORTING_HEAD   => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.REPORTING_TL     => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.SE_REVIEWING     => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.UPDATE_REPORT    => FEC_FraudConstantCommon.IntegrationMappingStatus.SEC_INVESTIGATING,
-    
+        // ===============================
+        FEC_FraudConstantCommon.ALLOCATING         => FEC_FraudConstantCommon.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.ALLOCATING_PIC     => FEC_FraudConstantCommon.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.ALLOCATING_TL      => FEC_FraudConstantCommon.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.INVESTIGATING      => FEC_FraudConstantCommon.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.PENDING            => FEC_FraudConstantCommon.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.REPORTING          => FEC_FraudConstantCommon.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.REPORTING_HEAD     => FEC_FraudConstantCommon.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.REPORTING_TL       => FEC_FraudConstantCommon.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.SE_REVIEWING       => FEC_FraudConstantCommon.SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.UPDATE_REPORT      => FEC_FraudConstantCommon.SEC_INVESTIGATING,
+
+        // ===============================
         // Fraud Investigating
-        FEC_FraudConstantCommon.IntegrationMappingStatus.EVALUATING        => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.RESULTING         => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.REVIEWING_REPORT  => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.UPDATING          => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_INVESTIGATING,
-    
-        // Mixed / Special
-        FEC_FraudConstantCommon.IntegrationMappingStatus.INITIAL     => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_SEC_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.NEW_STATUS         => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_SEC_INVESTIGATING,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.RE_INITIAL  => FEC_FraudConstantCommon.IntegrationMappingStatus.FRAUD_REVIEW,
-    
+        // ===============================
+        FEC_FraudConstantCommon.EVALUATING         => FEC_FraudConstantCommon.FRAUD_INVESTIGATING,
+        FEC_FraudConstantCommon.RESULTING          => FEC_FraudConstantCommon.FRAUD_INVESTIGATING,
+        FEC_FraudConstantCommon.REVIEWING_REPORT   => FEC_FraudConstantCommon.FRAUD_INVESTIGATING,
+        FEC_FraudConstantCommon.UPDATING           => FEC_FraudConstantCommon.FRAUD_INVESTIGATING,
+
+        // ===============================
+        // Mixed / Initial
+        // ===============================
+        FEC_FraudConstantCommon.INITIAL            => FEC_FraudConstantCommon.FRAUD_SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.NEW_STATUS         => FEC_FraudConstantCommon.FRAUD_SEC_INVESTIGATING,
+        FEC_FraudConstantCommon.RE_INITIAL         => FEC_FraudConstantCommon.FRAUD_REVIEW,
+
+        // ===============================
         // Final states
-        FEC_FraudConstantCommon.IntegrationMappingStatus.END_STATUS        => FEC_FraudConstantCommon.IntegrationMappingStatus.RESOLVED_COMPLETED,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.POLICING   => FEC_FraudConstantCommon.IntegrationMappingStatus.RESOLVED_COMPLETED,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.CANCELED   => FEC_FraudConstantCommon.IntegrationMappingStatus.RESOLVED_CANCEL,
-        FEC_FraudConstantCommon.IntegrationMappingStatus.PRE_CANCEL => FEC_FraudConstantCommon.IntegrationMappingStatus.RESOLVED_CANCEL,
-    
+        // ===============================
+        FEC_FraudConstantCommon.END_STATUS         => FEC_FraudConstantCommon.RESOLVED_COMPLETED,
+        FEC_FraudConstantCommon.POLICING           => FEC_FraudConstantCommon.RESOLVED_COMPLETED,
+        FEC_FraudConstantCommon.CANCELED           => FEC_FraudConstantCommon.RESOLVED_CANCEL,
+        FEC_FraudConstantCommon.PRE_CANCEL         => FEC_FraudConstantCommon.RESOLVED_CANCEL,
+
+        // ===============================
         // CS
-        FEC_FraudConstantCommon.IntegrationMappingStatus.CS_UPDATING => FEC_FraudConstantCommon.IntegrationMappingStatus.PROVIDE_INFORMATION
+        // ===============================
+        FEC_FraudConstantCommon.CS_UPDATING        => FEC_FraudConstantCommon.PROVIDE_INFORMATION
     };
+
     
 
 

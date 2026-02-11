@@ -1,0 +1,44 @@
+<template>
+    <div class="flow-control-container">
+        <div class="slds-p-around_small slds-theme_shade slds-border_bottom">
+            <div class="slds-grid slds-grid_vertical-align-center">
+                <lightning-icon icon-name="utility:flow" size="small" class="slds-m-right_x-small"></lightning-icon>
+                <h2 class="slds-text-heading_small slds-truncate">{labelTitle}</h2>
+            </div>
+        </div>
+
+        <div class="slds-p-around_small scroll-area">
+            <template if:true={item}>
+                <table class="slds-table slds-table_bordered slds-table_fixed-layout tech-table">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th scope="col" style="width: 45%">{labelControlField}</th>
+                            <th scope="col">{labelConfigValue}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={flowFields} for:item="f">
+                            <tr key={f.label} class="slds-hint-parent">
+                                <td class="slds-cell-wrap label-cell">
+                                    <span class="slds-truncate" title={f.label}>{f.label}</span>
+                                </td>
+                                <td class="slds-cell-wrap value-cell">
+                                    <strong>{f.value}</strong>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </template>
+
+            <template if:false={item}>
+                <div class="slds-align_absolute-center slds-m-top_xx-large">
+                    <div class="slds-text-align_center slds-text-color_weak">
+                        <lightning-icon icon-name="utility:info" size="large" variant="light"></lightning-icon>
+                        <p class="slds-m-top_small">{labelPromptSelectNode}</p>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

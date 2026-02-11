@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>FEC_FileInfo</members>
+        <members>FEC_CustomerAdditionalInfoListController</members>
+        <members>FEC_ProcessCustomerDataBatch</members>
+        <members>FEC_CustomerAdditionalHistoryHandler</members>
+        <members>FEC_InsertCustomerDataQueueable</members>
+        <members>FEC_ConstantCommon</members>
+        <name>ApexClass</name>
+    </types>
+
+    <types>
+        <members>FEC_CustomerAdditionalConfigHistory</members>
+        <name>ApexTrigger</name>
+    </types>
+
+    <types>
+        <members>fec_customerAdditionalInfoList</members>
+        <members>fecCustomDatatable</members>
+        <members>fecCustomerHistoryModal</members>
+        <members>fecCustomerUpsertModal</members>
+        <members>fecCustomPopoverFilter</members>
+        <members>fecGenericModal</members>
+        <members>fecUtils</members>
+        <name>LightningComponentBundle</name>
+    </types>
+
+    <types>
+        <members>FEC_SheetJS</members>
+        <name>StaticResource</name>
+    </types>
+
+    <types>
+        <members>FEC_CustomerAdditionalInfoConfig__c</members>
+        <members>FEC_CustomerAdditionalInfo__c</members>
+        <members>FEC_CustomerDataConfigHistory__c</members>
+        <name>CustomObject</name>
+    </types>
+
+    <types>
+        <members>ContentVersion.FEC_Comments__c</members>
+        <name>CustomField</name>
+    </types>
+
+    <types>
+        <members>*</members>
+        <name>CustomLabel</name>
+    </types>
+
+    <version>65.0</version>
+</Package>
