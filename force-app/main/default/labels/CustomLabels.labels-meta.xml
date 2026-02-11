@@ -703,6 +703,14 @@
         <value>{0} is required and cannot be empty.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Parse_JSON_Error</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Parse JSON Error</shortDescription>
+        <value>Failed to parse JSON: {0}</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Parse_XML_Error</fullName>
         <categories>API</categories>
         <language>en_US</language>

@@ -122,7 +122,7 @@ public with sharing class FEC_GetCardBasicInfo {
  
             validateRequest(transID, requestorId, dateTimeStr, accountNumber);
  
-            String soapBody = buildSoapRequest(
+            String soapBody = buildSoapBody(
                 transID,
                 requestorId,
                 dateTimeStr,
@@ -366,7 +366,7 @@ public with sharing class FEC_GetCardBasicInfo {
                 sp.MPA =
                     FEC_CommonUltils.xmlValToDecimal(s, 'MPA');
                 sp.StatementDate =
-                    FEC_CommonUltils.parseDate(s, 'STATEMENT_DATE');
+                    FEC_CommonUltils.xmlValToDate(s, 'STATEMENT_DATE');
  
                 result.CardBasicInfo.Statements.add(sp);
             }
