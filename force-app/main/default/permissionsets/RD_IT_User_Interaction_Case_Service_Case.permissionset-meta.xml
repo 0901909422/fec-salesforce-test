@@ -405,11 +405,6 @@
         <field>FEC_Assignment__c.FEC_Assignment_Type__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Assignment__c.FEC_Case__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>RD - IT User - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
