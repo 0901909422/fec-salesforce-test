@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_User_Group__c</fullName>
     <description>Đối tượng người dùng có thể tìm thấy bộ code NOC khi tạo mới bản ghi Case</description>
+    <externalId>false</externalId>
     <label>User Group</label>
     <required>false</required>
     <trackHistory>true</trackHistory>

@@ -3,6 +3,7 @@
     <fullName>FEC_Field_Reverted__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Đánh dấu các trường dữ liệu sẽ hiển thị khi Stage được Revert</description>
+    <externalId>false</externalId>
     <label>Field Reverted</label>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>

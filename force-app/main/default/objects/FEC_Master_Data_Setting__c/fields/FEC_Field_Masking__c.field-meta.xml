@@ -3,6 +3,7 @@
     <fullName>FEC_Field_Masking__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Đánh dấu là trường có masking hay không</description>
+    <externalId>false</externalId>
     <label>Field Masking</label>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>

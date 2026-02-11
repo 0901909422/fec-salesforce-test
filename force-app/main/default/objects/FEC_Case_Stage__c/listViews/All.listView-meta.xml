@@ -7,8 +7,10 @@
     <columns>FEC_Alias__c</columns>
     <columns>FEC_Active__c</columns>
     <columns>FEC_Business_Process__c</columns>
-    <columns>UPDATEDBY_USER</columns>
+    <columns>FEC_Default_Stage__c</columns>
+    <columns>FEC_User_Group__c</columns>
     <columns>LAST_UPDATE</columns>
+    <columns>UPDATEDBY_USER</columns>
     <filterScope>Everything</filterScope>
     <label>All Case Stages</label>
 </ListView>
