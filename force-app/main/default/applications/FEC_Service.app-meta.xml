@@ -81,6 +81,7 @@
     <tabs>FEC_Stage_Screen__c</tabs>
     <tabs>FEC_Action_Button__c</tabs>
     <tabs>FEC_Master_Data_Setting__c</tabs>
+    <tabs>FEC_Hold_Case__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
@@ -95,6 +96,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Category__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Hold_Case__c</tab>
         </mappings>
         <mappings>
             <tab>FEC_Master_Data_Setting__c</tab>
