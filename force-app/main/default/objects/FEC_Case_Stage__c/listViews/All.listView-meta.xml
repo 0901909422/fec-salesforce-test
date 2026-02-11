@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All</fullName>
+    <columns>NAME</columns>
+    <columns>FEC_Name_VN__c</columns>
+    <columns>FEC_Code__c</columns>
+    <columns>FEC_Alias__c</columns>
+    <columns>FEC_Active__c</columns>
+    <columns>FEC_Business_Process__c</columns>
+    <columns>UPDATEDBY_USER</columns>
+    <columns>LAST_UPDATE</columns>
+    <filterScope>Everything</filterScope>
+    <label>All Case Stages</label>
+</ListView>
