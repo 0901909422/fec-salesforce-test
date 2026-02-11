@@ -3073,7 +3073,7 @@
         <protected>false</protected>
         <shortDescription>System error</shortDescription>
         <value>System error</value>
-
+    </labels>
     <labels>
         <fullName>FEC_Tree_Title</fullName>
         <language>en_US</language>
@@ -4812,8 +4812,6 @@
         Missing OriginalRequest in request
     </value>
 </labels>
-
-    </labels>      
 
     <!-- ================= Fraud Case Detail UI ================= -->
     <labels>
