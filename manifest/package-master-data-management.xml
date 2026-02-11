@@ -35,6 +35,11 @@
 		<members>FEC_Stage_Screen__c</members>
 		<members>FEC_Sub_Category__c</members>
 		<members>FEC_Sub_Code__c</members>
+		<members>FEC_Additional_Field__c</members>
+		<members>FEC_Channel__c</members>
+		<members>FEC_Notification_Channel__c</members>
+		<members>FEC_Notification__c</members>
+		<members>FEC_Process_Action__c</members>
 		<name>CustomTab</name>
 	</types>
 	<types>
@@ -63,6 +68,14 @@
 	<types>
 		<members>FEC_Service</members>
 		<name>CustomApplication</name>
+	</types>
+	<types>
+		<members>RD_IT_User_Master_Data_Management</members>
+		<name>PermissionSet</name>
+	</types>
+	<types>
+		<members>PSG_RD_IT_User</members>
+		<name>PermissionSetGroup</name>
 	</types>
     <version>65.0</version>
 </Package>
