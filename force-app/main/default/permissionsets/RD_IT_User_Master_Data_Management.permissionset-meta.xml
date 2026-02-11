@@ -958,15 +958,12 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Sub_Code__c.FEC_Order__c</field>
->>>>>>> force-app/main/default/permissionsets/RD_IT_User_Master_Data_Management.permissionset-meta.xml
         <readable>true</readable>
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>RD - IT User - Master Data Management</label>
     <license>Salesforce</license>
     <objectPermissions>
-<<<<<<< force-app/main/default/permissionsets/RD_IT_User_Master_Data_Management.permissionset-meta.xml
-=======
         <allowCreate>false</allowCreate>
         <allowDelete>false</allowDelete>
         <allowEdit>false</allowEdit>
