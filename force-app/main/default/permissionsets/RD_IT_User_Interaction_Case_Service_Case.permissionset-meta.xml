@@ -439,7 +439,15 @@
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <recordTypeVisibilities>
+        <recordType>Case.Customer_Case</recordType>
+        <visible>true</visible>
+    </recordTypeVisibilities>
+    <recordTypeVisibilities>
         <recordType>Case.Interaction</recordType>
+        <visible>true</visible>
+    </recordTypeVisibilities>
+    <recordTypeVisibilities>
+        <recordType>Case.Internal_Case</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
     <tabSettings>
