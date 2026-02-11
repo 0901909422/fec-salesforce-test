@@ -146,20 +146,19 @@
     <enableActivities>false</enableActivities>
     <enableBulkApi>true</enableBulkApi>
     <enableFeeds>false</enableFeeds>
-    <enableHistory>true</enableHistory>
+    <enableHistory>false</enableHistory>
     <enableLicensing>false</enableLicensing>
     <enableReports>true</enableReports>
     <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>Additional Field</label>
+    <label>FEC Integration Case Info</label>
     <nameField>
-        <label>Additional Fields Name</label>
-        <trackHistory>false</trackHistory>
+        <label>FEC Integration Case Info Name</label>
         <type>Text</type>
     </nameField>
-    <pluralLabel>Additional Fields</pluralLabel>
+    <pluralLabel>FEC Integration Case Infos</pluralLabel>
     <searchLayouts></searchLayouts>
     <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>
