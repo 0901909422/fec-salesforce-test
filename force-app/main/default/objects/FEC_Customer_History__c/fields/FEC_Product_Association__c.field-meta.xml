@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Product_Association__c</fullName>
+    <description>Tổ chức phát hành thẻ</description>
+    <externalId>false</externalId>
+    <formula>CASE(
+    LEFT(FEC_Card_Number__c, 1),
+    &quot;5&quot;, &quot;MasterCard&quot;,
+    &quot;4&quot;, &quot;Visa&quot;,
+    &quot;3&quot;, &quot;JCB&quot;,
+    &quot;9&quot;, &quot;Napas&quot;,
+    &quot;Not defined&quot;
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Product Association</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

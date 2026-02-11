@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Sub_Channel__c</fullName>
+    <label>Sub-channel</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Facebook</fullName>
+                <default>false</default>
+                <label>Facebook</label>
+            </value>
+            <value>
+                <fullName>Zalo</fullName>
+                <default>false</default>
+                <label>Zalo</label>
+            </value>
+            <value>
+                <fullName>Webchat</fullName>
+                <default>false</default>
+                <label>Webchat</label>
+            </value>
+            <value>
+                <fullName>Mobile App Chat</fullName>
+                <default>false</default>
+                <label>Mobile App Chat</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+            <value>
+                <fullName>Inbound Call</fullName>
+                <default>false</default>
+                <label>Inbound Call</label>
+            </value>
+            <value>
+                <fullName>Outbound Call</fullName>
+                <default>false</default>
+                <label>Outbound Call</label>
+            </value>
+            <value>
+                <fullName>Incoming Email</fullName>
+                <default>false</default>
+                <label>Incoming Email</label>
+            </value>
+            <value>
+                <fullName>Outgoing Email</fullName>
+                <default>false</default>
+                <label>Outgoing Email</label>
+            </value>
+            <value>
+                <fullName>F2F</fullName>
+                <default>false</default>
+                <label>F2F</label>
+            </value>
+            <value>
+                <fullName>Letter</fullName>
+                <default>false</default>
+                <label>Letter</label>
+            </value>
+            <value>
+                <fullName>Other External Interaction</fullName>
+                <default>false</default>
+                <label>Other External Interaction</label>
+            </value>
+            <value>
+                <fullName>Internal Email</fullName>
+                <default>false</default>
+                <label>Internal Email</label>
+            </value>
+            <value>
+                <fullName>Internal Task</fullName>
+                <default>false</default>
+                <label>Internal Task</label>
+            </value>
+            <value>
+                <fullName>PR/ MKT</fullName>
+                <default>false</default>
+                <label>PR/ MKT</label>
+            </value>
+            <value>
+                <fullName>SBV</fullName>
+                <default>false</default>
+                <label>SBV</label>
+            </value>
+            <value>
+                <fullName>EA</fullName>
+                <default>false</default>
+                <label>EA</label>
+            </value>
+            <value>
+                <fullName>VPBank</fullName>
+                <default>false</default>
+                <label>VPBank</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
