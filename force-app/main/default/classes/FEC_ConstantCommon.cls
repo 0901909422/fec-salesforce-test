@@ -41,4 +41,13 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_VMXVERSION = '2.0';
     public static final String REQUESTOR_CONTEXT = 'CRM';
     public static final String REQUESTOR_ORG = 'FEC';
+    public static final String REQUESTOR_RES = 'RES';
+    public static final String REQUESTOR_PEGA = 'PEGA';
+
+    public static final String ADDRESS_TYPE_CURRES = 'CURRES';
+    public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
+    public static final String ADDRESS_TYPE_OFFICE = 'OFFICE';
+
+    public static final String TEXT_YES = 'Yes';
+
 }
