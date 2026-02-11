@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customValue>
+        <fullName>1</fullName>
+        <default>false</default>
+        <label>1</label>
+    </customValue>
+    <customValue>
+        <fullName>0</fullName>
+        <default>false</default>
+        <label>0</label>
+    </customValue>
+    <description>- 1: Block
+- 0: Not block</description>
+    <masterLabel>Block 1 NotBlock 0</masterLabel>
+    <sorted>false</sorted>
+</GlobalValueSet>

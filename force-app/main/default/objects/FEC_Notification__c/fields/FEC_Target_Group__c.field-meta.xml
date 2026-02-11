@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Target_Group__c</fullName>
+    <description>Đối tượng áp dụng (khách hàng hoặc người dùng nội bộ)</description>
+    <label>Target Group</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetName>Target_Group</valueSetName>
+    </valueSet>
+</CustomField>
