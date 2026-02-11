@@ -14,7 +14,7 @@
 public without sharing class FEC_SecondaryController {
 
     /* =====================================================
-     * DTO
+     * DTOs
      * ===================================================== */
 
     public class ReferenceDTO {
@@ -45,7 +45,7 @@ public without sharing class FEC_SecondaryController {
     public static SecondaryInfoDTO loadSecondaryInfo(Id caseId) {
 
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         /* ===== LOAD CASE ===== */
@@ -57,7 +57,7 @@ public without sharing class FEC_SecondaryController {
         ];
 
         if (c.FEC_Account_or_Contract__c == null) {
-            throw new AuraHandledException('Customer History not found');
+            throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
         }
 
         /* ===== LOAD CUSTOMER HISTORY ===== */
@@ -96,22 +96,22 @@ public without sharing class FEC_SecondaryController {
         try {
             FEC_GetDigitalAccountStatus.ResponseWrapper digitalRes =
                 FEC_GetDigitalAccountStatus.callGetDigitalAccountStatus(
-                    'APS',
-                    'PORTAL',
-                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
-                    '0347776208',
-                    '123456789'
+                    FEC_ConstantCommon.REQUESTOR_APS,
+                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    hist.FEC_Work_Phone__c,
+                    hist.FEC_CIF_Number__c
                 );
 
             if (digitalRes != null && digitalRes.DigitalAccounts != null) {
                 hist.FEC_Zalo_Follower__c =
-                    getStatusByType(digitalRes.DigitalAccounts, 'ZALO');
+                    getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_ZALO);
 
                 hist.FEC_Website_Account__c =
-                    getStatusByType(digitalRes.DigitalAccounts, 'WEBSITE');
+                    getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_WEBSITE);
 
                 hist.FEC_Mobile_App_Account__c =
-                    getStatusByType(digitalRes.DigitalAccounts, 'FEMOBILEAPP');
+                    getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_FE_MOBILE_APP);
             }
         } catch (Exception e) {
             System.debug('### DigitalAccountStatus FAILED: ' + e.getMessage());
@@ -123,10 +123,10 @@ public without sharing class FEC_SecondaryController {
         try {
             FEC_GetCustomerInfoBasic.ResponseWrapper contactRes =
                 FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
-                    'TRANS-' + Datetime.now().getTime(),
-                    'PORTAL',
-                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
-                    '1222222'
+                    FEC_ConstantCommon.REQUESTOR_APS,
+                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    hist.FEC_CIF_Number__c
                 );
 
             if (contactRes != null
@@ -155,10 +155,10 @@ public without sharing class FEC_SecondaryController {
         try {
             relativesRes =
                 FEC_GetRelativesList.callGetRelativesList(
-                    'APS',
-                    'PORTAL',
-                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
-                    '12333333'
+                    FEC_ConstantCommon.REQUESTOR_APS,
+                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    hist.FEC_CIF_Number__c
                 );
         } catch (Exception e) {
             System.debug('### GetRelativesList FAILED: ' + e.getMessage());

@@ -44,7 +44,7 @@ public without sharing class FEC_PaymentHistoryController {
 
         if (c.FEC_Account_or_Contract__c == null) {
             throw new AuraHandledException(
-                'Case does not have Account / Contract'
+                System.Label.FEC_MSG_Not_Account_Linked
             );
         }
         return c.FEC_Account_or_Contract__c;
@@ -68,10 +68,10 @@ public without sharing class FEC_PaymentHistoryController {
         try {
             apiRes = FEC_GetBilledTransactions.callGetBilledTransactions(
                 String.valueOf(UUID.randomUUID()),
-                'CRM',
-                Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 String.valueOf(customerHistoryId),
-                Datetime.now().format('MM/yyyy')
+                Datetime.now().format(FEC_ConstantCommon.DATE_FORMAT_MMYYYY)
             );
         } catch (Exception e) {
             apiRes = null; 
@@ -98,7 +98,7 @@ public without sharing class FEC_PaymentHistoryController {
 
         for (FEC_GetBilledTransactions.TransactionRecord t : apiRes.Transactions) {
 
-            Date paymentDate = parseDate(t.TransactionDate);
+            Date paymentDate = FEC_CommonUltils.parseDate(t.TransactionDate);
             String key = paymentDate + '|' + t.ReferenceNumber;
 
             FEC_Payment_History__c r =
@@ -109,7 +109,7 @@ public without sharing class FEC_PaymentHistoryController {
                 );
 
             r.FEC_Payment_Date__c   = paymentDate;
-            r.FEC_Booking_Date__c   = parseDate(t.PostingDate);
+            r.FEC_Booking_Date__c   = FEC_CommonUltils.parseDate(t.PostingDate);
             r.FEC_Payment_Amount__c = t.Amount;
             r.FEC_Particulars__c    = t.ReferenceNumber;
 
@@ -187,8 +187,8 @@ public without sharing class FEC_PaymentHistoryController {
         try {
             apiRes = FEC_GetPaymentInfo.callGetPaymentInfo(
                 String.valueOf(UUID.randomUUID()),
-                'CRM',
-                Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss'),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 String.valueOf(customerHistoryId)
             );
         } catch (Exception e) {
@@ -215,7 +215,7 @@ public without sharing class FEC_PaymentHistoryController {
 
         for (FEC_GetPaymentInfo.PaymentInfo p : apiRes.Payments) {
 
-            Date paymentDate = parseDate(p.TransactionDate);
+            Date paymentDate = FEC_CommonUltils.parseDate(p.TransactionDate);
             String key = paymentDate + '|' + p.Username;
 
             FEC_Payment_History__c r =

@@ -15,6 +15,8 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_MockupEndpoint</members>
         <members>FEC_PaymentHistoryController</members>
+        <members>FEC_GetNextWorkController</members>
+        <members>FEC_GetNextWorkControllerTest</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -39,7 +41,8 @@
         <members>fec_CommonUtils</members>
 		<members>fec_CommonConst</members>
         <members>fec_PaymentHistoryAcount</members>
-         <members>fec_RelatedListAddressesPaging</members>
+        <members>fec_RelatedListAddressesPaging</members>
+        <members>fec_GetNextWork</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -85,6 +88,13 @@
         <members>FEC_Email_Label</members>
         <members>FEC_Work_Phone_Label</members>
         <members>FEC_Demographic_Label</members>
+        <members>Title_button_Get_Next_Work</members>
+        <members>title_Select_Queue</members>
+        <members>title_Queue</members>
+        <members>title_Information_Queue</members>
+        <members>messenger_Warning</members>
+        <members>title_Toast_Event</members>
+         <members>messager_Toast_Event</members>
         <name>CustomLabel</name>
     </types>
     <types>

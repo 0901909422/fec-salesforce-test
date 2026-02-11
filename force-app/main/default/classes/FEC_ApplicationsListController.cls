@@ -88,7 +88,7 @@ public without sharing class FEC_ApplicationsListController {
         FEC_GetCustomerList.ResponseWrapper cusRes;
         try {
             cusRes = FEC_GetCustomerList.getCustomerList(
-                'CRM', null, false,
+                FEC_ConstantCommon.REQUESTOR_CRM, null, false,
                 null, null, null, null, null, null, null, null
             );
         } catch (Exception e) {
@@ -110,10 +110,10 @@ public without sharing class FEC_ApplicationsListController {
             try {
                 statusRes =
                     FEC_GetApplicationsList.callGetApplicationsList(
-                        'RES',
-                        'CRM',
-                        Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
-                        '26525477'
+                        FEC_ConstantCommon.REQUESTOR_RES,
+                        FEC_ConstantCommon.REQUESTOR_CRM,
+                        Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                        cif
                     );
             } catch (Exception e) {
                 statusRes = null;
@@ -126,10 +126,10 @@ public without sharing class FEC_ApplicationsListController {
             try {
                 addrRes =
                     FEC_GetAddressesList.callGetAddressesList(
-                        'RES',
-                        'CRM',
-                        Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
-                        '26525477'
+                        FEC_ConstantCommon.REQUESTOR_RES,
+                        FEC_ConstantCommon.REQUESTOR_CRM,
+                        Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                        cif
                     );
             } catch (Exception e) {
                 addrRes = null;
@@ -180,19 +180,19 @@ public without sharing class FEC_ApplicationsListController {
                     for (FEC_GetAddressesList.AddressInfo ad
                         : addrRes.Addresses) {
 
-                        if (ad.AddressType == 'CURRES') {
+                        if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_CURRES) {
                             row.put(
                                 'currentAddress',
                                 formatAddress(ad)
                             );
                         }
-                        if (ad.AddressType == 'PERMNENT') {
+                        if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
                             row.put(
                                 'permanentAddress',
                                 formatAddress(ad)
                             );
                         }
-                        if (ad.AddressType == 'OFFICE') {
+                        if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_OFFICE) {
                             row.put(
                                 'officeAddress',
                                 formatAddress(ad)
@@ -207,7 +207,7 @@ public without sharing class FEC_ApplicationsListController {
                 * ===================================================== */
                 FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleDisburseInfoResponse saleRes;
                 try {
-                    saleRes = FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo('APP123456');
+                    saleRes = FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo(app.ApplicationID);
                     if (saleRes != null &&
                         saleRes.CustomerSaleInfos != null &&
                         !saleRes.CustomerSaleInfos.isEmpty()) {

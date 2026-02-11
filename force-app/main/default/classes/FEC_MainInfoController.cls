@@ -51,7 +51,7 @@ public without sharing class FEC_MainInfoController {
     public static MainInfoDTO loadMainInfo(Id caseId) {
 
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         /* ===== LOAD CASE ===== */
@@ -63,7 +63,7 @@ public without sharing class FEC_MainInfoController {
         ];
 
         if (c.FEC_Account_or_Contract__c == null) {
-            throw new AuraHandledException('Customer History is not linked');
+            throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
         }
 
         /* ===== LOAD CUSTOMER HISTORY ===== */
@@ -103,10 +103,10 @@ public without sharing class FEC_MainInfoController {
         try {
             FEC_GetCustomerInfoBasic.ResponseWrapper basicRes =
                 FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
-                    'APS',
-                    'PORTAL',
-                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
-                    '4111111111111111'
+                    FEC_ConstantCommon.REQUESTOR_APS,
+                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    hist.FEC_CIF_Number__c
                 );
 
             if (basicRes != null && basicRes.CustomerBasicInfo != null) {
@@ -127,10 +127,10 @@ public without sharing class FEC_MainInfoController {
         try {
             FEC_GetDocumentsList.ResponseWrapper docRes =
                 FEC_GetDocumentsList.callGetDocumentsList(
-                    'APS',
-                    'PORTAL',
-                    Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
-                    '1233'
+                    FEC_ConstantCommon.REQUESTOR_APS,
+                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    hist.FEC_CIF_Number__c
                 );
 
             if (docRes != null && docRes.Documents != null && !docRes.Documents.isEmpty()) {
@@ -212,7 +212,7 @@ public without sharing class FEC_MainInfoController {
     private static String getPrimaryPhoneOnly() {
         FEC_GetCustomerList.ResponseWrapper res =
             FEC_GetCustomerList.getCustomerList(
-                'PORTAL', null, false,
+                FEC_ConstantCommon.REQUESTOR_PORTAL, null, false,
                 null, null, null, null, null, null, null, null
             );
 
@@ -232,8 +232,8 @@ public without sharing class FEC_MainInfoController {
         System.debug('### CIF BEFORE ADDRESS API = ' + hist.FEC_CIF_Number__c);
         FEC_GetAddressesList.ResponseWrapper res =
             FEC_GetAddressesList.callGetAddressesList(
-                'APS','PORTAL',
-                Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss'),
+                FEC_ConstantCommon.REQUESTOR_APS,FEC_ConstantCommon.REQUESTOR_PORTAL,
+                Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
                 hist.FEC_CIF_Number__c
             );
 
@@ -267,14 +267,14 @@ public without sharing class FEC_MainInfoController {
             }
 
             addr.FEC_Address__c = buildFullAddress(ai);
-            addr.FEC_Mailing_Address__c = 'Yes';
+            addr.FEC_Mailing_Address__c = FEC_ConstantCommon.TEXT_YES;
 
             result.toUpdate.add(addr);
 
             AddressDTO dto = new AddressDTO();
             dto.addressType = type;
             dto.address = addr.FEC_Address__c;
-            dto.mailingAddress = 'Yes';
+            dto.mailingAddress = FEC_ConstantCommon.TEXT_YES;
             result.dtoList.add(dto);
         }
 

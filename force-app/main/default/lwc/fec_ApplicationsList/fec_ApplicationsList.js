@@ -14,13 +14,14 @@
 import { LightningElement, api, track } from 'lwc';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import { NavigationMixin } from 'lightning/navigation';
+import { maskValue,formatDate } from 'c/fec_CommonUtils';
 
 import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
 
-import refreshApplications
-    from '@salesforce/apex/FEC_ApplicationsListController.loadApplicationInfo';
-import getApplications
-    from '@salesforce/apex/FEC_ApplicationsListController.getApplicationsForUI';
+import refreshApplications from '@salesforce/apex/FEC_ApplicationsListController.loadApplicationInfo';
+import getApplications from '@salesforce/apex/FEC_ApplicationsListController.getApplicationsForUI';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_Registration_Info_Label from '@salesforce/label/c.FEC_Registration_Info_Label';
 
 export default class Fec_ApplicationsList extends NavigationMixin(LightningElement) {
 
@@ -74,6 +75,11 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
         { label: 'Update Date', fieldName: 'updateDate',cellAlign: 'center' }
     ];
 
+    customLabel = {
+        msgErrorApiLabel: FEC_MSG_Error_API_Label,
+        registrationInfoLabel: FEC_Registration_Info_Label
+    }
+
     connectedCallback() {
         loadStyle(this, COMMON_STYLES)
             .then(() => {
@@ -99,13 +105,12 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
                 accountNumber: row.accountNumber,
                 contractNumber: row.contractNumber,
                 lastStatus: row.lastStatus,
-                updateDate: this.formatDateDDMMYYYY(row.updateDate),
+                updateDate: formatDate(row.updateDate),
                 productGroup: row.productGroup,
                 nationalPassportID: row.nationalPassportID,
                 registrationPhone: row.registrationPhone,
-                // ====== MASKED (dùng để hiển thị)
-                nationalPassportIDMasked: this.maskValue(row.nationalPassportID, false),
-                registrationPhoneMasked: this.maskValue(row.registrationPhone, false),
+                nationalPassportIDMasked: maskValue(row.nationalPassportID, false),
+                registrationPhoneMasked: maskValue(row.registrationPhone, false),
                 registrationEmail: row.registrationEmail,
                 currentAddress: row.currentAddress,
                 permanentAddress: row.permanentAddress,
@@ -128,78 +133,6 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
         } finally {
             this.isLoading = false;
         }
-    }
-
-    maskValue(value, showFull) {
-        if (!value) return '';
-        if (showFull) return value;
-
-        const v = value.trim();
-
-        /* =====================
-        * PASSPORT ID (bắt đầu bằng chữ)
-        * Hiển thị: 2 ký tự đầu + 3 ký tự cuối
-        * ===================== */
-        if (/^[A-Za-z]/.test(v)) {
-            if (v.length <= 5) return v;
-            return (
-                v.substring(0, 2) +
-                '*'.repeat(v.length - 5) +
-                v.slice(-3)
-            );
-        }
-
-        /* =====================
-        * PHONE NUMBER: 84xxxxxxxxx
-        * Hiển thị: 5 số đầu + 3 số cuối
-        * Ví dụ: 84901***678
-        * ===================== */
-        if (/^84\d{9}$/.test(v)) {
-            return (
-                v.substring(0, 5) +
-                '*'.repeat(v.length - 8) +
-                v.slice(-3)
-            );
-        }
-
-        /* =====================
-        * PHONE NUMBER (10 số)
-        * Hiển thị: 4 số đầu + 3 số cuối
-        * Ví dụ: 0906***678
-        * ===================== */
-        if (/^\d{10}$/.test(v)) {
-            return (
-                v.substring(0, 4) +
-                '*'.repeat(v.length - 7) +
-                v.slice(-3)
-            );
-        }
-
-        /* =====================
-        * CCCD (toàn số, > 6)
-        * Hiển thị: 3 số đầu + 3 số cuối
-        * ===================== */
-        if (/^\d+$/.test(v)) {
-            if (v.length <= 6) return v;
-            return (
-                v.substring(0, 3) +
-                '*'.repeat(v.length - 6) +
-                v.slice(-3)
-            );
-        }
-
-        return v;
-    }
-
-    formatDateDDMMYYYY(value) {
-        if (!value) return '-';
-
-        // Expect yyyy-mm-dd
-        const parts = value.split('-');
-        if (parts.length !== 3) return value;
-
-        const [yyyy, mm, dd] = parts;
-        return `${dd}/${mm}/${yyyy}`;
     }
 
     handleRegistrationSelect(event) {

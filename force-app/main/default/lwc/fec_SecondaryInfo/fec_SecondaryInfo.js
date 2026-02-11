@@ -12,6 +12,17 @@
 ****************************************************************************************/
 
 import { LightningElement, api, track } from 'lwc';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_Self_Service_Channel_Label from '@salesforce/label/c.FEC_Self_Service_Channel_Label';
+import FEC_Contact_List_Label from '@salesforce/label/c.FEC_Contact_List_Label';
+import FEC_Reference_Info_Label from '@salesforce/label/c.FEC_Reference_Info_Label';
+import FEC_Zalo_Follower_Label from '@salesforce/label/c.FEC_Zalo_Follower_Label';
+import FEC_Mobile_App_Account_Label from '@salesforce/label/c.FEC_Mobile_App_Account_Label';
+import FEC_Website_Account_Label from '@salesforce/label/c.FEC_Website_Account_Label';
+import FEC_Email_Label from '@salesforce/label/c.FEC_Email_Label';
+import FEC_Work_Phone_Label from '@salesforce/label/c.FEC_Work_Phone_Label';
+import { STR_NA } from 'c/fec_CommonConst';
+
 import loadSecondaryInfo from '@salesforce/apex/FEC_SecondaryController.loadSecondaryInfo';
 import logSensitiveFromSecondaryInfo from '@salesforce/apex/FEC_SecondaryController.logSensitiveFromSecondaryInfo';
 
@@ -22,9 +33,9 @@ export default class Fec_SecondaryInfo extends LightningElement {
     @track hasData = false;
     @track error;
 
-    @track zaloFollower = 'N/A';
-    @track websiteAccount = 'N/A';
-    @track mobileAppAccount = 'N/A';
+    @track zaloFollower = STR_NA;
+    @track websiteAccount = STR_NA;
+    @track mobileAppAccount = STR_NA;
     @track reference = [];
     @track contactList = [];
     @track helpTexts = {};
@@ -47,6 +58,18 @@ export default class Fec_SecondaryInfo extends LightningElement {
         eyeCondition: row => row.channel?.toLowerCase() === 'phone' },
     ];
 
+    customLabel = {
+        msgErrorApiLabel: FEC_MSG_Error_API_Label,
+        selfServiceChannelLabel: FEC_Self_Service_Channel_Label,
+        contactListLabel: FEC_Contact_List_Label,
+        referenceInfoLabel: FEC_Reference_Info_Label,
+        zaloFollowerLabel: FEC_Zalo_Follower_Label,
+        mobileAppAccountLabel: FEC_Mobile_App_Account_Label,
+        websiteAccountLabel: FEC_Website_Account_Label,
+        emailLabel: FEC_Email_Label,
+        workPhoneLabel: FEC_Work_Phone_Label
+    }
+
     connectedCallback() {
         this.loadData();
     }
@@ -54,9 +77,9 @@ export default class Fec_SecondaryInfo extends LightningElement {
     loadData() {
         loadSecondaryInfo({ caseId: this.recordId })
             .then(res => {
-                this.zaloFollower     = res.zaloFollower || 'N/A';
-                this.websiteAccount   = res.websiteAccount || 'N/A';
-                this.mobileAppAccount = res.mobileAppAccount || 'N/A';
+                this.zaloFollower     = res.zaloFollower || STR_NA;
+                this.websiteAccount   = res.websiteAccount || STR_NA;
+                this.mobileAppAccount = res.mobileAppAccount || STR_NA;
                 this.reference        = res.references || [];
                 this.contactList = res.contactList || [];
                 this.helpTexts        = res.helpTexts || {};
@@ -137,17 +160,5 @@ export default class Fec_SecondaryInfo extends LightningElement {
         }).catch(e => {
             console.error('Sensitive log failed', e);
         });
-    }
-
-    /* ===== MASK LOGIC ===== */
-    maskWorkPhone(phone) {
-        if (phone.length < 7) {
-            return phone;
-        }
-
-        let first = phone.substring(0, 4);
-        let last  = phone.substring(phone.length - 3);
-
-        return first + '***' + last;
     }
 }
