@@ -3023,6 +3023,48 @@
         <shortDescription>Total Payment Amount Label</shortDescription>
         <value>Total Payment Amount</value>
     </labels>
+
+        <fullName>Auto_Mapping</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto Mapping Property</shortDescription>
+        <value>Auto Mapping Property</value>
+    </labels>
+    <labels>
+        <fullName>CSM_Property</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CSM Property</shortDescription>
+        <value>CSM Property</value>
+    </labels>
+    <labels>
+        <fullName>CSM_Property_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CSM Property Type</shortDescription>
+        <value>CSM Property Type</value>
+    </labels>
+    <labels>
+        <fullName>Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>Err_Missing_Fraud_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case ID is required</shortDescription>
+        <value>Fraud Case ID is required</value>
+    </labels>
+    <labels>
+        <fullName>Err_System</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>System error</shortDescription>
+        <value>System error</value>
+
     <labels>
         <fullName>FEC_Tree_Title</fullName>
         <language>en_US</language>
@@ -3088,6 +3130,7 @@
         <protected>false</protected>
         <shortDescription>Zalo Follower Label</shortDescription>
         <value>Zalo Follower</value>
+
     </labels>
     <labels>
         <fullName>Int_Category</fullName>
@@ -3223,6 +3266,7 @@
         <value>WARNING: You are deleting node {0} of type "{1}". All child nodes will be deleted. Are you sure you want to continue?</value>
     </labels>
     <labels>
+
         <fullName>LBL_AccountNumber</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3237,6 +3281,7 @@
         <value>Account Number</value>
     </labels>
     <labels>
+
         <fullName>LBL_API_CaseId_Required</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3348,6 +3393,7 @@
         <value>Missing XML data</value>
     </labels>
     <labels>
+
         <fullName>LBL_AppID</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3565,6 +3611,7 @@
         <value>Integration mapping updated successfully</value>
     </labels>
     <labels>
+
     <fullName>LBL_Master_XML_Msg_Failed</fullName>
     <language>en_US</language>
     <protected>false</protected>
@@ -3598,6 +3645,7 @@
     </value>
 </labels>
     <labels>
+
 
         <fullName>LBL_NationalID</fullName>
         <language>en_US</language>
@@ -3676,6 +3724,7 @@
         <value>Mapping saved successfully</value>
     </labels>
     <labels>
+
         <fullName>LBL_Search_RecordPerPage</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3683,6 +3732,7 @@
         <value>Records / page</value>
     </labels>
     <labels>
+
         <fullName>LBL_SearchBtn</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3718,6 +3768,7 @@
         <value>Service Case ID</value>
     </labels>
     <labels>
+
         <fullName>LBL_SFT_Account_Number</fullName>
         <language>vi</language>
         <protected>false</protected>
@@ -3931,6 +3982,7 @@
     <labels><fullName>LBL_SFT_Violation_Type</fullName><language>vi</language><protected>false</protected><shortDescription>Violation Type</shortDescription><value>Loại vi phạm</value></labels>
     <labels>
 
+
         <fullName>LBL_SortBy</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3988,6 +4040,7 @@
     </labels>
     <labels>
 
+
         <fullName>LBL_TotalRecords</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3995,6 +4048,7 @@
         <value>Total records</value>
     </labels>
     <labels>
+
 
         <fullName>LBL_UIC</fullName>
         <language>en_US</language>
@@ -4052,6 +4106,7 @@
         <value>Mandatory</value>
     </labels>
     <labels>
+
         <fullName>messager_Toast_Event</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -4066,6 +4121,7 @@
         <value>Please select a queue</value>
     </labels>
     <labels>
+
 
         <fullName>Msg_Cancel_Failed</fullName>
         <language>en_US</language>
@@ -4116,6 +4172,7 @@
         <value>Save</value>
     </labels>
     <labels>
+
         <fullName>Title_button_Get_Next_Work</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -4151,6 +4208,7 @@
         <value>No Case Found</value>
     </labels>
     <labels>
+
         <fullName>User_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -4635,6 +4693,122 @@
         <protected>false</protected>
         <shortDescription>Submit</shortDescription>
         <value>Submit</value>
+
+    </labels>    
+	 <labels>
+        <fullName>LBL_API_Missing_Detail</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing detail object in request</shortDescription>
+        <value>Missing detail object in request</value>
+    </labels>
+	 <labels>
+        <fullName>LBL_API_CaseId_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing caseID in request</shortDescription>
+        <value>Missing caseID in request</value>
+    </labels>
+	 <labels>
+        <fullName>LBL_API_Missing_XML</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing XML data</shortDescription>
+        <value>Missing XML data</value>
+    </labels>
+	 <labels>
+        <fullName>LBL_API_Invalid_Case_Format</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Invalid fraud case format</shortDescription>
+        <value>Invalid fraud case format</value>
+    </labels>
+	<labels>
+        <fullName>LBL_API_Invalid_Case_Result_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing CaseResultInfo in request</shortDescription>
+        <value>Missing CaseResultInfo in request</value>
+    </labels>
+	
+	<labels>
+        <fullName>LBL_API_Invalid_Case_Request_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing RequestInfo in request</shortDescription>
+        <value>Missing RequestInfo in request</value>
+    </labels>
+	<labels>
+        <fullName>LBL_API_Invalid_Case_Creator_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing CreatorInfo in request</shortDescription>
+        <value>Missing CreatorInfo in request</value>
+    </labels>
+	<labels>
+        <fullName>LBL_API_Invalid_Case_Customer_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing CustomerInfo in request</shortDescription>
+        <value>Missing CustomerInfo in request</value>
+    </labels>
+	<labels>
+    <fullName>LBL_API_Invalid_Service_Case_Existing</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Parent ID not found for CaseID, ServiceCase, Channel
+    </shortDescription>
+    <value>
+        Parent ID not found for CaseID={0}, ServiceCase={1}, Channel={2}
+    </value>
+</labels>
+<labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Not_Found</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Fraud case not found for CaseID, ServiceCase, Channel
+    </shortDescription>
+    <value>
+        Fraud case not found for CaseID={0}, ServiceCase={1}, Channel={2}
+    </value>
+</labels>
+<labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Update_Success</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Fraud case updated successfully
+    </shortDescription>
+    <value>
+        Fraud case updated successfully
+    </value>
+</labels>
+<labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Not_Found_Parent</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Could not find Parent ID
+    </shortDescription>
+    <value>
+        Could not find Parent ID={0}, Channel={1}
+    </value>
+</labels>
+<labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Original_Request</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Missing OriginalRequest in request
+    </shortDescription>
+    <value>
+        Missing OriginalRequest in request
+    </value>
+</labels>
+
     </labels>                             
+
 
 </CustomLabels>
