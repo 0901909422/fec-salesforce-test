@@ -1,7 +1,7 @@
 public without sharing class FEC_GetProductListCallout {
-    
+    private static final String CIF_NS ='http://fecredit.com.vn/CIF_CustomerInfo';
     private static final String ENDPOINT = '/CIF_CustomerInfo';
-    private static final String MOCKUP_ENDPOINT = 'https://2585e1bc-373f-45b8-8b0b-d25f87bd6422.mock.pstmn.io/CIF_CustomerInfo';
+    private static final String MOCKUP_ENDPOINT = FEC_MockupEndpoint.GET_PRODUCTS_LIST_ENDPOINT_MOCKUP;
     
     public static CIF_GetProductsListResponse callService(String cifNumber) {
         Http http = new Http();
@@ -38,30 +38,6 @@ public without sharing class FEC_GetProductListCallout {
         return parseResponse(res.getBody());
     }
     
-    // =====================
-    // Build SOAP Request
-    // =====================
-    // private static String buildRequestBody(String cifNumber) {
-        //     String transId = String.valueOf(UUID.randomUUID());
-        //     String dateTime_x = Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ssXXX');
-        
-        //     return
-        //         '<?xml version="1.0" encoding="UTF-8"?>' +
-        //         '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-        //         'xmlns:cif="http://fecredit.com.vn/CIF_CustomerInfo">' +
-        //         '<soapenv:Header/>' +
-        //         '<soapenv:Body>' +
-        //         '<cif:GetProductsList>' +
-        //         '<Sys>' +
-        //         '<TransID>' + transId + '</TransID>' +
-        //         '<RequestorID>ESB</RequestorID>' +
-        //         '<DateTime>' + dateTime_x + '</DateTime>' +
-        //         '</Sys>' +
-        //         '<CIFNumber>' + cifNumber + '</CIFNumber>' +
-        //         '</cif:GetProductsList>' +
-        //         '</soapenv:Body>' +
-        //         '</soapenv:Envelope>';
-    // }
     
     private static String buildRequestBody(String cifNumber) {
         String transId = String.valueOf(UUID.randomUUID());
@@ -72,7 +48,7 @@ public without sharing class FEC_GetProductListCallout {
         // Root Envelope + soapenv namespace
         Dom.XmlNode envelope = doc.createRootElement(
             'soapenv:Envelope',
-        'http://schemas.xmlsoap.org/soap/envelope/',
+        FEC_ConstantCommon.SOAP_ENV,
         null
             );
         
@@ -86,7 +62,7 @@ public without sharing class FEC_GetProductListCallout {
         Dom.XmlNode getProductsList =
             body.addChildElement(
             'cif:GetProductsList',
-        'http://fecredit.com.vn/CIF_CustomerInfo',
+        CIF_NS,
         null
             );
         
@@ -97,7 +73,7 @@ public without sharing class FEC_GetProductListCallout {
             .addTextNode(transId);
         
         sysNode.addChildElement('RequestorID', null, null)
-            .addTextNode('ESB');
+            .addTextNode(FEC_ConstantCommon.REQUESTOR_ESB);
         
         sysNode.addChildElement('DateTime', null, null)
             .addTextNode(dateTime_x);
@@ -120,12 +96,12 @@ public without sharing class FEC_GetProductListCallout {
         Dom.XmlNode envelope = doc.getRootElement();
         Dom.XmlNode body = envelope.getChildElement(
             'Body',
-        'http://schemas.xmlsoap.org/soap/envelope/'
+        FEC_ConstantCommon.SOAP_ENV
             );
         
         Dom.XmlNode responseNode = body.getChildElement(
             'GetProductsListResponse',
-        'http://fecredit.com.vn/CIF_CustomerInfo'
+        CIF_NS
             );
         
         if (responseNode == null) {
