@@ -104,4 +104,89 @@ public with sharing class FEC_AttachmentController {
         }
         return false;
     }
+
+    /** * attachFileToInteractionCase
+    * Uploads a file to the Interaction Case and links it as a Content Document.
+    * @param interactionCaseId: ID of the Interaction Case (target for file upload).
+    * @param base64File: Base64 encoded file content.
+    * @param fileName: Name of the file to be uploaded.
+    * @created: nam.vo.3@fecredit.com.vn
+    * @modified: 
+    */ 
+    // @future(callout=true)
+    @AuraEnabled
+    public static void attachFileToInteractionCase(String interactionCaseId, String base64File, String fileName){
+        try {
+            System.debug('vào attachFileToInteractionCase');
+            Blob fileBody = EncodingUtil.base64Decode(base64File);
+            System.debug('fileBody Blob: ' + fileBody);
+            System.debug('fileName: ' + fileName);
+            ContentVersion cv = new ContentVersion();
+            cv.Title = fileName;          
+            cv.PathOnClient = fileName;     
+            cv.VersionData = fileBody;
+            cv.FirstPublishLocationId = interactionCaseId;
+            System.debug('ContentVersion to insert: ' + cv);
+            insert cv;
+            System.debug('Inserted ContentVersion Id: ' + cv.Id);
+            // Id conDocId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id].ContentDocumentId;
+            // System.debug('ContentDocument Id: ' + conDocId);
+            // ContentDocumentLink cdl = new ContentDocumentLink();
+            // cdl.ContentDocumentId = conDocId;
+            // cdl.LinkedEntityId = interactionCaseId;
+            // cdl.ShareType = 'V';
+            // System.debug('ContentDocumentLink to insert: ' + cdl);
+            // insert cdl;
+            System.debug('Thành công! File đã được lưu vào Case.');
+        } catch (Exception e) {
+            System.debug('Error: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    /** * downloadAndSaveBase64
+    * Downloads file from S3 URL, converts to Base64, and saves to Interaction Case.
+    * This method consolidates the JavaScript function handleDownloadAndSaveBase64 and callAttachFileToInteractionCase.
+    * @param s3Url: URL of the file on S3.
+    * @param interactionCaseId: ID of the Interaction Case (target for file upload).
+    * @param fileName: Name of the file to be uploaded.
+    * @created:
+    * @modified: 
+    */ 
+    @AuraEnabled
+    public static void downloadAndSaveBase64(String s3Url, String interactionCaseId, String fileName){
+        System.debug('vào downloadAndSaveBase64');
+        System.debug('S3 URL: ' + s3Url);
+        System.debug('Interaction Case ID: ' + interactionCaseId);
+        System.debug('File Name: ' + fileName);
+        try {
+            // 1. Fetch file từ S3 bằng HttpRequest
+            HttpRequest request = new HttpRequest();
+            request.setEndpoint(s3Url);
+            request.setMethod('GET');
+            request.setTimeout(60000); // 60 seconds timeout
+            
+            Http http = new Http();
+            HttpResponse response = http.send(request);
+            System.debug('HTTP Response Status: ' + response.getStatusCode());
+            // System.debug('HTTP Response Body: ' + response.getBody());
+            if (response.getStatusCode() != 200) {
+                throw new AuraHandledException('Lỗi tải file từ S3: HTTP ' + response.getStatusCode());
+            }
+            
+            // 2. Lấy Blob từ response và convert sang Base64
+            Blob fileBlob = response.getBodyAsBlob();
+            System.debug('File Blob: ' + fileBlob);
+            String base64String = EncodingUtil.base64Encode(fileBlob);
+            System.debug('Base64 String length: ' + base64String);
+            // 3. Gọi phương thức attachFileToInteractionCase để lưu file
+            attachFileToInteractionCase(interactionCaseId, base64String, fileName);
+            
+            System.debug('downloadAndSaveBase64: Thành công! File từ S3 đã được lưu vào Case.');
+        } catch (Exception e) {
+            System.debug('downloadAndSaveBase64 Error: ' + e.getMessage());
+            throw new AuraHandledException('Lỗi xử lý file: ' + e.getMessage());
+        }
+    }
+
 }

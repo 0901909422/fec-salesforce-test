@@ -18,8 +18,8 @@ public with sharing class CaseTriggerHandler {
     public void onBeforeInsert(List<Case> listNewCases) {
         // Comment: Thu thập tất cả External IDs từ các Case mới để kiểm tra bulk
         for (Case c : listNewCases) {
-            if (String.isNotBlank(c.FEC_ExternalInteractionID__c)) {
-                setExternalIDs.add(c.FEC_ExternalInteractionID__c);
+            if (String.isNotBlank(c.FEC_External_Interaction_ID__c)) {
+                setExternalIDs.add(c.FEC_External_Interaction_ID__c);
             }
         }
         
@@ -39,10 +39,10 @@ public with sharing class CaseTriggerHandler {
         // Comment: Chỉ kiểm tra trùng lặp nếu External ID bị thay đổi hoặc mới được thêm vào.
         for (Case c : listNewCases) {
             Case oldCase = mapOldCases.get(c.Id);
-            if (String.isNotBlank(c.FEC_ExternalInteractionID__c) && 
-                c.FEC_ExternalInteractionID__c != oldCase.FEC_ExternalInteractionID__c) 
+            if (String.isNotBlank(c.FEC_External_Interaction_ID__c) && 
+                c.FEC_External_Interaction_ID__c != oldCase.FEC_External_Interaction_ID__c) 
             {
-                setExternalIDs.add(c.FEC_ExternalInteractionID__c);
+                setExternalIDs.add(c.FEC_External_Interaction_ID__c);
             }
         }
 
@@ -65,28 +65,28 @@ public with sharing class CaseTriggerHandler {
         
         // SOQL for Loop để tránh limit heap size (nếu có nhiều ID cần check)
         for (Case existingCase : [
-            SELECT Id, CaseNumber, FEC_ExternalInteractionID__c
+            SELECT Id, CaseNumber, FEC_External_Interaction_ID__c
             FROM Case
-            WHERE FEC_ExternalInteractionID__c IN :setExternalIDs
+            WHERE FEC_External_Interaction_ID__c IN :setExternalIDs
         ]) {
             // Loại bỏ chính bản ghi đang được Trigger khỏi danh sách trùng lặp
-            if (mapExistingCases.isEmpty() || !mapExistingCases.containsKey(existingCase.FEC_ExternalInteractionID__c)) {
-                mapExistingCases.put(existingCase.FEC_ExternalInteractionID__c, existingCase);
+            if (mapExistingCases.isEmpty() || !mapExistingCases.containsKey(existingCase.FEC_External_Interaction_ID__c)) {
+                mapExistingCases.put(existingCase.FEC_External_Interaction_ID__c, existingCase);
             }
         }
 
         // Comment: Duyệt qua các Case đang được xử lý để thêm lỗi nếu tìm thấy trùng lặp
         for (Case c : listCasesToCheck) {
-            if (String.isNotBlank(c.FEC_ExternalInteractionID__c) && 
-                mapExistingCases.containsKey(c.FEC_ExternalInteractionID__c)) {
+            if (String.isNotBlank(c.FEC_External_Interaction_ID__c) && 
+                mapExistingCases.containsKey(c.FEC_External_Interaction_ID__c)) {
                 
-                Case duplicateCase = mapExistingCases.get(c.FEC_ExternalInteractionID__c);
+                Case duplicateCase = mapExistingCases.get(c.FEC_External_Interaction_ID__c);
                 
                 // Tránh lỗi khi bản ghi đang được xử lý là bản ghi trùng lặp chính nó
                 if (c.Id != duplicateCase.Id) {
                     // Tương tự Message Error trong FRD: External Interaction ID has already been used for another Pega Interaction <I-12345>.
                     String errorMessage = 'External Interaction ID has already been used for another Pega Interaction <' + duplicateCase.CaseNumber + '>. Please check and re-enter.';
-                    c.FEC_ExternalInteractionID__c.addError(errorMessage);
+                    c.FEC_External_Interaction_ID__c.addError(errorMessage);
                 }
             }
         }

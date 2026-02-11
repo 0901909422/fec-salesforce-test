@@ -44,11 +44,11 @@ public without sharing class FEC_CreateCaseHanlder {
     */
     @AuraEnabled 
     public static FEC_InteractionCaseResponse createInteractionCase(String jsonInput) {
-        System.debug('### [FEC] Raw JSON: ' + jsonInput);
+        // System.debug('### [FEC] Raw JSON: ' + jsonInput);
         // Tự ép kiểu để xem lỗi ở đâu
         FEC_InteractionCaseDTO dto = (FEC_InteractionCaseDTO)JSON.deserialize(jsonInput, FEC_InteractionCaseDTO.class);
-        System.debug('### [FEC] DTO after manual deserialize: ' + dto);
-        System.debug('### [FEC] Start createInteractionCase with DTO: ' + JSON.serialize(dto)); // Log Input Data
+        // System.debug('### [FEC] DTO after manual deserialize: ' + dto);
+        // System.debug('### [FEC] Start createInteractionCase with DTO: ' + JSON.serialize(dto)); // Log Input Data
         
         if (dto == null) {
             System.debug('### [FEC] Error: InteractionCaseDTO is null');
@@ -57,16 +57,16 @@ public without sharing class FEC_CreateCaseHanlder {
 
         try {
             Map<String, Id> rtMap = getRecordTypeIds();
-            System.debug('### [FEC] RecordType Mapping: ' + rtMap);
+            // System.debug('### [FEC] RecordType Mapping: ' + rtMap);
 
             Case interactionCase = new Case();
             interactionCase.RecordTypeId = rtMap.get('Interaction');
             
-        // CHANNEL / STATUS
-        // CHANNEL / STATUS
-        // ---------------------------
             // CHANNEL / STATUS
-        // ---------------------------
+            // CHANNEL / STATUS
+            // ---------------------------
+                // CHANNEL / STATUS
+            // ---------------------------
             interactionCase.FEC_Channel__c = dto.channel;
             interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
             interactionCase.FEC_Other_Subchannel__c = (dto.subChannel == 'Other' ? dto.otherSubChannel : null);
@@ -78,31 +78,31 @@ public without sharing class FEC_CreateCaseHanlder {
                 interactionCase.Status = 'Open';
             }
             
-        // CUSTOMER INFO
-        // CUSTOMER INFO
-        // ---------------------------
             // CUSTOMER INFO
-        // ---------------------------
+            // CUSTOMER INFO
+            // ---------------------------
+                // CUSTOMER INFO
+            // ---------------------------
             interactionCase.FEC_Phone_Number__c = dto.phoneNumber;
             interactionCase.FEC_National_ID_Passport_ID__c = dto.nationalId;
             interactionCase.FEC_Account_Number__c = dto.accountNumber;
         
         
-        // ---------------------------
-            
-        // ---------------------------
-        // INTERACTION DATA
-        // INTERACTION DATA
-        // ---------------------------
+            // ---------------------------
+                
+            // ---------------------------
             // INTERACTION DATA
-        // ---------------------------
+            // INTERACTION DATA
+            // ---------------------------
+                // INTERACTION DATA
+            // ---------------------------
             interactionCase.FEC_Transcription__c = dto.transcription;
             interactionCase.FEC_KYC_Method__c = dto.kycMethod;
             interactionCase.FEC_KYC_Result__c = dto.kycResult;
             
-            System.debug('### [FEC] Inserting Interaction Case: ' + interactionCase);
+            // System.debug('### [FEC] Inserting Interaction Case: ' + interactionCase);
             insert interactionCase;
-            System.debug('### [FEC] Insert Success. New Case ID: ' + interactionCase.Id);
+            // System.debug('### [FEC] Insert Success. New Case ID: ' + interactionCase.Id);
 
             // Re-query to get formula/auto-number fields if necessary
             interactionCase = [
@@ -110,11 +110,13 @@ public without sharing class FEC_CreateCaseHanlder {
                 FROM Case 
                 WHERE Id = :interactionCase.Id
             ];
+            System.debug('interactionCase: ' + interactionCase);
             
             FEC_InteractionCaseResponse res = new FEC_InteractionCaseResponse();
             res.caseId = interactionCase.Id;
             res.linkId = interactionCase.FEC_Link_ID__c;
             
+
             if (res.linkId != null && res.linkId.contains('>')) {
                 res.caseNo = res.linkId.substringBetween('>', '</');
             }

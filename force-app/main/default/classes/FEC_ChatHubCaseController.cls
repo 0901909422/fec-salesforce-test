@@ -26,9 +26,10 @@ public with sharing class FEC_ChatHubCaseController {
     
             // 1. Parse JSON
             Map<String, Object> mapRaw = (Map<String, Object>)JSON.deserializeUntyped(strJsonData);
-            
+            System.debug('### [FEC] Parsed JSON Map: ' + mapRaw);
             // NULL CHECK: Ensure root map is not null
             if (mapRaw == null) return null;
+            System.debug('### [FEC] chatSession mapRaw: ' + mapRaw.get('chatSession'));
     
             // 2. Safe Extraction of Child Maps
             // Initialize as empty maps if key is missing to avoid NullPointerException on .get()
@@ -43,13 +44,16 @@ public with sharing class FEC_ChatHubCaseController {
             
             dto.channel = 'Chat'; 
             
+            String strRawChannel = (mapSession.containsKey('chatChannel')) ? (String)mapSession.get('chatChannel') : '';
+
             // Safe .get() calls (even if map is empty, .get() returns null, not Exception)
-            dto.subChannel = FEC_Utils.getInteractionChannel((String)mapSession.get('chatChannel'));
+            dto.subChannel = FEC_Utils.getInteractionChannel(strRawChannel);
             dto.externalInteractionId = (String)mapSession.get('sessionID');
             dto.phoneNumber = (String)mapCustomer.get('phoneNumber');
             dto.nationalId = (String)mapCustomer.get('nationalID');
-            dto.kycResult = (String)mapCustomer.get('kYCStatus');
-            
+            // dto.kycResult = (String)mapCustomer.get('kYCStatus');
+            dto.kycResult = FEC_Utils.mappingKYCs((String)mapCustomer.get('kYCStatus'));
+            System.debug('dto data: ' + JSON.serialize(dto));
             // Optional: Validation
             if (String.isBlank(dto.externalInteractionId)) {
                  System.debug('### [FEC] Warning: Missing SessionID');
@@ -79,13 +83,85 @@ public with sharing class FEC_ChatHubCaseController {
     @AuraEnabled
     public static Boolean saveChatHistoryAndAttachment(String strJsonData) {
         System.debug('### [FEC] saveChatHistory Input: ' + strJsonData);
-        if (String.isBlank(strJsonData)) return false;
+        if (String.isBlank(strJsonData)) {
+            // old code
+            // return false;
 
+            // new code
+            throw new AuraHandledException('Chat history data is blank');
+        }
+
+        System.debug('### [FEC] JSON.deserializeUntyped: ' + JSON.deserializeUntyped(strJsonData));
         List<FEC_ChatHistory__c> listHistoriesToInsert = new List<FEC_ChatHistory__c>();
         List<Object> listRawHistory = (List<Object>)JSON.deserializeUntyped(strJsonData);
+        System.debug(listRawHistory);
         
+        // Check if listRawHistory is empty
+        if (listRawHistory == null || listRawHistory.isEmpty()) {
+            System.debug('### [FEC] Chat history list is empty');
+            // old code
+            // return false;
+
+            // new code
+            throw new AuraHandledException('Chat history list is empty');
+        }
+        
+        Map<String, Object> mapFirstItem = (Map<String, Object>)listRawHistory[0];
+        System.debug('listRawHistory PegaID: ' + mapFirstItem.get('pegaID'));
+        System.debug('listRawHistory SessionID: ' + mapFirstItem.get('sessionID'));
+        System.debug('listRawHistory SenderName: ' + mapFirstItem.get('senderName'));
+        System.debug('listRawHistory Message: ' + mapFirstItem.get('message'));
+        System.debug('listRawHistory MessageType: ' + mapFirstItem.get('messageType'));
+        System.debug('listRawHistory ChatChannel: ' + mapFirstItem.get('chatChannel'));
+        System.debug('listRawHistory CreatedAt: ' + mapFirstItem.get('createdAt'));
         // Use Set to collect Case Ids to query if needed, avoiding SOQL in loop
         String strCaseId = '';
+        
+        // Collect all attachment file names and case IDs before loop to batch query
+        Set<String> setExistingFileNames = new Set<String>();
+        Map<String, List<String>> mapCaseToFileNames = new Map<String, List<String>>();
+        
+        // Pre-process to collect all file names that need checking
+        for(Object obj : listRawHistory) {
+            Map<String, Object> mapItem = (Map<String, Object>)obj;
+            
+            if(String.isBlank(strCaseId)) {
+                strCaseId = (String)mapItem.get('pegaID');
+            }
+            
+            String strMessageType = (String)mapItem.get('messageType');
+            if (strMessageType == 'attachment' || strMessageType == 'image') {
+                String strCreatedAt = (String)mapItem.get('createdAt');
+                Datetime dtCreatedAt = FEC_Utils.parseChatHubDatetime(strCreatedAt);
+                String fileNameConvert = (FEC_Utils.formatDateTimeToString(dtCreatedAt) + '_' + (String)mapItem.get('fileName')).trim();
+                setExistingFileNames.add(fileNameConvert);
+            }
+        }
+        
+        // Batch query all existing files at once
+        Map<String, Boolean> mapExistingFiles = new Map<String, Boolean>();
+        System.debug('setExistingFileNames: ' + setExistingFileNames);
+        if (!setExistingFileNames.isEmpty()) {
+            System.debug('query listExistingLinks: ');
+            System.debug( [
+                SELECT ContentDocument.Title 
+                FROM ContentDocumentLink 
+                WHERE LinkedEntityId = :strCaseId 
+            ]);
+            System.debug('strCaseId: '  + strCaseId);
+            System.debug('setExistingFileNames: ' + setExistingFileNames);
+            List<ContentDocumentLink> listExistingLinks = [
+                SELECT ContentDocument.Title 
+                FROM ContentDocumentLink 
+                WHERE LinkedEntityId = :strCaseId 
+                AND ContentDocument.Title IN :setExistingFileNames
+            ];
+            System.debug('listExistingLinks: ' + listExistingLinks);
+            for (ContentDocumentLink link : listExistingLinks) {
+                mapExistingFiles.put(link.ContentDocument.Title.trim(), true);
+            }
+            System.debug('mapExistingFiles: ' + mapExistingFiles);
+        }
 
         // 1. Process Chat History
         for(Object obj : listRawHistory) {
@@ -113,9 +189,31 @@ public with sharing class FEC_ChatHubCaseController {
             // 2. Handle Attachment Logic
             // If message type is attachment, we might need to call the File Service
             if (objHistory.FEC_MessageType__c == 'attachment' || objHistory.FEC_MessageType__c == 'image') {
-                 // Logic to call FEC_CreateCSCaseService or similar to download file from URL
-                 // This should likely be an async call (Queueable/Future) to avoid holding the transaction
-                 handleAttachmentAsync(strCaseId, (String)mapItem.get('message'), (String)mapItem.get('fileName'));
+                Datetime dtCreatedAt = FEC_Utils.parseChatHubDatetime(strCreatedAt);
+                System.debug('dtCreatedAt: ' + dtCreatedAt);
+                // System.debug('FEC_Utils.formatDateTimeToString(dtCreatedAt): ' + FEC_Utils.formatDateTimeToString(dtCreatedAt));
+                String fileNameConvert = (FEC_Utils.formatDateTimeToString(dtCreatedAt) + '_' + (String)mapItem.get('fileName')).trim();
+                System.debug('Processing attachment: ' + fileNameConvert);
+                // Check if file already exists using pre-queried map
+                if (mapExistingFiles.containsKey(fileNameConvert)) {
+                    System.debug('File "' + fileNameConvert + '" đã tồn tại trên Case này. Bỏ qua.');
+                    continue;  // Skip this file, but continue processing other messages
+                } else {
+                    // Call async to download file
+                    // handleAttachmentAsync(objHistory.FEC_Case__c, (String)mapItem.get('fileUrl'), fileNameConvert);
+
+                    // new code
+                    // try{
+                    //     FEC_AttachmentController.downloadAndSaveBase64(
+                    //         (String)mapItem.get('fileUrl'), 
+                    //         objHistory.FEC_Case__c, 
+                    //         fileNameConvert
+                    //     );
+                    // }catch(Exception e){
+                    //     System.debug('### [FEC] Error downloading attachment: ' + e.getMessage());
+                    //     return false;
+                    // }
+                }
             }
         }
 
@@ -126,7 +224,11 @@ public with sharing class FEC_ChatHubCaseController {
             return true;
         } catch (Exception e) {
             System.debug('### [FEC] Error saving history: ' + e.getMessage());
-            return false;
+            // old code
+            // return false;
+
+            // new code
+            throw new AuraHandledException('Error saving chat history: ' + e.getMessage());
         }
     }
 

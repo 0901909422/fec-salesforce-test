@@ -66,10 +66,9 @@ public with sharing class FEC_ChatHubInitController {
             WHERE DeveloperName = :CHATHUB_METADATA_DEV_NAME 
             LIMIT 1
         ];
-        
+        System.debug('### [FEC_ChatHub] Retrieved Metadata Settings: ' + listSettings);
         Boolean isEnabled = !listSettings.isEmpty() && listSettings[0].FEC_ChatHubEnabled__c;
         System.debug('### [FEC_ChatHub] Check System Enabled: ' + isEnabled);
-
         return isAllowed && isEnabled;
     }
 
@@ -98,10 +97,9 @@ public with sharing class FEC_ChatHubInitController {
             String payload = shortUsername + '|' + String.valueOf(expiredTime);
             Blob data = Blob.valueOf(payload);
             System.debug('### [FEC_ChatHub] Payload: ' + payload);
-
+            System.debug('### [FEC_ChatHub] strKeyB64 ' + strKeyB64);
             /* ===== 2. KEY & SALT ===== */
             Blob aesKey = EncodingUtil.base64Decode(strKeyB64);
-
             /* ===== 3. ENCRYPT (Managed IV) ===== */
             // Salesforce tự sinh IV 12 bytes
             Blob encryptedWithIv = Crypto.encryptWithManagedIV('AES256-GCM', aesKey, data);
@@ -126,9 +124,22 @@ public with sharing class FEC_ChatHubInitController {
             
             String ivB64 = EncodingUtil.base64Encode(iv);
             String cipherB64 = EncodingUtil.base64Encode(cipher);
-            
+            ///// new code
+            // 1. Định nghĩa độ dài salt (16 bytes)
+            Integer saltLength = 16;
+
+            // 2. Tạo Salt ngẫu nhiên 
+            // Trong Apex, Crypto.generateAesKey(128) sẽ tạo ra một Blob 128 bit (tương đương 16 bytes)
+            Blob salt = Crypto.generateAesKey(128);
+
+            // 3. Mã hóa sang chuỗi Base64
+            String encodedSalt = EncodingUtil.base64Encode(salt);
+            System.debug('### [FEC_ChatHub] Generated Salt (Base64): ');
+            System.debug(encodedSalt);
+            //////
             // Format: iv:cipher
             return strSaltB64 + ':' + ivB64 + ':' + cipherB64;
+            // return encodedSalt + ':' + ivB64 + ':' + cipherB64;
 
         } catch (Exception e) {
             System.debug('### [FEC_ChatHub] ERROR: ' + e.getMessage());
