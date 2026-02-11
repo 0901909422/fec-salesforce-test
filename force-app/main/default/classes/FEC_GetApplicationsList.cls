@@ -103,7 +103,7 @@ public with sharing class FEC_GetApplicationsList {
 
         Dom.XmlNode envelope = doc.createRootElement(
             'soapenv:Envelope',
-            'http://schemas.xmlsoap.org/soap/envelope/',
+            FEC_ConstantCommon.SOAP_ENV,
             null
         );
 
