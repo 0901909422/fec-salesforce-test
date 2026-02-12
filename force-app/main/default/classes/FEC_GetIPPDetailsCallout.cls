@@ -162,7 +162,6 @@ public with sharing class FEC_GetIPPDetailsCallout {
             ? FEC_MockupEndpoint.GET_IPP_DETAIL_ENDPOINT_MOCKUP
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
-        // Server yêu cầu SOAPAction là full URI, không phải chỉ "GetIPPDetails"
         String soapAction = apiConfig.FEC_SOAP_Action__c;
 
         HttpResponse res = FEC_CommonUltils.calloutApi(
