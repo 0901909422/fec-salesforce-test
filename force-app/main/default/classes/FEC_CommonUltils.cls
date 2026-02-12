@@ -332,4 +332,24 @@ public with sharing class FEC_CommonUltils {
   public static String decimalToString(Decimal d) {
     return d == null ? '' : d.format();
   }
+
+  /**
+   * Build help text map for any SObject type
+   * @param fields - map field object
+   * @return Map of field API name to help text
+   */
+  public static Map<String, String> buildHelpTextMap(Map<String, Schema.SObjectField> fields) {
+    Map<String, String> m = new Map<String, String>();
+    try {
+      for (Schema.SObjectField f : fields.values()) {
+        Schema.DescribeFieldResult fieldDescribe = f.getDescribe();
+        if (String.isNotBlank(fieldDescribe.getInlineHelpText())) {
+          m.put(fieldDescribe.getName(), fieldDescribe.getInlineHelpText());
+        }
+      }
+    } catch (Exception e) {
+      System.debug('buildHelpTextMap error: ' + e.getMessage());
+    }
+    return m;
+  }
 }

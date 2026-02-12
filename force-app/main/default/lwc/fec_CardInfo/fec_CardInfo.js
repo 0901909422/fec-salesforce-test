@@ -3,6 +3,7 @@ import loadCardInfo from '@salesforce/apex/FEC_CardInfoController.loadCardInfo';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { subscribe, unsubscribe, onError } from 'lightning/empApi';
 import { autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
+import { formatDate } from 'c/fec_CommonUtils';
 import FEC_Card_Delivery_Label from '@salesforce/label/c.FEC_Card_Delivery_Label';
 import FEC_Other_Card_Label from '@salesforce/label/c.FEC_Other_Card_Label';
 
@@ -17,6 +18,9 @@ export default class Fec_CardInfo extends LightningElement {
 
     cardDeliveryData = [];
     otherCardData = [];
+    
+    // Track if data has been loaded (to differentiate empty data vs no API call)
+    otherCardDataLoaded = false;
     
     // Active accordion sections - mặc định mở cả 2
     activeSections = ['cardDelivery', 'otherCard'];
@@ -101,14 +105,23 @@ export default class Fec_CardInfo extends LightningElement {
                 return {
                     FEC_Card_Number__c: dto.cardNumber,
                     FEC_Issue_Date__c: dto.issueDate,
+                    FEC_Issue_Date_Formatted__c: formatDate(dto.issueDate),
                     FEC_Type_of_Issue__c: dto.typeOfIssue,
                     FEC_Delivery_Status__c: dto.deliveryStatus,
                     FEC_Delivery_Date__c: dto.deliveryDate,
+                    FEC_Delivery_Date_Formatted__c: formatDate(dto.deliveryDate),
                     FEC_Recipient__c: dto.recipient,
                     FEC_Tracking_Number__c: dto.trackingNumber,
                     FEC_Delivery_Note__c: dto.deliveryNote
                 };
-            }).map(record => autoHighlightNegativeCurrency(record));
+            })
+            .sort((a, b) => {
+                // Sort by Issue Date descending (mới nhất lên đầu)
+                const dateA = a.FEC_Issue_Date__c ? new Date(a.FEC_Issue_Date__c) : new Date(0);
+                const dateB = b.FEC_Issue_Date__c ? new Date(b.FEC_Issue_Date__c) : new Date(0);
+                return dateB - dateA;
+            })
+            .map(record => autoHighlightNegativeCurrency(record));
         } else {
             this.cardDeliveryData = [];
         }
@@ -121,16 +134,29 @@ export default class Fec_CardInfo extends LightningElement {
                     FEC_Card_Number__c: dto.cardNumber,
                     FEC_Plastic_ID__c: dto.plasticId,
                     FEC_Expiry_Date__c: dto.expiryDate,
+                    FEC_Expiry_Date_Formatted__c: formatDate(dto.expiryDate),
                     FEC_Embossing_Name__c: dto.embossingName,
                     FEC_Card_Activation_Date__c: dto.cardActivationDate,
+                    FEC_Card_Activation_Date_Formatted__c: formatDate(dto.cardActivationDate),
                     FEC_Issue_Date__c: dto.issueDate,
+                    FEC_Issue_Date_Formatted__c: formatDate(dto.issueDate),
                     FEC_Block_Code__c: dto.blockCode,
                     FEC_Gender__c: dto.gender
                 };
-            }).map(record => autoHighlightNegativeCurrency(record));
+            })
+            .sort((a, b) => {
+                // Sort by Issue Date descending (mới nhất lên đầu)
+                const dateA = a.FEC_Issue_Date__c ? new Date(a.FEC_Issue_Date__c) : new Date(0);
+                const dateB = b.FEC_Issue_Date__c ? new Date(b.FEC_Issue_Date__c) : new Date(0);
+                return dateB - dateA;
+            })
+            .map(record => autoHighlightNegativeCurrency(record));
         } else {
             this.otherCardData = [];
         }
+        
+        // Mark that Other Card data has been loaded (even if empty)
+        this.otherCardDataLoaded = true;
         
         this.hasCardDeliveryError = false;
         this.hasOtherCardError = false;
@@ -146,6 +172,7 @@ export default class Fec_CardInfo extends LightningElement {
         this.hasOtherCardError = true;
         this.cardDeliveryData = [];
         this.otherCardData = [];
+        this.otherCardDataLoaded = false;
         this.isCardDeliveryLoading = false;
         this.isOtherCardLoading = false;
     }
@@ -248,29 +275,34 @@ export default class Fec_CardInfo extends LightningElement {
             : 'slds-accordion__content slds-hide';
     }
 
+    // Hide row number for Card Delivery
+    get hideCardDeliveryRowNumber() {
+        return true;
+    }
+
     // Cấu hình cột cho Card Delivery
     cardDeliveryColumns = [
-        { label: 'Card Number', fieldName: 'FEC_Card_Number__c' },
-        { label: 'Issue Date', fieldName: 'FEC_Issue_Date__c', type: 'date' },
-        { label: 'Type of Issue', fieldName: 'FEC_Type_of_Issue__c' },
-        { label: 'Delivery Status', fieldName: 'FEC_Delivery_Status__c' },
-        { label: 'Delivery Date', fieldName: 'FEC_Delivery_Date__c', type: 'date' },
-        { label: 'Recipient', fieldName: 'FEC_Recipient__c' },
-        { label: 'Tracking Number', fieldName: 'FEC_Tracking_Number__c' },
-        { label: 'Delivery Note', fieldName: 'FEC_Delivery_Note__c' }
+        { label: 'Card Number', fieldName: 'FEC_Card_Number__c', width: '140px', minWidth: '120px' },
+        { label: 'Issue Date', fieldName: 'FEC_Issue_Date_Formatted__c', type: 'text', cellAlign: 'center', width: '100px', minWidth: '90px' },
+        { label: 'Type of Issue', fieldName: 'FEC_Type_of_Issue__c', cellAlign: 'center', width: '120px', minWidth: '105px' },
+        { label: 'Status', fieldName: 'FEC_Delivery_Status__c', width: '110px', minWidth: '95px' },
+        { label: 'Delivery Date', fieldName: 'FEC_Delivery_Date_Formatted__c', type: 'text', cellAlign: 'center', width: '115px', minWidth: '105px' },
+        { label: 'Recipient', fieldName: 'FEC_Recipient__c', width: '140px', minWidth: '120px' },
+        { label: 'Tracking Number', fieldName: 'FEC_Tracking_Number__c', cellAlign: 'center', width: '140px', minWidth: '120px' },
+        { label: 'Delivery Note', fieldName: 'FEC_Delivery_Note__c', width: '180px', minWidth: '150px' }
     ];
 
     // Cấu hình cột cho Other Card
     otherCardColumns = [
-        { label: 'Card Holder', fieldName: 'FEC_Cardholder__c' },
-        { label: 'Card Number', fieldName: 'FEC_Card_Number__c' },
-        { label: 'Plastic ID', fieldName: 'FEC_Plastic_ID__c' },
-        { label: 'Expiry Date', fieldName: 'FEC_Expiry_Date__c', type: 'date' },
-        { label: 'Embossing Name', fieldName: 'FEC_Embossing_Name__c' },
-        { label: 'Card Activation Date', fieldName: 'FEC_Card_Activation_Date__c', type: 'date' },
-        { label: 'Issue Date', fieldName: 'FEC_Issue_Date__c', type: 'date' },
-        { label: 'Block Code', fieldName: 'FEC_Block_Code__c' },
-        { label: 'Gender', fieldName: 'FEC_Gender__c' }
+        { label: 'Card Holder', fieldName: 'FEC_Cardholder__c', width: '140px', minWidth: '120px' },
+        { label: 'Card Number', fieldName: 'FEC_Card_Number__c', width: '140px', minWidth: '120px' },
+        { label: 'Plastic ID', fieldName: 'FEC_Plastic_ID__c', cellAlign: 'center', width: '120px', minWidth: '100px' },
+        { label: 'Expiry Date', fieldName: 'FEC_Expiry_Date_Formatted__c', type: 'text', cellAlign: 'center', width: '100px', minWidth: '90px' },
+        { label: 'Embossing Name', fieldName: 'FEC_Embossing_Name__c', width: '160px', minWidth: '140px' },
+        { label: 'Card Activation Date', fieldName: 'FEC_Card_Activation_Date_Formatted__c', type: 'text', cellAlign: 'center', width: '145px', minWidth: '130px' },
+        { label: 'Issue Date', fieldName: 'FEC_Issue_Date_Formatted__c', type: 'text', cellAlign: 'center', width: '100px', minWidth: '90px' },
+        { label: 'Block Code', fieldName: 'FEC_Block_Code__c', cellAlign: 'center', width: '100px', minWidth: '90px' },
+        { label: 'Gender', fieldName: 'FEC_Gender__c', cellAlign: 'center', width: '90px', minWidth: '80px' }
     ];
 
     // Refresh lại dữ liệu từ API (force refresh)

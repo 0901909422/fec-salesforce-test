@@ -163,6 +163,15 @@ public with sharing class FEC_GetCardSecInfo {
     }
  
     // =========================================================================
+    // CARDS DELIVERY
+    // =========================================================================
+    public class CardsDelivery {
+        public String CardNumber; // Card Number
+        public String KindOfIssue; // Type of Issue
+        public String DeliveryDate; // Delivery Date
+    }
+
+    // =========================================================================
     // PUBLIC CALL METHOD - Simplified version for easy usage
     // =========================================================================
     public static ResponseWrapper getCardSecInfo(String accountNumber) {
@@ -211,7 +220,7 @@ public with sharing class FEC_GetCardSecInfo {
         getCardSecInfo.addChildElement('AccountNumber', null, null).addTextNode(accountNumber);
         
         String requestBody = doc.toXmlString();
- 
+
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Sec_Info');
  
@@ -219,7 +228,7 @@ public with sharing class FEC_GetCardSecInfo {
             ? FEC_MockupEndpoint.GET_CARD_SEC_INFO_ENDPOINT_MOCKUP
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
         HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, requestBody);
- 
+
         if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
             throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
         }
@@ -378,7 +387,7 @@ public with sharing class FEC_GetCardSecInfo {
                 }
             }
         }
- 
+
         // IPPs
         Dom.XmlNode ippsNode = infoNode.getChildElement('IPPs', null);
         if (ippsNode != null) {
@@ -410,7 +419,7 @@ public with sharing class FEC_GetCardSecInfo {
  
         return result;
     }
- 
+
     /**
      * Một <IPP> có thể có OPENING_BALANCE_1, _2, ... _36 (nhiều kỳ) hoặc chỉ OpeningBalance (1 kỳ).
      * Trả về danh sách IPP (1 item per kỳ) để lưu nhiều bản ghi IPP Schedule.
@@ -418,7 +427,7 @@ public with sharing class FEC_GetCardSecInfo {
     private static List<IPP> expandIPPToScheduleItems(Dom.XmlNode ippNode) {
         List<IPP> listOut = new List<IPP>();
         if (ippNode == null) return listOut;
- 
+
         String ippPlan = FEC_CommonUltils.getXmlValue(ippNode, 'IPPPlan');
         String ippRecordNoFromXml = FEC_CommonUltils.getXmlValue(ippNode, 'IPPRecordNo');
         if (String.isBlank(ippRecordNoFromXml)) {
@@ -434,7 +443,7 @@ public with sharing class FEC_GetCardSecInfo {
         Decimal paymentAmount = FEC_CommonUltils.xmlValToDecimal(ippNode, 'PaymentAmount');
         Decimal monthlyPrincipal = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MonthlyPrincipal');
         Decimal monthlyInterest = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MonthlyInterest');
- 
+
         // Mỗi kỳ (1-36): OPENING_BALANCE_k, PAYMENT_AMT_k, MONTHLY_PRINCIPAL_k, MONTHLY_INTEREST_k
         for (Integer k = 1; k <= 36; k++) {
             String keyOpening = 'OPENING_BALANCE_' + k;
@@ -462,7 +471,7 @@ public with sharing class FEC_GetCardSecInfo {
                 } catch (Exception e) { /* skip invalid number */ }
             }
         }
- 
+
         if (listOut.isEmpty()) {
             Decimal openingBalance = FEC_CommonUltils.xmlValToDecimal(ippNode, 'OpeningBalance');
             IPP ipp = new IPP();
@@ -482,8 +491,7 @@ public with sharing class FEC_GetCardSecInfo {
         }
         return listOut;
     }
- 
- 
+
     // =========================================================================
     // VALIDATION (KEEP FULL)
     // =========================================================================
@@ -532,6 +540,10 @@ public with sharing class FEC_GetCardSecInfo {
         }
  
     }
- 
+
+
 }
+
  
+ 
+
