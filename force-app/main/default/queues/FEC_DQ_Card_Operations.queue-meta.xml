@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Queue xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Default Queue</description>
+    <doesSendEmailToMembers>false</doesSendEmailToMembers>
+    <name>DQ - Card Operations</name>
+    <queueMembers>
+        <roles>
+            <role>FEC_Card_Dispute_Charge_Back_Specialist</role>
+            <role>FEC_Card_Issuance_Specialist</role>
+            <role>FEC_Card_Operations_Control_Support_Expert</role>
+            <role>FEC_Card_Settlement_Manager</role>
+            <role>FEC_Card_Settlement_Specialist</role>
+            <role>FEC_Card_Transaction_Management_Officer</role>
+            <role>FEC_Card_Transaction_Management_Specialist</role>
+            <role>FEC_Card_Transaction_Manager</role>
+            <role>FEC_Head_Of_Card_Operations_Department</role>
+            <role>FEC_Senior_Card_Dispute_Charge_Back_Specialist</role>
+            <role>FEC_Senior_Card_Issuance_Specialist</role>
+            <role>FEC_Senior_Card_Operations_Control_Support_Specialist</role>
+            <role>FEC_Senior_Card_Settlement_Specialist</role>
+            <role>FEC_Senior_Card_Transaction_Management_Specialist</role>
+            <role>FEC_Unit_Head_of_Card_Operations</role>
+            <role>FEC_Unit_Head_of_Card_Risk_Management</role>
+        </roles>
+    </queueMembers>
+    <queueSobject>
+        <sobjectType>Case</sobjectType>
+    </queueSobject>
+</Queue>

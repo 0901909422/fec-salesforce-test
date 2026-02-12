@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Channel for switch mode Case</description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <description>mode handling</description>
+        <fieldName>isModeEdit</fieldName>
+    </lightningMessageFields>
+    <masterLabel>FEC Case Mode</masterLabel>
+</LightningMessageChannel>
