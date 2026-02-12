@@ -10,6 +10,42 @@
 
 public with sharing class FEC_IPPController {
 
+    // ==========================================
+    // DTO CLASSES - Data Transfer Objects
+    // ==========================================
+    public class IPPApiResponse {
+        public String transId;
+        public String sysDateTime;
+        public String responseCode;
+        public String responseDesc;
+        public List<IPPPlanDTO> plans;
+        
+        public IPPApiResponse() {
+            plans = new List<IPPPlanDTO>();
+        }
+    }
+    
+    public class IPPPlanDTO {
+        public String recordNumber;
+        public String planNumber;
+        public String openDate;
+        public String beginDate;
+        public String matureDate;
+        public Decimal currentBalance;
+        public Decimal ippCurrentBalance;
+        public Decimal baseRate;
+        public Decimal deferredInterest;
+        public Decimal accruedInterest;
+        public Decimal perDiem;
+        public Integer aggregateDays;
+        public Decimal ippInterest;
+        public String closeFeeIndicator;
+        public Decimal closeFeeIndicatorAmt;
+        public Decimal closeFeeAmount;
+        public Decimal additionalAccruedInt;
+        public Decimal totalPaymentAmount;
+        public String refNumber;
+    }
 
     // =========================================================================
     // DTO trả về cho LWC
@@ -54,6 +90,8 @@ public with sharing class FEC_IPPController {
 
         Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
 
+        Map<String, Schema.SObjectField> fields = FEC_IPP__c.SObjectType.getDescribe().fields.getMap();
+
         // 1. Ưu tiên query từ database
         if (customerHistoryId != null) {
             List<FEC_IPP__c> fromDb = [
@@ -70,7 +108,7 @@ public with sharing class FEC_IPPController {
             ];
             if (fromDb != null && !fromDb.isEmpty()) {
                 List<IPPRecordDTO> result = new List<IPPRecordDTO>();
-                Map<String, String> helpTextMap = getIPPHelpTextMap();
+                Map<String, String> helpTextMap = FEC_CommonUltils.buildHelpTextMap(fields);
                 for (FEC_IPP__c rec : fromDb) {
                     IPPRecordDTO dto = mapFECIPPToDTO(rec);
                     dto.helpTexts = helpTextMap;
@@ -91,7 +129,7 @@ public with sharing class FEC_IPPController {
         saveIPPRecordsToDatabase(caseId, result);
         
         // Gán help texts cho tất cả records
-        Map<String, String> helpTextMap = getIPPHelpTextMap();
+        Map<String, String> helpTextMap = FEC_CommonUltils.buildHelpTextMap(fields);
         for (IPPRecordDTO dto : result) {
             dto.helpTexts = helpTextMap;
         }
@@ -289,14 +327,14 @@ public with sharing class FEC_IPPController {
         // Dữ liệu chính từ CardPlan
         dto.planNumber = planNumberKey;
         dto.Id = 'api-' + dto.planNumber + '-' + (ipp != null && ipp.IPPRecordNo != null ? ipp.IPPRecordNo : '');
-        dto.openDate = parseDateSafe(cardPlan.openDate);
+        dto.openDate = FEC_CommonUltils.parseDate(cardPlan.openDate);
         dto.ippBalance = (cardPlan.currentBalance != null) ? cardPlan.currentBalance : 0;
         
         // Dữ liệu từ GetCardSecInfo IPP (nếu match)
         if (ipp != null) {
             dto.recordNo = (ipp.IPPRecordNo != null) ? ipp.IPPRecordNo.trim() : '';
-            dto.firstDueDate = parseDateSafe(ipp.IPPStartDate);
-            dto.matureDate = parseDateSafe(ipp.IPPMatureDate);
+            dto.firstDueDate = FEC_CommonUltils.parseDate(ipp.IPPStartDate);
+            dto.matureDate = FEC_CommonUltils.parseDate(ipp.IPPMatureDate);
             dto.currentBalance = (ipp.IPPCurrentBalance != null) ? ipp.IPPCurrentBalance : 0;
             dto.currentTerm = ipp.CurrentTerm;
         } else {
@@ -732,59 +770,11 @@ public with sharing class FEC_IPPController {
             // IPPTerm từ API có thể là "3 months" hoặc "3" → parse số
             if (ippTermMap.containsKey(dto.planNumber)) {
                 String ippTermStr = ippTermMap.get(dto.planNumber);
-                ipp.FEC_IPP_Term__c = parseIPPTerm(ippTermStr);
+                // ipp.FEC_IPP_Term__c = parseIPPTerm(ippTermStr);
+                ipp.FEC_IPP_Term__c = Decimal.valueOf(ippTermStr);
                 System.debug('### Parsed IPPTerm: ' + ippTermStr + ' → ' + ipp.FEC_IPP_Term__c);
             }
-
-
-    private static Date parseDateSafe(String dateStr) {
-        if (String.isBlank(dateStr)) {
-            return null;
         }
-        String s = dateStr.trim();
-        try {
-            if (s.length() == 10 && s.indexOf('-') >= 0) {
-                return Date.valueOf(s);
-            }
-            if (s.length() >= 10 && s.indexOf('/') >= 0) {
-                List<String> parts = s.split('/');
-                if (parts.size() == 3) {
-                    Integer y = Integer.valueOf(parts[2]);
-                    Integer m = Integer.valueOf(parts[1]);
-                    Integer d = Integer.valueOf(parts[0]);
-                    return Date.newInstance(y, m, d);
-                }
-            }
-        } catch (Exception e) {
-            System.debug('parseDateSafe failed for: ' + s + ' - ' + e.getMessage());
-        }
-        return null;
     }
 
-    /**
-     * Build help text map from FEC_IPP__c object field metadata
-     * Returns Map<fieldApiName, helpText> for LWC consumption
-     */
-    @AuraEnabled(cacheable=true)
-    public static Map<String, String> getIPPHelpTextMap() {
-        Map<String, String> helpTextMap = new Map<String, String>();
-        
-        try {
-            Schema.DescribeSObjectResult objectDescribe = Schema.SObjectType.FEC_IPP__c;
-            Map<String, Schema.SObjectField> fields = objectDescribe.fields.getMap();
-            
-            for (String fieldName : fields.keySet()) {
-                Schema.DescribeFieldResult fieldDescribe = fields.get(fieldName).getDescribe();
-                String helpText = fieldDescribe.getInlineHelpText();
-                
-                if (String.isNotBlank(helpText)) {
-                    helpTextMap.put(fieldDescribe.getName(), helpText);
-                }
-            }
-        } catch (Exception e) {
-            System.debug('FEC_IPPController.getIPPHelpTextMap error: ' + e.getMessage());
-        }
-        
-        return helpTextMap;
-    }
 }

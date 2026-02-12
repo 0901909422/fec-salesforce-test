@@ -45,7 +45,7 @@ public with sharing class FEC_CardInfoController {
     @AuraEnabled(cacheable=false)
     public static CardInfoDTO loadCardInfo(Id caseId) {
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         /* ===== TẢI CASE ===== */
@@ -138,7 +138,7 @@ public with sharing class FEC_CardInfoController {
                         // Gọi GetStatus API để lấy thông tin cơ bản
                         try {
                             FEC_GetStatus.CardDeliveryInfo cardDeliveryInfo = 
-                                FEC_GetStatus.getDeliveryStatus(accountNumber, caseId);
+                            FEC_GetStatus.getDeliveryStatus(accountNumber);
                             if (cardDeliveryInfo != null && cardDeliveryInfo.responseCode == '1') {
                                 // INSERT Card Delivery từ GetStatus
                                 FEC_Card_Delivery__c insertedCard = insertCardDeliveryFromGetStatus(
@@ -403,7 +403,7 @@ public with sharing class FEC_CardInfoController {
      */
     private static List<FEC_Other_Card__c> insertSupplementaryCards(List<FEC_GetCardSecInfo.SupplementaryCard> suppList, Id customerHistoryId) {
         if (customerHistoryId == null) {
-            throw new AuraHandledException('Customer History ID is required to save Supplementary Cards');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Customer History ID'}));
         }
         
         // Query tất cả existing Other Cards trong database
@@ -451,7 +451,7 @@ public with sharing class FEC_CardInfoController {
             record.FEC_Gender__c = item.Gender;
             
             // Ánh xạ các trường Date
-            record.FEC_Expiry_Date__c = convertDateSafeForOtherCard(item.ExpiryDate);
+            record.FEC_Expiry_Date__c = FEC_CommonUltils.parseDate(item.ExpiryDate);
             record.FEC_Card_Activation_Date__c = item.CardActivationDate; // Đã là Date type
             record.FEC_Issue_Date__c = item.CardIssueDate; // Đã là Date type
             
@@ -472,43 +472,6 @@ public with sharing class FEC_CardInfoController {
         return new List<FEC_Other_Card__c>();
     }
     
-    /* =====================================================
-     * CÁC METHOD ÁNH XẠ - CHUYỂN ĐỔI DTO
-     * ===================================================== */
-
-    /**
-     * Chuyển đổi chuỗi date từ API sang Date object cho Other Cards
-     * Hỗ trợ các format: yyyyMMdd, yyyy-MM-dd, MM/dd/yyyy.
-     * Tái sử dụng FEC_CommonUltils.parseDate cho format yyyyMMdd và yyyy-MM-dd.
-     * @param dateStr - Chuỗi date từ API
-     * @return Date object hoặc null nếu không parse được
-     */
-    private static Date convertDateSafeForOtherCard(String dateStr) {
-        if (String.isBlank(dateStr)) {
-            return null;
-        }
-        
-        try {
-            // Format MM/dd/yyyy hoặc M/d/yyyy (thứ tự month/day/year)
-            if (dateStr.contains('/')) {
-                List<String> parts = dateStr.split('/');
-                if (parts.size() == 3) {
-                    Integer month = Integer.valueOf(parts[0]);
-                    Integer day = Integer.valueOf(parts[1]);
-                    Integer year = Integer.valueOf(parts[2]);
-                    return Date.newInstance(year, month, day);
-                }
-            }
-            
-            // Format yyyyMMdd, yyyy-MM-dd, 00000000: dùng chung FEC_CommonUltils.parseDate
-            return FEC_CommonUltils.parseDate(dateStr);
-        } catch (Exception e) {
-            System.debug('convertDateSafeForOtherCard error for "' + dateStr + '": ' + e.getMessage());
-        }
-        
-        return null;
-    }
-
     /**
      * Ánh xạ Card Delivery records sang DTO
      * @param records - Danh sách FEC_Card_Delivery__c records

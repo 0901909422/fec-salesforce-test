@@ -335,13 +335,12 @@ public with sharing class FEC_CommonUltils {
 
   /**
    * Build help text map for any SObject type
-   * @param objectType - SObjectType to get help texts from (e.g., Schema.SObjectType.FEC_Card_Payment__c)
+   * @param fields - map field object
    * @return Map of field API name to help text
    */
-  public static Map<String, String> buildHelpTextMap(Schema.SObjectType objectType) {
+  public static Map<String, String> buildHelpTextMap(Map<String, Schema.SObjectField> fields) {
     Map<String, String> m = new Map<String, String>();
     try {
-      Map<String, Schema.SObjectField> fields = objectType.getDescribe().fields.getMap();
       for (Schema.SObjectField f : fields.values()) {
         Schema.DescribeFieldResult fieldDescribe = f.getDescribe();
         if (String.isNotBlank(fieldDescribe.getInlineHelpText())) {

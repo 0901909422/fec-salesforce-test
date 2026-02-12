@@ -226,7 +226,9 @@ public with sharing class FEC_CardPaymentController {
         dto.loanBalance = 0;
         dto.fullPaymentWithoutIPP = 0;
         dto.fullIPPPaymentAmount = 0;
-        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(Schema.SObjectType.FEC_Card_Payment__c);
+
+        Map<String, Schema.SObjectField> fields = FEC_Card_Payment__c.SObjectType.getDescribe().fields.getMap();
+        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(fields);
 
         /* ===== TẢI CASE ===== */
         Case c = [
