@@ -9,7 +9,6 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CommonUltils</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
-		<members>FEC_ConstantCommon</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -79,6 +78,7 @@
 		<members>Case.FEC_Transcription__c</members>
         <members>Case.FEC_Skip_Search_Internal_Case__c</members>
         <members>Case.FEC_Interaction_View_Mode__c</members>
+        <members>Case.FEC_Is_Submited__c</members>
 		<members>User.FEC_Agent_ID__c</members>
 		<members>User.FEC_Main_Queue__c</members>
         <members>User.FEC_Default_Queue__c</members>
