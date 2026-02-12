@@ -8,6 +8,6 @@
     </values>
     <values>
         <field>FEC_SOAP_Action__c</field>
-        <value xsi:type="xsd:string">GetIPPDetails</value>
+        <value xsi:type="xsd:string">http://esbservice.fecredit.org/EStatementService/GetIPPDetails</value>
     </values>
 </CustomMetadata>
