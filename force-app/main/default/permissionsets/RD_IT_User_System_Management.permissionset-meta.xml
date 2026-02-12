@@ -161,6 +161,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_IPPScheduleController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_InteractionHighlightController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -190,6 +194,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_MainInfoController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_MFASOUTSTANDINGAUTHINQ</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
