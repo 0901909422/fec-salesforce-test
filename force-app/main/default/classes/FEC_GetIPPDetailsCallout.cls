@@ -161,18 +161,7 @@ public with sharing class FEC_GetIPPDetailsCallout {
         String endpoint = apiSetting?.FEC_Call_Mock__c
             ? FEC_MockupEndpoint.GET_IPP_DETAIL_ENDPOINT_MOCKUP
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-
-        // Server yêu cầu SOAPAction là full URI, không phải chỉ "GetIPPDetails"
-        String soapAction = apiConfig.FEC_SOAP_Action__c;
-
-        HttpResponse res = FEC_CommonUltils.calloutApi(
-            endpoint,
-            'POST',
-            FEC_ConstantCommon.API_CONTENT_TYPE,
-            soapAction,
-            doc,
-            null
-        );
+        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, body);
 
         if (res.getStatusCode() != 200) {
             throw new CalloutException(
