@@ -1013,14 +1013,6 @@
         <value>Total Payment Amount</value>
     </labels>
     <labels>
-        <fullName>FEC_MSG_AccountNumber_Null</fullName>
-        <categories>API</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MSG AccountNumber Null</shortDescription>
-        <value>AccountNumber is null or invalid</value>
-    </labels>
-    <labels>
         <fullName>FEC_MSG_EndDate_Must_StartDate</fullName>
         <categories>API</categories>
         <language>en_US</language>
@@ -1029,12 +1021,6 @@
         <value>EndDate must &gt;= StartDate</value>
     </labels>
     <labels>
-        <fullName>FEC_MSG_StartDate_EndDate_Null</fullName>
-        <categories>API</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MSG StartDate/EndDate Null</shortDescription>
-        <value>StartDate/EndDate is required</value>
         <fullName>FEC_View_All_Btn_Label</fullName>
         <language>en_US</language>
         <protected>false</protected>
