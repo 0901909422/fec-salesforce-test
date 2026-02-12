@@ -81,7 +81,6 @@
 		<members>User.FEC_Main_Queue__c</members>
         <members>User.FEC_Default_Queue__c</members>
 		<members>User.FEC_User_Group__c</members>
-		<members>User.FEC_Is_Submited__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>

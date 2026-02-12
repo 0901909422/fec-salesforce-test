@@ -77,6 +77,12 @@
         <members>FEC_Team_Label</members>
         <members>FEC_Queue_Label</members>
         <members>FEC_Decision_Label</members>
+		<members>FEC_CaseBusinessService_Msg_001</members>
+		<members>FEC_CaseBusinessService_Msg_002</members>
+		<members>FEC_CaseBusinessService_Msg_003</members>
+		<members>FEC_CaseBusinessService_Msg_004</members>
+		<members>FEC_CaseBusinessService_Msg_005</members>
+		<members>FEC_CaseBusinessService_Msg_006</members>
         <name>CustomLabel</name>
     </types>
     <version>65.0</version>
