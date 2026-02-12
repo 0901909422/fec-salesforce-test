@@ -1,0 +1,14 @@
+/* Giảm margin mặc định của các trường input Salesforce */
+:host {
+    --sds-c-input-spacing-margin-bottom: 5px;
+}
+
+.compact-form lightning-input-field {
+    margin-bottom: 5px !important;
+    padding-bottom: 5px !important;
+}
+
+/* Ép label và input sát nhau hơn */
+.slds-form-element {
+    margin-bottom: 4px !important;
+}
