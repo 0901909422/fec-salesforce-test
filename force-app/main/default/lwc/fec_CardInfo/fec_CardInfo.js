@@ -3,6 +3,8 @@ import loadCardInfo from '@salesforce/apex/FEC_CardInfoController.loadCardInfo';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { subscribe, unsubscribe, onError } from 'lightning/empApi';
 import { autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
+import FEC_Card_Delivery_Label from '@salesforce/label/c.FEC_Card_Delivery_Label';
+import FEC_Other_Card_Label from '@salesforce/label/c.FEC_Other_Card_Label';
 
 // Error message constant
 const ERROR_MESSAGE = 'Tải dữ liệu không thành công';
@@ -29,6 +31,11 @@ export default class Fec_CardInfo extends LightningElement {
     // Platform Event subscription
     subscription = null;
     channelName = '/event/FEC_Card_Info_Refresh__e';
+
+    customLabel = {
+        cardDeliveryLabel: FEC_Card_Delivery_Label,
+        otherCardLabel: FEC_Other_Card_Label
+    }
 
     // Load data khi component mount (giống IPPDetails)
     connectedCallback() {

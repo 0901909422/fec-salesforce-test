@@ -135,8 +135,8 @@ public without sharing class FEC_GetAppStatusCallout {
         request.headers = new Map<String, Object>{
             'TransID'      => transactionId,
             'DateTime'     => Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX),
-            'RequestorID'  => 'PegaCSM',
-            'Content-Type' => 'application/json'
+            'RequestorID'  => FEC_ConstantCommon.REQUESTOR_PEGA_CSM,
+            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
         };
         
         request.parameters = new List<String>();
@@ -195,16 +195,18 @@ public without sharing class FEC_GetAppStatusCallout {
     // Validate request parameters
     public static ValidationResult validateRequest(String applicationId, Integer ageOfRecords) {
         if (String.isBlank(applicationId)) {
-            return new ValidationResult(false, 'ApplicationID is required and cannot be empty.');
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'ApplicationID'}));
+            
         }
         
         if (ageOfRecords != null && ageOfRecords < 0) {
-            return new ValidationResult(false, 'AgeOfRecords must be a positive number.');
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Positive_Number_Error, new List<String>{'AgeOfRecords'}));
+            
         }
         
         // Validate ApplicationID format (chỉ chứa số)
         if (!applicationId.isNumeric()) {
-            return new ValidationResult(false, 'ApplicationID must contain only numeric characters.');
+            return new ValidationResult(false, System.Label.FEC_MSG_ApplicationID_must_number);
         }
         
         return new ValidationResult(true, null);
@@ -213,19 +215,19 @@ public without sharing class FEC_GetAppStatusCallout {
     // Validate response
     public static ValidationResult validateResponse(AppStatusResponse response) {
         if (response == null) {
-            return new ValidationResult(false, 'Response is null.');
+            return new ValidationResult(false, System.Label.FEC_MSG_Response_Null);
         }
         
         if (String.isNotBlank(response.errorCode)) {
-            return new ValidationResult(false, 'HTTP Error: ' + response.errorCode + ' - ' + response.errorMessage);
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{response.errorCode + ' - ' + response.errorMessage}));
         }
         
         if (response.Sys == null) {
-            return new ValidationResult(false, 'Response Sys object is null.');
+            return new ValidationResult(false, System.Label.FEC_MSG_Response_Sys_Null);
         }
         
         if (response.Sys.Code != '1') {
-            return new ValidationResult(false, 'API Error: ' + response.Sys.Description);
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description}));
         }
         
         return new ValidationResult(true, null);
@@ -297,15 +299,15 @@ public without sharing class FEC_GetAppStatusCallout {
         } catch (CalloutException e) {
             result.isSuccess = false;
             result.errorCode = 'CALLOUT_ERROR';
-            result.errorMessage = 'Callout failed: ' + e.getMessage();
+            result.errorMessage = String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{e.getMessage()});
         } catch (JSONException e) {
             result.isSuccess = false;
             result.errorCode = 'JSON_PARSE_ERROR';
-            result.errorMessage = 'Failed to parse response: ' + e.getMessage();
+            result.errorMessage = String.format(System.Label.FEC_MSG_Parse_JSON_Error, new List<String>{e.getMessage()});
         } catch (Exception e) {
             result.isSuccess = false;
             result.errorCode = 'UNKNOWN_ERROR';
-            result.errorMessage = 'Unexpected error: ' + e.getMessage();
+            result.errorMessage = e.getMessage();
         }
         
         return result;

@@ -131,7 +131,7 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
         // Generate header values
         String transactionId = String.valueOf(UUID.randomUUID());
         String dateTimeValue = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX);
-        String requestorId = 'PEGA_CSM';
+        String requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
         
         // Validate request headers (TransID, DateTime, RequestorID)
         ValidationResult headerValidation = validateRequestHeaders(transactionId, dateTimeValue, requestorId);
@@ -149,7 +149,7 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
             'TransID'      => transactionId,
             'DateTime'     => dateTimeValue,
             'RequestorID'  => requestorId,
-            'Content-Type' => 'application/json'
+            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
         };
         
         request.parameters = new List<String>{ applicationId };
@@ -185,7 +185,7 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
     
     public static ValidationResult validateRequest(String applicationId) {
         if (String.isBlank(applicationId)) {
-            return new ValidationResult(false, 'ApplicationID is required and cannot be empty.');
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'ApplicationID'}));
         }
         return new ValidationResult(true, null);
     }
@@ -200,12 +200,12 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
     public static ValidationResult validateRequestHeaders(String transId, String dateTimeValue, String requestorId) {
         // Validate TransID
         if (String.isBlank(transId)) {
-            return new ValidationResult(false, 'TransID is required and cannot be empty.');
+            return new ValidationResult(false, System.Label.FEC_MSG_TransID_Null);
         }
         
         // Validate DateTime
         if (String.isBlank(dateTimeValue)) {
-            return new ValidationResult(false, 'DateTime is required and cannot be empty.');
+            return new ValidationResult(false, System.Label.FEC_MSG_Datetime_Null);
         }
         
         // Validate DateTime format (ISO 8601: yyyy-MM-dd'T'HH:mm:ss.SSSXXX)
@@ -214,15 +214,15 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
             Pattern dateTimePattern = Pattern.compile(FEC_ConstantCommon.PATTERN_DATE_TIME_FULL);
             Matcher matcher = dateTimePattern.matcher(dateTimeValue);
             if (!matcher.matches()) {
-                return new ValidationResult(false, 'DateTime format is invalid. Expected format: yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX');
+                return new ValidationResult(false, String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeValue}));
             }
         } catch (Exception e) {
-            return new ValidationResult(false, 'DateTime validation failed: ' + e.getMessage());
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeValue}));
         }
         
         // Validate RequestorID
         if (String.isBlank(requestorId)) {
-            return new ValidationResult(false, 'RequestorID is required and cannot be empty.');
+            return new ValidationResult(false, System.Label.FEC_MSG_RequestorID_Null);
         }
         
         return new ValidationResult(true, null);
@@ -230,19 +230,19 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
     
     public static ValidationResult validateResponse(CustomerSaleDisburseInfoResponse response) {
         if (response == null) {
-            return new ValidationResult(false, 'Response is null.');
+            return new ValidationResult(false, System.Label.FEC_MSG_Response_Null);
         }
         
         if (String.isNotBlank(response.errorCode)) {
-            return new ValidationResult(false, 'HTTP Error: ' + response.errorCode + ' - ' + response.errorMessage);
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{response.errorCode + ' - ' + response.errorMessage}));
         }
         
         if (response.Sys == null) {
-            return new ValidationResult(false, 'Response Sys object is null.');
+            return new ValidationResult(false, System.Label.FEC_MSG_Response_Sys_Null);
         }
         
         if (response.Sys.Code != 1) {
-            return new ValidationResult(false, 'API Error: ' + response.Sys.Description);
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description}));
         }
         
         return new ValidationResult(true, null);
@@ -306,15 +306,15 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
         } catch (CalloutException e) {
             result.isSuccess = false;
             result.errorCode = 'CALLOUT_ERROR';
-            result.errorMessage = 'Callout failed: ' + e.getMessage();
+            result.errorMessage = String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{e.getMessage()});
         } catch (JSONException e) {
             result.isSuccess = false;
             result.errorCode = 'JSON_PARSE_ERROR';
-            result.errorMessage = 'Failed to parse response: ' + e.getMessage();
+            result.errorMessage = String.format(System.Label.FEC_MSG_Parse_JSON_Error, new List<String>{e.getMessage()});
         } catch (Exception e) {
             result.isSuccess = false;
             result.errorCode = 'UNKNOWN_ERROR';
-            result.errorMessage = 'Unexpected error: ' + e.getMessage();
+            result.errorMessage = e.getMessage();
         }
         
         return result;

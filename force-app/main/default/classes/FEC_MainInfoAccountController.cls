@@ -71,7 +71,7 @@ public with sharing class FEC_MainInfoAccountController {
     public static MainInfoDTO loadAccountInfo(Id caseId) {
 
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         Case c = [
@@ -96,13 +96,13 @@ public with sharing class FEC_MainInfoAccountController {
 
         try {
             response = FEC_GetCardBasicInfo.callGetCardBasicInfo(
-                generateTransactionId(),
+                FEC_CommonUltils.generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                '0001500010000000022'
+                c.FEC_Account_Number__c
             );
         } catch (Exception e) {
-            throw new AuraHandledException('API ERROR: ' + e.getMessage());
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
         }
 
         FEC_Customer_History__c acc = createAccountFromAPI(response,caseId);
@@ -118,7 +118,7 @@ public with sharing class FEC_MainInfoAccountController {
     public static RewardEligibilityResult checkRewardEligibility(Id caseId) {
         try {
             if (caseId == null) {
-                throw new AuraHandledException('Case ID is required');
+                throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
             }
             
             Case c = [
@@ -129,7 +129,7 @@ public with sharing class FEC_MainInfoAccountController {
             ];
             
             if (c.FEC_Account_or_Contract__c == null) {
-                throw new AuraHandledException('No account linked to this case');
+                throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
             }
             
             FEC_Customer_History__c acc = [
@@ -145,12 +145,12 @@ public with sharing class FEC_MainInfoAccountController {
             }
             
             if (String.isBlank(accountNumber)) {
-                throw new AuraHandledException('Account number not found');
+                throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
             }
             
             FEC_GetRewardEligibility.ResponseWrapper apiResponse = 
                 FEC_GetRewardEligibility.callGetRewardEligibility(
-                    generateTransactionId(),
+                    FEC_CommonUltils.generateTransactionId(),
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                     accountNumber
@@ -160,11 +160,9 @@ public with sharing class FEC_MainInfoAccountController {
             String remark = '';
             
             if (isEligible) {
-                remark = 'Eligible for rewards program';
+                remark = System.Label.FEC_MSG_Eligible;
             } else {
-                remark = apiResponse.Sys.Description != null 
-                    ? apiResponse.Sys.Description 
-                    : 'Failed-LMS Account is Not Available (Minimum available points should more than 50000)';
+                remark = apiResponse.Sys.Description;
             }
             
             FEC_Customer_History__c accToUpdate = new FEC_Customer_History__c(
@@ -177,15 +175,15 @@ public with sharing class FEC_MainInfoAccountController {
             RewardEligibilityResult result = new RewardEligibilityResult();
             result.isEligible = isEligible;
             result.message = isEligible 
-                ? 'Reward eligibility check successful' 
-                : 'Reward eligibility check failed';
-            result.availablePoints = formatCurrency(apiResponse.AvailablePoints, 0);
+                ? System.Label.FEC_MSG_Reward_Eligibility_Success
+                : System.Label.FEC_MSG_Reward_Eligibility_Error;
+            result.availablePoints = FEC_CommonUltils.formatCurrency(apiResponse.AvailablePoints, 0);
             result.remark = remark;
             
             return result;
             
         } catch (Exception e) {
-            throw new AuraHandledException('Error: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
 
@@ -259,7 +257,7 @@ public with sharing class FEC_MainInfoAccountController {
     public static MainInfoDTO refreshAccountInfo(Id caseId) {
 
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         Case c = [
@@ -273,10 +271,10 @@ public with sharing class FEC_MainInfoAccountController {
 
         try {
             response = FEC_GetCardBasicInfo.callGetCardBasicInfo(
-                generateTransactionId(),
+                FEC_CommonUltils.generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                '0001500010000000022'
+                c.FEC_Account_Number__c
             );
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
@@ -297,30 +295,30 @@ public with sharing class FEC_MainInfoAccountController {
         dto.contractNumber  = acc.FEC_Contract_Number__c;
         dto.accountStatus   = acc.FEC_Account_Status__c;
         dto.applicationId   = acc.FEC_Application_ID__c;
-        dto.accountOpenDate = formatDate(acc.FEC_Account_Open_Date__c);
-        dto.accountCloseDate= formatDate(acc.FEC_Account_Close_Date__c);
+        dto.accountOpenDate = FEC_CommonUltils.formatDate(acc.FEC_Account_Open_Date__c);
+        dto.accountCloseDate= FEC_CommonUltils.formatDate(acc.FEC_Account_Close_Date__c);
         dto.eSignStatus     = acc.FEC_E_sign_Status__c;
-        dto.creditLimit     = formatCurrency(acc.FEC_Credit_Limit__c, 0);
-        dto.otb             = formatCurrency(acc.FEC_OTB__c, 0);
-        dto.currentBalance  = formatCurrency(acc.FEC_Current_Balance__c, 2);
-        dto.holdAmount      = formatCurrency(acc.FEC_Hold_Amount__c, 0);
-        dto.totalBalance    = formatCurrency(acc.FEC_Total_Balance__c, 2);
+        dto.creditLimit     = FEC_CommonUltils.formatCurrency(acc.FEC_Credit_Limit__c, 0);
+        dto.otb             = FEC_CommonUltils.formatCurrency(acc.FEC_OTB__c, 0);
+        dto.currentBalance  = FEC_CommonUltils.formatCurrency(acc.FEC_Current_Balance__c, 2);
+        dto.holdAmount      = FEC_CommonUltils.formatCurrency(acc.FEC_Hold_Amount__c, 0);
+        dto.totalBalance    = FEC_CommonUltils.formatCurrency(acc.FEC_Total_Balance__c, 2);
         dto.isFromAccount   = true;
         /* ===== ACCOUNT STATUS  ===== */
         dto.warningCode = acc.FEC_Warning_Code__c;
         dto.blockCode1  = acc.FEC_Block_Code_1__c;
-        dto.blockDate1  = formatDate(acc.FEC_Block_Date_1__c);
+        dto.blockDate1  = FEC_CommonUltils.formatDate(acc.FEC_Block_Date_1__c);
         dto.reason1     = acc.FEC_Reason_1__c;
         dto.blockCode2  = acc.FEC_Block_Code_2__c;
-        dto.blockDate2  = formatDate(acc.FEC_Block_Date_2__c);
+        dto.blockDate2  = FEC_CommonUltils.formatDate(acc.FEC_Block_Date_2__c);
         dto.reason2     = acc.FEC_Reason_2__c;
-        dto.daysPastDue = decimalToString(acc.FEC_Days_Past_Due__c);
+        dto.daysPastDue = FEC_CommonUltils.decimalToString(acc.FEC_Days_Past_Due__c);
         /* ===== CARD ===== */
         dto.cardNumber  = acc.FEC_Card_Number__c;
         dto.cardType    = acc.FEC_Card_Type__c;
         dto.plasticID   = acc.FEC_Plastic_ID__c;
         dto.digitalCardID = acc.FEC_Digital_Card_ID__c;
-        dto.expiryDate    = formatDate(acc.FEC_Expiry_Date__c);
+        dto.expiryDate    = FEC_CommonUltils.formatDate(acc.FEC_Expiry_Date__c);
         dto.schemeID    = acc.FEC_Scheme_ID__c;
         dto.schemeDesc  = acc.FEC_Scheme_Desc__c;
         dto.customerSegment = acc.FEC_Customer_Segment__c;
@@ -328,21 +326,21 @@ public with sharing class FEC_MainInfoAccountController {
         dto.insuranceFlag    = acc.FEC_Insurance_Flag__c;
         /* ===== CARD STATUS ===== */
         dto.cardBlockCode        = acc.FEC_Block_Code__c;
-        dto.cardBlockDate        = formatDate(acc.FEC_Block_Date__c);
+        dto.cardBlockDate        = FEC_CommonUltils.formatDate(acc.FEC_Block_Date__c);
         dto.blockedBy            = acc.FEC_Blocked_By__c;
         dto.cardActivationStatus = acc.FEC_Card_Activation_Status__c;
-        dto.cardActivationDate   = formatDate(acc.FEC_Card_Activation_Date__c);
+        dto.cardActivationDate   = FEC_CommonUltils.formatDate(acc.FEC_Card_Activation_Date__c);
         dto.eCommerceStatus      = acc.FEC_E_Commerce_Status__c;
         dto.fraudMonitorFlag     = acc.FEC_Fraud_Monitor_Flag__c;
-        dto.fraudMonitorDate     = formatDate(acc.FEC_Fraud_Monitor_Date__c);
+        dto.fraudMonitorDate     = FEC_CommonUltils.formatDate(acc.FEC_Fraud_Monitor_Date__c);
         dto.localUse             = acc.FEC_Local_Use__c;
-        dto.availablePoints      = formatCurrency(acc.FEC_Available_Points__c, 0);
+        dto.availablePoints      = FEC_CommonUltils.formatCurrency(acc.FEC_Available_Points__c, 0);
         dto.remark               = acc.FEC_Remark__c;
         /* ===== DEBT SALE ===== */
         dto.debtSaleCompanyName = acc.FEC_Company_Name__c;
-        dto.debtSoldDate        = formatDate(acc.FEC_Sold_Date__c);
-        dto.principalSold       = formatCurrency(acc.FEC_Principal_Sold__c, 2);
-        dto.interestSold        = formatCurrency(acc.FEC_Interest_Sold__c, 2);
+        dto.debtSoldDate        = FEC_CommonUltils.formatDate(acc.FEC_Sold_Date__c);
+        dto.principalSold       = FEC_CommonUltils.formatCurrency(acc.FEC_Principal_Sold__c, 2);
+        dto.interestSold        = FEC_CommonUltils.formatCurrency(acc.FEC_Interest_Sold__c, 2);
         dto.soldNote            = acc.FEC_Sold_Note__c;
         dto.debtSaleType        = acc.FEC_Debt_Sale_Type__c;
         return dto;
@@ -361,15 +359,11 @@ public with sharing class FEC_MainInfoAccountController {
             Name = 'Account ' + m.AccountNumber,
             FEC_Account_Number__c = m.AccountNumber,
             FEC_Contract_Number__c = m.ContractNumber,
-           // FEC_Account_Status__c = m.Status,
             FEC_Credit_Limit__c = m.CreditLimit,
             FEC_OTB__c = m.OTB,
             FEC_Current_Balance__c = response.CardBasicInfo.Statement?.StatementBalance,
             FEC_Hold_Amount__c = m.HoldAmount,
             FEC_Total_Balance__c = response.CardBasicInfo.Statement?.StatementBalance,
-            //FEC_Application_ID__c = m.BlockCode1,
-            //FEC_Account_Open_Date__c = m.AccountBlockCode2Date,
-            //FEC_Account_Close_Date__c = m.ExpiryDate,
             FEC_E_sign_Status__c = 'Yes',
 
             /* ===== ACCOUNT STATUS ===== */
@@ -380,38 +374,11 @@ public with sharing class FEC_MainInfoAccountController {
             FEC_Block_Code_2__c = m.BlockCode2,
             FEC_Block_Date_2__c = m.AccountBlockCode2Date,
             FEC_Reason_2__c     = m.RsnBlockCode2,
-            //FEC_Days_Past_Due__c = m.,
 
             /* ===== CARD ===== */
             FEC_Insurance_Flag__c = m.InsuranceFlag,
-            //FEC_Product_Association__c = m.ProductAssociation,
             FEC_Customer_Segment__c = m.CustomerSegment,
-            //FEC_Scheme_Desc__c = m.
-            // FEC_Scheme_ID__c = m.
-            //FEC_Card_Number__c
-            //FEC_Card_Type__c = m.
-            //FEC_Plastic_ID__c = m.
-            //FEC_Digital_Card_ID__c = m.
             FEC_Expiry_Date__c = m.ExpiryDate
-            /* ===== CARD STATUS ===== */
-            //FEC_Block_Code__c            = m.
-            //FEC_Block_Date__c         = m.FEC_Block_Date__c,
-            //FEC_Blocked_By__c      = m.FEC_Blocked_By__c,
-            //FEC_Card_Activation_Status__c          = m.cardActivationStatus == 'Active' ? 'Active':'Inactive'
-            //FEC_Card_Activation_Date__c  = m.FEC_Card_Activation_Date__c,
-            //FEC_ECommerce_Status__c    = m.FEC_ECommerce_Status__c,
-            //FEC_Fraud_Monitor_Flag__c        = m.FEC_Fraud_Monitor_Flag__c,
-            //FEC_Fraud_Monitor_Date__c      = m.FEC_Fraud_Monitor_Date__c,
-            //FEC_Local_Use__c      = m.FEC_Local_Use__c,
-            //FEC_Rewards_Eligibility__c = m.FEC_Rewards_Eligibility__c
-            //FEC_Remark__c                  = m.FEC_Remark__c
-            /* ===== DEBT SALE ===== */
-            //FEC_Company_Name__c = m.FEC_Company_Name__c
-            //FEC_Sold_Date__c = m.FEC_Sold_Date__c
-            //FEC_Principal_Sold__c = m.FEC_Principal_Sold__c
-            //FEC_Interest_Sold__c = m.FEC_Interest_Sold__c
-            //FEC_Sold_Note__c =m.FEC_Sold_Note__c
-            //FEC_Debt_Sale_Type__c =m.FEC_Debt_Sale_Type__c
         );
 
         insert acc;
@@ -430,7 +397,6 @@ public with sharing class FEC_MainInfoAccountController {
             Id = accountId,
             FEC_Account_Number__c = m.AccountNumber,
             FEC_Contract_Number__c = m.ContractNumber,
-           // FEC_Account_Status__c = m.Status,
             FEC_Credit_Limit__c = m.CreditLimit,
             FEC_OTB__c = m.OTB,
             FEC_Current_Balance__c = response.CardBasicInfo.Statement?.StatementBalance,
@@ -445,37 +411,10 @@ public with sharing class FEC_MainInfoAccountController {
             FEC_Block_Code_2__c = m.BlockCode2,
             FEC_Block_Date_2__c = m.AccountBlockCode2Date,
             FEC_Reason_2__c     = m.RsnBlockCode2,
-            //FEC_Days_Past_Due__c = m.,
             /* ===== CARD ===== */
             FEC_Insurance_Flag__c = m.InsuranceFlag,
-            //FEC_Product_Association__c = m.ProductAssociation,
             FEC_Customer_Segment__c = m.CustomerSegment,
-            //FEC_Scheme_Desc__c = m.
-            // FEC_Scheme_ID__c = m.
-            //FEC_Card_Number__c
-            //FEC_Card_Type__c = m.
-            //FEC_Plastic_ID__c = m.
-            //FEC_Digital_Card_ID__c = m.
             FEC_Expiry_Date__c = m.ExpiryDate
-            /* ===== CARD STATUS ===== */
-            //FEC_Block_Code__c            = m.
-            //FEC_Block_Date__c         = m.FEC_Block_Date__c,
-            //FEC_Blocked_By__c      = m.FEC_Blocked_By__c,
-            //FEC_Card_Activation_Status__c          = m.cardActivationStatus == 'Active' ? 'Active':'Inactive'
-            //FEC_Card_Activation_Date__c  = m.FEC_Card_Activation_Date__c,
-            //FEC_ECommerce_Status__c    = m.FEC_ECommerce_Status__c,
-            //FEC_Fraud_Monitor_Flag__c        = m.FEC_Fraud_Monitor_Flag__c,
-            //FEC_Fraud_Monitor_Date__c      = m.FEC_Fraud_Monitor_Date__c,
-            //FEC_Local_Use__c      = m.FEC_Local_Use__c,
-            //FEC_Rewards_Eligibility__c = m.FEC_Rewards_Eligibility__c
-            //FEC_Remark__c                  = m.FEC_Remark__c
-            /* ===== DEBT SALE ===== */
-            //FEC_Company_Name__c = m.FEC_Company_Name__c
-            //FEC_Sold_Date__c = m.FEC_Sold_Date__c
-            //FEC_Principal_Sold__c = m.FEC_Principal_Sold__c
-            //FEC_Interest_Sold__c = m.FEC_Interest_Sold__c
-            //FEC_Sold_Note__c =m.FEC_Sold_Note__c
-            //FEC_Debt_Sale_Type__c =m.FEC_Debt_Sale_Type__c
         );
     }
     /* ===================== HELP TEXT RESOLVER ===================== */
@@ -500,21 +439,4 @@ public with sharing class FEC_MainInfoAccountController {
         return result;
     }
 
-    private static String generateTransactionId() {
-        return Datetime.now().getTime() + '_' +
-               String.valueOf(Math.abs(Crypto.getRandomInteger())).substring(0, 6);
-    }
-
-    private static String formatDate(Date d) {
-        if (d == null) return '';
-        return d.format();
-    }
-
-    private static String formatCurrency(Decimal amount, Integer scale) {
-        if (amount == null) return '';
-        return amount.setScale(scale).format();
-    }
-    private static String decimalToString(Decimal d) {
-        return d == null ? '' : d.format();
-    }
 }

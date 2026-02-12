@@ -4,6 +4,9 @@ import { publish, MessageContext } from 'lightning/messageService';
 import FEC_IPP_NAVIGATION from '@salesforce/messageChannel/FEC_IPP_Navigation__c';
 import getIPPRecords from '@salesforce/apex/FEC_IPPController.getIPPRecords';
 import { formatCurrency, isNegative, autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
+import FEC_IPP_Details_Label from '@salesforce/label/c.FEC_IPP_Details_Label';
+import FEC_Total_IPP_Balance_Label from '@salesforce/label/c.FEC_Total_IPP_Balance_Label';
+import FEC_Total_IPP_Current_Balance_Label from '@salesforce/label/c.FEC_Total_IPP_Current_Balance_Label';
 
 // Error message constant
 const ERROR_MESSAGE = 'Tải dữ liệu không thành công';
@@ -128,6 +131,12 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
         }
         
     ];
+
+    customLabel = {
+        ippDetailsLabel: FEC_IPP_Details_Label,
+        totalIPPBalanceLabel: FEC_Total_IPP_Balance_Label,
+        totalIPPCurrentBalanceLabel: FEC_Total_IPP_Current_Balance_Label,
+    }
     
     // Field mapping từ Database sang UI
     // PlanNumber → IPP Plan (hyperlink to Sales Info)

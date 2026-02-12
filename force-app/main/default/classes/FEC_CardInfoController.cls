@@ -47,7 +47,7 @@ public with sharing class FEC_CardInfoController {
     @AuraEnabled(cacheable=false)
     public static CardInfoDTO loadCardInfo(Id caseId, Boolean forceRefresh) {
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         /* ===== TẢI CASE ===== */
@@ -359,7 +359,7 @@ public with sharing class FEC_CardInfoController {
         
         if (customerHistoryId == null) {
             System.debug('### ERROR: Customer History ID is null, cannot save Supplementary Cards');
-            throw new AuraHandledException('Customer History ID is required to save Supplementary Cards');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Customer History ID'}));
         }
         
         System.debug('### Using Customer History ID: ' + customerHistoryId);
@@ -407,7 +407,7 @@ public with sharing class FEC_CardInfoController {
             record.FEC_Gender__c = item.Gender;
             
             // Ánh xạ các trường Date (CardIssueDate và CardActivationDate giờ là Date type, ExpiryDate vẫn là String)
-            record.FEC_Expiry_Date__c = FEC_CommonUltils.convertDateSafeForOtherCard(item.ExpiryDate);
+            record.FEC_Expiry_Date__c = FEC_CommonUltils.parseDate(item.ExpiryDate);
             record.FEC_Card_Activation_Date__c = item.CardActivationDate; // Đã là Date type
             record.FEC_Issue_Date__c = item.CardIssueDate; // Đã là Date type
             
@@ -425,7 +425,7 @@ public with sharing class FEC_CardInfoController {
             } catch (Exception e) {
                 System.debug('### Save Supplementary Cards FAILED: ' + e.getMessage());
                 System.debug('### Stack trace: ' + e.getStackTraceString());
-                throw new AuraHandledException('Lỗi lưu dữ liệu: ' + e.getMessage());
+                throw new AuraHandledException(e.getMessage());
             }
         } else {
             System.debug('### No new Other Card records to insert');

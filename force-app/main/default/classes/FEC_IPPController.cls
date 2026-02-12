@@ -50,7 +50,7 @@ public with sharing class FEC_IPPController {
     @AuraEnabled(cacheable=false)
     public static List<FEC_IPP__c> loadIPPInfo(Id caseId) {
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         /* ===== TẢI CASE ===== */
@@ -363,7 +363,7 @@ public with sharing class FEC_IPPController {
                             ', StartDate=' + secIPP.IPPStartDate + 
                             ', MatureDate=' + secIPP.IPPMatureDate + 
                             ', CurrentBalance=' + secIPP.IPPCurrentBalance + 
-                            ', Term=' + secIPP.Term);
+                            ', Term=' + secIPP.currentTerm);
             }
         } else {
             System.debug('### GetCardSecInfo returned null or empty IPPs list');
@@ -432,7 +432,7 @@ public with sharing class FEC_IPPController {
                 ipp.FEC_IPP_First_Due_Date__c = String.isNotBlank(secIPP.IPPStartDate) ? FEC_CommonUltils.parseDate(secIPP.IPPStartDate) : null;
                 ipp.FEC_IPP_Mature_Date__c = String.isNotBlank(secIPP.IPPMatureDate) ? FEC_CommonUltils.parseDate(secIPP.IPPMatureDate) : null;
                 ipp.FEC_IPP_Current_Balance__c = secIPP.IPPCurrentBalance != null ? secIPP.IPPCurrentBalance : null;
-                ipp.FEC_IPP_Current_Term__c = secIPP.Term != null ? secIPP.Term : null;
+                ipp.FEC_IPP_Current_Term__c = secIPP.currentTerm != null ? secIPP.currentTerm : null;
                 // IPP Record No lấy từ GetCardSecInfo (1-36, dựa trên thứ tự OPENING_BALANCE_1, _2, ..., _36)
                 ipp.FEC_IPP_Record_No__c = secIPP.IPPRecordNo;
                 
@@ -485,7 +485,7 @@ public with sharing class FEC_IPPController {
                 System.debug('Đã insert thành công ' + recordsToInsert.size() + ' IPP records vào DB với đầy đủ dữ liệu từ tất cả API.');
             } catch (Exception e) {
                 System.debug('Lỗi khi lưu DB: ' + e.getMessage());
-                throw new AuraHandledException('Lỗi lưu dữ liệu: ' + e.getMessage());
+                throw new AuraHandledException(e.getMessage());
             }
         } else {
             System.debug('Không có records mới để insert!');
@@ -629,7 +629,7 @@ public with sharing class FEC_IPPController {
             
             return totals;
         } catch (Exception e) {
-            throw new AuraHandledException('Error fetching IPP totals: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
 

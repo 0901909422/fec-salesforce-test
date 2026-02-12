@@ -11,7 +11,7 @@
                             class="slds-m-right_x-small">
                         </lightning-icon>
                         <span>
-                            Card Delivery
+                            {customLabel.cardDeliveryLabel}
                             <template if:true={hasCardDeliveryError}>
                                 <span class="error-text"> - {ERROR_MESSAGE}</span>
                             </template>
@@ -47,7 +47,7 @@
                             class="slds-m-right_x-small">
                         </lightning-icon>
                         <span>
-                            Other Card
+                            {customLabel.otherCardLabel}
                             <template if:true={hasOtherCardError}>
                                 <span class="error-text"> - {ERROR_MESSAGE}</span>
                             </template>
