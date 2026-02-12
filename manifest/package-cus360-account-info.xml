@@ -76,6 +76,7 @@
 		<members>FEC_API_Config.FEC_Get_Status</members>
 		<members>FEC_API_Config.FEC_Get_Unbilled_Transaction</members>
 		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_API_Config.FEC_GetCardTransactions</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -119,6 +120,9 @@
 		<members>FEC_MSG_Not_Account_Linked</members>
 		<members>FEC_MSG_From_To_Invalid</members>
         <members>FEC_MSG_Parse_JSON_Error</members>
+		<members>FEC_MSG_AccountNumber_Null</members>
+		<members>FEC_MSG_EndDate_Must_StartDate</members>
+		<members>FEC_MSG_StartDate_EndDate_Null</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
