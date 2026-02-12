@@ -1,0 +1,137 @@
+<template>
+  <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
+
+  <div class="slds-card" if:true={sectionLoaded}>
+    <lightning-accordion
+      allow-multiple-sections-open
+      active-section-name={kycSectionlst}
+    >
+      <lightning-accordion-section name="KYC" label="KYC">
+        <div class="kyc-field slds-grid slds-wrap">
+          <div
+            class="kyc-field__item slds-col slds-size_1-of-1 slds-large-size_6-of-12 slds-p-around--small slds-border--bottom"
+          >
+            <template if:true={isDisabled}>
+              <p class="label">KYC Method</p>
+              <p class="value">{kycData.kycType}</p>
+            </template>
+
+            <lightning-record-edit-form
+              object-api-name="Case"
+              record-id={recordId}
+              if:false={isDisabled}
+              class="edit-form"
+              onsuccess={handleSucess}
+            >
+              <lightning-input-field
+                field-name="FEC_KYC_Method__c"
+                variant="label-inline"
+                onchange={handleChangeMethod}
+              >
+              </lightning-input-field>
+            </lightning-record-edit-form>
+
+            <!-- <lightning-record-view-form
+              object-api-name="Case"
+              record-id={recordId}
+            >
+              <lightning-output-field field-name="FEC_KYC_Method__c">
+              </lightning-output-field>
+            </lightning-record-view-form> -->
+          </div>
+        </div>
+
+        <lightning-accordion
+          class="slds-m-top--large"
+          if:true={hasProd}
+          active-section-name={prodTypeSectionlst}
+          allow-multiple-sections-open
+        >
+          <!-- active-section-name="KYC" -->
+          <template for:each={kycData.typelst} for:item="typeItem">
+            <lightning-accordion-section
+              name={typeItem.type}
+              label={typeItem.type}
+              key={typeItem.type}
+            >
+              <div class="option slds-grid slds-wrap">
+                <template for:each={typeItem.questions} for:item="item">
+                  <div
+                    key={item.id}
+                    class="option__item slds-col slds-size_1-of-1 slds-large-size_6-of-12 slds-p-around--small"
+                  >
+                    <div class="option__item__process">
+                      <div class="checkbox slds-m-bottom--small">
+                        <label class="tri-checkbox">
+                          <input
+                            type="checkbox"
+                            onclick={handleOpenAnswer}
+                            data-id={item.id}
+                            disabled={item.isDisabled}
+                            data-state={item.stage}
+                          />
+                          <span class="inner-box"></span>
+                        </label>
+
+                        <span>{item.name}</span>
+                      </div>
+
+                      <div class="option__answer" if:true={item.isOpenAnswer}>
+                        <div class="option__answer__suggest">
+                          <p class="slds-m-bottom--small">
+                            Suggested answer:
+                            <lightning-icon
+                              if:true={item.isMasked}
+                              icon-name={item.iconName}
+                              size="x-small"
+                              class="slds-m-left--small"
+                              data-id={item.id}
+                              onclick={handleToggleMask}
+                            >
+                            </lightning-icon>
+                          </p>
+                          <p class="claim-3">{item.maskedAnswer}</p>
+                        </div>
+
+                        <div class="option__answer__action">
+                          <lightning-button
+                            label="Fail"
+                            data-id={item.id}
+                            data-answer={item.suggestedAnswer}
+                            data-check="false"
+                            onclick={handleKYC}
+                          ></lightning-button>
+                          <lightning-button
+                            variant="brand"
+                            label="Pass"
+                            data-id={item.id}
+                            data-answer={item.suggestedAnswer}
+                            data-check="true"
+                            onclick={handleKYC}
+                          ></lightning-button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </lightning-accordion-section>
+          </template>
+        </lightning-accordion>
+        <!-- </div> -->
+      </lightning-accordion-section>
+
+      <lightning-accordion-section
+        name="KYCResult"
+        label="KYC Details"
+        if:true={isDisabled}
+      >
+        <p></p>
+        <c-fec_-related-list-paging
+          records={kycResultlst}
+          columns={kycResultColumn}
+        ></c-fec_-related-list-paging>
+      </lightning-accordion-section>
+    </lightning-accordion>
+  </div>
+</template>

@@ -1,0 +1,78 @@
+<template>
+  <!-- <template if:true={hasAccountOrContract}> -->
+    <div class="slds-grid slds-gutters slds-grid_align-stretch">
+      <div class="slds-col slds-size_8-of-12">
+        <div class="slds-tabs_card full-height">
+          <div class="slds-page-header slds-page-header_object-home">
+            <div class="slds-grid slds-grid_align-spread slds-wrap">
+              <div class="slds-col slds-grid slds-grid_vertical-align-center slds-grow">
+                <div class="slds-media">
+                  <div class="slds-media__figure">
+                    <lightning-icon icon-name="standard:case" size="small"></lightning-icon>
+                  </div>
+                  <div class="slds-media__figure">
+                    <h1 class="slds-page-header__title slds-truncate">
+                      <lightning-formatted-rich-text value={interactionId}></lightning-formatted-rich-text>
+                    </h1>
+                  </div>
+                  <div class="slds-media__body badge-container">
+                    <template if:true={customerSegment}>
+                      <lightning-badge label={customerSegment} class="slds-badge slds-badge_success"></lightning-badge>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="slds-border_bottom"></div>
+          <c-fec_-interaction-highlight record-id={recordId}
+            ondataupdate={handleDataUpdate}></c-fec_-interaction-highlight>
+
+        </div>
+      </div>
+      <div class="slds-col slds-size_4-of-12">
+        <div class="slds-tabs_card full-height slds-grid slds-grid_vertical">
+          <!-- Header Section -->
+          <!-- Header -->
+          <div class="slds-page-header slds-page-header_object-home">
+            <div class="slds-grid slds-grid_align-spread">
+              <h1 class="slds-page-header__title">{labels.interactionDuration}</h1>
+              <div>
+
+                <template if:true={isInteractionCase}>
+                  <div>
+                    <template if:true={isHandling}>
+                      <button class="slds-button slds-button_neutral" onclick={handleWrapUpClick}>{labels.wrapUp}</button>
+                    </template>
+                    <!-- Chỉ có nút Execute khi ở trạng thái review -->
+                    <template if:true={showExecute}>
+                      <button class="slds-button slds-button_neutral" onclick={handleExecute}>{labels.execute}</button>
+                    </template>
+                    <template if:true={isHandling}>
+                      <button class="slds-button slds-button_neutral" onclick={handleCreateCase}>{labels.createCase}</button>
+                    </template>
+                  </div>
+                </template>
+                <template if:false={isInteractionCase}>
+                  <div>
+                    <button class="slds-button slds-button_neutral" onclick={handleWrapUpClick}>{labels.wrapUp}</button>
+                    <button class="slds-button slds-button_neutral" onclick={handleCreateCase}>{labels.createCase}</button>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <div class="slds-border_bottom"></div>
+
+          <!-- Body: chiếm toàn bộ phần còn lại -->
+          <div class="slds-grow slds-p-around_x-small">
+            <c-fec_-interaction-s-l-a record-id={recordId} is-mode-edit={isModeEdit}>
+            </c-fec_-interaction-s-l-a>
+          </div>
+        </div>
+      </div>
+    </div>
+  <!-- </template> -->
+
+</template>

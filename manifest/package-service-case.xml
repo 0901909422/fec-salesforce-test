@@ -6,6 +6,7 @@
 	</types>
     <types>
 		<members>Case.Customer Case Process</members>
+		<members>Case.Internal Case Process</members>
 		<name>BusinessProcess</name>
 	</types>
     <types>
@@ -28,10 +29,12 @@
 	</types>
 	<types>
 		<members>Case.Customer_Case</members>
+		<members>Case.Internal_Case</members>
 		<name>RecordType</name>
 	</types>
     <types>
 		<members>Case.FEC_Execute_Customer_Case</members>
+		<members>Case.New_Assignment</members>
 		<name>QuickAction</name>
 	</types>
     <types>
@@ -45,6 +48,14 @@
     <types>
 		<members>RD_IT_User_Interaction_Case_Service_Case</members>
 		<name>PermissionSet</name>
+	</types>
+	<types>
+		<members>FEC_Assignment_Set_User_Role</members>
+		<name>Flow</name>
+	</types>
+	<types>
+		<members>Case.My_Pending_Cases</members>
+		<name>ListView</name>
 	</types>
     <version>65.0</version>
 </Package>

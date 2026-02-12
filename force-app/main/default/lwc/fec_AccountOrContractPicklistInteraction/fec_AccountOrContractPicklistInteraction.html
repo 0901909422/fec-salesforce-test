@@ -1,0 +1,24 @@
+<template>
+    <template if:true={hasAccountOrContact}>
+        <div class="account-contract-wrapper">
+            <div class="slds-text-title_caps slds-m-bottom_x-small">
+                {labels.accountContractNumber}
+            </div>
+            <!-- Trigger -->
+            <div class="account-contract-trigger" onclick={toggle}>
+                {selectedValue}
+                <lightning-icon icon-name="utility:chevrondown" size="x-small"
+                    class="slds-m-left_x-small"></lightning-icon>
+            </div>
+
+            <!-- Popover -->
+            <template if:true={isOpen}>
+                <section class="popover">
+                    <lightning-datatable key-field="id" data={data} columns={columns}
+                        onrowselection={handleRowSelection} selected-rows={selectedRows}
+                        max-row-selection="1"></lightning-datatable>
+                </section>
+            </template>
+        </div>
+    </template>
+</template>
