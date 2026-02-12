@@ -66,6 +66,79 @@ function isNumericValue(value) {
     return false;
 }
 
+/**
+ * Tự động quét và highlight các giá trị tiền tệ âm trong record
+ * Method này tự động phát hiện tất cả các field có giá trị số âm và thêm CSS class
+ * Không cần phải chỉ định danh sách fields - hệ thống tự động quét
+ * 
+ * @param {Object} record - Record object từ API cần được xử lý
+ * @param {Array<String>} excludeFields - (Optional) Danh sách các field cần bỏ qua (ví dụ: ['Id', 'CreatedDate'])
+ * @returns {Object} Record đã được thêm CSS class cho các field tiền tệ âm
+ * 
+ */
+export function autoHighlightNegativeCurrency(record, excludeFields = []) {
+    if (!record || typeof record !== 'object') {
+        return record;
+    }
+    
+    // Danh sách các field mặc định cần bỏ qua (không phải là giá trị tiền tệ)
+    const defaultExcludeFields = [
+        'Id', 
+        'attributes', 
+        'CreatedDate', 
+        'LastModifiedDate',
+        'SystemModstamp',
+        'CreatedById',
+        'LastModifiedById',
+        'OwnerId'
+    ];
+    
+    // Kết hợp danh sách exclude
+    const allExcludeFields = [...defaultExcludeFields, ...excludeFields];
+    
+    // Tạo bản sao của record để không modify object gốc
+    const processedRecord = { ...record };
+    
+    // Duyệt qua tất cả các keys trong record
+    Object.keys(record).forEach(fieldName => {
+        // Bỏ qua các field trong danh sách exclude
+        if (allExcludeFields.includes(fieldName)) {
+            return;
+        }
+        
+        // Bỏ qua các field đã có suffix 'Class' (để tránh xử lý lại)
+        if (fieldName.endsWith('Class')) {
+            return;
+        }
+        
+        // Bỏ qua các field đã có suffix 'Formatted' (để tránh xử lý lại)
+        if (fieldName.endsWith('Formatted')) {
+            return;
+        }
+        
+        const fieldValue = record[fieldName];
+        
+        // Kiểm tra xem giá trị có phải là số không
+        if (isNumericValue(fieldValue)) {
+            // Convert sang number nếu là string
+            const numValue = typeof fieldValue === 'string' ? Number(fieldValue) : fieldValue;
+            
+            // Tự động thêm CSS class cho field này
+            const classFieldName = fieldName + 'Class';
+            
+            // Kiểm tra xem có phải số âm không
+            if (isNegative(numValue)) {
+                processedRecord[classFieldName] = 'currency-negative';
+            } else {
+                // Đảm bảo field xxxClass luôn tồn tại, ngay cả khi không âm
+                processedRecord[classFieldName] = '';
+            }
+        }
+    });
+    
+    return processedRecord;
+}
+
 
 /**
  * Tự động quét và highlight các giá trị tiền tệ âm cho nhiều records cùng lúc
