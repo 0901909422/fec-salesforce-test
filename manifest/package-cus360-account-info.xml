@@ -38,6 +38,10 @@
         <members>FEC_Statement__c</members>
 		<name>CustomObject</name>
 	</types>
+	<types>
+        <members>FEC_IPPDetailPageWrapper</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
     <types>
         <members>fec_CardInfo</members>
         <members>fec_CardPayment</members>
@@ -50,6 +54,7 @@
 		<members>fec_StatementsAccount</members>
 		<members>fec_TransactionsAccount</members>
         <members>fec_IPPDetails</members>
+        <members>fec_IPPDetailPage</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
