@@ -79,6 +79,4 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER = 'Non-existing';
     public static final String CUSTOMER_HISTORY_EXISTING_CUSTOMER = 'Existing';
-    public static final String CASE_STATUS_AUTO_CANCELLED = 'Resolved-AutoCancelled';
-    public static final String CASE_STATUS_AUTO_CLOSED = 'Auto-Closed';
 }
