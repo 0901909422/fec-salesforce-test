@@ -47,7 +47,7 @@ public with sharing class FEC_StatementsAccountController {
         ];
 
         if (c.FEC_Account_or_Contract__c == null) {
-            throw new AuraHandledException('Case chưa có Customer History');
+            throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
         }
 
         return [
@@ -65,7 +65,7 @@ public with sharing class FEC_StatementsAccountController {
     public static void syncStatementFromAPI(Id caseId) {
 
         if (caseId == null) {
-            throw new AuraHandledException('CaseId is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
         /* ===== 1. CUSTOMER HISTORY ===== */
@@ -81,18 +81,18 @@ public with sharing class FEC_StatementsAccountController {
                 ch.FEC_Account_Number__c
             );
         } catch (Exception e) {
-            throw new AuraHandledException('Call API lỗi: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
 
         if (res == null || res.CardBasicInfo == null || res.CardBasicInfo.Statement == null) {
-            throw new AuraHandledException('API không trả dữ liệu Statement');
+            throw new AuraHandledException(System.Label.FEC_MSG_Response_Null);
         }
 
         FEC_GetCardBasicInfo.CardBasicInfo info = res.CardBasicInfo;
         Date statementDate = info.Statement.LastStatementDate;
 
         if (statementDate == null) {
-            throw new AuraHandledException('Statement Date bị null');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'StatementDate'}));
         }
 
         /* ===== 3. UPDATE FIRST – NOT EXISTS → INSERT ===== */

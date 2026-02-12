@@ -10,7 +10,7 @@
                             class="slds-m-right_x-small">
                         </lightning-icon>
                         <span>
-                            IPP Details
+                            {customLabel.ippDetailsLabel}
                             <template if:true={hasError}>
                                 <span class="error-text"> - {ERROR_MESSAGE}</span>
                             </template>
@@ -23,11 +23,11 @@
                 <template if:true={hasData}>
                     <div class="slds-grid slds-gutters slds-p-horizontal_medium slds-p-vertical_small slds-border_bottom">
                         <div class="slds-col slds-size_1-of-2">
-                            <span class="slds-text-color_error slds-text-title_bold">Total IPP Balance</span>
+                            <span class="slds-text-color_error slds-text-title_bold">{customLabel.totalIPPBalanceLabel}</span>
                             <span class={totalIPPBalanceClass}>{formattedTotalIPPBalance}</span>
                         </div>
                         <div class="slds-col slds-size_1-of-2">
-                            <span class="slds-text-color_error slds-text-title_bold">Total IPP Current Balance</span>
+                            <span class="slds-text-color_error slds-text-title_bold">{customLabel.totalIPPCurrentBalanceLabel}</span>
                             <span class={totalIPPCurrentBalanceClass}>{formattedTotalIPPCurrentBalance}</span>
                         </div>
                     </div>

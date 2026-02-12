@@ -78,7 +78,7 @@ public with sharing class FEC_EmeaAccountInqService {
 
             // 2. Prepare Sys Data (Auto-generated)
             String transId = UUID.randomUUID().toString();
-            String requestorId = 'APS'; 
+            String requestorId = FEC_ConstantCommon.REQUESTOR_APS; 
             String reqTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
             String vmxVersion = '1.0'; 
 
@@ -143,12 +143,12 @@ public with sharing class FEC_EmeaAccountInqService {
                     responseDoc.load(responseBody);
                     return parseResponse(responseDoc);
                 } else {
-                    throw new CalloutException('Response body is empty');
+                    throw new CalloutException(System.Label.FEC_MSG_Response_Null);
                 }
             } else {
                 // Log lỗi để dễ debug nếu HTTP Status != 200
                 System.debug('HTTP Error: ' + res.getBody());
-                throw new CalloutException('SOAP API Error: ' + res.getStatus() + ' - ' + res.getBody());
+                throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{res.getStatus() + ' - ' + res.getBody()}));
             }
 
         } catch (Exception e) {
@@ -161,11 +161,21 @@ public with sharing class FEC_EmeaAccountInqService {
     // 4. VALIDATION
     // ==========================================
     private static void validateInput(EmeaInput input) {
-        if (input == null) throw new CalloutException('Input cannot be null');
-        if (String.isBlank(input.context)) throw new CalloutException('Missing required field: CONTEXT');
-        if (String.isBlank(input.name)) throw new CalloutException('Missing required field: NAME');
-        if (String.isBlank(input.org)) throw new CalloutException('Missing required field: ORG');
-        if (String.isBlank(input.account)) throw new CalloutException('Missing required field: ACCOUNT');
+        if (input == null) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Input'}));
+        }
+        if (String.isBlank(input.context)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CONTEXT'}));
+        }
+        if (String.isBlank(input.name)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'NAME'}));
+        }
+        if (String.isBlank(input.org)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'ORG'}));
+        }
+        if (String.isBlank(input.account)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'ACCOUNT'}));
+        }
     }
 
     // ==========================================

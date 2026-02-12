@@ -40,7 +40,7 @@ public with sharing class FEC_GetStatus {
         try {
             // 1. CHUẨN BỊ DỮ LIỆU
             String transId = UUID.randomUUID().toString(); 
-            String requestorId = UUID.randomUUID().toString(); 
+            String requestorId = FEC_ConstantCommon.API_REQUESTOR_ID; 
             String reqTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
             
             // 2. VALIDATION
@@ -77,12 +77,12 @@ public with sharing class FEC_GetStatus {
                 // Code = "1" là success theo API spec
                 // Nếu không phải "1" thì có thể là account không tồn tại hoặc lỗi khác
                 if (info.responseCode != '1') {
-                    throw new CalloutException('Account Number is null or invalid');
+                    throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{info.responseDesc}));
                 }
                 
                 return info;
             } else {
-                throw new CalloutException('API Error: ' + res.getStatus() + ' Body: ' + res.getBody());
+                throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{res.getStatus() + ' Body: ' + res.getBody()}));
             }
 
         } catch (Exception e) {
@@ -95,18 +95,25 @@ public with sharing class FEC_GetStatus {
     // VALIDATION LOGIC
     // ==========================================
     public static void validateRequest(String transId, String requestorId, String dateTimeStr, String accountNumber) {
-        if (String.isBlank(transId)) throw new CalloutException('TransID is null or invalid');
-        if (transId.length() > MAX_ID_LEN) throw new CalloutException('TransID is null or invalid or no longer than 36 characters');
-
-        if (String.isBlank(requestorId)) throw new CalloutException('RequestorID is null or invalid');
-        if (requestorId.length() > MAX_ID_LEN) throw new CalloutException('RequestorID is null or invalid'); 
-
-        if (String.isBlank(dateTimeStr)) throw new CalloutException('DateTime is null or invalid');
+        if (String.isBlank(transId) || transId.length() > MAX_ID_LEN) {
+            throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
+        }
+        if (String.isBlank(requestorId) || requestorId.length() > MAX_ID_LEN) {
+            throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
+        }
+        if (String.isBlank(dateTimeStr)) {
+            throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
+        }
         String datePattern = FEC_ConstantCommon.PATTERN_SYS_TIME;
-        if (!Pattern.compile(datePattern).matcher(dateTimeStr).matches()) throw new CalloutException('DateTime is null or invalid or wrong format');
-
-        if (String.isBlank(accountNumber)) throw new CalloutException('AccountNumber is null or invalid');
-        if (accountNumber.length() > MAX_ACCOUNT_LEN) throw new CalloutException('AccountNumber is null or invalid or no longer than 255 characters');
+        if (!Pattern.compile(datePattern).matcher(dateTimeStr).matches()) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeStr}));
+        }
+        if (String.isBlank(accountNumber)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
+        }
+        if (accountNumber.length() > MAX_ACCOUNT_LEN) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'AccountNumber', '255'}));
+        }
     }
 
     // --- PARSE LOGIC ---
