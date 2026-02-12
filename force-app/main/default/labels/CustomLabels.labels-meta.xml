@@ -479,6 +479,13 @@
         <value>TransID is null or no longer than 36 characters</value>
     </labels>
     <labels>
+        <fullName>FEC_RemarkMsg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RemarkMsg</shortDescription>
+        <value>Yêu cầu được tự động chuyển trạng thái Resolved-AutoCancelled theo quy trình tự động kết thúc tương tác cuối ngày</value>
+    </labels>
+    <labels>
         <fullName>FEC_Account_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
