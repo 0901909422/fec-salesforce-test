@@ -11,6 +11,7 @@
 		<members>FEC_AccountOrContractPicklistHanlder</members>
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
+		<members>FEC_GenesysCreateDummyInteraction</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -109,6 +110,7 @@
 	</types>
     <types>
 		<members>FEC_API_Config.FEC_Get_Customer_List</members>
+		<members>FEC_API_Config.FEC_Get_Product_List</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
