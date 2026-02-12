@@ -3,6 +3,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String API_CONTENT_TYPE = 'text/xml; charset=utf-8';
     public static final String API_CONTENT_TYPE_JSON = 'application/json';
     public static final String API_METHOD_POST = 'POST';
+    public static final String API_REQUESTOR_ID = 'SALESFORE-CSM';
     public static final String SOAP_ENV = 'http://schemas.xmlsoap.org/soap/envelope/';
 
     public static final String STR_DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS';
@@ -19,6 +20,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
     public static final String CHANNEL_INBOUND_NAME = 'Inbound';
     public static final String CHANNEL_OUTBOUND_NAME = 'Outbound';
+    public static final String CHANNEL_ZALO = 'ZALO';
+    public static final String CHANNEL_WEBSITE = 'WEBSITE';
+    public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
 
     public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';
     public static final String CHANNEL_OUTBOUND_SUBCHANNEL_NAME = 'Outbound Call';
@@ -75,4 +79,6 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER = 'Non-existing';
     public static final String CUSTOMER_HISTORY_EXISTING_CUSTOMER = 'Existing';
+    public static final String CASE_STATUS_AUTO_CANCELLED = 'Resolved-AutoCancelled';
+    public static final String CASE_STATUS_AUTO_CLOSED = 'Auto-Closed';
 }

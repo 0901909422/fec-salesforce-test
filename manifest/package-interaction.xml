@@ -10,6 +10,7 @@
 		<members>FEC_CommonUltils</members>
 		<members>FEC_AccountOrContractPicklistHanlder</members>
 		<members>FEC_InteractionInforHandler</members>
+		<members>FEC_CloseInterationSchedulerBatch</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -90,6 +91,7 @@
 		<members>Case.FEC_Transcription__c</members>
         <members>Case.FEC_Skip_Search_Internal_Case__c</members>
         <members>Case.FEC_Interaction_View_Mode__c</members>
+        <members>Case.FEC_Is_Submited__c</members>
 		<members>User.FEC_Agent_ID__c</members>
 		<members>User.FEC_Main_Queue__c</members>
         <members>User.FEC_Default_Queue__c</members>
@@ -168,6 +170,7 @@
 		<members>FEC_MSG_TransID_Null</members>
 		<members>FEC_MSG_Create_Customer_History_Error</members>
 		<members>FEC_MSG_Create_Customer_History_Field_Null</members>
+		<members>FEC_RemarkMsg</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

@@ -1,71 +1,4 @@
 public with sharing class FEC_CommonUltils {
-  public static void notifyUsers(
-    Set<String> recipientsIds,
-    String targetId,
-    String targetPageRef,
-    String title,
-    String body
-  ) {
-    // Get the Id for our custom notification type
-    CustomNotificationType notificationType = [
-      SELECT Id, DeveloperName
-      FROM CustomNotificationType
-      WHERE DeveloperName = 'Custom_Notification'
-    ];
-
-    // Create a new custom notification
-    Messaging.CustomNotification notification = new Messaging.CustomNotification();
-
-    // Set the contents for the notification
-    notification.setTitle(title);
-    notification.setBody(body);
-
-    // Set the notification type and target
-    notification.setNotificationTypeId(notificationType.Id);
-    if (String.isNotBlank(targetId)) {
-      notification.setTargetId(targetId);
-    } else {
-      notification.setTargetPageRef(targetPageRef);
-    }
-
-    // Actually send the notification
-    try {
-      notification.send(recipientsIds);
-    } catch (Exception e) {
-      System.debug('Problem sending notification: ' + e.getMessage());
-    }
-  }
-
-  public static void notifyUsers(
-    Set<String> recipientsIds,
-    Id targetId,
-    String targetPageRef,
-    String title,
-    String body,
-    CustomNotificationType notificationType
-  ) {
-    // Create a new custom notification
-    Messaging.CustomNotification notification = new Messaging.CustomNotification();
-
-    // Set the contents for the notification
-    notification.setTitle(title);
-    notification.setBody(body);
-
-    // Set the notification type and target
-    notification.setNotificationTypeId(notificationType.Id);
-    if (String.isNotBlank(targetId)) {
-      notification.setTargetId(targetId);
-    } else {
-      notification.setTargetPageRef(targetPageRef);
-    }
-
-    // Actually send the notification
-    try {
-      notification.send(recipientsIds);
-    } catch (Exception e) {
-      System.debug('Problem sending notification: ' + e.getMessage());
-    }
-  }
 
   public static Boolean isLengthValid(String str, Integer maxLength) {
     if (String.isBlank(str)) {
@@ -158,66 +91,66 @@ public with sharing class FEC_CommonUltils {
     }
     return options;
   }
-
+  
   public static String resolveTemplate(String template, SObject c) {
     if (String.isBlank(template) || c == null) {
       return template;
     }
-
+    
     // Find all {{...}} placeholders
     Pattern p = Pattern.compile('\\{\\{([^}]+)\\}\\}');
     Matcher m = p.matcher(template);
-
+    
     String result = template;
-
+    
     while (m.find()) {
       String fullMatch = m.group(0); // {{Account.Name}}
       String fieldPath = m.group(1); // Account.Name
-
+      
       String value = getFieldValue(c, fieldPath);
       result = result.replace(fullMatch, value);
     }
-
+    
     return result;
   }
-
+  
   public static Set<String> extractFieldPaths(List<String> templates) {
     Set<String> fieldSet = new Set<String>();
-
+    
     if (templates == null || templates.isEmpty()) {
       return new Set<String>();
     }
-
+    
     Pattern p = Pattern.compile('\\{\\{([^}]+)\\}\\}');
-
+    
     for (String template : templates) {
       if (String.isBlank(template))
         continue;
-
+      
       Matcher m = p.matcher(template);
       while (m.find()) {
         fieldSet.add(m.group(1)); // Account.Name, Custom__r.Field__c
       }
     }
-
+    
     return fieldSet;
   }
-
+  
   private static String getFieldValue(SObject sobj, String fieldPath) {
     try {
       List<String> parts = fieldPath.split('\\.');
-
+      
       // Simple field: {{Name}}
       if (parts.size() == 1) {
         Object val = sobj.get(parts[0]);
         return val == null ? '' : String.valueOf(val);
       }
-
+      
       // Parent field: {{Account.Name}}
       SObject parent = sobj.getSObject(parts[0]);
       if (parent == null)
         return '';
-
+      
       Object val = parent.get(parts[1]);
       return val == null ? '' : String.valueOf(val);
     } catch (Exception e) {
@@ -225,7 +158,7 @@ public with sharing class FEC_CommonUltils {
       return '';
     }
   }
-
+  
   public class PicklistOption {
     @AuraEnabled
     public string label { get; set; }
@@ -245,7 +178,7 @@ public with sharing class FEC_CommonUltils {
       this.helpText = helpText;
     }
   }
-
+  
   @AuraEnabled
   public static void logSensitiveAccess(
     String section,
@@ -263,7 +196,7 @@ public with sharing class FEC_CommonUltils {
     );
     insert sensitiveData;
   }
-
+  
   public static String getXmlValue(Dom.XmlNode n, String name) {
     Dom.XmlNode c = (n == null) ? null : n.getChildElement(name, null);
     return (c == null) ? null : c.getText();
@@ -279,16 +212,10 @@ public with sharing class FEC_CommonUltils {
     return parseDate(v);
   }
 
-  public static Dom.XmlNode findChildByName(
-    Dom.XmlNode parent,
-    String nodeName
-  ) {
-    if (parent == null)
-      return null;
+  public static Dom.XmlNode findChildByName(Dom.XmlNode parent, String nodeName) {
+    if (parent == null) return null;
     for (Dom.XmlNode child : parent.getChildElements()) {
-      if (
-        child.getName() == nodeName || child.getName().endsWith(':' + nodeName)
-      ) {
+      if (child.getName() == nodeName || child.getName().endsWith(':' + nodeName)) {
         return child;
       }
     }
