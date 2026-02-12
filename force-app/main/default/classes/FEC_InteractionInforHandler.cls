@@ -63,13 +63,13 @@ public without sharing class FEC_InteractionInforHandler {
     public static String updateInteractionPhone(Id recordId, String phone) {
         
         if (!FEC_CommonUltils.isPhone(phone)) {
-            throw new AuraHandledException('Invalid phone number format');
+            throw new AuraHandledException(System.Label.FEC_MSG_Phone_Number_Invalid);
         }
         
         update new Case(
             Id = recordId,
-        FEC_Phone_Number__c = phone
-            );
+            FEC_Phone_Number__c = phone
+        );
         
         return FEC_CommonUltils.maskPhone(phone);
     }
