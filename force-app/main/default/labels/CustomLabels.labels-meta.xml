@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
+        <fullName>FEC_Account_Contract_Number_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account / Contract Number</shortDescription>
+        <value>Account / Contract Number</value>
+    </labels>
+    <labels>
         <fullName>FEC_Action_Label</fullName>
         <categories>Case</categories>
         <language>en_US</language>
@@ -25,12 +32,48 @@
         <value>Submit</value>
     </labels>
     <labels>
+        <fullName>FEC_Case_ID_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case ID</shortDescription>
+        <value>Case ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Case_List_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case List</shortDescription>
+        <value>Case List</value>
+    </labels>
+    <labels>
         <fullName>FEC_Case_Remark_Label</fullName>
         <categories>Case</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Case Remark Label</shortDescription>
         <value>Case Remarks</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Case_Status_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case Status</shortDescription>
+        <value>Case Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Create_Case_Btn_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Case</shortDescription>
+        <value>Create Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Customer_Information_Label</fullName>
+        <categories>Customer Information</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Information</shortDescription>
+        <value>Customer Information</value>
     </labels>
     <labels>
         <fullName>FEC_Decision_Label</fullName>
@@ -167,12 +210,26 @@
         <value>Demographic</value>
     </labels>
     <labels>
+        <fullName>FEC_Execute_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Execute</shortDescription>
+        <value>Execute</value>
+    </labels>
+    <labels>
         <fullName>FEC_Email_Label</fullName>
         <categories>Customer Info</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Email Label</shortDescription>
         <value>Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_External_Interaction_ID_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>External Interaction ID</shortDescription>
+        <value>External Interaction ID</value>
     </labels>
     <labels>
         <fullName>FEC_First_Name_Label</fullName>
@@ -191,12 +248,97 @@
         <value>Gender</value>
     </labels>
     <labels>
+        <fullName>FEC_Interaction_Channel_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Channel</shortDescription>
+        <value>Interaction Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Created_By_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Created By</shortDescription>
+        <value>Interaction Created By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Created_On_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Created On</shortDescription>
+        <value>Interaction Created On</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Duration_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Duration</shortDescription>
+        <value>Interaction Duration</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction ID</shortDescription>
+        <value>Interaction ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Information_Label</fullName>
+        <categories>Interacttion Information</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Information</shortDescription>
+        <value>Interaction Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Phone_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Phone</shortDescription>
+        <value>Interaction Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Remark_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Remark</shortDescription>
+        <value>Interaction Remark</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Status_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Status</shortDescription>
+        <value>Interaction Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Sub_Channel_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Sub Channel</shortDescription>
+        <value>Interaction Sub Channel</value>
+    </labels>
+    <labels>
         <fullName>FEC_Last_Name_Label</fullName>
         <categories>Customer Info</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Last Name Label</shortDescription>
         <value>Last Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Last_Updated_By_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Updated By</shortDescription>
+        <value>Last Updated By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Last_Updated_On_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Updated On</shortDescription>
+        <value>Last Updated On</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Param_Must_Number</fullName>
@@ -774,12 +916,26 @@
         <value>Main Card</value>
     </labels>
     <labels>
+        <fullName>FEC_Next_Btn_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Next</shortDescription>
+        <value>Next</value>
+    </labels>
+    <labels>
         <fullName>FEC_Other_Card_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Other Card Label</shortDescription>
         <value>Other Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Outcome_Code_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Outcome Code</shortDescription>
+        <value>Outcome Code</value>
     </labels>
     <labels>
         <fullName>FEC_PIN_Label</fullName>
@@ -790,12 +946,47 @@
         <value>PIN</value>
     </labels>
     <labels>
+        <fullName>FEC_Previous_Btn_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Previous</shortDescription>
+        <value>Previous</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Relevant_Cases_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Cases</shortDescription>
+        <value>Relevant Cases</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Relevant_Interactions_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Interactions</shortDescription>
+        <value>Relevant Interactions</value>
+    </labels>
+    <labels>
         <fullName>FEC_Sales_Info_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Sales Info Label</shortDescription>
         <value>Sales Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sub_Category_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub Category</shortDescription>
+        <value>Sub Category</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sub_Code_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub Code</shortDescription>
+        <value>Sub Code</value>
     </labels>
     <labels>
         <fullName>FEC_Total_IPP_Balance_Label</fullName>
@@ -820,6 +1011,27 @@
         <protected>false</protected>
         <shortDescription>Total Payment Amount Label</shortDescription>
         <value>Total Payment Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_View_All_Btn_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>View All</shortDescription>
+        <value>View All</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Wrap_up_Btn_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Wrap-up</shortDescription>
+        <value>Wrap-up</value>
+    </labels>
+    <labels>
+        <fullName>Pagination_Page_Of_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Pagination Page Of</shortDescription>
+        <value>Page {0} of {1}</value>
     </labels>
     <labels>
         <fullName>FEC_CaseBusinessService_Msg_001</fullName>

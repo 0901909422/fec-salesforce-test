@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Is_Owner__c</fullName>
+    <description>Trường tạo phục vụ dev để biết User đang xem có phải owner hay không phục vụ tính năng : chỉ hiển thị nút execute với owner</description>
+    <formula>$User.Id =  OwnerId</formula>
+    <label>Is Owner</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>
