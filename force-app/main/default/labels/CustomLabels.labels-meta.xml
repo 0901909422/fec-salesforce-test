@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
-    <labels>
-        <fullName>FEC_Account_Contract_Number_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Account / Contract Number</shortDescription>
-        <value>Account / Contract Number</value>
-    </labels>
     <labels>        
         <fullName>Auto_Mapping</fullName>
         <language>en_US</language>
@@ -357,84 +350,12 @@
         <value>Submit</value>
     </labels>
     <labels>
-        <fullName>FEC_Case_ID_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Case ID</shortDescription>
-        <value>Case ID</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Case_List_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Case List</shortDescription>
-        <value>Case List</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Case_ID_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Case ID</shortDescription>
-        <value>Case ID</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Case_Status_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Case Status</shortDescription>
-        <value>Case Status</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Create_Case_Btn_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Create Case</shortDescription>
-        <value>Create Case</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Customer_Information_Label</fullName>
-        <categories>Customer Information</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Customer Information</shortDescription>
-        <value>Customer Information</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Case_List_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Case List</shortDescription>
-        <value>Case List</value>
-    </labels>
-    <labels>
         <fullName>FEC_Button_Undo</fullName>
         <categories>General</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Undo Button</shortDescription>
         <value>Undo</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Case_Status_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Case Status</shortDescription>
-        <value>Case Status</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Create_Case_Btn_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Create Case</shortDescription>
-        <value>Create Case</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Customer_Information_Label</fullName>
-        <categories>Customer Information</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Customer Information</shortDescription>
-        <value>Customer Information</value>
     </labels>
     <labels>
         <fullName>FEC_Cancel</fullName>
@@ -886,12 +807,195 @@
         <value>Demographic</value>
     </labels>
     <labels>
+        <fullName>FEC_Edit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Edit action label</shortDescription>
+        <value>Edit</value>
+    </labels>
+    <labels>
         <fullName>FEC_Email_Label</fullName>
         <categories>Customer Info</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Email Label</shortDescription>
         <value>Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Empty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty</shortDescription>
+        <value>Empty</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Create_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unable to create template file</shortDescription>
+        <value>Unable to create template file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Delete_FieldList_Prefix</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error deleting Field List Value:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Delete_Record_Prefix</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error deleting record:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Details</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_DML_Prefix</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>DML Error:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Duplicated_KeyId_FieldId</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>A configuration with this Key Identifier and Field ID pair already exists</shortDescription>
+        <value>A configuration with this Key Identifier and Field ID pair already exists</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Expected_Key</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Column A: Expected {0}, Actual {1}</shortDescription>
+        <value>Column A: Expected {0}, Actual {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Expected_Value</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Column B: Expected {0}, Actual {1}</shortDescription>
+        <value>Column B: Expected {0}, Actual {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_File_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>File is invalid or empty</shortDescription>
+        <value>File is invalid or empty</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Invalid_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Invalid field</value>
+    </labels>
+    <labels>        
+        <fullName>FEC_Error_Invalid_RecordType</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for invalid RecordType</shortDescription>
+        <value>Invalid RecordType specified.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Invalid_SObject_Prefix</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Invalid SObject prefix:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Message_Deleting_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when deleting files on the system</shortDescription>
+        <value>Error when deleting files on the system</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_No_Delete_Permission</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>No delete permission</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_No_Field_Update_Permission</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>No field update permission</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_No_Update_Permission</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>No update permission</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Required_Fields</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>The required fields is missing</shortDescription>
+        <value>The required fields is missing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Retrieve_Additional_Fields</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Could not retrieve additional fields:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Save_Property_Mapping</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Failed to save property mapping</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Unknown_Node_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Unknown node type: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Upload_At_Least_Excel_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please upload at least one Excel file</shortDescription>
+        <value>Please upload at least one Excel file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Fail_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fail</shortDescription>
+        <value>Fail</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Fee_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fee Label</shortDescription>
+        <value>Fee</value>
     </labels>
     <labels>
         <fullName>FEC_First_Name_Label</fullName>
@@ -948,181 +1052,11 @@
         <value>Gender</value>
     </labels>
     <labels>
-        <fullName>FEC_Interaction_Channel_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Channel</shortDescription>
-        <value>Interaction Channel</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Created_By_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Created By</shortDescription>
-        <value>Interaction Created By</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Created_On_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Created On</shortDescription>
-        <value>Interaction Created On</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Duration_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Duration</shortDescription>
-        <value>Interaction Duration</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_ID</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction ID</shortDescription>
-        <value>Interaction ID</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Information_Label</fullName>
-        <categories>Interacttion Information</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Information</shortDescription>
-        <value>Interaction Information</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Phone_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Phone</shortDescription>
-        <value>Interaction Phone</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Remark_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Remark</shortDescription>
-        <value>Interaction Remark</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Status_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Status</shortDescription>
-        <value>Interaction Status</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Sub_Channel_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Sub Channel</shortDescription>
-        <value>Interaction Sub Channel</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Channel_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Channel</shortDescription>
-        <value>Interaction Channel</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Last_Updated_By_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Last Updated By</shortDescription>
-        <value>Last Updated By</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Last_Updated_On_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Last Updated On</shortDescription>
-        <value>Last Updated On</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Created_By_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Created By</shortDescription>
-        <value>Interaction Created By</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Created_On_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Created On</shortDescription>
-        <value>Interaction Created On</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Duration_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Duration</shortDescription>
-        <value>Interaction Duration</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_ID</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction ID</shortDescription>
-        <value>Interaction ID</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Information_Label</fullName>
-        <categories>Interacttion Information</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Information</shortDescription>
-        <value>Interaction Information</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Phone_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Phone</shortDescription>
-        <value>Interaction Phone</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Remark_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Remark</shortDescription>
-        <value>Interaction Remark</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Status_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Status</shortDescription>
-        <value>Interaction Status</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Sub_Channel_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Sub Channel</shortDescription>
-        <value>Interaction Sub Channel</value>
-    </labels>
-    <labels>
         <fullName>FEC_Has_No_Data</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>File has no data</shortDescription>
         <value>File has no data</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Last_Updated_By_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Last Updated By</shortDescription>
-        <value>Last Updated By</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Last_Updated_On_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Last Updated On</shortDescription>
-        <value>Last Updated On</value>
     </labels>
     <labels>
         <fullName>FEC_IPP_Details_Label</fullName>
@@ -1287,13 +1221,6 @@
         <value>Name VN</value>
     </labels>
     <labels>
-        <fullName>FEC_RemarkMsg</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_RemarkMsg</shortDescription>
-        <value>Yêu cầu được tự động chuyển trạng thái Resolved-AutoCancelled theo quy trình tự động kết thúc tương tác cuối ngày</value>
-    </labels>
-    <labels>
         <fullName>FEC_Label_Editable</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -1376,13 +1303,6 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Mapping Alias</value>
-    </labels>
-    <labels>
-        <fullName>FEC_RemarkMsg</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_RemarkMsg</shortDescription>
-        <value>Yêu cầu được tự động chuyển trạng thái Resolved-AutoCancelled theo quy trình tự động kết thúc tương tác cuối ngày</value>
     </labels>
     <labels>
         <fullName>FEC_Label_Name</fullName>
@@ -2522,20 +2442,6 @@
         <value>Select..</value>
     </labels>
     <labels>
-        <fullName>FEC_Next_Btn_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Next</shortDescription>
-        <value>Next</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Next_Btn_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Next</shortDescription>
-        <value>Next</value>
-    </labels>
-    <labels>
         <fullName>FEC_Other_Card_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -2550,13 +2456,6 @@
         <protected>false</protected>
         <shortDescription>PID Number Label</shortDescription>
         <value>PID Number</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Outcome_Code_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Outcome Code</shortDescription>
-        <value>Outcome Code</value>
     </labels>
     <labels>
         <fullName>FEC_PIN_Label</fullName>
@@ -2740,27 +2639,6 @@
         <protected>false</protected>
         <shortDescription>Routing Action Label</shortDescription>
         <value>Routing Action</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Previous_Btn_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Previous</shortDescription>
-        <value>Previous</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Relevant_Cases_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Relevant Cases</shortDescription>
-        <value>Relevant Cases</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Relevant_Interactions_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Relevant Interactions</shortDescription>
-        <value>Relevant Interactions</value>
     </labels>
     <labels>
         <fullName>FEC_Sales_Info_Label</fullName>
@@ -3128,20 +3006,6 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Click to Deactivate</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Sub_Category_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Sub Category</shortDescription>
-        <value>Sub Category</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Sub_Code_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Sub Code</shortDescription>
-        <value>Sub Code</value>
     </labels>
     <labels>
         <fullName>FEC_Total_IPP_Balance_Label</fullName>
@@ -5201,68 +5065,5 @@
         <language>vi</language>
         <shortDescription>Tải tập tin</shortDescription>
         <value>Tải tập tin</value>
-    </labels>
-    <labels>
-        <fullName>FEC_View_All_Btn_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>View All</shortDescription>
-        <value>View All</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Wrap_up_Btn_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Wrap-up</shortDescription>
-        <value>Wrap-up</value>
-    </labels>
-    <labels>
-        <fullName>Pagination_Page_Of_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Pagination Page Of</shortDescription>
-        <value>Page {0} of {1}</value>
-    </labels>
-    <labels>
-        <fullName>FEC_CaseBusinessService_Msg_001</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_CaseBusinessService_Msg_001</shortDescription>
-        <value>Manager not found for the current User owner.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_CaseBusinessService_Msg_002</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_CaseBusinessService_Msg_002</shortDescription>
-        <value>Current owner is a Queue; escalation to a Manager is not possible.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_CaseBusinessService_Msg_003</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_CaseBusinessService_Msg_003</shortDescription>
-        <value>Escalation failed: {0}</value>
-    </labels>
-    <labels>
-        <fullName>FEC_CaseBusinessService_Msg_004</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_CaseBusinessService_Msg_004</shortDescription>
-        <value>Không tìm thấy lịch sử Routing Action để thực hiện Recall.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_CaseBusinessService_Msg_005</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_CaseBusinessService_Msg_005</shortDescription>
-        <value>Bạn không phải người thực hiện Routing Action gần nhất.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_CaseBusinessService_Msg_006</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_CaseBusinessService_Msg_006</shortDescription>
-        <value>Không đủ điều kiện cập nhật số điện thoại.</value>
     </labels>
 </CustomLabels>
