@@ -28,6 +28,7 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_IPPScheduleController</members>
         <name>ApexClass</name>
     </types>
 	<types>

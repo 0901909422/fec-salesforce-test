@@ -163,15 +163,6 @@ public with sharing class FEC_GetCardSecInfo {
     }
  
     // =========================================================================
-    // CARDS DELIVERY
-    // =========================================================================
-    public class CardsDelivery {
-        public String CardNumber; // Card Number
-        public String KindOfIssue; // Type of Issue
-        public String DeliveryDate; // Delivery Date
-    }
-
-    // =========================================================================
     // PUBLIC CALL METHOD - Simplified version for easy usage
     // =========================================================================
     public static ResponseWrapper getCardSecInfo(String accountNumber) {
