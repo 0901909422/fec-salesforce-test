@@ -601,10 +601,7 @@ public with sharing class FEC_CaseBusinessService {
 
       switch on selectedMethod {
         when ROUTE_TO {
-
-      switch on selectedMethod {
-        when ROUTE_TO {
-          String caseId = (String) params.get('caseId');
+          caseId = (String) params.get('caseId');
           String queueId = (String) params.get('queueId');
           String natureOfCaseId = (String) params.get('natureOfCaseId');
           String actionId = (String) params.get('actionId');
@@ -638,16 +635,6 @@ public with sharing class FEC_CaseBusinessService {
           return FEC_UpdateCustomerContact.updateValue(caseId, EMAIL_UPDATE);
         }
         when FULLNAME_UPDATE {
-          revert(caseId);
-          return null;
-        }
-        when PHONE_UPDATE {
-          return FEC_UpdateCustomerContact.updateValue(caseId, PHONE_UPDATE);
-        }
-        when EMAIL_UPDATE {
-          return FEC_UpdateCustomerContact.updateValue(caseId, EMAIL_UPDATE);
-        }
-        when FULLNAME_UPDATE {
           return FEC_UpdateCustomerBasicInfo.updateValue(
             caseId,
             FULLNAME_UPDATE
@@ -661,9 +648,6 @@ public with sharing class FEC_CaseBusinessService {
         }
         when OC_001 {
           return FEC_UpdateCustomerBasicInfo.updateValue(caseId, DOB_UPDATE);
-        }
-        when GENDER_UPDATE {
-          return FEC_UpdateCustomerBasicInfo.updateValue(caseId, GENDER_UPDATE);
         }
         when else {
           // throw new CaseBusinessServiceException('Method not found.');
@@ -1674,7 +1658,6 @@ public with sharing class FEC_CaseBusinessService {
     }
   }
 
-<<<<<<< force-app/main/default/classes/FEC_CaseBusinessService.cls
   @AuraEnabled
   public static void recall(Id caseId) {
       Id currentUserId = UserInfo.getUserId();
@@ -1786,8 +1769,7 @@ public with sharing class FEC_CaseBusinessService {
 
   private static void undeliveriedCardUpdate(Case selectedCase) {
     FEC_GetStatus.CardDeliveryInfo cardDeliveryInfo = FEC_GetStatus.getDeliveryStatus(
-      selectedCase.FEC_Account_or_Contract__r.FEC_Account_Number__c,
-      selectedCase.Id
+      selectedCase.FEC_Account_or_Contract__r.FEC_Account_Number__c
     );
 
     if (cardDeliveryInfo != null) {
