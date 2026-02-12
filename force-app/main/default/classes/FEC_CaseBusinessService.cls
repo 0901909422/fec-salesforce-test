@@ -1,33 +1,54 @@
 public with sharing class FEC_CaseBusinessService {
+  public static final String CASE_ID = 'Case Id';
+  public static final String CUSTOMER_HISTORY = 'Customer History';
+
   public static final String ROUTE_TO = 'Route to';
   public static final String REVERT = 'Revert';
+  public static final String CANCEL = 'Cancel';
+  public static final String ESCALATE = 'Escalate';
+  public static final String REJECT = 'Reject';
+  public static final String RESOLVE = 'Resolve';
 
   public static final String PHONE_UPDATE = 'Phone Update';
   public static final String EMAIL_UPDATE = 'Email Update';
   public static final String FULLNAME_UPDATE = 'Full Name Update';
   public static final String DOB_UPDATE = 'Date of Birth Update';
   public static final String GENDER_UPDATE = 'Gender Update';
+  public static final String OC_001 = 'Outbound Campaign - OU01';
+
+  public static final String CATEGORY_UNDELIVERED_CARD = 'Undelivered Card';
 
   public static final String FRONT_LINE = 'CS Frontline';
 
   public enum Method {
     ROUTE_TO,
+    CANCEL,
     REVERT,
+    REJECT,
+    RESOLVE,
+    ESCALATE,
     PHONE_UPDATE,
     EMAIL_UPDATE,
     FULLNAME_UPDATE,
     DOB_UPDATE,
-    GENDER_UPDATE
+    GENDER_UPDATE,
+    OC_001
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
     ROUTE_TO => Method.ROUTE_TO,
+    CANCEL => Method.CANCEL,
+    REJECT => Method.REJECT,
+    RESOLVE => Method.RESOLVE,
+    REVERT => Method.REVERT,
+    ESCALATE => Method.ESCALATE,
     REVERT => Method.REVERT,
     PHONE_UPDATE => Method.PHONE_UPDATE,
     EMAIL_UPDATE => Method.EMAIL_UPDATE,
     FULLNAME_UPDATE => Method.FULLNAME_UPDATE,
     DOB_UPDATE => Method.DOB_UPDATE,
-    GENDER_UPDATE => Method.GENDER_UPDATE
+    GENDER_UPDATE => Method.GENDER_UPDATE,
+    OC_001 => Method.OC_001
   };
 
   @AuraEnabled
@@ -69,6 +90,7 @@ public with sharing class FEC_CaseBusinessService {
           FEC_Actual_Nature_of_Case__c,
           FEC_Account_or_Contract__c,
           FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
+          FEC_Account_or_Contract__r.FEC_Account_Number__c,
           FEC_Process_Action_Count__c
         FROM Case
         WHERE Id = :caseId
@@ -195,7 +217,7 @@ public with sharing class FEC_CaseBusinessService {
       // =================================== NATURE OF CASE ==================================
       if (String.isBlank(selectedNatureOfCaseId)) {
         natureOfCaseQuery =
-          'SELECT Id, FEC_Business_Process__c, FEC_Business_Process__r.FEC_Code__c, FEC_User_Group__c ' +
+          'SELECT Id, FEC_Business_Process__c, FEC_Business_Process__r.FEC_Code__c, FEC_User_Group__c, FEC_Category__r.FEC_Code__c ' +
           'FROM FEC_Nature_of_Case__c ' +
           'WHERE FEC_Product_Type__c = :productType ' +
           'AND FEC_Category__c = :category ' +
@@ -208,7 +230,7 @@ public with sharing class FEC_CaseBusinessService {
           String.join(new List<String>(rolelst), '\',\'') +
           '\')';
       } else {
-        natureOfCaseQuery = 'SELECT Id, FEC_Business_Process__c, FEC_Business_Process__r.FEC_Code__c, FEC_User_Group__c FROM FEC_Actual_Nature_of_Case__c WHERE Id = :selectedNatureOfCaseId ';
+        natureOfCaseQuery = 'SELECT Id, FEC_Category__r.FEC_Code__c, FEC_Business_Process__c, FEC_Business_Process__r.FEC_Code__c, FEC_User_Group__c FROM FEC_Actual_Nature_of_Case__c WHERE Id = :selectedNatureOfCaseId ';
       }
 
       List<SObject> natureOfCaselst = Database.queryWithBinds(
@@ -237,6 +259,19 @@ public with sharing class FEC_CaseBusinessService {
       if (businessObj != null) {
         businessProcessCode = (String) businessObj.get('FEC_Code__c');
       }
+
+      SObject categoryObj = selectedNatureOfCase.getSObject('FEC_Category__r');
+      String catergoryCode;
+
+      if (categoryObj != null) {
+        catergoryCode = (String) categoryObj.get('FEC_Code__c');
+      }
+
+      //  adhoc for Category = “Undelivered Card”
+      if (CATEGORY_UNDELIVERED_CARD.equals(catergoryCode)) {
+        undeliveriedCardUpdate(selectedCase);
+      }
+
       Error err = new Error();
 
       switch on METHOD_MAP.get(businessProcessCode) {
@@ -558,6 +593,14 @@ public with sharing class FEC_CaseBusinessService {
   public static Object run(String method, Map<String, String> params) {
     try {
       Method selectedMethod = METHOD_MAP.get(method);
+      String caseId;
+
+      if(params != null) {
+        caseId = (String) params.get('caseId');
+      }
+
+      switch on selectedMethod {
+        when ROUTE_TO {
 
       switch on selectedMethod {
         when ROUTE_TO {
@@ -569,31 +612,57 @@ public with sharing class FEC_CaseBusinessService {
           return null;
         }
         when REVERT {
-          String caseId = (String) params.get('caseId');
+          revert(caseId);
+          return null;
+        }
+        when CANCEL {
+          cancel(caseId);
+          return null;
+        }
+        when ESCALATE {
+          escalate(caseId);
+          return null;
+        }
+        when REJECT {
+          reject(caseId);
+          return null;
+        }
+        when RESOLVE {
+          resolve(caseId);
+          return null;
+        }
+        when PHONE_UPDATE {
+          return FEC_UpdateCustomerContact.updateValue(caseId, PHONE_UPDATE);
+        }
+        when EMAIL_UPDATE {
+          return FEC_UpdateCustomerContact.updateValue(caseId, EMAIL_UPDATE);
+        }
+        when FULLNAME_UPDATE {
           revert(caseId);
           return null;
         }
         when PHONE_UPDATE {
-          String caseId = (String) params.get('caseId');
           return FEC_UpdateCustomerContact.updateValue(caseId, PHONE_UPDATE);
         }
         when EMAIL_UPDATE {
-          String caseId = (String) params.get('caseId');
           return FEC_UpdateCustomerContact.updateValue(caseId, EMAIL_UPDATE);
         }
         when FULLNAME_UPDATE {
-          String caseId = (String) params.get('caseId');
           return FEC_UpdateCustomerBasicInfo.updateValue(
             caseId,
             FULLNAME_UPDATE
           );
         }
         when DOB_UPDATE {
-          String caseId = (String) params.get('caseId');
           return FEC_UpdateCustomerBasicInfo.updateValue(caseId, DOB_UPDATE);
         }
         when GENDER_UPDATE {
-          String caseId = (String) params.get('caseId');
+          return FEC_UpdateCustomerBasicInfo.updateValue(caseId, GENDER_UPDATE);
+        }
+        when OC_001 {
+          return FEC_UpdateCustomerBasicInfo.updateValue(caseId, DOB_UPDATE);
+        }
+        when GENDER_UPDATE {
           return FEC_UpdateCustomerBasicInfo.updateValue(caseId, GENDER_UPDATE);
         }
         when else {
@@ -601,6 +670,8 @@ public with sharing class FEC_CaseBusinessService {
         }
       }
 
+      Case selectedCase = new Case(Id = caseId, FEC_Is_Submited__c = true);
+      update selectedCase;
       return null;
     } catch (CaseBusinessServiceException e) {
       throw new AuraHandledException(e.getMessage());
@@ -630,7 +701,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty()) {
-        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Case Id'}));
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CASE_ID }));
       }
 
       Case updatedCase = caselst.get(0);
@@ -712,6 +783,114 @@ public with sharing class FEC_CaseBusinessService {
     }
   }
 
+  private static void cancel(String caseId) {
+    try {
+      List<Case> caselst = [
+        SELECT Id, OwnerId, Status
+        FROM Case
+        WHERE Id = :caseId
+      ];
+
+      if (caselst.isEmpty())
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CASE_ID }));
+
+      Case updatedCase = caselst.get(0);
+      updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
+
+      update updatedCase;
+    } catch (Exception e) {
+      throw new CaseBusinessServiceException(e.getMessage());
+    }
+  }
+
+  private static void reject(String caseId) {
+    try {
+      List<Case> caselst = [
+        SELECT Id, OwnerId, Status
+        FROM Case
+        WHERE Id = :caseId
+      ];
+
+      if (caselst.isEmpty())
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CASE_ID }));
+
+      Case updatedCase = caselst.get(0);
+      updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED;
+
+      update updatedCase;
+    } catch (Exception e) {
+      throw new CaseBusinessServiceException(e.getMessage());
+    }
+  }
+
+  private static void resolve(String caseId) {
+    try {
+      List<Case> caselst = [
+        SELECT Id, OwnerId, Status
+        FROM Case
+        WHERE Id = :caseId
+      ];
+
+      if (caselst.isEmpty())
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CASE_ID }));
+
+      Case updatedCase = caselst.get(0);
+      updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
+
+      update updatedCase;
+    } catch (Exception e) {
+      throw new CaseBusinessServiceException(e.getMessage());
+    }
+  }
+
+  private static void escalate(String caseId) {
+    try {
+      // 1. Use TYPEOF to safely access User-specific fields on the Owner polymorphic lookup
+      List<Case> caselst = [
+        SELECT
+          Id,
+          OwnerId,
+          Status,
+          TYPEOF Owner
+            WHEN User THEN ManagerId
+          END
+        FROM Case
+        WHERE Id = :caseId
+      ];
+
+      if (caselst.isEmpty()) {
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CASE_ID }));
+      }
+
+      Case updatedCase = caselst.get(0);
+
+      // 2. Check if the Owner is actually a User (not a Queue)
+      if (updatedCase.Owner instanceof User) {
+        // Cast the Owner relationship to a User object to access ManagerId
+        User ownerUser = (User) updatedCase.Owner;
+
+        if (ownerUser.ManagerId != null) {
+          updatedCase.OwnerId = ownerUser.ManagerId;
+        } else {
+          throw new CaseBusinessServiceException(
+            Label.FEC_CaseBusinessService_Msg_001
+          );
+        }
+      } else {
+        throw new CaseBusinessServiceException(
+          Label.FEC_CaseBusinessService_Msg_002
+        );
+      }
+
+      update updatedCase;
+    } catch (Exception e) {
+      // It's better practice to include the original exception as a cause if your custom exception supports it
+      throw new CaseBusinessServiceException(
+        String.format(Label.FEC_CaseBusinessService_Msg_003, new List<String>{ e.getMessage() })
+      );
+    }
+  }
+
   private static void revert(String caseId) {
     try {
       List<Case> caselst = [
@@ -725,7 +904,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty()) {
-        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Case Id'}));
+        throw new CaseBusinessServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CASE_ID }));
       }
 
       Case updatedCase = caselst.get(0);
@@ -1495,6 +1674,49 @@ public with sharing class FEC_CaseBusinessService {
     }
   }
 
+<<<<<<< force-app/main/default/classes/FEC_CaseBusinessService.cls
+  @AuraEnabled
+  public static void recall(Id caseId) {
+      Id currentUserId = UserInfo.getUserId();
+
+          // 1. Query Case & Owner Info (Lấy thêm Owner.Type để đỡ phải check prefix ID)
+          Case c = [SELECT Id, Status, OwnerId, Owner.Type
+                    FROM Case 
+                    WHERE Id = :caseId 
+                    LIMIT 1];
+
+          // 2. Query History gần nhất (Query vào List để tránh lỗi No Rows)
+          List<FEC_Routing_Action_History__c> historyList = [
+              SELECT Id, FEC_Perform_User__c, FEC_Updated_User_Queue__c, FEC_Updated_User_Queue_ID__c
+              FROM FEC_Routing_Action_History__c 
+              WHERE FEC_Case__c = :caseId 
+              AND FEC_Routing_Action__c = 'Route to' 
+              ORDER BY CreatedDate DESC 
+              LIMIT 1
+          ];
+          System.debug('historyList: ' + historyList);
+          if (historyList.isEmpty()) {
+               throw new AuraHandledException(Label.FEC_CaseBusinessService_Msg_004);
+          }
+          
+          FEC_Routing_Action_History__c lastAction = historyList[0];
+          System.debug('lastAction: ' + lastAction);
+          if (lastAction.FEC_Updated_User_Queue_ID__c != currentUserId) {
+            throw new AuraHandledException(Label.FEC_CaseBusinessService_Msg_005);          
+          }
+      try {
+          if (c.Owner.Type == 'Queue' && c.OwnerId == lastAction.FEC_Updated_User_Queue_ID__c) {
+              c.OwnerId = currentUserId;
+              update c;
+          }
+
+      } catch (Exception e) {
+          // Log lỗi hệ thống
+          System.debug('Error in recall: ' + e.getMessage());
+          throw new AuraHandledException(e.getMessage());
+      }
+  }
+
   private static Error phoneUpdateValidate(Id cHistoryId) {
     List<String> validStatuslst = new List<String>{ '8', '9', 'Z' };
     List<String> validBlockCodelst = new List<String>{ 'C' };
@@ -1532,7 +1754,7 @@ public with sharing class FEC_CaseBusinessService {
     List<String> errorlst = new List<String>();
 
     if (cHistorylst.isEmpty()) {
-      errorlst.add('Customer History is invalid');
+      errorlst.add(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ CUSTOMER_HISTORY }));
     }
 
     FEC_Customer_History__c selectedHistory = cHistorylst.get(0);
@@ -1552,7 +1774,7 @@ public with sharing class FEC_CaseBusinessService {
     if (errorlst.isEmpty())
       return new Error();
 
-    return new Error('Không đủ điều kiện cập nhật số điện thoại.', errorlst);
+    return new Error(Label.FEC_CaseBusinessService_Msg_006, errorlst);
   }
 
   private static void phoneUpdate(Case selectedCase) {
@@ -1560,6 +1782,19 @@ public with sharing class FEC_CaseBusinessService {
     selectedCase.FEC_Updated_Info_Phone_Number__c = selectedCase.FEC_Original_Info_Phone_Number__c;
 
     update selectedCase;
+  }
+
+  private static void undeliveriedCardUpdate(Case selectedCase) {
+    FEC_GetStatus.CardDeliveryInfo cardDeliveryInfo = FEC_GetStatus.getDeliveryStatus(
+      selectedCase.FEC_Account_or_Contract__r.FEC_Account_Number__c,
+      selectedCase.Id
+    );
+
+    if (cardDeliveryInfo != null) {
+      selectedCase.FEC_Delivery_Status__c = cardDeliveryInfo.status;
+      selectedCase.FEC_Delay_Note__c = cardDeliveryInfo.deliveryNotes;
+      update selectedCase;
+    }
   }
 
   public class CaseBusinessServiceException extends Exception {
