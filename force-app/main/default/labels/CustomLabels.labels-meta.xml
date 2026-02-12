@@ -1013,7 +1013,6 @@
         <value>Total Payment Amount</value>
     </labels>
     <labels>
-<<<<<<< force-app/main/default/labels/CustomLabels.labels-meta.xml
         <fullName>FEC_View_All_Btn_Label</fullName>
         <language>en_US</language>
         <protected>false</protected>
