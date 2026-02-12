@@ -90,8 +90,6 @@ public with sharing class FEC_IPPController {
 
         Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
 
-        Map<String, Schema.SObjectField> fields = FEC_IPP__c.SObjectType.getDescribe().fields.getMap();
-
         // 1. Ưu tiên query từ database
         if (customerHistoryId != null) {
             List<FEC_IPP__c> fromDb = [
@@ -108,7 +106,7 @@ public with sharing class FEC_IPPController {
             ];
             if (fromDb != null && !fromDb.isEmpty()) {
                 List<IPPRecordDTO> result = new List<IPPRecordDTO>();
-                Map<String, String> helpTextMap = FEC_CommonUltils.buildHelpTextMap(fields);
+                Map<String, String> helpTextMap = getIPPHelpTextMap();
                 for (FEC_IPP__c rec : fromDb) {
                     IPPRecordDTO dto = mapFECIPPToDTO(rec);
                     dto.helpTexts = helpTextMap;
@@ -129,7 +127,7 @@ public with sharing class FEC_IPPController {
         saveIPPRecordsToDatabase(caseId, result);
         
         // Gán help texts cho tất cả records
-        Map<String, String> helpTextMap = FEC_CommonUltils.buildHelpTextMap(fields);
+        Map<String, String> helpTextMap = getIPPHelpTextMap();
         for (IPPRecordDTO dto : result) {
             dto.helpTexts = helpTextMap;
         }
@@ -777,4 +775,14 @@ public with sharing class FEC_IPPController {
         }
     }
 
+    /**
+     * Build help text map from FEC_IPP__c object field metadata
+     * Returns Map<fieldApiName, helpText> for LWC consumption
+     */
+    @AuraEnabled(cacheable=true)
+    public static Map<String, String> getIPPHelpTextMap() {
+        Map<String, Schema.SObjectField> fields = FEC_IPP__c.SObjectType.getDescribe().fields.getMap();
+        Map<String, String> helpTextMap = FEC_CommonUltils.buildHelpTextMap(fields);
+        return helpTextMap;
+    }
 }

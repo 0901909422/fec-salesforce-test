@@ -5,27 +5,13 @@ import FEC_IPP_NAVIGATION from '@salesforce/messageChannel/FEC_IPP_Navigation__c
 import getIPPRecords from '@salesforce/apex/FEC_IPPController.getIPPRecords';
 import getIPPHelpTextMap from '@salesforce/apex/FEC_IPPController.getIPPHelpTextMap';
 import { formatCurrency, isNegative, autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
+import { formatDate } from 'c/fec_CommonUtils';
+import FEC_IPP_Details_Label from '@salesforce/label/c.FEC_IPP_Details_Label';
+import FEC_Total_IPP_Balance_Label from '@salesforce/label/c.FEC_Total_IPP_Balance_Label';
+import FEC_Total_IPP_Current_Balance_Label from '@salesforce/label/c.FEC_Total_IPP_Current_Balance_Label';
 
 // Error message constant
 const ERROR_MESSAGE = 'Tải dữ liệu không thành công';
-
-// Helper function to format date to dd/mm/yyyy
-function formatDate(dateValue) {
-    if (!dateValue) return '';
-    
-    try {
-        const date = new Date(dateValue);
-        if (isNaN(date.getTime())) return '';
-        
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        
-        return `${day}/${month}/${year}`;
-    } catch (e) {
-        return '';
-    }
-}
 
 export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -114,6 +100,12 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
         { label: 'Term', fieldName: 'ippTermFormatted', type: 'text', cellAlign: 'center', width: '80px', minWidth: '70px' },
         { label: 'Current Term', cellAlign: 'center', fieldName: 'currentTermFormatted', type: 'text', width: '90px', minWidth: '80px' }
     ];
+    
+    customLabel = {
+        ippDetailsLabel: FEC_IPP_Details_Label,
+        totalIPPBalanceLabel: FEC_Total_IPP_Balance_Label,
+        totalIPPCurrentBalanceLabel: FEC_Total_IPP_Current_Balance_Label,
+    }
     
     // Field mapping từ Database sang UI
     // PlanNumber → IPP Plan (hyperlink to Sales Info)
