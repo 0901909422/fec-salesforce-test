@@ -92,7 +92,6 @@
         <members>FEC_IPP_Schedule__c</members>
 		<members>FEC_Payment_History__c</members>
         <members>FEC_API_Config__mdt</members>
-		<members>FEC_Case_Remarks__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
