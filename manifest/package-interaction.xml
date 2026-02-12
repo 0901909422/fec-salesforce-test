@@ -8,7 +8,10 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CommonUltils</members>
+		<members>FEC_AccountOrContractPicklistHanlder</members>
+		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
+		<members>FEC_GenesysCreateDummyInteraction</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -18,6 +21,17 @@
 		<members>fec_Spinner</members>
 		<members>maskedToggleCell</members>
 		<members>maskedToggleDatatable</members>
+		<members>fecRelevantCaseCard</members>
+		<members>fecInteractionCreationHighlight</members>
+		<members>fecInteractionInfo</members>
+		<members>fecRelevantInteractionCard</members>
+		<members>fecRelevantInteractionCase</members>
+		<members>fec_AccountOrContractPicklistInteraction</members>
+		<members>fec_InteractionHighlight</members>
+		<members>fec_InteractionHighlightMain</members>
+		<members>fec_RelevantCaseListViewAll</members>
+		<members>fec_RelevantInteractionCaseListViewAll</members>
+		<members>fec_RelevantInteractionListViewAll</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -96,6 +110,7 @@
 	</types>
     <types>
 		<members>FEC_API_Config.FEC_Get_Customer_List</members>
+		<members>FEC_API_Config.FEC_Get_Product_List</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>

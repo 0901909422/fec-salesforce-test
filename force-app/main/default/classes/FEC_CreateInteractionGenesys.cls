@@ -100,4 +100,14 @@ public without sharing class FEC_CreateInteractionGenesys {
         return null; // no error
     }
     
+    @AuraEnabled
+    public static InteractionResult createDummyInteraction() {
+        try {
+            InteractionResult result = FEC_GenesysCreateDummyInteraction.createDummyInteraction();
+            return result;
+        } catch (Exception e) {
+            System.debug('Error creating dummy interaction: ' + e.getMessage());
+            return new InteractionResult(false, 'Create Dummy Interaction failed: ' + e.getMessage(), null, null);
+        }
+    }
 }

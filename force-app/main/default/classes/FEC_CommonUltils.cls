@@ -249,18 +249,20 @@ public with sharing class FEC_CommonUltils {
     }
     return first6 + middle + last4;
   }
-  
+
   /**
    * Format API trả về: yyyyMMdd (VD: 20281031) hoặc YYYY-MM-DD
    * @param dateStr - Chuỗi ngày tháng từ API
    * @return Đối tượng Date
    */
   public static Date parseDate(String dateStr) {
-    if (String.isBlank(dateStr)) return null;
-    
+    if (String.isBlank(dateStr))
+      return null;
+
     // Loại bỏ trường hợp 00000000 (không có ngày)
-    if (dateStr == '00000000' || dateStr == '0') return null;
-    
+    if (dateStr == '00000000' || dateStr == '0')
+      return null;
+
     try {
       // Format API trả về: yyyyMMdd (VD: 20281031)
       if (dateStr.length() == 8 && dateStr.isNumeric()) {
@@ -269,11 +271,16 @@ public with sharing class FEC_CommonUltils {
         Integer day = Integer.valueOf(dateStr.substring(6, 8));
         return Date.newInstance(year, month, day);
       }
-      
+
       // Fallback: Format YYYY-MM-DD
-      return Date.valueOf(dateStr); 
+      return Date.valueOf(dateStr);
     } catch (Exception e) {
-      System.debug('convertDateSafeForOtherCard error for "' + dateStr + '": ' + e.getMessage());
+      System.debug(
+        'convertDateSafeForOtherCard error for "' +
+          dateStr +
+          '": ' +
+          e.getMessage()
+      );
       return null;
     }
   }
@@ -286,16 +293,28 @@ public with sharing class FEC_CommonUltils {
       // Format: 2025-10-31T14:00:10.491Z
       dateTimeStr = dateTimeStr.replace('T', ' ').replace('Z', '');
       if (dateTimeStr.contains('.')) {
-          dateTimeStr = dateTimeStr.substringBefore('.');
+        dateTimeStr = dateTimeStr.substringBefore('.');
       }
       return Datetime.valueOf(dateTimeStr);
     } catch (Exception e) {
-      System.debug('Failed to parse datetime: ' + dateTimeStr + ', Error: ' + e.getMessage());
+      System.debug(
+        'Failed to parse datetime: ' +
+          dateTimeStr +
+          ', Error: ' +
+          e.getMessage()
+      );
       return null;
     }
   }
 
-  public static HttpResponse calloutApi(String endpoint, String method, String contentType, String soapAction, Dom.Document docBody, String body) {
+  public static HttpResponse calloutApi(
+    String endpoint,
+    String method,
+    String contentType,
+    String soapAction,
+    Dom.Document docBody,
+    String body
+  ) {
     HttpRequest req = new HttpRequest();
     req.setEndpoint(endpoint);
     req.setMethod(method);
@@ -316,20 +335,112 @@ public with sharing class FEC_CommonUltils {
   }
 
   public static String generateTransactionId() {
-    return Datetime.now().getTime() + '_' + String.valueOf(Math.abs(Crypto.getRandomInteger())).substring(0, 6);
+    return Datetime.now().getTime() +
+      '_' +
+      String.valueOf(Math.abs(Crypto.getRandomInteger())).substring(0, 6);
   }
 
   public static String formatCurrency(Decimal amount, Integer scale) {
-    if (amount == null) return '';
+    if (amount == null)
+      return '';
     return amount.setScale(scale).format();
   }
 
   public static String formatDate(Date d) {
-    if (d == null) return '';
+    if (d == null)
+      return '';
     return d.format();
   }
 
   public static String decimalToString(Decimal d) {
     return d == null ? '' : d.format();
   }
+  /**
+   * Mask National ID (CCCD) hoặc Passport ID để hiển thị an toàn.
+   * - CCCD: 9 hoặc 12 ký tự (chỉ số) → thay giữa bằng "*", hiển thị 3 số đầu + 3 số cuối.
+   * - Passport: 8 ký tự (ký tự đầu là chữ, 7 ký tự sau là số) → thay giữa bằng "*", hiển thị 2 ký tự đầu + 3 ký tự cuối.
+   * @param value National ID hoặc Passport ID (raw)
+   * @return Chuỗi đã mask, hoặc value gốc nếu blank/không khớp format
+   */
+  public static String maskNationalIdOrPassport(String value) {
+    if (String.isBlank(value)) {
+      return value;
+    }
+    String s = value.trim();
+
+    // CCCD: 9 hoặc 12 ký tự, chỉ gồm số
+    if ((s.length() == 9 || s.length() == 12) && Pattern.matches('\\d+', s)) {
+      if (s.length() < 6)
+        return s;
+      String first3 = s.substring(0, 3);
+      String last3 = s.substring(s.length() - 3);
+      String middle = '';
+      for (Integer i = 3; i < s.length() - 3; i++) {
+        middle += '*';
+      }
+      return first3 + middle + last3;
+    }
+
+    // Passport: 8 ký tự, ký tự đầu là chữ, 7 ký tự sau là số
+    if (s.length() == 8 && Pattern.matches('[A-Za-z]\\d{7}', s)) {
+      String first2 = s.substring(0, 2);
+      String last3 = s.substring(5, 8);
+      String middle = '***';
+      return first2 + middle + last3;
+    }
+
+    // Fallback: không khớp format → 3 đầu + 3 cuối
+    if (s.length() < 6)
+      return s;
+    String first3 = s.substring(0, 3);
+    String last3 = s.substring(s.length() - 3);
+    String middle = '';
+    for (Integer i = 3; i < s.length() - 3; i++) {
+      middle += '*';
+    }
+    return first3 + middle + last3;
+  }
+
+  public static void createProcessActionHistory(
+    String name,
+    String stage,
+    Boolean isSuccess
+  ) {
+    List<User> userlst = [
+      SELECT Email, UserRole.Name
+      FROM User
+      WHERE Id = :UserInfo.getUserId()
+      LIMIT 1
+    ];
+
+    if (userlst.isEmpty())
+      return;
+
+    FEC_Process_Action_History__c action = new FEC_Process_Action_History__c(
+      Name = name,
+      FEC_Stage_Name__c = stage,
+      FEC_Action_Result__c = isSuccess ? 'Success' : 'Fail',
+      FEC_User__c = userlst.get(0).Email.split('@')[0],
+      FEC_User_Role__c = userlst.get(0).UserRole.Name
+    );
+
+    insert action;
+  }
+
+ public static String maskPhone(String phone) {
+        if (String.isBlank(phone)) {
+            return phone;
+        }
+        
+        Integer len = phone.length();
+        
+        // Nếu quá ngắn thì không mask
+        if (len <= 7) {
+            return phone;
+        }
+        
+        return phone.substring(0, 4)
+            + '***'
+            + phone.substring(len - 3);
+    } 
 }
