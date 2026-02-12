@@ -346,8 +346,8 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.FEC_ID__c</fieldItem>
-                <identifier>RecordFEC_ID_cField</identifier>
+                <fieldItem>Record.FEC_Link_ID__c</fieldItem>
+                <identifier>RecordFEC_Link_ID_cField3</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
