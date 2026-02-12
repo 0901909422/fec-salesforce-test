@@ -13,7 +13,7 @@ import {
 
 //============================== Labels ==============================
 import FEC_RELEVANT_CASES_LABEL from "@salesforce/label/c.FEC_Relevant_Cases_Label";
-import FEC_CASE_ID_LABEL from "@salesforce/label/c.FEC_Case_List_Label";
+import FEC_CASE_ID_LABEL from "@salesforce/label/c.FEC_Case_ID_Label";
 import FEC_CASE_STATUS_LABEL from "@salesforce/label/c.FEC_Case_Status_Label";
 import FEC_SUB_CATEGORY_LABEL from "@salesforce/label/c.FEC_Sub_Category_Label";
 import FEC_SUB_CODE_LABEL from "@salesforce/label/c.FEC_Sub_Code_Label";
