@@ -24,6 +24,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_WEBSITE = 'WEBSITE';
     public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
 
+    public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';
+    public static final String CHANNEL_OUTBOUND_SUBCHANNEL_NAME = 'Outbound Call';
+
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
     public static final String PATTERN_APPLICATION_ID = '^(\\d{6}|\\d{8}|\\d{9})$';

@@ -363,7 +363,7 @@ public with sharing class FEC_IPPController {
                             ', StartDate=' + secIPP.IPPStartDate + 
                             ', MatureDate=' + secIPP.IPPMatureDate + 
                             ', CurrentBalance=' + secIPP.IPPCurrentBalance + 
-                            ', Term=' + secIPP.Term);
+                            ', Term=' + secIPP.currentTerm);
             }
         } else {
             System.debug('### GetCardSecInfo returned null or empty IPPs list');
@@ -432,7 +432,7 @@ public with sharing class FEC_IPPController {
                 ipp.FEC_IPP_First_Due_Date__c = String.isNotBlank(secIPP.IPPStartDate) ? FEC_CommonUltils.parseDate(secIPP.IPPStartDate) : null;
                 ipp.FEC_IPP_Mature_Date__c = String.isNotBlank(secIPP.IPPMatureDate) ? FEC_CommonUltils.parseDate(secIPP.IPPMatureDate) : null;
                 ipp.FEC_IPP_Current_Balance__c = secIPP.IPPCurrentBalance != null ? secIPP.IPPCurrentBalance : null;
-                ipp.FEC_IPP_Current_Term__c = secIPP.Term != null ? secIPP.Term : null;
+                ipp.FEC_IPP_Current_Term__c = secIPP.currentTerm != null ? secIPP.currentTerm : null;
                 // IPP Record No lấy từ GetCardSecInfo (1-36, dựa trên thứ tự OPENING_BALANCE_1, _2, ..., _36)
                 ipp.FEC_IPP_Record_No__c = secIPP.IPPRecordNo;
                 

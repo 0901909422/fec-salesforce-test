@@ -5,6 +5,7 @@
     <label>PSG - RD - IT User</label>
     <permissionSets>RD_IT_User_Customer_360</permissionSets>
     <permissionSets>RD_IT_User_Interaction_Case_Service_Case</permissionSets>
+    <permissionSets>RD_IT_User_Master_Data_Management</permissionSets>
     <permissionSets>RD_IT_User_System_Management</permissionSets>
     <permissionSets>RD_IT_User_User_Management</permissionSets>
     <status>Updated</status>
