@@ -21,6 +21,7 @@
 		<members>FEC_Stage_Change__c</members>
 		<members>FEC_Stage_Screen__c</members>
 		<members>FEC_Action_Button__c</members>
+		<members>FEC_Process_Action_History__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
