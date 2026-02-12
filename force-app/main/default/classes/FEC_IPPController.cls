@@ -533,6 +533,210 @@ public with sharing class FEC_IPPController {
         return c.FEC_Account_Number__c;
     }
 
+    
+    /**
+     * Gọi API GetCardPlanInfo thông qua FEC_GetCardPlanInfo class
+     * @param accountNumber - Account Number
+     * @param caseId - Case ID (optional, có thể null)
+     * @return IPPApiResponse
+     */
+    private static IPPApiResponse callGetCardPlanInfoAPI(String accountNumber, String caseId) {
+        // Gọi method từ FEC_GetCardPlanInfo
+        FEC_GetCardPlanInfo.CardPlanResult apiResult = FEC_GetCardPlanInfo.getCardPlanInfo(accountNumber);
+        
+        // Convert sang DTO của IPPController
+        IPPApiResponse response = new IPPApiResponse();
+        response.transId = apiResult.transId;
+        response.sysDateTime = apiResult.sysDateTime;
+        response.responseCode = apiResult.responseCode;
+        response.responseDesc = apiResult.responseDesc;
+        
+        // Map plans
+        for (FEC_GetCardPlanInfo.CardPlan apiPlan : apiResult.plans) {
+            IPPPlanDTO dto = new IPPPlanDTO();
+            dto.recordNumber = apiPlan.recordNumber;
+            dto.planNumber = apiPlan.planNumber;
+            dto.openDate = apiPlan.openDate;
+            dto.beginDate = apiPlan.beginDate;
+            dto.matureDate = null; 
+            dto.currentBalance = apiPlan.currentBalance;
+            dto.ippCurrentBalance = null; 
+            dto.baseRate = apiPlan.baseRate;
+            dto.deferredInterest = apiPlan.deferredInterest;
+            dto.accruedInterest = apiPlan.accruedInterest;
+            dto.perDiem = apiPlan.perDiem;
+            dto.aggregateDays = apiPlan.aggregateDays;
+            dto.ippInterest = apiPlan.ippInterest;
+            dto.closeFeeIndicator = apiPlan.closeFeeIndicator;
+            dto.closeFeeIndicatorAmt = apiPlan.closeFeeIndicatorAmt;
+            dto.closeFeeAmount = apiPlan.closeFeeAmount;
+            dto.additionalAccruedInt = apiPlan.additionalAccruedInt;
+            dto.totalPaymentAmount = apiPlan.totalPaymentAmount;
+            dto.refNumber = apiPlan.refNumber;
+            response.plans.add(dto);
+        }
+        
+        return response;
+    }
+    
+    // ==========================================
+    // SAVE TO DATABASE METHOD
+    // ==========================================
+    /**
+     * Lưu dữ liệu IPP từ API vào FEC_IPP__c (chỉ INSERT, không UPDATE)
+     * Method này chỉ được gọi 1 lần duy nhất khi chưa có dữ liệu trong database
+     * Gọi tất cả API đồng thời, merge dữ liệu, rồi insert 1 lần duy nhất
+     * @param dtoPlans - List IPPPlanDTO từ GetCardPlanInfo API
+     * @param secInfoResponse - Response từ GetCardSecInfo API (có thể null)
+     * @param interestRateMap - Map PlanNumber -> InterestRate từ GetIPPDetails API
+     * @param ippTermMap - Map PlanNumber -> IPPTerm từ GetIPPDetails API
+     * @param accountNumber - Account Number
+     * @param customerHistoryId - Customer History ID từ Case (ưu tiên dùng ID này)
+     */
+    private static void saveIPPToDatabase(List<IPPPlanDTO> dtoPlans, FEC_GetCardSecInfo.ResponseWrapper secInfoResponse, Map<String, Decimal> interestRateMap, Map<String, String> ippTermMap, String accountNumber, Id customerHistoryId) {
+        // Ưu tiên dùng Customer History ID từ Case
+        // Nếu không có, mới tìm từ Account Number
+        if (customerHistoryId == null) {
+            System.debug('Customer History ID từ Case là null, tìm từ Account Number...');
+            List<FEC_Customer_History__c> histories = [
+                SELECT Id FROM FEC_Customer_History__c 
+                WHERE FEC_Account_Number__c = :accountNumber 
+                LIMIT 1
+            ];
+            if (!histories.isEmpty()) {
+                customerHistoryId = histories[0].Id;
+                System.debug('Found Customer History ID từ Account Number: ' + customerHistoryId);
+            }
+        } else {
+            System.debug('Sử dụng Customer History ID từ Case: ' + customerHistoryId);
+        }
+        
+        if (customerHistoryId == null) {
+            System.debug('Không tìm thấy Customer History với Account Number: ' + accountNumber);
+            return;
+        }
+        
+        // Tạo List từ GetCardSecInfo để match theo thứ tự (vì plan number có thể khác nhau giữa 2 API)
+        List<FEC_GetCardSecInfo.IPP> secInfoList = new List<FEC_GetCardSecInfo.IPP>();
+        if (secInfoResponse != null && secInfoResponse.CardSecInfo != null && secInfoResponse.CardSecInfo.IPPs != null) {
+            System.debug('### GetCardSecInfo returned ' + secInfoResponse.CardSecInfo.IPPs.size() + ' IPP records');
+            for (FEC_GetCardSecInfo.IPP secIPP : secInfoResponse.CardSecInfo.IPPs) {
+                secInfoList.add(secIPP);
+                System.debug('### GetCardSecInfo IPP: Plan=' + secIPP.IPPPlan + 
+                            ', StartDate=' + secIPP.IPPStartDate + 
+                            ', MatureDate=' + secIPP.IPPMatureDate + 
+                            ', CurrentBalance=' + secIPP.IPPCurrentBalance + 
+                            ', Term=' + secIPP.currentTerm);
+            }
+        } else {
+            System.debug('### GetCardSecInfo returned null or empty IPPs list');
+        }
+        
+        // Query records cũ để kiểm tra (chỉ INSERT nếu chưa có)
+        List<FEC_IPP__c> existingRecords = [
+            SELECT Id, FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_Customer_History__c
+            FROM FEC_IPP__c 
+            WHERE FEC_Customer_History__c = :customerHistoryId
+        ];
+        
+        // Tạo Set để kiểm tra nhanh key (Record_No + Plan) đã tồn tại chưa
+        Set<String> existingKeys = new Set<String>();
+        for (FEC_IPP__c existing : existingRecords) {
+            String key = (existing.FEC_IPP_Record_No__c != null ? existing.FEC_IPP_Record_No__c : '') + '_' + 
+                        (existing.FEC_IPP_Plan__c != null ? existing.FEC_IPP_Plan__c : '');
+            existingKeys.add(key);
+        }
+        
+        System.debug('Found ' + existingRecords.size() + ' existing records in DB');
+        
+        List<FEC_IPP__c> recordsToInsert = new List<FEC_IPP__c>();
+        
+        // Match theo thứ tự: plan đầu tiên từ GetCardPlanInfo match với plan đầu tiên từ GetCardSecInfo
+        Integer planIndex = 0;
+        for (IPPPlanDTO dto : dtoPlans) {
+            // Validate: Phải có Plan Number
+            if (String.isBlank(dto.planNumber)) {
+                System.debug('Skipping IPP với planNumber rỗng');
+                continue;
+            }
+            
+            // Tạo key để kiểm tra: Record_No + Plan
+            String key = (dto.recordNumber != null ? dto.recordNumber : '') + '_' + 
+                        (dto.planNumber != null ? dto.planNumber : '');
+            
+            // Nếu key đã tồn tại → bỏ qua (không insert, không update)
+            if (existingKeys.contains(key)) {
+                System.debug('### IPP record already exists: Rec=' + dto.recordNumber + ', Plan=' + dto.planNumber + ', skipping insert');
+                continue;
+            }
+            
+            // Chỉ INSERT record mới (key chưa tồn tại)
+            FEC_IPP__c ipp = new FEC_IPP__c();
+            ipp.FEC_Customer_History__c = customerHistoryId;
+            
+            // Mapping fields từ GetCardPlanInfo
+            ipp.FEC_IPP_Plan__c = dto.planNumber;           // PlanNumber → IPP Plan
+            ipp.FEC_IPP_Open_Date__c = FEC_CommonUltils.parseDate(dto.openDate); // PlanOpenDate → IPP Open Date
+            ipp.FEC_IPP_Balance__c = dto.currentBalance;    // PlanCurrentBalance → IPP Balance
+            
+            // Merge dữ liệu từ GetCardSecInfo - Match theo thứ tự (index) vì plan number có thể khác nhau
+            FEC_GetCardSecInfo.IPP secIPP = null;
+            if (planIndex < secInfoList.size()) {
+                secIPP = secInfoList[planIndex];
+                System.debug('### Matching by index ' + planIndex + ': GetCardPlanInfo Plan=' + dto.planNumber + 
+                            ' with GetCardSecInfo Plan=' + secIPP.IPPPlan + 
+                            ', IPPStartDate=' + secIPP.IPPStartDate + 
+                            ', IPPMatureDate=' + secIPP.IPPMatureDate + 
+                            ', IPPCurrentBalance=' + secIPP.IPPCurrentBalance);
+            }
+            
+            if (secIPP != null) {
+                // CHỈ dùng IPPStartDate, IPPMatureDate, IPPCurrentBalance, Term từ GetCardSecInfo
+                ipp.FEC_IPP_First_Due_Date__c = String.isNotBlank(secIPP.IPPStartDate) ? FEC_CommonUltils.parseDate(secIPP.IPPStartDate) : null;
+                ipp.FEC_IPP_Mature_Date__c = String.isNotBlank(secIPP.IPPMatureDate) ? FEC_CommonUltils.parseDate(secIPP.IPPMatureDate) : null;
+                ipp.FEC_IPP_Current_Balance__c = secIPP.IPPCurrentBalance != null ? secIPP.IPPCurrentBalance : null;
+                ipp.FEC_IPP_Current_Term__c = secIPP.currentTerm != null ? secIPP.currentTerm : null;
+                // IPP Record No lấy từ GetCardSecInfo (1-36, dựa trên thứ tự OPENING_BALANCE_1, _2, ..., _36)
+                ipp.FEC_IPP_Record_No__c = secIPP.IPPRecordNo;
+                
+                System.debug('### Parsed dates for Plan ' + dto.planNumber + 
+                            ', First_Due_Date=' + ipp.FEC_IPP_First_Due_Date__c + 
+                            ', Mature_Date=' + ipp.FEC_IPP_Mature_Date__c + 
+                            ', Current_Balance=' + ipp.FEC_IPP_Current_Balance__c + 
+                            ', Current_Term=' + ipp.FEC_IPP_Current_Term__c +
+                            ', Record_No=' + ipp.FEC_IPP_Record_No__c);
+            } else {
+                System.debug('### WARNING: No matching GetCardSecInfo at index ' + planIndex + 
+                            ' for Plan ' + dto.planNumber + 
+                            ' (GetCardSecInfo has ' + secInfoList.size() + ' records)' +
+                            '. First Due Date will be NULL (NOT using BeginDate=' + dto.beginDate + ' from GetCardPlanInfo)');
+                // KHÔNG dùng BeginDate từ GetCardPlanInfo - chỉ để null nếu không có GetCardSecInfo
+                ipp.FEC_IPP_First_Due_Date__c = null;
+                ipp.FEC_IPP_Mature_Date__c = null;
+                ipp.FEC_IPP_Current_Balance__c = null;
+                ipp.FEC_IPP_Current_Term__c = null;
+                // Không có GetCardSecInfo → FEC_IPP_Record_No__c để null (không fallback)
+                ipp.FEC_IPP_Record_No__c = null;
+            }
+            
+            planIndex++; // Tăng index cho plan tiếp theo
+            
+            // Merge InterestRate và IPPTerm từ GetIPPDetails
+            if (interestRateMap.containsKey(dto.planNumber)) {
+                ipp.FEC_IPP_Interest_Rate__c = interestRateMap.get(dto.planNumber);
+            } else if (dto.baseRate != null) {
+                ipp.FEC_IPP_Interest_Rate__c = dto.baseRate;
+            }
+            
+            // Merge IPPTerm từ GetIPPDetails
+            // IPPTerm từ API có thể là "3 months" hoặc "3" → parse số
+            if (ippTermMap.containsKey(dto.planNumber)) {
+                String ippTermStr = ippTermMap.get(dto.planNumber);
+                ipp.FEC_IPP_Term__c = parseIPPTerm(ippTermStr);
+                System.debug('### Parsed IPPTerm: ' + ippTermStr + ' → ' + ipp.FEC_IPP_Term__c);
+            }
+
+
     private static Date parseDateSafe(String dateStr) {
         if (String.isBlank(dateStr)) {
             return null;

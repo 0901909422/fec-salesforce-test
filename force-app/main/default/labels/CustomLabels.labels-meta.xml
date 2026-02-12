@@ -1,6 +1,484 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
+        <fullName>FEC_Action_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Action Label</shortDescription>
+        <value>Action</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Save_Close</fullName>
+        <categories>Button</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button Save Close</shortDescription>
+        <value>Save &amp; Close</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Submit</fullName>
+        <categories>Button</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button Submit</shortDescription>
+        <value>Submit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Case_Remark_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case Remark Label</shortDescription>
+        <value>Case Remarks</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Decision_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Label</shortDescription>
+        <value>Decision</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Error_Panel_Body</fullName>
+        <categories>Common</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Error Panel Body</shortDescription>
+        <value>Review the errors on this page</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Error_Panel_Title</fullName>
+        <categories>Common</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Error Panel Title</shortDescription>
+        <value>We hit a snag</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Invalid</shortDescription>
+        <value>{0} is invalid.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Not_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Not Found</shortDescription>
+        <value>{0} not found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Queue_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Queue Label</shortDescription>
+        <value>Queue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reason_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reason Label</shortDescription>
+        <value>Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Routing_Action_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Routing Action Label</shortDescription>
+        <value>Routing Action</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Team_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Team Label</shortDescription>
+        <value>Team</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Addresses_List_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Addresses List Label</shortDescription>
+        <value>Addresses List</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CIF_Number_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CIF Number Label</shortDescription>
+        <value>CIF Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Contact_List_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contact List Label</shortDescription>
+        <value>Contact List</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Customer_Name_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Name Label</shortDescription>
+        <value>Customer Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Customer_Number_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Number Label</shortDescription>
+        <value>Customer Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Date_of_Birth_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Date of Birth Label</shortDescription>
+        <value>Date of Birth</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Date_of_Issue_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Date of Issue Label</shortDescription>
+        <value>Date of Issue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Demographic_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Demographic Label</shortDescription>
+        <value>Demographic</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Label</shortDescription>
+        <value>Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_First_Name_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>First Name Label</shortDescription>
+        <value>First Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Gender_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Gender Label</shortDescription>
+        <value>Gender</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Last_Name_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Name Label</shortDescription>
+        <value>Last Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Param_Must_Number</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Param Must Number</shortDescription>
+        <value>{0} must be numeric</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Marital_Status_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Marital Status Label</shortDescription>
+        <value>Marital Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Middle_Name_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Middle Name Label</shortDescription>
+        <value>Middle Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Mobile_App_Account_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Mobile App Account Label</shortDescription>
+        <value>Mobile App Account</value>
+    </labels>
+    <labels>
+        <fullName>FEC_National_ID_Passport_ID_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>National ID Passport ID Label</shortDescription>
+        <value>National ID/ Passport ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PID_Number_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PID Number Label</shortDescription>
+        <value>PID Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Place_of_Issue_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Place of Issue Label</shortDescription>
+        <value>Place of Issue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Primary_Phone_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Primary Phone Label</shortDescription>
+        <value>Primary Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reference_Info_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reference Info Label</shortDescription>
+        <value>Reference Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Registration_Info_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Registration Info Label</shortDescription>
+        <value>Registration Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Self_Service_Channel_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Self Service Channel Label</shortDescription>
+        <value>Self-service Channels</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Website_Account_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Website Account Label</shortDescription>
+        <value>Website Account</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Work_Phone_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Work Phone Label</shortDescription>
+        <value>Work Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Zalo_Follower_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Zalo Follower Label</shortDescription>
+        <value>Zalo Follower</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_AccountNumber_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG AccountNumber Invalid</shortDescription>
+        <value>AccountNumber must be 16 characters or 19 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ApplicationID_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG ApplicationID Invalid</shortDescription>
+        <value>ApplicationID must be 6 characters or 8 characters or 9 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractNumber_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG ContractNumber Invalid</shortDescription>
+        <value>ContractNumber must be one of: (8)-(6)-(4) | (8)-(7)-(3) | (8)-(7)-(2) | (8)-(7)-(1) | (8)-(7) | (2)-(2)-(2)-(2) digits</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Customer_History_Error</fullName>
+        <categories>Customer History</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Customer History Error</shortDescription>
+        <value>Failed to create Customer History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Customer_History_Field_Null</fullName>
+        <categories>Customer History</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Customer History Field Null</shortDescription>
+        <value>Value and fieldName must be provided.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Interaction_Error</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Interaction Error</shortDescription>
+        <value>Create Interaction failed: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Interaction_Success</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Interaction Success</shortDescription>
+        <value>Create Interaction successful</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Datetime_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Datetime Invalid</shortDescription>
+        <value>DateTime invalid: {0} is not type of Datetime</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Datetime_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Datetime Null</shortDescription>
+        <value>DateTime is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Eligible</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Eligible</shortDescription>
+        <value>Eligible for rewards program</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Email_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Email Invalid</shortDescription>
+        <value>Email must be one of (randomString1)@(randomString2).(2-5 chars) or (randomString1)@(randomString2).(2-5 chars).(2-5 chars)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Genesys_Phone_Number_Null</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Genesys Phone Number Null</shortDescription>
+        <value>PhoneNumber is required for Outbound call</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Genesys_Request_Invalid_Type</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Genesys Request Invalid Type</shortDescription>
+        <value>Invalid Type. Must be either OutboundEstablished or InboundRinging</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Genesys_Request_Null</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Genesys Request Null</shortDescription>
+        <value>Invalid request: Request body is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Genesys_Request_Type_Null</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Genesys Request Type Null</shortDescription>
+        <value>Type is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Interaction_Case_DTO_Null</fullName>
+        <categories>Interaction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Interaction Case DTO Null</shortDescription>
+        <value>InteractionCaseDTO cannot be null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_National_ID_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG National ID Invalid</shortDescription>
+        <value>National ID must be 9 characters or 12 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_PersonID_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG PersonID Invalid</shortDescription>
+        <value>PersonID is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Phone_Number_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Phone Number Invalid</shortDescription>
+        <value>Phone number must start with 0 (10 digits) or 84 (11 digits)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_RequestorID_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG RequestorID Null</shortDescription>
+        <value>RequestorID is null or invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_TransID_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG TransID Null</shortDescription>
+        <value>TransID is null or no longer than 36 characters</value>
+    </labels>
+    <labels>
         <fullName>FEC_Account_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -225,6 +703,14 @@
         <value>{0} is required and cannot be empty.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Parse_JSON_Error</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Parse JSON Error</shortDescription>
+        <value>Failed to parse JSON: {0}</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Parse_XML_Error</fullName>
         <categories>API</categories>
         <language>en_US</language>
@@ -255,6 +741,22 @@
         <protected>false</protected>
         <shortDescription>MSG Response Sys Null</shortDescription>
         <value>Response Sys object is null.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Reward_Eligibility_Error</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Reward Eligibility Error</shortDescription>
+        <value>Reward eligibility check failed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Reward_Eligibility_Success</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Reward Eligibility Success</shortDescription>
+        <value>Reward eligibility check successful</value>
     </labels>
     <labels>
         <fullName>FEC_Main_Card_Label</fullName>

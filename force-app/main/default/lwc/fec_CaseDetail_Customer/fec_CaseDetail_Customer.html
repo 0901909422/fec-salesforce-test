@@ -1,0 +1,36 @@
+<template>
+  <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
+
+  <c-fec_-case-bussiness
+    record-id={recordId}
+    is-edit={modeEditCase}
+  ></c-fec_-case-bussiness>
+
+  <lightning-accordion
+    allow-multiple-sections-open
+    active-section-name={activeSections}
+  >
+    <lightning-accordion-section
+      name="case-remark"
+      label={customLabel.caseRemarkLabel}
+      if:true={modeEditCase}
+    >
+      <c-fec_-case-remarks case-id={recordId}></c-fec_-case-remarks>
+    </lightning-accordion-section>
+  </lightning-accordion>
+
+  <div class="case-footer" if:true={modeEditCase}>
+    <lightning-button
+      label={customLabel.btnSaveClose}
+      onclick={handleSave}
+    ></lightning-button>
+
+    <lightning-button
+      variant="brand"
+      label={customLabel.btnSubmit}
+      onclick={handleSubmit}
+    ></lightning-button>
+
+    <c-fec_-error-panel if:true={hasError} errors={errlst}></c-fec_-error-panel>
+  </div>
+</template>

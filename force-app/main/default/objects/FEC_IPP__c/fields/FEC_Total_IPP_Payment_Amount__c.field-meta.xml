@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Total_IPP_Payment_Amount__c</fullName>
+    <description>Tổng số tiền trả góp</description>
+    <label>Total IPP Payment Amount</label>
+    <summarizedField>FEC_IPP_Schedule__c.FEC_IPP_Payment_Amount__c</summarizedField>
+    <summaryForeignKey>FEC_IPP_Schedule__c.FEC_IPP__c</summaryForeignKey>
+    <summaryOperation>sum</summaryOperation>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Summary</type>
+</CustomField>

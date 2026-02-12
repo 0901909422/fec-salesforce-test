@@ -15,4 +15,13 @@ public with sharing class FEC_MockupEndpoint {
     public static final String GET_REWARD_ELIGIBILITY_ENDPOINT_MOCKUP = 'https://ac989dc3-34ec-4c62-98cf-54ea477582c2.mock.pstmn.io';
     public static final String GET_STATUS_ENDPOINT_MOCKUP = 'https://fa2dbdcc-9a32-4469-8fc0-d9ca8def9cdd.mock.pstmn.io/CIF_CardInfo';
     public static final String GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP = 'https://82338791-908c-4531-95b3-3d8e5ab19fe7.mock.pstmn.io';
+    public static final String GET_ADDRESSES_LIST_ENDPOINT_MOCKUP = 'https://3541590e-4fb6-48e7-9dba-5a3259e62dc5.mock.pstmn.io';
+    public static final String GET_APPLICATIONS_LIST_ENDPOINT_MOCKUP = 'https://7eb0f748-8126-49f2-946b-61016266d9f8.mock.pstmn.io';
+    public static final String GET_CONTACTS_LIST_ENDPOINT_MOCKUP = 'https://4c75f566-6635-45c2-b066-1b73036661d6.mock.pstmn.io';
+    public static final String GET_CUSTOMER_INFO_BASIC_ENDPOINT_MOCKUP = 'https://ce03371a-6afd-46a0-a1f1-0729fbf4d334.mock.pstmn.io';
+    public static final String GET_DIGITAL_ACCOUNT_STATUS_ENDPOINT_MOCKUP = 'https://87eaeec6-b7ab-4552-997b-6aa7b7e55628.mock.pstmn.io';
+    public static final String GET_DOCUMENTS_LIST_ENDPOINT_MOCKUP = 'https://241aef91-9cc1-4b9c-9618-629c9b022c47.mock.pstmn.io';
+    public static final String GET_RELATIVES_LIST_ENDPOINT_MOCKUP = 'https://4fe9b5aa-83ad-47f8-801a-eba4fd18faf3.mock.pstmn.io';
+    public static final String UPDATE_CUSTOMER_BASIC_INFO_ENDPOINT_MOCKUP = 'https://0b78db69-eb98-4c57-9924-dc958e4388df.mock.pstmn.io/CIF_CustomerInfoUpdate';
+    public static final String UPDATE_CUSTOMER_CONTACT_ENDPOINT_MOCKUP = 'https://0b78db69-eb98-4c57-9924-dc958e4388df.mock.pstmn.io/CIF_CustomerInfoUpdate';
 }
