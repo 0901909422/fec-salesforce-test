@@ -383,6 +383,14 @@
         <value>DateTime is null</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Eligible</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Eligible</shortDescription>
+        <value>Eligible for rewards program</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Email_Invalid</fullName>
         <categories>API</categories>
         <language>en_US</language>
@@ -725,6 +733,22 @@
         <protected>false</protected>
         <shortDescription>MSG Response Sys Null</shortDescription>
         <value>Response Sys object is null.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Reward_Eligibility_Error</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Reward Eligibility Error</shortDescription>
+        <value>Reward eligibility check failed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Reward_Eligibility_Success</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Reward Eligibility Success</shortDescription>
+        <value>Reward eligibility check successful</value>
     </labels>
     <labels>
         <fullName>FEC_Main_Card_Label</fullName>
