@@ -159,14 +159,11 @@ public with sharing class FEC_GetIPPDetailsCallout {
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_IPP_Detail');
 
         String endpoint = apiSetting?.FEC_Call_Mock__c
-            ? 'https://0859a3da-fa01-402a-8ba6-668338547cfe.mock.pstmn.io'
+            ? FEC_MockupEndpoint.GET_IPP_DETAIL_ENDPOINT_MOCKUP
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
         // Server yêu cầu SOAPAction là full URI, không phải chỉ "GetIPPDetails"
-        String soapAction = apiConfig?.FEC_SOAP_Action__c;
-        if (String.isBlank(soapAction) || !soapAction.contains('://')) {
-            soapAction = 'http://esbservice.fecredit.org/EStatementService/GetIPPDetails';
-        }
+        String soapAction = apiConfig.FEC_SOAP_Action__c;
 
         HttpResponse res = FEC_CommonUltils.calloutApi(
             endpoint,
