@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_CS_Customer_Care_Case</fullName>
+    <columns>FEC_Link_ID__c</columns>
+    <columns>CASES.STATUS</columns>
+    <columns>FEC_Channel__c</columns>
+    <columns>FEC_Customer_Name__c</columns>
+    <columns>FEC_Account_Contract_Number_Text__c</columns>
+    <columns>FEC_Category__c</columns>
+    <columns>FEC_SubCategory__c</columns>
+    <columns>FEC_SubCode__c</columns>
+    <columns>FEC_Stage_Name__c</columns>
+    <columns>FEC_Case_Created_On__c</columns>
+    <columns>FEC_Case_Created_By__c</columns>
+    <filterScope>Queue</filterScope>
+    <filters>
+        <field>CASES.STATUS</field>
+        <operation>equals</operation>
+        <value>Open,Pending</value>
+    </filters>
+    <filters>
+        <field>CASES.RECORDTYPE</field>
+        <operation>equals</operation>
+        <value>Case.Internal_Case,Case.Customer_Case</value>
+    </filters>
+    <label>DQ - CS Customer Care</label>
+    <queue>FEC_DQ_CS_Customer_Care</queue>
+    <sharedTo>
+        <roleAndSubordinatesInternal>FEC_Customer_Care_Manager</roleAndSubordinatesInternal>
+        <roleAndSubordinatesInternal>FEC_Customer_Care_Specialist</roleAndSubordinatesInternal>
+        <roleAndSubordinatesInternal>FEC_Head_of_Customer_Care_Department</roleAndSubordinatesInternal>
+        <roleAndSubordinatesInternal>FEC_Senior_Customer_Care_Specialist</roleAndSubordinatesInternal>
+        <roleAndSubordinatesInternal>FEC_Unit_Head_of_Customer_Care</roleAndSubordinatesInternal>
+    </sharedTo>
+</ListView>

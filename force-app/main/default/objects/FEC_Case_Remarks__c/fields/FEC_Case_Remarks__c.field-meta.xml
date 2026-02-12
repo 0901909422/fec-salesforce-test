@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Case_Remarks__c</fullName>
     <description>Nội dung chi tiết ghi chú mà User đã nhập</description>
+    <externalId>false</externalId>
     <label>Case Remarks</label>
     <length>32768</length>
     <trackHistory>false</trackHistory>
