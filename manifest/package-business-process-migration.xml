@@ -10,6 +10,8 @@
         <members>FEC_CaseEditNOCController</members>
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_ConstantCommon</members>
+		<members>FEC_ConstantCommon</members>
+		<members>FEC_GetStatus</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -26,7 +28,10 @@
 		<members>Case.FEC_Updated_Info_Last_Name__c</members>
 		<members>Case.FEC_Updated_Info_Middle_Name__c</members>
 		<members>Case.FEC_Updated_Info_Phone_Number__c</members>
+		<members>Case.FEC_Delay_Note__c</members>
+		<members>Case.FEC_Delivery_Status__c</members>
 		<members>User.FEC_User_Division_Group__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Updated_User_Queue_ID__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -80,6 +85,12 @@
         <members>FEC_MSG_Eligible</members>
         <members>FEC_MSG_Reward_Eligibility_Success</members>
         <members>FEC_MSG_Reward_Eligibility_Error</members>
+		<members>FEC_CaseBusinessService_Msg_001</members>
+		<members>FEC_CaseBusinessService_Msg_002</members>
+		<members>FEC_CaseBusinessService_Msg_003</members>
+		<members>FEC_CaseBusinessService_Msg_004</members>
+		<members>FEC_CaseBusinessService_Msg_005</members>
+		<members>FEC_CaseBusinessService_Msg_006</members>
         <name>CustomLabel</name>
     </types>
     <version>65.0</version>

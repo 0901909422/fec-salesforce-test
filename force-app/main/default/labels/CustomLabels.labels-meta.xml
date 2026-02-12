@@ -1013,6 +1013,7 @@
         <value>Total Payment Amount</value>
     </labels>
     <labels>
+<<<<<<< force-app/main/default/labels/CustomLabels.labels-meta.xml
         <fullName>FEC_View_All_Btn_Label</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -1032,5 +1033,47 @@
         <protected>false</protected>
         <shortDescription>Pagination Page Of</shortDescription>
         <value>Page {0} of {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CaseBusinessService_Msg_001</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CaseBusinessService_Msg_001</shortDescription>
+        <value>Manager not found for the current User owner.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CaseBusinessService_Msg_002</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CaseBusinessService_Msg_002</shortDescription>
+        <value>Current owner is a Queue; escalation to a Manager is not possible.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CaseBusinessService_Msg_003</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CaseBusinessService_Msg_003</shortDescription>
+        <value>Escalation failed: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CaseBusinessService_Msg_004</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CaseBusinessService_Msg_004</shortDescription>
+        <value>Không tìm thấy lịch sử Routing Action để thực hiện Recall.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CaseBusinessService_Msg_005</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CaseBusinessService_Msg_005</shortDescription>
+        <value>Bạn không phải người thực hiện Routing Action gần nhất.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CaseBusinessService_Msg_006</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CaseBusinessService_Msg_006</shortDescription>
+        <value>Không đủ điều kiện cập nhật số điện thoại.</value>
     </labels>
 </CustomLabels>
