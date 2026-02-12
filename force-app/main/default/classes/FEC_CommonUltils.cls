@@ -355,8 +355,7 @@ public with sharing class FEC_CommonUltils {
   public static String decimalToString(Decimal d) {
     return d == null ? '' : d.format();
   }
-<<<<<<< force-app/main/default/classes/FEC_CommonUltils.cls
-
+  
   /**
    * Build help text map for any SObject type
    * @param fields - map field object
