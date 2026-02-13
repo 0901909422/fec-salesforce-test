@@ -26,6 +26,7 @@
 		<members>FEC_Address_Info__c</members>
         <members>FEC_Sensitive_Data__c</members>
         <members>FEC_Application_List__c</members>
+        <members>FEC_Contact_List__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -40,6 +41,7 @@
 		<members>fec_CommonConst</members>
         <members>fec_PaymentHistoryAcount</members>
         <members>fec_RelatedListPaging</members>
+        <members>fec_ApplicationsListTabView</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
