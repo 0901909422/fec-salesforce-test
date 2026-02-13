@@ -140,8 +140,8 @@
 		<name>PermissionSetGroup</name>
 	</types>
 	<types>
-		<members>Transactions</members>
-		<members>statements</members>
+		<members>FEC_Transactions</members>
+		<members>FEC_Statements</members>
 		<name>CustomTab</name>
 	</types>
     <version>65.0</version>
