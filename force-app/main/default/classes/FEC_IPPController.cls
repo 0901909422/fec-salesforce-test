@@ -781,8 +781,7 @@ public with sharing class FEC_IPPController {
      */
     @AuraEnabled(cacheable=true)
     public static Map<String, String> getIPPHelpTextMap() {
-        Map<String, Schema.SObjectField> fields = FEC_IPP__c.SObjectType.getDescribe().fields.getMap();
-        Map<String, String> helpTextMap = FEC_CommonUltils.buildHelpTextMap(fields);
+        Map<String, String> helpTextMap = FEC_CommonUltils.buildHelpTextMap(FEC_IPP__c.SObjectType);
         return helpTextMap;
     }
 }

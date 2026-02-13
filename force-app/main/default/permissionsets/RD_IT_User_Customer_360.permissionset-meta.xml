@@ -1663,4 +1663,12 @@
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
+    <tabSettings>
+        <tab>FEC_Statements</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_Transactions</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>

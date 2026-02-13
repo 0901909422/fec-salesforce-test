@@ -273,7 +273,7 @@ public with sharing class FEC_CommonUltils {
       }
 
       // Fallback: Format YYYY-MM-DD
-      return Date.valueOf(dateStr);
+      return Date.valueOf(dateStr.substring(0, 10));
     } catch (Exception e) {
       System.debug(
         'convertDateSafeForOtherCard error for "' +
@@ -361,10 +361,10 @@ public with sharing class FEC_CommonUltils {
    * @param fields - map field object
    * @return Map of field API name to help text
    */
-  public static Map<String, String> buildHelpTextMap(Map<String, Schema.SObjectField> fields) {
+  public static Map<String, String> buildHelpTextMap(SObject.SObjectType sobjType) {
     Map<String, String> m = new Map<String, String>();
     try {
-      for (Schema.SObjectField f : fields.values()) {
+      for (Schema.SObjectField f : sobjType.getDescribe().fields.getMap().values()) {
         Schema.DescribeFieldResult fieldDescribe = f.getDescribe();
         if (String.isNotBlank(fieldDescribe.getInlineHelpText())) {
           m.put(fieldDescribe.getName(), fieldDescribe.getInlineHelpText());
