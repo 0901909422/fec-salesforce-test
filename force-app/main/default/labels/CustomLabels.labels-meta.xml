@@ -680,4 +680,53 @@
         <shortDescription>Total Payment Amount Label</shortDescription>
         <value>Total Payment Amount</value>
     </labels>
+    <labels>
+        <fullName>Title_button_Get_Next_Work</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Get next work</value>
+    </labels>
+    <labels>
+        <fullName>messager_Toast_Event</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Messenger</shortDescription>
+        <value>No matching Case in this Queue.</value>
+    </labels>
+    <labels>
+        <fullName>messenger_Warning</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Messenger</shortDescription>
+        <value>Please select a queue</value>
+    </labels>
+    <labels>
+        <fullName>title_Information_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>= Required Information</value>
+    </labels>
+    <labels>
+        <fullName>title_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Select Queue</value>
+    </labels>
+    <labels>
+        <fullName>title_Select_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>You&apos;ve selected 1 record.</value>
+    </labels>
+    <labels>
+        <fullName>title_Toast_Event</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>No Case Found</value>
+    </labels>
 </CustomLabels>

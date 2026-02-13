@@ -1,4 +1,17 @@
-import { LightningElement, api, track, wire } from 'lwc';
+/****************************************************************************************
+ * File Name    : Fec_MainInfo.js
+ * Author       : Quangdv7
+ * Date         : 2025-01-10
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-10     Quangdv7             Create
+ 
+****************************************************************************************/
+
+import { LightningElement, api, track } from 'lwc';
 import loadMainInfo from '@salesforce/apex/FEC_MainInfoController.loadMainInfo';
 import logSensitiveFromMainInfo from '@salesforce/apex/FEC_MainInfoController.logSensitiveFromMainInfo';
 import { loadStyle } from 'lightning/platformResourceLoader';
@@ -85,7 +98,6 @@ export default class Fec_MainInfo extends LightningElement {
         loadMainInfo({ caseId: this.recordId })
             .then(res => {
                 this.data = res;
-                console.log('his.data ====>', JSON.stringify(this.data));
                 this.error = undefined;
             })
             .catch(err => {
@@ -120,6 +132,21 @@ export default class Fec_MainInfo extends LightningElement {
         return formatDateVNI(this.data?.birthDate);
     }
 
+    /* ================= HELP TEXT ================= */
+    get helpTextMap() {
+        return this.data?.helpTexts || {};
+    }
+
+    /**
+     * Generic help text getter
+     * @param {String} fieldApiName ex: FEC_First_Name__c
+     */
+    getHelpText(fieldApiName) {
+        return fieldApiName
+            ? this.helpTextMap[fieldApiName.toLowerCase()]
+            : null;
+    }
+    
     getMaskingConfig(key) {
         const configs = {
             phone: {
@@ -158,7 +185,7 @@ export default class Fec_MainInfo extends LightningElement {
 
         this[stateName] = !this[stateName];
     }
-
+    
     get maskedPhone() {
         return maskValue(
             this.data?.primaryPhone,
@@ -199,6 +226,4 @@ export default class Fec_MainInfo extends LightningElement {
     handleToggleNationalIDPassportID() {
         this.toggleMasking('nationalId');
     }
-
-
 }

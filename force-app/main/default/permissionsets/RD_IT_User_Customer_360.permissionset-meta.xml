@@ -1663,4 +1663,8 @@
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
+    <tabSettings>
+        <tab>FEC_ApplicationList</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>
