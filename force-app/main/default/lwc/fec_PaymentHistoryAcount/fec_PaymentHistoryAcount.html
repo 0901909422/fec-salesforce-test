@@ -14,21 +14,21 @@
                     </span>
                 </div>
 
-                <c-fec_-related-list-addresses-paging 
+                <c-fec_-related-list-paging 
                         records={paymentHistory} 
                         columns={paymentHistoryColumns}
                         sorted-by="paymentDate"
                         hide-row-number>
-                </c-fec_-related-list-addresses-paging>
+                </c-fec_-related-list-paging>
 
             </lightning-accordion-section>
 
             <!-- Real-time Payment -->
             <lightning-accordion-section name="realtimePayment" label="Real-time Payment">
 
-                <c-fec_-related-list-addresses-paging records={realtimePayments} columns={realtimePaymentColumns}
+                <c-fec_-related-list-paging records={realtimePayments} columns={realtimePaymentColumns}
                     sorted-by="paymentDate" show-refresh onrefresh={handleRefreshData}>
-                </c-fec_-related-list-addresses-paging>
+                </c-fec_-related-list-paging>
 
             </lightning-accordion-section>
 

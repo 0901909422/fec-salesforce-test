@@ -84,23 +84,23 @@
 
             <!-- ================= Contact List ================= -->
             <lightning-accordion-section name="contactList" label="Contact List">
-                <c-fec_-related-list-addresses-paging 
+                <c-fec_-related-list-paging 
                     records={contactList} 
                     columns={contactListColumnsFiltered}
                     sorted-by="channel"
                     onsensitivelog={handleContactStringView}>
-                </c-fec_-related-list-addresses-paging>
+                </c-fec_-related-list-paging>
             </lightning-accordion-section>
 
             <!-- ================= Reference Info ================= -->
             <lightning-accordion-section name="reference" label="Reference Info">
 
-                <c-fec_-related-list-addresses-paging 
+                <c-fec_-related-list-paging 
                     records={reference} 
                     columns={ReferenceColumns}
                     sorted-by="fullName"
                     onsensitivelog={handleReferencePhoneView}>
-                </c-fec_-related-list-addresses-paging>
+                </c-fec_-related-list-paging>
 
             </lightning-accordion-section>
 
