@@ -13,7 +13,7 @@
 
 import { LightningElement, api, track } from 'lwc';
 
-export default class Fec_RelatedListAddressesPaging extends LightningElement {
+export default class Fec_RelatedListPaging extends LightningElement {
 
     /* ================= API ================= */
     @api columns = [];

@@ -98,5 +98,9 @@
 		<members>FEC_ApplicationList</members>
 		<name>CustomTab</name>
 	</types>
+    <types>
+        <members>FEC_CommonCss</members>
+        <name>StaticResource</name>
+    </types>
     <version>65.0</version>
 </Package>
