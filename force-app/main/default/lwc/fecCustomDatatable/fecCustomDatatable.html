@@ -1,0 +1,31 @@
+<template>
+    <div class="table-wrapper">
+        <div class="datatable-container" onclick={captureClickPosition}>
+            <lightning-datatable
+                key-field={keyField}
+                data={displayData}
+                columns={internalColumns}
+                hide-checkbox-column={hideCheckboxColumn}
+                onsort={handleSort}
+                sorted-by={sortedBy}
+                sorted-direction={sortDirection}
+                onheaderaction={handleHeaderAction}
+                onrowaction={handleRowAction}>
+            </lightning-datatable>
+        </div>
+
+        <template if:true={isFilterOpen}>
+            <div onclick={handleInsideClick}>
+                <c-fec-custom-popover-filter
+                    str-column-label={currentFilterLabel}
+                    str-column-field={currentFilterColumn}
+                    str-popover-style={popoverStyle}
+                    filter-options={filterOptions}
+                    onapply={handleApplyFilter}
+                    onclear={handleClearFilter}
+                    onclose={closeFilter}>
+                </c-fec-custom-popover-filter>
+            </div>
+        </template>
+    </div>
+</template>

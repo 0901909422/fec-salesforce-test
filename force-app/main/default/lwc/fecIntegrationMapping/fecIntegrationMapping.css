@@ -1,0 +1,9 @@
+.vn-name {
+    max-width: 220px;
+    white-space: normal;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;        /* Show only 2 lines */
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+}
