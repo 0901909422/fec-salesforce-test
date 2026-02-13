@@ -265,7 +265,7 @@ public without sharing class FEC_ApplicationsListController {
             );
 
         dto.id = rec.Id;
-        dto.helpTexts = buildHelpTextMap();
+        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Application_List__c.SObjectType);
         if (rec.FEC_Customer_History__c != null) {
             List<Case> cases = [
                 SELECT Id,FEC_Account_or_Contract__c
@@ -324,31 +324,10 @@ public without sharing class FEC_ApplicationsListController {
                     ApplicationRowDTO.class
                 );
             dto.id = rec.Id;
-            dto.helpTexts = buildHelpTextMap();
+            dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Application_List__c.SObjectType);
             result.add(dto);
         }
 
-        return result;
-    }
-
-    private static Map<String, String> buildHelpTextMap() {
-        Map<String, String> result = new Map<String, String>();
-
-        Map<String, Schema.SObjectField> fieldMap =
-            FEC_Application_List__c.SObjectType
-                .getDescribe()
-                .fields.getMap();
-
-        for (String fieldName : fieldMap.keySet()) {
-            String helpText =
-                fieldMap.get(fieldName)
-                        .getDescribe()
-                        .getInlineHelpText();
-
-            if (String.isNotBlank(helpText)) {
-                result.put(fieldName.toLowerCase(), helpText);
-            }
-        }
         return result;
     }
 
