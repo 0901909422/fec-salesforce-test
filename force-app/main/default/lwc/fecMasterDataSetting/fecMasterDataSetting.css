@@ -1,0 +1,66 @@
+.slds-badge {
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+/* Hiệu ứng highlight khi hover vào dòng */
+.slds-hint-parent:hover {
+    background-color: #f3f3f3;
+    transition: background-color 0.2s ease;
+}
+
+.slds-cursor_pointer {
+    cursor: pointer;
+    user-select: none;
+    /* Ngăn bôi đen chữ khi click nhanh */
+}
+
+.slds-cursor_pointer:hover {
+    filter: brightness(90%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Căn chỉnh các cột Boolean */
+.slds-size_1-of-12 {
+    display: flex;
+    align-items: center;
+}
+
+/* --- Màu sắc cho Icon USER (Customer Type) --- */
+/* Non-existing: Đỏ đậm */
+.cust-non-existing {
+    --lwc-colorTextIconDefault: #8b0000 !important;
+    --slds-c-icon-color-foreground-default: #8b0000 !important;
+}
+
+/* Existing: Xanh nhạt (Light Blue) */
+.cust-existing {
+    --lwc-colorTextIconDefault: #14f518 !important;
+    --slds-c-icon-color-foreground-default: #14f518 !important;
+}
+
+/* All: Xanh đậm (Navy Blue) */
+.cust-all {
+    --lwc-colorTextIconDefault: #037f03 !important;
+    --slds-c-icon-color-foreground-default: #037f03 !important;
+}
+
+/* --- Màu sắc cho Icon RECORD (Status) --- */
+.red-record-icon {
+    --lwc-colorTextIconDefault: #e47f7f !important;
+    --slds-c-icon-color-foreground-default: #e47f7f !important;
+}
+
+.yellow-record-icon {
+    --lwc-colorTextIconDefault: #ffb75d !important;
+    --slds-c-icon-color-foreground-default: #ffb75d !important;
+}
+
+.blue-record-icon {
+    --lwc-colorTextIconDefault: #65cd76 !important;
+    /* Xanh lá ban đầu theo code của bạn */
+    --slds-c-icon-color-foreground-default: #65cd76 !important;
+}

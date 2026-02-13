@@ -1,0 +1,55 @@
+<template>
+    <div class="flow-config-container">
+        <!-- Compact Flow Path Visualization -->
+        <lightning-card>
+            <div slot="title">
+                <div class="card-title">
+                    <lightning-icon icon-name="utility:flow" size="small" class="title-icon"></lightning-icon>
+                    <span class="title-text">{labelFlowTitle}</span>
+                </div>
+            </div>
+            <div slot="actions">
+                <template lwc:if={isBusinessProcess}>
+                    <lightning-button label={labelAddStage} icon-name="utility:add" onclick={handleAddStage}
+                        variant="brand-outline" class="slds-m-left_small">
+                    </lightning-button>
+                </template>
+            </div>
+
+            <!-- Compact Horizontal Flow -->
+            <div class="compact-flow-wrapper">
+                <div class="flow-stages">
+                    <template for:each={stagesList} for:item="stage" for:index="index">
+                        <div key={stage.id} class="stage-wrapper">
+                            <!-- Stage Box -->
+                            <div class={stage.cssClass} data-stage-id={stage.id} onclick={handleStageClick}>
+                                <div class="stage-number">{stage.order}</div>
+                                <div class="stage-name">{stage.label}</div>
+                                <div class="stage-hover-actions">
+                                    <lightning-button-icon icon-name="utility:edit" variant="bare-inverse"
+                                        size="xx-small" alternative-text={labelAltEdit} data-stage-id={stage.id}
+                                        onclick={handleEditStageName}>
+                                    </lightning-button-icon>
+                                    <lightning-button-icon icon-name="utility:delete" variant="bare-inverse"
+                                        size="xx-small" alternative-text={labelAltRemove} data-stage-id={stage.id}
+                                        onclick={handleRemoveStage}>
+                                    </lightning-button-icon>
+                                </div>
+                            </div>
+
+                            <!-- Arrow Connector (not for last item) -->
+                            <template if:false={stage.isLast}>
+                                <div class="stage-connector">
+                                    <svg width="30" height="40" viewBox="0 0 30 40">
+                                        <path d="M 0 20 L 20 20 L 15 15 M 20 20 L 15 25" stroke="currentColor"
+                                            stroke-width="2" fill="none" />
+                                    </svg>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </lightning-card>
+    </div>
+</template>

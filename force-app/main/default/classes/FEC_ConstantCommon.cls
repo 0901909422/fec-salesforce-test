@@ -53,8 +53,20 @@ public with sharing class FEC_ConstantCommon {
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
     public static final String ADDRESS_TYPE_OFFICE = 'OFFICE';
-
     public static final String TEXT_YES = 'Yes';
+
+    public static final String ORIGINAL_USER_UPLOAD = 'Original_User_Upload';
+    public static final String JSON_DATA_FOR_PROCESSING = 'JSON_Data_For_Processing';
+    public static final String UPLOADED_STATUS = 'Uploaded';
+    public static final String PROCESSED_STATUS = 'Processed';
+    public static final String JSON_EXTENSION = '.json';
+    public static final String SUCCESS_MESSAGE = 'Success';
+    public static final String KEY_ID = 'id';
+    public static final String KEY_NAME = 'name';
+    public static final String KEY_UPLOADED_BY = 'uploadedBy';
+    public static final String KEY_UPLOADED_TIME = 'uploadedTime';
+    public static final String KEY_STATUS = 'status';
+    public static final String YES_VALUE = 'yes';
 
     public static final String PRODUCT_TYPE_INSURANCE = 'Insurance';
     public static final String PRODUCT_TYPE_LOAN = 'Loan';
