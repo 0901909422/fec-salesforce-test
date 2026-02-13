@@ -28,6 +28,7 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_IPPScheduleController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -36,8 +37,13 @@
 		<members>FEC_Other_Card__c</members>
         <members>FEC_Transaction__c</members>
         <members>FEC_Statement__c</members>
+		<members>FEC_API_Log__c</members>
 		<name>CustomObject</name>
 	</types>
+	<types>
+        <members>FEC_IPPDetailPageWrapper</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
     <types>
         <members>fec_CardInfo</members>
         <members>fec_CardPayment</members>
@@ -50,6 +56,10 @@
 		<members>fec_StatementsAccount</members>
 		<members>fec_TransactionsAccount</members>
         <members>fec_IPPDetails</members>
+        <members>fec_IPPDetailPage</members>
+		<members>fec_CommonDetailView</members>
+		<members>fec_StatementsAccountTabView</members>
+		<members>fec_TransactionsAccountTabView</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -129,6 +139,11 @@
 	<types>
 		<members>PSG_RD_IT_User</members>
 		<name>PermissionSetGroup</name>
+	</types>
+	<types>
+		<members>FEC_Transactions</members>
+		<members>FEC_Statements</members>
+		<name>CustomTab</name>
 	</types>
     <version>65.0</version>
 </Package>

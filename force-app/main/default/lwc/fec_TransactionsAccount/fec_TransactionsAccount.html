@@ -5,15 +5,19 @@
 
                 <c-fec_-related-list-paging records={unbilledTransactions}
                  data-section="unbilled"
-                    columns={unbilledTransactionsColumns} sorted-by="Unbilled Transactions" onrowselect={handleTransactionSelect}>
+                    columns={unbilledTransactionsColumns} 
+                    sorted-by="effectiveDate"
+                    onrowselect={handleTransactionSelect}>
                 </c-fec_-related-list-paging>
 
             </lightning-accordion-section>
             <lightning-accordion-section name="pendingTransactions" label="Pending Transactions">
 
                 <c-fec_-related-list-paging records={pendingTransactions}
-                 data-section="pending"
-                    columns={pendingTransactionsColumns} sorted-by="Pending Transactions" onrowselect={handleTransactionSelect}>
+                    data-section="pending"
+                    columns={pendingTransactionsColumns} 
+                    sorted-by="effectiveDate" 
+                    onrowselect={handleTransactionSelect}>
                 </c-fec_-related-list-paging>
 
             </lightning-accordion-section>
