@@ -1,5 +1,84 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>        
+        <fullName>Auto_Mapping</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto Mapping Property</shortDescription>
+        <value>Auto Mapping Property</value>
+    </labels>
+    <labels>
+        <fullName>Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>CSM_Property</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CSM Property</shortDescription>
+        <value>CSM Property</value>
+    </labels>
+    <labels>
+        <fullName>CSM_Property_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CSM Property Type</shortDescription>
+        <value>CSM Property Type</value>
+    </labels>
+    <labels>
+        <fullName>Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>Err_Missing_Fraud_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case ID is required</shortDescription>
+        <value>Fraud Case ID is required</value>
+    </labels>
+    <labels>
+        <fullName>Err_System</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>System error</shortDescription>
+        <value>System error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Account_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Label</shortDescription>
+        <value>Account</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Account_Status_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Status Label</shortDescription>
+        <value>Account Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Action_Delete</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Delete</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Action_Edit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Edit</value>
+    </labels>
     <labels>
         <fullName>FEC_Action_Label</fullName>
         <categories>Case</categories>
@@ -271,48 +350,12 @@
         <value>Submit</value>
     </labels>
     <labels>
-        <fullName>FEC_Case_ID_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Case ID</shortDescription>
-        <value>Case ID</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Case_List_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Case List</shortDescription>
-        <value>Case List</value>
-    </labels>
-    <labels>
         <fullName>FEC_Button_Undo</fullName>
         <categories>General</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Undo Button</shortDescription>
         <value>Undo</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Case_Status_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Case Status</shortDescription>
-        <value>Case Status</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Create_Case_Btn_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Create Case</shortDescription>
-        <value>Create Case</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Customer_Information_Label</fullName>
-        <categories>Customer Information</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Customer Information</shortDescription>
-        <value>Customer Information</value>
     </labels>
     <labels>
         <fullName>FEC_Cancel</fullName>
@@ -764,12 +807,195 @@
         <value>Demographic</value>
     </labels>
     <labels>
+        <fullName>FEC_Edit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Edit action label</shortDescription>
+        <value>Edit</value>
+    </labels>
+    <labels>
         <fullName>FEC_Email_Label</fullName>
         <categories>Customer Info</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Email Label</shortDescription>
         <value>Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Empty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty</shortDescription>
+        <value>Empty</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Create_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unable to create template file</shortDescription>
+        <value>Unable to create template file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Delete_FieldList_Prefix</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error deleting Field List Value:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Delete_Record_Prefix</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error deleting record:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Details</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_DML_Prefix</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>DML Error:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Duplicated_KeyId_FieldId</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>A configuration with this Key Identifier and Field ID pair already exists</shortDescription>
+        <value>A configuration with this Key Identifier and Field ID pair already exists</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Expected_Key</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Column A: Expected {0}, Actual {1}</shortDescription>
+        <value>Column A: Expected {0}, Actual {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Expected_Value</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Column B: Expected {0}, Actual {1}</shortDescription>
+        <value>Column B: Expected {0}, Actual {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_File_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>File is invalid or empty</shortDescription>
+        <value>File is invalid or empty</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Invalid_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Invalid field</value>
+    </labels>
+    <labels>        
+        <fullName>FEC_Error_Invalid_RecordType</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for invalid RecordType</shortDescription>
+        <value>Invalid RecordType specified.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Invalid_SObject_Prefix</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Invalid SObject prefix:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Message_Deleting_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when deleting files on the system</shortDescription>
+        <value>Error when deleting files on the system</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_No_Delete_Permission</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>No delete permission</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_No_Field_Update_Permission</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>No field update permission</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_No_Update_Permission</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>No update permission</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Required_Fields</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>The required fields is missing</shortDescription>
+        <value>The required fields is missing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Retrieve_Additional_Fields</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Could not retrieve additional fields:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Save_Property_Mapping</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Failed to save property mapping</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Unknown_Node_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Unknown node type: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Upload_At_Least_Excel_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please upload at least one Excel file</shortDescription>
+        <value>Please upload at least one Excel file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Fail_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fail</shortDescription>
+        <value>Fail</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Fee_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fee Label</shortDescription>
+        <value>Fee</value>
     </labels>
     <labels>
         <fullName>FEC_First_Name_Label</fullName>
@@ -826,96 +1052,11 @@
         <value>Gender</value>
     </labels>
     <labels>
-        <fullName>FEC_Interaction_Channel_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Channel</shortDescription>
-        <value>Interaction Channel</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Created_By_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Created By</shortDescription>
-        <value>Interaction Created By</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Created_On_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Created On</shortDescription>
-        <value>Interaction Created On</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Duration_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Duration</shortDescription>
-        <value>Interaction Duration</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_ID</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction ID</shortDescription>
-        <value>Interaction ID</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Information_Label</fullName>
-        <categories>Interacttion Information</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Information</shortDescription>
-        <value>Interaction Information</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Phone_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Phone</shortDescription>
-        <value>Interaction Phone</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Remark_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Remark</shortDescription>
-        <value>Interaction Remark</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Status_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Status</shortDescription>
-        <value>Interaction Status</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Interaction_Sub_Channel_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Interaction Sub Channel</shortDescription>
-        <value>Interaction Sub Channel</value>
-    </labels>
-    <labels>
         <fullName>FEC_Has_No_Data</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>File has no data</shortDescription>
         <value>File has no data</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Last_Updated_By_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Last Updated By</shortDescription>
-        <value>Last Updated By</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Last_Updated_On_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Last Updated On</shortDescription>
-        <value>Last Updated On</value>
     </labels>
     <labels>
         <fullName>FEC_IPP_Details_Label</fullName>
@@ -1162,13 +1303,6 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Mapping Alias</value>
-    </labels>
-    <labels>
-        <fullName>FEC_RemarkMsg</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_RemarkMsg</shortDescription>
-        <value>Yêu cầu được tự động chuyển trạng thái Resolved-AutoCancelled theo quy trình tự động kết thúc tương tác cuối ngày</value>
     </labels>
     <labels>
         <fullName>FEC_Label_Name</fullName>
@@ -2308,19 +2442,20 @@
         <value>Select..</value>
     </labels>
     <labels>
-        <fullName>FEC_Next_Btn_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Next</shortDescription>
-        <value>Next</value>
-    </labels>
-    <labels>
         <fullName>FEC_Other_Card_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Other Card Label</shortDescription>
         <value>Other Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PID_Number_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PID Number Label</shortDescription>
+        <value>PID Number</value>
     </labels>
     <labels>
         <fullName>FEC_PIN_Label</fullName>
@@ -2331,12 +2466,546 @@
         <value>PIN</value>
     </labels>
     <labels>
+        <fullName>FEC_Place_of_Issue_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Place of Issue Label</shortDescription>
+        <value>Place of Issue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Mapping_Reference</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Enter mapping reference...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Search_Tree</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Enter keyword...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_Biz</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Select Biz</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_CaseStage</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Select Case Stage</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_Category</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Select Category</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_CustomerType</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Select Customer Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_Product</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Select Product</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_Property</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Select Property Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_SubCat</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Select Sub Cat</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_SubCode</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Select Sub Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Please_Fill_All</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Please fill in all required fields.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Primary_Phone_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Primary Phone Label</shortDescription>
+        <value>Primary Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Prompt_Enter_New_Stage_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Enter new stage name:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Prompt_Select_Node_Detail</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Please select a node to view details.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Prompt_Select_Node_Flow_Control</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Select a Node to view Flow Control configuration</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Push_MDM_To_Live</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Push MDM to Live</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Queue_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Queue Label</shortDescription>
+        <value>Queue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reason_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reason Label</shortDescription>
+        <value>Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reference_Info_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reference Info Label</shortDescription>
+        <value>Reference Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Refresh_Data</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Refresh Data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Registration_Info_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Registration Info Label</shortDescription>
+        <value>Registration Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reset_MDM</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Reset MDM</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Routing_Action_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Routing Action Label</shortDescription>
+        <value>Routing Action</value>
+    </labels>
+    <labels>
         <fullName>FEC_Sales_Info_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Sales Info Label</shortDescription>
         <value>Sales Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Save</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Save</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Save_Success_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Record saved.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Save_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Save changes</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Saved_Data</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Saved data!</shortDescription>
+        <value>Saved data!</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Search_Text</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search Text</shortDescription>
+        <value>Search Text</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Self_Service_Channel_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Self Service Channel Label</shortDescription>
+        <value>Self-service Channels</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ServiceTypeMapping_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>ServiceType&apos;s Property references</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Spinner_Loading_Node_Details</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Loading node details...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Spinner_Saving</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Saving...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Success_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Additional_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Additional Field</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Additional_Field_List_Value</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Additional Field List Value</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Business_Process</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Business Process</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Case_Stage</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Case Stage</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Category</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Category</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Fraud_Integration_Mapping</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Fraud Integration Mapping</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Master_Data_Settings</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Master Data Settings</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Master_Setting</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Master Setting</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Nature_Of_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Nature Of Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Node_Details</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Node Details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Product_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Product Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Property_Configuration</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Property Configuration</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Sub_Category</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Sub Category</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Sub_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Sub Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TableHeader_PropertyName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Property Name (Additional Field)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TableHeader_Reference</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Service Type Property Reference</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Team_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Team Label</shortDescription>
+        <value>Team</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Title_Change_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Change History Modal Title</shortDescription>
+        <value>Change History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Title_Existing_Fields</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Existing Fields Section Title</shortDescription>
+        <value>Existing Information Fields</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Title_Pending_Process</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Pending Process Section Title</shortDescription>
+        <value>Successfully Uploaded &amp; Pending Processing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Delete_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Toast message for successful deletion</shortDescription>
+        <value>Channel deleted successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Deleted_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Deleted successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Error_Generic</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Generic error toast message</shortDescription>
+        <value>An error occurred. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Refresh_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Failed to refresh data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Refresh_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Data refreshed successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Save failed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Error_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>An error occurred while saving.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Error_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Saved successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Success_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Record saved successfully. ID: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Success_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Update_Status_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Status updated</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Validation_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Please complete all required fields.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Validation_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Validation Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Warning</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Warning</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tooltip_Click_To_Activate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Click to Activate</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tooltip_Click_To_Deactivate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Click to Deactivate</value>
     </labels>
     <labels>
         <fullName>FEC_Total_IPP_Balance_Label</fullName>
@@ -2361,5 +3030,2040 @@
         <protected>false</protected>
         <shortDescription>Total Payment Amount Label</shortDescription>
         <value>Total Payment Amount</value>
+    </labels>
+
+    <labels>
+        <fullName>Auto_Mapping</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto Mapping Property</shortDescription>
+        <value>Auto Mapping Property</value>
+    </labels>
+    <labels>
+        <fullName>CSM_Property</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CSM Property</shortDescription>
+        <value>CSM Property</value>
+    </labels>
+    <labels>
+        <fullName>CSM_Property_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CSM Property Type</shortDescription>
+        <value>CSM Property Type</value>
+    </labels>
+    <labels>
+        <fullName>Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>Err_Missing_Fraud_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case ID is required</shortDescription>
+        <value>Fraud Case ID is required</value>
+    </labels>
+    <labels>
+        <fullName>Err_System</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>System error</shortDescription>
+        <value>System error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tree_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Nature of Case Tree Structure</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Unknown_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Unknown error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Updated_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Updated successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Warning_Select_Node</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Please select a node first.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Warning_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Warning</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Warning_Type_Not_List</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>FEC Type of field &apos;{0}&apos; is not &apos;List&apos;.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Website_Account_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Website Account Label</shortDescription>
+        <value>Website Account</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Work_Phone_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Work Phone Label</shortDescription>
+        <value>Work Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Zalo_Follower_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Zalo Follower Label</shortDescription>
+        <value>Zalo Follower</value>
+
+    </labels>
+    <labels>
+        <fullName>Int_Category</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Category</shortDescription>
+        <value>Int Category</value>
+    </labels>
+    <labels>
+        <fullName>Int_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Channel</shortDescription>
+        <value>Int Channel</value>
+    </labels>
+    <labels>
+        <fullName>Int_Product_Line</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Product Line</shortDescription>
+        <value>Int Product Line</value>
+    </labels>
+    <labels>
+        <fullName>Int_Service_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Service Type</shortDescription>
+        <value>Int Service Type</value>
+    </labels>
+    <labels>
+        <fullName>Int_Sub_Category</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Sub Category</shortDescription>
+        <value>Int Sub Category</value>
+    </labels>
+    <labels>
+        <fullName>Int_Sub_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Sub Code</shortDescription>
+        <value>Int Sub Code</value>
+    </labels>
+    <labels>
+        <fullName>Int_User_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration User Type</shortDescription>
+        <value>Int User Type</value>
+    </labels>
+    <labels>
+        <fullName>Integrating_Property</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integrating Property</shortDescription>
+        <value>Integrating Property</value>
+    </labels>
+    <labels>
+        <fullName>Integrating_Property_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integrating Property Type</shortDescription>
+        <value>Integrating Property Type</value>
+    </labels>
+    <labels>
+        <fullName>Integration_Mapping_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Integration Mapping title</shortDescription>
+        <value>Integration Mapping</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ERROR_ADD_SUB_CODE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for adding sub code</shortDescription>
+        <value>Cannot add a child node to the last level (Sub Code).</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ERROR_DELETE_RECORD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for deleting a record</shortDescription>
+        <value>Cannot determine the record information to delete.</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ERROR_INVALID_RECORD_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for invalid record ID</shortDescription>
+        <value>Invalid record ID</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ERROR_LINK_NATURE_OF_CASE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for linking nature of case</shortDescription>
+        <value>Error occurred while linking nature of case.</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ERROR_SAVE_LOOKUP</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message for saving lookup</shortDescription>
+        <value>Error occurred while saving lookup.</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SUCCESS_ADD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message for adding data</shortDescription>
+        <value>Data added successfully</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SUCCESS_DELETE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message for deleting data</shortDescription>
+        <value>Deleted successfully</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SUCCESS_SAVE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message for saving data</shortDescription>
+        <value>Data has been saved successfully</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_WARNING_DELETE_NODE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Warning message for deleting a node</shortDescription>
+        <value>WARNING: You are deleting node {0} of type "{1}". All child nodes will be deleted. Are you sure you want to continue?</value>
+    </labels>
+    <labels>
+
+        <fullName>LBL_AccountNumber</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Number label</shortDescription>
+        <value>Account Number</value>
+    </labels>
+    <labels>
+        <fullName>LBL_AccountNumber_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Number column label</shortDescription>
+        <value>Account Number</value>
+    </labels>
+    <labels>
+
+        <fullName>LBL_API_CaseId_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing caseID in request</shortDescription>
+        <value>Missing caseID in request</value>
+    </labels>
+    <labels>
+        <fullName>LBL_API_Invalid_Case_Creator_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing CreatorInfo in request</shortDescription>
+        <value>Missing CreatorInfo in request</value>
+    </labels>
+    <labels>
+        <fullName>LBL_API_Invalid_Case_Customer_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing CustomerInfo in request</shortDescription>
+        <value>Missing CustomerInfo in request</value>
+    </labels>
+    <labels>
+        <fullName>LBL_API_Invalid_Case_Format</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Invalid fraud case format</shortDescription>
+        <value>Invalid fraud case format</value>
+    </labels>
+    <labels>
+        <fullName>LBL_API_Invalid_Case_Request_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing RequestInfo in request</shortDescription>
+        <value>Missing RequestInfo in request</value>
+    </labels>
+    <labels>
+        <fullName>LBL_API_Invalid_Case_Result_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing CaseResultInfo in request</shortDescription>
+        <value>Missing CaseResultInfo in request</value>
+    </labels>
+    <labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Not_Found</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Fraud case not found for CaseID, ServiceCase, Channel
+    </shortDescription>
+    <value>
+        Fraud case not found for CaseID={0}, ServiceCase={1}, Channel={2}
+    </value>
+</labels>
+    <labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Not_Found_Parent</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Could not find Parent ID
+    </shortDescription>
+    <value>
+        Could not find Parent ID={0}, Channel={1}
+    </value>
+</labels>
+    <labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Original_Request</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Missing OriginalRequest in request
+    </shortDescription>
+    <value>
+        Missing OriginalRequest in request
+    </value>
+</labels>
+    <labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Update_Success</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Fraud case updated successfully
+    </shortDescription>
+    <value>
+        Fraud case updated successfully
+    </value>
+</labels>
+    <labels>
+    <fullName>LBL_API_Invalid_Service_Case_Existing</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Parent ID not found for CaseID, ServiceCase, Channel
+    </shortDescription>
+    <value>
+        Parent ID not found for CaseID={0}, ServiceCase={1}, Channel={2}
+    </value>
+</labels>
+    <labels>
+        <fullName>LBL_API_Missing_Detail</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing detail object in request</shortDescription>
+        <value>Missing detail object in request</value>
+    </labels>
+    <labels>
+        <fullName>LBL_API_Missing_XML</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing XML data</shortDescription>
+        <value>Missing XML data</value>
+    </labels>
+    <labels>
+
+        <fullName>LBL_AppID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>App ID</shortDescription>
+        <value>App ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ApplicationID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Application ID label</shortDescription>
+        <value>Application ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CaseIdRequired</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case ID is required</shortDescription>
+        <value>Case ID is required</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CaseStatus</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case status</shortDescription>
+        <value>Case status</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Category</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Category</shortDescription>
+        <value>Category</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Channel_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel column label</shortDescription>
+        <value>Channel</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ClearBtn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear button label</shortDescription>
+        <value>Clear</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Conclusion</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Conclusion</shortDescription>
+        <value>Conclusion From Fraud Team</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ContractNumber</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract Number label</shortDescription>
+        <value>Contract Number</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTime</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Time</shortDescription>
+        <value>Create Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTimeTask</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Time</shortDescription>
+        <value>Create Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Creator</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Creator</shortDescription>
+        <value>Creator</value>
+    </labels>
+    <labels>
+        <fullName>LBL_DatabaseError</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Database error prefix</shortDescription>
+        <value>Database error:</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Deadline</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Deadline</shortDescription>
+        <value>Deadline</value>
+    </labels>
+    <labels>
+        <fullName>LBL_DownloadFile</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Download file</shortDescription>
+        <value>Download file</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error title</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCaseDetail</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case Detail</shortDescription>
+        <value>Fraud Case Detail</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCaseID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case ID label</shortDescription>
+        <value>Fraud Case ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCaseID_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case ID column label</shortDescription>
+        <value>Fraud Case ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCategory_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Category column label</shortDescription>
+        <value>Fraud Category</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCreatedBy_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud case created by column label</shortDescription>
+        <value>Fraud case created by</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudCreatedOn_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud case created on column label</shortDescription>
+        <value>Fraud case created on</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudStatus_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Status of Fraud Case column label</shortDescription>
+        <value>Status of Fraud Case</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudSubCategory_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Sub Category column label</shortDescription>
+        <value>Fraud Sub Category</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudSubCode_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Sub Code column label</shortDescription>
+        <value>Fraud Sub Code</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudTaskID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Task ID</shortDescription>
+        <value>Fraud Task ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_HeaderRequired</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Header required fields message</shortDescription>
+        <value>Please select all required header fields.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_HelpSearch</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Help text for search</shortDescription>
+        <value>Enter any one value for search.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_LoadingFraudCase</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loading fraud case</shortDescription>
+        <value>Loading fraud case detail</value>
+    </labels>
+    <labels>
+        <fullName>LBL_MappingCreated</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Mapping created message</shortDescription>
+        <value>Integration mapping created successfully</value>
+    </labels>
+    <labels>
+        <fullName>LBL_MappingUpdated</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Mapping updated message</shortDescription>
+        <value>Integration mapping updated successfully</value>
+    </labels>
+    <labels>
+    <fullName>LBL_Master_XML_Msg_Failed</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Import Failed
+    </shortDescription>
+    <value>
+        Import Failed
+    </value>
+</labels>
+    <labels>
+    <fullName>LBL_Master_XML_Sync_Msg_Success</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Import Completed
+    </shortDescription>
+    <value>
+        Import Completed
+    </value>
+</labels>
+    <labels>
+    <fullName>LBL_Master_XML_Sync_Success</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Imported or updated {0} records from XML.
+    </shortDescription>
+    <value>
+        Imported or updated {0} records from XML.
+    </value>
+</labels>
+    <labels>
+
+        <fullName>LBL_NationalID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>National ID label</shortDescription>
+        <value>National ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_NavigationMode</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Navigation Mode label</shortDescription>
+        <value>Navigation Mode</value>
+    </labels>
+    <labels>
+        <fullName>LBL_NextBtn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Next page button</shortDescription>
+        <value>Next</value>
+    </labels>
+    <labels>
+        <fullName>LBL_NoRecords</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No records found text</shortDescription>
+        <value>No records found.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_PayloadEmpty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payload empty error</shortDescription>
+        <value>Payload is empty</value>
+    </labels>
+    <labels>
+        <fullName>LBL_PhoneNumber</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Phone number label</shortDescription>
+        <value>Phone number</value>
+    </labels>
+    <labels>
+        <fullName>LBL_PrevBtn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Previous page button</shortDescription>
+        <value>Prev</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Remarks</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Remarks</shortDescription>
+        <value>Remarks From Customer Service Team</value>
+    </labels>
+    <labels>
+        <fullName>LBL_RootCaseNotFound</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Root case not found</shortDescription>
+        <value>Root case not found</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SaveFailed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Save mapping failed message</shortDescription>
+        <value>Save failed</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SaveSuccess</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Save mapping success message</shortDescription>
+        <value>Mapping saved successfully</value>
+    </labels>
+    <labels>
+
+        <fullName>LBL_Search_RecordPerPage</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Records / page</shortDescription>
+        <value>Records / page</value>
+    </labels>
+    <labels>
+
+        <fullName>LBL_SearchBtn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search button label</shortDescription>
+        <value>Search</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SearchFraudCaseScreen</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Screen title</shortDescription>
+        <value>Search Fraud Case Screen</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SearchHint</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hint text</shortDescription>
+        <value>Enter any one value for search.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SelectAtLeastOneRow</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No mapping row selected</shortDescription>
+        <value>Please select at least one property for mapping.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ServiceCaseID_Col</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Service Case ID column label</shortDescription>
+        <value>Service Case ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Account_Number</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Account Number</shortDescription>
+        <value>Số tài khoản</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Account_Owner</fullName><language>vi</language><protected>false</protected><shortDescription>Account owner</shortDescription><value>Chủ tài khoản</value></labels>
+    <labels><fullName>LBL_SFT_Actual_Delivery_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Actual Delivery Time</shortDescription><value>Thời gian nhận thực tế</value></labels>
+    <labels><fullName>LBL_SFT_Application_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Application ID</shortDescription><value>Mã hồ sơ</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Assign_To_Me</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Assign to me</shortDescription>
+        <value>Gán cho tôi</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Assigned_To</fullName><language>vi</language><protected>false</protected><shortDescription>Assigned To</shortDescription><value>Phân công cho</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Cancel_Reasons</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Reasons</shortDescription>
+        <value>Cancel Reasons</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Case_Id</fullName><language>vi</language><protected>false</protected><shortDescription>Case ID</shortDescription><value>Mã hồ sơ</value></labels>
+    <labels><fullName>LBL_SFT_Case_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Case Status</shortDescription><value>Trạng thái hồ sơ</value></labels>
+    <labels><fullName>LBL_SFT_Case_Type</fullName><language>vi</language><protected>false</protected><shortDescription>Case Type</shortDescription><value>Loại hồ sơ</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Case_Will_Be_Transferred</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Case will be transferred to your worklist</shortDescription>
+        <value>Hồ sơ sẽ được chuyển vào danh sách công việc của bạn</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Category</fullName><language>vi</language><protected>false</protected><shortDescription>Category</shortDescription><value>Danh mục</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Contract_Number</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Contract Number</shortDescription>
+        <value>Số hợp đồng</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Create_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Create Time</shortDescription><value>Thời gian tạo</value></labels>
+    <labels><fullName>LBL_SFT_Created</fullName><language>vi</language><protected>false</protected><shortDescription>Created</shortDescription><value>Ngày tạo</value></labels>
+    <labels><fullName>LBL_SFT_Created_By</fullName><language>vi</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Người tạo</value></labels>
+    <labels><fullName>LBL_SFT_Created_Date</fullName><language>vi</language><protected>false</protected><shortDescription>Created Date</shortDescription><value>Ngày tạo</value></labels>
+    <labels><fullName>LBL_SFT_Created_Date_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Created Date Time</shortDescription><value>Thời gian tạo</value></labels>
+    <labels><fullName>LBL_SFT_Created_In_Channel</fullName><language>vi</language><protected>false</protected><shortDescription>Created In Channel</shortDescription><value>Kênh tạo</value></labels>
+    <labels><fullName>LBL_SFT_Created_On</fullName><language>vi</language><protected>false</protected><shortDescription>Created On</shortDescription><value>Ngày tạo</value></labels>
+    <labels><fullName>LBL_SFT_Creator</fullName><language>vi</language><protected>false</protected><shortDescription>Creator</shortDescription><value>Người tạo</value></labels>
+    <labels><fullName>LBL_SFT_Customer_Care</fullName><language>vi</language><protected>false</protected><shortDescription>Customer Care</shortDescription><value>Chăm sóc khách hàng</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Customer_Information</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Customer Information</shortDescription>
+        <value>Thông tin khách hàng</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Customer_Name</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Customer Name</shortDescription>
+        <value>Tên khách hàng</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Deadline</fullName><language>vi</language><protected>false</protected><shortDescription>Deadline</shortDescription><value>Hạn xử lý</value></labels>
+    <labels><fullName>LBL_SFT_Deadline_Date</fullName><language>vi</language><protected>false</protected><shortDescription>Deadline date</shortDescription><value>Hạn chót</value></labels>
+    <labels><fullName>LBL_SFT_Decision</fullName><language>vi</language><protected>false</protected><shortDescription>Decision</shortDescription><value>Quyết định</value></labels>
+    <labels><fullName>LBL_SFT_Delivery_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Delivery Status</shortDescription><value>Trạng thái gửi</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Enter_Investigation_Notes</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Enter investigation notes</shortDescription>
+        <value>Enter investigation notes here...</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Fraud_Case_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Case ID</shortDescription><value>Mã hồ sơ gian lận</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Fraud_Case_Information</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case Information</shortDescription>
+        <value>Thông tin vụ gian lận</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Fraud_Cases</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Cases</shortDescription>
+        <value>Các vụ gian lận</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Fraud_Category</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Category</shortDescription><value>Loại gian lận</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Conclusion</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Conclusion</shortDescription><value>Kết luận từ bộ phận gian lận</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Sub_Code</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Sub Code</shortDescription><value>Mã phụ gian lận</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Subcategory</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Subcategory</shortDescription><value>Nhóm gian lận</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Fraud_Task</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Task</shortDescription>
+        <value>Nhiệm vụ gian lận</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Goal</fullName><language>vi</language><protected>false</protected><shortDescription>Goal</shortDescription><value>Mục tiêu</value></labels>
+    <labels><fullName>LBL_SFT_Last_Update</fullName><language>vi</language><protected>false</protected><shortDescription>Last update</shortDescription><value>Cập nhật lần cuối</value></labels>
+    <labels><fullName>LBL_SFT_Last_Updated_By</fullName><language>vi</language><protected>false</protected><shortDescription>Last Updated By</shortDescription><value>Người cập nhật</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Loading</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Loading</shortDescription>
+        <value>Đang tải</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_National_ID</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>National ID</shortDescription>
+        <value>CMND/CCCD</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Notification_Channel</fullName><language>vi</language><protected>false</protected><shortDescription>Notification Channel</shortDescription><value>Kênh thông báo</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Notification_History</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Notification History</shortDescription>
+        <value>Lịch sử thông báo</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Notification_Type</fullName><language>vi</language><protected>false</protected><shortDescription>Notification Type</shortDescription><value>Loại thông báo</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Primary_Phone</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Primary Phone</shortDescription>
+        <value>Số điện thoại chính</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Processing_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Processing Status</shortDescription><value>Trạng thái xử lý</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Product_Type</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Product Type</shortDescription>
+        <value>Loại sản phẩm</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Recipient</fullName><language>vi</language><protected>false</protected><shortDescription>Recipient</shortDescription><value>Người nhận</value></labels>
+    <labels><fullName>LBL_SFT_Reference_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Reference ID</shortDescription><value>Mã tham chiếu</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Related_Service_Cases</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Related Service Cases</shortDescription>
+        <value>Vụ việc liên quan</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Remarks</fullName><language>vi</language><protected>false</protected><shortDescription>Remarks</shortDescription><value>Ghi chú</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Remarks_History</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Remarks History</shortDescription>
+        <value>Lịch sử ghi chú</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Resolved_By</fullName><language>vi</language><protected>false</protected><shortDescription>Resolved By</shortDescription><value>Người xử lý</value></labels>
+    <labels><fullName>LBL_SFT_Resolved_On</fullName><language>vi</language><protected>false</protected><shortDescription>Resolved On</shortDescription><value>Ngày xử lý</value></labels>
+    <labels><fullName>LBL_SFT_Sent_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Sent Time</shortDescription><value>Thời gian gửi</value></labels>
+    <labels><fullName>LBL_SFT_Service_Case_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Service Case ID</shortDescription><value>Mã hồ sơ dịch vụ</value></labels>
+    <labels><fullName>LBL_SFT_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Status</shortDescription><value>Trạng thái</value></labels>
+    <labels><fullName>LBL_SFT_Sub_Category</fullName><language>vi</language><protected>false</protected><shortDescription>Sub Category</shortDescription><value>Danh mục con</value></labels>
+    <labels><fullName>LBL_SFT_Sub_Code</fullName><language>vi</language><protected>false</protected><shortDescription>Sub Code</shortDescription><value>Mã phụ</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Submit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Submit</shortDescription>
+        <value>Submit</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Submit_By_Department</fullName><language>vi</language><protected>false</protected><shortDescription>Submit by department</shortDescription><value>Phòng ban gửi</value></labels>
+    <labels><fullName>LBL_SFT_Task_Case_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Task Case ID</shortDescription><value>Mã hồ sơ tác vụ</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Task_Case_Information</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Task Case Information</shortDescription>
+        <value>Thông tin tác vụ</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Task_Name</fullName><language>vi</language><protected>false</protected><shortDescription>Task Name</shortDescription><value>Tên tác vụ</value></labels>
+    <labels><fullName>LBL_SFT_Task_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Task Status</shortDescription><value>Trạng thái tác vụ</value></labels>
+    <labels><fullName>LBL_SFT_Template_Name</fullName><language>vi</language><protected>false</protected><shortDescription>Template Name</shortDescription><value>Tên mẫu</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Toggle_National_ID</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Toggle National ID</shortDescription>
+        <value>Ẩn/Hiện CMND</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Toggle_Phone</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Toggle Phone</shortDescription>
+        <value>Ẩn/Hiện số điện thoại</value>
+    </labels>
+    <labels><fullName>LBL_SFT_UIC</fullName><language>vi</language><protected>false</protected><shortDescription>UIC</shortDescription><value>UIC</value></labels>
+    <labels><fullName>LBL_SFT_Update_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Update Time</shortDescription><value>Thời gian cập nhật</value></labels>
+    <labels><fullName>LBL_SFT_Urgency</fullName><language>vi</language><protected>false</protected><shortDescription>Urgency</shortDescription><value>Mức độ khẩn</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Value_Cannot_Be_Blank</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Value cannot be blank</shortDescription>
+        <value>Value cannot be blank</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Violation_Type</fullName><language>vi</language><protected>false</protected><shortDescription>Violation Type</shortDescription><value>Loại vi phạm</value></labels>
+    <labels>
+
+        <fullName>LBL_SortBy</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sort by label</shortDescription>
+        <value>Sort by:</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCategory</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub category</shortDescription>
+        <value>Sub category</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCode</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub code</shortDescription>
+        <value>Sub code</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success title</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Task ID</shortDescription>
+        <value>Task ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskList</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Task List</shortDescription>
+        <value>Task List</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Task name</shortDescription>
+        <value>Task name</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskStatus</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Task Status</shortDescription>
+        <value>Task Status</value>
+    </labels>
+    <labels>
+
+
+        <fullName>LBL_TotalRecords</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total records</shortDescription>
+        <value>Total records</value>
+    </labels>
+    <labels>
+
+
+        <fullName>LBL_UIC</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UIC</shortDescription>
+        <value>UIC</value>
+    </labels>
+    <labels>
+
+        <fullName>LBL_UnexpectedError</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unexpected error message</shortDescription>
+        <value>Unexpected error occurred</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTime</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Time</shortDescription>
+        <value>Update Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTimeTask</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Time</shortDescription>
+        <value>Update Time</value>
+    </labels>
+    <labels>
+
+        <fullName>LBL_ValidationError</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Validation error title</shortDescription>
+        <value>Validation Error</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ViolationType</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Violation Type</shortDescription>
+        <value>Violation Type</value>
+    </labels>
+    <labels>
+        <fullName>Loading</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loading</shortDescription>
+        <value>Loading</value>
+    </labels>
+    <labels>
+        <fullName>Mandatory</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Mandatory</shortDescription>
+        <value>Mandatory</value>
+    </labels>
+    <labels>
+        <fullName>messager_Toast_Event</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Messenger</shortDescription>
+        <value>No matching Case in this Queue.</value>
+    </labels>
+    <labels>
+        <fullName>messenger_Warning</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Messenger</shortDescription>
+        <value>Please select a queue</value>
+    </labels>
+    <labels>
+
+
+        <fullName>Msg_Cancel_Failed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Failed</shortDescription>
+        <value>Cancel Failed</value>
+    </labels>
+    <labels>
+        <fullName>Msg_Cancel_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Success</shortDescription>
+        <value>Cancel Success</value>
+    </labels>
+    <labels>
+        <fullName>Msg_Create_Failed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Failed</shortDescription>
+        <value>Create Failed</value>
+    </labels>
+    <labels>
+        <fullName>Msg_Create_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Success</shortDescription>
+        <value>Create Success</value>
+    </labels>
+    <labels>
+        <fullName>Msg_Update_Failed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update fraud case failed</shortDescription>
+        <value>Update fraud case failed</value>
+    </labels>
+    <labels>
+        <fullName>Msg_Update_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update fraud case success</shortDescription>
+        <value>Update fraud case success</value>
+    </labels>
+    <labels>
+        <fullName>Save</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Save</shortDescription>
+        <value>Save</value>
+    </labels>
+    <labels>
+        <fullName>Title_button_Get_Next_Work</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Get next work</value>
+    </labels>
+    <labels>
+        <fullName>title_Information_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>= Required Information</value>
+    </labels>
+    <labels>
+        <fullName>title_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Select Queue</value>
+    </labels>
+    <labels>
+        <fullName>title_Select_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>You&apos;ve selected 1 record.</value>
+    </labels>
+    <labels>
+        <fullName>title_Toast_Event</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>No Case Found</value>
+    </labels>
+    <labels>
+
+        <fullName>User_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User Type</shortDescription>
+        <value>User Type</value>
+    </labels>
+    <labels>
+        <fullName>Vietnamese_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Vietnamese Name</shortDescription>
+        <value>Vietnamese Name</value>
+    </labels>
+
+    <labels>
+        <fullName>LBL_SFT_Fraud_Task</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Task</shortDescription>
+        <value>Fraud Task</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Fraud_Task</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Task</shortDescription>
+        <value>Nhiệm vụ gian lận</value>
+    </labels>
+
+    <labels>
+        <fullName>LBL_SFT_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Status</shortDescription>
+        <value>Status</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Status</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Status</shortDescription>
+        <value>Trạng thái</value>
+    </labels>
+
+    <labels>
+        <fullName>LBL_SFT_Assign_To_Me</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assign to me</shortDescription>
+        <value>Assign to me</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Assign_To_Me</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Assign to me</shortDescription>
+        <value>Gán cho tôi</value>
+    </labels>
+
+    <labels>
+        <fullName>LBL_SFT_Loading</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loading</shortDescription>
+        <value>Loading</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Loading</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Loading</shortDescription>
+        <value>Đang tải</value>
+    </labels>
+
+    <!-- ================= SECTIONS ================= -->
+
+    <labels>
+        <fullName>LBL_SFT_Customer_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Information</shortDescription>
+        <value>Customer Information</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Customer_Information</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Customer Information</shortDescription>
+        <value>Thông tin khách hàng</value>
+    </labels>
+
+    <labels>
+        <fullName>LBL_SFT_Fraud_Case_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case Information</shortDescription>
+        <value>Fraud Case Information</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Fraud_Case_Information</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case Information</shortDescription>
+        <value>Thông tin vụ gian lận</value>
+    </labels>
+
+    <labels>
+        <fullName>LBL_SFT_Task_Case_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Task Case Information</shortDescription>
+        <value>Task Case Information</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Task_Case_Information</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Task Case Information</shortDescription>
+        <value>Thông tin tác vụ</value>
+    </labels>
+
+    <labels>
+        <fullName>LBL_SFT_Notification_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Notification History</shortDescription>
+        <value>Notification History</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Notification_History</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Notification History</shortDescription>
+        <value>Lịch sử thông báo</value>
+    </labels>
+
+    <labels>
+        <fullName>LBL_SFT_Related_Service_Cases</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Related Service Cases</shortDescription>
+        <value>Related Service Cases</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Related_Service_Cases</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Related Service Cases</shortDescription>
+        <value>Vụ việc liên quan</value>
+    </labels>
+
+    <labels>
+        <fullName>LBL_SFT_Fraud_Cases</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Cases</shortDescription>
+        <value>Fraud Cases</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Fraud_Cases</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Cases</shortDescription>
+        <value>Các vụ gian lận</value>
+    </labels>
+
+    <labels>
+        <fullName>LBL_SFT_Remarks_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Remarks History</shortDescription>
+        <value>Remarks History</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Remarks_History</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Remarks History</shortDescription>
+        <value>Lịch sử ghi chú</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Customer_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Name</shortDescription>
+        <value>Customer Name</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Contract_Number</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract Number</shortDescription>
+        <value>Contract Number</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_National_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>National ID</shortDescription>
+        <value>National ID</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Primary_Phone</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Primary Phone</shortDescription>
+        <value>Primary Phone</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Application_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Application ID</shortDescription>
+        <value>Application ID</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Product_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Product Type</shortDescription>
+        <value>Product Type</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Account_Number</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Number</shortDescription>
+        <value>Account Number</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Toggle_National_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Toggle National ID</shortDescription>
+        <value>Toggle National ID</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Toggle_Phone</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Toggle Phone</shortDescription>
+        <value>Toggle Phone</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Customer_Name</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Customer Name</shortDescription>
+        <value>Tên khách hàng</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Contract_Number</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Contract Number</shortDescription>
+        <value>Số hợp đồng</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_National_ID</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>National ID</shortDescription>
+        <value>CMND/CCCD</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Primary_Phone</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Primary Phone</shortDescription>
+        <value>Số điện thoại chính</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Application_ID</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Application ID</shortDescription>
+        <value>Mã hồ sơ</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Product_Type</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Product Type</shortDescription>
+        <value>Loại sản phẩm</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Account_Number</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Account Number</shortDescription>
+        <value>Số tài khoản</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Toggle_National_ID</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Toggle National ID</shortDescription>
+        <value>Ẩn/Hiện CMND</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Toggle_Phone</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Toggle Phone</shortDescription>
+        <value>Ẩn/Hiện số điện thoại</value>
+    </labels>
+    <labels><fullName>LBL_SFT_Fraud_Case_ID</fullName><language>en_US</language><protected>false</protected><shortDescription>Fraud Case ID</shortDescription><value>Fraud Case ID</value></labels>
+    <labels><fullName>LBL_SFT_Created_Date</fullName><language>en_US</language><protected>false</protected><shortDescription>Created Date</shortDescription><value>Created</value></labels>
+    <labels><fullName>LBL_SFT_Created_By</fullName><language>en_US</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Created by</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Category</fullName><language>en_US</language><protected>false</protected><shortDescription>Fraud Category</shortDescription><value>Fraud Category</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Subcategory</fullName><language>en_US</language><protected>false</protected><shortDescription>Fraud Subcategory</shortDescription><value>Fraud Subcategory</value></labels>
+    <labels><fullName>LBL_SFT_Reference_ID</fullName><language>en_US</language><protected>false</protected><shortDescription>Reference ID</shortDescription><value>Reference ID</value></labels>
+    <labels><fullName>LBL_SFT_Customer_Care</fullName><language>en_US</language><protected>false</protected><shortDescription>Customer Care</shortDescription><value>Customer care</value></labels>
+    <labels><fullName>LBL_SFT_Remarks</fullName><language>en_US</language><protected>false</protected><shortDescription>Remarks</shortDescription><value>Remarks</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Sub_Code</fullName><language>en_US</language><protected>false</protected><shortDescription>Fraud Sub Code</shortDescription><value>Fraud Sub Code</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Case_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Case ID</shortDescription><value>Mã vụ gian lận</value></labels>
+    <labels><fullName>LBL_SFT_Created_Date</fullName><language>vi</language><protected>false</protected><shortDescription>Created Date</shortDescription><value>Ngày tạo</value></labels>
+    <labels><fullName>LBL_SFT_Created_By</fullName><language>vi</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Người tạo</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Category</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Category</shortDescription><value>Loại gian lận</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Subcategory</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Subcategory</shortDescription><value>Nhóm gian lận</value></labels>
+    <labels><fullName>LBL_SFT_Reference_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Reference ID</shortDescription><value>Mã tham chiếu</value></labels>
+    <labels><fullName>LBL_SFT_Customer_Care</fullName><language>vi</language><protected>false</protected><shortDescription>Customer Care</shortDescription><value>Chăm sóc khách hàng</value></labels>
+    <labels><fullName>LBL_SFT_Remarks</fullName><language>vi</language><protected>false</protected><shortDescription>Remarks</shortDescription><value>Ghi chú</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Sub_Code</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Sub Code</shortDescription><value>Mã phụ gian lận</value></labels>
+    <labels><fullName>LBL_SFT_Task_Case_ID</fullName><language>en_US</language><protected>false</protected><shortDescription>Task Case ID</shortDescription><value>Task Case ID</value></labels>
+    <labels><fullName>LBL_SFT_Application_ID</fullName><language>en_US</language><protected>false</protected><shortDescription>Application ID</shortDescription><value>Application ID</value></labels>
+    <labels><fullName>LBL_SFT_Task_Status</fullName><language>en_US</language><protected>false</protected><shortDescription>Task Status</shortDescription><value>Task Status</value></labels>
+    <labels><fullName>LBL_SFT_UIC</fullName><language>en_US</language><protected>false</protected><shortDescription>UIC</shortDescription><value>UIC</value></labels>
+    <labels><fullName>LBL_SFT_Deadline</fullName><language>en_US</language><protected>false</protected><shortDescription>Deadline</shortDescription><value>Deadline</value></labels>
+    <labels><fullName>LBL_SFT_Task_Name</fullName><language>en_US</language><protected>false</protected><shortDescription>Task Name</shortDescription><value>Task Name</value></labels>
+    <labels><fullName>LBL_SFT_Violation_Type</fullName><language>en_US</language><protected>false</protected><shortDescription>Violation Type</shortDescription><value>Violation Type</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Conclusion</fullName><language>en_US</language><protected>false</protected><shortDescription>Fraud Conclusion</shortDescription><value>Conclusion from Fraud team</value></labels>
+    <labels><fullName>LBL_SFT_Task_Case_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Task Case ID</shortDescription><value>Mã hồ sơ tác vụ</value></labels>
+    <labels><fullName>LBL_SFT_Application_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Application ID</shortDescription><value>Mã hồ sơ</value></labels>
+    <labels><fullName>LBL_SFT_Task_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Task Status</shortDescription><value>Trạng thái tác vụ</value></labels>
+    <labels><fullName>LBL_SFT_UIC</fullName><language>vi</language><protected>false</protected><shortDescription>UIC</shortDescription><value>UIC</value></labels>
+    <labels><fullName>LBL_SFT_Deadline</fullName><language>vi</language><protected>false</protected><shortDescription>Deadline</shortDescription><value>Hạn xử lý</value></labels>
+    <labels><fullName>LBL_SFT_Task_Name</fullName><language>vi</language><protected>false</protected><shortDescription>Task Name</shortDescription><value>Tên tác vụ</value></labels>
+    <labels><fullName>LBL_SFT_Violation_Type</fullName><language>vi</language><protected>false</protected><shortDescription>Violation Type</shortDescription><value>Loại vi phạm</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Conclusion</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Conclusion</shortDescription><value>Kết luận từ bộ phận gian lận</value></labels>
+    <labels><fullName>LBL_SFT_Notification_Type</fullName><language>en_US</language><protected>false</protected><shortDescription>Notification Type</shortDescription><value>Notification Type</value></labels>
+    <labels><fullName>LBL_SFT_Template_Name</fullName><language>en_US</language><protected>false</protected><shortDescription>Template Name</shortDescription><value>Template Name</value></labels>
+    <labels><fullName>LBL_SFT_Notification_Channel</fullName><language>en_US</language><protected>false</protected><shortDescription>Notification Channel</shortDescription><value>Notification Channel</value></labels>
+    <labels><fullName>LBL_SFT_Recipient</fullName><language>en_US</language><protected>false</protected><shortDescription>Recipient</shortDescription><value>Recipient</value></labels>
+    <labels><fullName>LBL_SFT_Delivery_Status</fullName><language>en_US</language><protected>false</protected><shortDescription>Delivery Status</shortDescription><value>Delivery Status</value></labels>
+    <labels><fullName>LBL_SFT_Sent_Time</fullName><language>en_US</language><protected>false</protected><shortDescription>Sent Time</shortDescription><value>Sent Time</value></labels>
+    <labels><fullName>LBL_SFT_Actual_Delivery_Time</fullName><language>en_US</language><protected>false</protected><shortDescription>Actual Delivery Time</shortDescription><value>Actual Delivery Time</value></labels>
+    <labels><fullName>LBL_SFT_Notification_Type</fullName><language>vi</language><protected>false</protected><shortDescription>Notification Type</shortDescription><value>Loại thông báo</value></labels>
+    <labels><fullName>LBL_SFT_Template_Name</fullName><language>vi</language><protected>false</protected><shortDescription>Template Name</shortDescription><value>Tên mẫu</value></labels>
+    <labels><fullName>LBL_SFT_Notification_Channel</fullName><language>vi</language><protected>false</protected><shortDescription>Notification Channel</shortDescription><value>Kênh thông báo</value></labels>
+    <labels><fullName>LBL_SFT_Recipient</fullName><language>vi</language><protected>false</protected><shortDescription>Recipient</shortDescription><value>Người nhận</value></labels>
+    <labels><fullName>LBL_SFT_Delivery_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Delivery Status</shortDescription><value>Trạng thái gửi</value></labels>
+    <labels><fullName>LBL_SFT_Sent_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Sent Time</shortDescription><value>Thời gian gửi</value></labels>
+    <labels><fullName>LBL_SFT_Actual_Delivery_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Actual Delivery Time</shortDescription><value>Thời gian nhận thực tế</value></labels>
+    <labels><fullName>LBL_SFT_Service_Case_ID</fullName><language>en_US</language><protected>false</protected><shortDescription>Service Case ID</shortDescription><value>Service Case ID</value></labels>
+    <labels><fullName>LBL_SFT_Case_Type</fullName><language>en_US</language><protected>false</protected><shortDescription>Case Type</shortDescription><value>Case Type</value></labels>
+    <labels><fullName>LBL_SFT_Case_Status</fullName><language>en_US</language><protected>false</protected><shortDescription>Case Status</shortDescription><value>Case Status</value></labels>
+    <labels><fullName>LBL_SFT_Created_By</fullName><language>en_US</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Created By</value></labels>
+    <labels><fullName>LBL_SFT_Resolved_By</fullName><language>en_US</language><protected>false</protected><shortDescription>Resolved By</shortDescription><value>Resolved By</value></labels>
+    <labels><fullName>LBL_SFT_Created_On</fullName><language>en_US</language><protected>false</protected><shortDescription>Created On</shortDescription><value>Created On</value></labels>
+    <labels><fullName>LBL_SFT_Resolved_On</fullName><language>en_US</language><protected>false</protected><shortDescription>Resolved On</shortDescription><value>Resolved On</value></labels>
+    <labels><fullName>LBL_SFT_Service_Case_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Service Case ID</shortDescription><value>Mã hồ sơ dịch vụ</value></labels>
+    <labels><fullName>LBL_SFT_Case_Type</fullName><language>vi</language><protected>false</protected><shortDescription>Case Type</shortDescription><value>Loại hồ sơ</value></labels>
+    <labels><fullName>LBL_SFT_Case_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Case Status</shortDescription><value>Trạng thái hồ sơ</value></labels>
+    <labels><fullName>LBL_SFT_Created_By</fullName><language>vi</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Người tạo</value></labels>
+    <labels><fullName>LBL_SFT_Resolved_By</fullName><language>vi</language><protected>false</protected><shortDescription>Resolved By</shortDescription><value>Người xử lý</value></labels>
+    <labels><fullName>LBL_SFT_Created_On</fullName><language>vi</language><protected>false</protected><shortDescription>Created On</shortDescription><value>Ngày tạo</value></labels>
+    <labels><fullName>LBL_SFT_Resolved_On</fullName><language>vi</language><protected>false</protected><shortDescription>Resolved On</shortDescription><value>Ngày xử lý</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Case_ID</fullName><language>en_US</language><protected>false</protected><shortDescription>Fraud Case ID</shortDescription><value>Fraud Case ID</value></labels>
+    <labels><fullName>LBL_SFT_Case_Status</fullName><language>en_US</language><protected>false</protected><shortDescription>Case Status</shortDescription><value>Case Status</value></labels>
+    <labels><fullName>LBL_SFT_Creator</fullName><language>en_US</language><protected>false</protected><shortDescription>Creator</shortDescription><value>Creator</value></labels>
+    <labels><fullName>LBL_SFT_Category</fullName><language>en_US</language><protected>false</protected><shortDescription>Category</shortDescription><value>Category</value></labels>
+    <labels><fullName>LBL_SFT_Sub_Category</fullName><language>en_US</language><protected>false</protected><shortDescription>Sub Category</shortDescription><value>Sub Category</value></labels>
+    <labels><fullName>LBL_SFT_Sub_Code</fullName><language>en_US</language><protected>false</protected><shortDescription>Sub Code</shortDescription><value>Sub Code</value></labels>
+    <labels><fullName>LBL_SFT_Create_Time</fullName><language>en_US</language><protected>false</protected><shortDescription>Create Time</shortDescription><value>Create Time</value></labels>
+    <labels><fullName>LBL_SFT_Update_Time</fullName><language>en_US</language><protected>false</protected><shortDescription>Update Time</shortDescription><value>Update Time</value></labels>
+    <labels><fullName>LBL_SFT_Fraud_Case_ID</fullName><language>vi</language><protected>false</protected><shortDescription>Fraud Case ID</shortDescription><value>Mã hồ sơ gian lận</value></labels>
+    <labels><fullName>LBL_SFT_Case_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Case Status</shortDescription><value>Trạng thái hồ sơ</value></labels>
+    <labels><fullName>LBL_SFT_Creator</fullName><language>vi</language><protected>false</protected><shortDescription>Creator</shortDescription><value>Người tạo</value></labels>
+    <labels><fullName>LBL_SFT_Category</fullName><language>vi</language><protected>false</protected><shortDescription>Category</shortDescription><value>Danh mục</value></labels>
+    <labels><fullName>LBL_SFT_Sub_Category</fullName><language>vi</language><protected>false</protected><shortDescription>Sub Category</shortDescription><value>Danh mục con</value></labels>
+    <labels><fullName>LBL_SFT_Sub_Code</fullName><language>vi</language><protected>false</protected><shortDescription>Sub Code</shortDescription><value>Mã phụ</value></labels>
+    <labels><fullName>LBL_SFT_Create_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Create Time</shortDescription><value>Thời gian tạo</value></labels>
+    <labels><fullName>LBL_SFT_Update_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Update Time</shortDescription><value>Thời gian cập nhật</value></labels>
+    <labels><fullName>LBL_SFT_Submit_By_Department</fullName><language>en_US</language><protected>false</protected><shortDescription>Submit by department</shortDescription><value>Submit by department</value></labels>
+    <labels><fullName>LBL_SFT_Remarks</fullName><language>en_US</language><protected>false</protected><shortDescription>Remarks</shortDescription><value>Remarks</value></labels>
+    <labels><fullName>LBL_SFT_Processing_Status</fullName><language>en_US</language><protected>false</protected><shortDescription>Processing Status</shortDescription><value>Processing Status</value></labels>
+    <labels><fullName>LBL_SFT_Decision</fullName><language>en_US</language><protected>false</protected><shortDescription>Decision</shortDescription><value>Decision</value></labels>
+    <labels><fullName>LBL_SFT_Created_By</fullName><language>en_US</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Created By</value></labels>
+    <labels><fullName>LBL_SFT_Created_Date_Time</fullName><language>en_US</language><protected>false</protected><shortDescription>Created Date Time</shortDescription><value>Created Date Time</value></labels>
+    <labels><fullName>LBL_SFT_Assigned_To</fullName><language>en_US</language><protected>false</protected><shortDescription>Assigned To</shortDescription><value>Assigned to</value></labels>
+    <labels><fullName>LBL_SFT_Submit_By_Department</fullName><language>vi</language><protected>false</protected><shortDescription>Submit by department</shortDescription><value>Phòng ban gửi</value></labels>
+    <labels><fullName>LBL_SFT_Remarks</fullName><language>vi</language><protected>false</protected><shortDescription>Remarks</shortDescription><value>Ghi chú</value></labels>
+    <labels><fullName>LBL_SFT_Processing_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Processing Status</shortDescription><value>Trạng thái xử lý</value></labels>
+    <labels><fullName>LBL_SFT_Decision</fullName><language>vi</language><protected>false</protected><shortDescription>Decision</shortDescription><value>Quyết định</value></labels>
+    <labels><fullName>LBL_SFT_Created_By</fullName><language>vi</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Người tạo</value></labels>
+    <labels><fullName>LBL_SFT_Created_Date_Time</fullName><language>vi</language><protected>false</protected><shortDescription>Created Date Time</shortDescription><value>Thời gian tạo</value></labels>
+    <labels><fullName>LBL_SFT_Assigned_To</fullName><language>vi</language><protected>false</protected><shortDescription>Assigned To</shortDescription><value>Phân công cho</value></labels>
+    <labels><fullName>LBL_SFT_Case_Id</fullName><language>en_US</language><protected>false</protected><shortDescription>Case ID</shortDescription><value>Case ID</value></labels>
+    <labels><fullName>LBL_SFT_Status</fullName><language>en_US</language><protected>false</protected><shortDescription>Status</shortDescription><value>Status</value></labels>
+    <labels><fullName>LBL_SFT_Account_Owner</fullName><language>en_US</language><protected>false</protected><shortDescription>Account owner</shortDescription><value>Account owner</value></labels>
+    
+    <labels><fullName>LBL_SFT_Urgency</fullName><language>en_US</language><protected>false</protected><shortDescription>Urgency</shortDescription><value>Urgency</value></labels>
+    <labels><fullName>LBL_SFT_Goal</fullName><language>en_US</language><protected>false</protected><shortDescription>Goal</shortDescription><value>Goal</value></labels>
+    <labels><fullName>LBL_SFT_Deadline_Date</fullName><language>en_US</language><protected>false</protected><shortDescription>Deadline date</shortDescription><value>Deadline date</value></labels>
+    <labels><fullName>LBL_SFT_Last_Update</fullName><language>en_US</language><protected>false</protected><shortDescription>Last update</shortDescription><value>Last update</value></labels>
+    <labels><fullName>LBL_SFT_Created</fullName><language>en_US</language><protected>false</protected><shortDescription>Created</shortDescription><value>Created</value></labels>
+    
+    <labels><fullName>LBL_SFT_Created_By</fullName><language>en_US</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Created by</value></labels>
+    <labels><fullName>LBL_SFT_Created_In_Channel</fullName><language>en_US</language><protected>false</protected><shortDescription>Created In Channel</shortDescription><value>Created In Channel</value></labels>
+    <labels><fullName>LBL_SFT_Last_Updated_By</fullName><language>en_US</language><protected>false</protected><shortDescription>Last Updated By</shortDescription><value>Last Updated By</value></labels>
+    <labels><fullName>LBL_SFT_Case_Id</fullName><language>vi</language><protected>false</protected><shortDescription>Case ID</shortDescription><value>Mã hồ sơ</value></labels>
+    <labels><fullName>LBL_SFT_Status</fullName><language>vi</language><protected>false</protected><shortDescription>Status</shortDescription><value>Trạng thái</value></labels>
+    <labels><fullName>LBL_SFT_Account_Owner</fullName><language>vi</language><protected>false</protected><shortDescription>Account owner</shortDescription><value>Chủ tài khoản</value></labels>
+    
+    <labels><fullName>LBL_SFT_Urgency</fullName><language>vi</language><protected>false</protected><shortDescription>Urgency</shortDescription><value>Mức độ khẩn</value></labels>
+    <labels><fullName>LBL_SFT_Goal</fullName><language>vi</language><protected>false</protected><shortDescription>Goal</shortDescription><value>Mục tiêu</value></labels>
+    <labels><fullName>LBL_SFT_Deadline_Date</fullName><language>vi</language><protected>false</protected><shortDescription>Deadline date</shortDescription><value>Hạn chót</value></labels>
+    <labels><fullName>LBL_SFT_Last_Update</fullName><language>vi</language><protected>false</protected><shortDescription>Last update</shortDescription><value>Cập nhật lần cuối</value></labels>
+    <labels><fullName>LBL_SFT_Created</fullName><language>vi</language><protected>false</protected><shortDescription>Created</shortDescription><value>Ngày tạo</value></labels>
+    
+    <labels><fullName>LBL_SFT_Created_By</fullName><language>vi</language><protected>false</protected><shortDescription>Created By</shortDescription><value>Người tạo</value></labels>
+    <labels><fullName>LBL_SFT_Created_In_Channel</fullName><language>vi</language><protected>false</protected><shortDescription>Created In Channel</shortDescription><value>Kênh tạo</value></labels>
+    <labels><fullName>LBL_SFT_Last_Updated_By</fullName><language>vi</language><protected>false</protected><shortDescription>Last Updated By</shortDescription><value>Người cập nhật</value></labels>
+    <labels>
+        <fullName>LBL_SFT_Case_Will_Be_Transferred</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case will be transferred to your worklist</shortDescription>
+        <value>Case will be transferred to your worklist</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Case_Will_Be_Transferred</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Case will be transferred to your worklist</shortDescription>
+        <value>Hồ sơ sẽ được chuyển vào danh sách công việc của bạn</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SFT_Cancel_Reasons</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Reasons</shortDescription>
+        <value>Cancel Reasons</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Value_Cannot_Be_Blank</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Value cannot be blank</shortDescription>
+        <value>Value cannot be blank</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Enter_Investigation_Notes</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Enter investigation notes</shortDescription>
+        <value>Enter investigation notes here...</value>
+    </labels>
+    
+    <labels>
+        <fullName>LBL_SFT_Submit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Submit</shortDescription>
+        <value>Submit</value>
+
+    </labels>    
+	 <labels>
+        <fullName>LBL_API_Missing_Detail</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing detail object in request</shortDescription>
+        <value>Missing detail object in request</value>
+    </labels>
+	 <labels>
+        <fullName>LBL_API_CaseId_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing caseID in request</shortDescription>
+        <value>Missing caseID in request</value>
+    </labels>
+	 <labels>
+        <fullName>LBL_API_Missing_XML</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing XML data</shortDescription>
+        <value>Missing XML data</value>
+    </labels>
+	 <labels>
+        <fullName>LBL_API_Invalid_Case_Format</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Invalid fraud case format</shortDescription>
+        <value>Invalid fraud case format</value>
+    </labels>
+	<labels>
+        <fullName>LBL_API_Invalid_Case_Result_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing CaseResultInfo in request</shortDescription>
+        <value>Missing CaseResultInfo in request</value>
+    </labels>
+	
+	<labels>
+        <fullName>LBL_API_Invalid_Case_Request_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing RequestInfo in request</shortDescription>
+        <value>Missing RequestInfo in request</value>
+    </labels>
+	<labels>
+        <fullName>LBL_API_Invalid_Case_Creator_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing CreatorInfo in request</shortDescription>
+        <value>Missing CreatorInfo in request</value>
+    </labels>
+	<labels>
+        <fullName>LBL_API_Invalid_Case_Customer_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing CustomerInfo in request</shortDescription>
+        <value>Missing CustomerInfo in request</value>
+    </labels>
+	<labels>
+    <fullName>LBL_API_Invalid_Service_Case_Existing</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Parent ID not found for CaseID, ServiceCase, Channel
+    </shortDescription>
+    <value>
+        Parent ID not found for CaseID={0}, ServiceCase={1}, Channel={2}
+    </value>
+</labels>
+<labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Not_Found</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Fraud case not found for CaseID, ServiceCase, Channel
+    </shortDescription>
+    <value>
+        Fraud case not found for CaseID={0}, ServiceCase={1}, Channel={2}
+    </value>
+</labels>
+<labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Update_Success</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Fraud case updated successfully
+    </shortDescription>
+    <value>
+        Fraud case updated successfully
+    </value>
+</labels>
+<labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Not_Found_Parent</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Could not find Parent ID
+    </shortDescription>
+    <value>
+        Could not find Parent ID={0}, Channel={1}
+    </value>
+</labels>
+<labels>
+    <fullName>LBL_API_Invalid_Fraud_Case_Original_Request</fullName>
+    <language>en_US</language>
+    <protected>false</protected>
+    <shortDescription>
+        Missing OriginalRequest in request
+    </shortDescription>
+    <value>
+        Missing OriginalRequest in request
+    </value>
+</labels>
+
+    <!-- ================= Fraud Case Detail UI ================= -->
+    <labels>
+        <fullName>LBL_CaseStatus</fullName>
+        <language>en_US</language>
+        <shortDescription>Case status</shortDescription>
+        <value>Case status</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CaseStatus</fullName>
+        <language>vi</language>
+        <shortDescription>Trạng thái hồ sơ</shortDescription>
+        <value>Trạng thái hồ sơ</value>
+    </labels>
+    <labels>
+        <fullName>LBL_AppID</fullName>
+        <language>en_US</language>
+        <shortDescription>App ID</shortDescription>
+        <value>App ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_AppID</fullName>
+        <language>vi</language>
+        <shortDescription>Mã ứng dụng</shortDescription>
+        <value>Mã ứng dụng</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ViolationType</fullName>
+        <language>en_US</language>
+        <shortDescription>Violation Type</shortDescription>
+        <value>Violation Type</value>
+    </labels>
+    <labels>
+        <fullName>LBL_ViolationType</fullName>
+        <language>vi</language>
+        <shortDescription>Loại vi phạm</shortDescription>
+        <value>Loại vi phạm</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Creator</fullName>
+        <language>en_US</language>
+        <shortDescription>Creator</shortDescription>
+        <value>Creator</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Creator</fullName>
+        <language>vi</language>
+        <shortDescription>Người tạo</shortDescription>
+        <value>Người tạo</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskList</fullName>
+        <language>en_US</language>
+        <shortDescription>Task List</shortDescription>
+        <value>Task List</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskList</fullName>
+        <language>vi</language>
+        <shortDescription>Danh sách công việc</shortDescription>
+        <value>Danh sách công việc</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UIC</fullName>
+        <language>en_US</language>
+        <shortDescription>UIC</shortDescription>
+        <value>UIC</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UIC</fullName>
+        <language>vi</language>
+        <shortDescription>UIC</shortDescription>
+        <value>UIC</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Deadline</fullName>
+        <language>en_US</language>
+        <shortDescription>Deadline</shortDescription>
+        <value>Deadline</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Deadline</fullName>
+        <language>vi</language>
+        <shortDescription>Hạn xử lý</shortDescription>
+        <value>Hạn xử lý</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskID</fullName>
+        <language>en_US</language>
+        <shortDescription>Task ID</shortDescription>
+        <value>Task ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskID</fullName>
+        <language>vi</language>
+        <shortDescription>Mã công việc</shortDescription>
+        <value>Mã công việc</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Category</fullName>
+        <language>en_US</language>
+        <shortDescription>Category</shortDescription>
+        <value>Category</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Category</fullName>
+        <language>vi</language>
+        <shortDescription>Danh mục</shortDescription>
+        <value>Danh mục</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Conclusion</fullName>
+        <language>en_US</language>
+        <shortDescription>Conclusion</shortDescription>
+        <value>Conclusion From Fraud Team</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Conclusion</fullName>
+        <language>vi</language>
+        <shortDescription>Kết luận</shortDescription>
+        <value>Kết luận từ bộ phận gian lận</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTimeTask</fullName>
+        <language>en_US</language>
+        <shortDescription>Update Time</shortDescription>
+        <value>Update Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTimeTask</fullName>
+        <language>vi</language>
+        <shortDescription>Thời gian cập nhật</shortDescription>
+        <value>Thời gian cập nhật</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTime</fullName>
+        <language>en_US</language>
+        <shortDescription>Create Time</shortDescription>
+        <value>Create Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTime</fullName>
+        <language>vi</language>
+        <shortDescription>Thời gian tạo</shortDescription>
+        <value>Thời gian tạo</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTimeTask</fullName>
+        <language>en_US</language>
+        <shortDescription>Create Time</shortDescription>
+        <value>Create Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_CreateTimeTask</fullName>
+        <language>vi</language>
+        <shortDescription>Thời gian tạo</shortDescription>
+        <value>Thời gian tạo</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Remarks</fullName>
+        <language>en_US</language>
+        <shortDescription>Remarks</shortDescription>
+        <value>Remarks From Customer Service Team</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Remarks</fullName>
+        <language>vi</language>
+        <shortDescription>Ghi chú</shortDescription>
+        <value>Ghi chú từ bộ phận CSKH</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskStatus</fullName>
+        <language>en_US</language>
+        <shortDescription>Task Status</shortDescription>
+        <value>Task Status</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskStatus</fullName>
+        <language>vi</language>
+        <shortDescription>Trạng thái công việc</shortDescription>
+        <value>Trạng thái công việc</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCategory</fullName>
+        <language>en_US</language>
+        <shortDescription>Sub category</shortDescription>
+        <value>Sub category</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCategory</fullName>
+        <language>vi</language>
+        <shortDescription>Danh mục con</shortDescription>
+        <value>Danh mục con</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCode</fullName>
+        <language>en_US</language>
+        <shortDescription>Sub code</shortDescription>
+        <value>Sub code</value>
+    </labels>
+    <labels>
+        <fullName>LBL_SubCode</fullName>
+        <language>vi</language>
+        <shortDescription>Mã con</shortDescription>
+        <value>Mã con</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskName</fullName>
+        <language>en_US</language>
+        <shortDescription>Task name</shortDescription>
+        <value>Task name</value>
+    </labels>
+    <labels>
+        <fullName>LBL_TaskName</fullName>
+        <language>vi</language>
+        <shortDescription>Tên công việc</shortDescription>
+        <value>Tên công việc</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudTaskID</fullName>
+        <language>en_US</language>
+        <shortDescription>Fraud Task ID</shortDescription>
+        <value>Fraud Task ID</value>
+    </labels>
+    <labels>
+        <fullName>LBL_FraudTaskID</fullName>
+        <language>vi</language>
+        <shortDescription>Mã công việc gian lận</shortDescription>
+        <value>Mã công việc gian lận</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTime</fullName>
+        <language>en_US</language>
+        <shortDescription>Update Time</shortDescription>
+        <value>Update Time</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateTime</fullName>
+        <language>vi</language>
+        <shortDescription>Thời gian cập nhật</shortDescription>
+        <value>Thời gian cập nhật</value>
+    </labels>
+    <labels>
+        <fullName>LBL_DownloadFile</fullName>
+        <language>en_US</language>
+        <shortDescription>Download file</shortDescription>
+        <value>Download file</value>
+    </labels>
+    <labels>
+        <fullName>LBL_DownloadFile</fullName>
+        <language>vi</language>
+        <shortDescription>Tải tập tin</shortDescription>
+        <value>Tải tập tin</value>
     </labels>
 </CustomLabels>
