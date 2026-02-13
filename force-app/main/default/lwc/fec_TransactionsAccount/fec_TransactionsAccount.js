@@ -242,7 +242,7 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
         this[NavigationMixin.Navigate]({
             type: 'standard__navItemPage',
             attributes: {
-                apiName: 'Transactions'
+                apiName: 'FEC_Transactions'
             },
             state: {
                 c__transactionId: recordId,

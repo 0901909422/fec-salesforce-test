@@ -182,7 +182,7 @@ export default class Fec_StatementsAccount extends NavigationMixin(LightningElem
 
         this[NavigationMixin.Navigate]({
             type: 'standard__navItemPage',
-            attributes: { apiName: 'statements' },
+            attributes: { apiName: 'FEC_Statements' },
             state: { c__statementId: statementId }
         });
     }
