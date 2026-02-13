@@ -3,7 +3,7 @@
 
         <!-- General Statement Info -->
         <c-fec_-common-record-detail-section section-title="General Statement Info" fields={generalStatementInfoFields}
-            onbuttonclick={handleButtonClick}>
+            onbuttonclick={handleButtonClick} columns="3">
         </c-fec_-common-record-detail-section>
 
         <!-- Statement Details -->
@@ -11,12 +11,11 @@
 
             <div class="detail-wrapper">
                 <c-fec_-related-list-paging records={statementDetails} columns={statementDetailsColumns}
-                    sorted-by="Statement Details" onrowselect={handleStatementSelect}>
+                    sorted-by="statementDate" onrowselect={handleStatementSelect}>
                 </c-fec_-related-list-paging>
             </div>
 
         </lightning-accordion-section>
-
 
     </lightning-accordion>
 </template>
