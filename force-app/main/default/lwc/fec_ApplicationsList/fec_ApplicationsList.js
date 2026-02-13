@@ -142,7 +142,7 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
         this[NavigationMixin.Navigate]({
             type: 'standard__navItemPage',
             attributes: {
-                apiName: 'ApplicationList'
+                apiName: 'FEC_ApplicationList'
             },
             state: {
                 c__ApplicationList: applicationListId

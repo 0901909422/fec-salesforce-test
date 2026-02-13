@@ -95,7 +95,7 @@
         <name>CustomLabel</name>
     </types>
     <types>
-		<members>ApplicationList</members>
+		<members>FEC_ApplicationList</members>
 		<name>CustomTab</name>
 	</types>
     <version>65.0</version>
