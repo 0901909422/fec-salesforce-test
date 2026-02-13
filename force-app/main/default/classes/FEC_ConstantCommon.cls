@@ -39,6 +39,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_DATE_TIME_FULL = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
 
+    public static final String REQUESTOR_CRM = 'CRM';
+    public static final String REQUESTOR_PORTAL = 'PORTAL';
+    public static final String REQUESTOR_MOBILE_APP = 'MOBILE_APP';
+    public static final String REQUESTOR_PEGA_CSM = 'PegaCSM';
     public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
     public static final String REQUESTOR_APS = 'APS';
     public static final String REQUESTOR_SD = 'SD';
