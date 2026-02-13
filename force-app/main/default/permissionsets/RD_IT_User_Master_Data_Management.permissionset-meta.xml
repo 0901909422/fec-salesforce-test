@@ -162,11 +162,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Additional_Field__c.FEC_Field_1__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Callback_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1019,16 +1014,6 @@
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
         <modifyAllRecords>true</modifyAllRecords>
-        <object>FEC_Additional_Field__c</object>
-        <viewAllFields>false</viewAllFields>
-        <viewAllRecords>true</viewAllRecords>
-    </objectPermissions>
-    <objectPermissions>
-        <allowCreate>true</allowCreate>
-        <allowDelete>true</allowDelete>
-        <allowEdit>true</allowEdit>
-        <allowRead>true</allowRead>
-        <modifyAllRecords>true</modifyAllRecords>
         <object>FEC_Additional_Info__c</object>
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
@@ -1213,10 +1198,6 @@
     </recordTypeVisibilities>
     <tabSettings>
         <tab>FEC_Action_Button__c</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-    <tabSettings>
-        <tab>FEC_Additional_Field__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
