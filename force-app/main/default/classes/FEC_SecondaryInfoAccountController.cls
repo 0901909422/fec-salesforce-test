@@ -1,4 +1,17 @@
-public with sharing class FEC_SecondaryInfoAccountController {
+/****************************************************************************************
+ * File Name    : FEC_SecondaryInfoAccountController.Apex
+ * Author       : Quangdv7
+ * Date         : 2025-01-10
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-10     Quangdv7             Create
+ 
+****************************************************************************************/
+
+public without sharing class FEC_SecondaryInfoAccountController {
 
     /* ===================== DTO ===================== */
     public class SecondaryAccountDTO {
@@ -124,7 +137,7 @@ public with sharing class FEC_SecondaryInfoAccountController {
                 }
             }
         } catch (Exception e) {
-            System.debug('Card API failed: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
 
         /* ===== SALE API ===== */
@@ -151,7 +164,7 @@ public with sharing class FEC_SecondaryInfoAccountController {
                 acc.FEC_TSA_Name__c = s.TSA_NAME;
             }
         } catch (Exception e) {
-            System.debug('Sale API failed: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
 
         update acc;
@@ -195,19 +208,19 @@ public with sharing class FEC_SecondaryInfoAccountController {
     /* ===================== DTO MAPPER (DB ONLY) ===================== */
     private static SecondaryAccountDTO mapToDTO(FEC_Customer_History__c a) {
         SecondaryAccountDTO d = new SecondaryAccountDTO();
-        d.helpTexts = buildHelpTextMap();
+        d.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
 
-        d.dailyRetailLimit    = fmt(a.FEC_Daily_Retail_Limit__c);
-        d.dailyRetailNumber   = fmt(a.FEC_Daily_Retail_Number__c);
-        d.dailyCashLimit      = fmt(a.FEC_Daily_Cash_Limit__c);
-        d.dailyCashNumber     = fmt(a.FEC_Daily_Cash_Number__c);
-        d.lastCreditLimit     = fmt(a.FEC_Last_Credit_Limit__c);
-        d.lastCreditLimitDate = fmtDate(a.FEC_Last_Credit_Limit_Date__c);
+        d.dailyRetailLimit    = FEC_CommonUltils.decimalToString(a.FEC_Daily_Retail_Limit__c);
+        d.dailyRetailNumber   = FEC_CommonUltils.decimalToString(a.FEC_Daily_Retail_Number__c);
+        d.dailyCashLimit      = FEC_CommonUltils.decimalToString(a.FEC_Daily_Cash_Limit__c);
+        d.dailyCashNumber     = FEC_CommonUltils.decimalToString(a.FEC_Daily_Cash_Number__c);
+        d.lastCreditLimit     = FEC_CommonUltils.decimalToString(a.FEC_Last_Credit_Limit__c);
+        d.lastCreditLimitDate = FEC_CommonUltils.formatDate(a.FEC_Last_Credit_Limit_Date__c);
 
         d.embossingName       = a.FEC_Embossing_Name__c;
         d.responsibleUnit     = a.FEC_Responsible_Unit__c;
         d.responsiblePerson   = a.FEC_Responsible_Person__c;
-        d.delinquencyDate     = fmtDate(a.FEC_Delinquency_Date__c);
+        d.delinquencyDate     = FEC_CommonUltils.formatDate(a.FEC_Delinquency_Date__c);
 
         d.ccCode  = a.FEC_CC_Code__c;
         d.ccName  = a.FEC_CC_Name__c;
@@ -219,22 +232,4 @@ public with sharing class FEC_SecondaryInfoAccountController {
         return d;
     }
 
-    /* ===================== HELPERS ===================== */
-    private static String fmt(Decimal d) {
-        return d == null ? '' : d.format();
-    }
-    private static String fmtDate(Date d) {
-        return d == null ? '' : d.format();
-    }
-    private static Map<String, String> buildHelpTextMap() {
-        Map<String, String> m = new Map<String, String>();
-        for (Schema.SObjectField f :
-            FEC_Customer_History__c.SObjectType.getDescribe().fields.getMap().values()) {
-            if (String.isNotBlank(f.getDescribe().getInlineHelpText())) {
-                m.put(f.getDescribe().getName(), f.getDescribe().getInlineHelpText());
-            }
-        }
-        return m;
-    }
-    
 }

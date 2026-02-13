@@ -172,7 +172,7 @@ public without sharing class FEC_MainInfoController {
          * ===================================================== */
         MainInfoDTO dto = mapToDTO(hist);
         dto.addresses = addrResult.dtoList;
-        dto.helpTexts = buildHelpTextMap();
+        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
 
         /* ===== SAVE CACHE ===== */
         hist.FEC_API_Cache__c = JSON.serialize(dto);
@@ -298,18 +298,6 @@ public without sharing class FEC_MainInfoController {
             a.Ward, a.District, a.City,
             a.CountryName, a.ZipCode
         }, ', ');
-    }
-
-    private static Map<String, String> buildHelpTextMap() {
-        Map<String, String> m = new Map<String, String>();
-        for (Schema.SObjectField f :
-            FEC_Customer_History__c.SObjectType.getDescribe().fields.getMap().values()
-        ) {
-            if (String.isNotBlank(f.getDescribe().getInlineHelpText())) {
-                m.put(f.getDescribe().getName(), f.getDescribe().getInlineHelpText());
-            }
-        }
-        return m;
     }
 
     private static MainInfoDTO mapToDTO(FEC_Customer_History__c h) {

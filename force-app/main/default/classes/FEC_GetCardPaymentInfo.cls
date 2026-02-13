@@ -38,7 +38,7 @@
             // A. CHUẨN BỊ DỮ LIỆU
             // ---------------------------------------------------------
             String transId = UUID.randomUUID().toString();
-            String requestorId = UUID.randomUUID().toString(); 
+            String requestorId = FEC_ConstantCommon.API_REQUESTOR_ID; 
             String sysTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
             
             // Convert Date sang String format YYYY-MM-DD

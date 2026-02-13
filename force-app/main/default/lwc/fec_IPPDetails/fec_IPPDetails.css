@@ -1,3 +1,79 @@
+/* IPP Details summary: grid 2 cột, format giống ảnh (label đỏ, icon info, gạch dưới) */
+.ipp-details-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+    min-width: 0;
+}
+
+.ipp-details-summary-item {
+    display: flex;
+    padding: 10px 12px 0 12px;
+    align-items: flex-start;
+    min-width: 0;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+.ipp-details-summary-item .ipp-details-row-inner {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+    min-width: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dddbda;
+    box-sizing: border-box;
+}
+
+.ipp-details-summary-item .ipp-details-label {
+    flex: 0 1 55%;
+    min-width: 0;
+    max-width: 55%;
+    margin-bottom: 0;
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.3;
+}
+
+.ipp-details-summary-item .ipp-details-help-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    line-height: 0;
+    margin-top: -1px;
+}
+
+.ipp-details-summary-item .ipp-details-value {
+    flex: 1 1 0%;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 400;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
+    color: #3e3e3c;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+}
+
+.ipp-details-summary-item .ipp-details-value span {
+    display: inline;
+}
+
+@media (max-width: 768px) {
+    .ipp-details-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Info text styling */
 .slds-text-body_small {
     padding: 8px 0;
@@ -11,7 +87,18 @@
 /* Currency negative value styling - highlight negative values in red */
 .currency-negative,
 .slds-text-color_error {
-    color: #c23934 !important;
+    color: #ea001e !important;
+}
+
+/* Màu đỏ cho label Total IPP Balance và Total IPP Current Balance */
+.ipp-label-red {
+    color: #ea001e !important;
+}
+
+/* Giá trị âm trong summary: đỏ, không in đậm */
+span.slds-text-color_error {
+    color: #ea001e !important;
+    font-weight: 400;
 }
 
 /* Custom Accordion Styling */
@@ -26,8 +113,16 @@
 
 /* Error text styling - highlight phần "Tải dữ liệu không thành công" màu đỏ */
 .error-text {
-    color: #c23934 !important;
+    color: #ea001e !important;
     font-weight: 600;
+}
+
+/* Khối lỗi khi dùng RelatedListAddressesPaging (hasError = true) */
+.no-data.error {
+    color: #ea001e;
+    font-weight: 600;
+    padding: 1rem;
+    text-align: center;
 }
 
 

@@ -62,7 +62,7 @@
         try {
             // 1. CHUẨN BỊ DỮ LIỆU
             String transId = UUID.randomUUID().toString();
-            String requestorId = UUID.randomUUID().toString(); 
+            String requestorId = FEC_ConstantCommon.API_REQUESTOR_ID; 
             String reqTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
 
             validateRequest(transId, requestorId, reqTime, accountNumber);

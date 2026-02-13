@@ -1,0 +1,38 @@
+<template>
+    <lightning-record-edit-form object-api-name={OBJECT_API_NAME} record-id={recordId} onsuccess={handleSuccess}
+        onerror={handleError}>
+
+        <lightning-messages></lightning-messages>
+
+        <div class="slds-grid slds-wrap slds-gutters">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <template if:true={isNewMode}>
+                    <lightning-input-field field-name={FIELD_FEC_UNIQUE_ID} required></lightning-input-field>
+                </template>
+                <template if:true={isEditMode}>
+                    <lightning-output-field field-name={FIELD_FEC_UNIQUE_ID}></lightning-output-field>
+                </template>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input-field field-name={FIELD_NAME} required></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input-field field-name={FIELD_NAME_VN} required></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input-field field-name={FIELD_FEC_TYPE}></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input-field field-name={FIELD_FIELD_STATUS}></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input-field field-name={FIELD_FIELD_MANDATORY}></lightning-input-field>
+            </div>
+        </div>
+
+        <div class="slds-m-top_medium slds-float_right">
+            <lightning-button label={labelCancel} onclick={handleCancel} class="slds-m-right_x-small" title={titleCancel} variant="neutral"></lightning-button>
+            <lightning-button label={labelSave} type="submit" variant="brand" title={titleSave}></lightning-button>
+        </div>
+    </lightning-record-edit-form>
+</template>
