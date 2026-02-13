@@ -29,6 +29,7 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_IPPScheduleController</members>
+		<members>FEC_GetCardTransactions</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -126,9 +127,7 @@
 		<members>FEC_MSG_Not_Account_Linked</members>
 		<members>FEC_MSG_From_To_Invalid</members>
         <members>FEC_MSG_Parse_JSON_Error</members>
-		<members>FEC_MSG_AccountNumber_Null</members>
 		<members>FEC_MSG_EndDate_Must_StartDate</members>
-		<members>FEC_MSG_StartDate_EndDate_Null</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
