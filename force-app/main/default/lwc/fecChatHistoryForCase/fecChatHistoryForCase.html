@@ -1,0 +1,42 @@
+<template>
+    <lightning-card title="Chat History" icon-name="standard:live_chat">
+        <div class="slds-p-around_small">
+            <section role="log" class="slds-chat container-chat-history">
+                <ul class="slds-chat-list">
+                    <template for:each={chatMessages} for:item="msg">
+                        <li key={msg.Id} class={msg.itemClass}>
+                            <div class="slds-chat-message">
+                                <div class={msg.bodyClass}>
+                                    <div class="container-chat-history__body__sender-name">
+                                        <b>{msg.FEC_SenderName__c}</b> • {msg.formattedTime}
+                                    </div>
+                                    <div class={msg.bubbleClass}>
+                                        <template if:true={msg.isText}>
+                                            <span>{msg.FEC_Message__c}</span>
+                                        </template>
+
+                                        <template if:true={msg.isFile}>
+                                            <div class="slds-grid slds-grid_vertical-align-center">
+                                                <lightning-icon icon-name="doctype:attachment" size="small" title="Attachment" class="slds-m-right_x-small"></lightning-icon>
+                                                
+                                                <template if:true={msg.downloadUrl}>
+                                                    <a href={msg.downloadUrl} target="_blank" download={msg.fileName}>
+                                                        {msg.fileName}
+                                                    </a>
+                                                </template>
+                                                
+                                                <template if:false={msg.downloadUrl}>
+                                                    <span class="slds-text-color_error">{msg.fileName} (File not found)</span>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </section>
+        </div>
+    </lightning-card>
+</template>

@@ -16,6 +16,7 @@ public without sharing class FEC_CreateCaseHanlder {
         @AuraEnabled public String transcription;
         @AuraEnabled public String kycMethod;
         @AuraEnabled public String kycResult;
+        @AuraEnabled public String customerName;
     }
     
     public class FEC_InteractionCaseResponse {
@@ -86,6 +87,7 @@ public without sharing class FEC_CreateCaseHanlder {
             interactionCase.FEC_Phone_Number__c = dto.phoneNumber;
             interactionCase.FEC_National_ID_Passport_ID__c = dto.nationalId;
             interactionCase.FEC_Account_Number__c = dto.accountNumber;
+            interactionCase.FEC_Customer_Username__c = dto.customerName;
         
         
             // ---------------------------
