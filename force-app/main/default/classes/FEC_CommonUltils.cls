@@ -273,7 +273,7 @@ public with sharing class FEC_CommonUltils {
       }
 
       // Fallback: Format YYYY-MM-DD
-      return Date.valueOf(dateStr);
+      return Date.valueOf(dateStr.substring(0, 10));
     } catch (Exception e) {
       System.debug(
         'convertDateSafeForOtherCard error for "' +

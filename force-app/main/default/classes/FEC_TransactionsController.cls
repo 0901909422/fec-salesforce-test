@@ -198,7 +198,7 @@ public without sharing class FEC_TransactionsController {
 
             TransactionDTO dto = new TransactionDTO();
             dto.Id = tx.Id;
-            //dto.effectiveDate = safeDate(res.VMXMsgOut.EFF_DATE);
+            //dto.effectiveDate = FEC_CommonUltils.toDate(res.VMXMsgOut.EFF_DATE);
             //dto.transactionAmount = res.VMXMsgOut.AUTH_AMT;
             //dto.merchantDescription = res.VMXMsgOut.MERC_NAME_LOC;
             //dto.transactionPlan = res.VMXMsgOut.CR_PLAN;
@@ -237,7 +237,7 @@ public without sharing class FEC_TransactionsController {
             new Map<String, FEC_GetCardFinancialTransactions.FinancialTransaction>();
 
         for (FEC_GetCardFinancialTransactions.FinancialTransaction f : fList) {
-            Date postDate = safeDateFromDateTime(f.PostingDate);
+            Date postDate = FEC_CommonUltils.parseDate(f.PostingDate);
             if (postDate == null || f.TRNXAmount == null) continue;
 
             String key = buildKey(
@@ -275,7 +275,7 @@ public without sharing class FEC_TransactionsController {
         Map<String, FEC_Transaction__c> working = new Map<String, FEC_Transaction__c>();
 
         for (FEC_GetUnbilledTransactions.TransactionRecord u : uList) {
-            Date postDate = safeDate(u.PostingDate);
+            Date postDate = FEC_CommonUltils.toDate(u.PostingDate);
             if (postDate == null || u.Amount == null) continue;
 
             String key = buildKey(
@@ -294,7 +294,7 @@ public without sharing class FEC_TransactionsController {
                         );
 
             // ===== Base fields (Unbilled) =====
-            rec.FEC_Effective_Date__c = safeDate(u.TransactionDate);
+            rec.FEC_Effective_Date__c = FEC_CommonUltils.toDate(u.TransactionDate);
             rec.FEC_Post_Date__c = postDate;
             rec.FEC_Transaction_Amount__c = u.Amount;
             rec.FEC_Credit_Debit_Flag__c = u.TransactionType;
@@ -381,29 +381,6 @@ public without sharing class FEC_TransactionsController {
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
         ];
-    }
-
-    private static Date safeDate(String s) {
-        try {
-            return String.isBlank(s) ? null : Date.valueOf(s);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static Date safeDateFromDateTime(String s) {
-        try {
-            if (String.isBlank(s)) return null;
-
-        
-            if (s.contains('T')) {
-                return Date.valueOf(s.substring(0, 10));
-            }
-            return Date.valueOf(s);
-
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     private static String buildKey(
