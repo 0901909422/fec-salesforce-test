@@ -37,6 +37,7 @@
 		<members>FEC_Other_Card__c</members>
         <members>FEC_Transaction__c</members>
         <members>FEC_Statement__c</members>
+		<members>FEC_API_Log__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
