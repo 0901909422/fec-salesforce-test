@@ -18,6 +18,7 @@
 		<members>FEC_KYCService</members>
 		<members>FEC_InteractionSLAController</members>
 		<members>FEC_CreateCaseInteractionController</members>
+		<members>FEC_CaseService</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
