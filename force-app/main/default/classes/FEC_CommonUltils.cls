@@ -484,7 +484,7 @@ public with sharing class FEC_CommonUltils {
           if(response != null){
               log.FEC_Status_Code__c =  String.valueOf(response.getStatusCode());
               log.FEC_Response_String__c = response.getBody();
-              log.FEC_Is_Success__c =  String.valueOf(response.getStatusCode() == 200);
+              log.FEC_Is_Success__c =  (response.getStatusCode() == 200);
           }
           
           log.FEC_Error_Message__c = errorMessage;
