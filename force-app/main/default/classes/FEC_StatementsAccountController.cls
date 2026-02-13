@@ -231,7 +231,7 @@ public without sharing class FEC_StatementsAccountController {
         ];
 
         GeneralStatementInfoDTO dto = new GeneralStatementInfoDTO();
-        dto.helpTexts         = getStatementHelpTexts();
+        dto.helpTexts         = FEC_CommonUltils.buildHelpTextMap(FEC_Statement__c.SObjectType);
         dto.statementId       = s.Id;
         dto.billingCycle      = s.FEC_Billing_Cycle__c;
         dto.lastStatementDate = s.FEC_Last_Statement_Date__c;
@@ -258,7 +258,7 @@ public without sharing class FEC_StatementsAccountController {
             LIMIT 1
         ];
 
-        Map<String, String> helpTexts = getStatementHelpTexts();
+        Map<String, String> helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Statement__c.SObjectType);
         List<StatementPeriodDTO> result = new List<StatementPeriodDTO>();
 
         for (FEC_Statement__c s : [
@@ -342,28 +342,4 @@ public without sharing class FEC_StatementsAccountController {
         return result;
     }
 
-    /* =====================================================
-       HELP TEXT CACHE
-       ===================================================== */
-    private static Map<String, String> statementHelpTexts;
-
-    private static Map<String, String> getStatementHelpTexts() {
-        if (statementHelpTexts == null) {
-            statementHelpTexts = buildHelpTextMap(FEC_Statement__c.SObjectType);
-        }
-        return statementHelpTexts;
-    }
-
-    private static Map<String, String> buildHelpTextMap(
-        Schema.SObjectType sobType
-    ) {
-        Map<String, String> result = new Map<String, String>();
-        for (Schema.SObjectField f : sobType.getDescribe().fields.getMap().values()) {
-            Schema.DescribeFieldResult d = f.getDescribe();
-            if (String.isNotBlank(d.getInlineHelpText())) {
-                result.put(d.getName(), d.getInlineHelpText());
-            }
-        }
-        return result;
-    }
 }

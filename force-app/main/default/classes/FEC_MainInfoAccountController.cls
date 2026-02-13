@@ -303,7 +303,7 @@ public without sharing class FEC_MainInfoAccountController {
 
     private static MainInfoDTO mapToDTO(FEC_Customer_History__c acc) {
         MainInfoDTO dto = new MainInfoDTO();
-        dto.helpTexts = buildHelpTextMap();
+        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
         dto.accountNumber   = acc.FEC_Account_Number__c;
         dto.contractNumber  = acc.FEC_Contract_Number__c;
         dto.accountStatus   = acc.FEC_Account_Status__c;
@@ -430,25 +430,5 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Expiry_Date__c = m.ExpiryDate
         );
     }
-    /* ===================== HELP TEXT RESOLVER ===================== */
-    private static Map<String, String> buildHelpTextMap() {
-        Map<String, String> result = new Map<String, String>();
-
-        Map<String, Schema.SObjectField> fieldMap =
-            FEC_Customer_History__c.SObjectType
-                .getDescribe()
-                .fields.getMap();
-
-        for (String fieldName : fieldMap.keySet()) {
-            String helpText =
-                fieldMap.get(fieldName)
-                        .getDescribe()
-                        .getInlineHelpText();
-
-            if (String.isNotBlank(helpText)) {
-                result.put(fieldName, helpText);
-            }
-        }
-        return result;
-    }
+    
 }

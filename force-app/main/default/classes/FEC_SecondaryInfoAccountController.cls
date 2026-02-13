@@ -208,7 +208,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
     /* ===================== DTO MAPPER (DB ONLY) ===================== */
     private static SecondaryAccountDTO mapToDTO(FEC_Customer_History__c a) {
         SecondaryAccountDTO d = new SecondaryAccountDTO();
-        d.helpTexts = buildHelpTextMap();
+        d.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
 
         d.dailyRetailLimit    = fmt(a.FEC_Daily_Retail_Limit__c);
         d.dailyRetailNumber   = fmt(a.FEC_Daily_Retail_Number__c);
@@ -239,14 +239,5 @@ public without sharing class FEC_SecondaryInfoAccountController {
     private static String fmtDate(Date d) {
         return d == null ? '' : d.format();
     }
-    private static Map<String, String> buildHelpTextMap() {
-        Map<String, String> m = new Map<String, String>();
-        for (Schema.SObjectField f :
-            FEC_Customer_History__c.SObjectType.getDescribe().fields.getMap().values()) {
-            if (String.isNotBlank(f.getDescribe().getInlineHelpText())) {
-                m.put(f.getDescribe().getName(), f.getDescribe().getInlineHelpText());
-            }
-        }
-        return m;
-    }
+    
 }

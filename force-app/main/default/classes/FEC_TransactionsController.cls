@@ -151,7 +151,7 @@ public without sharing class FEC_TransactionsController {
         dto.merchantCategoryCode = tx.FEC_Merchant_Category_Code__c;
         dto.currencyCode = tx.FEC_Currency_Code__c;
         dto.otpSent = tx.FEC_OTP_Sent__c;
-        dto.helpTexts = buildHelpTextMap();
+        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Transaction__c.SObjectType);
         return dto;
     }
 
@@ -210,7 +210,7 @@ public without sharing class FEC_TransactionsController {
             //dto.merchantCategoryCode = res.VMXMsgOut.MERCH_CAT;
             //dto.currencyCode = res.VMXMsgOut.TXN_CURR_CODE;
 
-            dto.helpTexts = buildHelpTextMap();
+            dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Transaction__c.SObjectType);
             result.add(dto);
 
         } catch (Exception e) {
@@ -389,17 +389,6 @@ public without sharing class FEC_TransactionsController {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    private static Map<String, String> buildHelpTextMap() {
-        Map<String, String> m = new Map<String, String>();
-        for (Schema.SObjectField f :
-            FEC_Transaction__c.SObjectType.getDescribe().fields.getMap().values()) {
-            if (String.isNotBlank(f.getDescribe().getInlineHelpText())) {
-                m.put(f.getDescribe().getName(), f.getDescribe().getInlineHelpText());
-            }
-        }
-        return m;
     }
 
     private static Date safeDateFromDateTime(String s) {
