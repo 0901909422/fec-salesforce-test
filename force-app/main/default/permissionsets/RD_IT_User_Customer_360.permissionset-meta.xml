@@ -1362,6 +1362,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Statement__c.FEC_Billing_Cycle__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Statement__c.FEC_Credit_Amount__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1402,7 +1407,17 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Statement__c.FEC_Last_Statement_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Statement__c.FEC_Minimum_Payment_Due__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Statement__c.FEC_Next_Statement_Date__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

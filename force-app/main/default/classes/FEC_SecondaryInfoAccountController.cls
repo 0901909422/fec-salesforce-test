@@ -215,12 +215,12 @@ public without sharing class FEC_SecondaryInfoAccountController {
         d.dailyCashLimit      = FEC_CommonUltils.decimalToString(a.FEC_Daily_Cash_Limit__c);
         d.dailyCashNumber     = FEC_CommonUltils.decimalToString(a.FEC_Daily_Cash_Number__c);
         d.lastCreditLimit     = FEC_CommonUltils.decimalToString(a.FEC_Last_Credit_Limit__c);
-        d.lastCreditLimitDate = FEC_CommonUltils.formatDate((a.FEC_Last_Credit_Limit_Date__c);
+        d.lastCreditLimitDate = FEC_CommonUltils.formatDate(a.FEC_Last_Credit_Limit_Date__c);
 
         d.embossingName       = a.FEC_Embossing_Name__c;
         d.responsibleUnit     = a.FEC_Responsible_Unit__c;
         d.responsiblePerson   = a.FEC_Responsible_Person__c;
-        d.delinquencyDate     = FEC_CommonUltils.formatDate((a.FEC_Delinquency_Date__c);
+        d.delinquencyDate     = FEC_CommonUltils.formatDate(a.FEC_Delinquency_Date__c);
 
         d.ccCode  = a.FEC_CC_Code__c;
         d.ccName  = a.FEC_CC_Name__c;

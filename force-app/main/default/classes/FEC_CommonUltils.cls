@@ -358,10 +358,10 @@ public with sharing class FEC_CommonUltils {
   
   /**
    * Build help text map for any SObject type
-   * @param fields - map field object
+   * @param sobjType - Schema.SObjectType
    * @return Map of field API name to help text
    */
-  public static Map<String, String> buildHelpTextMap(SObject.SObjectType sobjType) {
+  public static Map<String, String> buildHelpTextMap(Schema.SObjectType sobjType) {
     Map<String, String> m = new Map<String, String>();
     try {
       for (Schema.SObjectField f : sobjType.getDescribe().fields.getMap().values()) {
