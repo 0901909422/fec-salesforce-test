@@ -3,11 +3,12 @@
     <fullName>FEC_Business_Process__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Thông tin luồng quy trình</description>
+    <externalId>false</externalId>
     <label>Business Process</label>
     <referenceTo>FEC_Business_Process__c</referenceTo>
     <relationshipName>Nature_of_Case</relationshipName>
     <required>false</required>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

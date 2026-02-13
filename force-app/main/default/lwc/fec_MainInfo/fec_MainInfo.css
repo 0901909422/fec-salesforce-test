@@ -1,0 +1,101 @@
+.detail-row {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid #dddbda;
+}
+
+.detail-label {
+    width: 45%;
+    color: #3e3e3c;
+    font-size: 13px;
+}
+
+.detail-value {
+    width: 55%;
+    color: #080707;
+    font-weight: 500;
+}
+
+.with-icon {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.eye-icon {
+    margin-left: 4px;
+}
+
+.sync-fail-text {
+    color: #c23934;
+    font-weight: 400;
+}
+/* Wrapper */
+.customer-info-wrapper {
+    background: #ffffff;
+}
+
+/* Info Section */
+.info-section {
+    background: #fafaf9;
+    padding: 0;
+}
+
+/* Info Row Container */
+.info-row-container {
+    display: flex;
+    border-bottom: 1px solid #e5e5e5;
+    min-height: 52px;
+}
+
+.info-row-container:last-child {
+    border-bottom: none;
+}
+
+/* Info Item */
+.info-item {
+    flex: 0 0 50%;
+    display: flex;
+    padding: 12px 24px;
+    align-items: center;
+}
+
+.info-item.left {
+    border-right: 1px solid #e5e5e5;
+}
+
+.info-item.right {
+    padding-left: 24px;
+}
+
+.info-item.empty {
+    background: #fafaf9;
+}
+
+/* Label & Value */
+.label {
+    flex: 0 0 200px;
+    font-size: 14px;
+    color: #706e6b;
+    font-weight: 400;
+    margin-right: 16px;
+}
+
+.value {
+    flex: 1;
+    font-size: 14px;
+    color: #080707;
+    font-weight: 400;
+    word-break: break-word;
+}
+
+.value-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.value-container .value {
+    flex: 1;
+}

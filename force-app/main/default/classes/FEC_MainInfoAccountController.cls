@@ -173,11 +173,9 @@ public without sharing class FEC_MainInfoAccountController {
             String remark = '';
             
             if (isEligible) {
-                remark = 'Eligible for rewards program';
+                remark = System.Label.FEC_MSG_Eligible;
             } else {
-                remark = apiResponse.Sys.Description != null 
-                    ? apiResponse.Sys.Description 
-                    : 'Failed-LMS Account is Not Available (Minimum available points should more than 50000)';
+                remark = apiResponse.Sys.Description;
             }
             
             FEC_Customer_History__c accToUpdate = new FEC_Customer_History__c(
@@ -190,8 +188,8 @@ public without sharing class FEC_MainInfoAccountController {
             RewardEligibilityResult result = new RewardEligibilityResult();
             result.isEligible = isEligible;
             result.message = isEligible 
-                ? 'Reward eligibility check successful' 
-                : 'Reward eligibility check failed';
+                ? System.Label.FEC_MSG_Reward_Eligibility_Success
+                : System.Label.FEC_MSG_Reward_Eligibility_Error;
             result.availablePoints = FEC_CommonUltils.formatCurrency(apiResponse.AvailablePoints, 0);
             result.remark = remark;
             
@@ -374,15 +372,11 @@ public without sharing class FEC_MainInfoAccountController {
             Name = 'Account ' + m.AccountNumber,
             FEC_Account_Number__c = m.AccountNumber,
             FEC_Contract_Number__c = m.ContractNumber,
-           // FEC_Account_Status__c = m.Status,
             FEC_Credit_Limit__c = m.CreditLimit,
             FEC_OTB__c = m.OTB,
             FEC_Current_Balance__c = response.CardBasicInfo.Statement?.StatementBalance,
             FEC_Hold_Amount__c = m.HoldAmount,
             FEC_Total_Balance__c = response.CardBasicInfo.Statement?.StatementBalance,
-            //FEC_Application_ID__c = m.BlockCode1,
-            //FEC_Account_Open_Date__c = m.AccountBlockCode2Date,
-            //FEC_Account_Close_Date__c = m.ExpiryDate,
             FEC_E_sign_Status__c = 'Yes',
 
             /* ===== ACCOUNT STATUS ===== */
@@ -393,38 +387,11 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Block_Code_2__c = m.BlockCode2,
             FEC_Block_Date_2__c = m.AccountBlockCode2Date,
             FEC_Reason_2__c     = m.RsnBlockCode2,
-            //FEC_Days_Past_Due__c = m.,
 
             /* ===== CARD ===== */
             FEC_Insurance_Flag__c = m.InsuranceFlag,
-            //FEC_Product_Association__c = m.ProductAssociation,
             FEC_Customer_Segment__c = m.CustomerSegment,
-            //FEC_Scheme_Desc__c = m.
-            // FEC_Scheme_ID__c = m.
-            //FEC_Card_Number__c
-            //FEC_Card_Type__c = m.
-            //FEC_Plastic_ID__c = m.
-            //FEC_Digital_Card_ID__c = m.
             FEC_Expiry_Date__c = m.ExpiryDate
-            /* ===== CARD STATUS ===== */
-            //FEC_Block_Code__c            = m.
-            //FEC_Block_Date__c         = m.FEC_Block_Date__c,
-            //FEC_Blocked_By__c      = m.FEC_Blocked_By__c,
-            //FEC_Card_Activation_Status__c          = m.cardActivationStatus == 'Active' ? 'Active':'Inactive'
-            //FEC_Card_Activation_Date__c  = m.FEC_Card_Activation_Date__c,
-            //FEC_ECommerce_Status__c    = m.FEC_ECommerce_Status__c,
-            //FEC_Fraud_Monitor_Flag__c        = m.FEC_Fraud_Monitor_Flag__c,
-            //FEC_Fraud_Monitor_Date__c      = m.FEC_Fraud_Monitor_Date__c,
-            //FEC_Local_Use__c      = m.FEC_Local_Use__c,
-            //FEC_Rewards_Eligibility__c = m.FEC_Rewards_Eligibility__c
-            //FEC_Remark__c                  = m.FEC_Remark__c
-            /* ===== DEBT SALE ===== */
-            //FEC_Company_Name__c = m.FEC_Company_Name__c
-            //FEC_Sold_Date__c = m.FEC_Sold_Date__c
-            //FEC_Principal_Sold__c = m.FEC_Principal_Sold__c
-            //FEC_Interest_Sold__c = m.FEC_Interest_Sold__c
-            //FEC_Sold_Note__c =m.FEC_Sold_Note__c
-            //FEC_Debt_Sale_Type__c =m.FEC_Debt_Sale_Type__c
         );
 
         insert acc;
@@ -443,7 +410,6 @@ public without sharing class FEC_MainInfoAccountController {
             Id = accountId,
             FEC_Account_Number__c = m.AccountNumber,
             FEC_Contract_Number__c = m.ContractNumber,
-           // FEC_Account_Status__c = m.Status,
             FEC_Credit_Limit__c = m.CreditLimit,
             FEC_OTB__c = m.OTB,
             FEC_Current_Balance__c = response.CardBasicInfo.Statement?.StatementBalance,
@@ -458,37 +424,10 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Block_Code_2__c = m.BlockCode2,
             FEC_Block_Date_2__c = m.AccountBlockCode2Date,
             FEC_Reason_2__c     = m.RsnBlockCode2,
-            //FEC_Days_Past_Due__c = m.,
             /* ===== CARD ===== */
             FEC_Insurance_Flag__c = m.InsuranceFlag,
-            //FEC_Product_Association__c = m.ProductAssociation,
             FEC_Customer_Segment__c = m.CustomerSegment,
-            //FEC_Scheme_Desc__c = m.
-            // FEC_Scheme_ID__c = m.
-            //FEC_Card_Number__c
-            //FEC_Card_Type__c = m.
-            //FEC_Plastic_ID__c = m.
-            //FEC_Digital_Card_ID__c = m.
             FEC_Expiry_Date__c = m.ExpiryDate
-            /* ===== CARD STATUS ===== */
-            //FEC_Block_Code__c            = m.
-            //FEC_Block_Date__c         = m.FEC_Block_Date__c,
-            //FEC_Blocked_By__c      = m.FEC_Blocked_By__c,
-            //FEC_Card_Activation_Status__c          = m.cardActivationStatus == 'Active' ? 'Active':'Inactive'
-            //FEC_Card_Activation_Date__c  = m.FEC_Card_Activation_Date__c,
-            //FEC_ECommerce_Status__c    = m.FEC_ECommerce_Status__c,
-            //FEC_Fraud_Monitor_Flag__c        = m.FEC_Fraud_Monitor_Flag__c,
-            //FEC_Fraud_Monitor_Date__c      = m.FEC_Fraud_Monitor_Date__c,
-            //FEC_Local_Use__c      = m.FEC_Local_Use__c,
-            //FEC_Rewards_Eligibility__c = m.FEC_Rewards_Eligibility__c
-            //FEC_Remark__c                  = m.FEC_Remark__c
-            /* ===== DEBT SALE ===== */
-            //FEC_Company_Name__c = m.FEC_Company_Name__c
-            //FEC_Sold_Date__c = m.FEC_Sold_Date__c
-            //FEC_Principal_Sold__c = m.FEC_Principal_Sold__c
-            //FEC_Interest_Sold__c = m.FEC_Interest_Sold__c
-            //FEC_Sold_Note__c =m.FEC_Sold_Note__c
-            //FEC_Debt_Sale_Type__c =m.FEC_Debt_Sale_Type__c
         );
     }
     /* ===================== HELP TEXT RESOLVER ===================== */
