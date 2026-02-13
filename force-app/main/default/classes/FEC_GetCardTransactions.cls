@@ -177,13 +177,13 @@ public without sharing class FEC_GetCardTransactions {
             return new ValidationResult(false, System.Label.FEC_MSG_RequestorID_Null);
 
         if (String.isBlank(accountNumber))
-            return new ValidationResult(false, System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'});
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
 
         if (startDate == null)
-            return new ValidationResult(false, System.Label.FEC_MSG_Param_Required, new List<String>{'startDate'});
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'startDate'}));
             
         if (endDate == null)
-            return new ValidationResult(false, System.Label.FEC_MSG_Param_Required, new List<String>{'endDate'});
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'endDate'}));
 
         if (endDate < startDate)
             return new ValidationResult(false, System.Label.FEC_MSG_EndDate_Must_StartDate);
