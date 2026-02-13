@@ -83,7 +83,7 @@ public without sharing class FEC_SecondaryController {
                     SecondaryInfoDTO.class
                 );
 
-            dto.helpTexts = buildHelpTextMap();
+            dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
 
             return dto;
         }
@@ -173,7 +173,7 @@ public without sharing class FEC_SecondaryController {
         SecondaryInfoDTO dto = mapToDTO(hist);
         dto.references = buildReferenceDTO(relativesRes);
         dto.contactList = buildContactDTO(hist.Id);
-        dto.helpTexts = buildHelpTextMap();
+        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
 
         /* =====================================================
          * SAVE CACHE
@@ -249,24 +249,7 @@ public without sharing class FEC_SecondaryController {
         }
         return null;
     }
-    private static Map<String, String> buildHelpTextMap() {
-        Map<String, String> m = new Map<String, String>();
-
-        for (Schema.SObjectField f :
-            FEC_Customer_History__c.SObjectType
-                .getDescribe()
-                .fields
-                .getMap()
-                .values()
-        ) {
-            Schema.DescribeFieldResult d = f.getDescribe();
-            if (String.isNotBlank(d.getInlineHelpText())) {
-                m.put(d.getName().toLowerCase(), d.getInlineHelpText());
-            }
-        }
-        return m;
-    }
-
+    
     private static List<ReferenceDTO> buildReferenceDTO(
         FEC_GetRelativesList.ResponseWrapper res
     ) {
