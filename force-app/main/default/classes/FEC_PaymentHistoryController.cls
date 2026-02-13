@@ -272,16 +272,4 @@ public without sharing class FEC_PaymentHistoryController {
         return result;
     }
 
-    /* =====================================================
-       DATE PARSER
-       ===================================================== */
-    private static Date parseDate(String val) {
-        try {
-            return String.isBlank(val)
-                ? null
-                : Date.valueOf(val.substring(0, 10));
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }
