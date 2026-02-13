@@ -13,7 +13,7 @@
 
 import { LightningElement, api } from 'lwc';
 
-export default class Fec_CommomRecordDetailSection extends LightningElement {
+export default class Fec_CommonRecordDetailSection extends LightningElement {
     /* ================= API ================= */
     @api sectionTitle;
     @api showRefreshButton = false;
