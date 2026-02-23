@@ -3,6 +3,8 @@ import { NavigationMixin } from 'lightning/navigation';
 import { getRecord } from 'lightning/uiRecordApi';
 import getInteraction from '@salesforce/apex/FEC_InteractionController.getInteraction';
 
+import FEC_View_All_Btn_Label from '@salesforce/label/c.FEC_View_All_Btn_Label';
+
 const FIELDS = [
     'Case.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c',
     'Case.FEC_Account_or_Contract__r.FEC_Primary_Phone__c',
@@ -19,6 +21,10 @@ export default class FecAllInteractionsCase extends NavigationMixin(LightningEle
     
     sortedBy = 'FEC_Interaction_Start_On__c';
     sortDirection = 'desc';
+
+    customlabel = {
+        viewAllBtnLabel: FEC_View_All_Btn_Label
+    }
 
     // Wire để lấy National ID, Phone Number và RecordType từ bản ghi hiện tại
     @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
