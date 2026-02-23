@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Queue xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Default Queue</description>
+    <doesSendEmailToMembers>false</doesSendEmailToMembers>
+    <name>DQ - IT Operations Support</name>
+    <queueMembers>
+        <roles>
+            <role>FEC_IT_System_Operation_Expert_Risk</role>
+            <role>FEC_IT_System_Operation_Officer_Risk</role>
+            <role>FEC_IT_System_Operation_Specialist_Risk</role>
+            <role>FEC_Senior_IT_System_Operation_Expert_Risk</role>
+            <role>FEC_Senior_IT_System_Operation_Specialist_Risk</role>
+            <role>FEC_Senior_Software_Development_Expert_Risk</role>
+            <role>FEC_Senior_Software_Development_Specialist_Risk</role>
+            <role>FEC_Software_Development_Expert_Risk</role>
+            <role>FEC_Software_Development_Specialist_Risk</role>
+            <role>FEC_Unit_Head_Of_Apps_Risk</role>
+        </roles>
+    </queueMembers>
+    <queueSobject>
+        <sobjectType>Case</sobjectType>
+    </queueSobject>
+</Queue>

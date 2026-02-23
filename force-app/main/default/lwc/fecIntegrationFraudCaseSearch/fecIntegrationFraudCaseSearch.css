@@ -1,0 +1,78 @@
+.search-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.button-row {
+    margin-top: 1rem;
+}
+
+.pagination {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.page-label {
+    font-weight: bold;
+}
+
+.no-result {
+    padding: 1rem;
+    text-align: center;
+    color: #888;
+}
+
+.help-text {
+    margin-top: 0.5rem;
+    color: #777;
+}
+.fh-link {
+    color: #0176d3;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.tk-text {
+    color: #181818;
+}
+.child-row td:first-child {
+    padding-left: 2rem;
+    background: #f7f9fb;
+}
+.child-row {
+    background-color: #f3f6fb;
+}
+
+.child-row td:first-child {
+    padding-left: 2rem;
+}
+
+.child-row::before {
+    content: '↳ ';
+    color: #5c6f8a;
+}
+:host {
+    --child-color: #5c6f8a;
+}
+
+.child-indicator {
+    color: var(--child-color);
+}
+
+.table-toolbar {
+    margin-bottom: 0.75rem;
+}
+
+.total-records,
+.page-label {
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.page-size-combobox {
+    min-width: 140px;
+}

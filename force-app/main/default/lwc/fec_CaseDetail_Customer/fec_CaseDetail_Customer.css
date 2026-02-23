@@ -1,0 +1,14 @@
+* {
+  --border-radius: 12px;
+  --padding: 16px;
+}
+
+.case-footer {
+  padding: var(--padding);
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid #ccc;
+}
