@@ -1,0 +1,24 @@
+<template>
+    <div class="wrapper">
+        <!-- ERROR MESSAGE -->
+        <template if:true={showError}>
+            <div class="error">
+                <lightning-icon icon-name="utility:error" size="x-small" alternative-text="error"></lightning-icon>
+                <span>Không được bỏ trống</span>
+            </div>
+        </template>
+
+        <!-- FORM -->
+        <div class="form">
+            <lightning-input label="Customer Name" value={customerName} onchange={handleNameChange}></lightning-input>
+
+            <lightning-input label="National ID/Passport ID" value={identityNo}
+                onchange={handleIdentityChange}></lightning-input>
+        </div>
+
+        <!-- ACTION -->
+        <div class="action">
+            <lightning-button variant="brand" label="Create Case" onclick={handleCreateCase}></lightning-button>
+        </div>
+    </div>
+</template>

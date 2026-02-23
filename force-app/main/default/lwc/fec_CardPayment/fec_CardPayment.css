@@ -1,0 +1,55 @@
+/* Màu xám cho các trường summary */
+.payment-field-label-gray {
+    color: #888888 !important;
+}
+/* Info text styling */
+.slds-text-body_small {
+    padding: 8px 0;
+}
+
+/* Loading spinner container */
+.slds-is-relative {
+    min-height: 100px;
+}
+
+/* Error text styling - giống MainInfo */
+.sync-fail-text {
+    color: #c23934;
+    font-weight: 600;
+}
+
+/* Currency negative value styling - only for detail screens */
+/* Target vào lightning-datatable cells với class currency-negative */
+:host c-fec_-related-list-paging lightning-datatable .currency-negative,
+:host c-fec_-related-list-paging lightning-datatable td.currency-negative,
+:host c-fec_-related-list-paging lightning-datatable .slds-cell-wrap.currency-negative,
+:host c-fec_-related-list-paging lightning-datatable tbody td[class*="currency-negative"] {
+    color: #c23934 !important;
+}
+
+/* Fallback cho các trường hợp khác */
+.currency-negative {
+    color: #c23934;
+}
+
+/* In đậm và cùng màu tab cho các field: Full Payment Without IPP, Full IPP Payment Amount, Loan Balance */
+.payment-field-label {
+    font-weight: 700 !important;
+    color: #0176D3 !important;
+}
+
+/* Custom Accordion Styling */
+.slds-accordion__summary {
+    cursor: pointer;
+    user-select: none;
+}
+
+.slds-accordion__summary:hover {
+    background-color: #f3f2f2;
+}
+
+/* Error text styling - highlight phần "Tải dữ liệu không thành công" màu đỏ */
+.error-text {
+    color: #c23934 !important;
+    font-weight: 600;
+}

@@ -21,7 +21,26 @@
 		<members>FEC_Stage_Change__c</members>
 		<members>FEC_Stage_Screen__c</members>
 		<members>FEC_Action_Button__c</members>
+		<members>FEC_Process_Action_History__c</members>
 		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>FEC_Action_Button__c</members>
+		<members>FEC_Business_Process__c</members>
+		<members>FEC_Case_Stage__c</members>
+		<members>FEC_Category__c</members>
+		<members>FEC_Master_Data_Setting__c</members>
+		<members>FEC_Nature_of_Case__c</members>
+		<members>FEC_Product_Type__c</members>
+		<members>FEC_Stage_Change__c</members>
+		<members>FEC_Stage_Screen__c</members>
+		<members>FEC_Sub_Category__c</members>
+		<members>FEC_Sub_Code__c</members>
+		<members>FEC_Channel__c</members>
+		<members>FEC_Notification_Channel__c</members>
+		<members>FEC_Notification__c</members>
+		<members>FEC_Process_Action__c</members>
+		<name>CustomTab</name>
 	</types>
 	<types>
 		<members>Category_Record_Page</members>
@@ -31,6 +50,13 @@
 		<members>Sub_Code_Record_Page</members>
         <members>Channel_Record_Page</members>
 		<members>Process_Action_Record_Page</members>
+		<members>Action_Button_Record_Page</members>
+		<members>Business_Process_Record_Page</members>
+		<members>Case_Stage_Record_Page</members>
+		<members>Master_Data_Setting_Record_Page</members>
+		<members>Nature_of_Cases_Record_Page</members>
+		<members>Stage_Change_Record_Page</members>
+		<members>Stage_Screen_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -38,6 +64,18 @@
 		<members>Target_Group</members>
 		<members>FEC_Verify_Information</members>
 		<name>GlobalValueSet</name>
+	</types>
+	<types>
+		<members>FEC_Service</members>
+		<name>CustomApplication</name>
+	</types>
+	<types>
+		<members>RD_IT_User_Master_Data_Management</members>
+		<name>PermissionSet</name>
+	</types>
+	<types>
+		<members>PSG_RD_IT_User</members>
+		<name>PermissionSetGroup</name>
 	</types>
     <version>65.0</version>
 </Package>

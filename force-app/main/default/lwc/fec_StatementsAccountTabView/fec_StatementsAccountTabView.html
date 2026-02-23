@@ -1,0 +1,56 @@
+<template>
+    <lightning-card>
+
+        <!-- LOADING -->
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading"></lightning-spinner>
+        </template>
+
+        <!-- HAS DATA -->
+        <template if:true={hasStatement}>
+
+            <!-- HEADER + DETAIL -->
+            <div class="slds-p-around_medium">
+                <c-fec_-common-detail-view
+                    title="Statement"
+                    sub-title={statementSubTitle}
+                    icon-name="standard:orders"
+                    sections={detailSections}
+                    columns="4">
+                </c-fec_-common-detail-view>
+            </div>
+
+            <!-- BILLED TRANSACTIONS -->
+            <lightning-accordion
+                active-section-name={activeSections}
+                allow-multiple-sections-open
+                class="slds-m-top_medium">
+
+                <lightning-accordion-section
+                    name="billedTx"
+                    label="Billed Transactions">
+
+                    <c-fec_-related-list-paging
+                        records={billedTransactions}
+                        columns={billedTransactionsColumns}
+                        sorted-by="transactionCode"
+                        onrowselect={handleTransactionSelect}>
+                    </c-fec_-related-list-paging>
+
+                </lightning-accordion-section>
+
+            </lightning-accordion>
+
+        </template>
+
+        <!-- EMPTY -->
+        <template if:false={hasStatement}>
+            <template if:false={isLoading}>
+                <div class="slds-text-color_weak slds-p-around_medium">
+                    No statement selected
+                </div>
+            </template>
+        </template>
+
+    </lightning-card>
+</template>

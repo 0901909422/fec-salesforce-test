@@ -1,9 +1,17 @@
 public with sharing class FEC_ConstantCommon {
     
     public static final String API_CONTENT_TYPE = 'text/xml; charset=utf-8';
+    public static final String API_CONTENT_TYPE_JSON = 'application/json';
+    public static final String API_METHOD_POST = 'POST';
+    public static final String API_REQUESTOR_ID = 'SALESFORE-CSM';
     public static final String SOAP_ENV = 'http://schemas.xmlsoap.org/soap/envelope/';
 
     public static final String STR_DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS';
+    public static final String STR_DATETIME_FORMAT_XXX = 'yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX';
+    public static final String DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss';
+    public static final String DATE_FORMAT = 'yyyy-MM-dd';
+    public static final String DATE_FORMAT_MMYYYY = 'MM/yyyy';
+    public static final String DATETIME_FORMAT_OUTPUT = 'dd/MM/yyyy HH:mm:ss';
 
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
@@ -12,6 +20,12 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
     public static final String CHANNEL_INBOUND_NAME = 'Inbound';
     public static final String CHANNEL_OUTBOUND_NAME = 'Outbound';
+    public static final String CHANNEL_ZALO = 'ZALO';
+    public static final String CHANNEL_WEBSITE = 'WEBSITE';
+    public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
+
+    public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';
+    public static final String CHANNEL_OUTBOUND_SUBCHANNEL_NAME = 'Outbound Call';
 
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
@@ -19,4 +33,65 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_ACCOUNT_NUMBER = '^(\\d{16}|\\d{19})$';
     public static final String PATTERN_CONTRACT_NUMBER = '^(\\d{8}-\\d{6}-\\d{4}|\\d{8}-\\d{7}-\\d{3}|\\d{8}-\\d{7}-\\d{2}|\\d{8}-\\d{7}-\\d{1}|\\d{8}-\\d{7}|\\d{2}-\\d{2}-\\d{2}-\\d{2})$';
     public static final String PATTERN_EMAIL = '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,5}(\\.[A-Za-z]{2,5})?$';
+    public static final String PATTERN_DATE = '^\\d{4}-\\d{2}-\\d{2}$';
+    public static final String PATTERN_SYS_TIME = '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}';
+    public static final String PATTERN_DATE_TIME = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$';
+    public static final String PATTERN_DATE_TIME_FULL = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$';
+    public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
+
+    public static final String REQUESTOR_CRM = 'CRM';
+    public static final String REQUESTOR_PORTAL = 'PORTAL';
+    public static final String REQUESTOR_MOBILE_APP = 'MOBILE_APP';
+    public static final String REQUESTOR_PEGA_CSM = 'PegaCSM';
+    public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
+    public static final String REQUESTOR_APS = 'APS';
+    public static final String REQUESTOR_SD = 'SD';
+    public static final String REQUESTOR_VMXVERSION = '2.0';
+    public static final String REQUESTOR_CONTEXT = 'CRM';
+    public static final String REQUESTOR_ORG = 'FEC';
+    public static final String REQUESTOR_RES = 'RES';
+    public static final String REQUESTOR_PEGA = 'PEGA';
+    public static final String REQUESTOR_ESB = 'ESB';
+
+    public static final String ADDRESS_TYPE_CURRES = 'CURRES';
+    public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
+    public static final String ADDRESS_TYPE_OFFICE = 'OFFICE';
+    public static final String TEXT_YES = 'Yes';
+
+    public static final String ORIGINAL_USER_UPLOAD = 'Original_User_Upload';
+    public static final String JSON_DATA_FOR_PROCESSING = 'JSON_Data_For_Processing';
+    public static final String UPLOADED_STATUS = 'Uploaded';
+    public static final String PROCESSED_STATUS = 'Processed';
+    public static final String JSON_EXTENSION = '.json';
+    public static final String SUCCESS_MESSAGE = 'Success';
+    public static final String KEY_ID = 'id';
+    public static final String KEY_NAME = 'name';
+    public static final String KEY_UPLOADED_BY = 'uploadedBy';
+    public static final String KEY_UPLOADED_TIME = 'uploadedTime';
+    public static final String KEY_STATUS = 'status';
+    public static final String YES_VALUE = 'yes';
+
+    public static final String PRODUCT_TYPE_INSURANCE = 'Insurance';
+    public static final String PRODUCT_TYPE_LOAN = 'Loan';
+    public static final String PRODUCT_TYPE_CARD = 'Card';
+
+    public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
+    public static final String CASE_STATUS_RESOLVED_REJECTED = 'Resolved-Rejected';
+    public static final String CASE_STATUS_RESOLVED_COMPLETED = 'Resolved-Completed';
+    public static final String CASE_STATUS_AUTO_CANCELLED = 'Resolved-AutoCancelled';
+    public static final String CASE_STATUS_AUTO_CLOSED = 'Auto-Closed';
+
+    public static final String INTERACTION_VIEW_MODE = 'view';
+    public static final String INTERACTION_HANDLING_MODE = 'handling';
+
+    public static final String CASE_STATUS_NEW = 'New';
+    public static final String CASE_STATUS_OPEN = 'Open';
+
+    public static final String CASE_WEB_ORIGIN = 'Web';
+
+    public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
+    public static final String CASE_EXISTING_CUSTOMER = 'Existing';
+
+    public static final String CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER = 'Non-existing';
+    public static final String CUSTOMER_HISTORY_EXISTING_CUSTOMER = 'Existing';
 }

@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Interaction__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
+    <description>Trường lookup hiển thị Interaction sinh ra Case</description>
     <label>Interaction</label>
     <referenceTo>Case</referenceTo>
     <relationshipLabel>Cases (Interaction)</relationshipLabel>
