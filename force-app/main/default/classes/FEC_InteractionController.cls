@@ -54,14 +54,14 @@ public with sharing class FEC_InteractionController {
                 FEC_Phone_Number__c,
                 FEC_Interaction_Email__c
                 FROM Case
-                WHERE RecordType.DeveloperName = 'Interaction'
+                WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME
                 AND FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c = :nationalId
                 AND FEC_Account_or_Contract__r.FEC_Primary_Phone__c = :primaryPhone
                 ORDER BY FEC_Interaction_Start_On__c DESC
                 LIMIT 10
             ];
         } catch (Exception e) {
-            throw new AuraHandledException('Error retrieving Interaction data: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
     
