@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+		<members>RD_IT_User_User_Management</members>
+		<members>RD_IT_User_System_Management</members>
+		<name>PermissionSet</name>
+	</types>
+	<types>
+		<members>PSG_RD_IT_User</members>
+		<name>PermissionSetGroup</name>
+	</types>
+    <version>65.0</version>
+</Package>

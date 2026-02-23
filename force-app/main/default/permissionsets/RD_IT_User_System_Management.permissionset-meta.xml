@@ -13,14 +13,6 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CommonUltils</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_ConstantCommon</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
         <apexClass>FEC_CardInfoController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -45,11 +37,19 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_ClickToCallHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CloseInterationSchedulerBatch</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_CommonUltils</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ConstantCommon</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -106,6 +106,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_GetCardSecInfo</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_GetCardTransactions</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -169,6 +173,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_InteractionController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_InteractionHighlightController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -193,15 +201,15 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_MFASOUTSTANDINGAUTHINQ</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_MainInfoAccountController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_MainInfoController</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_MFASOUTSTANDINGAUTHINQ</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
