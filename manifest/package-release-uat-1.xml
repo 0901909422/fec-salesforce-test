@@ -976,6 +976,7 @@
 		<members>fec_CustomerCaseExecuteAction</members>
         <members>fec_ClickToCallQuickActionClone</members>
 		<members>fecInteraction</members>
+		<members>fec_SensitiveDataTable</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
