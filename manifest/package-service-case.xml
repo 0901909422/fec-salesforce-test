@@ -3,6 +3,8 @@
     <types>
 		<members>FEC_ClickToCallHandler</members>
         <members>FEC_InteractionController</members>
+		<members>FEC_CaseBusinessService</members>
+		<members>FEC_CaseRemarkController</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -15,6 +17,7 @@
 		<members>Case.FEC_Interaction_End_On__c</members>
 		<members>Case.FEC_Interaction_Duration__c</members>
 		<members>Case.FEC_Is_Routing_Action_Display__c</members>
+		<members>Case.FEC_Draft_Routing_Action_Code__c</members>
         <members>FEC_Customer_History__c.FEC_Customer_Type__c</members>
         <name>CustomField</name>
     </types>
@@ -39,6 +42,11 @@
         <members>fec_ClickToCallQuickActionClone</members>
 		<members>fecInteraction</members>
 		<members>fec_SensitiveDataTable</members>
+		<members>fec_CaseBussiness</members>
+		<members>fec_CaseDetail_Customer</members>
+		<members>fec_CaseRemarks</members>
+		<members>fec_ErrorPanel</members>
+		<members>fec_CommonUtils</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>

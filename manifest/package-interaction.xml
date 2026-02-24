@@ -19,7 +19,13 @@
 		<members>FEC_InteractionSLAController</members>
 		<members>FEC_CreateCaseInteractionController</members>
 		<members>FEC_CaseService</members>
+		<members>FEC_InteractionHighlightController</members>
+		<members>FEC_CaseTriggerHandler</members>
 		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>FEC_CaseTrigger</members>
+		<name>ApexTrigger</name>
 	</types>
 	<types>
 		<members>customDblclickCell</members>
@@ -43,6 +49,7 @@
 		<members>fec_CreateCaseNonExistingCustomer</members>
 		<members>fec_InteractionSLA</members>
 		<members>fec_InteractionCreateCase</members>
+		<members>fec_ErrorPanel</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
