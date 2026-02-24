@@ -58,8 +58,3 @@
 .error > p {
   margin-bottom: 6px;
 }
-
-.phone-error {
-  color: var(--slds-g-color-error-1);
-  font-size: 0.75rem;
-}

@@ -12,44 +12,23 @@
   >
     <lightning-accordion-section
       name="case-remark"
-      label="* Case Remarks"
+      label={customLabel.caseRemarkLabel}
       if:true={modeEditCase}
     >
-      <div class="slds-p-around--x-small">
-        <c-fec_-case-remarks
-          case-id={recordId}
-          is-edit={modeEditCase}
-        ></c-fec_-case-remarks>
-      </div>
-    </lightning-accordion-section>
-
-    <lightning-accordion-section
-      name="case-remark-history"
-      label="Case Remarks History"
-    >
-      <div class="slds-p-around--x-small">
-        <c-fec_-related-list-paging
-          if:true={loadRemarklst}
-          records={remarklst}
-          columns={remarkColumnlst}
-          sorted-by="Registration"
-        >
-        </c-fec_-related-list-paging>
-      </div>
+      <c-fec_-case-remarks case-id={recordId}></c-fec_-case-remarks>
     </lightning-accordion-section>
   </lightning-accordion>
 
   <div class="case-footer" if:true={modeEditCase}>
     <lightning-button
-      label="Save & Close"
+      label={customLabel.btnSaveClose}
       onclick={handleSave}
     ></lightning-button>
 
     <lightning-button
       variant="brand"
-      label="Submit"
+      label={customLabel.btnSubmit}
       onclick={handleSubmit}
-      disabled={isSubmitDisabled}
     ></lightning-button>
 
     <c-fec_-error-panel if:true={hasError} errors={errlst}></c-fec_-error-panel>
