@@ -48,7 +48,6 @@ svg {
 }
 
 .error__panel.open {
-  z-index: 10000;
   display: block;
   height: unset;
 }
