@@ -91,5 +91,13 @@
 		<members>Case</members>
 		<name>CustomObject</name>
 	</types>
+    <types>
+		<members>FEC_GetNextWork</members>
+		<name>CustomTab</name>
+	</types>
+    <types>
+		<members>RD_IT_User_Interaction_Case_Service_Case</members>
+		<name>PermissionSet</name>
+	</types>
     <version>65.0</version>
 </Package>
