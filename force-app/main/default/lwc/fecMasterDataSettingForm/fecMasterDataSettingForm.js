@@ -1,5 +1,7 @@
 import { LightningElement, api, track, wire } from 'lwc';
-import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import saveMasterDataSetting from '@salesforce/apex/FEC_MasterDataSettingController.saveMasterDataSetting';
+import getAdditionalFieldOptions from '@salesforce/apex/FEC_MasterDataSettingController.getAdditionalFieldOptions';
 
 import getChannels from '@salesforce/apex/FEC_MasterDataSettingController.getChannels';
 import getUserRoles from '@salesforce/apex/FEC_MasterDataSettingController.getUserRoles';
@@ -8,30 +10,44 @@ import LABEL_BUTTON_CANCEL from '@salesforce/label/c.FEC_Button_Cancel';
 import LABEL_BUTTON_SAVE from '@salesforce/label/c.FEC_Button_Save';
 import LABEL_LABEL_CHANNEL_MULTISELECT from '@salesforce/label/c.FEC_Label_Channel_Multiselect';
 import LABEL_LABEL_APPLICABLE_ROLES from '@salesforce/label/c.FEC_Label_Applicable_Roles';
-import LABEL_CUSTOMERTYPE_EXISTING from '@salesforce/label/c.FEC_Label_CustomerType_Existing';
-import LABEL_CUSTOMERTYPE_NONEXISTING from '@salesforce/label/c.FEC_Label_CustomerType_NonExisting';
-import LABEL_CUSTOMERTYPE_ALL from '@salesforce/label/c.FEC_Label_CustomerType_All';
 
-import { FIELD_FIELD_ORDER_DISPLAY, OBJECT_MDM_MASTER_DATA_SETTING, FIELD_ADDITIONAL_FIELD, FIELD_FIELD_STATUS, FIELD_FIELD_READONLY, FIELD_FIELD_MANDATORY, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, FIELD_NATURE_OF_CASE, FIELD_STAGE_NAME, DATA_NAME_CHANNELS, DATA_NAME_ROLES, CUST_TYPE_EXISTING, CUST_TYPE_NON_EXISTING, CUST_TYPE_ALL, FIELD_SECTION } from 'c/fecConstants';
+import { FIELD_FIELD_ORDER_DISPLAY, OBJECT_MDM_MASTER_DATA_SETTING, FIELD_ADDITIONAL_FIELD, FIELD_FIELD_STATUS, FIELD_FIELD_READONLY, FIELD_FIELD_MANDATORY, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, FIELD_NATURE_OF_CASE, FIELD_STAGE_NAME, DATA_NAME_CHANNELS, DATA_NAME_ROLES, FIELD_SECTION } from 'c/fecConstants';
+import { showLog } from 'c/fecMDMUtils';
 
 const FIELDS = [
     `${OBJECT_MDM_MASTER_DATA_SETTING}.${FIELD_CHANNEL}`,
-    `${OBJECT_MDM_MASTER_DATA_SETTING}.${FIELD_APPLICABLE_ROLE}`
+    `${OBJECT_MDM_MASTER_DATA_SETTING}.${FIELD_APPLICABLE_ROLE}`,
+    `${OBJECT_MDM_MASTER_DATA_SETTING}.${FIELD_FIELD_STATUS}`,
+    `${OBJECT_MDM_MASTER_DATA_SETTING}.${FIELD_FIELD_READONLY}`,
+    `${OBJECT_MDM_MASTER_DATA_SETTING}.${FIELD_FIELD_MANDATORY}`,
+    `${OBJECT_MDM_MASTER_DATA_SETTING}.${FIELD_SECTION}`,
+    `${OBJECT_MDM_MASTER_DATA_SETTING}.${FIELD_FIELD_ORDER_DISPLAY}`,
+    `${OBJECT_MDM_MASTER_DATA_SETTING}.${FIELD_ADDITIONAL_FIELD}`
 ];
 
 export default class FecMasterDataSettingForm extends LightningElement {
     @api recordId;
+    @api recordData;
     @api natureOfCaseId;
     @api stageId;
-    @api nextOrder; // Nhận giá trị từ cha
+    @api nextOrder;
+    @api isIntegrationMode = false;
 
     @track selectedChannels = [];
     @track selectedRoles = [];
     @track channelOptions = [];
     @track roleOptions = [];
+    @track additionalFieldOptions = [];
     @track displayOrder;
-    @track customerTypeValue = CUST_TYPE_ALL; // Giá trị mặc định khi tạo mới
-    // expose labels
+    @track formData = {
+        additionalField: '',
+        section: '',
+        fieldStatus: true,
+        fieldReadOnly: false,
+        fieldMandatory: false
+    };
+
+    // expose labels and field names
     labelCancel = LABEL_BUTTON_CANCEL;
     labelSave = LABEL_BUTTON_SAVE;
     fieldOrderDisplay = FIELD_FIELD_ORDER_DISPLAY;
@@ -47,58 +63,122 @@ export default class FecMasterDataSettingForm extends LightningElement {
     dataNameChannels = DATA_NAME_CHANNELS;
     dataNameRoles = DATA_NAME_ROLES;
 
-
-    // Định nghĩa danh sách 3 giá trị cho dropdown
-    get customerTypeOptions() {
-        return [
-            { label: LABEL_CUSTOMERTYPE_EXISTING, value: CUST_TYPE_EXISTING },
-            { label: LABEL_CUSTOMERTYPE_NONEXISTING, value: CUST_TYPE_NON_EXISTING },
-            { label: LABEL_CUSTOMERTYPE_ALL, value: CUST_TYPE_ALL }
-        ];
+    get isEditMode() {
+        return !!this.recordId;
     }
 
-    // Sử dụng connectedCallback để thiết lập giá trị mặc định khi form khởi tạo
+    get isCreateMode() {
+        return !this.recordId;
+    }
+
     connectedCallback() {
-        // Chỉ tự động điền nếu là tạo mới (không có recordId)
         if (!this.recordId) {
+            // Create mode
             this.displayOrder = this.nextOrder;
+            
+            // Integration Mode: Set FIMA defaults
+            if (this.isIntegrationMode) {
+                this.displayOrder = 1;
+                this.selectedChannels = ['FIMA'];
+                this.formData.additionalField = 'FIMA';
+                showLog('[connectedCallback] Integration Mode activated - Set FIMA defaults');
+            }
+        } else if (this.recordData && Object.keys(this.recordData).length > 0) {
+            // Edit mode - populate form from recordData passed from parent
+            this.populateFormFromRecordData(this.recordData);
         }
     }
 
-    handleCustomerTypeChange(event) {
-        this.customerTypeValue = event.detail.value;
-    }
+    /**
+     * @description Populate form fields from recordData passed by parent component
+     */
+    populateFormFromRecordData(data) {
+        showLog('[populateFormFromRecordData] START with data:', data);
+        try {
+            const channelsStr = data.FEC_Channel__c || '';
+            const rolesStr = data.FEC_Applicable_Role__c || '';
+            const section = data.FEC_Section__c || '';
+            const order = data.FEC_Field_Order_Display__c || 0;
+            const status = data.FEC_Field_Status__c || false;
+            const readOnly = data.FEC_Field_ReadOnly__c || false;
+            const mandatory = data.FEC_Field_Mandatory__c || false;
+            const additionalField = data.FEC_Additional_Field__c || '';
 
-    // --- AUTO-FILL LOGIC ---
-    @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
-    wiredRecord({ error, data }) {
-        if (data) {
-            // Lấy giá trị String từ Database (ví dụ: "Web, Mobile") - dùng constants
-            const channelsStr = getFieldValue(data, `${OBJECT_MDM_MASTER_DATA_SETTING}.${FIELD_CHANNEL}`);
-            const rolesStr = getFieldValue(data, `${OBJECT_MDM_MASTER_DATA_SETTING}.${FIELD_APPLICABLE_ROLE}`);
-
-            // Chuyển chuỗi thành mảng để hiển thị Pills
             this.selectedChannels = channelsStr ? channelsStr.split(',').map(item => item.trim()) : [];
             this.selectedRoles = rolesStr ? rolesStr.split(',').map(item => item.trim()) : [];
-        } else if (error) {
-            console.error('Lỗi load dữ liệu cũ:', error);
+            this.displayOrder = order;
+            this.formData = {
+                additionalField: additionalField,
+                section: section,
+                fieldStatus: status,
+                fieldReadOnly: readOnly,
+                fieldMandatory: mandatory
+            };
+            showLog('[populateFormFromRecordData] Form populated successfully');
+        } catch (error) {
+            showLog('[populateFormFromRecordData] Error:', error);
         }
     }
 
+
     @wire(getChannels)
-    wiredChannels({ data }) { if (data) this.channelOptions = data; }
+    wiredChannels({ data }) {
+        if (data) this.channelOptions = data;
+    }
 
     @wire(getUserRoles)
-    wiredRoles({ data }) { if (data) this.roleOptions = data; }
+    wiredRoles({ data }) {
+        if (data) this.roleOptions = data;
+    }
+
+    @wire(getAdditionalFieldOptions)
+    wiredAdditionalFields({ data }) {
+        if (data) this.additionalFieldOptions = data;
+    }
+
+    // Handle input change for create mode
+    handleInputChange(event) {
+        const fieldName = event.target.dataset.fieldName;
+        const value = event.detail?.value || event.target.value;
+
+        showLog('[handleInputChange] Field:', fieldName, 'Value:', value);
+
+        if (fieldName === 'FEC_Additional_Field__c') {
+            this.formData = { ...this.formData, additionalField: value };
+        } else if (fieldName === 'FEC_Section__c') {
+            this.formData = { ...this.formData, section: value };
+        } else if (fieldName === 'FEC_Field_Order_Display__c') {
+            this.displayOrder = value;
+        } else if (fieldName === 'FEC_Field_Status__c') {
+            this.formData = { ...this.formData, fieldStatus: event.detail.checked };
+        } else if (fieldName === 'FEC_Field_ReadOnly__c') {
+            this.formData = { ...this.formData, fieldReadOnly: event.detail.checked };
+        } else if (fieldName === 'FEC_Field_Mandatory__c') {
+            this.formData = { ...this.formData, fieldMandatory: event.detail.checked };
+        }
+
+        showLog('[handleInputChange] Updated formData:', this.formData);
+    }
 
     handleSelectCustom(event) {
         const field = event.target.dataset.name;
         const value = event.detail.value;
+
+        // Prevent adding empty values
+        if (!value) return;
+
         if (field === DATA_NAME_CHANNELS && !this.selectedChannels.includes(value)) {
             this.selectedChannels = [...this.selectedChannels, value];
+            this.clearCombobox(event.target);
         } else if (field === DATA_NAME_ROLES && !this.selectedRoles.includes(value)) {
             this.selectedRoles = [...this.selectedRoles, value];
+            this.clearCombobox(event.target);
         }
+    }
+
+    clearCombobox(combobox) {
+        // Reset combobox value to trigger re-render
+        combobox.value = '';
     }
 
     handleRemoveCustom(event) {
@@ -113,20 +193,165 @@ export default class FecMasterDataSettingForm extends LightningElement {
 
     handleSubmit(event) {
         event.preventDefault();
-        const fields = event.detail.fields;
 
-        // Gộp mảng thành chuỗi để lưu vào Database
-        fields[FIELD_CHANNEL] = this.selectedChannels.join(', ');
-        fields[FIELD_APPLICABLE_ROLE] = this.selectedRoles.join(', ');
+        // Validate multi-select fields
+        if (this.selectedChannels.length === 0) {
+            this.showToast('Validation Error', 'Please select at least one Channel', 'error');
+            return;
+        }
 
-        fields[FIELD_NATURE_OF_CASE] = this.natureOfCaseId;
-        fields[FIELD_STAGE_NAME] = this.stageId;
+        if (this.selectedRoles.length === 0) {
+            this.showToast('Validation Error', 'Please select at least one Applicable Role', 'error');
+            return;
+        }
 
-        this.template.querySelector('lightning-record-edit-form').submit(fields);
+        try {
+            const fields = event.detail.fields || {};
+            fields[FIELD_CHANNEL] = this.selectedChannels.join(', ');
+            fields[FIELD_APPLICABLE_ROLE] = this.selectedRoles.join(', ');
+            fields[FIELD_NATURE_OF_CASE] = this.natureOfCaseId;
+            fields[FIELD_STAGE_NAME] = this.stageId;
+
+            this.template.querySelector('lightning-record-edit-form').submit(fields);
+        } catch (error) {
+            console.error('Error during form submission:', error);
+            this.showToast('Error', 'An error occurred while submitting the form', 'error');
+        }
     }
 
-    handleSuccess(event) {
-        this.dispatchEvent(new CustomEvent('success', { detail: event.detail }));
+    handleCreateSubmit() {
+        showLog('[handleSuccess] START - refreshing data');
+
+        // Validation
+        if (!this.formData.additionalField) {
+            this.showToast('Validation Error', 'Please enter Additional Field', 'error');
+            return;
+        }
+        if (this.selectedChannels.length === 0) {
+            this.showToast('Validation Error', 'Please select at least one Channel', 'error');
+            return;
+        }
+        if (this.selectedRoles.length === 0) {
+            this.showToast('Validation Error', 'Please select at least one Applicable Role', 'error');
+            return;
+        }
+
+        try {
+            const mappingReq = {
+                [FIELD_ADDITIONAL_FIELD]: this.formData.additionalField,
+                [FIELD_SECTION]: this.formData.section || null,
+                [FIELD_CHANNEL]: this.selectedChannels.join(', '),
+                [FIELD_APPLICABLE_ROLE]: this.selectedRoles.join(', '),
+                [FIELD_FIELD_ORDER_DISPLAY]: this.displayOrder || 0,
+                [FIELD_FIELD_STATUS]: this.formData.fieldStatus,
+                [FIELD_FIELD_READONLY]: this.formData.fieldReadOnly,
+                [FIELD_FIELD_MANDATORY]: this.formData.fieldMandatory,
+                [FIELD_NATURE_OF_CASE]: this.natureOfCaseId,
+                [FIELD_STAGE_NAME]: this.stageId
+            };
+
+            saveMasterDataSetting({ mappingReq })
+                .then(result => {
+                    if (result) {
+                        this.showToast('Success', 'Master Data Setting created successfully', 'success');
+
+                        // Dispatch event immediately for modal closure and data refresh
+                        try {
+                            this.dispatchEvent(new CustomEvent('success', {
+                                detail: { id: result },
+                                bubbles: true,
+                                composed: true
+                            }));
+                        } catch (eventError) {
+                            console.error('Error dispatching success event:', eventError);
+                        }
+                    } else {
+                        this.showToast('Error', 'No ID returned from save operation', 'error');
+                    }
+                })
+                .catch(error => {
+                    let errorMessage = 'An error occurred while saving';
+                    if (error) {
+                        if (error.body && error.body.message) {
+                            errorMessage = error.body.message;
+                        } else if (error.message) {
+                            errorMessage = error.message;
+                        }
+                    }
+                    this.showToast('Error', errorMessage, 'error');
+                    console.error('Error saving Master Data Setting:', error);
+                });
+        } catch (error) {
+            console.error('Error in handleCreateSubmit:', error);
+            this.showToast('Error', 'An unexpected error occurred', 'error');
+        }
+    }
+
+    handleSuccess(result) {
+        this.dispatchEvent(new CustomEvent('success', { detail: result }));
+    }
+
+    handleSubmitEdit() {
+        showLog('[handleSubmitEdit] START - Saving edit with all fields editable');
+        showLog('[handleSubmitEdit] Current formData:', this.formData);
+        showLog('[handleSubmitEdit] Selected Channels:', this.selectedChannels);
+        showLog('[handleSubmitEdit] Selected Roles:', this.selectedRoles);
+        showLog('[handleSubmitEdit] Display Order:', this.displayOrder);
+
+        // Validation - tất cả validation phải kiểm tra
+        if (!this.formData.additionalField) {
+            this.showToast('Validation Error', 'Please select Additional Field', 'error');
+            return;
+        }
+        if (this.selectedChannels.length === 0) {
+            this.showToast('Validation Error', 'Please select at least one Channel', 'error');
+            return;
+        }
+        if (this.selectedRoles.length === 0) {
+            this.showToast('Validation Error', 'Please select at least one Applicable Role', 'error');
+            return;
+        }
+
+        try {
+            const mappingReq = {
+                Id: this.recordId,
+                FEC_Additional_Field__c: this.formData.additionalField,
+                FEC_Section__c: this.formData.section || null,
+                FEC_Channel__c: this.selectedChannels.join(', '),
+                FEC_Applicable_Role__c: this.selectedRoles.join(', '),
+                FEC_Field_Order_Display__c: this.displayOrder || 0,
+                FEC_Field_Status__c: this.formData.fieldStatus,
+                FEC_Field_ReadOnly__c: this.formData.fieldReadOnly,
+                FEC_Field_Mandatory__c: this.formData.fieldMandatory,
+                FEC_Nature_Of_Case__c: this.natureOfCaseId,
+                FEC_Stage_Name__c: this.stageId
+            };
+
+            showLog('[handleSubmitEdit] Mapping Request:', mappingReq);
+
+            saveMasterDataSetting({ mappingReq })
+                .then(() => {
+                    this.showToast('Success', 'Master Data Setting updated successfully', 'success');
+                    this.dispatchEvent(new CustomEvent('success', {
+                        detail: { id: this.recordId },
+                        bubbles: true,
+                        composed: true
+                    }));
+                })
+                .catch(error => {
+                    let errorMessage = 'An error occurred while saving';
+                    if (error && error.body && error.body.message) {
+                        errorMessage = error.body.message;
+                    } else if (error && error.message) {
+                        errorMessage = error.message;
+                    }
+                    showLog('[handleSubmitEdit] Error:', error);
+                    this.showToast('Error', errorMessage, 'error');
+                });
+        } catch (error) {
+            console.error('Error in handleSubmitEdit:', error);
+            this.showToast('Error', 'An unexpected error occurred', 'error');
+        }
     }
 
     handleCancel() {
@@ -134,7 +359,33 @@ export default class FecMasterDataSettingForm extends LightningElement {
     }
 
     handleError(event) {
-        // Simple error handling
-        console.error('Form error', event.detail);
+        try {
+            let errorMessage = 'An error occurred while saving';
+
+            // Try to extract error message from event detail
+            if (event && event.detail) {
+                if (event.detail.output && event.detail.output.errors && Array.isArray(event.detail.output.errors) && event.detail.output.errors.length > 0) {
+                    errorMessage = event.detail.output.errors[0].message || errorMessage;
+                } else if (event.detail.message) {
+                    errorMessage = event.detail.message;
+                }
+            }
+
+            this.showToast('Error', errorMessage, 'error');
+            console.error('Form error details:', event.detail);
+        } catch (error) {
+            console.error('Error in handleError method:', error);
+            this.showToast('Error', 'An unexpected error occurred while saving', 'error');
+        }
+    }
+
+    showToast(title, message, variant) {
+        this.dispatchEvent(
+            new ShowToastEvent({
+                title,
+                message,
+                variant
+            })
+        );
     }
 }
