@@ -1,3 +1,5 @@
+import { getFocusedTabInfo, setTabLabel, setTabIcon } from 'lightning/platformWorkspaceApi';
+
 const formatDate = (curr) => {
   if (!curr) {
     return null;
@@ -102,4 +104,31 @@ const maskValue = (value, showFull) => {
   return v;
 }
 
-export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue };
+/* =========================
+ * CONSOLE TAB HELPER
+ * ========================= */
+/**
+ * Set Console Tab Label & Icon
+ * @param {string} label
+ * @param {string} icon (vd: 'standard:case')
+ */
+const setConsoleTab = async (label, icon) => {
+  try {
+    const tabInfo = await getFocusedTabInfo();
+    const { tabId } = tabInfo;
+
+    if (label) {
+      await setTabLabel(tabId, label);
+    }
+
+    if (icon) {
+      await setTabIcon(tabId, icon, {
+        iconAlt: label || "Tab",
+      });
+    }
+  } catch (e) {
+   console.error(e);
+  }
+};
+
+export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue, setConsoleTab};

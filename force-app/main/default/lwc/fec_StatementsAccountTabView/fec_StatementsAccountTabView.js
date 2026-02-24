@@ -14,6 +14,7 @@
 import { LightningElement, wire, track } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 import { NavigationMixin } from 'lightning/navigation';
+import { setConsoleTab } from 'c/fec_CommonUtils';
 
 import loadStatementDetails from '@salesforce/apex/FEC_StatementsAccountController.loadStatementDetails';
 import getBilledTransactions from '@salesforce/apex/FEC_StatementsAccountController.getBilledTransactions';
@@ -103,6 +104,11 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
         } finally {
             this.isLoading = false;
         }
+    }
+
+    /* ================= SET TABNAME ================= */
+    connectedCallback() {
+        setConsoleTab('Statements Detail', 'standard:record');
     }
 
     // ==============================
