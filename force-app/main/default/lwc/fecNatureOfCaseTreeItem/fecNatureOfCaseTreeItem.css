@@ -3,86 +3,180 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 14px; /* Kích thước phù hợp với chiều cao dòng */
+    width: 14px;
     height: 14px;
-    border: 1px solid #97a2dd; /* Viền xám nhạt như trong hình */
-    border-radius: 1px;       /* Góc vuông */
-    background-color: #f3f3f3; /* Nền xám nhạt */
+    border: 1px solid #97a2dd;
+    border-radius: 1px;
+    background-color: #f3f3f3;
 }
 
 /* Ẩn viền và nền của nút button gốc của Salesforce */
 .custom-toggle-button {
     border: none;
     background-color: transparent;
-    padding: 0; /* Loại bỏ padding mặc định nếu có */
+    padding: 0;
 }
 
+/* Status icons với màu sắc khác nhau */
 .red-record-icon {
-    /* Sử dụng hook chính xác và thêm !important */
     --slds-c-icon-color-foreground-default: #e47f7f !important; 
     --lwc-colorTextIconDefault: #e47f7f !important;
 }
+
 .blue-record-icon {
-    /* Sử dụng hook chính xác và thêm !important */
     --slds-c-icon-color-foreground-default: #65cd76 !important; 
     --lwc-colorTextIconDefault: #65cd76 !important;
 }
+
 .yellow-record-icon {
-    /* Sử dụng hook chính xác và thêm !important */
     --slds-c-icon-color-foreground-default: #f7f311e1 !important; 
     --lwc-colorTextIconDefault: #d6da14 !important;
 }
-/* Giữ nguyên các class cũ của bạn... */
-.custom-square-icon {
-    width: 14px; 
-    height: 14px;
-    /* ... các style cũ */
-}
 
-/* THÊM MỚI: Khoảng trắng giữ chỗ */
+/* Khoảng trắng giữ chỗ cho nodes không có children */
 .toggle-placeholder {
-    width: 14px;  /* Bằng đúng chiều rộng của .custom-square-icon */
-    height: 14px; /* Bằng đúng chiều cao của .custom-square-icon */
-    display: inline-block; /* Để nó chiếm không gian trên cùng một dòng */
-    flex-shrink: 0; /* Đảm bảo không bị bóp méo khi dòng quá dài */
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    flex-shrink: 0;
 }
 
-/* Đảm bảo nút button và placeholder có cùng lề phải */
+/* Margin cho button và placeholder */
 .slds-m-right_x-small {
-    margin-right: 0.5rem; /* Khoảng cách tiêu chuẩn của SLDS */
+    margin-right: 0.5rem;
 }
 
+/* Styling cho node được chọn */
 .node-selected {
-    background-color: #e0f0ff !important; /* Màu xanh nhạt khi chọn */
-    border-left: 4px solid #0070d2 !important; /* Vạch xanh bên trái */
+    background-color: #e0f0ff !important;
+    border-left: 4px solid #0070d2 !important;
     font-weight: bold;
+}
+
+/* Tree item positioning và styling */
+.slds-tree__item {
+    position: relative;
+}
+
+.slds-tree__item > div {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    position: relative;
 }
 
 .slds-tree__item:hover {
     background-color: #f3f3f3;
+    cursor: pointer;
 }
 
-.custom-btn-small {
-    padding: 0 8px !important;
-    line-height: 1.5 !important;
-    height: 22px !important;
-    font-size: 11px !important;
-}
-
-.slds-button-group {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.slds-tree__item > div:hover {
+    background-color: #f7f9fb;
     border-radius: 4px;
+    transition: background-color 0.15s ease;
 }
 
+.slds-tree__item-label {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Action buttons styling */
+.custom-btn-small {
+    padding: 6px 12px !important;
+    line-height: 1.4 !important;
+    height: 28px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    border-radius: 4px !important;
+    transition: all 0.15s ease-in-out !important;
+    margin-bottom: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100%;
+}
+
+.custom-btn-small:last-child {
+    margin-bottom: 0 !important;
+}
+
+.custom-btn-small:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.12) !important;
+}
+
+/* Brand button (Add Child) */
+.slds-button_brand.custom-btn-small {
+    background-color: #0176d3 !important;
+    border-color: #0176d3 !important;
+    color: #ffffff !important;
+}
+
+.slds-button_brand.custom-btn-small:hover {
+    background-color: #014486 !important;
+    border-color: #014486 !important;
+}
+
+/* Destructive button (Delete) */
+.slds-button_destructive.custom-btn-small {
+    background-color: #ea001e !important;
+    border-color: #ea001e !important;
+    color: #ffffff !important;
+}
+
+.slds-button_destructive.custom-btn-small:hover {
+    background-color: #ba0517 !important;
+    border-color: #ba0517 !important;
+}
+
+/* Action box container */
 .vertical-action-group {
     display: flex;
     flex-direction: column;
+    gap: 0;
+    min-width: 120px;
 }
 
 .action-box {
-    border: 1px solid #e0e0e0;
+    border: 1px solid #d8dde6;
     border-radius: 6px;
-    background: #fafbfc;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-    padding: 8px 6px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 8px;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    margin-top: 4px;
+    z-index: 1000;
+    animation: slideDown 0.2s ease-out;
+}
+
+/* Fade in animation cho action box */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Slide down animation cho dropdown */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Icon trong button */
+.custom-btn-small lightning-icon {
+    margin-right: 4px !important;
 }

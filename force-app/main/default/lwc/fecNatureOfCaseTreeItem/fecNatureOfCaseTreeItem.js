@@ -2,7 +2,7 @@ import { showLog } from 'c/fecMDMUtils';
 import { LightningElement, api, track } from 'lwc';
 import LABEL_BUTTON_ADD_CHILD from '@salesforce/label/c.FEC_Button_Add_Child';
 import LABEL_BUTTON_DELETE from '@salesforce/label/c.FEC_Button_Delete';
-import { ICON_TOGGLE_ADD, ICON_TOGGLE_DASH, STATUS_CLASS_BLUE, STATUS_CLASS_RED, STATUS_CLASS_YELLOW, ITEM_CLASS_BASE, ICON_BASE_CLASS, NODE_SELECTED_CLASS, STATUS_VALUE_NEW, STATUS_VALUE_UPDATE } from 'c/fecConstants';
+import { ICON_TOGGLE_ADD, ICON_TOGGLE_DASH, STATUS_CLASS_BLUE, STATUS_CLASS_RED, STATUS_CLASS_YELLOW, ITEM_CLASS_BASE, ICON_BASE_CLASS, NODE_SELECTED_CLASS, STATUS_VALUE_NEW, STATUS_VALUE_UPDATE, PREFIX_SC } from 'c/fecConstants';
 import { DISPLAY_FIELD_ALIAS } from 'c/fecConstants';
 
 export default class FecNatureOfCaseTreeItem extends LightningElement {
@@ -214,6 +214,14 @@ export default class FecNatureOfCaseTreeItem extends LightningElement {
         return this.item && this.item.ChangeStatus === 'New';
     }
 
+    get canAddChild() {
+        // Không cho phép Add Child nếu node là Sub Code (SCODE)
+        if (!this.item || !this.item.name) return false;
+        
+        const prefix = this.item.name.split('_')[0];
+        return prefix !== PREFIX_SC;
+    }
+
     handleDeleteNode(event) {
         event.stopPropagation();
         this.dispatchEvent(new CustomEvent('nodedelete', {
@@ -225,5 +233,9 @@ export default class FecNatureOfCaseTreeItem extends LightningElement {
             bubbles: true,
             composed: true
         }));
+    }
+
+    get isSubCode() {
+        return this.item && this.item.Name && this.item.Name.startsWith(PREFIX_SC);
     }
 }

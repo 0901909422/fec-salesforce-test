@@ -124,12 +124,11 @@ public with sharing class FEC_IntegrationMappingController{
     @AuraEnabled
     public static SaveResultDTO saveIntegrationMapping(String payloadJson) {  
         FEC_FraudConstantCommon.IntegrationMappingField caseField = new FEC_FraudConstantCommon.IntegrationMappingField();
-        FEC_FraudConstantCommon.IntegrationMappingStatus caseFieldStatus = new FEC_FraudConstantCommon.IntegrationMappingStatus();
-        
+          
         SaveResultDTO result = new SaveResultDTO();
         result.success = false;
     
-        String processChangeStatus = caseFieldStatus.NEW_STATUS;
+        String processChangeStatus = FEC_FraudConstantCommon.NEW_STATUS;
     
         try {
             /* ================= VALIDATE PAYLOAD ================= */
@@ -195,7 +194,10 @@ public with sharing class FEC_IntegrationMappingController{
             mapping.FEC_Int_Category_Id__c     = (String) header.get(caseField.SOURCE_TYPE_CATEGORY);
             mapping.FEC_Int_Sub_Category_Id__c = (String) header.get(caseField.SOURCE_TYPE_SUBCATEGORY);
             mapping.FEC_Int_Sub_Code_Id__c     = (String) header.get(caseField.SOURCE_TYPE_SUBCODE);
-    
+            
+            System.debug('### Before upsert mapping ###');
+            System.debug('Mapping fields: ' + mapping);
+
             upsert mapping;
     
             /* ================= DELETE OLD CHILDREN (UPDATE) ================= */

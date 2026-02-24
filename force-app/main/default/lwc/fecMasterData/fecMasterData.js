@@ -10,7 +10,6 @@ export default class FecMasterData extends LightningElement {
     handleItemSelect(event) {
         if (event.detail && event.detail.name) {
             this.selectedItem = event.detail; // object chứa id, type, name, label,...
-            showLog('MasterData nhận item từ Tree:', this.selectedItem);
         } else {
             // Reset to default if no valid item selected
             this.selectedItem = {};
