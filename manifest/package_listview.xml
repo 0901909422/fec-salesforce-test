@@ -76,11 +76,20 @@
     </types>
     <types>
 		<members>FEC_GetNextWorkController</members>
+		<members>FEC_ConstantCommon</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
 		<members>fec_GetNextWork</members>
 		<name>LightningComponentBundle</name>
+	</types>
+    <types>
+		<members>Case.Get_next_work</members>
+		<name>WebLink</name>
+	</types>
+    <types>
+		<members>Case</members>
+		<name>CustomObject</name>
 	</types>
     <version>65.0</version>
 </Package>
