@@ -424,7 +424,7 @@ public with sharing class FEC_CommonUltils {
 
   public static void createProcessActionHistory(
     String name,
-    String stage,
+    Case selectedCase,
     Boolean isSuccess
   ) {
     List<User> userlst = [
@@ -439,10 +439,11 @@ public with sharing class FEC_CommonUltils {
 
     FEC_Process_Action_History__c action = new FEC_Process_Action_History__c(
       Name = name,
-      FEC_Stage_Name__c = stage,
+      FEC_Stage_Name__c = selectedCase.FEC_Current_Case_Stage__r?.Name,
       FEC_Action_Result__c = isSuccess ? 'Success' : 'Fail',
       FEC_User__c = userlst.get(0).Email.split('@')[0],
-      FEC_User_Role__c = userlst.get(0).UserRole.Name
+      FEC_User_Role__c = userlst.get(0).UserRole.Name,
+      Case__c = selectedCase.Id
     );
 
     insert action;

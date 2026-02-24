@@ -15,6 +15,7 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
+    public static final String CASE_INTERNAL_RECORD_TYPE_DEV_NAME = 'Internal_Case';
 
     public static final String CHANNEL_INBOUND_API = 'InboundRinging';
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
@@ -94,4 +95,8 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER = 'Non-existing';
     public static final String CUSTOMER_HISTORY_EXISTING_CUSTOMER = 'Existing';
+
+    public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
+    public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
+
 }
