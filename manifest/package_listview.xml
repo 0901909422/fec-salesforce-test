@@ -74,5 +74,13 @@
         <members>Case.FEC_Internal_Audit_Case</members>
         <name>ListView</name>
     </types>
+    <types>
+		<members>FEC_GetNextWorkController</members>
+		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>fec_GetNextWork</members>
+		<name>LightningComponentBundle</name>
+	</types>
     <version>65.0</version>
 </Package>
