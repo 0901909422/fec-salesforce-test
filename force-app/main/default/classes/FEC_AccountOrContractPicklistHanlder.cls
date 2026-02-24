@@ -12,12 +12,12 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
         
         
         if (String.isBlank(cifNumber)) {
-            throw new AuraHandledException('CIF number is required');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
         }
         
         List<GetProductsListResponse> results = new List<GetProductsListResponse>();
         FEC_GetProductListCallout.CIF_GetProductsListResponse res =
-            FEC_GetProductListCallout.callService(cif);
+            FEC_GetProductListCallout.callService(cifNumber);
         
         // Log tổng quan
         System.debug('=== CODE === ' + res.code);

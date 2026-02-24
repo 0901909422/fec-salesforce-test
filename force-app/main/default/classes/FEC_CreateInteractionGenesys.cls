@@ -103,21 +103,7 @@ public without sharing class FEC_CreateInteractionGenesys {
     @AuraEnabled
     public static InteractionResult createDummyInteraction() {
         try {
-            GenesysRequest request = new GenesysRequest();
-            request.phoneNumber = '1234567890';
-            request.nationalID = '123456789';
-            request.genesysInteractionID =UUID.randomUUID()
-                .toString()
-                .replace('-', '')
-                .substring(0, 20);
-            
-            request.contractNum = 'dummy_contract_num';
-            request.cardAccountNum = 'dummy_card_account_num';
-            request.agentID = 'dummy_id'+Math.random();
-            request.campaignName = 'dummy_campaign_name';
-            request.type = 'OutboundEstablished';
-            request.method = 'Auto';
-            InteractionResult result = createInteraction(request);
+            InteractionResult result = FEC_GenesysCreateDummyInteraction.createDummyInteraction();
             return result;
         } catch (Exception e) {
             System.debug('Error creating dummy interaction: ' + e.getMessage());

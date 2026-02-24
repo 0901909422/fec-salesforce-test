@@ -11,6 +11,7 @@
 		<members>FEC_AccountOrContractPicklistHanlder</members>
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
+		<members>FEC_GenesysCreateDummyInteraction</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -20,7 +21,7 @@
 		<members>fec_Spinner</members>
 		<members>maskedToggleCell</members>
 		<members>maskedToggleDatatable</members>
-
+		<members>fecRelevantCaseCard</members>
 		<members>fecInteractionCreationHighlight</members>
 		<members>fecInteractionInfo</members>
 		<members>fecRelevantInteractionCard</members>
@@ -109,6 +110,7 @@
 	</types>
     <types>
 		<members>FEC_API_Config.FEC_Get_Customer_List</members>
+		<members>FEC_API_Config.FEC_Get_Product_List</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -140,9 +142,7 @@
 	</types>
 	<types>
 		<members>FEC_Service_UtilityBar</members>
-		<members>FEC_Customer_Case_Record_Page</members>
         <members>FEC_Interaction_Case_Record_Page</members>
-		<members>Assignment_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
