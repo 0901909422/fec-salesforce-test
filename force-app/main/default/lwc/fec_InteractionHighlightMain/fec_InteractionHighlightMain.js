@@ -21,12 +21,32 @@ import {
   MessageContext,
 } from "lightning/messageService";
 
+import FEC_INTERACTION_ID_LABEL from "@salesforce/label/c.FEC_Interaction_ID";
+import FEC_INTERACTION_STATUS_LABEL from "@salesforce/label/c.FEC_Interaction_Status_Label";
+import FEC_INTERACTION_DURATION_LABEL from "@salesforce/label/c.FEC_Interaction_Duration_Label";
+import FEC_LAST_UPDATED_BY_LABEL from "@salesforce/label/c.FEC_Last_Updated_By_Label";
+import FEC_LAST_UPDATED_ON_LABEL from "@salesforce/label/c.FEC_Last_Updated_On_Label";
+import FEC_EXECUTE_LABEL from "@salesforce/label/c.FEC_Execute_Label";
+import FEC_CREATE_CASE_BTN_LABEL from "@salesforce/label/c.FEC_Create_Case_Btn_Label";
+import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
+
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import CUSTOMER_TYPE from "@salesforce/schema/Case.FEC_Customer_Type__c";
 
 export default class Fec_InteractionHighlightMain extends NavigationMixin(
   LightningElement,
 ) {
+  labels = {
+    interactionId: FEC_INTERACTION_ID_LABEL,
+    interactionStatus: FEC_INTERACTION_STATUS_LABEL,
+    interactionDuration: FEC_INTERACTION_DURATION_LABEL,
+    lastUpdatedBy: FEC_LAST_UPDATED_BY_LABEL,
+    lastUpdatedOn: FEC_LAST_UPDATED_ON_LABEL,
+    execute: FEC_EXECUTE_LABEL,
+    createCase: FEC_CREATE_CASE_BTN_LABEL,
+    wrapUp: FEC_WRAP_UP_BTN_LABEL,
+  };
+
   @wire(MessageContext)
   messageContext;
   @track interactionRecordId;
