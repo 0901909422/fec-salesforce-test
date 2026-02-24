@@ -15,7 +15,7 @@
       >
         <div class="error" if:true={section.hasError}>
           <p>{section.error.label}</p>
-          <p>{customLabel.reasonLabel}:</p>
+          <p>Lý do:</p>
           <template for:each={section.error.errorPanellst} for:item="item">
             <p key={item.id}>{item.value}</p>
           </template>
@@ -31,6 +31,7 @@
                   key={obj.id}
                   object-api-name={obj.name}
                   onsuccess={handleSuccess}
+                  onerror={handleFormError}
                   record-id={obj.id}
                 >
                   <div class="slds-grid slds-wrap">
@@ -39,16 +40,16 @@
                       <div
                         key={field.apiName}
                         if:false={field.isHidden}
-                        class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+                        class={field.className}
                       >
                         <!-- editable -->
                         <div
                           if:true={field.editable}
-                          class="edit slds-m-around--small slds-p-around--x-small"
+                          class={field.editWrapperClass}
                         >
                           <p class="label">
-                            {field.label}
                             <abbr if:true={field.mandatory} title="*">*</abbr>
+                            {field.label}
                             <lightning-helptext
                               if:true={field.hasHelpText}
                               class="slds-m-left--x-small"
@@ -56,24 +57,90 @@
                             ></lightning-helptext>
                           </p>
 
-                          <lightning-input-field
-                            data-section={section.id}
-                            data-sub={subSection.name}
-                            data-obj-name={obj.name}
-                            data-obj={obj.id}
-                            variant="label-hidden"
-                            field-name={field.apiName}
-                            required={field.mandatory}
-                            onchange={handleChangeInput}
-                            value={field.value}
+                          <template if:true={field.isDate}>
+                            <lightning-input
+                              type="date"
+                              date-style="short"
+                              placeholder="DD/MM/YYYY"
+                              value={field.value}
+                              data-section={section.id}
+                              data-sub={subSection.name}
+                              data-obj-name={obj.name}
+                              data-field={field.apiName}
+                              data-obj={obj.id}
+                              data-field-type="date"
+                              variant="label-hidden"
+                              required={field.mandatory}
+                              onchange={handleChangeInput}
+                            >
+                            </lightning-input>
+                            <lightning-input-field
+                              field-name={field.apiName}
+                              value={field.value}
+                              class="slds-hide"
+                              variant="label-hidden"
+                              data-is-date-field
+                            >
+                            </lightning-input-field>
+                          </template>
+                          <template if:true={field.isPhone}>
+                            <lightning-input
+                              type="tel"
+                              value={field.value}
+                              maxlength="11"
+                              data-section={section.id}
+                              data-sub={subSection.name}
+                              data-obj-name={obj.name}
+                              data-field={field.apiName}
+                              data-obj={obj.id}
+                              data-is-phone-field
+                              variant="label-hidden"
+                              required={field.mandatory}
+                              onchange={handleChangeInput}
+                              onkeydown={handleInputKeydown}
+                              onpaste={handlePaste}
+                            >
+                            </lightning-input>
+                            <lightning-input-field
+                              field-name={field.apiName}
+                              value={field.value}
+                              class="slds-hide"
+                              variant="label-hidden"
+                              data-is-phone-field
+                            >
+                            </lightning-input-field>
+                          </template>
+                          <template if:false={field.isDate}>
+                            <template if:false={field.isPhone}>
+                              <lightning-input-field
+                                data-section={section.id}
+                                data-sub={subSection.name}
+                                data-obj={obj.id}
+                                data-field={field.apiName}
+                                data-obj-name={obj.name}
+                                variant="label-hidden"
+                                field-name={field.apiName}
+                                required={field.mandatory}
+                                onchange={handleChangeInput}
+                                onkeydown={handleInputKeydown}
+                                onpaste={handlePaste}
+                                value={field.value}
+                              >
+                              </lightning-input-field>
+                            </template>
+                          </template>
+                          <div
+                            if:true={field.customError}
+                            class="slds-form-element__help slds-m-top_x-small phone-error"
                           >
-                          </lightning-input-field>
+                            {field.customError}
+                          </div>
                         </div>
 
                         <!-- readonly -->
                         <div
                           if:true={field.readonly}
-                          class="read slds-border--bottom slds-m-around--small slds-p-around--x-small"
+                          class="read slds-border--bottom slds-m-around--x-small"
                         >
                           <p class="label">
                             {field.label}
@@ -84,7 +151,7 @@
                             ></lightning-helptext>
                           </p>
                           <p class="value">
-                            {field.value}
+                            {field.readonlyDisplayValue}
                             <lightning-icon
                               if:true={field.masked}
                               data-section={section.id}
@@ -146,13 +213,13 @@
     <lightning-accordion-section
       if:true={business.hasRoutingAction}
       name="routing-action"
-      label={customLabel.routingActionLabel}
+      label="Routing Action"
     >
-      <div class="slds-grid slds-wrap slds-m-top--small">
-        <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+      <div class="slds-grid slds-wrap">
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-p-around--x-small">
           <lightning-select
             data-id="routing-action"
-            label={customLabel.actionLabel}
+            label="Action"
             value={actionValue}
             options={business.routingActionlst}
             onchange={handleChangeAction}
@@ -167,14 +234,14 @@
           <div
             class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
           >
-            <p class="label">{customLabel.teamLabel}</p>
+            <p class="label">Team</p>
             <p class="value">{business.nextTeam}</p>
           </div>
 
           <div
             class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
           >
-            <p class="label">{customLabel.queueLabel}</p>
+            <p class="label">Queue</p>
             <p class="value">{business.nextQueue.label}</p>
           </div>
         </div>
@@ -186,8 +253,61 @@
           <div
             class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
           >
-            <p class="label">{customLabel.decisionLabel}</p>
+            <p class="label">Decision</p>
             <p class="value">{business.lastUser}</p>
+          </div>
+        </div>
+        <div
+          if:true={showTransfer}
+          class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+        >
+          <div
+            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
+          >
+            <lightning-combobox
+              name="decision"
+              label="Decision"
+              placeholder="Choose Decision"
+              value={decisionValue}
+              onchange={handleChange}
+              options={decisionOptions}
+              required
+            >
+            </lightning-combobox>
+          </div>
+
+          <div
+            if:true={decisionValue}
+            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
+          >
+            <template if:true={isSubDecisionOptionsDisplay}>
+              <lightning-combobox name="sub-decision" label="Sub Decision" placeholder="Choose Sub Decision"
+                value={subDecisionValue} onchange={handleChange} options={subDecisionOptions} required>
+              </lightning-combobox>
+            </template>
+            <template if:false={isSubDecisionOptionsDisplay}>
+              <p>Không tìm thấy giá trị thỏa mãn.</p>
+            </template>
+            
+          </div>
+        </div>
+        <div
+          if:true={showUpdate}
+          class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+        >
+          <div
+            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
+          >
+            <lightning-combobox
+              name="decision"
+              label="Decision"
+              placeholder="Choose Decision"
+              value={decisionValue}
+              onchange={handleChange}
+              options={decisionUpdateOptions}
+              required
+            >
+            </lightning-combobox>
           </div>
         </div>
       </div>
