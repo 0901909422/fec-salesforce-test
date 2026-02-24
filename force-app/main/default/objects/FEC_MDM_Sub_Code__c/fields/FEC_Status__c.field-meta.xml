@@ -3,7 +3,7 @@
     <fullName>FEC_Status__c</fullName>
     <defaultValue>false</defaultValue>
     <externalId>false</externalId>
-    <label>Status</label>
+    <label>FEC_Status</label>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>
