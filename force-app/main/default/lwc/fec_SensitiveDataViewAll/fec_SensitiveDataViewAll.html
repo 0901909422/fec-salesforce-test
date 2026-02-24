@@ -3,7 +3,7 @@
         <!-- ================= HEADER ================= -->
         <div class="header">
             <lightning-icon icon-name="utility:lock" size="small" class="header-icon"></lightning-icon>
-            <span class="header-title">Sensitive Data</span>
+            <span class="header-title">{labels.title}</span>
         </div>
 
         <!-- ================= BODY ================= -->
@@ -24,7 +24,7 @@
 
                 <!-- Page size -->
                 <div class="page-size slds-grid slds-grid_vertical-align-center">
-                    <span class="slds-m-right_x-small">Page size</span>
+                    <span class="slds-m-right_x-small">{labels.pageSizeLabel}</span>
                     <lightning-combobox value={pageSize} options={pageSizeOptions} onchange={handlePageSizeChange}
                         variant="label-hidden">
                     </lightning-combobox>
@@ -47,7 +47,7 @@
 
                 <!-- Go to page -->
                 <div class="go-to-page slds-grid slds-grid_vertical-align-center">
-                    <span class="slds-m-right_x-small">Go to page</span>
+                    <span class="slds-m-right_x-small">{labels.goToPageLabel}</span>
 
                     <lightning-input type="number" value={currentPage} min="1" max={totalPages} variant="label-hidden"
                         class="page-input" onchange={handleGoToPageInput}>
@@ -57,7 +57,7 @@
                         of {totalPages}
                     </span>
 
-                    <lightning-button label="Go" onclick={handleGoToPage} variant="brand">
+                    <lightning-button label={labels.goBtnLabel} onclick={handleGoToPage} variant="brand">
                     </lightning-button>
                 </div>
             </div>

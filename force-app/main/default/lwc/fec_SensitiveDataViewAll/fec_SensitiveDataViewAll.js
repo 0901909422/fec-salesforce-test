@@ -24,7 +24,12 @@ export default class Fec_SensitiveDataViewAll extends LightningElement {
   /* ============== API ============== */
   @api pageSize = 10;
   columns = COLUMNS;
-
+  labels = {
+    title: "Sensitive Data",
+    pageSizeLabel: "Records per page",
+    goToPageLabel: "Go to page",
+    goBtnLabel: "Go",
+  };
   /* ============== STATE ============== */
   recordId;
   listSensitiveData = [];
@@ -85,7 +90,7 @@ export default class Fec_SensitiveDataViewAll extends LightningElement {
 
   get hasRecords() {
     return this.totalRecords > 0;
-  } 
+  }
   get totalPages() {
     return Math.max(1, Math.ceil(this.totalRecords / this.pageSize));
   }
