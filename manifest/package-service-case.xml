@@ -7,6 +7,8 @@
 		<members>FEC_CaseBusinessService</members>
 		<members>FEC_CommonUltils</members>
 		<members>FEC_ConstantCommon</members>
+		<members>FEC_UpdateCustomerBasicInfo</members>
+		<members>FEC_UpdateCustomerContact</members>
 		<name>ApexClass</name>
 	</types>
     <types>
