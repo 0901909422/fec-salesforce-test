@@ -33,7 +33,33 @@ export default class Fec_CommonDetailViewailView extends LightningElement {
         return this._sections;
     }
     set sections(value) {
-        this._sections = value || [];
+        this._sections = (value || []).map(sec => {
+
+            const resolvedColumns = sec.columns ?? this.columns;
+
+            return {
+                ...sec,
+                fieldColClass: this.getFieldColClassByColumns(resolvedColumns),
+                fields: (sec.fields || []).map((field, index) => {
+
+                    if (field === '' || field?.isEmpty) {
+                        return {
+                            isEmpty: true,
+                            fieldName: `empty-${index}`,
+                            rowClass:
+                                'slds-grid slds-p-vertical_x-small slds-grid_vertical-align-center'
+                        };
+                    }
+
+                    return {
+                        ...field,
+                        rowClass:
+                            'slds-grid slds-border_bottom slds-p-vertical_x-small slds-grid_vertical-align-center'
+                    };
+                })
+            };
+        });
+
         this.activeSections = this._sections.map(sec => sec.name);
     }
 
@@ -75,17 +101,6 @@ export default class Fec_CommonDetailViewailView extends LightningElement {
         }
     }
     
-    set sections(value) {
-        this._sections = (value || []).map(sec => ({
-            ...sec,
-            fieldColClass: this.getFieldColClassByColumns(
-                sec.columns ?? this.columns
-            )
-        }));
-
-        this.activeSections = this._sections.map(sec => sec.name);
-    }
-
     /* ================= EVENTS ================= */
     handleToggle(event) {
         event.stopPropagation();
