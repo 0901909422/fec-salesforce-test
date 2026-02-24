@@ -97,6 +97,7 @@
 	</types>
     <types>
 		<members>RD_IT_User_Interaction_Case_Service_Case</members>
+		<members>RD_IT_User_System_Management</members>
 		<name>PermissionSet</name>
 	</types>
     <version>65.0</version>
