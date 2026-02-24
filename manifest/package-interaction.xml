@@ -19,6 +19,7 @@
 		<members>FEC_InteractionSLAController</members>
 		<members>FEC_CreateCaseInteractionController</members>
 		<members>FEC_CaseService</members>
+		<members>FEC_InteractionHighlightController</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -43,6 +44,7 @@
 		<members>fec_CreateCaseNonExistingCustomer</members>
 		<members>fec_InteractionSLA</members>
 		<members>fec_InteractionCreateCase</members>
+		<members>fec_ErrorPanel</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
