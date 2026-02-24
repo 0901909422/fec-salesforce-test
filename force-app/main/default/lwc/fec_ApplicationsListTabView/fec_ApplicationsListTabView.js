@@ -1,12 +1,22 @@
+/****************************************************************************************
+ * File Name    : Fec_ApplicationsListTabView.js
+ * Author       : Quangdv7
+ * Date         : 2025-02-13
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-02-13    Quangdv7             Create
+ 
+****************************************************************************************/
+
 import { LightningElement, track, wire } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
+import { formatDateVNI, maskValue,setConsoleTab } from 'c/fec_CommonUtils';
 
-import loadApplicationDetail
-    from '@salesforce/apex/FEC_ApplicationsListController.loadApplicationDetail';
-
-import logSensitiveFromMainInfo
-    from '@salesforce/apex/FEC_ApplicationsListController.logSensitiveFromMainInfo';
-
+import loadApplicationDetail from '@salesforce/apex/FEC_ApplicationsListController.loadApplicationDetail';
+import logSensitiveFromMainInfo from '@salesforce/apex/FEC_ApplicationsListController.logSensitiveFromMainInfo';
 export default class Fec_ApplicationsListTabView extends LightningElement {
 
     /* ================= STATE ================= */
@@ -38,7 +48,8 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
     salesFields = [
         { label: 'CC Code', fieldName: 'ccCode', fieldApiName: 'fec_cc_code__c' },
         { label: 'DSA Code', fieldName: 'dSACode', fieldApiName: 'fec_dsa_code__c' },
-        { label: 'TSA Code', fieldName: 'tSACode', fieldApiName: 'fec_tsa_code__c'},
+        { label: 'TSA Code', fieldName: 'tSACode', fieldApiName: 'fec_tsa_code__c'}, 
+        { isSpacer: true },
         { label: 'CC Name', fieldName: 'ccName', fieldApiName: 'fec_cc_name__c' },
         { label: 'DSA Name', fieldName: 'dSAName', fieldApiName: 'fec_dsa_name__c' },
         { label: 'TSA Name', fieldName: 'tSAName', fieldApiName: 'fec_tsa_name__c' }
@@ -77,6 +88,11 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
             });
     }
 
+    /* ================= SET TABNAME ================= */
+    connectedCallback() {
+        setConsoleTab('ApplicationsList Detail', 'standard:record');
+    }
+
     /* ================= SECTIONS ================= */
 
     get sections() {
@@ -91,7 +107,6 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
             {
                 name: 'sales',
                 label: 'Sales',
-                columns: 3,
                 fields: this.buildFields(this.salesFields)
             }
         ];
@@ -101,37 +116,43 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
     buildFields(configs) {
         if (!this.record) return [];
 
-        return configs.map(cfg => {
+        return configs.map((cfg, index) => {
+
+            if (cfg.isSpacer) {
+                return {
+                    fieldName: `empty-${index}`,
+                    isEmpty: true
+                };
+            }
+
             const rawValue = this.record?.[cfg.fieldName];
 
-            let value =
-                rawValue === null || rawValue === undefined
-                    ? '-'
-                    : rawValue;
+            let value;
+
+            if (rawValue === '') {
+                value = '';
+            } else if (rawValue === null || rawValue === undefined) {
+                value = '-';
+            } else {
+                value = rawValue;
+            }
 
             if (cfg.fieldName === 'updateDate' && value !== '-' && value !== '') {
-                value = this.formatDateDDMMYYYY(value);
+                value = formatDateVNI(value);
             }
 
             let iconName;
 
             if (cfg.toggle === true && value && value !== '-') {
+
                 if (cfg.fieldName === 'nationalPassportID') {
-                    value = this.showNationalID
-                        ? value
-                        : this.maskValue(value);
-                    iconName = this.showNationalID
-                        ? 'utility:preview'
-                        : 'utility:hide';
+                    value = this.showNationalID ? value : maskValue(value);
+                    iconName = this.showNationalID ? 'utility:preview' : 'utility:hide';
                 }
 
                 if (cfg.fieldName === 'registrationPhone') {
-                    value = this.showPhone
-                        ? value
-                        : this.maskValue(value);
-                    iconName = this.showPhone
-                        ? 'utility:preview'
-                        : 'utility:hide';
+                    value = this.showPhone ? value : maskValue(value);
+                    iconName = this.showPhone ? 'utility:preview' : 'utility:hide';
                 }
             }
 
@@ -142,42 +163,17 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
 
             return {
                 label: cfg.label,
-                value,               
+                value,
                 fieldName: cfg.fieldName,
-
                 toggle: cfg.toggle === true,
                 iconName,
-
                 helpText,
-                hasHelpText: !!helpText
+                hasHelpText: !!helpText,
+                isEmpty: false
             };
         });
     }
-
-
-    /* ================= TOGGLE HANDLER ================= */
-
-    handleToggle(event) {
-        const { fieldName, sectionName } = event.detail;
-
-        // ===== NATIONAL ID =====
-        if (fieldName === 'nationalPassportID') {
-            this.showNationalID = !this.showNationalID;
-            if (this.showNationalID) {
-                this.logSensitive(sectionName, 'National / Passport ID');
-            }
-            return;
-        }
-
-        // ===== PHONE =====
-        if (fieldName === 'registrationPhone') {
-            this.showPhone = !this.showPhone;
-            if (this.showPhone) {
-                this.logSensitive(sectionName, 'Registration Phone');
-            }
-        }
-    }
-
+    
     /* ================= LOG SENSITIVE ================= */
 
     logSensitive(section, fieldLabel) {
@@ -188,53 +184,5 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
         }).catch(err => {
             console.error('Log sensitive access failed', err);
         });
-    }
-
-    /* ================= MASKING ================= */
-
-    maskValue(value) {
-        if (!value) return '';
-
-        const v = value.toString().trim();
-
-        // Passport (bắt đầu bằng chữ)
-        if (/^[A-Za-z]/.test(v)) {
-            return v.length <= 5
-                ? v
-                : v.substring(0, 2) +
-                '*'.repeat(v.length - 5) +
-                v.slice(-3);
-        }
-
-        // Phone (10 số)
-        if (/^\d{10}$/.test(v)) {
-            return (
-                v.substring(0, 4) +
-                '*'.repeat(v.length - 7) +
-                v.slice(-3)
-            );
-        }
-
-        // CCCD / ID number
-        if (/^\d+$/.test(v)) {
-            return v.length <= 6
-                ? v
-                : v.substring(0, 3) +
-                '*'.repeat(v.length - 6) +
-                v.slice(-3);
-        }
-
-        return v;
-    }
-
-    formatDateDDMMYYYY(value) {
-        if (!value) return '-';
-
-        // Expect yyyy-mm-dd
-        const parts = value.split('-');
-        if (parts.length !== 3) return value;
-
-        const [yyyy, mm, dd] = parts;
-        return `${dd}/${mm}/${yyyy}`;
     }
 }
