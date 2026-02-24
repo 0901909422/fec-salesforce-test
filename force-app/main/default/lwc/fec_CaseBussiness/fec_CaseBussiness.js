@@ -17,6 +17,7 @@ const ACTION_EMAIL_UPDATE = "Email Update";
 const ACTION_FULLNAME_UPDATE = "Full Name Update";
 const ACTION_DOB_UPDATE = "Date of Birth Update";
 const ACTION_GENDER_UPDATE = "Gender Update";
+const OC_001 = "Outbound Campaign - OU01";
 
 const ACTION_ROUTE_TO = "Route to";
 const ACTION_REVERT = "Revert";
@@ -516,6 +517,12 @@ export default class Fec_CaseBussiness extends LightningElement {
         };
         break;
 
+      case OC_001:
+        params = {
+          caseId: this.recordId
+        };
+        break;
+        
       default:
         break;
     }

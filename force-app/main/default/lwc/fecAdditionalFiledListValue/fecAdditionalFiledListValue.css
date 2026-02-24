@@ -1,0 +1,14 @@
+/* Tạo vùng chứa có thanh cuộn cho bảng nếu dữ liệu vượt quá 350px */
+.datatable-container {
+    height: 350px;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    padding-right: 5px;
+}
+
+/* Tùy chỉnh căn lề cho các nút */
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

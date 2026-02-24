@@ -1,0 +1,30 @@
+.flow-control-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #fff;
+}
+
+.scroll-area {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.tech-table {
+    border: 1px solid #dddbda;
+}
+
+.label-cell {
+    background-color: #f3f3f3;
+    color: #3e3e3c;
+    font-weight: 600;
+}
+
+.value-cell {
+    color: #0176d3; /* Màu xanh Salesforce Tech */
+}
+
+/* Hiệu ứng khi hover vào hàng */
+.tech-table tbody tr:hover td {
+    background-color: #faffbd !important;
+}
