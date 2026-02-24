@@ -63,13 +63,13 @@ public without sharing class FEC_InteractionInforHandler {
     public static String updateInteractionPhone(Id recordId, String phone) {
         
         if (!FEC_CommonUltils.isPhone(phone)) {
-            throw new AuraHandledException(System.Label.FEC_MSG_Phone_Number_Invalid);
+            throw new AuraHandledException('Invalid phone number format');
         }
         
         update new Case(
             Id = recordId,
-            FEC_Phone_Number__c = phone
-        );
+        FEC_Phone_Number__c = phone
+            );
         
         return FEC_CommonUltils.maskPhone(phone);
     }
@@ -297,6 +297,7 @@ public without sharing class FEC_InteractionInforHandler {
                                        FEC_SubCode__r.FEC_Name_VN__c
                                 FROM Case
                                 WHERE FEC_Interaction__c = :recordId
+                                ORDER BY FEC_Case_Created_On__c DESC
                                 LIMIT 5];
             return caseList;
         } catch (Exception e) {
