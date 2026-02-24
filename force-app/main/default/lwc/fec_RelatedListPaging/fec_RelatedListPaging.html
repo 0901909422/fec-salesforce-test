@@ -1,0 +1,230 @@
+<template>
+    <div class="addresses-border-wrapper">
+        <div class="addresses-table-wrapper">
+
+            <!-- ================= HAS DATA ================= -->
+            <template if:true={hasRecords}>
+                <div class="custom-table">
+
+                    <!-- ================= HEADER ================= -->
+                    <div class="table-info">
+                        <div class="table-info-left">
+                            <span class="item-count">{recordCount} item{recordCountPlural}</span>
+                            <template if:true={currentSortedByLabel}>
+                                <span class="sorted-by">• Sorted by {currentSortedByLabel}</span>
+                            </template>
+                            <template if:false={hideUpdatedTime}>
+                                <template if:true={updatedTimeLabel}>
+                                    <span class="sorted-by">• {updatedTimeLabel}</span>
+                                </template>
+                            </template>
+                        </div>
+
+                        <template if:true={showRefresh}>
+                            <div class="table-info-right">
+                                <button class="refresh-btn" onclick={handleRefresh}>
+                                    Refresh
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- ================= TABLE ================= -->
+                    <div class="table-container">
+                        <table class="address-table">
+                            <thead>
+                                <tr>
+                                    <template if:false={hideRowNumber}>
+                                        <th class="col-number"></th>
+                                    </template>
+                                    <template for:each={columnsWithSort} for:item="col">
+
+                                        <th key={col.fieldName}
+                                            data-field={col.fieldName}
+                                            onclick={handleSort}
+                                            class="sortable-header {col.headerClass}"
+                                            style={col.headerStyle}>
+                                            <div class="header-content">
+                                                <span>{col.label}</span>
+                                                <lightning-icon
+                                                    icon-name={col.iconName}
+                                                    size="xx-small"
+                                                    class={col.iconClass}>
+                                                </lightning-icon>
+                                            </div>
+                                        </th>
+                                    </template>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <template for:each={displayRecords} for:item="row">
+                                    <tr key={row.id}>
+                                        <template if:false={hideRowNumber}>
+                                            <td class="col-number">{row.rowNumber}</td>
+                                        </template>
+
+                                        <template for:each={row.cells} for:item="cell">
+                                            <td key={cell.key} 
+                                            class={cell.cellClass}
+                                            style={cell.cellStyle}>
+
+                                                <!-- RICH TEXT -->
+                                                <template if:true={cell.isHtml}>
+                                                    <span lwc:dom="manual" data-value={cell.value}></span>
+                                                </template>
+
+                                                <!-- LINK -->
+                                                <template if:true={cell.isLink}>
+                                                    <div class="hover-wrapper" data-row-id={row.id}
+                                                        data-field={cell.fieldName}
+                                                        onmouseenter={handleMouseEnter}
+                                                        onmouseleave={handleMouseLeave}>
+
+                                                        <button class="slds-button slds-button_reset slds-text-link"
+                                                            data-record-id={cell.recordId} 
+                                                            onclick={handleLinkClick}>
+                                                            {cell.label}
+                                                        </button>
+
+                                                        <template if:true={cell.showHover}>
+                                                            <section class="hover-popover">
+
+                                                                <!-- Hover header -->
+                                                                <template if:true={cell.hoverTitle}>
+                                                                    <div class="hover-header">
+                                                                        {cell.hoverTitle}
+                                                                    </div>
+                                                                </template>
+
+                                                                <!-- Hover body -->
+                                                                <div class="hover-body">
+
+                                                                    <template
+                                                                        for:each={cell.hoverItems}
+                                                                        for:item="section"
+                                                                    >
+                                                                        <div
+                                                                            key={section.section}
+                                                                            class="hover-section"
+                                                                        >
+
+                                                                            <!-- Section title (hidden when same as popup header to avoid duplicate) -->
+                                                                            <template if:true={section.showSectionTitle}>
+                                                                                <div class="hover-section-title">
+                                                                                    {section.section}
+                                                                                </div>
+                                                                            </template>
+
+                                                                            <!-- Section grid -->
+                                                                            <div class="hover-body two-column">
+                                                                                <template
+                                                                                    for:each={section.items}
+                                                                                    for:item="item"
+                                                                                >
+                                                                                    <div
+                                                                                        key={item.label}
+                                                                                        class="hover-row"
+                                                                                    >
+                                                                                        <span class="hover-label">
+                                                                                            {item.label}
+                                                                                        </span>
+                                                                                        <span class="hover-value">
+                                                                                            {item.value}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </template>
+                                                                            </div>
+
+                                                                        </div>
+                                                                    </template>
+
+                                                                </div>
+                                                            </section>
+                                                        </template>
+                                                    </div>
+                                                </template>
+
+                                                <!-- EYE TYPE -->
+                                                <template if:true={cell.isEye}>
+                                                    <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                                                        <span>{cell.value}</span>
+                                                        <lightning-button-icon icon-name={cell.iconName} 
+                                                            variant="bare" size="small" 
+                                                            alternative-text="Toggle"
+                                                            data-row-index={cell.rowIndex} 
+                                                            data-field={cell.fieldName}
+                                                            onclick={handleToggleEye}>
+                                                        </lightning-button-icon>
+                                                    </div>
+                                                </template>
+
+                                                <!-- REGULAR TEXT WITH DYNAMIC CLASS -->
+                                                <template if:false={cell.isLink}>
+                                                    <template if:false={cell.isEye}>
+                                                        <template if:false={cell.isHtml}>
+                                                            <span>{cell.value}</span>
+                                                        </template>
+                                                    </template>
+                                                </template>
+
+                                            </td>
+                                        </template>
+
+                                    </tr>
+                                </template>
+                            </tbody>
+
+                        </table>
+                    </div>
+
+                    <!-- ================= PAGINATION ================= -->
+                    <div class="table-pagination">
+                        <div class="page-size">
+                            <span>Page size</span>
+                            <select class="page-size-select" onchange={handlePageSizeChange}>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="40">40</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+
+                        <div class="pagination-controls">
+                            <button class="page-btn" disabled={isFirstPage} onclick={handlePrevPage}>
+                                <lightning-icon icon-name="utility:chevronleft" size="xx-small">
+                                </lightning-icon>
+                            </button>
+
+                            <button class="page-btn active">
+                                {currentPage}
+                            </button>
+
+                            <button class="page-btn" disabled={isLastPage} onclick={handleNextPage}>
+                                <lightning-icon icon-name="utility:chevronright" size="xx-small">
+                                </lightning-icon>
+                            </button>
+                        </div>
+
+                        <div class="go-to-page">
+                            <span>Go to page</span>
+                            <input type="number" class="page-input" value={currentPage}
+                                onchange={handleGoToPageInput}
+                                min="1"
+                                max={totalPages} />
+                            <span class="page-total">of {totalPages}</span>
+                            <button class="go-btn" onclick={handleGoToPage}>Go</button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ================= NO DATA ================= -->
+            <template if:false={hasRecords}>
+                <div class="no-data">No data</div>
+            </template>
+
+        </div>
+    </div>
+</template>
