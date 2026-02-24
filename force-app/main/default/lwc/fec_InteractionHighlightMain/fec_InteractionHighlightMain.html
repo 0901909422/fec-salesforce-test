@@ -1,5 +1,5 @@
 <template>
-  <!-- <template if:true={hasAccountOrContract}> -->
+  <template if:true={showHighlight}>
     <div class="slds-grid slds-gutters slds-grid_align-stretch">
       <div class="slds-col slds-size_8-of-12">
         <div class="slds-tabs_card full-height">
@@ -36,27 +36,27 @@
           <!-- Header -->
           <div class="slds-page-header slds-page-header_object-home">
             <div class="slds-grid slds-grid_align-spread">
-              <h1 class="slds-page-header__title">{labels.interactionDuration}</h1>
+              <h1 class="slds-page-header__title">Interaction Duration</h1>
               <div>
 
                 <template if:true={isInteractionCase}>
                   <div>
                     <template if:true={isHandling}>
-                      <button class="slds-button slds-button_neutral" onclick={handleWrapUpClick}>{labels.wrapUp}</button>
+                      <button class="slds-button slds-button_neutral" onclick={handleWrapUpClick}>Wrap-up</button>
                     </template>
                     <!-- Chỉ có nút Execute khi ở trạng thái review -->
                     <template if:true={showExecute}>
-                      <button class="slds-button slds-button_neutral" onclick={handleExecute}>{labels.execute}</button>
+                      <button class="slds-button slds-button_neutral" onclick={handleExecute}>Execute</button>
                     </template>
                     <template if:true={isHandling}>
-                      <button class="slds-button slds-button_neutral" onclick={handleCreateCase}>{labels.createCase}</button>
+                      <button class="slds-button slds-button_neutral" onclick={handleCreateCase}>Create Case</button>
                     </template>
                   </div>
                 </template>
                 <template if:false={isInteractionCase}>
                   <div>
-                    <button class="slds-button slds-button_neutral" onclick={handleWrapUpClick}>{labels.wrapUp}</button>
-                    <button class="slds-button slds-button_neutral" onclick={handleCreateCase}>{labels.createCase}</button>
+                    <button class="slds-button slds-button_neutral" onclick={handleWrapUpClick}>Wrap-up</button>
+                    <button class="slds-button slds-button_neutral" onclick={handleCreateCase}>Create Case</button>
                   </div>
                 </template>
               </div>
@@ -73,6 +73,9 @@
         </div>
       </div>
     </div>
-  <!-- </template> -->
-
+  </template>
+  <template if:false={showHighlight}>
+    <div>
+    </div>
+  </template>
 </template>

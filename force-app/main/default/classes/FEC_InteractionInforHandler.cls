@@ -297,6 +297,7 @@ public without sharing class FEC_InteractionInforHandler {
                                        FEC_SubCode__r.FEC_Name_VN__c
                                 FROM Case
                                 WHERE FEC_Interaction__c = :recordId
+                                ORDER BY FEC_Case_Created_On__c DESC
                                 LIMIT 5];
             return caseList;
         } catch (Exception e) {

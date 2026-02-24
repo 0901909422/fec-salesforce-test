@@ -17,6 +17,10 @@ public with sharing class FEC_SearchController {
                 SELECT Id, FEC_Channel__c, FEC_National_ID_Passport_ID__c,
                  FEC_Phone_Number__c, FEC_Contract_Number__c, RecordType.Name,
                  FEC_Skip_Search_Internal_Case__c, FEC_Has_Account_or_Contract__c,
+                 FEC_Search_Account_Number__c, FEC_Search_Application_ID__c,
+                 FEC_Search_Contract_Number__c, FEC_Search_Customer_Number__c,
+                 FEC_Search_Email_Address__c, FEC_Search_National_ID__c,
+                 FEC_Search_Phone_Number__c,
                  (SELECT Id FROM Customer_Histories__r)
                 FROM Case
                 WHERE Id = :caseId
@@ -30,10 +34,10 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
-    public static void createHistory(String value, String fieldName, Id caseId) {
+    public static void createHistory(String value, String fieldName, Id caseId, String searchProducts) {
         // Return early if no value or field name
         if (value == null || value.trim() == '' || fieldName == null || fieldName.trim() == '') {
-            throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
+            throw new AuraHandledException('Value and fieldName must be provided.');
         }
         // Build record
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
@@ -51,17 +55,20 @@ public with sharing class FEC_SearchController {
         rec.Name = value;
         rec.FEC_Case__c = caseId;
 
-        // Insert in USER_MODE as per security best practice
-        Database.SaveResult sr = Database.insert(rec);
-        if (!sr.isSuccess()) {
-            Database.Error err = (sr.getErrors() != null && !sr.getErrors().isEmpty()) ? sr.getErrors()[0] : null;
-            throw new AuraHandledException(err != null ? err.getMessage() : System.Label.FEC_MSG_Create_Customer_History_Error);
-        } else {
+        try {
+            insert rec;
+            String randomCIF = String.valueOf(Math.round(Math.random() * 89999999 + 10000000));
             Case objCase = new Case(
-                Id = caseId,
-                FEC_Account_or_Contract__c = rec.Id
-            );
+                    Id = caseId,
+                    FEC_Account_or_Contract__c = rec.Id,
+                    FEC_Interaction_View_Mode__c = 'handling',
+                    FEC_CIF_Number__c = randomCIF,
+                    FEC_First_Access__c = true,
+                    FEC_Search_Products__c = searchProducts
+                );
             update objCase;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
         }
     }
 
@@ -78,5 +85,36 @@ public with sharing class FEC_SearchController {
         catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
+    }
+
+    /**
+   * @description Checks if the current user has edit access to specific fields on a given SObject.
+   * @param sObjectType The SObject type (e.g., 'Account', 'Custom_Object__c')
+   * @param fieldNames A list of field API names to check
+   * @return Map<String, Boolean> A map where the key is the field name and the value is true if editable.
+   */
+
+    @AuraEnabled(cacheable=true)
+    public static Map<String, Boolean> checkFieldEditPermissions(String sObjectType, List<String> fieldNames) {
+        Map<String, Boolean> fieldPermissions = new Map<String, Boolean>();
+        
+        // Get the describe result for the object
+        SObjectType targetType = Schema.getGlobalDescribe().get(sObjectType);
+        if (targetType == null) {
+            return fieldPermissions; 
+        }
+        
+        Map<String, SObjectField> fieldsMap = targetType.getDescribe().fields.getMap();
+        
+        for (String fieldName : fieldNames) {
+            if (fieldsMap.containsKey(fieldName)) {
+                // Check if the field is updateable by the current user
+                fieldPermissions.put(fieldName, fieldsMap.get(fieldName).getDescribe().isUpdateable());
+            } else {
+                fieldPermissions.put(fieldName, false); // Field doesn't exist or isn't accessible
+            }
+        }
+        
+        return fieldPermissions;
     }
 }

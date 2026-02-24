@@ -154,7 +154,8 @@ public without sharing class FEC_CreateCaseHanlder {
 
         }else if ( dto.type == FEC_ConstantCommon.CHANNEL_OUTBOUND_API ) {
             interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
-            interactionCase.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_SUBCHANNEL_NAME;
+            interactionCase.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.CHAN
+            NEL_OUTBOUND_SUBCHANNEL_NAME;
         }
         interactionCase.FEC_External_Interaction_ID__c = dto.genesysInteractionID;
         interactionCase.Status = 'Open';

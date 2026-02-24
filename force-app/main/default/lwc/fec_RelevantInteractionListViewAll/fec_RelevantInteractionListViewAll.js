@@ -3,8 +3,6 @@ import { CurrentPageReference } from "lightning/navigation";
 import getRelevantInteractionsViewAll from "@salesforce/apex/FEC_InteractionInforHandler.getRelevantInteractionsViewAll";
 import PAGINATION_PAGE_OF from "@salesforce/label/c.Pagination_Page_Of_Label";
 
-import NEXT_BTN from "@salesforce/label/c.FEC_Next_Btn_Label";
-import PREV_BTN from "@salesforce/label/c.FEC_Previous_Btn_Label";
 const COLUMNS = [
   {
     label: "Interaction ID ",
@@ -36,17 +34,19 @@ export default class Fec_RelevantInteractionListViewAll extends LightningElement
   // ===== Datatable =====
   columns = COLUMNS;
   labels = {
-    next: NEXT_BTN,
-    prev: PREV_BTN,
+    title: "View All Relevant Interactions",
+    pageSizeLabel: "Records per page",
+    goToPageLabel: "Go to page",
   };
   // ===== Data =====
   @track data = []; // full data
   @track pagedData = []; // data hiển thị theo page
   recordId;
 
-  // ===== Pagination =====
+  // ===== Pagination state =====
   pageSize = 10;
   currentPage = 1;
+  goToPageValue;
 
   // ===== Page reference =====
   @wire(CurrentPageReference)
@@ -60,21 +60,6 @@ export default class Fec_RelevantInteractionListViewAll extends LightningElement
   }
   // ===== Fetch data =====
 
-  //   FEC_Channel__c
-  // :
-  // "Outbound"
-  // FEC_Created_On__c
-  // :
-  // "2026-01-23T03:34:10.000Z"
-  // FEC_Interaction_ID__c
-  // :
-  // "<a href=\"/500Az00000LJIUz\" target=\"_self\">O-0101</a>"
-  // Id
-  // :
-  // "500Az00000LJIUzIAP"
-  // RecordTypeId
-  // :
-  // "012Az000000ohMjIAI"
   async fetchData() {
     try {
       const result = await getRelevantInteractionsViewAll({
@@ -82,7 +67,7 @@ export default class Fec_RelevantInteractionListViewAll extends LightningElement
       });
       console.log(result);
 
-      const mapped = result.map((c) => ({
+      this.data = result.map((c) => ({
         ...c,
         interactionUrl: `/${c.Id}`,
         interactionIdText: this.getPlainCaseId(c.FEC_Interaction_ID__c),
@@ -92,37 +77,20 @@ export default class Fec_RelevantInteractionListViewAll extends LightningElement
         createdBy: c.FEC_Created_by__c,
       }));
 
-      this.data = mapped;
-      console.log("Fetched data: ", this.data);
-      this.pagedData = this.data.slice(0, this.pageSize);
+      this.currentPage = 1;
+      this.updatePagedData();
     } catch (error) {
       console.error("Error fetching data: ", error);
     }
   }
 
-  // ===== Pagination logic =====
-  updatePagedData() {
-    const start = (this.currentPage - 1) * this.pageSize;
-    const end = start + this.pageSize;
-    this.pagedData = this.data.slice(start, end);
-  }
-
-  handleNext() {
-    if (!this.isLastPage) {
-      this.currentPage++;
-      this.updatePagedData();
-    }
-  }
-
-  handlePrev() {
-    if (!this.isFirstPage) {
-      this.currentPage--;
-      this.updatePagedData();
-    }
+  // ===== Computed Properties =====
+  get totalRecords() {
+    return this.data.length;
   }
 
   get totalPages() {
-    return Math.ceil(this.data.length / this.pageSize);
+    return Math.max(1, Math.ceil(this.totalRecords / this.pageSize));
   }
 
   get isFirstPage() {
@@ -130,13 +98,57 @@ export default class Fec_RelevantInteractionListViewAll extends LightningElement
   }
 
   get isLastPage() {
-    return this.currentPage === this.totalPages;
+    return this.currentPage >= this.totalPages;
   }
-  get pageInfoLabel() {
-    return PAGINATION_PAGE_OF.replace("{0}", this.currentPage).replace(
-      "{1}",
-      this.totalPages,
-    );
+
+  get pageSizeOptions() {
+    return [10, 20, 30, 40, 50].map((size) => ({
+      label: size.toString(),
+      value: size,
+    }));
+  }
+
+  // ===== Core Pagination Logic =====
+  updatePagedData() {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    this.pagedData = this.data.slice(start, end);
+  }
+
+  // ===== Event Handlers =====
+  handleNextPage() {
+    if (!this.isLastPage) {
+      this.currentPage++;
+      this.updatePagedData();
+    }
+  }
+
+  handlePrevPage() {
+    if (!this.isFirstPage) {
+      this.currentPage--;
+      this.updatePagedData();
+    }
+  }
+
+  handlePageSizeChange(event) {
+    this.pageSize = Number(event.detail.value);
+    this.currentPage = 1;
+    this.updatePagedData();
+  }
+
+  handleGoToPageInput(event) {
+    this.goToPageValue = Number(event.target.value);
+  }
+
+  handleGoToPage() {
+    if (
+      this.goToPageValue &&
+      this.goToPageValue >= 1 &&
+      this.goToPageValue <= this.totalPages
+    ) {
+      this.currentPage = this.goToPageValue;
+      this.updatePagedData();
+    }
   }
   // ===== Utils =====
   getPlainCaseId(htmlString) {
