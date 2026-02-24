@@ -200,13 +200,16 @@ public with sharing class FEC_GetIPPDetailsCallout {
         requestNode.addChildElement('AccountNumber', null, null).addTextNode(d.accountNumber);
         requestNode.addChildElement('EffectiveDate', null, null).addTextNode(d.effectiveDate);
         requestNode.addChildElement('Amount', null, null).addTextNode(String.valueOf(d.amount));
-        requestNode.addChildElement('PostingDate', null, null).addTextNode(d.postingDate);
 
         // Optional fields
         addOptionalNode(requestNode, 'PlanNumber', d.planNumber);
         addOptionalNode(requestNode, 'IPPTerm', d.ippTerm);
         addOptionalNode(requestNode, 'ReferenceNumber', d.referenceNumber);
         addOptionalNode(requestNode, 'TransactionPlan', d.transactionPlan);
+
+        // PostingDate
+        requestNode.addChildElement('PostingDate', null, null).addTextNode(d.postingDate);
+
         addOptionalNode(requestNode, 'CardNumber', d.cardNumber);
         addOptionalNode(requestNode, 'CardSeq', d.cardSeq);
         addOptionalNode(requestNode, 'IPPKey', d.ippKey);
