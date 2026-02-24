@@ -15,6 +15,7 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
+    public static final String CASE_INTERNAL_RECORD_TYPE_DEV_NAME = 'Internal_Case';
 
     public static final String CHANNEL_INBOUND_API = 'InboundRinging';
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
