@@ -21,8 +21,7 @@ public with sharing class FEC_InteractionHighlightController {
                     FEC_Category__r.Name,
                     FEC_Complain_Type__c,
                     FEC_SubCategory__r.FEC_Code__c,
-                    FEC_Case_Status__c,
-                    FEC_Case_Created_On__c,
+                    Status,
                     CreatedDate
                 FROM Case
                 WHERE Id = :caseId
@@ -50,8 +49,7 @@ public with sharing class FEC_InteractionHighlightController {
                         FEC_Category__r.Name,
                         FEC_Complain_Type__c,
                         FEC_SubCategory__r.FEC_Code__c,
-                        FEC_Case_Status__c,
-                        FEC_Case_Created_On__c,
+                        Status,
                         CreatedDate
                     FROM Case
                     WHERE Id = :caseRecord.FEC_Interaction__c
@@ -88,7 +86,6 @@ public with sharing class FEC_InteractionHighlightController {
                     customerHistory = histories[0];
                     result.customerName = customerHistory.FEC_Customer_Name__c;
                     result.nationalId = customerHistory.FEC_National_ID_Passport_ID__c;
-                    result.nationalIdMasked = FEC_CommonUltils.maskNationalIdOrPassport(customerHistory.FEC_National_ID_Passport_ID__c);
                     result.gender = customerHistory.FEC_Gender__c;
                     result.dateOfBirth = customerHistory.FEC_Date_of_Birth__c;
                     result.primaryPhone = customerHistory.FEC_Primary_Phone__c;
@@ -101,7 +98,7 @@ public with sharing class FEC_InteractionHighlightController {
             
             return result;
         } catch (Exception e) {
-            throw new AuraHandledException('Error retrieving interaction highlight data: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
     
@@ -109,91 +106,37 @@ public with sharing class FEC_InteractionHighlightController {
         if (isSuspectedFraud(caseRecord)) return 'Suspected Fraud';
         if (isMedia(caseRecord)) return 'Media';
         if (isSeriousComplaint(caseRecord)) return 'Serious Complaint';
-        if (isUnhappy(caseRecord)) return 'Unhappy';
-        if (isVIP(caseRecord)) return 'VIP';
+        if (isVIP(customerHistory)) return 'VIP';
         return 'Neutral';
     }
     
     private static Boolean isSuspectedFraud(Case caseRecord) {
-        if (caseRecord.FEC_Category__r?.Name != 'Complaint') return false;
-        if (caseRecord.FEC_Complain_Type__c != 'Urgent' && caseRecord.FEC_Complain_Type__c != 'High Risk') return false;
         String code = caseRecord.FEC_SubCategory__r?.FEC_Code__c;
         if (code != 'CL01' && code != 'CC01') return false;
-        Date createdDate = getCaseCreatedDate(caseRecord);
-        if (createdDate == null || createdDate < Date.today().addMonths(-6)) return false;
-        return !isExcludedStatus(caseRecord.FEC_Case_Status__c);
+        if (caseRecord.CreatedDate.date() < Date.today().addMonths(-6)) return false;
+        return !isExcludedStatus(caseRecord.Status);
     }
     
     private static Boolean isMedia(Case caseRecord) {
         if (caseRecord.FEC_Category__r?.Name != 'Complaint') return false;
         if (caseRecord.FEC_Complain_Type__c != 'Urgent') return false;
-        Date createdDate = getCaseCreatedDate(caseRecord);
-        if (createdDate == null || createdDate < Date.today().addMonths(-3)) return false;
-        return !isExcludedStatus(caseRecord.FEC_Case_Status__c);
+        if (caseRecord.CreatedDate.date() < Date.today().addMonths(-3)) return false;
+        return !isExcludedStatus(caseRecord.Status);
     }
     
     private static Boolean isSeriousComplaint(Case caseRecord) {
         if (caseRecord.FEC_Category__r?.Name != 'Complaint') return false;
-        if (caseRecord.FEC_Complain_Type__c != 'High Risk') return false;
-        Date createdDate = getCaseCreatedDate(caseRecord);
-        if (createdDate == null || createdDate < Date.today().addMonths(-3)) return false;
-        return !isExcludedStatus(caseRecord.FEC_Case_Status__c);
-    }
-    
-    private static Date getCaseCreatedDate(Case caseRecord) {
-        if (caseRecord.FEC_Case_Created_On__c != null) {
-            return caseRecord.FEC_Case_Created_On__c.date();
-        }
-        return null;
+        if (caseRecord.FEC_Complain_Type__c != 'High') return false;
+        if (caseRecord.CreatedDate.date() < Date.today().addMonths(-3)) return false;
+        return !isExcludedStatus(caseRecord.Status);
     }
     
     private static Boolean isExcludedStatus(String status) {
-        if (String.isBlank(status)) return false;
         return status == 'Open' || status == 'Resolved-Cancelled' || status == 'Resolved-AutoCancelled';
     }
     
-    private static Boolean isUnhappy(Case caseRecord) {
-        List<String> namesToMatch = getAccountOrContractNamesToMatch(caseRecord);
-        if (namesToMatch.isEmpty()) return false;
-        List<FEC_Customer_Segmentation__c> segmentations = [
-            SELECT Id
-            FROM FEC_Customer_Segmentation__c
-            WHERE Name IN :namesToMatch
-            AND FEC_Customer_Segment__c = 'VIP'
-            LIMIT 1
-        ];
-        return !segmentations.isEmpty();
-    }
-
-    private static Boolean isVIP(Case caseRecord) {
-        List<String> namesToMatch = getAccountOrContractNamesToMatch(caseRecord);
-        if (namesToMatch.isEmpty()) return false;
-        List<FEC_Customer_Segmentation__c> segmentations = [
-            SELECT Id
-            FROM FEC_Customer_Segmentation__c
-            WHERE Name IN :namesToMatch
-            AND FEC_Survey_Points__c >= 1
-            AND FEC_Survey_Points__c <= 3
-            LIMIT 1
-        ];
-        return !segmentations.isEmpty();
-    }
-
-    private static List<String> getAccountOrContractNamesToMatch(Case caseRecord) {
-        List<String> namesToMatch = new List<String>();
-        if (caseRecord == null || caseRecord.FEC_Account_or_Contract__c == null) return namesToMatch;
-        List<FEC_Customer_History__c> histories = [
-            SELECT Name, FEC_Account_Number__c, FEC_Contract_Number__c
-            FROM FEC_Customer_History__c
-            WHERE Id = :caseRecord.FEC_Account_or_Contract__c
-            LIMIT 1
-        ];
-        if (histories.isEmpty()) return namesToMatch;
-        FEC_Customer_History__c h = histories[0];
-        if (String.isNotBlank(h.Name)) namesToMatch.add(h.Name);
-        if (String.isNotBlank(h.FEC_Account_Number__c) && !namesToMatch.contains(h.FEC_Account_Number__c)) namesToMatch.add(h.FEC_Account_Number__c);
-        if (String.isNotBlank(h.FEC_Contract_Number__c) && !namesToMatch.contains(h.FEC_Contract_Number__c)) namesToMatch.add(h.FEC_Contract_Number__c);
-        return namesToMatch;
+    private static Boolean isVIP(FEC_Customer_History__c customerHistory) {
+        return customerHistory != null && String.isNotBlank(customerHistory.FEC_Customer_Segment__c);
     }
     
     @AuraEnabled
@@ -207,7 +150,7 @@ public with sharing class FEC_InteractionHighlightController {
             ];
             
             FEC_CommonUltils.logSensitiveAccess(
-                'Customer Information',
+                'Interaction Details',
                 fieldName,
                 u.Username.split('@')[0],
                 u.UserRole != null ? u.UserRole.Name : null,
@@ -225,7 +168,6 @@ public with sharing class FEC_InteractionHighlightController {
         @AuraEnabled public String customerCategory;
         @AuraEnabled public String customerName;
         @AuraEnabled public String nationalId;
-        @AuraEnabled public String nationalIdMasked;
         @AuraEnabled public String gender;
         @AuraEnabled public Date dateOfBirth;
         @AuraEnabled public String primaryPhone;
