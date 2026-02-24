@@ -6,7 +6,7 @@
 */ 
 public with sharing class FEC_ChatHubCaseController {
     
-    // Quy ước đặt tên biến: String: strName, Datetime: dtStartDate, List: listAccounts
+    // Naming convention: String: strName, Datetime: dtStartDate, List: listAccounts
     
     /** * createCaseOnNewSession
     * Handles the incoming 'createCaseRequestEvent' to create a new Case record.
@@ -47,14 +47,13 @@ public with sharing class FEC_ChatHubCaseController {
             String strRawChannel = (mapSession.containsKey('chatChannel')) ? (String)mapSession.get('chatChannel') : '';
 
             // Safe .get() calls (even if map is empty, .get() returns null, not Exception)
-            dto.subChannel = FEC_Utils.getInteractionChannel(strRawChannel); // this is interaction channel
+            dto.subChannel = FEC_Utils.getInteractionChannel(strRawChannel);
             dto.externalInteractionId = (String)mapSession.get('sessionID');
             dto.phoneNumber = (String)mapCustomer.get('phoneNumber');
             dto.nationalId = (String)mapCustomer.get('nationalID');
             dto.customerName = (String)mapCustomer.get('customerName');
             // dto.kycResult = (String)mapCustomer.get('kYCStatus');
             dto.kycResult = FEC_Utils.mappingKYCs((String)mapCustomer.get('kYCStatus'));
-            // System.debug('dto data: ' + JSON.serialize(dto));
             // Optional: Validation
             if (String.isBlank(dto.externalInteractionId)) {
                 System.debug('### [FEC] Warning: Missing SessionID');
@@ -199,7 +198,7 @@ public with sharing class FEC_ChatHubCaseController {
                         (String)mapItem.get('messageType') + '|' + 
                         String.valueOf(dtCreatedAt.getTime());
             if(setExistingSignatures.contains(currentSig)) {
-                System.debug('### Trùng lặp dữ liệu chat, bỏ qua dòng này.');
+                System.debug('### Duplicate chat data, skipping this line.');
                 continue; 
             }
 
@@ -222,36 +221,24 @@ public with sharing class FEC_ChatHubCaseController {
 
             // System.debug('dtCreatedAt: ' + dtCreatedAt);
             objHistory.FEC_CreatedAt__c = dtCreatedAt;
-
-           
-
-            // 2. Handle Attachment Logic
-            // If message type is attachment, we might need to call the File Service
             if (objHistory.FEC_MessageType__c == 'attachment' || objHistory.FEC_MessageType__c == 'image') {
-                // System.debug('FEC_Utils.formatDateTimeToString(dtCreatedAt): ' + FEC_Utils.formatDateTimeToString(dtCreatedAt));
                 String fileNameConvert = (FEC_Utils.formatDateTimeToString(dtCreatedAt) + '_' + (String)mapItem.get('fileName')).trim();
                 System.debug('(String)mapItem.get fileName: ' + (String)mapItem.get('fileName'));
                 System.debug('fileNameConvert: ' + fileNameConvert);
                 objHistory.FEC_Message__c = fileNameConvert;
-                // System.debug('Processing attachment: ' + fileNameConvert);
                 listHistoriesToInsert.add(objHistory);
                 // Check if file already exists using pre-queried map
                 if (mapExistingFiles.containsKey(fileNameConvert)) {
-                    // System.debug('File "' + fileNameConvert + '" đã tồn tại trên Case này. Bỏ qua.');
                     continue;  // Skip this file, but continue processing other messages
                 } else {
-                    // Call async to download file
-                    // handleAttachmentAsync(objHistory.FEC_Case__c, (String)mapItem.get('fileUrl'), fileNameConvert);
-
-                    // new code
                     try{
                         FEC_AttachmentController.downloadAndSaveBase64(
                             (String)mapItem.get('fileUrl'), 
                             objHistory.FEC_Case__c, 
-                            fileNameConvert
+                            fileNameConvert,
+                            null
                         );
                     }catch(Exception e){
-                        // System.debug('### [FEC] Error downloading attachment: ' + e.getMessage());
                         return false;
                     }
                 }
@@ -269,25 +256,22 @@ public with sharing class FEC_ChatHubCaseController {
             }
             return true;
         } catch (Exception e) {
-            // System.debug('### [FEC] Error saving history: ' + e.getMessage());
-            // old code
-            // return false;
-
-            // new code
             throw new AuraHandledException('Error saving chat history: ' + e.getMessage());
         }
     }
 
     /**
      * Helper to handle attachment download asynchronously
-     * @param strCaseId Case ID
-     * @param strFileUrl URL from ChatHub
-     * @param strFileName File Name
+     * @param strCaseId: Case ID
+     * @param strFileUrl: URL from ChatHub
+     * @param strFileName: File Name
+     * @return void
+     * @created: 
+     * @modified: 
      */
     @future(callout=true)
     public static void handleAttachmentAsync(String strCaseId, String strFileUrl, String strFileName) {
         // Logic integration with FEC_CreateCSCaseService goes here
         // Example: FEC_CreateCSCaseService.saveFile(strCaseId, strFileUrl, strFileName);
-        // System.debug('Downloading file: ' + strFileName + ' from ' + strFileUrl);
     }
 }

@@ -14,7 +14,6 @@ public with sharing class FEC_Utils {
     */ 
     @AuraEnabled
     public static String checkExistCaseByExtInteractionID(String strExtInteractionID) {
-        // Long's code
         // String strCaseID = null;
         
         // Find Case by the External Interaction ID field
@@ -30,7 +29,6 @@ public with sharing class FEC_Utils {
         // }
         // return strCaseID;
 
-        // Nam's code
         List<Case> cases = [
             SELECT Id
             FROM Case
@@ -50,12 +48,12 @@ public with sharing class FEC_Utils {
     */ 
     @AuraEnabled(cacheable=true)
     public static String getInteractionChannel(String strChatChannel) {
-        // 1. Handle Null/Blank input safely
+        // Handle Null/Blank input safely
         if (String.isBlank(strChatChannel)) {
             return 'Other';
         }
         
-        // Tương tự logic trong Core JS getInteractionChannel(chatChannel) [cite: 33]
+        // Map channel names similar to Core JS getInteractionChannel logic
         Map<String, String> mapChannels = new Map<String, String>{
             'facebook' => 'Facebook',
             'appchat'  => 'FE App',
@@ -71,7 +69,7 @@ public with sharing class FEC_Utils {
         return 'Other';
     }
 
-    // Example of using standard data type method (tương tự formatDatetime trong Core JS [cite: 34])
+    // Example of using standard data type method
     /** * formatDateTimeToString
     * Converts a Datetime to a custom formatted string (e.g., YYYYMMDDThhmmss.0 GMT).
     * @param dtDateTime: Datetime value to format.
@@ -95,11 +93,6 @@ public with sharing class FEC_Utils {
     // }
 
     // new code
-    /**
-     * Formats a Datetime Object into a specific file name string format (UTC).
-     * Input: Datetime object (e.g., 14:30 GMT+7)
-     * Output: String "20260203T073000.0 GMT" (UTC time)
-     */
     @AuraEnabled
     public static String formatDateTimeToString(Datetime dtDateTime) {
         if (dtDateTime == null) return '';
@@ -186,11 +179,11 @@ public with sharing class FEC_Utils {
     * Maps KYC status from ChatHub to internal representation.
     * @param strKYC: KYC status from ChatHub (e.g., 'KYC', 'NOT KYC').
     * @return strMappedKYC: Mapped KYC status ('Pass', 'Fail', 'Other').
-    * @created:  
+    * @created:
     */
     @AuraEnabled(cacheable=true)
     public static String mappingKYCs (String strKYC) {
-        // 1. Handle Null/Blank input safely
+        // Handle Null/Blank input safely
         if (String.isBlank(strKYC)) {
             return 'Other';
         }

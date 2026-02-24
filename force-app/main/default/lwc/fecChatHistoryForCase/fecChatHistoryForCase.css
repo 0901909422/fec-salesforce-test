@@ -23,6 +23,11 @@
     width: 100%;
 }
 
+.container-chat-history {
+    max-height: 400px;
+    overflow: auto;
+}
+
 .container-chat-history__body--outbound {
     display: flex;
     flex-direction: column;

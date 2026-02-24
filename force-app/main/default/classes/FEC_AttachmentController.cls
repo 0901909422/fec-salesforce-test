@@ -7,12 +7,12 @@
 public with sharing class FEC_AttachmentController {
     
     public class FileAttachmentInfo {
-        @AuraEnabled public String id;           // ContentVersion Ids
-        @AuraEnabled public String fileName;     // Tên file
-        @AuraEnabled public Datetime createdDate;// Ngày tạo
-        @AuraEnabled public String createdBy;    // Người tạo
-        @AuraEnabled public Boolean isAttached;  // Đã được gắn vào Service Case chưa
-        @AuraEnabled public Boolean isReadOnly;  // Read-only (đã gắn trước đó)
+        @AuraEnabled public String id;           // ContentVersion Id
+        @AuraEnabled public String fileName;     // File name
+        @AuraEnabled public Datetime createdDate;// Creation date
+        @AuraEnabled public String createdBy;    // Created by user
+        @AuraEnabled public Boolean isAttached;  // Indicates if attached to Service Case
+        @AuraEnabled public Boolean isReadOnly;  // Read-only flag (already attached previously)
     }
 
     /** * getAttachmentsFromInteraction
@@ -27,7 +27,7 @@ public with sharing class FEC_AttachmentController {
     public static List<FileAttachmentInfo> getAttachmentsFromInteraction(String strInteractionCaseId, String strTargetServiceCaseId) {
         List<FileAttachmentInfo> listFileAttachments = new List<FileAttachmentInfo>();
 
-        // 1. Lấy danh sách Content Document IDs từ Interaction Case
+        // 1. Retrieve Content Document IDs from Interaction Case
         Set<Id> setContentDocumentIds = new Set<Id>();
         for (ContentDocumentLink cdl : [
             SELECT ContentDocumentId 
@@ -41,9 +41,9 @@ public with sharing class FEC_AttachmentController {
             return listFileAttachments;
         }
 
-        // 2. Lấy thông tin Content Version và kiểm tra file đã gắn vào Target Service Case chưa
+        // 2. Retrieve Content Version info and check if files are already attached to Target Service Case
         Set<Id> setAttachedCDL = new Set<Id>();
-        // Comment: Kiểm tra các file đã gắn vào Service Case hiện tại để đánh dấu Read-Only.
+        // Comment: Check files already attached to current Service Case to mark as Read-Only.
         for (ContentDocumentLink cdl : [
             SELECT ContentDocumentId 
             FROM ContentDocumentLink 
@@ -53,7 +53,7 @@ public with sharing class FEC_AttachmentController {
             setAttachedCDL.add(cdl.ContentDocumentId);
         }
 
-        // 3. Lấy ContentVersion (tên file, ngày tạo, người tạo)
+        // 3. Retrieve ContentVersion (file name, creation date, created by user)
         for (ContentVersion cv : [
             SELECT Id, ContentDocumentId, Title, CreatedDate, CreatedBy.Name 
             FROM ContentVersion 
@@ -66,7 +66,7 @@ public with sharing class FEC_AttachmentController {
             info.createdDate = cv.CreatedDate;
             info.createdBy = cv.CreatedBy.Name;
             
-            // Logic Story 5: Đánh dấu file đã gắn trước đó là read-only (không thể chọn lại)
+            // Logic Story 5: Mark previously attached files as read-only (cannot select again)
             info.isAttached = setAttachedCDL.contains(cv.ContentDocumentId);
             info.isReadOnly = info.isAttached;
             
@@ -78,8 +78,8 @@ public with sharing class FEC_AttachmentController {
     
     /** * attachFilesToServiceCase
     * Links selected Content Documents to the target Service Case.
-    * @param strTargetServiceCaseId: ID của Service Case (target).
-    * @param listSelectedContentDocumentIds: List các ContentDocumentId được chọn.
+    * @param strTargetServiceCaseId: ID of the target Service Case.
+    * @param listSelectedContentDocumentIds: List of selected ContentDocumentIds.
     * @return isSuccess: Boolean indicating successful attachment.
     * @created: 2025/12/03 long.nguyen.50
     * @modified: 
@@ -88,16 +88,16 @@ public with sharing class FEC_AttachmentController {
     public static Boolean attachFilesToServiceCase(String strTargetServiceCaseId, List<String> listSelectedContentDocumentIds) {
         List<ContentDocumentLink> listCDLToInsert = new List<ContentDocumentLink>();
 
-        // Comment: Tạo ContentDocumentLink cho từng file được chọn và Case đích.
+        // Comment: Create ContentDocumentLink for each selected file and target Case.
         for (String strContentDocId : listSelectedContentDocumentIds) {
             ContentDocumentLink cdl = new ContentDocumentLink();
             cdl.ContentDocumentId = strContentDocId;
             cdl.LinkedEntityId = strTargetServiceCaseId;
-            cdl.ShareType = 'V'; // Viewer permission (đảm bảo quyền truy cập)
+            cdl.ShareType = 'V'; // Viewer permission (ensures access rights)
             listCDLToInsert.add(cdl);
         }
         
-        // Comment: Thực hiện DML insert ContentDocumentLink list (Không DML trong Loop)
+        // Comment: Execute DML insert of ContentDocumentLink list (no DML within Loop)
         if (!listCDLToInsert.isEmpty()) {
             insert listCDLToInsert;
             return true;
@@ -115,9 +115,27 @@ public with sharing class FEC_AttachmentController {
     */ 
     // @future(callout=true)
     @AuraEnabled
-    public static void attachFileToInteractionCase(String interactionCaseId, String base64File, String fileName){
+    public static void attachFileToInteractionCase(String interactionCaseId, String base64File, String fileName, String uniqueMessageId){
         try {
-            System.debug('vào attachFileToInteractionCase');
+            System.debug('Entering attachFileToInteractionCase');
+
+            if(uniqueMessageId != null) {
+                System.debug('interactionCaseId: ' + interactionCaseId);
+                // FOR UPDATE lock ensures concurrent queries are queued and processed sequentially
+                List<Case> lockCase = [SELECT Id FROM Case WHERE Id = :interactionCaseId FOR UPDATE];
+                List<ContentVersion> existingFiles = [
+                    SELECT Id FROM ContentVersion 
+                    WHERE FirstPublishLocationId = :interactionCaseId 
+                    AND Description = :uniqueMessageId
+                    LIMIT 1
+                ];
+                System.debug('existingFiles:');
+                System.debug(existingFiles);
+                if (!existingFiles.isEmpty()) {
+                    System.debug('Message with this file has already been processed, skipping to avoid duplicate multi-tab.');
+                    return; 
+                }
+            }
             Blob fileBody = EncodingUtil.base64Decode(base64File);
             System.debug('fileBody Blob: ' + fileBody);
             System.debug('fileName: ' + fileName);
@@ -126,18 +144,11 @@ public with sharing class FEC_AttachmentController {
             cv.PathOnClient = fileName;     
             cv.VersionData = fileBody;
             cv.FirstPublishLocationId = interactionCaseId;
+            cv.Description = uniqueMessageId ?? ''; // Use Description field to store uniqueMessageId for duplicate checking
             System.debug('ContentVersion to insert: ' + cv);
             insert cv;
             System.debug('Inserted ContentVersion Id: ' + cv.Id);
-            // Id conDocId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id].ContentDocumentId;
-            // System.debug('ContentDocument Id: ' + conDocId);
-            // ContentDocumentLink cdl = new ContentDocumentLink();
-            // cdl.ContentDocumentId = conDocId;
-            // cdl.LinkedEntityId = interactionCaseId;
-            // cdl.ShareType = 'V';
-            // System.debug('ContentDocumentLink to insert: ' + cdl);
-            // insert cdl;
-            System.debug('Thành công! File đã được lưu vào Case.');
+            System.debug('Success! File has been saved to Case.');
         } catch (Exception e) {
             System.debug('Error: ' + e.getMessage());
             throw new AuraHandledException(e.getMessage());
@@ -150,17 +161,19 @@ public with sharing class FEC_AttachmentController {
     * @param s3Url: URL of the file on S3.
     * @param interactionCaseId: ID of the Interaction Case (target for file upload).
     * @param fileName: Name of the file to be uploaded.
-    * @created:
+    * @param uniqueMessageId: Unique message identifier for duplicate detection.
+    * @return void
+    * @created: 
     * @modified: 
     */ 
     @AuraEnabled
-    public static void downloadAndSaveBase64(String s3Url, String interactionCaseId, String fileName){
-        System.debug('vào downloadAndSaveBase64');
-        System.debug('S3 URL: ' + s3Url);
-        System.debug('Interaction Case ID: ' + interactionCaseId);
-        System.debug('File Name: ' + fileName);
+    public static void downloadAndSaveBase64(String s3Url, String interactionCaseId, String fileName, String uniqueMessageId){
+        // System.debug('vào downloadAndSaveBase64');
+        // System.debug('S3 URL: ' + s3Url);
+        // System.debug('Interaction Case ID: ' + interactionCaseId);
+        // System.debug('File Name: ' + fileName);
         try {
-            // 1. Fetch file từ S3 bằng HttpRequest
+            // 1. Fetch file from S3 using HttpRequest
             HttpRequest request = new HttpRequest();
             request.setEndpoint(s3Url);
             request.setMethod('GET');
@@ -168,24 +181,24 @@ public with sharing class FEC_AttachmentController {
             
             Http http = new Http();
             HttpResponse response = http.send(request);
-            System.debug('HTTP Response Status: ' + response.getStatusCode());
+            // System.debug('HTTP Response Status: ' + response.getStatusCode());
             // System.debug('HTTP Response Body: ' + response.getBody());
             if (response.getStatusCode() != 200) {
-                throw new AuraHandledException('Lỗi tải file từ S3: HTTP ' + response.getStatusCode());
+                throw new AuraHandledException('Error downloading file from S3: HTTP ' + response.getStatusCode());
             }
             
-            // 2. Lấy Blob từ response và convert sang Base64
+            // 2. Get Blob from response and convert to Base64
             Blob fileBlob = response.getBodyAsBlob();
-            System.debug('File Blob: ' + fileBlob);
+            // System.debug('File Blob: ' + fileBlob);
             String base64String = EncodingUtil.base64Encode(fileBlob);
-            System.debug('Base64 String length: ' + base64String);
-            // 3. Gọi phương thức attachFileToInteractionCase để lưu file
-            attachFileToInteractionCase(interactionCaseId, base64String, fileName);
+            // System.debug('Base64 String length: ' + base64String);
+            // 3. Call attachFileToInteractionCase method to save file
+            attachFileToInteractionCase(interactionCaseId, base64String, fileName, uniqueMessageId);
             
-            System.debug('downloadAndSaveBase64: Thành công! File từ S3 đã được lưu vào Case.');
+            // System.debug('downloadAndSaveBase64: Success! File from S3 has been saved to Case.');
         } catch (Exception e) {
             System.debug('downloadAndSaveBase64 Error: ' + e.getMessage());
-            throw new AuraHandledException('Lỗi xử lý file: ' + e.getMessage());
+            throw new AuraHandledException('Error processing file: ' + e.getMessage());
         }
     }
 
