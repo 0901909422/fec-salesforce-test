@@ -31,7 +31,7 @@ import LABEL_TOAST_SAVE_SUCCESS_TITLE from '@salesforce/label/c.FEC_Toast_Save_S
 import LABEL_SUCCESS_DELETE from '@salesforce/label/c.LABEL_SUCCESS_DELETE';
 import LABEL_WARNING_DELETE_NODE from '@salesforce/label/c.LABEL_WARNING_DELETE_NODE';
 import LABEL_WARNING_SELECT_NODE from '@salesforce/label/c.FEC_Warning_Select_Node';
-import { OBJ_PRODUCT_TYPE, OBJ_BUSINESS_PROCESS, OBJ_CATEGORY, OBJ_SUB_CATEGORY, OBJ_SUB_CODE, TAG_NATURE_TREE, PREFIX_SUB_CODE, PREFIX_PT, PREFIX_BP, PREFIX_CAT, DISPLAY_FIELD_CODE, DISPLAY_FIELD_ALIAS, DISPLAY_FIELD_NAME_VN, DISPLAY_FIELD_NAME_EN, STATUS_ALL, STATUS_ACTIVE, STATUS_INACTIVE, TITLE_CLASS_BASE, TITLE_CLASS_SELECTED_SUFFIX } from 'c/fecConstants';
+import { OBJ_PRODUCT_TYPE, OBJ_BUSINESS_PROCESS, OBJ_CATEGORY, OBJ_SUB_CATEGORY, OBJ_SUB_CODE, TAG_NATURE_TREE, PREFIX_PT, PREFIX_BP, PREFIX_CAT, PREFIX_SCAT, PREFIX_SC, DISPLAY_FIELD_CODE, DISPLAY_FIELD_ALIAS, DISPLAY_FIELD_NAME_VN, DISPLAY_FIELD_NAME_EN, STATUS_ALL, STATUS_ACTIVE, STATUS_INACTIVE, TITLE_CLASS_BASE, TITLE_CLASS_SELECTED_SUFFIX, OBJECT_MAP } from 'c/fecConstants';
 
 export default class FecNatureOfCaseTree extends LightningElement {
     // labels
@@ -59,18 +59,23 @@ export default class FecNatureOfCaseTree extends LightningElement {
     fecRawData = [];       // Lưu trữ dữ liệu gốc từ Apex
     @track searchTerm = ''; // Thêm biến để lưu từ khóa
     @track expandedNodeNames = new Set(); // Lưu danh sách các node đang mở
+    
+    // Debounce variables để prevent duplicate calls
+    lastSelectedNodeId = null;
+    selectNodeTimeout = null;
 
     objectMap = {
         [PREFIX_PT]: OBJ_BUSINESS_PROCESS,
         [PREFIX_BP]: OBJ_CATEGORY,
         [PREFIX_CAT]: OBJ_SUB_CATEGORY,
-        [PREFIX_SUB_CODE]: OBJ_SUB_CODE
+        [PREFIX_SCAT]: OBJ_SUB_CODE
     };
     objectMapRoot = {
         [PREFIX_PT]: OBJ_PRODUCT_TYPE,
         [PREFIX_BP]: OBJ_BUSINESS_PROCESS,
         [PREFIX_CAT]: OBJ_CATEGORY,
-        [PREFIX_SUB_CODE]: OBJ_SUB_CATEGORY,
+        [PREFIX_SCAT]: OBJ_SUB_CATEGORY,
+        [PREFIX_SC]: OBJ_SUB_CODE 
     };
 
     @wire(getNatureOfCaseTreeData)
@@ -178,14 +183,14 @@ export default class FecNatureOfCaseTree extends LightningElement {
             return true;
         }
 
-        // 3. Kiểm tra cấp cuối
+        // 3. Kiểm tra cấp cuối: Chỉ disable khi ở cấp Sub Code (SC)
+        // Sub Category (SCAT) vẫn cho phép add Sub Code (SC)
         const prefix = this.selectedNodePrefix;
-        if (prefix === PREFIX_SUB_CODE) {
+        if (prefix === PREFIX_SC) {
             return true;
         }
 
-        const targetObjectType = this.objectMap[prefix];
-        return !targetObjectType;
+        return false;
     }
 
     /**
@@ -218,17 +223,35 @@ export default class FecNatureOfCaseTree extends LightningElement {
     }
 
     handleNodeSelect(event) {
-        // 1. TẮT trạng thái Title được chọn
-        this.isTitleSelected = false;
-
+        // Debounce: Prevent duplicate calls within 200ms
+        const selectedId = event.detail.fullItem?.idType;
         const selectedName = event.detail.name;
-        this.selectedNodeName = event.detail.name;
+        
+        // If same node selected within debounce window, ignore
+        if (this.lastSelectedNodeId === selectedId && this.selectNodeTimeout) {
+            return;
+        }
+        
+        // Clear previous timeout
+        if (this.selectNodeTimeout) {
+            clearTimeout(this.selectNodeTimeout);
+        }
+        
+        // Set new timeout to allow next selection
+        this.selectNodeTimeout = setTimeout(() => {
+            this.selectNodeTimeout = null;
+            this.lastSelectedNodeId = null;
+        }, 200);
+        
+        // Update lastSelectedNodeId
+        this.lastSelectedNodeId = selectedId;
+        
         const selectedItem = event.detail.fullItem;
-        showLog('selectedName:', selectedItem);
-
+        
         if (!selectedItem) return;
 
-        // 2. Cập nhật trạng thái Node
+        // Update state
+        this.isTitleSelected = false;
         const parts = selectedName.split('_');
 
         if (parts.length > 1) {
@@ -242,8 +265,9 @@ export default class FecNatureOfCaseTree extends LightningElement {
             this.selectedNodePrefix = null;
             this.selectedNodeLabel = null;
         }
+        
+        // Dispatch event to parent
         this.dispatchEvent(new CustomEvent("itemselect", { detail: selectedItem }));
-
     }
 
     handleAddNodeAction() {

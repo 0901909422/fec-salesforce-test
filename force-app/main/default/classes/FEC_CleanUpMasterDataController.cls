@@ -76,7 +76,7 @@ public with sharing class FEC_CleanUpMasterDataController {
             
             // --- 4 Tabs mới thêm ---
             // 6. Master Data Setting
-            masterDataMap.put(FEC_Constants.KEY_MASTER_SETTING, [SELECT Id, ExternalID__c, Name, FEC_Customer_Type__c, FEC_Additional_Field__c, FEC_Stage_Name__c, FEC_Channel__c, FEC_Applicable_Role__c, FEC_Data_Integration_Mapping__c, Process_Change_Status__c FROM FEC_MDM_Master_Data_Setting__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_MASTER_SETTING, [SELECT Id, ExternalID__c, Name, FEC_Additional_Field__c, FEC_Stage_Name__c, FEC_Channel__c, FEC_Applicable_Role__c, FEC_Data_Integration_Mapping__c, Process_Change_Status__c FROM FEC_MDM_Master_Data_Setting__c ORDER BY Name]);
             // Channel
             masterDataMap.put(FEC_Constants.KEY_CHANNEL, [SELECT Id, ExternalID__c, Name, Process_Change_Status__c FROM FEC_MDM_Channel__c ORDER BY Name]);
             
@@ -136,7 +136,7 @@ public with sharing class FEC_CleanUpMasterDataController {
         @AuraEnabled public Id Id;
         @AuraEnabled public String ExternalID;
         @AuraEnabled public String Name;
-        // @AuraEnabled public String FEC_Customer_Type;
+        @AuraEnabled public String FEC_Customer_Type;
         @AuraEnabled public String FEC_Product_Type_Name;
         @AuraEnabled public String FEC_Business_Process_Name;
         @AuraEnabled public String FEC_Category_Name;
@@ -147,7 +147,7 @@ public with sharing class FEC_CleanUpMasterDataController {
             Id = noc.Id;
             ExternalID = noc.ExternalID__c;
             Name = noc.Name;
-            // FEC_Customer_Type = noc.FEC_Customer_Type__c;
+            FEC_Customer_Type = noc.FEC_Customer_Type__c;
             FEC_Product_Type_Name = noc.FEC_Product_Type_Name__r != null ? noc.FEC_Product_Type_Name__r.Name : null;
             FEC_Business_Process_Name = noc.FEC_Business_Process_Name__r != null ? noc.FEC_Business_Process_Name__r.Name : null;
             FEC_Category_Name = noc.FEC_Category_Name__r != null ? noc.FEC_Category_Name__r.Name : null;
