@@ -1,12 +1,23 @@
 public with sharing class FEC_FraudConstantCommon {
 
+
+	public static final String LANG_VI      = 'vi';
+
 	public static final String SET_ENPOINT_FRAUD_HEALTH = 'callout:FECredit_Service/archival/actuator/health';
-	public static final String SET_ENPOINT_FRAUD_SERVICE = 'callout:FECredit_Service/fima';
+	public static final String SET_ENPOINT_FRAUD_SERVICE = 'callout:FIMA/fima/';
 	
 	public static final String FRAUD_X_API_KEY = 'RkVDX1NBTEVTRk9SQ0U';
 	public static final String CLIENT_ENDPOINT_XF = 'callout:FimaFraudService';
 	public static final String FRAUD_CASE_SERVICE_NAME = 'UpdateFraudCaseStatus';
+	public static final String FRAUD_CASE_CANCEL_NAME = 'CancelFraudCase';
+	public static final String FRAUD_CASE_CREATE_NAME = 'CreateFraudCase';
 	
+	public static final Integer NUMBER_MAX_LENGTH = 32768;
+	
+	
+	public static final String CATEGORY_KEY     = 'CATEGORY';
+    public static final String SUBCATEGORY_KEY  = 'SUBCATEGORY';
+    public static final String SUBCODE_KEY      = 'SUBCODE';
 
 	
 
@@ -32,12 +43,14 @@ public with sharing class FEC_FraudConstantCommon {
 	public static final String KEY_CREATED_DATE           = 'CreatedDate';
 	public static final String KEY_LAST_MODIFIED_DATE     = 'LastModifiedDate';
 	public static final String KEY_ADDITIONAL_PROPERTY     = 'AdditionalProperty';
+	public static final String KEY_AVAILABLE_VALUE     = 'AvailableValue';
+	
 
 	
 
 	public static final String SERVICE_CASE_LINK = '/lightning/n/Service_Fraud_Task_Case_Action?c__caseId=';
 	public static final String FRAUD_HANDLING_CASE_DETAIL_PATH = 'integration_fraud_handling_case_detail';
-	public static final String SYSTEM_CHANNEL = 'SALESFORE-CSM';
+	public static final String SYSTEM_CHANNEL = 'PEGACSM';
     public static final String DEFAULT_CHANNEL_INTEGRATION_CODE = 'FIMA';
     public static final Integer SUCCESSFULL = 200;
     public static final Integer CLIENT_ERROR = 400;
@@ -60,7 +73,7 @@ public with sharing class FEC_FraudConstantCommon {
 	public static final String MIME_XML_UTF8  = 'application/xml; charset=UTF-8';
 	public static final String MIME_TEXT_UTF8  = 'text/xml;charset=UTF-8';
 
-    public static final String FRAUD_SERVICE_SOAP_ENDPOINT = 'http://cf-webapp-uat02.deltavn.vn:3033/Soap/SCLService.svc';
+    public static final String FRAUD_SERVICE_SOAP_ENDPOINT = 'urn:PegaRULES:SOAP:FraudCase:Services/ISCLService/GetFraudMasterData';
     
 	public class IntegrationFieldType {
 		public final String TYPE_FILE     = 'file';
@@ -73,6 +86,22 @@ public with sharing class FEC_FraudConstantCommon {
 		public final String TYPE_OBJECT   = 'object';
 		public final String TYPE_ARRAY    = 'array';
 	}
+	public class IntegrationPayloadField {
+		public final String CHANNEL     = 'Channel';
+		public final String CASE_TYPE     = 'CaseType';
+		public final String PRODUCT_TYPE   = 'ProductType';
+		public final String CATEGORY   = 'Category';
+		public final String SUBCATEGORY     = 'SubCategory';
+		public final String SUBCODE = 'SubCode';
+		public final String USER_TYPE  = 'UserType';
+		public final String FRAUD_CASEID   = 'FraudCaseId';
+		public final String REMARKS    = 'Remarks';
+		public final String SERVICE_CASEID    = 'ServiceCaseId';
+		public final String CHANNEL_INTEGRATION_CODE    = 'ChannelIntegrationCode';
+		public final String ADDITIONAL_INFO    = 'AdditionalInfo';
+		
+		
+	}
 	public class IntegrationMappingField {
 		
 		// =====================================================
@@ -80,6 +109,8 @@ public with sharing class FEC_FraudConstantCommon {
 		// =====================================================
 		public final String SOURCE_HEADER        = 'header';
 		public final String SOURCE_DETAILS        = 'details';
+		public final String SOURCE_DETAIL        = 'detail';
+		public final String SOURCE_DATA        = 'data';
 		public final String SOURCE_NATURE_OF_CASE_ID        = 'natureOfCaseId';
 		public final String SOURCE_CASE_STAGE_ID        = 'caseStageId';
 		public final String SOURCE_SCREEN_CASE_ID        = 'screenCaseId';
@@ -110,6 +141,7 @@ public with sharing class FEC_FraudConstantCommon {
 		public final String SOURCE_TYPE_CASE_STAGE       = 'CaseStage';
 		public final String SOURCE_TYPE_SCREEN_CASE      = 'ScreenCase';
 		public final String SOURCE_TYPE_MAPPING          = 'Mapping';
+		public final String SOURCE_CASEID                = 'CaseID';
 	
 		// =====================================================
 		// Detail (row) – Integration Info fields
@@ -120,6 +152,14 @@ public with sharing class FEC_FraudConstantCommon {
 		public final String ROW_CSM_PROPERTY_TYPE        = 'csmPropertyType';
 		public final String ROW_AUTO_MAPPING             = 'autoMapping';
 		public final String ROW_MANDATORY                = 'mandatory';
+		
+		public final String NODE_RESPONSE                = 'Response';
+		public final String NODE_SUCCESS                = 'Success';
+		public final String NODE_CASEID                = 'CaseId';
+		public final String NODE_MESSAGE                = 'Message';
+		public final String NODE_TRUE                = 'true';
+		public final String NODE_FALSE                = 'false';
+		
 	}
 
 	
@@ -160,52 +200,52 @@ public with sharing class FEC_FraudConstantCommon {
 		public final String CREATOR_EMAIL_FIELD = 'CreatorEmail';
 		public final String ID_FIELD = 'ID';
 		public final String VALUE_FIELD = 'Value';
-		public final String USER_TYPE_FIELD = 'UserType';
-		
-		
-		
-		
-		
-		
+		public final String USER_TYPE_FIELD = 'UserType';		
 		
     }
-	public class IntegrationMappingStatus {
-		public final String ALLOCATING = 'Allocating';
-		public final String SEC_INVESTIGATING = 'SEC Investigating';
-		public final String ALLOCATING_PIC = 'Allocating_PIC';
-		public final String ALLOCATING_TL = 'Allocating_TL';
-		public final String INVESTIGATING = 'Investigating';
-		public final String PENDING = 'Pending';
-		public final String REPORTING = 'Reporting';
-		public final String REPORTING_HEAD = 'Reporting_Head';
-		public final String REPORTING_TL = 'Reporting_TL';
-		public final String SE_REVIEWING = 'SE_Reviewing';
-		public final String UPDATE_REPORT = 'Update_Report';
-
-		public final String EVALUATING = 'Evaluating';
-		public final String RESULTING = 'Resulting';
-		public final String REVIEWING_REPORT = 'Reviewing_Report';
-		public final String UPDATING = 'Updating';
-
-		public final String INITIAL = 'Initial';
-		public final String NEW_STATUS= 'New';
-		public final String RE_INITIAL = 'Re-initial';
-
-		public final String END_STATUS = 'End';
-		public final String POLICING = 'Policing';
-		public final String CANCELED = 'Canceled';
-		public final String PRE_CANCEL = 'Pre_Cancel';
-
-		public final String CS_UPDATING = 'CS_Updating';
-
-		public final String FRAUD_INVESTIGATING = 'Fraud Investigating';
-		public final String FRAUD_SEC_INVESTIGATING = 'Fraud/SEC Investigating';
-		public final String FRAUD_REVIEW = 'Fraud review';
-
-		public final String RESOLVED_COMPLETED = 'Resolved-Completed';
-		public final String RESOLVED_CANCEL = 'Resolved-Cancel';
-		public final String PROVIDE_INFORMATION = 'Provide Information';
-	}
+	
+	 // SEC Investigating
+	 public static final String ALLOCATING            = 'Allocating';
+	 public static final String ALLOCATING_PIC        = 'Allocating_PIC';
+	 public static final String ALLOCATING_TL         = 'Allocating_TL';
+	 public static final String INVESTIGATING         = 'Investigating';
+	 public static final String PENDING               = 'Pending';
+	 public static final String REPORTING             = 'Reporting';
+	 public static final String REPORTING_HEAD        = 'Reporting_Head';
+	 public static final String REPORTING_TL          = 'Reporting_TL';
+	 public static final String SE_REVIEWING          = 'SE_Reviewing';
+	 public static final String UPDATE_REPORT         = 'Update_Report';
+ 
+	 public static final String SEC_INVESTIGATING     = 'SEC Investigating';
+ 
+	 // Fraud Investigating
+	 public static final String EVALUATING            = 'Evaluating';
+	 public static final String RESULTING             = 'Resulting';
+	 public static final String REVIEWING_REPORT      = 'Reviewing_Report';
+	 public static final String UPDATING              = 'Updating';
+ 
+	 public static final String FRAUD_INVESTIGATING   = 'Fraud Investigating';
+ 
+	 // Mixed
+	 public static final String INITIAL               = 'Initial';
+	 public static final String NEW_STATUS            = 'New';
+	 public static final String RE_INITIAL            = 'Re-initial';
+ 
+	 public static final String FRAUD_SEC_INVESTIGATING = 'Fraud/SEC Investigating';
+	 public static final String FRAUD_REVIEW            = 'Fraud review';
+ 
+	 // Final
+	 public static final String END_STATUS            = 'End';
+	 public static final String POLICING              = 'Policing';
+	 public static final String CANCELED              = 'Canceled';
+	 public static final String PRE_CANCEL            = 'Pre_Cancel';
+ 
+	 public static final String RESOLVED_COMPLETED    = 'Resolved-Completed';
+	 public static final String RESOLVED_CANCEL       = 'Resolved-Cancel';
+ 
+	 // CS
+	 public static final String CS_UPDATING            = 'CS_Updating';
+	 public static final String PROVIDE_INFORMATION    = 'Provide Information';
 
 	
 }

@@ -41,20 +41,27 @@ global with sharing class FEC_IntegrationFraudService {
      *
      * @return The total number of records inserted or updated.
      */
-    public static Integer syncMasterDataIntegration() {
+    public static Integer syncMasterDataIntegration() {   
         IntegrationFraudField masterDataField = new IntegrationFraudField();
         String integrationChannelId = getIntegrationChannelCode(FEC_FraudConstantCommon.DEFAULT_CHANNEL_INTEGRATION_CODE);
         // 1) Load ALL existing mapping records into a map for upsert comparison
         Map<String, FEC_Master_Data_Integration__c> existingMap = loadExisting(integrationChannelId);        
+       
         Boolean isConnectisConnected  = isConnectFraudSystem();
+        log('LOG-syncMasterDataIntegration: ' + isConnectisConnected);
+        
+        String xml = null;
         if(isConnectisConnected) {
-            String getMasterData = getFraudMasterData();
-            log('LOG-XML_MASTER_DATA: ' + getMasterData);
+            xml = getFraudMasterData();
+            log('LOG-XML_MASTER_DATA REAL: ' + xml);
+        } else {
+            //xml = FEC_FraudCaseMockData.getFraudMasterData();
+            log('LOG-XML_MASTER_DATA MOCKUP: ');
         }
       
         // 2) Parse XML
        
-        String xml = FEC_FraudCaseMockData.getFraudMasterData();
+        
         Dom.Document doc = new Dom.Document();
         doc.load(xml);
 
@@ -533,9 +540,10 @@ global with sharing class FEC_IntegrationFraudService {
                         '</urn:GetFraudMasterDataRequest>' +
                     '</soapenv:Body>' +
                 '</soapenv:Envelope>';
-    
+            
             request.setBody(xmlBody);
-    
+            log('LOG-XML-REQUEST-MASTER-DATA: '+ xmlBody);
+
             // ---------------------------------------------------------
             // Callout
             // ---------------------------------------------------------
@@ -563,17 +571,19 @@ global with sharing class FEC_IntegrationFraudService {
     
 
 
-    public static Boolean isConnectFraudSystem() {
-        Http http = new Http();
-        HttpRequest request = new HttpRequest();        
-        // 1. Set Endpoint và Method        
-        request.setEndpoint(FEC_FraudConstantCommon.SET_ENPOINT_FRAUD_HEALTH);        
-        request.setMethod('GET');        
-        request.setHeader('X-API-KEY', FEC_FraudConstantCommon.FRAUD_X_API_KEY);        
-        request.setTimeout(20000); // Tăng timeout lên 20s        
+    public static Boolean isConnectFraudSystem() {        
         try {
+            Http http = new Http();
+            HttpRequest request = new HttpRequest();        
+            // 1. Set Endpoint và Method        
+            request.setEndpoint(FEC_FraudConstantCommon.SET_ENPOINT_FRAUD_HEALTH);        
+            request.setMethod('GET');        
+            request.setHeader('X-API-KEY', FEC_FraudConstantCommon.FRAUD_X_API_KEY);        
+            request.setTimeout(20000); // Tăng timeout lên 20s        
             HttpResponse response = http.send(request);
             log('STATUS CODE: ' + response.getStatusCode());
+            System.debug(LoggingLevel.INFO, 'STATUS CODE: ' + response.getStatusCode());
+            System.debug(LoggingLevel.INFO, 'BODY: ' + response.getBody());
             log('BODY: ' + response.getBody());        
             if (response.getStatusCode() == 200) {
                 log('Kết nối thành công!');
@@ -586,7 +596,8 @@ global with sharing class FEC_IntegrationFraudService {
             }
         
         } catch (Exception e) {
-            log('Lỗi kết nối (Timeout/DNS): ' + e.getMessage());
+            log('Lỗi kết nối (Timeout/DNS): ' + e.getMessage());          
+
             return false;
         
         }
