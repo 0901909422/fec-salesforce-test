@@ -23,7 +23,7 @@ import getRemarklst from "@salesforce/apex/FEC_CaseRemarkController.getRemarklst
 
 const REQUIRED_MSG = "{0} can't be Blank";
 
-import { formatDate } from "c/fec_CommonUtils";
+import { formatDateTime } from "c/fec_CommonUtils";
 
 export default class Fec_CaseDetail_Customer extends LightningElement {
   @api recordId;
@@ -72,7 +72,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
           .filter((item) => item.Id)
           .map((item) => ({
             ...item,
-            CreatedDate: formatDate(item.CreatedDate),
+            CreatedDate: formatDateTime(item.CreatedDate),
           }));
 
         this.loadRemarklst = true;

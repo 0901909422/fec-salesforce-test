@@ -4,7 +4,7 @@ import getRemarklst from '@salesforce/apex/FEC_CaseRemarkController.getRemarklst
 import createRemark from '@salesforce/apex/FEC_CaseRemarkController.createRemark';
 import submitRemark from '@salesforce/apex/FEC_CaseRemarkController.submitRemark';
 
-import { formatDate } from 'c/fec_CommonUtils';
+import { formatDateTime } from 'c/fec_CommonUtils';
 
 export default class Fec_CaseRemarks extends LightningElement {
   @api caseId;
@@ -59,7 +59,7 @@ export default class Fec_CaseRemarks extends LightningElement {
           .filter((item) => item.Id)
           .map((item) => ({
             ...item,
-            CreatedDate: formatDate(item.CreatedDate),
+            CreatedDate: formatDateTime(item.CreatedDate),
           }));
 
         this.loadRemarklst = true;
