@@ -30,7 +30,7 @@ export default class Fec_CaseRemarks extends LightningElement {
     { label: 'Stage Name', fieldName: 'FEC_Stage_Name__c' },
     { label: 'User', fieldName: 'FEC_User__c' },
     { label: 'User Role', fieldName: 'FEC_User_Role__c' },
-    { label: 'Created Date', fieldName: 'CreatedDate' },
+    { label: 'Date Time', fieldName: 'CreatedDate' },
   ];
 
   loadRemarklst = false;
