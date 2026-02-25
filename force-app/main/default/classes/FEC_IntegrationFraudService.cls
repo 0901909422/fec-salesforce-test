@@ -414,14 +414,14 @@ global with sharing class FEC_IntegrationFraudService {
      * @return The matching channel code if active, otherwise null
      */
     private static String getIntegrationChannelCode(String code) {
-        List<FEC_Case_Channel__c> chs = [
-            SELECT FEC_Alias__c, FEC_Code__c
-            FROM FEC_Case_Channel__c
-            WHERE FEC_Status__c = true
+        List<FEC_Channel__c> chs = [
+            SELECT FEC_Channel_ID__c
+            FROM FEC_Channel__c
+            WHERE FEC_Channel_Status__c = true
         ];
 
-        for (FEC_Case_Channel__c c : chs) {
-            if (c.FEC_Code__c == code) return c.FEC_Code__c;
+        for (FEC_Channel__c c : chs) {
+            if (c.FEC_Channel_ID__c == code) return c.FEC_Channel_ID__c;
         }
         return null;
     }
@@ -586,17 +586,17 @@ global with sharing class FEC_IntegrationFraudService {
             System.debug(LoggingLevel.INFO, 'BODY: ' + response.getBody());
             log('BODY: ' + response.getBody());        
             if (response.getStatusCode() == 200) {
-                log('Kết nối thành công!');
+                log('Connected FIMA System');
                 return true;
             
             } else {
-                log('Lỗi từ Server: ' + response.getStatus());
+                log('Connect Failed FIMA System: ' + response.getStatus());
                 return false;
         
             }
         
         } catch (Exception e) {
-            log('Lỗi kết nối (Timeout/DNS): ' + e.getMessage());          
+            log('Connect Failed (Timeout/DNS): ' + e.getMessage());          
 
             return false;
         

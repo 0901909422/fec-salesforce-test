@@ -352,6 +352,7 @@ export default class FraudIntegrationMapping extends LightningElement {
         this.categoryOptions = [];
         this.subCategoryOptions = [];
         this.subCodeOptions = [];
+        this.channel = null;
 
         loadChannelList()
             .then(r => {
