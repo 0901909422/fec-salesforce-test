@@ -202,6 +202,17 @@ public with sharing class FEC_CommonUltils {
     return (c == null) ? null : c.getText();
   }
 
+  public static String getXmlValueHasNamspace(Dom.XmlNode n, String name) {
+    if (n == null) return null;
+
+    for (Dom.XmlNode child : n.getChildElements()) {
+        if (child.getName() == name) {
+            return child.getText();
+        }
+    }
+    return null;
+  }
+
   public static Decimal xmlValToDecimal(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
     return String.isBlank(v) ? null : Decimal.valueOf(v);

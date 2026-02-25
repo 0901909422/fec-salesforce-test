@@ -194,10 +194,10 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         // SYS
         Dom.XmlNode sysNode = responseNode.getChildElement('Sys', NS_VMX);
         result.Sys = new SysResponse();
-        result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
-        result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
-        result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
-        result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
+        result.Sys.TransID = FEC_CommonUltils.getXmlValueHasNamspace(sysNode, 'TransID');
+        result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValueHasNamspace(sysNode, 'DateTime');
+        result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValueHasNamspace(sysNode, 'Code'));
+        result.Sys.Description = FEC_CommonUltils.getXmlValueHasNamspace(sysNode, 'Description');
 
         // VMX_MSGOUT
         Dom.XmlNode msgOutNode =
@@ -207,24 +207,24 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
                 .getChildElement('VMX_MSGOUT', NS_VMX);
 
         VMXMsgOut out = new VMXMsgOut();
-        out.SVC_RETURN = FEC_CommonUltils.getXmlValue(msgOutNode, 'SVC_RETURN');
-        out.RC_NBR_OCCUR = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(msgOutNode, 'RC_NBR_OCCUR'));
-        out.O_CURR_NOD = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(msgOutNode, 'O_CURR_NOD'));
-        out.O_CURR_NBR = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(msgOutNode, 'O_CURR_NBR'));
-        out.FOREIGN_USE = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(msgOutNode, 'FOREIGN_USE'));
-        out.ORG = FEC_CommonUltils.getXmlValue(msgOutNode, 'ORG');
-        out.ACCT = FEC_CommonUltils.getXmlValue(msgOutNode, 'ACCT');
-        out.REQ_TYPE = FEC_CommonUltils.getXmlValue(msgOutNode, 'REQ_TYPE');
-        out.MORE_DATA_FLAG = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(msgOutNode, 'MORE_DATA_FLAG'));
-        out.NBR_RETURNED_ITEMS = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(msgOutNode, 'NBR_RETURNED_ITEMS'));
+        out.SVC_RETURN = FEC_CommonUltils.getXmlValueHasNamspace(msgOutNode, 'SVC_RETURN');
+        out.RC_NBR_OCCUR = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValueHasNamspace(msgOutNode, 'RC_NBR_OCCUR'));
+        out.O_CURR_NOD = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValueHasNamspace(msgOutNode, 'O_CURR_NOD'));
+        out.O_CURR_NBR = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValueHasNamspace(msgOutNode, 'O_CURR_NBR'));
+        out.FOREIGN_USE = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValueHasNamspace(msgOutNode, 'FOREIGN_USE'));
+        out.ORG = FEC_CommonUltils.getXmlValueHasNamspace(msgOutNode, 'ORG');
+        out.ACCT = FEC_CommonUltils.getXmlValueHasNamspace(msgOutNode, 'ACCT');
+        out.REQ_TYPE = FEC_CommonUltils.getXmlValueHasNamspace(msgOutNode, 'REQ_TYPE');
+        out.MORE_DATA_FLAG = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValueHasNamspace(msgOutNode, 'MORE_DATA_FLAG'));
+        out.NBR_RETURNED_ITEMS = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValueHasNamspace(msgOutNode, 'NBR_RETURNED_ITEMS'));
 
         // RC_DATA
         out.RC_DATA = new List<RCData>();
         for (Dom.XmlNode n : msgOutNode.getChildElements()) {
             if (n.getName() == 'RC_DATA') {
                 RCData d = new RCData();
-                d.RETURN_CODE = FEC_CommonUltils.getXmlValue(n, 'RETURN_CODE');
-                d.RETURN_DESC = FEC_CommonUltils.getXmlValue(n, 'RETURN_DESC');
+                d.RETURN_CODE = FEC_CommonUltils.getXmlValueHasNamspace(n, 'RETURN_CODE');
+                d.RETURN_DESC = FEC_CommonUltils.getXmlValueHasNamspace(n, 'RETURN_DESC');
                 out.RC_DATA.add(d);
             }
         }
@@ -233,16 +233,16 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         Dom.XmlNode nextNode = msgOutNode.getChildElement('NEXT_TOKEN', NS_VMX);
         if (nextNode != null) {
             out.NEXT_TOKEN = new Token();
-            out.NEXT_TOKEN.EFF_DATE = FEC_CommonUltils.getXmlValue(nextNode, 'EFF_DATE_NEXT');
-            out.NEXT_TOKEN.TIME_X = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(nextNode, 'TIME_NEXT'));
+            out.NEXT_TOKEN.EFF_DATE = FEC_CommonUltils.getXmlValueHasNamspace(nextNode, 'EFF_DATE_NEXT');
+            out.NEXT_TOKEN.TIME_X = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValueHasNamspace(nextNode, 'TIME_NEXT'));
         }
 
         // PREV_TOKEN
         Dom.XmlNode prevNode = msgOutNode.getChildElement('PREV_TOKEN', NS_VMX);
         if (prevNode != null) {
             out.PREV_TOKEN = new Token();
-            out.PREV_TOKEN.EFF_DATE = FEC_CommonUltils.getXmlValue(prevNode, 'EFF_DATE_PREV');
-            out.PREV_TOKEN.TIME_X = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(prevNode, 'TIME_PREV'));
+            out.PREV_TOKEN.EFF_DATE = FEC_CommonUltils.getXmlValueHasNamspace(prevNode, 'EFF_DATE_PREV');
+            out.PREV_TOKEN.TIME_X = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValueHasNamspace(prevNode, 'TIME_PREV'));
         }
 
         result.VMXMsgOut = out;

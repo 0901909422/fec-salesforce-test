@@ -91,6 +91,7 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
         loadTransactionDetail({ transactionId: this.transactionId })
             .then(res => {
                 this.transaction = res;
+                setConsoleTab('Transactions Detail', 'standard:record');
             })
             .catch(() => {
                 this.transaction = null;
@@ -98,11 +99,6 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
             .finally(() => {
                 this.isLoading = false;
             });
-    }
-
-    /* ================= SET TABNAME ================= */
-    connectedCallback() {
-        setConsoleTab('Transactions Detail', 'standard:record');
     }
 
     /* ================= SECTIONS ================= */
