@@ -160,6 +160,7 @@ public without sharing class FEC_CreateCaseHanlder {
         interactionCase.Status = 'Open';
         interactionCase.FEC_Genesys_campaign_Name__c = dto.campaignName;
         interactionCase.FEC_Phone_Number__c = dto.phoneNumber;
+        interactionCase.FEC_Search_Phone_Number__c = dto.phoneNumber;
         interactionCase.FEC_National_ID_Passport_ID__c = dto.nationalId;
         interactionCase.FEC_Account_Number__c = dto.cardAccountNum;
         interactionCase.FEC_Contract_Number__c = dto.contractNum;
