@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
+	<types>
+		<members>FEC_ContentDocumentLinkTrigger</members>
+		<members>FEC_ContentDocumentTrigger</members>
+		<members>FEC_ContentVersionTrigger</members>
+		<members>FEC_ContentDistributionTrigger</members>
+		<name>ApexTrigger</name>
+	</types>
     <types>
 		<members>FEC_GetCustomerList</members>
 		<members>FEC_SearchController</members>
@@ -20,6 +27,12 @@
 		<members>FEC_CreateCaseInteractionController</members>
 		<members>FEC_CaseService</members>
 		<members>FEC_InteractionHighlightController</members>
+		<members>FEC_ConstantCommon</members>
+		<members>FEC_FileActionOnReviewService</members>
+		<members>FEC_ContentDocumentLinkTriggerHandler</members>
+		<members>FEC_ContentDocumentTriggerHandler</members>
+		<members>FEC_ContentVersionTriggerHandler</members>
+		<members>FEC_ContentDistributionTriggerHandler</members>
 		<name>ApexClass</name>
 	</types>
 	<types>

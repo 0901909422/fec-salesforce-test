@@ -15,6 +15,7 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
+    public static final String CASE_INTERNAL_RECORD_TYPE_DEV_NAME = 'Internal_Case';
 
     public static final String CHANNEL_INBOUND_API = 'InboundRinging';
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
@@ -46,6 +47,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
     public static final String REQUESTOR_APS = 'APS';
     public static final String REQUESTOR_SD = 'SD';
+    public static final String REQUESTOR_VMXVERSION = '2.0';
+    public static final String REQUESTOR_CONTEXT = 'CRM';
+    public static final String REQUESTOR_ORG = 'FEC';
     public static final String REQUESTOR_RES = 'RES';
     public static final String REQUESTOR_PEGA = 'PEGA';
     public static final String REQUESTOR_ESB = 'ESB';
@@ -80,6 +84,7 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String INTERACTION_VIEW_MODE = 'view';
     public static final String INTERACTION_HANDLING_MODE = 'handling';
+    public static final String INTERACTION_REVIEW_MODE = 'review';
 
     public static final String CASE_STATUS_NEW = 'New';
     public static final String CASE_STATUS_OPEN = 'Open';
@@ -91,4 +96,8 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER = 'Non-existing';
     public static final String CUSTOMER_HISTORY_EXISTING_CUSTOMER = 'Existing';
+
+    public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
+    public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
+
 }
