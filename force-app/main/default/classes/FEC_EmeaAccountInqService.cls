@@ -8,13 +8,14 @@
  * SOAPAction   : M_CMS_EMEA_ACCOUNT_INQ
  ****************************************************************************************/
 
-public with sharing class FEC_EmeaAccountInqService {
+ public with sharing class FEC_EmeaAccountInqService {
 
     // ==========================================
     // CONSTANTS & CONFIGURATION
     // ==========================================
-    private static final String SERVICE_NS = 'http://fecredit.com.vn/CMS_VMXIntegrationWS';
-    private static final String WS_RESPONSE_NS = 'http://fecredit.com.vn/cms/ws/v2'; // Namespace cho WSResponse
+    // SỬA LỖI 1: Namespace chuẩn theo WSDL version 2
+    private static final String SERVICE_NS = 'http://fecredit.com.vn/cms/ws/v2'; 
+    private static final String WS_RESPONSE_NS = 'http://fecredit.com.vn/cms/ws/v2'; 
  
     // ==========================================
     // 1. INPUT DTO (Data Transfer Object)
@@ -51,7 +52,7 @@ public with sharing class FEC_EmeaAccountInqService {
         @AuraEnabled public Decimal pmtPastDue { get; set; }
         @AuraEnabled public Decimal loanBal { get; set; }
         
-        // [NEW FIELDS] Memo Debit & Credit
+        // Memo Debit & Credit
         @AuraEnabled public Decimal amtMemoDb { get; set; }  // AMT_MEMO_DB
         @AuraEnabled public Decimal amtMemoCr { get; set; }  // AMT_MEMO_CR
         
@@ -112,7 +113,7 @@ public with sharing class FEC_EmeaAccountInqService {
                 addTextNode(msgIn, 'DUAL_IND', input.dualInd);
             }
 
-            // Lấy cấu hình API từ Custom Setting
+            // 4. Lấy cấu hình API từ Custom Setting
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Emea_Account_Inq');
 
@@ -123,22 +124,18 @@ public with sharing class FEC_EmeaAccountInqService {
 
             // 5. Process Response
             if (res.getStatusCode() == 200) {
-                // Làm sạch response body trước khi parse (loại bỏ BOM và whitespace không hợp lệ)
+                // Làm sạch response body trước khi parse
                 String responseBody = res.getBody();
                 if (String.isNotBlank(responseBody)) {
-                    // Loại bỏ BOM (Byte Order Mark) và các ký tự không hợp lệ ở đầu
                     responseBody = responseBody.trim();
-                    // Loại bỏ BOM UTF-8 (EF BB BF)
                     if (responseBody.startsWith('\uFEFF')) {
                         responseBody = responseBody.substring(1);
                     }
-                    // Loại bỏ các ký tự không in được ở đầu
                     while (responseBody.length() > 0 && !responseBody.startsWith('<')) {
                         responseBody = responseBody.substring(1);
                     }
-                    System.debug('### Response Body (first 500 chars): ' + responseBody.substring(0, Math.min(500, responseBody.length())));
+                    System.debug('### Response Body: ' + responseBody.substring(0, Math.min(500, responseBody.length())));
                     
-                    // Parse response body đã làm sạch
                     Dom.Document responseDoc = new Dom.Document();
                     responseDoc.load(responseBody);
                     return parseResponse(responseDoc);
@@ -146,7 +143,6 @@ public with sharing class FEC_EmeaAccountInqService {
                     throw new CalloutException(System.Label.FEC_MSG_Response_Null);
                 }
             } else {
-                // Log lỗi để dễ debug nếu HTTP Status != 200
                 System.debug('HTTP Error: ' + res.getBody());
                 throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{res.getStatus() + ' - ' + res.getBody()}));
             }
@@ -187,19 +183,15 @@ public with sharing class FEC_EmeaAccountInqService {
         String rootName = root.getName();
         Dom.XmlNode wsResponse = null;
         
-        // Kiểm tra xem root có phải là WSResponse không (direct XML response)
         if (rootName == 'WSResponse' || rootName.contains('WSResponse')) {
             wsResponse = root;
         } else if (rootName == 'Envelope') {
-            // Nếu là SOAP envelope, tìm Body -> WSResponse hoặc M_CMS_EMEA_ACCOUNT_INQResponse
             Dom.XmlNode body = root.getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
             if (body != null) {
-                // Thử tìm WSResponse trong Body
                 wsResponse = body.getChildElement('WSResponse', WS_RESPONSE_NS);
                 if (wsResponse == null) {
                     wsResponse = body.getChildElement('WSResponse', null);
                 }
-                // Nếu không tìm thấy WSResponse, thử format cũ
                 if (wsResponse == null) {
                     Dom.XmlNode responseNode = body.getChildElement('M_CMS_EMEA_ACCOUNT_INQResponse', SERVICE_NS);
                     if (responseNode != null) {
@@ -208,7 +200,6 @@ public with sharing class FEC_EmeaAccountInqService {
                 }
             }
         } else {
-            // Thử tìm WSResponse như child element
             wsResponse = root.getChildElement('WSResponse', WS_RESPONSE_NS);
             if (wsResponse == null) {
                 wsResponse = root.getChildElement('WSResponse', null);
@@ -237,38 +228,46 @@ public with sharing class FEC_EmeaAccountInqService {
                 if (msgOut != null) {
                     result.svcReturn = FEC_CommonUltils.getXmlValue(msgOut, 'SVC_RETURN');
 
-                    // C. Parse ACCT_BS_OUTPUT (Thông tin tài khoản chính)
+                    // C. Parse ACCT_BS_OUTPUT
                     Dom.XmlNode acctBs = msgOut.getChildElement('ACCT_BS_OUTPUT', null);
                     if (acctBs != null) {
                         result.acctNbr = FEC_CommonUltils.getXmlValue(acctBs, 'ACCT_NBR');
                         result.shortName = FEC_CommonUltils.getXmlValue(acctBs, 'SHORT_NAME');
                         result.custNbr = FEC_CommonUltils.getXmlValue(acctBs, 'CUST_NBR');
                         
-                        // --- Parse Decimals ---
                         result.currBal = FEC_CommonUltils.xmlValToDecimal(acctBs, 'CURR_BAL');
                         result.income = FEC_CommonUltils.xmlValToDecimal(acctBs, 'INCOME');
                         result.pmtTotAmtDue = FEC_CommonUltils.xmlValToDecimal(acctBs, 'PMT_TOT_AMT_DUE');
-                        result.pmtPastDue = FEC_CommonUltils.xmlValToDecimal(acctBs, 'PMT_PAST_DUE');
                         result.loanBal = FEC_CommonUltils.xmlValToDecimal(acctBs, 'LOAN_BAL');
                         
+                        // SỬA LỖI 2: PMT_PAST_DUE nằm trong PMT_DELQ_AMTS
+                        Dom.XmlNode pmtDelqAmts = acctBs.getChildElement('PMT_DELQ_AMTS', null);
+                        if (pmtDelqAmts != null) {
+                            result.pmtPastDue = FEC_CommonUltils.xmlValToDecimal(pmtDelqAmts, 'PMT_PAST_DUE');
+                        }
+
                         // Memo Fields
                         result.amtMemoDb = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_DB');
                         result.amtMemoCr = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_CR');
                         
-                        // --- Parse Dates ---
                         result.dtOpened = getDateSafe(acctBs, 'DT_OPENED');
                         result.dtPmtDue = getDateSafe(acctBs, 'DT_PMT_DUE');
                         result.dtCardExp = getDateSafe(acctBs, 'DT_CARD_EXP');
+                    }
 
-                        // D. Parse NA_DATA_TBL -> NA_DATA (Thông tin liên hệ)
-                        Dom.XmlNode naTbl = acctBs.getChildElement('NA_DATA_TBL', null);
-                        if (naTbl != null) {
-                            Dom.XmlNode naData = naTbl.getChildElement('NA_DATA', null);
-                            if (naData != null) {
-                                result.naFirstName = FEC_CommonUltils.getXmlValue(naData, 'NA_FIRST_NAME');
-                                result.naMobPh = FEC_CommonUltils.getXmlValue(naData, 'NA_MOB_PH');
-                                result.naCity = FEC_CommonUltils.getXmlValue(naData, 'NA_CITY');
-                                result.naEmp = FEC_CommonUltils.getXmlValue(naData, 'NA_EMP');
+                    // SỬA LỖI 3: NA_DATA_TBL nằm ngang hàng với ACCT_BS_OUTPUT (trong VMX_MSGOUT)
+                    Dom.XmlNode naTbl = msgOut.getChildElement('NA_DATA_TBL', null);
+                    if (naTbl != null) {
+                        Dom.XmlNode naData = naTbl.getChildElement('NA_DATA', null);
+                        if (naData != null) {
+                            result.naFirstName = FEC_CommonUltils.getXmlValue(naData, 'NA_FIRST_NAME');
+                            result.naMobPh = FEC_CommonUltils.getXmlValue(naData, 'NA_MOB_PH');
+                            result.naEmp = FEC_CommonUltils.getXmlValue(naData, 'NA_EMP');
+
+                            // SỬA LỖI 4: NA_CITY nằm trong NA_FIXED_DATA
+                            Dom.XmlNode naFixedData = naData.getChildElement('NA_FIXED_DATA', null);
+                            if(naFixedData != null) {
+                                result.naCity = FEC_CommonUltils.getXmlValue(naFixedData, 'NA_CITY');
                             }
                         }
                     }
@@ -297,38 +296,45 @@ public with sharing class FEC_EmeaAccountInqService {
             if (msgOut != null) {
                 result.svcReturn = FEC_CommonUltils.getXmlValue(msgOut, 'SVC_RETURN');
 
-                // C. Parse ACCT_BS_OUTPUT (Thông tin tài khoản chính)
+                // C. Parse ACCT_BS_OUTPUT
                 Dom.XmlNode acctBs = msgOut.getChildElement('ACCT_BS_OUTPUT', null);
                 if (acctBs != null) {
                     result.acctNbr = FEC_CommonUltils.getXmlValue(acctBs, 'ACCT_NBR');
                     result.shortName = FEC_CommonUltils.getXmlValue(acctBs, 'SHORT_NAME');
                     result.custNbr = FEC_CommonUltils.getXmlValue(acctBs, 'CUST_NBR');
                     
-                    // --- Parse Decimals ---
                     result.currBal = FEC_CommonUltils.xmlValToDecimal(acctBs, 'CURR_BAL');
                     result.income = FEC_CommonUltils.xmlValToDecimal(acctBs, 'INCOME');
                     result.pmtTotAmtDue = FEC_CommonUltils.xmlValToDecimal(acctBs, 'PMT_TOT_AMT_DUE');
-                    result.pmtPastDue = FEC_CommonUltils.xmlValToDecimal(acctBs, 'PMT_PAST_DUE');
                     result.loanBal = FEC_CommonUltils.xmlValToDecimal(acctBs, 'LOAN_BAL');
+
+                    // SỬA LỖI 2: PMT_PAST_DUE
+                    Dom.XmlNode pmtDelqAmts = acctBs.getChildElement('PMT_DELQ_AMTS', null);
+                    if (pmtDelqAmts != null) {
+                        result.pmtPastDue = FEC_CommonUltils.xmlValToDecimal(pmtDelqAmts, 'PMT_PAST_DUE');
+                    }
                     
-                    // Memo Fields
                     result.amtMemoDb = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_DB');
                     result.amtMemoCr = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_CR');
                     
-                    // --- Parse Dates ---
                     result.dtOpened = getDateSafe(acctBs, 'DT_OPENED');
                     result.dtPmtDue = getDateSafe(acctBs, 'DT_PMT_DUE');
                     result.dtCardExp = getDateSafe(acctBs, 'DT_CARD_EXP');
+                }
 
-                    // D. Parse NA_DATA_TBL -> NA_DATA (Thông tin liên hệ)
-                    Dom.XmlNode naTbl = acctBs.getChildElement('NA_DATA_TBL', null);
-                    if (naTbl != null) {
-                        Dom.XmlNode naData = naTbl.getChildElement('NA_DATA', null);
-                        if (naData != null) {
-                            result.naFirstName = FEC_CommonUltils.getXmlValue(naData, 'NA_FIRST_NAME');
-                            result.naMobPh = FEC_CommonUltils.getXmlValue(naData, 'NA_MOB_PH');
-                            result.naCity = FEC_CommonUltils.getXmlValue(naData, 'NA_CITY');
-                            result.naEmp = FEC_CommonUltils.getXmlValue(naData, 'NA_EMP');
+                // SỬA LỖI 3: NA_DATA_TBL lấy từ msgOut
+                Dom.XmlNode naTbl = msgOut.getChildElement('NA_DATA_TBL', null);
+                if (naTbl != null) {
+                    Dom.XmlNode naData = naTbl.getChildElement('NA_DATA', null);
+                    if (naData != null) {
+                        result.naFirstName = FEC_CommonUltils.getXmlValue(naData, 'NA_FIRST_NAME');
+                        result.naMobPh = FEC_CommonUltils.getXmlValue(naData, 'NA_MOB_PH');
+                        result.naEmp = FEC_CommonUltils.getXmlValue(naData, 'NA_EMP');
+
+                        // SỬA LỖI 4: NA_CITY
+                        Dom.XmlNode naFixedData = naData.getChildElement('NA_FIXED_DATA', null);
+                        if(naFixedData != null) {
+                            result.naCity = FEC_CommonUltils.getXmlValue(naFixedData, 'NA_CITY');
                         }
                     }
                 }
@@ -346,19 +352,17 @@ public with sharing class FEC_EmeaAccountInqService {
         parent.addChildElement(name, null, null).addTextNode(value == null ? '' : value);
     }
 
-    // Lấy Date an toàn (Xử lý cả yyyyMMdd và yyyy-MM-dd)
+    // Lấy Date an toàn
     private static Date getDateSafe(Dom.XmlNode parent, String name) {
         String v = FEC_CommonUltils.getXmlValue(parent, name);
         if (String.isBlank(v)) return null;
         try {
-            // Case 1: Format yyyyMMdd (Không có dấu phân cách)
             if (v.length() == 8 && v.isNumeric()) {
                 Integer y = Integer.valueOf(v.substring(0, 4));
                 Integer m = Integer.valueOf(v.substring(4, 6));
                 Integer d = Integer.valueOf(v.substring(6, 8));
                 return Date.newInstance(y, m, d);
             }
-            // Case 2: Format chuẩn Salesforce yyyy-MM-dd
             return Date.valueOf(v);
         } catch (Exception e) {
             System.debug('Date Parse Error for field ' + name + ': ' + v);
