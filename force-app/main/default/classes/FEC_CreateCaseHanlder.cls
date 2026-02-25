@@ -154,8 +154,7 @@ public without sharing class FEC_CreateCaseHanlder {
 
         }else if ( dto.type == FEC_ConstantCommon.CHANNEL_OUTBOUND_API ) {
             interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
-            interactionCase.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.CHAN
-            NEL_OUTBOUND_SUBCHANNEL_NAME;
+            interactionCase.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_SUBCHANNEL_NAME;
         }
         interactionCase.FEC_External_Interaction_ID__c = dto.genesysInteractionID;
         interactionCase.Status = 'Open';
@@ -184,7 +183,7 @@ public without sharing class FEC_CreateCaseHanlder {
             System.debug('Assigning Agent ID: ' + dto.agentId + ' to User Id    : ' + createdInteraction.OwnerId);
             User userInfo = [SELECT Id, FEC_Agent_ID__c,FEC_Main_Queue__c FROM User WHERE Id = :createdInteraction.OwnerId];
             userInfo.FEC_Agent_ID__c = dto.agentId;
-            userInfo.FEC_Main_Queue__c = 'default value';
+            // userInfo.FEC_Main_Queue__c = 'default value';
             update userInfo;
         }
         
