@@ -3,15 +3,7 @@
         <!-- Header with Back button và icon IPP -->
         <div slot="title">
             <div class="slds-media slds-media_center">
-                <!-- <div class="slds-media__figure">
-                    <lightning-button-icon
-                        icon-name="utility:back"
-                        alternative-text="Back"
-                        title="Back"
-                        onclick={handleBack}
-                        class="slds-m-right_small">
-                    </lightning-button-icon>
-                </div> -->
+                
                 <div class="slds-media__figure ipp-header-icon-wrap">
                     <span class="ipp-header-icon" title="IPP">
                         <lightning-icon icon-name="standard:account" size="small" class="ipp-header-icon-svg"></lightning-icon>
@@ -26,15 +18,6 @@
             </div>
         </div>
         
-        <!-- Actions -->
-        <!-- <div slot="actions">
-            <lightning-button
-                label="View Standard Record"
-                onclick={handleViewRecord}
-                variant="neutral">
-            </lightning-button>
-        </div> -->
-
         <!-- Loading spinner -->
         <template if:true={isLoading}>
             <div class="slds-is-relative slds-p-around_large">
