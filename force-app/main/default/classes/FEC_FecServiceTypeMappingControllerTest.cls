@@ -18,8 +18,7 @@ private class FEC_FecServiceTypeMappingControllerTest {
 
         // 2. Khởi tạo Nature of Case liên kết với BP
         FEC_MDM_Nature_Of_Case__c noc = new FEC_MDM_Nature_Of_Case__c(
-            FEC_Business_Process_Name__c = bp.Id,
-            ExternalID__c = 'NOC_EXT_TEST'
+            FEC_Business_Process__c = bp.Id
         );
         insert noc;
 

@@ -10,41 +10,41 @@ public with sharing class FEC_NatureOfCaseTreeService {
                 Process_Change_Status__c, 
                 FEC_Customer_Type__c, 
 
-                FEC_Product_Type_Name__c, 
-                FEC_Product_Type_Name__r.Name, 
-                FEC_Product_Type_Name__r.FEC_Alias__c, 
-                FEC_Product_Type_Name__r.FEC_Code__c, 
-                FEC_Product_Type_Name__r.FEC_Name_VN__c, 
-                FEC_Product_Type_Name__r.FEC_Pos_Order__c, 
-                FEC_Product_Type_Name__r.FEC_Status__c, 
-                FEC_Product_Type_Name__r.Process_Change_Status__c, 
+                FEC_Product_Type__c, 
+                FEC_Product_Type__r.Name, 
+                FEC_Product_Type__r.FEC_Alias__c, 
+                FEC_Product_Type__r.FEC_Code__c, 
+                FEC_Product_Type__r.FEC_Name_VN__c, 
+                FEC_Product_Type__r.FEC_Pos_Order__c, 
+                FEC_Product_Type__r.FEC_Active__c, 
+                FEC_Product_Type__r.Process_Change_Status__c, 
 
-                FEC_Business_Process_Name__c, 
-                FEC_Business_Process_Name__r.Name, 
-                FEC_Business_Process_Name__r.FEC_Alias__c, 
-                FEC_Business_Process_Name__r.FEC_Code__c, 
-                FEC_Business_Process_Name__r.FEC_Name_VN__c, 
-                FEC_Business_Process_Name__r.FEC_Pos_Order__c, 
-                FEC_Business_Process_Name__r.FEC_Status__c, 
-                FEC_Business_Process_Name__r.Process_Change_Status__c, 
+                FEC_Business_Process__c, 
+                FEC_Business_Process__r.Name, 
+                FEC_Business_Process__r.FEC_Alias__c, 
+                FEC_Business_Process__r.FEC_Code__c, 
+                FEC_Business_Process__r.FEC_Name_VN__c, 
+                FEC_Business_Process__r.FEC_Pos_Order__c, 
+                FEC_Business_Process__r.FEC_Active__c, 
+                FEC_Business_Process__r.Process_Change_Status__c, 
 
-                FEC_Category_Name__c, 
-                FEC_Category_Name__r.Name, 
-                FEC_Category_Name__r.FEC_Alias__c, 
-                FEC_Category_Name__r.FEC_Code__c, 
-                FEC_Category_Name__r.FEC_Name_VN__c, 
-                FEC_Category_Name__r.FEC_Pos_Order__c, 
-                FEC_Category_Name__r.FEC_Status__c, 
-                FEC_Category_Name__r.Process_Change_Status__c,  
+                FEC_Category__c, 
+                FEC_Category__r.Name, 
+                FEC_Category__r.FEC_Alias__c, 
+                FEC_Category__r.FEC_Code__c, 
+                FEC_Category__r.FEC_Name_VN__c, 
+                FEC_Category__r.FEC_Pos_Order__c, 
+                FEC_Category__r.FEC_Active__c, 
+                FEC_Category__r.Process_Change_Status__c,  
 
-                FEC_Sub_Category_Name__c, 
-                FEC_Sub_Category_Name__r.Name, 
-                FEC_Sub_Category_Name__r.FEC_Alias__c, 
-                FEC_Sub_Category_Name__r.FEC_Code__c, 
-                FEC_Sub_Category_Name__r.FEC_Name_VN__c, 
-                FEC_Sub_Category_Name__r.FEC_Pos_Order__c, 
-                FEC_Sub_Category_Name__r.FEC_Status__c, 
-                FEC_Sub_Category_Name__r.Process_Change_Status__c, 
+                FEC_Sub_Category__c, 
+                FEC_Sub_Category__r.Name, 
+                FEC_Sub_Category__r.FEC_Alias__c, 
+                FEC_Sub_Category__r.FEC_Code__c, 
+                FEC_Sub_Category__r.FEC_Name_VN__c, 
+                FEC_Sub_Category__r.FEC_Pos_Order__c, 
+                FEC_Sub_Category__r.FEC_Active__c, 
+                FEC_Sub_Category__r.Process_Change_Status__c, 
 
                 FEC_Sub_Code__c, 
                 FEC_Sub_Code__r.Name,
@@ -52,14 +52,14 @@ public with sharing class FEC_NatureOfCaseTreeService {
                 FEC_Sub_Code__r.FEC_Code__c, 
                 FEC_Sub_Code__r.FEC_Name_VN__c, 
                 FEC_Sub_Code__r.FEC_Pos_Order__c, 
-                FEC_Sub_Code__r.FEC_Status__c,
+                FEC_Sub_Code__r.FEC_Active__c,
                 FEC_Sub_Code__r.Process_Change_Status__c
             FROM FEC_MDM_Nature_Of_Case__c
             ORDER BY 
-                FEC_Product_Type_Name__r.FEC_Pos_Order__c ASC,
-                FEC_Business_Process_Name__r.FEC_Pos_Order__c ASC,
-                FEC_Category_Name__r.FEC_Pos_Order__c ASC,
-                FEC_Sub_Category_Name__r.FEC_Pos_Order__c ASC,
+                FEC_Product_Type__r.FEC_Pos_Order__c ASC,
+                FEC_Business_Process__r.FEC_Pos_Order__c ASC,
+                FEC_Category__r.FEC_Pos_Order__c ASC,
+                FEC_Sub_Category__r.FEC_Pos_Order__c ASC,
                 FEC_Sub_Code__r.FEC_Pos_Order__c ASC
         ];
         // Note: Security.stripInaccessible removed - ensure proper FLS via Permission Sets
@@ -95,7 +95,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
         if (fieldMap.containsKey(FEC_Constants.FIELD_ALIAS)) newRecord.put(FEC_Constants.FIELD_ALIAS, strAlias);
         if (fieldMap.containsKey(FEC_Constants.FIELD_CODE)) newRecord.put(FEC_Constants.FIELD_CODE, strCode);
         if (fieldMap.containsKey(FEC_Constants.FIELD_NAME_VN)) newRecord.put(FEC_Constants.FIELD_NAME_VN, strNameVN);
-        if (fieldMap.containsKey(FEC_Constants.FIELD_STATUS)) newRecord.put(FEC_Constants.FIELD_STATUS, isStatus);
+        if (fieldMap.containsKey(FEC_Constants.FIELD_ACTIVE)) newRecord.put(FEC_Constants.FIELD_ACTIVE, isStatus);
         if (fieldMap.containsKey(FEC_Constants.FIELD_NAME)) newRecord.put(FEC_Constants.FIELD_NAME, strName);
         if (fieldMap.containsKey(FEC_Constants.FIELD_POS_ORDER)) newRecord.put(FEC_Constants.FIELD_POS_ORDER, intPosOrder);
         
@@ -120,7 +120,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
             );
             
             if (objectTypeUpper.equalsIgnoreCase(FEC_Constants.KEY_MDM_PRODUCT_TYPE)) {
-                nocRecord.FEC_Product_Type_Name__c = newRecordId;
+                nocRecord.FEC_Product_Type__c = newRecordId;
             } else if (strParentId != null && !String.isBlank(strParentId) && NOC_MAPPING.containsKey(objectTypeUpper)) {
                 List<String> mapping = NOC_MAPPING.get(objectTypeUpper);
                 String childNocField = mapping[0];
@@ -169,10 +169,10 @@ public with sharing class FEC_NatureOfCaseTreeService {
             List<FEC_MDM_Nature_Of_Case__c> relatedNocs = Database.query(query);
             
             for (FEC_MDM_Nature_Of_Case__c n : relatedNocs) {
-                if (n.FEC_Product_Type_Name__c != null) ptIds.add(n.FEC_Product_Type_Name__c);
-                if (n.FEC_Business_Process_Name__c != null) bpIds.add(n.FEC_Business_Process_Name__c);
-                if (n.FEC_Category_Name__c != null) catIds.add(n.FEC_Category_Name__c);
-                if (n.FEC_Sub_Category_Name__c != null) scatIds.add(n.FEC_Sub_Category_Name__c);
+                if (n.FEC_Product_Type__c != null) ptIds.add(n.FEC_Product_Type__c);
+                if (n.FEC_Business_Process__c != null) bpIds.add(n.FEC_Business_Process__c);
+                if (n.FEC_Category__c != null) catIds.add(n.FEC_Category__c);
+                if (n.FEC_Sub_Category__c != null) scatIds.add(n.FEC_Sub_Category__c);
                 if (n.FEC_Sub_Code__c != null) scodeIds.add(n.FEC_Sub_Code__c);
             }
             

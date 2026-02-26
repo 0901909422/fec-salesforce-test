@@ -53,13 +53,13 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>FEC_MDM_Additional_Field__c</label>
+    <label>FEC_Additional_Field__c</label>
     <nameField>
-        <label>FEC_MDM_Additional_Field_Name__c</label>
+        <label>FEC_Additional_Field__c</label>
         <trackHistory>false</trackHistory>
         <type>Text</type>
     </nameField>
-    <pluralLabel>FEC_MDM_Additional_Fields__c</pluralLabel>
+    <pluralLabel>FEC_Additional_Fields__c</pluralLabel>
     <searchLayouts></searchLayouts>
     <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>
