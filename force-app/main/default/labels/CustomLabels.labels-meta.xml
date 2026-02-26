@@ -1181,6 +1181,14 @@
         <value>Interaction Remark</value>
     </labels>
     <labels>
+        <fullName>FEC_Interaction_Remarks_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Remarks Label</shortDescription>
+        <value>Interaction Remarks</value>
+    </labels>
+    <labels>
         <fullName>FEC_Interaction_Status_Label</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -1201,6 +1209,14 @@
         <protected>false</protected>
         <shortDescription>KYC Answer Label</shortDescription>
         <value>KYC Answer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_KYC_Method_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>KYC Method Label</shortDescription>
+        <value>KYC Method</value>
     </labels>
     <labels>
         <fullName>FEC_KYC_Product_Label</fullName>
@@ -2806,6 +2822,14 @@
         <value>Queue</value>
     </labels>
     <labels>
+        <fullName>FEC_Quick_Wrap_up_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Quick Wrap-up Label</shortDescription>
+        <value>Quick Wrap-up</value>
+    </labels>
+    <labels>
         <fullName>FEC_Reason_Label</fullName>
         <categories>Case</categories>
         <language>en_US</language>
@@ -3285,6 +3309,22 @@
         <value>View All</value>
     </labels>
     <labels>
+        <fullName>FEC_View_All_Case_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>View All Case Label</shortDescription>
+        <value>View All Cases</value>
+    </labels>
+    <labels>
+        <fullName>FEC_View_All_Relevant_Interaction_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>View All Relevant Interaction Label</shortDescription>
+        <value>View All Relevant Interactions</value>
+    </labels>
+    <labels>
         <fullName>FEC_Wrap_up_Btn_Label</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3439,6 +3479,14 @@
         <protected>false</protected>
         <shortDescription>Work Phone Label</shortDescription>
         <value>Work Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Wrap_up_Information_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Wrap-up Information Label</shortDescription>
+        <value>Wrap-up Information</value>
     </labels>
     <labels>
         <fullName>FEC_Zalo_Follower_Label</fullName>

@@ -14,6 +14,10 @@ import hasUnsubmittedCases from "@salesforce/apex/FEC_InteractionSLAController.h
 import hasSubmittedCases from "@salesforce/apex/FEC_InteractionSLAController.hasSubmittedCases";
 import ICONS from "@salesforce/resourceUrl/FEC_SLA_Icon";
 
+import FEC_Interaction_Remarks_Label from '@salesforce/label/c.FEC_Interaction_Remarks_Label';
+import FEC_Quick_Wrap_up_Label from '@salesforce/label/c.FEC_Quick_Wrap_up_Label';
+import FEC_Wrap_up_Information_Label from '@salesforce/label/c.FEC_Wrap_up_Information_Label';
+
 const SLA_RULES = {
   Inbound: { green: 5, yellow: 10 },
   Outbound: { green: 5, yellow: null },
@@ -57,6 +61,12 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
   quickWrapUpOutcomeCode = 'Hoàn tất/ Đã phản hồi';
 
   iconUrl;
+
+  customLabel = {
+    interactionRemark: FEC_Interaction_Remarks_Label,
+    quickWrapUp: FEC_Quick_Wrap_up_Label,
+    wrapUpInformation: FEC_Wrap_up_Information_Label
+  }
 
   @wire(IsConsoleNavigation)
   isConsoleNavigation;
@@ -184,6 +194,10 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
     }
 
     clearInterval(this.timer);
+
+    if( this.record?.IsClosed ) {
+      return "duration__donut duration__donut--grey";
+    }
 
     return "duration__donut duration__donut--red";
   }
