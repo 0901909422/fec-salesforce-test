@@ -1,6 +1,6 @@
 /**
  * @description Test class cho FEC_ProcessChangeStatusTriggerHandler.
- * Kiểm tra việc tự động cập nhật Process_Change_Status__c và sinh ExternalID__c.
+ * Kiểm tra việc tự động cập nhật Process_Change_Status__c và sinh FEC_Code__c.
  * @author DAT NGO
  * @date 2026-01-27
  */
@@ -10,7 +10,7 @@ private class FEC_ChangeStatusHandlerTest {
     /**
      * @description Test logic Before Insert:
      * 1. Status phải luôn là 'New'.
-     * 2. ExternalID__c phải được sinh ra tự động.
+     * 2. FEC_Code__c phải được sinh ra tự động.
      */
     @isTest
     static void testHandleStatusBeforeInsert() {
@@ -26,13 +26,13 @@ private class FEC_ChangeStatusHandlerTest {
 
         // Kiểm tra kết quả sau khi Insert
         FEC_MDM_Product_Type__c result = [
-            SELECT Process_Change_Status__c, ExternalID__c 
+            SELECT Process_Change_Status__c, FEC_Code__c 
             FROM FEC_MDM_Product_Type__c 
             WHERE Id = :prod.Id
         ];
 
         Assert.areEqual('New', result.Process_Change_Status__c, 'Bản ghi mới tạo phải có status là New');
-        Assert.isNotNull(result.ExternalID__c, 'ExternalID phải được tạo tự động');
+        Assert.isNotNull(result.FEC_Code__c, 'ExternalID phải được tạo tự động');
     }
 
     /**

@@ -1,110 +1,116 @@
 <template>
-    <lightning-accordion-section name={sectionTitle} label={sectionTitle} class="slds-accordion__section">
-        <!-- ================= ACTIONS ================= -->
+    <lightning-accordion-section
+        name={sectionTitle}
+        label={sectionTitle}
+        class="slds-accordion__section">
+
+        <!-- ACTIONS -->
         <div slot="actions" if:true={showRefreshButton}>
-            <lightning-button label="Refresh" variant="brand" onclick={handleRefresh}>
+            <lightning-button
+                label="Refresh"
+                variant="brand"
+                onclick={handleRefresh}>
             </lightning-button>
         </div>
 
-        <!-- ================= CONTENT ================= -->
-        <div class="slds-form slds-form_horizontal slds-p-around_small" role="list">
+        <!-- CONTENT -->
+        <div class="slds-form slds-p-around_small" role="list">
+
             <template for:each={rows} for:item="row">
-                <!-- ========== BUTTON ROW ========== -->
-                <div key={row.key} if:true={row.isButtonRow} class="slds-m-vertical_x-small">
+
+                <!-- BUTTON ROW -->
+                <div key={row.key} if:true={row.isButtonRow} class={row.buttonRowClass}>
                     <template for:each={row.buttons} for:item="btn">
-                        <lightning-button key={btn.name} label={btn.label} variant={btn.variant} data-name={btn.name}
-                            onclick={handleButtonClick} class="slds-m-right_x-small">
+                        <lightning-button
+                            key={btn.name}
+                            label={btn.label}
+                            variant={btn.variant}
+                            data-name={btn.name}
+                            onclick={handleButtonClick}
+                            class="slds-m-right_x-small">
                         </lightning-button>
                     </template>
                 </div>
 
-                <!-- ========== FIELD ROW ========== -->
-                <div key={row.key} if:false={row.isButtonRow} class="slds-form__row">
+                <!-- FIELD ROW -->
+                <div key={row.key} if:false={row.isButtonRow}
+                     class="slds-grid slds-wrap slds-gutters_x-small">
+
                     <template for:each={row.fields} for:item="field">
-                        <!-- EMPTY -->
-                        <div key={field.key} if:true={field.isEmpty} class="slds-form__item" role="listitem"></div>
-                        <!-- FULL WIDTH FIELD -->
-                        <div key={field.key} if:true={field.isFullWidth} class="slds-form__item slds-size_1-of-1"
-                            role="listitem">
-                            <div class="slds-form-element slds-form-element_horizontal slds-form-element_readonly">
+                        <div key={field.key} class={field.gridClass}>
 
-                                <span class="slds-form-element__label">
-                                    <span class="slds-grid slds-grid_vertical-align-center">
-                                        <span>{field.label}</span>
+                            <template if:false={field.isEmpty}>
+                                <div class="slds-p-around_x-small">
 
-                                        <template if:true={field.hasHelpText}>
-                                            <lightning-helptext content={field.helpText}
-                                                class="slds-m-left_xx-small"></lightning-helptext>
-                                        </template>
-                                    </span>
-                                </span>
+                                    <!-- ROW -->
+                                    <div class="slds-grid
+                                                slds-grid_vertical-align-start
+                                                slds-border_bottom
+                                                slds-p-bottom_x-small">
 
-                                <div class="slds-form-element__control">
-                                    <div class="slds-form-element__static
-                                               slds-grid
-                                               slds-grid_align-spread
-                                               slds-grid_vertical-align-center">
-                                        <span>{field.value}</span>
+                                        <!-- LABEL -->
+                                        <div class="slds-grid
+                                                    slds-grid_vertical-align-center
+                                                    slds-text-title_bold"
+                                             style="
+                                                width: 140px;
+                                                min-width: 170px;
+                                                margin-right: 4px;
+                                                white-space: nowrap;
+                                             ">
 
-                                        <span>
+                                            <span>{field.label}</span>
+
+                                            <template if:true={field.hasHelpText}>
+                                                <lightning-helptext
+                                                    content={field.helpText}
+                                                    class="slds-m-left_xx-small">
+                                                </lightning-helptext>
+                                            </template>
+                                        </div>
+
+                                        <!-- VALUE -->
+                                        <div style="
+                                                flex: 1;
+                                                word-break: break-word;
+                                             "
+                                             class="slds-text-body_regular">
+                                            {field.value}
+                                        </div>
+
+                                        <!-- ICON -->
+                                        <div class="slds-m-left_x-small
+                                                    slds-grid
+                                                    slds-grid_vertical-align-center">
                                             <template if:true={field.showSuccess}>
-                                                <lightning-icon icon-name="utility:success" variant="success"
-                                                    size="x-small"></lightning-icon>
+                                                <lightning-icon
+                                                    icon-name="utility:success"
+                                                    variant="success"
+                                                    size="x-small">
+                                                </lightning-icon>
                                             </template>
 
                                             <template if:true={field.showError}>
-                                                <lightning-icon icon-name="utility:error" variant="error"
-                                                    size="x-small"></lightning-icon>
+                                                <lightning-icon
+                                                    icon-name="utility:clear"
+                                                    variant="error"
+                                                    size="x-small">
+                                                </lightning-icon>
                                             </template>
-                                        </span>
+                                        </div>
+
                                     </div>
+
                                 </div>
-                            </div>
+                            </template>
+
                         </div>
-
-                        <!-- NORMAL FIELD -->
-                        <div key={field.key} if:false={field.isEmpty} class="slds-form__item" role="listitem">
-                            <div class="slds-form-element slds-form-element_horizontal slds-form-element_readonly">
-
-                                <span class="slds-form-element__label">
-                                    <span class="slds-grid slds-grid_vertical-align-center">
-                                        <span>{field.label}</span>
-
-                                        <template if:true={field.hasHelpText}>
-                                            <lightning-helptext content={field.helpText}
-                                                class="slds-m-left_xx-small"></lightning-helptext>
-                                        </template>
-                                    </span>
-                                </span>
-
-                                <div class="slds-form-element__control">
-                                    <div class="slds-form-element__static
-                                               slds-grid
-                                               slds-grid_align-spread
-                                               slds-grid_vertical-align-center">
-                                        <span>{field.value}</span>
-
-                                        <span>
-                                            <template if:true={field.showSuccess}>
-                                                <lightning-icon icon-name="utility:success" variant="success"
-                                                    size="x-small"></lightning-icon>
-                                            </template>
-
-                                            <template if:true={field.showError}>
-                                                <lightning-icon icon-name="utility:error" variant="error"
-                                                    size="x-small"></lightning-icon>
-                                            </template>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                     </template>
+
                 </div>
 
             </template>
-        </div>
 
+        </div>
     </lightning-accordion-section>
 </template>

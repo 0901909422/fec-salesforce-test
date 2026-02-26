@@ -1,4 +1,17 @@
-public with sharing class FEC_MainInfoController {
+/****************************************************************************************
+ * File Name    : FEC_MainInfoController.Apex
+ * Author       : Quangdv7
+ * Date         : 2025-01-10
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-10     Quangdv7             Create
+ 
+****************************************************************************************/
+
+public without sharing class FEC_MainInfoController {
 
     /* =====================================================
      * DTO
@@ -159,7 +172,7 @@ public with sharing class FEC_MainInfoController {
          * ===================================================== */
         MainInfoDTO dto = mapToDTO(hist);
         dto.addresses = addrResult.dtoList;
-        dto.helpTexts = buildHelpTextMap();
+        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
 
         /* ===== SAVE CACHE ===== */
         hist.FEC_API_Cache__c = JSON.serialize(dto);
@@ -285,18 +298,6 @@ public with sharing class FEC_MainInfoController {
             a.Ward, a.District, a.City,
             a.CountryName, a.ZipCode
         }, ', ');
-    }
-
-    private static Map<String, String> buildHelpTextMap() {
-        Map<String, String> m = new Map<String, String>();
-        for (Schema.SObjectField f :
-            FEC_Customer_History__c.SObjectType.getDescribe().fields.getMap().values()
-        ) {
-            if (String.isNotBlank(f.getDescribe().getInlineHelpText())) {
-                m.put(f.getDescribe().getName(), f.getDescribe().getInlineHelpText());
-            }
-        }
-        return m;
     }
 
     private static MainInfoDTO mapToDTO(FEC_Customer_History__c h) {

@@ -24,6 +24,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_WEBSITE = 'WEBSITE';
     public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
 
+    public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';
+    public static final String CHANNEL_OUTBOUND_SUBCHANNEL_NAME = 'Outbound Call';
+
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
     public static final String PATTERN_APPLICATION_ID = '^(\\d{6}|\\d{8}|\\d{9})$';
@@ -35,6 +38,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_DATE_TIME = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$';
     public static final String PATTERN_DATE_TIME_FULL = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
+    public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
 
     public static final String REQUESTOR_CRM = 'CRM';
     public static final String REQUESTOR_PORTAL = 'PORTAL';
@@ -43,8 +47,13 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
     public static final String REQUESTOR_APS = 'APS';
     public static final String REQUESTOR_SD = 'SD';
+    public static final String REQUESTOR_VMXVERSION = '2.0';
+    public static final String REQUESTOR_CONTEXT = 'CRM';
+    public static final String REQUESTOR_ORG = 'FEC';
     public static final String REQUESTOR_RES = 'RES';
     public static final String REQUESTOR_PEGA = 'PEGA';
+    public static final String REQUESTOR_ESB = 'ESB';
+
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
     public static final String ADDRESS_TYPE_OFFICE = 'OFFICE';
@@ -62,4 +71,28 @@ public with sharing class FEC_ConstantCommon {
     public static final String KEY_UPLOADED_TIME = 'uploadedTime';
     public static final String KEY_STATUS = 'status';
     public static final String YES_VALUE = 'yes';
+
+    public static final String PRODUCT_TYPE_INSURANCE = 'Insurance';
+    public static final String PRODUCT_TYPE_LOAN = 'Loan';
+    public static final String PRODUCT_TYPE_CARD = 'Card';
+
+    public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
+    public static final String CASE_STATUS_RESOLVED_REJECTED = 'Resolved-Rejected';
+    public static final String CASE_STATUS_RESOLVED_COMPLETED = 'Resolved-Completed';
+    public static final String CASE_STATUS_AUTO_CANCELLED = 'Resolved-AutoCancelled';
+    public static final String CASE_STATUS_AUTO_CLOSED = 'Auto-Closed';
+
+    public static final String INTERACTION_VIEW_MODE = 'view';
+    public static final String INTERACTION_HANDLING_MODE = 'handling';
+
+    public static final String CASE_STATUS_NEW = 'New';
+    public static final String CASE_STATUS_OPEN = 'Open';
+
+    public static final String CASE_WEB_ORIGIN = 'Web';
+
+    public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
+    public static final String CASE_EXISTING_CUSTOMER = 'Existing';
+
+    public static final String CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER = 'Non-existing';
+    public static final String CUSTOMER_HISTORY_EXISTING_CUSTOMER = 'Existing';
 }

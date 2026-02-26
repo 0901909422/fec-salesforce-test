@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_National_ID_Passport_ID__c</fullName>
-    <caseSensitive>false</caseSensitive>
+    <description>Số CMND/CCCD</description>
     <externalId>true</externalId>
     <label>National ID/ Passport ID</label>
     <length>12</length>
@@ -10,5 +10,5 @@
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Text</type>
-    <unique>true</unique>
+    <unique>false</unique>
 </CustomField>

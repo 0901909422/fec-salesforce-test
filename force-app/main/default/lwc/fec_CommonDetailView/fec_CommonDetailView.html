@@ -1,0 +1,123 @@
+<template>
+    <article class="slds-card transaction-card">
+
+        <!-- ================= HEADER ================= -->
+        <div class="slds-page-header slds-page-header_record-home">
+            <div class="slds-page-header__row">
+                <div class="slds-page-header__col-title">
+                    <div class="slds-media">
+
+                        <!-- ICON -->
+                        <div class="slds-media__figure">
+                            <span class="slds-icon_container slds-icon-standard-orders slds-icon_container_circle">
+                                <lightning-icon
+                                    icon-name={iconName}
+                                    size="small"
+                                    alternative-text="Transaction">
+                                </lightning-icon>
+                            </span>
+                        </div>
+
+                        <!-- TITLE -->
+                        <div class="slds-media__body">
+                            <div class="slds-page-header__name">
+                                <span class="slds-page-header__title slds-truncate">
+                                    {title}
+                                </span>
+                            </div>
+                            <p class="slds-text-heading_large slds-text-color_brand">
+                                {subTitle}
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= DETAILS ================= -->
+        <div class="detail-tab-wrapper">
+
+            <lightning-tabset variant="scoped">
+                <lightning-tab label="Details">
+
+                    <lightning-accordion
+                        allow-multiple-sections-open
+                        active-section-name={activeSections}>
+
+                        <template for:each={sections} for:item="section">
+                            <lightning-accordion-section
+                                key={section.name}
+                                name={section.name}
+                                label={section.label}>
+
+                                <div class="slds-grid slds-wrap slds-p-horizontal_medium slds-p-vertical_small">
+
+                                    <template for:each={section.fields} for:item="field">
+
+                                        <div key={field.fieldName}
+                                             class={section.fieldColClass}>
+
+                                            <!-- ROW -->
+                                            <div class={field.rowClass}>
+
+                                                <!-- LABEL -->
+                                                <div class="slds-col slds-size_1-of-2 slds-text-color_weak">
+                                                    <div class="slds-grid slds-grid_vertical-align-center slds-gutters_xx-small">
+
+                                                        <template if:false={field.isEmpty}>
+                                                            <span class="slds-form-element__label slds-truncate">
+                                                                {field.label}
+                                                            </span>
+
+                                                            <template if:true={field.hasHelpText}>
+                                                                <lightning-helptext content={field.helpText}>
+                                                                </lightning-helptext>
+                                                            </template>
+                                                        </template>
+
+                                                    </div>
+                                                </div>
+
+                                                <!-- VALUE -->
+                                                <div class="slds-col slds-size_1-of-2 slds-grid slds-grid_vertical-align-center">
+
+                                                    <template if:false={field.isEmpty}>
+                                                        <span class="slds-truncate" style="flex: 1;">
+                                                            {field.value}
+                                                        </span>
+
+                                                        <template if:true={field.toggle}>
+                                                            <lightning-button-icon
+                                                                icon-name={field.iconName}
+                                                                variant="bare"
+                                                                size="small"
+                                                                alternative-text="Toggle"
+                                                                data-field={field.fieldName}
+                                                                data-section={section.name}
+                                                                onclick={handleToggle}
+                                                                class="slds-m-left_x-small slds-flex-shrink_none">
+                                                            </lightning-button-icon>
+                                                        </template>
+                                                    </template>
+
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                </div>
+
+                            </lightning-accordion-section>
+                        </template>
+
+                    </lightning-accordion>
+
+                </lightning-tab>
+            </lightning-tabset>
+
+        </div>
+
+    </article>
+</template>
