@@ -1,3 +1,16 @@
+/****************************************************************************************
+ * File Name    : FEC_MainInfoAccount.js
+ * Author       : Quangdv7
+ * Date         : 2025-01-12
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-10     Quangdv7             Create
+ 
+****************************************************************************************/
+
 import { LightningElement, api, track } from 'lwc';
 import loadAccountInfo from '@salesforce/apex/FEC_MainInfoAccountController.loadAccountInfo';
 import refreshAccountInfo from '@salesforce/apex/FEC_MainInfoAccountController.refreshAccountInfo';
@@ -28,7 +41,6 @@ export default class FEC_MainInfoAccount extends LightningElement {
     };
 
     activeSections = ['Account', 'Account Status', 'Card Status', 'Debt Sale','Card'];
-
     customLabel = {
         accountLabel: FEC_Account_Label,
         accountStatusLabel: FEC_Account_Status_Label,
@@ -54,7 +66,6 @@ export default class FEC_MainInfoAccount extends LightningElement {
         loadAccountInfo({ caseId: this.recordId })
             .then(result => {
                 this.accountData = result;
-                console.log('accountData ====>', JSON.stringify(this.accountData))
                 this.error = undefined;
             })
             .catch(err => {
@@ -87,7 +98,6 @@ export default class FEC_MainInfoAccount extends LightningElement {
                 })
                 .catch(err => {
                     this.refreshStatusMap[section] = 'ERROR';
-                    console.log('err ====>', JSON.stringify(err));
                     this.handleError(err);
                 })
                 .finally(() => {
@@ -145,17 +155,15 @@ export default class FEC_MainInfoAccount extends LightningElement {
 
         return [
             this.buildField('Account Number', this.accountData?.accountNumber, status,'FEC_Account_Number__c'),
+            this.buildField('Credit Limit', this.accountData?.creditLimit, status,'FEC_Credit_Limit__c'),
             this.buildMoneyField('Current Balance', this.accountData?.currentBalance, status,'FEC_Current_Balance__c'),
             this.buildField('Contract Number', this.accountData?.contractNumber, status,'FEC_Contract_Number__c'),
+            this.buildMoneyField('OTB', this.accountData?.otb, status,'FEC_OTB__c'),
             this.buildMoneyField('Total Balance', this.accountData?.totalBalance, status,'FEC_Total_Balance__c'),
             this.buildField('Account Status', this.accountData?.accountStatus, status,'FEC_Account_Status__c'),
-            this.buildField('Credit Limit', this.accountData?.creditLimit, status,'FEC_Credit_Limit__c'),
-            this.buildField('Account Open Date', this.accountData?.accountOpenDate, status,'FEC_Account_Open_Date__c'),
-            this.buildMoneyField('OTB', this.accountData?.otb, status,'FEC_OTB__c'),
-            this.buildField('Account Close Date', this.accountData?.accountCloseDate, status,'FEC_Account_Close_Date__c'),
             this.buildField('Hold Amount', this.accountData?.holdAmount, status,'FEC_Hold_Amount__c'),
             this.buildField('Application ID', this.accountData?.applicationId, status,'FEC_Application_ID__c'),
-            this.buildField('E-sign Status', this.accountData?.eSignStatus, status,'FEC_E_sign_Status__c')
+            this.buildField('Account Open Date', this.accountData?.accountOpenDate, status,'FEC_Account_Open_Date__c'),
         ];
     }
 
@@ -164,12 +172,12 @@ export default class FEC_MainInfoAccount extends LightningElement {
         if (!this.accountData && status !== 'ERROR') return [];
 
         return [
-            this.buildField('Warning Code',this.accountData?.warningCode,status,'FEC_Warning_Code__c'),
-            this.buildField('Days Past Due',this.accountData?.daysPastDue,status,'FEC_Days_Past_Due__c'),
             this.buildField('Block Code 1',this.accountData?.blockCode1,status,'FEC_Block_Code_1__c'),
             this.buildField('Block Code 2',this.accountData?.blockCode2,status,'FEC_Block_Code_2__c'),
+            this.buildField('Warning Code',this.accountData?.warningCode,status,'FEC_Warning_Code__c'),
             this.buildField('Block Date 1',this.accountData?.blockDate1,status,'FEC_Block_Date_1__c'),
             this.buildField('Block Date 2',this.accountData?.blockDate2,status,'FEC_Block_Date_2__c'),
+            this.buildField('Days Past Due',this.accountData?.daysPastDue,status,'FEC_Days_Past_Due__c'),      
             this.buildField('Reason 1',this.accountData?.reason1,status,'FEC_Reason_1__c'),
             this.buildField('Reason 2',this.accountData?.reason2,status,'FEC_Reason_2__c')
         ];
@@ -182,15 +190,14 @@ export default class FEC_MainInfoAccount extends LightningElement {
 
         return [
             this.buildField('Card Number', this.accountData?.cardNumber, status,'FEC_Card_Number__c'),
+            this.buildField('Expiry Date', this.accountData?.expiryDate, status,'FEC_Expiry_Date__c'),
             this.buildField('Scheme ID', this.accountData?.schemeID, status,'FEC_Scheme_ID__c'),
             this.buildField('Card Type', this.accountData?.cardType, status,'FEC_Card_Type__c'),
-             this.buildField('Scheme Desc', this.accountData?.schemeDesc, status,'FEC_Scheme_Desc__c'),
+            this.buildField('Insurance Flag', this.accountData?.insuranceFlag, status,'FEC_Insurance_Flag__c'),
+            this.buildField('Scheme Desc', this.accountData?.schemeDesc, status,'FEC_Scheme_Desc__c'),
             this.buildField('Plastic ID', this.accountData?.plasticID, status,'FEC_Plastic_ID__c'),
-             this.buildMoneyField('Customer Segment', this.accountData?.customerSegment, status,'FEC_Customer_Segment__c'),
-            this.buildField('Digital Card ID', this.accountData?.digitalCardID, status,'FEC_Digital_Card_ID__c'),
             this.buildField('Product Association', this.accountData?.productAssociation, status,'FEC_Product_Association__c'),
-            this.buildField('Expiry Date', this.accountData?.expiryDate, status,'FEC_Expiry_Date__c'),
-            this.buildField('Insurance Flag', this.accountData?.insuranceFlag, status,'FEC_Insurance_Flag__c')
+            this.buildMoneyField('Customer Segment', this.accountData?.customerSegment, status,'FEC_Customer_Segment__c'),
         ];
     }
 
@@ -202,24 +209,25 @@ export default class FEC_MainInfoAccount extends LightningElement {
 
         return [
             this.buildField('Block Code',this.accountData?.blockCode,status,'FEC_Block_Code__c'),
-            this.buildField('E-Commerce Status',this.accountData?.eCommerceStatus,status,'FEC_E_Commerce_Status__c'),
-            this.buildField('Block Date',this.accountData?.blockDate,status,'FEC_Block_Date__c'),
-            this.buildField('Fraud Monitor Flag',this.accountData?.fraudMonitorFlag,status,'FEC_Fraud_Monitor_Flag__c'),
-            this.buildField('Blocked By',this.accountData?.blockedBy,status,'FEC_Blocked_By__c'),
-            this.buildField('Fraud Monitor Date',this.accountData?.fraudMonitorDate,status,'FEC_Fraud_Monitor_Date__c'),
             this.buildField('Card Activation Status',this.accountData?.cardActivationStatus,status,'FEC_Card_Activation_Status__c'),
             this.buildField('Local Use',this.formatLocalUse(this.accountData?.localUse),status,'FEC_Local_Use__c'),
+            this.buildField('Block Date',this.accountData?.blockDate,status,'FEC_Block_Date__c'),
             this.buildField('Card Activation Date',this.accountData?.cardActivationDate,status,'FEC_Card_Activation_Date__c'),
-            { type: 'button',buttons: [
+            this.buildMoneyField('Available Points',this.accountData?.availablePoints,status,'FEC_Available_Points__c'),
+            this.buildField('Blocked By',this.accountData?.blockedBy,status,'FEC_Blocked_By__c'),
+            this.buildField('E-Commerce Status',this.accountData?.eCommerceStatus,status,'FEC_E_Commerce_Status__c'),
+            this.buildField('Remark',this.accountData?.remark,status,'FEC_Remark__c'),
+            { type: 'button',
+                align: 'right',
+                buttons: [
                     { 
                         label: 'Rewards Eligibility', 
                         variant: 'brand',
+                        
                         name: 'rewardsEligibility'
                     }
                 ]
             },
-            this.buildMoneyField('Available Points',this.accountData?.availablePoints,status,'FEC_Available_Points__c'),
-            this.buildField('Remark',this.accountData?.remark,status,'FEC_Remark__c')
         ];
     }
 
@@ -231,9 +239,9 @@ export default class FEC_MainInfoAccount extends LightningElement {
 
         return [
             this.buildField('Debt Sale Type',this.accountData?.debtSaleType,status,'FEC_Debt_Sale_Type__c'),
-            this.buildField('Company Name',this.accountData?.debtSaleCompanyName,status,'FEC_Company_Name__c'),
             this.buildField('Sold Date',this.accountData?.debtSoldDate,status,'FEC_Sold_Date__c'),
             this.buildMoneyField('Principal Sold',this.accountData?.principalSold,status,'FEC_Principal_Sold__c'),
+            this.buildField('Company Name',this.accountData?.debtSaleCompanyName,status,'FEC_Company_Name__c'),
             this.buildField('Sold Note',this.accountData?.soldNote,status,'FEC_Sold_Note__c'),
             this.buildMoneyField('Interest Sold',this.accountData?.interestSold,status,'FEC_Interest_Sold__c'),
         ];

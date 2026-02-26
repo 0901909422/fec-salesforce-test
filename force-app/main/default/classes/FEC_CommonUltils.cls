@@ -259,10 +259,6 @@ public with sharing class FEC_CommonUltils {
     if (String.isBlank(dateStr))
       return null;
 
-    // Loại bỏ trường hợp 00000000 (không có ngày)
-    if (dateStr == '00000000' || dateStr == '0')
-      return null;
-
     try {
       // Format API trả về: yyyyMMdd (VD: 20281031)
       if (dateStr.length() == 8 && dateStr.isNumeric()) {
@@ -273,7 +269,7 @@ public with sharing class FEC_CommonUltils {
       }
 
       // Fallback: Format YYYY-MM-DD
-      return Date.valueOf(dateStr);
+      return Date.valueOf(dateStr.substring(0, 10));
     } catch (Exception e) {
       System.debug(
         'convertDateSafeForOtherCard error for "' +
@@ -355,6 +351,27 @@ public with sharing class FEC_CommonUltils {
   public static String decimalToString(Decimal d) {
     return d == null ? '' : d.format();
   }
+  
+  /**
+   * Build help text map for any SObject type
+   * @param sobjType - Schema.SObjectType
+   * @return Map of field API name to help text
+   */
+  public static Map<String, String> buildHelpTextMap(Schema.SObjectType sobjType) {
+    Map<String, String> m = new Map<String, String>();
+    try {
+      for (Schema.SObjectField f : sobjType.getDescribe().fields.getMap().values()) {
+        Schema.DescribeFieldResult fieldDescribe = f.getDescribe();
+        if (String.isNotBlank(fieldDescribe.getInlineHelpText())) {
+          m.put(fieldDescribe.getName(), fieldDescribe.getInlineHelpText());
+        }
+      }
+    } catch (Exception e) {
+      System.debug('buildHelpTextMap error: ' + e.getMessage());
+    }
+    return m;
+  }
+  
   /**
    * Mask National ID (CCCD) hoặc Passport ID để hiển thị an toàn.
    * - CCCD: 9 hoặc 12 ký tự (chỉ số) → thay giữa bằng "*", hiển thị 3 số đầu + 3 số cuối.
@@ -443,4 +460,35 @@ public with sharing class FEC_CommonUltils {
             + '***'
             + phone.substring(len - 3);
     } 
+
+    public static void logApi(
+        String apiName,
+        String endpoint,
+        String method,
+        String requestBody,
+        HttpResponse response,
+        String errorMessage
+  ){
+      try{
+          FEC_API_Log__c log = new FEC_API_Log__c();
+
+          log.Name = apiName;
+          log.FEC_Endpoint__c = endpoint;
+          log.FEC_Method__c = method;
+          log.FEC_Request_String__c = requestBody;
+
+          if(response != null){
+              log.FEC_Status_Code__c =  String.valueOf(response.getStatusCode());
+              log.FEC_Response_String__c = response.getBody();
+              log.FEC_Is_Success__c =  (response.getStatusCode() == 200);
+          }
+          
+          log.FEC_Error_Message__c = errorMessage;
+
+          insert log;
+
+        }catch(Exception e){
+            System.debug('LOG INSERT ERROR: ' + e.getMessage());
+        }
+    }
 }
