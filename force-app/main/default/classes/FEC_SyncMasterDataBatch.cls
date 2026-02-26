@@ -52,7 +52,6 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
     private static final String OBJ_MDM_ADDITIONAL_FIELD = FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD;
     private static final String OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE = FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE;
     private static final String OBJ_MDM_MASTER_DATA_SETTING = FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING;
-    
     private static final String OBJ_PRODUCT_TYPE = FEC_Constants.OBJ_PRODUCT_TYPE;
     private static final String OBJ_BUSINESS_PROCESS = FEC_Constants.OBJ_BUSINESS_PROCESS;
     private static final String OBJ_CATEGORY = FEC_Constants.OBJ_CATEGORY;
@@ -65,48 +64,51 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
     private static final String OBJ_CASE_STAGE = FEC_Constants.OBJ_CASE_STAGE;
     private static final String OBJ_MASTER_DATA_SETTING = FEC_Constants.OBJ_MASTER_DATA_SETTING;
     
+    // Map key constants
+    private static final String MDM_FIELD_KEY = 'mdmField';
+    private static final String MDM_OBJ_KEY = 'mdmObj';
     
     // Map of: source lookup field => { mdmField, mdmObjectName }
     // These fields hold IDs from source objects that need to be remapped to MDM object IDs
     private static final Map<String, Map<String, String>> LOOKUP_FIELD_MDM_MAP = new Map<String, Map<String, String>>{
         // Nature of Case lookups
         FIELD_BUSINESS_PROCESS => new Map<String, String>{
-            'mdmField' => FIELD_BUSINESS_PROCESS,
-            'mdmObj'   => OBJ_MDM_BUSINESS_PROCESS
+            MDM_FIELD_KEY => FIELD_BUSINESS_PROCESS,
+            MDM_OBJ_KEY   => OBJ_MDM_BUSINESS_PROCESS
         },
         FIELD_PRODUCT_TYPE => new Map<String, String>{
-            'mdmField' => FIELD_PRODUCT_TYPE,
-            'mdmObj'   => OBJ_MDM_PRODUCT_TYPE
+            MDM_FIELD_KEY => FIELD_PRODUCT_TYPE,
+            MDM_OBJ_KEY   => OBJ_MDM_PRODUCT_TYPE
         },
         FIELD_CATEGORY => new Map<String, String>{
-            'mdmField' => FIELD_CATEGORY,
-            'mdmObj'   => OBJ_MDM_CATEGORY
+            MDM_FIELD_KEY => FIELD_CATEGORY,
+            MDM_OBJ_KEY   => OBJ_MDM_CATEGORY
         },
         FIELD_SUB_CATEGORY => new Map<String, String>{
-            'mdmField' => FIELD_SUB_CATEGORY,
-            'mdmObj'   => OBJ_MDM_SUB_CATEGORY
+            MDM_FIELD_KEY => FIELD_SUB_CATEGORY,
+            MDM_OBJ_KEY   => OBJ_MDM_SUB_CATEGORY
         },
         FIELD_SUB_CODE => new Map<String, String>{
-            'mdmField' => FIELD_SUB_CODE,
-            'mdmObj'   => OBJ_MDM_SUB_CODE
+            MDM_FIELD_KEY => FIELD_SUB_CODE,
+            MDM_OBJ_KEY   => OBJ_MDM_SUB_CODE
         },
         // Additional Field List Value lookups
         FIELD_ADDITIONAL_FIELD => new Map<String, String>{
-            'mdmField' => FIELD_ADDITIONAL_FIELD,
-            'mdmObj'   => OBJ_MDM_ADDITIONAL_FIELD
+            MDM_FIELD_KEY => FIELD_ADDITIONAL_FIELD,
+            MDM_OBJ_KEY   => OBJ_MDM_ADDITIONAL_FIELD
         },
         // Master Data Setting lookups
         FIELD_STAGE_NAME => new Map<String, String>{
-            'mdmField' => FIELD_STAGE_NAME,
-            'mdmObj'   => OBJ_MDM_CASE_STAGE
+            MDM_FIELD_KEY => FIELD_STAGE_NAME,
+            MDM_OBJ_KEY   => OBJ_MDM_CASE_STAGE
         },
         FIELD_NATURE_OF_CASE => new Map<String, String>{
-            'mdmField' => FIELD_NATURE_OF_CASE,
-            'mdmObj'   => OBJ_MDM_NATURE_OF_CASE
+            MDM_FIELD_KEY => FIELD_NATURE_OF_CASE,
+            MDM_OBJ_KEY   => OBJ_MDM_NATURE_OF_CASE
         },
         FIELD_CHANNEL => new Map<String, String>{
-            'mdmField' => FIELD_CHANNEL,
-            'mdmObj'   => OBJ_MDM_CHANNEL
+            MDM_FIELD_KEY => FIELD_CHANNEL,
+            MDM_OBJ_KEY   => OBJ_MDM_CHANNEL
         }
     };
     
@@ -399,7 +401,7 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
                 lookupRemapMaps.put(srcLookupField, new Map<Id, Id>());
                 continue;
             }
-            String mdmLookupObj = LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get('mdmObj');
+            String mdmLookupObj = LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(MDM_OBJ_KEY);
             if (!gd.containsKey(mdmLookupObj)) {
                 lookupRemapMaps.put(srcLookupField, new Map<Id, Id>());
                 continue;
@@ -451,7 +453,7 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         if (objectLookupFields == null || objectLookupFields.isEmpty()) return;
         for (String srcLookupField : objectLookupFields) {
             if (!targetFields.containsKey(srcLookupField)) continue;
-            String mdmLookupField = LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get('mdmField');
+            String mdmLookupField = LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(MDM_FIELD_KEY);
             if (!mdmFieldsMap.containsKey(mdmLookupField)) continue;
             Id sourceId = (Id)source.get(srcLookupField);
             if (sourceId == null) continue;
