@@ -259,10 +259,6 @@ public with sharing class FEC_CommonUltils {
     if (String.isBlank(dateStr))
       return null;
 
-    // Loại bỏ trường hợp 00000000 (không có ngày)
-    if (dateStr == '00000000' || dateStr == '0')
-      return null;
-
     try {
       // Format API trả về: yyyyMMdd (VD: 20281031)
       if (dateStr.length() == 8 && dateStr.isNumeric()) {
