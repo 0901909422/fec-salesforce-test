@@ -207,10 +207,10 @@ export const FIELD_STATUS = 'FEC_Status__c';
 export const FIELD_CUSTOMER_TYPE = 'FEC_Customer_Type__c';
 
 // Lookup field API name constants for parent-child relations
-export const FIELD_PRODUCT_TYPE_NAME = 'FEC_Product_Type_Name__c';
-export const FIELD_BUSINESS_PROCESS_NAME = 'FEC_Business_Process_Name__c';
-export const FIELD_CATEGORY_NAME = 'FEC_Category_Name__c';
-export const FIELD_SUB_CATEGORY_NAME = 'FEC_Sub_Category_Name__c';
+export const FIELD_PRODUCT_TYPE_NAME = 'FEC_Product_Type__c';
+export const FIELD_BUSINESS_PROCESS_NAME = 'FEC_Business_Process__c';
+export const FIELD_CATEGORY_NAME = 'FEC_Category__c';
+export const FIELD_SUB_CATEGORY_NAME = 'FEC_Sub_Category__c';
 export const FIELD_FEC_TYPE = 'FEC_Type__c';
 // Flattened/computed field constants from NatureOfCaseMDMWrapper API response
 export const FIELD_FEC_PRODUCT_TYPE_NAME = 'FEC_Product_Type_Name';
@@ -219,6 +219,7 @@ export const FIELD_FEC_CATEGORY_NAME = 'FEC_Category_Name';
 export const FIELD_FEC_SUB_CATEGORY_NAME = 'FEC_Sub_Category_Name';
 export const FIELD_FEC_SUB_CODE = 'FEC_Sub_Code';
 export const FIELD_FEC_CUSTOMER_TYPE = 'FEC_Customer_Type';
+export const FIELD_PROCESS_STATUS_NAME = 'Process_Change_Status';
 
 // Row Action constants
 export const ACTION_EDIT = 'edit';
