@@ -146,13 +146,13 @@
         <members>FEC_MDM_Master_Data_Setting__c.Process_Change_Status__c</members>
         <members>FEC_MDM_Master_Data_Setting__c.Property_Reference__c</members>
         <members>FEC_MDM_Nature_Of_Case__c.ExternalID__c</members>
-        <members>FEC_MDM_Nature_Of_Case__c.FEC_Business_Process_Name__c</members>
-        <members>FEC_MDM_Nature_Of_Case__c.FEC_Category_Name__c</members>
+        <members>FEC_MDM_Nature_Of_Case__c.FEC_Business_Process__c</members>
+        <members>FEC_MDM_Nature_Of_Case__c.FEC_Category__c</members>
         <members>FEC_MDM_Nature_Of_Case__c.FEC_Customer_Type__c</members>
-        <members>FEC_MDM_Nature_Of_Case__c.FEC_Product_Type_Name__c</members>
+        <members>FEC_MDM_Nature_Of_Case__c.FEC_Product_Type__c</members>
         <members>FEC_MDM_Nature_Of_Case__c.FEC_Role_Names__c</members>
         <members>FEC_MDM_Nature_Of_Case__c.FEC_Stage_Name__c</members>
-        <members>FEC_MDM_Nature_Of_Case__c.FEC_Sub_Category_Name__c</members>
+        <members>FEC_MDM_Nature_Of_Case__c.FEC_Sub_Category__c</members>
         <members>FEC_MDM_Nature_Of_Case__c.FEC_Sub_Code__c</members>
         <members>FEC_MDM_Nature_Of_Case__c.Process_Change_Status__c</members>
         <members>FEC_MDM_Product_Type__c.ExternalID__c</members>

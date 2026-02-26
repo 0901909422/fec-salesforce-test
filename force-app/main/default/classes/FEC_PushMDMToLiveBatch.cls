@@ -85,10 +85,10 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
         
         // --- BƯỚC 2: XÂY DỰNG QUERY DÙNG IF/ELSE ---
         if (mdmObjName == FEC_Constants.OBJ_MDM_NATURE_OF_CASE) {
-            query += ', FEC_Product_Type_Name__r.FEC_Code__c, ' +
-                'FEC_Business_Process_Name__r.FEC_Code__c, ' +
-                'FEC_Category_Name__r.FEC_Code__c, ' +
-                'FEC_Sub_Category_Name__r.FEC_Code__c, ' +
+            query += ', FEC_Product_Type__r.FEC_Code__c, ' +
+                'FEC_Business_Process__r.FEC_Code__c, ' +
+                'FEC_Category__r.FEC_Code__c, ' +
+                'FEC_Sub_Category__r.FEC_Code__c, ' +
                 'FEC_Sub_Code__r.FEC_Code__c';
         } else if (mdmObjName == FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING) {
             query += ', FEC_Nature_Of_Case__r.FEC_Code__c, ' +
@@ -112,7 +112,6 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
         // --- BƯỚC 3: MAPPING DÙNG IF/ELSE ---
         for (SObject mdm : mdmRecords) {
             SObject target = Schema.getGlobalDescribe().get(targetObjName).newSObject();
-            target.put(FEC_Constants.FIELD_PROCESS_CHANGE_STATUS, FEC_Constants.PROCESS_STATUS_SYNCED);
             
             if (mdmObjName == FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING) {
                 try {
@@ -166,7 +165,7 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
         // --- BƯỚC 4: UPSERT ---
         if (!targetList.isEmpty()) {
             FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = false;
-            Schema.SObjectField extIdField = Schema.getGlobalDescribe().get(targetObjName).getDescribe().fields.getMap().get(FEC_Constants.FIELD_EXTERNAL_ID);
+            Schema.SObjectField extIdField = Schema.getGlobalDescribe().get(targetObjName).getDescribe().fields.getMap().get(FEC_Constants.FIELD_CODE);
             Database.UpsertResult[] results = Database.upsert(targetList, extIdField, false);
             
             List<SObject> mdmToUpdate = new List<SObject>();

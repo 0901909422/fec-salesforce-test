@@ -1,6 +1,7 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex'; // 1. Import refreshApex
+import { showLog } from 'c/fecMDMUtils';
 import getAllMasterData from '@salesforce/apex/FEC_CleanUpMasterDataController.getAllMasterData';
 import syncDataToMDM from '@salesforce/apex/FEC_CleanUpMasterDataController.syncDataToMDM';
 import pushMDMToLive from '@salesforce/apex/FEC_CleanUpMasterDataController.pushMDMToLive'; // Nút mới
@@ -49,8 +50,8 @@ import LABEL_NOC_SUB_CATEGORY from '@salesforce/label/c.FEC_NOC_Sub_Category';
 import LABEL_NOC_SUB_CODE from '@salesforce/label/c.FEC_NOC_Sub_Code';
 import LABEL_TYPE from '@salesforce/label/c.FEC_Label_Type';
 import LABEL_BP from '@salesforce/label/c.FEC_Label_Business_Process';
-import { FIELD_PRODUCT_TYPE_NAME, FIELD_BUSINESS_PROCESS_NAME, FIELD_CATEGORY_NAME, FIELD_SUB_CATEGORY_NAME, FIELD_SUB_CODE, FIELD_ORDER_GENERIC, FIELD_BUSINESS_PROCESS, TYPE_NUMBER, VARIANT_SUCCESS, VARIANT_ERROR, VARIANT_INFO, FIELD_ADDITIONAL_FIELD, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, FIELD_STAGE_NAME, FIELD_DATA_INTEGRATION_MAPPING, EVENT_REFRESH, EVENT_SYNC, EVENT_PUSH } from 'c/fecConstants';
-import { FIELD_FEC_TYPE } from 'c/fecConstants';
+import { FIELD_ORDER_GENERIC, FIELD_BUSINESS_PROCESS_NAME, TYPE_NUMBER, VARIANT_SUCCESS, VARIANT_ERROR, VARIANT_INFO, FIELD_ADDITIONAL_FIELD, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, FIELD_STAGE_NAME, FIELD_DATA_INTEGRATION_MAPPING, EVENT_REFRESH, EVENT_SYNC, EVENT_PUSH } from 'c/fecConstants';
+import { FIELD_FEC_TYPE, FIELD_FEC_PRODUCT_TYPE_NAME, FIELD_FEC_BUSINESS_PROCESS_NAME, FIELD_FEC_CATEGORY_NAME, FIELD_FEC_SUB_CATEGORY_NAME, FIELD_FEC_SUB_CODE } from 'c/fecConstants';
 
 export default class FecAllMasterData extends LightningElement {
     labelTitle = LABEL_TITLE;
@@ -83,7 +84,8 @@ export default class FecAllMasterData extends LightningElement {
         { label: LABEL_COL_NAME_VN, fieldName: FIELD_NAME_VN },
         { label: LABEL_COL_ORDER, fieldName: FIELD_POS_ORDER },
         { label: LABEL_COL_STATUS, fieldName: FIELD_STATUS },
-        { label: LABEL_COL_PROCESS_STATUS, fieldName: FIELD_PROCESS_STATUS }
+        { label: LABEL_COL_PROCESS_STATUS, fieldName: FIELD_PROCESS_STATUS },
+        { label: 'Active', fieldName: 'FEC_Active__c', type: 'boolean' }
     ];
 
     // Cột cho Master Setting
@@ -92,6 +94,7 @@ export default class FecAllMasterData extends LightningElement {
         { label: LABEL_COL_EXTERNALID, fieldName: FIELD_EXTERNAL_ID },
         { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
         { label: LABEL_COL_ADDITIONAL_FIELD, fieldName: FIELD_ADDITIONAL_FIELD },
+        { label: 'FEC_Nature_Of_Case__c', fieldName: 'FEC_Nature_Of_Case__c' },
         { label: LABEL_COL_CHANNEL, fieldName: FIELD_CHANNEL },
         { label: LABEL_COL_APPLICABLE_ROLE, fieldName: FIELD_APPLICABLE_ROLE },
         { label: LABEL_COL_STAGE, fieldName: FIELD_STAGE_NAME },
@@ -102,7 +105,7 @@ export default class FecAllMasterData extends LightningElement {
     // Cột cho Master Setting (generic)
     columnsSetting = [
         { label: LABEL_COL_ID, fieldName: FIELD_ID },
-        { label: LABEL_COL_EXTERNALID, fieldName: FIELD_EXTERNAL_ID },
+        { label: 'FEC_Additional_Field__c', fieldName: 'FEC_Additional_Field__c' },
         { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
         { label: LABEL_COL_PROCESS_STATUS, fieldName: FIELD_PROCESS_STATUS }
     ];
@@ -110,14 +113,12 @@ export default class FecAllMasterData extends LightningElement {
     // Cột cho Nature of Case (Lưu ý: Cần xử lý flatten data nếu muốn show Name của Lookup)
     columnsNOC = [
         { label: LABEL_COL_ID, fieldName: FIELD_ID },
-        { label: LABEL_COL_EXTERNALID, fieldName: FIELD_EXTERNAL_ID },
         { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
-        { label: LABEL_NOC_PRODUCT, fieldName: FIELD_PRODUCT_TYPE_NAME },
-        { label: LABEL_NOC_BP, fieldName: FIELD_BUSINESS_PROCESS_NAME },
-        { label: LABEL_NOC_CATEGORY, fieldName: FIELD_CATEGORY_NAME },
-        { label: LABEL_NOC_SUB_CATEGORY, fieldName: FIELD_SUB_CATEGORY_NAME },
-        { label: LABEL_NOC_SUB_CODE, fieldName: FIELD_SUB_CODE },
-        { label: LABEL_COL_PROCESS_STATUS, fieldName: FIELD_PROCESS_STATUS }
+        { label: LABEL_NOC_PRODUCT, fieldName: FIELD_FEC_PRODUCT_TYPE_NAME },
+        { label: LABEL_NOC_BP, fieldName: FIELD_FEC_BUSINESS_PROCESS_NAME },
+        { label: LABEL_NOC_CATEGORY, fieldName: FIELD_FEC_CATEGORY_NAME },
+        { label: LABEL_NOC_SUB_CATEGORY, fieldName: FIELD_FEC_SUB_CATEGORY_NAME },
+        { label: LABEL_NOC_SUB_CODE, fieldName: FIELD_FEC_SUB_CODE }
     ];
 
     // Cột cho Additional Field
@@ -135,7 +136,7 @@ export default class FecAllMasterData extends LightningElement {
         { label: LABEL_COL_ID, fieldName: FIELD_ID },
         { label: LABEL_COL_EXTERNALID, fieldName: FIELD_EXTERNAL_ID },
         { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
-        { label: LABEL_BP, fieldName: FIELD_BUSINESS_PROCESS },
+        { label: LABEL_BP, fieldName: FIELD_BUSINESS_PROCESS_NAME },
         { label: LABEL_COL_ORDER, fieldName: FIELD_ORDER_GENERIC, type: TYPE_NUMBER },
         { label: LABEL_COL_PROCESS_STATUS, fieldName: FIELD_PROCESS_STATUS }
     ];
@@ -146,7 +147,9 @@ export default class FecAllMasterData extends LightningElement {
         const { error, data } = result;
         if (data) {
             this.data = data;
+            showLog('getAllMasterData data', data);
         } else if (error) {
+            showLog('getAllMasterData error', error);
             console.error(error);
         }
     }

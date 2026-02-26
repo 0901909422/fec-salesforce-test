@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Category_Status__c</fullName>
-    <description>Cloned from FEC_Nature_of_Case__c.FEC_Category_Status__c (master: FEC_Category__r.FEC_Active__c). MDM stores as plain Checkbox since no Lookup available.</description>
     <defaultValue>false</defaultValue>
+    <description>Cloned from FEC_Nature_of_Case__c.FEC_Category_Status__c (master: FEC_Category__r.FEC_Active__c). MDM stores as plain Checkbox since no Lookup available.</description>
     <externalId>false</externalId>
     <label>Category Status</label>
     <trackHistory>false</trackHistory>

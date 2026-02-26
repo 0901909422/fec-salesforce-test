@@ -274,21 +274,11 @@ export default class FecMasterDataSetting extends LightningElement {
         return data.map(record => {
             showLog('processMasterData Record Status', record.Process_Change_Status__c);
             
-            // Handle channel - could be from lookup relationship or text field
-            let channelDisplay = '';
-            if (record.FEC_Case_Channel__r?.Name) {
-                channelDisplay = record.FEC_Case_Channel__r.Name;
-            } else if (record.FEC_Channel__c) {
-                channelDisplay = record.FEC_Channel__c;
-            } else {
-                channelDisplay = LABEL_DEFAULT_CHANNEL_NAME;
-            }
-            
             return {
                 ...record,
                 FEC_Stage_Name_Name: record.FEC_Stage_Name__r?.Name || '',
                 FEC_Additional_Field_Name: record.FEC_Additional_Field__r?.Name || '',
-                FEC_Channel_Name_Name: channelDisplay,
+                FEC_Channel_Name_Name: record.FEC_Data_Integration_Mapping__r?.FEC_Int_Channel__c || '',
                 FEC_Field_Status__c: !!record.FEC_Field_Status__c,            // Thuộc tính phục vụ UI Expand
                 isExpanded: false,
                 expandIcon: ICON_CHEVRON_RIGHT,
@@ -298,6 +288,7 @@ export default class FecMasterDataSetting extends LightningElement {
                 FEC_Int_Category_Id__c: record.FEC_Data_Integration_Mapping__r?.FEC_Int_Category_Id__c || '',
                 FEC_Int_Sub_Category_Id__c: record.FEC_Data_Integration_Mapping__r?.FEC_Int_Sub_Category_Id__c || '',
                 FEC_Int_Sub_Code_Id__c: record.FEC_Data_Integration_Mapping__r?.FEC_Int_Sub_Code_Id__c || '',
+                FEC_Int_Channel__c: record.FEC_Data_Integration_Mapping__r?.FEC_Int_Channel__c || '',
                 // Display values (placeholders - will show IDs until we fetch actual values)
                 Product_Line__c: record.FEC_Data_Integration_Mapping__r?.FEC_Int_Product_Line_Id__c || LABEL_DEFAULT_PRODUCT_LINE,
                 Service_Type__c: record.FEC_Data_Integration_Mapping__r?.FEC_Int_Service_Type_Id__c || LABEL_DEFAULT_SERVICE_TYPE,
@@ -555,17 +546,14 @@ export default class FecMasterDataSetting extends LightningElement {
         // Combine mapping data with integration form data
         const newMapping = {
             FEC_Data_Integration_Mapping__c: integrationId,
-            FEC_Field_Object_Name__c: FIELD_OBJECT_FRAUD_INTEGRATION,
             FEC_Nature_Of_Case__c: this.currentNatureOfCaseId,
             FEC_Stage_Name__c: this.stageId,
-            FEC_Customer_Type__c: this.FEC_Customer_Type,
             FEC_Applicable_Role__c: this.integrationFormData.selectedRoles.join(','),
             FEC_Section__c: this.integrationFormData.section,
             FEC_Field_Mandatory__c: this.integrationFormData.fieldMandatory,
             FEC_Field_ReadOnly__c: this.integrationFormData.fieldReadOnly,
             FEC_Field_Editable__c: true,
-            FEC_Field_Status__c: this.integrationFormData.fieldStatus,
-            FEC_Channel__c: 'FIMA' // Added channel value
+            FEC_Field_Status__c: this.integrationFormData.fieldStatus
         };
         
         // If in edit mode (recordIdForIntegration is set), include the record ID for update
