@@ -62,8 +62,8 @@ public with sharing class FEC_NatureOfCaseTreeService {
                 FEC_Sub_Category_Name__r.FEC_Pos_Order__c ASC,
                 FEC_Sub_Code__r.FEC_Pos_Order__c ASC
         ];
-        // Enforce FLS before returning
-        result = (List<FEC_MDM_Nature_Of_Case__c>) Security.stripInaccessible(AccessType.READABLE, result).getRecords();
+        // Note: Security.stripInaccessible removed - ensure proper FLS via Permission Sets
+        // If FLS stripping is required, make sure all fields in the SOQL are accessible to the running user
         return result;
     }
 

@@ -46,15 +46,6 @@ public without sharing class FEC_InteractionInforHandler {
         c.Id
             );
         
-        // FEC_Sensitive_Data__c sensitiveData = new FEC_Sensitive_Data__c(
-        //     FEC_Section__c = 'Interaction Details',
-        // Name = 'Interaction Phone',
-        // FEC_User__c = u.Username.split('@')[0],
-        // FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
-        // FEC_Related_Case__c = c.Id
-        //     );
-        // insert sensitiveData;
-        
         return c.FEC_Phone_Number__c;
     }
     
@@ -297,6 +288,7 @@ public without sharing class FEC_InteractionInforHandler {
                                        FEC_SubCode__r.FEC_Name_VN__c
                                 FROM Case
                                 WHERE FEC_Interaction__c = :recordId
+                                ORDER BY FEC_Case_Created_On__c DESC
                                 LIMIT 5];
             return caseList;
         } catch (Exception e) {

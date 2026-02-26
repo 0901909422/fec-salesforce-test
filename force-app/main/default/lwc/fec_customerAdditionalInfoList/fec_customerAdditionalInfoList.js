@@ -1,6 +1,8 @@
 import { LightningElement, track, wire } from 'lwc';
-import { HEADER_ACTIONS, VIEW_HISTORY_ACTION, EDIT_ACTION } from 'c/fecUtils';
+import { HEADER_ACTIONS, VIEW_HISTORY_ACTION, EDIT_ACTION, DELETE_ACTION, DELETED_DATA_SUCCESSFULLY_MSG, DELETE_CONFIRMATION_TITLE, DELETE_CONFIRMATION_MSG, SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE } from 'c/fecUtils';
 import { refreshApex } from '@salesforce/apex';
+import LightningConfirm from 'lightning/confirm';
+import deleteConfig from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.deleteConfig';
 import getUploadedConfigs from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getUploadedConfigs';
 import getExistingConfigs from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getExistingConfigs';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -97,6 +99,15 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
                 name: EDIT_ACTION, 
                 variant: 'bare'
             } 
+        },
+        { 
+            type: 'button-icon', 
+            fixedWidth: 50, 
+            typeAttributes: { 
+                iconName: 'utility:delete',
+                name: DELETE_ACTION,
+                variant: 'bare',
+            } 
         }
     ];
     @track DEFAULT_FORM_DATA = {
@@ -129,7 +140,7 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
         if (result.data) {
             this.uploadedData = result.data;
         } else if (result.error) {
-            this.showToast('Error', cannotRefreshDataMsg, 'error');
+            this.showToast(FAIL_TITLE, cannotRefreshDataMsg, 'error');
         }
     }
 
@@ -149,14 +160,41 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
         else if (action === EDIT_ACTION) this.openEditModal(row);
     }
     
-    handleUploadedRowAction(event) {
+    async handleUploadedRowAction(event) {
         const action = event.detail.action.name;
         const row = event.detail.row;
+
         if (action === EDIT_ACTION) {
             this.openEditModal(row);
+        } else if (action === DELETE_ACTION) {
+            await this.handleDeleteRow(row);
         }
     }
     
+    async handleDeleteRow(row) {
+        const result = await LightningConfirm.open({
+            message: DELETE_CONFIRMATION_MSG,
+            variant: 'header',
+            label: DELETE_CONFIRMATION_TITLE,
+            theme: 'warning',
+        });
+
+        if (result) {
+            this.isLoading = true;
+            try {
+                await deleteConfig({ configId: row.Id });
+                
+                this.showToast(SUCCESS_TITLE, DELETED_DATA_SUCCESSFULLY_MSG, 'success');
+                
+                await this.handleReload();
+            } catch (error) {
+                this.showToast(FAIL_TITLE, error.body.message, 'error');
+            } finally {
+                this.isLoading = false;
+            }
+        }
+    }
+
     async handleReload() {
         this.isLoading = true;
         try {

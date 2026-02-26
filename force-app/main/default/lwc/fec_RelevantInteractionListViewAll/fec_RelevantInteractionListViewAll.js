@@ -5,6 +5,8 @@ import PAGINATION_PAGE_OF from "@salesforce/label/c.Pagination_Page_Of_Label";
 
 import NEXT_BTN from "@salesforce/label/c.FEC_Next_Btn_Label";
 import PREV_BTN from "@salesforce/label/c.FEC_Previous_Btn_Label";
+import FEC_View_All_Relevant_Interaction_Label from "@salesforce/label/c.FEC_View_All_Relevant_Interaction_Label";
+
 const COLUMNS = [
   {
     label: "Interaction ID ",
@@ -38,6 +40,7 @@ export default class Fec_RelevantInteractionListViewAll extends LightningElement
   labels = {
     next: NEXT_BTN,
     prev: PREV_BTN,
+    viewAllInteraction: FEC_View_All_Relevant_Interaction_Label,
   };
   // ===== Data =====
   @track data = []; // full data
@@ -58,23 +61,7 @@ export default class Fec_RelevantInteractionListViewAll extends LightningElement
       }
     }
   }
-  // ===== Fetch data =====
-
-  //   FEC_Channel__c
-  // :
-  // "Outbound"
-  // FEC_Created_On__c
-  // :
-  // "2026-01-23T03:34:10.000Z"
-  // FEC_Interaction_ID__c
-  // :
-  // "<a href=\"/500Az00000LJIUz\" target=\"_self\">O-0101</a>"
-  // Id
-  // :
-  // "500Az00000LJIUzIAP"
-  // RecordTypeId
-  // :
-  // "012Az000000ohMjIAI"
+  
   async fetchData() {
     try {
       const result = await getRelevantInteractionsViewAll({
