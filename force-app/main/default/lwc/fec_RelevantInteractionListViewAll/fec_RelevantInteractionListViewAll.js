@@ -58,23 +58,7 @@ export default class Fec_RelevantInteractionListViewAll extends LightningElement
       }
     }
   }
-  // ===== Fetch data =====
-
-  //   FEC_Channel__c
-  // :
-  // "Outbound"
-  // FEC_Created_On__c
-  // :
-  // "2026-01-23T03:34:10.000Z"
-  // FEC_Interaction_ID__c
-  // :
-  // "<a href=\"/500Az00000LJIUz\" target=\"_self\">O-0101</a>"
-  // Id
-  // :
-  // "500Az00000LJIUzIAP"
-  // RecordTypeId
-  // :
-  // "012Az000000ohMjIAI"
+  
   async fetchData() {
     try {
       const result = await getRelevantInteractionsViewAll({

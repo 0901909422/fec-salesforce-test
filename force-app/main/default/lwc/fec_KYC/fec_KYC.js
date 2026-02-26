@@ -23,6 +23,12 @@ import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 
 import { mask } from "c/fec_CommonUtils";
 
+import FEC_KYC_Answer_Label from "@salesforce/label/c.FEC_KYC_Answer_Label";
+import FEC_KYC_Product_Label from "@salesforce/label/c.FEC_KYC_Product_Label";
+import FEC_KYC_Question_Label from "@salesforce/label/c.FEC_KYC_Question_Label";
+import FEC_KYC_Result_Label from "@salesforce/label/c.FEC_KYC_Result_Label";
+import FEC_Performed_On_Label from "@salesforce/label/c.FEC_Performed_On_Label";
+
 export default class Fec_KYC extends LightningElement {
   @api recordId;
   interationId;
@@ -60,12 +66,20 @@ export default class Fec_KYC extends LightningElement {
 
   subscription = null;
 
+  customLabel = {
+    kycAnswerLabel: FEC_KYC_Answer_Label,
+    kycProductLabel: FEC_KYC_Product_Label,
+    kycQuestionLabel: FEC_KYC_Question_Label,
+    kycResultLabel: FEC_KYC_Result_Label,
+    performedOnLabel: FEC_Performed_On_Label
+  }
+
   @track kycResultColumn = [
-    { label: "KYC Product", fieldName: "productType" },
-    { label: "KYC Question", fieldName: "question" },
-    { label: "KYC Answer", fieldName: "answer" },
-    { label: "KYC Result", fieldName: "result" },
-    { label: "Performed On", fieldName: "performedOn" }
+    { label: this.customLabel.kycProductLabel, fieldName: "productType" },
+    { label: this.customLabel.kycQuestionLabel, fieldName: "question" },
+    { label: this.customLabel.kycAnswerLabel, fieldName: "answer" },
+    { label: this.customLabel.kycResultLabel, fieldName: "result" },
+    { label: this.customLabel.performedOnLabel, fieldName: "performedOn" }
   ];
 
   @wire(getRecord, {
