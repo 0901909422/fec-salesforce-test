@@ -1,8 +1,6 @@
 import { LightningElement, api, wire } from "lwc";
 import getRelevantCases from "@salesforce/apex/FEC_InteractionInforHandler.getRelevantCases";
 import getRelevantCasesViewAllCount from "@salesforce/apex/FEC_InteractionInforHandler.getRelevantCasesViewAllCount";
-// import getSubCategory from "@salesforce/apex/FEC_InteractionInforHandler.getSubCategory";
-// import getSubCode from "@salesforce/apex/FEC_InteractionInforHandler.getSubCode";
 import { NavigationMixin } from "lightning/navigation";
 import {
   getFocusedTabInfo,
@@ -91,19 +89,6 @@ export default class FecRelevantCaseCard extends NavigationMixin(
     this.cases = this.cases.map((i) =>
       i.Id === id ? { ...i, open: !i.open } : i,
     );
-  }
-
-  formatDate(dateString) {
-    if (!dateString) return "";
-    const d = new Date(dateString);
-    return d.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
   }
 
   async handleViewAll() {

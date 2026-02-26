@@ -2191,6 +2191,14 @@
         <value>HTTP Error: {0}</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Input_Required</fullName>
+        <categories>LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Input Required</shortDescription>
+        <value>Please fill the fields below.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Interaction_Case_DTO_Null</fullName>
         <categories>Interaction</categories>
         <language>en_US</language>

@@ -225,6 +225,7 @@
         <members>FEC_Interaction_Created_By_Label</members>
         <members>FEC_External_Interaction_ID_Label</members>
         <members>FEC_Outcome_Code_Label</members>
+        <members>FEC_MSG_Input_Required</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
