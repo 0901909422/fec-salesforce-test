@@ -18,6 +18,8 @@ import FEC_Interaction_Remarks_Label from '@salesforce/label/c.FEC_Interaction_R
 import FEC_Quick_Wrap_up_Label from '@salesforce/label/c.FEC_Quick_Wrap_up_Label';
 import FEC_Wrap_up_Information_Label from '@salesforce/label/c.FEC_Wrap_up_Information_Label';
 
+import { urlCmpWithRecordId } from "c/fec_CommonUtils";
+
 const SLA_RULES = {
   Inbound: { green: 5, yellow: 10 },
   Outbound: { green: 5, yellow: null },
@@ -403,7 +405,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
   async handleCreateCase() {
     if (this.isConsoleNavigation) {
       await openTab({
-        url: `/lightning/cmp/c__fec_InteractionCreateCase?c__recordId=${this.recordId}`,
+        url: urlCmpWithRecordId('fec_InteractionCreateCase', this.recordId),
         focus: true
       });
     } else {
@@ -422,7 +424,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
   async handleEditInteraction() {
     if (this.isConsoleNavigation) {
       await openTab({
-        url: `/lightning/cmp/c__fec_CaseDetail_Interation_Edit?c__recordId=${this.recordId}`,
+        url: urlCmpWithRecordId('fec_CaseDetail_Interation_Edit', this.recordId),
         focus: true
       });
     } else {

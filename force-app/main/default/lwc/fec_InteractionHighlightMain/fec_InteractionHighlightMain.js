@@ -32,6 +32,8 @@ import FEC_EXECUTE_LABEL from "@salesforce/label/c.FEC_Execute_Label";
 import FEC_CREATE_CASE_BTN_LABEL from "@salesforce/label/c.FEC_Create_Case_Btn_Label";
 import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
 
+import { urlCmpWithRecordId } from "c/fec_CommonUtils";
+
 export default class Fec_InteractionHighlightMain extends NavigationMixin(
   LightningElement,
 ) {
@@ -218,7 +220,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     console.log("handleCreateCase from creation highlight");
     if (this.isConsoleNavigation) {
       await openTab({
-        url: `/lightning/cmp/c__fec_InteractionCreateCase?c__recordId=${this.createCaseSourceId}`,
+        url: urlCmpWithRecordId("fec_InteractionCreateCase", this.createCaseSourceId),
         focus: true,
       });
     } else {
