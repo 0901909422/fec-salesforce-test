@@ -25,7 +25,7 @@ import LABEL_NAME_VN_DISPLAY from '@salesforce/label/c.FEC_Label_Name_VN_Display
 import LABEL_TYPE_DISPLAY from '@salesforce/label/c.FEC_Label_Type_Display';
 import LABEL_UPDATED_SUCCESS from '@salesforce/label/c.FEC_Updated_Success';
 import LABEL_PLEASE_FILL_ALL from '@salesforce/label/c.FEC_Please_Fill_All';
-import { VARIANT_SUCCESS, VARIANT_ERROR, ICON_MAP, ICON_FALLBACK, TYPE_TEXT } from 'c/fecConstants';
+import { VARIANT_SUCCESS, VARIANT_ERROR, ICON_MAP, ICON_FALLBACK, TYPE_TEXT, OBJ_PRODUCT_TYPE, OBJ_BUSINESS_PROCESS, OBJ_CATEGORY, OBJ_SUB_CATEGORY, OBJ_SUB_CODE, PREFIX_PT, PREFIX_BP, PREFIX_CAT, PREFIX_SCAT, PREFIX_SC, OBJECT_MAP } from 'c/fecConstants';
 
 // Node type keys used in data/model
 const NODE_PRODUCT_LINE = 'Product_Line';
@@ -49,7 +49,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
     // runtime caches / helpers
     mappingRecords = [];
     wiredMappingsResult = null;
-    objectMap = {};
+    objectMap = OBJECT_MAP;
     selectedNodePrefix = null;
     _item = null;
     _originalItem = null;
@@ -134,7 +134,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
         const name = this.editedItem?.name || '';
         const parts = name ? name.split('_') : [];
         this.selectedNodePrefix = parts.length > 1 ? parts[0] : null;
-        showLog('set editedItem', this.editedItem);
     }
     get item() {
         return this._item;
@@ -142,9 +141,21 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
     get targetObjectType() {
         const prefix = this.selectedNodePrefix;
-        const label = this.objectMap && this.objectMap[prefix] ? this.objectMap[prefix] : '';
+        if (!prefix || !this.objectMap) {
+            return this.editedItem?.Code || '';
+        }
+        const label = this.objectMap[prefix] || '';
+        // If the object name is "FEC_MDM_Sub_Code__c", we want to display "Sub Code"
+        // Let's create a more readable display name for the header
+        let friendlyLabel = label;
+        if (prefix === PREFIX_SC) friendlyLabel = OBJ_SUB_CODE;
+        else if (prefix === PREFIX_SCAT) friendlyLabel = OBJ_SUB_CATEGORY;
+        else if (prefix === PREFIX_CAT) friendlyLabel = OBJ_CATEGORY;
+        else if (prefix === PREFIX_BP) friendlyLabel = OBJ_BUSINESS_PROCESS;
+        else if (prefix === PREFIX_PT) friendlyLabel = OBJ_PRODUCT_TYPE;
+
         const code = this.editedItem?.Code || '';
-        return (label ? label + ' ID: ' : '') + code;
+        return (friendlyLabel ? friendlyLabel + ' ID: ' : '') + code;
     }
 
     validateForm() {
@@ -195,7 +206,11 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
 
     get nodeIcon() {
-        return ICON_MAP[this.item?.type] || ICON_FALLBACK;
+        const nodeType = this.item?.type;
+        if (!nodeType) {
+            return ICON_FALLBACK;
+        }
+        return ICON_MAP[nodeType] || ICON_FALLBACK;
     }
 
     get displayFields() {
@@ -257,7 +272,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
         if (!mapping) return [];
 
         const path = [];
-        const iconMap = ICON_MAP;
 
         // Build path from mapping
         if (mapping.CS_Product_Line__r) {
@@ -265,7 +279,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
                 type: NODE_PRODUCT_LINE,
                 name: mapping.CS_Product_Line__r.Name,
                 label: LABEL_NODE_PRODUCT_LINE,
-                icon: iconMap[NODE_PRODUCT_LINE],
+                icon: ICON_MAP[NODE_PRODUCT_LINE] || ICON_FALLBACK,
                 isLast: false
             });
         }
@@ -275,7 +289,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
                 type: NODE_SERVICE_TYPE,
                 name: mapping.CS_Service_Type__r.Name,
                 label: LABEL_NODE_SERVICE_TYPE,
-                icon: iconMap[NODE_SERVICE_TYPE],
+                icon: ICON_MAP[NODE_SERVICE_TYPE] || ICON_FALLBACK,
                 isLast: false
             });
         }
@@ -285,7 +299,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
                 type: NODE_CATEGORY,
                 name: mapping.CS_Category__r.Name,
                 label: LABEL_NODE_CATEGORY,
-                icon: iconMap[NODE_CATEGORY],
+                icon: ICON_MAP[NODE_CATEGORY] || ICON_FALLBACK,
                 isLast: false
             });
         }
@@ -295,7 +309,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
                 type: NODE_SUB_CATEGORY,
                 name: mapping.CS_Sub_Category__r.Name,
                 label: LABEL_NODE_SUB_CATEGORY,
-                icon: iconMap[NODE_SUB_CATEGORY],
+                icon: ICON_MAP[NODE_SUB_CATEGORY] || ICON_FALLBACK,
                 isLast: false
             });
         }
@@ -305,7 +319,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
                 type: NODE_ACTION,
                 name: mapping.CS_Action__r.Name,
                 label: LABEL_NODE_ACTION,
-                icon: iconMap[NODE_ACTION],
+                icon: ICON_MAP[NODE_ACTION] || ICON_FALLBACK,
                 isLast: false
             });
         }
@@ -368,6 +382,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
     // Methods
     getNodeTypeLabel(nodeType) {
+        // Map the NODE_* constants to the descriptive Labels
         const labels = {
             [NODE_PRODUCT_LINE]: LABEL_NODE_PRODUCT_LINE,
             [NODE_SERVICE_TYPE]: LABEL_NODE_SERVICE_TYPE,
@@ -375,7 +390,17 @@ export default class FecMasterDataItemDetail extends LightningElement {
             [NODE_SUB_CATEGORY]: LABEL_NODE_SUB_CATEGORY,
             [NODE_ACTION]: LABEL_NODE_ACTION
         };
-        return labels[nodeType] || nodeType;
+        // Safety check: if nodeType is not in our internal NODE_* map, check if it matches the object labels
+        let label = labels[nodeType];
+        if (!label) {
+            if (nodeType === OBJ_PRODUCT_TYPE) label = LABEL_NODE_PRODUCT_LINE;
+            else if (nodeType === OBJ_BUSINESS_PROCESS) label = LABEL_NODE_SERVICE_TYPE;
+            else if (nodeType === OBJ_CATEGORY) label = LABEL_NODE_CATEGORY;
+            else if (nodeType === OBJ_SUB_CATEGORY) label = LABEL_NODE_SUB_CATEGORY;
+            else if (nodeType === OBJ_SUB_CODE) label = LABEL_NODE_ACTION;
+        }
+
+        return label || nodeType;
     }
 
     handleRefresh() {

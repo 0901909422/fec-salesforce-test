@@ -50,6 +50,7 @@ import LABEL_NOC_SUB_CODE from '@salesforce/label/c.FEC_NOC_Sub_Code';
 import LABEL_TYPE from '@salesforce/label/c.FEC_Label_Type';
 import LABEL_BP from '@salesforce/label/c.FEC_Label_Business_Process';
 import { FIELD_PRODUCT_TYPE_NAME, FIELD_BUSINESS_PROCESS_NAME, FIELD_CATEGORY_NAME, FIELD_SUB_CATEGORY_NAME, FIELD_SUB_CODE, FIELD_ORDER_GENERIC, FIELD_BUSINESS_PROCESS, TYPE_NUMBER, VARIANT_SUCCESS, VARIANT_ERROR, VARIANT_INFO, FIELD_ADDITIONAL_FIELD, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, FIELD_STAGE_NAME, FIELD_DATA_INTEGRATION_MAPPING, EVENT_REFRESH, EVENT_SYNC, EVENT_PUSH } from 'c/fecConstants';
+import { FIELD_FEC_TYPE } from 'c/fecConstants';
 
 export default class FecAllMasterData extends LightningElement {
     labelTitle = LABEL_TITLE;
@@ -168,6 +169,8 @@ export default class FecAllMasterData extends LightningElement {
         try {
             await syncDataToMDM();
             this.showToast(LABEL_NOTIFY_SYNC_STARTED, '', VARIANT_INFO);
+            // Refresh dữ liệu sau khi sync thành công
+            await refreshApex(this.wiredDataResult);
         } catch (error) {
             this.showToast(LABEL_TOAST_ERROR, error.body?.message || error.message, VARIANT_ERROR);
         } finally {
@@ -183,6 +186,8 @@ export default class FecAllMasterData extends LightningElement {
         try {
             await pushMDMToLive();
             this.showToast(LABEL_NOTIFY_PUSH_STARTED, '', VARIANT_SUCCESS);
+            // Refresh dữ liệu sau khi push thành công
+            await refreshApex(this.wiredDataResult);
         } catch (error) {
             this.showToast(LABEL_TOAST_ERROR, error.body?.message || error.message, VARIANT_ERROR);
         } finally {
@@ -193,9 +198,4 @@ export default class FecAllMasterData extends LightningElement {
     showToast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
-
-    // expose events for parent components
-    handleRefresh() { this.dispatchEvent(new CustomEvent(EVENT_REFRESH)); }
-    handleSyncDataToMDM() { this.dispatchEvent(new CustomEvent(EVENT_SYNC)); }
-    handlePushToLive() { this.dispatchEvent(new CustomEvent(EVENT_PUSH)); }
 }

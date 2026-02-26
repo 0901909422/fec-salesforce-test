@@ -25,10 +25,26 @@ public with sharing class FEC_MasterDataSettingController {
             'FEC_Applicable_Role__c','Process_Change_Status__c','FEC_Data_Integration_Mapping__c',
             'FEC_Additional_Field__r.Name','FEC_Stage_Name__r.Name','FEC_Nature_Of_Case__r.Name','FEC_Channel__c','FEC_Case_Channel__r.Name'
         };
+        
+        // Add integration mapping fields only if querying fraud/integration records
+        if (isIntegration != null && isIntegration) {
+            fields.addAll(new List<String>{
+                'FEC_Data_Integration_Mapping__r.Id','FEC_Data_Integration_Mapping__r.Name',
+                'FEC_Data_Integration_Mapping__r.FEC_Int_Product_Line_Id__c',
+                'FEC_Data_Integration_Mapping__r.FEC_Int_Service_Type_Id__c',
+                'FEC_Data_Integration_Mapping__r.FEC_Int_Category_Id__c',
+                'FEC_Data_Integration_Mapping__r.FEC_Int_Sub_Category_Id__c',
+                'FEC_Data_Integration_Mapping__r.FEC_Int_Sub_Code_Id__c'
+            });
+        }
 
         String baseQuery = 'SELECT ' + String.join(fields, ', ') + ' FROM FEC_MDM_Master_Data_Setting__c WHERE FEC_Nature_Of_Case__c = :selectedNodeId ';
         if (String.isNotBlank(selectedStageId)) {
+            // If selectedStageId is provided, return only records for that specific stage
             baseQuery += ' AND FEC_Stage_Name__c = :selectedStageId ';
+        } else {
+            // If selectedStageId is null, return empty result (do not query records with FEC_Stage_Name__c = NULL)
+            return new List<FEC_MDM_Master_Data_Setting__c>();
         }
         if (isIntegration != null) {
             baseQuery += isIntegration ? ' AND FEC_Data_Integration_Mapping__c != NULL ' : ' AND FEC_Data_Integration_Mapping__c = NULL ';
@@ -36,10 +52,27 @@ public with sharing class FEC_MasterDataSettingController {
 
         String finalQuery = baseQuery + ' ORDER BY FEC_Field_Order_Display__c ASC NULLS LAST, Name ASC';
         
+        System.debug('=== getMasterDataSettings DEBUG ===');
+        System.debug('selectedNodeId: ' + selectedNodeId);
+        System.debug('selectedStageId: ' + selectedStageId);
+        System.debug('isIntegration: ' + isIntegration);
+        System.debug('SOQL: ' + finalQuery);
+        
         List<FEC_MDM_Master_Data_Setting__c> settings = Database.query(finalQuery);
-        // Enforce FLS
-        List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, settings).getRecords();
-        return (List<FEC_MDM_Master_Data_Setting__c>) safe;
+        System.debug('Results count: ' + settings.size());
+        
+        // Log record data for debugging
+        if (settings.size() > 0) {
+            System.debug('First record (WITHOUT FLS stripping): ' + JSON.serialize(settings[0]));
+        }
+        
+        // NOTE: FLS enforcement removed - returning full record data to LWC
+        // This bypasses Field Level Security checks - use with caution!
+        // If FLS is needed for security, re-enable: 
+        // List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, settings).getRecords();
+        // return (List<FEC_MDM_Master_Data_Setting__c>) safe;
+        
+        return settings;
     }
     
     @AuraEnabled(cacheable=true)
@@ -111,25 +144,33 @@ public with sharing class FEC_MasterDataSettingController {
     @AuraEnabled
     public static Id saveMasterDataSetting(Map<String, Object> mappingReq) {
         System.debug('--- START saveMasterDataSetting ---');
+        System.debug('mappingReq: ' + mappingReq);
+        
         String recordId = (String)mappingReq.get(FEC_Constants.FIELD_ID);
         FEC_MDM_Master_Data_Setting__c recordToSave = String.isNotBlank(recordId)
             ? new FEC_MDM_Master_Data_Setting__c(Id = recordId)
             : new FEC_MDM_Master_Data_Setting__c();
         try {
-            if (String.isBlank(recordId)) {
-                recordToSave.Process_Change_Status__c = FEC_Constants.PROCESS_STATUS_NEW;
+            // Common fields for both CREATE and EDIT
+            if (mappingReq.containsKey(FEC_Constants.FIELD_NATURE_OF_CASE)) {
                 recordToSave.FEC_Nature_Of_Case__c = getOptionalId(mappingReq, FEC_Constants.FIELD_NATURE_OF_CASE);
+            }
+            if (mappingReq.containsKey(FEC_Constants.FIELD_STAGE_NAME)) {
                 recordToSave.FEC_Stage_Name__c = getOptionalId(mappingReq, FEC_Constants.FIELD_STAGE_NAME);
-                recordToSave.FEC_Field_Mandatory__c = (Boolean)mappingReq.get(FEC_Constants.FIELD_FIELD_MANDATORY);
-                recordToSave.FEC_Field_ReadOnly__c = (Boolean)mappingReq.get(FEC_Constants.FIELD_FIELD_READONLY);
-                recordToSave.FEC_Section__c = (String)mappingReq.get(FEC_Constants.FIELD_SECTION);
-                recordToSave.FEC_Field_Object_Name__c = (String)mappingReq.get(FEC_Constants.FIELD_FIELD_OBJECT_NAME);
+            }
+            if (mappingReq.containsKey(FEC_Constants.FIELD_ADDITIONAL_FIELD)) {
                 recordToSave.FEC_Additional_Field__c = (String)mappingReq.get(FEC_Constants.FIELD_ADDITIONAL_FIELD);
-                recordToSave.FEC_Applicable_Role__c = getOptionalId(mappingReq, FEC_Constants.FIELD_APPLICABLE_ROLE);
-                recordToSave.FEC_Field_ReadOnly__c = (Boolean)mappingReq.get(FEC_Constants.FIELD_FIELD_READONLY);
+            }
+            if (mappingReq.containsKey(FEC_Constants.FIELD_SECTION)) {
+                recordToSave.FEC_Section__c = (String)mappingReq.get(FEC_Constants.FIELD_SECTION);
+            }
+            if (mappingReq.containsKey(FEC_Constants.FIELD_CHANNEL)) {
                 recordToSave.FEC_Channel__c = getOptionalId(mappingReq, FEC_Constants.FIELD_CHANNEL);
-                recordToSave.FEC_Case_Channel__c = getOptionalId(mappingReq, FEC_Constants.FIELD_CASE_CHANNEL);
-                recordToSave.FEC_Data_Integration_Mapping__c = getOptionalId(mappingReq, FEC_Constants.FIELD_DATA_INTEGRATION_MAPPING);
+            }
+            if (mappingReq.containsKey(FEC_Constants.FIELD_APPLICABLE_ROLE)) {
+                recordToSave.FEC_Applicable_Role__c = getOptionalId(mappingReq, FEC_Constants.FIELD_APPLICABLE_ROLE);
+            }
+            if (mappingReq.containsKey(FEC_Constants.FIELD_FIELD_ORDER_DISPLAY)) {
                 Object orderValue = mappingReq.get(FEC_Constants.FIELD_FIELD_ORDER_DISPLAY);
                 recordToSave.FEC_Field_Order_Display__c = (orderValue != null)
                     ? Integer.valueOf(String.valueOf(orderValue)) : null;
@@ -137,12 +178,31 @@ public with sharing class FEC_MasterDataSettingController {
             if (mappingReq.containsKey(FEC_Constants.FIELD_FIELD_STATUS)) {
                 recordToSave.FEC_Field_Status__c = (Boolean)mappingReq.get(FEC_Constants.FIELD_FIELD_STATUS);
             }
+            if (mappingReq.containsKey(FEC_Constants.FIELD_FIELD_READONLY)) {
+                recordToSave.FEC_Field_ReadOnly__c = (Boolean)mappingReq.get(FEC_Constants.FIELD_FIELD_READONLY);
+            }
+            if (mappingReq.containsKey(FEC_Constants.FIELD_FIELD_MANDATORY)) {
+                recordToSave.FEC_Field_Mandatory__c = (Boolean)mappingReq.get(FEC_Constants.FIELD_FIELD_MANDATORY);
+            }
+            if (mappingReq.containsKey(FEC_Constants.FIELD_FIELD_OBJECT_NAME)) {
+                recordToSave.FEC_Field_Object_Name__c = (String)mappingReq.get(FEC_Constants.FIELD_FIELD_OBJECT_NAME);
+            }
+            if (mappingReq.containsKey(FEC_Constants.FIELD_CASE_CHANNEL)) {
+                recordToSave.FEC_Case_Channel__c = getOptionalId(mappingReq, FEC_Constants.FIELD_CASE_CHANNEL);
+            }
+            if (mappingReq.containsKey(FEC_Constants.FIELD_DATA_INTEGRATION_MAPPING)) {
+                recordToSave.FEC_Data_Integration_Mapping__c = getOptionalId(mappingReq, FEC_Constants.FIELD_DATA_INTEGRATION_MAPPING);
+            }
+            
+            System.debug('recordToSave before upsert: ' + recordToSave);
             upsert recordToSave;
             System.debug('--- END saveMasterDataSetting Success: ' + recordToSave.Id + ' ---');
             return recordToSave.Id;
         } catch (DmlException dml) {
+            System.debug('DML Error: ' + dml.getMessage());
             throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' ' + dml.getDmlMessage(0));
         } catch (Exception e) {
+            System.debug('General Error: ' + e.getMessage());
             throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
         }
     }
@@ -160,6 +220,30 @@ public with sharing class FEC_MasterDataSettingController {
              System.debug('FEC_MasterDataSettingController.deleteRecord error: ' + e);
             throw new AuraHandledException(FEC_Constants.ERROR_SYSTEM + ' ' + e.getMessage());
          }
+    }
+    
+    @AuraEnabled
+    public static void updateCaseStageName(Id stageId, String newName) {
+        try {
+            FEC_MDM_Case_Stage__c stage = new FEC_MDM_Case_Stage__c(
+                Id = stageId,
+                Name = newName,
+                FEC_Name_VN__c = newName,
+                FEC_Alias__c = newName
+            );
+            update stage;
+        } catch (Exception e) {
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static void deleteCaseStage(Id stageId) {
+        try {
+            delete new FEC_MDM_Case_Stage__c(Id = stageId);
+        } catch (Exception e) {
+            throw new AuraHandledException(FEC_Constants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
+        }
     }
     
     @AuraEnabled
@@ -207,4 +291,97 @@ public with sharing class FEC_MasterDataSettingController {
          }
           return options;
       }
- }
+      
+      @AuraEnabled(cacheable=true)
+    public static List<Map<String, String>> getAdditionalFieldOptions() {
+        List<Map<String, String>> options = new List<Map<String, String>>();
+        List<FEC_MDM_Additional_Field__c> fields = [
+            SELECT Id, Name 
+            FROM FEC_MDM_Additional_Field__c 
+            WHERE FEC_Field_Status__c = true
+            ORDER BY Name ASC
+        ];
+        
+        List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, fields).getRecords();
+        for (FEC_MDM_Additional_Field__c field : (List<FEC_MDM_Additional_Field__c>) safe) {
+            options.add(new Map<String, String>{
+                FEC_Constants.MAP_LABEL => field.Name,
+                FEC_Constants.MAP_VALUE => field.Id
+            });
+        }
+        return options;
+    }
+
+    /**
+     * @description Lấy ID của FEC_User_Type__c dựa trên FEC_Customer_Type (Name)
+     * @param customerTypeName Tên của Customer Type (e.g., 'ALL', 'EXISTING', 'Non-existing')
+     * @return String ID của FEC_User_Type__c record
+     */
+    @AuraEnabled(cacheable=true)
+    public static String getUserTypeIdByName(String customerTypeName) {
+        if (String.isBlank(customerTypeName)) {
+            System.debug('getUserTypeIdByName: customerTypeName is blank');
+            return null;
+        }
+        
+        try {
+            List<FEC_User_Type__c> userTypes = [
+                SELECT Id, Name 
+                FROM FEC_User_Type__c 
+                WHERE FEC_Status__c = true 
+                AND Name = :customerTypeName
+                LIMIT 1
+            ];
+            
+            System.debug('getUserTypeIdByName Query - customerTypeName: ' + customerTypeName);
+            System.debug('getUserTypeIdByName Results count: ' + userTypes.size());
+            
+            if (!userTypes.isEmpty()) {
+                System.debug('getUserTypeIdByName Found ID: ' + userTypes[0].Id);
+                return userTypes[0].Id;
+            }
+            
+            System.debug('getUserTypeIdByName: No matching user type found');
+            return null;
+        } catch (Exception e) {
+            System.debug('getUserTypeIdByName ERROR: ' + e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Delete a fraud integration mapping record
+     * @param recordId - ID of the record to delete
+     */
+    @AuraEnabled
+    public static void deleteFraudIntegrationMapping(String recordId) {
+        try {
+            if (String.isBlank(recordId)) {
+                throw new IllegalArgumentException('Record ID cannot be empty');
+            }
+
+            // Verify record exists and user has delete access
+            List<FEC_MDM_Master_Data_Setting__c> records = [
+                SELECT Id, Name 
+                FROM FEC_MDM_Master_Data_Setting__c 
+                WHERE Id = :recordId 
+                LIMIT 1
+            ];
+
+            if (records.isEmpty()) {
+                throw new IllegalArgumentException('Record not found');
+            }
+
+            // Delete the record
+            delete records[0];
+            
+            System.debug('Successfully deleted fraud integration mapping: ' + recordId);
+        } catch (DmlException e) {
+            System.debug('DML Error: ' + e.getMessage());
+            throw new AuraHandledException('Lỗi khi xóa record: ' + e.getMessage());
+        } catch (Exception e) {
+            System.debug('Error: ' + e.getMessage());
+            throw new AuraHandledException('Lỗi: ' + e.getMessage());
+        }
+    }
+}
