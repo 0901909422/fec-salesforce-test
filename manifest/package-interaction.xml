@@ -230,7 +230,13 @@
 		<members>FEC_KYC_Product_Label</members>
 		<members>FEC_KYC_Question_Label</members>
 		<members>FEC_KYC_Result_Label</members>
+		<members>FEC_KYC_Method_Label</members>
 		<members>FEC_Performed_On_Label</members>
+		<members>FEC_Interaction_Remarks_Label</members>
+		<members>FEC_Quick_Wrap_up_Label</members>
+		<members>FEC_Wrap_up_Information_Label</members>
+		<members>FEC_View_All_Case_Label</members>
+		<members>FEC_View_All_Relevant_Interaction_Label</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
