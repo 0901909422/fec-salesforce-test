@@ -32,15 +32,13 @@
                 </header>
                 <div class="slds-modal__content slds-p-around_medium">
                     <lightning-record-edit-form object-api-name={OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE}
-                         record-id={listValueRecordIdForEdit} onsuccess={handleFormSuccess} onerror={handleFormError} oncancel={closeAddEditModal}>
+                         record-id={listValueRecordIdForEdit} onsubmit={handleSubmit} onsuccess={handleFormSuccess} onerror={handleFormError} oncancel={closeAddEditModal}>
+
+                        <lightning-messages></lightning-messages>
 
                         <lightning-input-field field-name={FIELD_NAME} required aria-label={labelListValueName}></lightning-input-field>
                         <lightning-input-field field-name={FIELD_NAME_VN} required aria-label={labelListValueNameVN}></lightning-input-field>
                         <lightning-input-field field-name={FIELD_ORDER} aria-label={labelOrder}></lightning-input-field>
-
-                        <lightning-input-field field-name={FIELD_PARENT_FIELD} value={parentFieldId}
-                            class="slds-hidden" aria-hidden="true">
-                        </lightning-input-field>
 
                         <div class="slds-m-top_medium slds-align_absolute-center">
                             <lightning-button label={labelCancel} onclick={closeAddEditModal} class="slds-m-right_x-small" title={labelCancel}></lightning-button>

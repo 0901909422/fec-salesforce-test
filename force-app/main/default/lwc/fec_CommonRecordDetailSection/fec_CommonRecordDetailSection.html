@@ -48,13 +48,13 @@
                                                 slds-border_bottom
                                                 slds-p-bottom_x-small">
 
-                                        <!-- LABEL (FIXED WIDTH, NO WRAP) -->
+                                        <!-- LABEL -->
                                         <div class="slds-grid
                                                     slds-grid_vertical-align-center
                                                     slds-text-title_bold"
                                              style="
                                                 width: 140px;
-                                                min-width: 140px;
+                                                min-width: 170px;
                                                 margin-right: 4px;
                                                 white-space: nowrap;
                                              ">
@@ -69,7 +69,7 @@
                                             </template>
                                         </div>
 
-                                        <!-- VALUE (FLEX, WRAP OK) -->
+                                        <!-- VALUE -->
                                         <div style="
                                                 flex: 1;
                                                 word-break: break-word;
@@ -78,7 +78,7 @@
                                             {field.value}
                                         </div>
 
-                                        <!-- ICON (FIXED) -->
+                                        <!-- ICON -->
                                         <div class="slds-m-left_x-small
                                                     slds-grid
                                                     slds-grid_vertical-align-center">
@@ -92,7 +92,7 @@
 
                                             <template if:true={field.showError}>
                                                 <lightning-icon
-                                                    icon-name="utility:error"
+                                                    icon-name="utility:clear"
                                                     variant="error"
                                                     size="x-small">
                                                 </lightning-icon>

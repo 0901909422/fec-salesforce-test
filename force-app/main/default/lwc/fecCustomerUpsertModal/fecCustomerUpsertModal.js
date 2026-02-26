@@ -3,7 +3,7 @@ import LightningConfirm from 'lightning/confirm';
 import USER_ID from '@salesforce/user/Id';
 import { getRecord } from 'lightning/uiRecordApi';
 import USER_NAME_FIELD from '@salesforce/schema/User.Name'
-import { ACCOUNT_LINKAGE_OPTIONS, formatDateDDMMYYYY } from 'c/fecUtils';
+import { ACCOUNT_LINKAGE_OPTIONS, formatDateDDMMYYYY, DELETE_CONFIRMATION_TITLE, DELETE_CONFIRMATION_MSG, SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE } from 'c/fecUtils';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import saveCustomerData from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.saveCustomerData';
 import getRelatedFiles from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getRelatedFiles';
@@ -44,12 +44,7 @@ import errorUploadAtLeastExcelFile from '@salesforce/label/c.FEC_Error_Upload_At
 import deletedFileMsg from '@salesforce/label/c.FEC_Deleted_File';
 import savedDataMsg from '@salesforce/label/c.FEC_Saved_Data';
 import errorCreateTemplate from '@salesforce/label/c.FEC_Error_Create_Template';
-import deleteConfirmationTitle from '@salesforce/label/c.FEC_Delete_Confirmation_Title';
-import deleteConfirmationMsg from '@salesforce/label/c.FEC_Delete_Confirmation_Msg';
 import cannotDeleteFileMsg from '@salesforce/label/c.FEC_Cannot_Delete_File';
-import successTitle from '@salesforce/label/c.FEC_Success_Title';
-import failTitle from '@salesforce/label/c.FEC_Fail_Title';
-import warningTitle from '@salesforce/label/c.FEC_Warning_Title';
 
 export default class FecCustomerUpsertModal extends LightningElement {
     label = {
@@ -125,7 +120,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
             })
             .catch(error => {
                 console.error('Error loading FEC_SheetJS', error);
-                this.showToast(failTitle, errorLoadExcelLib, 'error');
+                this.showToast(FAIL_TITLE, errorLoadExcelLib, 'error');
             });
     }
 
@@ -182,6 +177,8 @@ export default class FecCustomerUpsertModal extends LightningElement {
             if (!isFieldMatch) {
                 errorMsg += formatString(errorExpectedValue, fieldId, fileHeader[1] || emptyMsg);
             }
+
+            this.resetFileState();
             
             throw new Error(errorMsg);
         }
@@ -232,7 +229,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
             this.resetFileState();
     
         } catch (error) {
-            this.showToast(failTitle, error.message, 'error');
+            this.showToast(FAIL_TITLE, error.message, 'error');
         } finally {
             this.isLoading = false;
         }
@@ -252,12 +249,12 @@ export default class FecCustomerUpsertModal extends LightningElement {
                       }, true);
 
         if (!allValid) {
-            this.showToast(failTitle, errorRequiredFields, 'error');
+            this.showToast(FAIL_TITLE, errorRequiredFields, 'error');
             return;
         }
 
         if (this.existingFiles.length === 0) {
-            this.showToast(failTitle, errorUploadAtLeastExcelFile, 'error');
+            this.showToast(FAIL_TITLE, errorUploadAtLeastExcelFile, 'error');
             return;
         }
         
@@ -283,12 +280,12 @@ export default class FecCustomerUpsertModal extends LightningElement {
             });
 
             if (result === 'Success') {
-                this.showToast(successTitle, savedDataMsg, 'success');
+                this.showToast(SUCCESS_TITLE, savedDataMsg, 'success');
                 this.dispatchEvent(new CustomEvent('save'));
                 this.handleClose();
             }
         } catch (error) {
-            this.showToast(failTitle, error.body?.message || error.message, 'error');
+            this.showToast(FAIL_TITLE, error.body?.message || error.message, 'error');
         } finally {
             this.isLoading = false;
         }
@@ -342,7 +339,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
     handleDownloadTemplate() {
         // Kiểm tra thư viện đã load chưa
         if (!this.isLibraryLoaded || typeof XLSX === 'undefined') {
-            this.showToast(warningTitle, errorLoadExcelLib, 'warning');
+            this.showToast(WARNING_TITLE, errorLoadExcelLib, 'warning');
             return;
         }
 
@@ -376,7 +373,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
 
         } catch (error) {
             console.error('Error generating template:', error);
-            this.showToast(failTitle, errorCreateTemplate + error.message, 'error');
+            this.showToast(FAIL_TITLE, errorCreateTemplate + error.message, 'error');
         }
     }
 
@@ -388,13 +385,13 @@ export default class FecCustomerUpsertModal extends LightningElement {
 
             if (!fileId.startsWith('temp-')) {
                 if (this.existingFiles.length < 2) {
-                    this.showToast(failTitle, errorUploadAtLeastExcelFile, 'error');
+                    this.showToast(FAIL_TITLE, errorUploadAtLeastExcelFile, 'error');
                     return;
                 }
                 const result = await LightningConfirm.open({
-                    message: deleteConfirmationMsg,
+                    message: DELETE_CONFIRMATION_MSG,
                     variant: 'header',
-                    label: deleteConfirmationTitle,
+                    label: DELETE_CONFIRMATION_TITLE,
                     theme: 'error',
                 });
                 if (!result) return;
@@ -403,9 +400,9 @@ export default class FecCustomerUpsertModal extends LightningElement {
 
             this.existingFiles = this.existingFiles.filter(f => f.id !== fileId);
             this.pendingFiles = this.pendingFiles.filter(f => f.id !== fileId);
-            this.showToast(successTitle, deletedFileMsg, 'success');
+            this.showToast(SUCCESS_TITLE, deletedFileMsg, 'success');
         } catch (error) {
-            this.showToast(failTitle, cannotDeleteFileMsg + (error.body?.message || error.message), 'error');
+            this.showToast(FAIL_TITLE, cannotDeleteFileMsg + (error.body?.message || error.message), 'error');
         } finally {
             this.isLoading = false;
         }

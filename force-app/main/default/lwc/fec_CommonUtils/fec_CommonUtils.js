@@ -1,3 +1,5 @@
+import { getFocusedTabInfo, setTabLabel, setTabIcon } from 'lightning/platformWorkspaceApi';
+
 const formatDate = (curr) => {
   if (!curr) {
     return null;
@@ -9,6 +11,25 @@ const formatDate = (curr) => {
   const day = String(curr.getDate()).padStart(2, "0");
 
   return `${day}-${month}-${year}`;
+};
+
+/**
+ * Format date-time as DD/MM/YYYY, HH:mm:ss (e.g. 28/12/2025, 13:20:10)
+ */
+const formatDateTime = (curr) => {
+  if (!curr) {
+    return null;
+  }
+
+  curr = new Date(curr);
+  const year = curr.getFullYear();
+  const month = String(curr.getMonth() + 1).padStart(2, "0");
+  const day = String(curr.getDate()).padStart(2, "0");
+  const h = String(curr.getHours()).padStart(2, "0");
+  const m = String(curr.getMinutes()).padStart(2, "0");
+  const s = String(curr.getSeconds()).padStart(2, "0");
+
+  return `${day}/${month}/${year}, ${h}:${m}:${s}`;
 };
 
 const mask = (s, keep = 4) => {
@@ -61,6 +82,19 @@ const maskValue = (value, showFull) => {
   }
 
   /* =====================
+        * PHONE NUMBER: 84xxxxxxxxx
+        * Hiển thị: 5 số đầu + 3 số cuối
+        * Ví dụ: 84901***678
+        * ===================== */
+        if (/^84\d{9}$/.test(v)) {
+            return (
+                v.substring(0, 5) +
+                '*'.repeat(v.length - 8) +
+                v.slice(-3)
+            );
+        }
+
+  /* =====================
   * PHONE NUMBER (10 số)
   * Hiển thị: 4 số đầu + 3 số cuối
   * Ví dụ: 0906***678
@@ -89,4 +123,31 @@ const maskValue = (value, showFull) => {
   return v;
 }
 
-export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue };
+/* =========================
+ * CONSOLE TAB HELPER
+ * ========================= */
+/**
+ * Set Console Tab Label & Icon
+ * @param {string} label
+ * @param {string} icon (vd: 'standard:case')
+ */
+const setConsoleTab = async (label, icon) => {
+  try {
+    const tabInfo = await getFocusedTabInfo();
+    const { tabId } = tabInfo;
+
+    if (label) {
+      await setTabLabel(tabId, label);
+    }
+
+    if (icon) {
+      await setTabIcon(tabId, icon, {
+        iconAlt: label || "Tab",
+      });
+    }
+  } catch (e) {
+   console.error(e);
+  }
+};
+
+export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue, formatDateTime, setConsoleTab };

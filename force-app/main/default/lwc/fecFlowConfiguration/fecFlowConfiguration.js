@@ -1,21 +1,29 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import createCaseStage from '@salesforce/apex/FEC_MasterDataSettingController.createCaseStage';
 import getCaseStageOptionsByBP from '@salesforce/apex/FEC_MasterDataSettingController.getCaseStageOptionsByBP';
+import updateCaseStageName from '@salesforce/apex/FEC_MasterDataSettingController.updateCaseStageName';
+import deleteCaseStage from '@salesforce/apex/FEC_MasterDataSettingController.deleteCaseStage';
 import { showLog } from 'c/fecMDMUtils';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import LABEL_FLOW_STAGES_TITLE from '@salesforce/label/c.FEC_Flow_Stages_Title';
 import LABEL_ADD_STAGE from '@salesforce/label/c.FEC_Add_Stage';
 import LABEL_STAGE_PREFIX from '@salesforce/label/c.FEC_Label_Stage';
 import LABEL_ALT_EDIT from '@salesforce/label/c.FEC_Alt_Edit';
 import LABEL_ALT_REMOVE from '@salesforce/label/c.FEC_Alt_Remove';
 import LABEL_PROMPT_ENTER_NEW_STAGE_NAME from '@salesforce/label/c.FEC_Prompt_Enter_New_Stage_Name';
-import { EVENT_HANDLE_STAGE_CLICK, EVENT_SAVE_CONFIG, CSS_STAGE_BOX, CSS_STAGE_BOX_ACTIVE } from 'c/fecConstants';
+import { EVENT_HANDLE_STAGE_CLICK, EVENT_SAVE_CONFIG, CSS_STAGE_BOX, CSS_STAGE_BOX_ACTIVE, PREFIX_BP, VARIANT_SUCCESS, VARIANT_ERROR } from 'c/fecConstants';
 
 
 export default class FecFlowConfiguration extends LightningElement {
     @api nodeData;
     @track stages = [];
     @track selectedStageIndex = 0;
-    @track showPropertyModal = false;
+    @track refreshCounter = 0; // Force wire adapter refresh
+    
+    // Modal states
+    @track showEditModal = false;
+    @track editingStageId = '';
+    @track editingStageName = '';
 
     connectedCallback() {
         this.selectedStageIndex = 0;
@@ -27,7 +35,7 @@ export default class FecFlowConfiguration extends LightningElement {
         // Kiểm tra an toàn xem nodeData và nodeData.name có tồn tại không
         return this.nodeData &&
             this.nodeData.name &&
-            this.nodeData.name.startsWith('BP');
+            this.nodeData.name.startsWith(PREFIX_BP);
     }
 
     // Hàm chuyển đổi dữ liệu từ Apex sang định dạng Stage của Component
@@ -61,7 +69,7 @@ export default class FecFlowConfiguration extends LightningElement {
     }
 
     // [THAY ĐỔI 3]: Cập nhật hàm @wire để tải và gán dữ liệu vào this.stages
-    @wire(getCaseStageOptionsByBP, { businessProcessId: '$actualBPId' })
+    @wire(getCaseStageOptionsByBP, { businessProcessId: '$actualBPId', refreshTrigger: '$refreshCounter' })
     wiredGetStageOptions({ error, data }) {
         if (data) {
             this.stages = this.processStageOptions(data);
@@ -115,20 +123,19 @@ export default class FecFlowConfiguration extends LightningElement {
             const code = businessProcessId + '-' + stageName;
 
             const params = {
-                name: stageName, // Map đúng với biến 'name' trong Apex
+                name: stageName, 
                 code: code,
-                businessProcessId: businessProcessId, // Đảm bảo nodeData.id có giá trị
+                businessProcessId: businessProcessId,
                 nameVN: stageName,
                 status: true,
                 alias: stageName,
-                posOrder: newStageNumber // Kiểu Number
+                posOrder: newStageNumber
             };
-            showLog('Adding new stage:', this.nodeData);
-
-            // Gọi Apex
+            
+            showLog('[handleAddStage] Creating stage with params:', params);
             const newStageId = await createCaseStage(params);
+            showLog('[handleAddStage] Stage created with ID:', newStageId);
 
-            // Logic thêm vào mảng UI sau khi DB thành công
             const newStage = {
                 id: newStageId,
                 name: stageName,
@@ -138,32 +145,119 @@ export default class FecFlowConfiguration extends LightningElement {
                 isActive: false
             };
             this.stages = [...this.stages, newStage];
-
+            
+            showLog('[handleAddStage] New stage added to local state. Total stages:', this.stages.length);
+            this.showToast('Success', 'Stage added successfully', VARIANT_SUCCESS);
+            
+            // Trigger wire adapter refresh by incrementing refreshCounter
+            // This forces getCaseStageOptionsByBP to re-execute and reload fresh data from server
+            this.refreshCounter++;
+            showLog('[handleAddStage] Triggered wire adapter refresh with refreshCounter:', this.refreshCounter);
+            
         } catch (error) {
             showLog('Error creating stage:', error);
-            // Hiển thị toast thông báo lỗi cụ thể từ Apex
+            this.showToast('Error', 'Failed to add stage: ' + error.body?.message, VARIANT_ERROR);
         }
     }
-    handleRemoveStage(event) {
+
+    async handleRemoveStage(event) {
+        event.stopPropagation();
+        
+        // Only allow delete at Business Process level
+        if (!this.isBusinessProcess) {
+            this.showToast('Info', 'Stages can only be deleted at Business Process level', 'info');
+            showLog('[handleRemoveStage] Delete not allowed - not at BP level. isBusinessProcess:', this.isBusinessProcess);
+            return;
+        }
+        
         const stageId = event.currentTarget.dataset.stageId;
-        this.stages = this.stages.filter(s => s.id !== stageId);
-        if (this.selectedStageIndex >= this.stages.length) {
-            this.selectedStageIndex = Math.max(0, this.stages.length - 1);
+        const stage = this.stages.find(s => s.id === stageId);
+        
+        if (!stage) return;
+
+        // Confirmation
+        if (!confirm(`Are you sure you want to delete stage "${stage.label}"?`)) {
+            return;
+        }
+
+        try {
+            await deleteCaseStage({ stageId });
+            this.stages = this.stages.filter(s => s.id !== stageId);
+            
+            // Update selected index if needed
+            if (this.selectedStageIndex >= this.stages.length) {
+                this.selectedStageIndex = Math.max(0, this.stages.length - 1);
+            }
+            
+            this.showToast('Success', `Stage "${stage.label}" deleted successfully`, VARIANT_SUCCESS);
+        } catch (error) {
+            showLog('Error deleting stage:', error);
+            this.showToast('Error', 'Failed to delete stage: ' + error.body?.message, VARIANT_ERROR);
         }
     }
 
     handleEditStageName(event) {
-        const stageId = event.currentTarget.dataset.stageId;
-        const stageIndex = this.stages.findIndex(s => s.id === stageId);
-
-        // For now, we'll use a simple prompt
-        const newName = prompt(LABEL_PROMPT_ENTER_NEW_STAGE_NAME, this.stages[stageIndex].name);
-        if (newName) {
-            const updatedStages = [...this.stages];
-            updatedStages[stageIndex].name = newName;
-            updatedStages[stageIndex].label = newName;
-            this.stages = updatedStages;
+        event.stopPropagation();
+        
+        // Only allow edit at Business Process level
+        if (!this.isBusinessProcess) {
+            this.showToast('Info', 'Stage names can only be edited at Business Process level', 'info');
+            showLog('[handleEditStageName] Edit not allowed - not at BP level. isBusinessProcess:', this.isBusinessProcess);
+            return;
         }
+        
+        const stageId = event.currentTarget.dataset.stageId;
+        const stage = this.stages.find(s => s.id === stageId);
+        if (stage) {
+            this.editingStageId = stageId;
+            this.editingStageName = stage.name;
+            this.showEditModal = true;
+        }
+    }
+
+    handleCancelEdit() {
+        this.showEditModal = false;
+        this.editingStageId = '';
+        this.editingStageName = '';
+    }
+
+    handleStageNameChange(event) {
+        this.editingStageName = event.target.value;
+    }
+
+    async handleSaveStageName() {
+        if (!this.editingStageName.trim()) return;
+
+        try {
+            await updateCaseStageName({ 
+                stageId: this.editingStageId, 
+                newName: this.editingStageName 
+            });
+
+            const index = this.stages.findIndex(s => s.id === this.editingStageId);
+            if (index !== -1) {
+                const updatedStages = [...this.stages];
+                updatedStages[index].name = this.editingStageName;
+                updatedStages[index].label = this.editingStageName;
+                this.stages = updatedStages;
+            }
+
+            this.showEditModal = false;
+            this.showToast('Success', 'Stage updated successfully', VARIANT_SUCCESS);
+        } catch (error) {
+            showLog('Error updating stage:', error);
+            this.showToast('Error', 'Failed to update stage: ' + error.body?.message, VARIANT_ERROR);
+        }
+    }
+
+    showToast(title, message, variant) {
+        this.dispatchEvent(
+            new ShowToastEvent({
+                title,
+                message,
+                variant,
+            })
+        );
     }
 
     handleSaveConfiguration() {

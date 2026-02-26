@@ -29,6 +29,7 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_IPPScheduleController</members>
+		<members>FEC_GetCardTransactions</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -60,6 +61,7 @@
 		<members>fec_CommonDetailView</members>
 		<members>fec_StatementsAccountTabView</members>
 		<members>fec_TransactionsAccountTabView</members>
+		<members>fec_CommonUtils</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -86,6 +88,7 @@
 		<members>FEC_API_Config.FEC_Get_Status</members>
 		<members>FEC_API_Config.FEC_Get_Unbilled_Transaction</members>
 		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_API_Config.FEC_GetCardTransactions</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -129,6 +132,7 @@
 		<members>FEC_MSG_Not_Account_Linked</members>
 		<members>FEC_MSG_From_To_Invalid</members>
         <members>FEC_MSG_Parse_JSON_Error</members>
+		<members>FEC_MSG_EndDate_Must_StartDate</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
