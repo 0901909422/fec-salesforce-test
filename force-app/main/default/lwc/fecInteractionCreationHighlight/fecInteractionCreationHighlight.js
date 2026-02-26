@@ -57,9 +57,7 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     if (data) {
       this.viewMode = getFieldValue(data, VIEW_MODE);
       let hasAccountOrContract = getFieldValue(data, HAS_ACCOUNT_OR_CONTRACT);
-      // if (hasAccountOrContract == false) {
-
-      // }
+      
       this.tryResetViewMode();
     } else if (error) {
       console.error("ViewMode load error", error);
