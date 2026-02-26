@@ -61,6 +61,7 @@
 		<members>fec_CommonDetailView</members>
 		<members>fec_StatementsAccountTabView</members>
 		<members>fec_TransactionsAccountTabView</members>
+		<members>fec_CommonUtils</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>

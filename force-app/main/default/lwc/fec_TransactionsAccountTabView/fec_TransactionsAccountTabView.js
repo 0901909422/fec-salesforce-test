@@ -14,6 +14,7 @@
 import { LightningElement, wire, track } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 import loadTransactionDetail from '@salesforce/apex/FEC_TransactionsController.loadTransactionDetail';
+import { setConsoleTab } from 'c/fec_CommonUtils';
 
 export default class Fec_TransactionsAccountTabView extends LightningElement {
 
@@ -97,6 +98,11 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
             .finally(() => {
                 this.isLoading = false;
             });
+    }
+
+    /* ================= SET TABNAME ================= */
+    connectedCallback() {
+        setConsoleTab('Transactions Detail', 'standard:record');
     }
 
     /* ================= SECTIONS ================= */
