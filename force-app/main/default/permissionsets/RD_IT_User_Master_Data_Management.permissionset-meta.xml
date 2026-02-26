@@ -1000,23 +1000,12 @@
         <field>FEC_Sub_Code__c.FEC_Order__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <!-- FEC_MDM_Product_Type__c Permissions -->
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Product_Type__c.FEC_Alias__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Product_Type__c.FEC_Code__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Product_Type__c.FEC_Name_VN__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <!-- FEC_MDM_Additional_Field__c Permissions -->
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Additional_Field__c.ExternalID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_MDM_Additional_Field__c.FEC_Field_Mandatory__c</field>
@@ -1063,64 +1052,6 @@
         <field>FEC_MDM_Additional_Field_List_Value__c.Process_Change_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
-    <!-- FEC_MDM_Master_Data_Setting__c Field Permissions -->
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.FEC_Additional_Field__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.FEC_Section__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.FEC_Channel__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.FEC_Applicable_Role__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.FEC_Field_Order_Display__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.FEC_Field_Status__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.FEC_Field_ReadOnly__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.FEC_Field_Mandatory__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.FEC_Nature_Of_Case__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.FEC_Stage_Name__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.Process_Change_Status__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-
     <!-- FEC_MDM_Channel__c Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -1140,6 +1071,78 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_MDM_Channel__c.Process_Change_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <!-- FEC_MDM_Master_Data_Setting__c Field Permissions -->
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Applicable_Role__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Additional_Field__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Channel__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Field_Mandatory__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Field_Order_Display__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Field_ReadOnly__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Field_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Nature_Of_Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Section__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Stage_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.Process_Change_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <!-- FEC_MDM_Product_Type__c Permissions -->
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Product_Type__c.FEC_Alias__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Product_Type__c.FEC_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Product_Type__c.FEC_Name_VN__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
