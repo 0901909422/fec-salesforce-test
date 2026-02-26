@@ -1052,36 +1052,15 @@
         <field>FEC_MDM_Additional_Field_List_Value__c.Process_Change_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <!-- FEC_MDM_Channel__c Permissions -->
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Channel__c.ExternalID__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Channel__c.FEC_Channel_Status__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Channel__c.FEC_Self_Service_Flag__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Channel__c.Process_Change_Status__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <!-- FEC_MDM_Master_Data_Setting__c Field Permissions -->
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.FEC_Applicable_Role__c</field>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Additional_Field__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_MDM_Master_Data_Setting__c.FEC_Additional_Field__c</field>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Applicable_Role__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1127,6 +1106,27 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_MDM_Master_Data_Setting__c.Process_Change_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <!-- FEC_MDM_Channel__c Permissions -->
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Channel__c.ExternalID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Channel__c.FEC_Channel_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Channel__c.FEC_Self_Service_Flag__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Channel__c.Process_Change_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <!-- FEC_MDM_Product_Type__c Permissions -->
@@ -1354,6 +1354,24 @@
         <modifyAllRecords>true</modifyAllRecords>
         <object>FEC_Sub_Code__c</object>
         <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>FEC_MDM_Additional_Field__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>FEC_MDM_Additional_Field_List_Value__c</object>
+        <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
     <!-- Other MDM Objects -->
     <objectPermissions>
