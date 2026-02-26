@@ -16,6 +16,8 @@ import FEC_INTERACTION_ID_LABEL from "@salesforce/label/c.FEC_Interaction_ID";
 import FEC_INTERACTION_CREATED_ON_LABEL from "@salesforce/label/c.FEC_Interaction_Created_On_Label";
 import FEC_INTERACTION_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_Channel_Label";
 
+import { formatDateTime } from 'c/fec_CommonUtils';
+
 const COLUMNS = [
   {
     label: FEC_INTERACTION_ID_LABEL,
@@ -54,7 +56,7 @@ export default class FecRelevantInteractionCard extends NavigationMixin(
         ...i,
         caseUrl: `/${i.Id}`,
         caseIdText: this.getPlainCaseId(i.FEC_Interaction_ID__c),
-        formattedCreatedOn: this.formatDate(i.FEC_Created_On__c),
+        formattedCreatedOn: formatDateTime(i.FEC_Created_On__c),
       }));
     }
   }
@@ -78,19 +80,6 @@ export default class FecRelevantInteractionCard extends NavigationMixin(
     this.interactions = this.interactions.map((i) =>
       i.Id === id ? { ...i, open: !i.open } : i,
     );
-  }
-
-  formatDate(dateString) {
-    if (!dateString) return "";
-    const d = new Date(dateString);
-    return d.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
   }
 
   async handleViewAll() {
