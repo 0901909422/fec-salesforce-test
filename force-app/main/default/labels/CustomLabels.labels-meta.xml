@@ -1195,6 +1195,38 @@
         <value>Interaction Sub Channel</value>
     </labels>
     <labels>
+        <fullName>FEC_KYC_Answer_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>KYC Answer Label</shortDescription>
+        <value>KYC Answer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_KYC_Product_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>KYC Product Label</shortDescription>
+        <value>KYC Product</value>
+    </labels>
+    <labels>
+        <fullName>FEC_KYC_Question_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>KYC Question Label</shortDescription>
+        <value>KYC Question</value>
+    </labels>
+    <labels>
+        <fullName>FEC_KYC_Result_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>KYC Result Label</shortDescription>
+        <value>KYC Result</value>
+    </labels>
+    <labels>
         <fullName>FEC_Label_Action</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -2628,6 +2660,14 @@
         <protected>false</protected>
         <shortDescription>PIN Label</shortDescription>
         <value>PIN</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Performed_On_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Performed On Label</shortDescription>
+        <value>Performed On</value>
     </labels>
     <labels>
         <fullName>FEC_Place_of_Issue_Label</fullName>
