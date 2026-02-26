@@ -341,7 +341,7 @@ export default class FecNatureOfCaseTree extends LightningElement {
                     this.treeKey = true; // Kích hoạt render lại toàn bộ
                 }, 0);
 
-                this.showToast(LABEL_TOAST_SAVE_SUCCESS_TITLE, LABEL_SUCCESS_ADD, 'success');
+                // this.showToast(LABEL_TOAST_SAVE_SUCCESS_TITLE, LABEL_SUCCESS_ADD, 'success');
             }
         } catch (error) {
             console.error('Error:', error);

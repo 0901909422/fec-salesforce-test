@@ -30,6 +30,7 @@ public with sharing class FEC_MasterDataSettingController {
         if (isIntegration != null && isIntegration) {
             fields.addAll(new List<String>{
                 'FEC_Data_Integration_Mapping__r.Id','FEC_Data_Integration_Mapping__r.Name',
+                'FEC_Data_Integration_Mapping__r.FEC_Int_Channel__c',
                 'FEC_Data_Integration_Mapping__r.FEC_Int_Product_Line_Id__c',
                 'FEC_Data_Integration_Mapping__r.FEC_Int_Service_Type_Id__c',
                 'FEC_Data_Integration_Mapping__r.FEC_Int_Category_Id__c',
