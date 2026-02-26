@@ -27,8 +27,8 @@ export default class FecCustomerHistoryModal extends LightningElement {
     @track isLoading = false;
 
     columns = [
-        { label: LBL_DATA_LINKAGE, fieldName: 'FEC_KeyIdentifier__c', type: 'text' },
-        { label: LBL_FIELD_NAME, fieldName: 'FEC_FieldID__c', type: 'text' },
+        { label: LBL_DATA_LINKAGE, fieldName: 'FEC_KeyIdentifier__c', type: 'text', sortable: true },
+        { label: LBL_FIELD_NAME, fieldName: 'FEC_FieldID__c', type: 'text', sortable: true },
         { label: LBL_STATUS, fieldName: 'FEC_Status__c', type: 'text', sortable: true },
         { label: LBL_IS_ACTIVE, fieldName: 'FEC_IsActive__c', type: 'boolean', sortable: true },
         { 
@@ -53,7 +53,7 @@ export default class FecCustomerHistoryModal extends LightningElement {
             typeAttributes: { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' },
             sortable: true
         },
-        { label: LBL_MODIFIED_BY, fieldName: 'ModifiedByName', type: 'text' },
+        { label: LBL_MODIFIED_BY, fieldName: 'ModifiedByName', type: 'text', sortable: true },
         { 
             label: LBL_MODIFIED_DATE, 
             fieldName: 'LastModifiedDate', 
