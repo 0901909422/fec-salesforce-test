@@ -11,6 +11,25 @@ const formatDate = (curr) => {
   return `${day}-${month}-${year}`;
 };
 
+/**
+ * Format date-time as DD/MM/YYYY, HH:mm:ss (e.g. 28/12/2025, 13:20:10)
+ */
+const formatDateTime = (curr) => {
+  if (!curr) {
+    return null;
+  }
+
+  curr = new Date(curr);
+  const year = curr.getFullYear();
+  const month = String(curr.getMonth() + 1).padStart(2, "0");
+  const day = String(curr.getDate()).padStart(2, "0");
+  const h = String(curr.getHours()).padStart(2, "0");
+  const m = String(curr.getMinutes()).padStart(2, "0");
+  const s = String(curr.getSeconds()).padStart(2, "0");
+
+  return `${day}/${month}/${year}, ${h}:${m}:${s}`;
+};
+
 const mask = (s, keep = 4) => {
   const len = s.length;
 
@@ -89,4 +108,4 @@ const maskValue = (value, showFull) => {
   return v;
 }
 
-export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue };
+export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue, formatDateTime };
