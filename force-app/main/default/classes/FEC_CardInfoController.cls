@@ -465,7 +465,7 @@ public with sharing class FEC_CardInfoController {
                 return recordsToInsert;
             } catch (Exception e) {
                 System.debug('Insert Supplementary Cards error: ' + e.getMessage());
-                throw new AuraHandledException('Lỗi lưu dữ liệu: ' + e.getMessage());
+                throw new AuraHandledException(e.getMessage());
             }
         }
         
