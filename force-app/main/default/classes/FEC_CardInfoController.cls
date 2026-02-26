@@ -48,7 +48,7 @@ public with sharing class FEC_CardInfoController {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
-        /* ===== TẢI CASE ===== */
+        /* ===== TẢI CASE (cần cho cả luồng Mock và luồng thật) ===== */
         Case c = [
             SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c,
                    FEC_Account_or_Contract__r.FEC_Account_Number__c
@@ -73,13 +73,13 @@ public with sharing class FEC_CardInfoController {
         }
 
         /* =====================================================
-         * BƯỚC 1: QUERY DATABASE TRƯỚC
+         * BƯỚC 1: QUERY DATABASE TRƯỚC (chung cho cả Mock và không Mock)
+         * Đã có data trong DB → return luôn, không gọi API (kể cả khi Mock bật)
          * ===================================================== */
         CardInfoDTO dto = new CardInfoDTO();
         dto.cardDeliveries = new List<CardDeliveryDTO>();
         dto.otherCards = new List<OtherCardDTO>();
 
-        /* ===== TẢI CARD DELIVERIES TỪ DATABASE ===== */
         try {
             if (customerHistoryId != null) {
                 dto.cardDeliveries = mapCardDeliveriesToDTO([
@@ -95,7 +95,6 @@ public with sharing class FEC_CardInfoController {
             System.debug('Load Card Deliveries error: ' + e.getMessage());
         }
 
-        /* ===== TẢI OTHER CARDS TỪ DATABASE ===== */
         try {
             if (customerHistoryId != null) {
                 dto.otherCards = mapOtherCardsToDTO([
@@ -111,12 +110,64 @@ public with sharing class FEC_CardInfoController {
             System.debug('Load Other Cards error: ' + e.getMessage());
         }
 
+        Boolean hasCardDeliveryData = dto.cardDeliveries != null && dto.cardDeliveries.size() > 0;
+        Boolean hasOtherCardData = dto.otherCards != null && dto.otherCards.size() > 0;
+
+        /* =====================================================
+         * KHI BẬT MOCK: đã có data trong DB → return; chưa có thì gọi API, lưu DB rồi return
+         * ===================================================== */
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        if (apiSetting != null && apiSetting.FEC_Call_Mock__c == true) {
+            if (hasCardDeliveryData && hasOtherCardData) {
+                return dto;
+            }
+            try {
+                if (String.isNotBlank(accountNumber) && customerHistoryId != null) {
+                    FEC_GetStatus.CardDeliveryInfo getStatusInfo = FEC_GetStatus.getDeliveryStatus(accountNumber);
+                    FEC_GetCardSecInfo.ResponseWrapper cardSecResponse = FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
+                    CardInfoDTO mockDto = buildCardInfoFromResponses(getStatusInfo, cardSecResponse);
+                    if (mockDto != null) {
+                        Boolean hasData = (mockDto.cardDeliveries != null && !mockDto.cardDeliveries.isEmpty())
+                            || (mockDto.otherCards != null && !mockDto.otherCards.isEmpty());
+                        if (hasData) {
+                            if (!hasCardDeliveryData && getStatusInfo != null && getStatusInfo.responseCode == '1') {
+                                FEC_Card_Delivery__c insertedCard = insertCardDeliveryFromGetStatus(getStatusInfo, caseId, customerHistoryId);
+                                if (insertedCard != null && cardSecResponse != null && cardSecResponse.CardSecInfo != null && cardSecResponse.CardSecInfo.CardsDeliveries != null && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
+                                    Boolean needsUpdate = false;
+                                    FEC_GetCardSecInfo.CardsDelivery matchedDelivery = null;
+                                    for (FEC_GetCardSecInfo.CardsDelivery delivery : cardSecResponse.CardSecInfo.CardsDeliveries) {
+                                        Boolean isMatch = String.isNotBlank(delivery.CardNumber) && compareCardNumbers(insertedCard.FEC_Card_Number__c, delivery.CardNumber);
+                                        if (isMatch) { matchedDelivery = delivery; break; }
+                                    }
+                                    if (matchedDelivery == null && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
+                                        matchedDelivery = cardSecResponse.CardSecInfo.CardsDeliveries[0];
+                                    }
+                                    if (matchedDelivery != null) {
+                                        if (String.isNotBlank(matchedDelivery.KindOfIssue)) { insertedCard.FEC_Type_of_Issue__c = matchedDelivery.KindOfIssue; needsUpdate = true; }
+                                        if (String.isNotBlank(matchedDelivery.DeliveryDate)) {
+                                            try { insertedCard.FEC_Delivery_Date__c = parseDeliveryDate(matchedDelivery.DeliveryDate); needsUpdate = true; } catch (Exception ex) { }
+                                        }
+                                    }
+                                    if (needsUpdate) { update insertedCard; }
+                                }
+                            }
+                            if (!hasOtherCardData && cardSecResponse != null && cardSecResponse.CardSecInfo != null && cardSecResponse.CardSecInfo.SupplementaryCards != null && !cardSecResponse.CardSecInfo.SupplementaryCards.isEmpty()) {
+                                insertSupplementaryCards(cardSecResponse.CardSecInfo.SupplementaryCards, customerHistoryId);
+                            }
+                            return mockDto;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.debug('Mock GetStatus/GetCardSecInfo error: ' + e.getMessage());
+            }
+            return FEC_MockData.getHardcodedCardInfo();
+        }
+
         /* =====================================================
          * BƯỚC 2: KIỂM TRA XEM CÓ DỮ LIỆU KHÔNG
          * Kiểm tra từng loại dữ liệu riêng biệt để gọi API độc lập
          * ===================================================== */
-        Boolean hasCardDeliveryData = dto.cardDeliveries != null && dto.cardDeliveries.size() > 0;
-        Boolean hasOtherCardData = dto.otherCards != null && dto.otherCards.size() > 0;
 
         /* =====================================================
          * BƯỚC 3: GỌI API CHO TỪNG LOẠI DỮ LIỆU CÒN THIẾU (CHỈ 1 LẦN DUY NHẤT)
@@ -515,6 +566,69 @@ public with sharing class FEC_CardInfoController {
             dtoList.add(dto);
         }
         return dtoList;
+    }
+
+    /**
+     * Build CardInfoDTO từ response GetStatus + GetCardSecInfo (không gọi API).
+     * Dùng khi đã có sẵn getStatusInfo và cardSecResponse (Mock: gọi 1 lần rồi build + insert).
+     */
+    private static CardInfoDTO buildCardInfoFromResponses(FEC_GetStatus.CardDeliveryInfo getStatusInfo, FEC_GetCardSecInfo.ResponseWrapper cardSecResponse) {
+        if (getStatusInfo == null || getStatusInfo.responseCode != '1') {
+            return null;
+        }
+        if (cardSecResponse != null && (cardSecResponse.Sys == null || cardSecResponse.Sys.Code != 1 || cardSecResponse.CardSecInfo == null)) {
+            cardSecResponse = null;
+        }
+
+        CardInfoDTO dto = new CardInfoDTO();
+        dto.cardDeliveries = new List<CardDeliveryDTO>();
+        dto.otherCards = new List<OtherCardDTO>();
+
+        CardDeliveryDTO deliveryDto = new CardDeliveryDTO();
+        deliveryDto.cardNumber = String.isNotBlank(getStatusInfo.cardNumber) ? FEC_CommonUltils.maskCardNumber(getStatusInfo.cardNumber) : getStatusInfo.cardNumber;
+        deliveryDto.issueDate = String.isNotBlank(getStatusInfo.issueDate) ? parseDeliveryDate(getStatusInfo.issueDate) : null;
+        if (deliveryDto.issueDate == null && String.isNotBlank(getStatusInfo.issueDate)) {
+            try { deliveryDto.issueDate = Date.valueOf(getStatusInfo.issueDate); } catch (Exception ex) { }
+        }
+        deliveryDto.typeOfIssue = null;
+        deliveryDto.deliveryStatus = getStatusInfo.status;
+        deliveryDto.deliveryDate = null;
+        deliveryDto.recipient = getStatusInfo.receiverName;
+        deliveryDto.trackingNumber = getStatusInfo.trackingNo;
+        deliveryDto.deliveryNote = getStatusInfo.deliveryNotes;
+        if (cardSecResponse != null && cardSecResponse.CardSecInfo.CardsDeliveries != null && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
+            for (FEC_GetCardSecInfo.CardsDelivery cd : cardSecResponse.CardSecInfo.CardsDeliveries) {
+                if (String.isNotBlank(cd.CardNumber) && compareCardNumbers(deliveryDto.cardNumber, cd.CardNumber)) {
+                    deliveryDto.typeOfIssue = cd.KindOfIssue;
+                    deliveryDto.deliveryDate = parseDeliveryDate(cd.DeliveryDate);
+                    break;
+                }
+            }
+            if (deliveryDto.typeOfIssue == null && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
+                FEC_GetCardSecInfo.CardsDelivery first = cardSecResponse.CardSecInfo.CardsDeliveries[0];
+                deliveryDto.typeOfIssue = first.KindOfIssue;
+                deliveryDto.deliveryDate = parseDeliveryDate(first.DeliveryDate);
+            }
+        }
+        dto.cardDeliveries.add(deliveryDto);
+
+        if (cardSecResponse != null && cardSecResponse.CardSecInfo.SupplementaryCards != null) {
+            for (FEC_GetCardSecInfo.SupplementaryCard sc : cardSecResponse.CardSecInfo.SupplementaryCards) {
+                if (String.isBlank(sc.CardNumber)) continue;
+                OtherCardDTO oc = new OtherCardDTO();
+                oc.cardholder = sc.CardholderName;
+                oc.cardNumber = sc.CardNumber;
+                oc.plasticId = sc.PlasticIndicator;
+                oc.expiryDate = FEC_CommonUltils.parseDate(sc.ExpiryDate);
+                oc.embossingName = sc.EmbossingName;
+                oc.cardActivationDate = sc.CardActivationDate;
+                oc.issueDate = sc.CardIssueDate;
+                oc.blockCode = sc.BlockCode;
+                oc.gender = sc.Gender;
+                dto.otherCards.add(oc);
+            }
+        }
+        return dto;
     }
 
 }
