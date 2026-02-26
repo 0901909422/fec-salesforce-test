@@ -98,38 +98,42 @@ public with sharing class FEC_GetAddressesList {
         String cifNumber
     ) {
         Dom.Document doc = new Dom.Document();
-
+        
         Dom.XmlNode envelope = doc.createRootElement(
             'soapenv:Envelope',
-            FEC_ConstantCommon.SOAP_ENV,
+            null,
             null
         );
-
+        
+        envelope.setAttribute(
+            'xmlns:soapenv',
+            FEC_ConstantCommon.SOAP_ENV
+        );
+        
         envelope.setAttribute(
             'xmlns:cif',
             'http://fecredit.com.vn/CIF_CustomerInfo'
         );
-
+        
+        // ===== Header =====
         envelope.addChildElement('soapenv:Header', null, null);
+        
+        // ===== Body =====
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+        
+         // ===== Main Action =====
+        Dom.XmlNode action =
+            body.addChildElement('cif:GetAddressesList', null, null);
 
-        Dom.XmlNode body = envelope.addChildElement('soapenv:Body', null, null);
-
-        Dom.XmlNode getAddresses = body.addChildElement(
-            'cif:GetAddressesList',
-            null,
-            null
-        );
-
-        Dom.XmlNode sys = getAddresses.addChildElement('Sys', null, null);
-        sys.addChildElement('TransID', null, null).addTextNode(transID);
-        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
-        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
-
-        getAddresses
-            .addChildElement('CIFNumber', null, null)
+       Dom.XmlNode sys = action.addChildElement('Sys', null, null);
+       sys.addChildElement('TransID', null, null).addTextNode(transID);
+       sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+       sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+       action.addChildElement('CIFNumber', null, null)
             .addTextNode(cifNumber);
-
-        return doc.toXmlString();
+ 
+       return doc.toXmlString();
     }
  
     // =========================================================================
