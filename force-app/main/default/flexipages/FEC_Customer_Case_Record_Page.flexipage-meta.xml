@@ -7,6 +7,9 @@
                     <name>actionNames</name>
                     <valueList>
                         <valueListItems>
+                            <value>Case.New_Assignment</value>
+                        </valueListItems>
+                        <valueListItems>
                             <value>Case.FEC_Execute_Customer_Case</value>
                         </valueListItems>
                     </valueList>

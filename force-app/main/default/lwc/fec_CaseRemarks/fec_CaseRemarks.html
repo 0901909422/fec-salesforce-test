@@ -1,5 +1,5 @@
 <template>
-  <lightning-textarea name="remark" label={customLabel.caseRemarkLabel}></lightning-textarea>
+  <lightning-textarea name="remark" label={customLabel.caseRemarkLabel} if:true={isEdit}></lightning-textarea>
 
   <c-fec_-related-list-paging
     if:true={loadRemarklst}

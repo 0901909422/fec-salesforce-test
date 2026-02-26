@@ -50,6 +50,13 @@
         <value>System error</value>
     </labels>
     <labels>
+        <fullName>FEC_Account_Contract_Number_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account / Contract Number</shortDescription>
+        <value>Account / Contract Number</value>
+    </labels>
+    <labels>
         <fullName>FEC_Account_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -418,12 +425,48 @@
         <value>Card Status</value>
     </labels>
     <labels>
+        <fullName>FEC_Case_ID_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case ID</shortDescription>
+        <value>Case ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Case_List_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case List</shortDescription>
+        <value>Case List</value>
+    </labels>
+    <labels>
         <fullName>FEC_Case_Remark_Label</fullName>
         <categories>Case</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Case Remark Label</shortDescription>
         <value>Case Remarks</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Case_Status_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case Status</shortDescription>
+        <value>Case Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Create_Case_Btn_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Case</shortDescription>
+        <value>Create Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Customer_Information_Label</fullName>
+        <categories>Customer Information</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Information</shortDescription>
+        <value>Customer Information</value>
     </labels>
     <labels>
         <fullName>FEC_Child_Actions</fullName>
@@ -814,6 +857,20 @@
         <value>Edit</value>
     </labels>
     <labels>
+        <fullName>FEC_Execute_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Execute</shortDescription>
+        <value>Execute</value>
+    </labels>
+    <labels>
+        <fullName>FEC_External_Interaction_ID_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>External Interaction ID</shortDescription>
+        <value>External Interaction ID</value>
+    </labels>
+    <labels>
         <fullName>FEC_Email_Label</fullName>
         <categories>Customer Info</categories>
         <language>en_US</language>
@@ -1065,6 +1122,125 @@
         <protected>false</protected>
         <shortDescription>IPP Details Label</shortDescription>
         <value>IPP Details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Channel_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Channel</shortDescription>
+        <value>Interaction Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Created_By_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Created By</shortDescription>
+        <value>Interaction Created By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Created_On_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Created On</shortDescription>
+        <value>Interaction Created On</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Duration_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Duration</shortDescription>
+        <value>Interaction Duration</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction ID</shortDescription>
+        <value>Interaction ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Information_Label</fullName>
+        <categories>Interacttion Information</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Information</shortDescription>
+        <value>Interaction Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Phone_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Phone</shortDescription>
+        <value>Interaction Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Remark_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Remark</shortDescription>
+        <value>Interaction Remark</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Remarks_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Remarks Label</shortDescription>
+        <value>Interaction Remarks</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Status_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Status</shortDescription>
+        <value>Interaction Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Sub_Channel_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Sub Channel</shortDescription>
+        <value>Interaction Sub Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_KYC_Answer_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>KYC Answer Label</shortDescription>
+        <value>KYC Answer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_KYC_Method_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>KYC Method Label</shortDescription>
+        <value>KYC Method</value>
+    </labels>
+    <labels>
+        <fullName>FEC_KYC_Product_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>KYC Product Label</shortDescription>
+        <value>KYC Product</value>
+    </labels>
+    <labels>
+        <fullName>FEC_KYC_Question_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>KYC Question Label</shortDescription>
+        <value>KYC Question</value>
+    </labels>
+    <labels>
+        <fullName>FEC_KYC_Result_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>KYC Result Label</shortDescription>
+        <value>KYC Result</value>
     </labels>
     <labels>
         <fullName>FEC_Label_Action</fullName>
@@ -1549,6 +1725,20 @@
         <protected>false</protected>
         <shortDescription>Last Name Label</shortDescription>
         <value>Last Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Last_Updated_By_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Updated By</shortDescription>
+        <value>Last Updated By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Last_Updated_On_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Updated On</shortDescription>
+        <value>Last Updated On</value>
     </labels>
     <labels>
         <fullName>FEC_Lbl_Action</fullName>
@@ -2053,6 +2243,14 @@
         <value>HTTP Error: {0}</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Input_Required</fullName>
+        <categories>LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Input Required</shortDescription>
+        <value>Please fill the fields below.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Interaction_Case_DTO_Null</fullName>
         <categories>Interaction</categories>
         <language>en_US</language>
@@ -2271,6 +2469,13 @@
         <value>National ID/ Passport ID</value>
     </labels>
     <labels>
+        <fullName>FEC_Next_Btn_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Next</shortDescription>
+        <value>Next</value>
+    </labels>
+    <labels>
         <fullName>FEC_New_Additional_Field</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -2454,6 +2659,13 @@
         <value>Other Card</value>
     </labels>
     <labels>
+        <fullName>FEC_Outcome_Code_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Outcome Code</shortDescription>
+        <value>Outcome Code</value>
+    </labels>
+    <labels>
         <fullName>FEC_PID_Number_Label</fullName>
         <categories>Customer Info</categories>
         <language>en_US</language>
@@ -2468,6 +2680,14 @@
         <protected>false</protected>
         <shortDescription>PIN Label</shortDescription>
         <value>PIN</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Performed_On_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Performed On Label</shortDescription>
+        <value>Performed On</value>
     </labels>
     <labels>
         <fullName>FEC_Place_of_Issue_Label</fullName>
@@ -2555,6 +2775,13 @@
         <value>Please fill in all required fields.</value>
     </labels>
     <labels>
+        <fullName>FEC_Previous_Btn_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Previous</shortDescription>
+        <value>Previous</value>
+    </labels>
+    <labels>
         <fullName>FEC_Primary_Phone_Label</fullName>
         <categories>Customer Info</categories>
         <language>en_US</language>
@@ -2599,6 +2826,14 @@
         <value>Queue</value>
     </labels>
     <labels>
+        <fullName>FEC_Quick_Wrap_up_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Quick Wrap-up Label</shortDescription>
+        <value>Quick Wrap-up</value>
+    </labels>
+    <labels>
         <fullName>FEC_Reason_Label</fullName>
         <categories>Case</categories>
         <language>en_US</language>
@@ -2628,6 +2863,27 @@
         <protected>false</protected>
         <shortDescription>Registration Info Label</shortDescription>
         <value>Registration Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Relevant_Cases_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Cases</shortDescription>
+        <value>Relevant Cases</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Relevant_Interactions_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Interactions</shortDescription>
+        <value>Relevant Interactions</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RemarkMsg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RemarkMsg</shortDescription>
+        <value>Yêu cầu được tự động chuyển trạng thái Resolved-AutoCancelled theo quy trình tự động kết thúc tương tác cuối ngày</value>
     </labels>
     <labels>
         <fullName>FEC_Reset_MDM</fullName>
@@ -2715,6 +2971,20 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Saving...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sub_Category_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub Category</shortDescription>
+        <value>Sub Category</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sub_Code_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub Code</shortDescription>
+        <value>Sub Code</value>
     </labels>
     <labels>
         <fullName>FEC_Success_Title</fullName>
@@ -3035,7 +3305,85 @@
         <shortDescription>Total Payment Amount Label</shortDescription>
         <value>Total Payment Amount</value>
     </labels>
-
+    <labels>
+        <fullName>FEC_View_All_Btn_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>View All</shortDescription>
+        <value>View All</value>
+    </labels>
+    <labels>
+        <fullName>FEC_View_All_Case_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>View All Case Label</shortDescription>
+        <value>View All Cases</value>
+    </labels>
+    <labels>
+        <fullName>FEC_View_All_Relevant_Interaction_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>View All Relevant Interaction Label</shortDescription>
+        <value>View All Relevant Interactions</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Wrap_up_Btn_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Wrap-up</shortDescription>
+        <value>Wrap-up</value>
+    </labels>
+    <labels>
+        <fullName>Pagination_Page_Of_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Pagination Page Of</shortDescription>
+        <value>Page {0} of {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CaseBusinessService_Msg_001</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CaseBusinessService_Msg_001</shortDescription>
+        <value>Manager not found for the current User owner.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CaseBusinessService_Msg_002</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CaseBusinessService_Msg_002</shortDescription>
+        <value>Current owner is a Queue; escalation to a Manager is not possible.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CaseBusinessService_Msg_003</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CaseBusinessService_Msg_003</shortDescription>
+        <value>Escalation failed: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CaseBusinessService_Msg_004</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CaseBusinessService_Msg_004</shortDescription>
+        <value>Không tìm thấy lịch sử Routing Action để thực hiện Recall.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CaseBusinessService_Msg_005</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CaseBusinessService_Msg_005</shortDescription>
+        <value>Bạn không phải người thực hiện Routing Action gần nhất.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CaseBusinessService_Msg_006</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CaseBusinessService_Msg_006</shortDescription>
+        <value>Không đủ điều kiện cập nhật số điện thoại.</value>
+    </labels>
     <labels>
         <fullName>Auto_Mapping</fullName>
         <language>en_US</language>
@@ -3135,6 +3483,14 @@
         <protected>false</protected>
         <shortDescription>Work Phone Label</shortDescription>
         <value>Work Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Wrap_up_Information_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Wrap-up Information Label</shortDescription>
+        <value>Wrap-up Information</value>
     </labels>
     <labels>
         <fullName>FEC_Zalo_Follower_Label</fullName>
