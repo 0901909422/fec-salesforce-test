@@ -1,4 +1,17 @@
-public with sharing class FEC_ApplicationsListController {
+/****************************************************************************************
+ * File Name    : FEC_ApplicationsListController.Apex
+ * Author       : Quangdv7
+ * Date         : 2025-01-12
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-12     Quangdv7             Create
+ 
+****************************************************************************************/
+
+public without sharing class FEC_ApplicationsListController {
 
     /* =====================================================
      * DTO 
@@ -24,6 +37,7 @@ public with sharing class FEC_ApplicationsListController {
         @AuraEnabled public String dSAName;
         @AuraEnabled public String tSACode;
         @AuraEnabled public String tSAName;
+        @AuraEnabled public Map<String, String> helpTexts;
     }
 
     /* =====================================================
@@ -251,6 +265,7 @@ public with sharing class FEC_ApplicationsListController {
             );
 
         dto.id = rec.Id;
+        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Application_List__c.SObjectType);
         if (rec.FEC_Customer_History__c != null) {
             List<Case> cases = [
                 SELECT Id,FEC_Account_or_Contract__c
@@ -309,13 +324,14 @@ public with sharing class FEC_ApplicationsListController {
                     ApplicationRowDTO.class
                 );
             dto.id = rec.Id;
+            dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Application_List__c.SObjectType);
             result.add(dto);
         }
 
         return result;
     }
 
-     /* =====================================================
+    /* =====================================================
      * LOG SENSITIVE
      * ===================================================== */
     @AuraEnabled

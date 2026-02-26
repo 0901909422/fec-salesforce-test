@@ -8,6 +8,6 @@
     </values>
     <values>
         <field>FEC_SOAP_Action__c</field>
-        <value xsi:type="xsd:string">M_CMS_EMEA_ACCOUNT_INQ</value>
+        <value xsi:type="xsd:string">http://fecredit.com.vn/CMS_VMXIntegrationWS/M_CMS_EMEA_ACCOUNT_INQ</value>
     </values>
 </CustomMetadata>

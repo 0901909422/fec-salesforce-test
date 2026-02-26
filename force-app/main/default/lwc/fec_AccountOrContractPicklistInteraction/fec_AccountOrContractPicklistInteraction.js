@@ -14,7 +14,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
 
   @api recordId;
 
-  selectedValue = "0001500010000123456";
+  selectedValue = "";
   hasAccountOrContact = false;
   isOpen = false;
 
