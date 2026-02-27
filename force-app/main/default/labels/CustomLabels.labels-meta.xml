@@ -5342,4 +5342,44 @@
         <shortDescription>FEC_MSG_Submit</shortDescription>
         <value>Submission failed. Please try again.</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_UPDATED_INFO_NOT_UPDATED</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_UPDATED_INFO_NOT_UPDATED</shortDescription>
+        <value>The information has not been updated.</value>
+    </labels>
+	<labels>
+        <fullName>FEC_ACTION_PHONE_UPDATE_HEADER</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_ACTION_PHONE_UPDATE_HEADER</shortDescription>
+        <value>Update Customer Info</value>
+    </labels>
+	<labels>
+        <fullName>FEC_MSG_ACTION_PHONE_UPDATE</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PHONE_UPDATE</shortDescription>
+        <value>You are about to update this customer&apos;s information. Are you sure you want to proceed?</value>
+    </labels>
+	<labels>
+        <fullName>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</shortDescription>
+        <value>Customer information updated successfully</value>
+    </labels>
+	<labels>
+        <fullName>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</shortDescription>
+        <value>Customer information update failed. Please try again</value>
+    </labels>
 </CustomLabels>

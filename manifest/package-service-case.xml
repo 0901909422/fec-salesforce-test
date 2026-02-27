@@ -86,5 +86,18 @@
 		<members>Case.My_Pending_Cases</members>
 		<name>ListView</name>
 	</types>
+	<types>
+		<members>FEC_MSG_Submit</members>
+		<members>FEC_MSG_UPDATED_INFO_NOT_UPDATED</members>
+		<members>FEC_ACTION_PHONE_UPDATE_HEADER</members>
+		<members>FEC_MSG_ACTION_PHONE_UPDATE</members>
+		<members>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</members>
+		<members>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</members>
+		<name>CustomLabel</name>
+	</types>
+	<types>
+        <members>vi</members>
+        <name>Translations</name>
+    </types>
     <version>65.0</version>
 </Package>

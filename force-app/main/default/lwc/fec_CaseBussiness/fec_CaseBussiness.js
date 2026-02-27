@@ -25,8 +25,12 @@ import {
 } from "c/fec_CommonUtils";
 
 import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION } from "c/fec_CommonConst";
+import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
+import FEC_ACTION_PHONE_UPDATE_HEADER from "@salesforce/label/c.FEC_ACTION_PHONE_UPDATE_HEADER";
+import FEC_MSG_ACTION_PHONE_UPDATE from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE";
+import FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS";
+import FEC_MSG_ACTION_PHONE_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE_ERROR";
 
-const UPDATED_INFO_NOT_UPDATED_MSG = "Thông tin chưa được cập nhật";
 
 const ACTION_PHONE_UPDATE = "Phone Update";
 const ACTION_EMAIL_UPDATE = "Email Update";
@@ -110,16 +114,6 @@ const CS_SUPPORT_ASSESMENT_TYPE = "FEC_CS_Support_Assessment_Type__c";
 const CONFIRM_D2C_ASSESMENT = "FEC_Confirm_D2C_Assessment__c";
 const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
-
-const ACTION_PHONE_UPDATE_HEADER = "Update Customer Info";
-const ACTION_PHONE_UPDATE_MSG =
-  "Bạn sắp cập nhật thông tin cho khách hàng này. Bạn có chắc chắn muốn tiếp tục?";
-
-const ACTION_PHONE_UPDATE_SUCCESS_MSG =
-  "Cập nhật thông tin khách hàng thành công";
-
-const ACTION_PHONE_UPDATE_ERROR_MSG =
-  "Cập nhật thông tin khách hàng thất bại. Vui lòng thử lại";
 
 const TYPE_QUALIFIED = "Qualified";
 const TYPE_UNQUALIFIED = "Unqualified";
@@ -431,7 +425,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       { presentUpdatedApiNames: this._getPresentCaseFieldApiNames() },
     );
     if (noUpdate) {
-      this.showToast("Validation", UPDATED_INFO_NOT_UPDATED_MSG, "warning");
+      this.showToast("Validation", FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
       return true;
     }
     return false;
@@ -1051,8 +1045,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._getCaseFieldValue.bind(this),
       { presentUpdatedApiNames: this._getPresentCaseFieldApiNames() },
     );
-    if (noUpdate) {
-      this.showToast("Validation", UPDATED_INFO_NOT_UPDATED_MSG, "warning");
+    // Chỉ chặn khi có dropdown routing và user chưa cập nhật bất kỳ trường Updated nào.
+    if (routeToEle && noUpdate) {
+      this.showToast("Validation", FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
       return false;
     }
 
@@ -1125,8 +1120,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     this.processActionMethod = method;
 
-    this.header = ACTION_PHONE_UPDATE_HEADER;
-    this.content = ACTION_PHONE_UPDATE_MSG;
+    this.header = FEC_ACTION_PHONE_UPDATE_HEADER;
+    this.content = FEC_MSG_ACTION_PHONE_UPDATE;
     this.isModalOpen = true;
   }
 
@@ -1189,7 +1184,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           res?.actionCount != -1 && res?.actionCount != 3;
 
         if (isSuccess) {
-          this.processActionMsg = ACTION_PHONE_UPDATE_SUCCESS_MSG;
+          this.processActionMsg = FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS;
           this.isProcessActionSuccessed = true;
           this.actionValue = ACTION_RESOLVE;
 
@@ -1201,7 +1196,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             routeToEle.value = ACTION_RESOLVE;
           }
         } else {
-          this.processActionMsg = ACTION_PHONE_UPDATE_ERROR_MSG;
+          this.processActionMsg = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
           this.isProcessActionFailed = true;
         }
 
@@ -1220,7 +1215,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         );
 
         this.isProcessActionFailed = true;
-        this.processActionMsg = ACTION_PHONE_UPDATE_ERROR_MSG;
+        this.processActionMsg = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
       })
       .finally(() => {
         this.isLoaded = true;
