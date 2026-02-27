@@ -10,6 +10,7 @@ public with sharing class FEC_CreateCaseInteractionController {
     
     Id customerCaseRtId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
       .get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)
+      .get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)
       .getRecordTypeId();
     
     Case newCase = new Case();
@@ -18,7 +19,11 @@ public with sharing class FEC_CreateCaseInteractionController {
     newCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
     newCase.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
     newCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
+    newCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
+    newCase.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
+    newCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
     newCase.FEC_Interaction__c = caseId;
+    newCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
     newCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
     newCase.FEC_Customer_Name__c = interation.FEC_Account_or_Contract__r?.FEC_Customer_Name__c;
     
@@ -59,7 +64,7 @@ public with sharing class FEC_CreateCaseInteractionController {
         WHERE Id = :caseId
         LIMIT 1
       ];
-      
+
       // 3. Get RecordType safely
       Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
       
@@ -69,7 +74,7 @@ public with sharing class FEC_CreateCaseInteractionController {
         )
       ) {
         throw new AuraHandledException(
-        String.format(System.Label.FEC_MSG_Not_Found, new List<String>{FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME})
+          String.format(System.Label.FEC_MSG_Not_Found, new List<String>{FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME})
         );
       }
       

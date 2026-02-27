@@ -274,36 +274,4 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     console.log("connectedCallback");
   }
 
-  // disconnectedCallback() {
-  //   this.unsubscribeToMessageChannel();
-  // }
-
-  // // ===============================
-  // // LMS HANDLERS
-  // // ===============================
-  // subscribeToMessageChannel() {
-  //   if (!this.subscription) {
-  //     this.subscription = subscribe(
-  //       this.messageContext,
-  //       IS_MODE_EDIT,
-  //       (message) => this.handleMessage(message),
-  //       { scope: APPLICATION_SCOPE }
-  //     );
-  //   }
-  // }
-
-  // unsubscribeToMessageChannel() {
-  //   unsubscribe(this.subscription);
-  //   this.subscription = null;
-  // }
-
-  // handleMessage(message) {
-  //   // Check if the message contains the isModeEdit property
-  //   if (message && typeof message.isModeEdit !== 'undefined') {
-  //       this.isModeEdit = message.isModeEdit;
-
-  //       // Optional: If you need to verify it matches the current record
-  //       // if (message.recordId === this.recordId) { ... }
-  //   }
-  // }
 }
