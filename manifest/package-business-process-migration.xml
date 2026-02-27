@@ -121,6 +121,10 @@
         <members>FEC_MSG_Select_outcome_code</members>
         <members>FEC_MSG_check_related_case_error</members>
         <members>FEC_MSG_check_case_type_error</members>
+		<members>FEC_KYC_Details_Label</members>
+        <members>FEC_Suggested_answer_Label</members>
+        <members>FEC_Button_Fail</members>
+        <members>FEC_Button_Pass</members>
         <name>CustomLabel</name>
     </types>
     <version>65.0</version>

@@ -29,6 +29,10 @@ import FEC_KYC_Question_Label from "@salesforce/label/c.FEC_KYC_Question_Label";
 import FEC_KYC_Result_Label from "@salesforce/label/c.FEC_KYC_Result_Label";
 import FEC_Performed_On_Label from "@salesforce/label/c.FEC_Performed_On_Label";
 import FEC_KYC_Method_Label from "@salesforce/label/c.FEC_KYC_Method_Label";
+import FEC_KYC_Details_Label from "@salesforce/label/c.FEC_KYC_Details_Label";
+import FEC_Suggested_answer_Label from "@salesforce/label/c.FEC_Suggested_answer_Label";
+import FEC_Button_Fail from "@salesforce/label/c.FEC_Button_Fail";
+import FEC_Button_Pass from "@salesforce/label/c.FEC_Button_Pass";
 
 export default class Fec_KYC extends LightningElement {
   @api recordId;
@@ -73,7 +77,11 @@ export default class Fec_KYC extends LightningElement {
     kycQuestionLabel: FEC_KYC_Question_Label,
     kycResultLabel: FEC_KYC_Result_Label,
     performedOnLabel: FEC_Performed_On_Label,
-    kycMethodLabel: FEC_KYC_Method_Label
+    kycMethodLabel: FEC_KYC_Method_Label,
+    kycDetailsLabel: FEC_KYC_Details_Label,
+    suggestedAnswerLabel: FEC_Suggested_answer_Label,
+    buttonFail: FEC_Button_Fail,
+    buttonPass: FEC_Button_Pass,
   }
 
   @track kycResultColumn = [

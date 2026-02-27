@@ -315,11 +315,27 @@
         <value>Expand All</value>
     </labels>
     <labels>
+        <fullName>FEC_Button_Fail</fullName>
+        <categories>Button</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button Fail</shortDescription>
+        <value>Fail</value>
+    </labels>
+    <labels>
         <fullName>FEC_Button_New_Setting</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>New Setting</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Pass</fullName>
+        <categories>Button</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button Pass</shortDescription>
+        <value>Pass</value>
     </labels>
     <labels>
         <fullName>FEC_Button_Query</fullName>
@@ -1296,6 +1312,14 @@
         <protected>false</protected>
         <shortDescription>KYC Answer Label</shortDescription>
         <value>KYC Answer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_KYC_Details_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>KYC Details Label</shortDescription>
+        <value>KYC Details</value>
     </labels>
     <labels>
         <fullName>FEC_KYC_Method_Label</fullName>
@@ -3150,6 +3174,14 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Suggested_answer_Label</fullName>
+        <categories>KYC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Suggested answer Label</shortDescription>
+        <value>Suggested answer</value>
     </labels>
     <labels>
         <fullName>FEC_TSA_Code_Label</fullName>
