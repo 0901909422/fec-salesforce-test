@@ -7,6 +7,8 @@ import NEXT_BTN from "@salesforce/label/c.FEC_Next_Btn_Label";
 import PREV_BTN from "@salesforce/label/c.FEC_Previous_Btn_Label";
 import FEC_View_All_Relevant_Interaction_Label from "@salesforce/label/c.FEC_View_All_Relevant_Interaction_Label";
 
+import { DIV_ELEMENT } from "c/fec_CommonConst";
+
 const COLUMNS = [
   {
     label: "Interaction ID ",
@@ -128,7 +130,7 @@ export default class Fec_RelevantInteractionListViewAll extends LightningElement
   // ===== Utils =====
   getPlainCaseId(htmlString) {
     if (!htmlString) return "";
-    const div = document.createElement("div");
+    const div = document.createElement(DIV_ELEMENT);
     div.innerHTML = htmlString;
     return div.textContent || div.innerText || "";
   }

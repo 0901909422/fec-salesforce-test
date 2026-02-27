@@ -17,6 +17,7 @@ import FEC_INTERACTION_CREATED_ON_LABEL from "@salesforce/label/c.FEC_Interactio
 import FEC_INTERACTION_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_Channel_Label";
 
 import { formatDateTime, urlCmpWithRecordId } from 'c/fec_CommonUtils';
+import { DIV_ELEMENT, ICON_CASE } from "c/fec_CommonConst";
 
 const COLUMNS = [
   {
@@ -91,12 +92,12 @@ export default class FecRelevantInteractionCard extends NavigationMixin(
       focus: true,
     });
     await setTabLabel(subtabId, "Relevant Interactions - View All");
-    await setTabIcon(subtabId, "standard:case", "Cases");
+    await setTabIcon(subtabId, ICON_CASE, "Cases");
   }
 
   getPlainCaseId(htmlString) {
     if (!htmlString) return "";
-    const div = document.createElement("div");
+    const div = document.createElement(DIV_ELEMENT);
     div.innerHTML = htmlString;
     return div.textContent || div.innerText || "";
   }

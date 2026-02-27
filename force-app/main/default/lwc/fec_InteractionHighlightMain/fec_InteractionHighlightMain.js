@@ -33,6 +33,7 @@ import FEC_CREATE_CASE_BTN_LABEL from "@salesforce/label/c.FEC_Create_Case_Btn_L
 import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
 
 import { urlCmpWithRecordId } from "c/fec_CommonUtils";
+import { DIV_ELEMENT } from "c/fec_CommonConst";
 
 export default class Fec_InteractionHighlightMain extends NavigationMixin(
   LightningElement,
@@ -181,7 +182,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       data.interactionId || data.interactionIdSearch || "";
 
     if (interactionIdValue) {
-      const tempDiv = document.createElement("div");
+      const tempDiv = document.createElement(DIV_ELEMENT);
       tempDiv.innerHTML = interactionIdValue;
       this.interactionId =
         tempDiv.textContent || tempDiv.innerText || interactionIdValue;

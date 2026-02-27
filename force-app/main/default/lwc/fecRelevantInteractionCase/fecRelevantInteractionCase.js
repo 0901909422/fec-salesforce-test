@@ -24,6 +24,7 @@ import FEC_SUB_CODE_LABEL from "@salesforce/label/c.FEC_Sub_Code_Label";
 import FEC_VIEW_ALL_BTN_LABEL from "@salesforce/label/c.FEC_View_All_Btn_Label";
 
 import { urlCmpWithRecordId } from 'c/fec_CommonUtils';
+import { DIV_ELEMENT, ICON_CASE } from "c/fec_CommonConst";
 
 const COLUMNS = [
   {
@@ -123,13 +124,13 @@ export default class FecRelevantInteractionCase extends NavigationMixin(
       focus: true,
     });
     await setTabLabel(subtabId, "Cases List - View All");
-    await setTabIcon(subtabId, "standard:case", "Cases");
+    await setTabIcon(subtabId, ICON_CASE, "Cases");
   }
 
   // ===== Utils =====
   getPlainCaseId(htmlString) {
     if (!htmlString) return "";
-    const div = document.createElement("div");
+    const div = document.createElement(DIV_ELEMENT);
     div.innerHTML = htmlString;
     return div.textContent || div.innerText || "";
   }
