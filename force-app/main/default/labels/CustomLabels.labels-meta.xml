@@ -313,6 +313,14 @@
         <value>Query</value>
     </labels>
     <labels>
+        <fullName>FEC_Button_Refresh</fullName>
+        <categories>Button</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button Refresh</shortDescription>
+        <value>Refresh</value>
+    </labels>
+    <labels>
         <fullName>FEC_Button_Save</fullName>
         <language>en_US</language>
         <protected>false</protected>
