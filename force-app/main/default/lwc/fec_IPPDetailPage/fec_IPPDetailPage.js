@@ -4,6 +4,7 @@ import { CurrentPageReference } from 'lightning/navigation';
 import { formatCurrency, isNegative, autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
 import getIPPScheduleData from '@salesforce/apex/FEC_IPPScheduleController.getIPPScheduleData';
 import getIPPHelpTextMap from '@salesforce/apex/FEC_IPPController.getIPPHelpTextMap';
+import { setConsoleTab } from 'c/fec_CommonUtils';
 
 export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -36,6 +37,8 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     
     connectedCallback() {
         this.loadHelpText();
+        /* ================= SET TABNAME ================= */
+        setConsoleTab('IPP Detail', 'standard:record');
     }
     
     loadHelpText() {
@@ -48,6 +51,10 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
             });
     }
     
+    get isMockRecord() {
+        return this.recordId && String(this.recordId).startsWith('mock-');
+    }
+
     @wire(CurrentPageReference)
     getStateParameters(currentPageReference) {
         if (currentPageReference && currentPageReference.state) {
@@ -62,10 +69,13 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
                     // Sales Info hiển thị ngay vì lấy từ recordData (state), Schedule cần gọi getIPPScheduleData
                     if (this.recordId && !this._scheduleLoaded) {
                         this._scheduleLoaded = true;
-                        this.loadIPPSchedules();
+                        if (this.recordId && String(this.recordId).startsWith('mock-')) {
+                            this.loadMockIPPData();
+                        } else {
+                            this.loadIPPSchedules();
+                        }
                     } else if (!this.recordId) {
                         this.isLoading = false;
-                    } else {
                     }
                 } catch (e) {
                     this.isLoading = false;
@@ -74,6 +84,15 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
                 this.isLoading = false;
             }
         }
+    }
+
+    /** Data giả cho mock record - không gọi API, hiển thị IPP Schedule + Sales Info từ recordData */
+    loadMockIPPData() {
+        this.ippSchedules = [
+            { Id: 'm1', paymentNo: '1', openingBalance: '50,000,000', paymentAmount: '5,000,000', monthlyPrincipal: '4,000,000', monthlyInterest: '100,000', openingBalanceClass: '', paymentAmountClass: '', monthlyPrincipalClass: '', monthlyInterestClass: '' },
+            { Id: 'm2', paymentNo: '2', openingBalance: '46,000,000', paymentAmount: '5,000,000', monthlyPrincipal: '4,000,000', monthlyInterest: '92,000', openingBalanceClass: '', paymentAmountClass: '', monthlyPrincipalClass: '', monthlyInterestClass: '' }
+        ];
+        this.isLoading = false;
     }
     
     // Load IPP Schedule data (gọi getIPPScheduleData để trigger API GetCardSecInfo khi DB chưa có schedule)

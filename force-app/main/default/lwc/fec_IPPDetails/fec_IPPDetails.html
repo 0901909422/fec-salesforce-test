@@ -10,7 +10,7 @@
                             class="slds-m-right_x-small">
                         </lightning-icon>
                         <span>
-                            {customLabel.ippDetailsLabel}
+                            IPP Details
                             <template if:true={showErrorInHeader}>
                                 <span class="error-text"> - {ERROR_MESSAGE}</span>
                             </template>
@@ -25,7 +25,7 @@
                         <div class="ipp-details-summary-item">
                             <div class="ipp-details-row-inner">
                                 <label class="ipp-details-label ipp-label-red">
-                                    {customLabel.totalIPPBalanceLabel}
+                                    Total IPP Balance
                                     <span class="ipp-details-help-icon">
                                         <template if:true={helpTextMap.FEC_Total_IPP_Balance__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_IPP_Balance__c}></lightning-helptext>
@@ -40,7 +40,7 @@
                         <div class="ipp-details-summary-item">
                             <div class="ipp-details-row-inner">
                                 <label class="ipp-details-label ipp-label-red">
-                                    {customLabel.totalIPPCurrentBalanceLabel}
+                                    Total IPP Current Balance
                                     <span class="ipp-details-help-icon">
                                         <template if:true={helpTextMap.FEC_Total_IPP_Current_Balance__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_IPP_Current_Balance__c}></lightning-helptext>
@@ -60,16 +60,18 @@
                         <div class="no-data error">{ERROR_MESSAGE}</div>
                     </template>
                     <template if:true={showTable}>
-                        <c-fec_-related-list-paging
-                            columns={columns}
-                            records={ippData}
-                            page-size={pageSize}
-                            updated-time={updatedTime}
-                            hide-updated-time="true"
-                            default-sorted-by={defaultSortBy}
-                            default-sort-direction={defaultSortDirection}
-                            onrowselect={handleRowSelect}>
-                        </c-fec_-related-list-paging>
+                        <div class="ipp-details-table-wrapper">
+                            <c-fec_-related-list-addresses-paging
+                                columns={columns}
+                                records={ippData}
+                                page-size={pageSize}
+                                updated-time={updatedTime}
+                                hide-updated-time="true"
+                                default-sorted-by={defaultSortBy}
+                                default-sort-direction={defaultSortDirection}
+                                onrowselect={handleRowSelect}>
+                            </c-fec_-related-list-addresses-paging>
+                        </div>
                     </template>
                 </template>
                 <template if:true={isLoading}>
