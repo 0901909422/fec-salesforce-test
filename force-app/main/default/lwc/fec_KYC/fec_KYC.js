@@ -22,6 +22,7 @@ import {
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 
 import { mask } from "c/fec_CommonUtils";
+import { ICON_PREVIEW, ICON_HIDE } from "c/fec_CommonConst";
 
 import FEC_KYC_Answer_Label from "@salesforce/label/c.FEC_KYC_Answer_Label";
 import FEC_KYC_Product_Label from "@salesforce/label/c.FEC_KYC_Product_Label";
@@ -223,7 +224,7 @@ export default class Fec_KYC extends LightningElement {
               item.isDisabled = !item.isEditable || this.isDisabled;
 
               if (item.isMasked) {
-                item.iconName = "utility:hide";
+                item.iconName = ICON_HIDE;
               }
 
               item.maskedAnswer = item.isMasked
@@ -255,7 +256,7 @@ export default class Fec_KYC extends LightningElement {
 
   handleToggleMask(e) {
     let id = e.target.dataset.id;
-    let isPreview = e.target.iconName === "utility:preview";
+    let isPreview = e.target.iconName === ICON_PREVIEW;
 
     this.kycData.typelst?.forEach((typeItem) => {
       this.prodTypeSectionlst.push(typeItem.type);
@@ -264,10 +265,10 @@ export default class Fec_KYC extends LightningElement {
         if (item.id === id) {
           if (isPreview) {
             item.maskedAnswer = mask(item.suggestedAnswer);
-            item.iconName = "utility:hide";
+            item.iconName = ICON_HIDE;
           } else {
             item.maskedAnswer = item.suggestedAnswer;
-            item.iconName = "utility:preview";
+            item.iconName = ICON_PREVIEW;
             logSensitiveAccess({
               itemName: item.fieldName,
               caseId: this.recordId
