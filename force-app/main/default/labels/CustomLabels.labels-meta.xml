@@ -5334,4 +5334,12 @@
         <shortDescription>Tải tập tin</shortDescription>
         <value>Tải tập tin</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_Submit</fullName>
+        <categories>CaseDetail_Customer_LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Submit</shortDescription>
+        <value>Submission failed. Please try again.</value>
+    </labels>
 </CustomLabels>

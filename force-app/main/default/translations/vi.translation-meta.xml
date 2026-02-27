@@ -759,5 +759,9 @@
     <customLabels>
             <name>FEC_Warning_Type_Not_List</name>
             <label>FEC Type của trường '{0}' không phải là 'List'.</label>
-        </customLabels>
+    </customLabels>
+    <customLabels>
+        <name>FEC_MSG_Submit</name>
+        <label>Submit thất bại. Vui lòng thử lại.</label>
+    </customLabels>
 </Translations>

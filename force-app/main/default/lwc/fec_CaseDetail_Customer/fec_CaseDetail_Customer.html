@@ -41,13 +41,13 @@
 
   <div class="case-footer" if:true={modeEditCase}>
     <lightning-button
-      label="Save & Close"
+      label={labelSaveClose}
       onclick={handleSave}
     ></lightning-button>
 
     <lightning-button
       variant="brand"
-      label="Submit"
+      label={labelSubmit}
       onclick={handleSubmit}
       disabled={isSubmitDisabled}
     ></lightning-button>

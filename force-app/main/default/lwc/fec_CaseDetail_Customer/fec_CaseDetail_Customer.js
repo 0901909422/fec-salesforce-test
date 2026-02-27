@@ -16,6 +16,9 @@ import {
 import saveCaseDrafts from "@salesforce/apex/FEC_CaseBusinessService.saveCaseDrafts";
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 import clearDraftRemarks from "@salesforce/apex/FEC_CaseRemarkController.clearDraftRemarks";
+import FEC_Button_Save_Close from "@salesforce/label/c.FEC_Button_Save_Close";
+import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
+import FEC_MSG_Submit from "@salesforce/label/c.FEC_MSG_Submit";
 
 import { RefreshEvent } from "lightning/refresh";
 
@@ -44,6 +47,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   get hasError() {
     return this.errlst && this.errlst.length > 0;
+  }
+
+  get labelSaveClose() {
+    return FEC_Button_Save_Close;
+  }
+
+  get labelSubmit() {
+    return FEC_Button_Submit;
   }
 
   /** Disable nút Submit khi đang xử lý để tránh double-click tạo 2 bản ghi. */
@@ -284,7 +295,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       this.errlst = [
         error?.body?.message ||
           error?.message ||
-          "Submit thất bại. Vui lòng thử lại.",
+          FEC_MSG_Submit,
       ];
     } finally {
       this.isLoaded = true;
