@@ -53,6 +53,8 @@
 		<members>fec_CaseEditNOC</members>
 		<members>fec_CommonConst</members>
 		<members>fec_ComboBox</members>
+		<members>fec_CommonConst</members>
+        <members>fec_ErrorPanel</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
