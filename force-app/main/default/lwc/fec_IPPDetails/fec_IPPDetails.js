@@ -5,9 +5,10 @@ import FEC_IPP_NAVIGATION from '@salesforce/messageChannel/FEC_IPP_Navigation__c
 import getIPPRecords from '@salesforce/apex/FEC_IPPController.getIPPRecords';
 import getIPPHelpTextMap from '@salesforce/apex/FEC_IPPController.getIPPHelpTextMap';
 import { formatCurrency, isNegative, autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
-
-// Error message constant
-const ERROR_MESSAGE = 'Tải dữ liệu không thành công';
+import FEC_IPP_Details_Label from '@salesforce/label/c.FEC_IPP_Details_Label';
+import FEC_Total_IPP_Balance_Label from '@salesforce/label/c.FEC_Total_IPP_Balance_Label';
+import FEC_Total_IPP_Current_Balance_Label from '@salesforce/label/c.FEC_Total_IPP_Current_Balance_Label';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 
 // Helper function to format date to dd/mm/yyyy
 function formatDate(dateValue) {
@@ -30,8 +31,14 @@ function formatDate(dateValue) {
 export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
     @api recordId;
     
-    // Expose ERROR_MESSAGE for template
-    ERROR_MESSAGE = ERROR_MESSAGE;
+    // Custom labels từ CustomLabels.labels-meta.xml (Account Info)
+    ERROR_MESSAGE = FEC_MSG_Error_API_Label;
+    
+    customLabel = {
+        ippDetailsLabel: FEC_IPP_Details_Label,
+        totalIPPBalanceLabel: FEC_Total_IPP_Balance_Label,
+        totalIPPCurrentBalanceLabel: FEC_Total_IPP_Current_Balance_Label
+    };
     
     // Message Context for LMS
     @wire(MessageContext)
@@ -345,7 +352,7 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
         this.loadIPPData();
     }
     
-    // Default sort cho RelatedListAddressesPaging (Open Date mới nhất trước)
+    // Default sort cho RelatedListPaging (Open Date mới nhất trước)
     get defaultSortBy() {
         return 'openDateFormatted';
     }
@@ -354,7 +361,7 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
     }
 
     /**
-     * Handle row select từ RelatedListAddressesPaging (click vào IPP Plan hyperlink)
+     * Handle row select từ RelatedListPaging (click vào IPP Plan hyperlink)
      * Navigate đến custom IPP detail page
      */
     handleRowSelect(event) {

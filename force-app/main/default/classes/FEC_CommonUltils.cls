@@ -465,6 +465,23 @@ public with sharing class FEC_CommonUltils {
             + phone.substring(len - 3);
     } 
 
+    public static String cleanResponseBody(String responseBody) {
+        if (String.isBlank(responseBody)) {
+            return responseBody;
+        }
+        
+        responseBody = responseBody.trim();
+        // Remove BOM character (\uFEFF) if it exists at the beginning
+        if (responseBody.startsWith('\uFEFF')) {
+            responseBody = responseBody.substring(1);
+        }
+        // Remove any leading non-XML characters until '<' is found
+        while (responseBody.length() > 0 && !responseBody.startsWith('<')) {
+            responseBody = responseBody.substring(1);
+        }
+        return responseBody;
+    }
+
     public static void logApi(
         String apiName,
         String endpoint,

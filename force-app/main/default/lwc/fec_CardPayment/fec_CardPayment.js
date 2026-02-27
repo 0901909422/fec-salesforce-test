@@ -2,9 +2,19 @@ import { LightningElement, api } from 'lwc';
 import getCardPaymentRecords from '@salesforce/apex/FEC_CardPaymentController.getCardPaymentRecords';
 import getCardPaymentTotals from '@salesforce/apex/FEC_CardPaymentController.getCardPaymentTotals';
 import { formatCurrency, isNegative, autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
-
-// Error message constant
-const ERROR_MESSAGE = 'Tải dữ liệu không thành công';
+import FEC_Card_Payment_Label from '@salesforce/label/c.FEC_Card_Payment_Label';
+import FEC_Full_Payment_Amount_Label from '@salesforce/label/c.FEC_Full_Payment_Amount_Label';
+import FEC_Loan_Balance_Label from '@salesforce/label/c.FEC_Loan_Balance_Label';
+import FEC_Full_Payment_Without_IPP_Label from '@salesforce/label/c.FEC_Full_Payment_Without_IPP_Label';
+import FEC_Full_IPP_Payment_Amount_Label from '@salesforce/label/c.FEC_Full_IPP_Payment_Amount_Label';
+import FEC_Total_Current_Balance_Label from '@salesforce/label/c.FEC_Total_Current_Balance_Label';
+import FEC_Total_Accrued_Interest_Label from '@salesforce/label/c.FEC_Total_Accrued_Interest_Label';
+import FEC_Total_Per_Diem_Label from '@salesforce/label/c.FEC_Total_Per_Diem_Label';
+import FEC_Total_Close_Fee_Amount_Label from '@salesforce/label/c.FEC_Total_Close_Fee_Amount_Label';
+import FEC_Total_IPP_Accrued_Interest_Label from '@salesforce/label/c.FEC_Total_IPP_Accrued_Interest_Label';
+import FEC_Total_Deferred_Interest_Label from '@salesforce/label/c.FEC_Total_Deferred_Interest_Label';
+import FEC_Total_Plan_Payment_Amount_Label from '@salesforce/label/c.FEC_Total_Plan_Payment_Amount_Label';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 
 // Helper function to format date to dd/mm/yyyy
 function formatDate(dateValue) {
@@ -27,11 +37,27 @@ function formatDate(dateValue) {
 export default class Fec_CardPayment extends LightningElement {
     _recordId;
     
-    // Expose ERROR_MESSAGE for template
-    ERROR_MESSAGE = ERROR_MESSAGE;
+    // Custom labels từ CustomLabels.labels-meta.xml (Account Info)
+    ERROR_MESSAGE = FEC_MSG_Error_API_Label;
     
     // Help text map from Apex
     helpTextMap = {};
+    
+    // Custom labels for template (khớp với customLabel.xxx trong HTML)
+    customLabel = {
+        cardPaymentLabel: FEC_Card_Payment_Label,
+        fullPaymentAmountLabel: FEC_Full_Payment_Amount_Label,
+        loanBalanceLabel: FEC_Loan_Balance_Label,
+        fullPaymentWithoutIPPLabel: FEC_Full_Payment_Without_IPP_Label,
+        fullIPPPaymentAmountLabel: FEC_Full_IPP_Payment_Amount_Label,
+        totalCurrentBalanceLabel: FEC_Total_Current_Balance_Label,
+        totalAccruedInterestLabel: FEC_Total_Accrued_Interest_Label,
+        totalPerDiemLabel: FEC_Total_Per_Diem_Label,
+        totalCloseFeeAmountLabel: FEC_Total_Close_Fee_Amount_Label,
+        totalIPPAccruedInterestLabel: FEC_Total_IPP_Accrued_Interest_Label,
+        totalDeferredInterestLabel: FEC_Total_Deferred_Interest_Label,
+        totalPlanPaymentAmountLabel: FEC_Total_Plan_Payment_Amount_Label
+    };
     
     // Page size for table pagination
     pageSize = 10;

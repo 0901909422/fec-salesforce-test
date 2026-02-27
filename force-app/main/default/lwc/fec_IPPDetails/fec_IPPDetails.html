@@ -10,7 +10,7 @@
                             class="slds-m-right_x-small">
                         </lightning-icon>
                         <span>
-                            IPP Details
+                            {customLabel.ippDetailsLabel}
                             <template if:true={showErrorInHeader}>
                                 <span class="error-text"> - {ERROR_MESSAGE}</span>
                             </template>
@@ -25,7 +25,7 @@
                         <div class="ipp-details-summary-item">
                             <div class="ipp-details-row-inner">
                                 <label class="ipp-details-label ipp-label-red">
-                                    Total IPP Balance
+                                    {customLabel.totalIPPBalanceLabel}
                                     <span class="ipp-details-help-icon">
                                         <template if:true={helpTextMap.FEC_Total_IPP_Balance__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_IPP_Balance__c}></lightning-helptext>
@@ -40,7 +40,7 @@
                         <div class="ipp-details-summary-item">
                             <div class="ipp-details-row-inner">
                                 <label class="ipp-details-label ipp-label-red">
-                                    Total IPP Current Balance
+                                    {customLabel.totalIPPCurrentBalanceLabel}
                                     <span class="ipp-details-help-icon">
                                         <template if:true={helpTextMap.FEC_Total_IPP_Current_Balance__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_IPP_Current_Balance__c}></lightning-helptext>

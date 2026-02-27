@@ -10,7 +10,7 @@
                             class="slds-m-right_x-small">
                         </lightning-icon>
                         <span>
-                            Card Payment
+                            {customLabel.cardPaymentLabel}
                             <template if:true={hasError}>
                                 <span class="error-text"> - {ERROR_MESSAGE}</span>
                             </template>
@@ -31,7 +31,7 @@
                         <div class="detail-row">
                             <div class="detail-row-inner">
                                 <span class="detail-label payment-field-label-red">
-                                    Full Payment Amount
+                                    {customLabel.fullPaymentAmountLabel}
                                     <span class="help-icon">
                                         <template if:true={helpTextMap.FEC_Full_Payment_Amount__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Full_Payment_Amount__c}></lightning-helptext>
@@ -44,7 +44,7 @@
                         <div class="detail-row">
                             <div class="detail-row-inner">
                                 <span class="detail-label payment-field-label-gray">
-                                    Loan Balance
+                                    {customLabel.loanBalanceLabel}
                                     <span class="help-icon">
                                         <template if:true={helpTextMap.FEC_Loan_Balance__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Loan_Balance__c}></lightning-helptext>
@@ -57,7 +57,7 @@
                         <div class="detail-row">
                             <div class="detail-row-inner">
                                 <span class="detail-label payment-field-label-gray">
-                                    Full Payment Without IPP
+                                    {customLabel.fullPaymentWithoutIPPLabel}
                                     <span class="help-icon">
                                         <template if:true={helpTextMap.FEC_Full_Payment_Without_IPP__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Full_Payment_Without_IPP__c}></lightning-helptext>
@@ -73,7 +73,7 @@
                         <div class="detail-row">
                             <div class="detail-row-inner">
                                 <span class="detail-label payment-field-label-gray">
-                                    Full IPP Payment Amount
+                                    {customLabel.fullIPPPaymentAmountLabel}
                                     <span class="help-icon">
                                         <template if:true={helpTextMap.FEC_Full_IPP_Payment_Amount__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Full_IPP_Payment_Amount__c}></lightning-helptext>
@@ -87,7 +87,7 @@
                         <div class="detail-row">
                             <div class="detail-row-inner">
                                 <span class="detail-label payment-field-label-gray">
-                                    Total Current Balance
+                                    {customLabel.totalCurrentBalanceLabel}
                                     <span class="help-icon">
                                         <template if:true={helpTextMap.FEC_Total_Current_Balance__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_Current_Balance__c}></lightning-helptext>
@@ -100,7 +100,7 @@
                         <div class="detail-row">
                             <div class="detail-row-inner">
                                 <span class="detail-label payment-field-label-gray">
-                                    Total Accrued Interest
+                                    {customLabel.totalAccruedInterestLabel}
                                     <span class="help-icon">
                                         <template if:true={helpTextMap.FEC_Total_Accrued_Interest__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_Accrued_Interest__c}></lightning-helptext>
@@ -113,7 +113,7 @@
                         <div class="detail-row">
                             <div class="detail-row-inner">
                                 <span class="detail-label payment-field-label-gray">
-                                    Total Per Diem
+                                    {customLabel.totalPerDiemLabel}
                                     <span class="help-icon">
                                         <template if:true={helpTextMap.FEC_Total_Per_Diem__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_Per_Diem__c}></lightning-helptext>
@@ -127,7 +127,7 @@
                         <div class="detail-row">
                             <div class="detail-row-inner">
                                 <span class="detail-label payment-field-label-gray">
-                                    Total Close Fee Amount
+                                    {customLabel.totalCloseFeeAmountLabel}
                                     <span class="help-icon">
                                         <template if:true={helpTextMap.FEC_Total_Close_Fee_Amount__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_Close_Fee_Amount__c}></lightning-helptext>
@@ -140,7 +140,7 @@
                         <div class="detail-row">
                             <div class="detail-row-inner">
                                 <span class="detail-label payment-field-label-gray">
-                                    Total IPP Accrued Interest
+                                    {customLabel.totalIPPAccruedInterestLabel}
                                     <span class="help-icon">
                                         <template if:true={helpTextMap.FEC_Total_IPP_Accrued_Interest__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_IPP_Accrued_Interest__c}></lightning-helptext>
@@ -153,7 +153,7 @@
                         <div class="detail-row">
                             <div class="detail-row-inner">
                                 <span class="detail-label payment-field-label-gray">
-                                    Total Deferred Interest
+                                    {customLabel.totalDeferredInterestLabel}
                                     <span class="help-icon">
                                         <template if:true={helpTextMap.FEC_Total_Deferred_Interest__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_Deferred_Interest__c}></lightning-helptext>
@@ -166,7 +166,7 @@
                         <div class="detail-row">
                             <div class="detail-row-inner">
                                 <span class="detail-label payment-field-label-gray">
-                                    Total Plan Payment Amount
+                                    {customLabel.totalPlanPaymentAmountLabel}
                                     <span class="help-icon">
                                         <template if:true={helpTextMap.FEC_Total_Plan_Payment_Amount__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_Plan_Payment_Amount__c}></lightning-helptext>
