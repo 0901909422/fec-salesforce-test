@@ -126,20 +126,22 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
             FIELD_ADDITIONAL_FIELD
         },
         OBJ_MDM_MASTER_DATA_SETTING => new List<String>{
-            FIELD_STAGE_NAME, FIELD_NATURE_OF_CASE, FIELD_CHANNEL
+            FIELD_STAGE_NAME,
+            FIELD_NATURE_OF_CASE,
+            FIELD_ADDITIONAL_FIELD
         }
     };
     
     private List<String> executionOrder = new List<String>{
-        OBJ_MDM_PRODUCT_TYPE,
         OBJ_MDM_BUSINESS_PROCESS,
+        OBJ_MDM_ADDITIONAL_FIELD,
+        OBJ_MDM_PRODUCT_TYPE,
         OBJ_MDM_CATEGORY,
         OBJ_MDM_SUB_CATEGORY,
         OBJ_MDM_SUB_CODE,
-        OBJ_MDM_NATURE_OF_CASE,
         OBJ_MDM_CHANNEL,
         OBJ_MDM_CASE_STAGE,
-        OBJ_MDM_ADDITIONAL_FIELD,
+        OBJ_MDM_NATURE_OF_CASE,
         OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE,
         OBJ_MDM_MASTER_DATA_SETTING
     };
