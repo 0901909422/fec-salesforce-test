@@ -117,6 +117,14 @@
         <value>Addresses List</value>
     </labels>
     <labels>
+        <fullName>FEC_Application_ID_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Application ID Label</shortDescription>
+        <value>Application ID</value>
+    </labels>
+    <labels>
         <fullName>FEC_AllMasterData_Title</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -371,6 +379,22 @@
         <protected>false</protected>
         <shortDescription>Undo Button</shortDescription>
         <value>Undo</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CC_Code_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CC Code Label</shortDescription>
+        <value>CC Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CC_Name_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CC Name Label</shortDescription>
+        <value>CC Name</value>
     </labels>
     <labels>
         <fullName>FEC_Cancel</fullName>
@@ -748,6 +772,22 @@
         <value>Customer Number</value>
     </labels>
     <labels>
+        <fullName>FEC_DSA_Code_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DSA Code Label</shortDescription>
+        <value>DSA Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DSA_Name_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DSA Name Label</shortDescription>
+        <value>DSA Name</value>
+    </labels>
+    <labels>
         <fullName>FEC_Date_of_Birth_Label</fullName>
         <categories>Customer Info</categories>
         <language>en_US</language>
@@ -856,6 +896,14 @@
         <protected>false</protected>
         <shortDescription>Demographic Label</shortDescription>
         <value>Demographic</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Disbursement_Channel_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Disbursement Channel Label</shortDescription>
+        <value>Disbursement Channel</value>
     </labels>
     <labels>
         <fullName>FEC_Edit</fullName>
@@ -1130,6 +1178,22 @@
         <protected>false</protected>
         <shortDescription>IPP Details Label</shortDescription>
         <value>IPP Details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_IPP_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP Label</shortDescription>
+        <value>IPP</value>
+    </labels>
+    <labels>
+        <fullName>FEC_IPP_Schedule_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP Schedule Label</shortDescription>
+        <value>IPP Schedule</value>
     </labels>
     <labels>
         <fullName>FEC_Interaction_Channel_Label</fullName>
@@ -2289,6 +2353,13 @@
         <value>No data available</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_No_Data</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG No Data</shortDescription>
+        <value>Không có dữ liệu</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Not_Account_Linked</fullName>
         <categories>API</categories>
         <language>en_US</language>
@@ -2659,6 +2730,14 @@
         <value>Select..</value>
     </labels>
     <labels>
+        <fullName>FEC_Origination_Channel_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Origination Channel Label</shortDescription>
+        <value>Origination Channel</value>
+    </labels>
+    <labels>
         <fullName>FEC_Other_Card_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -3002,6 +3081,22 @@
         <value>Success</value>
     </labels>
     <labels>
+        <fullName>FEC_TSA_Code_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TSA Code Label</shortDescription>
+        <value>TSA Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TSA_Name_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Additional Field</value>
+    </labels>
+    <labels>
         <fullName>FEC_Tab_Additional_Field</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3304,6 +3399,30 @@
         <protected>false</protected>
         <shortDescription>Total IPP Current Balance Label</shortDescription>
         <value>Total IPP Current Balance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_IPP_Monthly_Interest_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total IPP Monthly Interest Label</shortDescription>
+        <value>Total IPP Monthly Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_IPP_Monthly_Principal_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total IPP Monthly Principal Label</shortDescription>
+        <value>Total IPP Monthly Principal</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_IPP_Payment_Amount_Label</fullName>
+        <categories>IPP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total IPP Payment Amount Label</shortDescription>
+        <value>Total IPP Payment Amount</value>
     </labels>
     <labels>
         <fullName>FEC_Total_Payment_Amount_Label</fullName>

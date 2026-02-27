@@ -91,6 +91,21 @@
 		<members>FEC_CaseBusinessService_Msg_004</members>
 		<members>FEC_CaseBusinessService_Msg_005</members>
 		<members>FEC_CaseBusinessService_Msg_006</members>
+		<members>FEC_IPP_Label</members>
+        <members>FEC_IPP_Schedule_Label</members>
+        <members>FEC_Total_IPP_Payment_Amount_Label</members>
+        <members>FEC_Total_IPP_Monthly_Principal_Label</members>
+        <members>FEC_Total_IPP_Monthly_Interest_Label</members>
+        <members>FEC_MSG_No_Data</members>
+        <members>FEC_Application_ID_Label</members>
+        <members>FEC_CC_Code_Label</members>
+        <members>FEC_DSA_Code_Label</members>
+        <members>FEC_TSA_Code_Label</members>
+        <members>FEC_Disbursement_Channel_Label</members>
+        <members>FEC_CC_Name_Label</members>
+        <members>FEC_DSA_Name_Label</members>
+        <members>FEC_TSA_Name_Label</members>
+        <members>FEC_Origination_Channel_Label</members>
         <name>CustomLabel</name>
     </types>
     <version>65.0</version>
