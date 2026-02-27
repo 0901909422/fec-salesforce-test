@@ -279,6 +279,14 @@
         <value>Cancel Edit</value>
     </labels>
     <labels>
+        <fullName>FEC_Button_Confirm</fullName>
+        <categories>Button</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button Confirm</shortDescription>
+        <value>Confirm</value>
+    </labels>
+    <labels>
         <fullName>FEC_Button_Close</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -1251,6 +1259,13 @@
         <protected>false</protected>
         <shortDescription>Interaction Remark</shortDescription>
         <value>Interaction Remark</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Remark_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Remark Placeholder</shortDescription>
+        <value>Enter interaction remarks...</value>
     </labels>
     <labels>
         <fullName>FEC_Interaction_Remarks_Label</fullName>
@@ -3029,6 +3044,13 @@
         <protected>false</protected>
         <shortDescription>Search Text</shortDescription>
         <value>Search Text</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Select_Outcome_Code_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Outcome Code Label</shortDescription>
+        <value>Select Outcome Code</value>
     </labels>
     <labels>
         <fullName>FEC_Self_Service_Channel_Label</fullName>
