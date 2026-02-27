@@ -14,6 +14,7 @@
 import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import loadTransactions from '@salesforce/apex/FEC_TransactionsController.loadTransactions';
+import { formatDateVNI, formatDateDDMMYYYYHHMM, formatNumber } from 'c/fec_CommonUtils';
 
 export default class Fec_TransactionsAccount extends NavigationMixin(LightningElement) {
 
@@ -134,7 +135,6 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
     /* ================= LOAD DATA ================= */
     loadTransactions() {
         if (!this.recordId) {
-            console.error('[FEC] recordId is missing');
             return;
         }
 
@@ -178,9 +178,9 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             merchantDescription: tx.merchantDescription || '',
             creditDebitFlag: tx.creditDebitFlag || '',
 
-            effectiveDate: this.formatDate(tx.effectiveDate),
-            postDate: this.formatDate(tx.postingDate),
-            transactionAmount: this.formatNumber(tx.transactionAmount),
+            effectiveDate: formatDateDDMMYYYYHHMM(tx.effectiveDate),
+            postDate: formatDateVNI (tx.postingDate),
+            transactionAmount: formatNumber(tx.transactionAmount),
 
             transactionPlan: tx.transactionPlan || '',
             authorizationCode: tx.authorizationCode || '',
@@ -197,8 +197,8 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             transactionCode: tx.transactionCode || '',
             merchantDescription: tx.merchantDescription || '',
 
-            effectiveDate: this.formatDate(tx.effectiveDate),
-            transactionAmount: this.formatNumber(tx.transactionAmount),
+            effectiveDate: formatDateDDMMYYYYHHMM(tx.effectiveDate),
+            transactionAmount: formatNumber(tx.transactionAmount),
             transactionPlan: tx.transactionPlan || '',
             authorizationCode: tx.authorizationCode || '',
             merchantCategoryCode: tx.merchantCategoryCode || '',
@@ -209,37 +209,6 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             declineReasonCode: tx.declineReasonCode || '',
             approvalCode: tx.approvalCode || ''
         };
-    }
-
-    /* ================= FORMATTERS ================= */
-    formatDate(value) {
-        if (!value) return '';
-
-        try {
-            const d = new Date(value);
-            if (isNaN(d.getTime())) return value;
-
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear();
-
-            const hours = String(d.getHours()).padStart(2, '0');
-            const minutes = String(d.getMinutes()).padStart(2, '0');
-            const seconds = String(d.getSeconds()).padStart(2, '0');
-
-            return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
-        } catch (e) {
-            return value;
-        }
-    }
-
-    formatNumber(value) {
-        if (value === null || value === undefined) return '';
-        try {
-            return new Intl.NumberFormat('en-US').format(value);
-        } catch {
-            return value;
-        }
     }
 
     /* ================= ROW SELECT ================= */
