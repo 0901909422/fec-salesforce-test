@@ -7,6 +7,7 @@ const MASKING_TYPE_PHONE = 'Mobile/ Phone';
 const MASKING_TYPE_PASSPORT = 'National ID/ Passport';
 
 const PHONE_VN_REGION = '84';
+const STR_EMPTY = '';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -17,4 +18,5 @@ export {
     MASKING_TYPE_PHONE,
     MASKING_TYPE_PASSPORT,
     PHONE_VN_REGION
+    STR_EMPTY,
 };

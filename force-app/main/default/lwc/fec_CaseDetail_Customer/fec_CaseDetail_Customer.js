@@ -27,6 +27,7 @@ import getRemarklst from "@salesforce/apex/FEC_CaseRemarkController.getRemarklst
 const REQUIRED_MSG = "{0} can't be Blank";
 
 import { formatDateTime } from "c/fec_CommonUtils";
+import { STR_EMPTY } from "c/fec_CommonConst";
 
 export default class Fec_CaseDetail_Customer extends LightningElement {
   @api recordId;
@@ -193,8 +194,8 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     const saveDraftsPromise = this.recordId
       ? saveCaseDrafts({
           caseId: this.recordId,
-          natureOfCaseId: natureOfCaseId ?? "",
-          updatedPhoneNumber: updatedPhoneNumber ?? "",
+          natureOfCaseId: natureOfCaseId ?? STR_EMPTY,
+          updatedPhoneNumber: updatedPhoneNumber ?? STR_EMPTY,
           routingActionCode: routingActionCode ?? null,
         })
       : Promise.resolve();

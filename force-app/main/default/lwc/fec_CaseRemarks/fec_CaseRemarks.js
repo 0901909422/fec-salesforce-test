@@ -5,6 +5,7 @@ import createRemark from '@salesforce/apex/FEC_CaseRemarkController.createRemark
 import submitRemark from '@salesforce/apex/FEC_CaseRemarkController.submitRemark';
 
 import { formatDateTime } from 'c/fec_CommonUtils';
+import { STR_EMPTY } from 'c/fec_CommonConst';
 
 export default class Fec_CaseRemarks extends LightningElement {
   @api caseId;
@@ -23,7 +24,7 @@ export default class Fec_CaseRemarks extends LightningElement {
   }
 
   @track remarklst = [];
-  @track draftRemarkValue = '';
+  @track draftRemarkValue = STR_EMPTY;
 
   remarkColumnlst = [
     { label: 'Case Remarks', fieldName: 'FEC_Case_Remarks__c' },
@@ -52,8 +53,8 @@ export default class Fec_CaseRemarks extends LightningElement {
         const latestDraft =
           draftItems.length > 0 ? draftItems[draftItems.length - 1] : null;
         this.draftRemarkValue = latestDraft
-          ? latestDraft.FEC_Case_Remarks__c || ''
-          : '';
+          ? latestDraft.FEC_Case_Remarks__c || STR_EMPTY
+          : STR_EMPTY;
 
         this.remarklst = res
           .filter((item) => item.Id)
@@ -83,7 +84,7 @@ export default class Fec_CaseRemarks extends LightningElement {
   @api async createRemark() {
     const textarea = this.template.querySelector('lightning-textarea');
     const remarkText =
-      (textarea && textarea.value) || this.draftRemarkValue || '';
+      (textarea && textarea.value) || this.draftRemarkValue || STR_EMPTY;
 
     let result;
     if (this.caseId && remarkText !== undefined) {

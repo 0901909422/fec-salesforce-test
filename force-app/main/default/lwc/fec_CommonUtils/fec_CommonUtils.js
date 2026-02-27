@@ -1,4 +1,5 @@
 import { getFocusedTabInfo, setTabLabel, setTabIcon } from 'lightning/platformWorkspaceApi';
+import { STR_EMPTY } from 'c/fec_CommonConst';
 
 const formatDate = (curr) => {
   if (!curr) {
@@ -33,7 +34,7 @@ const formatDateTime = (curr) => {
 };
 
 const mask = (s, keepStart = 4, keepEnd = 4) => {
-  if (!s) return "";
+  if (!s) return STR_EMPTY;
   s = String(s);
 
   const len = s.length;
@@ -59,10 +60,10 @@ const mask = (s, keepStart = 4, keepEnd = 4) => {
  * SAFE: no Date object
  */
 const formatDateVNI = (iso) => {
-  if (!iso || typeof iso !== "string") return "";
+  if (!iso || typeof iso !== "string") return STR_EMPTY;
 
   const parts = iso.split("-");
-  if (parts.length !== 3) return "";
+  if (parts.length !== 3) return STR_EMPTY;
 
   const [y, m, d] = parts;
   return `${d}/${m}/${y}`;
@@ -72,13 +73,13 @@ const formatDateVNI = (iso) => {
  * ISO → DD/MM/YYYY (display)
  */
 const formatToDDMMYYYY = (iso) => {
-  if (!iso || typeof iso !== "string") return "";
+  if (!iso || typeof iso !== "string") return STR_EMPTY;
 
   const parts = iso.split("-");
-  if (parts.length !== 3) return "";
+  if (parts.length !== 3) return STR_EMPTY;
 
   const [y, m, d] = parts;
-  if (!y || !m || !d) return "";
+  if (!y || !m || !d) return STR_EMPTY;
 
   return `${d}/${m}/${y}`;
 };
@@ -88,26 +89,26 @@ const formatToDDMMYYYY = (iso) => {
  * Validate calendar
  */
 const parseDateVNI = (s) => {
-  if (!s || typeof s !== "string") return "";
+  if (!s || typeof s !== "string") return STR_EMPTY;
 
   const trimmed = s.trim();
-  if (!trimmed) return "";
+  if (!trimmed) return STR_EMPTY;
 
   const parts = trimmed.split("/");
-  if (parts.length !== 3) return "";
+  if (parts.length !== 3) return STR_EMPTY;
 
   let [day, month, year] = parts.map((p) => parseInt(p, 10));
 
-  if (!day || !month || !year) return "";
+  if (!day || !month || !year) return STR_EMPTY;
 
   // basic range
-  if (year < 1000 || year > 9999) return "";
-  if (month < 1 || month > 12) return "";
-  if (day < 1) return "";
+  if (year < 1000 || year > 9999) return STR_EMPTY;
+  if (month < 1 || month > 12) return STR_EMPTY;
+  if (day < 1) return STR_EMPTY;
 
   // ===== REAL CALENDAR CHECK =====
   const daysInMonth = new Date(year, month, 0).getDate();
-  if (day > daysInMonth) return "";
+  if (day > daysInMonth) return STR_EMPTY;
 
   // format
   const y = String(year);
@@ -129,7 +130,7 @@ const maskWorkPhone = (phone) => {
 };
 
 const maskValue = (value, showFull) => {
-  if (!value) return "";
+  if (!value) return STR_EMPTY;
   if (showFull) return value;
 
   const v = value.trim();
@@ -173,7 +174,7 @@ const validateUpdatedInfoPhone = (phone) => {
   if (phone == null || typeof phone !== "string") return null;
 
   const trimmed = phone.trim();
-  if (trimmed === "") return null;
+  if (trimmed === STR_EMPTY) return null;
 
   if (!/^\d+$/.test(trimmed)) return "Phone number must only contain numbers";
 
@@ -192,8 +193,8 @@ const validateUpdatedInfoPhone = (phone) => {
  * @returns {string}
  */
 const applyPhoneInputMaxLength = (value) => {
-  if (value == null || typeof value !== "string") return "";
-  const cleaned = String(value).replace(/\D/g, "");
+  if (value == null || typeof value !== "string") return STR_EMPTY;
+  const cleaned = String(value).replace(/\D/g, STR_EMPTY);
   if (cleaned.startsWith("84")) return cleaned.slice(0, 11);
   if (cleaned.startsWith("0")) return cleaned.slice(0, 10);
   return cleaned.slice(0, 11);
@@ -218,7 +219,7 @@ const validateUpdatedInfoEmail = (value) => {
   }
 
   const trimmed = value.trim();
-  if (trimmed === "") {
+  if (trimmed === STR_EMPTY) {
     return { valid: true };
   }
 
@@ -265,12 +266,12 @@ const validateIdNumber = (value) => {
   }
 
   // Phân nhánh message theo từng trường hợp invalid
-  if (trimmedValue === "") {
+  if (trimmedValue === STR_EMPTY) {
     return { isValid: false, message: "Invalid National ID or Passport number" };
   }
   // Bắt đầu bằng chữ → coi như đang nhập Passport (bắt buộc chữ hoa + 7 số)
   if (/^[A-Za-z]/.test(trimmedValue)) {
-    const rest = trimmedValue.slice(1).replace(/\D/g, "");
+    const rest = trimmedValue.slice(1).replace(/\D/g, STR_EMPTY);
     if (/^[a-z]/.test(trimmedValue)) {
       return {
         isValid: false,
@@ -343,7 +344,7 @@ const validateNationalId = (value) => {
   }
 
   // Phân nhánh message theo từng trường hợp invalid (chỉ CMND/CCCD)
-  if (trimmedValue === "") {
+  if (trimmedValue === STR_EMPTY) {
     return { isValid: false, message: "Invalid National ID number" };
   }
   if (!/^\d+$/.test(trimmedValue)) {
@@ -379,17 +380,17 @@ const validateNationalId = (value) => {
  * @returns {string}
  */
 const validateUpdatedInfoNationalID = (value) => {
-  if (value == null || typeof value !== "string") return "";
+  if (value == null || typeof value !== "string") return STR_EMPTY;
   const v = String(value);
 
   const firstLetterMatch = v.match(/^[A-Z]/);
   if (firstLetterMatch) {
     const firstChar = firstLetterMatch[0];
-    const restDigits = v.slice(1).replace(/\D/g, "").slice(0, 7);
+    const restDigits = v.slice(1).replace(/\D/g, STR_EMPTY).slice(0, 7);
     return firstChar + restDigits;
   }
 
-  return v.replace(/\D/g, "").slice(0, 12);
+  return v.replace(/\D/g, STR_EMPTY).slice(0, 12);
 };
 
 // Cặp Original/Updated để kiểm tra "chưa cập nhật" khi submit
@@ -437,7 +438,7 @@ const ORIGINAL_UPDATED_FIELD_PAIRS = [
 ];
 
 const _normalizeForCompare = (v) => {
-  if (v == null) return "";
+  if (v == null) return STR_EMPTY;
   if (typeof v !== "string") return String(v).trim();
   return v.trim();
 };
