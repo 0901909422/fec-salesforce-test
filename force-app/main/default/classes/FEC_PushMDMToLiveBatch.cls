@@ -139,7 +139,9 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
             FIELD_ADDITIONAL_FIELD
         },
         OBJ_MDM_MASTER_DATA_SETTING => new List<String>{
-            FIELD_STAGE_NAME, FIELD_NATURE_OF_CASE, FIELD_CHANNEL
+            FIELD_STAGE_NAME,
+            FIELD_NATURE_OF_CASE,
+            FIELD_ADDITIONAL_FIELD
         }
     };
     
@@ -160,17 +162,17 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
     private Set<String> uniqueErrors = new Set<String>();
     
     private List<String> executionOrder = new List<String>{
-        OBJ_MDM_PRODUCT_TYPE,
         OBJ_MDM_BUSINESS_PROCESS,
+        OBJ_MDM_ADDITIONAL_FIELD,
+        OBJ_MDM_PRODUCT_TYPE,
         OBJ_MDM_CATEGORY,
         OBJ_MDM_SUB_CATEGORY,
         OBJ_MDM_SUB_CODE,
         OBJ_MDM_CHANNEL,
-        OBJ_MDM_MASTER_DATA_SETTING,
         OBJ_MDM_CASE_STAGE,
-        OBJ_MDM_ADDITIONAL_FIELD,
+        OBJ_MDM_NATURE_OF_CASE,
         OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE,
-        OBJ_MDM_NATURE_OF_CASE
+        OBJ_MDM_MASTER_DATA_SETTING
     };
     
     private Map<String, String> mdmToOriginalMap = new Map<String, String>{
@@ -209,7 +211,7 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
         FIELD_FIELD_READONLY        => FIELD_FIELD_READONLY,
         FIELD_PROPERTY_REFERENCE    => FIELD_PROPERTY_REFERENCE,
         FIELD_SECTION               => FIELD_SECTION,
-        FIELD_CHANNEL               => FIELD_CHANNEL,
+        // FIELD_CHANNEL               => FIELD_CHANNEL,
         FIELD_DATA_INTEGRATION_MAPPING => FIELD_DATA_INTEGRATION_MAPPING,
         //NOC Lookup Fields
         FIELD_ALIAS                 => FIELD_ALIAS,
@@ -281,7 +283,7 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
             if (mdmRecords.isEmpty()) return;
             
             populateMissingCodes(mdmRecords, mdmObjName);
-
+            
             // STEP 3: Build lookup remap maps (MDM -> Live)
             Map<String, Map<Id, Id>> lookupRemapMaps = new Map<String, Map<Id, Id>>();
             if (OBJECTS_WITH_LOOKUP_REMAPPING.contains(mdmObjName)) {
@@ -360,7 +362,7 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
             }
         }
     }
-
+    
     private List<SObject> buildTargetList(
         List<SObject> mdmRecords, String mdmObjName, String targetObjName,
     Map<String, String> filteredFieldMap, Map<String, Map<Id, Id>> lookupRemapMaps,
