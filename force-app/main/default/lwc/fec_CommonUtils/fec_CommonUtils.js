@@ -118,4 +118,23 @@ const setConsoleTab = async (label, icon) => {
   }
 };
 
-export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue, setConsoleTab};
+/* ================= NEGATIVE HELPER ================= */
+const isNegative = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return false;
+  }
+
+  if (typeof value === 'number') {
+    return value < 0;
+  }
+
+  const cleaned = value.toString().replace(/,/g, '').trim();
+
+  if (cleaned === '' || isNaN(cleaned)) {
+    return false;
+  }
+
+  return Number(cleaned) < 0;
+};
+
+export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue, setConsoleTab, isNegative};
