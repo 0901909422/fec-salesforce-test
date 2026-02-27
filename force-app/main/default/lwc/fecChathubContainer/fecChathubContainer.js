@@ -1,13 +1,13 @@
 import { LightningElement, track, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 import getChatHubInfo from '@salesforce/apex/FEC_ChatHubInitController.getChatHubInfo';
 import createCaseOnNewSession from '@salesforce/apex/FEC_ChatHubCaseController.createCaseOnNewSession';
 import saveChatHistoryAndAttachment from '@salesforce/apex/FEC_ChatHubCaseController.saveChatHistoryAndAttachment';
 import checkExistCaseByExtInteractionID from '@salesforce/apex/FEC_Utils.checkExistCaseByExtInteractionID';
 import downloadAndSaveBase64 from '@salesforce/apex/FEC_AttachmentController.downloadAndSaveBase64';
-import formatDateTimeToString from '@salesforce/apex/FEC_Utils.formatDateTimeToString';
+import attachFileToInteractionCase from '@salesforce/apex/FEC_AttachmentController.attachFileToInteractionCase';
+import { executeWithLock, fetchFileFromUrl, formatDatetime, showToast, decryptDataKYC } from 'c/fecUtils';
 
 const CHATHUB_URL_KEY = 'https://portal-chathub-uat.fecredit.cloud';
 // Log formatting for better console visibility
@@ -23,6 +23,7 @@ export default class FecChathubContainer extends LightningElement {
     @track chatHubUrl = '';
     @track chatHubUsername = '';
     @track localStorageUsername = "chathub_username";
+    #secretKey = '4mX2SmAeoLy9n8c1zsEpH+L37XrwsCGxvc1tAyOdaTpxgcOQuXitLA==';
 
     // --- 1. INITIALIZATION ---
     /**
@@ -105,7 +106,7 @@ export default class FecChathubContainer extends LightningElement {
 
         // Only log events with action (ignore noise from other extensions)
         if (action) {
-            console.group(LOG_PREFIX + '📩 RECEIVED: ' + action, LOG_STYLE);
+            console.log(LOG_PREFIX + '📩 RECEIVED: ' + action, LOG_STYLE);
             console.log('%cPayload:', LOG_INFO, JSON.parse(JSON.stringify(data || {})));
         }
 
@@ -145,10 +146,19 @@ export default class FecChathubContainer extends LightningElement {
      * @param {Object} data - Request data containing chat session and customer info
      * @return {void}
      */
-    handleCreateCaseRequest(data) {
+    async handleCreateCaseRequest(data) {
         console.log('🚀 Calling Apex: createCaseOnNewSession...');
         console.log('data: ', data);
+        if (data.customerInfo.nationalID !== '') {
+            const dataNationID = await decryptDataKYC(data.customerInfo.nationalID, this.#secretKey)
+            data.customerInfo.nationalID = dataNationID;
+        }
+        if (data.customerInfo.phoneNumber !== '') {
+            const dataPhoneNumber = await decryptDataKYC(data.customerInfo.phoneNumber, this.#secretKey)
+            data.customerInfo.phoneNumber = dataPhoneNumber;
+        }
         const payload = JSON.stringify(data);
+        console.log('payload', payload);
         if (!this.verifyUsernameAndAgent(data)) {
             return;
         }
@@ -163,7 +173,7 @@ export default class FecChathubContainer extends LightningElement {
                         chatChannel: data.chatSession.chatChannel
                     };
                     this.postMessageToChatHub('pegaCsmCaseInfo', response);
-                    this.showToast('Thành công', `Đã tạo Case tương tác: ${caseId || ''}`, 'success');
+                    showToast(this, 'Thành công', `Đã tạo Case tương tác: ${caseId || ''}`, 'success');
                     this.navigateToRecord(caseId);
                 }
             })
@@ -215,7 +225,7 @@ export default class FecChathubContainer extends LightningElement {
             try {
                 const success = await saveChatHistoryAndAttachment({ strJsonData: payload });
                 if (success) {
-                    this.showToast('Success', 'Chat history saved successfully.', 'success');
+                    showToast(this, 'Success', 'Chat history saved successfully.', 'success');
                 }
             } catch (error) {
                 console.error('[FEC-ChatHub] Lỗi gọi saveChatHistoryAndAttachment:', error);
@@ -223,7 +233,7 @@ export default class FecChathubContainer extends LightningElement {
         };
 
         // Call lock function (true parameter ensures active tab is prioritized)
-        this.executeWithLock(lockName, processHistoryAction, true);
+        executeWithLock(lockName, processHistoryAction, true);
     }
 
     /**
@@ -245,7 +255,7 @@ export default class FecChathubContainer extends LightningElement {
             };
 
             // Call shared lock function (true parameter maintains active tab priority)
-            await this.executeWithLock(lockName, processFileAction, true);
+            await executeWithLock(lockName, processFileAction, true);
 
         }
     }
@@ -269,7 +279,7 @@ export default class FecChathubContainer extends LightningElement {
             try {
                 const caseId = await checkExistCaseByExtInteractionID({ strExtInteractionID: data.sessionID });
 
-                this.fetchFileFromUrl(data.fileUrl); // Test CORS
+                fetchFileFromUrl(data.fileUrl); // Test CORS
 
                 await downloadAndSaveBase64({
                     s3Url: data.fileUrl,
@@ -278,9 +288,9 @@ export default class FecChathubContainer extends LightningElement {
                     uniqueMessageId: uniqueMessageId
                 });
 
-                this.showToast('Thành công', 'File đã được tải và lưu vào Case.', 'success');
+                showToast(this, 'Thành công', 'File đã được tải và lưu vào Case.', 'success');
             } catch (error) {
-                this.showToast('Lỗi', 'Không thể tải và lưu file.', 'error');
+                showToast(this, 'Lỗi', 'Không thể tải và lưu file.', 'error');
                 console.error('Lỗi Apex:', error);
             }
         }
@@ -315,7 +325,7 @@ export default class FecChathubContainer extends LightningElement {
                     alert('File URL ' + chatHistories[i].fileUrl + ' exceeded max length 1000 characters. Please contact administrator');
                 }
             }
-            chatHistories[i].createdAt = this.formatDatetime(chat.createdAt, false);
+            chatHistories[i].createdAt = formatDatetime(chat.createdAt, false);
         }
         chatHistories = chatHistories.map((data) => {
             return Object.keys(data).reduce((obj, key) => {
@@ -330,29 +340,6 @@ export default class FecChathubContainer extends LightningElement {
     }
 
     // --- 4. HELPER FUNCTIONS ---
-
-    /**
-     * Fetches file from URL and converts to Blob
-     * Tests CORS compatibility with file server
-     * @param {string} fileUrl - URL of the file to fetch
-     * @return {Promise<Blob>} - File blob data
-     */
-    async fetchFileFromUrl(fileUrl) {
-        try {
-            const response = await fetch(fileUrl);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const blob = await response.blob();
-            return blob;
-        } catch (error) {
-            console.error('%cError fetching file:', LOG_ERROR, error);
-            throw error;
-        }
-    }
-
 
     /**
      * Sends postMessage to ChatHub iframe
@@ -394,19 +381,6 @@ export default class FecChathubContainer extends LightningElement {
     }
 
     /**
-     * Displays toast notification on UI
-     * @created: 2025/12/29 long.nguyen.50
-     * @param {string} title - Toast title
-     * @param {string} message - Toast message content
-     * @param {string} variant - Toast variant (success, error, warning, info)
-     * @return {void}
-     */
-    showToast(title, message, variant) {
-        // console.log(`showToast: [${variant.toUpperCase()}] ${title} - ${message}`);
-        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
-    }
-
-    /**
      * Updates username in local storage
      * @param {string} username - Username to store
      * @return {void}
@@ -423,33 +397,8 @@ export default class FecChathubContainer extends LightningElement {
      * @return {string} - Formatted filename with datetime prefix
      */
     formatFilenameWithDateTime(filename, time, onlyNumber = true) {
-        const formattedDate = this.formatDatetime(time, onlyNumber);
+        const formattedDate = formatDatetime(time, onlyNumber);
         return formattedDate + "_" + filename;
-    }
-    /**
-     * Formats datetime string to custom format
-     * @param {string} timeString - ISO datetime string
-     * @param {boolean} onlyNumber - If true, returns YYYYMMDDhhmmss, else YYYYMMDDThhmm.0 GMT
-     * @return {string} - Formatted datetime string
-     */
-    formatDatetime(timeString, onlyNumber) {
-        const d = new Date(timeString);
-        const year = "" + (d.getUTCFullYear());
-        const month = ("" + (d.getUTCMonth() + 1)).padStart(2, "0");
-        const day = ("" + d.getUTCDate()).padStart(2, "0");
-        const hour = ("" + d.getUTCHours()).padStart(2, "0");
-        const min = ("" + d.getUTCMinutes()).padStart(2, "0");
-        const second = ("" + d.getUTCSeconds()).padStart(2, "0");
-
-        let result = year + month + day;
-        if (!onlyNumber) {
-            result += "T";
-        }
-        result += hour + min + second;
-        if (!onlyNumber) {
-            result += ".0 GMT";
-        }
-        return result;
     }
 
     /**
@@ -502,67 +451,5 @@ export default class FecChathubContainer extends LightningElement {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Prevents duplicate execution across multiple browser tabs
-     * @param {string} stringUnique - Unique identifier key
-     * @return {boolean} - True if lock acquired, false if already locked by another tab
-     */
-    preventMultiTab(stringUnique) {
-        console.log(localStorage.getItem(stringUnique));
-        if (localStorage.getItem(stringUnique)) {
-            console.log(`Key ${stringUnique} is being saved by another tab, skipping to avoid duplicates.`);
-            return false;
-        } else {
-            localStorage.setItem(stringUnique, true);
-            setTimeout(() => {
-                localStorage.removeItem(stringUnique);
-            }, 60000);
-            return true;
-        }
-    }
-
-    /**
-     * Executes an asynchronous function with Web Locks API to prevent multi-tab duplication
-     * @param {string} lockName - Unique lock identifier (e.g., message ID)
-     * @param {Function} callback - Function containing actual logic to execute when lock is acquired
-     * @param {boolean} prioritizeActiveTab - Prioritize active tab (default true). Background tabs wait 300ms
-     * @return {Promise<boolean>} - Resolves to true if executed successfully, false if blocked by another tab
-     */
-    executeWithLock(lockName, callback, prioritizeActiveTab = true) {
-        return new Promise((resolve, reject) => {
-            // Xác định thời gian delay để ưu tiên tab đang active
-            let delayTime = 0;
-            if (prioritizeActiveTab) {
-                const isFocused = document.hasFocus();
-                delayTime = isFocused ? 0 : 300; // Background tab đợi 300ms
-            }
-
-            setTimeout(() => {
-                if (navigator && navigator.locks) {
-                    navigator.locks.request(lockName, { mode: 'exclusive', ifAvailable: true }, async (lock) => {
-                        if (!lock) {
-                            console.log(`[Lock: ${lockName}] Another tab is processing. Yielded priority.`);
-                            resolve(false); // Return false to signal safe blocking
-                            return;
-                        }
-
-                        try {
-                            // If lock acquired, run the actual logic provided
-                            await callback();
-                            resolve(true);
-                        } catch (error) {
-                            console.error(`[Lock: ${lockName}] Error executing callback:`, error);
-                            reject(error);
-                        }
-                    });
-                } else {
-                    // Fallback if browser doesn't support Web Locks API
-                    console.warn('Browser does not support Web Locks API, running fallback.');
-                    callback().then(() => resolve(true)).catch(reject);
-                }
-            }, delayTime);
-        });
     }
 }

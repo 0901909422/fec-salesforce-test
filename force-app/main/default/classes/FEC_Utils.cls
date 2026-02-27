@@ -179,7 +179,7 @@ public with sharing class FEC_Utils {
     * Maps KYC status from ChatHub to internal representation.
     * @param strKYC: KYC status from ChatHub (e.g., 'KYC', 'NOT KYC').
     * @return strMappedKYC: Mapped KYC status ('Pass', 'Fail', 'Other').
-    * @created:
+    * @created: 
     */
     @AuraEnabled(cacheable=true)
     public static String mappingKYCs (String strKYC) {
@@ -189,7 +189,8 @@ public with sharing class FEC_Utils {
         }
         Map<String, String> mapKYCs = new Map<String, String>{
             'KYC' => 'Pass',
-            'NOT KYC'  => 'Fail'
+            'NOT KYC'  => 'Fail',
+            'KYCed' => 'Pass'
         };
         if (mapKYCs.containsKey(strKYC)) {
             return mapKYCs.get(strKYC);

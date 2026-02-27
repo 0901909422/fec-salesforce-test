@@ -65,7 +65,7 @@ public with sharing class FEC_ChatHubCaseController {
     
             // 4. Call existing Handler to create Case
             FEC_CreateCaseHanlder.FEC_InteractionCaseResponse response = FEC_CreateCaseHanlder.createInteractionCase(strDtoJson);
-            
+            System.debug('response: ' + response);
             return response.caseId;
     
         } catch (Exception e) {
@@ -95,7 +95,8 @@ public with sharing class FEC_ChatHubCaseController {
         // System.debug('### [FEC] JSON.deserializeUntyped: ' + JSON.deserializeUntyped(strJsonData));
         List<FEC_ChatHistory__c> listHistoriesToInsert = new List<FEC_ChatHistory__c>();
         List<Object> listRawHistory = (List<Object>)JSON.deserializeUntyped(strJsonData);
-        // System.debug(listRawHistory);
+        System.debug('listRawHistory');
+        System.debug(listRawHistory);
         
         // Check if listRawHistory is empty
         if (listRawHistory == null || listRawHistory.isEmpty()) {
