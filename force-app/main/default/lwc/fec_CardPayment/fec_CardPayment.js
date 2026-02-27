@@ -15,24 +15,8 @@ import FEC_Total_IPP_Accrued_Interest_Label from '@salesforce/label/c.FEC_Total_
 import FEC_Total_Deferred_Interest_Label from '@salesforce/label/c.FEC_Total_Deferred_Interest_Label';
 import FEC_Total_Plan_Payment_Amount_Label from '@salesforce/label/c.FEC_Total_Plan_Payment_Amount_Label';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import { formatDate } from 'c/fec_CommonUtils';
 
-// Helper function to format date to dd/mm/yyyy
-function formatDate(dateValue) {
-    if (!dateValue) return '';
-    
-    try {
-        const date = new Date(dateValue);
-        if (isNaN(date.getTime())) return '';
-        
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        
-        return `${day}/${month}/${year}`;
-    } catch (e) {
-        return '';
-    }
-}
 
 export default class Fec_CardPayment extends LightningElement {
     _recordId;
