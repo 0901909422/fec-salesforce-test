@@ -354,6 +354,11 @@
     word-break: break-word;
 }
 
+.text-negative,
+.text-negative span {
+    color: #ea001e !important;
+    font-weight: 600;
+}
 
 /* Responsive */
 @media (max-width: 768px) {

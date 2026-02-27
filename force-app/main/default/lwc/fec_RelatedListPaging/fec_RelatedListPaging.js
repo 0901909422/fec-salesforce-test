@@ -206,6 +206,11 @@ export default class Fec_RelatedListPaging extends LightningElement {
                             cellClass = col.cellAttributes.class;
                         }
                     }
+                    /* ===== ADD NEGATIVE CHECK ===== */
+                    const isNeg = this.isNegative(row[col.fieldName]);
+                    if (isNeg) {
+                        cellClass = (cellClass ? cellClass + ' ' : '') + 'text-negative';
+                    }
 
                     return {
                         key: col.fieldName,
@@ -329,6 +334,19 @@ export default class Fec_RelatedListPaging extends LightningElement {
                     el.innerHTML = el.dataset.value;
                 }
             });
+    }
+
+    /* ================= NEGATIVE HELPER ================= */
+    isNegative(value) {
+        if (value === null || value === undefined) return false;
+        let str = value.toString().trim();
+        if (!str) return false;
+        str = str.replace(/,/g, '');
+        if (str.startsWith('(') && str.endsWith(')')) {
+            return true;
+        }
+        const num = Number(str);
+        return !isNaN(num) && num < 0;
     }
 
     /* ================= PAGINATION ================= */

@@ -82,6 +82,18 @@ export default class Fec_CommonRecordDetailSection extends LightningElement {
         );
     }
 
+    /* ================= NEGATIVE HELPER ================= */
+    isNegative(value) {
+        if (value === null || value === undefined || value === '') return false;
+
+        if (typeof value === 'number') {
+            return value < 0;
+        }
+
+        const cleaned = value.toString().replace(/,/g, '').trim();
+        return !isNaN(cleaned) && Number(cleaned) < 0;
+    }
+
     /* ================= ROW BUILDER ================= */
 
     get rows() {
