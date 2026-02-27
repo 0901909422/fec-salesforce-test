@@ -5336,7 +5336,7 @@
     </labels>
     <labels>
         <fullName>FEC_MSG_Submit</fullName>
-        <categories>CaseDetail_Customer_LWC</categories>
+        <categories>CaseDetail Customer LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Submit</shortDescription>
