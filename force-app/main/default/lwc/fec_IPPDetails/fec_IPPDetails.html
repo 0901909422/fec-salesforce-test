@@ -61,7 +61,7 @@
                     </template>
                     <template if:true={showTable}>
                         <div class="ipp-details-table-wrapper">
-                            <c-fec_-related-list-addresses-paging
+                            <c-fec_-related-list-paging
                                 columns={columns}
                                 records={ippData}
                                 page-size={pageSize}
@@ -70,7 +70,7 @@
                                 default-sorted-by={defaultSortBy}
                                 default-sort-direction={defaultSortDirection}
                                 onrowselect={handleRowSelect}>
-                            </c-fec_-related-list-addresses-paging>
+                            </c-fec_-related-list-paging>
                         </div>
                     </template>
                 </template>

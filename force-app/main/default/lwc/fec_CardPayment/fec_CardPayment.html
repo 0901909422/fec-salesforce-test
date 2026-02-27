@@ -189,7 +189,7 @@
                 
                 <!-- Card Payment Table with Pagination -->
                 <template if:false={isLoading}>
-                    <c-fec_-related-list-addresses-paging
+                    <c-fec_-related-list-paging
                         columns={columns}
                         records={cardPaymentData}
                         page-size={pageSize}
@@ -198,7 +198,7 @@
                         default-sorted-by="FEC_Open_Date_Formatted__c"
                         default-sort-direction="desc"
                         column-count="2">
-                    </c-fec_-related-list-addresses-paging>
+                    </c-fec_-related-list-paging>
                 </template>
             </div>
         </section>
