@@ -9,24 +9,7 @@ import FEC_IPP_Details_Label from '@salesforce/label/c.FEC_IPP_Details_Label';
 import FEC_Total_IPP_Balance_Label from '@salesforce/label/c.FEC_Total_IPP_Balance_Label';
 import FEC_Total_IPP_Current_Balance_Label from '@salesforce/label/c.FEC_Total_IPP_Current_Balance_Label';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
-
-// Helper function to format date to dd/mm/yyyy
-function formatDate(dateValue) {
-    if (!dateValue) return '';
-    
-    try {
-        const date = new Date(dateValue);
-        if (isNaN(date.getTime())) return '';
-        
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        
-        return `${day}/${month}/${year}`;
-    } catch (e) {
-        return '';
-    }
-}
+import { formatDate } from 'c/fec_CommonUtils';
 
 export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
     @api recordId;
