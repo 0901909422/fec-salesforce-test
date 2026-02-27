@@ -110,6 +110,17 @@
         <members>FEC_Interaction_Remark_Placeholder</members>
         <members>FEC_Btn_Cancel</members>
         <members>FEC_Button_Confirm</members>
+		<members>FEC_Success_Title</members>
+        <members>FEC_Error_Title</members>
+        <members>FEC_Unknown_Error</members>
+        <members>FEC_Warning_Title</members>
+        <members>FEC_MSG_Interaction_wrapped_up_success</members>
+        <members>FEC_MSG_Wrap_Up_Warning</members>
+        <members>FEC_MSG_Close_Interaction_Warning</members>
+        <members>FEC_MSG_Close_Interaction_Complete_Case_Warning</members>
+        <members>FEC_MSG_Select_outcome_code</members>
+        <members>FEC_MSG_check_related_case_error</members>
+        <members>FEC_MSG_check_case_type_error</members>
         <name>CustomLabel</name>
     </types>
     <version>65.0</version>

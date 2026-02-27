@@ -8,6 +8,7 @@ const MASKING_TYPE_PASSPORT = 'National ID/ Passport';
 const PHONE_VN_REGION = '84';
 const DIV_ELEMENT = 'div';
 const ICON_CASE = 'standard:case';
+const OUTCOME_CODE = 'Hoàn tất/ Đã phản hồi';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -20,4 +21,5 @@ export {
     PHONE_VN_REGION,
     DIV_ELEMENT,
     ICON_CASE,
+    OUTCOME_CODE,
 };

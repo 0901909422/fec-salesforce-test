@@ -21,8 +21,21 @@ import FEC_Select_Outcome_Code_Label from '@salesforce/label/c.FEC_Select_Outcom
 import FEC_Interaction_Remark_Placeholder from '@salesforce/label/c.FEC_Interaction_Remark_Placeholder';
 import FEC_Btn_Cancel from '@salesforce/label/c.FEC_Btn_Cancel';
 import FEC_Button_Confirm from '@salesforce/label/c.FEC_Button_Confirm';
+import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
+import FEC_Error_Title from '@salesforce/label/c.FEC_Error_Title';
+import FEC_Unknown_Error from '@salesforce/label/c.FEC_Unknown_Error';
+import FEC_Warning_Title from '@salesforce/label/c.FEC_Warning_Title';
+import FEC_MSG_Interaction_wrapped_up_success from '@salesforce/label/c.FEC_MSG_Interaction_wrapped_up_success';
+import FEC_MSG_Not_Found from '@salesforce/label/c.FEC_MSG_Not_Found';
+import FEC_MSG_Wrap_Up_Warning from '@salesforce/label/c.FEC_MSG_Wrap_Up_Warning';
+import FEC_MSG_Close_Interaction_Warning from '@salesforce/label/c.FEC_MSG_Close_Interaction_Warning';
+import FEC_MSG_Close_Interaction_Complete_Case_Warning from '@salesforce/label/c.FEC_MSG_Close_Interaction_Complete_Case_Warning';
+import FEC_MSG_Select_outcome_code from '@salesforce/label/c.FEC_MSG_Select_outcome_code';
+import FEC_MSG_check_related_case_error from '@salesforce/label/c.FEC_MSG_check_related_case_error';
+import FEC_MSG_check_case_type_error from '@salesforce/label/c.FEC_MSG_check_case_type_error';
 
 import { urlCmpWithRecordId } from "c/fec_CommonUtils";
+import { OUTCOME_CODE } from "c/fec_CommonConst";
 
 const SLA_RULES = {
   Inbound: { green: 5, yellow: 10 },
@@ -64,7 +77,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
   @track interactionRemarks = '';
   @track outcomeCodeOptions = [];
   @track quickOutcomeCodeOptions = [];
-  quickWrapUpOutcomeCode = 'Hoàn tất/ Đã phản hồi';
+  quickWrapUpOutcomeCode = OUTCOME_CODE;
 
   iconUrl;
 
@@ -76,6 +89,18 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
     interactionRemarkPlaceholder: FEC_Interaction_Remark_Placeholder,
     btnCancel: FEC_Btn_Cancel,
     btnConfirm: FEC_Button_Confirm,
+    successTitle: FEC_Success_Title,
+    errorTitle: FEC_Error_Title,
+    unknownError: FEC_Unknown_Error,
+    warningTitle: FEC_Warning_Title,
+    msgInteractionWrappedUpSuccess: FEC_MSG_Interaction_wrapped_up_success,
+    msgNotFound: FEC_MSG_Not_Found,
+    msgWrapUpWarning: FEC_MSG_Wrap_Up_Warning,
+    msgCloseInteractionWarning: FEC_MSG_Close_Interaction_Warning,
+    msgCloseInteractionCompleteCaseWarning: FEC_MSG_Close_Interaction_Complete_Case_Warning,
+    msgSelectOutcomeCode: FEC_MSG_Select_outcome_code,
+    msgCheckRelatedCaseError: FEC_MSG_check_related_case_error,
+    msgCheckCaseTypeError: FEC_MSG_check_case_type_error,
   }
 
   @wire(IsConsoleNavigation)
@@ -231,7 +256,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
 
   handleQuickWrapUpClick() {
     // Đảm bảo combobox luôn chọn đúng giá trị mặc định
-    this.quickWrapUpOutcomeCode = 'Hoàn tất/ Đã phản hồi';
+    this.quickWrapUpOutcomeCode = OUTCOME_CODE;
     this.isQuickWrapUpModalOpen = true;
   }
 
@@ -247,7 +272,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
       outcomeCode: quickOutcomeCode
     })
       .then(() => {
-        this.showToast('Success', 'Interaction wrapped up successfully', 'success');
+        this.showToast(this.customLabel.successTitle, this.customLabel.msgInteractionWrappedUpSuccess, 'success');
         this.record.FEC_Outcome_Code__c = quickOutcomeCode;
         this.record.Status = 'Closed';
         this.isQuickWrapUpModalOpen = false;
@@ -256,7 +281,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
       .catch((error) => {
         console.error('Full error object:', JSON.stringify(error));
         console.error('Error details:', error);
-        let errorMessage = 'Unknown error occurred';
+        let errorMessage = this.customLabel.unknownError;
         if (error.body) {
           if (error.body.message) {
             errorMessage = error.body.message;
@@ -268,7 +293,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
         } else if (error.message) {
           errorMessage = error.message;
         }
-        this.showToast('Error', errorMessage, 'error');
+        this.showToast(this.customLabel.errorTitle, errorMessage, 'error');
       });
   }
 
@@ -278,7 +303,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
     getCase({ recordId: this.recordId })
       .then((caseData) => {
         if (!caseData) {
-          this.showToast('Error', 'Không tìm thấy thông tin Case.', 'error');
+          this.showToast(this.customLabel.errorTitle, this.customLabel.msgNotFound.replace('{0}', 'Case'), 'error');
           return;
         }
         const isInteraction = caseData.RecordType && caseData.RecordType.DeveloperName === 'Interaction';
@@ -286,10 +311,10 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
         if (!isInteraction) {
           if (caseData.FEC_Is_Submited__c) {
             // Đã submit, mở popup wrap-up
-            this.selectedOutcomeCode = 'Hoàn tất/ Đã phản hồi';
+            this.selectedOutcomeCode = OUTCOME_CODE;
             if (this.outcomeCodeOptions && this.outcomeCodeOptions.length > 0) {
               const defaultOption = this.outcomeCodeOptions.find(
-                option => option.label === 'Hoàn tất/ Đã phản hồi'
+                option => option.label === OUTCOME_CODE
               );
               if (defaultOption) {
                 this.selectedOutcomeCode = defaultOption.value;
@@ -299,7 +324,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
             this.isWrapUpModalOpen = true;
           } else {
             // Chưa submit, cảnh báo
-            this.showToast('Warning', 'Vui lòng submit trước khi wrap-up.', 'warning');
+            this.showToast(this.customLabel.warningTitle, this.customLabel.msgWrapUpWarning, 'warning');
           }
           return;
         }
@@ -307,25 +332,25 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
         getRelatedCasesCount({ recordId: this.recordId })
           .then((count) => {
             if (count === 0) {
-              this.showToast('Thông báo', 'Vui lòng tạo ít nhất 1 yêu cầu trước khi đóng tương tác.', 'warning');
+              this.showToast(this.customLabel.warningTitle, this.customLabel.msgCloseInteractionWarning, 'warning');
               return;
             }
             return hasUnsubmittedCases({ recordId: this.recordId })
               .then((hasUnsubmitted) => {
                 if (hasUnsubmitted) {
-                  this.showToast('Thông báo', 'Vui lòng hoàn tất các yêu cầu trước khi đóng tương tác.', 'warning');
+                  this.showToast(this.customLabel.warningTitle, this.customLabel.msgCloseInteractionCompleteCaseWarning, 'warning');
                   return;
                 }
                 return hasSubmittedCases({ recordId: this.recordId })
                   .then((hasSubmitted) => {
                     if (!hasSubmitted) {
-                      this.showToast('Thông báo', 'Vui lòng hoàn tất các yêu cầu trước khi đóng tương tác.', 'warning');
+                      this.showToast(this.customLabel.warningTitle, this.customLabel.msgCloseInteractionCompleteCaseWarning, 'warning');
                       return;
                     }
-                    this.selectedOutcomeCode = 'Hoàn tất/ Đã phản hồi';
+                    this.selectedOutcomeCode = OUTCOME_CODE;
                     if (this.outcomeCodeOptions && this.outcomeCodeOptions.length > 0) {
                       const defaultOption = this.outcomeCodeOptions.find(
-                        option => option.label === 'Hoàn tất/ Đã phản hồi'
+                        option => option.label === OUTCOME_CODE
                       );
                       if (defaultOption) {
                         this.selectedOutcomeCode = defaultOption.value;
@@ -338,12 +363,12 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
           })
           .catch((error) => {
             console.error('Error checking related cases:', error);
-            this.showToast('Error', 'Không thể kiểm tra trạng thái yêu cầu liên quan', 'error');
+            this.showToast(this.customLabel.errorTitle, this.customLabel.msgCheckRelatedCaseError, 'error');
           });
       })
       .catch((error) => {
         console.error('Error checking case type:', error);
-        this.showToast('Error', 'Không thể kiểm tra loại bản ghi', 'error');
+        this.showToast(this.customLabel.errorTitle, this.customLabel.msgCheckCaseTypeError, 'error');
       });
   }
 
@@ -363,7 +388,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
 
   handleConfirmClick() {
     if (!this.selectedOutcomeCode) {
-      this.showToast('Error', 'Please select an outcome code', 'error');
+      this.showToast(this.customLabel.errorTitle, this.customLabel.msgSelectOutcomeCode, 'error');
       return;
     }
 
@@ -374,7 +399,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
       interactionRemarks: this.interactionRemarks || ''
     })
       .then(() => {
-        this.showToast('Success', 'Interaction wrapped up successfully', 'success');
+        this.showToast(this.customLabel.successTitle, this.customLabel.msgInteractionWrappedUpSuccess, 'success');
         
         // Refresh the record
         this.record.FEC_Outcome_Code__c = this.selectedOutcomeCode;
@@ -392,7 +417,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
         console.error('Full error object:', JSON.stringify(error));
         console.error('Error details:', error);
         
-        let errorMessage = 'Unknown error occurred';
+        let errorMessage = this.customLabel.unknownError;
         
         if (error.body) {
           if (error.body.message) {
@@ -406,7 +431,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
           errorMessage = error.message;
         }
         
-        this.showToast('Error', errorMessage, 'error');
+        this.showToast(this.customLabel.errorTitle, errorMessage, 'error');
       });
   }
 

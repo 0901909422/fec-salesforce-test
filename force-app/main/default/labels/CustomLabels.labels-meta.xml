@@ -2184,6 +2184,20 @@
             tải dữ liệu mới nhất</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Close_Interaction_Complete_Case_Warning</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Close Interaction Complete Case Warning</shortDescription>
+        <value>Vui lòng hoàn tất các yêu cầu trước khi đóng tương tác.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Close_Interaction_Warning</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Close Interaction Warning</shortDescription>
+        <value>Vui lòng tạo ít nhất 1 yêu cầu trước khi đóng tương tác.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ContractNumber_Invalid</fullName>
         <categories>API</categories>
         <language>en_US</language>
@@ -2344,6 +2358,13 @@
         <protected>false</protected>
         <shortDescription>MSG Interaction Case DTO Null</shortDescription>
         <value>InteractionCaseDTO cannot be null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Interaction_wrapped_up_success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Interaction wrapped up success</shortDescription>
+        <value>Interaction wrapped up successfully</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Invalid</fullName>
@@ -2533,12 +2554,40 @@
         <value>Reward eligibility check successful</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Select_outcome_code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Select outcome code</shortDescription>
+        <value>Please select an outcome code</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_TransID_Null</fullName>
         <categories>API</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG TransID Null</shortDescription>
         <value>TransID is null or no longer than 36 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Wrap_Up_Warning</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Wrap Up Warning</shortDescription>
+        <value>Vui lòng submit trước khi wrap-up.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_check_case_type_error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG check case type error</shortDescription>
+        <value>Không thể kiểm tra loại bản ghi</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_check_related_case_error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG check related case error</shortDescription>
+        <value>Không thể kiểm tra trạng thái yêu cầu liên quan</value>
     </labels>
     <labels>
         <fullName>FEC_name_Control_name</fullName>
