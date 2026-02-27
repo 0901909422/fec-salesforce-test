@@ -68,8 +68,8 @@ public without sharing class FEC_InteractionInforHandler {
         
         update new Case(
             Id = recordId,
-            FEC_Phone_Number__c = phone
-        );
+        FEC_Phone_Number__c = phone
+            );
         
         return FEC_CommonUltils.maskPhone(phone);
     }
@@ -95,8 +95,9 @@ public without sharing class FEC_InteractionInforHandler {
         SELECT FEC_Interaction_ID__c,
                FEC_Interaction_Status__c,
                FEC_Last_Updated_On__c,
-               FEC_Last_Updated_By__c
-               
+               FEC_Last_Updated_By__c,
+               FEC_Channel__c,
+               FEC_Interaction_Subchannel__c
         FROM Case
         WHERE Id = :recordId
     ];
