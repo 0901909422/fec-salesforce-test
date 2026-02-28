@@ -1101,6 +1101,62 @@
         <value>Full Payment Without IPP</value>
     </labels>
     <labels>
+        <fullName>FEC_Total_Current_Balance_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Current Balance Label</shortDescription>
+        <value>Total Current Balance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_Accrued_Interest_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Accrued Interest Label</shortDescription>
+        <value>Total Accrued Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_Per_Diem_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Per Diem Label</shortDescription>
+        <value>Total Per Diem</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_Close_Fee_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Close Fee Amount Label</shortDescription>
+        <value>Total Close Fee Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_IPP_Accrued_Interest_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total IPP Accrued Interest Label</shortDescription>
+        <value>Total IPP Accrued Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_Deferred_Interest_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Deferred Interest Label</shortDescription>
+        <value>Total Deferred Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_Plan_Payment_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Plan Payment Amount Label</shortDescription>
+        <value>Total Plan Payment Amount</value>
+    </labels>
+    <labels>
         <fullName>FEC_Gender_Label</fullName>
         <categories>Customer Info</categories>
         <language>en_US</language>
@@ -1917,46 +1973,6 @@
         <protected>false</protected>
         <shortDescription>Loan Balance Label</shortDescription>
         <value>Loan Balance</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Total_Per_Diem_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Total Per Diem Label</shortDescription>
-        <value>Total Per Diem</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Total_Close_Fee_Amount_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Total Close Fee Amount Label</shortDescription>
-        <value>Total Close Fee Amount</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Total_IPP_Accrued_Interest_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Total IPP Accrued Interest Label</shortDescription>
-        <value>Total IPP Accrued Interest</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Total_Deferred_Interest_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Total Deferred Interest Label</shortDescription>
-        <value>Total Deferred Interest</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Total_Plan_Payment_Amount_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Total Plan Payment Amount Label</shortDescription>
-        <value>Total Plan Payment Amount</value>
     </labels>
     <labels>
         <fullName>FEC_IPP_Label</fullName>

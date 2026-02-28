@@ -45,6 +45,19 @@ public with sharing class FEC_CommonUltils {
     return false;
   }
 
+  /**
+   * Kiểm tra AccountNumber có hợp lệ không (16 hoặc 19 chữ số)
+   * @param accountNumber - Account Number cần kiểm tra
+   * @return true nếu hợp lệ (16 hoặc 19 chữ số), false nếu không
+   */
+  public static Boolean isValidAccountNumber(String accountNumber) {
+    if (String.isBlank(accountNumber)) {
+      return false;
+    }
+    // AccountNumber phải có 16 hoặc 19 chữ số theo requirement của API GetCustomerList
+    return Pattern.matches('^\\d{16}$', accountNumber) || Pattern.matches('^\\d{19}$', accountNumber);
+  }
+
   public static Boolean isValidDateByFormat(String input) {
     if (String.isBlank(input))
       return false;
@@ -471,11 +484,9 @@ public with sharing class FEC_CommonUltils {
         }
         
         responseBody = responseBody.trim();
-        // Remove BOM character (\uFEFF) if it exists at the beginning
         if (responseBody.startsWith('\uFEFF')) {
             responseBody = responseBody.substring(1);
         }
-        // Remove any leading non-XML characters until '<' is found
         while (responseBody.length() > 0 && !responseBody.startsWith('<')) {
             responseBody = responseBody.substring(1);
         }

@@ -35,7 +35,7 @@ export default class Fec_CardInfo extends LightningElement {
     subscription = null;
     channelName = '/event/FEC_Card_Info_Refresh__e';
     
-    customLabels = {
+    customLabel = {
         cardDeliveryLabel: FEC_Card_Delivery_Label,
         otherCardLabel: FEC_Other_Card_Label
     };

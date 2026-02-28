@@ -5,6 +5,24 @@ import { formatCurrency, isNegative, autoHighlightNegativeCurrency } from 'c/fec
 import getIPPScheduleData from '@salesforce/apex/FEC_IPPScheduleController.getIPPScheduleData';
 import getIPPHelpTextMap from '@salesforce/apex/FEC_IPPController.getIPPHelpTextMap';
 import { setConsoleTab } from 'c/fec_CommonUtils';
+import IPP_DETAILS_LABEL from '@salesforce/label/c.FEC_IPP_Details_Label';
+import IPP_SCHEDULE_LABEL from '@salesforce/label/c.FEC_IPP_Schedule_Label';
+import SALES_INFO_LABEL from '@salesforce/label/c.FEC_Sales_Info_Label';
+import TOTAL_IPP_PAYMENT_AMOUNT_LABEL from '@salesforce/label/c.FEC_Total_IPP_Payment_Amount_Label';
+import TOTAL_IPP_MONTHLY_PRINCIPAL_LABEL from '@salesforce/label/c.FEC_Total_IPP_Monthly_Principal_Label';
+import TOTAL_IPP_MONTHLY_INTEREST_LABEL from '@salesforce/label/c.FEC_Total_IPP_Monthly_Interest_Label';
+import APPLICATION_ID_LABEL from '@salesforce/label/c.FEC_Application_ID_Label';
+import CC_CODE_LABEL from '@salesforce/label/c.FEC_CC_Code_Label';
+import CC_NAME_LABEL from '@salesforce/label/c.FEC_CC_Name_Label';
+import DSA_CODE_LABEL from '@salesforce/label/c.FEC_DSA_Code_Label';
+import DSA_NAME_LABEL from '@salesforce/label/c.FEC_DSA_Name_Label';
+import TSA_CODE_LABEL from '@salesforce/label/c.FEC_TSA_Code_Label';
+import TSA_NAME_LABEL from '@salesforce/label/c.FEC_TSA_Name_Label';
+import ORIGINATION_CHANNEL_LABEL from '@salesforce/label/c.FEC_Origination_Channel_Label';
+import DISBURSEMENT_CHANNEL_LABEL from '@salesforce/label/c.FEC_Disbursement_Channel_Label';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import NO_IPP_SCHEDULE_DATA_LABEL from '@salesforce/label/c.FEC_MSG_No_IPP_Schedule_Data';
+import NO_DATA_TO_DISPLAY_LABEL from '@salesforce/label/c.FEC_MSG_No_Data_To_Display';
 
 export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -27,6 +45,9 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     
     // Help text map for field inline help (giống IPPDetails / Card Payment)
     helpTextMap = {};
+
+    // Custom labels từ CustomLabels.labels-meta.xml (Account Info)
+    ERROR_MESSAGE = FEC_MSG_Error_API_Label;
     
     // Flag để đảm bảo chỉ load schedule 1 lần
     _scheduleLoaded = false;
@@ -53,6 +74,28 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     
     get isMockRecord() {
         return this.recordId && String(this.recordId).startsWith('mock-');
+    }
+
+    get customLabel() {
+        return {
+            ippDetailLabel: IPP_DETAILS_LABEL,
+            ippScheduleLabel: IPP_SCHEDULE_LABEL,
+            salesInfoLabel: SALES_INFO_LABEL,
+            totalIPPPaymentAmountLabel: TOTAL_IPP_PAYMENT_AMOUNT_LABEL,
+            totalIPPMonthlyPrincipalLabel: TOTAL_IPP_MONTHLY_PRINCIPAL_LABEL,
+            totalIPPMonthlyInterestLabel: TOTAL_IPP_MONTHLY_INTEREST_LABEL,
+            applicationIdLabel: APPLICATION_ID_LABEL,
+            ccCodeLabel: CC_CODE_LABEL,
+            ccNameLabel: CC_NAME_LABEL,
+            dsaCodeLabel: DSA_CODE_LABEL,
+            dsaNameLabel: DSA_NAME_LABEL,
+            tsaCodeLabel: TSA_CODE_LABEL,
+            tsaNameLabel: TSA_NAME_LABEL,
+            originationChannelLabel: ORIGINATION_CHANNEL_LABEL,
+            disbursementChannelLabel: DISBURSEMENT_CHANNEL_LABEL,
+            noIPPScheduleDataLabel: NO_IPP_SCHEDULE_DATA_LABEL,
+            noDataToDisplayLabel: NO_DATA_TO_DISPLAY_LABEL
+        };
     }
 
     @wire(CurrentPageReference)

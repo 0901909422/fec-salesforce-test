@@ -370,9 +370,9 @@ public with sharing class FEC_IPPController {
             FEC_GetIPPDetailsCallout.IPPDetailsResponse detailResp = FEC_GetIPPDetailsCallout.getIPPDetails(req);
 
             Boolean isSuccess = detailResp != null && (
-                detailResp.status == 'SUCCESS' ||
-                detailResp.status == '0' ||
-                (detailResp.sysMessage != null && detailResp.sysMessage.equalsIgnoreCase('Success'))
+                detailResp.status == FEC_ConstantCommon.SUCCESS_MESSAGE ||
+                detailResp.status == FEC_ConstantCommon.SUCCESS_STATUS_CODE ||
+                (detailResp.sysMessage != null && detailResp.sysMessage.equalsIgnoreCase(FEC_ConstantCommon.SUCCESS_MESSAGE))
             );
 
             if (isSuccess) {

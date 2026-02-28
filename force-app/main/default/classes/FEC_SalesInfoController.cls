@@ -95,7 +95,7 @@ public without sharing class FEC_SalesInfoController {
             // Validate input
             if (String.isBlank(ippRecordId)) {
                 result.errorCode = 'VALIDATION_ERROR';
-                result.errorMessage = 'IPP Record ID is required.';
+                result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'IPP Record Id'});
                 return result;
             }
             
@@ -142,7 +142,7 @@ public without sharing class FEC_SalesInfoController {
             
             if (String.isBlank(accountNumber)) {
                 result.errorCode = 'NO_DATA';
-                result.errorMessage = 'Account Number not found on IPP Record or linked Case.';
+                result.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Account Number'});
                 return result;
             }
             
@@ -169,11 +169,11 @@ public without sharing class FEC_SalesInfoController {
         } catch (QueryException e) {
             result.isSuccess = false;
             result.errorCode = 'QUERY_ERROR';
-            result.errorMessage = 'IPP Record not found: ' + e.getMessage();
+            result.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'IPP Record'});
         } catch (Exception e) {
             result.isSuccess = false;
             result.errorCode = 'UNKNOWN_ERROR';
-            result.errorMessage = 'Error: ' + e.getMessage();
+            result.errorMessage = System.Label.FEC_Unknown_Error;
         }
         
         return result;
@@ -189,7 +189,7 @@ public without sharing class FEC_SalesInfoController {
         try {
             if (String.isBlank(accountNumber)) {
                 result.errorCode = 'VALIDATION_ERROR';
-                result.errorMessage = 'AccountNumber is required.';
+                result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Account Number'});
                 return result;
             }
 
@@ -227,9 +227,9 @@ public without sharing class FEC_SalesInfoController {
             }
 
             // Bước 2: Validate AccountNumber format trước khi gọi API
-            if (!isValidAccountNumber(accountNumber)) {
+            if (!Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, accountNumber)) {
                 result.errorCode = 'VALIDATION_ERROR';
-                result.errorMessage = 'AccountNumber không hợp lệ. AccountNumber phải có 16 hoặc 19 chữ số. Giá trị hiện tại: ' + accountNumber;
+                result.errorMessage = System.Label.FEC_MSG_AccountNumber_Invalid;
                 return result;
             }
             
@@ -238,7 +238,7 @@ public without sharing class FEC_SalesInfoController {
             String applicationId = getApplicationIdByAccountNumber(accountNumber);
             if (String.isBlank(applicationId)) {
                 result.errorCode = 'NO_DATA';
-                result.errorMessage = 'Không tìm thấy ApplicationID từ AccountNumber: ' + accountNumber;
+                result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Application Id'});
                 return result;
             }
             System.debug('### Got ApplicationID: ' + applicationId);
@@ -271,7 +271,7 @@ public without sharing class FEC_SalesInfoController {
         } catch (Exception e) {
             result.isSuccess = false;
             result.errorCode = 'UNKNOWN_ERROR';
-            result.errorMessage = 'Error: ' + e.getMessage();
+            result.errorMessage = System.Label.FEC_Unknown_Error;
         }
         return result;
     }
@@ -288,7 +288,7 @@ public without sharing class FEC_SalesInfoController {
         try {
             if (String.isBlank(applicationId)) {
                 result.errorCode = 'VALIDATION_ERROR';
-                result.errorMessage = 'ApplicationID is required.';
+                result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Application Id'});
                 return result;
             }
 
@@ -319,7 +319,7 @@ public without sharing class FEC_SalesInfoController {
         } catch (Exception e) {
             result.isSuccess = false;
             result.errorCode = 'UNKNOWN_ERROR';
-            result.errorMessage = 'Error: ' + e.getMessage();
+            result.errorMessage = System.Label.FEC_Unknown_Error;
         }
         return result;
     }
@@ -432,18 +432,6 @@ public without sharing class FEC_SalesInfoController {
             }
         }
     
-    //=============== PRIVATE HELPER METHODS ===============//
-    
-    /**
-     * Kiểm tra AccountNumber có hợp lệ không (16 hoặc 19 chữ số)
-     */
-    private static Boolean isValidAccountNumber(String accountNumber) {
-        if (String.isBlank(accountNumber)) {
-            return false;
-        }
-        // AccountNumber phải có 16 hoặc 19 chữ số theo requirement của API GetCustomerList
-        return Pattern.matches('^\\d{16}$', accountNumber) || Pattern.matches('^\\d{19}$', accountNumber);
-    }
     
     /**
      * Gọi GetCustomerList để lấy ApplicationID từ AccountNumber
