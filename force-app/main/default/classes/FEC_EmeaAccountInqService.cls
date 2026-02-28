@@ -20,10 +20,10 @@
     // 1. INPUT DTO (Data Transfer Object)
     // ==========================================
     public class EmeaInput {
-        @AuraEnabled public String context { get; set; }     // VMX_MSGIN.CONTEXT (bắt buộc)
-        @AuraEnabled public String name { get; set; }         // VMX_MSGIN.NAME (bắt buộc)
-        @AuraEnabled public String org { get; set; }          // VMX_MSGIN.ORG (bắt buộc)
-        @AuraEnabled public String account { get; set; }       // VMX_MSGIN.ACCOUNT (bắt buộc)
+        @AuraEnabled public String context { get; set; }     // VMX_MSGIN.CONTEXT (required)
+        @AuraEnabled public String name { get; set; }         // VMX_MSGIN.NAME (required)
+        @AuraEnabled public String org { get; set; }          // VMX_MSGIN.ORG (required)
+        @AuraEnabled public String account { get; set; }       // VMX_MSGIN.ACCOUNT (required)
         @AuraEnabled public String dualInd { get; set; }       // VMX_MSGIN.DUAL_IND (optional)
         // Sys.VMXVersion (optional). 
         @AuraEnabled public String vmxVersion { get; set; }
@@ -81,7 +81,7 @@
             // 2. Prepare Sys Data
             String transId = UUID.randomUUID().toString();
             String requestorId = String.isNotBlank(FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN) ? FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN : 'PEGA_CSM';
-            String reqTime = Datetime.now().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
+            String reqTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
 
             // 3. Construct XML Request
             Dom.Document doc = new Dom.Document();
@@ -100,7 +100,7 @@
                 sysNode.addChildElement('VMXVersion', null, null).addTextNode(input.vmxVersion);
             }
 
-            // [QUAN TRỌNG 2] Root Element Service: M_CMS_EMEA_ACCOUNT_INQ (KHÔNG có namespace giống mẫu)
+            // Root Element Service: M_CMS_EMEA_ACCOUNT_INQ
             Dom.XmlNode rootRequest = wsRequest.addChildElement('M_CMS_EMEA_ACCOUNT_INQ', null, null);
 
             // Block VMX_ROOT -> VMX_MSGIN
@@ -111,13 +111,11 @@
             addTextNode(msgIn, 'NAME', input.name);
             addTextNode(msgIn, 'ORG', input.org);
             addTextNode(msgIn, 'ACCOUNT', input.account);
-            // VMX_MSGIN.DUAL_IND optional - chỉ gửi khi caller truyền
+            // VMX_MSGIN.DUAL_IND optiona
             if (String.isNotBlank(input.dualInd)) {
                 addTextNode(msgIn, 'DUAL_IND', input.dualInd);
             }
 
-            // In ra XML xem thử đã chuẩn chưa
-            System.debug('### RAW XML REQUEST: \n' + doc.toXmlString());
 
             // Lấy cấu hình API từ Custom Setting
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
@@ -126,28 +124,20 @@
             String endpoint = apiSetting?.FEC_Call_Mock__c
                 ? FEC_MockupEndpoint.EMEA_ACCOUNT_INQ_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            // Lưu ý: Nếu ESB báo "Cannot coerce Null to String" khi đọc CLIENT_ID từ authorization,
-            // cần cấu hình và gửi header Authorization (vd: Basic base64(clientId:secret)) trong FEC_CommonUltils.calloutApi hoặc Named Credential.
+
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, doc, '');
 
             // 5. Process Response
             if (res.getStatusCode() == 200) {
-                // Làm sạch response body trước khi parse (loại bỏ BOM và whitespace không hợp lệ)
+
                 String responseBody = res.getBody();
                 if (String.isNotBlank(responseBody)) {
-                    // Loại bỏ BOM (Byte Order Mark) và các ký tự không hợp lệ ở đầu
-                    responseBody = responseBody.trim();
-                    // Loại bỏ BOM UTF-8 (EF BB BF)
-                    if (responseBody.startsWith('\uFEFF')) {
-                        responseBody = responseBody.substring(1);
-                    }
-                    // Loại bỏ các ký tự không in được ở đầu
-                    while (responseBody.length() > 0 && !responseBody.startsWith('<')) {
-                        responseBody = responseBody.substring(1);
-                    }
+
+                    // normalize using common utility (handles BOM, leading chars, trimming)
+                    responseBody = FEC_CommonUltils.cleanResponseBody(responseBody);
+
                     System.debug('### Response Body (first 500 chars): ' + responseBody.substring(0, Math.min(500, responseBody.length())));
                     
-                    // Parse response body đã làm sạch
                     Dom.Document responseDoc = new Dom.Document();
                     responseDoc.load(responseBody);
                     return parseResponse(responseDoc);
@@ -155,7 +145,7 @@
                     throw new CalloutException(System.Label.FEC_MSG_Response_Null);
                 }
             } else {
-                // Log lỗi để dễ debug nếu HTTP Status != 200
+                
                 System.debug('HTTP Error: ' + res.getBody());
                 throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{res.getStatus() + ' - ' + res.getBody()}));
             }
@@ -206,7 +196,7 @@
                 if (wsResponse == null) {
                     wsResponse = body.getChildElement('WSResponse', null);
                 }
-                // Nếu không tìm thấy WSResponse, thử format cũ
+                
                 if (wsResponse == null) {
                     Dom.XmlNode responseNode = body.getChildElement('M_CMS_EMEA_ACCOUNT_INQResponse', SERVICE_NS);
                     if (responseNode != null) {
@@ -215,7 +205,7 @@
                 }
             }
         } else {
-            // Thử tìm WSResponse như child element
+            
             wsResponse = root.getChildElement('WSResponse', WS_RESPONSE_NS);
             if (wsResponse == null) {
                 wsResponse = root.getChildElement('WSResponse', null);
@@ -265,7 +255,7 @@
                         result.dtPmtDue = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_PMT_DUE');
                         result.dtCardExp = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_CARD_EXP');
 
-                        // D. Parse NA_DATA_TBL -> NA_DATA (Thông tin liên hệ)
+                        // D. Parse NA_DATA_TBL -> NA_DATA 
                         Dom.XmlNode naTbl = acctBs.getChildElement('NA_DATA_TBL', null);
                         if (naTbl != null) {
                             Dom.XmlNode naData = naTbl.getChildElement('NA_DATA', null);
@@ -324,7 +314,7 @@
                     result.dtPmtDue = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_PMT_DUE');
                     result.dtCardExp = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_CARD_EXP');
 
-                    // D. Parse NA_DATA_TBL -> NA_DATA (Thông tin liên hệ)
+                    // D. Parse NA_DATA_TBL -> NA_DATA 
                     Dom.XmlNode naTbl = acctBs.getChildElement('NA_DATA_TBL', null);
                     if (naTbl != null) {
                         Dom.XmlNode naData = naTbl.getChildElement('NA_DATA', null);
@@ -342,24 +332,12 @@
     }
 
     // ==========================================
-    // 6. HELPERS (Tiện ích xử lý XML)
+    // 6. HELPERS
     // ==========================================
     
     // Thêm Text Node vào XML
     private static void addTextNode(Dom.XmlNode parent, String name, String value) {
         parent.addChildElement(name, null, null).addTextNode(value == null ? '' : value);
     }
-
-    private static Decimal getDecimalSafe(Dom.XmlNode parent, String name) {
-        String v = FEC_CommonUltils.getXmlValue(parent, name);
-        if (String.isBlank(v)) return 0.0; // Nếu không có dữ liệu, mặc định là 0
-        try {
-            // Loại bỏ khoảng trắng 2 đầu và dấu phẩy (nếu hệ thống trả về kiểu 1,000.00)
-            v = v.trim().replace(',', '');
-            return Decimal.valueOf(v);
-        } catch (Exception e) {
-            System.debug('### Lỗi Parse Decimal tại trường [' + name + '] với giá trị: [' + v + ']');
-            return 0.0; // Trả về 0 thay vì crash hệ thống
-        }
-    }
+    
 }
