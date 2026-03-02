@@ -6,6 +6,18 @@ public with sharing class FEC_ConstantCommon {
     public static final String API_REQUESTOR_ID = 'SALESFORE-CSM';
     public static final String SOAP_ENV = 'http://schemas.xmlsoap.org/soap/envelope/';
 
+    /** Chuỗi rỗng dùng chung (default khi value blank). */
+    public static final String STR_EMPTY = '';
+
+    /** Dấu phân tách dùng cho key (vd: RecordType|Channel). */
+    public static final String KEY_DELIMITER_PIPE = '|';
+
+    /** Dấu phân tách trong FEC_ID_Search__c (format: Prefix-Số, vd S-0001). */
+    public static final String FEC_ID_SEARCH_DELIMITER = '-';
+
+    /** Prefix cho các trạng thái Case đã resolved (Resolved-Completed, Resolved-Cancelled, ...) */
+    public static final String CASE_STATUS_PREFIX_RESOLVED = 'Resolved';
+
     public static final String STR_DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS';
     public static final String STR_DATETIME_FORMAT_XXX = 'yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX';
     public static final String DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss';
