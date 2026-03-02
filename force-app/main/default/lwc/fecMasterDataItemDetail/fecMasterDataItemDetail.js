@@ -43,6 +43,13 @@ export default class FecMasterDataItemDetail extends LightningElement {
     // Use accessor for @api item (defined below). Initialize reactive state and helper properties.
     @track editedItem = {};
     @track loading = false;
+    @track isDirty = false;          // Reactive: true khi có thay đổi
+
+    // Getter ensures LWC recomputes on every render when isDirty changes
+    get isUndoDisabled() {
+        console.log('[DEBUG][isUndoDisabled getter] called, isDirty:', this.isDirty, '-> returns:', !this.isDirty);
+        return !this.isDirty;
+    }
     // Error object (server responses) -- getters at bottom will surface message
     error = null;
 
@@ -126,10 +133,27 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
     @api
     set item(value) {
-        // Deep clone for local edits
+        const incomingId = value?.id;
+        const currentId = this._item?.id;
+
+        console.log('[DEBUG][item setter] incomingId:', incomingId, '| currentId:', currentId, '| isDirty:', this.isDirty);
+
+        // Only reset state when a DIFFERENT node is selected
+        // If parent reflects back the same node (after nodebufferchange), skip reset
+        if (incomingId && incomingId === currentId && this.isDirty) {
+            // Same node, user is editing → only update _item reference, do NOT touch editedItem/_originalItem/isDirty
+            this._item = value;
+            console.log('[DEBUG][item setter] Same node + isDirty → skip reset, keep editedItem and isDirty');
+            return;
+        }
+
+        // Different node selected → full reset
         this._item = value;
         this.editedItem = value ? JSON.parse(JSON.stringify(value)) : {};
         this._originalItem = value ? JSON.parse(JSON.stringify(value)) : {};
+        this.isDirty = false;
+        console.log('[DEBUG][item setter] New node → reset. _originalItem:', JSON.stringify(this._originalItem));
+
         // Precompute selectedNodePrefix from name (pure side-effect in setter)
         const name = this.editedItem?.name || '';
         const parts = name ? name.split('_') : [];
@@ -195,8 +219,41 @@ export default class FecMasterDataItemDetail extends LightningElement {
     handleInputChange(event) {
         const field = event.target.name;
         const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-        this.editedItem = { ...this.editedItem, [field]: value };
-        showLog('handleInputChange', this.editedItem);
+
+        console.log('[DEBUG][handleInputChange] START ------');
+        console.log('[DEBUG][handleInputChange] field:', field, '| value:', value, '| type:', typeof value);
+        console.log('[DEBUG][handleInputChange] _originalItem:', JSON.stringify(this._originalItem));
+        console.log('[DEBUG][handleInputChange] editedItem BEFORE:', JSON.stringify(this.editedItem));
+        console.log('[DEBUG][handleInputChange] isDirty BEFORE:', this.isDirty);
+        console.log('[DEBUG][handleInputChange] isUndoDisabled BEFORE (getter):', this.isUndoDisabled);
+
+        // Update only the changed field (shallow merge, then deep clone to sever reference)
+        this.editedItem = JSON.parse(JSON.stringify({ ...this.editedItem, [field]: value }));
+
+        console.log('[DEBUG][handleInputChange] editedItem AFTER:', JSON.stringify(this.editedItem));
+
+        // Compare each tracked field against the original snapshot
+        const orig = this._originalItem;
+        const curr = this.editedItem;
+
+        console.log('[DEBUG][handleInputChange] COMPARE Alias    :', curr.Alias,    '!==', orig.Alias,    '->', curr.Alias !== orig.Alias);
+        console.log('[DEBUG][handleInputChange] COMPARE NameEN   :', curr.NameEN,   '!==', orig.NameEN,   '->', curr.NameEN !== orig.NameEN);
+        console.log('[DEBUG][handleInputChange] COMPARE nameVN   :', curr.nameVN,   '!==', orig.nameVN,   '->', curr.nameVN !== orig.nameVN);
+        console.log('[DEBUG][handleInputChange] COMPARE PosOrder :', curr.PosOrder, '!= ', orig.PosOrder, '->', curr.PosOrder != orig.PosOrder);
+        console.log('[DEBUG][handleInputChange] COMPARE Status   :', curr.Status,   '!==', orig.Status,   '->', curr.Status !== orig.Status);
+
+        this.isDirty = (
+            curr.Alias     !== orig.Alias     ||
+            curr.NameEN    !== orig.NameEN    ||
+            curr.nameVN    !== orig.nameVN    ||
+            curr.PosOrder  != orig.PosOrder   ||
+            curr.Status    !== orig.Status
+        );
+
+        console.log('[DEBUG][handleInputChange] isDirty AFTER:', this.isDirty);
+        console.log('[DEBUG][handleInputChange] isUndoDisabled AFTER (getter):', this.isUndoDisabled);
+        console.log('[DEBUG][handleInputChange] END ------');
+
         this.dispatchEvent(new CustomEvent('nodebufferchange', {
             detail: this.editedItem,
             bubbles: true,
@@ -376,10 +433,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
         return countDescendants(this.childNodes);
     }
 
-    get isUndoDisabled() {
-        return !this.isDirty; // Nếu không bẩn (dirty) thì disable nút Undo
-    }
-
     // Methods
     getNodeTypeLabel(nodeType) {
         // Map the NODE_* constants to the descriptive Labels
@@ -404,16 +457,20 @@ export default class FecMasterDataItemDetail extends LightningElement {
     }
 
     handleRefresh() {
-        // 1. Khôi phục ngay lập tức về dữ liệu cũ trong bộ nhớ (để UI đổi ngay)
+        // 1. Restore editedItem from the original snapshot taken when the node was first loaded
+        this.editedItem = JSON.parse(JSON.stringify(this._originalItem));
+
+        // 2. Reset dirty/undo state so Undo button becomes disabled again
+        this.isDirty = false;
+
+        // 3. Notify parent that local buffer has been reset
         this.dispatchEvent(new CustomEvent('nodebufferreset', {
-            detail: { idType: this.item.idType, id: this.item.id },
+            detail: { idType: this.item?.idType, id: this.item?.id },
             bubbles: true,
             composed: true
         }));
 
-        // 2. Logic refresh local của bạn (ví dụ gán lại editedItem = item)
-        this.editedItem = { ...this.item };
-        showLog('handleRefresh - Restored to original data');
+        showLog('handleRefresh - Restored to original data', this.editedItem);
     }
 
     // Watch for item changes to reprocess mapping data
