@@ -1189,6 +1189,13 @@
         <value>Gender</value>
     </labels>
     <labels>
+        <fullName>FEC_Go_Button_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Go Button Label</shortDescription>
+        <value>Go</value>
+    </labels>
+    <labels>
         <fullName>FEC_Go_to_page_label</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3205,6 +3212,13 @@
         <value>Registration Info</value>
     </labels>
     <labels>
+        <fullName>FEC_RelevantCaseListViewAll_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Case List View All Label</shortDescription>
+        <value>View All Relevant Cases</value>
+    </labels>
+    <labels>
         <fullName>FEC_Relevant_Cases_Label</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3290,6 +3304,13 @@
         <protected>false</protected>
         <shortDescription>Self Service Channel Label</shortDescription>
         <value>Self-service Channels</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sensitive_Data_Table_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sensitive Data</shortDescription>
+        <value>Sensitive Data</value>
     </labels>
     <labels>
         <fullName>FEC_ServiceTypeMapping_Title</fullName>
