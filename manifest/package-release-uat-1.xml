@@ -373,6 +373,7 @@
 		<members>FEC_ContentDocumentTriggerHandler</members>
 		<members>FEC_ContentVersionTriggerHandler</members>
 		<members>FEC_ContentDistributionTriggerHandler</members>
+		<members>FEC_FollowUpController</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -607,6 +608,18 @@
 		<members>FEC_View_All_Relevant_Interaction_Label</members>
 		<members>FEC_FollowUp_Type_Until_Case_Resolved</members>
         <members>Interaction_Entitlement_Name</members>
+        <members>FEC_MSG_FollowUp_Check_Status_Error</members>
+        <members>FEC_MSG_FollowUp_Get_Watchers_Error</members>
+        <members>FEC_MSG_FollowUp_Case_User_Required</members>
+        <members>FEC_MSG_FollowUp_Owner_Only</members>
+        <members>FEC_MSG_FollowUp_User_Not_Found</members>
+        <members>FEC_MSG_FollowUp_Add_User_Success</members>
+        <members>FEC_MSG_FollowUp_Add_User_Error</members>
+        <members>FEC_MSG_FollowUp_Not_Following</members>
+        <members>FEC_MSG_FollowUp_Already_Unfollowed</members>
+        <members>FEC_MSG_FollowUp_Unfollow_Success</members>
+        <members>FEC_MSG_FollowUp_Save_Success</members>
+        <members>FEC_MSG_FollowUp_Save_Error</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
