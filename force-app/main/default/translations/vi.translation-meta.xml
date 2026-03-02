@@ -759,5 +759,41 @@
     <customLabels>
             <name>FEC_Warning_Type_Not_List</name>
             <label>FEC Type của trường '{0}' không phải là 'List'.</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_MSG_Submit</name>
+        <label>Submit thất bại. Vui lòng thử lại.</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_MSG_UPDATED_INFO_NOT_UPDATED</name>
+        <label>Thông tin chưa được cập nhật</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_ACTION_PHONE_UPDATE_HEADER</name>
+        <label>Cập nhật thông tin khách hàng</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_MSG_ACTION_PHONE_UPDATE</name>
+        <label>Bạn sắp cập nhật thông tin cho khách hàng này. Bạn có chắc chắn muốn tiếp tục?</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</name>
+        <label>Cập nhật thông tin khách hàng thành công</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</name>
+        <label>Cập nhật thông tin khách hàng thất bại. Vui lòng thử lại</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Choose_Decision_Label</name>
+        <label>Chọn Quyết định</label>
+    </customLabels>
+        <customLabels>
+            <name>FEC_Sub_Decision_Label</name>
+            <label>Quyết định phụ</label>
         </customLabels>
+    <customLabels>
+        <name>FEC_Choose_Sub_Decision_Label</name>
+        <label>Chọn Quyết định phụ</label>
+    </customLabels>
 </Translations>

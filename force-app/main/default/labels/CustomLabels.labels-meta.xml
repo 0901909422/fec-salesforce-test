@@ -772,6 +772,30 @@
         <value>Decision</value>
     </labels>
     <labels>
+        <fullName>FEC_Choose_Decision_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Choose Decision Label</shortDescription>
+        <value>Choose Decision</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sub_Decision_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub Decision Label</shortDescription>
+        <value>Sub Decision</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Choose_Sub_Decision_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Choose Sub Decision Label</shortDescription>
+        <value>Choose Sub Decision</value>
+    </labels>
+    <labels>
         <fullName>FEC_Default_Category</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -5333,5 +5357,53 @@
         <language>vi</language>
         <shortDescription>Tải tập tin</shortDescription>
         <value>Tải tập tin</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Submit</fullName>
+        <categories>CaseDetail Customer LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Submit</shortDescription>
+        <value>Submission failed. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_UPDATED_INFO_NOT_UPDATED</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_UPDATED_INFO_NOT_UPDATED</shortDescription>
+        <value>The information has not been updated.</value>
+    </labels>
+	<labels>
+        <fullName>FEC_ACTION_PHONE_UPDATE_HEADER</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_ACTION_PHONE_UPDATE_HEADER</shortDescription>
+        <value>Update Customer Info</value>
+    </labels>
+	<labels>
+        <fullName>FEC_MSG_ACTION_PHONE_UPDATE</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PHONE_UPDATE</shortDescription>
+        <value>You are about to update this customer&apos;s information. Are you sure you want to proceed?</value>
+    </labels>
+	<labels>
+        <fullName>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</shortDescription>
+        <value>Customer information updated successfully</value>
+    </labels>
+	<labels>
+        <fullName>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</shortDescription>
+        <value>Customer information update failed. Please try again</value>
     </labels>
 </CustomLabels>

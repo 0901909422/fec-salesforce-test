@@ -281,7 +281,9 @@ public with sharing class FEC_UpdateCustomerContact {
         FEC_Updated_Info_Phone_Number__c,
         FEC_Updated_Info_Email__c,
         FEC_Account_or_Contract__r.FEC_CIF_Number__c,
-        FEC_Process_Action_Count__c
+        FEC_Process_Action_Count__c,
+        FEC_Current_Case_Stage__c,
+        FEC_Current_Case_Stage__r.Name
       FROM Case
       WHERE Id = :caseId
     ];
@@ -319,6 +321,12 @@ public with sharing class FEC_UpdateCustomerContact {
     update selectedCase;
 
     result.actionCount = selectedCase.FEC_Process_Action_Count__c;
+
+    FEC_CommonUltils.createProcessActionHistory(
+      method,
+      selectedCase,
+      result.success
+    );
 
     return result;
   }
