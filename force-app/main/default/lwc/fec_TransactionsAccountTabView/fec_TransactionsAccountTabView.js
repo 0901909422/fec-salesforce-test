@@ -30,12 +30,12 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
         { label: 'Effective Date', fieldName: 'effectiveDate', apiName: 'FEC_Effective_Date__c' },
         { label: 'Credit Debit Flag', fieldName: 'creditDebitFlag', apiName: 'FEC_Credit_Debit_Flag__c' },
         { label: 'Merchant Description', fieldName: 'merchantDescription', apiName: 'FEC_Merchant_Description__c' },
-        { label: 'Transaction Plan', fieldName: 'plan', apiName: 'FEC_Transaction_Plan__c' },
+        { label: 'Transaction Plan', fieldName: 'transactionPlan', apiName: 'FEC_Transaction_Plan__c' },
         { label: 'Post Date', fieldName: 'postingDate', apiName: 'FEC_Post_Date__c' },
         { label: 'Currency Code', fieldName: 'currencyCode', apiName: 'FEC_Currency_Code__c' },
         { label: 'Merchant Category Code', fieldName: 'merchantCategoryCode', apiName: 'FEC_Merchant_Category_Code__c' },
-        { label: 'Authorization Code', fieldName: 'authCode', apiName: 'FEC_Authorization_Code__c' },
-        { label: 'Transaction Amount', fieldName: 'amount', apiName: 'FEC_Transaction_Amount__c' },
+        { label: 'Authorization Code', fieldName: 'authorizationCode', apiName: 'FEC_Authorization_Code__c' },
+        { label: 'Transaction Amount', fieldName: 'transactionAmount', apiName: 'FEC_Transaction_Amount__c' },
         { label: 'OTP Sent', fieldName: 'otpSent', apiName: 'FEC_OTP_Sent__c' },
     ];
 
@@ -44,11 +44,11 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
         { label: 'Effective Date', fieldName: 'effectiveDate', apiName: 'FEC_Effective_Date__c' },
         { label: 'Authorization Response', fieldName: 'authorizationResponse', apiName: 'FEC_Authorization_Response__c' },
         { label: 'Merchant Description', fieldName: 'merchantDescription', apiName: 'FEC_Merchant_Description__c' },
-        { label: 'Transaction Plan', fieldName: 'plan', apiName: 'FEC_Transaction_Plan__c' },
-        { label: 'Transaction Amount', fieldName: 'amount', apiName: 'FEC_Transaction_Amount__c' },
+        { label: 'Transaction Plan', fieldName: 'transactionPlan', apiName: 'FEC_Transaction_Plan__c' },
+        { label: 'Transaction Amount', fieldName: 'transactionAmount', apiName: 'FEC_Transaction_Amount__c' },
         { label: 'Decline Description', fieldName: 'declineDescription', apiName: 'FEC_Decline_Description__c' },
         { label: 'Merchant Category Code', fieldName: 'merchantCategoryCode', apiName: 'FEC_Merchant_Category_Code__c' },
-        { label: 'Authorization Code', fieldName: 'authCode', apiName: 'FEC_Authorization_Code__c' },
+        { label: 'Authorization Code', fieldName: 'authorizationCode', apiName: 'FEC_Authorization_Code__c' },
         { label: 'Approval Code', fieldName: 'approvalCode', apiName: 'FEC_Approval_Code__c' },
         { label: 'Currency Code', fieldName: 'currencyCode', apiName: 'FEC_Currency_Code__c' }
     ];
@@ -58,12 +58,12 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
         { label: 'Effective Date', fieldName: 'effectiveDate', apiName: 'FEC_Effective_Date__c' },
         { label: 'Credit Debit Flag', fieldName: 'creditDebitFlag', apiName: 'FEC_Credit_Debit_Flag__c' },
         { label: 'Merchant Description', fieldName: 'merchantDescription', apiName: 'FEC_Merchant_Description__c' },
-        { label: 'Transaction Plan', fieldName: 'plan', apiName: 'FEC_Transaction_Plan__c' },
+        { label: 'Transaction Plan', fieldName: 'transactionPlan', apiName: 'FEC_Transaction_Plan__c' },
         { label: 'Post Date', fieldName: 'postingDate', apiName: 'FEC_Post_Date__c' },
         { label: 'Currency Code', fieldName: 'currencyCode', apiName: 'FEC_Currency_Code__c' },
         { label: 'Merchant Category Code', fieldName: 'merchantCategoryCode', apiName: 'FEC_Merchant_Category_Code__c' },
-        { label: 'Authorization Code', fieldName: 'authCode', apiName: 'FEC_Authorization_Code__c' },
-        { label: 'Transaction Amount', fieldName: 'amount', apiName: 'FEC_Transaction_Amount__c' },
+        { label: 'Authorization Code', fieldName: 'authorizationCode', apiName: 'FEC_Authorization_Code__c' },
+        { label: 'Transaction Amount', fieldName: 'transactionAmount', apiName: 'FEC_Transaction_Amount__c' },
         { label: 'OTP Sent', fieldName: 'otpSent', apiName: 'FEC_OTP_Sent__c' }
     ];
 
@@ -91,6 +91,7 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
         loadTransactionDetail({ transactionId: this.transactionId })
             .then(res => {
                 this.transaction = res;
+                setConsoleTab('Transactions Detail', 'standard:record');
             })
             .catch(() => {
                 this.transaction = null;
@@ -98,11 +99,6 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
             .finally(() => {
                 this.isLoading = false;
             });
-    }
-
-    /* ================= SET TABNAME ================= */
-    connectedCallback() {
-        setConsoleTab('Transactions Detail', 'standard:record');
     }
 
     /* ================= SECTIONS ================= */

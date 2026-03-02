@@ -38,6 +38,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_SYS_TIME = '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}';
     public static final String PATTERN_DATE_TIME = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$';
     public static final String PATTERN_DATE_TIME_FULL = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$';
+    public static final String PATTERN_DATE_FORMAT_MM = '^(1[0-2]|[1-9])$';
+    public static final String PATTERN_DATE_FORMAT_DDMMYYZZ = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
     public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
 
@@ -66,6 +68,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PROCESSED_STATUS = 'Processed';
     public static final String JSON_EXTENSION = '.json';
     public static final String SUCCESS_MESSAGE = 'Success';
+    public static final String SUCCESS_STATUS_CODE = '0';
     public static final String KEY_ID = 'id';
     public static final String KEY_NAME = 'name';
     public static final String KEY_UPLOADED_BY = 'uploadedBy';

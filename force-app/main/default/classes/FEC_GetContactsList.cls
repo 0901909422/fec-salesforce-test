@@ -47,7 +47,7 @@ public with sharing class FEC_GetContactsList {
 
         validateRequest(transId, requestorId, dateTimeStr, cifNumber);
 
-        String soapBody = buildSoapBody(transId, requestorId, dateTimeStr, cifNumber);
+        String soapBody = buildSoapRequest(transId, requestorId, dateTimeStr, cifNumber);
 
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Contacts_List');
@@ -72,6 +72,56 @@ public with sharing class FEC_GetContactsList {
         }
 
         return response;
+    }
+
+    // =========================================================================
+    // BUILD SOAP REQUEST
+    // =========================================================================
+    private static String buildSoapRequest(
+        String transID,
+        String requestorId,
+        String dateTimeStr,
+        String cifNumber
+    ) {
+        Dom.Document doc = new Dom.Document();
+        
+        Dom.XmlNode envelope = doc.createRootElement(
+            'soapenv:Envelope',
+            null,
+            null
+        );
+        
+        envelope.setAttribute(
+            'xmlns:soapenv',
+            FEC_ConstantCommon.SOAP_ENV
+        );
+        
+        envelope.setAttribute(
+            'xmlns:cif',
+            'http://fecredit.com.vn/CIF_CustomerInfo'
+        );
+        
+        // ===== Header =====
+        envelope.addChildElement('soapenv:Header', null, null);
+        
+        // ===== Body =====
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+        
+        // ===== Main Action =====
+        Dom.XmlNode action =
+            body.addChildElement('cif:GetContactsList', null, null);
+      
+        Dom.XmlNode sys = action.addChildElement('Sys', null, null);
+        sys.addChildElement('TransID', null, null).addTextNode(transID);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+
+        action
+            .addChildElement('CIFNumber', null, null)
+            .addTextNode(cifNumber);
+
+        return doc.toXmlString();
     }
 
     /* =====================================================
@@ -119,9 +169,8 @@ public with sharing class FEC_GetContactsList {
         Dom.Document doc = new Dom.Document();
         doc.load(xml);
 
-        Dom.XmlNode envelope = doc.getRootElement();
-        Dom.XmlNode bodyNode =
-            envelope.getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
+        Dom.XmlNode bodyNode = doc.getRootElement()
+            .getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
 
         Dom.XmlNode responseNode;
         for (Dom.XmlNode n : bodyNode.getChildElements()) {
@@ -133,15 +182,10 @@ public with sharing class FEC_GetContactsList {
             throw new CalloutException(System.Label.FEC_MSG_Response_Null);
         }
 
-        Dom.XmlNode resultNode = getChild(responseNode, 'GetContactsListResult');
-        if (resultNode == null) {
-            resultNode = responseNode;
-        }
-
         ResponseWrapper result = new ResponseWrapper();
 
         /* ===== SYS ===== */
-        Dom.XmlNode sysNode = getChild(resultNode, 'Sys');
+        Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
         if (sysNode != null) {
             result.Sys = new SysResponse();
             result.Sys.TransID     = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
@@ -151,11 +195,11 @@ public with sharing class FEC_GetContactsList {
         }
 
         /* ===== CIF ===== */
-        result.CIFNumber = FEC_CommonUltils.getXmlValue(resultNode, 'CIFNumber');
+        result.CIFNumber = FEC_CommonUltils.getXmlValue(responseNode, 'CIFNumber');
 
         /* ===== CONTACTS ===== */
         result.Contacts = new List<ContactInfo>();
-        Dom.XmlNode contactsNode = getChild(resultNode, 'Contacts');
+        Dom.XmlNode contactsNode = responseNode.getChildElement('Contacts', null);
 
         if (contactsNode != null) {
             for (Dom.XmlNode cNode : contactsNode.getChildElements()) {
@@ -172,42 +216,5 @@ public with sharing class FEC_GetContactsList {
         }
 
         return result;
-    }
-
-    /* =====================================================
-       HELPERS
-       ===================================================== */
-    private static Dom.XmlNode getChild(Dom.XmlNode parent, String name) {
-        if (parent == null) return null;
-        for (Dom.XmlNode c : parent.getChildElements()) {
-            if (c.getName().endsWith(name)) {
-                return c;
-            }
-        }
-        return null;
-    }
-
-    private static String buildSoapBody(
-        String transId,
-        String requestorId,
-        String dateTimeStr,
-        String cifNumber
-    ) {
-        return
-            '<?xml version="1.0" encoding="utf-8"?>' +
-            '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-            'xmlns:cif="http://fecredit.com.vn/CIF_CustomerInfo">' +
-                '<soapenv:Header/>' +
-                '<soapenv:Body>' +
-                    '<cif:GetContactsList>' +
-                        '<Sys>' +
-                            '<TransID>' + transId + '</TransID>' +
-                            '<RequestorID>' + requestorId + '</RequestorID>' +
-                            '<DateTime>' + dateTimeStr + '</DateTime>' +
-                        '</Sys>' +
-                        '<CIFNumber>' + cifNumber + '</CIFNumber>' +
-                    '</cif:GetContactsList>' +
-                '</soapenv:Body>' +
-            '</soapenv:Envelope>';
     }
 }

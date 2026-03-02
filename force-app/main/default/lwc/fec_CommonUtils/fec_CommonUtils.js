@@ -10,7 +10,7 @@ const formatDate = (curr) => {
   const month = String(curr.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
   const day = String(curr.getDate()).padStart(2, "0");
 
-  return `${day}-${month}-${year}`;
+  return `${day}/${month}/${year}`;
 };
 
 /**
@@ -95,6 +95,19 @@ const maskValue = (value, showFull) => {
         }
 
   /* =====================
+        * PHONE NUMBER: 84xxxxxxxxx
+        * Hiển thị: 5 số đầu + 3 số cuối
+        * Ví dụ: 84901***678
+        * ===================== */
+        if (/^84\d{9}$/.test(v)) {
+            return (
+                v.substring(0, 5) +
+                '*'.repeat(v.length - 8) +
+                v.slice(-3)
+            );
+        }
+
+  /* =====================
   * PHONE NUMBER (10 số)
   * Hiển thị: 4 số đầu + 3 số cuối
   * Ví dụ: 0906***678
@@ -150,4 +163,54 @@ const setConsoleTab = async (label, icon) => {
   }
 };
 
-export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue, formatDateTime, setConsoleTab};
+/* ================= NEGATIVE HELPER ================= */
+const isNegative = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return false;
+  }
+
+  if (typeof value === 'number') {
+    return value < 0;
+  }
+
+  const cleaned = value.toString().replace(/,/g, '').trim();
+
+  if (cleaned === '' || isNaN(cleaned)) {
+    return false;
+  }
+
+  return Number(cleaned) < 0;
+};
+
+/* ================= FORMATTERS ================= */
+   const formatDateDDMMYYYYHHMM = (value)  =>{
+        if (!value) return '';
+
+        try {
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return value;
+
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const seconds = String(d.getSeconds()).padStart(2, '0');
+
+            return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
+        } catch (e) {
+            return value;
+        }
+    }
+
+   const  formatNumber = (value) => {
+        if (value === null || value === undefined) return '';
+        try {
+            return new Intl.NumberFormat('en-US').format(value);
+        } catch {
+            return value;
+        }
+    }
+
+export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue, formatDateTime, setConsoleTab, isNegative, formatDateDDMMYYYYHHMM, formatNumber };
