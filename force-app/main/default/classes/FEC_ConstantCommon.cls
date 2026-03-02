@@ -39,6 +39,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_DATE_TIME = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$';
     public static final String PATTERN_DATE_TIME_FULL = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
+    public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
 
     public static final String REQUESTOR_CRM = 'CRM';
     public static final String REQUESTOR_PORTAL = 'PORTAL';
@@ -88,8 +89,11 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String CASE_STATUS_NEW = 'New';
     public static final String CASE_STATUS_OPEN = 'Open';
+    public static final String CASE_STATUS_PENDING = 'Pending';
 
     public static final String CASE_WEB_ORIGIN = 'Web';
+
+    public static final String GROUP_TYPE_QUEUE = 'Queue';
 
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
