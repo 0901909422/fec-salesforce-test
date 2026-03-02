@@ -24,7 +24,7 @@ import {
   isOnlyNumber
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_ACTION_PHONE_UPDATE_HEADER from "@salesforce/label/c.FEC_ACTION_PHONE_UPDATE_HEADER";
 import FEC_MSG_ACTION_PHONE_UPDATE from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE";
@@ -47,6 +47,8 @@ const ACTION_TRANSFER = "Transfer";
 const ACTION_UPDATE = "Update";
 const ACTION_ESCALATE = "Escalate";
 const ACTION_CANCEL = "Cancel";
+
+const OUTBOUND_CAMPAIGN = 'Outbound Campaign';
 
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
@@ -122,6 +124,7 @@ const TYPE_DISAGREE = "Disagree";
 
 const DECISION_USER = "User";
 const DECISION_QUEUE = "Queue";
+const NONE_STRING = '--None--';
 
 export default class Fec_CaseBussiness extends LightningElement {
   @api recordId;
@@ -150,8 +153,8 @@ export default class Fec_CaseBussiness extends LightningElement {
   //   return this.isMasked ? "utility:preview" : "utility:hide";
   // }
   updateDecision;
-  @track decisionValue = "";
-  @track subDecisionValue = "";
+  @track decisionValue = STR_EMPTY;
+  @track subDecisionValue = STR_EMPTY;
   @track subDecisionOptions = [];
 
   userGroup;
@@ -225,7 +228,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     if (fieldName === "decision") {
       this.decisionValue = value;
-      this.subDecisionValue = ""; // Reset sub-decision khi đổi decision chính
+      this.subDecisionValue = STR_EMPTY; // Reset sub-decision khi đổi decision chính
       this.subDecisionOptions = [];
 
       if (value === DECISION_USER) {
@@ -234,7 +237,11 @@ export default class Fec_CaseBussiness extends LightningElement {
         this.fetchTransferQueues();
       }
     } else if (fieldName === "sub-decision") {
-      this.subDecisionValue = value;
+      if (value != '--Non--') {
+        this.subDecisionValue = value;
+      } else {
+        this.subDecisionValue = STR_EMPTY;
+      }
     }
   }
 
@@ -249,6 +256,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         if (userOptions.length > 0) {
           this.subDecisionOptions = [...userOptions];
+        } else {
+          this.subDecisionOptions = [NONE_STRING];
         }
         console.log("User options:", this.subDecisionOptions);
       })
@@ -280,13 +289,15 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.isLoaded = false;
     getTransferQueues()
       .then((result) => {
-        const queueOptions = result.map((user) => ({
+        const queueOptions = result.map((q) => ({
           label: q.Name,
           value: q.Id,
         }));
 
         if (queueOptions.length > 0) {
           this.subDecisionOptions = [...queueOptions];
+        } else {
+          this.subDecisionOptions = [NONE_STRING];
         }
       })
       .catch((error) => console.error("Error fetching queues:", error))
@@ -347,12 +358,12 @@ export default class Fec_CaseBussiness extends LightningElement {
           const f = obj.fieldlst?.find((x) => x.apiName === apiName);
           if (f != null) {
             const v = f.value;
-            return typeof v === "string" ? v.trim() : (v ?? "");
+            return typeof v === "string" ? v.trim() : (v ?? STR_EMPTY);
           }
         }
       }
     }
-    return "";
+    return STR_EMPTY;
   }
 
   /** Case field apiName đang có trên form (form đổi theo NOC). */
@@ -382,12 +393,12 @@ export default class Fec_CaseBussiness extends LightningElement {
           const f = obj.fieldlst?.find((x) => x.apiName === apiName);
           if (f != null) {
             const v = f.original != null ? f.original : f.value;
-            return typeof v === "string" ? v.trim() : (v ?? "");
+            return typeof v === "string" ? v.trim() : (v ?? STR_EMPTY);
           }
         }
       }
     }
-    return "";
+    return STR_EMPTY;
   }
 
   @api getUpdatedInfoPhoneNumber() {
@@ -456,7 +467,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   connectedCallback() {
     this.getData();
-    this.updateRoutingActionDisplay("");
+    this.updateRoutingActionDisplay(STR_EMPTY);
   }
 
   disconnectedCallback() {}
@@ -526,8 +537,12 @@ export default class Fec_CaseBussiness extends LightningElement {
           ? draftCode
           : this.business.routingActionlst[0]?.value;
 
+        if(OUTBOUND_CAMPAIGN == this.business.code) {
+          this.actionValue = ACTION_RESOLVE;
+        }
+
         if (!this.business.nextQueue) {
-          this.business.nextQueue = { label: "", value: null };
+          this.business.nextQueue = { label: STR_EMPTY, value: null };
         }
 
         this.business.sectionlst.forEach((section, index) => {
@@ -558,7 +573,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
               obj.fieldlst?.forEach((field) => {
                 if (field.value == null || field.value === undefined) {
-                  field.value = "";
+                  field.value = STR_EMPTY;
                 }
 
                 field.className = `slds-col slds-size_1-of-1 slds-medium-size_${field.layout}-of-12`;
@@ -610,7 +625,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.hasHelpText =
                   field.helpText != null &&
                   field.helpText !== undefined &&
-                  field.helpText !== "";
+                  field.helpText !== STR_EMPTY;
 
                 field.masked = field.masked && field.value;
 
@@ -662,6 +677,8 @@ export default class Fec_CaseBussiness extends LightningElement {
           this.updateRoutingActionDisplay(foundActions.join(";"));
         }
         this.businessLoaded = true;
+
+        console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
       })
       .catch((err) => {
         console.error(
@@ -718,14 +735,14 @@ export default class Fec_CaseBussiness extends LightningElement {
       if (!isDigit && !isControl) e.preventDefault();
       // Chặn gõ thêm số khi đã đủ độ dài: 0xxx → 10 ký tự, 84xxx → 11 ký tự
       if (isDigit) {
-        const val = (e.target.value || "").replace(/\D/g, "");
+        const val = (e.target.value || STR_EMPTY).replace(/\D/g, STR_EMPTY);
         const maxLen = val.startsWith("84") ? 11 : 10;
         if (val.length >= maxLen) e.preventDefault();
       }
     } else if (nationalIdOnlyFields.includes(fieldName)) {
       if (!isDigit && !isControl) e.preventDefault();
     } else if (nationalIdOrPassportFields.includes(fieldName)) {
-      const val = e.target.value || "";
+      const val = e.target.value || STR_EMPTY;
       const startsWithUppercase = /^[A-Z]/.test(val);
       if (isLetter && !isLetterUppercase) {
         e.preventDefault();
@@ -818,7 +835,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       field.customError = validateUpdatedInfoPhone(value) || null;
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
-        (field.customError ? " slds-has-error" : "");
+        (field.customError ? " slds-has-error" : STR_EMPTY);
       this.business = { ...this.business };
     }
 
@@ -827,41 +844,41 @@ export default class Fec_CaseBussiness extends LightningElement {
       field.customError = emailResult.valid ? null : emailResult.message;
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
-        (field.customError ? " slds-has-error" : "");
+        (field.customError ? " slds-has-error" : STR_EMPTY);
       this.business = { ...this.business };
     }
 
     if (fieldName === FIELD_NEW_CITIZEN_ID_NUMBER && field) {
       const trimmed =
-        value != null && typeof value === "string" ? value.trim() : "";
+        value != null && typeof value === "string" ? value.trim() : STR_EMPTY;
       const idResult = validateNationalId(value);
       field.customError =
-        trimmed === "" ? null : idResult.isValid ? null : idResult.message;
+        trimmed === STR_EMPTY ? null : idResult.isValid ? null : idResult.message;
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
-        (field.customError ? " slds-has-error" : "");
+        (field.customError ? " slds-has-error" : STR_EMPTY);
       this.business = { ...this.business };
     }
     if (fieldName === FIELD_OLD_CITIZEN_ID_NUMBER && field) {
       const trimmed =
-        value != null && typeof value === "string" ? value.trim() : "";
+        value != null && typeof value === "string" ? value.trim() : STR_EMPTY;
       const idResult = validateNationalId(value);
       field.customError =
-        trimmed === "" ? null : idResult.isValid ? null : idResult.message;
+        trimmed === STR_EMPTY ? null : idResult.isValid ? null : idResult.message;
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
-        (field.customError ? " slds-has-error" : "");
+        (field.customError ? " slds-has-error" : STR_EMPTY);
       this.business = { ...this.business };
     }
     if (fieldName === FIELD_UPDATED_INFO_NATIONAL_ID && field) {
       const trimmed =
-        value != null && typeof value === "string" ? value.trim() : "";
+        value != null && typeof value === "string" ? value.trim() : STR_EMPTY;
       const idResult = validateIdNumber(value);
       field.customError =
-        trimmed === "" ? null : idResult.isValid ? null : idResult.message;
+        trimmed === STR_EMPTY ? null : idResult.isValid ? null : idResult.message;
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
-        (field.customError ? " slds-has-error" : "");
+        (field.customError ? " slds-has-error" : STR_EMPTY);
       this.business = { ...this.business };
     }
 
@@ -869,7 +886,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (adHocFieldlst.includes(`${objName}.${fieldName}`)) {
       switch (`${objName}.${fieldName}`) {
         case CASE_UPDATED_INFO_PHONE_NUMBER:
-          toRouteTo = value && value.trim() != "";
+          toRouteTo = value && value.trim() != STR_EMPTY;
           break;
         case CASE_UPDATED_INFO_FIRST_NAME:
         case CASE_UPDATED_INFO_MIDDLE_NAME:
@@ -882,7 +899,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         case CASE_UPDATED_INFO_PLACE_OF_ISSUE:
           toRouteTo =
             value != null &&
-            (typeof value !== "string" || String(value).trim() !== "");
+            (typeof value !== "string" || String(value).trim() !== STR_EMPTY);
           break;
 
         case CASE_CS_D2C_ASSIGNMENT_TYPE:
@@ -1040,6 +1057,10 @@ export default class Fec_CaseBussiness extends LightningElement {
   @api async submit() {
     if (!this.validate()) return false;
 
+    // Có routing thì mới chặn khi chưa đổi thông tin Updated; không có routing cho phép chỉ submit remarks.
+    let routeToEle = this.template.querySelector(
+      'lightning-select[data-id="routing-action"]',
+    );
     const noUpdate = checkNoUpdateInSubmit(
       this._getCaseFieldOriginalValue.bind(this),
       this._getCaseFieldValue.bind(this),
@@ -1052,9 +1073,6 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     await this._submitFormsPromise();
-    let routeToEle = this.template.querySelector(
-      'lightning-select[data-id="routing-action"]',
-    );
     if (routeToEle) {
       let method = routeToEle.value;
       let actionId;
@@ -1111,6 +1129,12 @@ export default class Fec_CaseBussiness extends LightningElement {
         });
       }
       await run({ ...params });
+    } else {
+      // Không có routing: chỉ set FEC_Is_Submited__c = true + clear draft + Status = Pending (nếu Case mở).
+      await run({
+        method: "Submit Without Route To",
+        params: { caseId: this.recordId },
+      });
     }
     return true;
   }

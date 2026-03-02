@@ -124,9 +124,9 @@
                                 onchange={handleChangeInput}
                                 onkeydown={handleInputKeydown}
                                 onpaste={handlePaste}
-                                value={field.value}
-                              >
+                                >
                               </lightning-input-field>
+                              <!-- value={field.value} -->
                             </template>
                           </template>
                           <div
@@ -285,9 +285,9 @@
                 value={subDecisionValue} onchange={handleChange} options={subDecisionOptions} required>
               </lightning-combobox>
             </template>
-            <template if:false={isSubDecisionOptionsDisplay}>
+            <!-- <template if:false={isSubDecisionOptionsDisplay}>
               <p>Không tìm thấy giá trị thỏa mãn.</p>
-            </template>
+            </template> -->
             
           </div>
         </div>
