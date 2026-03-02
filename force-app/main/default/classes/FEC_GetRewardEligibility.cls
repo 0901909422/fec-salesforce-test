@@ -210,7 +210,7 @@ public with sharing class FEC_GetRewardEligibility {
         if (sysNode != null) {
             result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
             result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
-            result.Sys.Status = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Status'));
+            result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Status'));
             result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');}
 
         // ================= MAIN DATA =================
@@ -293,7 +293,7 @@ public with sharing class FEC_GetRewardEligibility {
     public class SysResponse {
         public String TransID;
         public String DateTimeStr;
-        public Integer Status;
+        public Integer Code;
         public String Description;
     }
  
