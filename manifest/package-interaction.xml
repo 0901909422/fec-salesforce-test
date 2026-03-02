@@ -149,6 +149,7 @@
 		<members>FEC_KYC_Result__c</members>
 		<members>FEC_KYC__c</members>
 		<members>FEC_CaseID_Prefix__mdt</members>
+		<members>FEC_Case_Follow_Update__e</members>
 		<name>CustomObject</name>
 	</types>
     <types>
