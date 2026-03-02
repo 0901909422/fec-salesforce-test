@@ -285,6 +285,9 @@
         <members>FEC_MSG_FollowUp_Save_Error</members>
         <members>FEC_Record_per_Page</members>
         <members>FEC_Go_to_page_label</members>
+		<members>FEC_Sensitive_Data_Table_Label</members>
+        <members>FEC_Go_Button_Label</members>
+        <members>FEC_RelevantCaseListViewAll_Label</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
