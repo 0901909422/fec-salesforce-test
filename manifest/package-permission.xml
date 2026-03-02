@@ -156,13 +156,26 @@
         <members>Case.FEC_User_Email_ID__c</members>
         <members>Case.FEC_Zip_Code__c</members>
 		<members>FEC_Actual_Master_Data_Setting__c.FEC_Sub_Section_Field_Layout__c</members>
+		<members>FEC_Actual_Master_Data_Setting__c.FEC_Masking_Type__c</members>
+		<members>FEC_Master_Data_Setting__c.FEC_Masking_Type__c</members>
+		<members>FEC_Case_Stage__c.FEC_Nature_of_Cases__c</members>
 		<name>CustomField</name>
+	</types>
+	<types>
+		<members>FEC_Customer_Search__c</members>
+		<members>FEC_Customer_Segmentation__c</members>
+		<members>FEC_Customer_History__c</members>
+		<members>FEC_Reference_Info__c</members>
+		<members>FEC_Country__c</members>
+		<members>FEC_District__c</members>
+		<name>CustomObject</name>
 	</types>
 	<types>
 		<members>FEC_Corrective_Action</members>
 		<members>FEC_Assessment_Type</members>
 		<members>FEC_Confirm_Assessment</members>
 		<members>FEC_Risk_Level</members>
+		<members>FEC_Masking_Type</members>
 		<name>GlobalValueSet</name>
 	</types>
 	<types>
