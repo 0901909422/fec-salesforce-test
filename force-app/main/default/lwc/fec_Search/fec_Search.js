@@ -12,6 +12,7 @@ import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getCase from "@salesforce/apex/FEC_SearchController.getCase";
 import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
+import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import createCustomerCase from "@salesforce/apex/FEC_SearchController.createCustomerCase";
 import SkipModal from "c/fec_SkipModal";
 import {
@@ -28,6 +29,16 @@ import {
   refreshTab,
 } from "lightning/platformWorkspaceApi";
 import MyModal from "c/fec_SendNotification";
+
+const FIELDS_TO_CHECK = [
+    'FEC_Search_National_ID__c',
+    'FEC_Search_Phone_Number__c',
+    'FEC_Search_Application_ID__c',
+    'FEC_Search_Contract_Number__c',
+    'FEC_Search_Account_Number__c',
+    'FEC_Search_Email_Address__c',
+    'FEC_Search_Customer_Number__c'
+];
 
 export default class Fec_Search extends NavigationMixin(LightningElement) {
   @api recordId;
@@ -48,6 +59,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   showNewCaseModal = false;
   isSkip;
   wiredCaseResult;
+  fieldPermissions;
 
   @wire(MessageContext)
   messageContext;
@@ -97,6 +109,10 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       { label: "Plastic ID", fieldName: "PlasticID", sortable: true },
       { label: "Account Status", fieldName: "AccountStatus", sortable: true },
     ];
+  }
+
+  get isShowCustomerNumber() {
+    return this.recordId ? true : false;
   }
 
   get loanContractColumns() {
@@ -258,14 +274,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.isDisplay =
         data.Customer_Histories__r === undefined &&
         data.FEC_Skip_Search_Internal_Case__c === false;
-      this.phoneNumber = data.FEC_Phone_Number__c || null;
-      this.nationalId = data.FEC_National_ID_Passport_ID__c || null;
-      this.contractNumber = data.FEC_Contract_Number__c || null;
-
-      // Tự động seed data nếu có thông tin tìm kiếm từ Case
-      if (this.phoneNumber || this.nationalId || this.contractNumber) {
-        this.seedSampleRows(true);
-      }
     } else if (error) {
       // Xử lý lỗi (tương đương phần .catch cũ)
       console.error("Error fetching case data:", error);
@@ -273,17 +281,62 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     }
   }
 
-  connectedCallback() {
+  async connectedCallback() {
     this.isLoaded = true;
     // Load styles
     loadStyle(this, COMMON_STYLES)
       .then(() => console.log("Common styles loaded"))
       .catch((err) => console.error(err));
 
-    // KHÔNG gọi getCase ở đây nữa vì @wire đã đảm nhiệm
+    try {
+      this.fieldPermissions = await checkFieldEditPermissions({
+        sObjectType: 'Case',
+        fieldNames: FIELDS_TO_CHECK
+      })
+      let result = await getCase({ caseId: this.recordId });
+      this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_Search_National_ID__c : null;
+      this.phoneNumber = this.fieldPermissions['FEC_Search_Phone_Number__c'] ? result.FEC_Search_Phone_Number__c : null;
+      this.applicationId = this.fieldPermissions['FEC_Search_Application_ID__c'] ? result.FEC_Search_Application_ID__c : null;
+      this.contractNumber = this.fieldPermissions['FEC_Search_Contract_Number__c'] ? result.FEC_Search_Contract_Number__c : null;
+      this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Search_Account_Number__c : null;
+      this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Search_Email_Address__c : null;
+      this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
+      if (this.phoneNumber || this.nationalId || this.contractNumber) {
+        this.seedSampleRows(true);
+      }
+    } catch (error) {
+      console.error("Error fetching case data:", error);
+    }
     if (!this.recordId) {
       this.isDisplay = true;
     }
+  }
+  get isDisabledNationalId() {
+    return this.fieldPermissions ? !this.fieldPermissions['FEC_Search_National_ID__c'] : true;
+  }
+
+  get isDisabledPhoneNumber() {
+    return this.fieldPermissions ? !this.fieldPermissions['FEC_Search_Phone_Number__c'] : true;
+  }
+
+  get isDisabledApplicationId() {
+    return this.fieldPermissions ? !this.fieldPermissions['FEC_Search_Application_ID__c'] : true;
+  }
+
+  get isDisabledContractNumber() {
+    return this.fieldPermissions ? !this.fieldPermissions['FEC_Search_Contract_Number__c'] : true;
+  }
+
+  get isDisabledAccountNumber() {
+    return this.fieldPermissions ? !this.fieldPermissions['FEC_Search_Account_Number__c'] : true;
+  }
+
+  get isDisabledEmailAddress() {
+    return this.fieldPermissions ? !this.fieldPermissions['FEC_Search_Email_Address__c'] : true;
+  }
+
+  get isDisabledCustomerNumber() {
+    return this.fieldPermissions ? !this.fieldPermissions['FEC_Search_Customer_Number__c'] : true;
   }
 
   // Handle inputs (wire these ids to your current fields as needed)
@@ -491,6 +544,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     // Clear all datasets
     this.cardData = [];
     this.loanData = [];
+    this.loanContractData = [];
+    this.loanB2Data = [];
+    this.loanCash24Data = [];
     this.insuranceData = [];
     this.ubankData = [];
   }
