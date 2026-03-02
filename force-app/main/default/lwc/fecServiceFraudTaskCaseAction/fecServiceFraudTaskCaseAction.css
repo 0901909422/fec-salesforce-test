@@ -1,0 +1,111 @@
+/* =========================
+   Task History Layout
+========================= */
+
+.task-history-grid {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+}
+
+/* Left-side spacing */
+.decision-block,
+.cancel-block {
+    margin-right: 1.5rem;
+    min-width: 300px;
+}
+
+/* Right-side anchored Remarks */
+.remarks-block {
+    margin-left: auto;      /* ⭐ pushes to the far right */
+    width: 100%;          /* control size of remarks */
+}
+
+/* Improve textarea appearance */
+.remarks-textarea textarea {
+    min-height: 100px !important;
+}
+textarea {
+    min-height: 100px !important;
+}
+
+/* =========================
+   Existing styles (unchanged)
+========================= */
+
+.section-header {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.slds-button_icon {
+    vertical-align: middle;
+}
+
+.section-title {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.status-wrapper {
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+/* ===== FORCE SHOW PENDING FLAG ===== */
+.pending-flag {
+    display: inline-block !important;
+    width: 1rem !important;
+    height: 1rem !important;
+    min-width: 1rem !important;
+    min-height: 1rem !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    --slds-c-icon-color-foreground-default: #c23934 !important;
+}
+
+.pending-flag-raw {
+    color: #c23934;
+    font-size: 1rem;
+    margin-left: .4rem;
+}
+
+.wrap-text {
+    white-space: normal;
+    word-break: break-word;
+    max-width: 400px;
+}
+
+.slds-table th {
+    background-color: #f3f3f3;
+    font-weight: 600;
+}
+
+.slds-table td {
+    vertical-align: top;
+}
+
+lightning-textarea {
+    --slds-c-textarea-shadow: none;
+}
+
+lightning-textarea::part(textarea) {
+    min-height: 500px !important;
+}
+
+.filter-row lightning-input {
+    width: 100%;
+}
+
+.filter-row {
+    background-color: #fafafa;
+}
+
+th.slds-is-sortable {
+    cursor: pointer;
+}
+
+th.slds-is-sortable:hover {
+    background-color: #f3f3f3;
+}
