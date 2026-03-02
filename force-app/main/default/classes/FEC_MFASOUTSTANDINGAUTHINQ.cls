@@ -1,5 +1,5 @@
 /****************************************************************************************
- * File Name    : FEC_GetCustomerInfoBasic
+ * File Name    : FEC_MFASOUTSTANDINGAUTHINQ
  * Author       : Quangdv7
  * Date         : 2026-01-29
  * Description  : Get data for API service
@@ -89,14 +89,14 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
             // ===== LOG REQUEST + RESPONSE =====
-            FEC_CommonUltils.logApi(
-                'FEC_MFASOUTSTANDINGAUTHINQ',
-                endpoint,
-                'POST',
-                soapBody,
-                res,
-                null
-            );
+            // FEC_CommonUltils.logApi(
+            //     'FEC_MFASOUTSTANDINGAUTHINQ',
+            //     endpoint,
+            //     'POST',
+            //     soapBody,
+            //     res,
+            //     null
+            // );
 
         if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
             throw new CalloutException( String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
@@ -127,53 +127,68 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         String acct
     ) {
         Dom.Document doc = new Dom.Document();
-
-        Dom.XmlNode envelope = doc.createRootElement(
-            'Envelope',
-            FEC_ConstantCommon.SOAP_ENV,
-            'soapenv'
+    
+        Dom.XmlNode envelope = doc.createRootElement( 'soapenv:Envelope',null,null);
+        
+        envelope.setAttribute(
+            'xmlns:soapenv',
+            FEC_ConstantCommon.SOAP_ENV
+        );
+        envelope.setAttribute(
+            'xmlns:v2',
+            'http://fecredit.com.vn/cms/ws/v2'
         );
 
-        Dom.XmlNode body = envelope.addChildElement(
-            'Body',
-            FEC_ConstantCommon.SOAP_ENV,
-            'soapenv'
-        );
+        // ===== Header =====
+        envelope.addChildElement('soapenv:Header', null, null);
 
-        Dom.XmlNode wsRequest = body.addChildElement(
-            'WSRequest',
-            NS_VMX,
-            'ns'
-        );
+        // ===== Body =====
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+
+        // ===== v2:WSRequest =====
+        Dom.XmlNode action =
+            body.addChildElement('v2:WSRequest', null, null);
 
         // ================= SYS =================
-        Dom.XmlNode sys = wsRequest.addChildElement('Sys', NS_VMX, 'ns');
-        sys.addChildElement('TransID', NS_VMX, 'ns').addTextNode(transID);
-        sys.addChildElement('RequestorID', NS_VMX, 'ns').addTextNode(requestorId);
-        sys.addChildElement('DateTime', NS_VMX, 'ns').addTextNode(dateTimeStr);
+        Dom.XmlNode sys =
+            action.addChildElement('Sys', null, null);
+
+        sys.addChildElement('TransID', null, null)
+            .addTextNode(transID);
+
+        sys.addChildElement('RequestorID', null, null)
+            .addTextNode(requestorId);
+
+        sys.addChildElement('DateTime', null, null)
+            .addTextNode(dateTimeStr);
 
         if (!String.isBlank(vmxVersion)) {
-            sys.addChildElement('VMXVersion', NS_VMX, 'ns')
+            sys.addChildElement('VMXVersion', null, null)
                 .addTextNode(vmxVersion);
         }
 
         // ================= BUSINESS NODE =================
-        Dom.XmlNode fasNode = wsRequest.addChildElement(
-            'M_FAS_OUTSTANDING_AUTH_INQ',
-            NS_VMX,
-            'ns'
-        );
+        Dom.XmlNode fasNode =
+            action.addChildElement('M_FAS_OUTSTANDING_AUTH_INQ', null, null);
 
         Dom.XmlNode vmxRoot =
-            fasNode.addChildElement('VMX_ROOT', NS_VMX, 'ns');
+            fasNode.addChildElement('VMX_ROOT', null, null);
 
         Dom.XmlNode msgIn =
-            vmxRoot.addChildElement('VMX_MSGIN', NS_VMX, 'ns');
+            vmxRoot.addChildElement('VMX_MSGIN', null, null);
 
-        msgIn.addChildElement('CONTEXT', NS_VMX, 'ns').addTextNode(context);
-        msgIn.addChildElement('SIGNON_NAME', NS_VMX, 'ns').addTextNode(signOnName);
-        msgIn.addChildElement('ORG', NS_VMX, 'ns').addTextNode(org);
-        msgIn.addChildElement('ACCT', NS_VMX, 'ns').addTextNode(acct);
+        msgIn.addChildElement('CONTEXT', null, null)
+            .addTextNode(context);
+
+        msgIn.addChildElement('SIGNON_NAME', null, null)
+            .addTextNode(signOnName);
+
+        msgIn.addChildElement('ORG', null, null)
+            .addTextNode(org);
+
+        msgIn.addChildElement('ACCT', null, null)
+            .addTextNode(acct);
 
         return doc.toXmlString();
     }

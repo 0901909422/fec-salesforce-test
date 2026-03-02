@@ -228,8 +228,21 @@ public with sharing class FEC_CommonUltils {
 
   public static Decimal xmlValToDecimal(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
-    return String.isBlank(v) ? null : Decimal.valueOf(v);
-  }
+    if (String.isBlank(v)) {
+      return null;
+    }
+
+    v = v.trim(); 
+    if (v == '') {
+        return null;
+    }
+    try {
+        return Decimal.valueOf(v);
+    } catch (Exception e) {
+      System.debug('Invalid decimal for tag ' + name + ': [' + v + ']');
+      return null; 
+    }
+}
 
   public static Date xmlValToDate(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
@@ -244,6 +257,14 @@ public with sharing class FEC_CommonUltils {
       }
     }
     return null;
+  }
+
+  public static String getValueSafe(Dom.XmlNode parent,String nodeName) {
+    if (parent == null) return null;
+
+    Dom.XmlNode node = findChildByName(parent, nodeName);
+
+    return node == null ? null : node.getText();
   }
 
   public static Integer toInt(String v) {
