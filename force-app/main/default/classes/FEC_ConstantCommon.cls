@@ -100,4 +100,21 @@ public with sharing class FEC_ConstantCommon {
     public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
     public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
 
+    public static final String FEC_CATEGORY_COMPLAINT = 'Complaint';
+    public static final String FEC_COMPLAIN_TYPE_NORMAL = 'Normal';
+    public static final String FEC_COMPLAIN_TYPE_URGENT = 'Urgent';
+    public static final String FEC_COMPLAIN_TYPE_HIGH_RISK = 'High Risk';
+    public static final String FEC_SUB_CATEGORY_CODE_CL01 = 'CL01';
+    public static final String FEC_SUB_CATEGORY_CODE_CC01 = 'CC01';
+
+    public static final String CUSTOMER_CATEGORY_SUSPECTED_FRAUD = 'Suspected Fraud';
+    public static final String CUSTOMER_CATEGORY_MEDIA = 'Media';
+    public static final String CUSTOMER_CATEGORY_SERIOUS_COMPLAINT = 'Serious Complaint';
+    public static final String CUSTOMER_CATEGORY_UNHAPPY = 'Unhappy';
+    public static final String CUSTOMER_CATEGORY_VIP = 'VIP';
+    public static final String CUSTOMER_CATEGORY_NEUTRAL = 'Neutral';
+
+    public static final String SECTION_INTERACTION_DETAILS = 'Interaction Details';
+    public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
+
 }

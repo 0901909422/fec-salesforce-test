@@ -35,7 +35,7 @@ public with sharing class FEC_InteractionHighlightController {
             
             // Nếu RecordType.Name khác "Interaction", lấy data từ FEC_Interaction__c
             Case interactionCase = caseRecord;
-            if (caseRecord.RecordType.Name != 'Interaction' && caseRecord.FEC_Interaction__c != null) {
+            if (caseRecord.RecordType.Name != FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME && caseRecord.FEC_Interaction__c != null) {
                 List<Case> interactionCases = [
                     SELECT 
                         Id,
@@ -106,39 +106,39 @@ public with sharing class FEC_InteractionHighlightController {
     }
     
     private static String determineCustomerCategory(Case caseRecord, FEC_Customer_History__c customerHistory) {
-        if (isSuspectedFraud(caseRecord)) return 'Suspected Fraud';
-        if (isMedia(caseRecord)) return 'Media';
-        if (isSeriousComplaint(caseRecord)) return 'Serious Complaint';
-        if (isUnhappy(caseRecord)) return 'Unhappy';
-        if (isVIP(caseRecord)) return 'VIP';
-        return 'Neutral';
+        if (isSuspectedFraud(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SUSPECTED_FRAUD;
+        if (isMedia(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_MEDIA;
+        if (isSeriousComplaint(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SERIOUS_COMPLAINT;
+        if (isUnhappy(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_UNHAPPY;
+        if (isVIP(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP;
+        return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
     }
     
     private static Boolean isSuspectedFraud(Case caseRecord) {
-        if (caseRecord.FEC_Category__r?.Name != 'Complaint') return false;
-        if (caseRecord.FEC_Complain_Type__c != 'Normal' && caseRecord.FEC_Complain_Type__c != 'Urgent' && caseRecord.FEC_Complain_Type__c != 'High Risk') return false;
+        if (caseRecord.FEC_Category__r?.Name != FEC_ConstantCommon.FEC_CATEGORY_COMPLAINT) return false;
+        if (caseRecord.FEC_Complain_Type__c != FEC_ConstantCommon.FEC_COMPLAIN_TYPE_NORMAL && caseRecord.FEC_Complain_Type__c != FEC_ConstantCommon.FEC_COMPLAIN_TYPE_URGENT && caseRecord.FEC_Complain_Type__c != FEC_ConstantCommon.FEC_COMPLAIN_TYPE_HIGH_RISK) return false;
         String code = caseRecord.FEC_SubCategory__r?.FEC_Code__c;
-        if (code != 'CL01' && code != 'CC01') return false;
+        if (code != FEC_ConstantCommon.FEC_SUB_CATEGORY_CODE_CL01 && code != FEC_ConstantCommon.FEC_SUB_CATEGORY_CODE_CC01) return false;
         Date createdDate = getCaseCreatedDate(caseRecord);
         if (createdDate == null || createdDate < Date.today().addMonths(-6)) return false;
         return !isExcludedStatus(caseRecord.FEC_Case_Status__c);
     }
     
     private static Boolean isMedia(Case caseRecord) {
-        if (caseRecord.FEC_Category__r?.Name != 'Complaint') return false;
-        if (caseRecord.FEC_Complain_Type__c != 'Urgent') return false;
+        if (caseRecord.FEC_Category__r?.Name != FEC_ConstantCommon.FEC_CATEGORY_COMPLAINT) return false;
+        if (caseRecord.FEC_Complain_Type__c != FEC_ConstantCommon.FEC_COMPLAIN_TYPE_URGENT) return false;
         String code = caseRecord.FEC_SubCategory__r?.FEC_Code__c;
-        if (code == 'CL01' || code == 'CC01') return false;
+        if (code == FEC_ConstantCommon.FEC_SUB_CATEGORY_CODE_CL01 || code == FEC_ConstantCommon.FEC_SUB_CATEGORY_CODE_CC01) return false;
         Date createdDate = getCaseCreatedDate(caseRecord);
         if (createdDate == null || createdDate < Date.today().addMonths(-3)) return false;
         return !isExcludedStatus(caseRecord.FEC_Case_Status__c);
     }
     
     private static Boolean isSeriousComplaint(Case caseRecord) {
-        if (caseRecord.FEC_Category__r?.Name != 'Complaint') return false;
-        if (caseRecord.FEC_Complain_Type__c != 'High Risk') return false;
+        if (caseRecord.FEC_Category__r?.Name != FEC_ConstantCommon.FEC_CATEGORY_COMPLAINT) return false;
+        if (caseRecord.FEC_Complain_Type__c != FEC_ConstantCommon.FEC_COMPLAIN_TYPE_HIGH_RISK) return false;
         String code = caseRecord.FEC_SubCategory__r?.FEC_Code__c;
-        if (code == 'CL01' || code == 'CC01') return false;
+        if (code == FEC_ConstantCommon.FEC_SUB_CATEGORY_CODE_CL01 || code == FEC_ConstantCommon.FEC_SUB_CATEGORY_CODE_CC01) return false;
         Date createdDate = getCaseCreatedDate(caseRecord);
         if (createdDate == null || createdDate < Date.today().addMonths(-3)) return false;
         return !isExcludedStatus(caseRecord.FEC_Case_Status__c);
@@ -153,7 +153,7 @@ public with sharing class FEC_InteractionHighlightController {
     
     private static Boolean isExcludedStatus(String status) {
         if (String.isBlank(status)) return false;
-        return status == 'Open' || status == 'Resolved-Cancelled' || status == 'Resolved-AutoCancelled';
+        return status == FEC_ConstantCommon.CASE_STATUS_OPEN || status == FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED || status == FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED;
     }
     
     private static Boolean isUnhappy(Case caseRecord) {
@@ -179,7 +179,7 @@ public with sharing class FEC_InteractionHighlightController {
                 SELECT Id
                 FROM FEC_Customer_Segmentation__c
                 WHERE FEC_CIF_Number__c = :info.cif
-                AND FEC_Customer_Segment__c = 'VIP'
+                AND FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP
                 LIMIT 1
             ];
         } else if (String.isBlank(info.cif)) {
@@ -187,7 +187,7 @@ public with sharing class FEC_InteractionHighlightController {
                 SELECT Id
                 FROM FEC_Customer_Segmentation__c
                 WHERE Name = :info.accountOrContractName
-                AND FEC_Customer_Segment__c = 'VIP'
+                AND FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP
                 LIMIT 1
             ];
         } else {
@@ -195,7 +195,7 @@ public with sharing class FEC_InteractionHighlightController {
                 SELECT Id
                 FROM FEC_Customer_Segmentation__c
                 WHERE (Name = :info.accountOrContractName OR FEC_CIF_Number__c = :info.cif)
-                AND FEC_Customer_Segment__c = 'VIP'
+                AND FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP
                 LIMIT 1
             ];
         }
@@ -250,7 +250,7 @@ public with sharing class FEC_InteractionHighlightController {
             ];
             
             FEC_CommonUltils.logSensitiveAccess(
-                'Customer Information',
+                FEC_ConstantCommon.SECTION_CUSTOMER_INFORMATION,
                 fieldName,
                 u.Username.split('@')[0],
                 u.UserRole != null ? u.UserRole.Name : null,
