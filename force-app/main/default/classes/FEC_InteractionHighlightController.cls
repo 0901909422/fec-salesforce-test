@@ -106,12 +106,51 @@ public with sharing class FEC_InteractionHighlightController {
     }
     
     private static String determineCustomerCategory(Case caseRecord, FEC_Customer_History__c customerHistory) {
+        String uploadCategory = getCategoryFromUploadList(caseRecord);
+        if (uploadCategory != null) return uploadCategory;
         if (isSuspectedFraud(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SUSPECTED_FRAUD;
         if (isMedia(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_MEDIA;
         if (isSeriousComplaint(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SERIOUS_COMPLAINT;
-        if (isVIP(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP;
-        if (isUnhappy(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_UNHAPPY;
         return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
+    }
+
+    private static String getCategoryFromUploadList(Case caseRecord) {
+        AccountOrContractInfo info = getAccountOrContractInfo(caseRecord);
+        if (String.isBlank(info.accountOrContractName) && String.isBlank(info.cif)) return null;
+        List<FEC_Customer_Segmentation__c> segmentations;
+        if (String.isBlank(info.accountOrContractName)) {
+            segmentations = [
+                SELECT Id, FEC_Customer_Segment__c, FEC_Survey_Points__c, CreatedDate
+                FROM FEC_Customer_Segmentation__c
+                WHERE FEC_CIF_Number__c = :info.cif
+                AND (FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP OR (FEC_Survey_Points__c >= 1 AND FEC_Survey_Points__c <= 3))
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+        } else if (String.isBlank(info.cif)) {
+            segmentations = [
+                SELECT Id, FEC_Customer_Segment__c, FEC_Survey_Points__c, CreatedDate
+                FROM FEC_Customer_Segmentation__c
+                WHERE Name = :info.accountOrContractName
+                AND (FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP OR (FEC_Survey_Points__c >= 1 AND FEC_Survey_Points__c <= 3))
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+        } else {
+            segmentations = [
+                SELECT Id, FEC_Customer_Segment__c, FEC_Survey_Points__c, CreatedDate
+                FROM FEC_Customer_Segmentation__c
+                WHERE (Name = :info.accountOrContractName OR FEC_CIF_Number__c = :info.cif)
+                AND (FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP OR (FEC_Survey_Points__c >= 1 AND FEC_Survey_Points__c <= 3))
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+        }
+        if (segmentations.isEmpty()) return null;
+        FEC_Customer_Segmentation__c seg = segmentations[0];
+        if (seg.FEC_Customer_Segment__c == FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP) return FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP;
+        if (seg.FEC_Survey_Points__c >= 1 && seg.FEC_Survey_Points__c <= 3) return FEC_ConstantCommon.CUSTOMER_CATEGORY_UNHAPPY;
+        return null;
     }
     
     private static Boolean isSuspectedFraud(Case caseRecord) {
