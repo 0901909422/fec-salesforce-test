@@ -1,5 +1,5 @@
 import { getFocusedTabInfo, setTabLabel, setTabIcon } from 'lightning/platformWorkspaceApi';
-import { STR_EMPTY } from 'c/fec_CommonConst';
+import { STR_EMPTY, MSG_PHONE_ONLY_NUMBERS, MSG_PHONE_FORMAT_0_OR_84, MSG_INVALID_NATIONAL_ID_OR_PASSPORT, MSG_NATIONAL_ID_9_OR_12_CHARS, MSG_PASSPORT_1_LETTER_7_DIGITS, MSG_PASSPORT_START_UPPERCASE_THEN_7, MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7, MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY, MSG_NATIONAL_ID_9_OR_12_DIGITS, MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY, MSG_NATIONAL_ID_PASSPORT_RULES, MSG_INVALID_NATIONAL_ID, MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12 } from 'c/fec_CommonConst';
 
 const formatDate = (curr) => {
   if (!curr) {
@@ -11,7 +11,7 @@ const formatDate = (curr) => {
   const month = String(curr.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
   const day = String(curr.getDate()).padStart(2, "0");
 
-  return `${day}-${month}-${year}`;
+  return `${day}/${month}/${year}`;
 };
 
 /**
@@ -176,10 +176,10 @@ const validateUpdatedInfoPhone = (phone) => {
   const trimmed = phone.trim();
   if (trimmed === STR_EMPTY) return null;
 
-  if (!/^\d+$/.test(trimmed)) return "Phone number must only contain numbers";
+  if (!/^\d+$/.test(trimmed)) return MSG_PHONE_ONLY_NUMBERS;
 
   if (!/^(0\d{9}|84\d{9})$/.test(trimmed))
-    return "Phone number must start with 0 (10 digits) or 84 (11 digits)";
+    return MSG_PHONE_FORMAT_0_OR_84;
 
   return null;
 };
@@ -242,7 +242,7 @@ const validateUpdatedInfoEmail = (value) => {
  */
 const validateIdNumber = (value) => {
   if (value == null || typeof value !== "string") {
-    return { isValid: false, message: "Invalid National ID or Passport number" };
+    return { isValid: false, message: MSG_INVALID_NATIONAL_ID_OR_PASSPORT };
   }
   const trimmedValue = value.trim();
 
@@ -253,7 +253,7 @@ const validateIdNumber = (value) => {
     return {
       isValid: true,
       type: "National ID",
-      message: "National ID must be 9 characters or 12 characters",
+      message: MSG_NATIONAL_ID_9_OR_12_CHARS,
     };
   }
 
@@ -261,13 +261,13 @@ const validateIdNumber = (value) => {
     return {
       isValid: true,
       type: "Passport",
-      message: "Passport must be 1 uppercase letter and 7 digits",
+      message: MSG_PASSPORT_1_LETTER_7_DIGITS,
     };
   }
 
   // Phân nhánh message theo từng trường hợp invalid
   if (trimmedValue === STR_EMPTY) {
-    return { isValid: false, message: "Invalid National ID or Passport number" };
+    return { isValid: false, message: MSG_INVALID_NATIONAL_ID_OR_PASSPORT };
   }
   // Bắt đầu bằng chữ → coi như đang nhập Passport (bắt buộc chữ hoa + 7 số)
   if (/^[A-Za-z]/.test(trimmedValue)) {
@@ -275,24 +275,24 @@ const validateIdNumber = (value) => {
     if (/^[a-z]/.test(trimmedValue)) {
       return {
         isValid: false,
-        message: "Passport must start with 1 uppercase letter (A-Z) then 7 digits",
+        message: MSG_PASSPORT_START_UPPERCASE_THEN_7,
       };
     }
     if (rest.length < 7) {
       return {
         isValid: false,
-        message: "Passport must be 1 uppercase letter (A-Z) followed by 7 digits",
+        message: MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7,
       };
     }
     if (rest.length > 7) {
       return {
         isValid: false,
-        message: "Passport must be 1 uppercase letter and 7 digits only",
+        message: MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY,
       };
     }
     return {
       isValid: false,
-      message: "Passport must start with 1 uppercase letter (A-Z) then 7 digits",
+      message: MSG_PASSPORT_START_UPPERCASE_THEN_7,
     };
   }
   // Toàn số → đang nhập CMND/CCCD
@@ -301,24 +301,24 @@ const validateIdNumber = (value) => {
     if (len < 9) {
       return {
         isValid: false,
-        message: "National ID must be 9 digits or 12 digits",
+        message: MSG_NATIONAL_ID_9_OR_12_DIGITS,
       };
     }
     if (len > 12) {
       return {
         isValid: false,
-        message: "National ID must be 9 or 12 digits only",
+        message: MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY,
       };
     }
     return {
       isValid: false,
-      message: "National ID must be 9 digits or 12 digits",
+      message: MSG_NATIONAL_ID_9_OR_12_DIGITS,
     };
   }
   // Có ký tự không phải số (và không phải dạng Passport)
   return {
     isValid: false,
-    message: "National ID/Passport: digits only, or 1 uppercase letter + 7 digits for Passport",
+    message: MSG_NATIONAL_ID_PASSPORT_RULES,
   };
 };
 
@@ -331,7 +331,7 @@ const validateIdNumber = (value) => {
  */
 const validateNationalId = (value) => {
   if (value == null || typeof value !== "string") {
-    return { isValid: false, message: "Invalid National ID number" };
+    return { isValid: false, message: MSG_INVALID_NATIONAL_ID };
   }
   const trimmedValue = value.trim();
   const nationalIdRegex = /^\d{9}$|^\d{12}$/;
@@ -339,36 +339,36 @@ const validateNationalId = (value) => {
   if (nationalIdRegex.test(trimmedValue)) {
     return {
       isValid: true,
-      message: "National ID must be 9 characters or 12 characters",
+      message: MSG_NATIONAL_ID_9_OR_12_CHARS,
     };
   }
 
   // Phân nhánh message theo từng trường hợp invalid (chỉ CMND/CCCD)
   if (trimmedValue === STR_EMPTY) {
-    return { isValid: false, message: "Invalid National ID number" };
+    return { isValid: false, message: MSG_INVALID_NATIONAL_ID };
   }
   if (!/^\d+$/.test(trimmedValue)) {
     return {
       isValid: false,
-      message: "National ID must contain digits only (9 or 12 digits)",
+      message: MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12,
     };
   }
   const len = trimmedValue.length;
   if (len < 9) {
     return {
       isValid: false,
-      message: "National ID must be 9 digits or 12 digits",
+      message: MSG_NATIONAL_ID_9_OR_12_DIGITS,
     };
   }
   if (len > 12) {
     return {
       isValid: false,
-      message: "National ID must be 9 or 12 digits only",
+      message: MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY,
     };
   }
   return {
     isValid: false,
-    message: "National ID must be 9 digits or 12 digits",
+    message: MSG_NATIONAL_ID_9_OR_12_DIGITS,
   };
 };
 
