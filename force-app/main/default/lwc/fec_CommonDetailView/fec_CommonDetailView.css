@@ -17,3 +17,8 @@
     align-items: center;
     gap: 6px; 
 }
+
+.text-red {
+  color: red;
+  font-weight: 600;
+}

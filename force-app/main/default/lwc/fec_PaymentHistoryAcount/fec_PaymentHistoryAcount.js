@@ -2,17 +2,10 @@ import { LightningElement, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 /* ================= APEX ================= */
-import syncPaymentHistory
-    from '@salesforce/apex/FEC_PaymentHistoryController.syncPaymentHistory';
-
-import syncRealtimePayment
-    from '@salesforce/apex/FEC_PaymentHistoryController.syncRealtimePayment';
-
-import loadPaymentHistory
-    from '@salesforce/apex/FEC_PaymentHistoryController.loadPaymentHistory';
-
-import loadRealtimePayment
-    from '@salesforce/apex/FEC_PaymentHistoryController.loadRealtimePayment';
+import syncPaymentHistory from '@salesforce/apex/FEC_PaymentHistoryController.syncPaymentHistory';
+import syncRealtimePayment from '@salesforce/apex/FEC_PaymentHistoryController.syncRealtimePayment';
+import loadPaymentHistory from '@salesforce/apex/FEC_PaymentHistoryController.loadPaymentHistory';
+import loadRealtimePayment from '@salesforce/apex/FEC_PaymentHistoryController.loadRealtimePayment';
 
 import FEC_Total_Payment_Amount_Label from '@salesforce/label/c.FEC_Total_Payment_Amount_Label';
 
@@ -33,26 +26,29 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
 
     /* ================= COLUMNS FOR CUSTOM COMPONENT ================= */
     paymentHistoryColumns = [
-        { label: 'Payment Date', fieldName: 'paymentDate', type: 'text' },
-        { label: 'Booking Date', fieldName: 'bookingDate', type: 'text' },
+        { label: 'Payment No.', fieldName: 'paymentNo', type: 'text', cellAlign: 'center'},
+        { label: 'Payment Date', fieldName: 'paymentDate', type: 'text',cellAlign: 'center' },
+        { label: 'Booking Date', fieldName: 'bookingDate', type: 'text', cellAlign: 'center'},
         {
             label: 'Payment Amount',
             fieldName: 'paymentAmountDisplay',
             type: 'text',
+            cellAlign: 'right',
             cellAttributes: { 
                 alignment: 'right',
                 class: { fieldName: 'amountColorClass' }
             }
         },
-        { label: 'Particulars', fieldName: 'particulars', type: 'text' }
+        { label: 'Particulars', fieldName: 'particulars', type: 'text',width: '250px'}
     ];
 
     realtimePaymentColumns = [
-        { label: 'Payment Date', fieldName: 'paymentDate', type: 'text' },
+        { label: 'Payment Date', fieldName: 'paymentDate', type: 'text',cellAlign: 'center' },
         {
             label: 'Payment Amount',
             fieldName: 'paymentAmountDisplay',
             type: 'text',
+            cellAlign: 'right',
             cellAttributes: { 
                 alignment: 'right',
                 class: { fieldName: 'amountColorClass' }
