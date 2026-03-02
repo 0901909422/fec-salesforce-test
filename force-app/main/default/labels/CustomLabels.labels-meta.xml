@@ -3196,8 +3196,8 @@
         <categories>IPP</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Additional Field</value>
+        <shortDescription>TSA Name Label</shortDescription>
+        <value>TSA Name</value>
     </labels>
     <labels>
         <fullName>FEC_Tab_Additional_Field</fullName>
@@ -6668,5 +6668,89 @@
         <protected>false</protected>
         <shortDescription>Error Deleting Data</shortDescription>
         <value>Error Deleting Data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Daily_Retail_Limit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Daily Retail Limit</shortDescription>
+        <value>Daily Retail Limit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Daily_Cash_Limit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Daily Cash Limit</shortDescription>
+        <value>Daily Cash Limit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Last_Credit_Limit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Credit Limit</shortDescription>
+        <value>Last Credit Limit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Daily_Retail_Number</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Daily Retail Number</shortDescription>
+        <value>Daily Retail Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Daily_Cash_Number</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Daily Cash Number</shortDescription>
+        <value>Daily Cash Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Last_Credit_Limit_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Credit Limit Date</shortDescription>
+        <value>Last Credit Limit Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Embossing_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Embossing Name</shortDescription>
+        <value>Embossing Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Statement_Notification_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Statement Notification Type</shortDescription>
+        <value>Statement Notification Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Responsible_Unit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Responsible Unit</shortDescription>
+        <value>Responsible Unit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Date_Assigned</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Date Assigned</shortDescription>
+        <value>Date Assigned</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Responsible_Person</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Responsible Person</shortDescription>
+        <value>Responsible Person</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delinquency_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Delinquency Date</shortDescription>
+        <value>Delinquency Date</value>
     </labels>
 </CustomLabels>

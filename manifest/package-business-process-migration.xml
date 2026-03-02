@@ -125,6 +125,18 @@
         <members>FEC_Suggested_answer_Label</members>
         <members>FEC_Button_Fail</members>
         <members>FEC_Button_Pass</members>
+		<members>FEC_Daily_Retail_Limit</members>
+		<members>FEC_Daily_Cash_Limit</members>
+		<members>FEC_Last_Credit_Limit</members>
+		<members>FEC_Daily_Retail_Number</members>
+		<members>FEC_Daily_Cash_Number</members>
+		<members>FEC_Last_Credit_Limit_Date</members>
+		<members>FEC_Embossing_Name</members>
+		<members>FEC_Statement_Notification_Type</members>
+		<members>FEC_Responsible_Unit</members>
+		<members>FEC_Date_Assigned</members>
+		<members>FEC_Responsible_Person</members>
+		<members>FEC_Delinquency_Date</members>
         <name>CustomLabel</name>
     </types>
     <version>65.0</version>
