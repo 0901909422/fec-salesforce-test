@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Created_On__c</fullName>
-    <formula>CreatedDate</formula>
+    <description>Ngày giờ tạo Interaction
+Trường tạo mới để đáp ứng hiển thị trên giao diện và listview</description>
+    <formula>IF(
+    RecordType.DeveloperName = &quot;Interaction&quot;,
+    CreatedDate,
+    NULL
+)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
-    <label>Created On</label>
+    <label>Interaction Created On</label>
     <required>false</required>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>

@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Account_or_Contract__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
+    <description>số hợp đồng/ tài khoản</description>
     <label>Account/ Contract Number</label>
     <referenceTo>FEC_Customer_History__c</referenceTo>
     <relationshipLabel>Cases</relationshipLabel>

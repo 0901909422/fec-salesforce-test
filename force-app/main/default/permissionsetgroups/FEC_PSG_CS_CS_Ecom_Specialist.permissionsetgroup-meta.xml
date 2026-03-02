@@ -7,5 +7,6 @@
     <permissionSets>FEC_CS_CS_Ecom_Specialist_Master_Data_Management</permissionSets>
     <permissionSets>FEC_CS_CS_Ecom_Specialist_Search_Functions</permissionSets>
     <permissionSets>FEC_CS_CS_Ecom_Specialist_User_Management</permissionSets>
+    <permissionSets>FEC_Common_System_Setting</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>
