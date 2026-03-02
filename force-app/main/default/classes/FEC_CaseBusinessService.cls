@@ -932,7 +932,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
 
       Case updatedCase = caselst.get(0);
 
@@ -1014,7 +1014,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (changelst.isEmpty()) {
-        throw new CaseBusinessServiceException('Cannot find Stage Change.');
+        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CANNOT_FIND_STAGE_CHANGE);
       }
 
       FEC_Stage_Change__c selectedChange = changelst.get(0);
@@ -1108,10 +1108,10 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
 
       Case updatedCase = caselst.get(0);
-      updatedCase.Status = 'Resolved-Cancelled';
+      updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
 
       update updatedCase;
     } catch (Exception e) {
@@ -1128,7 +1128,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
@@ -1148,7 +1148,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = 'Resolved-Rejected';
@@ -1168,7 +1168,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = 'Resolved-Completed';
@@ -1186,10 +1186,10 @@ public with sharing class FEC_CaseBusinessService {
     ];
 
     if (caselst.isEmpty())
-      throw new CaseBusinessServiceException('Case Id is invalid.');
+      throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
 
     if (userOrQueueId == null) {
-      throw new CaseBusinessServiceException('User or Queue Id is invalid.');
+      throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_USER_QUEUE_ID_INVALID);
     }
     try {
       Case updatedCase = caselst.get(0);
@@ -1216,7 +1216,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty()) {
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
       }
 
       Case updatedCase = caselst.get(0);
@@ -1230,12 +1230,12 @@ public with sharing class FEC_CaseBusinessService {
           updatedCase.OwnerId = ownerUser.ManagerId;
         } else {
           throw new CaseBusinessServiceException(
-            'Manager not found for the current User owner.'
+            FEC_ConstantCommon.ERR_MANAGER_NOT_FOUND
           );
         }
       } else {
         throw new CaseBusinessServiceException(
-          'Current owner is a Queue; escalation to a Manager is not possible.'
+          FEC_ConstantCommon.ERR_OWNER_IS_QUEUE_ESCALATION
         );
       }
 
@@ -1243,7 +1243,7 @@ public with sharing class FEC_CaseBusinessService {
     } catch (Exception e) {
       // It's better practice to include the original exception as a cause if your custom exception supports it
       throw new CaseBusinessServiceException(
-        'Escalation failed: ' + e.getMessage()
+        FEC_ConstantCommon.ERR_ESCALATION_FAILED_PREFIX + e.getMessage()
       );
     }
   }
@@ -1263,7 +1263,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException('Case Id is invalid.');
+        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
 
       Case updatedCase = caselst.get(0);
 
@@ -1385,7 +1385,7 @@ public with sharing class FEC_CaseBusinessService {
     ];
 
     if (sourcelst.isEmpty())
-      throw new CaseBusinessServiceException('Nature of Case Id is invalid.');
+      throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_NATURE_OF_CASE_ID_INVALID);
 
     FEC_Nature_of_Case__c src = sourcelst.get(0);
 
@@ -1438,7 +1438,7 @@ public with sharing class FEC_CaseBusinessService {
     ];
 
     if (sourcelst.isEmpty())
-      throw new CaseBusinessServiceException('No Master Data Setting found.');
+      throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_NO_MASTER_DATA_SETTING_FOUND);
 
     List<FEC_Actual_Master_Data_Setting__c> targetlst = new List<FEC_Actual_Master_Data_Setting__c>();
 
@@ -2142,7 +2142,7 @@ public with sharing class FEC_CaseBusinessService {
     System.debug('historyList: ' + historyList);
     if (historyList.isEmpty()) {
       throw new CaseBusinessServiceException(
-        'Không thể thực hiện hành động Recall Action.'
+        FEC_ConstantCommon.ERR_RECALL_ACTION_NOT_ALLOWED
       );
     }
 
@@ -2150,12 +2150,12 @@ public with sharing class FEC_CaseBusinessService {
     System.debug('lastAction: ' + lastAction);
     if (lastAction.FEC_Perform_User__c != currentUserId) {
       throw new CaseBusinessServiceException(
-        'Không thể thực hiện hành động Recall Action.'
+        FEC_ConstantCommon.ERR_RECALL_ACTION_NOT_ALLOWED
       );
     }
     if (c.Owner.Type == 'User' && c.OwnerId != currentUserId) {
       throw new CaseBusinessServiceException(
-        'Không thể thực hiện hành động Recall Action.'
+        FEC_ConstantCommon.ERR_RECALL_ACTION_NOT_ALLOWED
       );
     }
     try {
