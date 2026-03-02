@@ -65,6 +65,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PROCESSED_STATUS = 'Processed';
     public static final String JSON_EXTENSION = '.json';
     public static final String SUCCESS_MESSAGE = 'Success';
+    public static final String SUCCESS_STATUS_CODE = '0';
     public static final String KEY_ID = 'id';
     public static final String KEY_NAME = 'name';
     public static final String KEY_UPLOADED_BY = 'uploadedBy';
