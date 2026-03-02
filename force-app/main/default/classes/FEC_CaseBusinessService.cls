@@ -643,7 +643,7 @@ public with sharing class FEC_CaseBusinessService {
           SELECT Id, Name, DeveloperName, Type
           FROM Group
           WHERE
-            Type = 'Queue'
+            Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
             AND DeveloperName = :stageChangelst.get(0).FEC_Next_Queue__c
         ];
 
@@ -775,7 +775,7 @@ public with sharing class FEC_CaseBusinessService {
       FEC_Draft_Remarks__c = null
     );
     if (c.IsClosed == false) {
-      toUpdate.Status = 'Pending';
+      toUpdate.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
     }
     update toUpdate;
   }
@@ -1111,7 +1111,7 @@ public with sharing class FEC_CaseBusinessService {
         throw new CaseBusinessServiceException('Case Id is invalid.');
 
       Case updatedCase = caselst.get(0);
-      updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
+      updatedCase.Status = 'Resolved-Cancelled';
 
       update updatedCase;
     } catch (Exception e) {
@@ -1131,7 +1131,7 @@ public with sharing class FEC_CaseBusinessService {
         throw new CaseBusinessServiceException('Case Id is invalid.');
 
       Case updatedCase = caselst.get(0);
-      updatedCase.Status = 'Pending';
+      updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
 
       update updatedCase;
     } catch (Exception e) {
@@ -1308,7 +1308,7 @@ public with sharing class FEC_CaseBusinessService {
               SELECT Id, Name, DeveloperName, Type
               FROM Group
               WHERE
-                Type = 'Queue'
+                Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
                 AND DeveloperName = :history.FEC_Perform_User__r.FEC_Main_Queue__c
             ];
 
@@ -2160,12 +2160,12 @@ public with sharing class FEC_CaseBusinessService {
     }
     try {
       if (
-        c.Owner.Type == 'Queue' &&
+        c.Owner.Type == FEC_ConstantCommon.GROUP_TYPE_QUEUE &&
         currentUserId == lastAction.FEC_Perform_User__c &&
         lastAction.FEC_Updated_User_Queue_ID__c == c.OwnerId
       ) {
         c.OwnerId = currentUserId;
-        c.Status = 'Pending';
+        c.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
         update c;
       }
     } catch (Exception e) {
@@ -2234,7 +2234,7 @@ public with sharing class FEC_CaseBusinessService {
       List<Group> targetQueue = [
         SELECT Id
         FROM Group
-        WHERE Type = 'Queue' AND Name = :targetQueueName
+        WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND Name = :targetQueueName
         LIMIT 1
       ];
       if (!targetQueue.isEmpty()) {
@@ -2252,7 +2252,7 @@ public with sharing class FEC_CaseBusinessService {
       Id = caseId,
       OwnerId = newOwnerId,
       FEC_Team__c = teamValue,
-      Status = 'Pending'
+      Status = FEC_ConstantCommon.CASE_STATUS_PENDING
     );
 
     try {
@@ -2590,7 +2590,7 @@ public with sharing class FEC_CaseBusinessService {
     List<Group> userQueues = [
         SELECT Name, DeveloperName  
         FROM Group 
-        WHERE Type = 'Queue' 
+        WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE 
         AND Id IN (
             SELECT GroupId 
             FROM GroupMember 
@@ -2643,7 +2643,7 @@ public with sharing class FEC_CaseBusinessService {
     return [
         SELECT Id, Name, DeveloperName
         FROM Group
-        WHERE Type = 'Queue' AND DeveloperName IN :targetQueueNames
+        WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND DeveloperName IN :targetQueueNames
         ORDER BY Name ASC
     ];
 }
