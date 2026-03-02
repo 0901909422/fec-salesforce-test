@@ -932,7 +932,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
 
       Case updatedCase = caselst.get(0);
 
@@ -1014,7 +1014,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (changelst.isEmpty()) {
-        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CANNOT_FIND_STAGE_CHANGE);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Cannot_Find_Stage_Change);
       }
 
       FEC_Stage_Change__c selectedChange = changelst.get(0);
@@ -1108,7 +1108,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
@@ -1128,7 +1128,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
@@ -1148,10 +1148,10 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
 
       Case updatedCase = caselst.get(0);
-      updatedCase.Status = 'Resolved-Rejected';
+      updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED;
 
       update updatedCase;
     } catch (Exception e) {
@@ -1168,7 +1168,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
@@ -1186,10 +1186,10 @@ public with sharing class FEC_CaseBusinessService {
     ];
 
     if (caselst.isEmpty())
-      throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
+      throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
 
     if (userOrQueueId == null) {
-      throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_USER_QUEUE_ID_INVALID);
+      throw new CaseBusinessServiceException(System.Label.FEC_MSG_User_Queue_Id_Invalid);
     }
     try {
       Case updatedCase = caselst.get(0);
@@ -1216,7 +1216,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty()) {
-        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
       }
 
       Case updatedCase = caselst.get(0);
@@ -1230,12 +1230,12 @@ public with sharing class FEC_CaseBusinessService {
           updatedCase.OwnerId = ownerUser.ManagerId;
         } else {
           throw new CaseBusinessServiceException(
-            FEC_ConstantCommon.ERR_MANAGER_NOT_FOUND
+            System.Label.FEC_MSG_Manager_Not_Found
           );
         }
       } else {
         throw new CaseBusinessServiceException(
-          FEC_ConstantCommon.ERR_OWNER_IS_QUEUE_ESCALATION
+          System.Label.FEC_MSG_Owner_Is_Queue_Escalation
         );
       }
 
@@ -1243,7 +1243,7 @@ public with sharing class FEC_CaseBusinessService {
     } catch (Exception e) {
       // It's better practice to include the original exception as a cause if your custom exception supports it
       throw new CaseBusinessServiceException(
-        FEC_ConstantCommon.ERR_ESCALATION_FAILED_PREFIX + e.getMessage()
+        System.Label.FEC_MSG_Escalation_Failed_Prefix + e.getMessage()
       );
     }
   }
@@ -1263,7 +1263,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
 
       Case updatedCase = caselst.get(0);
 
@@ -1385,7 +1385,7 @@ public with sharing class FEC_CaseBusinessService {
     ];
 
     if (sourcelst.isEmpty())
-      throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_NATURE_OF_CASE_ID_INVALID);
+      throw new CaseBusinessServiceException(System.Label.FEC_MSG_Nature_Of_Case_Id_Invalid);
 
     FEC_Nature_of_Case__c src = sourcelst.get(0);
 
@@ -1438,7 +1438,7 @@ public with sharing class FEC_CaseBusinessService {
     ];
 
     if (sourcelst.isEmpty())
-      throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_NO_MASTER_DATA_SETTING_FOUND);
+      throw new CaseBusinessServiceException(System.Label.FEC_MSG_No_Master_Data_Setting_Found);
 
     List<FEC_Actual_Master_Data_Setting__c> targetlst = new List<FEC_Actual_Master_Data_Setting__c>();
 
@@ -2142,7 +2142,7 @@ public with sharing class FEC_CaseBusinessService {
     System.debug('historyList: ' + historyList);
     if (historyList.isEmpty()) {
       throw new CaseBusinessServiceException(
-        FEC_ConstantCommon.ERR_RECALL_ACTION_NOT_ALLOWED
+        System.Label.FEC_MSG_Recall_Action_Not_Allowed
       );
     }
 
@@ -2150,12 +2150,12 @@ public with sharing class FEC_CaseBusinessService {
     System.debug('lastAction: ' + lastAction);
     if (lastAction.FEC_Perform_User__c != currentUserId) {
       throw new CaseBusinessServiceException(
-        FEC_ConstantCommon.ERR_RECALL_ACTION_NOT_ALLOWED
+        System.Label.FEC_MSG_Recall_Action_Not_Allowed
       );
     }
     if (c.Owner.Type == 'User' && c.OwnerId != currentUserId) {
       throw new CaseBusinessServiceException(
-        FEC_ConstantCommon.ERR_RECALL_ACTION_NOT_ALLOWED
+        System.Label.FEC_MSG_Recall_Action_Not_Allowed
       );
     }
     try {

@@ -5406,4 +5406,81 @@
         <shortDescription>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</shortDescription>
         <value>Customer information update failed. Please try again</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_Case_Id_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Case_Id_Invalid</shortDescription>
+        <value>Case Id is invalid.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Cannot_Find_Stage_Change</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Cannot_Find_Stage_Change</shortDescription>
+        <value>Cannot find Stage Change.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_User_Queue_Id_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_User_Queue_Id_Invalid</shortDescription>
+        <value>User or Queue Id is invalid.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Manager_Not_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Manager_Not_Found</shortDescription>
+        <value>Manager not found for the current User owner.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Owner_Is_Queue_Escalation</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Owner_Is_Queue_Escalation</shortDescription>
+        <value>Current owner is a Queue; escalation to a Manager is not possible.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Escalation_Failed_Prefix</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Escalation_Failed_Prefix</shortDescription>
+        <value>Escalation failed: </value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Nature_Of_Case_Id_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Nature_Of_Case_Id_Invalid</shortDescription>
+        <value>Nature of Case Id is invalid.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_No_Master_Data_Setting_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_No_Master_Data_Setting_Found</shortDescription>
+        <value>No Master Data Setting found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Recall_Action_Not_Allowed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Recall_Action_Not_Allowed</shortDescription>
+        <value>Không thể thực hiện hành động Recall Action.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Record_Id_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Record_Id_Invalid</shortDescription>
+        <value>Record ID is invalid.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Interaction_Highlight_Prefix</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Interaction_Highlight_Prefix</shortDescription>
+        <value>Error retrieving interaction highlight data: </value>
+    </labels>
 </CustomLabels>
