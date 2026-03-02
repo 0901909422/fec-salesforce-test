@@ -1,0 +1,217 @@
+/****************************************************************************************
+ * File Name    : Fec_SecondaryInfoAccount.js
+ * Author       : Quangdv7
+ * Date         : 2025-01-14
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-10     Quangdv7             Create
+ 
+****************************************************************************************/
+
+import { LightningElement, api, track } from 'lwc';
+import loadSecondaryAccount from '@salesforce/apex/FEC_SecondaryInfoAccountController.loadSecondaryAccount';
+import refreshSecondaryAccount from '@salesforce/apex/FEC_SecondaryInfoAccountController.refreshSecondaryAccount';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_Limit_Label from '@salesforce/label/c.FEC_Limit_Label';
+import FEC_Main_Card_Label from '@salesforce/label/c.FEC_Main_Card_Label';
+import FEC_Collections_Info_Label from '@salesforce/label/c.FEC_Collections_Info_Label';
+import FEC_Sales_Info_Label from '@salesforce/label/c.FEC_Sales_Info_Label';
+
+export default class Fec_SecondaryInfoAccount extends LightningElement {
+
+    /* ================= INPUT ================= */
+    @api recordId;
+
+    /* ================= STATE ================= */
+    @track limitFields = [];
+    @track mainCardFields = [];
+    @track collectionsInfoFields = [];
+    @track salesInfoFields = [];
+    @track dto;
+
+    isLoading = false;
+    error;
+
+    activeSections = [
+        'Limit',
+        'Main Card'
+    ];
+
+    refreshStatusMap = {
+        'Limit': 'NONE',
+        'Main Card': 'NONE',
+        'Collections Info': 'NONE',
+        'Sales Info': 'NONE'
+    };
+
+    customLabel = {
+        msgErrorAPI: FEC_MSG_Error_API_Label,
+        limitLabel: FEC_Limit_Label,
+        mainCardLabel: FEC_Main_Card_Label,
+        collectionsInfoLabel: FEC_Collections_Info_Label,
+        salesInfoLabel: FEC_Sales_Info_Label
+    }
+
+    /* ================= LIFECYCLE ================= */
+
+    connectedCallback() {
+        if (this.recordId) {
+            this.loadData();
+        }
+    }
+
+    /* ================= LOAD ================= */
+
+    loadData() {
+        this.isLoading = true;
+
+        loadSecondaryAccount({ caseId: this.recordId })
+            .then(dto => {
+                this.dto = dto;
+                this.mapLimitSection(dto, 'NONE');
+                this.mapMainCardSection(dto, 'NONE');
+                this.mapCollectionsInfoSection(dto, 'NONE');
+                this.mapSalesInfoSection(dto, 'NONE');
+                this.error = undefined;
+            })
+            .catch(err => {
+                console.error('SecondaryInfo load error', err)
+            })
+            .catch(err => {
+                console.error('SecondaryInfo load error', err);
+                this.error = err;
+            })
+            .finally(() => {
+                this.isLoading = false;
+            });
+    }
+    get hasData() {
+        return this.dto && Object.keys(this.dto).length > 0;
+    }
+
+    /* ================= REFRESH ================= */
+
+    setRefreshStatus(section, status) {
+        this.refreshStatusMap = {
+            ...this.refreshStatusMap,
+            [section]: status
+        };
+    }
+
+    handleRefresh(event) {
+        event.stopPropagation();
+
+        const section = event.detail?.section;
+        if (!section || !this.recordId) return;
+
+        this.setRefreshStatus(section, 'NONE');
+        this.isLoading = true;
+
+        refreshSecondaryAccount({ caseId: this.recordId })
+            .then(dto => {
+
+                if (section === 'Main Card') {
+                    this.mapMainCardSection(dto, 'SUCCESS');
+                }
+
+                if (section === 'Collections Info') {
+                    this.mapCollectionsInfoSection(dto, 'SUCCESS');
+                }
+
+                this.setRefreshStatus(section, 'SUCCESS');
+                this.showToast(
+                'Success',
+                `${section} refreshed successfully`,
+                'success'
+            );
+            })
+            .catch(err => {
+                console.error('Refresh SecondaryInfo error', err);
+                this.setRefreshStatus(section, 'ERROR');
+                this.showToast(
+                'Error',
+                `Failed to refresh ${section}`,
+                'error'
+            );
+            })
+            .finally(() => {
+                this.isLoading = false;
+            });
+    }
+
+    /* ================= MAP UI ================= */
+
+    mapLimitSection(dto,status) {
+        this.limitFields = [
+            this.buildField('Daily Retail Limit', dto.dailyRetailLimit,status,'FEC_Daily_Retail_Limit__c'),
+            this.buildField('Daily Cash Limit', dto.dailyCashLimit,status,'FEC_Daily_Cash_Limit__c'),
+            this.buildField('Last Credit Limit', dto.lastCreditLimit,status,'FEC_Last_Credit_Limit__c'),
+            this.buildField('Daily Retail Number', dto.dailyRetailNumber,status,'FEC_Daily_Retail_Number__c'),
+            this.buildField('Daily Cash Number', dto.dailyCashNumber,status,'FEC_Daily_Cash_Number__c'),
+            this.buildField('Last Credit Limit Date', dto.lastCreditLimitDate,status,'FEC_Last_Credit_Limit_Date__c')
+        ];
+    }
+
+    mapMainCardSection(dto, status = 'NONE') {
+        this.mainCardFields = [
+            this.buildField('Embossing Name', dto.embossingName, status,'FEC_Embossing_Name__c'),
+            this.buildField('Statement Notification Type', dto.statementNotificationType, status,'FEC_Statement_Notification_Type__c'),
+        ];
+    }
+
+    mapCollectionsInfoSection(dto, status) {
+        this.collectionsInfoFields = [
+            this.buildField('Responsible Unit', dto.responsibleUnit, status,'FEC_Responsible_Unit__c'),
+            this.buildField('Date Assigned', dto.responsiblePerson, status,'FEC_Date_Assigned__c'),'',
+            this.buildField('Responsible Person', dto.dateAssigned, status,'FEC_Responsible_Person__c'),
+            this.buildField('Delinquency Date', dto.delinquencyDate, status,'FEC_Delinquency_Date__c'),
+        ];
+    }
+    mapSalesInfoSection(dto, status) {
+        this.salesInfoFields = [
+            this.buildField('CC Code', dto.ccCode, status,'FEC_CC_Code__c'),
+            this.buildField('DSA Code', dto.dsaCode, status,'FEC_DSA_Code__c'),
+            this.buildField('TSA Code', dto.tsaCode, status,'FEC_TSA_Code__c'),
+            this.buildField('CC Name', dto.ccName, status,'FEC_CC_Name__c'),
+            this.buildField('DSA Name', dto.dsaName, status,'FEC_DSA_Name__c'),
+            this.buildField('TSA Name', dto.tsaName, status,'FEC_TSA_Name__c')
+        ];
+    }
+    /* ================= FIELD BUILDER ================= */
+
+    buildField(label, value, status,fieldApiName) {
+       const helpText =
+        fieldApiName
+            ? this.dto?.helpTexts?.[fieldApiName]
+            : null;
+           
+        return {
+            label,
+            value: value || '-',
+            syncStatus: status,
+            helpText,
+            hasHelpText: !!helpText
+        };
+    }
+
+    /* ================= ERROR + TOAST ================= */
+
+    handleError(err) {
+        this.error = err?.body?.message || err?.message || 'Unknown error';
+        this.showToast('Error', this.error, 'error');
+    }
+
+    showToast(title, message, variant) {
+        this.dispatchEvent(
+            new ShowToastEvent({
+                title,
+                message,
+                variant
+            })
+        );
+    }
+}

@@ -1,0 +1,160 @@
+.slds-badge {
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.slds-cursor_pointer {
+    cursor: pointer;
+    user-select: none;
+}
+
+.slds-cursor_pointer:hover {
+    filter: brightness(90%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== Icon Color Customization ===== */
+
+/* --- Màu sắc cho Icon USER (Customer Type) --- */
+/* Non-existing: Đỏ đậm */
+.cust-non-existing {
+    --lwc-colorTextIconDefault: #8b0000 !important;
+    --slds-c-icon-color-foreground-default: #8b0000 !important;
+}
+
+/* Existing: Xanh nhạt (Light Blue) */
+.cust-existing {
+    --lwc-colorTextIconDefault: #14f518 !important;
+    --slds-c-icon-color-foreground-default: #14f518 !important;
+}
+
+/* All: Xanh đậm (Navy Blue) */
+.cust-all {
+    --lwc-colorTextIconDefault: #037f03 !important;
+    --slds-c-icon-color-foreground-default: #037f03 !important;
+}
+
+/* --- Màu sắc cho Icon RECORD (Status) --- */
+.red-record-icon {
+    --lwc-colorTextIconDefault: #e47f7f !important;
+    --slds-c-icon-color-foreground-default: #e47f7f !important;
+}
+
+.yellow-record-icon {
+    --lwc-colorTextIconDefault: #ffb75d !important;
+    --slds-c-icon-color-foreground-default: #ffb75d !important;
+}
+
+.blue-record-icon {
+    --lwc-colorTextIconDefault: #65cd76 !important;
+    /* Xanh lá ban đầu theo code của bạn */
+    --slds-c-icon-color-foreground-default: #65cd76 !important;
+}
+
+/* ===== Table Layout Improvements ===== */
+
+/* Grid container - Using a specific class to avoid conflicts with standard SLDS grids */
+.custom-table-grid {
+    gap: 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    align-items: stretch;
+    border-left: 1px solid #d8d8d8;
+    border-right: 1px solid #d8d8d8;
+}
+
+/* Column styling within the custom grid */
+.custom-table-grid .slds-col {
+    min-width: 0;
+    padding: 8px 6px !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    border-right: 1px solid #d8d8d8;
+    height: auto;
+    min-height: 40px;
+}
+
+.custom-table-grid .slds-col:last-child {
+    border-right: none;
+}
+
+/* Specific alignments */
+.custom-table-grid .slds-col.slds-text-align_center,
+.custom-table-grid .slds-col[style*="text-align: center"] {
+    justify-content: center;
+    text-align: center;
+}
+
+/* Table styling additions */
+.slds-theme_shade.custom-table-grid {
+    background-color: #f3f3f3 !important;
+    font-weight: 600;
+    border-top: 1px solid #d8d8d8;
+}
+
+.slds-border_bottom {
+    border-bottom: 1px solid #d8d8d8;
+    width: 100%;
+}
+
+/* Header row specific styling */
+.slds-theme_shade.custom-table-grid .slds-col {
+    padding: 10px 6px !important;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #3e3e3c;
+    background-color: #f3f3f3;
+}
+
+/* Data row specific styling */
+.slds-border_bottom .custom-table-grid .slds-col {
+    font-size: 12px;
+    font-weight: 400;
+    color: #181818;
+}
+
+.slds-border_bottom:hover {
+    background-color: #f3f3f3;
+    transition: background-color 0.1s ease;
+}
+
+/* Truncate text with tooltip support */
+.slds-truncate {
+    display: block !important;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 100%;
+}
+
+/* ===== Delete Column Styling ===== */
+.custom-table-grid .col-delete.slds-col,
+.custom-table-grid .col-delete-header.slds-col {
+    padding: 0 !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: visible !important;
+    flex-shrink: 0 !important;
+    gap: 0 !important;
+}
+
+.custom-table-grid .col-delete lightning-button-icon {
+    --sds-c-button-icon-sizing-padding: 0px !important;
+    margin: 0 !important;
+    width: 20px !important;
+    height: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}

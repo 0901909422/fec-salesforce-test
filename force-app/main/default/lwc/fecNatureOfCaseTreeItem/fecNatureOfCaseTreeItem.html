@@ -1,0 +1,51 @@
+<template>
+    <li role="treeitem" aria-level={level} aria-expanded={isExpanded} style="position: relative;">
+        <div class={itemClass} onclick={handleItemClick} oncontextmenu={handleRightClick}
+            style="cursor: pointer; display: flex; align-items: center;">
+
+            <template if:true={hasChildren}>
+                <button class="slds-button slds-button_icon slds-m-right_x-small custom-toggle-button"
+                    onclick={handleToggle}>
+                    <span class="custom-square-icon">
+                        <lightning-icon icon-name={toggleIconName} size="xx-small"></lightning-icon>
+                    </span>
+                </button>
+            </template>
+            <template if:false={hasChildren}>
+                <div style="width: 14px; margin-right: 0.5rem;"></div>
+            </template>
+
+            <lightning-icon icon-name={item.iconName} size="small" class={computedIconClass}></lightning-icon>
+
+            <div class="slds-tree__item-label slds-truncate" title={displayValue}>
+                <lightning-formatted-rich-text value={highlightedDisplayValue}>
+                </lightning-formatted-rich-text>
+            </div>
+            <template if:true={showActionButtons}>
+                <div class="slds-m-left_small vertical-action-group action-box" role="group" onmouseleave={handleActionBoxMouseLeave}>
+                    <template if:true={canAddChild}>
+                        <button class="slds-button slds-button_brand custom-btn-small" onclick={triggerAddChild}>
+                            <lightning-icon icon-name="utility:add" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                            Add Child
+                        </button>
+                    </template>
+                    <template if:true={canDelete}>
+                        <button class="slds-button slds-button_destructive custom-btn-small" onclick={handleDeleteNode}>
+                            <lightning-icon icon-name="utility:delete" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                            Delete
+                        </button>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <ul if:true={isExpanded} role="group">
+            <template for:each={item.items} for:item="child">
+                <c-fec-nature-of-case-tree-item key={child.name} item={child} level={nextLevel} search-term={searchTerm}
+                    selected-node-name={selectedNodeName} display-field={displayField} parent-id={item.idType}
+                    onnodeselect={handleChildSelect}>
+                </c-fec-nature-of-case-tree-item>
+            </template>
+        </ul>
+    </li>
+</template>

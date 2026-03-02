@@ -11,6 +11,7 @@ public with sharing class FEC_FraudConstantCommon {
 	public static final String FRAUD_CASE_SERVICE_NAME = 'UpdateFraudCaseStatus';
 	public static final String FRAUD_CASE_CANCEL_NAME = 'CancelFraudCase';
 	public static final String FRAUD_CASE_CREATE_NAME = 'CreateFraudCase';
+
 	public static final String FRAUD_CASE_UPDATE_NAME = 'UpdateFraudCase';
 	public static final String FRAUD_CASE_PROCESS_NAME = 'ProcessCase';
 	
@@ -18,17 +19,12 @@ public with sharing class FEC_FraudConstantCommon {
 	public static final Integer NUMBER_MAX_LENGTH = 32768;
 
 	
-
-	
-	
-	
 	public static final String CATEGORY_KEY     = 'CATEGORY';
     public static final String SUBCATEGORY_KEY  = 'SUBCATEGORY';
     public static final String SUBCODE_KEY      = 'SUBCODE';
+
 	public static final String FIELD_NAME_VN      = 'nameVN';
 	public static final String FIELD_NAME_EN      = 'nameEN';
-
-	
 
 
     public static final String DATETIME_FORMAT_DDMMYYYHHMMSS = 'dd/MM/yyyy HH:mm:ss';
@@ -38,6 +34,7 @@ public with sharing class FEC_FraudConstantCommon {
 	public static final String INFO_APPLICATION_ID = 'AppID';
 	public static final String INFO_UIC = 'UIC';
 	public static final String INFO_VIOLATIONTYPE = 'ViolationType';
+
 	public static final String INFO_RESULT_DETAIL_CODE = 'ResultDetailCode';
 
 	public static final String INFO_APPLICATION_IDS = 'AppIDs';
@@ -54,8 +51,8 @@ public with sharing class FEC_FraudConstantCommon {
 	public static final String KEY_CREATED_DATE           = 'CreatedDate';
 	public static final String KEY_LAST_MODIFIED_DATE     = 'LastModifiedDate';
 	public static final String KEY_ADDITIONAL_PROPERTY     = 'AdditionalProperty';
-	public static final String KEY_AVAILABLE_VALUE     = 'AvailableValues';
-	
+
+	public static final String KEY_AVAILABLE_VALUE     = 'AvailableValues';	
 
 	
 
@@ -85,6 +82,7 @@ public with sharing class FEC_FraudConstantCommon {
 	public static final String MIME_TEXT_UTF8  = 'text/xml;charset=UTF-8';
 
     public static final String FRAUD_SERVICE_SOAP_ENDPOINT = 'urn:PegaRULES:SOAP:FraudCase:Services/ISCLService/GetFraudMasterData';
+
 	public static final String FRAUD_SERVICE_SOAP_CREATE_ENDPOINT = 'urn:PegaRULES:SOAP:FraudCase:Services/ISCLService/CreateFraudCase';
 	public static final String FRAUD_SERVICE_SOAP_CANCEL_ENDPOINT = 'urn:PegaRULES:SOAP:FraudCase:Services/ISCLService/CancelFraudCase';
 	public static final String FRAUD_SERVICE_SOAP_GET_MASTER_ENDPOINT = 'urn:PegaRULES:SOAP:FraudCase:Services/ISCLService/GetFraudMasterData';
@@ -123,6 +121,7 @@ public with sharing class FEC_FraudConstantCommon {
 		public final String LABEL_TYPE_MULTI    = 'MULTI';
 		public final String LABEL_TYPE_LIST     = 'LIST';
 		public final String LABEL_TYPE_PICKLIST = 'PICKLIST';
+
 	}
 	public class IntegrationPayloadField {
 		public final String CHANNEL     = 'Channel';
@@ -206,10 +205,9 @@ public with sharing class FEC_FraudConstantCommon {
 		public final String NODE_CODE                = 'Code';
 		public final String NODE_DESCRIPTION                = 'Description';
 		public final String NODE_LABEL                = 'label';
-
 		public final String NODE_VALUE                = 'value';
 		public final String NODE_PARENT_ID                = 'parentId';
-		
+
 	}
 
 	
@@ -250,8 +248,7 @@ public with sharing class FEC_FraudConstantCommon {
 		public final String CREATOR_EMAIL_FIELD = 'CreatorEmail';
 		public final String ID_FIELD = 'ID';
 		public final String VALUE_FIELD = 'Value';
-		public final String USER_TYPE_FIELD = 'UserType';		
-
+		public final String USER_TYPE_FIELD = 'UserType';
 		public final String MASTER_ADDITONAL_PROPERTIES = 'additionalProperties';
 		public final String MASTER_POSORDER = 'posOrder';
 		public final String MASTER_SUBCATEGORIES = 'subCategories';
@@ -262,6 +259,7 @@ public with sharing class FEC_FraudConstantCommon {
 		public final String MASTER_MANDATORY = 'mandatory';
 		public final String MASTER_TYPE = 'type';		
 		public final String MASTER_CATEGORIES = 'categories';
+
 		
     }
 	

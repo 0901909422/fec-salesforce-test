@@ -91,7 +91,7 @@ public class FEC_FraudCaseMockData {
         );
     }
     
-    
+
     public static FEC_IntegrationFraudCaseUtil.ServiceCasesInfo getServiceCasesInfoMockData() {
         FEC_IntegrationFraudCaseUtil.ServiceCasesInfo r3 = new FEC_IntegrationFraudCaseUtil.ServiceCasesInfo();
         r3.caseId = '5008X00000123AB';        

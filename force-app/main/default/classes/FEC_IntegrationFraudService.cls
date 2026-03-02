@@ -415,6 +415,7 @@ global with sharing class FEC_IntegrationFraudService {
      */
     private static String getIntegrationChannelCode(String code) {
         List<FEC_Channel__c> chs = [
+
             SELECT FEC_Channel_ID__c, FEC_Code__c
             FROM FEC_Channel__c
             WHERE FEC_Channel_Status__c = true
@@ -492,6 +493,7 @@ global with sharing class FEC_IntegrationFraudService {
         return emails;
     }
 
+
     /**
      * Calls external Fraud SOAP service to retrieve Fraud Master Data.
      *
@@ -504,6 +506,11 @@ global with sharing class FEC_IntegrationFraudService {
      * @return String
      *         - SOAP XML response body if callout is successful.
      *         - <ERROR>message</ERROR> if exception occurs.
+   /**
+     * Calls CIF_CustomerInfo SOAP service to retrieve fraud master data.
+     *
+     * @return SOAP response body as String
+     * @throws CalloutException if HTTP callout fails
      */
     public static String getFraudMasterData() {
 
@@ -514,6 +521,7 @@ global with sharing class FEC_IntegrationFraudService {
             request.setEndpoint(FEC_FraudConstantCommon.SET_ENPOINT_FRAUD_SERVICE);
             request.setMethod('POST');
             request.setTimeout(FEC_FraudConstantCommon.REQUEST_TIMEOUT);
+
             request.setHeader(
                 FEC_FraudConstantCommon.MIME_CONTENT_TYPE,
                 FEC_FraudConstantCommon.MIME_TEXT_UTF8
@@ -546,6 +554,22 @@ global with sharing class FEC_IntegrationFraudService {
                                 '</ns1:DateTime>' +
                             '</ns1:Sys>' +
                         '</ns1:GetFraudMasterDataRequest>' +
+                    'xmlns:urn="urn:PegaRULES:SOAP:FraudCase:Services">' +
+                    '<soapenv:Header/>' +
+                    '<soapenv:Body>' +
+                        '<urn:GetFraudMasterDataRequest>' +
+                            '<urn:Sys>' +
+                                '<urn:Channel>' +
+                                    FEC_FraudConstantCommon.SYSTEM_CHANNEL +
+                                '</urn:Channel>' +
+                                '<urn:TransactionID>' +
+                                    FEC_IntegrationFraudCaseUtil.generateUUID() +
+                                '</urn:TransactionID>' +
+                                '<urn:DateTime>' +
+                                    Datetime.now().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss') +
+                                '</urn:DateTime>' +
+                            '</urn:Sys>' +
+                        '</urn:GetFraudMasterDataRequest>' +
                     '</soapenv:Body>' +
                 '</soapenv:Envelope>';
             
@@ -576,6 +600,7 @@ global with sharing class FEC_IntegrationFraudService {
            
         }
     }
+
 
     /**
      * Calls the external Fraud Case SOAP service
@@ -1475,7 +1500,7 @@ global with sharing class FEC_IntegrationFraudService {
 
         return xml;
     }
-    
+
 
 
     public static Boolean isConnectFraudSystem() {        
@@ -1493,18 +1518,18 @@ global with sharing class FEC_IntegrationFraudService {
             System.debug(LoggingLevel.INFO, 'BODY: ' + response.getBody());
             log('BODY: ' + response.getBody());        
             if (response.getStatusCode() == 200) {
-                log('Kết nối thành công!');
+                log('Connected FIMA System');
                 return true;
             
-            } else {
-                log('Lỗi từ Server: ' + response.getStatus());
+            }  else {
+                log('Connect Failed FIMA System: ' + response.getStatus());
                 return false;
         
             }
         
-        } catch (Exception e) {
-            log('Lỗi kết nối (Timeout/DNS): ' + e.getMessage());          
+        } catch (Exception e) {       
 
+            log('Connect Failed (Timeout/DNS): ' + e.getMessage());     
             return false;
         
         }

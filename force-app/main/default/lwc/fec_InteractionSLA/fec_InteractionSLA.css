@@ -1,0 +1,160 @@
+/* ================= HOST ================= */
+:host {
+  display: block;
+}
+
+/* ================= CARD WRAPPER ================= */
+.interaction-duration-card {
+  margin-bottom: 0;
+}
+
+/* Scope SLDS card safely */
+.interaction-duration-card .slds-card {
+  background: #fff;
+  margin-bottom: 0;
+}
+
+.interaction-duration-card .slds-card__body {
+  padding: 1rem;
+  padding-bottom: 0;
+}
+
+.interaction-duration-card .slds-card__body_inner > *:last-child {
+  margin-bottom: 0;
+}
+
+/* ================= LAYOUT ================= */
+.card-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+/* ================= SECTION TITLE ================= */
+.section-title {
+  font-weight: 700;
+  text-decoration: underline;
+  margin-bottom: 0.5rem;
+  color: #03234d;
+}
+
+/* ================= DURATION ================= */
+.duration {
+  --donut-color: #3bb964;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.duration__title {
+  font-size: 1.25rem;
+}
+
+.duration__donut {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--donut-color) 0% 100%,
+    #e0e0e0 65% 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.duration__donut::before {
+  content: "";
+  width: 50px;
+  height: 50px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.duration__donut--yellow {
+  --donut-color: #ebcc20;
+}
+
+.duration__donut--red {
+  --donut-color: #ff1e00;
+}
+
+/* ================= ICONS ================= */
+.recording-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ff1e00;
+  position: relative;
+}
+
+.recording-icon::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.channel-icon {
+  width: 40px;
+  height: 40px;
+}
+
+/* ================= MILESTONES ================= */
+.milestones-card {
+  border: 1px solid #e5e5e5;
+  border-radius: 0.25rem;
+  margin-bottom: 0;
+}
+
+.milestones-card .slds-card__body {
+  padding-bottom: 0;
+}
+
+.milestone-title {
+  font-weight: 700;
+  color: #080707;
+}
+
+.milestone-icon {
+  color: #ff6b35;
+}
+
+/* ================= PROGRESS ================= */
+.progress-indicator {
+  width: 2rem;
+  height: 2rem;
+  position: relative;
+}
+
+.progress-indicator::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid #3bb964;
+  border-top-color: transparent;
+  border-right-color: transparent;
+  transform: rotate(-45deg);
+}
+
+/* ================= SHOW MORE ================= */
+.show-more-container {
+  border-top: 1px solid var(--lwc-colorBorder);
+  text-align: center;
+  padding-top: 0.25rem;
+}
+
+/* Remove SLDS button height artifact */
+.showMoreShowLess .slds-button {
+  min-height: auto;
+  line-height: 1;
+  padding-bottom: 0;
+}

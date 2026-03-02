@@ -81,6 +81,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         @AuraEnabled public String responseDescription;
     }
 
+
     /**
      * Wrapper class used to build the request payload
      * for Fraud Case integration service.
@@ -356,7 +357,6 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         @AuraEnabled public String sentTime;              // Time sent
         @AuraEnabled public String actualDeliveryTime;    // Actual delivery timestamp
     }
-
     /**
      * Wrapper class that represents the result of extracting a fraud payload.
      *
@@ -780,6 +780,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         return creator;
     }
 
+
     /**
      * Converts a Pega-formatted ISO 8601 datetime string into a Salesforce Datetime value.
      *
@@ -915,6 +916,8 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         // Format number to always have 6 digits with leading zeros
         return 'S-' + String.valueOf(rnd).leftPad(6, '0');
     }
+
+
 
     /**
      * Extracts business metadata and embedded XML from the incoming fraud payload.
@@ -1297,6 +1300,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
             rawDate.substring(0, 4);
     }
 
+
     /**
      * Retrieves an existing FEC_Integration_Case__c record
      * by external Fraud Case ID.
@@ -1323,6 +1327,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         // Return first record if exists, otherwise return null
         return existing.isEmpty() ? null : existing[0];
     }
+
 
     public static String generateUUID() {
         Blob b = Crypto.generateAesKey(128);
