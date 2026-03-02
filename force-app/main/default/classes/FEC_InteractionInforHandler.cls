@@ -39,7 +39,7 @@ public without sharing class FEC_InteractionInforHandler {
         
         // 🔐 Audit sensitive access
         FEC_CommonUltils.logSensitiveAccess(
-            'Interaction Details',
+            FEC_ConstantCommon.SECTION_INTERACTION_DETAILS,
         'Interaction Phone',
         u.Username.split('@')[0],
         u.UserRole != null ? u.UserRole.Name : null,
