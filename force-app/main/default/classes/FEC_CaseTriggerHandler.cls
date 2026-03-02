@@ -106,7 +106,6 @@ public without sharing class FEC_CaseTriggerHandler {
         isExecuting = true;
         
         try {
-            handleCaseSLAWarning(newCases, oldMap);
             handleFollowUpOnResolved(newCases, oldMap);
             handleAutoFollowUpOnUpdate(newCases, oldMap);
         } finally {
@@ -114,38 +113,6 @@ public without sharing class FEC_CaseTriggerHandler {
         }
     }
 
-    /**
-     * Method Description: Xử lý cảnh báo SLA cho Case (Warning và Violation)
-     * @param newCases Danh sách Case mới
-     * @param oldMap Map chứa giá trị cũ của Case
-     * @return void
-     * @created: 2026/01/03
-     * @modified:  
-     */
-    private void handleCaseSLAWarning(List<Case> newCases, Map<Id, Case> oldMap) {
-        List<Case> caseWarnings = new List<Case>();
-        List<Case> caseViolates = new List<Case>();
-        for (Case newCase : newCases) {
-            Case oldCase = oldMap.get(newCase.Id);
-            
-            Boolean isWarning = String.isBlank(oldCase.FEC_SLA_Warning__c) && String.isNotBlank(newCase.FEC_SLA_Warning__c);
-            Boolean isViolate = String.isBlank(oldCase.FEC_SLA_Violating_Warning__c) && String.isNotBlank(newCase.FEC_SLA_Violating_Warning__c);
-            
-            // Priority: violation > warning
-            if (isViolate) {
-                caseViolates.add(newCase);
-            } else if (isWarning) {
-                caseWarnings.add(newCase);
-            }
-        }
-        if (!caseViolates.isEmpty()) {
-            FEC_CaseSLAWarningService.handleViolation(caseViolates);
-        }
-        if (!caseWarnings.isEmpty()) {
-            FEC_CaseSLAWarningService.handleWarning(caseWarnings);
-        }
-    }
-    
     /**
      * @description Xử lý logic Follow-up khi Case được resolved
      * @param newCases Danh sách Case mới
