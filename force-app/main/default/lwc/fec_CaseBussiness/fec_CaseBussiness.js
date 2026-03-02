@@ -351,8 +351,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     teamLabel: FEC_Team_Label,
     queueLabel: FEC_Queue_Label,
     decisionLabel: FEC_Decision_Label,
-    chooseDecisionLabel: FEC_Choose_Decision_Label,
-    routingActionLabel: FEC_Routing_Action_Label
+    chooseDecisionLabel: FEC_Choose_Decision_Label
   }
 
   @api getNatureOfCaseId() {
