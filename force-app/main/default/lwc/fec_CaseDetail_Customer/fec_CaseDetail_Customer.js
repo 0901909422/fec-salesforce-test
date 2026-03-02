@@ -19,6 +19,7 @@ import clearDraftRemarks from "@salesforce/apex/FEC_CaseRemarkController.clearDr
 import FEC_Button_Save_Close from "@salesforce/label/c.FEC_Button_Save_Close";
 import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
 import FEC_MSG_Submit from "@salesforce/label/c.FEC_MSG_Submit";
+import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
 
 import { RefreshEvent } from "lightning/refresh";
 
@@ -63,6 +64,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     return FEC_Button_Submit;
   }
 
+  get caseRemarkLabel() {
+    return FEC_Case_Remark_Label;
+  }
+
+  get caseRemarkSectionLabel() {
+    return '* ' + FEC_Case_Remark_Label;
+  }
+
   /** Disable nút Submit khi đang xử lý để tránh double-click tạo 2 bản ghi. */
   get isSubmitDisabled() {
     return !this.isLoaded;
@@ -70,13 +79,15 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   @track remarklst = [];
 
-  remarkColumnlst = [
-    { label: "Case Remarks", fieldName: "FEC_Case_Remarks__c" },
-    { label: "Stage Name", fieldName: "FEC_Stage_Name__c" },
-    { label: "User", fieldName: "FEC_User__c" },
-    { label: "User Role", fieldName: "FEC_User_Role__c" },
-    { label: "Date Time", fieldName: "CreatedDate" },
-  ];
+  get remarkColumnlst() {
+    return [
+      { label: FEC_Case_Remark_Label, fieldName: "FEC_Case_Remarks__c" },
+      { label: "Stage Name", fieldName: "FEC_Stage_Name__c" },
+      { label: "User", fieldName: "FEC_User__c" },
+      { label: "User Role", fieldName: "FEC_User_Role__c" },
+      { label: "Date Time", fieldName: "CreatedDate" },
+    ];
+  }
 
   loadRemarklst = false;
 
@@ -258,7 +269,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     if (caseBusinessEle && !caseBusinessEle.validate()) isAllValid = false;
     if (!caseRemarksEle || !caseRemarksEle.validate()) {
       isAllValid = false;
-      this.errlst.push(REQUIRED_MSG.replace("{0}", "Case Remarks"));
+      this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
     }
 
     if (!isAllValid) {
