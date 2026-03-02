@@ -97,6 +97,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Actual_Master_Data_Setting__c.FEC_Masking_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Actual_Master_Data_Setting__c.FEC_Section__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -517,6 +522,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Master_Data_Setting__c.FEC_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Master_Data_Setting__c.FEC_Editable_Role__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -577,6 +587,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Master_Data_Setting__c.FEC_Masking_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Master_Data_Setting__c.FEC_Nature_Of_Case__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -628,6 +643,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Category__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Nature_of_Case__c.FEC_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -857,12 +877,12 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Routing_Action_History__c.FEC_Updated_User_Queue__c</field>
+        <field>FEC_Routing_Action_History__c.FEC_Updated_User_Queue_ID__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Routing_Action_History__c.FEC_Updated_User_Queue_ID__c</field>
+        <field>FEC_Routing_Action_History__c.FEC_Updated_User_Queue__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
