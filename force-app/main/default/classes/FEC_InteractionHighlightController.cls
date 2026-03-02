@@ -109,8 +109,8 @@ public with sharing class FEC_InteractionHighlightController {
         if (isSuspectedFraud(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SUSPECTED_FRAUD;
         if (isMedia(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_MEDIA;
         if (isSeriousComplaint(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SERIOUS_COMPLAINT;
-        if (isUnhappy(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_UNHAPPY;
         if (isVIP(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP;
+        if (isUnhappy(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_UNHAPPY;
         return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
     }
     
