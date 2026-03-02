@@ -270,7 +270,7 @@ public without sharing class FEC_KYCController {
       return null;
     }
 
-    Pattern p = Pattern.compile('\\{\\{(.*?)\\}\\}');
+    Pattern p = Pattern.compile(FEC_ConstantCommon.PATTERN_TOKEN_KYC);
     Matcher m = p.matcher(input);
 
     return m.find() ? m.group(1) : null;

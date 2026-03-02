@@ -41,6 +41,11 @@ export default class FecAdditionalFieldForm extends LightningElement {
         return !!this.recordId;
     }
 
+    /** Default status to true for new records */
+    get fieldStatusValue() {
+        return this.isNewMode ? true : undefined;
+    }
+
     // Localized labels using Custom Labels (platform handles translations)
     get labelCancel() {
         return LABEL_CANCEL;
@@ -65,7 +70,6 @@ export default class FecAdditionalFieldForm extends LightningElement {
             message: LABEL_SAVE_SUCCESS_MSG,
             variant: 'success'
         });
-        this.dispatchEvent(evt);
         this.dispatchEvent(new CustomEvent('success', { detail: event.detail }));
     }
 

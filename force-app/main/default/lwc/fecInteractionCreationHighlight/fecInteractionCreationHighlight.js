@@ -17,6 +17,8 @@ import FEC_EXECUTE_LABEL from "@salesforce/label/c.FEC_Execute_Label";
 import FEC_CREATE_CASE_BTN_LABEL from "@salesforce/label/c.FEC_Create_Case_Btn_Label";
 import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
 
+import { formatDateTime } from 'c/fec_CommonUtils';
+
 export default class FecInteractionCreationHighlight extends NavigationMixin(
   LightningElement,
 ) {
@@ -55,9 +57,7 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     if (data) {
       this.viewMode = getFieldValue(data, VIEW_MODE);
       let hasAccountOrContract = getFieldValue(data, HAS_ACCOUNT_OR_CONTRACT);
-      // if (hasAccountOrContract == false) {
-
-      // }
+      
       this.tryResetViewMode();
     } else if (error) {
       console.error("ViewMode load error", error);
@@ -118,14 +118,7 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     const value = this.record?.FEC_Last_Updated_On__c;
     if (!value) return "";
 
-    return new Date(value).toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
+    return formatDateTime(value);
   }
 
   // ===============================
@@ -143,12 +136,6 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
       ?.handleWrapUpClick?.();
   }
 
-  // handleExecute() {
-  //   resetViewMode({ recordId: this.recordId, viewMode: "handling" });
-  //   this.viewMode = "handling";
-  //   this._resetDone = false;
-
-  // }
   async handleExecute() {
     try {
       await resetViewMode({
@@ -167,27 +154,9 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   }
 
   async handleCreateCase() {
-    // this.template
-    //   .querySelector("c-fec_-interaction-s-l-a")
-    //   ?.handleCreateCase?.();
     console.log("handleCreateCase from creation highlight");
     this.isOpen = true;
-    // if (this.isConsoleNavigation) {
-    //   await openTab({
-    //     url: `/lightning/cmp/c__fec_InteractionCreateCase?c__recordId=${this.recordId}`,
-    //     focus: true
-    //   });
-    // } else {
-    //   this[NavigationMixin.Navigate]({
-    //     type: "standard__component",
-    //     attributes: {
-    //       componentName: "c__fec_InteractionCreateCase"
-    //     },
-    //     state: {
-    //       c__recordId: this.recordId
-    //     }
-    //   });
-    // }
+    
   }
 
   close() {

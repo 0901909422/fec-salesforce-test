@@ -5,9 +5,13 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
      */
     public static List<FEC_NatureOfCaseTreeItem> buildTree(List<FEC_MDM_Nature_Of_Case__c> listNOC) {
         List<FEC_NatureOfCaseTreeItem> treeItems = new List<FEC_NatureOfCaseTreeItem>();
-        if (listNOC == null || listNOC.isEmpty()) return treeItems;
+        if (listNOC == null || listNOC.isEmpty()) {
+            System.debug('===== BUILDER DEBUG: No NOC records to build tree from');
+            return treeItems;
+        }
 
         Map<String, FEC_NatureOfCaseTreeItem> mapProductType = new Map<String, FEC_NatureOfCaseTreeItem>();
+        Integer skippedCount = 0;
 
         for (FEC_MDM_Nature_Of_Case__c noc : listNOC) {
             String productTypeCode = noc.FEC_Product_Type_Name__r?.FEC_Code__c;
@@ -53,9 +57,13 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                     ptNode = mapProductType.get(productTypeCode);
                 }
                 if (noc.FEC_Product_Type_Name__r.FEC_Status__c == false) {
+                    System.debug('===== BUILDER DEBUG: Skipping inactive Product Type: ' + productTypeCode);
+                    skippedCount++;
                     continue;
                 }
             } else {
+                System.debug('===== BUILDER DEBUG: Skipping NOC with null Product Type. NOC Id: ' + noc.Id);
+                skippedCount++;
                 continue;
             }
 
@@ -196,6 +204,11 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
             ptItem.convertMapToList();
             treeItems.add(ptItem);
         }
+        
+        System.debug('===== BUILDER DEBUG: Total records processed: ' + listNOC.size());
+        System.debug('===== BUILDER DEBUG: Total records skipped: ' + skippedCount);
+        System.debug('===== BUILDER DEBUG: Total tree nodes created: ' + treeItems.size());
+        
         return treeItems;
     }
 }
