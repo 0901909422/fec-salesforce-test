@@ -2,6 +2,10 @@ import { LightningElement, api, wire } from "lwc";
 import getSensitiveDataViewAll from "@salesforce/apex/FEC_InteractionInforHandler.getSensitiveDataViewAll";
 import countSensitiveData from "@salesforce/apex/FEC_InteractionInforHandler.countSensitiveData";
 import { CurrentPageReference } from "lightning/navigation";
+import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page";
+import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
+import FEC_VIEW_ALL_SENSITIVE_LABEL from "@salesforce/label/c.FEC_Sensitive_Data_Table_Label";
+import FEC_GO_BTN from "@salesforce/label/c.FEC_Go_Button_Label";
 
 const COLUMNS = [
   { label: "Section", fieldName: "FEC_Section__c" },
@@ -25,10 +29,10 @@ export default class Fec_SensitiveDataViewAll extends LightningElement {
   @api pageSize = 10;
   columns = COLUMNS;
   labels = {
-    title: "Sensitive Data",
-    pageSizeLabel: "Records per page",
-    goToPageLabel: "Go to page",
-    goBtnLabel: "Go",
+    title: FEC_VIEW_ALL_SENSITIVE_LABEL,
+    pageSizeLabel: FEC_RECORDS_PER_PAGE_LABEL,
+    goToPageLabel: FEC_GO_TO_PAGE_LABEL,
+    goBtnLabel: FEC_GO_BTN,
   };
   /* ============== STATE ============== */
   recordId;

@@ -2,6 +2,9 @@ import { LightningElement, wire, track } from "lwc";
 import { CurrentPageReference } from "lightning/navigation";
 import getCaseListViewAll from "@salesforce/apex/FEC_InteractionInforHandler.getCaseListViewAll";
 
+import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page";
+import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
+import FEC_VIEW_ALL_LABEL from "@salesforce/label/c.FEC_View_All_Cases_Label";
 const COLUMNS = [
   {
     label: "Case ID",
@@ -36,9 +39,9 @@ export default class Fec_RelevantInteractionCaseListViewAll extends LightningEle
   // ===== Datatable =====
   columns = COLUMNS;
   labels = {
-    title: "View All Cases",
-    pageSizeLabel: "Records per page",
-    goToPageLabel: "Go to page",
+    title: FEC_VIEW_ALL_LABEL,
+    pageSizeLabel: FEC_RECORDS_PER_PAGE_LABEL,
+    goToPageLabel: FEC_GO_TO_PAGE_LABEL,
   };
   // ===== Data =====
   @track data = [];
