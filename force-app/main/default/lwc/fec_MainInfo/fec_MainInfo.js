@@ -125,7 +125,7 @@ export default class Fec_MainInfo extends LightningElement {
     get maritalStatus() { return this.data?.maritalStatus || ''; }
     get cifNumber() { return this.data?.cifNumber || ''; }
     get nationalIDPassportID() { return this.data?.nationalIDPassportID || ''; }
-    get dateOfIssue() { return this.data?.dateOfIssue || ''; }
+    get dateOfIssue() { return formatDateVNI(this.data?.dateOfIssue || ''); }
     get placeOfIssue() { return this.data?.placeOfIssue || ''; }
 
     get dateOfBirth() {

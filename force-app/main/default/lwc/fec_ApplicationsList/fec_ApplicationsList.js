@@ -14,7 +14,7 @@
 import { LightningElement, api, track } from 'lwc';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import { NavigationMixin } from 'lightning/navigation';
-import { maskValue,formatDate } from 'c/fec_CommonUtils';
+import { maskValue,formatDateVNI } from 'c/fec_CommonUtils';
 
 import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
 
@@ -105,7 +105,7 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
                 accountNumber: row.accountNumber,
                 contractNumber: row.contractNumber,
                 lastStatus: row.lastStatus,
-                updateDate: formatDate(row.updateDate),
+                updateDate: formatDateVNI(row.updateDate),
                 productGroup: row.productGroup,
                 nationalPassportID: row.nationalPassportID,
                 registrationPhone: row.registrationPhone,

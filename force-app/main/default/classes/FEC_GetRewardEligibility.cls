@@ -40,14 +40,14 @@ public with sharing class FEC_GetRewardEligibility {
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
             // ===== LOG REQUEST + RESPONSE =====
-            FEC_CommonUltils.logApi(
-                'FEC_GetRewardEligibility',
-                endpoint,
-                'POST',
-                soapBody,
-                res,
-                null
-            );
+            // FEC_CommonUltils.logApi(
+            //     'FEC_GetRewardEligibility',
+            //     endpoint,
+            //     'POST',
+            //     soapBody,
+            //     res,
+            //     null
+            // );
  
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));

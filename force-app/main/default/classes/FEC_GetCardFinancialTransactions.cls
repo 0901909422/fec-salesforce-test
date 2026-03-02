@@ -81,14 +81,14 @@ public with sharing class FEC_GetCardFinancialTransactions {
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
             // ===== LOG REQUEST + RESPONSE =====
-            FEC_CommonUltils.logApi(
-                'FEC_GetCardFinancialTransactions',
-                endpoint,
-                'POST',
-                soapBody,
-                res,
-                null
-            );
+            // FEC_CommonUltils.logApi(
+            //     'FEC_GetCardFinancialTransactions',
+            //     endpoint,
+            //     'POST',
+            //     soapBody,
+            //     res,
+            //     null
+            // );
  
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
