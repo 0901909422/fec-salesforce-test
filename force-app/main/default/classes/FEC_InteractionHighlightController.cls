@@ -116,7 +116,7 @@ public with sharing class FEC_InteractionHighlightController {
     
     private static Boolean isSuspectedFraud(Case caseRecord) {
         if (caseRecord.FEC_Category__r?.Name != 'Complaint') return false;
-        if (caseRecord.FEC_Complain_Type__c != 'Urgent' && caseRecord.FEC_Complain_Type__c != 'High Risk') return false;
+        if (caseRecord.FEC_Complain_Type__c != 'Normal' && caseRecord.FEC_Complain_Type__c != 'Urgent' && caseRecord.FEC_Complain_Type__c != 'High Risk') return false;
         String code = caseRecord.FEC_SubCategory__r?.FEC_Code__c;
         if (code != 'CL01' && code != 'CC01') return false;
         Date createdDate = getCaseCreatedDate(caseRecord);
@@ -127,6 +127,8 @@ public with sharing class FEC_InteractionHighlightController {
     private static Boolean isMedia(Case caseRecord) {
         if (caseRecord.FEC_Category__r?.Name != 'Complaint') return false;
         if (caseRecord.FEC_Complain_Type__c != 'Urgent') return false;
+        String code = caseRecord.FEC_SubCategory__r?.FEC_Code__c;
+        if (code == 'CL01' || code == 'CC01') return false;
         Date createdDate = getCaseCreatedDate(caseRecord);
         if (createdDate == null || createdDate < Date.today().addMonths(-3)) return false;
         return !isExcludedStatus(caseRecord.FEC_Case_Status__c);
@@ -135,6 +137,8 @@ public with sharing class FEC_InteractionHighlightController {
     private static Boolean isSeriousComplaint(Case caseRecord) {
         if (caseRecord.FEC_Category__r?.Name != 'Complaint') return false;
         if (caseRecord.FEC_Complain_Type__c != 'High Risk') return false;
+        String code = caseRecord.FEC_SubCategory__r?.FEC_Code__c;
+        if (code == 'CL01' || code == 'CC01') return false;
         Date createdDate = getCaseCreatedDate(caseRecord);
         if (createdDate == null || createdDate < Date.today().addMonths(-3)) return false;
         return !isExcludedStatus(caseRecord.FEC_Case_Status__c);
@@ -153,30 +157,69 @@ public with sharing class FEC_InteractionHighlightController {
     }
     
     private static Boolean isUnhappy(Case caseRecord) {
-        List<String> namesToMatch = getAccountOrContractNamesToMatch(caseRecord);
-        if (namesToMatch.isEmpty()) return false;
+        AccountOrContractInfo info = getAccountOrContractInfo(caseRecord);
+        if (String.isBlank(info.accountOrContractName)) return false;
         List<FEC_Customer_Segmentation__c> segmentations = [
             SELECT Id
             FROM FEC_Customer_Segmentation__c
-            WHERE Name IN :namesToMatch
-            AND FEC_Customer_Segment__c = 'VIP'
+            WHERE Name = :info.accountOrContractName
+            AND FEC_Survey_Points__c >= 1
+            AND FEC_Survey_Points__c <= 3
             LIMIT 1
         ];
         return !segmentations.isEmpty();
     }
 
     private static Boolean isVIP(Case caseRecord) {
-        List<String> namesToMatch = getAccountOrContractNamesToMatch(caseRecord);
-        if (namesToMatch.isEmpty()) return false;
-        List<FEC_Customer_Segmentation__c> segmentations = [
-            SELECT Id
-            FROM FEC_Customer_Segmentation__c
-            WHERE Name IN :namesToMatch
-            AND FEC_Survey_Points__c >= 1
-            AND FEC_Survey_Points__c <= 3
+        AccountOrContractInfo info = getAccountOrContractInfo(caseRecord);
+        if (String.isBlank(info.accountOrContractName) && String.isBlank(info.cif)) return false;
+        List<FEC_Customer_Segmentation__c> segmentations;
+        if (String.isBlank(info.accountOrContractName)) {
+            segmentations = [
+                SELECT Id
+                FROM FEC_Customer_Segmentation__c
+                WHERE FEC_CIF_Number__c = :info.cif
+                AND FEC_Customer_Segment__c = 'VIP'
+                LIMIT 1
+            ];
+        } else if (String.isBlank(info.cif)) {
+            segmentations = [
+                SELECT Id
+                FROM FEC_Customer_Segmentation__c
+                WHERE Name = :info.accountOrContractName
+                AND FEC_Customer_Segment__c = 'VIP'
+                LIMIT 1
+            ];
+        } else {
+            segmentations = [
+                SELECT Id
+                FROM FEC_Customer_Segmentation__c
+                WHERE (Name = :info.accountOrContractName OR FEC_CIF_Number__c = :info.cif)
+                AND FEC_Customer_Segment__c = 'VIP'
+                LIMIT 1
+            ];
+        }
+        return !segmentations.isEmpty();
+    }
+
+    private static AccountOrContractInfo getAccountOrContractInfo(Case caseRecord) {
+        AccountOrContractInfo info = new AccountOrContractInfo();
+        info.names = new List<String>();
+        if (caseRecord == null || caseRecord.FEC_Account_or_Contract__c == null) return info;
+        List<FEC_Customer_History__c> histories = [
+            SELECT Name, FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :caseRecord.FEC_Account_or_Contract__c
             LIMIT 1
         ];
-        return !segmentations.isEmpty();
+        if (histories.isEmpty()) return info;
+        FEC_Customer_History__c h = histories[0];
+        info.accountOrContractName = h.Name;
+        if (String.isNotBlank(h.Name)) info.names.add(h.Name);
+        if (String.isNotBlank(h.FEC_Account_Number__c) && !info.names.contains(h.FEC_Account_Number__c)) info.names.add(h.FEC_Account_Number__c);
+        if (String.isNotBlank(h.FEC_Contract_Number__c) && !info.names.contains(h.FEC_Contract_Number__c)) info.names.add(h.FEC_Contract_Number__c);
+        info.cif = h.FEC_CIF_Number__c;
+        return info;
     }
 
     private static List<String> getAccountOrContractNamesToMatch(Case caseRecord) {
@@ -218,6 +261,12 @@ public with sharing class FEC_InteractionHighlightController {
         }
     }
     
+    private class AccountOrContractInfo {
+        List<String> names;
+        String cif;
+        String accountOrContractName;
+    }
+
     public class InteractionHighlightData {
         @AuraEnabled public String interactionId;
         @AuraEnabled public String caseId;
