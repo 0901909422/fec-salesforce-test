@@ -11,6 +11,8 @@ const ICON_CASE = 'standard:case';
 const ICON_PREVIEW = 'utility:preview';
 const ICON_HIDE = 'utility:hide';
 const OUTCOME_CODE = 'Hoàn tất/ Đã phản hồi';
+const LOCALE_ENG = 'en-US';
+const LOCALE_VN = 'vi-VN';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -26,4 +28,6 @@ export {
     ICON_PREVIEW,
     ICON_HIDE,
     OUTCOME_CODE,
+    LOCALE_ENG,
+    LOCALE_VN,
 };

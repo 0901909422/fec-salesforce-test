@@ -139,6 +139,42 @@
 		<members>FEC_Delinquency_Date</members>
 		<members>FEC_MSG_Section_Refresh_Success</members>
         <members>FEC_MSG_Section_Refresh_Fail</members>
+        <members>FEC_Billing_Cycle</members>
+        <members>FEC_Total_Payment_Due</members>
+        <members>FEC_Last_Statement_Date</members>
+        <members>FEC_Payment_Due_Date</members>
+        <members>FEC_Minimum_Payment_Due</members>
+        <members>FEC_Next_Statement_Date</members>
+        <members>FEC_Statement</members>
+        <members>FEC_Billed_Transactions</members>
+        <members>FEC_MSG_No_statement_selected</members>
+        <members>FEC_Statement_Date</members>
+        <members>FEC_Total_Interest</members>
+        <members>FEC_Beginning_Balance</members>
+        <members>FEC_IPP_Principal</members>
+        <members>FEC_End_Balance</members>
+        <members>FEC_Total_Past_Due</members>
+        <members>FEC_Current_Payment_Due</members>
+        <members>FEC_IPP_Interest</members>
+        <members>FEC_Statement_Details</members>
+        <members>FEC_Transaction_Code</members>
+        <members>FEC_Unbilled_Transactions</members>
+        <members>FEC_Transaction_Plan</members>
+        <members>FEC_Effective_Date</members>
+        <members>FEC_Authorization_Code</members>
+        <members>FEC_Post_Date</members>
+        <members>FEC_Credit_Debit_Flag</members>
+        <members>FEC_Transaction_Amount</members>
+        <members>FEC_Currency_Code</members>
+        <members>FEC_Merchant_Description</members>
+        <members>FEC_OTP_Sent</members>
+        <members>FEC_Merchant_Category_Code</members>
+        <members>FEC_Pending_Transactions</members>
+        <members>FEC_Authorization_Response</members>
+        <members>FEC_Decline_Description</members>
+        <members>FEC_Approval_Code</members>
+        <members>FEC_Transaction</members>
+        <members>FEC_MSG_No_transaction_selected</members>
         <name>CustomLabel</name>
     </types>
     <version>65.0</version>

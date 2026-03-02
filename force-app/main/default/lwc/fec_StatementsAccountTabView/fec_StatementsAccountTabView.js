@@ -19,6 +19,22 @@ import { setConsoleTab } from 'c/fec_CommonUtils';
 import loadStatementDetails from '@salesforce/apex/FEC_StatementsAccountController.loadStatementDetails';
 import getBilledTransactions from '@salesforce/apex/FEC_StatementsAccountController.getBilledTransactions';
 
+import FEC_Statement from '@salesforce/label/c.FEC_Statement';
+import FEC_Billed_Transactions from '@salesforce/label/c.FEC_Billed_Transactions';
+import FEC_MSG_No_statement_selected from '@salesforce/label/c.FEC_MSG_No_statement_selected';
+import FEC_Total_Payment_Due from '@salesforce/label/c.FEC_Total_Payment_Due';
+import FEC_Payment_Due_Date from '@salesforce/label/c.FEC_Payment_Due_Date';
+import FEC_Minimum_Payment_Due from '@salesforce/label/c.FEC_Minimum_Payment_Due';
+import FEC_Statement_Date from '@salesforce/label/c.FEC_Statement_Date';
+import FEC_Total_Interest from '@salesforce/label/c.FEC_Total_Interest';
+import FEC_Beginning_Balance from '@salesforce/label/c.FEC_Beginning_Balance';
+import FEC_IPP_Principal from '@salesforce/label/c.FEC_IPP_Principal';
+import FEC_End_Balance from '@salesforce/label/c.FEC_End_Balance';
+import FEC_Total_Past_Due from '@salesforce/label/c.FEC_Total_Past_Due';
+import FEC_Current_Payment_Due from '@salesforce/label/c.FEC_Current_Payment_Due';
+import FEC_IPP_Interest from '@salesforce/label/c.FEC_IPP_Interest';
+import FEC_Statement_Details from '@salesforce/label/c.FEC_Statement_Details';
+
 export default class Fec_StatementsAccountTabView extends NavigationMixin(LightningElement) {
 
     // ==============================
@@ -63,6 +79,24 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
         { label: 'Merchant Description', fieldName: 'merchantDescription', type: 'text' },
         { label: 'Credit Debit Flag', fieldName: 'creditDebitFlag', type: 'text', cellAlign: 'center' }
     ];
+
+    customLabel = {
+        statementLabel: FEC_Statement,
+        billedTransactionsLabel: FEC_Billed_Transactions,
+        msgNoStatementSelected: FEC_MSG_No_statement_selected,
+        totalPaymentDueLabel: FEC_Total_Payment_Due,
+        paymentDueDateLabel: FEC_Payment_Due_Date,
+        minimumPaymentDueLabel: FEC_Minimum_Payment_Due,
+        statementDateLabel: FEC_Statement_Date,
+        totalInterestLabel: FEC_Total_Interest,
+        beginningBalanceLabel: FEC_Beginning_Balance,
+        ippPrincipalLabel: FEC_IPP_Principal,
+        endBalanceLabel: FEC_End_Balance,
+        totalPastDueLabel: FEC_Total_Past_Due,
+        currentPaymentDueLabel: FEC_Current_Payment_Due,
+        ippInterestLabel: FEC_IPP_Interest,
+        statementDetailsLabel: FEC_Statement_Details
+    }
 
     // ==============================
     // PAGE STATE
@@ -129,23 +163,23 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
         if (!this.statement) return [];
 
         const fields = [
-            { label: 'Statement Date', value: this.formatDate(this.statement.statementDate), apiName: 'FEC_Statement_Date__c' },
-            { label: 'Total Payment Due', value: this.formatNumber(this.statement.totalPaymentDue), apiName: 'FEC_Total_Payment_Due__c' },
-            { label: 'Total Interest', value: this.formatNumber(this.statement.FEC_Total_Interest__c), apiName: 'FEC_Total_Interest__c' },
-            { label: 'Beginning Balance', value: this.formatNumber(this.statement.beginningBalance), apiName: 'FEC_Beginning_Balance__c' },
-            { label: 'Payment Due Date', value: this.formatDate(this.statement.paymentDueDate), apiName: 'FEC_Payment_Due_Date__c' },
-            { label: 'Minimum Payment Due', value: this.formatNumber(this.statement.minimumPaymentDue), apiName: 'FEC_Minimum_Payment_Due__c' },
-            { label: 'IPP Principal', value: this.formatNumber(this.statement.FEC_IPP_Principal__c), apiName: 'FEC_IPP_Principal__c' },
-            { label: 'End Balance', value: this.formatNumber(this.statement.endBalance), apiName: 'FEC_End_Balance__c' },
-            { label: 'Total Past Due', value: this.formatNumber(this.statement.FEC_Total_Past_Due__c), apiName: 'FEC_Total_Past_Due__c' },
-            { label: 'Current Payment Due', value: this.formatNumber(this.statement.currentPaymentDue), apiName: 'FEC_Current_Payment_Due__c' },
-            { label: 'IPP Interest', value: this.formatNumber(this.statement.FEC_IPP_Interest__c), apiName: 'FEC_IPP_Interest__c' }
+            { label: this.customLabel.statementDateLabel, value: this.formatDate(this.statement.statementDate), apiName: 'FEC_Statement_Date__c' },
+            { label: this.customLabel.totalPaymentDueLabel, value: this.formatNumber(this.statement.totalPaymentDue), apiName: 'FEC_Total_Payment_Due__c' },
+            { label: this.customLabel.totalInterestLabel, value: this.formatNumber(this.statement.FEC_Total_Interest__c), apiName: 'FEC_Total_Interest__c' },
+            { label: this.customLabel.beginningBalanceLabel, value: this.formatNumber(this.statement.beginningBalance), apiName: 'FEC_Beginning_Balance__c' },
+            { label: this.customLabel.paymentDueDateLabel, value: this.formatDate(this.statement.paymentDueDate), apiName: 'FEC_Payment_Due_Date__c' },
+            { label: this.customLabel.minimumPaymentDueLabel, value: this.formatNumber(this.statement.minimumPaymentDue), apiName: 'FEC_Minimum_Payment_Due__c' },
+            { label: this.customLabel.ippPrincipalLabel, value: this.formatNumber(this.statement.FEC_IPP_Principal__c), apiName: 'FEC_IPP_Principal__c' },
+            { label: this.customLabel.endBalanceLabel, value: this.formatNumber(this.statement.endBalance), apiName: 'FEC_End_Balance__c' },
+            { label: this.customLabel.totalPastDueLabel, value: this.formatNumber(this.statement.FEC_Total_Past_Due__c), apiName: 'FEC_Total_Past_Due__c' },
+            { label: this.customLabel.currentPaymentDueLabel, value: this.formatNumber(this.statement.currentPaymentDue), apiName: 'FEC_Current_Payment_Due__c' },
+            { label: this.customLabel.ippInterestLabel, value: this.formatNumber(this.statement.FEC_IPP_Interest__c), apiName: 'FEC_IPP_Interest__c' }
         ];
         return [
             {
                 name: 'statementDetail',
                 columns: 4,
-                label: 'Statement Details',
+                label: this.customLabel.statementDetailsLabel,
                 fields: this.addHelpTextToFields(fields)
             }
         ];

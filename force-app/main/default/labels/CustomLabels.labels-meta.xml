@@ -6767,4 +6767,256 @@
         <shortDescription>Delinquency Date</shortDescription>
         <value>Delinquency Date</value>
     </labels>
+    <labels>
+        <fullName>FEC_Billing_Cycle</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Billing Cycle</shortDescription>
+        <value>Billing Cycle</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_Payment_Due</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Payment Due</shortDescription>
+        <value>Total Payment Due</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Last_Statement_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Statement Date</shortDescription>
+        <value>Last Statement Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Payment_Due_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment Due Date</shortDescription>
+        <value>Payment Due Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Minimum_Payment_Due</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Minimum Payment Due</shortDescription>
+        <value>Minimum Payment Due</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Next_Statement_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Next Statement Date</shortDescription>
+        <value>Next Statement Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Statement</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Statement</shortDescription>
+        <value>Statement</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Billed_Transactions</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Billed Transactions</shortDescription>
+        <value>Billed Transactions</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_No_statement_selected</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG No statement selected</shortDescription>
+        <value>No statement selected</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Statement_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Statement Date</shortDescription>
+        <value>Statement Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_Interest</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Interest</shortDescription>
+        <value>Total Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Beginning_Balance</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Beginning Balance</shortDescription>
+        <value>Beginning Balance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_IPP_Principal</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP Principal</shortDescription>
+        <value>IPP Principal</value>
+    </labels>
+    <labels>
+        <fullName>FEC_End_Balance</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>End Balance</shortDescription>
+        <value>End Balance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Total_Past_Due</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Past Due</shortDescription>
+        <value>Total Past Due</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Payment_Due</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Payment Due</shortDescription>
+        <value>Current Payment Due</value>
+    </labels>
+    <labels>
+        <fullName>FEC_IPP_Interest</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP Interest</shortDescription>
+        <value>IPP Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Statement_Details</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Statement Details</shortDescription>
+        <value>Statement Details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transaction_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transaction Code</shortDescription>
+        <value>Transaction Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Unbilled_Transactions</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unbilled Transactions</shortDescription>
+        <value>Unbilled Transactions</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transaction_Plan</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transaction Plan</shortDescription>
+        <value>Transaction Plan</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Effective_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Effective Date</shortDescription>
+        <value>Effective Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Authorization_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Authorization Code</shortDescription>
+        <value>Authorization Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Post_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Post Date</shortDescription>
+        <value>Post Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Credit_Debit_Flag</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Credit Debit Flag</shortDescription>
+        <value>Credit Debit Flag</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transaction_Amount</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transaction Amount</shortDescription>
+        <value>Transaction Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Currency_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Currency Code</shortDescription>
+        <value>Currency Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Merchant_Description</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Merchant Description</shortDescription>
+        <value>Merchant Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_OTP_Sent</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>OTP Sent</shortDescription>
+        <value>OTP Sent</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Merchant_Category_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Merchant Category Code</shortDescription>
+        <value>Merchant Category Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Pending_Transactions</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Pending Transactions</shortDescription>
+        <value>Pending Transactions</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Authorization_Response</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Authorization Response</shortDescription>
+        <value>Authorization Response</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Decline_Description</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decline Description</shortDescription>
+        <value>Decline Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Approval_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Approval Code</shortDescription>
+        <value>Approval Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transaction</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transaction</shortDescription>
+        <value>Transaction</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_No_transaction_selected</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG No transaction selected</shortDescription>
+        <value>No transaction selected</value>
+    </labels>
 </CustomLabels>
