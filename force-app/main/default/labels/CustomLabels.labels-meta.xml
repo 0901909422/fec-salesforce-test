@@ -1109,6 +1109,13 @@
         <value>Gender</value>
     </labels>
     <labels>
+        <fullName>FEC_Go_to_page_label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Go to page</shortDescription>
+        <value>Go to page</value>
+    </labels>
+    <labels>
         <fullName>FEC_Has_No_Data</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -2946,6 +2953,13 @@
         <protected>false</protected>
         <shortDescription>Reason Label</shortDescription>
         <value>Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Record_per_Page</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Record per Page</shortDescription>
+        <value>Records per page</value>
     </labels>
     <labels>
         <fullName>FEC_Reference_Info_Label</fullName>
