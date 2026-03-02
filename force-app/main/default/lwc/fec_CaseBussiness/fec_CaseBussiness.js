@@ -30,6 +30,15 @@ import FEC_ACTION_PHONE_UPDATE_HEADER from "@salesforce/label/c.FEC_ACTION_PHONE
 import FEC_MSG_ACTION_PHONE_UPDATE from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE";
 import FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS";
 import FEC_MSG_ACTION_PHONE_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE_ERROR";
+import FEC_Reason_Label from "@salesforce/label/c.FEC_Reason_Label";
+import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
+import FEC_Action_Label from "@salesforce/label/c.FEC_Action_Label";
+import FEC_Team_Label from "@salesforce/label/c.FEC_Team_Label";
+import FEC_Queue_Label from "@salesforce/label/c.FEC_Queue_Label";
+import FEC_Decision_Label from "@salesforce/label/c.FEC_Decision_Label";
+import FEC_Choose_Decision_Label from "@salesforce/label/c.FEC_Choose_Decision_Label";
+import FEC_Sub_Decision_Label from "@salesforce/label/c.FEC_Sub_Decision_Label";
+import FEC_Choose_Sub_Decision_Label from "@salesforce/label/c.FEC_Choose_Sub_Decision_Label";
 
 
 const ACTION_PHONE_UPDATE = "Phone Update";
@@ -237,7 +246,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this.fetchTransferQueues();
       }
     } else if (fieldName === "sub-decision") {
-      if (value != '--Non--') {
+      if (value != NONE_STRING) {
         this.subDecisionValue = value;
       } else {
         this.subDecisionValue = STR_EMPTY;
@@ -257,7 +266,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (userOptions.length > 0) {
           this.subDecisionOptions = [...userOptions];
         } else {
-          this.subDecisionOptions = [NONE_STRING];
+          this.subDecisionOptions = [{ label: NONE_STRING, value: NONE_STRING }];
         }
         console.log("User options:", this.subDecisionOptions);
       })
@@ -297,7 +306,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (queueOptions.length > 0) {
           this.subDecisionOptions = [...queueOptions];
         } else {
-          this.subDecisionOptions = [NONE_STRING];
+          this.subDecisionOptions = [{ label: NONE_STRING, value: NONE_STRING }];
         }
       })
       .catch((error) => console.error("Error fetching queues:", error))
