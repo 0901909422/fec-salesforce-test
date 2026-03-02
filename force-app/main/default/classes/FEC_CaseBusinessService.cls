@@ -1111,7 +1111,7 @@ public with sharing class FEC_CaseBusinessService {
         throw new CaseBusinessServiceException('Case Id is invalid.');
 
       Case updatedCase = caselst.get(0);
-      updatedCase.Status = 'Resolved-Cancelled';
+      updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
 
       update updatedCase;
     } catch (Exception e) {
