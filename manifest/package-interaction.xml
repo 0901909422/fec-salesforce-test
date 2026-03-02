@@ -34,6 +34,7 @@
 		<members>FEC_ContentDocumentTriggerHandler</members>
 		<members>FEC_ContentVersionTriggerHandler</members>
 		<members>FEC_ContentDistributionTriggerHandler</members>
+		<members>FEC_FollowUpController</members>
 		<name>ApexClass</name>
 	</types>
 	<types>

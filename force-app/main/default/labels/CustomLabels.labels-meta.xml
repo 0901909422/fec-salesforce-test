@@ -2109,6 +2109,102 @@
         <value>Vui lòng nhấn &lt;strong&gt;Refresh&lt;/strong&gt; ở mục &lt;strong&gt;Account&lt;/strong&gt; trong tab &lt;strong&gt;Main Info&lt;/strong&gt; để tải dữ liệu mới nhất</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_FollowUp_Check_Status_Error</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error checking follow status</shortDescription>
+        <value>Error checking follow status: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Get_Watchers_Error</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error getting watchers</shortDescription>
+        <value>Error getting watchers: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Case_User_Required</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case Id and User Id required</shortDescription>
+        <value>Case Id và User Id không được để trống.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Owner_Only</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Only Case Owner can add Follow-Up User</shortDescription>
+        <value>Chỉ Case Owner mới có thể thêm Follow-Up User.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_User_Not_Found</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User not found or inactive</shortDescription>
+        <value>User không tồn tại hoặc không active.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Add_User_Success</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow-Up User added successfully</shortDescription>
+        <value>Follow-Up User đã được thêm thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Add_User_Error</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error adding follow-up user</shortDescription>
+        <value>Error adding follow-up user: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Not_Following</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User has not followed this Case</shortDescription>
+        <value>Bạn chưa follow Case này.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Already_Unfollowed</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User already unfollowed this Case</shortDescription>
+        <value>Bạn đã unfollow Case này rồi.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Unfollow_Success</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unfollowed Case successfully</shortDescription>
+        <value>Unfollowed Case successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Save_Success</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow-up saved successfully</shortDescription>
+        <value>Follow-up saved successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Save_Error</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error saving follow-up</shortDescription>
+        <value>Error saving follow-up: {0}</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ContractNumber_Invalid</fullName>
         <categories>API</categories>
         <language>en_US</language>
