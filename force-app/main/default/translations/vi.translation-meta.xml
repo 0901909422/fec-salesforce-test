@@ -784,4 +784,8 @@
         <name>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</name>
         <label>Cập nhật thông tin khách hàng thất bại. Vui lòng thử lại</label>
     </customLabels>
+    <customLabels>
+        <name>FEC_Choose_Decision_Label</name>
+        <label>Chọn Quyết định</label>
+    </customLabels>
 </Translations>
