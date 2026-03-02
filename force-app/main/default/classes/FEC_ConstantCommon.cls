@@ -15,6 +15,7 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
+    public static final String CASE_INTERNAL_RECORD_TYPE_DEV_NAME = 'Internal_Case';
 
     public static final String CHANNEL_INBOUND_API = 'InboundRinging';
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
@@ -47,6 +48,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
     public static final String REQUESTOR_APS = 'APS';
     public static final String REQUESTOR_SD = 'SD';
+    public static final String REQUESTOR_VMXVERSION = '2.0';
+    public static final String REQUESTOR_CONTEXT = 'CRM';
+    public static final String REQUESTOR_ORG = 'FEC';
     public static final String REQUESTOR_RES = 'RES';
     public static final String REQUESTOR_PEGA = 'PEGA';
     public static final String REQUESTOR_ESB = 'ESB';
@@ -81,15 +85,53 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String INTERACTION_VIEW_MODE = 'view';
     public static final String INTERACTION_HANDLING_MODE = 'handling';
+    public static final String INTERACTION_REVIEW_MODE = 'review';
 
     public static final String CASE_STATUS_NEW = 'New';
     public static final String CASE_STATUS_OPEN = 'Open';
+    public static final String CASE_STATUS_PENDING = 'Pending';
 
     public static final String CASE_WEB_ORIGIN = 'Web';
+
+    public static final String GROUP_TYPE_QUEUE = 'Queue';
 
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
 
     public static final String CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER = 'Non-existing';
     public static final String CUSTOMER_HISTORY_EXISTING_CUSTOMER = 'Existing';
+
+    public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
+    public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
+
+    public static final String FEC_CATEGORY_COMPLAINT = 'Complaint';
+    public static final String FEC_COMPLAIN_TYPE_NORMAL = 'Normal';
+    public static final String FEC_COMPLAIN_TYPE_URGENT = 'Urgent';
+    public static final String FEC_COMPLAIN_TYPE_HIGH_RISK = 'High Risk';
+    public static final String FEC_SUB_CATEGORY_CODE_CL01 = 'CL01';
+    public static final String FEC_SUB_CATEGORY_CODE_CC01 = 'CC01';
+
+    public static final String CUSTOMER_CATEGORY_SUSPECTED_FRAUD = 'Suspected Fraud';
+    public static final String CUSTOMER_CATEGORY_MEDIA = 'Media';
+    public static final String CUSTOMER_CATEGORY_SERIOUS_COMPLAINT = 'Serious Complaint';
+    public static final String CUSTOMER_CATEGORY_UNHAPPY = 'Unhappy';
+    public static final String CUSTOMER_CATEGORY_VIP = 'VIP';
+    public static final String CUSTOMER_CATEGORY_NEUTRAL = 'Neutral';
+
+    public static final String SECTION_INTERACTION_DETAILS = 'Interaction Details';
+    public static final String SECTION_INTERACTION_PHONE = 'Interaction Phone';
+    public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
+
+    // Case Business Service exception messages
+    public static final String ERR_CASE_ID_INVALID = 'Case Id is invalid.';
+    public static final String ERR_CANNOT_FIND_STAGE_CHANGE = 'Cannot find Stage Change.';
+    public static final String ERR_USER_QUEUE_ID_INVALID = 'User or Queue Id is invalid.';
+    public static final String ERR_MANAGER_NOT_FOUND = 'Manager not found for the current User owner.';
+    public static final String ERR_OWNER_IS_QUEUE_ESCALATION = 'Current owner is a Queue; escalation to a Manager is not possible.';
+    public static final String ERR_ESCALATION_FAILED_PREFIX = 'Escalation failed: ';
+    public static final String ERR_NATURE_OF_CASE_ID_INVALID = 'Nature of Case Id is invalid.';
+    public static final String ERR_NO_MASTER_DATA_SETTING_FOUND = 'No Master Data Setting found.';
+    public static final String ERR_RECALL_ACTION_NOT_ALLOWED = 'Không thể thực hiện hành động Recall Action.';
+    public static final String ERR_RECORD_ID_INVALID = 'Record ID is invalid.';
+    public static final String ERR_INTERACTION_HIGHLIGHT_PREFIX = 'Error retrieving interaction highlight data: ';
 }
