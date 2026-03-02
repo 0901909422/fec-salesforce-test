@@ -780,6 +780,22 @@
         <value>Choose Decision</value>
     </labels>
     <labels>
+        <fullName>FEC_Sub_Decision_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub Decision Label</shortDescription>
+        <value>Sub Decision</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Choose_Sub_Decision_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Choose Sub Decision Label</shortDescription>
+        <value>Choose Sub Decision</value>
+    </labels>
+    <labels>
         <fullName>FEC_Default_Category</fullName>
         <language>en_US</language>
         <protected>false</protected>

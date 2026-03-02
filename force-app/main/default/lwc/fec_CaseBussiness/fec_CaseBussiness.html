@@ -281,7 +281,7 @@
             class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
           >
             <template if:true={isSubDecisionOptionsDisplay}>
-              <lightning-combobox name="sub-decision" label="Sub Decision" placeholder="Choose Sub Decision"
+              <lightning-combobox name="sub-decision" label={customLabel.subDecisionLabel} placeholder={customLabel.chooseSubDecisionLabel}
                 value={subDecisionValue} onchange={handleChange} options={subDecisionOptions} required>
               </lightning-combobox>
             </template>
