@@ -1,7 +1,9 @@
 import { LightningElement, wire, track } from "lwc";
 import { CurrentPageReference } from "lightning/navigation";
 import getRelevantCasesViewAll from "@salesforce/apex/FEC_InteractionInforHandler.getRelevantCasesViewAll";
-
+import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page";
+import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
+import FEC_RELEVANT_CASE_LIST_VIEW_ALL_LABEL from "@salesforce/label/c.FEC_RelevantCaseListViewAll_Label";
 const COLUMNS = [
   {
     label: "Case ID",
@@ -32,9 +34,9 @@ const COLUMNS = [
 export default class Fec_RelevantCaseListViewAll extends LightningElement {
   columns = COLUMNS;
   labels = {
-    title: "View All Relevant Cases",
-    pageSizeLabel: "Records per page",
-    goToPageLabel: "Go to page",
+    title: FEC_RELEVANT_CASE_LIST_VIEW_ALL_LABEL,
+    pageSizeLabel: FEC_RECORDS_PER_PAGE_LABEL,
+    goToPageLabel: FEC_GO_TO_PAGE_LABEL,
   };
 
 
