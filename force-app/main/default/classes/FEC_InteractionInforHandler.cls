@@ -42,8 +42,8 @@ public without sharing class FEC_InteractionInforHandler {
         
         // 🔐 Audit sensitive access
         FEC_CommonUltils.logSensitiveAccess(
-            'Interaction Details',
-        'Interaction Phone',
+            FEC_ConstantCommon.SECTION_INTERACTION_DETAILS,
+        FEC_ConstantCommon.SECTION_INTERACTION_PHONE,
         u.Username.split('@')[0],
         u.UserRole != null ? u.UserRole.Name : null,
         c.Id
@@ -80,7 +80,7 @@ public without sharing class FEC_InteractionInforHandler {
     @AuraEnabled(cacheable=false)
     public static void updateInteractionEmail(Id recordId, String email) {
         if (recordId == null) {
-            throw new AuraHandledException('Record ID không hợp lệ.');
+            throw new AuraHandledException(System.Label.FEC_MSG_Record_Id_Invalid);
         }
         update new Case(
             Id = recordId,
