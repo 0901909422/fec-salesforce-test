@@ -137,6 +137,8 @@
 		<members>FEC_Date_Assigned</members>
 		<members>FEC_Responsible_Person</members>
 		<members>FEC_Delinquency_Date</members>
+		<members>FEC_MSG_Section_Refresh_Success</members>
+        <members>FEC_MSG_Section_Refresh_Fail</members>
         <name>CustomLabel</name>
     </types>
     <version>65.0</version>

@@ -2578,6 +2578,20 @@
         <value>Reward eligibility check successful</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Section_Refresh_Fail</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Section Refresh Fail</shortDescription>
+        <value>Failed to refresh {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Section_Refresh_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Section Refresh Success</shortDescription>
+        <value>{0} refreshed successfully</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Select_outcome_code</fullName>
         <language>en_US</language>
         <protected>false</protected>
