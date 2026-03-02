@@ -1232,6 +1232,20 @@
         <value>Interaction Duration</value>
     </labels>
     <labels>
+        <fullName>FEC_FollowUp_Type_Until_Case_Resolved</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow-up type: Until Case is Resolved</shortDescription>
+        <value>Until Case is Resolved</value>
+    </labels>
+    <labels>
+        <fullName>Interaction_Entitlement_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Name of Entitlement record for Interaction Case</shortDescription>
+        <value>Interaction Entitlement</value>
+    </labels>
+    <labels>
         <fullName>FEC_Interaction_ID</fullName>
         <language>en_US</language>
         <protected>false</protected>
