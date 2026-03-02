@@ -3,6 +3,12 @@
     <types>
 		<members>FEC_ClickToCallHandler</members>
         <members>FEC_InteractionController</members>
+		<members>FEC_CaseRemarkController</members>
+		<members>FEC_CaseBusinessService</members>
+		<members>FEC_CommonUltils</members>
+		<members>FEC_ConstantCommon</members>
+		<members>FEC_UpdateCustomerBasicInfo</members>
+		<members>FEC_UpdateCustomerContact</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -15,6 +21,7 @@
 		<members>Case.FEC_Interaction_End_On__c</members>
 		<members>Case.FEC_Interaction_Duration__c</members>
 		<members>Case.FEC_Is_Routing_Action_Display__c</members>
+		<members>Case.FEC_Draft_Routing_Action_Code__c</members>
         <members>FEC_Customer_History__c.FEC_Customer_Type__c</members>
         <name>CustomField</name>
     </types>
@@ -39,6 +46,15 @@
         <members>fec_ClickToCallQuickActionClone</members>
 		<members>fecInteraction</members>
 		<members>fec_SensitiveDataTable</members>
+		<members>fec_CaseRemarks</members>
+		<members>fec_CaseDetail_Customer</members>
+		<members>fec_CaseBussiness</members>
+		<members>fec_CommonUtils</members>
+		<members>fec_CaseEditNOC</members>
+		<members>fec_CommonConst</members>
+		<members>fec_ComboBox</members>
+		<members>fec_CommonConst</members>
+        <members>fec_ErrorPanel</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -72,5 +88,18 @@
 		<members>Case.My_Pending_Cases</members>
 		<name>ListView</name>
 	</types>
+	<types>
+		<members>FEC_MSG_Submit</members>
+		<members>FEC_MSG_UPDATED_INFO_NOT_UPDATED</members>
+		<members>FEC_ACTION_PHONE_UPDATE_HEADER</members>
+		<members>FEC_MSG_ACTION_PHONE_UPDATE</members>
+		<members>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</members>
+		<members>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</members>
+		<name>CustomLabel</name>
+	</types>
+	<types>
+        <members>vi</members>
+        <name>Translations</name>
+    </types>
     <version>65.0</version>
 </Package>
