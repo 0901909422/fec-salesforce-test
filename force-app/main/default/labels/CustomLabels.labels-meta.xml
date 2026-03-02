@@ -1159,6 +1159,13 @@
         <value>Until Case is Resolved</value>
     </labels>
     <labels>
+        <fullName>Interaction_Entitlement_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Name of Entitlement record for Interaction Case</shortDescription>
+        <value>Interaction Entitlement</value>
+    </labels>
+    <labels>
         <fullName>FEC_Interaction_ID</fullName>
         <language>en_US</language>
         <protected>false</protected>

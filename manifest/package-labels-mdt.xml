@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+	<types>
+		<members>FEC_CaseTriggerHandler</members>
+		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>FEC_CaseTrigger</members>
+		<name>ApexTrigger</name>
+	</types>
+	<types>
+		<members>FEC_CaseID_Prefix__mdt</members>
+		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>FEC_CaseID_Prefix.FEC_Customer_Case</members>
+		<members>FEC_CaseID_Prefix.FEC_Email2Case</members>
+		<members>FEC_CaseID_Prefix.FEC_Interaction_Chat</members>
+		<members>FEC_CaseID_Prefix.FEC_Interaction_Email</members>
+		<members>FEC_CaseID_Prefix.FEC_Interaction_External</members>
+		<members>FEC_CaseID_Prefix.FEC_Interaction_F2F</members>
+		<members>FEC_CaseID_Prefix.FEC_Interaction_Inbound</members>
+		<members>FEC_CaseID_Prefix.FEC_Interaction_Internal</members>
+		<members>FEC_CaseID_Prefix.FEC_Interaction_Letter</members>
+		<members>FEC_CaseID_Prefix.FEC_Interaction_Outbound</members>
+		<name>CustomMetadata</name>
+	</types>
+	<types>
+		<members>FEC_Case_RecordType_Customer_Case</members>
+		<members>FEC_Case_RecordType_Internal_Case</members>
+		<members>FEC_CaseID_Default_Prefix</members>
+		<members>FEC_FollowUp_Type_Until_Case_Resolved</members>
+		<members>Interaction_Entitlement_Name</members>
+		<name>CustomLabel</name>
+	</types>
+	<version>65.0</version>
+</Package>
