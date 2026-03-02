@@ -16,6 +16,8 @@ const STR_NONE = 'none';
 const STR_UNDEFINED = 'undefined';
 const VIEW_MODE_HANDLING = 'handling';
 const VIEW_MODE_REVIEW = 'review';
+const ACTION_REOPEN = 'Reopen';
+const ACTION_RECALL = 'Recall';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -36,4 +38,6 @@ export {
     STR_UNDEFINED,
     VIEW_MODE_HANDLING,
     VIEW_MODE_REVIEW,
+    ACTION_REOPEN,
+    ACTION_RECALL,
 };

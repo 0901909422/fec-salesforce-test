@@ -4,7 +4,7 @@
       allow-multiple-sections-open
       active-section-name={activeSection}
     >
-      <lightning-accordion-section name="noc" label="Nature of Case">
+      <lightning-accordion-section name="noc" label={natureOfCaseLabel}>
         <template lwc:if={isEdit}>
           <lightning-layout multiple-rows>
             <lightning-layout-item padding="around-small" size="6">

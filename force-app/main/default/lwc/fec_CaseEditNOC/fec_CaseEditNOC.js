@@ -23,6 +23,8 @@ import getSubCategorylst from "@salesforce/apex/FEC_CaseEditNOCController.getSub
 import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCodelst";
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
+import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
+import { ACTION_REOPEN, ACTION_RECALL } from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
 
@@ -34,6 +36,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   get isEdit() {
     return this.modeEditCase && !this.isSubmited;
+  }
+
+  get natureOfCaseLabel() {
+    return FEC_Tab_Nature_Of_Case;
   }
 
   @wire(MessageContext)
@@ -126,10 +132,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
             const actions = business.routingActionlst || [];
             const foundActions = [];
 
-            if (actions.some((a) => a.value === "Reopen"))
-              foundActions.push("Reopen");
-            if (actions.some((a) => a.value === "Recall"))
-              foundActions.push("Recall");
+            if (actions.some((a) => a.value === ACTION_REOPEN))
+              foundActions.push(ACTION_REOPEN);
+            if (actions.some((a) => a.value === ACTION_RECALL))
+              foundActions.push(ACTION_RECALL);
 
             // 2. If any were found, call the update method with the combined string
             if (foundActions.length > 0) {
