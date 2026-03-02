@@ -52,7 +52,6 @@ public without sharing class FEC_CaseTriggerHandler {
         generateFECIdSearch(newCases);
         updateCaseParticipantsOnInsert(newCases);
         syncChannelFromInteractionForCustomerCase(newCases);
-        setEmail2CaseChannelBeforeInsert(newCases);
         assignEntitlement(newCases);
     }
 
@@ -83,7 +82,6 @@ public without sharing class FEC_CaseTriggerHandler {
         isExecuting = true;
         
         try {
-            updateEmail2CaseFieldsOnInsert(newCases);
             handleAutoFollowUpOnInsert(newCases);
         } finally {
             isExecuting = false;
@@ -96,8 +94,8 @@ public without sharing class FEC_CaseTriggerHandler {
      * @param oldMap Map chứa giá trị cũ của Case trước update
      * @return void
      * @created: 2026/01/03
-     * @modified: 2026/01/16 - Added auto follow-up on owner change
-     * @modified: 2026/02/02 - Removed updateCaseParticipantsOnUpdate (moved to onBeforeUpdate)
+     * @modified: 2026/01/16
+     * @modified: 2026/02/02
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         // Tránh recursive trigger
@@ -160,9 +158,9 @@ public without sharing class FEC_CaseTriggerHandler {
         for (Case newCase : newCases) {
             Case oldCase = oldCaseMap.get(newCase.Id);
             
-            // Kiểm tra xem Case có chuyển sang Resolved không (Status bắt đầu bằng "Resolved")
-            Boolean oldWasResolved = oldCase.Status != null && oldCase.Status.startsWith('Resolved');
-            Boolean newIsResolved = newCase.Status != null && newCase.Status.startsWith('Resolved');
+            // Kiểm tra xem Case có chuyển sang Resolved không (dùng common)
+            Boolean oldWasResolved = FEC_CommonUltils.isCaseStatusResolved(oldCase.Status);
+            Boolean newIsResolved = FEC_CommonUltils.isCaseStatusResolved(newCase.Status);
             
             if (newIsResolved && !oldWasResolved) {
                 resolvedCaseIds.add(newCase.Id);
@@ -191,14 +189,14 @@ public without sharing class FEC_CaseTriggerHandler {
         for (FEC_CaseID_Prefix__mdt config : [SELECT FEC_Record_Type__c, FEC_Channel__c, FEC_Prefix__c 
                                                FROM FEC_CaseID_Prefix__mdt]) {
             // Tạo key để tra cứu: RecordType|Channel hoặc RecordType|
-            String recordType = String.isNotBlank(config.FEC_Record_Type__c) ? config.FEC_Record_Type__c : '';
-            String channel = String.isNotBlank(config.FEC_Channel__c) ? config.FEC_Channel__c : '';
-            String key = recordType + '|' + channel;
+            String recordType = FEC_CommonUltils.defaultToEmpty(config.FEC_Record_Type__c);
+            String channel = FEC_CommonUltils.defaultToEmpty(config.FEC_Channel__c);
+            String key = recordType + FEC_ConstantCommon.KEY_DELIMITER_PIPE + channel;
             
             prefixConfigMap.put(key, config.FEC_Prefix__c);
         }
 
-        // BƯỚC 2: LẤY RECORD TYPE INFO (Query 1 lần để tối ưu)
+        // BƯỚC 2: LẤY RECORD TYPE INFO
         Set<Id> recordTypeIds = new Set<Id>();
         for (Case c : newCases) {
             if (c.RecordTypeId != null) {
@@ -241,7 +239,7 @@ public without sharing class FEC_CaseTriggerHandler {
             for (Case c : casesByPrefix.get(prefix)) {
                 currentNum++;
                 String seqStr = String.valueOf(currentNum).leftPad(4, '0');
-                c.FEC_ID_Search__c = prefix + '-' + seqStr;
+                c.FEC_ID_Search__c = prefix + FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER + seqStr;
             }
         }
     }
@@ -257,25 +255,25 @@ public without sharing class FEC_CaseTriggerHandler {
     private String determinePrefixForCase(Case c, Map<Id, String> recordTypeNameMap, Map<String, String> prefixConfigMap) {
         String prefix = 'S'; // Fallback mặc định
         String recordTypeName = recordTypeNameMap.get(c.RecordTypeId);
-        String channel = c.FEC_Channel__c != null ? String.valueOf(c.FEC_Channel__c) : '';
+        String channel = FEC_CommonUltils.defaultToEmpty(c.FEC_Channel__c);
         
         // Thứ tự ưu tiên tra cứu:
         // 1. RecordType + Channel (cho Interaction)
         // 2. RecordType only (cho Customer_Case, Internal_Case)
         
         if (String.isNotBlank(recordTypeName) && String.isNotBlank(channel)) {
-            String key = recordTypeName + '|' + channel;
+            String key = recordTypeName + FEC_ConstantCommon.KEY_DELIMITER_PIPE + channel;
             if (prefixConfigMap.containsKey(key)) {
                 prefix = prefixConfigMap.get(key);
             } else {
                 // Fallback: thử RecordType only
-                key = recordTypeName + '|';
+                key = recordTypeName + FEC_ConstantCommon.KEY_DELIMITER_PIPE;
                 if (prefixConfigMap.containsKey(key)) {
                     prefix = prefixConfigMap.get(key);
                 }
             }
         } else if (String.isNotBlank(recordTypeName)) {
-            String key = recordTypeName + '|';
+            String key = recordTypeName + FEC_ConstantCommon.KEY_DELIMITER_PIPE;
             if (prefixConfigMap.containsKey(key)) {
                 prefix = prefixConfigMap.get(key);
             }
@@ -297,13 +295,13 @@ public without sharing class FEC_CaseTriggerHandler {
             // Query tất cả FEC_ID_Search__c có prefix này
             List<Case> cases = [SELECT FEC_ID_Search__c 
                                FROM Case 
-                               WHERE FEC_ID_Search__c LIKE :prefix + '-%'
+                               WHERE FEC_ID_Search__c LIKE :prefix + FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER + '%'
                                ALL ROWS];
             
             // Tách số và tìm max
             for (Case c : cases) {
                 try {
-                    String numberPart = c.FEC_ID_Search__c.substringAfterLast('-');
+                    String numberPart = c.FEC_ID_Search__c.substringAfterLast(FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER);
                     if (numberPart.isNumeric()) {
                         Integer num = Integer.valueOf(numberPart);
                         if (num > maxNum) {
@@ -322,101 +320,14 @@ public without sharing class FEC_CaseTriggerHandler {
     }
     
     /**
-     * Method Description: Cập nhật Case (Email2Case) sau insert khi thỏa điều kiện:
-     * Origin = Email2Case, RecordType DeveloperName = Interaction, FEC_Channel__c rỗng.
-     * Gán FEC_Interaction_Email__c từ EmailMessage.FromAddress, FEC_Send_To__c, FEC_Channel__c = Email.
-     * Gọi @future để tránh thời điểm After Insert chưa có EmailMessage / FromAddress (Email-to-Case tạo EmailMessage sau Case).
-     * @param newCases Danh sách Case mới vừa được insert
-     * @return void
-     * @created: 2026/02/10 LongNH76
-     */
-      private void updateEmail2CaseFieldsOnInsert(List<Case> newCases) {
-        Id interactionRecordTypeId = getInteractionRecordTypeId();
-        if (interactionRecordTypeId == null) {
-            return;
-        }
-
-        List<Id> caseIdsToUpdate = new List<Id>();
-
-        for (Case c : newCases) {
-            if (c.Origin == 'Email2Case' && c.RecordTypeId == interactionRecordTypeId) {
-                caseIdsToUpdate.add(c.Id);
-            }
-        }
-
-        if (caseIdsToUpdate.isEmpty()) {
-            return;
-        }
-
-        // Chạy bất đồng bộ: sau khi transaction insert commit, EmailMessage đã có và FromAddress đã fill
-        updateEmail2CaseFieldsAsync(caseIdsToUpdate);
-    }
-
-    /**
-     * Before Insert: Gán FEC_Channel__c = 'Email' cho Case Email2Case (Origin=Email2Case, RecordType=Interaction, FEC_Channel__c rỗng).
-     */
-    private void setEmail2CaseChannelBeforeInsert(List<Case> newCases) {
-        Id interactionRecordTypeId = getInteractionRecordTypeId();
-        if (interactionRecordTypeId == null) {
-            return;
-        }
-        final String channelEmail = 'Email';
-        for (Case c : newCases) {
-            if (c.Origin == 'Email2Case'
-                    && c.RecordTypeId == interactionRecordTypeId
-                    && String.isBlank(c.FEC_Channel__c)) {
-                c.FEC_Channel__c = channelEmail;
-            }
-        }
-    }
-
-    /**
-     * Cập nhật Case (FEC_Interaction_Email__c, FEC_Send_To__c) chạy sau transaction insert.
-     * FEC_Channel__c đã được set trong Before Insert.
-     */
-    @future
-    public static void updateEmail2CaseFieldsAsync(List<Id> caseIds) {
-        if (caseIds == null || caseIds.isEmpty()) {
-            return;
-        }
-
-        final String sendToValue = System.Label.UBankCustomberServiceEmail;
-
-        Map<Id, String> caseIdToFromAddress = new Map<Id, String>();
-        for (EmailMessage em : [SELECT Id, ParentId, FromAddress, CreatedDate
-                                FROM EmailMessage
-                                WHERE ParentId IN :caseIds
-                                AND FromAddress != NULL AND ToAddress  = :sendToValue
-                                ORDER BY CreatedDate ASC]) {
-            if (!caseIdToFromAddress.containsKey(em.ParentId)) {
-                caseIdToFromAddress.put(em.ParentId, em.FromAddress);
-            }
-        }
-
-        List<Case> casesToDml = new List<Case>();
-        for (Id caseId : caseIds) {
-            String fromAddr = caseIdToFromAddress.get(caseId);
-            casesToDml.add(new Case(
-                Id = caseId,
-                FEC_Interaction_Email__c = fromAddr,
-                FEC_Send_To__c = sendToValue
-            ));
-        }
-
-        assignCases(casesToDml);
-
-        if (!casesToDml.isEmpty()) {
-            update casesToDml;
-        }
-    }
-
-    /**
-     * Lấy RecordType Id của Case có DeveloperName = "Interaction".
+     * Lấy RecordType Id của Case có DeveloperName = CASE_INTERACTION_RECORD_TYPE_DEV_NAME (Interaction).
+     * Dùng Schema describe, không query.
      * @return Id hoặc null nếu không tìm thấy
      */
     private static Id getInteractionRecordTypeId() {
-        List<RecordType> rts = [SELECT Id FROM RecordType WHERE DeveloperName = 'Interaction' AND SObjectType = 'Case' LIMIT 1];
-        return rts.isEmpty() ? null : rts[0].Id;
+        Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+        if (!rtMap.containsKey(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME)) return null;
+        return rtMap.get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
     }
 
     /**
@@ -440,13 +351,9 @@ public without sharing class FEC_CaseTriggerHandler {
                 userIds.add(c.CreatedById);
             }
             
-            // Thêm Owner vào danh sách follow (nếu khác Creator)
-            if (c.OwnerId != null && c.OwnerId != c.CreatedById) {
-                // Chỉ thêm Owner nếu là User (không phải Queue)
-                String ownerId = String.valueOf(c.OwnerId);
-                if (ownerId.startsWith('005')) { // User ID prefix
-                    userIds.add(c.OwnerId);
-                }
+            // Thêm Owner vào danh sách follow (nếu khác Creator); chỉ thêm nếu Owner là User (không phải Queue)
+            if (c.OwnerId != null && c.OwnerId != c.CreatedById && c.OwnerId.getSObjectType() == User.SObjectType) {
+                userIds.add(c.OwnerId);
             }
             
             if (!userIds.isEmpty()) {
@@ -456,7 +363,7 @@ public without sharing class FEC_CaseTriggerHandler {
         
         // Bulk thêm users vào follow-up với type = 'Until Case is Resolved'
         if (!caseUserMap.isEmpty()) {
-            FEC_FollowUpController.addUsersToFollowUpBulk(caseUserMap, 'Until Case is Resolved');
+            FEC_FollowUpController.addUsersToFollowUpBulk(caseUserMap, System.Label.FEC_FollowUp_Type_Until_Case_Resolved);
         }
     }
     
@@ -476,13 +383,10 @@ public without sharing class FEC_CaseTriggerHandler {
             Case oldCase = oldCaseMap.get(newCase.Id);
             Set<Id> userIds = new Set<Id>();
             
-            // Kiểm tra Owner có thay đổi không
-            if (newCase.OwnerId != null && newCase.OwnerId != oldCase.OwnerId) {
-                // Chỉ thêm Owner mới nếu là User (không phải Queue)
-                String ownerId = String.valueOf(newCase.OwnerId);
-                if (ownerId.startsWith('005')) { // User ID prefix
-                    userIds.add(newCase.OwnerId);
-                }
+            // Kiểm tra Owner có thay đổi không; chỉ thêm nếu Owner là User (không phải Queue)
+            if (newCase.OwnerId != null && newCase.OwnerId != oldCase.OwnerId
+                    && newCase.OwnerId.getSObjectType() == User.SObjectType) {
+                userIds.add(newCase.OwnerId);
             }
             
             // Có thể thêm các điều kiện khác ở đây:
@@ -496,7 +400,7 @@ public without sharing class FEC_CaseTriggerHandler {
         
         // Bulk thêm users vào follow-up với type = 'Until Case is Resolved'
         if (!caseUserMap.isEmpty()) {
-            FEC_FollowUpController.addUsersToFollowUpBulk(caseUserMap, 'Until Case is Resolved');
+            FEC_FollowUpController.addUsersToFollowUpBulk(caseUserMap, System.Label.FEC_FollowUp_Type_Until_Case_Resolved);
         }
     }
     
@@ -538,13 +442,9 @@ public without sharing class FEC_CaseTriggerHandler {
                 continue;
             }
             
-            // Kiểm tra Owner là User (không phải Queue)
-            if (c.OwnerId != null) {
-                String ownerId = String.valueOf(c.OwnerId);
-                if (ownerId.startsWith('005')) { // User ID prefix
-                    // Add OwnerID vào FEC_Case_Participants__c
-                    c.FEC_Case_Participants__c = addParticipant(c.FEC_Case_Participants__c, c.OwnerId);
-                }
+            // Kiểm tra Owner là User (không phải Queue); add OwnerId vào FEC_Case_Participants__c
+            if (c.OwnerId != null && c.OwnerId.getSObjectType() == User.SObjectType) {
+                c.FEC_Case_Participants__c = addParticipant(c.FEC_Case_Participants__c, c.OwnerId);
             }
         }
     }
@@ -557,7 +457,7 @@ public without sharing class FEC_CaseTriggerHandler {
      * @param oldCaseMap Map chứa các giá trị cũ của Case
      * @return void
      * @created: 2026/01/29 Toannd61
-     * @modified: 2026/02/02 - Fixed to work in Before Update context (no DML needed)
+     * @modified: 2026/02/02 - 
      */
     private void updateCaseParticipantsOnUpdate(List<Case> newCases, Map<Id, Case> oldCaseMap) {
         // Lọc các Case có Owner thay đổi
@@ -567,15 +467,12 @@ public without sharing class FEC_CaseTriggerHandler {
         for (Case newCase : newCases) {
             Case oldCase = oldCaseMap.get(newCase.Id);
             
-            // Kiểm tra Owner có thay đổi không
-            if (newCase.OwnerId != null && newCase.OwnerId != oldCase.OwnerId) {
-                // Chỉ xử lý nếu Owner mới là User (không phải Queue)
-                String ownerId = String.valueOf(newCase.OwnerId);
-                if (ownerId.startsWith('005')) { // User ID prefix
-                    casesToUpdate.add(newCase);
-                    if (newCase.RecordTypeId != null) {
-                        recordTypeIds.add(newCase.RecordTypeId);
-                    }
+            // Kiểm tra Owner có thay đổi không; chỉ xử lý nếu Owner mới là User (không phải Queue)
+            if (newCase.OwnerId != null && newCase.OwnerId != oldCase.OwnerId
+                    && newCase.OwnerId.getSObjectType() == User.SObjectType) {
+                casesToUpdate.add(newCase);
+                if (newCase.RecordTypeId != null) {
+                    recordTypeIds.add(newCase.RecordTypeId);
                 }
             }
         }
@@ -696,11 +593,11 @@ public without sharing class FEC_CaseTriggerHandler {
         Map<String, Schema.RecordTypeInfo> rtMap =
             Schema.SObjectType.Case.getRecordTypeInfosByName();
 
-        if (!rtMap.containsKey('Interaction')) {
+        if (!rtMap.containsKey(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME)) {
             return;
         }
 
-        Id interactionRtId = rtMap.get('Interaction').getRecordTypeId();
+        Id interactionRtId = rtMap.get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
 
         String entitlementName = System.Label.Interaction_Entitlement_Name;
 
@@ -726,204 +623,4 @@ public without sharing class FEC_CaseTriggerHandler {
         }
     }
 
-    /*
-     * MAIN METHOD
-     * Call from BEFORE INSERT trigger
-     */
-    public static void assignCases(List<Case> casesToAssign) {
-
-        if (casesToAssign == null || casesToAssign.isEmpty()) {
-            return;
-        }
-
-        Map<Id, UserInfo> userMap = buildUserInfoMap();
-
-        if (userMap.isEmpty()) {
-            return;
-        }
-
-        for (Case c : casesToAssign) {
-
-            Id selectedUser = getBestUser(userMap);
-
-            if (selectedUser == null) {
-                break; // no more capacity
-            }
-
-            c.OwnerId = selectedUser;
-
-            // reduce remaining capacity
-            UserInfo info = userMap.get(selectedUser);
-            info.remainingCapacity = info.remainingCapacity - 1;
-            info.openCases = info.openCases + 1;
-        }
-    }
-
-    /*
-     * Build user map with:
-     * - Total capacity
-     * - Open case count
-     * - Remaining capacity
-     * - Highest skill level
-     */
-    private static Map<Id, UserInfo> buildUserInfoMap() {
-
-        List<ServiceResourceSkill> skillList = [
-            SELECT FEC_Capacity__c,
-                   SkillLevel,
-                   ServiceResource.RelatedRecordId
-            FROM ServiceResourceSkill
-            WHERE FEC_Capacity__c > 0
-            AND Skill.DeveloperName = 'Ubank_Email' AND FEC_Active__c = true
-        ];
-
-        Map<Id, Decimal> totalCapacityMap = new Map<Id, Decimal>();
-        Map<Id, Decimal> skillMap = new Map<Id, Decimal>();
-
-        // Aggregate capacity + highest skill
-        for (ServiceResourceSkill srs : skillList) {
-
-            if (srs.ServiceResource == null ||
-                srs.ServiceResource.RelatedRecordId == null) {
-                continue;
-            }
-
-            Id userId = srs.ServiceResource.RelatedRecordId;
-            Decimal capacity = srs.FEC_Capacity__c != null
-                ? srs.FEC_Capacity__c
-                : 0;
-
-            Decimal level = srs.SkillLevel != null
-                ? srs.SkillLevel
-                : 0;
-
-            // Sum capacity
-            totalCapacityMap.put(
-                userId,
-                totalCapacityMap.containsKey(userId)
-                    ? totalCapacityMap.get(userId) + capacity
-                    : capacity
-            );
-
-            // Highest skill
-            skillMap.put(
-                userId,
-                skillMap.containsKey(userId)
-                    ? Math.max(skillMap.get(userId), level)
-                    : level
-            );
-        }
-
-        if (totalCapacityMap.isEmpty()) {
-            return new Map<Id, UserInfo>();
-        }
-
-        // Count open cases
-        Map<Id, Integer> openCaseMap = new Map<Id, Integer>();
-
-        for (AggregateResult ar : [
-            SELECT OwnerId, COUNT(Id) total
-            FROM Case
-            WHERE IsClosed = false
-            AND OwnerId IN :totalCapacityMap.keySet()
-            GROUP BY OwnerId
-        ]) {
-            openCaseMap.put(
-                (Id) ar.get('OwnerId'),
-                (Integer) ar.get('total')
-            );
-        }
-
-        // Build final user map
-        Map<Id, UserInfo> userMap = new Map<Id, UserInfo>();
-
-        for (Id userId : totalCapacityMap.keySet()) {
-
-            Decimal totalCapacity = totalCapacityMap.get(userId);
-            Integer openCases = openCaseMap.containsKey(userId)
-                ? openCaseMap.get(userId)
-                : 0;
-
-            Decimal remaining = totalCapacity - openCases;
-
-            if (remaining > 0) {
-                userMap.put(
-                    userId,
-                    new UserInfo(
-                        remaining,
-                        openCases,
-                        skillMap.get(userId)
-                    )
-                );
-            }
-        }
-
-        return userMap;
-    }
-
-    /*
-     * FINAL SELECTION RULES
-     *
-     * 1️⃣ Highest Remaining Capacity
-     * 2️⃣ If tie → Lowest Open Case Count
-     * 3️⃣ If tie → Highest Skill Level
-     */
-    private static Id getBestUser(Map<Id, UserInfo> userMap) {
-
-        Id selectedUser;
-        Decimal maxRemaining = null;
-        Integer minOpenCases = null;
-        Decimal maxSkill = null;
-
-        for (Id userId : userMap.keySet()) {
-
-            UserInfo info = userMap.get(userId);
-
-            if (info.remainingCapacity <= 0) {
-                continue;
-            }
-
-            if (maxRemaining == null ||
-
-                // Rule 1
-                info.remainingCapacity > maxRemaining ||
-
-                // Rule 2
-                (info.remainingCapacity == maxRemaining &&
-                 (minOpenCases == null ||
-                  info.openCases < minOpenCases)) ||
-
-                // Rule 3
-                (info.remainingCapacity == maxRemaining &&
-                 info.openCases == minOpenCases &&
-                 (maxSkill == null ||
-                  info.skillLevel > maxSkill))
-            ) {
-                selectedUser = userId;
-                maxRemaining = info.remainingCapacity;
-                minOpenCases = info.openCases;
-                maxSkill = info.skillLevel;
-            }
-        }
-
-        return selectedUser;
-    }
-
-    /*
-     * Internal structure to hold all comparison data
-     */
-    /*
-     * Internal structure
-     */
-    private class UserInfo {
-        Decimal remainingCapacity;
-        Integer openCases;
-        Decimal skillLevel;
-
-        UserInfo(Decimal capacity, Integer cases, Decimal level) {
-            this.remainingCapacity = capacity;
-            this.openCases = cases;
-            this.skillLevel = level;
-        }
-    }
 }

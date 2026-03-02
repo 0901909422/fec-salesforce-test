@@ -22,6 +22,33 @@ public with sharing class FEC_CommonUltils {
     return Pattern.matches(regex, email);
   }
 
+  /**
+   * Kiểm tra Case Status có thuộc nhóm Resolved hay không (bắt đầu bằng prefix Resolved).
+   * @param status Case Status (có thể null)
+   * @return true nếu status không rỗng và bắt đầu bằng FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED
+   */
+  public static Boolean isCaseStatusResolved(String status) {
+    return String.isNotBlank(status) && status.startsWith(FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED);
+  }
+
+  /**
+   * Trả về chuỗi gốc nếu không blank, ngược lại trả về STR_EMPTY.
+   * @param str Chuỗi cần kiểm tra (có thể null)
+   * @return str nếu không blank, ngược lại FEC_ConstantCommon.STR_EMPTY
+   */
+  public static String defaultToEmpty(String str) {
+    return String.isNotBlank(str) ? str : FEC_ConstantCommon.STR_EMPTY;
+  }
+
+  /**
+   * Trả về String.valueOf(obj) nếu obj != null, ngược lại STR_EMPTY.
+   * @param obj Giá trị bất kỳ (Id, String, ... có thể null)
+   * @return Chuỗi biểu diễn obj hoặc FEC_ConstantCommon.STR_EMPTY
+   */
+  public static String defaultToEmpty(Object obj) {
+    return obj != null ? String.valueOf(obj) : FEC_ConstantCommon.STR_EMPTY;
+  }
+
   public static Boolean isPhone(String phone) {
     if (String.isBlank(phone)) {
       return false;
