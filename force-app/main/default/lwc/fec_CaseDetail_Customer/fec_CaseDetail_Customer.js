@@ -27,7 +27,12 @@ import getRemarklst from "@salesforce/apex/FEC_CaseRemarkController.getRemarklst
 const REQUIRED_MSG = "{0} can't be Blank";
 
 import { formatDateTime } from "c/fec_CommonUtils";
-import { STR_EMPTY } from "c/fec_CommonConst";
+import {
+  STR_EMPTY,
+  STR_UNDEFINED,
+  VIEW_MODE_HANDLING,
+  VIEW_MODE_REVIEW,
+} from "c/fec_CommonConst";
 
 export default class Fec_CaseDetail_Customer extends LightningElement {
   @api recordId;
@@ -98,7 +103,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   connectedCallback() {
     resetViewMode({
       recordId: this.recordId,
-      viewMode: "review",
+      viewMode: VIEW_MODE_REVIEW,
     });
 
     this.loadRemarkHistory();
@@ -125,13 +130,13 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   }
 
   handleMessage(message) {
-    if (message == null || typeof message.isModeEdit === "undefined") return;
+    if (message == null || typeof message.isModeEdit === STR_UNDEFINED) return;
 
     this.modeEditCase = message.isModeEdit === true;
 
     resetViewMode({
       recordId: this.recordId,
-      viewMode: this.modeEditCase ? "handling" : "review",
+      viewMode: this.modeEditCase ? VIEW_MODE_HANDLING : VIEW_MODE_REVIEW,
     })
       .then((res) => {
         this.dispatchEvent(new RefreshEvent());
