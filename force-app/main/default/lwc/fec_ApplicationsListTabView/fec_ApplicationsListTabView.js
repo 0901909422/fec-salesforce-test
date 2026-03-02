@@ -31,28 +31,28 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
     /* ================= FIELD CONFIG ================= */
 
     applicationFields = [
-        { label: 'Application ID', fieldName: 'applicationId', fieldApiName: 'fec_application_id__c' },
-        { label: 'Last Status', fieldName: 'lastStatus', fieldApiName: 'fec_last_status__c' },
-        { label: 'National / Passport ID', fieldName: 'nationalPassportID', fieldApiName: 'fec_national_passport_id__c', toggle: true },
-        { label: 'Current Address', fieldName: 'currentAddress', fieldApiName: 'fec_current_address__c' },
-        { label: 'Account Number', fieldName: 'accountNumber', fieldApiName: 'fec_account_number__c' },
-        { label: 'Updated Date', fieldName: 'updateDate', fieldApiName: 'fec_updated_date__c' },
-        { label: 'Registration Phone', fieldName: 'registrationPhone', fieldApiName: 'fec_registration_phone__c', toggle: true },
-        { label: 'Permanent Address', fieldName: 'permanentAddress', fieldApiName: 'fec_permanent_address__c' },
-        { label: 'Contract Number', fieldName: 'contractNumber', fieldApiName: 'fec_contract_number__c' },
-        { label: 'Product Group', fieldName: 'productGroup', fieldApiName: 'fec_product_group__c' },
-        { label: 'Registration Email', fieldName: 'registrationEmail', fieldApiName: 'fec_registration_email__c' },
-        { label: 'Office Address', fieldName: 'officeAddress', fieldApiName: 'fec_office_address__c' }
+        { label: 'Application ID', fieldName: 'applicationId', fieldApiName: 'FEC_Application_ID__c' },
+        { label: 'Last Status', fieldName: 'lastStatus', fieldApiName: 'FEC_Last_Status__c' },
+        { label: 'National / Passport ID', fieldName: 'nationalPassportID', fieldApiName: 'FEC_National_Passport_ID__c', toggle: true },
+        { label: 'Current Address', fieldName: 'currentAddress', fieldApiName: 'FEC_Current_Address__c' },
+        { label: 'Account Number', fieldName: 'accountNumber', fieldApiName: 'FEC_Account_Number__c' },
+        { label: 'Updated Date', fieldName: 'updateDate', fieldApiName: 'FEC_Updated_Date__c' },
+        { label: 'Registration Phone', fieldName: 'registrationPhone', fieldApiName: 'FEC_Registration_Phone__c', toggle: true },
+        { label: 'Permanent Address', fieldName: 'permanentAddress', fieldApiName: 'FEC_Permanent_Address__c' },
+        { label: 'Contract Number', fieldName: 'contractNumber', fieldApiName: 'FEC_Contract_Number__c' },
+        { label: 'Product Group', fieldName: 'productGroup', fieldApiName: 'FEC_Product_Group__c' },
+        { label: 'Registration Email', fieldName: 'registrationEmail', fieldApiName: 'FEC_Registration_Email__c' },
+        { label: 'Office Address', fieldName: 'officeAddress', fieldApiName: 'FEC_Office_Address__c' }
     ];
 
     salesFields = [
-        { label: 'CC Code', fieldName: 'ccCode', fieldApiName: 'fec_cc_code__c' },
-        { label: 'DSA Code', fieldName: 'dSACode', fieldApiName: 'fec_dsa_code__c' },
-        { label: 'TSA Code', fieldName: 'tSACode', fieldApiName: 'fec_tsa_code__c'}, 
+        { label: 'CC Code', fieldName: 'ccCode', fieldApiName: 'FEC_CC_Code__c' },
+        { label: 'DSA Code', fieldName: 'dSACode', fieldApiName: 'FEC_DSA_Code__c' },
+        { label: 'TSA Code', fieldName: 'tSACode', fieldApiName: 'FEC_TSA_Code__c'}, 
         { isSpacer: true },
-        { label: 'CC Name', fieldName: 'ccName', fieldApiName: 'fec_cc_name__c' },
-        { label: 'DSA Name', fieldName: 'dSAName', fieldApiName: 'fec_dsa_name__c' },
-        { label: 'TSA Name', fieldName: 'tSAName', fieldApiName: 'fec_tsa_name__c' }
+        { label: 'CC Name', fieldName: 'ccName', fieldApiName: 'FEC_CC_Name__c' },
+        { label: 'DSA Name', fieldName: 'dSAName', fieldApiName: 'FEC_DSA_Name__c' },
+        { label: 'TSA Name', fieldName: 'tSAName', fieldApiName: 'FEC_TSA_Name__c' }
     ];
 
     /* ================= NAV ================= */
@@ -79,6 +79,10 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
         loadApplicationDetail({ applicationListId: this.applicationListId })
             .then(res => {
                 this.record = res;
+                setConsoleTab(
+                    'ApplicationsList Detail',
+                    'standard:record'
+                );
             })
             .catch(err => {
                 console.error('Load application detail failed', err);
@@ -86,11 +90,6 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
             .finally(() => {
                 this.isLoading = false;
             });
-    }
-
-    /* ================= SET TABNAME ================= */
-    connectedCallback() {
-        setConsoleTab('ApplicationsList Detail', 'standard:record');
     }
 
     /* ================= SECTIONS ================= */
@@ -156,7 +155,7 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
                 }
             }
 
-            const apiName = cfg.fieldApiName?.toLowerCase();
+            const apiName = cfg.fieldApiName;
             const helpText = apiName
                 ? this.record?.helpTexts?.[apiName]
                 : null;
@@ -172,6 +171,29 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
                 isEmpty: false
             };
         });
+    }
+
+    /* ================= TOGGLE HANDLER ================= */
+
+    handleToggle(event) {
+        const { fieldName, sectionName } = event.detail;
+
+        // ===== NATIONAL ID =====
+        if (fieldName === 'nationalPassportID') {
+            this.showNationalID = !this.showNationalID;
+            if (this.showNationalID) {
+                this.logSensitive(sectionName, 'National / Passport ID');
+            }
+            return;
+        }
+
+        // ===== PHONE =====
+        if (fieldName === 'registrationPhone') {
+            this.showPhone = !this.showPhone;
+            if (this.showPhone) {
+                this.logSensitive(sectionName, 'Registration Phone');
+            }
+        }
     }
     
     /* ================= LOG SENSITIVE ================= */
