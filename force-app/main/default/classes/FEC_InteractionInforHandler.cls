@@ -11,7 +11,10 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Last_Updated_On__c,
                FEC_Last_Updated_By__c,
                FEC_Outcome_Code__c,
-               FEC_Interaction_Remarks__c, 
+               FEC_Interaction_Remarks__c,
+               FEC_Interaction_Email__c,
+               FEC_Send_To__c,
+               ParentId,
                IsClosed
         FROM Case
         WHERE Id = :recordId
@@ -46,6 +49,15 @@ public without sharing class FEC_InteractionInforHandler {
         c.Id
             );
         
+        // FEC_Sensitive_Data__c sensitiveData = new FEC_Sensitive_Data__c(
+        //     FEC_Section__c = 'Interaction Details',
+        // Name = 'Interaction Phone',
+        // FEC_User__c = u.Username.split('@')[0],
+        // FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
+        // FEC_Related_Case__c = c.Id
+        //     );
+        // insert sensitiveData;
+        
         return c.FEC_Phone_Number__c;
     }
     
@@ -64,10 +76,17 @@ public without sharing class FEC_InteractionInforHandler {
         
         return FEC_CommonUltils.maskPhone(phone);
     }
-    
-    
-    
-    
+
+    @AuraEnabled(cacheable=false)
+    public static void updateInteractionEmail(Id recordId, String email) {
+        if (recordId == null) {
+            throw new AuraHandledException('Record ID không hợp lệ.');
+        }
+        update new Case(
+            Id = recordId,
+            FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
+        );
+    }
     
     @AuraEnabled(cacheable=true)
     public static Id getInteractionIdFromCustomerCase(Id caseId) {
@@ -641,13 +660,34 @@ public without sharing class FEC_InteractionInforHandler {
     }
     
     @AuraEnabled
-    public static void resetViewMode(Id recordId, String viewMode) {
-        if (recordId == null) return;
-        
+    public static String resetViewMode(Id recordId, String viewMode) {
+        if (recordId == null)
+        return null;
+
+        List<Case> caselst = [
+            SELECT
+                Id,
+                RecordType.DeveloperName,
+                FEC_First_Access__c,
+                FEC_Interaction_View_Mode__c
+            FROM Case
+            WHERE Id = :recordId
+        ];
+
+        if (caselst.isEmpty())
+            return null;
+
+        viewMode = caselst.get(0).FEC_First_Access__c
+            ? caselst.get(0).FEC_Interaction_View_Mode__c
+            : viewMode;
+
         update new Case(
             Id = recordId,
-        FEC_Interaction_View_Mode__c = viewMode
-            );
+            FEC_Interaction_View_Mode__c = viewMode,
+            FEC_First_Access__c = false
+        );
+
+        return viewMode;
     }
     
     @AuraEnabled
