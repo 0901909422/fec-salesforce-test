@@ -80,7 +80,7 @@
 
             // 2. Prepare Sys Data
             String transId = UUID.randomUUID().toString();
-            String requestorId = String.isNotBlank(FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN) ? FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN : 'PEGA_CSM';
+            String requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
             String reqTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
 
             // 3. Construct XML Request
