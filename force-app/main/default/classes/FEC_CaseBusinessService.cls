@@ -1171,7 +1171,7 @@ public with sharing class FEC_CaseBusinessService {
         throw new CaseBusinessServiceException(FEC_ConstantCommon.ERR_CASE_ID_INVALID);
 
       Case updatedCase = caselst.get(0);
-      updatedCase.Status = 'Resolved-Completed';
+      updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
 
       update updatedCase;
     } catch (Exception e) {
@@ -1670,7 +1670,7 @@ public with sharing class FEC_CaseBusinessService {
 
     // DateTime: lightning-input-field expects ISO8601 with timezone offset
     if (dtype == Schema.DisplayType.DateTime) {
-      return ((DateTime) value).formatGmt('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
+      return ((DateTime) value).formatGmt(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z);
     }
 
     // Everything else
@@ -2242,7 +2242,7 @@ public with sharing class FEC_CaseBusinessService {
       } else {
         // Ném lỗi nếu không tìm thấy Queue cấu hình trong hệ thống
         throw new AuraHandledException(
-          'Không tìm thấy Queue có tên: ' + targetQueueName
+          String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Queue ' + targetQueueName })
         );
       }
     }
@@ -2258,7 +2258,7 @@ public with sharing class FEC_CaseBusinessService {
     try {
       update c;
     } catch (DmlException e) {
-      throw new AuraHandledException('Error updating Case: ' + e.getMessage());
+      throw new AuraHandledException(e.getMessage());
     }
   }
 
@@ -2299,7 +2299,7 @@ public with sharing class FEC_CaseBusinessService {
     List<String> errorlst = new List<String>();
 
     if (cHistorylst.isEmpty()) {
-      errorlst.add('Customer History is invalid');
+      errorlst.add(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'CUSTOMER_HISTORY' }));
     } else {
       FEC_Customer_History__c selectedHistory = cHistorylst.get(0);
 
@@ -2320,7 +2320,7 @@ public with sharing class FEC_CaseBusinessService {
     if (errorlst.isEmpty())
       return new Error();
 
-    return new Error('Không đủ điều kiện cập nhật số điện thoại.', errorlst);
+    return new Error(Label.FEC_CaseBusinessService_Msg_006, errorlst);
   }
 
   private static void phoneUpdate(Case selectedCase) {
