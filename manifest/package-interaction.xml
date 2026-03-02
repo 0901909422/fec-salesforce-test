@@ -19,6 +19,7 @@
 		<members>FEC_InteractionSLAController</members>
 		<members>FEC_CreateCaseInteractionController</members>
 		<members>FEC_CaseService</members>
+		<members>FEC_CaseTriggerHandler</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -130,11 +131,23 @@
         <members>FEC_API_Config__mdt</members>
 		<members>FEC_KYC_Result__c</members>
 		<members>FEC_KYC__c</members>
+		<members>FEC_CaseID_Prefix__mdt</members>
 		<name>CustomObject</name>
 	</types>
     <types>
 		<members>FEC_API_Config.FEC_Get_Customer_List</members>
 		<members>FEC_API_Config.FEC_Get_Product_List</members>
+		<members>FEC_CaseID_Prefix.FEC_Customer_Case</members>
+		<members>FEC_CaseID_Prefix.FEC_Internal_Case</members>
+        <members>FEC_CaseID_Prefix.FEC_Email2Case</members>
+        <members>FEC_CaseID_Prefix.FEC_Interaction_Chat</members>
+        <members>FEC_CaseID_Prefix.FEC_Interaction_Email</members>
+        <members>FEC_CaseID_Prefix.FEC_Interaction_External</members>
+        <members>FEC_CaseID_Prefix.FEC_Interaction_F2F</members>
+        <members>FEC_CaseID_Prefix.FEC_Interaction_Inbound</members>
+        <members>FEC_CaseID_Prefix.FEC_Interaction_Internal</members>
+        <members>FEC_CaseID_Prefix.FEC_Interaction_Letter</members>
+        <members>FEC_CaseID_Prefix.FEC_Interaction_Outbound</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -237,6 +250,8 @@
 		<members>FEC_Wrap_up_Information_Label</members>
 		<members>FEC_View_All_Case_Label</members>
 		<members>FEC_View_All_Relevant_Interaction_Label</members>
+		<members>FEC_FollowUp_Type_Until_Case_Resolved</members>
+        <members>Interaction_Entitlement_Name</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -258,5 +273,9 @@
 		<members>PSG_RD_IT_User</members>
 		<name>PermissionSetGroup</name>
 	</types>
+    <types>
+        <members>FEC_CaseTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
     <version>65.0</version>
 </Package>
