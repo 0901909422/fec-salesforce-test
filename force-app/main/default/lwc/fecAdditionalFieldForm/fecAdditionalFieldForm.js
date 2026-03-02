@@ -91,9 +91,11 @@ export default class FecAdditionalFieldForm extends LightningElement {
      * Handle cancel button click
      */
     handleCancel() {
-        const form = this.template.querySelector('lightning-record-edit-form');
-        if (form) form.reset();
         // Dispatch event so parent can close modal
-        this.dispatchEvent(new CustomEvent('cancel'));
+        this.dispatchEvent(new CustomEvent('cancel', { 
+            bubbles: true, 
+            composed: true,
+            detail: {}
+        }));
     }
 }
