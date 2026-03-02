@@ -18,6 +18,21 @@ public with sharing class FEC_ConstantCommon {
     /** Prefix cho các trạng thái Case đã resolved (Resolved-Completed, Resolved-Cancelled, ...) */
     public static final String CASE_STATUS_PREFIX_RESOLVED = 'Resolved';
 
+    /** Follow-up: giá trị picklist "Until Case is Resolved" */
+    public static final String FOLLOW_UP_TYPE_UNTIL_RESOLVED = 'Until Case is Resolved';
+    /** Follow-up: giá trị picklist "Until choosing Unfollow" */
+    public static final String FOLLOW_UP_TYPE_UNTIL_UNFOLLOW = 'Until choosing Unfollow';
+    /** Follow-up: giá trị frontend UNTIL_RESOLVED */
+    public static final String FOLLOW_UP_FRONTEND_RESOLVED = 'UNTIL_RESOLVED';
+    /** Follow-up: giá trị frontend UNTIL_UNFOLLOW */
+    public static final String FOLLOW_UP_FRONTEND_UNFOLLOW = 'UNTIL_UNFOLLOW';
+    /** Follow-up: ký hiệu rút gọn trong FEC_Follow_Up_User__c cho Until Resolved */
+    public static final String FOLLOW_UP_COMPACT_RESOLVED = 'R';
+    /** Follow-up: ký hiệu rút gọn trong FEC_Follow_Up_User__c cho Until Unfollow */
+    public static final String FOLLOW_UP_COMPACT_UNFOLLOW = 'U';
+    /** Dấu phân tách giữa các entry trong FEC_Follow_Up_User__c */
+    public static final String FOLLOW_UP_FIELD_DELIMITER = ';';
+
     public static final String STR_DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS';
     public static final String STR_DATETIME_FORMAT_XXX = 'yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX';
     public static final String DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss';
