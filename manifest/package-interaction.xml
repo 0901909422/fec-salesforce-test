@@ -61,6 +61,7 @@
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_ErrorPanel</members>
 		<members>fec_CommonConst</members>
+		<members>fec_SensitiveDataViewAll</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
