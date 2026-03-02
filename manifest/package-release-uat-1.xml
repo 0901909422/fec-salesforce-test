@@ -1092,6 +1092,17 @@
 		<members>FEC_MSG_ACTION_PHONE_UPDATE</members>
 		<members>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</members>
 		<members>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</members>
+		<members>FEC_MSG_Case_Id_Invalid</members>
+		<members>FEC_MSG_Cannot_Find_Stage_Change</members>
+		<members>FEC_MSG_User_Queue_Id_Invalid</members>
+		<members>FEC_MSG_Manager_Not_Found</members>
+		<members>FEC_MSG_Owner_Is_Queue_Escalation</members>
+		<members>FEC_MSG_Escalation_Failed_Prefix</members>
+		<members>FEC_MSG_Nature_Of_Case_Id_Invalid</members>
+		<members>FEC_MSG_No_Master_Data_Setting_Found</members>
+		<members>FEC_MSG_Recall_Action_Not_Allowed</members>
+		<members>FEC_MSG_Record_Id_Invalid</members>
+		<members>FEC_MSG_Interaction_Highlight_Prefix</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
