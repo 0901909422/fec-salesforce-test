@@ -138,16 +138,6 @@ public with sharing class FEC_ConstantCommon {
     public static final String SECTION_INTERACTION_PHONE = 'Interaction Phone';
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
 
-    // Case Business Service exception messages
-    public static final String ERR_CASE_ID_INVALID = 'Case Id is invalid.';
-    public static final String ERR_CANNOT_FIND_STAGE_CHANGE = 'Cannot find Stage Change.';
-    public static final String ERR_USER_QUEUE_ID_INVALID = 'User or Queue Id is invalid.';
-    public static final String ERR_MANAGER_NOT_FOUND = 'Manager not found for the current User owner.';
-    public static final String ERR_OWNER_IS_QUEUE_ESCALATION = 'Current owner is a Queue; escalation to a Manager is not possible.';
-    public static final String ERR_ESCALATION_FAILED_PREFIX = 'Escalation failed: ';
-    public static final String ERR_NATURE_OF_CASE_ID_INVALID = 'Nature of Case Id is invalid.';
-    public static final String ERR_NO_MASTER_DATA_SETTING_FOUND = 'No Master Data Setting found.';
-    public static final String ERR_RECALL_ACTION_NOT_ALLOWED = 'Không thể thực hiện hành động Recall Action.';
-    public static final String ERR_RECORD_ID_INVALID = 'Record ID is invalid.';
-    public static final String ERR_INTERACTION_HIGHLIGHT_PREFIX = 'Error retrieving interaction highlight data: ';
+    public static final String EMAIL = 'Email';
+
 }
