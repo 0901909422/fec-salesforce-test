@@ -39,6 +39,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_DATE_TIME = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$';
     public static final String PATTERN_DATE_TIME_FULL = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
+    public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
 
     public static final String REQUESTOR_CRM = 'CRM';
     public static final String REQUESTOR_PORTAL = 'PORTAL';
@@ -84,6 +85,7 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String INTERACTION_VIEW_MODE = 'view';
     public static final String INTERACTION_HANDLING_MODE = 'handling';
+    public static final String INTERACTION_REVIEW_MODE = 'review';
 
     public static final String CASE_STATUS_NEW = 'New';
     public static final String CASE_STATUS_OPEN = 'Open';
@@ -101,5 +103,22 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
     public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
+
+    public static final String FEC_CATEGORY_COMPLAINT = 'Complaint';
+    public static final String FEC_COMPLAIN_TYPE_NORMAL = 'Normal';
+    public static final String FEC_COMPLAIN_TYPE_URGENT = 'Urgent';
+    public static final String FEC_COMPLAIN_TYPE_HIGH_RISK = 'High Risk';
+    public static final String FEC_SUB_CATEGORY_CODE_CL01 = 'CL01';
+    public static final String FEC_SUB_CATEGORY_CODE_CC01 = 'CC01';
+
+    public static final String CUSTOMER_CATEGORY_SUSPECTED_FRAUD = 'Suspected Fraud';
+    public static final String CUSTOMER_CATEGORY_MEDIA = 'Media';
+    public static final String CUSTOMER_CATEGORY_SERIOUS_COMPLAINT = 'Serious Complaint';
+    public static final String CUSTOMER_CATEGORY_UNHAPPY = 'Unhappy';
+    public static final String CUSTOMER_CATEGORY_VIP = 'VIP';
+    public static final String CUSTOMER_CATEGORY_NEUTRAL = 'Neutral';
+
+    public static final String SECTION_INTERACTION_DETAILS = 'Interaction Details';
+    public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
 
 }
