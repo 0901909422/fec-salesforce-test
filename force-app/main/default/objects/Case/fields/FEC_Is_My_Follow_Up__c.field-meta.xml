@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Is_My_Follow_Up__c</fullName>
-    <formula>OR(
-   CONTAINS(FEC_Follow_Up_User__c, $User.Id),
-   CONTAINS(FEC_Follow_Up_User__c, LEFT($User.Id, 15))
+    <description>Case tạo để check listview my follow up case (user đang xem có nằm trong danh sách follow case không)</description>
+    <formula>AND(
+    /* Điều kiện BẮT BUỘC: Case Owner khác user đang xem */
+    OwnerId &lt;&gt; $User.Id,
+
+    /* User có nằm trong Follow Up */
+    OR(
+        CONTAINS(FEC_Follow_Up_User__c, $User.Id),
+        CONTAINS(FEC_Follow_Up_User__c, LEFT($User.Id, 15))
+    ),
+
+    /* Điều kiện trạng thái / creator */
+    OR(
+        BEGINS(TEXT(Status), &apos;Resolved&apos;),
+        CreatedById &lt;&gt; $User.Id
+    )
 )</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Is My Follow Up</label>

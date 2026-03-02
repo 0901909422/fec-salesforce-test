@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Service_Case_Owner__c</fullName>
+    <description>email của chủ sở hữu (bỏ đuôi) hoặc tên Queue nếu người sở hữu Case là Queue</description>
     <externalId>false</externalId>
-    <formula>IF(ISBLANK(Owner:Queue.Id),
-   SUBSTITUTE(Owner:User.Email, &quot;@fpt.com&quot;, &quot;&quot;),
-    Owner:Queue.Name)</formula>
+    <formula>IF( Or(RecordType.Name = &apos;Customer Case&apos;, RecordType.Name = &apos;Internal Case&apos;),(IF(ISBLANK(Owner:Queue.Id),
+LEFT(Owner:User.Email,FIND(&quot;@&quot;, Owner:User.Email) - 1),
+Owner:Queue.Name)),&apos;&apos;)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Service Case Owner</label>
     <required>false</required>
