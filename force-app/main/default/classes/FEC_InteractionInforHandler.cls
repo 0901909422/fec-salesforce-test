@@ -71,7 +71,7 @@ public without sharing class FEC_InteractionInforHandler {
     @AuraEnabled(cacheable=false)
     public static void updateInteractionEmail(Id recordId, String email) {
         if (recordId == null) {
-            throw new AuraHandledException(FEC_ConstantCommon.ERR_RECORD_ID_INVALID);
+            throw new AuraHandledException(System.Label.FEC_MSG_Record_Id_Invalid);
         }
         update new Case(
             Id = recordId,

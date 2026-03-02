@@ -34,6 +34,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String FOLLOW_UP_FIELD_DELIMITER = ';';
 
     public static final String STR_DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS';
+    public static final String STR_DATETIME_FORMAT_Z = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'';
     public static final String STR_DATETIME_FORMAT_XXX = 'yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX';
     public static final String DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss';
     public static final String DATE_FORMAT = 'yyyy-MM-dd';
@@ -65,6 +66,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_SYS_TIME = '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}';
     public static final String PATTERN_DATE_TIME = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$';
     public static final String PATTERN_DATE_TIME_FULL = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$';
+    public static final String PATTERN_DATE_FORMAT_MM = '^(1[0-2]|[1-9])$';
+    public static final String PATTERN_DATE_FORMAT_DDMMYYZZ = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
     public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
 
@@ -93,6 +96,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PROCESSED_STATUS = 'Processed';
     public static final String JSON_EXTENSION = '.json';
     public static final String SUCCESS_MESSAGE = 'Success';
+    public static final String SUCCESS_STATUS_CODE = '0';
     public static final String KEY_ID = 'id';
     public static final String KEY_NAME = 'name';
     public static final String KEY_UPLOADED_BY = 'uploadedBy';
@@ -134,7 +138,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String FEC_CATEGORY_COMPLAINT = 'Complaint';
     public static final String FEC_COMPLAIN_TYPE_NORMAL = 'Normal';
     public static final String FEC_COMPLAIN_TYPE_URGENT = 'Urgent';
-    public static final String FEC_COMPLAIN_TYPE_HIGH_RISK = 'High Risk';
+    public static final String FEC_COMPLAIN_TYPE_HIGH_RISK = 'High risk';
     public static final String FEC_SUB_CATEGORY_CODE_CL01 = 'CL01';
     public static final String FEC_SUB_CATEGORY_CODE_CC01 = 'CC01';
 
@@ -149,16 +153,6 @@ public with sharing class FEC_ConstantCommon {
     public static final String SECTION_INTERACTION_PHONE = 'Interaction Phone';
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
 
-    // Case Business Service exception messages
-    public static final String ERR_CASE_ID_INVALID = 'Case Id is invalid.';
-    public static final String ERR_CANNOT_FIND_STAGE_CHANGE = 'Cannot find Stage Change.';
-    public static final String ERR_USER_QUEUE_ID_INVALID = 'User or Queue Id is invalid.';
-    public static final String ERR_MANAGER_NOT_FOUND = 'Manager not found for the current User owner.';
-    public static final String ERR_OWNER_IS_QUEUE_ESCALATION = 'Current owner is a Queue; escalation to a Manager is not possible.';
-    public static final String ERR_ESCALATION_FAILED_PREFIX = 'Escalation failed: ';
-    public static final String ERR_NATURE_OF_CASE_ID_INVALID = 'Nature of Case Id is invalid.';
-    public static final String ERR_NO_MASTER_DATA_SETTING_FOUND = 'No Master Data Setting found.';
-    public static final String ERR_RECALL_ACTION_NOT_ALLOWED = 'Không thể thực hiện hành động Recall Action.';
-    public static final String ERR_RECORD_ID_INVALID = 'Record ID is invalid.';
-    public static final String ERR_INTERACTION_HIGHLIGHT_PREFIX = 'Error retrieving interaction highlight data: ';
+    public static final String EMAIL = 'Email';
+
 }
