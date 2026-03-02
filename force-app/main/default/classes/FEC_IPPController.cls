@@ -10,6 +10,10 @@
 
 public with sharing class FEC_IPPController {
 
+    private static final String REC_PREFIX = 'REC';
+    private static final String API_PREFIX = 'api-';
+    private static final String HYPHEN = '-';
+
     // ==========================================
     // DTO CLASSES - Data Transfer Objects
     // ==========================================
@@ -233,7 +237,7 @@ public with sharing class FEC_IPPController {
             if (ipp.IPPRecordNo != null && String.isNotBlank(ipp.IPPRecordNo.trim())) {
                 String rn = ipp.IPPRecordNo.trim();
                 recordNoToIpp.put(rn, ipp);
-                recordNoToIpp.put('REC' + rn, ipp);
+                recordNoToIpp.put(REC_PREFIX + rn, ipp);
             }
         }
     }
@@ -263,7 +267,7 @@ public with sharing class FEC_IPPController {
         Map<String, FEC_GetCardSecInfo.IPP> recordNoToIpp
     ) {
         List<IPPRecordDTO> result = new List<IPPRecordDTO>();
-        String todayStr = Datetime.now().formatGmt('yyyy-MM-dd');
+        String todayStr = Datetime.now().formatGmt(FEC_ConstantCommon.DATE_FORMAT);
         Integer calloutCount = 0;
         
         for (FEC_GetCardPlanInfo.CardPlan cardPlan : cardPlans) {
@@ -304,7 +308,7 @@ public with sharing class FEC_IPPController {
         if (ipp == null && String.isNotBlank(cardPlan.recordNumber)) {
             String rn = cardPlan.recordNumber.trim();
             ipp = recordNoToIpp.get(rn);
-            if (ipp == null && rn.length() > 3 && rn.startsWith('REC')) {
+            if (ipp == null && rn.length() > 3 && rn.startsWith(REC_PREFIX)) {
                 ipp = recordNoToIpp.get(rn.substring(3));
             }
         }
@@ -324,7 +328,7 @@ public with sharing class FEC_IPPController {
         
         // Dữ liệu chính từ CardPlan
         dto.planNumber = planNumberKey;
-        dto.Id = 'api-' + dto.planNumber + '-' + (ipp != null && ipp.IPPRecordNo != null ? ipp.IPPRecordNo : '');
+        dto.Id = API_PREFIX + dto.planNumber + HYPHEN + (ipp != null && ipp.IPPRecordNo != null ? ipp.IPPRecordNo : '');
         dto.openDate = FEC_CommonUltils.parseDate(cardPlan.openDate);
         dto.ippBalance = (cardPlan.currentBalance != null) ? cardPlan.currentBalance : 0;
         
@@ -348,15 +352,15 @@ public with sharing class FEC_IPPController {
         dto.totalIPPMonthlyInterest = 0;
         
         // Giá trị mặc định cho các fields sales info
-        dto.ccCode = '-';
-        dto.ccName = '-';
-        dto.dsaCode = '-';
-        dto.dsaName = '-';
-        dto.tsaCode = '-';
-        dto.tsaName = '-';
-        dto.applicationId = '-';
-        dto.originationChannel = '-';
-        dto.disbursementChannel = '-';
+        dto.ccCode = HYPHEN;
+        dto.ccName = HYPHEN;
+        dto.dsaCode = HYPHEN;
+        dto.dsaName = HYPHEN;
+        dto.tsaCode = HYPHEN;
+        dto.tsaName = HYPHEN;
+        dto.applicationId = HYPHEN;
+        dto.originationChannel = HYPHEN;
+        dto.disbursementChannel = HYPHEN;
         
         return dto;
     }
@@ -511,7 +515,7 @@ public with sharing class FEC_IPPController {
         out.put('salesInfo', new Map<String, String>());
         out.put('scheduleTotals', new Map<String, Decimal>());
 
-        if (String.isBlank(ippRecordId) || ippRecordId.startsWith('api-')) {
+        if (String.isBlank(ippRecordId) || ippRecordId.startsWith(API_PREFIX)) {
             return out;
         }
 
@@ -531,15 +535,15 @@ public with sharing class FEC_IPPController {
 
         FEC_IPP__c ipp = ipps[0];
         Map<String, String> salesInfo = new Map<String, String>();
-        salesInfo.put('ccCode', ipp.FEC_CC_Code__c != null ? ipp.FEC_CC_Code__c : '-');
-        salesInfo.put('ccName', ipp.FEC_CC_Name__c != null ? ipp.FEC_CC_Name__c : '-');
-        salesInfo.put('dsaCode', ipp.FEC_DSA_Code__c != null ? ipp.FEC_DSA_Code__c : '-');
-        salesInfo.put('dsaName', ipp.FEC_DSA_Name__c != null ? ipp.FEC_DSA_Name__c : '-');
-        salesInfo.put('tsaCode', ipp.FEC_TSA_Code__c != null ? ipp.FEC_TSA_Code__c : '-');
-        salesInfo.put('tsaName', ipp.FEC_TSA_Name__c != null ? ipp.FEC_TSA_Name__c : '-');
-        salesInfo.put('applicationId', ipp.FEC_Application_ID__c != null ? ipp.FEC_Application_ID__c : '-');
-        salesInfo.put('originationChannel', ipp.FEC_Origination_Channel__c != null ? ipp.FEC_Origination_Channel__c : '-');
-        salesInfo.put('disbursementChannel', ipp.FEC_Disbursement_Channel__c != null ? ipp.FEC_Disbursement_Channel__c : '-');
+        salesInfo.put('ccCode', ipp.FEC_CC_Code__c != null ? ipp.FEC_CC_Code__c : HYPHEN);
+        salesInfo.put('ccName', ipp.FEC_CC_Name__c != null ? ipp.FEC_CC_Name__c : HYPHEN);
+        salesInfo.put('dsaCode', ipp.FEC_DSA_Code__c != null ? ipp.FEC_DSA_Code__c : HYPHEN);
+        salesInfo.put('dsaName', ipp.FEC_DSA_Name__c != null ? ipp.FEC_DSA_Name__c : HYPHEN);
+        salesInfo.put('tsaCode', ipp.FEC_TSA_Code__c != null ? ipp.FEC_TSA_Code__c : HYPHEN);
+        salesInfo.put('tsaName', ipp.FEC_TSA_Name__c != null ? ipp.FEC_TSA_Name__c : HYPHEN);
+        salesInfo.put('applicationId', ipp.FEC_Application_ID__c != null ? ipp.FEC_Application_ID__c : HYPHEN);
+        salesInfo.put('originationChannel', ipp.FEC_Origination_Channel__c != null ? ipp.FEC_Origination_Channel__c : HYPHEN);
+        salesInfo.put('disbursementChannel', ipp.FEC_Disbursement_Channel__c != null ? ipp.FEC_Disbursement_Channel__c : HYPHEN);
         out.put('salesInfo', salesInfo);
 
         Map<String, Decimal> scheduleTotals = new Map<String, Decimal>();
@@ -768,7 +772,6 @@ public with sharing class FEC_IPPController {
             // IPPTerm từ API có thể là "3 months" hoặc "3" → parse số
             if (ippTermMap.containsKey(dto.planNumber)) {
                 String ippTermStr = ippTermMap.get(dto.planNumber);
-                // ipp.FEC_IPP_Term__c = parseIPPTerm(ippTermStr);
                 ipp.FEC_IPP_Term__c = Decimal.valueOf(ippTermStr);
                 System.debug('### Parsed IPPTerm: ' + ippTermStr + ' → ' + ipp.FEC_IPP_Term__c);
             }

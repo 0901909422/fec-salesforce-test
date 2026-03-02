@@ -20,6 +20,8 @@ public with sharing class FEC_CaseBusinessService {
 
   public static final String FRONT_LINE = 'CS Frontline';
 
+  public static final String QUEUE = 'Queue';
+
   public enum Method {
     ROUTE_TO,
     CANCEL,
@@ -565,7 +567,7 @@ public with sharing class FEC_CaseBusinessService {
           SELECT Id, Name, DeveloperName, Type
           FROM Group
           WHERE
-            Type = 'Queue'
+            Type = :QUEUE
             AND DeveloperName = :stageChangelst.get(0).FEC_Next_Queue__c
         ];
 
@@ -931,7 +933,7 @@ public with sharing class FEC_CaseBusinessService {
               SELECT Id, Name, DeveloperName, Type
               FROM Group
               WHERE
-                Type = 'Queue'
+                Type = :QUEUE
                 AND DeveloperName = :history.FEC_Perform_User__r.FEC_Main_Queue__c
             ];
 
@@ -1673,7 +1675,7 @@ public with sharing class FEC_CaseBusinessService {
               SELECT Id, FEC_Perform_User__c, FEC_Updated_User_Queue__c, FEC_Updated_User_Queue_ID__c
               FROM FEC_Routing_Action_History__c 
               WHERE FEC_Case__c = :caseId 
-              AND FEC_Routing_Action__c = 'Route to' 
+              AND FEC_Routing_Action__c = :ROUTE_TO
               ORDER BY CreatedDate DESC 
               LIMIT 1
           ];
@@ -1688,7 +1690,7 @@ public with sharing class FEC_CaseBusinessService {
             throw new AuraHandledException(Label.FEC_CaseBusinessService_Msg_005);          
           }
       try {
-          if (c.Owner.Type == 'Queue' && c.OwnerId == lastAction.FEC_Updated_User_Queue_ID__c) {
+          if (c.Owner.Type == QUEUE && c.OwnerId == lastAction.FEC_Updated_User_Queue_ID__c) {
               c.OwnerId = currentUserId;
               update c;
           }

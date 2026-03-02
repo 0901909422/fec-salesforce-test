@@ -91,26 +91,6 @@ public with sharing class FEC_CreateCaseInteractionController {
       );
       insert newInfo;
 
-      // 5. Update Customer History (safe)
-      // List<FEC_Customer_History__c> histories = [
-      //   SELECT Id, FEC_Customer_Type__c, FEC_Customer_Name__c
-      //   FROM FEC_Customer_History__c
-      //   WHERE FEC_Case__c = :caseId
-      //   LIMIT 1
-      // ];
-
-      // if (!histories.isEmpty()) {
-      //   histories[0].Name =
-      //     'Non-Existing Customer - ' +
-      //     customerName +
-      //     ' - ' +
-      //     Datetime.now().format('yyyy-MM-dd HH:mm:ss');
-      //   histories[0]
-      //     .FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
-      //   histories[0].FEC_Customer_Name__c = customerName;
-      //   update histories[0];
-      // }
-
       return newCase.Id;
     } catch (Exception e) {
       throw new AuraHandledException(
