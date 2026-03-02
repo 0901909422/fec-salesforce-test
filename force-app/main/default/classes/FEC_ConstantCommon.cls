@@ -119,6 +119,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CUSTOMER_CATEGORY_NEUTRAL = 'Neutral';
 
     public static final String SECTION_INTERACTION_DETAILS = 'Interaction Details';
+    public static final String SECTION_INTERACTION_PHONE = 'Interaction Phone';
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
 
     // Case Business Service exception messages
@@ -131,5 +132,5 @@ public with sharing class FEC_ConstantCommon {
     public static final String ERR_NATURE_OF_CASE_ID_INVALID = 'Nature of Case Id is invalid.';
     public static final String ERR_NO_MASTER_DATA_SETTING_FOUND = 'No Master Data Setting found.';
     public static final String ERR_RECALL_ACTION_NOT_ALLOWED = 'Không thể thực hiện hành động Recall Action.';
-
+    public static final String ERR_RECORD_ID_INVALID = 'Record ID is invalid.';
 }

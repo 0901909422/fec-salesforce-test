@@ -11,7 +11,10 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Last_Updated_On__c,
                FEC_Last_Updated_By__c,
                FEC_Outcome_Code__c,
-               FEC_Interaction_Remarks__c, 
+               FEC_Interaction_Remarks__c,
+               FEC_Interaction_Email__c,
+               FEC_Send_To__c,
+               ParentId,
                IsClosed
         FROM Case
         WHERE Id = :recordId
@@ -39,8 +42,8 @@ public without sharing class FEC_InteractionInforHandler {
         
         // 🔐 Audit sensitive access
         FEC_CommonUltils.logSensitiveAccess(
-            'Interaction Details',
-        'Interaction Phone',
+            FEC_ConstantCommon.SECTION_INTERACTION_DETAILS,
+        FEC_ConstantCommon.SECTION_INTERACTION_PHONE,
         u.Username.split('@')[0],
         u.UserRole != null ? u.UserRole.Name : null,
         c.Id
@@ -63,7 +66,7 @@ public without sharing class FEC_InteractionInforHandler {
     public static String updateInteractionPhone(Id recordId, String phone) {
         
         if (!FEC_CommonUltils.isPhone(phone)) {
-            throw new AuraHandledException('Invalid phone number format');
+            throw new AuraHandledException(System.Label.FEC_MSG_Phone_Number_Invalid);
         }
         
         update new Case(
@@ -73,10 +76,17 @@ public without sharing class FEC_InteractionInforHandler {
         
         return FEC_CommonUltils.maskPhone(phone);
     }
-    
-    
-    
-    
+
+    @AuraEnabled(cacheable=false)
+    public static void updateInteractionEmail(Id recordId, String email) {
+        if (recordId == null) {
+            throw new AuraHandledException(FEC_ConstantCommon.ERR_RECORD_ID_INVALID);
+        }
+        update new Case(
+            Id = recordId,
+            FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
+        );
+    }
     
     @AuraEnabled(cacheable=true)
     public static Id getInteractionIdFromCustomerCase(Id caseId) {
@@ -95,8 +105,9 @@ public without sharing class FEC_InteractionInforHandler {
         SELECT FEC_Interaction_ID__c,
                FEC_Interaction_Status__c,
                FEC_Last_Updated_On__c,
-               FEC_Last_Updated_By__c
-               
+               FEC_Last_Updated_By__c,
+               FEC_Channel__c,
+               FEC_Interaction_Subchannel__c
         FROM Case
         WHERE Id = :recordId
     ];
@@ -649,13 +660,34 @@ public without sharing class FEC_InteractionInforHandler {
     }
     
     @AuraEnabled
-    public static void resetViewMode(Id recordId, String viewMode) {
-        if (recordId == null) return;
-        
+    public static String resetViewMode(Id recordId, String viewMode) {
+        if (recordId == null)
+        return null;
+
+        List<Case> caselst = [
+            SELECT
+                Id,
+                RecordType.DeveloperName,
+                FEC_First_Access__c,
+                FEC_Interaction_View_Mode__c
+            FROM Case
+            WHERE Id = :recordId
+        ];
+
+        if (caselst.isEmpty())
+            return null;
+
+        viewMode = caselst.get(0).FEC_First_Access__c
+            ? caselst.get(0).FEC_Interaction_View_Mode__c
+            : viewMode;
+
         update new Case(
             Id = recordId,
-        FEC_Interaction_View_Mode__c = viewMode
-            );
+            FEC_Interaction_View_Mode__c = viewMode,
+            FEC_First_Access__c = false
+        );
+
+        return viewMode;
     }
     
     @AuraEnabled
