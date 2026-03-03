@@ -60,16 +60,18 @@
                         <div class="no-data error">{ERROR_MESSAGE}</div>
                     </template>
                     <template if:true={showTable}>
-                        <c-fec_-related-list-paging
-                            columns={columns}
-                            records={ippData}
-                            page-size={pageSize}
-                            updated-time={updatedTime}
-                            hide-updated-time="true"
-                            default-sorted-by={defaultSortBy}
-                            default-sort-direction={defaultSortDirection}
-                            onrowselect={handleRowSelect}>
-                        </c-fec_-related-list-paging>
+                        <div class="ipp-details-table-wrapper">
+                            <c-fec_-related-list-paging
+                                columns={columns}
+                                records={ippData}
+                                page-size={pageSize}
+                                updated-time={updatedTime}
+                                hide-updated-time="true"
+                                default-sorted-by={defaultSortBy}
+                                default-sort-direction={defaultSortDirection}
+                                onrowselect={handleRowSelect}>
+                            </c-fec_-related-list-paging>
+                        </div>
                     </template>
                 </template>
                 <template if:true={isLoading}>

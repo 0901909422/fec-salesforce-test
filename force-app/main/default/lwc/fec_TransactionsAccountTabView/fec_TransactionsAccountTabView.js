@@ -67,12 +67,12 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
         { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', apiName: 'FEC_Effective_Date__c' },
         { label: this.customLabel.creditDebitFlagLabel, fieldName: 'creditDebitFlag', apiName: 'FEC_Credit_Debit_Flag__c' },
         { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription', apiName: 'FEC_Merchant_Description__c' },
-        { label: this.customLabel.transactionPlanLabel, fieldName: 'plan', apiName: 'FEC_Transaction_Plan__c' },
+        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', apiName: 'FEC_Transaction_Plan__c' },
         { label: this.customLabel.postDateLabel, fieldName: 'postingDate', apiName: 'FEC_Post_Date__c' },
         { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode', apiName: 'FEC_Currency_Code__c' },
         { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode', apiName: 'FEC_Merchant_Category_Code__c' },
-        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authCode', apiName: 'FEC_Authorization_Code__c' },
-        { label: this.customLabel.transactionAmountLabel, fieldName: 'amount', apiName: 'FEC_Transaction_Amount__c' },
+        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode', apiName: 'FEC_Authorization_Code__c' },
+        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', apiName: 'FEC_Transaction_Amount__c' },
         { label: this.customLabel.otpSentLabel, fieldName: 'otpSent', apiName: 'FEC_OTP_Sent__c' }
     ];
 
@@ -81,11 +81,11 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
         { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', apiName: 'FEC_Effective_Date__c' },
         { label: this.customLabel.authorizationResponseLabel, fieldName: 'authorizationResponse', apiName: 'FEC_Authorization_Response__c' },
         { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription', apiName: 'FEC_Merchant_Description__c' },
-        { label: this.customLabel.transactionPlanLabel, fieldName: 'plan', apiName: 'FEC_Transaction_Plan__c' },
-        { label: this.customLabel.transactionAmountLabel, fieldName: 'amount', apiName: 'FEC_Transaction_Amount__c' },
+        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', apiName: 'FEC_Transaction_Plan__c' },
+        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', apiName: 'FEC_Transaction_Amount__c' },
         { label: this.customLabel.declineDescriptionLabel, fieldName: 'declineDescription', apiName: 'FEC_Decline_Description__c' },
         { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode', apiName: 'FEC_Merchant_Category_Code__c' },
-        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authCode', apiName: 'FEC_Authorization_Code__c' },
+        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode', apiName: 'FEC_Authorization_Code__c' },
         { label: this.customLabel.approvalCodeLabel, fieldName: 'approvalCode', apiName: 'FEC_Approval_Code__c' },
         { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode', apiName: 'FEC_Currency_Code__c' }
     ];
@@ -95,12 +95,12 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
         { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', apiName: 'FEC_Effective_Date__c' },
         { label: this.customLabel.creditDebitFlagLabel, fieldName: 'creditDebitFlag', apiName: 'FEC_Credit_Debit_Flag__c' },
         { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription', apiName: 'FEC_Merchant_Description__c' },
-        { label: this.customLabel.transactionPlanLabel, fieldName: 'plan', apiName: 'FEC_Transaction_Plan__c' },
+        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', apiName: 'FEC_Transaction_Plan__c' },
         { label: this.customLabel.postDateLabel, fieldName: 'postingDate', apiName: 'FEC_Post_Date__c' },
         { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode', apiName: 'FEC_Currency_Code__c' },
         { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode', apiName: 'FEC_Merchant_Category_Code__c' },
-        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authCode', apiName: 'FEC_Authorization_Code__c' },
-        { label: this.customLabel.transactionAmountLabel, fieldName: 'amount', apiName: 'FEC_Transaction_Amount__c' },
+        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode', apiName: 'FEC_Authorization_Code__c' },
+        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', apiName: 'FEC_Transaction_Amount__c' },
         { label: this.customLabel.otpSentLabel, fieldName: 'otpSent', apiName: 'FEC_OTP_Sent__c' }
     ];
 
@@ -128,6 +128,7 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
         loadTransactionDetail({ transactionId: this.transactionId })
             .then(res => {
                 this.transaction = res;
+                setConsoleTab('Transactions Detail', 'standard:record');
             })
             .catch(() => {
                 this.transaction = null;
@@ -135,11 +136,6 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
             .finally(() => {
                 this.isLoading = false;
             });
-    }
-
-    /* ================= SET TABNAME ================= */
-    connectedCallback() {
-        setConsoleTab('Transactions Detail', 'standard:record');
     }
 
     /* ================= SECTIONS ================= */

@@ -130,6 +130,7 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
                     : null;
 
             this.billedTransactions = this.formatBilledTransactions(billedTxRes);
+            setConsoleTab('Statements Detail', 'standard:record');
 
         } catch (error) {
             console.error('Load data error:', error);
@@ -138,11 +139,6 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
         } finally {
             this.isLoading = false;
         }
-    }
-
-    /* ================= SET TABNAME ================= */
-    connectedCallback() {
-        setConsoleTab('Statements Detail', 'standard:record');
     }
 
     // ==============================

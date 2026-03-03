@@ -24,24 +24,34 @@
         <div class="slds-grid slds-gutters slds-p-around_xxx-small">
           <ul class="slds-grid slds-wrap slds-size_1-of-1 slds-m-top_small">
 
-            <li class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
+            <li class="slds-col slds-size_1-of-6 slds-p-horizontal_small">
               <span class="slds-text-title"><b>{labels.interactionId}</b></span><br />
               <span class="slds-text-body_regular">
                 <lightning-formatted-rich-text value={interactionId}></lightning-formatted-rich-text>
               </span>
             </li>
 
-            <li class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
+            <li class="slds-col slds-size_1-of-6 slds-p-horizontal_small">
               <span class="slds-text-title"><b>{labels.interactionStatus}</b></span><br />
               <span class="slds-text-body_regular">{status}</span>
             </li>
 
-            <li class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
+            <li class="slds-col slds-size_1-of-6 slds-p-horizontal_small">
+              <span class="slds-text-title"><b>{labels.interactionChannel}</b></span><br />
+              <span class="slds-text-body_regular">{interactionChannel}</span>
+            </li>
+
+            <li class="slds-col slds-size_1-of-6 slds-p-horizontal_small">
+              <span class="slds-text-title"><b>{labels.interactionSubChannel}</b></span><br />
+              <span class="slds-text-body_regular">{interactionSubChannel}</span>
+            </li>
+
+            <li class="slds-col slds-size_1-of-6 slds-p-horizontal_small">
               <span class="slds-text-title"><b>{labels.lastUpdatedOn}</b></span><br />
               <span class="slds-text-body_regular">{lastUpdated}</span>
             </li>
 
-            <li class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
+            <li class="slds-col slds-size_1-of-6 slds-p-horizontal_small">
               <span class="slds-text-title"><b>{labels.lastUpdatedBy}</b></span><br />
               <span class="slds-text-body_regular">{updatedBy}</span>
             </li>

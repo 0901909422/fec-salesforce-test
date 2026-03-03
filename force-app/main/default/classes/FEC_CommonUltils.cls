@@ -22,6 +22,33 @@ public with sharing class FEC_CommonUltils {
     return Pattern.matches(regex, email);
   }
 
+  /**
+   * Kiểm tra Case Status có thuộc nhóm Resolved hay không (bắt đầu bằng prefix Resolved).
+   * @param status Case Status (có thể null)
+   * @return true nếu status không rỗng và bắt đầu bằng FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED
+   */
+  public static Boolean isCaseStatusResolved(String status) {
+    return String.isNotBlank(status) && status.startsWith(FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED);
+  }
+
+  /**
+   * Trả về chuỗi gốc nếu không blank, ngược lại trả về STR_EMPTY.
+   * @param str Chuỗi cần kiểm tra (có thể null)
+   * @return str nếu không blank, ngược lại FEC_ConstantCommon.STR_EMPTY
+   */
+  public static String defaultToEmpty(String str) {
+    return String.isNotBlank(str) ? str : FEC_ConstantCommon.STR_EMPTY;
+  }
+
+  /**
+   * Trả về String.valueOf(obj) nếu obj != null, ngược lại STR_EMPTY.
+   * @param obj Giá trị bất kỳ (Id, String, ... có thể null)
+   * @return Chuỗi biểu diễn obj hoặc FEC_ConstantCommon.STR_EMPTY
+   */
+  public static String defaultToEmpty(Object obj) {
+    return obj != null ? String.valueOf(obj) : FEC_ConstantCommon.STR_EMPTY;
+  }
+
   public static Boolean isPhone(String phone) {
     if (String.isBlank(phone)) {
       return false;
@@ -43,6 +70,19 @@ public with sharing class FEC_CommonUltils {
     }
 
     return false;
+  }
+
+  /**
+   * Kiểm tra AccountNumber có hợp lệ không (16 hoặc 19 chữ số)
+   * @param accountNumber - Account Number cần kiểm tra
+   * @return true nếu hợp lệ (16 hoặc 19 chữ số), false nếu không
+   */
+  public static Boolean isValidAccountNumber(String accountNumber) {
+    if (String.isBlank(accountNumber)) {
+      return false;
+    }
+    // AccountNumber phải có 16 hoặc 19 chữ số theo requirement của API GetCustomerList
+    return Pattern.matches('^\\d{16}$', accountNumber) || Pattern.matches('^\\d{19}$', accountNumber);
   }
 
   public static Boolean isValidDateByFormat(String input) {
@@ -202,10 +242,34 @@ public with sharing class FEC_CommonUltils {
     return (c == null) ? null : c.getText();
   }
 
+  public static String getXmlValueHasNamspace(Dom.XmlNode n, String name) {
+    if (n == null) return null;
+
+    for (Dom.XmlNode child : n.getChildElements()) {
+        if (child.getName() == name) {
+            return child.getText();
+        }
+    }
+    return null;
+  }
+
   public static Decimal xmlValToDecimal(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
-    return String.isBlank(v) ? null : Decimal.valueOf(v);
-  }
+    if (String.isBlank(v)) {
+      return null;
+    }
+
+    v = v.trim(); 
+    if (v == '') {
+        return null;
+    }
+    try {
+        return Decimal.valueOf(v);
+    } catch (Exception e) {
+      System.debug('Invalid decimal for tag ' + name + ': [' + v + ']');
+      return null; 
+    }
+}
 
   public static Date xmlValToDate(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
@@ -220,6 +284,14 @@ public with sharing class FEC_CommonUltils {
       }
     }
     return null;
+  }
+
+  public static String getValueSafe(Dom.XmlNode parent,String nodeName) {
+    if (parent == null) return null;
+
+    Dom.XmlNode node = findChildByName(parent, nodeName);
+
+    return node == null ? null : node.getText();
   }
 
   public static Integer toInt(String v) {
@@ -420,7 +492,7 @@ public with sharing class FEC_CommonUltils {
 
   public static void createProcessActionHistory(
     String name,
-    String stage,
+    Case selectedCase,
     Boolean isSuccess
   ) {
     List<User> userlst = [
@@ -435,10 +507,11 @@ public with sharing class FEC_CommonUltils {
 
     FEC_Process_Action_History__c action = new FEC_Process_Action_History__c(
       Name = name,
-      FEC_Stage_Name__c = stage,
+      FEC_Stage_Name__c = selectedCase.FEC_Current_Case_Stage__r?.Name,
       FEC_Action_Result__c = isSuccess ? 'Success' : 'Fail',
       FEC_User__c = userlst.get(0).Email.split('@')[0],
-      FEC_User_Role__c = userlst.get(0).UserRole.Name
+      FEC_User_Role__c = userlst.get(0).UserRole.Name,
+      Case__c = selectedCase.Id
     );
 
     insert action;
@@ -460,6 +533,21 @@ public with sharing class FEC_CommonUltils {
             + '***'
             + phone.substring(len - 3);
     } 
+
+    public static String cleanResponseBody(String responseBody) {
+        if (String.isBlank(responseBody)) {
+            return responseBody;
+        }
+        
+        responseBody = responseBody.trim();
+        if (responseBody.startsWith('\uFEFF')) {
+            responseBody = responseBody.substring(1);
+        }
+        while (responseBody.length() > 0 && !responseBody.startsWith('<')) {
+            responseBody = responseBody.substring(1);
+        }
+        return responseBody;
+    }
 
     public static void logApi(
         String apiName,

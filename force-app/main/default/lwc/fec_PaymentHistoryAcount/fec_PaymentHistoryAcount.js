@@ -37,7 +37,7 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
 
     /* ================= COLUMNS FOR CUSTOM COMPONENT ================= */
     paymentHistoryColumns = [
-        { label: 'Payment No.', fieldName: 'paymentNo', type: 'text'},
+        { label: 'Payment No.', fieldName: 'paymentNo', type: 'text', cellAlign: 'center'},
         { label: 'Payment Date', fieldName: 'paymentDate', type: 'text',cellAlign: 'center' },
         { label: 'Booking Date', fieldName: 'bookingDate', type: 'text', cellAlign: 'center'},
         {

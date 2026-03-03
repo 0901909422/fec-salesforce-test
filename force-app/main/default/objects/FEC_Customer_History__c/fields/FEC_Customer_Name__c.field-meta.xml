@@ -3,6 +3,7 @@
     <fullName>FEC_Customer_Name__c</fullName>
     <description>Họ và Tên</description>
     <externalId>false</externalId>
+    <inlineHelpText>Tên đầy đủ khách hàng</inlineHelpText>
     <label>Customer Name</label>
     <length>255</length>
     <required>false</required>

@@ -17,18 +17,19 @@
                 <label>Urgent</label>
             </value>
             <value>
-                <fullName>High</fullName>
+                <fullName>High risk</fullName>
                 <default>false</default>
-                <label>High</label>
+                <label>High risk</label>
             </value>
             <value>
-                <fullName>Medium</fullName>
+                <fullName>Normal</fullName>
                 <default>false</default>
-                <label>Medium</label>
+                <label>Normal</label>
             </value>
             <value>
                 <fullName>Low</fullName>
                 <default>false</default>
+                <isActive>false</isActive>
                 <label>Low</label>
             </value>
         </valueSetDefinition>
