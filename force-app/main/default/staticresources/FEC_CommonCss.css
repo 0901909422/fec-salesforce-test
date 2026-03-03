@@ -1,5 +1,6 @@
 c-fec_-case-detail_-interation_-edit .slds-accordion__summary,
 c-fec_-case-detail_-customer_-edit .slds-accordion__summary,
+c-fec_-case-detail_-customer .slds-accordion__summary,
 c-fec_-search .slds-accordion__summary,
 c-fec-interaction-info .slds-accordion__summary,
 c-fec_-send-notification .slds-accordion__summary,
@@ -17,6 +18,13 @@ c-fec_-payment-history-acount .slds-accordion__summary,
 c-fec_-common-detail-view .slds-accordion__summary,
 c-fec_-case-edit-n-o-c .slds-accordion__summary,
 c-fec_-statements-account-tab-view .slds-accordion__summary,
+c-fec_-card-info .slds-accordion__summary,
+c-fec_-card-payment .slds-accordion__summary,
+c-fec_-i-p-p-details .slds-accordion__summary,
+c-fec_-i-p-p-detail-page .slds-accordion__summary,
+c-fec_-pending-service-cases .slds-accordion__summary,
+c-fec_-closed-service-cases .slds-accordion__summary,
+c-fec_-interaction-cases .slds-accordion__summary,
 c-fec_-k-y-c .slds-accordion__summary {
   background-color: #f3f3f3;
   border-radius: 4px;

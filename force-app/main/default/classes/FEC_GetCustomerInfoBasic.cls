@@ -112,7 +112,6 @@ public with sharing class FEC_GetCustomerInfoBasic {
     ) {
         try {
  
-            // FIX typo duy nhất
             validateRequest(transId, requestorId, dateTimeStr, cifNumber);
  
             String soapBody = buildSoapRequest(
@@ -129,15 +128,15 @@ public with sharing class FEC_GetCustomerInfoBasic {
                 ? FEC_MockupEndpoint.GET_CUSTOMER_INFO_BASIC_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
-            // ===== LOG REQUEST + RESPONSE =====
-            FEC_CommonUltils.logApi(
-                'FEC_GetCustomerInfoBasic',
-                endpoint,
-                'POST',
-                soapBody,
-                res,
-                null
-            );
+            // // ===== LOG REQUEST + RESPONSE =====
+            // FEC_CommonUltils.logApi(
+            //     'FEC_GetCustomerInfoBasic',
+            //     endpoint,
+            //     'POST',
+            //     soapBody,
+            //     res,
+            //     null
+            // );
  
             if (res.getStatusCode() != 200) {
                 throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
@@ -157,7 +156,6 @@ public with sharing class FEC_GetCustomerInfoBasic {
     /* =====================================================
        BUILD SOAP REQUEST
        ===================================================== */
-
     private static String buildSoapRequest(
         String transId,
         String requestorId,
@@ -165,39 +163,48 @@ public with sharing class FEC_GetCustomerInfoBasic {
         String cifNumber
     ) {
         Dom.Document doc = new Dom.Document();
-
         Dom.XmlNode envelope = doc.createRootElement(
             'soapenv:Envelope',
-            FEC_ConstantCommon.SOAP_ENV,
+            null,
             null
         );
-
-        envelope.setAttribute('xmlns:cif', CIF_NS);
-
+        
+        envelope.setAttribute(
+            'xmlns:soapenv',
+            FEC_ConstantCommon.SOAP_ENV
+        );
+        
+        envelope.setAttribute(
+            'xmlns:ns1',
+            'http://fecredit.com.vn/CIF_CustomerInfo'
+        );
+        
+        // ===== Header =====
         envelope.addChildElement('soapenv:Header', null, null);
-
+        
+        
+        // ===== Body =====
         Dom.XmlNode body =
             envelope.addChildElement('soapenv:Body', null, null);
-
-        Dom.XmlNode getInfo =
-            body.addChildElement(
-                'cif:GetCustomerInfoBasic',
-                null,
-                null
-            );
-
-        Dom.XmlNode sys = getInfo.addChildElement('Sys', null, null);
+        
+        // ===== Main Action =====
+        Dom.XmlNode action =
+            body.addChildElement('ns1:GetCustomerInfoBasic', null, null);
+        
+        action.setAttribute(
+            'xmlns:ns1',
+            'http://fecredit.com.vn/CIF_CustomerInfo'
+        );
+        
+        Dom.XmlNode sys =
+            action.addChildElement('Sys', null, null);
         sys.addChildElement('TransID', null, null).addTextNode(transId);
         sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
         sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
-
-        getInfo
-            .addChildElement('CIFNumber', null, null)
+        action.addChildElement('CIFNumber', null, null)
             .addTextNode(cifNumber);
-
         return doc.toXmlString();
     }
-
  
     // =========================================================================
     // REQUEST VALIDATION
@@ -215,7 +222,7 @@ public with sharing class FEC_GetCustomerInfoBasic {
             throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
  
-        Set<String> validRequestorIds = new Set<String>{ FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP };
+        Set<String> validRequestorIds = new Set<String>{ FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP,FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN};
         if (!validRequestorIds.contains(requestorId)) {
             throw new CalloutException(
                 System.Label.FEC_MSG_RequestorID_Null
@@ -225,11 +232,13 @@ public with sharing class FEC_GetCustomerInfoBasic {
         if (String.isBlank(dateTimeStr)) {
             throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
         }
-        try {
-            Datetime.valueOfGmt(dateTimeStr.replace('T', ' '));
-        } catch (Exception e) {
+        
+        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_DATE_FORMAT_DDMMYYZZ,dateTimeStr)) {
             throw new CalloutException(
-                String.format(System.Label.FEC_MSG_Param_Datetime_Format_Invalid, new List<String>{dateTimeStr})
+                String.format(
+                    System.Label.FEC_MSG_Datetime_Invalid,
+                    new List<String>{dateTimeStr}
+                )
             );
         }
  

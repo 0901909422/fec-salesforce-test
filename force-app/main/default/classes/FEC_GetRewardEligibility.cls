@@ -40,14 +40,14 @@ public with sharing class FEC_GetRewardEligibility {
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
             // ===== LOG REQUEST + RESPONSE =====
-            FEC_CommonUltils.logApi(
-                'FEC_GetRewardEligibility',
-                endpoint,
-                'POST',
-                soapBody,
-                res,
-                null
-            );
+            // FEC_CommonUltils.logApi(
+            //     'FEC_GetRewardEligibility',
+            //     endpoint,
+            //     'POST',
+            //     soapBody,
+            //     res,
+            //     null
+            // );
  
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
@@ -82,31 +82,42 @@ public with sharing class FEC_GetRewardEligibility {
 
         Dom.XmlNode envelope = doc.createRootElement(
             'soapenv:Envelope',
-            FEC_ConstantCommon.SOAP_ENV,
+            null,
             null
         );
-
+        
+        envelope.setAttribute(
+            'xmlns:soapenv',
+            FEC_ConstantCommon.SOAP_ENV
+        );
+        
         envelope.setAttribute(
             'xmlns:ns1',
             'http://esbservice.fecredit.org/CMS_RewardWS/'
         );
-
+        
+         // ===== Header =====
         envelope.addChildElement('soapenv:Header', null, null);
-
+        
+        // ===== Body =====
         Dom.XmlNode body =
             envelope.addChildElement('soapenv:Body', null, null);
-
+        
+        // ===== Main Action =====
         Dom.XmlNode action =
             body.addChildElement('ns1:GetRewardEligibility', null, null);
+        
+        action.setAttribute(
+            'xmlns:ns1',
+            'http://esbservice.fecredit.org/CMS_RewardWS/'
+        );
 
-        Dom.XmlNode sys =
-            action.addChildElement('Sys', null, null);
-
-        sys.addChildElement('transId', null, null).addTextNode(transId);
+        Dom.XmlNode sys = action.addChildElement('SysRequest', null, null);
+        sys.addChildElement('TransID', null, null).addTextNode(transId);
         sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
         sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
 
-        action.addChildElement('accountNumber', null, null)
+        action.addChildElement('AccountNumber', null, null)
               .addTextNode(accountNumber);
 
         return doc.toXmlString();
@@ -166,49 +177,52 @@ public with sharing class FEC_GetRewardEligibility {
     // SOAP RESPONSE PARSER
     // =========================================================================
     private static ResponseWrapper parseResponse(String xml) {
- 
+
+        if (String.isBlank(xml)) {
+            throw new CalloutException(System.Label.FEC_MSG_Response_Null);
+        }
+
         Dom.Document doc = new Dom.Document();
         doc.load(xml);
- 
+
         Dom.XmlNode bodyNode = doc.getRootElement()
             .getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
- 
+
         if (bodyNode == null) {
             throw new CalloutException(System.Label.FEC_MSG_Response_Null);
         }
- 
+
         Dom.XmlNode responseNode = bodyNode.getChildElement(
             'GetRewardEligibilityResponse',
             'http://esbservice.fecredit.org/CMS_RewardWS/'
         );
- 
+
         if (responseNode == null) {
-            throw new CalloutException(
-                System.Label.FEC_MSG_Response_Null
-            );
+            throw new CalloutException(System.Label.FEC_MSG_Response_Null);
         }
- 
+
         ResponseWrapper result = new ResponseWrapper();
- 
+
         // ================= SYS RESPONSE =================
-        Dom.XmlNode sysNode = responseNode.getChildElement('SysResponse', null);
+        Dom.XmlNode sysNode =
+            responseNode.getChildElement('SysResponse', null);
         result.Sys = new SysResponse();
-        result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
-        result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
-        result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
-        result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
- 
+        if (sysNode != null) {
+            result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
+            result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
+            result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Status'));
+            result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');}
+
         // ================= MAIN DATA =================
         result.LMSAccount = FEC_CommonUltils.getXmlValue(responseNode, 'LMSAccount');
         result.CustomerName = FEC_CommonUltils.getXmlValue(responseNode, 'CustomerName');
         result.SchemeID = FEC_CommonUltils.getXmlValue(responseNode, 'SchemeID');
- 
         result.EarnedPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'EarnedPoints');
         result.BoughtPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'BoughtPoints');
         result.BonusPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'BonusPoints');
-        result.RedeemedPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'RedeemedPoints');
-        result.ClosedPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'ClosedPoints');
-        result.CalculatedClosedPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'CalculatedClosedPoints');
+        result.RedeemedPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'RedeemedPoints'); 
+        result.ClosedPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'ClosedPoints'); 
+        result.CalculatedClosedPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'CalculatedClosedPoints'); 
         result.ExpiredPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'ExpiredPoints');
         result.AdjustedInPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'AdjustedInPoints');
         result.AdjustedOutPoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'AdjustedOutPoints');
@@ -218,21 +232,20 @@ public with sharing class FEC_GetRewardEligibility {
         result.AvailablePoints = FEC_CommonUltils.xmlValToDecimal(responseNode, 'AvailablePoints');
         result.OutstandingTxn = FEC_CommonUltils.xmlValToDecimal(responseNode, 'OutstandingTxn');
         result.CustomerMobile = FEC_CommonUltils.getXmlValue(responseNode, 'CustomerMobile');
- 
+
         // ================= REDEMPTION OPTIONS =================
         Dom.XmlNode redemptionNode = responseNode.getChildElement('RedemptionOptions', null);
         if (redemptionNode != null) {
             result.RedemptionOptions = new RedemptionOptions();
-            result.RedemptionOptions.EvoucherEligible =
-                Boolean.valueOf(FEC_CommonUltils.getXmlValue(redemptionNode, 'EvoucherEligible'));
-            result.RedemptionOptions.CashbackEligible =
-                Boolean.valueOf(FEC_CommonUltils.getXmlValue(redemptionNode, 'CashbackEligible'));
-            result.RedemptionOptions.MvoucherEligible =
-                Boolean.valueOf(FEC_CommonUltils.getXmlValue(redemptionNode, 'MvoucherEligible'));
+            result.RedemptionOptions.EvoucherEligible = Boolean.valueOf(FEC_CommonUltils.getXmlValue(redemptionNode, 'EvoucherEligible'));
+            result.RedemptionOptions.CashbackEligible = Boolean.valueOf(FEC_CommonUltils.getXmlValue(redemptionNode, 'CashbackEligible'));
+            result.RedemptionOptions.MvoucherEligible = Boolean.valueOf(FEC_CommonUltils.getXmlValue(redemptionNode, 'MvoucherEligible'));
         }
- 
+
         // ================= PRODUCTS =================
-        Dom.XmlNode productsNode = responseNode.getChildElement('Products', null);
+        Dom.XmlNode productsNode =
+            responseNode.getChildElement('Products', null);
+
         if (productsNode != null) {
             result.Products = new List<Product>();
             for (Dom.XmlNode pNode : productsNode.getChildElements()) {
@@ -243,7 +256,7 @@ public with sharing class FEC_GetRewardEligibility {
                 result.Products.add(p);
             }
         }
- 
+
         return result;
     }
  

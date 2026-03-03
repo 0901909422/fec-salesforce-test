@@ -5,7 +5,7 @@
             <div class="slds-media slds-media_center">
                 
                 <div class="slds-media__figure ipp-header-icon-wrap">
-                    <span class="ipp-header-icon" title="IPP">
+                    <span class="ipp-header-icon" title={customLabel.ippDetailLabel}>
                         <lightning-icon icon-name="standard:account" size="small" class="ipp-header-icon-svg"></lightning-icon>
                     </span>
                 </div>
@@ -30,7 +30,7 @@
             <template if:true={hasData}>
                 <div class="ipp-detail-tabset-wrapper">
                 <lightning-tabset class="ipp-detail-tabset">
-                    <lightning-tab label="Details">
+                    <lightning-tab label={customLabel.ippDetailLabel}>
                         <div class="slds-p-around_medium">
                             
                             <!-- IPP Schedule Section -->
@@ -54,7 +54,7 @@
                                 <div class="ipp-schedule-summary-item">
                                     <div class="ipp-detail-row-inner">
                                         <label class="slds-form-element__label ipp-label-red ipp-detail-label">
-                                            {customLabel.totalIPPAmountLabel}
+                                            {customLabel.totalIPPPaymentAmountLabel}
                                             <span class="ipp-help-icon">
                                                 <template if:true={helpTextMap.FEC_Total_IPP_Payment_Amount__c}>
                                                     <lightning-helptext content={helpTextMap.FEC_Total_IPP_Payment_Amount__c}></lightning-helptext>
@@ -111,7 +111,7 @@
                             </template>
                             <template if:false={hasSchedules}>
                                 <div class="slds-text-align_center slds-p-around_medium">
-                                    <p>{customLabel.noDataLabel}</p>
+                                    <p>{customLabel.noIPPScheduleDataLabel}</p>
                                 </div>
                             </template>
                             </div>
@@ -246,7 +246,7 @@
             <!-- No data message -->
             <template if:false={hasData}>
                 <div class="slds-text-align_center slds-p-around_large">
-                    <p>{customLabel.noDataLabel}</p>
+                    <p>{customLabel.noDataToDisplayLabel}</p>
                 </div>
             </template>
         </template>

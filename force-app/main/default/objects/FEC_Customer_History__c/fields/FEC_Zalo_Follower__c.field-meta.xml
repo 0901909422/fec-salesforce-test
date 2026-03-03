@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Zalo_Follower__c</fullName>
     <description>Theo dõi FEC Zalo</description>
+    <inlineHelpText>theo dõi FEC zalo</inlineHelpText>
     <label>Zalo Follower</label>
     <required>false</required>
     <trackHistory>false</trackHistory>

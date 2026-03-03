@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Is_In_Create_new_mode__c</fullName>
+    <description>Trường dùng cho record page để show thông tin</description>
     <formula>IF(NOT(ISBLANK(Id)) , FALSE, TRUE)</formula>
     <label>Is In Create new mode</label>
     <trackHistory>false</trackHistory>
