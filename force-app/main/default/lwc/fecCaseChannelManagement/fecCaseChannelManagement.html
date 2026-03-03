@@ -1,0 +1,117 @@
+<template>
+    <div class="slds-p-around_medium">
+        <lightning-spinner if:true={isLoading} variant="brand" size="medium"></lightning-spinner>
+
+        <div class="slds-m-bottom_medium">
+            <lightning-button label="New Case Channel" icon-name="utility:add" onclick={handleAddNew} variant="brand"></lightning-button>
+        </div>
+
+        <lightning-datatable
+            key-field="Id"
+            data={caseChannels}
+            columns={columns}
+            onrowaction={handleRowAction}>
+        </lightning-datatable>
+
+        <template if:true={isModalOpen}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 class="slds-modal__title">{modalTitle}</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <div class="slds-grid slds-wrap slds-gap_medium">
+                            <!-- Channel Name -->
+                            <div class="slds-col slds-size_1-of-1">
+                                <label class="slds-form-element__label">
+                                    <span class="slds-required">*</span> Channel Name
+                                </label>
+                                <lightning-input
+                                    type="text"
+                                    data-field-name="name"
+                                    value={formData.name}
+                                    onchange={handleInputChange}
+                                    placeholder="Enter Channel Name">
+                                </lightning-input>
+                            </div>
+
+                            <!-- Code -->
+                            <div class="slds-col slds-size_1-of-2">
+                                <label class="slds-form-element__label">Code</label>
+                                <lightning-input
+                                    type="text"
+                                    data-field-name="code"
+                                    value={formData.code}
+                                    onchange={handleInputChange}
+                                    placeholder="Enter Code">
+                                </lightning-input>
+                            </div>
+
+                            <!-- Alias -->
+                            <div class="slds-col slds-size_1-of-2">
+                                <label class="slds-form-element__label">Alias</label>
+                                <lightning-input
+                                    type="text"
+                                    data-field-name="alias"
+                                    value={formData.alias}
+                                    onchange={handleInputChange}
+                                    placeholder="Enter Alias">
+                                </lightning-input>
+                            </div>
+
+                            <!-- Name VN -->
+                            <div class="slds-col slds-size_1-of-1">
+                                <label class="slds-form-element__label">Name VN</label>
+                                <lightning-input
+                                    type="text"
+                                    data-field-name="nameVN"
+                                    value={formData.nameVN}
+                                    onchange={handleInputChange}
+                                    placeholder="Enter Vietnamese Name">
+                                </lightning-input>
+                            </div>
+
+                            <!-- Checkboxes Row -->
+                            <div class="slds-col slds-size_1-of-1">
+                                <div class="slds-grid slds-gap_medium">
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <lightning-input
+                                            type="checkbox"
+                                            label="Channel Status"
+                                            data-field-name="channelStatus"
+                                            checked={formData.channelStatus}
+                                            onchange={handleInputChange}>
+                                        </lightning-input>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <lightning-input
+                                            type="checkbox"
+                                            label="Self Service Flag"
+                                            data-field-name="selfServiceFlag"
+                                            checked={formData.selfServiceFlag}
+                                            onchange={handleInputChange}>
+                                        </lightning-input>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <lightning-input
+                                            type="checkbox"
+                                            label="Status"
+                                            data-field-name="status"
+                                            checked={formData.status}
+                                            onchange={handleInputChange}>
+                                        </lightning-input>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Cancel" onclick={handleCancel}></lightning-button>
+                        <lightning-button label="Save" variant="brand" onclick={handleSave}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </div>
+</template>

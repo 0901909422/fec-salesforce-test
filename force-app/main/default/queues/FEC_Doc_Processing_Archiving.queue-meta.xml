@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Queue xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Team Queue</description>
+    <doesSendEmailToMembers>false</doesSendEmailToMembers>
+    <name>Doc Processing &amp; Archiving</name>
+    <queueMembers>
+        <roles>
+            <role>FEC_Document_Processing_Archiving_Manager</role>
+            <role>FEC_Document_Processing_Archiving_Officer</role>
+            <role>FEC_Document_Processing_Archiving_Specialist</role>
+            <role>FEC_Head_Of_Record_Management_Department</role>
+            <role>FEC_Senior_Document_Processing_Archiving_Specialist</role>
+        </roles>
+    </queueMembers>
+    <queueSobject>
+        <sobjectType>Case</sobjectType>
+    </queueSobject>
+</Queue>

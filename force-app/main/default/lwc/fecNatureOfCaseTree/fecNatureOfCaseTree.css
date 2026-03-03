@@ -1,0 +1,24 @@
+/* fecNatureOfCaseTree.css */
+
+.card-title-clickable {
+    font-size: 1rem; /* Kích thước font chuẩn của title */
+    font-weight: 500; /* Độ đậm chuẩn */
+    color: var(--lwc-colorTextHeading);
+    padding: 0.5rem 0.75rem; /* Padding phù hợp */
+    cursor: pointer;
+    transition: background-color 0.1s;
+}
+
+/* THÊM HIỆU ỨNG SELECTED */
+.card-title-clickable.is-selected {
+    background-color: var(--lwc-colorBackgroundHighlightInverse); /* Màu nền nhạt */
+    color: var(--lwc-colorTextBrand); /* Hoặc màu chữ đậm hơn */
+    border-left: 4px solid var(--lwc-colorBorderBrand); /* Hiệu ứng gạch chân */
+    padding-left: 0.5rem;
+}
+
+.vertical-action-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}

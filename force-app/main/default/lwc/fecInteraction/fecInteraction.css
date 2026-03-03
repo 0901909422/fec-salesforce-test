@@ -1,0 +1,25 @@
+.slds-form-element__label {
+    font-weight: bold;
+    color: #080707;
+    margin-bottom: 0.25rem;
+}
+
+.slds-text-body_regular {
+    color: #3e3e3c;
+    padding: 0.5rem 0;
+}
+
+.customer-detail-section {
+    background-color: #f3f3f3;
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+
+.search-section {
+    border-bottom: 1px solid #dddbda;
+    padding-bottom: 1rem;
+}
+
+.slds-text-title_bold {
+    font-weight: 700;
+}
