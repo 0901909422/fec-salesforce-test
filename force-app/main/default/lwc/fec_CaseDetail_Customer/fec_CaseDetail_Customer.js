@@ -20,6 +20,7 @@ import FEC_Button_Save_Close from "@salesforce/label/c.FEC_Button_Save_Close";
 import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
 import FEC_MSG_Submit from "@salesforce/label/c.FEC_MSG_Submit";
 import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
+import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
 
 import { RefreshEvent } from "lightning/refresh";
 
@@ -266,7 +267,12 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       "c-fec_-case-bussiness",
     );
 
-    if (caseBusinessEle && !caseBusinessEle.validate()) isAllValid = false;
+    if (caseBusinessEle && !caseBusinessEle.validate()) {
+      isAllValid = false;
+      if (!caseBusinessEle.validateNatureOfCase()) {
+        this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Tab_Nature_Of_Case));
+      }
+    }
     if (!caseRemarksEle || !caseRemarksEle.validate()) {
       isAllValid = false;
       this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
