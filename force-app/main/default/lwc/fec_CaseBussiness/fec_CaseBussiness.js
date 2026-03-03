@@ -998,7 +998,13 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.actionValue = e.detail.value;
   }
 
+  @api validateNatureOfCase() {
+    return !!this.business?.natureOfCase;
+  }
+
   @api validate() {
+    if (!this.validateNatureOfCase()) return false;
+
     let isAllValid = true;
 
     let inputFiellst = this.template.querySelectorAll("lightning-input-field");
