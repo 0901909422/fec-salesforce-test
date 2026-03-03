@@ -348,8 +348,8 @@ public with sharing class FEC_GetCardSecInfo {
                     sup.Status = FEC_CommonUltils.getXmlValue(child, 'Status');
                     sup.ExpiryDate = FEC_CommonUltils.getXmlValue(child, 'ExpiryDate');
                     sup.ContactPhone = FEC_CommonUltils.getXmlValue(child, 'ContactPhone');
-                    sup.CardIssueDate = FEC_CommonUltils.toDate(FEC_CommonUltils.getXmlValue(child, 'CardIssueDate'));
-                    sup.CardActivationDate = FEC_CommonUltils.toDate(FEC_CommonUltils.getXmlValue(child, 'CardActivationDate'));
+                    sup.CardIssueDate = FEC_CommonUltils.parseDate(FEC_CommonUltils.getXmlValue(child, 'CardIssueDate'));
+                    sup.CardActivationDate = FEC_CommonUltils.parseDate(FEC_CommonUltils.getXmlValue(child, 'CardActivationDate'));
                     sup.PlasticIndicator = FEC_CommonUltils.getXmlValue(child, 'PlasticIndicator');
                     sup.BlockCode = FEC_CommonUltils.getXmlValue(child, 'BlockCode');
                     sup.CardholderFlag = FEC_CommonUltils.getXmlValue(child, 'CardholderFlag');

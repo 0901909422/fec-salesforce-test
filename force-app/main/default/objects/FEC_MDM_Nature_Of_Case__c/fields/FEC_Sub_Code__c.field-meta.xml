@@ -6,7 +6,7 @@
     <label>Sub Code</label>
     <referenceTo>FEC_MDM_Sub_Code__c</referenceTo>
     <relationshipLabel>Nature of Case MDM</relationshipLabel>
-    <relationshipName>FEC_MDM_Nature_Of_Case</relationshipName>
+    <relationshipName>FEC_NatureOfCaseSubCode</relationshipName>
     <required>false</required>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>

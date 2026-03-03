@@ -1,6 +1,6 @@
 <template>
   <lightning-accordion class="interaction-infor" allow-multiple-sections-open active-section-name={activeSections}>
-    <lightning-accordion-section name="interactionInfo" label="Interaction Information">
+    <lightning-accordion-section name="interactionInfo" label={labels.interactionInformation}>
       <template if:true={isInteractionCase}>
         <!-- SLDS spacing instead of custom card -->
         <div class="slds-p-horizontal_medium slds-p-vertical_small">

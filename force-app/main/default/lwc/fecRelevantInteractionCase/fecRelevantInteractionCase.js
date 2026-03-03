@@ -23,6 +23,9 @@ import FEC_SUB_CATEGORY_LABEL from "@salesforce/label/c.FEC_Sub_Category_Label";
 import FEC_SUB_CODE_LABEL from "@salesforce/label/c.FEC_Sub_Code_Label";
 import FEC_VIEW_ALL_BTN_LABEL from "@salesforce/label/c.FEC_View_All_Btn_Label";
 
+import { urlCmpWithRecordId } from 'c/fec_CommonUtils';
+import { DIV_ELEMENT, ICON_CASE } from "c/fec_CommonConst";
+
 const COLUMNS = [
   {
     label: FEC_CASE_ID_LABEL,
@@ -112,35 +115,22 @@ export default class FecRelevantInteractionCase extends NavigationMixin(
     );
   }
 
-  formatDate(dateString) {
-    if (!dateString) return "";
-    const d = new Date(dateString);
-    return d.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  }
-
   async handleViewAll() {
     const focusedTab = await getFocusedTabInfo();
     console.log("focusedTab:", JSON.stringify(focusedTab));
 
     const subtabId = await openSubtab(focusedTab.tabId, {
-      url: `/lightning/cmp/c__fec_RelevantInteractionCaseListViewAll?c__recordId=${this.recordId}`,
+      url: urlCmpWithRecordId("fec_RelevantInteractionCaseListViewAll", this.recordId),
       focus: true,
     });
     await setTabLabel(subtabId, "Cases List - View All");
-    await setTabIcon(subtabId, "standard:case", "Cases");
+    await setTabIcon(subtabId, ICON_CASE, "Cases");
   }
 
   // ===== Utils =====
   getPlainCaseId(htmlString) {
     if (!htmlString) return "";
-    const div = document.createElement("div");
+    const div = document.createElement(DIV_ELEMENT);
     div.innerHTML = htmlString;
     return div.textContent || div.innerText || "";
   }

@@ -9,17 +9,17 @@ public with sharing class FEC_CreateCaseInteractionController {
     ];
 
     Id customerCaseRtId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
-      .get('Customer_Case')
+      .get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)
       .getRecordTypeId();
 
     Case newCase = new Case();
     newCase.RecordTypeId = customerCaseRtId;
     newCase.FEC_Account_or_Contract__c = interation.FEC_Account_or_Contract__c;
-    newCase.Status = 'Open';
-    newCase.Origin = 'Web';
-    newCase.FEC_Customer_Type__c = 'Existing';
+    newCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
+    newCase.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
+    newCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
     newCase.FEC_Interaction__c = caseId;
-    newCase.FEC_Interaction_View_Mode__c = 'handling';
+    newCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
     newCase.FEC_Customer_Name__c = interation.FEC_Account_or_Contract__r?.FEC_Customer_Name__c;
 
     insert newCase;
@@ -41,7 +41,7 @@ public with sharing class FEC_CreateCaseInteractionController {
     try {
       // 1. Validate input
       if (caseId == null) {
-        throw new AuraHandledException('caseId is required');
+        throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
       }
 
       // 2. Get interaction case
@@ -52,9 +52,6 @@ public with sharing class FEC_CreateCaseInteractionController {
         LIMIT 1
       ];
 
-      // Id customerCaseRtId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
-      //   .get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)
-      //   .getRecordTypeId();
       // 3. Get RecordType safely
       Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
 
@@ -64,8 +61,7 @@ public with sharing class FEC_CreateCaseInteractionController {
         )
       ) {
         throw new AuraHandledException(
-          'RecordType not found: ' +
-          FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+          String.format(System.Label.FEC_MSG_Not_Found, new List<String>{FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME})
         );
       }
 
@@ -94,7 +90,6 @@ public with sharing class FEC_CreateCaseInteractionController {
       return newCase.Id;
     } catch (Exception e) {
       throw new AuraHandledException(
-        'createCustomerCaseFromCaseNonExistingCustomer failed: ' +
         e.getMessage()
       );
     }

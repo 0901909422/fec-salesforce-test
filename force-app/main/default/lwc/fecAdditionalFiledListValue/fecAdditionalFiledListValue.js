@@ -3,8 +3,11 @@ import getFieldListValues from '@salesforce/apex/FEC_AdditionalFieldController.g
 import deleteFieldListValue from '@salesforce/apex/FEC_AdditionalFieldController.deleteFieldListValue';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
-import { OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE, FIELD_ORDER, FIELD_PARENT_FIELD } from 'c/fecConstants';
+import { OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE, FIELD_ORDER, FIELD_PARENT_FIELD, FIELD_NAME, FIELD_NAME_VN, FIELD_PROCESS_CHANGE_STATUS, VARIANT_SUCCESS, VARIANT_ERROR } from 'c/fecConstants';
 import LABEL_NEW_LIST_VALUE from '@salesforce/label/c.FEC_New_List_Value';
+import LABEL_NAME from '@salesforce/label/c.FEC_Label_Name';
+import LABEL_NAME_VN from '@salesforce/label/c.FEC_Label_Name_VN';
+import LABEL_ORDER from '@salesforce/label/c.FEC_Col_Order';
 import LABEL_LIST_VALUE_CLOSE from '@salesforce/label/c.FEC_List_Value_Modal_Close_Title';
 import LABEL_LIST_VALUE_CANCEL from '@salesforce/label/c.FEC_List_Value_Cancel';
 import LABEL_LIST_VALUE_SAVE from '@salesforce/label/c.FEC_List_Value_Save';
@@ -12,16 +15,16 @@ import LABEL_LIST_VALUE_CONFIRM_DELETE_TITLE from '@salesforce/label/c.FEC_List_
 import LABEL_LIST_VALUE_CONFIRM_DELETE_MSG from '@salesforce/label/c.FEC_List_Value_Confirm_Delete_Message';
 import LABEL_DELETE from '@salesforce/label/c.FEC_Button_Delete';
 import LABEL_CANCEL from '@salesforce/label/c.FEC_Button_Cancel';
-import LABEL_SUCCESS_SAVE from '@salesforce/label/c.LABEL_SUCCESS_SAVE';
-import LABEL_SUCCESS_DELETE from '@salesforce/label/c.LABEL_SUCCESS_DELETE';
+import LABEL_SAVE_SUCCESS_MSG from '@salesforce/label/c.FEC_Save_Success_Message';
+import LABEL_DELETE_SUCCESS_MSG from '@salesforce/label/c.FEC_Delete_Success_Message';
 
 const COLUMNS = [
-    { label: 'Name EN', fieldName: 'Name', type: 'text' },
-    { label: 'Name VN', fieldName: 'FEC_Name_VN__c', type: 'text' },
-    { label: 'Order', fieldName: 'FEC_Order__c', type: 'number', sortable: true },// THÊM CỘT NÀY VÀO ĐÂY
+    { label: 'Name EN', fieldName: FIELD_NAME, type: 'text' },
+    { label: 'Name VN', fieldName: FIELD_NAME_VN, type: 'text' },
+    { label: 'Order', fieldName: FIELD_ORDER, type: 'number', sortable: true },
     {
         label: 'Process Status',
-        fieldName: 'Process_Change_Status__c',
+        fieldName: FIELD_PROCESS_CHANGE_STATUS,
         type: 'text',
         initialWidth: 120
     },
@@ -52,6 +55,8 @@ export default class FecAdditionalFiledListValue extends LightningElement {
     OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE = OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE;
     FIELD_ORDER = FIELD_ORDER;
     FIELD_PARENT_FIELD = FIELD_PARENT_FIELD;
+    FIELD_NAME = FIELD_NAME;
+    FIELD_NAME_VN = FIELD_NAME_VN;
     labelListValueName = LABEL_NAME;
     labelListValueNameVN = LABEL_NAME_VN;
     labelOrder = LABEL_ORDER || 'Order';
@@ -105,12 +110,32 @@ export default class FecAdditionalFiledListValue extends LightningElement {
         this.recordIdToDelete = null;
     }
 
+    handleSubmit(event) {
+        event.preventDefault();
+        const fields = event.detail.fields;
+        
+        // Ensure parent link is set for new records
+        if (!this.listValueRecordIdForEdit) {
+            fields[FIELD_PARENT_FIELD] = this.fieldRecord ? this.fieldRecord.Id : null;
+        }
+
+        // Logic check: if it's a new record and parent ID is still null, block it
+        if (!this.listValueRecordIdForEdit && !fields[FIELD_PARENT_FIELD]) {
+            this.showToast('Error', 'Missing Parent Field reference.', 'error');
+            return;
+        }
+
+        this.template.querySelector('lightning-record-edit-form').submit(fields);
+    }
+
     async handleFormSuccess() {
-        this.showToast('Success', LABEL_SUCCESS_SAVE, 'success');
-        this.closeAddEditModal();
         this.isLoading = true;
         try {
             await refreshApex(this.wiredListValuesResult);
+            this.showToast('Success', LABEL_SAVE_SUCCESS_MSG, VARIANT_SUCCESS);
+            this.closeAddEditModal();
+        } catch (error) {
+            this.showToast('Error', error.body?.message || error.message, VARIANT_ERROR);
         } finally {
             this.isLoading = false;
         }
@@ -128,7 +153,7 @@ export default class FecAdditionalFiledListValue extends LightningElement {
         this.isLoading = true;
         try {
             await deleteFieldListValue({ recordId: this.recordIdToDelete });
-            this.showToast('Success', LABEL_SUCCESS_DELETE, 'success');
+            this.showToast('Success', LABEL_DELETE_SUCCESS_MSG, 'success');
             await refreshApex(this.wiredListValuesResult);
         } catch (error) {
             let message = 'Lỗi khi xóa';

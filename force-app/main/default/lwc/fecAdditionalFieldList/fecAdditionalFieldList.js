@@ -18,6 +18,9 @@ import LABEL_MANDATORY from '@salesforce/label/c.FEC_Label_Mandatory';
 import LABEL_PROCESS_STATUS from '@salesforce/label/c.FEC_Label_Process_Status';
 import LABEL_DELETE_SUCCESS from '@salesforce/label/c.FEC_Delete_Success_Message';
 import LABEL_ERROR_RETRIEVE from '@salesforce/label/c.FEC_Error_Retrieve_Additional_Fields';
+import LABEL_SUCCESS_TITLE from '@salesforce/label/c.FEC_Success_Title'; // Added
+import LABEL_ERROR_TITLE from '@salesforce/label/c.FEC_Error_Title'; // Added
+import LABEL_SAVE_SUCCESS_MSG from '@salesforce/label/c.FEC_Save_Success_Message'; // Added
 import LABEL_WARNING_TYPE_NOT_LIST from '@salesforce/label/c.FEC_Warning_Type_Not_List';
 import LABEL_WARNING_TITLE from '@salesforce/label/c.FEC_Warning_Title';
 import LABEL_LIST_TITLE from '@salesforce/label/c.FEC_Additional_Fields_List_Title';
@@ -55,10 +58,11 @@ export default class FecAdditionalFieldList extends LightningElement {
     @track modalTitle = "";
     @track recordIdForEdit; // Lưu ID của bản ghi đang chỉnh sửa
     @track isEditModalOpen = false; // Trạng thái Modal Edit
-    @track isListValueModalOpen = false; // Biến kiểm soát Modal mới
-    @track selectedFieldRecord = {};    // Lưu record đang được chọn để quản lý List
+    /** Custom Delete Confirmation Modal */
     @track showDeleteConfirm = false; // for delete confirmation modal
     @track recordIdToDelete = null; // store record id to delete
+    @track isListValueModalOpen = false; // Biến kiểm soát Modal mới
+    @track selectedFieldRecord = {};    // Lưu record đang được chọn để quản lý List
     wiredFieldsResult;
 
     sortedBy;
@@ -83,7 +87,7 @@ export default class FecAdditionalFieldList extends LightningElement {
         } else if (result.error) {
             this.error = result.error;
             this.fieldList = undefined;
-            this.showToast(LABEL_ERROR_TITLE, LABEL_ERROR_RETRIEVE + (result.error.body?.message || result.error.message), 'error');
+            this.showToast(LABEL_ERROR_TITLE, LABEL_ERROR_RETRIEVE + ': ' + (result.error.body?.message || result.error.message), 'error');
         }
         this.isLoading = false;
     }
@@ -98,7 +102,6 @@ export default class FecAdditionalFieldList extends LightningElement {
             }
         } catch (error) {
             this.showToast(LABEL_ERROR_TITLE, error?.body?.message || error?.message || 'Failed to delete record.', 'error');
-            // Optionally log error
         } finally {
             this.isLoading = false;
         }
@@ -133,9 +136,9 @@ export default class FecAdditionalFieldList extends LightningElement {
      */
     handleManageListValues(record) {
         if (record.FEC_Type__c === 'List') {
-            this.selectedFieldRecord = record; // Lưu toàn bộ bản ghi
-            this.modalTitle = LABEL_MANAGE_LIST_VALUES + ': ' + record.Name; // Cập nhật tiêu đề
-            this.isListValueModalOpen = true; // Mở Modal quản lý List Value
+            this.selectedFieldRecord = { ...record }; // Ensure it is an object
+            this.modalTitle = LABEL_MANAGE_LIST_VALUES + ': ' + record.Name;
+            this.isListValueModalOpen = true;
         } else {
             // Use label with placeholder
             this.showToast(LABEL_WARNING_TITLE, LABEL_WARNING_TYPE_NOT_LIST.replace('{0}', record.Name), 'warning');
@@ -151,12 +154,27 @@ export default class FecAdditionalFieldList extends LightningElement {
     }
 
     /**
-    * @description Đóng Modal.
+    * @description Đóng Modal chỉnh sửa.
     */
     closeSettingModal() {
         this.isModalOpen = false;
+        this.isEditModalOpen = false;
         this.recordIdForEdit = null;
         this.actionClick = false;
+    }
+
+    /**
+     * @description Đóng Modal (alias cho closeSettingModal).
+     */
+    closeModal() {
+        this.closeSettingModal();
+    }
+
+    /**
+     * @description Xử lý sự kiện cancel từ child component (fecAdditionalFieldForm).
+     */
+    handleCancelEvent() {
+        this.closeSettingModal();
     }
 
     /**
@@ -180,15 +198,6 @@ export default class FecAdditionalFieldList extends LightningElement {
         this.recordIdToDelete = null;
     }
 
-    /**
-     * @description Đóng Modal.
-     */
-    closeModal() {
-        this.isModalOpen = false;
-        this.recordIdForEdit = null;
-        this.actionClick = false;
-    }
-
     openNewFieldModal() {
         this.modalTitle = LABEL_NEW_ADDITIONAL_FIELD;
         this.actionClick = false;
@@ -200,7 +209,7 @@ export default class FecAdditionalFieldList extends LightningElement {
         this.closeModal();
         this.showToast(LABEL_SUCCESS_TITLE, LABEL_SAVE_SUCCESS_MSG, 'success');
         if (this.wiredFieldsResult) {
-            return refreshApex(this.wiredFieldsResult);
+            refreshApex(this.wiredFieldsResult);
         }
     }
 

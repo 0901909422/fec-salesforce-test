@@ -3,7 +3,6 @@ public without sharing class FEC_KYCController {
   public static final String PLASTIC_ID_DC2 = 'DC2';
   public static final String PLASTIC_ID_DP3 = 'DP3';
   public static final String CASE_INTERACTION = 'Interaction';
-  // public static final String CASE_CUSTOMER = 'DP3';
 
   @AuraEnabled
   public static String getInterationId(String recordId) {
@@ -158,7 +157,6 @@ public without sharing class FEC_KYCController {
             : 'false';
           temp.isEditable = kycResultMap.get(item.Id).FEC_Editable__c;
 
-          // temp.resultId = kycResultMap.get(item.Id).Id;
         }
 
         if (!typeMap.containsKey(item.FEC_Product_Type__r.Name)) {
@@ -187,7 +185,6 @@ public without sharing class FEC_KYCController {
   @AuraEnabled
   public static void submitKYC(
     String recordId,
-    // String resultId,
     String kycId,
     Boolean checked,
     String answer
@@ -209,7 +206,6 @@ public without sharing class FEC_KYCController {
         return;
 
       FEC_KYC_Result__c result = new FEC_KYC_Result__c(
-        // Id = resultId,
         Name = kyclst.get(0).Name,
         FEC_Case_Interaction__c = recordId,
         FEC_KYC__c = kycId,
@@ -270,7 +266,7 @@ public without sharing class FEC_KYCController {
       return null;
     }
 
-    Pattern p = Pattern.compile('\\{\\{(.*?)\\}\\}');
+    Pattern p = Pattern.compile(FEC_ConstantCommon.PATTERN_TOKEN_KYC);
     Matcher m = p.matcher(input);
 
     return m.find() ? m.group(1) : null;
@@ -303,9 +299,6 @@ public without sharing class FEC_KYCController {
   public class QuestionDTO {
     @AuraEnabled
     public String id;
-
-    // @AuraEnabled
-    // public String resultId;
 
     @AuraEnabled
     public String name;

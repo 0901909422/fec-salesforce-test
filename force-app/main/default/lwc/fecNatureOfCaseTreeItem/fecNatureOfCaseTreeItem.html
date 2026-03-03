@@ -23,11 +23,15 @@
             </div>
             <template if:true={showActionButtons}>
                 <div class="slds-m-left_small vertical-action-group action-box" role="group" onmouseleave={handleActionBoxMouseLeave}>
-                    <button class="slds-button slds-button_brand custom-btn-small" onclick={triggerAddChild}>
-                        + Add Child
-                    </button>
+                    <template if:true={canAddChild}>
+                        <button class="slds-button slds-button_brand custom-btn-small" onclick={triggerAddChild}>
+                            <lightning-icon icon-name="utility:add" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                            Add Child
+                        </button>
+                    </template>
                     <template if:true={canDelete}>
                         <button class="slds-button slds-button_destructive custom-btn-small" onclick={handleDeleteNode}>
+                            <lightning-icon icon-name="utility:delete" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
                             Delete
                         </button>
                     </template>
