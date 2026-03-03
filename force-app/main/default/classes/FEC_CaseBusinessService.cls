@@ -2135,7 +2135,7 @@ public with sharing class FEC_CaseBusinessService {
         FEC_Updated_User_Queue__c,
         FEC_Updated_User_Queue_ID__c
       FROM FEC_Routing_Action_History__c
-      WHERE FEC_Case__c = :caseId AND FEC_Routing_Action__c = 'Route to'
+      WHERE FEC_Case__c = :caseId AND FEC_Routing_Action__c = :ROUTE_TO
       ORDER BY CreatedDate DESC
       LIMIT 1
     ];
