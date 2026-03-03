@@ -1,4 +1,71 @@
 public with sharing class FEC_CommonUltils {
+  public static void notifyUsers(
+    Set<String> recipientsIds,
+    String targetId,
+    String targetPageRef,
+    String title,
+    String body
+  ) {
+    // Get the Id for our custom notification type
+    CustomNotificationType notificationType = [
+      SELECT Id, DeveloperName
+      FROM CustomNotificationType
+      WHERE DeveloperName = 'Custom_Notification'
+    ];
+
+    // Create a new custom notification
+    Messaging.CustomNotification notification = new Messaging.CustomNotification();
+
+    // Set the contents for the notification
+    notification.setTitle(title);
+    notification.setBody(body);
+
+    // Set the notification type and target
+    notification.setNotificationTypeId(notificationType.Id);
+    if (String.isNotBlank(targetId)) {
+      notification.setTargetId(targetId);
+    } else {
+      notification.setTargetPageRef(targetPageRef);
+    }
+
+    // Actually send the notification
+    try {
+      notification.send(recipientsIds);
+    } catch (Exception e) {
+      System.debug('Problem sending notification: ' + e.getMessage());
+    }
+  }
+
+  public static void notifyUsers(
+    Set<String> recipientsIds,
+    Id targetId,
+    String targetPageRef,
+    String title,
+    String body,
+    CustomNotificationType notificationType
+  ) {
+    // Create a new custom notification
+    Messaging.CustomNotification notification = new Messaging.CustomNotification();
+
+    // Set the contents for the notification
+    notification.setTitle(title);
+    notification.setBody(body);
+
+    // Set the notification type and target
+    notification.setNotificationTypeId(notificationType.Id);
+    if (String.isNotBlank(targetId)) {
+      notification.setTargetId(targetId);
+    } else {
+      notification.setTargetPageRef(targetPageRef);
+    }
+
+    // Actually send the notification
+    try {
+      notification.send(recipientsIds);
+    } catch (Exception e) {
+      System.debug('Problem sending notification: ' + e.getMessage());
+    }
+  }
 
   public static Boolean isLengthValid(String str, Integer maxLength) {
     if (String.isBlank(str)) {
@@ -273,7 +340,7 @@ public with sharing class FEC_CommonUltils {
       }
 
       // Fallback: Format YYYY-MM-DD
-      return Date.valueOf(dateStr);
+      return Date.valueOf(dateStr.substring(0, 10));
     } catch (Exception e) {
       System.debug(
         'convertDateSafeForOtherCard error for "' +
@@ -355,6 +422,27 @@ public with sharing class FEC_CommonUltils {
   public static String decimalToString(Decimal d) {
     return d == null ? '' : d.format();
   }
+  
+  /**
+   * Build help text map for any SObject type
+   * @param sobjType - Schema.SObjectType
+   * @return Map of field API name to help text
+   */
+  public static Map<String, String> buildHelpTextMap(Schema.SObjectType sobjType) {
+    Map<String, String> m = new Map<String, String>();
+    try {
+      for (Schema.SObjectField f : sobjType.getDescribe().fields.getMap().values()) {
+        Schema.DescribeFieldResult fieldDescribe = f.getDescribe();
+        if (String.isNotBlank(fieldDescribe.getInlineHelpText())) {
+          m.put(fieldDescribe.getName(), fieldDescribe.getInlineHelpText());
+        }
+      }
+    } catch (Exception e) {
+      System.debug('buildHelpTextMap error: ' + e.getMessage());
+    }
+    return m;
+  }
+  
   /**
    * Mask National ID (CCCD) hoặc Passport ID để hiển thị an toàn.
    * - CCCD: 9 hoặc 12 ký tự (chỉ số) → thay giữa bằng "*", hiển thị 3 số đầu + 3 số cuối.
@@ -368,8 +456,19 @@ public with sharing class FEC_CommonUltils {
     }
     String s = value.trim();
 
-    // CCCD: 9 hoặc 12 ký tự, chỉ gồm số
-    if ((s.length() == 9 || s.length() == 12) && Pattern.matches('\\d+', s)) {
+    // Passport: bắt đầu bằng chữ → 2 ký tự đầu + 3 ký tự cuối (theo quy định)
+    if (s.length() >= 5 && Pattern.matches('^[A-Za-z].*', s)) {
+      String first2 = s.substring(0, 2);
+      String last3 = s.substring(s.length() - 3);
+      String middle = '';
+      for (Integer i = 2; i < s.length() - 3; i++) {
+        middle += '*';
+      }
+      return first2 + middle + last3;
+    }
+
+    // CCCD: chỉ gồm số → 3 số đầu + 3 số cuối
+    if (Pattern.matches('\\d+', s)) {
       if (s.length() < 6)
         return s;
       String first3 = s.substring(0, 3);
@@ -379,14 +478,6 @@ public with sharing class FEC_CommonUltils {
         middle += '*';
       }
       return first3 + middle + last3;
-    }
-
-    // Passport: 8 ký tự, ký tự đầu là chữ, 7 ký tự sau là số
-    if (s.length() == 8 && Pattern.matches('[A-Za-z]\\d{7}', s)) {
-      String first2 = s.substring(0, 2);
-      String last3 = s.substring(5, 8);
-      String middle = '***';
-      return first2 + middle + last3;
     }
 
     // Fallback: không khớp format → 3 đầu + 3 cuối
@@ -403,7 +494,7 @@ public with sharing class FEC_CommonUltils {
 
   public static void createProcessActionHistory(
     String name,
-    String stage,
+    Case selectedCase,
     Boolean isSuccess
   ) {
     List<User> userlst = [
@@ -418,10 +509,11 @@ public with sharing class FEC_CommonUltils {
 
     FEC_Process_Action_History__c action = new FEC_Process_Action_History__c(
       Name = name,
-      FEC_Stage_Name__c = stage,
+      FEC_Stage_Name__c = selectedCase.FEC_Current_Case_Stage__r?.Name,
       FEC_Action_Result__c = isSuccess ? 'Success' : 'Fail',
       FEC_User__c = userlst.get(0).Email.split('@')[0],
-      FEC_User_Role__c = userlst.get(0).UserRole.Name
+      FEC_User_Role__c = userlst.get(0).UserRole.Name,
+      Case__c = selectedCase.Id
     );
 
     insert action;
@@ -443,4 +535,50 @@ public with sharing class FEC_CommonUltils {
             + '***'
             + phone.substring(len - 3);
     } 
+
+    public static String cleanResponseBody(String responseBody) {
+        if (String.isBlank(responseBody)) {
+            return responseBody;
+        }
+        
+        responseBody = responseBody.trim();
+        if (responseBody.startsWith('\uFEFF')) {
+            responseBody = responseBody.substring(1);
+        }
+        while (responseBody.length() > 0 && !responseBody.startsWith('<')) {
+            responseBody = responseBody.substring(1);
+        }
+        return responseBody;
+    }
+
+    public static void logApi(
+        String apiName,
+        String endpoint,
+        String method,
+        String requestBody,
+        HttpResponse response,
+        String errorMessage
+  ){
+      try{
+          FEC_API_Log__c log = new FEC_API_Log__c();
+
+          log.Name = apiName;
+          log.FEC_Endpoint__c = endpoint;
+          log.FEC_Method__c = method;
+          log.FEC_Request_String__c = requestBody;
+
+          if(response != null){
+              log.FEC_Status_Code__c =  String.valueOf(response.getStatusCode());
+              log.FEC_Response_String__c = response.getBody();
+              log.FEC_Is_Success__c = (response.getStatusCode() == 200);
+          }
+          
+          log.FEC_Error_Message__c = errorMessage;
+
+          insert log;
+
+        }catch(Exception e){
+            System.debug('LOG INSERT ERROR: ' + e.getMessage());
+        }
+    }
 }

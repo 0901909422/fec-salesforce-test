@@ -7,6 +7,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String SOAP_ENV = 'http://schemas.xmlsoap.org/soap/envelope/';
 
     public static final String STR_DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS';
+    public static final String STR_DATETIME_FORMAT_Z = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'';
     public static final String STR_DATETIME_FORMAT_XXX = 'yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX';
     public static final String DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss';
     public static final String DATE_FORMAT = 'yyyy-MM-dd';
@@ -15,6 +16,7 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
+    public static final String CASE_INTERNAL_RECORD_TYPE_DEV_NAME = 'Internal_Case';
 
     public static final String CHANNEL_INBOUND_API = 'InboundRinging';
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
@@ -37,6 +39,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_SYS_TIME = '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}';
     public static final String PATTERN_DATE_TIME = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$';
     public static final String PATTERN_DATE_TIME_FULL = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$';
+    public static final String PATTERN_DATE_FORMAT_MM = '^(1[0-2]|[1-9])$';
+    public static final String PATTERN_DATE_FORMAT_DDMMYYZZ = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
     public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
 
@@ -47,6 +51,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
     public static final String REQUESTOR_APS = 'APS';
     public static final String REQUESTOR_SD = 'SD';
+    public static final String REQUESTOR_VMXVERSION = '2.0';
+    public static final String REQUESTOR_CONTEXT = 'CRM';
+    public static final String REQUESTOR_ORG = 'FEC';
     public static final String REQUESTOR_RES = 'RES';
     public static final String REQUESTOR_PEGA = 'PEGA';
     public static final String REQUESTOR_ESB = 'ESB';
@@ -62,6 +69,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PROCESSED_STATUS = 'Processed';
     public static final String JSON_EXTENSION = '.json';
     public static final String SUCCESS_MESSAGE = 'Success';
+    public static final String SUCCESS_STATUS_CODE = '0';
     public static final String KEY_ID = 'id';
     public static final String KEY_NAME = 'name';
     public static final String KEY_UPLOADED_BY = 'uploadedBy';
@@ -81,15 +89,43 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String INTERACTION_VIEW_MODE = 'view';
     public static final String INTERACTION_HANDLING_MODE = 'handling';
+    public static final String INTERACTION_REVIEW_MODE = 'review';
 
     public static final String CASE_STATUS_NEW = 'New';
     public static final String CASE_STATUS_OPEN = 'Open';
+    public static final String CASE_STATUS_PENDING = 'Pending';
 
     public static final String CASE_WEB_ORIGIN = 'Web';
+
+    public static final String GROUP_TYPE_QUEUE = 'Queue';
 
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
 
     public static final String CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER = 'Non-existing';
     public static final String CUSTOMER_HISTORY_EXISTING_CUSTOMER = 'Existing';
+
+    public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
+    public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
+
+    public static final String FEC_CATEGORY_COMPLAINT = 'Complaint';
+    public static final String FEC_COMPLAIN_TYPE_NORMAL = 'Normal';
+    public static final String FEC_COMPLAIN_TYPE_URGENT = 'Urgent';
+    public static final String FEC_COMPLAIN_TYPE_HIGH_RISK = 'High risk';
+    public static final String FEC_SUB_CATEGORY_CODE_CL01 = 'CL01';
+    public static final String FEC_SUB_CATEGORY_CODE_CC01 = 'CC01';
+
+    public static final String CUSTOMER_CATEGORY_SUSPECTED_FRAUD = 'Suspected Fraud';
+    public static final String CUSTOMER_CATEGORY_MEDIA = 'Media';
+    public static final String CUSTOMER_CATEGORY_SERIOUS_COMPLAINT = 'Serious Complaint';
+    public static final String CUSTOMER_CATEGORY_UNHAPPY = 'Unhappy';
+    public static final String CUSTOMER_CATEGORY_VIP = 'VIP';
+    public static final String CUSTOMER_CATEGORY_NEUTRAL = 'Neutral';
+
+    public static final String SECTION_INTERACTION_DETAILS = 'Interaction Details';
+    public static final String SECTION_INTERACTION_PHONE = 'Interaction Phone';
+    public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
+
+    public static final String EMAIL = 'Email';
+    public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
 }
