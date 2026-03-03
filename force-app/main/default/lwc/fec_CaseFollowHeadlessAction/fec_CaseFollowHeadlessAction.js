@@ -5,18 +5,14 @@ import checkFollowStatus from '@salesforce/apex/FEC_FollowUpController.checkFoll
 import followCase from '@salesforce/apex/FEC_FollowUpController.followCase';
 import followCaseForUser from '@salesforce/apex/FEC_FollowUpController.followCaseForUser';
 import searchUsers from '@salesforce/apex/FEC_FollowUpController.searchUsers';
-import UNTIL_CASE_RESOLVED from '@salesforce/label/c.FEC_LABEL_UNTIL_CASE_RESOLVED';
-import UNTIL_UNFOLLOW from '@salesforce/label/c.FEC_LABEL_UNTIL_UNFOLLOW';
-import ACTION_CANCEL from '@salesforce/label/c.FEC_ACTION_CANCEL';
-import ACTION_CONFIRM from '@salesforce/label/c.FEC_ACTION_CONFIRM';
-import ACTION_SELECT_USER from '@salesforce/label/c.FEC_ACTION_SELECT_USER';
-import ACTION_CLOSE from '@salesforce/label/c.FEC_ACTION_CLOSE';
-import MSG_NO_USER_FOUND from '@salesforce/label/c.FEC_MSG_NO_USER_FOUND';
-import LABEL_USER from '@salesforce/label/c.FEC_LABEL_USER';
-import LABEL_FOLLOW_UP_TYPE from '@salesforce/label/c.FEC_LABEL_FOLLOW_UP_TYPE';
-import LABEL_FOLLOW_UP from '@salesforce/label/c.FEC_LABEL_FOLLOW_UP';
-import LABEL_SELECT_FOLLOW_UP_USER from '@salesforce/label/c.FEC_LABEL_SELECT_FOLLOW_UP_USER';
-import LABEL_CLEAR_USER_SELECTION from '@salesforce/label/c.FEC_LABEL_CLEAR_USER_SELECTION';
+import FEC_Error_Title from '@salesforce/label/c.FEC_Error_Title';
+import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
+import FEC_Warning_Title from '@salesforce/label/c.FEC_Warning_Title';
+import FEC_MSG_FollowUp_Please_Select_User from '@salesforce/label/c.FEC_MSG_FollowUp_Please_Select_User';
+import FEC_MSG_FollowUp_Add_User_To_Watcher_Success from '@salesforce/label/c.FEC_MSG_FollowUp_Add_User_To_Watcher_Success';
+import FEC_MSG_FollowUp_Type_Updated_Success from '@salesforce/label/c.FEC_MSG_FollowUp_Type_Updated_Success';
+import FEC_MSG_FollowUp_Case_Follow_Success from '@salesforce/label/c.FEC_MSG_FollowUp_Case_Follow_Success';
+import FEC_MSG_FollowUp_Error_Detail from '@salesforce/label/c.FEC_MSG_FollowUp_Error_Detail';
 
 export default class FecCaseFollowHeadlessAction extends LightningElement {
     @api recordId;
@@ -182,7 +178,8 @@ export default class FecCaseFollowHeadlessAction extends LightningElement {
                 })
                 .catch((err) => {
                     this.userSearchResults = [];
-                    this.showToast('Error', err.body?.message || err.message, 'error');
+                    const errMsg = err.body?.message || err.message || '';
+                    this.showToast(FEC_Error_Title, FEC_MSG_FollowUp_Error_Detail.replace('{0}', errMsg), 'error');
                 });
         }, 300);
     }
@@ -228,7 +225,7 @@ export default class FecCaseFollowHeadlessAction extends LightningElement {
      */
     handleConfirmUserModal() {
         if (!this.selectedUserId) {
-            this.showToast('Warning', 'Vui lòng chọn một User.', 'warning');
+            this.showToast(FEC_Warning_Title, FEC_MSG_FollowUp_Please_Select_User, 'warning');
             return;
         }
         this.isLoading = true;
@@ -240,7 +237,7 @@ export default class FecCaseFollowHeadlessAction extends LightningElement {
             .then(() => {
                 this.isLoading = false;
                 getRecordNotifyChange([{ recordId: this.recordId }]);
-                this.showToast('Success', 'Follow-Up User đã được thêm vào danh sách follow-up và Watcher Information.', 'success');
+                this.showToast(FEC_Success_Title, FEC_MSG_FollowUp_Add_User_To_Watcher_Success, 'success');
                 this.showUserModal = false;
                 this.selectedUserId = '';
                 this.selectedUserName = '';
@@ -249,37 +246,17 @@ export default class FecCaseFollowHeadlessAction extends LightningElement {
             })
             .catch(error => {
                 this.isLoading = false;
-                this.showToast('Error', error.body?.message || error.message, 'error');
+                const errMsg = error.body?.message || error.message || '';
+                this.showToast(FEC_Error_Title, FEC_MSG_FollowUp_Error_Detail.replace('{0}', errMsg), 'error');
             });
     }
 
-    // Options cho Follow-Up Type (giống popup Follow-Up) - labels pulled from custom labels
+    // Options cho Follow-Up Type (giống popup Follow-Up)
     get followUpTypeOptions() {
         return [
-            { label: UNTIL_CASE_RESOLVED, value: 'UNTIL_RESOLVED' },
-            { label: UNTIL_UNFOLLOW, value: 'UNTIL_UNFOLLOW' }
+            { label: 'Until Case Resolved', value: 'UNTIL_RESOLVED' },
+            { label: 'Until Unfollow', value: 'UNTIL_UNFOLLOW' }
         ];
-    }
-
-    // expose custom labels to template for consistent access
-    get customLabels() {
-        return {
-            followTypeLabel: this.followTypeLabel,
-            selectedFollowUpTypeLabel: this.selectedFollowUpTypeLabel,
-            labelFollowUp: LABEL_FOLLOW_UP,
-            actionClose: ACTION_CLOSE,
-            untilResolved: UNTIL_CASE_RESOLVED,
-            untilUnfollow: UNTIL_UNFOLLOW,
-            actionSelectUser: ACTION_SELECT_USER,
-            actionCancel: ACTION_CANCEL,
-            actionConfirm: ACTION_CONFIRM,
-            labelSelectFollowUpUser: LABEL_SELECT_FOLLOW_UP_USER,
-            labelUser: LABEL_USER,
-            placeholderSearchUsers: PLACEHOLDER_SEARCH_USERS,
-            labelClearUserSelection: LABEL_CLEAR_USER_SELECTION,
-            msgNoUserFound: MSG_NO_USER_FOUND,
-            labelFollowUpType: LABEL_FOLLOW_UP_TYPE
-        };
     }
 
     checkStatus() {
@@ -311,7 +288,8 @@ export default class FecCaseFollowHeadlessAction extends LightningElement {
             })
             .catch(error => {
                 this.isLoading = false;
-                this.showToast('Error', error.body?.message || error.message, 'error');
+                const errMsg = error.body?.message || error.message || '';
+                this.showToast(FEC_Error_Title, FEC_MSG_FollowUp_Error_Detail.replace('{0}', errMsg), 'error');
                 this.showModal = false;
             });
     }
@@ -388,15 +366,16 @@ export default class FecCaseFollowHeadlessAction extends LightningElement {
                 getRecordNotifyChange([{ recordId: this.recordId }]);
 
                 const message = this.alreadyFollowing 
-                    ? 'Follow-up type has been updated successfully' 
-                    : 'Follow Case has been saved successfully';
-                this.showToast('Success', message, 'success');
+                    ? FEC_MSG_FollowUp_Type_Updated_Success 
+                    : FEC_MSG_FollowUp_Case_Follow_Success;
+                this.showToast(FEC_Success_Title, message, 'success');
                 
                 this.showModal = false;
             })
             .catch(error => {
                 this.isLoading = false;
-                this.showToast('Error', error.body?.message || error.message, 'error');
+                const errMsg = error.body?.message || error.message || '';
+                this.showToast(FEC_Error_Title, FEC_MSG_FollowUp_Error_Detail.replace('{0}', errMsg), 'error');
             });
     }
 

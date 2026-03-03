@@ -2,77 +2,39 @@ import { LightningElement, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecordNotifyChange } from 'lightning/uiRecordApi';
 import unfollowCase from '@salesforce/apex/FEC_FollowUpController.unfollowCase';
-import ACTION_CANCEL from '@salesforce/label/c.FEC_ACTION_CANCEL';
-import ACTION_UNFOLLOW from '@salesforce/label/c.FEC_ACTION_UNFOLLOW';
-import LABEL_CURRENT_FOLLOW_TYPE from '@salesforce/label/c.FEC_LABEL_CURRENT_FOLLOW_TYPE';
-import LABEL_CASE_STATUS from '@salesforce/label/c.FEC_LABEL_CASE_STATUS';
-import MSG_CONFIRM_UNFOLLOW from '@salesforce/label/c.FEC_MSG_CONFIRM_UNFOLLOW';
-import MSG_UNFOLLOW_INFO from '@salesforce/label/c.FEC_MSG_UNFOLLOW_INFO';
-
+import FEC_Error_Title from '@salesforce/label/c.FEC_Error_Title';
+import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
+import FEC_MSG_FollowUp_Case_ID_Not_Found from '@salesforce/label/c.FEC_MSG_FollowUp_Case_ID_Not_Found';
+import FEC_MSG_FollowUp_Unfollow_Success from '@salesforce/label/c.FEC_MSG_FollowUp_Unfollow_Success';
+import FEC_MSG_FollowUp_Error_Detail from '@salesforce/label/c.FEC_MSG_FollowUp_Error_Detail';
+import FEC_MSG_FollowUp_Unfollow_Error from '@salesforce/label/c.FEC_MSG_FollowUp_Unfollow_Error';
 
 export default class FecCaseUnfollowHeadlessAction extends LightningElement {
     @api recordId;
-    @api followTypeLabel;          // value displayed in template
-
-    // internal state for modal
-    showModal = false;
-    isLoading = false;
-    caseInfo;                      // optional object with case information
-
-    // expose JS-side custom labels for template convenience
-    get customLabels() {
-        return {
-            followTypeLabel: this.followTypeLabel,
-            caseStatus: this.caseInfo ? this.caseInfo.caseStatus : '',
-            confirmUnfollow: MSG_CONFIRM_UNFOLLOW,
-            unfollowInfo: MSG_UNFOLLOW_INFO
-        };
-    }
 
     // Headless Action - invoke() được gọi khi click button
-    // accepts optional data object with properties passed from caller
-    // e.g. { caseInfo: {...}, followTypeLabel: 'Until Resolved' }
+    // Unfollow trực tiếp KHÔNG cần popup xác nhận
     @api
-    invoke(data) {
+    invoke() {
         if (!this.recordId) {
-            this.showToast('Error', 'Case ID not found', 'error');
+            this.showToast(FEC_Error_Title, FEC_MSG_FollowUp_Case_ID_Not_Found, 'error');
             return;
         }
-        if (data) {
-            if (data.caseInfo) {
-                this.caseInfo = data.caseInfo;
-            }
-            if (data.followTypeLabel) {
-                this.followTypeLabel = data.followTypeLabel;
-            }
-        }
-        // show confirmation modal instead of immediate unfollow
-        this.showModal = true;
-    }
 
-    handleCancel() {
-        this.showModal = false;
-    }
-
-    handleConfirm() {
-        this.isLoading = true;
+        // Unfollow ngay lập tức
         unfollowCase({ caseId: this.recordId })
-            .then(result => {
+            .then(() => {
+                // Notify LDS to refresh record
                 getRecordNotifyChange([{ recordId: this.recordId }]);
-                this.showToast('Success', result || 'Unfollowed Case successfully', 'success');
-                this.showModal = false;
+                this.showToast(FEC_Success_Title, FEC_MSG_FollowUp_Unfollow_Success, 'success');
             })
             .catch(error => {
-                const errorMsg = error.body?.message || error.message || 'An error occurred while unfollowing';
-                this.showToast('Error', errorMsg, 'error');
-            })
-            .finally(() => {
-                this.isLoading = false;
+                const errorMsg = error.body?.message || error.message || FEC_MSG_FollowUp_Unfollow_Error;
+                this.showToast(FEC_Error_Title, FEC_MSG_FollowUp_Error_Detail.replace('{0}', errorMsg), 'error');
             });
     }
 
     showToast(title, message, variant) {
-        // allow passing label values too
         this.dispatchEvent(new ShowToastEvent({
             title: title,
             message: message,

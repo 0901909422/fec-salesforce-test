@@ -3290,6 +3290,62 @@
         <value>Select Sub Cat</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_FollowUp_Case_ID_Not_Found</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case ID not found</shortDescription>
+        <value>Case ID not found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Unfollow_Error</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error while unfollowing Case</shortDescription>
+        <value>An error occurred while unfollowing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Please_Select_User</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please select a User</shortDescription>
+        <value>Vui lòng chọn một User.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Add_User_To_Watcher_Success</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow-Up User added to list and Watcher Information</shortDescription>
+        <value>Follow-Up User đã được thêm vào danh sách follow-up và Watcher Information.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Type_Updated_Success</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow-up type updated successfully</shortDescription>
+        <value>Follow-up type has been updated successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Case_Follow_Success</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow Case saved successfully</shortDescription>
+        <value>Follow Case has been saved successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Error_Detail</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message with detail</shortDescription>
+        <value>Error: {0}</value>
+    </labels>
+    <labels>
         <fullName>FEC_Placeholder_Select_SubCode</fullName>
         <language>en_US</language>
         <protected>false</protected>
