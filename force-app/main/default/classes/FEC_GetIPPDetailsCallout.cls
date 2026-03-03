@@ -49,8 +49,8 @@ public with sharing class FEC_GetIPPDetailsCallout {
     //=============== VALIDATION METHODS ===============//
 
     /**
-     * Validate request parameters
-     * Required fields: AccountNumber, EffectiveDate, Amount, PostingDate
+     * Validate request parameters.
+     * Required: AccountNumber, EffectiveDate, Amount, PostingDate.
      */
     public static ValidationResult validateRequest(IPPRequest reqData) {
         if (reqData == null) {
@@ -200,18 +200,28 @@ public with sharing class FEC_GetIPPDetailsCallout {
         requestNode.addChildElement('AccountNumber', null, null).addTextNode(d.accountNumber);
         requestNode.addChildElement('EffectiveDate', null, null).addTextNode(d.effectiveDate);
         requestNode.addChildElement('Amount', null, null).addTextNode(String.valueOf(d.amount));
-        requestNode.addChildElement('PostingDate', null, null).addTextNode(d.postingDate);
 
         // Optional fields
-        addOptionalNode(requestNode, 'PlanNumber', d.planNumber);
-        addOptionalNode(requestNode, 'IPPTerm', d.ippTerm);
-        addOptionalNode(requestNode, 'ReferenceNumber', d.referenceNumber);
-        addOptionalNode(requestNode, 'TransactionPlan', d.transactionPlan);
+        addOptionalNodeOrEmpty(requestNode, 'PlanNumber', d.planNumber);
+        addOptionalNodeOrEmpty(requestNode, 'IPPTerm', d.ippTerm);
+        addOptionalNodeOrEmpty(requestNode, 'ReferenceNumber', d.referenceNumber);
+        addOptionalNodeOrEmpty(requestNode, 'TransactionPlan', d.transactionPlan);
+
+        // Required
+        requestNode.addChildElement('PostingDate', null, null).addTextNode(d.postingDate);
+
+        // Optional fields after PostingDate
         addOptionalNode(requestNode, 'CardNumber', d.cardNumber);
         addOptionalNode(requestNode, 'CardSeq', d.cardSeq);
         addOptionalNode(requestNode, 'IPPKey', d.ippKey);
 
         return doc;
+    }
+
+    /**(optional fields before PostingDate). */
+    private static void addOptionalNodeOrEmpty(Dom.XmlNode parent, String tagName, Object value) {
+        String text = (value != null && String.isNotBlank(String.valueOf(value))) ? String.valueOf(value) : '';
+        parent.addChildElement(tagName, null, null).addTextNode(text);
     }
 
     private static void addOptionalNode(Dom.XmlNode parent, String tagName, Object value) {

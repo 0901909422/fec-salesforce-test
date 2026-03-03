@@ -19,6 +19,13 @@ import syncStatementFromAPI from '@salesforce/apex/FEC_StatementsAccountControll
 import loadGeneralStatementInfo from '@salesforce/apex/FEC_StatementsAccountController.loadGeneralStatementInfo';
 import loadStatementDetails from '@salesforce/apex/FEC_StatementsAccountController.loadStatementDetails';
 
+import FEC_Billing_Cycle from '@salesforce/label/c.FEC_Billing_Cycle';
+import FEC_Total_Payment_Due from '@salesforce/label/c.FEC_Total_Payment_Due';
+import FEC_Last_Statement_Date from '@salesforce/label/c.FEC_Last_Statement_Date';
+import FEC_Payment_Due_Date from '@salesforce/label/c.FEC_Payment_Due_Date';
+import FEC_Minimum_Payment_Due from '@salesforce/label/c.FEC_Minimum_Payment_Due';
+import FEC_Next_Statement_Date from '@salesforce/label/c.FEC_Next_Statement_Date';
+
 export default class Fec_StatementsAccount extends NavigationMixin(LightningElement) {
 
     /* ================= API ================= */
@@ -81,6 +88,15 @@ export default class Fec_StatementsAccount extends NavigationMixin(LightningElem
         }
     ];
 
+    customLabel = {
+        billingCycleLabel: FEC_Billing_Cycle,
+        totalPaymentDueLabel: FEC_Total_Payment_Due,
+        lastStatementDateLabel: FEC_Last_Statement_Date,
+        paymentDueDateLabel: FEC_Payment_Due_Date,
+        minimumPaymentDueLabel: FEC_Minimum_Payment_Due,
+        nextStatementDateLabel: FEC_Next_Statement_Date
+    }
+
     /* ================= LIFECYCLE ================= */
     connectedCallback() {
         this.loadData();
@@ -131,12 +147,12 @@ export default class Fec_StatementsAccount extends NavigationMixin(LightningElem
         }
 
         this.generalStatementInfoFields = [
-            this.buildField('Billing Cycle', dto.billingCycle, 'FEC_Billing_Cycle__c'),
-            this.buildField('Total Payment Due', this.formatNumber(dto.totalPaymentDue), 'FEC_Total_Payment_Due__c'),
-            this.buildField('Last Statement Date', this.formatDate(dto.lastStatementDate), 'FEC_Last_Statement_Date__c'),
-             this.buildField('Payment Due Date', this.formatDate(dto.paymentDueDate), 'FEC_Payment_Due_Date__c'),
-            this.buildField('Minimum Payment Due', this.formatNumber(dto.minimumPaymentDue), 'FEC_Minimum_Payment_Due__c'),
-            this.buildField('Next Statement Date', this.formatDate(dto.nextStatementDate), 'FEC_Next_Statement_Date__c')
+            this.buildField(this.customLabel.billingCycleLabel, dto.billingCycle, 'FEC_Billing_Cycle__c'),
+            this.buildField(this.customLabel.totalPaymentDueLabel, this.formatNumber(dto.totalPaymentDue), 'FEC_Total_Payment_Due__c'),
+            this.buildField(this.customLabel.lastStatementDateLabel, this.formatDate(dto.lastStatementDate), 'FEC_Last_Statement_Date__c'),
+            this.buildField(this.customLabel.paymentDueDateLabel, this.formatDate(dto.paymentDueDate), 'FEC_Payment_Due_Date__c'),
+            this.buildField(this.customLabel.minimumPaymentDueLabel, this.formatNumber(dto.minimumPaymentDue), 'FEC_Minimum_Payment_Due__c'),
+            this.buildField(this.customLabel.nextStatementDateLabel, this.formatDate(dto.nextStatementDate), 'FEC_Next_Statement_Date__c')
         ];
     }
 

@@ -100,36 +100,39 @@ public with sharing class FEC_GetApplicationsList {
         String cifNumber
     ) {
         Dom.Document doc = new Dom.Document();
-
         Dom.XmlNode envelope = doc.createRootElement(
             'soapenv:Envelope',
-            FEC_ConstantCommon.SOAP_ENV,
+            null,
             null
         );
-
+        
+        envelope.setAttribute(
+            'xmlns:soapenv',
+            FEC_ConstantCommon.SOAP_ENV
+        );
+        
         envelope.setAttribute(
             'xmlns:cif',
             'http://fecredit.com.vn/CIF_CustomerInfo'
         );
-
+        
+        // ===== Header =====
         envelope.addChildElement('soapenv:Header', null, null);
-
+        
+        // ===== Body =====
         Dom.XmlNode body =
             envelope.addChildElement('soapenv:Body', null, null);
-
-        Dom.XmlNode getApps =
-            body.addChildElement(
-                'cif:GetApplicationsList',
-                null,
-                null
-            );
-
-        Dom.XmlNode sys = getApps.addChildElement('Sys', null, null);
+        
+        // ===== Main Action =====
+        Dom.XmlNode action =
+            body.addChildElement('cif:GetApplicationsList', null, null);
+      
+        Dom.XmlNode sys = action.addChildElement('Sys', null, null);
         sys.addChildElement('TransID', null, null).addTextNode(transID);
         sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
         sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
 
-        getApps
+        action
             .addChildElement('CIFNumber', null, null)
             .addTextNode(cifNumber);
 

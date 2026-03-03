@@ -22,6 +22,18 @@ import {
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 
 import { mask } from "c/fec_CommonUtils";
+import { ICON_PREVIEW, ICON_HIDE } from "c/fec_CommonConst";
+
+import FEC_KYC_Answer_Label from "@salesforce/label/c.FEC_KYC_Answer_Label";
+import FEC_KYC_Product_Label from "@salesforce/label/c.FEC_KYC_Product_Label";
+import FEC_KYC_Question_Label from "@salesforce/label/c.FEC_KYC_Question_Label";
+import FEC_KYC_Result_Label from "@salesforce/label/c.FEC_KYC_Result_Label";
+import FEC_Performed_On_Label from "@salesforce/label/c.FEC_Performed_On_Label";
+import FEC_KYC_Method_Label from "@salesforce/label/c.FEC_KYC_Method_Label";
+import FEC_KYC_Details_Label from "@salesforce/label/c.FEC_KYC_Details_Label";
+import FEC_Suggested_answer_Label from "@salesforce/label/c.FEC_Suggested_answer_Label";
+import FEC_Button_Fail from "@salesforce/label/c.FEC_Button_Fail";
+import FEC_Button_Pass from "@salesforce/label/c.FEC_Button_Pass";
 
 export default class Fec_KYC extends LightningElement {
   @api recordId;
@@ -60,12 +72,25 @@ export default class Fec_KYC extends LightningElement {
 
   subscription = null;
 
+  customLabel = {
+    kycAnswerLabel: FEC_KYC_Answer_Label,
+    kycProductLabel: FEC_KYC_Product_Label,
+    kycQuestionLabel: FEC_KYC_Question_Label,
+    kycResultLabel: FEC_KYC_Result_Label,
+    performedOnLabel: FEC_Performed_On_Label,
+    kycMethodLabel: FEC_KYC_Method_Label,
+    kycDetailsLabel: FEC_KYC_Details_Label,
+    suggestedAnswerLabel: FEC_Suggested_answer_Label,
+    buttonFail: FEC_Button_Fail,
+    buttonPass: FEC_Button_Pass,
+  }
+
   @track kycResultColumn = [
-    { label: "KYC Product", fieldName: "productType" },
-    { label: "KYC Question", fieldName: "question" },
-    { label: "KYC Answer", fieldName: "answer" },
-    { label: "KYC Result", fieldName: "result" },
-    { label: "Performed On", fieldName: "performedOn" }
+    { label: this.customLabel.kycProductLabel, fieldName: "productType" },
+    { label: this.customLabel.kycQuestionLabel, fieldName: "question" },
+    { label: this.customLabel.kycAnswerLabel, fieldName: "answer" },
+    { label: this.customLabel.kycResultLabel, fieldName: "result" },
+    { label: this.customLabel.performedOnLabel, fieldName: "performedOn" }
   ];
 
   @wire(getRecord, {
@@ -199,7 +224,7 @@ export default class Fec_KYC extends LightningElement {
               item.isDisabled = !item.isEditable || this.isDisabled;
 
               if (item.isMasked) {
-                item.iconName = "utility:hide";
+                item.iconName = ICON_HIDE;
               }
 
               item.maskedAnswer = item.isMasked
@@ -231,7 +256,7 @@ export default class Fec_KYC extends LightningElement {
 
   handleToggleMask(e) {
     let id = e.target.dataset.id;
-    let isPreview = e.target.iconName === "utility:preview";
+    let isPreview = e.target.iconName === ICON_PREVIEW;
 
     this.kycData.typelst?.forEach((typeItem) => {
       this.prodTypeSectionlst.push(typeItem.type);
@@ -240,10 +265,10 @@ export default class Fec_KYC extends LightningElement {
         if (item.id === id) {
           if (isPreview) {
             item.maskedAnswer = mask(item.suggestedAnswer);
-            item.iconName = "utility:hide";
+            item.iconName = ICON_HIDE;
           } else {
             item.maskedAnswer = item.suggestedAnswer;
-            item.iconName = "utility:preview";
+            item.iconName = ICON_PREVIEW;
             logSensitiveAccess({
               itemName: item.fieldName,
               caseId: this.recordId

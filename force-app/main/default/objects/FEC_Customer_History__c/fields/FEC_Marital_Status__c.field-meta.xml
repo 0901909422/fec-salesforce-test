@@ -3,6 +3,7 @@
     <fullName>FEC_Marital_Status__c</fullName>
     <description>Tình trạng hôn nhân</description>
     <externalId>false</externalId>
+    <inlineHelpText>tình trạng hôn nhân</inlineHelpText>
     <label>Marital Status</label>
     <length>255</length>
     <required>false</required>

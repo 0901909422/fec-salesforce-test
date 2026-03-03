@@ -1,27 +1,10 @@
 <template>
   <div class="slds-card">
-    <!-- <div class="duration">
-      <p class="duration__title">Interation Duration</p>
-
-      <div class="duration__donut"></div>
-
-      <div>
-        <img src={iconUrl} alt="" />
-      </div>
-    </div> -->
     <div class="slds-grid slds-gutters slds-m-top_small">
 
       <!-- LEFT: Icons (50%) -->
       <div class="slds-col slds-size_6-of-12 slds-p-bottom_none">
-        <!-- <div class="slds-grid slds-grid_vertical slds-grid_vertical-align-center">
-          <div class="slds-m-bottom_small">
-            <div class="duration__donut"></div>
-          </div>
-
-          <template if:true={iconUrl}>
-            <img src={iconUrl} class="channel-icon" alt="Channel Icon" />
-          </template>
-        </div> -->
+        
         <div class="duration">
           <div class="duration__donut"></div>
           <div>
@@ -46,19 +29,19 @@
       <div class="slds-modal__container">
         <!-- Modal Header -->
         <header class="slds-modal__header">
-          <h2 class="slds-text-heading_medium">Quick Wrap-up</h2>
+          <h2 class="slds-text-heading_medium">{customLabel.quickWrapUp}</h2>
         </header>
 
         <!-- Modal Body -->
         <div class="slds-modal__content slds-p-around_medium">
-          <lightning-combobox name="quickOutcomeCode" label="Select Outcome Code" value={quickWrapUpOutcomeCode}
+          <lightning-combobox name="quickOutcomeCode" label={customLabel.selectOutcomeCode} value={quickWrapUpOutcomeCode}
             placeholder="--None--" options={quickOutcomeCodeOptions} disabled></lightning-combobox>
         </div>
 
         <!-- Modal Footer -->
         <footer class="slds-modal__footer">
-          <lightning-button variant="neutral" label="Cancel" onclick={handleQuickWrapUpCancelClick}></lightning-button>
-          <lightning-button variant="brand" label="Confirm" onclick={handleQuickWrapUpConfirmClick}></lightning-button>
+          <lightning-button variant="neutral" label={customLabel.btnCancel} onclick={handleQuickWrapUpCancelClick}></lightning-button>
+          <lightning-button variant="brand" label={customLabel.btnConfirm} onclick={handleQuickWrapUpConfirmClick}></lightning-button>
         </footer>
       </div>
     </section>
@@ -71,30 +54,30 @@
       <div class="slds-modal__container">
         <!-- Modal Header -->
         <header class="slds-modal__header">
-          <h2 class="slds-text-heading_medium">Wrap-up Information</h2>
+          <h2 class="slds-text-heading_medium">{customLabel.wrapUpInformation}</h2>
         </header>
 
         <!-- Modal Body -->
         <div class="slds-modal__content slds-p-around_medium">
-          <lightning-combobox name="outcomeCode" label="Select Outcome Code" value={selectedOutcomeCode}
+          <lightning-combobox name="outcomeCode" label={customLabel.selectOutcomeCode} value={selectedOutcomeCode}
             placeholder="--None--" options={outcomeCodeOptions} onchange={handleOutcomeCodeChange}
             required></lightning-combobox>
 
           <div class="slds-form-element slds-m-top_medium">
             <label class="slds-form-element__label" for="interactionRemarks">
-              <span class="slds-form-element__label">Interaction Remarks</span>
+              <span class="slds-form-element__label">{customLabel.interactionRemark}</span>
             </label>
             <div class="slds-form-element__control">
               <textarea id="interactionRemarks" class="slds-textarea" oninput={handleInteractionRemarksChange}
-                placeholder="Enter interaction remarks...">{interactionRemarks}</textarea>
+                placeholder={customLabel.interactionRemarkPlaceholder}>{interactionRemarks}</textarea>
             </div>
           </div>
         </div>
 
         <!-- Modal Footer -->
         <footer class="slds-modal__footer">
-          <lightning-button variant="neutral" label="Cancel" onclick={handleCancelClick}></lightning-button>
-          <lightning-button variant="brand" label="Confirm" onclick={handleConfirmClick}></lightning-button>
+          <lightning-button variant="neutral" label={customLabel.btnCancel} onclick={handleCancelClick}></lightning-button>
+          <lightning-button variant="brand" label={customLabel.btnConfirm} onclick={handleConfirmClick}></lightning-button>
         </footer>
       </div>
     </section>

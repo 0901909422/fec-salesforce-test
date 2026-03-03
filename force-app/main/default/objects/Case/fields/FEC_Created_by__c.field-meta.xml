@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Created_by__c</fullName>
+    <description>Hiển thị Email ID của người tạo Interaction
+Trường tạo mới để đáp ứng hiển thị trên giao diện và listview</description>
     <externalId>false</externalId>
-    <formula>IF(ISBLANK(Owner:Queue.Id),Owner:User.Email,Owner:Queue.Name)</formula>
+    <formula>IF( RecordType.Name = &apos;Interaction&apos; , LEFT(CreatedBy.Email,FIND(&quot;@&quot;,CreatedBy.Email)-1) , &apos;&apos;)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
-    <label>Created by</label>
+    <label>Interaction Created By</label>
     <required>false</required>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>

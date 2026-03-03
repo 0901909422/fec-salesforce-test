@@ -3,6 +3,7 @@
     <fullName>FEC_Email__c</fullName>
     <description>Thư điện tử</description>
     <externalId>false</externalId>
+    <inlineHelpText>Mail của khách hàng</inlineHelpText>
     <label>Email</label>
     <required>false</required>
     <trackHistory>false</trackHistory>

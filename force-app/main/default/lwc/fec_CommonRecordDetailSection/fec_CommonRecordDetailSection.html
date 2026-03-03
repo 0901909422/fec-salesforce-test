@@ -7,7 +7,7 @@
         <!-- ACTIONS -->
         <div slot="actions" if:true={showRefreshButton}>
             <lightning-button
-                label="Refresh"
+                label={customLabel.btnRefresh}
                 variant="brand"
                 onclick={handleRefresh}>
             </lightning-button>
@@ -48,16 +48,11 @@
                                                 slds-border_bottom
                                                 slds-p-bottom_x-small">
 
-                                        <!-- LABEL (FIXED WIDTH, NO WRAP) -->
+                                        <!-- LABEL -->
                                         <div class="slds-grid
                                                     slds-grid_vertical-align-center
-                                                    slds-text-title_bold"
-                                             style="
-                                                width: 140px;
-                                                min-width: 140px;
-                                                margin-right: 4px;
-                                                white-space: nowrap;
-                                             ">
+                                                    slds-text-title_bold
+                                                    field-label-style">
 
                                             <span>{field.label}</span>
 
@@ -69,16 +64,14 @@
                                             </template>
                                         </div>
 
-                                        <!-- VALUE (FLEX, WRAP OK) -->
-                                        <div style="
-                                                flex: 1;
-                                                word-break: break-word;
-                                             "
-                                             class="slds-text-body_regular">
-                                            {field.value}
+                                        <!-- VALUE -->
+                                        <div class="slds-text-body_regular field-value-style">
+                                            <span class={field.valueClass}>
+                                                {field.value}
+                                            </span>
                                         </div>
 
-                                        <!-- ICON (FIXED) -->
+                                        <!-- ICON -->
                                         <div class="slds-m-left_x-small
                                                     slds-grid
                                                     slds-grid_vertical-align-center">
@@ -92,25 +85,19 @@
 
                                             <template if:true={field.showError}>
                                                 <lightning-icon
-                                                    icon-name="utility:error"
+                                                    icon-name="utility:clear"
                                                     variant="error"
                                                     size="x-small">
                                                 </lightning-icon>
                                             </template>
                                         </div>
-
                                     </div>
-
                                 </div>
                             </template>
-
                         </div>
                     </template>
-
                 </div>
-
             </template>
-
         </div>
     </lightning-accordion-section>
 </template>

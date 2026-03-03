@@ -3,6 +3,8 @@ const MANUAL_NOTIFICATION_HEADER_VI = 'New Notifications: Manual Notification';
 const AUTO_NOTIFICATION_TYPE = 'Auto_Notification';
 const MANUAL_NOTIFICATION_TYPE = 'Manual_Notification';
 const STR_NA = 'N/A';
+const LOCALE_ENG = 'en-US';
+const LOCALE_VN = 'vi-VN';
 const MASKING_TYPE_PHONE = 'Mobile/ Phone';
 const MASKING_TYPE_PASSPORT = 'National ID/ Passport';
 const PHONE_VN_REGION = '84';
@@ -38,6 +40,8 @@ export {
     AUTO_NOTIFICATION_TYPE, 
     MANUAL_NOTIFICATION_TYPE,
     STR_NA,
+    LOCALE_ENG,
+    LOCALE_VN,
     MASKING_TYPE_PHONE,
     MASKING_TYPE_PASSPORT,
     PHONE_VN_REGION,

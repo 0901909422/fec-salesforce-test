@@ -3,6 +3,7 @@
     <fullName>FEC_Daily_Retail_Limit__c</fullName>
     <description>Hạn mức cà thẻ/ngày</description>
     <externalId>false</externalId>
+    <inlineHelpText>hạn mức theo ngày</inlineHelpText>
     <label>Daily Retail Limit</label>
     <precision>18</precision>
     <required>false</required>
