@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Interaction_Masked_Phone__c</fullName>
+    <description>Trường số điện thoại trên Interaction hiển thị dạng masking</description>
     <externalId>false</externalId>
     <formula>IF(
     ISBLANK( FEC_Phone_Number__c ),
