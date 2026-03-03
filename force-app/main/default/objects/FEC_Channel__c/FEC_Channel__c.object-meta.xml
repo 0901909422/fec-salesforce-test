@@ -147,7 +147,7 @@
         <type>Default</type>
     </actionOverrides>
     <allowInChatterGroups>true</allowInChatterGroups>
-    <compactLayoutAssignment>FEC_Compact_Layout</compactLayoutAssignment>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
     <description>Là tính năng Channels Library thuộc module Business Configuration Tools trong Salesforce tại FEC. Channels Library dùng để liệt kê và quản lý các kênh tích hợp, hỗ trợ hệ thống bên ngoài truy xuất dữ liệu (Master Data, Nature of Case, trạng thái Case…).
 Thông qua MyCase API, các hệ thống như Mobile App, Vymo, Pega có thể tạo Case trên New CSM; để thực hiện thao tác này, hệ thống cần được khai báo Channel tương ứng trong Channels Library.</description>
