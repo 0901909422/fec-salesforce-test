@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CompactLayout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Compact_Layout</fullName>
+    <label>FEC Compact Layout</label>
+</CompactLayout>

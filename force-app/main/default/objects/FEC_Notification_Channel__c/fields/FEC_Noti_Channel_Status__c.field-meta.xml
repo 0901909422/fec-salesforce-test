@@ -3,7 +3,7 @@
     <fullName>FEC_Noti_Channel_Status__c</fullName>
     <defaultValue>true</defaultValue>
     <description>Trạng thái kênh thông báo</description>
-    <label>Noti Channel Status</label>
+    <label>Notification Channel Status</label>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
