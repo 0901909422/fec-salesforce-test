@@ -97,6 +97,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Actual_Master_Data_Setting__c.FEC_Masking_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Actual_Master_Data_Setting__c.FEC_Section__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -722,6 +727,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Master_Data_Setting__c.FEC_Masking_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Master_Data_Setting__c.FEC_Nature_Of_Case__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -818,6 +828,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_User_Group__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_Channel__c.FEC_Create__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
