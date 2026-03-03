@@ -1035,15 +1035,15 @@
         <fullName>FEC_Error_Expected_Key</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Column A: Expected {0}, Actual {1}</shortDescription>
-        <value>Column A: Expected {0}, Actual {1}</value>
+        <shortDescription>Column A: Expected "{0}", Actual "{1}"</shortDescription>
+        <value>Column A: Expected "{0}", Actual "{1}"</value>
     </labels>
     <labels>
         <fullName>FEC_Error_Expected_Value</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Column B: Expected {0}, Actual {1}</shortDescription>
-        <value>Column B: Expected {0}, Actual {1}</value>
+        <shortDescription>Column B: Expected "{0}", Actual "{1}"</shortDescription>
+        <value>Column B: Expected "{0}", Actual "{1}"</value>
     </labels>
     <labels>
         <fullName>FEC_Error_File_Invalid</fullName>
@@ -1999,7 +1999,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Data Linkage Field Label</shortDescription>
-        <value>Data Linkage Field</value>
+        <value>Key Identifier</value>
     </labels>
     <labels>
         <fullName>FEC_Lbl_Edit_Title</fullName>
@@ -2062,13 +2062,6 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Is Active Checkbox Label</shortDescription>
-        <value>Is Active?</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Lbl_Is_Active_Table</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Is Active Table Column</shortDescription>
         <value>Is Active</value>
     </labels>
     <labels>
@@ -3713,14 +3706,14 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Existing Fields Section Title</shortDescription>
-        <value>Existing Information Fields</value>
+        <value>Processed &amp; Available Fields</value>
     </labels>
     <labels>
         <fullName>FEC_Title_Pending_Process</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Pending Process Section Title</shortDescription>
-        <value>Successfully Uploaded &amp; Pending Processing</value>
+        <value>Uploaded &amp; Waiting For Process</value>
     </labels>
     <labels>
         <fullName>FEC_Toast_Delete_Success</fullName>
@@ -7630,5 +7623,26 @@
         <protected>false</protected>
         <shortDescription>Office Address</shortDescription>
         <value>Office Address</value>
+    </labels>
+    <labels>    
+        <fullName>End_Date_Less_Than_Today_Validation_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>The end date cannot be less than today's date</shortDescription>
+        <value>The end date cannot be less than today's date</value>
+    </labels>
+    <labels>
+        <fullName>End_Date_After_Or_Equal_Start_Date_Validation_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>The end date must be after or equal to the start date</shortDescription>
+        <value>The end date must be after or equal to the start date</value>
+    </labels>
+    <labels>
+        <fullName>No_Record_To_Display_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No records to display</shortDescription>
+        <value>No records to display</value>
     </labels>
 </CustomLabels>
