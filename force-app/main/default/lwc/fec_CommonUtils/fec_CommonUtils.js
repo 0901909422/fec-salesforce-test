@@ -150,4 +150,8 @@ const setConsoleTab = async (label, icon) => {
   }
 };
 
-export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue, formatDateTime, setConsoleTab };
+const urlCmpWithRecordId = (cmp, recordId) => {
+  return `/lightning/cmp/c__${cmp}?c__recordId=${recordId}`;
+}
+
+export { formatDate, mask, formatDateVNI, maskWorkPhone, maskValue, formatDateTime, setConsoleTab, urlCmpWithRecordId };
