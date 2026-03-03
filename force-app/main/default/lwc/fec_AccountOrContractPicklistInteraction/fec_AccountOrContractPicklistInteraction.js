@@ -1,24 +1,36 @@
-import { LightningElement, api, wire } from "lwc";
+import { LightningElement, api, wire, track } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import HAS_ACCOUNT_OR_CONTACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
+import getInteractionAccountNumber from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.getInteractionAccountNumber";
 import GetProductsListByCif from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.GetProductsListByCif";
+import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
+import {
+  subscribe,
+  unsubscribe,
+  APPLICATION_SCOPE,
+  MessageContext,
+} from "lightning/messageService";
 
+import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import FEC_ACCOUNT_CONTRACT_NUMBER_LABEL from "@salesforce/label/c.FEC_Account_Contract_Number_Label";
-
-
+import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 export default class Fec_AccountOrContractPicklistInteraction extends LightningElement {
-
   labels = {
     accountContractNumber: FEC_ACCOUNT_CONTRACT_NUMBER_LABEL,
   };
 
   @api recordId;
-
-  selectedValue = "0001500010000123456";
+  selectedValue = "";
   hasAccountOrContact = false;
   isOpen = false;
-
   selectedRows = [];
+  isEditMode = false;
+  recordTypeId;
+  recordTypeDevName;
+  subscription = null;
+
+  @wire(MessageContext)
+  messageContext;
 
   columns = [
     {
@@ -51,7 +63,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
       product: "Credit Card",
       accountContractNumber: "CC-200045",
       productName: "Platinum Credit Card",
-      isSelected: false, // selected row
+      isSelected: false,
     },
     {
       id: "row-003",
@@ -70,23 +82,65 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   ];
 
   /* =======================
+   * LMS SUBSCRIPTION
+   * ======================= */
+
+  connectedCallback() {
+    this.subscribeToModeChannel();
+  }
+
+  subscribeToModeChannel() {
+    if (this.subscription) return;
+
+    this.subscription = subscribe(
+      this.messageContext,
+      IS_MODE_EDIT,
+      (message) => this.handleModeMessage(message),
+      { scope: APPLICATION_SCOPE },
+    );
+  }
+
+  handleModeMessage(message) {
+    console.log("[LMS] Mode received:", message);
+
+    if (message?.isModeEdit !== undefined) {
+      this.isEditMode = message.isModeEdit;
+
+      console.log("[LMS] isEditMode:", this.isEditMode);
+
+      // // UI reaction
+      // this.isOpen = this.isEditMode;
+    }
+  }
+
+  disconnectedCallback() {
+    if (this.subscription) {
+      unsubscribe(this.subscription);
+      this.subscription = null;
+    }
+  }
+
+  /* =======================
    * WIRE
    * ======================= */
+
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [HAS_ACCOUNT_OR_CONTACT],
+    fields: [HAS_ACCOUNT_OR_CONTACT, RECORDTYPE_ID],
   })
   wiredCase({ data, error }) {
     if (data) {
       this.hasAccountOrContact = getFieldValue(data, HAS_ACCOUNT_OR_CONTACT);
-
+      this.recordTypeId = getFieldValue(data, RECORDTYPE_ID);
       console.log("[WIRE] Case loaded");
       console.log("[WIRE] recordId:", this.recordId);
       console.log("[WIRE] hasAccountOrContact:", this.hasAccountOrContact);
-
-      // if (this.hasAccountOrContact) {
-      //   this.getProductsList();
-      // }
+      if (this.recordTypeId) {
+        this.loadRecordType();
+      }
+      if (this.hasAccountOrContact) {
+        this.getInteractionAccountNumber();
+      }
     }
 
     if (error) {
@@ -94,14 +148,30 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     }
   }
 
+  async loadRecordType() {
+    try {
+      this.recordTypeDevName = await getRecordTypeName({
+        recordId: this.recordId,
+      });
+    } catch (e) {
+      console.error("getRecordTypeName error:", e);
+    }
+  }
+
+  getInteractionAccountNumber() {
+    getInteractionAccountNumber({ caseId: this.recordId })
+      .then((result) => {
+        console.log("[APEX] getInteractionAccountNumber result:", result);
+        this.selectedValue = result;
+      })
+      .catch((error) => {
+        console.error("[APEX] GetInteractionAccountNumber error:", error);
+      });
+  }
+
   getProductsList() {
     GetProductsListByCif({ cifNumber: "" })
       .then((result) => {
-        console.log(
-          "[APEX] GetProductsListByCif result:",
-          JSON.stringify(result, null, 2),
-        );
-
         this.data = result.map((item, index) => ({
           id: String(index + 1),
           product: item.productType,
@@ -109,62 +179,47 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
           productName: item.productName,
           isSelected: false,
         }));
-        this.data.push({
-          id: String(this.data.length + 1),
-          product: "UBANK",
-          accountContractNumber: "",
-          productName: "",
-          isSelected: false,
-        });
       })
       .catch((error) => {
-        console.error(
-          "[APEX] GetProductsListByCif error:",
-          JSON.stringify(error),
-        );
+        console.error("[APEX] GetProductsListByCif error:", error);
       });
   }
 
+  get showPicklist() {
+    return this.hasAccountOrContact && this.isEditMode;
+  }
+
+  get isInteractionCase() {
+    return this.recordTypeDevName === "Interaction";
+  }
+
+  get isCustomerCase() {
+    return this.recordTypeDevName === "Customer_Case";
+  }
   /* =======================
    * UI ACTIONS
    * ======================= */
+
   toggle() {
     this.isOpen = !this.isOpen;
-
-    console.log("[ACTION] toggle popover");
-    console.log("[STATE] isOpen:", this.isOpen);
   }
 
   handleRowSelection(event) {
     const selected = event.detail.selectedRows;
-
-    console.log("[ACTION] row selection event fired");
-    console.log("[EVENT] selectedRows:", JSON.stringify(selected));
-
     if (!selected.length) return;
 
     const row = selected[0];
-    const now = Date.now();
 
-    // single click
     this.selectedRows = [row.id];
     this.data = this.data.map((r) => ({
       ...r,
       isSelected: r.id === row.id,
     }));
 
-    console.log("[STATE] selected row id:", row.id);
-    console.log("[STATE] selectedRows:", JSON.stringify(this.selectedRows));
-    console.log("[STATE] data after select:", JSON.stringify(this.data));
-
     this.selectedValue = row.accountContractNumber;
   }
 
   handleUbankClick() {
     this.selectedValue = "UBANK";
-    // ví dụ:
-    // open UBANK tab
-    // publish LMS
-    // navigate external
   }
 }
