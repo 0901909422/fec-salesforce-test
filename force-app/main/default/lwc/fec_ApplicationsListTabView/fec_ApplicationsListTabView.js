@@ -37,6 +37,8 @@ import FEC_Product_Group from '@salesforce/label/c.FEC_Product_Group';
 import FEC_Registration_Email from '@salesforce/label/c.FEC_Registration_Email';
 import FEC_Office_Address from '@salesforce/label/c.FEC_Office_Address';
 
+import { ICON_PREVIEW, ICON_HIDE } from "c/fec_CommonConst";
+
 export default class Fec_ApplicationsListTabView extends LightningElement {
 
     /* ================= STATE ================= */
@@ -187,12 +189,12 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
 
                 if (cfg.fieldName === 'nationalPassportID') {
                     value = this.showNationalID ? value : maskValue(value);
-                    iconName = this.showNationalID ? 'utility:preview' : 'utility:hide';
+                    iconName = this.showNationalID ? ICON_PREVIEW : ICON_HIDE;
                 }
 
                 if (cfg.fieldName === 'registrationPhone') {
                     value = this.showPhone ? value : maskValue(value);
-                    iconName = this.showPhone ? 'utility:preview' : 'utility:hide';
+                    iconName = this.showPhone ? ICON_PREVIEW : ICON_HIDE;
                 }
             }
 
