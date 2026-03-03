@@ -17,6 +17,12 @@ import ICONS from "@salesforce/resourceUrl/FEC_SLA_Icon";
 import FEC_Interaction_Remarks_Label from '@salesforce/label/c.FEC_Interaction_Remarks_Label';
 import FEC_Quick_Wrap_up_Label from '@salesforce/label/c.FEC_Quick_Wrap_up_Label';
 import FEC_Wrap_up_Information_Label from '@salesforce/label/c.FEC_Wrap_up_Information_Label';
+import FEC_Select_Outcome_Code_Label from '@salesforce/label/c.FEC_Select_Outcome_Code_Label';
+import FEC_Interaction_Remark_Placeholder from '@salesforce/label/c.FEC_Interaction_Remark_Placeholder';
+import FEC_Btn_Cancel from '@salesforce/label/c.FEC_Btn_Cancel';
+import FEC_Button_Confirm from '@salesforce/label/c.FEC_Button_Confirm';
+
+import { urlCmpWithRecordId } from "c/fec_CommonUtils";
 
 const SLA_RULES = {
   Inbound: { green: 5, yellow: 10 },
@@ -39,6 +45,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
   wiredCaseRecord({ data, error }) {
     if (data) {
       this.interactionViewMode = getFieldValue(data, VIEW_MODE);
+      console.log("Interaction View Mode:", this.interactionViewMode);
     }
   }
 
@@ -65,7 +72,11 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
   customLabel = {
     interactionRemark: FEC_Interaction_Remarks_Label,
     quickWrapUp: FEC_Quick_Wrap_up_Label,
-    wrapUpInformation: FEC_Wrap_up_Information_Label
+    wrapUpInformation: FEC_Wrap_up_Information_Label,
+    selectOutcomeCode: FEC_Select_Outcome_Code_Label,
+    interactionRemarkPlaceholder: FEC_Interaction_Remark_Placeholder,
+    btnCancel: FEC_Btn_Cancel,
+    btnConfirm: FEC_Button_Confirm,
   }
 
   @wire(IsConsoleNavigation)
@@ -403,7 +414,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
   async handleCreateCase() {
     if (this.isConsoleNavigation) {
       await openTab({
-        url: `/lightning/cmp/c__fec_InteractionCreateCase?c__recordId=${this.recordId}`,
+        url: urlCmpWithRecordId('fec_InteractionCreateCase', this.recordId),
         focus: true
       });
     } else {
@@ -422,7 +433,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
   async handleEditInteraction() {
     if (this.isConsoleNavigation) {
       await openTab({
-        url: `/lightning/cmp/c__fec_CaseDetail_Interation_Edit?c__recordId=${this.recordId}`,
+        url: urlCmpWithRecordId('fec_CaseDetail_Interation_Edit', this.recordId),
         focus: true
       });
     } else {
