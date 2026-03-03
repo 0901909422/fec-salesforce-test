@@ -1,11 +1,43 @@
+/****************************************************************************************
+ * File Name    : Fec_ApplicationsListTabView.js
+ * Author       : Quangdv7
+ * Date         : 2025-02-13
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-02-13    Quangdv7             Create
+ 
+****************************************************************************************/
+
 import { LightningElement, track, wire } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
+import { formatDateVNI, maskValue,setConsoleTab } from 'c/fec_CommonUtils';
 
-import loadApplicationDetail
-    from '@salesforce/apex/FEC_ApplicationsListController.loadApplicationDetail';
+import loadApplicationDetail from '@salesforce/apex/FEC_ApplicationsListController.loadApplicationDetail';
+import logSensitiveFromMainInfo from '@salesforce/apex/FEC_ApplicationsListController.logSensitiveFromMainInfo';
 
-import logSensitiveFromMainInfo
-    from '@salesforce/apex/FEC_ApplicationsListController.logSensitiveFromMainInfo';
+import FEC_CC_Code_Label from '@salesforce/label/c.FEC_CC_Code_Label';
+import FEC_DSA_Code_Label from '@salesforce/label/c.FEC_DSA_Code_Label';
+import FEC_TSA_Code_Label from '@salesforce/label/c.FEC_TSA_Code_Label';
+import FEC_CC_Name_Label from '@salesforce/label/c.FEC_CC_Name_Label';
+import FEC_DSA_Name_Label from '@salesforce/label/c.FEC_DSA_Name_Label';
+import FEC_TSA_Name_Label from '@salesforce/label/c.FEC_TSA_Name_Label';
+import LBL_ApplicationID from '@salesforce/label/c.LBL_ApplicationID';
+import LBL_AccountNumber from '@salesforce/label/c.LBL_AccountNumber';
+import LBL_ContractNumber from '@salesforce/label/c.LBL_ContractNumber';
+import FEC_Last_Status from '@salesforce/label/c.FEC_Last_Status';
+import FEC_National_Passport_ID from '@salesforce/label/c.FEC_National_Passport_ID';
+import FEC_Current_Address from '@salesforce/label/c.FEC_Current_Address';
+import FEC_Updated_Date from '@salesforce/label/c.FEC_Updated_Date';
+import FEC_Registration_Phone from '@salesforce/label/c.FEC_Registration_Phone';
+import FEC_Permanent_Address from '@salesforce/label/c.FEC_Permanent_Address';
+import FEC_Product_Group from '@salesforce/label/c.FEC_Product_Group';
+import FEC_Registration_Email from '@salesforce/label/c.FEC_Registration_Email';
+import FEC_Office_Address from '@salesforce/label/c.FEC_Office_Address';
+
+import { ICON_PREVIEW, ICON_HIDE } from "c/fec_CommonConst";
 
 export default class Fec_ApplicationsListTabView extends LightningElement {
 
@@ -18,30 +50,52 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
     applicationListId;
     isLoading = false;
 
+    customLabel = {
+        ccCodeLabel: FEC_CC_Code_Label,
+        dsaCodeLabel: FEC_DSA_Code_Label,
+        tsaCodeLabel: FEC_TSA_Code_Label,
+        ccNameLabel: FEC_CC_Name_Label,
+        dsaNameLabel: FEC_DSA_Name_Label,
+        tsaNameLabel: FEC_TSA_Name_Label,
+        applicationIdLabel: LBL_ApplicationID,
+        lastStatusLabel: FEC_Last_Status,
+        nationalPassportIdLabel: FEC_National_Passport_ID,
+        currentAddressLabel: FEC_Current_Address,
+        accountNumberLabel: LBL_AccountNumber,
+        updatedDateLabel: FEC_Updated_Date,
+        registrationPhoneLabel: FEC_Registration_Phone,
+        permanentAddressLabel: FEC_Permanent_Address,
+        contractNumberLabel: LBL_ContractNumber,
+        productGroupLabel: FEC_Product_Group,
+        registrationEmailLabel: FEC_Registration_Email,
+        officeAddressLabel: FEC_Office_Address
+    }
+
     /* ================= FIELD CONFIG ================= */
 
     applicationFields = [
-        { label: 'Application ID', fieldName: 'applicationId', fieldApiName: 'fec_application_id__c' },
-        { label: 'Last Status', fieldName: 'lastStatus', fieldApiName: 'fec_last_status__c' },
-        { label: 'National / Passport ID', fieldName: 'nationalPassportID', fieldApiName: 'fec_national_passport_id__c', toggle: true },
-        { label: 'Current Address', fieldName: 'currentAddress', fieldApiName: 'fec_current_address__c' },
-        { label: 'Account Number', fieldName: 'accountNumber', fieldApiName: 'fec_account_number__c' },
-        { label: 'Updated Date', fieldName: 'updateDate', fieldApiName: 'fec_updated_date__c' },
-        { label: 'Registration Phone', fieldName: 'registrationPhone', fieldApiName: 'fec_registration_phone__c', toggle: true },
-        { label: 'Permanent Address', fieldName: 'permanentAddress', fieldApiName: 'fec_permanent_address__c' },
-        { label: 'Contract Number', fieldName: 'contractNumber', fieldApiName: 'fec_contract_number__c' },
-        { label: 'Product Group', fieldName: 'productGroup', fieldApiName: 'fec_product_group__c' },
-        { label: 'Registration Email', fieldName: 'registrationEmail', fieldApiName: 'fec_registration_email__c' },
-        { label: 'Office Address', fieldName: 'officeAddress', fieldApiName: 'fec_office_address__c' }
+        { label: this.customLabel.applicationIdLabel, fieldName: 'applicationId', fieldApiName: 'FEC_Application_ID__c' },
+        { label: this.customLabel.lastStatusLabel, fieldName: 'lastStatus', fieldApiName: 'FEC_Last_Status__c' },
+        { label: this.customLabel.nationalPassportIdLabel, fieldName: 'nationalPassportID', fieldApiName: 'FEC_National_Passport_ID__c', toggle: true },
+        { label: this.customLabel.currentAddressLabel, fieldName: 'currentAddress', fieldApiName: 'FEC_Current_Address__c' },
+        { label: this.customLabel.accountNumberLabel, fieldName: 'accountNumber', fieldApiName: 'FEC_Account_Number__c' },
+        { label: this.customLabel.updatedDateLabel, fieldName: 'updateDate', fieldApiName: 'FEC_Updated_Date__c' },
+        { label: this.customLabel.registrationPhoneLabel, fieldName: 'registrationPhone', fieldApiName: 'FEC_Registration_Phone__c', toggle: true },
+        { label: this.customLabel.permanentAddressLabel, fieldName: 'permanentAddress', fieldApiName: 'FEC_Permanent_Address__c' },
+        { label: this.customLabel.contractNumberLabel, fieldName: 'contractNumber', fieldApiName: 'FEC_Contract_Number__c' },
+        { label: this.customLabel.productGroupLabel, fieldName: 'productGroup', fieldApiName: 'FEC_Product_Group__c' },
+        { label: this.customLabel.registrationEmailLabel, fieldName: 'registrationEmail', fieldApiName: 'FEC_Registration_Email__c' },
+        { label: this.customLabel.officeAddressLabel, fieldName: 'officeAddress', fieldApiName: 'FEC_Office_Address__c' }
     ];
 
     salesFields = [
-        { label: 'CC Code', fieldName: 'ccCode', fieldApiName: 'fec_cc_code__c' },
-        { label: 'DSA Code', fieldName: 'dSACode', fieldApiName: 'fec_dsa_code__c' },
-        { label: 'TSA Code', fieldName: 'tSACode', fieldApiName: 'fec_tsa_code__c'},
-        { label: 'CC Name', fieldName: 'ccName', fieldApiName: 'fec_cc_name__c' },
-        { label: 'DSA Name', fieldName: 'dSAName', fieldApiName: 'fec_dsa_name__c' },
-        { label: 'TSA Name', fieldName: 'tSAName', fieldApiName: 'fec_tsa_name__c' }
+        { label: this.customLabel.ccCodeLabel, fieldName: 'ccCode', fieldApiName: 'FEC_CC_Code__c' },
+        { label: this.customLabel.dsaCodeLabel, fieldName: 'dSACode', fieldApiName: 'FEC_DSA_Code__c' },
+        { label: this.customLabel.tsaCodeLabel, fieldName: 'tSACode', fieldApiName: 'FEC_TSA_Code__c'}, 
+        { isSpacer: true },
+        { label: this.customLabel.ccNameLabel, fieldName: 'ccName', fieldApiName: 'FEC_CC_Name__c' },
+        { label: this.customLabel.dsaNameLabel, fieldName: 'dSAName', fieldApiName: 'FEC_DSA_Name__c' },
+        { label: this.customLabel.tsaNameLabel, fieldName: 'tSAName', fieldApiName: 'FEC_TSA_Name__c' }
     ];
 
     /* ================= NAV ================= */
@@ -68,6 +122,10 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
         loadApplicationDetail({ applicationListId: this.applicationListId })
             .then(res => {
                 this.record = res;
+                setConsoleTab(
+                    'ApplicationsList Detail',
+                    'standard:record'
+                );
             })
             .catch(err => {
                 console.error('Load application detail failed', err);
@@ -91,7 +149,6 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
             {
                 name: 'sales',
                 label: 'Sales',
-                columns: 3,
                 fields: this.buildFields(this.salesFields)
             }
         ];
@@ -101,59 +158,63 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
     buildFields(configs) {
         if (!this.record) return [];
 
-        return configs.map(cfg => {
+        return configs.map((cfg, index) => {
+
+            if (cfg.isSpacer) {
+                return {
+                    fieldName: `empty-${index}`,
+                    isEmpty: true
+                };
+            }
+
             const rawValue = this.record?.[cfg.fieldName];
 
-            let value =
-                rawValue === null || rawValue === undefined
-                    ? '-'
-                    : rawValue;
+            let value;
+
+            if (rawValue === '') {
+                value = '';
+            } else if (rawValue === null || rawValue === undefined) {
+                value = '-';
+            } else {
+                value = rawValue;
+            }
 
             if (cfg.fieldName === 'updateDate' && value !== '-' && value !== '') {
-                value = this.formatDateDDMMYYYY(value);
+                value = formatDateVNI(value);
             }
 
             let iconName;
 
             if (cfg.toggle === true && value && value !== '-') {
+
                 if (cfg.fieldName === 'nationalPassportID') {
-                    value = this.showNationalID
-                        ? value
-                        : this.maskValue(value);
-                    iconName = this.showNationalID
-                        ? 'utility:preview'
-                        : 'utility:hide';
+                    value = this.showNationalID ? value : maskValue(value);
+                    iconName = this.showNationalID ? ICON_PREVIEW : ICON_HIDE;
                 }
 
                 if (cfg.fieldName === 'registrationPhone') {
-                    value = this.showPhone
-                        ? value
-                        : this.maskValue(value);
-                    iconName = this.showPhone
-                        ? 'utility:preview'
-                        : 'utility:hide';
+                    value = this.showPhone ? value : maskValue(value);
+                    iconName = this.showPhone ? ICON_PREVIEW : ICON_HIDE;
                 }
             }
 
-            const apiName = cfg.fieldApiName?.toLowerCase();
+            const apiName = cfg.fieldApiName;
             const helpText = apiName
                 ? this.record?.helpTexts?.[apiName]
                 : null;
 
             return {
                 label: cfg.label,
-                value,               
+                value,
                 fieldName: cfg.fieldName,
-
                 toggle: cfg.toggle === true,
                 iconName,
-
                 helpText,
-                hasHelpText: !!helpText
+                hasHelpText: !!helpText,
+                isEmpty: false
             };
         });
     }
-
 
     /* ================= TOGGLE HANDLER ================= */
 
@@ -177,7 +238,7 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
             }
         }
     }
-
+    
     /* ================= LOG SENSITIVE ================= */
 
     logSensitive(section, fieldLabel) {
@@ -188,53 +249,5 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
         }).catch(err => {
             console.error('Log sensitive access failed', err);
         });
-    }
-
-    /* ================= MASKING ================= */
-
-    maskValue(value) {
-        if (!value) return '';
-
-        const v = value.toString().trim();
-
-        // Passport (bắt đầu bằng chữ)
-        if (/^[A-Za-z]/.test(v)) {
-            return v.length <= 5
-                ? v
-                : v.substring(0, 2) +
-                '*'.repeat(v.length - 5) +
-                v.slice(-3);
-        }
-
-        // Phone (10 số)
-        if (/^\d{10}$/.test(v)) {
-            return (
-                v.substring(0, 4) +
-                '*'.repeat(v.length - 7) +
-                v.slice(-3)
-            );
-        }
-
-        // CCCD / ID number
-        if (/^\d+$/.test(v)) {
-            return v.length <= 6
-                ? v
-                : v.substring(0, 3) +
-                '*'.repeat(v.length - 6) +
-                v.slice(-3);
-        }
-
-        return v;
-    }
-
-    formatDateDDMMYYYY(value) {
-        if (!value) return '-';
-
-        // Expect yyyy-mm-dd
-        const parts = value.split('-');
-        if (parts.length !== 3) return value;
-
-        const [yyyy, mm, dd] = parts;
-        return `${dd}/${mm}/${yyyy}`;
     }
 }

@@ -84,9 +84,6 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
       console.log("[WIRE] recordId:", this.recordId);
       console.log("[WIRE] hasAccountOrContact:", this.hasAccountOrContact);
 
-      // if (this.hasAccountOrContact) {
-      //   this.getProductsList();
-      // }
     }
 
     if (error) {

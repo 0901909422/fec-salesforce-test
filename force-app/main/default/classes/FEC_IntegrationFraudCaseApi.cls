@@ -75,7 +75,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 responseDoc =
                     FEC_IntegrationFraudCaseUtil.errorResponseXml(
                         MSG_MISSING_DETAIL,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                        FEC_FraudConstantCommon.CLIENT_ERROR
                     );
                 return responseDoc.toXmlString();
             }
@@ -90,7 +90,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 responseDoc =
                     FEC_IntegrationFraudCaseUtil.errorResponseXml(
                         MSG_CASEID_REQUIRED,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                        FEC_FraudConstantCommon.CLIENT_ERROR
                     );
                 return responseDoc.toXmlString();
             }
@@ -100,7 +100,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 responseDoc =
                     FEC_IntegrationFraudCaseUtil.errorResponseXml(
                         MSG_MISSING_XML,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                        FEC_FraudConstantCommon.CLIENT_ERROR
                     );
                 return responseDoc.toXmlString();
             }
@@ -123,7 +123,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 responseDoc =
                     FEC_IntegrationFraudCaseUtil.errorResponseXml(
                         MSG_INVALID_CASE_FORMAT,
-                        FEC_IntegrationFraudCaseUtil.NOT_FOUND
+                        FEC_FraudConstantCommon.NOT_FOUND
                     );
                 responseStr = responseDoc.toXmlString();
             }
@@ -136,7 +136,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             responseDoc =
                 FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     ex.getMessage(),
-                    FEC_IntegrationFraudCaseUtil.SERVER_ERROR
+                    FEC_FraudConstantCommon.SERVER_ERROR
                 );
             return responseDoc.toXmlString();
     
@@ -241,7 +241,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_RESULT_INFO,
-                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();                
             }                
             Dom.XmlNode originalRequestNode = FEC_IntegrationFraudCaseUtil.find(caseNode, caseField.ORIGINAL_REQUEST);
@@ -249,14 +249,14 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             if (requestInfoNode == null)
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_REQUEST_INFO,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();
             
             Dom.XmlNode creatorInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, caseField.CREATOR_INFO);
             if (creatorInfoNode == null){
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_CREATOR_INFO,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();
             }
 
@@ -264,7 +264,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             if (customerInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_CUSTOMER_INFO,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();
             }
         
@@ -283,7 +283,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 log(msg);
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     msg,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();
             }
             Long messageTime = (Long) detail.get(caseField.MESSAGE_TIME);
@@ -323,7 +323,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 log(msg);
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     msg,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();
             }
 
@@ -405,7 +405,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
         } catch (Exception ex) {
             return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                 ex.getMessage(),
-                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                FEC_FraudConstantCommon.CLIENT_ERROR
             ).toXmlString();
         }
         
@@ -477,7 +477,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             if (caseNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_RESULT_INFO,
-                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString(); 
             }
                         
@@ -486,7 +486,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             if (requestInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_REQUEST_INFO,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();
             }
         
@@ -494,7 +494,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             if (creatorInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_CREATOR_INFO,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();
             }
 
@@ -502,7 +502,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             if (customerInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_CUSTOMER_INFO,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();
             }
             String caseStatus     = (String) detail.get(caseField.CASE_STATUS_FIELD);
@@ -529,7 +529,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 log(msg);
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     msg,
-                        FEC_IntegrationFraudCaseUtil.NOT_FOUND
+                    FEC_FraudConstantCommon.NOT_FOUND
                     ).toXmlString();
             }
             if (messageTime != null) {
@@ -582,7 +582,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
         } catch (Exception ex) {
             return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                 ex.getMessage(),
-                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                FEC_FraudConstantCommon.CLIENT_ERROR
             ).toXmlString();
         }        
        
@@ -629,7 +629,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             if (caseNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_RESULT_INFO,
-                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();
             }
     
@@ -637,13 +637,13 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             if (originalRequestNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_ORIGINAL_REQUEST,
-                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR).toXmlString();
+                    FEC_FraudConstantCommon.CLIENT_ERROR).toXmlString();
             }
             Dom.XmlNode requestInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, caseField.REQUEST_INFO);
             if (requestInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_REQUEST_INFO,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();
             }
          
@@ -651,14 +651,14 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             if (creatorInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_CREATOR_INFO,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();
             }         
             Dom.XmlNode customerInfoNode = FEC_IntegrationFraudCaseUtil.find(originalRequestNode, caseField.CUSTOMER_INFO);
             if (customerInfoNode == null) {
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     MSG_INVALID_CASE_CUSTOMER_INFO,
-                        FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                    FEC_FraudConstantCommon.CLIENT_ERROR
                     ).toXmlString();
             }
             // =======================
@@ -699,7 +699,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 log(msg);
                 return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                     msg,
-                        FEC_IntegrationFraudCaseUtil.NOT_FOUND
+                    FEC_FraudConstantCommon.NOT_FOUND
                     ).toXmlString();
             }
     
@@ -849,7 +849,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
         catch (Exception ex) {
             return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                 ex.getMessage(),
-                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                FEC_FraudConstantCommon.CLIENT_ERROR
             ).toXmlString();
         }
     }
@@ -883,11 +883,11 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             // ==========================================================
             // 1. Build Interaction DTO from integration data
             // ==========================================================
-            FEC_CreateCaseHanlder.FEC_InteractionCaseDTO dto =
-                new FEC_CreateCaseHanlder.FEC_InteractionCaseDTO();
+            // FEC_CreateCaseHanlder.FEC_InteractionCaseDTO dto =
+            //     new FEC_CreateCaseHanlder.FEC_InteractionCaseDTO();
 
-            // Required: integration channel
-            dto.channel = parentRec.FEC_Sys_Channel__c;
+            // // Required: integration channel
+            // dto.channel = parentRec.FEC_Sys_Channel__c;
 
             // Optional customer & contract data
             String phoneNumber = null;
@@ -908,13 +908,13 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                     accountNumber = i.FEC_Info_Value__c;
                 }
             }
-            dto.phoneNumber    = phoneNumber;
-            dto.nationalId     = nationId;
-            dto.accountNumber  = accountNumber;
-            dto.contractNumber = contractNumber;
+            // dto.phoneNumber    = phoneNumber;
+            // dto.nationalId     = nationId;
+            // dto.accountNumber  = accountNumber;
+            // dto.contractNumber = contractNumber;
  
 
-            log('DTO prepared: ' + JSON.serializePretty(dto));
+            //log('DTO prepared: ' + JSON.serializePretty(dto));
 
             // ==========================================================
             // 2. Create Interaction Case
@@ -923,17 +923,19 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             //FEC_CreateCaseHanlder.FEC_InteractionCaseResponse response =
             //FEC_CreateCaseHanlder.createInteractionCase(dto);
             //Mockup response data
-            FEC_CreateCaseHanlder.FEC_InteractionCaseResponse resultData = new FEC_CreateCaseHanlder.FEC_InteractionCaseResponse();
-            resultData.caseNo = randomSFTCaseId();
+            // FEC_CreateCaseHanlder.FEC_InteractionCaseResponse resultData = new FEC_CreateCaseHanlder.FEC_InteractionCaseResponse();
+            // resultData.caseNo = randomSFTCaseId();
             log('Interaction Case created');
-            log('New Case Id  = ' + resultData.caseNo);
+            //log('New Case Id  = ' + resultData.caseNo);
             //log('Case Link Id = ' + response.linkId);
             //log('Case Number  = ' + response.caseNo);
 
             // ==========================================================
             // 3. Link new SFT Case back to integration record
             // ==========================================================
-            parentRec.FEC_Service_Case_ID__c = resultData.caseNo;
+            //parentRec.FEC_Service_Case_ID__c = resultData.caseNo;
+            String caseSFT = randomSFTCaseId();
+            parentRec.FEC_Service_Case_ID__c = caseSFT;
             update parentRec;
 
             log('Parent integration record updated with Service Case Id');
@@ -941,7 +943,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             log('==================== processSFTCase SUCCESS ====================');
            
             return FEC_IntegrationFraudCaseUtil.successResponseXml(
-                resultData.caseNo, MSG_FRAUD_UPDATE_SUCCESS ).toXmlString();
+                caseSFT, MSG_FRAUD_UPDATE_SUCCESS ).toXmlString();
         }
         catch (Exception ex) {
             log('==================== processSFTCase ERROR ====================');
@@ -949,7 +951,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             log('Stack trace  : ' + ex.getStackTraceString());
             return FEC_IntegrationFraudCaseUtil.errorResponseXml(
                 ex.getMessage(),
-                    FEC_IntegrationFraudCaseUtil.CLIENT_ERROR
+                FEC_FraudConstantCommon.CLIENT_ERROR
             ).toXmlString();
             
         }

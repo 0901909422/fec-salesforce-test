@@ -524,7 +524,8 @@ public with sharing class FEC_IntegrationMappingController{
         String category,
         String subCategory,
         String subCode,
-        String channelCode
+        String channelCode,
+        String serviceType
     ) {
 
         // Result list returned to LWC
@@ -550,6 +551,7 @@ public with sharing class FEC_IntegrationMappingController{
                    FEC_Source_Parent_Id__c = :subCode
                 OR FEC_Source_Parent_Id__c = :category
                 OR FEC_Source_Parent_Id__c = :subCategory
+                OR FEC_Source_Parent_Id__c = :serviceType
               )
             ORDER BY FEC_Source_Id__c
         ]) {
@@ -644,16 +646,19 @@ public with sharing class FEC_IntegrationMappingController{
         }
         else {
             for (FEC_Master_Data_Integration__c r : [
-            SELECT FEC_Source_Id__c, FEC_Source_NameVN__c, FEC_Source_Name__c
-            FROM FEC_Master_Data_Integration__c
-            WHERE FEC_Source_Type__c = :sourceType
-            AND FEC_Source_Parent_Id__c = :parentId
-            AND FEC_Channel__c = :channelCode
-            ORDER BY FEC_PosOrder__c
+                SELECT FEC_Source_Id__c,
+                       FEC_Source_NameVN__c,
+                       FEC_Source_Name__c
+                FROM FEC_Master_Data_Integration__c
+                WHERE FEC_Source_Type__c = :sourceType
+                  AND FEC_Channel__c = :channelCode
+                  AND FEC_Source_Parent_Id__c = :parentId
+                ORDER BY FEC_PosOrder__c
             ]) {
                 String displayName = isVietnamese
-                ? r.FEC_Source_NameVN__c
-                : r.FEC_Source_Name__c;
+                    ? r.FEC_Source_NameVN__c
+                    : r.FEC_Source_Name__c;
+            
                 result.add(new NodeDTO(displayName, r.FEC_Source_Id__c));
             }
         }
@@ -724,26 +729,26 @@ public with sharing class FEC_IntegrationMappingController{
         //Detect user language       
         Boolean isVietnamese = userLang != null && userLang.startsWith(FEC_FraudConstantCommon.LANG_VI);
         // List to store queried records
-        List<FEC_Case_Channel__c> records;
+        List<FEC_Channel__c> records;
         records = [
             SELECT Id,
-            FEC_Code__c,
+            FEC_Channel_ID__c,
             Name,          
-            FEC_Name_VN__c
-            FROM FEC_Case_Channel__c
-            WHERE FEC_Status__c = True
+            FEC_Channel_Vietnamese_name__c
+            FROM FEC_Channel__c
+            WHERE FEC_Channel_Status__c = True
         ];
 
         // Convert queried records to NodeDTO list
         List<NodeDTO> result = new List<NodeDTO>();
-        for (FEC_Case_Channel__c r : records) {
+        for (FEC_Channel__c r : records) {
             String displayName = isVietnamese
-            ? r.FEC_Name_VN__c
+            ? r.FEC_Channel_Vietnamese_name__c
             : r.Name;
             result.add(
                 new NodeDTO(
                     displayName, // label
-                    r.FEC_Code__c      // value
+                    r.FEC_Channel_ID__c      // value
                 )
             );
         }
