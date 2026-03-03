@@ -691,6 +691,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_Channel__c.FEC_Create__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Notification_Channel__c.FEC_Noti_Channel_Status__c</field>
         <readable>true</readable>

@@ -37,6 +37,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_CaseTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_ClickToCallHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -53,6 +57,22 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_ContentDistributionTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ContentDocumentLinkTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ContentDocumentTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ContentVersionTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CreateCaseHanlder</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -66,6 +86,14 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_EmeaAccountInqService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_FileActionOnReviewService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_FollowUpController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -214,6 +242,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_MainInfoController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_MockData</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
