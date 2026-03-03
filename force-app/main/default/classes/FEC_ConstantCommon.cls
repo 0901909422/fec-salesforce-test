@@ -6,6 +6,33 @@ public with sharing class FEC_ConstantCommon {
     public static final String API_REQUESTOR_ID = 'SALESFORE-CSM';
     public static final String SOAP_ENV = 'http://schemas.xmlsoap.org/soap/envelope/';
 
+    /** Chuỗi rỗng dùng chung (default khi value blank). */
+    public static final String STR_EMPTY = '';
+
+    /** Dấu phân tách dùng cho key (vd: RecordType|Channel). */
+    public static final String KEY_DELIMITER_PIPE = '|';
+
+    /** Dấu phân tách trong FEC_ID_Search__c (format: Prefix-Số, vd S-0001). */
+    public static final String FEC_ID_SEARCH_DELIMITER = '-';
+
+    /** Prefix cho các trạng thái Case đã resolved (Resolved-Completed, Resolved-Cancelled, ...) */
+    public static final String CASE_STATUS_PREFIX_RESOLVED = 'Resolved';
+
+    /** Follow-up: giá trị picklist "Until Case is Resolved" */
+    public static final String FOLLOW_UP_TYPE_UNTIL_RESOLVED = 'Until Case is Resolved';
+    /** Follow-up: giá trị picklist "Until choosing Unfollow" */
+    public static final String FOLLOW_UP_TYPE_UNTIL_UNFOLLOW = 'Until choosing Unfollow';
+    /** Follow-up: giá trị frontend UNTIL_RESOLVED */
+    public static final String FOLLOW_UP_FRONTEND_RESOLVED = 'UNTIL_RESOLVED';
+    /** Follow-up: giá trị frontend UNTIL_UNFOLLOW */
+    public static final String FOLLOW_UP_FRONTEND_UNFOLLOW = 'UNTIL_UNFOLLOW';
+    /** Follow-up: ký hiệu rút gọn trong FEC_Follow_Up_User__c cho Until Resolved */
+    public static final String FOLLOW_UP_COMPACT_RESOLVED = 'R';
+    /** Follow-up: ký hiệu rút gọn trong FEC_Follow_Up_User__c cho Until Unfollow */
+    public static final String FOLLOW_UP_COMPACT_UNFOLLOW = 'U';
+    /** Dấu phân tách giữa các entry trong FEC_Follow_Up_User__c */
+    public static final String FOLLOW_UP_FIELD_DELIMITER = ';';
+
     public static final String STR_DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS';
     public static final String STR_DATETIME_FORMAT_Z = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'';
     public static final String STR_DATETIME_FORMAT_XXX = 'yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX';
