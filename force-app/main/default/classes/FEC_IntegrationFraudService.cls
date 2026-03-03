@@ -415,13 +415,14 @@ global with sharing class FEC_IntegrationFraudService {
      */
     private static String getIntegrationChannelCode(String code) {
         List<FEC_Channel__c> chs = [
-            SELECT FEC_Channel_ID__c
+
+            SELECT FEC_Channel_ID__c, FEC_Code__c
             FROM FEC_Channel__c
             WHERE FEC_Channel_Status__c = true
         ];
 
         for (FEC_Channel__c c : chs) {
-            if (c.FEC_Channel_ID__c == code) return c.FEC_Channel_ID__c;
+            if (c.FEC_Code__c == code) return c.FEC_Code__c;
         }
         return null;
     }
@@ -492,6 +493,19 @@ global with sharing class FEC_IntegrationFraudService {
         return emails;
     }
 
+
+    /**
+     * Calls external Fraud SOAP service to retrieve Fraud Master Data.
+     *
+     * This method:
+     * 1. Builds a SOAP XML request body.
+     * 2. Sets required HTTP headers (Content-Type, SOAPAction).
+     * 3. Sends HTTP POST callout to Fraud service endpoint.
+     * 4. Returns raw XML response body.
+     *
+     * @return String
+     *         - SOAP XML response body if callout is successful.
+     *         - <ERROR>message</ERROR> if exception occurs.
    /**
      * Calls CIF_CustomerInfo SOAP service to retrieve fraud master data.
      *
@@ -506,13 +520,15 @@ global with sharing class FEC_IntegrationFraudService {
         try {
             request.setEndpoint(FEC_FraudConstantCommon.SET_ENPOINT_FRAUD_SERVICE);
             request.setMethod('POST');
+            request.setTimeout(FEC_FraudConstantCommon.REQUEST_TIMEOUT);
+
             request.setHeader(
                 FEC_FraudConstantCommon.MIME_CONTENT_TYPE,
                 FEC_FraudConstantCommon.MIME_TEXT_UTF8
             );
             request.setHeader(
                 'SOAPAction',
-                FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_ENDPOINT
+                FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_GET_MASTER_ENDPOINT
             );
     
             // ---------------------------------------------------------
@@ -522,6 +538,22 @@ global with sharing class FEC_IntegrationFraudService {
                 '<?xml version="1.0" encoding="UTF-8"?>' +
                 '<soapenv:Envelope ' +
                     'xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
+                    'xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
+                    '<soapenv:Header/>' +
+                    '<soapenv:Body>' +
+                        '<ns1:GetFraudMasterDataRequest>' +
+                            '<ns1:Sys>' +
+                                '<ns1:Channel>' +
+                                    FEC_FraudConstantCommon.SYSTEM_CHANNEL +
+                                '</ns1:Channel>' +
+                                '<ns1:TransactionID>' +
+                                    FEC_IntegrationFraudCaseUtil.generateUUID() +
+                                '</ns1:TransactionID>' +
+                                '<ns1:DateTime>' +
+                                    Datetime.now().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss') +
+                                '</ns1:DateTime>' +
+                            '</ns1:Sys>' +
+                        '</ns1:GetFraudMasterDataRequest>' +
                     'xmlns:urn="urn:PegaRULES:SOAP:FraudCase:Services">' +
                     '<soapenv:Header/>' +
                     '<soapenv:Body>' +
@@ -568,7 +600,907 @@ global with sharing class FEC_IntegrationFraudService {
            
         }
     }
+
+
+    /**
+     * Calls the external Fraud Case SOAP service
+     * to create a new fraud case.
+     *
+     * This method:
+     * - Initializes the generated SOAP service stub
+     * - Configures endpoint and timeout settings
+     * - Invokes the CreateFraudCase operation
+     * - Returns the service response
+     *
+     * @param sys     System-level metadata (channel, transaction ID, timestamp)
+     * @param cust    Customer information section
+     * @param req     Fraud case request details
+     * @param creator Creator metadata (user initiating the request)
+     *
+     * @return FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType
+     *         SOAP response returned by external system
+     *
+     * @throws CalloutException if the external service call fails
+     */
+    public static FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType
+    callCreateFraudCaseService(
+        FEC_IntegrationFraudCaseUtil.FraudCaseRequestWrapper reqWrapper,
+        FEC_IntegrationSoapFraudcaseService.SysType sys,
+        FEC_IntegrationSoapFraudcaseService.CustomerInfo_element cust,
+        FEC_IntegrationSoapFraudcaseService.RequestInfo_element req,
+        FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator
+    ) {
     
+        Http http = new Http();
+        HttpRequest request = new HttpRequest();
+    
+        try {
+    
+            // ---------------------------------------------------------
+            // Configure HTTP request
+            // ---------------------------------------------------------
+            request.setEndpoint(FEC_FraudConstantCommon.SET_ENPOINT_FRAUD_SERVICE);
+            request.setMethod('POST');
+            request.setTimeout(FEC_FraudConstantCommon.REQUEST_TIMEOUT);
+    
+            request.setHeader(
+                FEC_FraudConstantCommon.MIME_CONTENT_TYPE,
+                FEC_FraudConstantCommon.MIME_TEXT_UTF8
+            );
+    
+            request.setHeader(
+                'SOAPAction',
+                FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_CREATE_ENDPOINT
+            );
+    
+            // ---------------------------------------------------------
+            // Build SOAP XML body (FIXED CALL)
+            // ---------------------------------------------------------
+            String requestBody = buildCreateFraudCaseBody(
+                sys,
+                cust,
+                req,
+                creator
+            );
+    
+            request.setBody(requestBody);
+    
+            log('SOAP CREATE REQUEST: ' + requestBody);
+            Boolean isConnectisConnected  = isConnectFraudSystem();
+            log('LOG-callCreateFraudCaseService: ' + isConnectisConnected);
+            Integer statusCode = 0;
+            String responseBody = null;
+            HttpResponse response = null;
+            //isConnectisConnected = false;
+            if(isConnectisConnected) {
+                 // ---------------------------------------------------------
+                // Execute callout
+                // ---------------------------------------------------------
+                response = http.send(request);        
+                statusCode = response.getStatusCode();
+                responseBody = response.getBody();
+        
+            } else {
+                //For Mockup data
+                responseBody = FEC_FraudCaseMockData.responseFailedCreateConnectFraudCase();
+                //responseBody = FEC_FraudCaseMockData.responseCreateFraudCase();
+                
+                statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
+                log('LOG-callCreateFraudCaseService MOCKUP: ');
+            }
+            //Central integration logging
+            String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_CREATE_NAME;
+            writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody);
+    
+           
+            log('SOAP CREATE STATUS: ' + statusCode);
+            log('SOAP CREATE RESPONSE: ' + responseBody);
+    
+            // ---------------------------------------------------------
+            // Validate HTTP status
+            // ---------------------------------------------------------
+            if (statusCode != FEC_FraudConstantCommon.SUCCESSFULL) {
+                throw new CalloutException(
+                    'HTTP Error: ' + statusCode + ' - ' + response.getStatus()
+                );
+            }
+    
+            // ---------------------------------------------------------
+            // Parse SOAP XML Response → Convert to ResponseType
+            // ---------------------------------------------------------
+            return parseCreateFraudCaseResponse(responseBody);
+    
+        } catch (CalloutException ce) {
+    
+            log('CalloutException in callCreateFraudCaseService: ' + ce.getMessage());
+            throw ce;
+    
+        } catch (Exception ex) {
+    
+            log('Unexpected error in callCreateFraudCaseService: ' + ex.getMessage());
+            throw ex;
+        }
+    }
+
+    public static FEC_IntegrationSoapFraudcaseService.ProcessCaseResponseType
+    callProcessFraudCaseService(
+        FEC_IntegrationFraudCaseUtil.FraudCaseRequestWrapper reqWrapper,
+        FEC_IntegrationSoapFraudcaseService.SysType sys,
+        FEC_IntegrationSoapFraudcaseService.CaseInfoType4 caseInfo,
+        FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator
+    ) {
+       
+    
+        Http http = new Http();
+        HttpRequest request = new HttpRequest();
+    
+        try {
+    
+            // ---------------------------------------------------------
+            // Configure HTTP request
+            // ---------------------------------------------------------
+            request.setEndpoint(FEC_FraudConstantCommon.SET_ENPOINT_FRAUD_SERVICE);
+            request.setMethod('POST');
+            request.setTimeout(FEC_FraudConstantCommon.REQUEST_TIMEOUT);
+    
+            request.setHeader(
+                FEC_FraudConstantCommon.MIME_CONTENT_TYPE,
+                FEC_FraudConstantCommon.MIME_TEXT_UTF8
+            );
+    
+            request.setHeader(
+                'SOAPAction',
+                FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_PROCESS_CASE_ENDPOINT
+            );
+    
+            // ---------------------------------------------------------
+            // Build SOAP XML body (FIXED CALL)
+            // ---------------------------------------------------------
+            String requestBody = buildProcessFraudCaseBody(
+                sys,
+                caseInfo,
+                creator
+            );
+    
+            request.setBody(requestBody);
+    
+            log('SOAP CREATE REQUEST: ' + requestBody);
+            Boolean isConnectisConnected  = isConnectFraudSystem();
+            log('LOG-callCreateFraudCaseService: ' + isConnectisConnected);
+            Integer statusCode = 0;
+            String responseBody = null;
+            HttpResponse response = null;
+            if(isConnectisConnected) {
+                 // ---------------------------------------------------------
+                // Execute callout
+                // ---------------------------------------------------------
+                response = http.send(request);        
+                statusCode = response.getStatusCode();
+                responseBody = response.getBody();
+        
+            } else {
+                //For Mockup data
+                //responseBody = FEC_FraudCaseMockData.responseFailedCreateFraudCase();
+                statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
+                log('LOG-callCreateFraudCaseService MOCKUP: ');
+            }
+            //Central integration logging
+            String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_PROCESS_NAME;
+            writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody);
+    
+           
+            log('SOAP CREATE STATUS: ' + statusCode);
+            log('SOAP CREATE RESPONSE: ' + responseBody);
+    
+            // ---------------------------------------------------------
+            // Validate HTTP status
+            // ---------------------------------------------------------
+            if (statusCode != FEC_FraudConstantCommon.SUCCESSFULL) {
+                throw new CalloutException(
+                    'HTTP Error: ' + statusCode + ' - ' + response.getStatus()
+                );
+            }
+    
+            // ---------------------------------------------------------
+            // Parse SOAP XML Response → Convert to ResponseType
+            // ---------------------------------------------------------
+            return parseProcessFraudCaseResponse(responseBody);
+    
+        } catch (CalloutException ce) {
+    
+            log('CalloutException in callCreateFraudCaseService: ' + ce.getMessage());
+            throw ce;
+    
+        } catch (Exception ex) {
+    
+            log('Unexpected error in callCreateFraudCaseService: ' + ex.getMessage());
+            throw ex;
+        }
+    }
+
+    public static FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType
+    callUpdateFraudCaseService(
+        FEC_IntegrationFraudCaseUtil.FraudCaseRequestWrapper reqWrapper,
+        FEC_IntegrationSoapFraudcaseService.SysType sys,
+        FEC_IntegrationSoapFraudcaseService.CustomerInfo_element cust,
+        FEC_IntegrationSoapFraudcaseService.RequestInfo_element req,
+        FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator
+    ) {
+    
+        Http http = new Http();
+        HttpRequest request = new HttpRequest();
+    
+        try {
+    
+            // ---------------------------------------------------------
+            // Configure HTTP request
+            // ---------------------------------------------------------
+            request.setEndpoint(FEC_FraudConstantCommon.SET_ENPOINT_FRAUD_SERVICE);
+            request.setMethod('POST');
+            request.setTimeout(FEC_FraudConstantCommon.REQUEST_TIMEOUT);
+    
+            request.setHeader(
+                FEC_FraudConstantCommon.MIME_CONTENT_TYPE,
+                FEC_FraudConstantCommon.MIME_TEXT_UTF8
+            );
+    
+            request.setHeader(
+                'SOAPAction',
+                FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_CREATE_ENDPOINT
+            );
+    
+            // ---------------------------------------------------------
+            // Build SOAP XML body (FIXED CALL)
+            // ---------------------------------------------------------
+            String requestBody = buildCreateFraudCaseBody(
+                sys,
+                cust,
+                req,
+                creator
+            );
+    
+            request.setBody(requestBody);
+    
+            log('SOAP UPDATE REQUEST: ' + requestBody);
+            Boolean isConnectisConnected  = isConnectFraudSystem();
+            log('LOG-callUpdateFraudCaseService: ' + isConnectisConnected);
+            Integer statusCode = 0;
+            String responseBody = null;
+            HttpResponse response = null;
+            if(isConnectisConnected) {
+                 // ---------------------------------------------------------
+                // Execute callout
+                // ---------------------------------------------------------
+                response = http.send(request);        
+                statusCode = response.getStatusCode();
+                responseBody = response.getBody();
+        
+            } else {
+                //For Mockup data
+                responseBody = FEC_FraudCaseMockData.responseFailedCreateConnectFraudCase();
+                statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
+                log('LOG-callUpdateFraudCaseService MOCKUP: ');
+            }
+            //Central integration logging
+            String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_UPDATE_NAME;
+            writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody);
+    
+           
+            log('SOAP UPDATE STATUS: ' + statusCode);
+            log('SOAP UPDATE RESPONSE: ' + responseBody);
+    
+            // ---------------------------------------------------------
+            // Validate HTTP status
+            // ---------------------------------------------------------
+            if (statusCode != FEC_FraudConstantCommon.SUCCESSFULL) {
+                throw new CalloutException(
+                    'HTTP Error: ' + statusCode + ' - ' + response.getStatus()
+                );
+            }
+    
+            // ---------------------------------------------------------
+            // Parse SOAP XML Response → Convert to ResponseType
+            // ---------------------------------------------------------
+            return parseCreateFraudCaseResponse(responseBody);
+    
+        } catch (CalloutException ce) {
+    
+            log('CalloutException in callUpdateFraudCaseService: ' + ce.getMessage());
+            throw ce;
+    
+        } catch (Exception ex) {
+    
+            log('Unexpected error in callUpdateFraudCaseService: ' + ex.getMessage());
+            throw ex;
+        }
+    }
+
+    /**
+     * Calls the external Fraud Case SOAP service to cancel an existing fraud case.
+     *
+     * This method:
+     * - Builds SOAP XML request body
+     * - Configures HTTP callout (endpoint, headers, timeout)
+     * - Executes callout (or uses mock response if integration disabled)
+     * - Validates HTTP status code
+     * - Parses SOAP XML response into CancelFraudCaseResponseType
+     *
+     * Integration Flow:
+     * 1. Build SOAP body via buildCancelFraudCaseBody(...)
+     * 2. Send HTTP POST request
+     * 3. Validate HTTP response code
+     * 4. Parse SOAP response
+     *
+     * @param sys      System metadata (Channel, TransactionID, DateTime)
+     * @param caseIfo  Case information to cancel
+     * @param creator  User performing the cancel action
+     *
+     * @return FEC_IntegrationSoapFraudcaseService.CancelFraudCaseResponseType
+     *         parsed SOAP response object
+     *
+     * @throws CalloutException when HTTP status is not successful
+     * @throws Exception for unexpected processing errors
+     */
+    public static FEC_IntegrationSoapFraudcaseService.CancelFraudCaseResponseType
+    callCancelFraudCaseService(
+        FEC_IntegrationFraudCaseUtil.FraudCaseRequestWrapper reqWrapper,
+        FEC_IntegrationSoapFraudcaseService.SysType sys,
+        FEC_IntegrationSoapFraudcaseService.CaseInfoType caseIfo,
+        FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator
+    ) {
+    
+        Http http = new Http();
+        HttpRequest request = new HttpRequest();
+    
+        try {
+    
+            // ---------------------------------------------------------
+            // Configure HTTP request
+            // ---------------------------------------------------------
+            request.setEndpoint(FEC_FraudConstantCommon.SET_ENPOINT_FRAUD_SERVICE);
+            request.setMethod('POST');
+            request.setTimeout(FEC_FraudConstantCommon.REQUEST_TIMEOUT);
+    
+            request.setHeader(
+                FEC_FraudConstantCommon.MIME_CONTENT_TYPE,
+                FEC_FraudConstantCommon.MIME_TEXT_UTF8
+            );
+    
+            request.setHeader(
+                'SOAPAction',
+                FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_CANCEL_ENDPOINT
+            );
+    
+            // ---------------------------------------------------------
+            // Build SOAP XML body (FIXED CALL)
+            // ---------------------------------------------------------
+            String requestBody = buildCancelFraudCaseBody(
+                sys,
+                caseIfo,
+                creator
+            );
+    
+            request.setBody(requestBody);
+    
+            log('SOAP CANCEL REQUEST: ' + requestBody);
+            Boolean isConnectisConnected  = isConnectFraudSystem();
+            log('LOG-callCancelFraudCaseService: ' + isConnectisConnected);
+            Integer statusCode = 0;
+            String responseBody = null;
+            HttpResponse response = null;
+            if(isConnectisConnected) {
+                 // ---------------------------------------------------------
+                // Execute callout
+                // ---------------------------------------------------------
+                response = http.send(request);        
+                statusCode = response.getStatusCode();
+                responseBody = response.getBody();
+        
+            } else {
+                //For Mockup data
+                responseBody = FEC_FraudCaseMockData.responseFailedCancelConnectFraudCase();
+                statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
+                log('LOG-callCancelFraudCaseService MOCKUP: ');
+            }
+            //Central integration logging
+            String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_CANCEL_NAME;
+            writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody);
+    
+           
+            log('SOAP CANCEL STATUS: ' + statusCode);
+            log('SOAP CANCEL RESPONSE: ' + responseBody);
+    
+            // ---------------------------------------------------------
+            // Validate HTTP status
+            // ---------------------------------------------------------
+            if (statusCode != FEC_FraudConstantCommon.SUCCESSFULL) {
+                throw new CalloutException(
+                    'HTTP Error: ' + statusCode + ' - ' + response.getStatus()
+                );
+            }
+    
+            // ---------------------------------------------------------
+            // Parse SOAP XML Response → Convert to ResponseType
+            // ---------------------------------------------------------
+            return parseCancelFraudCaseResponse(responseBody);
+    
+        } catch (CalloutException ce) {
+    
+            log('CalloutException in callCancelFraudCaseService: ' + ce.getMessage());
+            throw ce;
+    
+        } catch (Exception ex) {
+    
+            log('Unexpected error in callCancelFraudCaseService: ' + ex.getMessage());
+            throw ex;
+        }
+    }
+    
+    /**
+    * Writes integration log for Fraud Case service execution.
+    *
+    * This method is a safe wrapper around the main integration logger.
+    * It ensures that any logging failure will NOT break the main business flow.
+    *
+    * @param serviceName     Name of the integration service (e.g. "CreateFraudCase")
+    * @param channelId       Channel / source system identifier
+    * @param caseId          Case ID returned from external system (FH Case)
+    * @param serviceCaseId   Internal generated service case ID
+    * @param requestBody     Serialized request payload sent to the service
+    * @param responseXml     Serialized response payload received from the service
+    */
+    private static void writeLogIntegrationService(
+        String serviceName,
+        String channelId,
+        String caseId,
+        String serviceCaseId,
+        String requestBody,
+        String responseXml
+    ) {
+        try {
+            // Call centralized logging utility
+            FEC_IntegrationFraudCaseUtil.logIntegrationService(
+                serviceName,
+                channelId,
+                caseId,
+                serviceCaseId,
+                requestBody,
+                responseXml
+            );
+ 
+            // Log success for debugging & monitoring
+            log('SUCCESS - writeLogIntegrationService');
+ 
+        } catch (Exception ex) {
+            // Never allow logging errors to interrupt main transaction
+            log('ERROR - writeLogIntegrationService: ' + ex.getMessage());
+        }
+    } 
+
+    private static FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType
+    parseCreateFraudCaseResponse(String xmlResponse) {
+
+        FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType result =
+            new FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType();
+        FEC_FraudConstantCommon.IntegrationMappingField responseField = new FEC_FraudConstantCommon.IntegrationMappingField();
+
+        String NS_SOAP = FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_NS_SOAP;
+        String NS_URN  = FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_NS_URN;
+
+        Dom.Document doc = new Dom.Document();
+        doc.load(xmlResponse);
+
+        Dom.XmlNode envelope = doc.getRootElement();
+        Dom.XmlNode body = envelope.getChildElement('Body', NS_SOAP);
+
+        if (body == null) return result;
+
+        // Get CreateFraudCaseResponse node
+        Dom.XmlNode responseNode =
+            body.getChildElement('CreateFraudCaseResponse', NS_URN);
+
+        if (responseNode == null) return result;
+
+        // ======================
+        // Parse CaseID
+        // ======================
+        Dom.XmlNode caseIdNode =
+            responseNode.getChildElement('CaseID', NS_URN);
+
+        if (caseIdNode != null) {
+            result.CaseID = caseIdNode.getText();
+        }
+
+        // ======================
+        // Parse Sys block
+        // ======================
+        Dom.XmlNode sysNode =
+            responseNode.getChildElement('Sys', NS_URN);
+
+        if (sysNode != null) {
+
+            result.Sys = new FEC_IntegrationSoapFraudcaseService.SysType2();
+
+            Dom.XmlNode codeNode =
+                sysNode.getChildElement('Code', NS_URN);
+
+            Dom.XmlNode descNode =
+                sysNode.getChildElement('Description', NS_URN);
+
+            if (codeNode != null) {
+                result.Sys.Code = codeNode.getText();
+            }
+
+            if (descNode != null) {
+                result.Sys.Description = descNode.getText();
+            }
+        }
+
+        return result;
+    }
+
+    private static FEC_IntegrationSoapFraudcaseService.ProcessCaseResponseType
+    parseProcessFraudCaseResponse(String xmlResponse) {
+
+        FEC_IntegrationSoapFraudcaseService.ProcessCaseResponseType result =
+            new FEC_IntegrationSoapFraudcaseService.ProcessCaseResponseType();
+        FEC_FraudConstantCommon.IntegrationMappingField responseField = new FEC_FraudConstantCommon.IntegrationMappingField();
+
+        // String NS_SOAP = FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_NS_SOAP;
+        // String NS_URN  = FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_NS_URN;
+
+        // Dom.Document doc = new Dom.Document();
+        // doc.load(xmlResponse);
+
+        // Dom.XmlNode envelope = doc.getRootElement();
+        // Dom.XmlNode body = envelope.getChildElement('Body', NS_SOAP);
+
+        // if (body == null) return result;
+
+        // // Get CreateFraudCaseResponse node
+        // Dom.XmlNode responseNode =
+        //     body.getChildElement('CreateFraudCaseResponse', NS_URN);
+
+        // if (responseNode == null) return result;
+
+        // // ======================
+        // // Parse CaseID
+        // // ======================
+        // Dom.XmlNode caseIdNode =
+        //     responseNode.getChildElement('CaseID', NS_URN);
+
+        // if (caseIdNode != null) {
+        //     result.CaseID = caseIdNode.getText();
+        // }
+
+        // // ======================
+        // // Parse Sys block
+        // // ======================
+        // Dom.XmlNode sysNode =
+        //     responseNode.getChildElement('Sys', NS_URN);
+
+        // if (sysNode != null) {
+
+        //     result.Sys = new FEC_IntegrationSoapFraudcaseService.SysType2();
+
+        //     Dom.XmlNode codeNode =
+        //         sysNode.getChildElement('Code', NS_URN);
+
+        //     Dom.XmlNode descNode =
+        //         sysNode.getChildElement('Description', NS_URN);
+
+        //     if (codeNode != null) {
+        //         result.Sys.Code = codeNode.getText();
+        //     }
+
+        //     if (descNode != null) {
+        //         result.Sys.Description = descNode.getText();
+        //     }
+        // }
+
+        return result;
+    }
+
+    private static FEC_IntegrationSoapFraudcaseService.CancelFraudCaseResponseType
+    parseCancelFraudCaseResponse(String xmlResponse) {
+
+        FEC_IntegrationSoapFraudcaseService.CancelFraudCaseResponseType result =
+            new FEC_IntegrationSoapFraudcaseService.CancelFraudCaseResponseType();
+        FEC_FraudConstantCommon.IntegrationMappingField responseField = new FEC_FraudConstantCommon.IntegrationMappingField();
+
+        String NS_SOAP = FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_NS_SOAP;
+        String NS_URN  = FEC_FraudConstantCommon.FRAUD_SERVICE_SOAP_NS_URN;
+
+        Dom.Document doc = new Dom.Document();
+        doc.load(xmlResponse);
+
+        Dom.XmlNode envelope = doc.getRootElement();
+        Dom.XmlNode body = envelope.getChildElement('Body', NS_SOAP);
+
+        if (body == null) return result;
+
+        // Get CancelFraudCaseResponse node
+        Dom.XmlNode responseNode =
+            body.getChildElement('CancelFraudCaseResponse', NS_URN);
+
+        if (responseNode == null) return result;
+
+        // ======================
+        // Parse CaseID
+        // ======================
+        Dom.XmlNode caseIdNode =
+            responseNode.getChildElement('CaseID', NS_URN);
+
+        if (caseIdNode != null) {
+            result.CaseID = caseIdNode.getText();
+        }
+
+        // ======================
+        // Parse Sys block
+        // ======================
+        Dom.XmlNode sysNode =
+            responseNode.getChildElement('Sys', NS_URN);
+
+        if (sysNode != null) {
+
+            result.Sys = new FEC_IntegrationSoapFraudcaseService.SysType2();
+
+            Dom.XmlNode codeNode =
+                sysNode.getChildElement('Code', NS_URN);
+
+            Dom.XmlNode descNode =
+                sysNode.getChildElement('Description', NS_URN);
+
+            if (codeNode != null) {
+                result.Sys.Code = codeNode.getText();
+            }
+
+            if (descNode != null) {
+                result.Sys.Description = descNode.getText();
+            }
+        }
+
+        return result;
+    }
+
+    
+    /**
+     * Builds the raw SOAP XML body for CreateFraudCase request.
+     *
+     * This method manually constructs the SOAP Envelope including:
+     * - Sys block (Required)
+     * - CustomerInfo block (Optional)
+     * - RequestInfo block (Optional, including AdditionalInfo list)
+     * - CreatorInfo block (Optional)
+     *
+     * Notes:
+     * - Null values are handled via buildTag() helper method
+     * - DateTime is formatted in GMT (ISO-8601 format)
+     * - Optional sections are included only when data is present
+     *
+     * @param sys     System metadata (required block)
+     * @param cust    Customer information (optional)
+     * @param req     Fraud request information (optional)
+     * @param creator Creator metadata (optional)
+     *
+     * @return Fully constructed SOAP XML request body as String
+     */
+    private static String buildCreateFraudCaseBody(
+        FEC_IntegrationSoapFraudcaseService.SysType sys,
+        FEC_IntegrationSoapFraudcaseService.CustomerInfo_element cust,
+        FEC_IntegrationSoapFraudcaseService.RequestInfo_element req,
+        FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator
+    ) {
+
+        // Initialize SOAP Envelope
+        String xml = 
+            '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<soapenv:Envelope ' +
+                'xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
+                'xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
+                '<soapenv:Header/>' +
+                '<soapenv:Body>' +
+                    '<ns1:CreateFraudCaseRequest>';
+
+        // =========================
+        // SYS (Required Section)
+        // =========================
+        xml += '<ns1:Sys>' +
+                FEC_IntegrationFraudCaseUtil.buildTag('Channel', sys != null ? sys.Channel : null) +
+                FEC_IntegrationFraudCaseUtil.buildTag('TransactionID', sys != null ? sys.TransactionID : null) +
+                FEC_IntegrationFraudCaseUtil.buildTag(
+                    'DateTime',
+                    sys != null && sys.DateTime_x != null
+                        ? sys.DateTime_x.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss')
+                        : null
+                ) +
+            '</ns1:Sys>';
+
+        // =========================
+        // CUSTOMER INFO (Optional)
+        // Included only when UserType exists
+        // =========================
+        if (cust != null && String.isNotBlank(cust.UserType)) {
+            xml += '<ns1:CustomerInfo>' +
+                    FEC_IntegrationFraudCaseUtil.buildTag('UserType', cust.UserType) +
+                '</ns1:CustomerInfo>';
+        }
+
+        // =========================
+        // REQUEST INFO (Optional Block)
+        // Contains main fraud classification and additional info
+        // =========================
+        if (req != null) {
+
+            String requestBlock = '';
+
+            // Basic fraud classification fields
+            requestBlock += FEC_IntegrationFraudCaseUtil.buildTag('CaseType', req.CaseType);
+            requestBlock += FEC_IntegrationFraudCaseUtil.buildTag('ProductType', req.ProductType);
+            requestBlock += FEC_IntegrationFraudCaseUtil.buildTag('Category', req.Category);
+            requestBlock += FEC_IntegrationFraudCaseUtil.buildTag('SubCategory', req.SubCategory);
+            requestBlock += FEC_IntegrationFraudCaseUtil.buildTag('SubCode', req.SubCode);
+            requestBlock += FEC_IntegrationFraudCaseUtil.buildTag('Remarks', req.Remarks);
+
+            // AdditionalInfo elements (0..n)
+            if (req.AdditionalInfo != null && !req.AdditionalInfo.isEmpty()) {
+
+                for (FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element ai 
+                    : req.AdditionalInfo) {
+
+                    requestBlock +=
+                        '<ns1:AdditionalInfo>' +
+                            FEC_IntegrationFraudCaseUtil.buildTag('ID', ai.ID) +
+                            FEC_IntegrationFraudCaseUtil.buildTag('Value', ai.Value) +
+                        '</ns1:AdditionalInfo>';
+                }
+            }
+
+            // Append RequestInfo block only if it contains data
+            if (String.isNotBlank(requestBlock)) {
+                xml += '<ns1:RequestInfo>' + requestBlock + '</ns1:RequestInfo>';
+            }
+        }
+
+        // =========================
+        // CREATOR INFO (Optional)
+        // =========================
+        if (creator != null && String.isNotBlank(creator.CreatorEmail)) {
+            xml += '<ns1:CreatorInfo>' +
+                    FEC_IntegrationFraudCaseUtil.buildTag('CreatorEmail', creator.CreatorEmail) +
+                '</ns1:CreatorInfo>';
+        }
+
+        // Close SOAP Envelope
+        xml +=
+                    '</ns1:CreateFraudCaseRequest>' +
+                '</soapenv:Body>' +
+            '</soapenv:Envelope>';
+
+        return xml;
+    }
+
+    private static String buildCancelFraudCaseBody(
+        FEC_IntegrationSoapFraudcaseService.SysType sys,
+        FEC_IntegrationSoapFraudcaseService.CaseInfoType caseIfo,
+        FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator
+    ) {
+
+        // Initialize SOAP Envelope
+        String xml = 
+            '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<soapenv:Envelope ' +
+                'xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
+                'xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
+                '<soapenv:Header/>' +
+                '<soapenv:Body>' +
+                    '<ns1:CancelFraudCaseRequest>';
+
+        // =========================
+        // SYS (Required Section)
+        // =========================
+        xml += '<ns1:Sys>' +
+                FEC_IntegrationFraudCaseUtil.buildTag('Channel', sys != null ? sys.Channel : null) +
+                FEC_IntegrationFraudCaseUtil.buildTag('TransactionID', sys != null ? sys.TransactionID : null) +
+                FEC_IntegrationFraudCaseUtil.buildTag(
+                    'DateTime',
+                    sys != null && sys.DateTime_x != null
+                        ? sys.DateTime_x.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss')
+                        : null
+                ) +
+            '</ns1:Sys>';
+
+        // =========================
+        // CASE INFO (Optional)        
+        // =========================
+        if (caseIfo != null && String.isNotBlank(caseIfo.CaseID)) {
+            xml += '<ns1:CaseInfo>' +
+                    FEC_IntegrationFraudCaseUtil.buildTag('CaseID', caseIfo.CaseID) +
+                    FEC_IntegrationFraudCaseUtil.buildTag('Remarks', caseIfo.Remarks) +
+                '</ns1:CaseInfo>';
+        }
+
+
+        // =========================
+        // CREATOR INFO (Optional)
+        // =========================
+        if (creator != null && String.isNotBlank(creator.CreatorEmail)) {
+            xml += '<ns1:CreatorInfo>' +
+                    FEC_IntegrationFraudCaseUtil.buildTag('CreatorEmail', creator.CreatorEmail) +
+                '</ns1:CreatorInfo>';
+        }
+
+        // Close SOAP Envelope
+        xml +=
+                    '</ns1:CancelFraudCaseRequest>' +
+                '</soapenv:Body>' +
+            '</soapenv:Envelope>';
+
+        return xml;
+    }
+
+    private static String buildProcessFraudCaseBody(
+        FEC_IntegrationSoapFraudcaseService.SysType sys,
+        FEC_IntegrationSoapFraudcaseService.CaseInfoType4 caseIfo,
+        FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator
+    ) {
+
+        // Initialize SOAP Envelope
+        String xml = 
+            '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<soapenv:Envelope ' +
+                'xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
+                'xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
+                '<soapenv:Header/>' +
+                '<soapenv:Body>' +
+                    '<ns1:ProcessCaseRequest>';
+
+        // =========================
+        // SYS (Required Section)
+        // =========================
+        xml += '<ns1:Sys>' +
+                FEC_IntegrationFraudCaseUtil.buildTag('Channel', sys != null ? sys.Channel : null) +
+                FEC_IntegrationFraudCaseUtil.buildTag('TransactionID', sys != null ? sys.TransactionID : null) +
+                FEC_IntegrationFraudCaseUtil.buildTag(
+                    'DateTime',
+                    sys != null && sys.DateTime_x != null
+                        ? sys.DateTime_x.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss')
+                        : null
+                ) +
+            '</ns1:Sys>';
+
+        // =========================
+        // CASE INFO (Optional)        
+        // =========================
+        if (caseIfo != null && String.isNotBlank(caseIfo.CaseID)) {
+            xml += '<ns1:CaseInfo>' +
+                    FEC_IntegrationFraudCaseUtil.buildTag('CaseID', caseIfo.CaseID) +
+                    FEC_IntegrationFraudCaseUtil.buildTag('Decision', caseIfo.Decision) +
+                    FEC_IntegrationFraudCaseUtil.buildTag('SubDecision', caseIfo.SubDecision) +
+                    FEC_IntegrationFraudCaseUtil.buildTag('Reason', caseIfo.Reason) +                    
+                    FEC_IntegrationFraudCaseUtil.buildTag('Remarks', caseIfo.Remarks) +
+                '</ns1:CaseInfo>';
+        }
+
+
+        // =========================
+        // CREATOR INFO (Optional)
+        // =========================
+        if (creator != null && String.isNotBlank(creator.CreatorEmail)) {
+            xml += '<ns1:CreatorInfo>' +
+                    FEC_IntegrationFraudCaseUtil.buildTag('CreatorEmail', creator.CreatorEmail) +
+                '</ns1:CreatorInfo>';
+        }
+
+        // Close SOAP Envelope
+        xml +=
+                    '</ns1:ProcessCaseRequest>' +
+                '</soapenv:Body>' +
+            '</soapenv:Envelope>';
+
+        return xml;
+    }
+
 
 
     public static Boolean isConnectFraudSystem() {        
@@ -589,15 +1521,15 @@ global with sharing class FEC_IntegrationFraudService {
                 log('Connected FIMA System');
                 return true;
             
-            } else {
+            }  else {
                 log('Connect Failed FIMA System: ' + response.getStatus());
                 return false;
         
             }
         
-        } catch (Exception e) {
-            log('Connect Failed (Timeout/DNS): ' + e.getMessage());          
+        } catch (Exception e) {       
 
+            log('Connect Failed (Timeout/DNS): ' + e.getMessage());     
             return false;
         
         }

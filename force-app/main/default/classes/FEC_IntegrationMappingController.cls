@@ -524,7 +524,8 @@ public with sharing class FEC_IntegrationMappingController{
         String category,
         String subCategory,
         String subCode,
-        String channelCode
+        String channelCode,
+        String serviceType
     ) {
 
         // Result list returned to LWC
@@ -550,6 +551,7 @@ public with sharing class FEC_IntegrationMappingController{
                    FEC_Source_Parent_Id__c = :subCode
                 OR FEC_Source_Parent_Id__c = :category
                 OR FEC_Source_Parent_Id__c = :subCategory
+                OR FEC_Source_Parent_Id__c = :serviceType
               )
             ORDER BY FEC_Source_Id__c
         ]) {
@@ -644,16 +646,19 @@ public with sharing class FEC_IntegrationMappingController{
         }
         else {
             for (FEC_Master_Data_Integration__c r : [
-            SELECT FEC_Source_Id__c, FEC_Source_NameVN__c, FEC_Source_Name__c
-            FROM FEC_Master_Data_Integration__c
-            WHERE FEC_Source_Type__c = :sourceType
-            AND FEC_Source_Parent_Id__c = :parentId
-            AND FEC_Channel__c = :channelCode
-            ORDER BY FEC_PosOrder__c
+                SELECT FEC_Source_Id__c,
+                       FEC_Source_NameVN__c,
+                       FEC_Source_Name__c
+                FROM FEC_Master_Data_Integration__c
+                WHERE FEC_Source_Type__c = :sourceType
+                  AND FEC_Channel__c = :channelCode
+                  AND FEC_Source_Parent_Id__c = :parentId
+                ORDER BY FEC_PosOrder__c
             ]) {
                 String displayName = isVietnamese
-                ? r.FEC_Source_NameVN__c
-                : r.FEC_Source_Name__c;
+                    ? r.FEC_Source_NameVN__c
+                    : r.FEC_Source_Name__c;
+            
                 result.add(new NodeDTO(displayName, r.FEC_Source_Id__c));
             }
         }

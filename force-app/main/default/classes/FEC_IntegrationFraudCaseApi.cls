@@ -883,11 +883,11 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             // ==========================================================
             // 1. Build Interaction DTO from integration data
             // ==========================================================
-            FEC_CreateCaseHanlder.FEC_InteractionCaseDTO dto =
-                new FEC_CreateCaseHanlder.FEC_InteractionCaseDTO();
+            // FEC_CreateCaseHanlder.FEC_InteractionCaseDTO dto =
+            //     new FEC_CreateCaseHanlder.FEC_InteractionCaseDTO();
 
-            // Required: integration channel
-            dto.channel = parentRec.FEC_Sys_Channel__c;
+            // // Required: integration channel
+            // dto.channel = parentRec.FEC_Sys_Channel__c;
 
             // Optional customer & contract data
             String phoneNumber = null;
@@ -908,13 +908,13 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                     accountNumber = i.FEC_Info_Value__c;
                 }
             }
-            dto.phoneNumber    = phoneNumber;
-            dto.nationalId     = nationId;
-            dto.accountNumber  = accountNumber;
-            dto.contractNumber = contractNumber;
+            // dto.phoneNumber    = phoneNumber;
+            // dto.nationalId     = nationId;
+            // dto.accountNumber  = accountNumber;
+            // dto.contractNumber = contractNumber;
  
 
-            log('DTO prepared: ' + JSON.serializePretty(dto));
+            //log('DTO prepared: ' + JSON.serializePretty(dto));
 
             // ==========================================================
             // 2. Create Interaction Case
@@ -923,17 +923,19 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             //FEC_CreateCaseHanlder.FEC_InteractionCaseResponse response =
             //FEC_CreateCaseHanlder.createInteractionCase(dto);
             //Mockup response data
-            FEC_CreateCaseHanlder.FEC_InteractionCaseResponse resultData = new FEC_CreateCaseHanlder.FEC_InteractionCaseResponse();
-            resultData.caseNo = randomSFTCaseId();
+            // FEC_CreateCaseHanlder.FEC_InteractionCaseResponse resultData = new FEC_CreateCaseHanlder.FEC_InteractionCaseResponse();
+            // resultData.caseNo = randomSFTCaseId();
             log('Interaction Case created');
-            log('New Case Id  = ' + resultData.caseNo);
+            //log('New Case Id  = ' + resultData.caseNo);
             //log('Case Link Id = ' + response.linkId);
             //log('Case Number  = ' + response.caseNo);
 
             // ==========================================================
             // 3. Link new SFT Case back to integration record
             // ==========================================================
-            parentRec.FEC_Service_Case_ID__c = resultData.caseNo;
+            //parentRec.FEC_Service_Case_ID__c = resultData.caseNo;
+            String caseSFT = randomSFTCaseId();
+            parentRec.FEC_Service_Case_ID__c = caseSFT;
             update parentRec;
 
             log('Parent integration record updated with Service Case Id');
@@ -941,7 +943,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             log('==================== processSFTCase SUCCESS ====================');
            
             return FEC_IntegrationFraudCaseUtil.successResponseXml(
-                resultData.caseNo, MSG_FRAUD_UPDATE_SUCCESS ).toXmlString();
+                caseSFT, MSG_FRAUD_UPDATE_SUCCESS ).toXmlString();
         }
         catch (Exception ex) {
             log('==================== processSFTCase ERROR ====================');
