@@ -6439,4 +6439,67 @@
         <shortDescription>Error Deleting Data</shortDescription>
         <value>Error Deleting Data</value>
     </labels>
+	<labels>
+        <fullName>LBL_Missing_Required_Fields</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing Required Fields</shortDescription>
+        <value>Missing Required Fields</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Fill_Required_Fields</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please fill in all required fields before submitting.</shortDescription>
+        <value>Please fill in all required fields before submitting.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Missing_Additional_Properties</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Missing Additional Properties</shortDescription>
+        <value>Missing Additional Properties</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Add_Additional_Property</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please add at least one additional property before submitting.</shortDescription>
+        <value>Please add at least one additional property before submitting.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Create_Fraud_Case_Submission_Failed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Submission Failed</shortDescription>
+        <value>Submission Failed</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Create_Fraud_Case_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Cancel_Fraud_Case_Missing_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fraud Case and Service Case are required before cancelling.</shortDescription>
+        <value>Fraud Case and Service Case are required before cancelling.</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Cancel_Fraud_Case_Button</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Fraud Case</shortDescription>
+        <value>Cancel Fraud Case</value>
+    </labels>
+    <labels>
+        <fullName>LBL_Create_Fraud_Case_Button</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Fraud Case</shortDescription>
+        <value>Create Fraud Case</value>
+    </labels>
 </CustomLabels>
