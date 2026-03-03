@@ -1,0 +1,49 @@
+<template>
+    <template if:true={isShowModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- Header -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close" title="Close" onclick={handleCancel}>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-text-heading_medium">{labels.TITLE_MODEL_QUEUE}</h2>
+                </header>
+
+                <!-- Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p>{labels.TITLE_SELECT_QUEUE}</p>
+
+                    <div class="slds-grid slds-grid_align-spread slds-m-top_medium slds-m-bottom_x-small">
+                        <label class="slds-text-body_small slds-text-color_weak" for="queue">
+                            <abbr class="slds-required" title="required">*</abbr> {labels.TITLE_QUEUE}
+                        </label>
+
+                        <span class="slds-text-body_small slds-text-color_weak">
+                            <abbr class="slds-required" title="required">*</abbr> {labels.TITLE_INFORMATION_QUEUE}
+                        </span>
+                    </div>
+
+                    <div class="slds-form-element">
+                        <div class="slds-form-element__control">
+
+                            <lightning-combobox name="queue" label="Queue" value={selectedQueue}
+                                placeholder="Select a queue" options={queueOptions} onchange={handleQueueChange}
+                                class="slds-m-bottom_medium">
+                            </lightning-combobox>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Cancel" onclick={handleCancel}></lightning-button>
+                    <lightning-button class="slds-m-left_small" variant="brand" label="Get"
+                        onclick={handleGet}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

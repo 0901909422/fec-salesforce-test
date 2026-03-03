@@ -1,0 +1,206 @@
+<template>
+    <div class="slds-accordion">
+        <section class={sectionClass}>
+            <div class="slds-accordion__summary" onclick={handleCardPaymentToggle}>
+                <h3 class="slds-accordion__summary-heading">
+                    <span class="slds-accordion__summary-content slds-grid">
+                        <lightning-icon 
+                            icon-name={cardPaymentIconName} 
+                            size="x-small" 
+                            class="slds-m-right_x-small">
+                        </lightning-icon>
+                        <span>
+                            {customLabel.cardPaymentLabel}
+                            <template if:true={hasError}>
+                                <span class="error-text"> - {ERROR_MESSAGE}</span>
+                            </template>
+                        </span>
+                    </span>
+                </h3>
+            </div>
+            <div class={cardPaymentContentClass}>
+                <!-- Refresh Instruction -->
+                <!-- <div class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
+                    Vui lòng nhấn <strong>Refresh</strong> ở mục <strong>Account</strong> trong tab <strong>Main Info</strong> để tải dữ liệu mới nhất
+                </div> -->
+                
+                <!-- Payment Summary: grid 3 cột x 4 hàng, căn thẳng hàng, không đè khi zoom -->
+                <template if:true={showPaymentSummary}>
+                    <div class="card-payment-summary slds-m-bottom_medium">
+                        <!-- Hàng 1: Full Payment Amount | Loan Balance | Full Payment Without IPP -->
+                        <div class="detail-row">
+                            <div class="detail-row-inner">
+                                <span class="detail-label payment-field-label-red">
+                                    {customLabel.fullPaymentAmountLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Full_Payment_Amount__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Full_Payment_Amount__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="detail-value"><span class={isFullPaymentAmountNegative}>{formattedFullPaymentAmount}</span></span>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-row-inner">
+                                <span class="detail-label payment-field-label-gray">
+                                    {customLabel.loanBalanceLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Loan_Balance__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Loan_Balance__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="detail-value"><span class={isLoanBalanceNegative}>{formattedLoanBalance}</span></span>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-row-inner">
+                                <span class="detail-label payment-field-label-gray">
+                                    {customLabel.fullPaymentWithoutIPPLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Full_Payment_Without_IPP__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Full_Payment_Without_IPP__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="detail-value"><span class={isFullPaymentWithoutIPPNegative}>{formattedFullPaymentWithoutIPP}</span></span>
+                            </div>
+                        </div>
+                        <!-- Hàng 2: cột 1 & 2 trống, cột 3 Full IPP Payment Amount -->
+                        <div class="detail-row detail-row-empty"></div>
+                        <div class="detail-row detail-row-empty"></div>
+                        <div class="detail-row">
+                            <div class="detail-row-inner">
+                                <span class="detail-label payment-field-label-gray">
+                                    {customLabel.fullIPPPaymentAmountLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Full_IPP_Payment_Amount__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Full_IPP_Payment_Amount__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="detail-value"><span class={isFullIPPPaymentAmountNegative}>{formattedFullIPPPaymentAmount}</span></span>
+                            </div>
+                        </div>
+                        <!-- Hàng 3: Total Current Balance | Total Accrued Interest | Total Per Diem -->
+                        <div class="detail-row">
+                            <div class="detail-row-inner">
+                                <span class="detail-label payment-field-label-gray">
+                                    {customLabel.totalCurrentBalanceLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Total_Current_Balance__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Total_Current_Balance__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="detail-value"><span class={isTotalCurrentBalanceNegative}>{formattedTotalCurrentBalance}</span></span>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-row-inner">
+                                <span class="detail-label payment-field-label-gray">
+                                    {customLabel.totalAccruedInterestLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Total_Accrued_Interest__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Total_Accrued_Interest__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="detail-value"><span class={isTotalAccruedInterestNegative}>{formattedTotalAccruedInterest}</span></span>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-row-inner">
+                                <span class="detail-label payment-field-label-gray">
+                                    {customLabel.totalPerDiemLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Total_Per_Diem__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Total_Per_Diem__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="detail-value"><span class={isTotalPerDiemNegative}>{formattedTotalPerDiem}</span></span>
+                            </div>
+                        </div>
+                        <!-- Hàng 4 -->
+                        <div class="detail-row">
+                            <div class="detail-row-inner">
+                                <span class="detail-label payment-field-label-gray">
+                                    {customLabel.totalCloseFeeAmountLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Total_Close_Fee_Amount__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Total_Close_Fee_Amount__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="detail-value"><span class={isTotalCloseFeeAmountNegative}>{formattedTotalCloseFeeAmount}</span></span>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-row-inner">
+                                <span class="detail-label payment-field-label-gray">
+                                    {customLabel.totalIPPAccruedInterestLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Total_IPP_Accrued_Interest__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Total_IPP_Accrued_Interest__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="detail-value"><span class={isTotalIPPAccruedInterestNegative}>{formattedTotalIPPAccruedInterest}</span></span>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-row-inner">
+                                <span class="detail-label payment-field-label-gray">
+                                    {customLabel.totalDeferredInterestLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Total_Deferred_Interest__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Total_Deferred_Interest__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="detail-value"><span class={isTotalDeferredInterestNegative}>{formattedTotalDeferredInterest}</span></span>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-row-inner">
+                                <span class="detail-label payment-field-label-gray">
+                                    {customLabel.totalPlanPaymentAmountLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Total_Plan_Payment_Amount__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Total_Plan_Payment_Amount__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="detail-value"><span class={isTotalPlanPaymentAmountNegative}>{formattedTotalPlanPaymentAmount}</span></span>
+                            </div>
+                        </div>
+                        <div class="detail-row detail-row-empty"></div>
+                    </div>
+                </template>
+                
+                <!-- Loading Spinner -->
+                <template if:true={isLoading}>
+                    <div class="slds-is-relative slds-m-vertical_large">
+                        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                    </div>
+                </template>
+                
+                <!-- Card Payment Table with Pagination -->
+                <template if:false={isLoading}>
+                    <c-fec_-related-list-paging
+                        columns={columns}
+                        records={cardPaymentData}
+                        page-size={pageSize}
+                        hide-row-number={hideRowNumber}
+                        hide-updated-time={hideUpdatedTime}
+                        default-sorted-by="FEC_Open_Date_Formatted__c"
+                        default-sort-direction="desc"
+                        column-count="2">
+                    </c-fec_-related-list-paging>
+                </template>
+            </div>
+        </section>
+    </div>
+</template>

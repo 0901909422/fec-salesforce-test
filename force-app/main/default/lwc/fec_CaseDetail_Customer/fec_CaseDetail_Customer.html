@@ -1,0 +1,57 @@
+<template>
+  <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
+
+  <c-fec_-case-bussiness
+    record-id={recordId}
+    is-edit={modeEditCase}
+  ></c-fec_-case-bussiness>
+
+  <lightning-accordion
+    allow-multiple-sections-open
+    active-section-name={activeSections}
+  >
+    <lightning-accordion-section
+      name="case-remark"
+      label={caseRemarkSectionLabel}
+      if:true={modeEditCase}
+    >
+      <div class="slds-p-around--x-small">
+        <c-fec_-case-remarks
+          case-id={recordId}
+          is-edit={modeEditCase}
+        ></c-fec_-case-remarks>
+      </div>
+    </lightning-accordion-section>
+
+    <lightning-accordion-section
+      name="case-remark-history"
+      label="Case Remarks History"
+    >
+      <div class="slds-p-around--x-small">
+        <c-fec_-related-list-paging
+          if:true={loadRemarklst}
+          records={remarklst}
+          columns={remarkColumnlst}
+          sorted-by="Registration"
+        >
+        </c-fec_-related-list-paging>
+      </div>
+    </lightning-accordion-section>
+  </lightning-accordion>
+
+  <div class="case-footer" if:true={modeEditCase}>
+    <lightning-button
+      label={labelSaveClose}
+      onclick={handleSave}
+    ></lightning-button>
+
+    <lightning-button
+      variant="brand"
+      label={labelSubmit}
+      onclick={handleSubmit}
+      disabled={isSubmitDisabled}
+    ></lightning-button>
+
+    <c-fec_-error-panel if:true={hasError} errors={errlst}></c-fec_-error-panel>
+  </div>
+</template>

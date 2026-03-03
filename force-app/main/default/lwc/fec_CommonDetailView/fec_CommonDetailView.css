@@ -1,0 +1,24 @@
+.transaction-card {
+    border-radius: 0.75rem;
+}
+
+.transaction-icon {
+    background: #f3f3f3;
+    border-radius: 50%;
+    padding: 0.5rem;
+}
+
+.slds-accordion__summary-heading {
+    font-weight: 600;
+}
+
+.label-with-help {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px; 
+}
+
+.text-red {
+  color: red;
+  font-weight: 600;
+}

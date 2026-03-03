@@ -1,0 +1,68 @@
+<template>
+    <div class="slds-grid slds-wrap slds-box slds-theme_default slds-is-relative">
+        <template if:true={isSaving}>
+            <lightning-spinner alternative-text="Saving..." size="medium"></lightning-spinner>
+        </template>
+
+        <div class="slds-col slds-size_1-of-4 slds-border_right slds-p-around_small">
+            <h3 class="slds-text-heading_small slds-m-bottom_medium">{labelServiceTypes}</h3>
+            <lightning-tree 
+                items={treeItems} 
+                onselect={handleSelect}>
+            </lightning-tree>
+        </div>
+
+        <div class="slds-col slds-size_3-of-4 slds-p-around_small">
+            <div class="slds-page-header slds-grid slds-grid_vertical-align-center">
+                <div class="slds-col">
+                    <h2 class="slds-page-header__title">{title}</h2>
+                </div>
+                <div class="slds-col slds-no-flex">
+                    <lightning-button 
+                        label="Save Mapping" 
+                        variant="brand" 
+                        icon-name="utility:save" 
+                        onclick={handleSave}
+                        disabled={isSaveDisabled}>
+                    </lightning-button>
+                </div>
+            </div>
+            
+            <template if:true={selectedProperty}>
+                <div class="slds-m-top_large">
+                    <table class="slds-table slds-table_bordered">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th scope="col">{tableHeaderProperty}</th>
+                                <th scope="col">{tableHeaderReference}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="slds-theme_shade">
+                                    <strong>{selectedProperty.label}</strong>
+                                    <p class="slds-text-color_weak slds-text-body_small">BP: {selectedProperty.parentName}</p>
+                                </td>
+                                <td>
+                                    <lightning-input 
+                                        variant="label-hidden" 
+                                        value={selectedProperty.propertyRef}
+                                        onchange={handleInputChange}
+                                        placeholder={placeholderMappingRef}>
+                                    </lightning-input>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <template if:false={selectedProperty}>
+                <div class="slds-align_absolute-center slds-m-top_xx-large slds-text-color_weak">
+                    <lightning-icon icon-name="utility:info" size="small" class="slds-m-right_x-small"></lightning-icon>
+                    {messageSelectProperty}
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
