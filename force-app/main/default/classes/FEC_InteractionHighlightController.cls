@@ -109,6 +109,9 @@ public with sharing class FEC_InteractionHighlightController {
         if (caseRecord.RecordType.Name == FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
             return determineCustomerCategoryFromRelatedCases(caseRecord.Id);
         }
+        if (caseRecord.FEC_Interaction__c != null) {
+            return determineCustomerCategoryFromRelatedCases(caseRecord.FEC_Interaction__c);
+        }
         String uploadCategory = getCategoryFromUploadList(caseRecord);
         if (uploadCategory != null) return uploadCategory;
         if (isSuspectedFraud(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SUSPECTED_FRAUD;
