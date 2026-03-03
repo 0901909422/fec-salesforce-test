@@ -6,6 +6,22 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
         @AuraEnabled public String productName;
     }
     
+    @auraEnabled(cacheable=true)
+    public static String getInteractionAccountNumber(String caseId){
+        try {
+            List<Case> interactionCase = [SELECT Id, FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Account_Number__c FROM Case WHERE Id = :caseId LIMIT 1];
+            String accountNumbers = '';
+
+            System.debug('Interaction Case: ' + interactionCase);
+            if (!interactionCase.isEmpty() && interactionCase[0].FEC_Account_or_Contract__c != null) {
+                accountNumbers = interactionCase[0].FEC_Account_or_Contract__r.FEC_Account_Number__c;
+            }
+            return accountNumbers;
+        } catch (Exception e) {
+            System.debug('Error getting account numbers: ' + e.getMessage());
+            return '';
+        }
+    }
     
     @AuraEnabled(cacheable=true)
     public static List<GetProductsListResponse> GetProductsListByCif(String cifNumber){
