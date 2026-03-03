@@ -932,7 +932,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Invalid);
 
       Case updatedCase = caselst.get(0);
 
@@ -1014,7 +1014,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (changelst.isEmpty()) {
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Cannot_Find_Stage_Change);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Not_Found);
       }
 
       FEC_Stage_Change__c selectedChange = changelst.get(0);
@@ -1108,7 +1108,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Invalid);
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
@@ -1128,7 +1128,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Invalid);
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
@@ -1148,7 +1148,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Invalid);
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED;
@@ -1168,7 +1168,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Invalid);
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
@@ -1186,10 +1186,10 @@ public with sharing class FEC_CaseBusinessService {
     ];
 
     if (caselst.isEmpty())
-      throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+      throw new CaseBusinessServiceException(System.Label.FEC_MSG_Invalid);
 
     if (userOrQueueId == null) {
-      throw new CaseBusinessServiceException(System.Label.FEC_MSG_User_Queue_Id_Invalid);
+      throw new CaseBusinessServiceException(System.Label.FEC_MSG_Invalid);
     }
     try {
       Case updatedCase = caselst.get(0);
@@ -1216,7 +1216,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty()) {
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Invalid);
       }
 
       Case updatedCase = caselst.get(0);
@@ -1263,7 +1263,7 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Invalid);
 
       Case updatedCase = caselst.get(0);
 
@@ -1385,7 +1385,7 @@ public with sharing class FEC_CaseBusinessService {
     ];
 
     if (sourcelst.isEmpty())
-      throw new CaseBusinessServiceException(System.Label.FEC_MSG_Nature_Of_Case_Id_Invalid);
+      throw new CaseBusinessServiceException(System.Label.FEC_MSG_Invalid);
 
     FEC_Nature_of_Case__c src = sourcelst.get(0);
 
@@ -1438,7 +1438,7 @@ public with sharing class FEC_CaseBusinessService {
     ];
 
     if (sourcelst.isEmpty())
-      throw new CaseBusinessServiceException(System.Label.FEC_MSG_No_Master_Data_Setting_Found);
+      throw new CaseBusinessServiceException(System.Label.FEC_MSG_Not_Found);
 
     List<FEC_Actual_Master_Data_Setting__c> targetlst = new List<FEC_Actual_Master_Data_Setting__c>();
 
