@@ -7,16 +7,16 @@ public with sharing class FEC_FecServiceTypeMappingController {
         
         List<FEC_MDM_Master_Data_Setting__c> allSettings = [
             SELECT Id, Name,FEC_Additional_Field__r.Name, Property_Reference__c, 
-                   FEC_Nature_Of_Case__r.FEC_Business_Process_Name__c 
+                   FEC_Nature_Of_Case__r.FEC_Business_Process__c 
             FROM FEC_MDM_Master_Data_Setting__c
-            WHERE FEC_Nature_Of_Case__r.FEC_Business_Process_Name__c IN :bpMap.keySet()
+            WHERE FEC_Nature_Of_Case__r.FEC_Business_Process__c IN :bpMap.keySet()
             AND FEC_Additional_Field__c != null
             ORDER BY Name
         ];
         
         Map<Id, List<Map<String, Object>>> bpToProperties = new Map<Id, List<Map<String, Object>>>();
         for(FEC_MDM_Master_Data_Setting__c setting : allSettings) {
-            Id bpId = setting.FEC_Nature_Of_Case__r.FEC_Business_Process_Name__c;
+            Id bpId = setting.FEC_Nature_Of_Case__r.FEC_Business_Process__c;
             if(!bpToProperties.containsKey(bpId)) {
                 bpToProperties.put(bpId, new List<Map<String, Object>>());
             }

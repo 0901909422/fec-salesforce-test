@@ -14,7 +14,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
 
   @api recordId;
 
-  selectedValue = "0001500010000123456";
+  selectedValue = "";
   hasAccountOrContact = false;
   isOpen = false;
 
@@ -84,9 +84,6 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
       console.log("[WIRE] recordId:", this.recordId);
       console.log("[WIRE] hasAccountOrContact:", this.hasAccountOrContact);
 
-      // if (this.hasAccountOrContact) {
-      //   this.getProductsList();
-      // }
     }
 
     if (error) {

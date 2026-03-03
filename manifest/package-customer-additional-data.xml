@@ -7,6 +7,11 @@
         <members>FEC_CustomerAdditionalHistoryHandler</members>
         <members>FEC_InsertCustomerDataQueueable</members>
         <members>FEC_ConstantCommon</members>
+
+        <members>FEC_CustAddInfoListCtrlTest</members>
+        <members>FEC_CustAddHistHandlerTest</members>
+        <members>FEC_ProcessCustDataBatchTest</members>
+
         <name>ApexClass</name>
     </types>
 

@@ -13,8 +13,10 @@
                             <template if:true={currentSortedByLabel}>
                                 <span class="sorted-by">• Sorted by {currentSortedByLabel}</span>
                             </template>
-                            <template if:true={updatedTimeLabel}>
-                                <span class="sorted-by">• {updatedTimeLabel}</span>
+                            <template if:false={hideUpdatedTime}>
+                                <template if:true={updatedTimeLabel}>
+                                    <span class="sorted-by">• {updatedTimeLabel}</span>
+                                </template>
                             </template>
                         </div>
 
@@ -36,11 +38,17 @@
                                         <th class="col-number"></th>
                                     </template>
                                     <template for:each={columnsWithSort} for:item="col">
-                                        <th key={col.fieldName} data-field={col.fieldName} 
-                                            onclick={handleSort} class="sortable-header">
+
+                                        <th key={col.fieldName}
+                                            data-field={col.fieldName}
+                                            onclick={handleSort}
+                                            class="sortable-header {col.headerClass}"
+                                            style={col.headerStyle}>
                                             <div class="header-content">
                                                 <span>{col.label}</span>
-                                                <lightning-icon icon-name={col.iconName} size="xx-small"
+                                                <lightning-icon
+                                                    icon-name={col.iconName}
+                                                    size="xx-small"
                                                     class={col.iconClass}>
                                                 </lightning-icon>
                                             </div>
@@ -57,8 +65,10 @@
                                         </template>
 
                                         <template for:each={row.cells} for:item="cell">
-                                            <td key={cell.key}>
-                                                
+                                            <td key={cell.key} 
+                                            class={cell.cellClass}
+                                            style={cell.cellStyle}>
+
                                                 <!-- RICH TEXT -->
                                                 <template if:true={cell.isHtml}>
                                                     <span lwc:dom="manual" data-value={cell.value}></span>
@@ -80,24 +90,56 @@
                                                         <template if:true={cell.showHover}>
                                                             <section class="hover-popover">
 
-                                                                <div class="hover-header">
-                                                                    {cell.hoverTitle}
-                                                                </div>
+                                                                <!-- Hover header -->
+                                                                <template if:true={cell.hoverTitle}>
+                                                                    <div class="hover-header">
+                                                                        {cell.hoverTitle}
+                                                                    </div>
+                                                                </template>
 
-                                                                <div class={cell.hoverBodyClass}>
-                                                                    <template for:each={cell.hoverItems} for:item="item">
-                                                                        <div key={item.label}
-                                                                            class="hover-row">
-                                                                            <span class="hover-label">
-                                                                                {item.label}
-                                                                            </span>
-                                                                            <span class="hover-value">
-                                                                                {item.value}
-                                                                            </span>
+                                                                <!-- Hover body -->
+                                                                <div class="hover-body">
+
+                                                                    <template
+                                                                        for:each={cell.hoverItems}
+                                                                        for:item="section"
+                                                                    >
+                                                                        <div
+                                                                            key={section.section}
+                                                                            class="hover-section"
+                                                                        >
+
+                                                                            <!-- Section title (hidden when same as popup header to avoid duplicate) -->
+                                                                            <template if:true={section.showSectionTitle}>
+                                                                                <div class="hover-section-title">
+                                                                                    {section.section}
+                                                                                </div>
+                                                                            </template>
+
+                                                                            <!-- Section grid -->
+                                                                            <div class="hover-body two-column">
+                                                                                <template
+                                                                                    for:each={section.items}
+                                                                                    for:item="item"
+                                                                                >
+                                                                                    <div
+                                                                                        key={item.label}
+                                                                                        class="hover-row"
+                                                                                    >
+                                                                                        <span class="hover-label">
+                                                                                            {item.label}
+                                                                                        </span>
+                                                                                        <span class="hover-value">
+                                                                                            {item.value}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </template>
+                                                                            </div>
+
                                                                         </div>
                                                                     </template>
-                                                                </div>
 
+                                                                </div>
                                                             </section>
                                                         </template>
                                                     </div>
@@ -121,7 +163,7 @@
                                                 <template if:false={cell.isLink}>
                                                     <template if:false={cell.isEye}>
                                                         <template if:false={cell.isHtml}>
-                                                            <span class={cell.cellClass}>{cell.value}</span>
+                                                            <span>{cell.value}</span>
                                                         </template>
                                                     </template>
                                                 </template>

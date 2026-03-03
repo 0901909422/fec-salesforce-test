@@ -97,37 +97,40 @@ public with sharing class FEC_GetDocumentsList {
         String cifNumber
     ) {
         Dom.Document doc = new Dom.Document();
-
+        
         Dom.XmlNode envelope = doc.createRootElement(
             'soapenv:Envelope',
-            FEC_ConstantCommon.SOAP_ENV,
+            null,
             null
         );
-
-        envelope.setAttribute('xmlns:cif', 'http://fecredit.com.vn/CIF_CustomerInfo');
-
+        
+         envelope.setAttribute(
+            'xmlns:soapenv',
+            FEC_ConstantCommon.SOAP_ENV
+        );
+        
+        envelope.setAttribute(
+            'xmlns:cif',
+            'http://fecredit.com.vn/CIF_CustomerInfo'
+        );
+        
+        // ===== Header =====
         envelope.addChildElement('soapenv:Header', null, null);
-
+        
+        // ===== Body =====
         Dom.XmlNode body =
             envelope.addChildElement('soapenv:Body', null, null);
+        
+        // ===== Main Action =====
+        Dom.XmlNode action =
+            body.addChildElement('cif:GetDocumentsList', null, null);
 
-        Dom.XmlNode getDocs =
-            body.addChildElement(
-                'cif:GetDocumentsList',
-                null,
-                null
-            );
-
-        Dom.XmlNode sys =
-            getDocs.addChildElement('Sys', null, null);
-        sys.addChildElement('TransID', null, null)
-           .addTextNode(transId);
-        sys.addChildElement('RequestorID', null, null)
-           .addTextNode(requestorId);
-        sys.addChildElement('DateTime', null, null)
-           .addTextNode(dateTimeStr);
-
-        getDocs.addChildElement('CIFNumber', null, null)
+        
+        Dom.XmlNode sys = action.addChildElement('Sys', null, null);
+        sys.addChildElement('TransID', null, null).addTextNode(transId);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+        action.addChildElement('CIFNumber', null, null)
                .addTextNode(cifNumber);
 
         return doc.toXmlString();

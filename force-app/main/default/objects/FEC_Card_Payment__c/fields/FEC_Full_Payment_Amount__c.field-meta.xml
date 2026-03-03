@@ -4,6 +4,7 @@
     <description>Tổng số tiền thanh toán
 Formula = Total Balance (real-time) + Sum (Accrued Interest + Per Diem + Deferred Interest + IPP Accrued Interest + Close Fee Amount) of ALL plans</description>
     <externalId>false</externalId>
+    <inlineHelpText>Tổng số tiền</inlineHelpText>
     <label>Full Payment Amount</label>
     <precision>18</precision>
     <required>false</required>

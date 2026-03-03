@@ -3,6 +3,8 @@ import { CurrentPageReference } from "lightning/navigation";
 import getRelevantInteractionsViewAll from "@salesforce/apex/FEC_InteractionInforHandler.getRelevantInteractionsViewAll";
 import PAGINATION_PAGE_OF from "@salesforce/label/c.Pagination_Page_Of_Label";
 
+import { DIV_ELEMENT } from "c/fec_CommonConst";
+
 const COLUMNS = [
   {
     label: "Interaction ID ",
@@ -153,7 +155,7 @@ export default class Fec_RelevantInteractionListViewAll extends LightningElement
   // ===== Utils =====
   getPlainCaseId(htmlString) {
     if (!htmlString) return "";
-    const div = document.createElement("div");
+    const div = document.createElement(DIV_ELEMENT);
     div.innerHTML = htmlString;
     return div.textContent || div.innerText || "";
   }

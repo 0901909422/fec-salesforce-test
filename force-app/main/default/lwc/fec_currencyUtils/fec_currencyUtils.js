@@ -1,19 +1,8 @@
 /**
- * Currency formatting utilities for FEC CSM
- * Provides consistent currency formatting across all LWC components
- * 
- * Format Requirements:
- * - Thousands separator with comma (e.g., 1,000,000)
- * - Support 0 or 2 decimal places (e.g., 1,102,372.90 or 1,918,207)
- * - Negative numbers displayed in red with (-) sign in front (e.g., -1,573,000)
- * - Red highlighting only applies on record detail screens, NOT on list views
- */
-
-/**
- * Format a number as currency with thousands separators
- * @param {Number} value - The numeric value to format
- * @param {Number} decimals - Number of decimal places (0 or 2)
- * @returns {String} Formatted currency string
+ * Định dạng số thành chuỗi tiền tệ có dấu phân cách hàng nghìn
+ * @param {Number} value - Giá trị số cần định dạng
+ * @param {Number} decimals - Số chữ số thập phân (0 hoặc 2)
+ * @returns {String} Chuỗi tiền tệ đã định dạng
  */
 export function formatCurrency(value, decimals = 0) {
     if (value === null || value === undefined || isNaN(value)) {
@@ -30,18 +19,18 @@ export function formatCurrency(value, decimals = 0) {
 }
 
 /**
- * Check if a value is negative
- * @param {Number} value - The numeric value to check
- * @returns {Boolean} True if the value is negative
+ * Kiểm tra giá trị có phải số âm hay không
+ * @param {Number} value - Giá trị số cần kiểm tra
+ * @returns {Boolean} True nếu giá trị là số âm
  */
 export function isNegative(value) {
     return value !== null && value !== undefined && !isNaN(value) && value < 0;
 }
 
 /**
- * Get CSS class for currency value (red for negative)
- * @param {Number} value - The numeric value
- * @returns {String} CSS class name ('currency-negative' for negative, empty string for positive)
+ * Trả về CSS class cho giá trị tiền tệ (đỏ cho số âm)
+ * @param {Number} value - Giá trị số
+ * @returns {String} Tên CSS class ('currency-negative' cho số âm, chuỗi rỗng cho số dương)
  */
 export function getCurrencyClass(value) {
     return isNegative(value) ? 'currency-negative' : '';
@@ -86,22 +75,6 @@ function isNumericValue(value) {
  * @param {Array<String>} excludeFields - (Optional) Danh sách các field cần bỏ qua (ví dụ: ['Id', 'CreatedDate'])
  * @returns {Object} Record đã được thêm CSS class cho các field tiền tệ âm
  * 
- * @example
- * const record = { 
- *   Id: '001', 
- *   ippBalance: -1000000, 
- *   currentBalance: 500000,
- *   name: 'Test',
- *   amount: -50000
- * };
- * const processed = autoHighlightNegativeCurrency(record);
- * // Kết quả: { 
- * //   Id: '001', 
- * //   ippBalance: -1000000, ippBalanceClass: 'currency-negative',
- * //   currentBalance: 500000, currentBalanceClass: '',
- * //   name: 'Test',
- * //   amount: -50000, amountClass: 'currency-negative'
- * // }
  */
 export function autoHighlightNegativeCurrency(record, excludeFields = []) {
     if (!record || typeof record !== 'object') {
@@ -150,17 +123,22 @@ export function autoHighlightNegativeCurrency(record, excludeFields = []) {
             // Convert sang number nếu là string
             const numValue = typeof fieldValue === 'string' ? Number(fieldValue) : fieldValue;
             
+            // Tự động thêm CSS class cho field này
+            const classFieldName = fieldName + 'Class';
+            
             // Kiểm tra xem có phải số âm không
             if (isNegative(numValue)) {
-                // Tự động thêm CSS class cho field này
-                const classFieldName = fieldName + 'Class';
                 processedRecord[classFieldName] = 'currency-negative';
+            } else {
+                // Đảm bảo field xxxClass luôn tồn tại, ngay cả khi không âm
+                processedRecord[classFieldName] = '';
             }
         }
     });
     
     return processedRecord;
 }
+
 
 /**
  * Tự động quét và highlight các giá trị tiền tệ âm cho nhiều records cùng lúc
@@ -186,11 +164,11 @@ export function autoHighlightNegativeCurrencyForRecords(records, excludeFields =
 }
 
 /**
- * Format currency for datatable cell renderer
- * Used in custom datatable type for handling negative values
- * @param {Number} value - The numeric value
- * @param {Number} decimals - Number of decimal places (0 or 2)
- * @returns {Object} Object with formatted value and CSS class
+ * Định dạng tiền tệ cho ô hiển thị trong datatable
+ * Dùng trong custom datatable type để xử lý giá trị âm (highlight đỏ)
+ * @param {Number} value - Giá trị số
+ * @param {Number} decimals - Số chữ số thập phân (0 hoặc 2)
+ * @returns {Object} Object chứa giá trị đã định dạng và CSS class
  */
 export function formatCurrencyForTable(value, decimals = 0) {
     return {

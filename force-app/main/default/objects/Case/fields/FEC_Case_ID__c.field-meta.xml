@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Case_ID__c</fullName>
+    <description>Trường thông tin trạng thái Interaction lấy theo ID  để phục vụ hiển thị ở giao diện Interaction theo yêu cầu FEC</description>
     <externalId>false</externalId>
     <formula>IF(  Or(RecordType.Name = &apos;Customer Case&apos;, RecordType.Name = &apos;Internal Case&apos;), HYPERLINK(&quot;/&quot; &amp; Id, FEC_ID_Search__c, &quot;_self&quot;), &apos;&apos;)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>

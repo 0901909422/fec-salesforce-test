@@ -17,6 +17,10 @@
 		<name>PermissionSet</name>
 	</types>
 	<types>
+		<members>FEC_Hold_Case__c-Hold Case Layout</members>
+		<name>Layout</name>
+	</types>
+	<types>
 		<members>FEC_Service</members>
 		<name>CustomApplication</name>
 	</types>

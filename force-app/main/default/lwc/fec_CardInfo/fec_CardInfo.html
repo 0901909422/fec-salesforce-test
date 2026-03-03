@@ -27,16 +27,24 @@
                 </template>
                 
                 <template if:false={isCardDeliveryLoading}>
-                    <c-fec_-related-list-paging
-                        columns={cardDeliveryColumns}
-                        records={cardDeliveryData}
-                        updated-time={cardDeliveryUpdatedTime}>
-                    </c-fec_-related-list-paging>
+                    <template if:true={hasCardDeliveryData}>
+                        <div class="card-info-table-wrapper">
+                            <c-fec_-related-list-paging
+                                columns={cardDeliveryColumns}
+                                records={cardDeliveryData}
+                                updated-time={cardDeliveryUpdatedTime}
+                                default-sorted-by="FEC_Issue_Date_Formatted__c"
+                                default-sort-direction="desc"
+                                hide-row-number={hideCardDeliveryRowNumber}
+                                hide-updated-time={hideCardDeliveryRowNumber}>
+                            </c-fec_-related-list-paging>
+                        </div>
+                    </template>
                 </template>
             </div>
         </section>
 
-        <!-- Other Card Section -->
+        <!-- Other Cards Section -->
         <section class={otherCardSectionClass}>
             <div class="slds-accordion__summary" onclick={handleOtherCardToggle}>
                 <h3 class="slds-accordion__summary-heading">
@@ -63,11 +71,18 @@
                 </template>
                 
                 <template if:false={isOtherCardLoading}>
-                    <c-fec_-related-list-paging
-                        columns={otherCardColumns}
-                        records={otherCardData}
-                        updated-time={otherCardUpdatedTime}>
-                    </c-fec_-related-list-paging>
+                    <template if:true={hasOtherCardData}>
+                        <div class="card-info-table-wrapper">
+                            <c-fec_-related-list-paging
+                                columns={otherCardColumns}
+                                records={otherCardData}
+                                updated-time={otherCardUpdatedTime}
+                                default-sorted-by="FEC_Issue_Date_Formatted__c"
+                                default-sort-direction="desc"
+                                hide-updated-time={hideCardDeliveryRowNumber}>
+                            </c-fec_-related-list-paging>
+                        </div>
+                    </template>
                 </template>
             </div>
         </section>

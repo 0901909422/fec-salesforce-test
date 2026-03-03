@@ -41,12 +41,24 @@ public with sharing class FEC_NatureOfCaseTreeController {
         try {
             // Reuse shared service to fetch mappings (SOQL + FLS enforcement)
             List<FEC_MDM_Nature_Of_Case__c> listNOC = FEC_NatureOfCaseTreeService.fetchAllMasterDataMappings();
+            System.debug('===== TREE DEBUG: Total NOC records fetched: ' + listNOC.size());
+            
+            // Log first few records for debugging
+            if (!listNOC.isEmpty()) {
+                System.debug('===== TREE DEBUG: Sample record: ' + JSON.serializePretty(listNOC[0]));
+            }
 
             // Build tree with helper to improve readability and testability
             // Delegate tree construction to external builder
             treeItems = FEC_NatureOfCaseTreeBuilder.buildTree(listNOC);
+            System.debug('===== TREE DEBUG: Total tree items built: ' + treeItems.size());
+            
+            if (!treeItems.isEmpty()) {
+                System.debug('===== TREE DEBUG: First tree item: ' + JSON.serializePretty(treeItems[0]));
+            }
          } catch (Exception e) {
              System.debug('FEC_NatureOfCaseTreeController.getNatureOfCaseTreeData error: ' + e);
+             System.debug('===== TREE DEBUG: Error stack trace: ' + e.getStackTraceString());
              // Return empty list on failure to avoid throwing raw exceptions to UI
              return new List<FEC_NatureOfCaseTreeItem>();
          }

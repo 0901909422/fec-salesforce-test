@@ -105,6 +105,56 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
         return lstFiles;
     }
 
+    /**
+     * Xóa bản ghi Config
+     * @param configId ID của bản ghi FEC_CustomerAdditionalInfoConfig__c cần xóa
+     */
+    @AuraEnabled
+    public static void deleteConfig(Id configId) {
+        Savepoint sp = Database.setSavepoint(); 
+        
+        try {
+            if (configId != null) {
+                List<ContentDocumentLink> fileLinks = [
+                    SELECT ContentDocumentId 
+                    FROM ContentDocumentLink 
+                    WHERE LinkedEntityId = :configId
+                ];
+                
+                if (!fileLinks.isEmpty()) {
+                    List<ContentDocument> docsToDelete = new List<ContentDocument>();
+                    for(ContentDocumentLink link : fileLinks) {
+                        docsToDelete.add(new ContentDocument(Id = link.ContentDocumentId));
+                    }
+                    delete docsToDelete; 
+                }
+
+                List<FEC_CustomerAdditionalInfo__c> relatedDetails = [
+                    SELECT Id 
+                    FROM FEC_CustomerAdditionalInfo__c 
+                    WHERE FEC_Config__c = :configId
+                ];
+                if (!relatedDetails.isEmpty()) {
+                    delete relatedDetails;
+                }
+
+                List<FEC_CustomerDataConfigHistory__c> relatedHistories = [
+                    SELECT Id 
+                    FROM FEC_CustomerDataConfigHistory__c 
+                    WHERE FEC_Customers_Data_Config__c = :configId
+                ];
+                if (!relatedHistories.isEmpty()) {
+                    delete relatedHistories;
+                }
+
+                delete new FEC_CustomerAdditionalInfoConfig__c(Id = configId);
+            }
+        } catch (Exception e) {
+            Database.rollback(sp);
+            throw new AuraHandledException(System.Label.FEC_Error_Message_Deleting_Data + e.getMessage());
+        }
+    }
+
     @AuraEnabled
     public static void deleteFile(Id documentId) {
         try {
