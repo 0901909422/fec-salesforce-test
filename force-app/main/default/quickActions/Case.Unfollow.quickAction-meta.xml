@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <QuickAction xmlns="http://soap.sforce.com/2006/04/metadata">
-    <apiVersion>65.0</apiVersion>
-    <label>Execute</label>
-    <lightningWebComponent>fec_CustomerCaseExecuteAction</lightningWebComponent>
+    <actionSubtype>Action</actionSubtype>
+    <label>Unfollow</label>
+    <lightningWebComponent>fec_CaseUnfollowHeadlessAction</lightningWebComponent>
     <optionsCreateFeedItem>false</optionsCreateFeedItem>
     <type>LightningWebComponent</type>
 </QuickAction>

@@ -1,0 +1,76 @@
+<template>
+    <!-- Modal -->
+    <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small" aria-modal="true">
+            <div class="slds-modal__container">
+                <!-- Modal Header -->
+                <div class="slds-modal__header">
+                    <h1 class="slds-modal__title slds-hyphenate slds-text-heading_medium slds-text-align_center">{$Label.FEC_LABEL_UNFOLLOW_CASE}</h1>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium" style="min-height: 100px;">
+                    <!-- Loading Spinner -->
+                    <template if:true={isLoading}>
+                        <div class="slds-text-align_center slds-p-vertical_large">
+                            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                        </div>
+                    </template>
+
+                    <!-- Content - Confirmation Message -->
+                    <template if:false={isLoading}>
+                        <div class="slds-text-align_center slds-m-bottom_medium">
+                            <lightning-icon icon-name="utility:warning" size="large" variant="warning" class="slds-m-bottom_small"></lightning-icon>
+                        </div>
+                        
+                        <div class="slds-text-align_center slds-m-bottom_medium">
+                            <p class="slds-text-heading_small slds-text-color_default slds-m-bottom_x-small">
+                                {customLabels.confirmUnfollow}
+                            </p>
+                            <p class="slds-text-body_small slds-text-color_weak">
+                                {customLabels.unfollowInfo}
+                            </p>
+                        </div>
+
+                        <!-- Case Info -->
+                        <template if:true={caseInfo}>
+                            <div class="case-info-box slds-box slds-box_x-small slds-theme_shade slds-m-bottom_medium">
+                                <div class="slds-grid slds-gutters_small">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <p class="slds-text-body_small slds-text-color_weak">{$Label.FEC_LABEL_CURRENT_FOLLOW_TYPE}</p>
+                                        <p class="slds-text-body_regular slds-text-color_default slds-truncate">
+                                            <strong>{customLabels.followTypeLabel}</strong>
+                                        </p>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <p class="slds-text-body_small slds-text-color_weak">{$Label.FEC_LABEL_CASE_STATUS}</p>
+                                        <p class="slds-text-body_regular slds-text-color_default slds-truncate">
+                                            {customLabels.caseStatus}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="slds-modal__footer">
+                    <button 
+                        class="slds-button slds-button_neutral custom-cancel-btn"
+                        onclick={handleCancel}
+                        disabled={isLoading}>
+                        {customLabels.labelCancel}
+                    </button>
+                    <button 
+                        class="slds-button slds-button_destructive custom-unfollow-btn"
+                        onclick={handleConfirm}
+                        disabled={isLoading}>
+                        {customLabels.labelConfirm}
+                    </button>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>
