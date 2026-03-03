@@ -154,12 +154,27 @@ export default class FecAdditionalFieldList extends LightningElement {
     }
 
     /**
-    * @description Đóng Modal.
+    * @description Đóng Modal chỉnh sửa.
     */
     closeSettingModal() {
         this.isModalOpen = false;
+        this.isEditModalOpen = false;
         this.recordIdForEdit = null;
         this.actionClick = false;
+    }
+
+    /**
+     * @description Đóng Modal (alias cho closeSettingModal).
+     */
+    closeModal() {
+        this.closeSettingModal();
+    }
+
+    /**
+     * @description Xử lý sự kiện cancel từ child component (fecAdditionalFieldForm).
+     */
+    handleCancelEvent() {
+        this.closeSettingModal();
     }
 
     /**
@@ -181,15 +196,6 @@ export default class FecAdditionalFieldList extends LightningElement {
         await this.deleteRecord(this.recordIdToDelete);
         this.showDeleteConfirm = false;
         this.recordIdToDelete = null;
-    }
-
-    /**
-     * @description Đóng Modal.
-     */
-    closeModal() {
-        this.isModalOpen = false;
-        this.recordIdForEdit = null;
-        this.actionClick = false;
     }
 
     openNewFieldModal() {
