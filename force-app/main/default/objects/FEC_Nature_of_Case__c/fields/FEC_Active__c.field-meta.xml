@@ -3,6 +3,7 @@
     <fullName>FEC_Active__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Trạng thái của bộ NOC</description>
+    <externalId>false</externalId>
     <label>Active</label>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>

@@ -1,0 +1,228 @@
+<template>
+    <div class="form-container">
+        <!-- EDIT MODE: Use custom form layout -->
+        <template lwc:if={recordId}>
+            <div class="slds-grid slds-wrap slds-p-around_medium edit-form">
+                <lightning-messages></lightning-messages>
+
+                <!-- Additional Field (Editable in Edit Mode) -->
+                <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                    <label class="slds-form-element__label">
+                        <span class="slds-required">*</span> Additional Field
+                    </label>
+                    <lightning-combobox data-field-name="FEC_Additional_Field__c" options={additionalFieldOptions}
+                        value={formData.additionalField} placeholder="-- Select Additional Field --" onchange={handleInputChange}></lightning-combobox>
+                    <div class="slds-text-color_weak slds-text-body_small slds-m-top_xx-small">
+                        Choose from active Additional Fields only
+                    </div>
+                </div>
+
+                <!-- FEC Channel (Multi-select) -->
+                <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                    <label class="slds-form-element__label">
+                        <span class="slds-required">*</span> {labelChannelMultiselect}
+                    </label>
+                    <lightning-combobox data-name={dataNameChannels} options={channelOptions}
+                        placeholder="-- Select Channels --" onchange={handleSelectCustom}>
+                    </lightning-combobox>
+                    <div class="pills-container">
+                        <template for:each={selectedChannels} for:item="val">
+                            <lightning-pill key={val} label={val} name={val} data-name={dataNameChannels}
+                                onremove={handleRemoveCustom}></lightning-pill>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Applicable Roles (Multi-select) -->
+                <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                    <label class="slds-form-element__label">
+                        <span class="slds-required">*</span> {labelApplicableRoles}
+                    </label>
+                    <lightning-combobox data-name={dataNameRoles} options={roleOptions}
+                        placeholder="-- Select Roles --" onchange={handleSelectCustom}>
+                    </lightning-combobox>
+                    <div class="pills-container">
+                        <template for:each={selectedRoles} for:item="val">
+                            <lightning-pill key={val} label={val} name={val} data-name={dataNameRoles}
+                                onremove={handleRemoveCustom}></lightning-pill>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Section & Field Order - Below Roles -->
+                <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                    <label class="slds-form-element__label">Section</label>
+                    <lightning-input type="text" data-field-name="FEC_Section__c" value={formData.section}
+                        onchange={handleInputChange}></lightning-input>
+                </div>
+
+                <div class="slds-col slds-size_1-of-4 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                    <label class="slds-form-element__label">Order</label>
+                    <lightning-input type="number" data-field-name="FEC_Field_Order_Display__c" value={displayOrder}
+                        onchange={handleInputChange}></lightning-input>
+                </div>
+
+                <!-- Checkboxes Row -->
+                <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                    <div class="slds-grid slds-gap_medium checkbox-row">
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-input type="checkbox" label="Status" data-field-name="FEC_Field_Status__c"
+                                checked={formData.fieldStatus} onchange={handleInputChange}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-input type="checkbox" label="Read Only" data-field-name="FEC_Field_ReadOnly__c"
+                                checked={formData.fieldReadOnly} onchange={handleInputChange}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-input type="checkbox" label="Mandatory" data-field-name="FEC_Field_Mandatory__c"
+                                checked={formData.fieldMandatory} onchange={handleInputChange}></lightning-input>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="slds-m-top_medium slds-p-horizontal_medium button-wrapper">
+                <lightning-button label={labelCancel} onclick={handleCancel}></lightning-button>
+                <lightning-button variant="brand" label={labelSave} onclick={handleSubmitEdit}></lightning-button>
+            </div>
+        </template>
+
+        <!-- CREATE MODE: Use custom form with lightning-input -->
+        <template lwc:else>
+            <div class="slds-grid slds-wrap slds-p-around_medium create-form">
+                <lightning-messages></lightning-messages>
+
+                <!-- Integration Mode: Hidden fields for Additional Field and Channel -->
+                <template lwc:if={isIntegrationMode}>
+                    <!-- These fields are fixed to FIMA, hidden from UI -->
+                    <!-- Additional Field is automatically set to FIMA -->
+                    <!-- FEC Channel is automatically set to FIMA -->
+                    <!-- Field Order is automatically set to 1 -->
+
+                    <!-- Applicable Roles (Multi-select) -->
+                    <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                        <label class="slds-form-element__label">
+                            <span class="slds-required">*</span> {labelApplicableRoles}
+                        </label>
+                        <lightning-combobox data-name={dataNameRoles} options={roleOptions} placeholder="-- Select Roles --"
+                            onchange={handleSelectCustom}>
+                        </lightning-combobox>
+                        <div class="pills-container">
+                            <template for:each={selectedRoles} for:item="val">
+                                <lightning-pill key={val} label={val} name={val} data-name={dataNameRoles}
+                                    onremove={handleRemoveCustom}></lightning-pill>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Section -->
+                    <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                        <lightning-input type="text" label="Section" data-field-name="FEC_Section__c"
+                            value={formData.section} onchange={handleInputChange}></lightning-input>
+                    </div>
+
+                    <!-- Checkboxes Row -->
+                    <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                        <div class="slds-grid slds-gap_medium checkbox-row">
+                            <div class="slds-col slds-size_1-of-3">
+                                <lightning-input type="checkbox" label="Field Status" data-field-name="FEC_Field_Status__c"
+                                    checked={formData.fieldStatus} onchange={handleInputChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-3">
+                                <lightning-input type="checkbox" label="Read Only" data-field-name="FEC_Field_ReadOnly__c"
+                                    checked={formData.fieldReadOnly} onchange={handleInputChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-3">
+                                <lightning-input type="checkbox" label="Mandatory" data-field-name="FEC_Field_Mandatory__c"
+                                    checked={formData.fieldMandatory} onchange={handleInputChange}></lightning-input>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Normal Mode: Show all fields -->
+                <template lwc:if={isCreateMode}>
+                    <!-- Additional Field (from FEC_MDM_Additional_Field__c with status = true) -->
+                    <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                        <label class="slds-form-element__label">
+                            <span class="slds-required">*</span> Additional Field
+                        </label>
+                        <lightning-combobox data-field-name="FEC_Additional_Field__c" options={additionalFieldOptions}
+                            placeholder="-- Select Additional Field --" onchange={handleInputChange}></lightning-combobox>
+                        <div class="slds-text-color_weak slds-text-body_small slds-m-top_xx-small">
+                            Choose from active Additional Fields only
+                        </div>
+                    </div>
+
+                    <!-- FEC Channel (Multi-select) -->
+                    <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                        <label class="slds-form-element__label">
+                            <span class="slds-required">*</span> {labelChannelMultiselect}
+                        </label>
+                        <lightning-combobox data-name={dataNameChannels} options={channelOptions}
+                            placeholder="-- Select Channels --" onchange={handleSelectCustom}>
+                        </lightning-combobox>
+                        <div class="pills-container">
+                            <template for:each={selectedChannels} for:item="val">
+                                <lightning-pill key={val} label={val} name={val} data-name={dataNameChannels}
+                                    onremove={handleRemoveCustom}></lightning-pill>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Applicable Roles (Multi-select) -->
+                    <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                        <label class="slds-form-element__label">
+                            <span class="slds-required">*</span> {labelApplicableRoles}
+                        </label>
+                        <lightning-combobox data-name={dataNameRoles} options={roleOptions} placeholder="-- Select Roles --"
+                            onchange={handleSelectCustom}>
+                        </lightning-combobox>
+                        <div class="pills-container">
+                            <template for:each={selectedRoles} for:item="val">
+                                <lightning-pill key={val} label={val} name={val} data-name={dataNameRoles}
+                                    onremove={handleRemoveCustom}></lightning-pill>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Section & Field Order - Below Roles -->
+                    <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                        <lightning-input type="text" label="Section" data-field-name="FEC_Section__c"
+                            value={formData.section} onchange={handleInputChange}></lightning-input>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-4 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                        <lightning-input type="number" label="Field Order" data-field-name="FEC_Field_Order_Display__c"
+                            value={displayOrder} onchange={handleInputChange}></lightning-input>
+                    </div>
+
+                    <!-- Checkboxes Row -->
+                    <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                        <div class="slds-grid slds-gap_medium checkbox-row">
+                            <div class="slds-col slds-size_1-of-3">
+                                <lightning-input type="checkbox" label="Field Status" data-field-name="FEC_Field_Status__c"
+                                    checked={formData.fieldStatus} onchange={handleInputChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-3">
+                                <lightning-input type="checkbox" label="Read Only" data-field-name="FEC_Field_ReadOnly__c"
+                                    checked={formData.fieldReadOnly} onchange={handleInputChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-3">
+                                <lightning-input type="checkbox" label="Mandatory" data-field-name="FEC_Field_Mandatory__c"
+                                    checked={formData.fieldMandatory} onchange={handleInputChange}></lightning-input>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Buttons -->
+            <div class="slds-m-top_medium slds-p-horizontal_medium button-wrapper">
+                <lightning-button label={labelCancel} onclick={handleCancel}></lightning-button>
+                <lightning-button variant="brand" label={labelSave} onclick={handleCreateSubmit}></lightning-button>
+            </div>
+        </template>
+    </div>
+</template>

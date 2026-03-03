@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Last_Updated_By__c</fullName>
+    <description>Email ID của người chỉnh sửa gần nhất
+Trường tạo mới để hiển thị trên Case details và interaction details do trường standard không hiển thị được đúng  yêu cầu</description>
     <externalId>false</externalId>
     <formula>LEFT(LastModifiedBy.Email,FIND(&quot;@&quot;,LastModifiedBy.Email)-1)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>

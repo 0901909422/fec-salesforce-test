@@ -150,13 +150,17 @@ public without sharing class FEC_CreateCaseHanlder {
         interactionCase.RecordTypeId = interactionRecordTypeId;
         if( dto.type == FEC_ConstantCommon.CHANNEL_INBOUND_API ) {
             interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
+            interactionCase.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.CHANNEL_INBOUND_SUBCHANNEL_NAME;
+
         }else if ( dto.type == FEC_ConstantCommon.CHANNEL_OUTBOUND_API ) {
             interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
+            interactionCase.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_SUBCHANNEL_NAME;
         }
         interactionCase.FEC_External_Interaction_ID__c = dto.genesysInteractionID;
         interactionCase.Status = 'Open';
         interactionCase.FEC_Genesys_campaign_Name__c = dto.campaignName;
         interactionCase.FEC_Phone_Number__c = dto.phoneNumber;
+        interactionCase.FEC_Search_Phone_Number__c = dto.phoneNumber;
         interactionCase.FEC_National_ID_Passport_ID__c = dto.nationalId;
         interactionCase.FEC_Account_Number__c = dto.cardAccountNum;
         interactionCase.FEC_Contract_Number__c = dto.contractNum;
@@ -180,7 +184,7 @@ public without sharing class FEC_CreateCaseHanlder {
             System.debug('Assigning Agent ID: ' + dto.agentId + ' to User Id    : ' + createdInteraction.OwnerId);
             User userInfo = [SELECT Id, FEC_Agent_ID__c,FEC_Main_Queue__c FROM User WHERE Id = :createdInteraction.OwnerId];
             userInfo.FEC_Agent_ID__c = dto.agentId;
-            userInfo.FEC_Main_Queue__c = 'default value';
+            // userInfo.FEC_Main_Queue__c = 'default value';
             update userInfo;
         }
         

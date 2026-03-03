@@ -1,17 +1,17 @@
 /****************************************************************************************
- * File Name    : FEC_GetBilledTransactions
- * Author       : Quangdv7
- * Date         : 2025-12-16
- * Description  : Get data for API service
- * ===============================================================
- * Ver      Date           Author              Modification
- * ===============================================================
+* File Name    : FEC_GetBilledTransactions
+* Author       : Quangdv7
+* Date         : 2025-12-16
+* Description  : Get data for API service
+* ===============================================================
+* Ver      Date           Author              Modification
+* ===============================================================
    1.0      2025-12-16     Quangdv7             Create
  
 ****************************************************************************************/
-
+ 
 public with sharing class FEC_GetBilledTransactions {
-
+ 
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -21,14 +21,14 @@ public with sharing class FEC_GetBilledTransactions {
         public List<TransactionRecord> Transactions;
         public List<LoanRecord> Loans;
     }
-
+ 
     public class SysResponse {
         public String TransID;
         public String DateTimeStr;
-        public Integer Code;
+        public Integer Status;
         public String Description;
     }
-
+ 
     public class AccountRecord {
         public String AccountNumber;
         public String AccountStatus;
@@ -44,25 +44,25 @@ public with sharing class FEC_GetBilledTransactions {
         public String DateLastPayment;
         public String EmailAddress;
     }
-
+ 
     public class TransactionRecord {
         public String TransactionDate;
         public String PostingDate;
         public String Description;
         public Decimal Amount;
-        public String CurrencyCode; 
+        public String CurrencyCode;
         public String ReferenceNumber;
         public String TransactionType;
         public String MerchantName;
         public String MCC;
         public String Location;
     }
-
+ 
     public class LoanRecord {
         public String LoanNumber;
         public Decimal OutstandingAmount;
     }
-
+ 
     // =========================================================================
     // PUBLIC METHOD
     // =========================================================================
@@ -74,57 +74,112 @@ public with sharing class FEC_GetBilledTransactions {
         String statementMonth
     ) {
         try {
-
+ 
             validateRequest(transID, requestorId, dateTimeStr, accountNumber, statementMonth);
             
-            String soapBody =
-                '<?xml version="1.0" encoding="utf-8"?>' +
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
-                'xmlns:est="http://esbservice.fecredit.org/EStatementService/">' +
-                    '<soapenv:Header/>' +
-                    '<soapenv:Body>' +
-                        '<est:GetAccountDetails>' +
-                            '<est:SysRequest>' +
-                                '<TransID>' + transId + '</TransID>' +
-                                '<RequestorID>' + requestorId + '</RequestorID>' +
-                                '<DateTime>' + dateTimeStr + '</DateTime>' +
-                            '</est:SysRequest>' +
-                            '<AccountNumber>' + accountNumber + '</AccountNumber>' +
-                            '<StatementMonth>' + statementMonth + '</StatementMonth>' +
-                        '</est:GetAccountDetails>' +
-                    '</soapenv:Body>' +
-                '</soapenv:Envelope>';
+            String soapBody = buildSoapRequest(
+                transId,
+                requestorId,
+                dateTimeStr,
+                accountNumber,
+                statementMonth
+            );
             
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Billed_Transaction');
-
+ 
             String endpoint = apiSetting?.FEC_Call_Mock__c
                 ? FEC_MockupEndpoint.GET_BILLED_TRANSACTION_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
-
+            
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
                     String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()})
                 );
             }
-
+ 
             ResponseWrapper response = parseResponse(res.getBody());
-
-            if (response.Sys != null && response.Sys.Code != 1) {
+ 
+            if (response.Sys != null && response.Sys.Status != 0) {
                 throw new CalloutException(
                     String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
                 );
             }
             
             return response;
-
+ 
         } catch (Exception ex) {
             System.debug('### BILLED TXN ERROR: ' + ex.getMessage());
             throw ex;
         }
     }
 
+    // =========================================================================
+    // BUILD SOAP REQUEST
+    // =========================================================================
+    private static String buildSoapRequest(
+        String transId,
+        String requestorId,
+        String dateTimeStr,
+        String accountNumber,
+        String statementMonth
+    ) {
+    
+        Dom.Document doc = new Dom.Document();
+   
+        Dom.XmlNode envelope = doc.createRootElement(
+            'soapenv:Envelope',
+            null,
+            null
+        );
+    
+        envelope.setAttribute(
+            'xmlns:soapenv',
+            FEC_ConstantCommon.SOAP_ENV
+        );
+        envelope.setAttribute(
+            'xmlns:ns1',
+            'http://esbservice.fecredit.org/EStatementService/'
+        );
+    
+        // ===== Header =====
+        envelope.addChildElement('soapenv:Header', null, null);
+    
+        // ===== Body =====
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+    
+        // ===== Main Action =====
+        Dom.XmlNode action =
+            body.addChildElement('ns1:GetBilledTransactions', null, null);
+    
+        action.setAttribute(
+            'xmlns:ns1',
+            'http://esbservice.fecredit.org/EStatementService/'
+        );
+    
+        Dom.XmlNode sys =
+            action.addChildElement('ns1:SysRequest', null, null);
+    
+        sys.addChildElement('TransID', null, null)
+           .addTextNode(transId);
+    
+        sys.addChildElement('RequestorID', null, null)
+           .addTextNode(requestorId);
+    
+        sys.addChildElement('DateTime', null, null)
+           .addTextNode(dateTimeStr);
+    
+        action.addChildElement('AccountNumber', null, null)
+              .addTextNode(accountNumber);
+    
+        action.addChildElement('StatementMonth', null, null)
+              .addTextNode(statementMonth);
+    
+        return doc.toXmlString();
+    }
+ 
     // =========================================================================
     // REQUEST VALIDATION
     // =========================================================================
@@ -135,18 +190,18 @@ public with sharing class FEC_GetBilledTransactions {
         String accountNumber,
         String statementMonth
     ) {
-
+ 
         // ===================== TRANSID =====================
         if (String.isBlank(transID) || transID.length() > 36) {
             throw new CalloutException(System.Label.FEC_MSG_TransID_Null);
         }
-
+ 
         // ===================== REQUESTORID =====================
         Set<String> validRequestorIds = new Set<String>{FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP};
         if (String.isBlank(requestorId) || !validRequestorIds.contains(requestorId)) {
             throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
-
+ 
         // ===================== DATETIME =====================
         if (String.isBlank(dateTimeStr)) {
             throw new CalloutException(System.Label.FEC_MSG_Datetime_Null);
@@ -156,7 +211,7 @@ public with sharing class FEC_GetBilledTransactions {
         } catch(Exception e) {
             throw new CalloutException(String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeStr}));
         }
-
+ 
         // ===================== ACCOUNT NUMBER =====================
         if (String.isBlank(accountNumber)) {
             throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
@@ -167,93 +222,125 @@ public with sharing class FEC_GetBilledTransactions {
         
         // ===================== STATEMENT MONTH =====================
         if (String.isBlank(statementMonth)) {
-            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'StatementMonth'}));
+            throw new CalloutException(
+                String.format(System.Label.FEC_MSG_Param_Required,
+                    new List<String>{'StatementMonth'})
+            );
         }
-    
-        Pattern p = Pattern.compile(FEC_ConstantCommon.PATTERN_DATE_FORMAT_MMYYYY);
-        if (!p.matcher(statementMonth).matches()) {
-            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Format_Invalid, new List<String>{'StatementMonth', FEC_ConstantCommon.DATE_FORMAT_MMYYYY}));
+        
+        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_DATE_FORMAT_MM, statementMonth)) {
+            throw new CalloutException(
+                String.format(System.Label.FEC_MSG_Param_Format_Invalid,
+                    new List<String>{'StatementMonth', '1-12'})
+            );
         }
     }
-
+ 
     // =========================================================================
     // SOAP RESPONSE PARSER
     // =========================================================================
     private static ResponseWrapper parseResponse(String xml) {
-        System.debug('XML RAW >>>' + xml);
-        
+
+        ResponseWrapper result = new ResponseWrapper();
+        result.Transactions = new List<TransactionRecord>();
+        result.Loans = new List<LoanRecord>();
+    
+        if (String.isBlank(xml)) {
+            return result;
+        }
+    
         Dom.Document doc = new Dom.Document();
         doc.load(xml);
-
+    
         Dom.XmlNode envelope = doc.getRootElement();
+        if (envelope == null) return result;
+    
+        // ===== BODY =====
         Dom.XmlNode bodyNode =
-            envelope.getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
-
+            FEC_CommonUltils.findChildByName(envelope, 'Body');
+    
+        if (bodyNode == null) return result;
+    
+        // ===== RESPONSE NODE  =====
         Dom.XmlNode responseNode;
         for (Dom.XmlNode n : bodyNode.getChildElements()) {
             responseNode = n;
             break;
         }
-
-        ResponseWrapper result = new ResponseWrapper();
-
-        // -------- SYS RESPONSE --------
-        Dom.XmlNode sysNode = responseNode.getChildElement('SysResponse', null);
+    
+        if (responseNode == null) return result;
+    
+        // ================= SYS RESPONSE =================
+        Dom.XmlNode sysNode =
+            FEC_CommonUltils.findChildByName(responseNode, 'SysResponse');
+    
         if (sysNode != null) {
             result.Sys = new SysResponse();
-            result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
-            result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
-            result.Sys.Code = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Code'));
-            result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
+            result.Sys.TransId =
+                FEC_CommonUltils.getValueSafe(sysNode, 'TransID'); 
+            result.Sys.DateTimeStr =
+                FEC_CommonUltils.getValueSafe(sysNode, 'DateTime');
+            result.Sys.Status =
+                FEC_CommonUltils.toInt(
+                    FEC_CommonUltils.getValueSafe(sysNode, 'Status')
+                );
+            result.Sys.Description =
+                FEC_CommonUltils.getValueSafe(sysNode, 'Description');
         }
-
-        // -------- ACCOUNT RECORD --------
-        Dom.XmlNode accountRecords = responseNode.getChildElement('AccountRecords', null);
+    
+        // ================= ACCOUNT =================
+        Dom.XmlNode accountRecords =
+            FEC_CommonUltils.findChildByName(responseNode, 'AccountRecords');
+    
         if (accountRecords != null) {
-            Dom.XmlNode acc = accountRecords.getChildElement('AccountRecord', null);
+            Dom.XmlNode acc =
+                FEC_CommonUltils.findChildByName(accountRecords, 'AccountRecord');
+    
             if (acc != null) {
                 result.Account = parseAccount(acc);
             }
         }
-
-        // -------- TRANSACTIONS --------
-        result.Transactions = parseTransactions(
-            responseNode.getChildElement('TransactionRecords', null)
-        );
-
-        // -------- LOANS --------
-        result.Loans = parseLoans(
-            responseNode.getChildElement('LoanRecords', null)
-        );
-
+    
+        // ================= TRANSACTIONS =================
+        Dom.XmlNode txnNode =
+            FEC_CommonUltils.findChildByName(responseNode, 'TransactionRecords');
+    
+        result.Transactions = parseTransactions(txnNode);
+    
+        // ================= LOANS =================
+        Dom.XmlNode loanNode =
+            FEC_CommonUltils.findChildByName(responseNode, 'LoanRecords');
+    
+        result.Loans = parseLoans(loanNode);
+    
         return result;
     }
-
+ 
     // =========================================================================
     // PARSERS
     // =========================================================================
     private static AccountRecord parseAccount(Dom.XmlNode acc) {
         AccountRecord a = new AccountRecord();
-        a.AccountNumber = FEC_CommonUltils.getXmlValue(acc, 'AccountNumber');
-        a.AccountStatus = FEC_CommonUltils.getXmlValue(acc, 'AccountStatus');
-        a.CustomerName = FEC_CommonUltils.getXmlValue(acc, 'CustomerName');
+        a.AccountNumber = FEC_CommonUltils.getValueSafe(acc, 'AccountNumber');
+        a.AccountStatus = FEC_CommonUltils.getValueSafe(acc, 'AccountStatus');
+        a.CustomerName = FEC_CommonUltils.getValueSafe(acc, 'CustomerName');
         a.CreditLimit = FEC_CommonUltils.xmlValToDecimal(acc, 'CreditLimit');
         a.CurrentBalance = FEC_CommonUltils.xmlValToDecimal(acc, 'CurrentBalance');
         a.AvailableCredit = FEC_CommonUltils.xmlValToDecimal(acc, 'AvailableCredit');
         a.CashLimit = FEC_CommonUltils.xmlValToDecimal(acc, 'CashLimit');
         a.AvailableCashLimit = FEC_CommonUltils.xmlValToDecimal(acc, 'AvailableCashLimit');
-        a.LastStatementDate = FEC_CommonUltils.getXmlValue(acc, 'LastStatementDate');
+        a.LastStatementDate = FEC_CommonUltils.getValueSafe(acc, 'LastStatementDate');
         a.MinimumPaymentDue = FEC_CommonUltils.xmlValToDecimal(acc, 'MinimumPaymentDue');
-        a.PaymentDueDate = FEC_CommonUltils.getXmlValue(acc, 'PaymentDueDate');
-        a.DateLastPayment = FEC_CommonUltils.getXmlValue(acc, 'DateLastPayment');
-        a.EmailAddress = FEC_CommonUltils.getXmlValue(acc, 'EmailAddress');
+        a.PaymentDueDate = FEC_CommonUltils.getValueSafe(acc, 'PaymentDueDate');
+        a.DateLastPayment = FEC_CommonUltils.getValueSafe(acc, 'DateLastPayment');
+        a.EmailAddress = FEC_CommonUltils.getValueSafe(acc, 'EmailAddress');
         return a;
     }
-
+ 
     private static List<TransactionRecord> parseTransactions(Dom.XmlNode node) {
         List<TransactionRecord> txns = new List<TransactionRecord>();
         if (node == null) return txns;
-
+ 
         for (Dom.XmlNode txn : node.getChildElements()) {
             TransactionRecord t = new TransactionRecord();
             t.TransactionDate = FEC_CommonUltils.getXmlValue(txn, 'TransactionDate');
@@ -270,11 +357,11 @@ public with sharing class FEC_GetBilledTransactions {
         }
         return txns;
     }
-
+ 
     private static List<LoanRecord> parseLoans(Dom.XmlNode node) {
         List<LoanRecord> loans = new List<LoanRecord>();
         if (node == null) return loans;
-
+ 
         for (Dom.XmlNode ln : node.getChildElements()) {
             LoanRecord l = new LoanRecord();
             l.LoanNumber = FEC_CommonUltils.getXmlValue(ln, 'LoanNumber');
@@ -283,5 +370,5 @@ public with sharing class FEC_GetBilledTransactions {
         }
         return loans;
     }
-
+ 
 }

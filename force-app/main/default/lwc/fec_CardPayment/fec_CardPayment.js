@@ -1,26 +1,50 @@
 import { LightningElement, api } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation';
 import getCardPaymentRecords from '@salesforce/apex/FEC_CardPaymentController.getCardPaymentRecords';
 import getCardPaymentTotals from '@salesforce/apex/FEC_CardPaymentController.getCardPaymentTotals';
 import { formatCurrency, isNegative, autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
 import FEC_Card_Payment_Label from '@salesforce/label/c.FEC_Card_Payment_Label';
-import FEC_MSG_Card_Payment_Refresh from '@salesforce/label/c.FEC_MSG_Card_Payment_Refresh';
 import FEC_Full_Payment_Amount_Label from '@salesforce/label/c.FEC_Full_Payment_Amount_Label';
 import FEC_Loan_Balance_Label from '@salesforce/label/c.FEC_Loan_Balance_Label';
 import FEC_Full_Payment_Without_IPP_Label from '@salesforce/label/c.FEC_Full_Payment_Without_IPP_Label';
 import FEC_Full_IPP_Payment_Amount_Label from '@salesforce/label/c.FEC_Full_IPP_Payment_Amount_Label';
+import FEC_Total_Current_Balance_Label from '@salesforce/label/c.FEC_Total_Current_Balance_Label';
+import FEC_Total_Accrued_Interest_Label from '@salesforce/label/c.FEC_Total_Accrued_Interest_Label';
+import FEC_Total_Per_Diem_Label from '@salesforce/label/c.FEC_Total_Per_Diem_Label';
+import FEC_Total_Close_Fee_Amount_Label from '@salesforce/label/c.FEC_Total_Close_Fee_Amount_Label';
+import FEC_Total_IPP_Accrued_Interest_Label from '@salesforce/label/c.FEC_Total_IPP_Accrued_Interest_Label';
+import FEC_Total_Deferred_Interest_Label from '@salesforce/label/c.FEC_Total_Deferred_Interest_Label';
+import FEC_Total_Plan_Payment_Amount_Label from '@salesforce/label/c.FEC_Total_Plan_Payment_Amount_Label';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import { formatDate } from 'c/fec_CommonUtils';
 
-// Error message constant
-const ERROR_MESSAGE = 'Tải dữ liệu không thành công';
 
-export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
+export default class Fec_CardPayment extends LightningElement {
     _recordId;
     
-    // Expose ERROR_MESSAGE for template
-    ERROR_MESSAGE = ERROR_MESSAGE;
+    // Custom labels từ CustomLabels.labels-meta.xml (Account Info)
+    ERROR_MESSAGE = FEC_MSG_Error_API_Label;
     
-    // Hide row number in table
-    hideRowNumber = true;
+    // Help text map from Apex
+    helpTextMap = {};
+    
+    // Custom labels for template (khớp với customLabel.xxx trong HTML)
+    customLabel = {
+        cardPaymentLabel: FEC_Card_Payment_Label,
+        fullPaymentAmountLabel: FEC_Full_Payment_Amount_Label,
+        loanBalanceLabel: FEC_Loan_Balance_Label,
+        fullPaymentWithoutIPPLabel: FEC_Full_Payment_Without_IPP_Label,
+        fullIPPPaymentAmountLabel: FEC_Full_IPP_Payment_Amount_Label,
+        totalCurrentBalanceLabel: FEC_Total_Current_Balance_Label,
+        totalAccruedInterestLabel: FEC_Total_Accrued_Interest_Label,
+        totalPerDiemLabel: FEC_Total_Per_Diem_Label,
+        totalCloseFeeAmountLabel: FEC_Total_Close_Fee_Amount_Label,
+        totalIPPAccruedInterestLabel: FEC_Total_IPP_Accrued_Interest_Label,
+        totalDeferredInterestLabel: FEC_Total_Deferred_Interest_Label,
+        totalPlanPaymentAmountLabel: FEC_Total_Plan_Payment_Amount_Label
+    };
+    
+    // Page size for table pagination
+    pageSize = 10;
     
     @api 
     get recordId() {
@@ -33,15 +57,6 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
             this.loadTotals();
             this.loadCardPaymentData();
         }
-    }
-
-    customLabel = {
-        cardPaymentLabel: FEC_Card_Payment_Label,
-        msgCardPaymentRefresh: FEC_MSG_Card_Payment_Refresh,
-        fullPaymentAmountLabel: FEC_Full_Payment_Amount_Label,
-        loanBalanceLabel: FEC_Loan_Balance_Label,
-        fullPaymentWithoutIPPLabel: FEC_Full_Payment_Without_IPP_Label,
-        fullIPPPaymentAmountLabel: FEC_Full_IPP_Payment_Amount_Label
     }
     
     // Format dữ liệu percent: chia cho 100 và thêm ký hiệu %
@@ -70,15 +85,18 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
                 formattedRecord.FEC_Close_Fee_Formatted__c = value.toFixed(2) + '%';
             }
             
-            // Format các trường số với dấu phẩy
-            // Number(18,0) - không có số thập phân
-            const integerFields = [
+            // Format các trường số với dấu phẩy - Number(18,0) - không có số thập phân
+            const currencyFields = [
                 'FEC_Current_Balance__c',
                 'FEC_Close_Fee_Amount__c',
-                'FEC_Plan_Payment_Amount__c'
+                'FEC_Plan_Payment_Amount__c',
+                'FEC_Accrued_Interest__c',
+                'FEC_Per_Diem__c',
+                'FEC_Deferred_Interest__c',
+                'FEC_IPP_Accrued_Interest__c'
             ];
             
-            integerFields.forEach(field => {
+            currencyFields.forEach(field => {
                 if (formattedRecord[field] != null && formattedRecord[field] !== undefined) {
                     const value = Number(formattedRecord[field]);
                     // Thay __c bằng _Formatted__c để tạo tên field đúng
@@ -87,23 +105,12 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
                 }
             });
             
-            // Number(18,2) - có 2 chữ số thập phân
-            const decimalFields = [
-                'FEC_Accrued_Interest__c',
-                'FEC_Per_Diem__c',
-                'FEC_Deferred_Interest__c',
-                'FEC_IPP_Accrued_Interest__c'
-            ];
-            
-            decimalFields.forEach(field => {
-                // Thay __c bằng _Formatted__c để tạo tên field đúng
-                const formattedFieldName = field.replace('__c', '_Formatted__c');
-                if (formattedRecord[field] != null && formattedRecord[field] !== undefined) {
-                    const value = Number(formattedRecord[field]);
-                    formattedRecord[formattedFieldName] = formatCurrency(value, 2);
-                } else {
-                    // Nếu null/undefined, hiển thị 0.00
-                    formattedRecord[formattedFieldName] = '0.00';
+            // Format các trường date sang dd/mm/yyyy
+            const dateFields = ['FEC_Open_Date__c', 'FEC_Begin_Date__c'];
+            dateFields.forEach(field => {
+                if (formattedRecord[field]) {
+                    const formattedFieldName = field.replace('__c', '_Formatted__c');
+                    formattedRecord[formattedFieldName] = formatDate(formattedRecord[field]);
                 }
             });
             
@@ -149,8 +156,11 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
             .then(data => {
                 // Format dữ liệu percent trước khi hiển thị
                 this.cardPaymentData = this.formatPercentData(data || []);
+                
+                // Calculate totals from card payment data
+                this.calculateTotalsFromData();
+                
                 this.hasError = false;
-                this.updatedTime = new Date();
                 this.isLoading = false;
             })
             .catch(error => {
@@ -160,6 +170,43 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
             });
     }
     
+    // Calculate totals from card payment data
+    calculateTotalsFromData() {
+        if (!this.cardPaymentData || this.cardPaymentData.length === 0) {
+            // Reset totals if no data
+            this.totalCurrentBalance = 0;
+            this.totalAccruedInterest = 0;
+            this.totalIPPAccruedInterest = 0;
+            this.totalPerDiem = 0;
+            this.totalDeferredInterest = 0;
+            this.totalCloseFeeAmount = 0;
+            this.totalPlanPaymentAmount = 0;
+            return;
+        }
+        
+        // Calculate sums from raw field values (not formatted ones)
+        this.totalCurrentBalance = this.cardPaymentData.reduce((sum, record) => 
+            sum + (Number(record.FEC_Current_Balance__c) || 0), 0);
+            
+        this.totalAccruedInterest = this.cardPaymentData.reduce((sum, record) => 
+            sum + (Number(record.FEC_Accrued_Interest__c) || 0), 0);
+            
+        this.totalIPPAccruedInterest = this.cardPaymentData.reduce((sum, record) => 
+            sum + (Number(record.FEC_IPP_Accrued_Interest__c) || 0), 0);
+            
+        this.totalPerDiem = this.cardPaymentData.reduce((sum, record) => 
+            sum + (Number(record.FEC_Per_Diem__c) || 0), 0);
+            
+        this.totalDeferredInterest = this.cardPaymentData.reduce((sum, record) => 
+            sum + (Number(record.FEC_Deferred_Interest__c) || 0), 0);
+            
+        this.totalCloseFeeAmount = this.cardPaymentData.reduce((sum, record) => 
+            sum + (Number(record.FEC_Close_Fee_Amount__c) || 0), 0);
+            
+        this.totalPlanPaymentAmount = this.cardPaymentData.reduce((sum, record) => 
+            sum + (Number(record.FEC_Plan_Payment_Amount__c) || 0), 0);
+    }
+    
     cardPaymentData = [];
     
     // Card Payment Totals from Customer History
@@ -167,6 +214,13 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
     loanBalance = 0;
     fullPaymentWithoutIPP = 0;
     fullIPPPaymentAmount = 0;
+    totalCurrentBalance = 0;
+    totalAccruedInterest = 0;
+    totalIPPAccruedInterest = 0;
+    totalPerDiem = 0;
+    totalDeferredInterest = 0;
+    totalCloseFeeAmount = 0;
+    totalPlanPaymentAmount = 0;
     
     // Active accordion section - open by default
     activeSections = ['cardPayment'];
@@ -188,25 +242,22 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
     // Loading state for totals
     isTotalsLoading = true;
     
-    // Updated time for display
-    updatedTime;
-    
     columns = [
-        { label: 'Rec', fieldName: 'FEC_Rec__c' },
-        { label: 'REF Number', fieldName: 'FEC_REF_Number__c' },
-        { label: 'Current Balance', fieldName: 'FEC_Current_Balance_Formatted__c', type: 'text', cellAttributes: { class: { fieldName: 'currentBalanceClass' }, alignment: 'right' } },
-        { label: 'Open Date', fieldName: 'FEC_Open_Date__c', type: 'date' },
-        { label: 'Plan', fieldName: 'FEC_Plan__c' },
-        { label: 'Base Rate', fieldName: 'FEC_Base_Rate_Formatted__c', cellAttributes: { class: { fieldName: 'baseRateClass' } } },
-        { label: 'Begin Date', fieldName: 'FEC_Begin_Date__c', type: 'date' },
-        { label: 'Accrued Interest', fieldName: 'FEC_Accrued_Interest_Formatted__c', type: 'text', cellAttributes: { class: { fieldName: 'accruedInterestClass' }, alignment: 'right' } },
-        { label: 'Per Diem', fieldName: 'FEC_Per_Diem_Formatted__c', type: 'text', cellAttributes: { class: { fieldName: 'perDiemClass' }, alignment: 'right' } },
-        { label: 'Deferred Interest', fieldName: 'FEC_Deferred_Interest_Formatted__c', type: 'text', cellAttributes: { class: { fieldName: 'deferredInterestClass' }, alignment: 'right' } },
-        { label: 'IPP\u00A0Interest', fieldName: 'FEC_IPP_Interest_Formatted__c', cellAttributes: { class: { fieldName: 'ippInterestClass' } } },
-        { label: 'IPP Accrued Interest', fieldName: 'FEC_IPP_Accrued_Interest_Formatted__c', type: 'text', cellAttributes: { class: { fieldName: 'ippAccruedInterestClass' }, alignment: 'right' } },
-        { label: 'Close Fee', fieldName: 'FEC_Close_Fee_Formatted__c', cellAttributes: { class: { fieldName: 'closeFeeClass' } } },
-        { label: 'Close Fee Amount', fieldName: 'FEC_Close_Fee_Amount_Formatted__c', type: 'text', cellAttributes: { class: { fieldName: 'closeFeeAmountClass' }, alignment: 'right' } },
-        { label: 'Plan Payment Amount', fieldName: 'FEC_Plan_Payment_Amount_Formatted__c', type: 'text', cellAttributes: { class: { fieldName: 'planPaymentAmountClass' }, alignment: 'right' } }
+        { label: 'Rec', fieldName: 'FEC_Rec__c', type: 'text', width: '44px', minWidth: '44px', cellAlign: 'center' },
+        { label: 'REF Number', fieldName: 'FEC_REF_Number__c', type: 'text', width: '130px', minWidth: '120px' },
+        { label: 'Current Balance', fieldName: 'FEC_Current_Balance_Formatted__c', type: 'text', cellAlign: 'right', width: '130px', minWidth: '120px', cellAttributes: { class: { fieldName: 'currentBalanceClass' } } },
+        { label: 'Open Date', fieldName: 'FEC_Open_Date_Formatted__c', type: 'text', width: '100px', minWidth: '90px', cellAlign: 'center' },
+        { label: 'Plan', fieldName: 'FEC_Plan__c', type: 'text', width: '70px', minWidth: '60px', cellAlign: 'center' },
+        { label: 'Base Rate', fieldName: 'FEC_Base_Rate_Formatted__c', type: 'text', cellAlign: 'right', width: '95px', minWidth: '85px', cellAttributes: { class: { fieldName: 'baseRateClass' } } },
+        { label: 'Begin Date', fieldName: 'FEC_Begin_Date_Formatted__c', type: 'text', width: '100px', minWidth: '90px', cellAlign: 'center' },
+        { label: 'Accrued Interest', fieldName: 'FEC_Accrued_Interest_Formatted__c', type: 'text', cellAlign: 'right', width: '135px', minWidth: '120px', cellAttributes: { class: { fieldName: 'accruedInterestClass' } } },
+        { label: 'Per Diem', fieldName: 'FEC_Per_Diem_Formatted__c', type: 'text', cellAlign: 'right', width: '95px', minWidth: '85px', cellAttributes: { class: { fieldName: 'perDiemClass' } } },
+        { label: 'Deferred Interest', fieldName: 'FEC_Deferred_Interest_Formatted__c', type: 'text', cellAlign: 'right', width: '140px', minWidth: '125px', cellAttributes: { class: { fieldName: 'deferredInterestClass' } } },
+        { label: 'IPP Interest', fieldName: 'FEC_IPP_Interest_Formatted__c', type: 'text', cellAlign: 'right', width: '110px', minWidth: '95px', cellAttributes: { class: { fieldName: 'ippInterestClass' } } },
+        { label: 'IPP Accrued Interest', fieldName: 'FEC_IPP_Accrued_Interest_Formatted__c', type: 'text', cellAlign: 'right', width: '155px', minWidth: '140px', cellAttributes: { class: { fieldName: 'ippAccruedInterestClass' } } },
+        { label: 'Close Fee', fieldName: 'FEC_Close_Fee_Formatted__c', type: 'text', cellAlign: 'right', width: '95px', minWidth: '85px', cellAttributes: { class: { fieldName: 'closeFeeClass' } } },
+        { label: 'Close Fee Amount', fieldName: 'FEC_Close_Fee_Amount_Formatted__c', type: 'text', cellAlign: 'right', width: '135px', minWidth: '120px', cellAttributes: { class: { fieldName: 'closeFeeAmountClass' } } },
+        { label: 'Plan Payment Amount', fieldName: 'FEC_Plan_Payment_Amount_Formatted__c', type: 'text', cellAlign: 'right', width: '155px', minWidth: '140px', cellAttributes: { class: { fieldName: 'planPaymentAmountClass' } } }
     ];
     
     // Computed property for hasData - giống Card Info
@@ -219,6 +270,15 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
         // TẠM THỜI: Luôn hiển thị vì đang dùng API mock
         return true;
         // return !this.hasError && !this.hasTotalsError && !this.isTotalsLoading;
+    }
+
+    // Getters for template properties
+    get hideRowNumber() {
+        return false;
+    }
+
+    get hideUpdatedTime() {
+        return true;
     }
 
     // Storage key for accordion state
@@ -301,6 +361,8 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
                 this.loanBalance = data.loanBalance || 0;
                 this.fullPaymentWithoutIPP = data.fullPaymentWithoutIPP || 0;
                 this.fullIPPPaymentAmount = data.fullIPPPaymentAmount || 0;
+                // Note: Total fields are now calculated from card payment data, not from API
+                this.helpTextMap = data.helpTexts || {};
                 this.hasTotalsError = false;
                 this.isTotalsLoading = false;
             })
@@ -309,6 +371,8 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
                 this.loanBalance = 0;
                 this.fullPaymentWithoutIPP = 0;
                 this.fullIPPPaymentAmount = 0;
+                // Keep calculated totals from card payment data even if API fails
+                this.helpTextMap = {};
                 this.hasTotalsError = true;
                 this.isTotalsLoading = false;
             });
@@ -318,7 +382,7 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
     refreshData() {
         // Refresh cả totals và card payment data
         this.loadTotals();
-        this.loadCardPaymentData();
+        this.loadCardPaymentData(); // This will also recalculate totals from data
     }
     
     // Formatted currency values for summary (với 0 decimal places)
@@ -327,7 +391,7 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
     }
     
     get isFullPaymentAmountNegative() {
-        return isNegative(this.fullPaymentAmount) ? 'currency-negative' : '';
+        return isNegative(this.fullPaymentAmount) ? 'slds-text-color_error' : '';
     }
     
     get formattedLoanBalance() {
@@ -335,7 +399,7 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
     }
     
     get isLoanBalanceNegative() {
-        return isNegative(this.loanBalance) ? 'currency-negative' : '';
+        return isNegative(this.loanBalance) ? 'slds-text-color_error' : '';
     }
     
     get formattedFullPaymentWithoutIPP() {
@@ -343,7 +407,7 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
     }
     
     get isFullPaymentWithoutIPPNegative() {
-        return isNegative(this.fullPaymentWithoutIPP) ? 'currency-negative' : '';
+        return isNegative(this.fullPaymentWithoutIPP) ? 'slds-text-color_error' : '';
     }
     
     get formattedFullIPPPaymentAmount() {
@@ -351,6 +415,62 @@ export default class Fec_CardPayment extends NavigationMixin(LightningElement) {
     }
     
     get isFullIPPPaymentAmountNegative() {
-        return isNegative(this.fullIPPPaymentAmount) ? 'currency-negative' : '';
+        return isNegative(this.fullIPPPaymentAmount) ? 'slds-text-color_error' : '';
+    }
+    
+    get formattedTotalCurrentBalance() {
+        return formatCurrency(this.totalCurrentBalance, 0);
+    }
+    
+    get isTotalCurrentBalanceNegative() {
+        return isNegative(this.totalCurrentBalance) ? 'slds-text-color_error' : '';
+    }
+    
+    get formattedTotalAccruedInterest() {
+        return formatCurrency(this.totalAccruedInterest, 0);
+    }
+    
+    get isTotalAccruedInterestNegative() {
+        return isNegative(this.totalAccruedInterest) ? 'slds-text-color_error' : '';
+    }
+    
+    get formattedTotalIPPAccruedInterest() {
+        return formatCurrency(this.totalIPPAccruedInterest, 0);
+    }
+    
+    get isTotalIPPAccruedInterestNegative() {
+        return isNegative(this.totalIPPAccruedInterest) ? 'slds-text-color_error' : '';
+    }
+    
+    get formattedTotalPerDiem() {
+        return formatCurrency(this.totalPerDiem, 0);
+    }
+    
+    get isTotalPerDiemNegative() {
+        return isNegative(this.totalPerDiem) ? 'slds-text-color_error' : '';
+    }
+    
+    get formattedTotalDeferredInterest() {
+        return formatCurrency(this.totalDeferredInterest, 0);
+    }
+    
+    get isTotalDeferredInterestNegative() {
+        return isNegative(this.totalDeferredInterest) ? 'slds-text-color_error' : '';
+    }
+    
+    get formattedTotalCloseFeeAmount() {
+        return formatCurrency(this.totalCloseFeeAmount, 0);
+    }
+    
+    get isTotalCloseFeeAmountNegative() {
+        return isNegative(this.totalCloseFeeAmount) ? 'slds-text-color_error' : '';
+    }
+    
+    get formattedTotalPlanPaymentAmount() {
+        return formatCurrency(this.totalPlanPaymentAmount, 0);
+    }
+    
+    get isTotalPlanPaymentAmountNegative() {
+        return isNegative(this.totalPlanPaymentAmount) ? 'slds-text-color_error' : '';
     }
 }

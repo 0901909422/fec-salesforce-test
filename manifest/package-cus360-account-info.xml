@@ -27,6 +27,10 @@
         <members>FEC_CommonUltils</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_MockupEndpoint</members>
+		<members>FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_IPPScheduleController</members>
+		<members>FEC_GetCardTransactions</members>
+		<members>FEC_MockData</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -35,8 +39,13 @@
 		<members>FEC_Other_Card__c</members>
         <members>FEC_Transaction__c</members>
         <members>FEC_Statement__c</members>
+		<members>FEC_API_Log__c</members>
 		<name>CustomObject</name>
 	</types>
+	<types>
+        <members>FEC_IPPDetailPageWrapper</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
     <types>
         <members>fec_CardInfo</members>
         <members>fec_CardPayment</members>
@@ -49,6 +58,11 @@
 		<members>fec_StatementsAccount</members>
 		<members>fec_TransactionsAccount</members>
         <members>fec_IPPDetails</members>
+        <members>fec_IPPDetailPage</members>
+		<members>fec_CommonDetailView</members>
+		<members>fec_StatementsAccountTabView</members>
+		<members>fec_TransactionsAccountTabView</members>
+		<members>fec_CommonUtils</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -74,6 +88,8 @@
 		<members>FEC_API_Config.FEC_Get_Reward_Eligibility</members>
 		<members>FEC_API_Config.FEC_Get_Status</members>
 		<members>FEC_API_Config.FEC_Get_Unbilled_Transaction</members>
+		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_API_Config.FEC_GetCardTransactions</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -116,6 +132,16 @@
 		<members>FEC_MSG_Parse_XML_Error</members>
 		<members>FEC_MSG_Not_Account_Linked</members>
 		<members>FEC_MSG_From_To_Invalid</members>
+        <members>FEC_MSG_Parse_JSON_Error</members>
+		<members>FEC_MSG_EndDate_Must_StartDate</members>
+		<members>FEC_Unknown_Error</members>
+		<members>FEC_Total_IPP_Accrued_Interest_Label</members>
+		<members>FEC_Total_Per_Diem_Label</members>
+		<members>FEC_Total_Plan_Payment_Amount_Label</members>
+		<members>FEC_Total_Deferred_Interest_Label</members>
+		<members>FEC_Total_Accrued_Interest_Label</members>
+		<members>FEC_Total_Close_Fee_Amount_Label</members>
+		<members>FEC_Total_Current_Balance_Label</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -126,6 +152,11 @@
 	<types>
 		<members>PSG_RD_IT_User</members>
 		<name>PermissionSetGroup</name>
+	</types>
+	<types>
+		<members>FEC_Transactions</members>
+		<members>FEC_Statements</members>
+		<name>CustomTab</name>
 	</types>
     <version>65.0</version>
 </Package>

@@ -22,6 +22,33 @@ public with sharing class FEC_CommonUltils {
     return Pattern.matches(regex, email);
   }
 
+  /**
+   * Kiểm tra Case Status có thuộc nhóm Resolved hay không (bắt đầu bằng prefix Resolved).
+   * @param status Case Status (có thể null)
+   * @return true nếu status không rỗng và bắt đầu bằng FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED
+   */
+  public static Boolean isCaseStatusResolved(String status) {
+    return String.isNotBlank(status) && status.startsWith(FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED);
+  }
+
+  /**
+   * Trả về chuỗi gốc nếu không blank, ngược lại trả về STR_EMPTY.
+   * @param str Chuỗi cần kiểm tra (có thể null)
+   * @return str nếu không blank, ngược lại FEC_ConstantCommon.STR_EMPTY
+   */
+  public static String defaultToEmpty(String str) {
+    return String.isNotBlank(str) ? str : FEC_ConstantCommon.STR_EMPTY;
+  }
+
+  /**
+   * Trả về String.valueOf(obj) nếu obj != null, ngược lại STR_EMPTY.
+   * @param obj Giá trị bất kỳ (Id, String, ... có thể null)
+   * @return Chuỗi biểu diễn obj hoặc FEC_ConstantCommon.STR_EMPTY
+   */
+  public static String defaultToEmpty(Object obj) {
+    return obj != null ? String.valueOf(obj) : FEC_ConstantCommon.STR_EMPTY;
+  }
+
   public static Boolean isPhone(String phone) {
     if (String.isBlank(phone)) {
       return false;
@@ -43,6 +70,19 @@ public with sharing class FEC_CommonUltils {
     }
 
     return false;
+  }
+
+  /**
+   * Kiểm tra AccountNumber có hợp lệ không (16 hoặc 19 chữ số)
+   * @param accountNumber - Account Number cần kiểm tra
+   * @return true nếu hợp lệ (16 hoặc 19 chữ số), false nếu không
+   */
+  public static Boolean isValidAccountNumber(String accountNumber) {
+    if (String.isBlank(accountNumber)) {
+      return false;
+    }
+    // AccountNumber phải có 16 hoặc 19 chữ số theo requirement của API GetCustomerList
+    return Pattern.matches('^\\d{16}$', accountNumber) || Pattern.matches('^\\d{19}$', accountNumber);
   }
 
   public static Boolean isValidDateByFormat(String input) {
@@ -202,10 +242,34 @@ public with sharing class FEC_CommonUltils {
     return (c == null) ? null : c.getText();
   }
 
+  public static String getXmlValueHasNamspace(Dom.XmlNode n, String name) {
+    if (n == null) return null;
+
+    for (Dom.XmlNode child : n.getChildElements()) {
+        if (child.getName() == name) {
+            return child.getText();
+        }
+    }
+    return null;
+  }
+
   public static Decimal xmlValToDecimal(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
-    return String.isBlank(v) ? null : Decimal.valueOf(v);
-  }
+    if (String.isBlank(v)) {
+      return null;
+    }
+
+    v = v.trim(); 
+    if (v == '') {
+        return null;
+    }
+    try {
+        return Decimal.valueOf(v);
+    } catch (Exception e) {
+      System.debug('Invalid decimal for tag ' + name + ': [' + v + ']');
+      return null; 
+    }
+}
 
   public static Date xmlValToDate(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
@@ -220,6 +284,14 @@ public with sharing class FEC_CommonUltils {
       }
     }
     return null;
+  }
+
+  public static String getValueSafe(Dom.XmlNode parent,String nodeName) {
+    if (parent == null) return null;
+
+    Dom.XmlNode node = findChildByName(parent, nodeName);
+
+    return node == null ? null : node.getText();
   }
 
   public static Integer toInt(String v) {
@@ -249,18 +321,16 @@ public with sharing class FEC_CommonUltils {
     }
     return first6 + middle + last4;
   }
-  
+
   /**
    * Format API trả về: yyyyMMdd (VD: 20281031) hoặc YYYY-MM-DD
    * @param dateStr - Chuỗi ngày tháng từ API
    * @return Đối tượng Date
    */
   public static Date parseDate(String dateStr) {
-    if (String.isBlank(dateStr)) return null;
-    
-    // Loại bỏ trường hợp 00000000 (không có ngày)
-    if (dateStr == '00000000' || dateStr == '0') return null;
-    
+    if (String.isBlank(dateStr))
+      return null;
+
     try {
       // Format API trả về: yyyyMMdd (VD: 20281031)
       if (dateStr.length() == 8 && dateStr.isNumeric()) {
@@ -269,11 +339,16 @@ public with sharing class FEC_CommonUltils {
         Integer day = Integer.valueOf(dateStr.substring(6, 8));
         return Date.newInstance(year, month, day);
       }
-      
+
       // Fallback: Format YYYY-MM-DD
-      return Date.valueOf(dateStr); 
+      return Date.valueOf(dateStr.substring(0, 10));
     } catch (Exception e) {
-      System.debug('convertDateSafeForOtherCard error for "' + dateStr + '": ' + e.getMessage());
+      System.debug(
+        'convertDateSafeForOtherCard error for "' +
+          dateStr +
+          '": ' +
+          e.getMessage()
+      );
       return null;
     }
   }
@@ -286,16 +361,28 @@ public with sharing class FEC_CommonUltils {
       // Format: 2025-10-31T14:00:10.491Z
       dateTimeStr = dateTimeStr.replace('T', ' ').replace('Z', '');
       if (dateTimeStr.contains('.')) {
-          dateTimeStr = dateTimeStr.substringBefore('.');
+        dateTimeStr = dateTimeStr.substringBefore('.');
       }
       return Datetime.valueOf(dateTimeStr);
     } catch (Exception e) {
-      System.debug('Failed to parse datetime: ' + dateTimeStr + ', Error: ' + e.getMessage());
+      System.debug(
+        'Failed to parse datetime: ' +
+          dateTimeStr +
+          ', Error: ' +
+          e.getMessage()
+      );
       return null;
     }
   }
 
-  public static HttpResponse calloutApi(String endpoint, String method, String contentType, String soapAction, Dom.Document docBody, String body) {
+  public static HttpResponse calloutApi(
+    String endpoint,
+    String method,
+    String contentType,
+    String soapAction,
+    Dom.Document docBody,
+    String body
+  ) {
     HttpRequest req = new HttpRequest();
     req.setEndpoint(endpoint);
     req.setMethod(method);
@@ -316,20 +403,180 @@ public with sharing class FEC_CommonUltils {
   }
 
   public static String generateTransactionId() {
-    return Datetime.now().getTime() + '_' + String.valueOf(Math.abs(Crypto.getRandomInteger())).substring(0, 6);
+    return Datetime.now().getTime() +
+      '_' +
+      String.valueOf(Math.abs(Crypto.getRandomInteger())).substring(0, 6);
   }
 
   public static String formatCurrency(Decimal amount, Integer scale) {
-    if (amount == null) return '';
+    if (amount == null)
+      return '';
     return amount.setScale(scale).format();
   }
 
   public static String formatDate(Date d) {
-    if (d == null) return '';
+    if (d == null)
+      return '';
     return d.format();
   }
 
   public static String decimalToString(Decimal d) {
     return d == null ? '' : d.format();
   }
+  
+  /**
+   * Build help text map for any SObject type
+   * @param sobjType - Schema.SObjectType
+   * @return Map of field API name to help text
+   */
+  public static Map<String, String> buildHelpTextMap(Schema.SObjectType sobjType) {
+    Map<String, String> m = new Map<String, String>();
+    try {
+      for (Schema.SObjectField f : sobjType.getDescribe().fields.getMap().values()) {
+        Schema.DescribeFieldResult fieldDescribe = f.getDescribe();
+        if (String.isNotBlank(fieldDescribe.getInlineHelpText())) {
+          m.put(fieldDescribe.getName(), fieldDescribe.getInlineHelpText());
+        }
+      }
+    } catch (Exception e) {
+      System.debug('buildHelpTextMap error: ' + e.getMessage());
+    }
+    return m;
+  }
+  
+  /**
+   * Mask National ID (CCCD) hoặc Passport ID để hiển thị an toàn.
+   * - CCCD: 9 hoặc 12 ký tự (chỉ số) → thay giữa bằng "*", hiển thị 3 số đầu + 3 số cuối.
+   * - Passport: 8 ký tự (ký tự đầu là chữ, 7 ký tự sau là số) → thay giữa bằng "*", hiển thị 2 ký tự đầu + 3 ký tự cuối.
+   * @param value National ID hoặc Passport ID (raw)
+   * @return Chuỗi đã mask, hoặc value gốc nếu blank/không khớp format
+   */
+  public static String maskNationalIdOrPassport(String value) {
+    if (String.isBlank(value)) {
+      return value;
+    }
+    String s = value.trim();
+
+    // CCCD: 9 hoặc 12 ký tự, chỉ gồm số
+    if ((s.length() == 9 || s.length() == 12) && Pattern.matches('\\d+', s)) {
+      if (s.length() < 6)
+        return s;
+      String first3 = s.substring(0, 3);
+      String last3 = s.substring(s.length() - 3);
+      String middle = '';
+      for (Integer i = 3; i < s.length() - 3; i++) {
+        middle += '*';
+      }
+      return first3 + middle + last3;
+    }
+
+    // Passport: 8 ký tự, ký tự đầu là chữ, 7 ký tự sau là số
+    if (s.length() == 8 && Pattern.matches('[A-Za-z]\\d{7}', s)) {
+      String first2 = s.substring(0, 2);
+      String last3 = s.substring(5, 8);
+      String middle = '***';
+      return first2 + middle + last3;
+    }
+
+    // Fallback: không khớp format → 3 đầu + 3 cuối
+    if (s.length() < 6)
+      return s;
+    String first3 = s.substring(0, 3);
+    String last3 = s.substring(s.length() - 3);
+    String middle = '';
+    for (Integer i = 3; i < s.length() - 3; i++) {
+      middle += '*';
+    }
+    return first3 + middle + last3;
+  }
+
+  public static void createProcessActionHistory(
+    String name,
+    Case selectedCase,
+    Boolean isSuccess
+  ) {
+    List<User> userlst = [
+      SELECT Email, UserRole.Name
+      FROM User
+      WHERE Id = :UserInfo.getUserId()
+      LIMIT 1
+    ];
+
+    if (userlst.isEmpty())
+      return;
+
+    FEC_Process_Action_History__c action = new FEC_Process_Action_History__c(
+      Name = name,
+      FEC_Stage_Name__c = selectedCase.FEC_Current_Case_Stage__r?.Name,
+      FEC_Action_Result__c = isSuccess ? 'Success' : 'Fail',
+      FEC_User__c = userlst.get(0).Email.split('@')[0],
+      FEC_User_Role__c = userlst.get(0).UserRole.Name,
+      Case__c = selectedCase.Id
+    );
+
+    insert action;
+  }
+
+ public static String maskPhone(String phone) {
+        if (String.isBlank(phone)) {
+            return phone;
+        }
+        
+        Integer len = phone.length();
+        
+        // Nếu quá ngắn thì không mask
+        if (len <= 7) {
+            return phone;
+        }
+        
+        return phone.substring(0, 4)
+            + '***'
+            + phone.substring(len - 3);
+    } 
+
+    public static String cleanResponseBody(String responseBody) {
+        if (String.isBlank(responseBody)) {
+            return responseBody;
+        }
+        
+        responseBody = responseBody.trim();
+        if (responseBody.startsWith('\uFEFF')) {
+            responseBody = responseBody.substring(1);
+        }
+        while (responseBody.length() > 0 && !responseBody.startsWith('<')) {
+            responseBody = responseBody.substring(1);
+        }
+        return responseBody;
+    }
+
+    public static void logApi(
+        String apiName,
+        String endpoint,
+        String method,
+        String requestBody,
+        HttpResponse response,
+        String errorMessage
+  ){
+      try{
+          FEC_API_Log__c log = new FEC_API_Log__c();
+
+          log.Name = apiName;
+          log.FEC_Endpoint__c = endpoint;
+          log.FEC_Method__c = method;
+          log.FEC_Request_String__c = requestBody;
+
+          if(response != null){
+              log.FEC_Status_Code__c =  String.valueOf(response.getStatusCode());
+              log.FEC_Response_String__c = response.getBody();
+              log.FEC_Is_Success__c =  (response.getStatusCode() == 200);
+          }
+          
+          log.FEC_Error_Message__c = errorMessage;
+
+          insert log;
+
+        }catch(Exception e){
+            System.debug('LOG INSERT ERROR: ' + e.getMessage());
+        }
+    }
 }

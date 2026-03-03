@@ -94,22 +94,8 @@ public with sharing class FEC_GetCustomerList {
             email,
             personId
         );
-
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_List');
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(
-            apiSetting?.FEC_Call_Mock__c
-            ? FEC_MockupEndpoint.GET_CUSTOMER_LIST_ENDPOINT_MOCKUP
-            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c)
-        );
-        req.setMethod('POST');
-        req.setTimeout(120000);
-        req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE);
-        req.setHeader('SOAPAction', apiConfig?.FEC_SOAP_Action__c);
-
-        req.setBody(
-            buildSoapBody(
+        
+        String soapBody = buildSoapBody(
                 transId,
                 requestorId,
                 dateTimeStr,
@@ -123,11 +109,28 @@ public with sharing class FEC_GetCustomerList {
                 contractNumber,
                 email,
                 personId
-            )
-        );
+            );
 
-        Http http = new Http();
-        HttpResponse res = http.send(req);
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_List');
+        
+         String endpoint = apiSetting?.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_CUSTOMER_LIST_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+                    
+        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+               
+        // ===== LOG REQUEST + RESPONSE =====
+            // FEC_CommonUltils.logApi(
+            //     'FEC_GetCustomerList',
+            //     endpoint,
+            //     'POST',
+            //     String.valueOf(res.getStatusCode()),
+            //     soapBody,
+            //     res.getBody(),
+            //     res.getStatusCode() == 200,
+            //     null
+            // );
 
         if (res.getStatusCode() == 200 && String.isNotBlank(res.getBody())) {
             return parseResponse(res.getBody());
@@ -154,29 +157,37 @@ public with sharing class FEC_GetCustomerList {
         String personId
     ) {
         Dom.Document doc = new Dom.Document();
-
+        
         Dom.XmlNode envelope = doc.createRootElement(
             'soapenv:Envelope',
-            FEC_ConstantCommon.SOAP_ENV,
+            null,
             null
         );
+        
+        envelope.setAttribute(
+            'xmlns:soapenv',
+            FEC_ConstantCommon.SOAP_ENV
+        );
+        
         envelope.setAttribute(
             'xmlns:cif',
             'http://fecredit.com.vn/CIF_CustomerSearch'
         );
-
+        
+         // ===== Header =====
         envelope.addChildElement('soapenv:Header', null, null);
-
-        Dom.XmlNode body = envelope.addChildElement(
-            'soapenv:Body',
-            null,
-            null
-        );
-
-        Dom.XmlNode action = body.addChildElement(
-            'cif:GetCustomerList',
-            null,
-            null
+        
+        // ===== Body =====
+        Dom.XmlNode body =
+            envelope.addChildElement('soapenv:Body', null, null);
+        
+        // ===== Main Action =====
+        Dom.XmlNode action =
+            body.addChildElement('ns1:GetCustomerList', null, null);
+        
+        action.setAttribute(
+            'xmlns:ns1',
+            'http://fecredit.com.vn/CIF_CustomerSearch'
         );
 
         Dom.XmlNode sys = action.addChildElement('Sys', null, null);

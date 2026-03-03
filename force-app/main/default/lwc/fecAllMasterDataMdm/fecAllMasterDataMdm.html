@@ -1,0 +1,50 @@
+<template>
+    <lightning-card title={labelTitle} icon-name="standard:record_lookup">
+        <div slot="actions">
+            <lightning-button-group>
+                <lightning-button label={labelRefresh} icon-name="utility:refresh" onclick={handleRefreshMDM}
+                    variant="neutral">
+                </lightning-button>
+            </lightning-button-group>
+        </div>
+        <div class="slds-p-around_small">
+            <lightning-tabset variant="scoped">
+                <lightning-tab label={labelTabProduct}><lightning-datatable key-field="Id" data={data.ProductType}
+                        columns={columnsBasic}></lightning-datatable></lightning-tab>
+                <lightning-tab label={labelTabBP}><lightning-datatable key-field="Id" data={data.BusinessProcess}
+                        columns={columnsBasic}></lightning-datatable></lightning-tab>
+                <lightning-tab label={labelTabCategory}><lightning-datatable key-field="Id" data={data.Category}
+                        columns={columnsBasic}></lightning-datatable></lightning-tab>
+                <lightning-tab label={labelTabSubCategory}><lightning-datatable key-field="Id" data={data.SubCategory}
+                        columns={columnsBasic}></lightning-datatable></lightning-tab>
+                <lightning-tab label={labelTabSubCode}><lightning-datatable key-field="Id" data={data.SubCode}
+                        columns={columnsBasic}></lightning-datatable></lightning-tab>
+
+                <lightning-tab label={labelTabMasterSetting}>
+                    <lightning-datatable key-field="Id" data={data.MasterSetting}
+                        columns={columnsMsSetting}></lightning-datatable>
+                </lightning-tab>
+                <lightning-tab label={labelTabChannel}>
+                    <lightning-datatable key-field="Id" data={data.Channel}
+                        columns={columnsSetting}></lightning-datatable>
+                </lightning-tab>
+                <lightning-tab label={labelTabNOC}>
+                    <lightning-datatable key-field="Id" data={data.NatureOfCase}
+                        columns={columnsNOC}></lightning-datatable>
+                </lightning-tab>
+                <lightning-tab label={labelTabAddField}>
+                    <lightning-datatable key-field="Id" data={data.AdditionalField}
+                        columns={columnsField}></lightning-datatable>
+                </lightning-tab>
+                <lightning-tab label={labelTabAddFieldList}>
+                    <lightning-datatable key-field="Id" data={data.AdditionalFieldList}
+                        columns={columnsSetting}></lightning-datatable>
+                </lightning-tab>
+                <lightning-tab label={labelTabCaseStage}>
+                    <lightning-datatable key-field="Id" data={data.CaseStage}
+                        columns={columnsStage}></lightning-datatable>
+                </lightning-tab>
+            </lightning-tabset>
+        </div>
+    </lightning-card>
+</template>

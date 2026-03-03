@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Interaction_Subchannel__c</fullName>
+    <description>Kênh tương tác phụ</description>
     <label>Interaction Sub Channel</label>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
@@ -15,6 +16,11 @@
                 <fullName>Inbound Call</fullName>
                 <default>false</default>
                 <label>Inbound Call</label>
+            </value>
+            <value>
+                <fullName>Outbound Call</fullName>
+                <default>false</default>
+                <label>Outbound Call</label>
             </value>
             <value>
                 <fullName>Other</fullName>

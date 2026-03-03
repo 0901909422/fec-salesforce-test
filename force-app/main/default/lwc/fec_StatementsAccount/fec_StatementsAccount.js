@@ -1,12 +1,30 @@
+/****************************************************************************************
+ * File Name    : Fec_StatementsAccount.js
+ * Author       : Quangdv7
+ * Date         : 2025-01-15
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-10     Quangdv7             Create
+ 
+****************************************************************************************/
+
 import { LightningElement, api } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 
-import syncStatementFromAPI
-    from '@salesforce/apex/FEC_StatementsAccountController.syncStatementFromAPI';
-import loadGeneralStatementInfo
-    from '@salesforce/apex/FEC_StatementsAccountController.loadGeneralStatementInfo';
-import loadStatementDetails
-    from '@salesforce/apex/FEC_StatementsAccountController.loadStatementDetails';
+import getLatestStatementId from '@salesforce/apex/FEC_StatementsAccountController.getLatestStatementId';
+import syncStatementFromAPI from '@salesforce/apex/FEC_StatementsAccountController.syncStatementFromAPI';
+import loadGeneralStatementInfo from '@salesforce/apex/FEC_StatementsAccountController.loadGeneralStatementInfo';
+import loadStatementDetails from '@salesforce/apex/FEC_StatementsAccountController.loadStatementDetails';
+
+import FEC_Billing_Cycle from '@salesforce/label/c.FEC_Billing_Cycle';
+import FEC_Total_Payment_Due from '@salesforce/label/c.FEC_Total_Payment_Due';
+import FEC_Last_Statement_Date from '@salesforce/label/c.FEC_Last_Statement_Date';
+import FEC_Payment_Due_Date from '@salesforce/label/c.FEC_Payment_Due_Date';
+import FEC_Minimum_Payment_Due from '@salesforce/label/c.FEC_Minimum_Payment_Due';
+import FEC_Next_Statement_Date from '@salesforce/label/c.FEC_Next_Statement_Date';
 
 export default class Fec_StatementsAccount extends NavigationMixin(LightningElement) {
 
@@ -25,6 +43,7 @@ export default class Fec_StatementsAccount extends NavigationMixin(LightningElem
     /* ================= DATA ================= */
     generalStatementInfoFields = [];
     statementDetails = [];
+    helpTexts = {}; // 
 
     /* ================= TABLE COLUMNS ================= */
     statementDetailsColumns = [
@@ -34,33 +53,49 @@ export default class Fec_StatementsAccount extends NavigationMixin(LightningElem
             type: 'link',
             recordIdField: 'Id',
             hoverTitle: 'Statement Details',
+            cellAlign: 'center',
             hoverFields: [
-               { label: 'Statement Date', fieldName: 'statementDate'},
-                { label: 'Current Payment Due', fieldName: 'currentPaymentDue'},
-                { label: 'Total Past Due', fieldName: 'totalPastDue'},
-                { label: 'Beginning Balance', fieldName: 'beginningBalance'},
-                { label: 'End Balance', fieldName: 'endingBalance'},
-                { label: 'Total Interest', fieldName: 'totalInterest'},
-                { label: 'IPP Principal', fieldName: 'ippPrincipal'},
-                { label: 'IPP Interest', fieldName: 'ippInterest'}
+                { label: 'Statement Date', fieldName: 'statementDate' },
+                { label: 'Beginning Balance', fieldName: 'beginningBalance' },
+                { label: 'Total Payment Due', fieldName: 'totalPaymentDue' },
+                { label: 'End Balance', fieldName: 'endBalance' },
+                { label: 'Minimum Payment Due', fieldName: 'minimumPaymentDue' },
+                { label: 'Total Interest', fieldName: 'totalInterest' },
+                { label: 'Payment Due Date', fieldName: 'paymentDueDate' },
+                { label: 'IPP Principal', fieldName: 'iPPPrincipal' },
+                { label: 'Current Payment Due', fieldName: 'currentPaymentDue' },
+                { label: 'IPP Interest', fieldName: 'iPPInterest' },
+                { label: 'Total Past Due', fieldName: 'totalPastDue' }
             ]
         },
         {
             label: 'Total Payment Due',
             fieldName: 'totalPaymentDue',
-            type: 'text'
+            type: 'text',
+            cellAlign: 'right'
         },
         {
             label: 'Minimum Payment Due',
             fieldName: 'minimumPaymentDue',
-            type: 'text'
+            type: 'text',
+            cellAlign: 'right'
         },
         {
             label: 'Payment Due Date',
             fieldName: 'paymentDueDate',
-            type: 'text'
+            type: 'text',
+            cellAlign: 'center'
         }
     ];
+
+    customLabel = {
+        billingCycleLabel: FEC_Billing_Cycle,
+        totalPaymentDueLabel: FEC_Total_Payment_Due,
+        lastStatementDateLabel: FEC_Last_Statement_Date,
+        paymentDueDateLabel: FEC_Payment_Due_Date,
+        minimumPaymentDueLabel: FEC_Minimum_Payment_Due,
+        nextStatementDateLabel: FEC_Next_Statement_Date
+    }
 
     /* ================= LIFECYCLE ================= */
     connectedCallback() {
@@ -76,18 +111,29 @@ export default class Fec_StatementsAccount extends NavigationMixin(LightningElem
         try {
             await syncStatementFromAPI({ caseId: this.recordId });
 
+            const statementId = await getLatestStatementId({
+                caseId: this.recordId
+            });
+
+            if (!statementId) {
+                this.generalStatementInfoFields = [];
+                this.statementDetails = [];
+                return;
+            }
+
             const [general, details] = await Promise.all([
-                loadGeneralStatementInfo({ caseId: this.recordId }),
-                loadStatementDetails({ caseId: this.recordId })
+                loadGeneralStatementInfo({ statementId }),
+                loadStatementDetails({ statementId })
             ]);
 
+            this.helpTexts = general?.helpTexts || {};
             this.mapGeneralStatementInfo(general);
             this.mapStatementDetails(details);
 
             this.error = undefined;
         } catch (err) {
-            this.error = err;
             console.error(err);
+            this.error = err?.body?.message || err.message;
         } finally {
             this.isLoading = false;
         }
@@ -101,12 +147,12 @@ export default class Fec_StatementsAccount extends NavigationMixin(LightningElem
         }
 
         this.generalStatementInfoFields = [
-            { label: 'Billing Cycle', value: dto.billingCycle ?? '-' },
-            { label: 'Total Payment Due', value: this.formatNumber(dto.totalPaymentDue) },
-            { label: 'Last Statement Date', value: this.formatDate(dto.lastStatementDate) },
-            { label: 'Minimum Payment Due', value: this.formatNumber(dto.minimumPaymentDue) },
-            { label: 'Next Statement Date', value: this.formatDate(dto.nextStatementDate) },
-            { label: 'Payment Due Date', value: this.formatDate(dto.paymentDueDate) }
+            this.buildField(this.customLabel.billingCycleLabel, dto.billingCycle, 'FEC_Billing_Cycle__c'),
+            this.buildField(this.customLabel.totalPaymentDueLabel, this.formatNumber(dto.totalPaymentDue), 'FEC_Total_Payment_Due__c'),
+            this.buildField(this.customLabel.lastStatementDateLabel, this.formatDate(dto.lastStatementDate), 'FEC_Last_Statement_Date__c'),
+            this.buildField(this.customLabel.paymentDueDateLabel, this.formatDate(dto.paymentDueDate), 'FEC_Payment_Due_Date__c'),
+            this.buildField(this.customLabel.minimumPaymentDueLabel, this.formatNumber(dto.minimumPaymentDue), 'FEC_Minimum_Payment_Due__c'),
+            this.buildField(this.customLabel.nextStatementDateLabel, this.formatDate(dto.nextStatementDate), 'FEC_Next_Statement_Date__c')
         ];
     }
 
@@ -121,13 +167,28 @@ export default class Fec_StatementsAccount extends NavigationMixin(LightningElem
             totalPaymentDue: this.formatNumber(row.totalPaymentDue),
             minimumPaymentDue: this.formatNumber(row.minimumPaymentDue),
 
+            currentPaymentDue: this.formatNumber(row.currentPaymentDue),
+            totalPastDue: this.formatNumber(row.totalPastDue),
+
             beginningBalance: this.formatNumber(row.beginningBalance),
-            endingBalance: this.formatNumber(row.endingBalance),
+            endBalance: this.formatNumber(row.endBalance),
+
             totalInterest: this.formatNumber(row.totalInterest),
-            ippPrincipal: this.formatNumber(row.ippPrincipal),
-            ippInterest: this.formatNumber(row.ippInterest),
-            totalPastDue: this.formatNumber(row.totalPastDue)
+            iPPPrincipal: this.formatNumber(row.iPPPrincipal),
+            iPPInterest: this.formatNumber(row.iPPInterest)
         }));
+    }
+
+    /* ================= FIELD BUILDER ================= */
+    buildField(label, value, fieldApiName) {
+        const helpText = this.helpTexts?.[fieldApiName];
+
+        return {
+            label,
+            value: value ?? '-',
+            helpText,
+            hasHelpText: Boolean(helpText)
+        };
     }
 
     /* ================= LINK CLICK ================= */
@@ -137,46 +198,21 @@ export default class Fec_StatementsAccount extends NavigationMixin(LightningElem
 
         this[NavigationMixin.Navigate]({
             type: 'standard__navItemPage',
-            attributes: { apiName: 'statements' },
+            attributes: { apiName: 'FEC_Statements' },
             state: { c__statementId: statementId }
         });
     }
 
     /* ================= FORMATTERS ================= */
-
-    // dd/MM/yyyy
     formatDate(value) {
         if (!value) return '-';
-
         const d = new Date(value);
-        if (isNaN(d.getTime())) return '-';
-
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
-
-        return `${day}/${month}/${year}`;
+        if (isNaN(d)) return '-';
+        return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     }
 
-    // number with thousand separators
     formatNumber(value) {
-        if (value === null || value === undefined || value === '') return '';
-        return new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-        }).format(value);
-    }
-
-    // currency VND
-    formatCurrency(value) {
         if (value === null || value === undefined) return '-';
-
-        const formatted = new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-            maximumFractionDigits: 0
-        }).format(Math.abs(value));
-
-        return value < 0 ? `-${formatted}` : formatted;
+        return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(value);
     }
 }
