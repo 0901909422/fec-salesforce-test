@@ -650,11 +650,36 @@ public without sharing class FEC_InteractionInforHandler {
     @AuraEnabled
     public static void resetViewMode(Id recordId, String viewMode) {
         if (recordId == null) return;
+
+        List<Case> caselst = [
+            SELECT
+                Id,
+                RecordType.DeveloperName,
+                FEC_First_Access__c,
+                FEC_Interaction_View_Mode__c,
+                FEC_Get_Next_Work__c
+            FROM Case
+            WHERE Id = :recordId
+        ];
+
+        if (caselst.isEmpty())
+            return null;
+
+        Case c = caselst.get(0);
+
+        if (c.FEC_Get_Next_Work__c == true) {
+            viewMode = 'handling';
+        } else if (c.FEC_First_Access__c == true) {
+            viewMode = c.FEC_Interaction_View_Mode__c;
+        }
         
         update new Case(
             Id = recordId,
-        FEC_Interaction_View_Mode__c = viewMode
-            );
+            FEC_Interaction_View_Mode__c = viewMode,
+            FEC_First_Access__c = false,
+            FEC_Get_Next_Work__c = false
+        );
+        return viewMode;
     }
     
     @AuraEnabled
