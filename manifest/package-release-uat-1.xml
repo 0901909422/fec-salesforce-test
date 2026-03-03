@@ -1220,6 +1220,11 @@
 		<members>FEC_MSG_Recall_Action_Not_Allowed</members>
 		<members>FEC_MSG_Record_Id_Invalid</members>
 		<members>FEC_MSG_Interaction_Highlight_Prefix</members>
+		<members>FEC_Choose_Sub_Decision_Label</members>
+		<members>FEC_Choose_Decision_Label</members>
+		<members>FEC_Sub_Decision_Label</members>
+		<members>FEC_MSG_No_IPP_Schedule_Data</members>
+		<members>FEC_MSG_No_Data_To_Display</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
