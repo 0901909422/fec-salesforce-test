@@ -16,7 +16,8 @@ import FEC_INTERACTION_ID_LABEL from "@salesforce/label/c.FEC_Interaction_ID";
 import FEC_INTERACTION_CREATED_ON_LABEL from "@salesforce/label/c.FEC_Interaction_Created_On_Label";
 import FEC_INTERACTION_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_Channel_Label";
 
-import { formatDateTime } from 'c/fec_CommonUtils';
+import { formatDateTime, urlCmpWithRecordId } from 'c/fec_CommonUtils';
+import { DIV_ELEMENT, ICON_CASE } from "c/fec_CommonConst";
 
 const COLUMNS = [
   {
@@ -87,16 +88,16 @@ export default class FecRelevantInteractionCard extends NavigationMixin(
     console.log("focusedTab:", JSON.stringify(focusedTab));
 
     const subtabId = await openSubtab(focusedTab.tabId, {
-      url: `/lightning/cmp/c__fec_RelevantInteractionListViewAll?c__recordId=${this.recordId}`,
+      url: urlCmpWithRecordId("fec_RelevantInteractionListViewAll", this.recordId),
       focus: true,
     });
     await setTabLabel(subtabId, "Relevant Interactions - View All");
-    await setTabIcon(subtabId, "standard:case", "Cases");
+    await setTabIcon(subtabId, ICON_CASE, "Cases");
   }
 
   getPlainCaseId(htmlString) {
     if (!htmlString) return "";
-    const div = document.createElement("div");
+    const div = document.createElement(DIV_ELEMENT);
     div.innerHTML = htmlString;
     return div.textContent || div.innerText || "";
   }
