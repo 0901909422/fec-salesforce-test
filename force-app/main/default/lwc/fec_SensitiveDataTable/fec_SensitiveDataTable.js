@@ -7,6 +7,9 @@ import {
   setTabLabel,
   setTabIcon,
 } from "lightning/platformWorkspaceApi";
+
+import { urlCmpWithRecordId } from "c/fec_CommonUtils";
+
 const COLUMNS = [
   { label: "Section", fieldName: "FEC_Section__c" },
   { label: "Field Name", fieldName: "Name" },
@@ -45,27 +48,6 @@ export default class Fec_SensitiveDataTable extends NavigationMixin(
     this.fetchSensitiveData();
   }
 
-  // fetchSensitiveData() {
-  //   getSensitiveData({ recordId: this.recordId })
-  //     .then((data) => {
-  //       // Process and assign data to rows if needed
-  //       console.log("Fetched sensitive data:", data);
-  //       this.rows = data.map((c) => ({
-  //         const { caseUrl, caseIdText } = this.parseAnchor(row.FEC_Case_ID__c);
-  //         return {
-  //         ...c,
-  //         caseUrl: `/${c.Id}`,
-  //         caseIdText: this.getPlainCaseId(c.FEC_Case_ID__c),
-  //         formattedDate: this.formatDate(c.CreatedDate),
-  //         }
-  //       }));
-  //       this.total = data.length;
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error fetching sensitive data:", error);
-  //     });
-  // }
-
   fetchSensitiveData() {
     getSensitiveData({ recordId: this.recordId })
       .then((data) => {
@@ -99,7 +81,7 @@ export default class Fec_SensitiveDataTable extends NavigationMixin(
     console.log("focusedTab:", JSON.stringify(focusedTab));
 
     const subtabId = await openSubtab(focusedTab.tabId, {
-      url: `/lightning/cmp/c__fec_SensitiveDataViewAll?c__recordId=${this.recordId}`,
+      url: urlCmpWithRecordId("fec_SensitiveDataViewAll", this.recordId),
       focus: true,
     });
     await setTabLabel(subtabId, "Sensitive Data - View All");

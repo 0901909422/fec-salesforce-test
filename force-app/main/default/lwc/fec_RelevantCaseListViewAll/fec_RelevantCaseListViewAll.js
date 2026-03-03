@@ -1,9 +1,13 @@
 import { LightningElement, wire, track } from "lwc";
 import { CurrentPageReference } from "lightning/navigation";
 import getRelevantCasesViewAll from "@salesforce/apex/FEC_InteractionInforHandler.getRelevantCasesViewAll";
+
+import { DIV_ELEMENT } from "c/fec_CommonConst";
+
 import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page";
 import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
 import FEC_RELEVANT_CASE_LIST_VIEW_ALL_LABEL from "@salesforce/label/c.FEC_RelevantCaseListViewAll_Label";
+
 const COLUMNS = [
   {
     label: "Case ID",
@@ -155,7 +159,7 @@ export default class Fec_RelevantCaseListViewAll extends LightningElement {
   // ===== Utils =====
   getPlainCaseId(htmlString) {
     if (!htmlString) return "";
-    const div = document.createElement("div");
+    const div = document.createElement(DIV_ELEMENT);
     div.innerHTML = htmlString;
     return div.textContent || div.innerText || "";
   }

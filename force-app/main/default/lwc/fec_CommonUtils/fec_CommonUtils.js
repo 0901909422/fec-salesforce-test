@@ -497,6 +497,10 @@ const setConsoleTab = async (label, icon) => {
   }
 };
 
+const urlCmpWithRecordId = (cmp, recordId) => {
+  return `/lightning/cmp/c__${cmp}?c__recordId=${recordId}`;
+}
+
 export {
   formatDate,
   formatDateTime,
@@ -515,4 +519,5 @@ export {
   checkNoUpdateInSubmit,
   isOnlyNumber,
   setConsoleTab,
+  urlCmpWithRecordId,
 };

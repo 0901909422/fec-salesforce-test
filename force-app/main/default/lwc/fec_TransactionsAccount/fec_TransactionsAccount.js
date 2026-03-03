@@ -16,6 +16,23 @@ import { NavigationMixin } from 'lightning/navigation';
 import loadTransactions from '@salesforce/apex/FEC_TransactionsController.loadTransactions';
 import { formatDateVNI, formatDateDDMMYYYYHHMM, formatNumber } from 'c/fec_CommonUtils';
 
+import FEC_Transaction_Code from '@salesforce/label/c.FEC_Transaction_Code';
+import FEC_Unbilled_Transactions from '@salesforce/label/c.FEC_Unbilled_Transactions';
+import FEC_Transaction_Plan from '@salesforce/label/c.FEC_Transaction_Plan';
+import FEC_Effective_Date from '@salesforce/label/c.FEC_Effective_Date';
+import FEC_Authorization_Code from '@salesforce/label/c.FEC_Authorization_Code';
+import FEC_Post_Date from '@salesforce/label/c.FEC_Post_Date';
+import FEC_Credit_Debit_Flag from '@salesforce/label/c.FEC_Credit_Debit_Flag';
+import FEC_Transaction_Amount from '@salesforce/label/c.FEC_Transaction_Amount';
+import FEC_Currency_Code from '@salesforce/label/c.FEC_Currency_Code';
+import FEC_Merchant_Description from '@salesforce/label/c.FEC_Merchant_Description';
+import FEC_OTP_Sent from '@salesforce/label/c.FEC_OTP_Sent';
+import FEC_Merchant_Category_Code from '@salesforce/label/c.FEC_Merchant_Category_Code';
+import FEC_Pending_Transactions from '@salesforce/label/c.FEC_Pending_Transactions';
+import FEC_Authorization_Response from '@salesforce/label/c.FEC_Authorization_Response';
+import FEC_Decline_Description from '@salesforce/label/c.FEC_Decline_Description';
+import FEC_Approval_Code from '@salesforce/label/c.FEC_Approval_Code';
+
 export default class Fec_TransactionsAccount extends NavigationMixin(LightningElement) {
 
     /* ================= API ================= */
@@ -31,55 +48,74 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
         'pendingTransactions'
     ];
 
+    customLabel = {
+        transactionCodeLabel: FEC_Transaction_Code,
+        unbilledTransactionsLabel: FEC_Unbilled_Transactions,
+        transactionPlanLabel: FEC_Transaction_Plan,
+        effectiveDateLabel: FEC_Effective_Date,
+        authorizationCodeLabel: FEC_Authorization_Code,
+        postDateLabel: FEC_Post_Date,
+        creditDebitFlagLabel: FEC_Credit_Debit_Flag,
+        transactionAmountLabel: FEC_Transaction_Amount,
+        currencyCodeLabel: FEC_Currency_Code,
+        merchantDescriptionLabel: FEC_Merchant_Description,
+        otpSentLabel: FEC_OTP_Sent,
+        merchantCategoryCodeLabel: FEC_Merchant_Category_Code,
+        pendingTransactionsLabel: FEC_Pending_Transactions,
+        authorizationResponseLabel: FEC_Authorization_Response,
+        declineDescriptionLabel: FEC_Decline_Description,
+        approvalCodeLabel: FEC_Approval_Code
+    }
+
     /* ================= COLUMNS ================= */
     unbilledTransactionsColumns = [
         {
-            label: 'Transaction Code',
+            label: this.customLabel.transactionCodeLabel,
             fieldName: 'transactionCode',
             type: 'link',
             recordIdField: 'Id',
-            hoverTitle: 'Unbilled Transactions',
+            hoverTitle: this.customLabel.unbilledTransactionsLabel,
             cellAlign: 'center',
             hoverFields: [
-                { label: 'Transaction Code', fieldName: 'transactionCode' },
-                { label: 'Transaction Plan', fieldName: 'transactionPlan' },
-                { label: 'Effective Date', fieldName: 'effectiveDate' },
-                { label: 'Authorization Code', fieldName: 'authorizationCode' },
-                { label: 'Post Date', fieldName: 'postDate' },
-                { label: 'Credit Debit Flag', fieldName: 'creditDebitFlag' },
-                { label: 'Transaction Amount', fieldName: 'transactionAmount' },
-                { label: 'Currency Code', fieldName: 'currencyCode' },
-                { label: 'Merchant Description', fieldName: 'merchantDescription' },
-                { label: 'OTP Sent', fieldName: 'otpSent' },
-                { label: 'Merchant Category Code', fieldName: 'merchantCategoryCode' }
+                { label: this.customLabel.transactionCodeLabel, fieldName: 'transactionCode' },
+                { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan' },
+                { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate' },
+                { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode' },
+                { label: this.customLabel.postDateLabel, fieldName: 'postDate' },
+                { label: this.customLabel.creditDebitFlagLabel, fieldName: 'creditDebitFlag' },
+                { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount' },
+                { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode' },
+                { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription' },
+                { label: this.customLabel.otpSentLabel, fieldName: 'otpSent' },
+                { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode' }
             ]
         },
         {
-            label: 'Effective Date',
+            label: this.customLabel.effectiveDateLabel,
             fieldName: 'effectiveDate',
             type: 'text',
             cellAlign: 'center'
         },
         {
-            label: 'Post Date',
+            label: this.customLabel.postDateLabel,
             fieldName: 'postDate',
             type: 'text',
             cellAlign: 'center'
         },
         {
-            label: 'Transaction Amount',
+            label: this.customLabel.transactionAmountLabel,
             fieldName: 'transactionAmount',
             type: 'text',
             cellAlign: 'right'
         },
         {
-            label: 'Merchant Description',
+            label: this.customLabel.merchantDescriptionLabel,
             fieldName: 'merchantDescription',
             type: 'text',
             width: '240px'
         },
         {
-            label: 'Credit Debit Flag',
+            label: this.customLabel.creditDebitFlagLabel,
             fieldName: 'creditDebitFlag',
             type: 'text',
             cellAlign: 'center'
@@ -88,40 +124,40 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
 
     pendingTransactionsColumns = [
         {
-            label: 'Transaction Code',
+            label: this.customLabel.transactionCodeLabel,
             fieldName: 'transactionCode',
             type: 'link',
             recordIdField: 'Id',
-            hoverTitle: 'Pending Transactions',
+            hoverTitle: this.customLabel.pendingTransactionsLabel,
             cellAlign: 'center',
             hoverFields: [
-                { label: 'Transaction Code', fieldName: 'transactionCode' },
-                { label: 'Transaction Plan', fieldName: 'transactionPlan' },
-                { label: 'Effective Date', fieldName: 'effectiveDate' },
-                { label: 'Authorization Code', fieldName: 'authorizationCode' },
-                { label: 'Transaction Amount', fieldName: 'transactionAmount' },
-                { label: 'Authorization Response', fieldName: 'authorizationResponse' },
-                { label: 'Merchant Description', fieldName: 'merchantDescription' },
-                { label: 'Currency Code', fieldName: 'currencyCode' },
-                { label: 'Merchant Category Code', fieldName: 'merchantCategoryCode' },
-                { label: 'Decline Description', fieldName: 'declineDescription' },
-                { label: 'Approval Code', fieldName: 'approvalCode' }
+                { label: this.customLabel.transactionCodeLabel, fieldName: 'transactionCode' },
+                { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan' },
+                { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate' },
+                { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode' },
+                { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount' },
+                { label: this.customLabel.authorizationResponseLabel, fieldName: 'authorizationResponse' },
+                { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription' },
+                { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode' },
+                { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode' },
+                { label: this.customLabel.declineDescriptionLabel, fieldName: 'declineDescription' },
+                { label: this.customLabel.approvalCodeLabel, fieldName: 'approvalCode' }
             ]
         },
         {
-            label: 'Effective Date',
+            label: this.customLabel.effectiveDateLabel,
             fieldName: 'effectiveDate',
             type: 'text',
             cellAlign: 'center'
         },
         {
-            label: 'Transaction Amount',
+            label: this.customLabel.transactionAmountLabel,
             fieldName: 'transactionAmount',
             type: 'text',
             cellAlign: 'right'
         },
         {
-            label: 'Merchant Description',
+            label: this.customLabel.merchantDescriptionLabel,
             fieldName: 'merchantDescription',
             type: 'text'
         }
