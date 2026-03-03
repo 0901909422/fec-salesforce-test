@@ -79,4 +79,35 @@ public with sharing class FEC_SearchController {
             throw new AuraHandledException(e.getMessage());
         }
     }
+
+    /**
+   * @description Checks if the current user has edit access to specific fields on a given SObject.
+   * @param sObjectType The SObject type (e.g., 'Account', 'Custom_Object__c')
+   * @param fieldNames A list of field API names to check
+   * @return Map<String, Boolean> A map where the key is the field name and the value is true if editable.
+   */
+
+    @AuraEnabled(cacheable=true)
+    public static Map<String, Boolean> checkFieldEditPermissions(String sObjectType, List<String> fieldNames) {
+        Map<String, Boolean> fieldPermissions = new Map<String, Boolean>();
+        
+        // Get the describe result for the object
+        SObjectType targetType = Schema.getGlobalDescribe().get(sObjectType);
+        if (targetType == null) {
+            return fieldPermissions; 
+        }
+        
+        Map<String, SObjectField> fieldsMap = targetType.getDescribe().fields.getMap();
+        
+        for (String fieldName : fieldNames) {
+            if (fieldsMap.containsKey(fieldName)) {
+                // Check if the field is updateable by the current user
+                fieldPermissions.put(fieldName, fieldsMap.get(fieldName).getDescribe().isUpdateable());
+            } else {
+                fieldPermissions.put(fieldName, false); // Field doesn't exist or isn't accessible
+            }
+        }
+        
+        return fieldPermissions;
+    }
 }

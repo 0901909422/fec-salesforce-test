@@ -12,6 +12,7 @@
 ****************************************************************************************/
 
 import { LightningElement, api } from 'lwc';
+import { isNegative } from 'c/fec_CommonUtils';
 
 import FEC_Button_Refresh from '@salesforce/label/c.FEC_Button_Refresh';
 
@@ -125,6 +126,7 @@ export default class Fec_CommonRecordDetailSection extends LightningElement {
                 currentSpan = 0;
             }
 
+            const isNeg = isNegative(field.value);
             currentRow.push({
                 ...field,
                 key: `field-${index}`,
@@ -133,6 +135,9 @@ export default class Fec_CommonRecordDetailSection extends LightningElement {
 
                 /* ===== GRID ===== */
                 gridClass: `slds-size_${colspan}-of-${this.columns}`,
+                
+                /* ===== VALUE STYLE ===== */
+                valueClass: isNeg ? 'text-negative' : '',
 
                 /* ===== SYNC STATUS ===== */
                 showSuccess: syncStatus === 'SUCCESS',

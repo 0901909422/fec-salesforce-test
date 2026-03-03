@@ -18,3 +18,8 @@
     color: #c23934 !important;
     font-weight: 600;
 }
+
+/* Đường ngăn cách cột - truyền biến CSS cho bảng Card Delivery và Other Cards */
+.card-info-table-wrapper {
+    --fec-table-border-right: 1px solid #d8dde6;
+}

@@ -6,15 +6,14 @@ import { autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
 import { formatDate } from 'c/fec_CommonUtils';
 import FEC_Card_Delivery_Label from '@salesforce/label/c.FEC_Card_Delivery_Label';
 import FEC_Other_Card_Label from '@salesforce/label/c.FEC_Other_Card_Label';
-
-// Error message constant
-const ERROR_MESSAGE = 'Tải dữ liệu không thành công';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_Gender_Label from '@salesforce/label/c.FEC_Gender_Label';
 
 export default class Fec_CardInfo extends LightningElement {
     @api recordId;
     
-    // Expose ERROR_MESSAGE for template
-    ERROR_MESSAGE = ERROR_MESSAGE;
+    // Custom labels từ CustomLabels.labels-meta.xml (Account Info / Common)
+    ERROR_MESSAGE = FEC_MSG_Error_API_Label;
 
     cardDeliveryData = [];
     otherCardData = [];
@@ -35,11 +34,11 @@ export default class Fec_CardInfo extends LightningElement {
     // Platform Event subscription
     subscription = null;
     channelName = '/event/FEC_Card_Info_Refresh__e';
-
+    
     customLabel = {
         cardDeliveryLabel: FEC_Card_Delivery_Label,
         otherCardLabel: FEC_Other_Card_Label
-    }
+    };
 
     // Load data khi component mount (giống IPPDetails)
     connectedCallback() {
@@ -223,7 +222,6 @@ export default class Fec_CardInfo extends LightningElement {
         try {
             localStorage.setItem(this.storageKey, JSON.stringify(this.activeSections));
         } catch (e) {
-            // Silent error
         }
     }
 
@@ -236,7 +234,6 @@ export default class Fec_CardInfo extends LightningElement {
         return this.activeSections.includes('otherCard');
     }
 
-    // Icon name for accordion chevron
     get cardDeliveryIconName() {
         return this.isCardDeliveryOpen ? 'utility:chevrondown' : 'utility:chevronright';
     }
@@ -245,7 +242,6 @@ export default class Fec_CardInfo extends LightningElement {
         return this.isOtherCardOpen ? 'utility:chevrondown' : 'utility:chevronright';
     }
 
-    // Section class for custom accordion
     get cardDeliverySectionClass() {
         let classes = 'slds-accordion__section';
         if (this.isCardDeliveryOpen) {
@@ -273,6 +269,15 @@ export default class Fec_CardInfo extends LightningElement {
         return this.isOtherCardOpen 
             ? 'slds-accordion__content' 
             : 'slds-accordion__content slds-hide';
+    }
+
+    // Chỉ hiển thị bảng khi có dữ liệu (không hiển thị "No data" ở body)
+    get hasCardDeliveryData() {
+        return Array.isArray(this.cardDeliveryData) && this.cardDeliveryData.length > 0;
+    }
+
+    get hasOtherCardData() {
+        return Array.isArray(this.otherCardData) && this.otherCardData.length > 0;
     }
 
     // Hide row number for Card Delivery

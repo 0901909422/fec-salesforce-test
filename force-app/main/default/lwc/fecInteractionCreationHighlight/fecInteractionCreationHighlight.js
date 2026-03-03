@@ -17,7 +17,11 @@ import FEC_EXECUTE_LABEL from "@salesforce/label/c.FEC_Execute_Label";
 import FEC_CREATE_CASE_BTN_LABEL from "@salesforce/label/c.FEC_Create_Case_Btn_Label";
 import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
 
-import { formatDateTime } from 'c/fec_CommonUtils';
+import FEC_INTERACTION_CHANNEL from "@salesforce/label/c.FEC_Interaction_Channel_Label";
+
+import FEC_INTERACTION_SUB_CHANNEL from "@salesforce/label/c.FEC_Interaction_Sub_Channel_Label";
+
+import { formatDateTime } from "c/fec_CommonUtils";
 
 export default class FecInteractionCreationHighlight extends NavigationMixin(
   LightningElement,
@@ -31,6 +35,8 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     execute: FEC_EXECUTE_LABEL,
     createCase: FEC_CREATE_CASE_BTN_LABEL,
     wrapUp: FEC_WRAP_UP_BTN_LABEL,
+    interactionChannel: FEC_INTERACTION_CHANNEL,
+    interactionSubChannel: FEC_INTERACTION_SUB_CHANNEL,
   };
 
   @api recordId;
@@ -121,6 +127,14 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     return formatDateTime(value);
   }
 
+  get interactionChannel() {
+    return this.record?.FEC_Channel__c || "";
+  }
+
+  get interactionSubChannel() {
+    return this.record?.FEC_Interaction_Subchannel__c || "";
+  }
+
   // ===============================
   // ACTIONS → SLA
   // ===============================
@@ -156,7 +170,6 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   async handleCreateCase() {
     console.log("handleCreateCase from creation highlight");
     this.isOpen = true;
-    
   }
 
   close() {

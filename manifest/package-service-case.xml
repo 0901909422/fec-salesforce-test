@@ -3,6 +3,13 @@
     <types>
 		<members>FEC_ClickToCallHandler</members>
         <members>FEC_InteractionController</members>
+		<members>FEC_CaseRemarkController</members>
+		<members>FEC_CaseBusinessService</members>
+		<members>FEC_CommonUltils</members>
+		<members>FEC_ConstantCommon</members>
+		<members>FEC_UpdateCustomerBasicInfo</members>
+		<members>FEC_UpdateCustomerContact</members>
+		<members>FEC_CaseEditNOCController</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -15,6 +22,7 @@
 		<members>Case.FEC_Interaction_End_On__c</members>
 		<members>Case.FEC_Interaction_Duration__c</members>
 		<members>Case.FEC_Is_Routing_Action_Display__c</members>
+		<members>Case.FEC_Draft_Routing_Action_Code__c</members>
         <members>FEC_Customer_History__c.FEC_Customer_Type__c</members>
         <name>CustomField</name>
     </types>
@@ -23,6 +31,7 @@
 		<members>FEC_Relevant_Ticket__c</members>
 		<members>FEC_Watcher__c</members>
 		<members>FEC_Notification_History__c</members>
+		<members>FEC_Team_Queue__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -39,6 +48,15 @@
         <members>fec_ClickToCallQuickActionClone</members>
 		<members>fecInteraction</members>
 		<members>fec_SensitiveDataTable</members>
+		<members>fec_CaseRemarks</members>
+		<members>fec_CaseDetail_Customer</members>
+		<members>fec_CaseBussiness</members>
+		<members>fec_CommonUtils</members>
+		<members>fec_CaseEditNOC</members>
+		<members>fec_CommonConst</members>
+		<members>fec_ComboBox</members>
+		<members>fec_CommonConst</members>
+        <members>fec_ErrorPanel</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -72,5 +90,29 @@
 		<members>Case.My_Pending_Cases</members>
 		<name>ListView</name>
 	</types>
+	<types>
+		<members>FEC_MSG_Submit</members>
+		<members>FEC_MSG_UPDATED_INFO_NOT_UPDATED</members>
+		<members>FEC_ACTION_PHONE_UPDATE_HEADER</members>
+		<members>FEC_MSG_ACTION_PHONE_UPDATE</members>
+		<members>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</members>
+		<members>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</members>
+		<members>FEC_MSG_Case_Id_Invalid</members>
+		<members>FEC_MSG_Cannot_Find_Stage_Change</members>
+		<members>FEC_MSG_User_Queue_Id_Invalid</members>
+		<members>FEC_MSG_Manager_Not_Found</members>
+		<members>FEC_MSG_Owner_Is_Queue_Escalation</members>
+		<members>FEC_MSG_Escalation_Failed_Prefix</members>
+		<members>FEC_MSG_Nature_Of_Case_Id_Invalid</members>
+		<members>FEC_MSG_No_Master_Data_Setting_Found</members>
+		<members>FEC_MSG_Recall_Action_Not_Allowed</members>
+		<members>FEC_MSG_Record_Id_Invalid</members>
+		<members>FEC_MSG_Interaction_Highlight_Prefix</members>
+		<name>CustomLabel</name>
+	</types>
+	<types>
+        <members>vi</members>
+        <name>Translations</name>
+    </types>
     <version>65.0</version>
 </Package>
