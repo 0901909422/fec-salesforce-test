@@ -796,6 +796,7 @@
 		<members>FEC_Total_Accrued_Interest_Label</members>
 		<members>FEC_Total_Close_Fee_Amount_Label</members>
 		<members>FEC_Total_Current_Balance_Label</members>
+		<members>FEC_Button_Refresh</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
