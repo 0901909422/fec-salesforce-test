@@ -7082,4 +7082,67 @@
         <shortDescription>MSG No transaction selected</shortDescription>
         <value>No transaction selected</value>
     </labels>
+    <labels>
+        <fullName>FEC_Last_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Status</shortDescription>
+        <value>Last Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_National_Passport_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>National / Passport ID</shortDescription>
+        <value>National / Passport ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Address</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Address</shortDescription>
+        <value>Current Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Updated_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Updated Date</shortDescription>
+        <value>Updated Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Registration_Phone</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Registration Phone</shortDescription>
+        <value>Registration Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Permanent_Address</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Permanent Address</shortDescription>
+        <value>Permanent Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Product_Group</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Product Group</shortDescription>
+        <value>Product Group</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Registration_Email</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Registration Email</shortDescription>
+        <value>Registration Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Office_Address</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Office Address</shortDescription>
+        <value>Office Address</value>
+    </labels>
 </CustomLabels>
