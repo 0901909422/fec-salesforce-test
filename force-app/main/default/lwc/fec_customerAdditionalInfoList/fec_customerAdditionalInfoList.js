@@ -116,7 +116,7 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
         FEC_FieldName__c: '',
         FEC_IsActive__c: true,
         FEC_Status__c: 'New',
-        FEC_StartDate__c: new Date()
+        FEC_StartDate__c: new Date().toISOString().split('T')[0]
     };
     
     @track uploadedData = []; 

@@ -14,24 +14,36 @@
                 <div class="header-section slds-p-vertical_x-small slds-p-horizontal_small slds-theme_shade slds-border_top slds-border_bottom">
                     <h3 class="slds-text-heading_small"><strong>{label.titlePendingProcess}</strong></h3>
                 </div>
-                <c-fec-custom-datatable
-                    hide-checkbox-column="true"
-                    table-data={uploadedData}
-                    columns={columnsPending}
-                    onrowaction={handleUploadedRowAction}>
-                </c-fec-custom-datatable>
+                <template if:true={uploadedData.length}>
+                    <c-fec-custom-datatable
+                        hide-checkbox-column="true"
+                        table-data={uploadedData}
+                        columns={columnsPending}
+                        onrowaction={handleUploadedRowAction}>
+                    </c-fec-custom-datatable>
+                </template>
+                
+                <template if:false={uploadedData.length}>
+                    <c-fec-no-record-display></c-fec-no-record-display>
+                </template>
             </div>
 
             <div class="slds-m-bottom_large">
                 <div class="header-section slds-p-vertical_x-small slds-p-horizontal_small slds-theme_shade slds-border_top slds-border_bottom">
                     <h3 class="slds-text-heading_small"><strong>{label.titleExistingFields}</strong></h3>
                 </div>
-                <c-fec-custom-datatable
-                    hide-checkbox-column="true"
-                    table-data={processedData}
-                    columns={columnsProcessed}
-                    onrowaction={handleProcessedRowAction}>
-                </c-fec-custom-datatable>
+                <template if:true={processedData.length}>
+                    <c-fec-custom-datatable
+                        hide-checkbox-column="true"
+                        table-data={processedData}
+                        columns={columnsProcessed}
+                        onrowaction={handleProcessedRowAction}>
+                    </c-fec-custom-datatable>
+                </template>
+                
+                <template if:false={processedData.length}>
+                    <c-fec-no-record-display></c-fec-no-record-display>
+                </template>
             </div>
         </div>
     </lightning-card>
