@@ -338,7 +338,8 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
         FEC_Updated_Info_Date_of_Birth__c,
         FEC_Updated_Info_Gender__c,
         FEC_Account_or_Contract__r.FEC_CIF_Number__c,
-        FEC_Process_Action_Count__c
+        FEC_Process_Action_Count__c,
+        FEC_Current_Case_Stage__r.Name
       FROM Case
       WHERE Id = :caseId
     ];
@@ -397,6 +398,12 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
     update selectedCase;
 
     result.actionCount = selectedCase.FEC_Process_Action_Count__c;
+
+    FEC_CommonUltils.createProcessActionHistory(
+      method,
+      selectedCase,
+      result.success
+    );
 
     return result;
   }

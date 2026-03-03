@@ -116,28 +116,38 @@ public with sharing class FEC_GetCardFinancialTransactions {
     ) {
 
         Dom.Document doc = new Dom.Document();
-
+        
         Dom.XmlNode envelope = doc.createRootElement(
             'soapenv:Envelope',
-           FEC_ConstantCommon.SOAP_ENV,
+            null,
             null
         );
+        
+         envelope.setAttribute(
+            'xmlns:soapenv',
+            FEC_ConstantCommon.SOAP_ENV
+        );
+        
         envelope.setAttribute(
             'xmlns:cif',
             'http://fecredit.com.vn/CIF_CardInfo'
         );
-
+        
+         // ===== Header =====
         envelope.addChildElement('soapenv:Header', null, null);
-
+        
+        // ===== Body =====
         Dom.XmlNode body =
             envelope.addChildElement('soapenv:Body', null, null);
-
+        
+        // ===== Main Action =====
         Dom.XmlNode action =
-            body.addChildElement(
-                'cif:GetCardFinancialTransactions',
-                null,
-                null
-            );
+            body.addChildElement('ns1:GetCardFinancialTransactions', null, null);
+        
+        action.setAttribute(
+            'xmlns:ns1',
+            'http://fecredit.com.vn/CIF_CardInfo'
+        );
 
         Dom.XmlNode sys = action.addChildElement('Sys', null, null);
         sys.addChildElement('TransID', null, null).addTextNode(transId);
@@ -149,12 +159,12 @@ public with sharing class FEC_GetCardFinancialTransactions {
 
         if (fromDate != null) {
             action.addChildElement('FromDate', null, null)
-                  .addTextNode(fromDate.format());
+                  .addTextNode(String.valueOf(fromDate));
         }
-
+        
         if (toDate != null) {
             action.addChildElement('ToDate', null, null)
-                  .addTextNode(toDate.format());
+                  .addTextNode(String.valueOf(toDate));
         }
 
         return doc.toXmlString();

@@ -145,3 +145,8 @@ span.slds-text-color_error {
     overflow-wrap: normal !important;
     word-break: keep-all !important;
 }
+
+/* Đường ngăn cách cột cho bảng IPP Details - truyền biến CSS vào component con */
+.ipp-details-table-wrapper {
+    --fec-ipp-table-border-right: 1px solid #d8dde6;
+}

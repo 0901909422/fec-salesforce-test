@@ -14,6 +14,7 @@
 import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import loadTransactions from '@salesforce/apex/FEC_TransactionsController.loadTransactions';
+import { formatDateVNI, formatDateDDMMYYYYHHMM, formatNumber } from 'c/fec_CommonUtils';
 
 import FEC_Transaction_Code from '@salesforce/label/c.FEC_Transaction_Code';
 import FEC_Unbilled_Transactions from '@salesforce/label/c.FEC_Unbilled_Transactions';
@@ -170,7 +171,6 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
     /* ================= LOAD DATA ================= */
     loadTransactions() {
         if (!this.recordId) {
-            console.error('[FEC] recordId is missing');
             return;
         }
 
@@ -214,9 +214,9 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             merchantDescription: tx.merchantDescription || '',
             creditDebitFlag: tx.creditDebitFlag || '',
 
-            effectiveDate: this.formatDate(tx.effectiveDate),
-            postDate: this.formatDate(tx.postingDate),
-            transactionAmount: this.formatNumber(tx.transactionAmount),
+            effectiveDate: formatDateDDMMYYYYHHMM(tx.effectiveDate),
+            postDate: formatDateVNI (tx.postingDate),
+            transactionAmount: formatNumber(tx.transactionAmount),
 
             transactionPlan: tx.transactionPlan || '',
             authorizationCode: tx.authorizationCode || '',
@@ -233,8 +233,8 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             transactionCode: tx.transactionCode || '',
             merchantDescription: tx.merchantDescription || '',
 
-            effectiveDate: this.formatDate(tx.effectiveDate),
-            transactionAmount: this.formatNumber(tx.transactionAmount),
+            effectiveDate: formatDateDDMMYYYYHHMM(tx.effectiveDate),
+            transactionAmount: formatNumber(tx.transactionAmount),
             transactionPlan: tx.transactionPlan || '',
             authorizationCode: tx.authorizationCode || '',
             merchantCategoryCode: tx.merchantCategoryCode || '',
@@ -245,27 +245,6 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             declineReasonCode: tx.declineReasonCode || '',
             approvalCode: tx.approvalCode || ''
         };
-    }
-
-    /* ================= FORMATTERS ================= */
-    formatDate(value) {
-        if (!value) return '';
-        try {
-            const d = new Date(value);
-            if (isNaN(d.getTime())) return value;
-            return d.toLocaleDateString('en-GB');
-        } catch {
-            return value;
-        }
-    }
-
-    formatNumber(value) {
-        if (value === null || value === undefined) return '';
-        try {
-            return new Intl.NumberFormat('en-US').format(value);
-        } catch {
-            return value;
-        }
     }
 
     /* ================= ROW SELECT ================= */

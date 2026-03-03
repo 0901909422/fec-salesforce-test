@@ -12,6 +12,7 @@
 ****************************************************************************************/
 
 import { LightningElement, api, track } from 'lwc';
+import { isNegative } from 'c/fec_CommonUtils';
 
 export default class Fec_CommonDetailViewailView extends LightningElement {
 
@@ -54,7 +55,10 @@ export default class Fec_CommonDetailViewailView extends LightningElement {
                     return {
                         ...field,
                         rowClass:
-                            'slds-grid slds-border_bottom slds-p-vertical_x-small slds-grid_vertical-align-center'
+                            'slds-grid slds-border_bottom slds-p-vertical_x-small slds-grid_vertical-align-center',
+                            valueClass: isNegative(field.value)
+                                ? 'slds-truncate text-red'
+                                : 'slds-truncate'
                     };
                 })
             };

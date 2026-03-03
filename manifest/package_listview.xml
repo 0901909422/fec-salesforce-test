@@ -74,5 +74,31 @@
         <members>Case.FEC_Internal_Audit_Case</members>
         <name>ListView</name>
     </types>
+    <types>
+		<members>FEC_GetNextWorkController</members>
+		<members>FEC_ConstantCommon</members>
+		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>fec_GetNextWork</members>
+		<name>LightningComponentBundle</name>
+	</types>
+    <types>
+		<members>Case.Get_next_work</members>
+		<name>WebLink</name>
+	</types>
+    <types>
+		<members>Case</members>
+		<name>CustomObject</name>
+	</types>
+    <types>
+		<members>FEC_GetNextWork</members>
+		<name>CustomTab</name>
+	</types>
+    <types>
+		<members>RD_IT_User_Interaction_Case_Service_Case</members>
+		<members>RD_IT_User_System_Management</members>
+		<name>PermissionSet</name>
+	</types>
     <version>65.0</version>
 </Package>
