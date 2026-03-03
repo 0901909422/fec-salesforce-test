@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_External_Interaction_ID__c</fullName>
     <caseSensitive>true</caseSensitive>
+    <description>Mã tương tác từ các hệ thống tích hợp</description>
     <externalId>true</externalId>
     <label>External Interaction ID</label>
     <length>20</length>
