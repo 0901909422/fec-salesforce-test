@@ -97,7 +97,7 @@ public with sharing class FEC_InteractionHighlightController {
                 }
             }
             
-            result.customerCategory = determineCustomerCategory(interactionCase, customerHistory);
+            result.customerCategory = determineCustomerCategory(caseRecord, customerHistory);
             
             return result;
         } catch (Exception e) {
