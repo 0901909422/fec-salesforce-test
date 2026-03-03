@@ -8,6 +8,9 @@
     <columns>UPDATEDBY_USER</columns>
     <columns>UPDATEDBY_USER.ALIAS</columns>
     <columns>LAST_UPDATE</columns>
+    <columns>OWNER.ALIAS</columns>
+    <columns>OWNER.FIRST_NAME</columns>
+    <columns>OWNER.LAST_NAME</columns>
     <columns>OBJECT_ID</columns>
     <filterScope>Everything</filterScope>
     <label>All</label>
