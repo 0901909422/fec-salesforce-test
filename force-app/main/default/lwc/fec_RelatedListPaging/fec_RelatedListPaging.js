@@ -12,6 +12,7 @@
 ****************************************************************************************/
 
 import { LightningElement, api, track } from 'lwc';
+import { isNegative } from 'c/fec_CommonUtils';
 
 export default class Fec_RelatedListPaging extends LightningElement {
 
@@ -289,6 +290,11 @@ export default class Fec_RelatedListPaging extends LightningElement {
                         } else if (typeof col.cellAttributes.class === 'string') {
                             cellClass = col.cellAttributes.class;
                         }
+                    }
+                    /* ===== ADD NEGATIVE CHECK ===== */
+                    const isNeg = isNegative(row[col.fieldName]);
+                    if (isNeg) {
+                        cellClass = (cellClass ? cellClass + ' ' : '') + 'text-negative';
                     }
 
                     const align = col.cellAlign

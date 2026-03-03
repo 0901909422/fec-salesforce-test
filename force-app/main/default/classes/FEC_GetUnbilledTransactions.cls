@@ -73,36 +73,52 @@ public with sharing class FEC_GetUnbilledTransactions {
         String accountNumber
     ) {
         Dom.Document doc = new Dom.Document();
-
+    
+        // ===== Create Envelope WITHOUT namespace param =====
         Dom.XmlNode envelope = doc.createRootElement(
             'soapenv:Envelope',
-            FEC_ConstantCommon.SOAP_ENV,
+            null,
             null
         );
-
+    
+        // ===== Manually bind namespaces =====
         envelope.setAttribute(
-            'xmlns:est',
+            'xmlns:soapenv',
+            FEC_ConstantCommon.SOAP_ENV
+        );
+    
+        envelope.setAttribute(
+            'xmlns:ns1',
             'http://esbservice.fecredit.org/EStatementService/'
         );
-
+    
+        // ===== Header =====
         envelope.addChildElement('soapenv:Header', null, null);
-
+    
+        // ===== Body =====
         Dom.XmlNode body =
             envelope.addChildElement('soapenv:Body', null, null);
-
+    
+        // ===== Main Action =====
         Dom.XmlNode action =
-            body.addChildElement('est:GetUnbilledTransactions', null, null);
-
+            body.addChildElement('ns1:GetUnbilledTransactions', null, null);
+    
+        // ===== SysRequest =====
         Dom.XmlNode sys =
-            action.addChildElement('Sys', null, null);
-
-        sys.addChildElement('transId', null, null).addTextNode(transId);
+            action.addChildElement('ns1:SysRequest', null, null);
+    
+        sys.addChildElement('TransID', null, null).addTextNode(transId);
         sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
         sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
-
-        action.addChildElement('accountNumber', null, null)
+    
+        // ===== AccountNumber =====
+        action.addChildElement('AccountNumber', null, null)
               .addTextNode(accountNumber);
-
+    
+        // ===== IPPAvailabilityCheck =====
+        action.addChildElement('IPPAvailabilityCheck', null, null)
+              .addTextNode('true');
+    
         return doc.toXmlString();
     }
     
@@ -157,52 +173,69 @@ public with sharing class FEC_GetUnbilledTransactions {
     // SOAP RESPONSE PARSER
     // =========================================================================
     private static ResponseWrapper parseResponse(String xml) {
- 
+
+        ResponseWrapper result = new ResponseWrapper();
+        result.Transactions = new List<TransactionRecord>();
+
+        if (String.isBlank(xml)) {
+            return result;
+        }
+
         Dom.Document doc = new Dom.Document();
         doc.load(xml);
- 
+
         Dom.XmlNode envelope = doc.getRootElement();
-        Dom.XmlNode bodyNode = envelope.getChildElement(
-            'Body',
-            FEC_ConstantCommon.SOAP_ENV
-        );
- 
+        if (envelope == null) return result;
+
+        Dom.XmlNode bodyNode =
+            FEC_CommonUltils.findChildByName(envelope, 'Body');
+        if (bodyNode == null) return result;
+
         Dom.XmlNode responseNode;
         for (Dom.XmlNode n : bodyNode.getChildElements()) {
             responseNode = n;
             break;
         }
- 
-        ResponseWrapper result = new ResponseWrapper();
- 
-        // ================= SYS RESPONSE =================
-        Dom.XmlNode sysNode = responseNode.getChildElement('SysResponse', null);
-        result.Sys = new SysResponse();
-        result.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
-        result.Sys.DateTimeStr = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
-        result.Sys.Status = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(sysNode, 'Status'));
-        result.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
- 
-        // ================= TRANSACTION RECORDS =================
-        result.Transactions = new List<TransactionRecord>();
-        Dom.XmlNode txnRecords = responseNode.getChildElement('TransactionRecords', null);
+        if (responseNode == null) return result;
+
+        // ===== SYS RESPONSE =====
+        Dom.XmlNode sysNode =
+            FEC_CommonUltils.findChildByName(responseNode, 'SysResponse');
+
+        if (sysNode != null) {
+
+            result.Sys = new SysResponse();
+
+            result.Sys.TransID = FEC_CommonUltils.getValueSafe(sysNode, 'TransID');
+            result.Sys.DateTimeStr = FEC_CommonUltils.getValueSafe(sysNode, 'DateTime');
+            result.Sys.Status =
+                FEC_CommonUltils.toInt(FEC_CommonUltils.getValueSafe(sysNode, 'Status'));
+            result.Sys.Description = FEC_CommonUltils.getValueSafe(sysNode, 'Description');
+        }
+
+        // ===== TRANSACTIONS =====
+        Dom.XmlNode txnRecords =
+            FEC_CommonUltils.findChildByName(responseNode, 'TransactionRecords');
+
         if (txnRecords != null) {
             for (Dom.XmlNode txn : txnRecords.getChildElements()) {
                 TransactionRecord tr = new TransactionRecord();
-                tr.TransactionDate = FEC_CommonUltils.getXmlValue(txn, 'TransactionDate');
-                tr.PostingDate = FEC_CommonUltils.getXmlValue(txn, 'PostingDate');
-                tr.Description = FEC_CommonUltils.getXmlValue(txn, 'Description');
+
+                tr.TransactionDate = FEC_CommonUltils.getValueSafe(txn, 'TransactionDate');
+                tr.PostingDate = FEC_CommonUltils.getValueSafe(txn, 'PostingDate');
+                tr.Description = FEC_CommonUltils.getValueSafe(txn, 'Description');
                 tr.Amount = FEC_CommonUltils.xmlValToDecimal(txn, 'Amount');
-                tr.CurrencyCode = FEC_CommonUltils.getXmlValue(txn, 'Number'); // Updated field name
-                tr.ReferenceNumber = FEC_CommonUltils.getXmlValue(txn, 'ReferenceNumber');
-                tr.TransactionType = FEC_CommonUltils.getXmlValue(txn, 'TransactionType');
-                tr.MerchantName = FEC_CommonUltils.getXmlValue(txn, 'MerchantName');
-                tr.MCC = FEC_CommonUltils.getXmlValue(txn, 'MCC');
-                tr.Location = FEC_CommonUltils.getXmlValue(txn, 'Location');
+                tr.CurrencyCode = FEC_CommonUltils.getValueSafe(txn, 'CurrencyCode');
+                tr.ReferenceNumber = FEC_CommonUltils.getValueSafe(txn, 'ReferenceNumber');
+                tr.TransactionType = FEC_CommonUltils.getValueSafe(txn, 'TransactionType');
+                tr.MerchantName = FEC_CommonUltils.getValueSafe(txn, 'MerchantName');
+                tr.MCC = FEC_CommonUltils.getValueSafe(txn, 'MCC');
+                tr.Location = FEC_CommonUltils.getValueSafe(txn, 'Location');
+
                 result.Transactions.add(tr);
             }
         }
- 
+
         return result;
     }
  

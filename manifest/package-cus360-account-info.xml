@@ -30,6 +30,7 @@
 		<members>FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_IPPScheduleController</members>
 		<members>FEC_GetCardTransactions</members>
+		<members>FEC_MockData</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -133,6 +134,14 @@
 		<members>FEC_MSG_From_To_Invalid</members>
         <members>FEC_MSG_Parse_JSON_Error</members>
 		<members>FEC_MSG_EndDate_Must_StartDate</members>
+		<members>FEC_Unknown_Error</members>
+		<members>FEC_Total_IPP_Accrued_Interest_Label</members>
+		<members>FEC_Total_Per_Diem_Label</members>
+		<members>FEC_Total_Plan_Payment_Amount_Label</members>
+		<members>FEC_Total_Deferred_Interest_Label</members>
+		<members>FEC_Total_Accrued_Interest_Label</members>
+		<members>FEC_Total_Close_Fee_Amount_Label</members>
+		<members>FEC_Total_Current_Balance_Label</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
