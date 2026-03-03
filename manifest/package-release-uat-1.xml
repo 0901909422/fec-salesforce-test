@@ -1225,6 +1225,7 @@
 		<members>FEC_Sub_Decision_Label</members>
 		<members>FEC_MSG_No_IPP_Schedule_Data</members>
 		<members>FEC_MSG_No_Data_To_Display</members>
+		<members>FEC_Tab_Nature_Of_Case</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
