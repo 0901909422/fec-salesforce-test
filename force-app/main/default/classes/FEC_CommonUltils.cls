@@ -139,6 +139,19 @@ public with sharing class FEC_CommonUltils {
     return false;
   }
 
+  /**
+   * Kiểm tra AccountNumber có hợp lệ không (16 hoặc 19 chữ số)
+   * @param accountNumber - Account Number cần kiểm tra
+   * @return true nếu hợp lệ (16 hoặc 19 chữ số), false nếu không
+   */
+  public static Boolean isValidAccountNumber(String accountNumber) {
+    if (String.isBlank(accountNumber)) {
+      return false;
+    }
+    // AccountNumber phải có 16 hoặc 19 chữ số theo requirement của API GetCustomerList
+    return Pattern.matches('^\\d{16}$', accountNumber) || Pattern.matches('^\\d{19}$', accountNumber);
+  }
+
   public static Boolean isValidDateByFormat(String input) {
     if (String.isBlank(input))
       return false;
@@ -296,10 +309,34 @@ public with sharing class FEC_CommonUltils {
     return (c == null) ? null : c.getText();
   }
 
+  public static String getXmlValueHasNamspace(Dom.XmlNode n, String name) {
+    if (n == null) return null;
+
+    for (Dom.XmlNode child : n.getChildElements()) {
+        if (child.getName() == name) {
+            return child.getText();
+        }
+    }
+    return null;
+  }
+
   public static Decimal xmlValToDecimal(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
-    return String.isBlank(v) ? null : Decimal.valueOf(v);
-  }
+    if (String.isBlank(v)) {
+      return null;
+    }
+
+    v = v.trim(); 
+    if (v == '') {
+        return null;
+    }
+    try {
+        return Decimal.valueOf(v);
+    } catch (Exception e) {
+      System.debug('Invalid decimal for tag ' + name + ': [' + v + ']');
+      return null; 
+    }
+}
 
   public static Date xmlValToDate(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
@@ -314,6 +351,14 @@ public with sharing class FEC_CommonUltils {
       }
     }
     return null;
+  }
+
+  public static String getValueSafe(Dom.XmlNode parent,String nodeName) {
+    if (parent == null) return null;
+
+    Dom.XmlNode node = findChildByName(parent, nodeName);
+
+    return node == null ? null : node.getText();
   }
 
   public static Integer toInt(String v) {
@@ -351,10 +396,6 @@ public with sharing class FEC_CommonUltils {
    */
   public static Date parseDate(String dateStr) {
     if (String.isBlank(dateStr))
-      return null;
-
-    // Loại bỏ trường hợp 00000000 (không có ngày)
-    if (dateStr == '00000000' || dateStr == '0')
       return null;
 
     try {

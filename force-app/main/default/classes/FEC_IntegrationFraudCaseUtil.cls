@@ -83,6 +83,281 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
 
 
     /**
+     * Wrapper class used to build the request payload
+     * for Fraud Case integration service.
+     * 
+     * This class represents the structure of data
+     * that will be sent to the external Fraud Case SOAP API.
+     */
+    public class FraudCaseRequestWrapper {
+
+        /** 
+         * Channel name that triggers the fraud case 
+         * (e.g., PEGACSM, WEB, MOBILE).
+         */
+        public String channel;
+
+        /** 
+         * Internal channel code used by the external system.
+         */
+        public String channelCode;
+
+        /** 
+         * Type of fraud case (e.g., Transaction Fraud, Account Fraud).
+         */
+        public String caseType;
+
+        /** 
+         * Product type related to the fraud case 
+         * (e.g., Credit Card, Loan, Deposit).
+         */
+        public String productType;
+
+        /** 
+         * Main fraud category classification.
+         */
+        public String category;
+
+        /** 
+         * Sub category under the main fraud category.
+         */
+        public String subCategory;
+
+        /** 
+         * Sub category code used for mapping with external system.
+         */
+        public String subCode;
+
+        /** 
+         * Additional remarks or description of the fraud case.
+         */
+        public String remarks;
+
+        /** 
+         * Type of user creating the case 
+         * (e.g., Customer, Agent, Admin).
+         */
+        public String userType;
+
+       /** 
+         * Related Service Case ID (if fraud case is created 
+         * from an existing Service Case).
+         */
+        public String caseId;
+
+        /** 
+         * Related Service Case ID (if fraud case is created 
+         * from an existing Service Case).
+         */
+        public String serviceCaseId;
+
+        /** 
+         * Email address of the user who created the case.
+         */
+        public String creatorEmail;       
+
+        /** 
+         * List of additional key-value information 
+         * required by the integration service.
+         */
+        public List<FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element> additionalInfos;
+        public List<FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element> additionalInfoOrginal;
+    }
+
+    /**
+     * Builds and returns a CategorySubCodeDTO object.
+     *
+     * This factory method initializes a new CategorySubCodeDTO and assigns
+     * all provided parameters to the corresponding DTO fields.
+     *
+     * Used to standardize DTO creation and avoid repetitive field assignments
+     * throughout the codebase.
+     *
+     * @param id           Unique identifier of the category sub code
+     * @param displayName  Display label shown to users
+     * @param parentId     Parent category ID (if hierarchical structure exists)
+     * @param value        Internal value/code of the sub category
+     * @param mappingId    External system mapping identifier
+     * @param groupName    Logical group name of the category
+     * @return             Fully populated CategorySubCodeDTO instance
+     */
+    public static CategorySubCodeDTO buildDTO(
+    String id,
+    String displayName,
+    String parentId,
+    String value,
+    String mappingId,
+    String groupName
+    ) {
+        CategorySubCodeDTO dto = new CategorySubCodeDTO();
+        dto.id = id;
+        dto.displayName = displayName;
+        dto.parentId = parentId;
+        dto.value = value;
+        dto.mappingId = mappingId;
+        dto.groupName = groupName;
+        return dto;
+    }
+    public class CategorySubCodeDTO {
+        @AuraEnabled public String id;              // Record Id
+        @AuraEnabled public String value;        // CATEGORY / SUBCATEGORY / SUBCODE
+        @AuraEnabled public String displayName; // Name by language
+        @AuraEnabled public String mappingId;    // Code
+        @AuraEnabled public String parentId;     // Parent hierarchy Id
+        @AuraEnabled public String groupName;    // Optional grouping
+    }
+    public class CategoryMappingResponse {
+
+        @AuraEnabled public List<Object> categoryAll;
+        @AuraEnabled public List<Object> subCategoriesAll;
+        @AuraEnabled public List<Object> subCodesAll;
+    
+        public CategoryMappingResponse() {
+            categoryAll = new List<Object>();
+            subCategoriesAll = new List<Object>();
+            subCodesAll = new List<Object>();
+        }
+    }
+
+    /**
+     * Root DTO used for Fraud Service Task screen.
+     *
+     * This object aggregates all related information:
+     * - Customer details
+     * - Fraud case information
+     * - Task information
+     * - Case metadata
+     * - Remarks history
+     * - Related service cases
+     * - Notification records
+     *
+     * Used for LWC/Aura data transfer.
+     */
+    public class ServiceFraudTaskDTO {
+
+        @AuraEnabled public CustomerInfo customer;                  // Customer profile information
+        @AuraEnabled public FraudInfo fraud;                        // Current fraud case details
+        @AuraEnabled public List<FraudInfo> fraudCasesList;         // List of related fraud cases
+        @AuraEnabled public TaskInfo task;                          // Task information linked to fraud case
+        @AuraEnabled public CaseInfo caseInfo;                      // Salesforce Case information
+        @AuraEnabled public List<RemarksInfo> remarksInfo;          // Case/Fraud remarks history
+        @AuraEnabled public List<ServiceCasesInfo> serviceCasesInfo;// Related service case records
+        @AuraEnabled public List<NotificationInfo> notificationInfo;// Notification tracking records
+    }
+    /**
+     * DTO representing customer profile information
+     * associated with the fraud case.
+     */
+    public class CustomerInfo {
+
+        @AuraEnabled public String customerName;     // Full name of customer
+        @AuraEnabled public String contractNumber;   // Contract number
+        @AuraEnabled public String nationalId;       // National ID / Citizen ID
+        @AuraEnabled public String primaryPhone;     // Primary contact number
+        @AuraEnabled public String applicationId;    // Loan/Application ID
+        @AuraEnabled public String productType;      // Product type (Loan, Credit Card, etc.)
+        @AuraEnabled public String accountNumber;    // Account number
+    }
+
+    /**
+     * DTO representing fraud case details.
+     */
+    public class FraudInfo {
+
+        @AuraEnabled public String fraudCaseId;      // External fraud case ID
+        @AuraEnabled public String fraudCategory;    // Main fraud category
+        @AuraEnabled public String fraudSubCategory; // Fraud sub category
+        @AuraEnabled public String createdDate;      // Fraud case creation date
+        @AuraEnabled public String owner;            // Assigned owner
+        @AuraEnabled public String referenceId;      // Reference ID from external system
+        @AuraEnabled public String csOwner;          // Customer service owner
+        @AuraEnabled public String remarks;          // Fraud remarks
+        @AuraEnabled public String subCode;          // Sub-code classification
+        @AuraEnabled public String caseStatus;       // Current case status
+        @AuraEnabled public String updateTime;       // Last updated timestamp
+    }
+
+    /**
+     * DTO representing task information
+     * associated with fraud handling.
+     */
+    public class TaskInfo {
+
+        @AuraEnabled public String taskId;           // Task record ID
+        @AuraEnabled public String taskStatus;       // Current task status
+        @AuraEnabled public String urgency;          // Task priority/urgency
+        @AuraEnabled public String deadline;         // Task deadline
+        @AuraEnabled public String createdDate;      // Task creation date
+        @AuraEnabled public String applicationId;    // Related application ID
+        @AuraEnabled public String taskUIC;          // Task UIC code
+        @AuraEnabled public String taskName;         // Task display name
+        @AuraEnabled public String taskType;         // Task type classification
+        @AuraEnabled public String taskConclusion;   // Final conclusion/result
+    }
+
+    /**
+     * DTO representing Salesforce Case metadata.
+     */
+    public class CaseInfo {
+
+        @AuraEnabled public String owner;            // Case owner
+        @AuraEnabled public String createdDate;      // Case creation date
+        @AuraEnabled public String caseId;           // Salesforce Case ID
+        @AuraEnabled public String caseStatus;       // Case status
+        @AuraEnabled public String accountOwner;     // Account owner
+        @AuraEnabled public String caseGoal;         // Case objective/goal
+        @AuraEnabled public String lastUpdateDate;   // Last modified date
+        @AuraEnabled public String createdBy;        // Creator name
+        @AuraEnabled public String caseChannel;      // Channel (PEGACSM, Salesforce, etc.)
+        @AuraEnabled public String lastUpdateBy;     // Last updated by
+    }
+
+    /**
+     * DTO representing remarks or processing history
+     * related to fraud case or task.
+     */
+    public class RemarksInfo {
+
+        @AuraEnabled public String id;               // Remark record ID
+        @AuraEnabled public String actor;            // User who performed action
+        @AuraEnabled public String remarks;          // Remark content
+        @AuraEnabled public String processingStatus; // Processing status at time of remark
+        @AuraEnabled public String decision;         // Decision made
+        @AuraEnabled public String createdBy;        // Creator name
+        @AuraEnabled public String createdDate;      // Creation timestamp
+    }
+
+    /**
+     * DTO representing related service case records.
+     */
+    public class ServiceCasesInfo {
+
+        @AuraEnabled public String caseId;        // Fraud case ID
+        @AuraEnabled public String serviceCaseId; // Related service case ID
+        @AuraEnabled public String caseType;      // Case type
+        @AuraEnabled public String caseStatus;    // Case status
+        @AuraEnabled public String createdBy;     // Creator name
+        @AuraEnabled public String resolvedBy;    // Resolver name
+        @AuraEnabled public String createdOn;     // Created date
+        @AuraEnabled public String resolvedOn;    // Resolved date
+    }
+
+    /**
+     * DTO representing notification tracking information
+     * (SMS, Email, System notification, etc.).
+     */
+    public class NotificationInfo {
+
+        @AuraEnabled public String id;                    // Notification record ID
+        @AuraEnabled public String notificationType;      // Type (SMS, Email, Push)
+        @AuraEnabled public String templateName;          // Template used
+        @AuraEnabled public String channel;               // Delivery channel
+        @AuraEnabled public String recipient;             // Recipient contact
+        @AuraEnabled public String status;                // Delivery status
+        @AuraEnabled public String sentTime;              // Time sent
+        @AuraEnabled public String actualDeliveryTime;    // Actual delivery timestamp
+    }
+    /**
      * Wrapper class that represents the result of extracting a fraud payload.
      *
      * This object separates the incoming request into two independent parts:
@@ -176,6 +451,336 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
 
         insert logRec;
     }
+
+    /**
+     * Extracts and maps incoming integration payload data
+     * into a FraudCaseRequestWrapper object.
+     *
+     * This method:
+     * - Reads values from the generic payload map
+     * - Maps them to strongly-typed wrapper fields
+     * - Applies default values when necessary
+     * - Builds AdditionalInfo elements for SOAP request
+     *
+     * @param payload Raw integration payload (Map<String, Object>)
+     * @return FraudCaseRequestWrapper fully populated request object
+     */
+    public static FraudCaseRequestWrapper extractPayload(Map<String,Object> payload) {
+
+        // Load constant field names used for payload mapping
+        FEC_FraudConstantCommon.IntegrationPayloadField c =
+            new FEC_FraudConstantCommon.IntegrationPayloadField();
+        FEC_FraudConstantCommon.IntegrationFieldType fileType =
+        new FEC_FraudConstantCommon.IntegrationFieldType();
+            
+
+        // Initialize wrapper object
+        FraudCaseRequestWrapper w = new FraudCaseRequestWrapper();
+
+        // Map basic fraud case information
+        //w.channel      = (String) payload.get(c.CHANNEL);
+        w.channel      = FEC_FraudConstantCommon.SYSTEM_CHANNEL;
+        w.caseType     = (String) payload.get(c.CASE_TYPE);
+        w.productType  = (String) payload.get(c.PRODUCT_TYPE);
+        w.category     = (String) payload.get(c.CATEGORY);
+        w.subCategory  = (String) payload.get(c.SUBCATEGORY);
+        w.subCode      = (String) payload.get(c.SUBCODE);
+        w.remarks      = safeText((String) payload.get(c.REMARKS));
+        w.userType     = (String) payload.get(c.USER_TYPE);
+        w.caseId       = (String) payload.get(c.FRAUD_CASEID);
+       
+
+        // Automatically assign current user's email as creator
+        w.creatorEmail = UserInfo.getUserEmail();
+
+        // Determine Service Case ID:
+        // - Use provided value if available
+        // - Otherwise generate a random one
+        String tmpServiceCaseId = (String) payload.get(c.SERVICE_CASEID);
+        w.serviceCaseId = String.isBlank(tmpServiceCaseId)
+            ? randomServiceCaseId()
+            : tmpServiceCaseId;
+
+        // Determine Channel Integration Code:
+        // - Use provided value if available
+        // - Otherwise fallback to default constant
+        String tmpChannel = (String) payload.get(c.CHANNEL_INTEGRATION_CODE);
+        w.channelCode = String.isBlank(tmpChannel)
+            ? FEC_FraudConstantCommon.DEFAULT_CHANNEL_INTEGRATION_CODE
+            : tmpChannel;
+
+        // Initialize AdditionalInfo list for SOAP request
+        w.additionalInfos = new List<FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element>();      
+        w.additionalInfoOrginal =new List<FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element>(); 
+        // Extract AdditionalInfo entries if present
+        List<Object> rawList = (List<Object>) payload.get(c.ADDITIONAL_INFO);
+        
+        if (rawList != null) {
+            for (Object o : rawList) {
+        
+                Map<String,Object> row =
+                    (Map<String,Object>) JSON.deserializeUntyped(
+                        JSON.serialize(o)
+                    );
+        
+                FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element ai =
+                    new FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element();
+                
+                FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element originalAI =
+                new FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element();              
+                
+                String infoValue = (String) row.get(c.INFO_VALUE);
+                originalAI.ID = (String) row.get(c.INFO_ID);
+                originalAI.Value = infoValue;  
+                w.additionalInfoOrginal.add(originalAI);
+                 //Check Attached file
+                if((String) row.get(c.INFO_TYPE) == fileType.TYPE_FILE) {
+                    Integer firstPipe = infoValue.indexOf('|');
+                    Integer secondPipe = infoValue.indexOf('|', firstPipe + 1);
+                    if (firstPipe > 0 && secondPipe > firstPipe) {
+                        String fileName  = infoValue.substring(0, firstPipe);
+                        String extension = infoValue.substring(firstPipe + 1, secondPipe);
+                        String base64Val = infoValue.substring(secondPipe + 1);
+                        String convertZipFile = createZipBase64(fileName, base64Val);
+                        if (convertZipFile != null) {
+                            infoValue =
+                                fileName + '|' +
+                                extension + '|' +
+                                convertZipFile;
+                        }
+                    }
+                    
+                }
+                
+                ai.ID    = (String) row.get(c.INFO_ID);
+                ai.Value = infoValue;
+        
+                w.additionalInfos.add(ai);
+            }
+            //Add ReferenceID
+            FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element ai =
+                        new FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element();
+            ai.ID    = c.INFO_REFERENCE_ID;
+            ai.Value = w.serviceCaseId;
+            w.additionalInfos.add(ai);
+            //Check caseID existing for update
+            if (String.isNotBlank(w.caseId)) {
+        
+                FEC_Integration_Case__c recInfo =
+                    getIntegrationCaseById(w.caseId);
+        
+                log('Check caseID existing for update: ' +
+                    JSON.serializePretty(recInfo));
+        
+                if (recInfo != null) {
+                
+                    ai.ID    = c.INFO_CASE_ID;
+                    ai.Value = w.caseId;
+        
+                    w.additionalInfos.add(ai);
+                }
+            }
+        }
+
+        return w;
+    }
+   
+
+    private static String createZipBase64(String fileName, String base64Data) {
+
+        Blob originalBlob = EncodingUtil.base64Decode(base64Data);
+    
+        // Create zip
+        Compression.ZipWriter writer = new Compression.ZipWriter();
+    
+        writer.addEntry(fileName, originalBlob);
+    
+        Blob zipBlob = writer.getArchive();
+    
+        // Convert zip to base64
+        return EncodingUtil.base64Encode(zipBlob);
+    }
+
+    /**
+     * Builds the SysType object required by the Fraud Case SOAP service.
+     *
+     * This method constructs the system-level metadata section
+     * of the SOAP request, including:
+     * - Channel information
+     * - Unique transaction ID
+     * - Current timestamp
+     *
+     * @param w FraudCaseRequestWrapper containing request data
+     * @return FEC_IntegrationSoapFraudcaseService.SysType populated system object
+     */
+    public static FEC_IntegrationSoapFraudcaseService.SysType 
+    buildSys(FraudCaseRequestWrapper w) {
+
+        // Initialize SysType object for SOAP request
+        FEC_IntegrationSoapFraudcaseService.SysType sys =
+            new FEC_IntegrationSoapFraudcaseService.SysType();
+
+        // Set channel from request wrapper
+        sys.Channel = w.channel;
+
+        // Generate unique transaction ID using current timestamp (milliseconds)
+        sys.TransactionID = generateUUID();
+
+        // Set current system date-time
+        sys.DateTime_x = System.now();
+
+        return sys;
+    }
+
+    public static String randomTransactionId() {
+        Long seed = Crypto.getRandomInteger();           // Always valid
+        Blob input = Blob.valueOf(String.valueOf(seed)); // Convert Long → String → Blob
+        Blob digest = Crypto.generateDigest('SHA1', input);
+        return EncodingUtil.convertToHex(digest);        // Return hex string
+    }
+    
+
+
+    public static String randomCaseId() {
+        Integer raw = Math.abs(Crypto.getRandomInteger());
+        Integer rnd = Math.mod(raw, 1000000);  // 0–999999, no error
+        return 'FH-' + String.valueOf(rnd).leftPad(6, '0');
+    }
+
+
+    public static String nowAsXmlDateTime() {
+        return Datetime.now().formatGMT('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
+    }
+
+    /**
+     * Builds the CustomerInfo_element section
+     * for the Fraud Case SOAP request.
+     *
+     * This method maps customer-related information
+     * from the FraudCaseRequestWrapper into the
+     * corresponding SOAP service structure.
+     *
+     * @param w FraudCaseRequestWrapper containing request data
+     * @return FEC_IntegrationSoapFraudcaseService.CustomerInfo_element
+     *         populated customer information object
+     */
+    public static FEC_IntegrationSoapFraudcaseService.CustomerInfo_element
+    buildCustomer(FraudCaseRequestWrapper w) {
+
+        // Initialize CustomerInfo element for SOAP request
+        FEC_IntegrationSoapFraudcaseService.CustomerInfo_element cust =
+            new FEC_IntegrationSoapFraudcaseService.CustomerInfo_element();
+
+        // Map user type (e.g., Customer, Agent, Admin)
+        cust.UserType = w.userType;
+
+        return cust;
+    }
+
+    public static FEC_IntegrationSoapFraudcaseService.CaseInfoType
+    buildCCaseInfo(FraudCaseRequestWrapper w) {
+       
+        FEC_IntegrationSoapFraudcaseService.CaseInfoType caseIfo =
+            new FEC_IntegrationSoapFraudcaseService.CaseInfoType();
+        caseIfo.CaseID = w.caseId;
+        caseIfo.Remarks = w.remarks;       
+
+        return caseIfo;
+    }
+
+    /**
+     * Builds the RequestInfo_element section
+     * for the Fraud Case SOAP request.
+     *
+     * This method maps fraud case request details
+     * from the FraudCaseRequestWrapper into the
+     * corresponding SOAP request structure.
+     *
+     * Mapped fields include:
+     * - Case classification (type, category, subcategory)
+     * - Product information
+     * - Remarks/description
+     * - Additional key-value information
+     *
+     * @param w FraudCaseRequestWrapper containing request data
+     * @return FEC_IntegrationSoapFraudcaseService.RequestInfo_element
+     *         populated request information object
+     */
+    public static FEC_IntegrationSoapFraudcaseService.RequestInfo_element
+    buildRequest(FraudCaseRequestWrapper w) {
+
+        // Initialize RequestInfo element for SOAP request
+        FEC_IntegrationSoapFraudcaseService.RequestInfo_element req =
+            new FEC_IntegrationSoapFraudcaseService.RequestInfo_element();
+
+        // Map fraud classification fields
+        req.CaseType    = w.caseType;
+        req.ProductType = w.productType;
+        req.Category    = w.category;
+        req.SubCategory = w.subCategory;
+        req.SubCode     = w.subCode;
+
+        // Map case description / remarks
+        req.Remarks = w.remarks;
+
+        // Map additional key-value information (if any)
+        req.AdditionalInfo = w.additionalInfos;
+
+        return req;
+    }
+
+    public static FEC_IntegrationSoapFraudcaseService.RequestInfo_element
+    buildRequestOriginal(FraudCaseRequestWrapper w) {
+
+        // Initialize RequestInfo element for SOAP request
+        FEC_IntegrationSoapFraudcaseService.RequestInfo_element req =
+            new FEC_IntegrationSoapFraudcaseService.RequestInfo_element();
+
+        // Map fraud classification fields
+        req.CaseType    = w.caseType;
+        req.ProductType = w.productType;
+        req.Category    = w.category;
+        req.SubCategory = w.subCategory;
+        req.SubCode     = w.subCode;
+
+        // Map case description / remarks
+        req.Remarks = w.remarks;
+
+        // Map additional key-value information (if any)
+        req.AdditionalInfo = w.additionalInfoOrginal;
+
+        return req;
+    }
+
+    /**
+     * Builds the CreatorInfoType section
+     * for the Fraud Case SOAP request.
+     *
+     * This method maps creator-related metadata
+     * from the FraudCaseRequestWrapper into the
+     * corresponding SOAP structure.
+     *
+     * Typically, this represents the user who
+     * initiated the fraud case creation.
+     *
+     * @param w FraudCaseRequestWrapper containing request data
+     * @return FEC_IntegrationSoapFraudcaseService.CreatorInfoType
+     *         populated creator information object
+     */
+    public static FEC_IntegrationSoapFraudcaseService.CreatorInfoType
+    buildCreator(FraudCaseRequestWrapper w) {
+
+        // Initialize CreatorInfoType element for SOAP request
+        FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator =
+            new FEC_IntegrationSoapFraudcaseService.CreatorInfoType();
+
+        // Map creator email (current Salesforce user)
+        creator.CreatorEmail = w.creatorEmail;
+
+        return creator;
+    }
+
+
     /**
      * Converts a Pega-formatted ISO 8601 datetime string into a Salesforce Datetime value.
      *
@@ -211,6 +816,36 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
     
         return Datetime.valueOfGmt(cleaned);
     }
+
+    /**
+     * Builds a namespaced XML tag with escaped value.
+     *
+     * This helper method:
+     * - Skips tag creation if value is blank
+     * - Escapes XML special characters
+     * - Wraps the value inside <urn:tagName>...</ns1:tagName>
+     *
+     * Example:
+     * buildTag('Channel', 'WEB')
+     * → <urn:Channel>WEB</ns1:Channel>
+     *
+     * @param tagName XML tag name (without namespace prefix)
+     * @param value   Tag value to be inserted
+     * @return Properly formatted XML tag string or empty string if value is blank
+     */
+    public static String buildTag(String tagName, String value) {
+
+        // Do not generate tag if value is null/blank
+        if (String.isBlank(value)) {
+            return '';
+        }
+
+        // Wrap escaped value inside namespaced tag
+        return '<ns1:' + tagName + '>' +
+                escapeXml(value) +
+            '</ns1:' + tagName + '>';
+    }
+
 
     /**
      * Extracts the CaseID value from a response XML string.
@@ -253,11 +888,36 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
      * @param input  Raw text input
      * @return       Original or truncated text within Salesforce limits
      */
-    private static String safeText(String input) {
+    public static String safeText(String input) {
         if (String.isBlank(input)) return input;
         return input.length() > FEC_FraudConstantCommon.NUMBER_MAX_LENGTH ? input.substring(0, FEC_FraudConstantCommon.NUMBER_MAX_LENGTH) : input;
     }
-    
+
+   /**
+     * Generates a random Service Case ID.
+     *
+     * Format: S-XXXXXX
+     * - Prefix: "S-"
+     * - 6-digit zero-padded number (000000 – 999999)
+     *
+     * Uses Crypto.getRandomInteger() to ensure better randomness
+     * compared to Math.random().
+     *
+     * @return A randomly generated Service Case ID string.
+     */
+    private static String randomServiceCaseId() {
+
+        // Generate a random integer (can be negative)
+        Integer raw = Math.abs(Crypto.getRandomInteger());
+
+        // Limit value to range 0–999999 to ensure 6 digits maximum
+        Integer rnd = Math.mod(raw, 1000000);
+
+        // Format number to always have 6 digits with leading zeros
+        return 'S-' + String.valueOf(rnd).leftPad(6, '0');
+    }
+
+
 
     /**
      * Extracts business metadata and embedded XML from the incoming fraud payload.
@@ -639,6 +1299,35 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
             rawDate.substring(4, 6) + '/' +
             rawDate.substring(0, 4);
     }
+
+
+    /**
+     * Retrieves an existing FEC_Integration_Case__c record
+     * by external Fraud Case ID.
+     *
+     * This method queries the integration case object using
+     * the provided external Case ID and returns the first match.
+     *
+     * @param caseId External Fraud Case ID (FEC_CaseID__c)
+     * @return FEC_Integration_Case__c record if found,
+     *         otherwise null
+     */
+    public static FEC_Integration_Case__c getIntegrationCaseById(String caseId) {
+
+        // Query integration case by external Case ID
+        List<FEC_Integration_Case__c> existing = [
+            SELECT Id,
+                FEC_CaseID__c,
+                FEC_Service_Case_ID__c
+            FROM FEC_Integration_Case__c
+            WHERE FEC_CaseID__c = :caseId
+            LIMIT 1
+        ];
+
+        // Return first record if exists, otherwise return null
+        return existing.isEmpty() ? null : existing[0];
+    }
+
 
     public static String generateUUID() {
         Blob b = Crypto.generateAesKey(128);

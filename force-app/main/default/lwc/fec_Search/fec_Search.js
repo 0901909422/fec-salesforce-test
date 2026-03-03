@@ -7,19 +7,14 @@ import {
 import Toast from "lightning/toast";
 import { refreshApex } from "@salesforce/apex";
 import { RefreshEvent } from "lightning/refresh";
-import FORM_FACTOR from "@salesforce/client/formFactor";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getCase from "@salesforce/apex/FEC_SearchController.getCase";
 import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
-import createCustomerCase from "@salesforce/apex/FEC_SearchController.createCustomerCase";
 import SkipModal from "c/fec_SkipModal";
 import {
-  subscribe,
-  unsubscribe,
   publish,
-  APPLICATION_SCOPE,
   MessageContext,
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
@@ -28,7 +23,6 @@ import {
   getFocusedTabInfo,
   refreshTab,
 } from "lightning/platformWorkspaceApi";
-import MyModal from "c/fec_SendNotification";
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',

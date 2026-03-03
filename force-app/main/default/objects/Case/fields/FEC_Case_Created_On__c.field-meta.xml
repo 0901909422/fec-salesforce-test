@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Case_Created_On__c</fullName>
+    <description>Hiển thị ngày giờ tạo Case
+Trường tạo mới để hiển thị trên Case details và interaction details do trường standard không hiển thị được đúng  yêu cầu</description>
     <formula>IF(
     OR(
         RecordType.DeveloperName = &quot;Customer_Case&quot;,

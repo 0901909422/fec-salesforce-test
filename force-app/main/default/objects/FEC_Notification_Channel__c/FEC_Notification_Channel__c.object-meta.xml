@@ -159,7 +159,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Notification Channels</label>
     <nameField>
-        <label>Noti Channel Name</label>
+        <label>Notification Channel Name</label>
         <trackHistory>true</trackHistory>
         <type>Text</type>
     </nameField>

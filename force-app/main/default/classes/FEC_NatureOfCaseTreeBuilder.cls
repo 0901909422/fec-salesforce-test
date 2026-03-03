@@ -5,21 +5,25 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
      */
     public static List<FEC_NatureOfCaseTreeItem> buildTree(List<FEC_MDM_Nature_Of_Case__c> listNOC) {
         List<FEC_NatureOfCaseTreeItem> treeItems = new List<FEC_NatureOfCaseTreeItem>();
-        if (listNOC == null || listNOC.isEmpty()) return treeItems;
+        if (listNOC == null || listNOC.isEmpty()) {
+            System.debug('===== BUILDER DEBUG: No NOC records to build tree from');
+            return treeItems;
+        }
 
         Map<String, FEC_NatureOfCaseTreeItem> mapProductType = new Map<String, FEC_NatureOfCaseTreeItem>();
+        Integer skippedCount = 0;
 
         for (FEC_MDM_Nature_Of_Case__c noc : listNOC) {
-            String productTypeCode = noc.FEC_Product_Type_Name__r?.FEC_Code__c;
-            String businessProcessCode = noc.FEC_Business_Process_Name__r?.FEC_Code__c;
-            String categoryCode = noc.FEC_Category_Name__r?.FEC_Code__c;
-            String subCategoryCode = noc.FEC_Sub_Category_Name__r?.FEC_Code__c;
+            String productTypeCode = noc.FEC_Product_Type__r?.FEC_Code__c;
+            String businessProcessCode = noc.FEC_Business_Process__r?.FEC_Code__c;
+            String categoryCode = noc.FEC_Category__r?.FEC_Code__c;
+            String subCategoryCode = noc.FEC_Sub_Category__r?.FEC_Code__c;
             String subCodeCode = noc.FEC_Sub_Code__r?.FEC_Code__c;
 
-            String ptId = noc.FEC_Product_Type_Name__c;
-            String bpId = noc.FEC_Business_Process_Name__c;
-            String catId = noc.FEC_Category_Name__c;
-            String scatId = noc.FEC_Sub_Category_Name__c;
+            String ptId = noc.FEC_Product_Type__c;
+            String bpId = noc.FEC_Business_Process__c;
+            String catId = noc.FEC_Category__c;
+            String scatId = noc.FEC_Sub_Category__c;
             String scodeId = noc.FEC_Sub_Code__c;
 
             String ptKey = FEC_Constants.PT_PREFIX + ptId;
@@ -36,14 +40,14 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         productTypeCode,
                         ptKey,
                         new List<FEC_NatureOfCaseTreeItem>(),
-                        noc.FEC_Product_Type_Name__r.FEC_Alias__c,
-                        noc.FEC_Product_Type_Name__r.FEC_Code__c,
-                        noc.FEC_Product_Type_Name__r.FEC_Name_VN__c,
-                        noc.FEC_Product_Type_Name__r.FEC_Pos_Order__c,
-                        noc.FEC_Product_Type_Name__r.FEC_Status__c,
-                        noc.FEC_Product_Type_Name__r.Process_Change_Status__c,
-                        noc.FEC_Product_Type_Name__r.Name,
-                        noc.FEC_Product_Type_Name__c,
+                        noc.FEC_Product_Type__r.FEC_Alias__c,
+                        noc.FEC_Product_Type__r.FEC_Code__c,
+                        noc.FEC_Product_Type__r.FEC_Name_VN__c,
+                        noc.FEC_Product_Type__r.FEC_Pos_Order__c,
+                        noc.FEC_Product_Type__r.FEC_Active__c,
+                        noc.FEC_Product_Type__r.Process_Change_Status__c,
+                        noc.FEC_Product_Type__r.Name,
+                        noc.FEC_Product_Type__c,
                         noc.FEC_Customer_Type__c,
                         noc.Id,
                         FEC_Constants.LABEL_PRODUCT_TYPE
@@ -52,10 +56,14 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                 } else {
                     ptNode = mapProductType.get(productTypeCode);
                 }
-                if (noc.FEC_Product_Type_Name__r.FEC_Status__c == false) {
+                if (noc.FEC_Product_Type__r.FEC_Active__c == false) {
+                    System.debug('===== BUILDER DEBUG: Skipping inactive Product Type: ' + productTypeCode);
+                    skippedCount++;
                     continue;
                 }
             } else {
+                System.debug('===== BUILDER DEBUG: Skipping NOC with null Product Type. NOC Id: ' + noc.Id);
+                skippedCount++;
                 continue;
             }
 
@@ -70,14 +78,14 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         businessProcessCode,
                         bpsKey,
                         new List<FEC_NatureOfCaseTreeItem>(),
-                        noc.FEC_Business_Process_Name__r.FEC_Alias__c,
-                        noc.FEC_Business_Process_Name__r.FEC_Code__c,
-                        noc.FEC_Business_Process_Name__r.FEC_Name_VN__c,
-                        noc.FEC_Business_Process_Name__r.FEC_Pos_Order__c,
-                        noc.FEC_Business_Process_Name__r.FEC_Status__c,
-                        noc.FEC_Business_Process_Name__r.Process_Change_Status__c,
-                        noc.FEC_Business_Process_Name__r.Name,
-                        noc.FEC_Business_Process_Name__c,
+                        noc.FEC_Business_Process__r.FEC_Alias__c,
+                        noc.FEC_Business_Process__r.FEC_Code__c,
+                        noc.FEC_Business_Process__r.FEC_Name_VN__c,
+                        noc.FEC_Business_Process__r.FEC_Pos_Order__c,
+                        noc.FEC_Business_Process__r.FEC_Active__c,
+                        noc.FEC_Business_Process__r.Process_Change_Status__c,
+                        noc.FEC_Business_Process__r.Name,
+                        noc.FEC_Business_Process__c,
                         noc.FEC_Customer_Type__c,
                         noc.Id,
                         FEC_Constants.LABEL_BUSINESS_PROCESS
@@ -86,7 +94,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                 } else {
                     bpNode = ptNode.mapChilds.get(bpKey);
                 }
-                if (noc.FEC_Business_Process_Name__r.FEC_Status__c == false) {
+                if (noc.FEC_Business_Process__r.FEC_Active__c == false) {
                     continue;
                 }
             } else {
@@ -104,14 +112,14 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         categoryCode,
                         cataKey,
                         new List<FEC_NatureOfCaseTreeItem>(),
-                        noc.FEC_Category_Name__r.FEC_Alias__c,
-                        noc.FEC_Category_Name__r.FEC_Code__c,
-                        noc.FEC_Category_Name__r.FEC_Name_VN__c,
-                        noc.FEC_Category_Name__r.FEC_Pos_Order__c,
-                        noc.FEC_Category_Name__r.FEC_Status__c,
-                        noc.FEC_Category_Name__r.Process_Change_Status__c,
-                        noc.FEC_Category_Name__r.Name,
-                        noc.FEC_Category_Name__c,
+                        noc.FEC_Category__r.FEC_Alias__c,
+                        noc.FEC_Category__r.FEC_Code__c,
+                        noc.FEC_Category__r.FEC_Name_VN__c,
+                        noc.FEC_Category__r.FEC_Pos_Order__c,
+                        noc.FEC_Category__r.FEC_Active__c,
+                        noc.FEC_Category__r.Process_Change_Status__c,
+                        noc.FEC_Category__r.Name,
+                        noc.FEC_Category__c,
                         noc.FEC_Customer_Type__c,
                         noc.Id,
                         FEC_Constants.LABEL_CATEGORY
@@ -120,7 +128,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                 } else {
                     catNode = bpNode.mapChilds.get(catKey);
                 }
-                if (noc.FEC_Category_Name__r.FEC_Status__c == false) {
+                if (noc.FEC_Category__r.FEC_Active__c == false) {
                     continue;
                 }
             } else {
@@ -138,14 +146,14 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         subCategoryCode,
                         scatKey,
                         new List<FEC_NatureOfCaseTreeItem>(),
-                        noc.FEC_Sub_Category_Name__r.FEC_Alias__c,
-                        noc.FEC_Sub_Category_Name__r.FEC_Code__c,
-                        noc.FEC_Sub_Category_Name__r.FEC_Name_VN__c,
-                        noc.FEC_Sub_Category_Name__r.FEC_Pos_Order__c,
-                        noc.FEC_Sub_Category_Name__r.FEC_Status__c,
-                        noc.FEC_Sub_Category_Name__r.Process_Change_Status__c,
-                        noc.FEC_Sub_Category_Name__r.Name,
-                        noc.FEC_Sub_Category_Name__c,
+                        noc.FEC_Sub_Category__r.FEC_Alias__c,
+                        noc.FEC_Sub_Category__r.FEC_Code__c,
+                        noc.FEC_Sub_Category__r.FEC_Name_VN__c,
+                        noc.FEC_Sub_Category__r.FEC_Pos_Order__c,
+                        noc.FEC_Sub_Category__r.FEC_Active__c,
+                        noc.FEC_Sub_Category__r.Process_Change_Status__c,
+                        noc.FEC_Sub_Category__r.Name,
+                        noc.FEC_Sub_Category__c,
                         noc.FEC_Customer_Type__c,
                         noc.Id,
                         FEC_Constants.LABEL_SUB_CATEGORY
@@ -154,7 +162,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                 } else {
                     subCatNode = catNode.mapChilds.get(subCatKey);
                 }
-                if (noc.FEC_Sub_Category_Name__r.FEC_Status__c == false) {
+                if (noc.FEC_Sub_Category__r.FEC_Active__c == false) {
                     continue;
                 }
             } else {
@@ -175,7 +183,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         noc.FEC_Sub_Code__r.FEC_Code__c,
                         noc.FEC_Sub_Code__r.FEC_Name_VN__c,
                         noc.FEC_Sub_Code__r.FEC_Pos_Order__c,
-                        noc.FEC_Sub_Code__r.FEC_Status__c,
+                        noc.FEC_Sub_Code__r.FEC_Active__c,
                         noc.FEC_Sub_Code__r.Process_Change_Status__c,
                         noc.FEC_Sub_Code__r.Name,
                         noc.FEC_Sub_Code__c,
@@ -185,7 +193,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                     );
                     subCatNode.mapChilds.put(scKey, scNode);
                 }
-                if (noc.FEC_Sub_Code__r.FEC_Status__c == false) {
+                if (noc.FEC_Sub_Code__r.FEC_Active__c == false) {
                     continue;
                 }
             }
@@ -196,6 +204,11 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
             ptItem.convertMapToList();
             treeItems.add(ptItem);
         }
+        
+        System.debug('===== BUILDER DEBUG: Total records processed: ' + listNOC.size());
+        System.debug('===== BUILDER DEBUG: Total records skipped: ' + skippedCount);
+        System.debug('===== BUILDER DEBUG: Total tree nodes created: ' + treeItems.size());
+        
         return treeItems;
     }
 }
