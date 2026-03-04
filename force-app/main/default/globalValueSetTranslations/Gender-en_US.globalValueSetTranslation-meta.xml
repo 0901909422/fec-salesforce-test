@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GlobalValueSetTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
     <valueTranslation>
-        <masterLabel>Agree</masterLabel>
-        <translation>Đồng ý</translation>
+        <masterLabel>Female</masterLabel>
+        <translation>Nữ</translation>
     </valueTranslation>
     <valueTranslation>
-        <masterLabel>Disagree</masterLabel>
-        <translation>Không đồng ý</translation>
+        <masterLabel>Male</masterLabel>
+        <translation>Nam</translation>
     </valueTranslation>
 </GlobalValueSetTranslation>
