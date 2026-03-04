@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ListView xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_CS_Support_Case</fullName>
+    <fullName>FEC_DQ_Payment_Case</fullName>
     <columns>FEC_Link_ID__c</columns>
     <columns>CASES.STATUS</columns>
     <columns>FEC_Channel__c</columns>
@@ -23,13 +23,10 @@
         <operation>equals</operation>
         <value>Case.Customer_Case,Case.Internal_Case</value>
     </filters>
-    <label>DQ - CS Support</label>
-    <queue>FEC_DQ_CS_Support</queue>
+    <label>DQ - Payment</label>
+    <queue>FEC_DQ_Payment</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Support_Manager</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Support_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_of_Customer_Care_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Customer_Service_Support_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Unit_Head_of_Customer_Service_Support</roleAndSubordinatesInternal>
+        <roleAndSubordinatesInternal>FEC_Head_Of_Incoming_Payment_Accounting</roleAndSubordinatesInternal>
+        <roleAndSubordinatesInternal>FEC_Head_Of_Outgoing_Payment_Accounting</roleAndSubordinatesInternal>
     </sharedTo>
 </ListView>
