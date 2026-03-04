@@ -58,6 +58,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
   wiredCaseRecord({ data, error }) {
     if (data) {
       this.interactionViewMode = getFieldValue(data, VIEW_MODE);
+      console.log("Interaction View Mode:", this.interactionViewMode);
     }
   }
 
