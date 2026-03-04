@@ -58,11 +58,16 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   @wire(getRecord, {
     recordId: "$recordId",
     fields: [VIEW_MODE],
+    
   })
   wiredViewMode({ data, error }) {
     if (data) {
       this.viewMode = getFieldValue(data, VIEW_MODE);
       let hasAccountOrContract = getFieldValue(data, HAS_ACCOUNT_OR_CONTRACT);
+      
+      // if (hasAccountOrContract == false) {
+
+      // }
       
       this.tryResetViewMode();
     } else if (error) {
@@ -79,6 +84,7 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
       console.log(
         "Reset viewMode to review in FecInteractionCreationHighlight",
       );
+      
       resetViewMode({
         recordId: this.recordId,
         viewMode: "review",

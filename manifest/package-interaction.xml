@@ -134,6 +134,7 @@
 		<members>Case.FEC_Email_From__c</members>
 		<members>Case.FEC_Email_CC__c</members>
 		<members>Case.FEC_Correct_Contract_Number__c</members>
+		<members>Case.FEC_Get_Next_Work__c</members>
 		<members>User.FEC_Agent_ID__c</members>
 		<members>User.FEC_Main_Queue__c</members>
         <members>User.FEC_Default_Queue__c</members>
