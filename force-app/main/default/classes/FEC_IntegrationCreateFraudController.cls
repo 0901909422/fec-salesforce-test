@@ -849,6 +849,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
             FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator =
             FEC_IntegrationFraudCaseUtil.buildCreator(reqWrapper);
+            log('submitUpdateFraudCase: '+ JSON.serialize(req));
 
             // 3. Call SOAP service
             FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType apiRes =
