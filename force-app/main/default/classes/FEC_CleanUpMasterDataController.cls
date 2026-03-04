@@ -27,7 +27,7 @@ public with sharing class FEC_CleanUpMasterDataController {
             
             // --- 4 Tabs mới thêm ---
             // 6. Master Data Setting
-            masterDataMap.put(FEC_Constants.KEY_MASTER_SETTING, [SELECT Id, Name, FEC_Stage_Name__c, FEC_Channel__c, FEC_Nature_Of_Case__c, FEC_Channel__c FROM FEC_Master_Data_Setting__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_MASTER_SETTING, [SELECT Id, Name, FEC_Stage_Name__c, FEC_Nature_Of_Case__c, FEC_Channel__c FROM FEC_Master_Data_Setting__c ORDER BY Name]);
             
             masterDataMap.put(FEC_Constants.KEY_CHANNEL, [SELECT Id, Name FROM FEC_Channel__c ORDER BY Name]);
             
@@ -76,7 +76,7 @@ public with sharing class FEC_CleanUpMasterDataController {
             
             // --- 4 Tabs mới thêm ---
             // 6. Master Data Setting
-            masterDataMap.put(FEC_Constants.KEY_MASTER_SETTING, [SELECT Id, Name, FEC_Additional_Field__c, FEC_Channel__c, FEC_Nature_Of_Case__c, FEC_Stage_Name__c, FEC_Channel__c, FEC_Applicable_Role__c, FEC_Data_Integration_Mapping__c, Process_Change_Status__c FROM FEC_MDM_Master_Data_Setting__c ORDER BY Name]);
+            masterDataMap.put(FEC_Constants.KEY_MASTER_SETTING, [SELECT Id, Name, FEC_Additional_Field__c, FEC_Nature_Of_Case__c, FEC_Stage_Name__c, FEC_Channel__c, FEC_Applicable_Role__c, FEC_Data_Integration_Mapping__c, Process_Change_Status__c FROM FEC_MDM_Master_Data_Setting__c ORDER BY Name]);
             // Channel
             masterDataMap.put(FEC_Constants.KEY_CHANNEL, [SELECT Id, Name, Process_Change_Status__c FROM FEC_MDM_Channel__c ORDER BY Name]);
             

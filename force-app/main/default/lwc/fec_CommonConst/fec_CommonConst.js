@@ -3,8 +3,6 @@ const MANUAL_NOTIFICATION_HEADER_VI = 'New Notifications: Manual Notification';
 const AUTO_NOTIFICATION_TYPE = 'Auto_Notification';
 const MANUAL_NOTIFICATION_TYPE = 'Manual_Notification';
 const STR_NA = 'N/A';
-const LOCALE_ENG = 'en-US';
-const LOCALE_VN = 'vi-VN';
 const MASKING_TYPE_PHONE = 'Mobile/ Phone';
 const MASKING_TYPE_PASSPORT = 'National ID/ Passport';
 const PHONE_VN_REGION = '84';
@@ -13,6 +11,8 @@ const ICON_CASE = 'standard:case';
 const ICON_PREVIEW = 'utility:preview';
 const ICON_HIDE = 'utility:hide';
 const OUTCOME_CODE = 'Hoàn tất/ Đã phản hồi';
+const LOCALE_ENG = 'en-US';
+const LOCALE_VN = 'vi-VN';
 const STR_EMPTY = '';
 const STR_NONE = 'none';
 const STR_UNDEFINED = 'undefined';
@@ -33,15 +33,13 @@ const MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY = 'National ID must be 9 or 12 digits 
 const MSG_NATIONAL_ID_PASSPORT_RULES = 'National ID/Passport: digits only, or 1 uppercase letter + 7 digits for Passport';
 const MSG_INVALID_NATIONAL_ID = 'Invalid National ID number';
 const MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12 = 'National ID must contain digits only (9 or 12 digits)';
-
+const UBANK_PRODUCT_NAME = 'UBank';
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
     AUTO_NOTIFICATION_TYPE, 
     MANUAL_NOTIFICATION_TYPE,
     STR_NA,
-    LOCALE_ENG,
-    LOCALE_VN,
     MASKING_TYPE_PHONE,
     MASKING_TYPE_PASSPORT,
     PHONE_VN_REGION,
@@ -50,6 +48,8 @@ export {
     ICON_PREVIEW,
     ICON_HIDE,
     OUTCOME_CODE,
+    LOCALE_ENG,
+    LOCALE_VN,
     STR_EMPTY,
     STR_NONE,
     STR_UNDEFINED,
@@ -70,4 +70,5 @@ export {
     MSG_NATIONAL_ID_PASSPORT_RULES,
     MSG_INVALID_NATIONAL_ID,
     MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12,
+    UBANK_PRODUCT_NAME,
 };

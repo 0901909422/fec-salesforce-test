@@ -2,7 +2,7 @@ import { LightningElement, wire, track } from "lwc";
 import { CurrentPageReference } from "lightning/navigation";
 import getRelevantInteractionsViewAll from "@salesforce/apex/FEC_InteractionInforHandler.getRelevantInteractionsViewAll";
 import PAGINATION_PAGE_OF from "@salesforce/label/c.Pagination_Page_Of_Label";
-
+import { formatDateTime, urlCmpWithRecordId } from 'c/fec_CommonUtils';
 import { DIV_ELEMENT } from "c/fec_CommonConst";
 
 const COLUMNS = [
@@ -23,12 +23,7 @@ const COLUMNS = [
   {
     label: "Interaction Created Date",
     fieldName: "createdDate",
-    type: "date",
-    typeAttributes: {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    },
+    
   },
   { label: "Interaction Created By", fieldName: "createdBy" },
 ];
@@ -75,7 +70,7 @@ export default class Fec_RelevantInteractionListViewAll extends LightningElement
         interactionIdText: this.getPlainCaseId(c.FEC_Interaction_ID__c),
         interactionStatus: c.FEC_Interaction_Status__c,
         interactionChannel: c.FEC_Channel__c,
-        createdDate: c.FEC_Created_On__c,
+        createdDate: formatDateTime(c.FEC_Created_On__c),
         createdBy: c.FEC_Created_by__c,
       }));
 
