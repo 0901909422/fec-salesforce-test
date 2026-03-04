@@ -1,4 +1,17 @@
-public with sharing class FEC_PaymentHistoryController {
+/****************************************************************************************
+ * File Name    : FEC_PaymentHistoryController.Apex
+ * Author       : Quangdv7
+ * Date         : 2025-01-20
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-20     Quangdv7             Create
+ 
+****************************************************************************************/
+
+public without sharing class FEC_PaymentHistoryController {
 
     /* =====================================================
        DTOs 
@@ -38,7 +51,7 @@ public with sharing class FEC_PaymentHistoryController {
     }
 
     /* =====================================================
-       ================= BILLING PAYMENT =================
+        BILLING PAYMENT
        ===================================================== */
     @AuraEnabled
     public static void syncPaymentHistory(Id caseId) {
@@ -158,7 +171,7 @@ public with sharing class FEC_PaymentHistoryController {
     }
 
     /* =====================================================
-       ================= REALTIME PAYMENT =================
+        REALTIME PAYMENT 
        ===================================================== */
     @AuraEnabled
     public static void syncRealtimePayment(Id caseId) {

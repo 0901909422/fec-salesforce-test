@@ -92,6 +92,220 @@ public class FEC_FraudCaseMockData {
     }
     
 
+    public static FEC_IntegrationFraudCaseUtil.ServiceCasesInfo getServiceCasesInfoMockData() {
+        FEC_IntegrationFraudCaseUtil.ServiceCasesInfo r3 = new FEC_IntegrationFraudCaseUtil.ServiceCasesInfo();
+        r3.caseId = '5008X00000123AB';        
+        //Get service case from case object
+        r3.caseType = 'Fraud Review';
+        r3.caseStatus = 'Resolved';
+        r3.createdBy = 'Alice';
+        r3.resolvedBy = 'Bob';
+        r3.createdOn =  '06/01/2026 09:12';
+        r3.resolvedOn =  '07/01/2026 11:40';
+        return r3;
+    }
+    public static FEC_IntegrationFraudCaseUtil.CaseInfo getCaseInfoMockData() {
+        FEC_IntegrationFraudCaseUtil.CaseInfo caseInfo = new FEC_IntegrationFraudCaseUtil.CaseInfo();
+        caseInfo.caseStatus = 'Pending-FraudTask';
+        caseInfo.accountOwner = '4354545959';
+        caseInfo.caseGoal = '1 month 9 days from now';
+        caseInfo.lastUpdateDate = 'Jan 6, 2026';
+        caseInfo.caseChannel = 'FIMA';
+        caseInfo.lastUpdateBy = 'Nguyen Tan Hoai';
+        caseInfo.createdBy = 'hoai.nguyen.14.test@fecredit.com.vn';
+        caseInfo.createdDate = '10/07/2024';
+        return caseInfo;
+    }
+    public static FEC_IntegrationFraudCaseUtil.NotificationInfo getNotificationMockData() {
+        FEC_IntegrationFraudCaseUtil.NotificationInfo r2 = new FEC_IntegrationFraudCaseUtil.NotificationInfo();
+        r2.id = '001';
+        r2.notificationType = 'Email';
+        r2.templateName = 'Fraud Alert';
+        r2.channel = 'Email';
+        r2.recipient = 'user@test.com';
+        r2.status = 'Delivered';
+        r2.sentTime = '01/08/2026 10:20';
+        r2.actualDeliveryTime = '01/08/2026 10:21';
+        return r2;
+    }
+
+    public static FEC_IntegrationFraudCaseUtil.RemarksInfo getRemarksMockData() {
+        FEC_IntegrationFraudCaseUtil.RemarksInfo remark = new FEC_IntegrationFraudCaseUtil.RemarksInfo();
+        remark.id = 'R01';
+        remark.actor = 'Customer Service';
+        remark.remarks = 'Transaction flagged as suspicious and moved to investigation queue.';
+        remark.decision = 'Cancel';
+        remark.processingStatus = 'In Progress';
+        remark.createdBy = 'Admin';
+        remark.createdDate =  '10/07/2024';
+        return remark;
+    }
+
+    public static FEC_IntegrationFraudCaseUtil.CustomerInfo getCustomerMockData() {
+        FEC_IntegrationFraudCaseUtil.CustomerInfo cust = new FEC_IntegrationFraudCaseUtil.CustomerInfo();
+        cust.customerName = 'TRẦN NGỌC THANH TRÚC';
+        cust.contractNumber = '15000200000066011';
+        cust.nationalId = '023619701';
+        cust.primaryPhone = '0901234567';
+        cust.applicationId = '0901234567';
+        cust.accountNumber = '34536566767777';
+        cust.productType = 'Card';
+        return cust;
+    }
+    public static String responseFailedCancelFraudCase() {
+    String txnId   = FEC_IntegrationFraudCaseUtil.randomTransactionId();
+    String caseId  = FEC_IntegrationFraudCaseUtil.randomCaseId();
+    String dtStr   = FEC_IntegrationFraudCaseUtil.nowAsXmlDateTime();
+    String xml =
+    '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+    '  <soap:Body>' +
+    '    <ns1:CancelFraudCaseResponse xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
+    '      <ns1:Sys>' +
+    '        <ns1:TransactionID>' + txnId + '</ns1:TransactionID>' +
+    '        <ns1:DateTime>' + dtStr + '</ns1:DateTime>' +
+    '        <ns1:Code></ns1:Code>' +
+    '        <ns1:Description>No Service Case Record found for the given request</ns1:Description>' +
+    '      </ns1:Sys>' +
+    '    </ns1:CancelFraudCaseResponse>' +
+    '  </soap:Body>' +
+    '</soap:Envelope>';
+    return xml;
+    
+}
+
+public static String responseFailedCancelConnectFraudCase() {
+    String txnId   = FEC_IntegrationFraudCaseUtil.generateUUID();
+    String dtStr   = FEC_IntegrationFraudCaseUtil.nowAsXmlDateTime();
+    String xml =
+    '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+    '  <soap:Body>' +
+    '    <ns1:CancelFraudCaseResponse xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
+    '      <ns1:Sys>' +
+    '        <ns1:TransactionID>' + txnId + '</ns1:TransactionID>' +
+    '        <ns1:DateTime>' + dtStr + '</ns1:DateTime>' +
+    '        <ns1:Code>0</ns1:Code>' +
+    '        <ns1:Description>Failed to connect to external service</ns1:Description>' +
+    '      </ns1:Sys>' +
+    '    </ns1:CancelFraudCaseResponse>' +
+    '  </soap:Body>' +
+    '</soap:Envelope>';
+    return xml;
+    
+}
+public static String responseFailedCreateConnectFraudCase() {
+    String txnId   = FEC_IntegrationFraudCaseUtil.generateUUID();
+    String dtStr   = FEC_IntegrationFraudCaseUtil.nowAsXmlDateTime();
+    String xml =
+    '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+    '  <soap:Body>' +
+    '    <ns1:CreateFraudCaseResponse xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
+    '      <ns1:Sys>' +
+    '        <ns1:TransactionID>' + txnId + '</ns1:TransactionID>' +
+    '        <ns1:DateTime>' + dtStr + '</ns1:DateTime>' +
+    '        <ns1:Code>0</ns1:Code>' +
+    '        <ns1:Description>Failed to connect to external service</ns1:Description>' +
+    '      </ns1:Sys>' +
+    '    </ns1:CreateFraudCaseResponse>' +
+    '  </soap:Body>' +
+    '</soap:Envelope>';
+    return xml;
+    
+}
+
+public static String responseSuccessCancelFraudCase() {
+    String txnId   = FEC_IntegrationFraudCaseUtil.generateUUID();
+    String caseId  = FEC_IntegrationFraudCaseUtil.randomCaseId();
+    String dtStr   = FEC_IntegrationFraudCaseUtil.nowAsXmlDateTime();
+    String xml =
+    '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+    '  <soap:Body>' +
+    '    <ns1:CancelFraudCaseResponse xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
+    '      <ns1:Sys>' +
+    '        <ns1:TransactionID>' + txnId + '</ns1:TransactionID>' +
+    '        <ns1:DateTime>' + dtStr + '</ns1:DateTime>' +
+    '        <ns1:Code>1</ns1:Code>' +
+    '        <ns1:Description>Success</ns1:Description>' +
+    '      </ns1:Sys>' +
+    '    </ns1:CancelFraudCaseResponse>' +
+    '  </soap:Body>' +
+    '</soap:Envelope>';
+    return xml;
+    
+}
+    
+    public static String responseCreateFraudCase() {
+        String txnId   = FEC_IntegrationFraudCaseUtil.randomTransactionId();
+        String caseId  = FEC_IntegrationFraudCaseUtil.randomCaseId();
+        String dtStr   = FEC_IntegrationFraudCaseUtil.nowAsXmlDateTime();
+        String xml =
+        '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+        '  <soap:Body>' +
+        '    <ns1:CreateFraudCaseResponse xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
+        '      <ns1:Sys>' +
+        '        <ns1:TransactionID>' + txnId + '</ns1:TransactionID>' +
+        '        <ns1:DateTime>' + dtStr + '</ns1:DateTime>' +
+        '        <ns1:Code>1</ns1:Code>' +
+        '        <ns1:Description>Create Success</ns1:Description>' +
+        '      </ns1:Sys>' +
+        '      <ns1:CaseID>'+ caseId +'</ns1:CaseID>' +
+        '    </ns1:CreateFraudCaseResponse>' +
+        '  </soap:Body>' +
+        '</soap:Envelope>';
+        return xml;
+    }
+    public static String responseCreateFailedFraudCase() {
+        String txnId   = FEC_IntegrationFraudCaseUtil.randomTransactionId();
+        String caseId  = FEC_IntegrationFraudCaseUtil.randomCaseId();
+        String dtStr   = FEC_IntegrationFraudCaseUtil.nowAsXmlDateTime();
+        String xml =
+        '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+        '  <soap:Body>' +
+        '    <ns1:CreateFraudCaseResponse xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
+        '      <ns1:Sys>' +
+        '        <ns1:TransactionID>' + txnId + '</ns1:TransactionID>' +
+        '        <ns1:DateTime>' + dtStr + '</ns1:DateTime>' +
+        '        <ns1:Code>0</ns1:Code>' +
+        '        <ns1:Description>AppId 12046658 exists in FH-500080; AppId 12046658 exists in FH-500067; AppId 12046658 exists in FH-500078; AppId 12046658 exists in FH-500079; AppId 12046658 exists in FH-500081</ns1:Description>' +
+        '      </ns1:Sys>' +
+        '      <ns1:CaseID>'+ caseId +'</ns1:CaseID>' +
+        '    </ns1:CreateFraudCaseResponse>' +
+        '  </soap:Body>' +
+        '</soap:Envelope>';
+        return xml;
+    }
+
+    public static List<Map<String, Object>> getCategoryMockupData() {
+        List<Map<String, Object>> categoryMock = new List<Map<String, Object>>{
+            new Map<String, Object>{ 'label' => 'Customer Complaint', 'value' => 'CC', 'mappingId' => 'a068500000GqumTAAR' },
+            new Map<String, Object>{ 'label' => 'Fraud Transaction', 'value' => 'FraudTransaction', 'mappingId' => 'a068500000Gquo5AAB' },
+            new Map<String, Object>{ 'label' => 'No Mapping', 'value' => 'NoMapping', 'mappingId' => null }
+        };
+        return categoryMock;
+    }
+    public static List<Map<String, Object>> getSubCategoryMockupData() {
+        List<Map<String, Object>> subCategoryMock = new List<Map<String, Object>>{
+            new Map<String, Object>{ 'label' => 'KH không làm hồ sơ vay', 'value' => 'CC01', 'parentId' => 'CC', 'mappingId' => 'a068500000GqumTAAR' },
+            new Map<String, Object>{ 'label' => 'KH bị chiếm dụng', 'value' => 'CC02', 'parentId' => 'CC', 'mappingId' => 'a068500000Gqv93AAB' },
+            new Map<String, Object>{ 'label' => 'KH bị yêu cầu tiền phí', 'value' => 'CC03', 'parentId' => 'CC', 'mappingId' => 'a068500000GquMgAAJ' },
+            new Map<String, Object>{ 'label' => 'Hack Sim', 'value' => 'HackSim', 'parentId' => 'FraudTransaction', 'mappingId' => 'a068500000GfODHAA3' },
+            new Map<String, Object>{ 'label' => 'OTP Compromised_No need feedback', 'value' => 'NoCashReceive', 'parentId' => 'FraudTransaction', 'mappingId' => 'a068500000GpqjMAAR' },
+            new Map<String, Object>{ 'label' => 'Test no mapping Subcategory', 'value' => 'nomapping', 'parentId' => 'FraudTransaction', 'mappingId' => null },
+            new Map<String, Object>{ 'label' => 'Test no mapping All', 'value' => 'nomapping-9393', 'parentId' => 'NoMapping', 'mappingId' => null }
+        };
+        return subCategoryMock;
+    }
+    public static List<Map<String, Object>> getCategorySubCodeMockupData() {
+        List<Map<String, Object>> subCodeMock = new List<Map<String, Object>>{
+            new Map<String, Object>{ 'label' => 'Khoản vay tiền mặt', 'value' => 'CC01-01', 'parentId' => 'CC01', 'mappingId' => 'a068500000GqumTAAR' },
+            new Map<String, Object>{ 'label' => 'Khoản vay CD-TW', 'value' => 'CC01-02', 'parentId' => 'CC01', 'mappingId' => 'a068500000GqupiAAB' },
+            new Map<String, Object>{ 'label' => 'Hợp đồng mở thẻ', 'value' => 'CC01-03', 'parentId' => 'CC01', 'mappingId' => 'a068500000GqpzwAAB' },
+            new Map<String, Object>{ 'label' => 'Khoản giải ngân', 'value' => 'CC02-01', 'parentId' => 'CC02', 'mappingId' => 'a068500000Gqv93AAB' },
+            new Map<String, Object>{ 'label' => 'Test only category mapping', 'value' => 'nomapping-01', 'parentId' => 'nomapping-9393', 'mappingId' => null },
+            new Map<String, Object>{ 'label' => 'No Mapping All', 'value' => 'nomapping-02', 'parentId' => 'nomapping-9393', 'mappingId' => null }
+        };
+        return subCodeMock;
+    }
+
     public static String getFraudMasterData() {
         return xmlPart1() +
         xmlPart2() +

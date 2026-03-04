@@ -128,16 +128,7 @@ public with sharing class FEC_GetCustomerInfoBasic {
                 ? FEC_MockupEndpoint.GET_CUSTOMER_INFO_BASIC_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
-            // ===== LOG REQUEST + RESPONSE =====
-            // FEC_CommonUltils.logApi(
-            //     'FEC_GetCustomerInfoBasic',
-            //     endpoint,
-            //     'POST',
-            //     soapBody,
-            //     res,
-            //     null
-            // );
- 
+            
             if (res.getStatusCode() != 200) {
                 throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
             }

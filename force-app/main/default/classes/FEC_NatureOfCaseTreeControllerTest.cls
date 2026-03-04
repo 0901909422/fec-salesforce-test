@@ -20,10 +20,10 @@ private class FEC_NatureOfCaseTreeControllerTest {
         // Create Nature Of Case
         FEC_MDM_Nature_Of_Case__c noc = new FEC_MDM_Nature_Of_Case__c(
             Name='NOC',
-            FEC_Product_Type_Name__c=prod.Id,
-            FEC_Business_Process_Name__c=bp.Id,
-            FEC_Category_Name__c=cat.Id,
-            FEC_Sub_Category_Name__c=scat.Id,
+            FEC_Product_Type__c=prod.Id,
+            FEC_Business_Process__c=bp.Id,
+            FEC_Category__c=cat.Id,
+            FEC_Sub_Category__c=scat.Id,
             FEC_Sub_Code__c=scode.Id,
             FEC_Customer_Type__c='All'
         );
@@ -36,21 +36,21 @@ private class FEC_NatureOfCaseTreeControllerTest {
 
         Test.startTest();
         
-        // 1. Phủ nhánh: FEC_Product_Type_Name__c (Trả về count của Business Process + 1)
+        // 1. Phủ nhánh: FEC_Product_Type__c (Trả về count của Business Process + 1)
         // Kết quả mong đợi: 1 (biz) + 1 = 2
-        Integer res1 = FEC_NatureOfCaseTreeController.getNextPosOrder(prodId, 'FEC_Product_Type_Name__c');
+        Integer res1 = FEC_NatureOfCaseTreeController.getNextPosOrder(prodId, 'FEC_Product_Type__c');
         Assert.areEqual(2, res1);
 
-        // 2. Phủ nhánh: FEC_Business_Process_Name__c -> target: FEC_Category_Name__c
-        FEC_NatureOfCaseTreeController.getNextPosOrder(prodId, 'FEC_Business_Process_Name__c');
+        // 2. Phủ nhánh: FEC_Business_Process__c -> target: FEC_Category__c
+        FEC_NatureOfCaseTreeController.getNextPosOrder(prodId, 'FEC_Business_Process__c');
 
-        // 3. Phủ nhánh: FEC_Category_Name__c -> target: FEC_Sub_Category_Name__c
-        FEC_NatureOfCaseTreeController.getNextPosOrder(prodId, 'FEC_Category_Name__c');
+        // 3. Phủ nhánh: FEC_Category__c -> target: FEC_Sub_Category__c
+        FEC_NatureOfCaseTreeController.getNextPosOrder(prodId, 'FEC_Category__c');
 
-        // 4. Phủ nhánh: FEC_Sub_Category_Name__c -> target: FEC_Sub_Code__c
-        FEC_NatureOfCaseTreeController.getNextPosOrder(prodId, 'FEC_Sub_Category_Name__c');
+        // 4. Phủ nhánh: FEC_Sub_Category__c -> target: FEC_Sub_Code__c
+        FEC_NatureOfCaseTreeController.getNextPosOrder(prodId, 'FEC_Sub_Category__c');
 
-        // 5. Phủ nhánh ELSE: target: FEC_Product_Type_Name__c
+        // 5. Phủ nhánh ELSE: target: FEC_Product_Type__c
         FEC_NatureOfCaseTreeController.getNextPosOrder(null, 'Unknown_Field');
 
         // 6. Phủ nhánh KHÔNG có parentId (Bỏ qua WHERE clause)
@@ -72,7 +72,7 @@ private class FEC_NatureOfCaseTreeControllerTest {
     @isTest static void testSaveNewLookupNode_BusinessProcess() {
         Id prodId = [SELECT Id FROM FEC_MDM_Product_Type__c LIMIT 1].Id;
         // Insert parent NOC for mapping
-        FEC_MDM_Nature_Of_Case__c parentNoc = new FEC_MDM_Nature_Of_Case__c(Name='ParentNOC', FEC_Product_Type_Name__c=prodId, FEC_Customer_Type__c='All');
+        FEC_MDM_Nature_Of_Case__c parentNoc = new FEC_MDM_Nature_Of_Case__c(Name='ParentNOC', FEC_Product_Type__c=prodId, FEC_Customer_Type__c='All');
         insert parentNoc;
         String id = FEC_NatureOfCaseTreeController.saveNewLookupNode('Business Process', 'All', prodId, 'NewBP', 'AliasBP', 'CodeBP', 'VNBP', 2, true);
         System.assertNotEquals(null, id);

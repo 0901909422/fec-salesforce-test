@@ -252,11 +252,13 @@ export default class FraudIntegrationMapping extends LightningElement {
         this.userTypeOptions = await loadUserTypeList();
         this.channelOptions = await loadChannelList();
         this.intUserTypeOptions = await loadMasterIntegration({ sourceType: this.inSourceType, parentId: this.channel, channelCode: this.channel });
-        this.productLineOptions = await loadMasterIntegration({ sourceType: this.intProductLine, parentId:null , channelCode: data.channel });
-        this.serviceTypeOptions = await loadMasterIntegration({ sourceType: this.intCaseType, parentId: data.productLine, channelCode: this.channel });
-        this.categoryOptions = await loadMasterIntegration({ sourceType: this.intCategory, parentId: data.serviceType, channelCode: this.channel });
+
+        this.productLineOptions = await loadMasterIntegration({ sourceType: this.intProductLine, parentId:null , channelCode: data.channel});
+        this.serviceTypeOptions = await loadMasterIntegration({ sourceType: this.intCaseType, parentId: data.productLine, channelCode: this.channel});
+        this.categoryOptions = await loadMasterIntegration({ sourceType: this.intCategory, parentId: data.serviceType, channelCode: this.channel});
         this.subCategoryOptions = await loadMasterIntegration({ sourceType: this.intSubCategory, parentId: data.category, channelCode: this.channel });
-        this.subCodeOptions = await loadMasterIntegration({ sourceType: this.intSubCode, parentId: data.subCategory, channelCode: this.channel });  
+        this.subCodeOptions = await loadMasterIntegration({ sourceType: this.intSubCode, parentId: data.subCategory, channelCode: this.channel});  
+      
     }
 
 
@@ -352,6 +354,7 @@ export default class FraudIntegrationMapping extends LightningElement {
         this.categoryOptions = [];
         this.subCategoryOptions = [];
         this.subCodeOptions = [];
+        this.channel = null;
 
         loadChannelList()
             .then(r => {
@@ -579,7 +582,9 @@ export default class FraudIntegrationMapping extends LightningElement {
             category: this.category,
             subCategory: this.subCategory,
             subCode: this.subCode,
-            channelCode: this.channel
+            channelCode: this.channel,
+            serviceType: this.serviceType
+
         })
             .then(r => {
                 console.log('[SUCCESS] Additional Properties:', r);
@@ -606,7 +611,9 @@ export default class FraudIntegrationMapping extends LightningElement {
             category: this.category,
             subCategory: this.subCategory,
             subCode: this.subCode,
-            channelCode: this.channel
+            channelCode: this.channel,
+            serviceType: this.serviceType
+
         })
             .then(r => {
                 console.log('[SUCCESS] Additional Properties:', r);

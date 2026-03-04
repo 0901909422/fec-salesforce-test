@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q11 Staff Support Enthusiasm --></label>
+    <name>FEC_Q11_Staff_Support_Enthusiasm__c</name>
+    <picklistValues>
+        <masterLabel>N/A</masterLabel>
+        <translation>N/A</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No</masterLabel>
+        <translation>Không</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Yes</masterLabel>
+        <translation>Có</translation>
+    </picklistValues>
+</CustomFieldTranslation>

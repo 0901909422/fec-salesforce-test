@@ -24,6 +24,23 @@ import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label
 import NO_IPP_SCHEDULE_DATA_LABEL from '@salesforce/label/c.FEC_MSG_No_IPP_Schedule_Data';
 import NO_DATA_TO_DISPLAY_LABEL from '@salesforce/label/c.FEC_MSG_No_Data_To_Display';
 
+import FEC_IPP_Label from '@salesforce/label/c.FEC_IPP_Label';
+import FEC_IPP_Schedule_Label from '@salesforce/label/c.FEC_IPP_Schedule_Label';
+import FEC_Total_IPP_Payment_Amount_Label from '@salesforce/label/c.FEC_Total_IPP_Payment_Amount_Label';
+import FEC_Total_IPP_Monthly_Principal_Label from '@salesforce/label/c.FEC_Total_IPP_Monthly_Principal_Label';
+import FEC_Total_IPP_Monthly_Interest_Label from '@salesforce/label/c.FEC_Total_IPP_Monthly_Interest_Label';
+import FEC_MSG_No_Data from '@salesforce/label/c.FEC_MSG_No_Data';
+import FEC_Sales_Info_Label from '@salesforce/label/c.FEC_Sales_Info_Label';
+import FEC_Application_ID_Label from '@salesforce/label/c.FEC_Application_ID_Label';
+import FEC_CC_Code_Label from '@salesforce/label/c.FEC_CC_Code_Label';
+import FEC_DSA_Code_Label from '@salesforce/label/c.FEC_DSA_Code_Label';
+import FEC_TSA_Code_Label from '@salesforce/label/c.FEC_TSA_Code_Label';
+import FEC_Disbursement_Channel_Label from '@salesforce/label/c.FEC_Disbursement_Channel_Label';
+import FEC_CC_Name_Label from '@salesforce/label/c.FEC_CC_Name_Label';
+import FEC_DSA_Name_Label from '@salesforce/label/c.FEC_DSA_Name_Label';
+import FEC_TSA_Name_Label from '@salesforce/label/c.FEC_TSA_Name_Label';
+import FEC_Origination_Channel_Label from '@salesforce/label/c.FEC_Origination_Channel_Label';
+
 export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement) {
     @api recordId;
     
@@ -55,6 +72,25 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     // Retry counter cho việc load schedules
     _scheduleRetryCount = 0;
     _maxRetries = 1; // Retry tối đa 1 lần
+
+    customLabel = {
+        ippLabel: FEC_IPP_Label,
+        ippScheduleLabel: FEC_IPP_Schedule_Label,
+        totalIPPAmountLabel: FEC_Total_IPP_Payment_Amount_Label,
+        totalIPPMonthlyPrincipalLabel: FEC_Total_IPP_Monthly_Principal_Label,
+        totalIPPMonthlyInterestLabel: FEC_Total_IPP_Monthly_Interest_Label,
+        noDataLabel: FEC_MSG_No_Data,
+        salesInfoLabel: FEC_Sales_Info_Label,
+        applicationIdLabel: FEC_Application_ID_Label,
+        ccCodeLabel: FEC_CC_Code_Label,
+        dsaCodeLabel: FEC_DSA_Code_Label,
+        tsaCodeLabel: FEC_TSA_Code_Label,
+        disbursementChannelLabel: FEC_Disbursement_Channel_Label,
+        ccNameLabel: FEC_CC_Name_Label,
+        dsaNameLabel: FEC_DSA_Name_Label,
+        tsaNameLabel: FEC_TSA_Name_Label,
+        originationChannelLabel: FEC_Origination_Channel_Label,
+    }
     
     connectedCallback() {
         this.loadHelpText();

@@ -34,6 +34,8 @@ import FEC_INTERACTION_LAST_UPDATED_BY from "@salesforce/label/c.FEC_Last_Update
 
 import FEC_INTERACTION_LAST_UPDATED_ON from "@salesforce/label/c.FEC_Last_Updated_On_Label";
 
+import { STR_EMPTY, STR_NONE } from "c/fec_CommonConst";
+
 export default class Fec_InteractionHighlight extends LightningElement {
   //=========================== Labels ===========================
   label = {
@@ -93,7 +95,7 @@ export default class Fec_InteractionHighlight extends LightningElement {
   }
 
   get iconUrl() {
-    if (!this.data?.customerCategory || !ICONS) return "";
+    if (!ICONS) return STR_EMPTY;
 
     const iconMap = {
       "Suspected Fraud": "suspected_fraud.svg",
@@ -104,8 +106,8 @@ export default class Fec_InteractionHighlight extends LightningElement {
       Neutral: "neutral.svg",
     };
 
-    const iconName = iconMap[this.data.customerCategory] || "neutral.svg";
-    return iconName ? `${ICONS}/${iconName}` : "";
+    const iconName = iconMap[this.data?.customerCategory] || "neutral.svg";
+    return `${ICONS}/${iconName}`;
   }
 
   get categoryLabel() {
@@ -113,12 +115,12 @@ export default class Fec_InteractionHighlight extends LightningElement {
   }
 
   get customerName() {
-    return this.data?.customerName || "";
+    return this.data?.customerName || STR_EMPTY;
   }
 
   get maskedNationalId() {
     const nationalId = this.data?.nationalId;
-    if (!nationalId) return "";
+    if (!nationalId) return STR_EMPTY;
     if (this.isNationalIdMasked) {
       return this.data?.nationalIdMasked ?? nationalId;
     }
@@ -126,11 +128,11 @@ export default class Fec_InteractionHighlight extends LightningElement {
   }
 
   get gender() {
-    return this.data?.gender || "";
+    return this.data?.gender || STR_EMPTY;
   }
 
   get dateOfBirth() {
-    if (!this.data?.dateOfBirth) return "";
+    if (!this.data?.dateOfBirth) return STR_EMPTY;
     const d = new Date(this.data.dateOfBirth);
     return `${String(d.getDate()).padStart(2, "0")}/${String(
       d.getMonth() + 1,
@@ -139,7 +141,7 @@ export default class Fec_InteractionHighlight extends LightningElement {
 
   get maskedPhone() {
     const phone = this.data?.primaryPhone;
-    if (!phone) return "";
+    if (!phone) return STR_EMPTY;
 
     if (this.isPhoneMasked) {
       if (phone.length < 7) return phone;
@@ -152,11 +154,11 @@ export default class Fec_InteractionHighlight extends LightningElement {
   }
 
   get email() {
-    return this.data?.email || "";
+    return this.data?.email || STR_EMPTY;
   }
 
   get interactionId() {
-    const value = this.data?.interactionId || "";
+    const value = this.data?.interactionId || STR_EMPTY;
     if (!value && this.data?.caseId && this.data?.interactionIdSearch) {
       return `<a href="/${this.data.caseId}" target="_self">${this.data.interactionIdSearch}</a>`;
     }
@@ -164,19 +166,19 @@ export default class Fec_InteractionHighlight extends LightningElement {
   }
 
   get interactionStatus() {
-    return this.data?.interactionStatus || "";
+    return this.data?.interactionStatus || STR_EMPTY;
   }
 
   get interactionChannel() {
-    return this.data?.interactionChannel || "";
+    return this.data?.interactionChannel || STR_EMPTY;
   }
 
   get interactionSubStatus() {
-    return this.data?.interactionSubStatus || "";
+    return this.data?.interactionSubStatus || STR_EMPTY;
   }
 
   get lastUpdatedOn() {
-    if (!this.data?.lastUpdatedOn) return "";
+    if (!this.data?.lastUpdatedOn) return STR_EMPTY;
     const d = new Date(this.data.lastUpdatedOn);
     return `${String(d.getDate()).padStart(2, "0")}/${String(
       d.getMonth() + 1,
@@ -187,19 +189,19 @@ export default class Fec_InteractionHighlight extends LightningElement {
   }
 
   get lastUpdatedBy() {
-    return this.data?.lastUpdatedBy || "";
+    return this.data?.lastUpdatedBy || STR_EMPTY;
   }
 
   get customerSegment() {
-    return this.data?.customerSegment || "";
+    return this.data?.customerSegment || STR_EMPTY;
   }
 
   get externalInteractionId() {
-    return this.data?.externalInteractionId || "";
+    return this.data?.externalInteractionId || STR_EMPTY;
   }
 
   get interactionCreatedOn() {
-    if (!this.data?.interactionCreatedOn && !this.data?.createdDate) return "";
+    if (!this.data?.interactionCreatedOn && !this.data?.createdDate) return STR_EMPTY;
     const dateValue = this.data?.interactionCreatedOn || this.data?.createdDate;
     const d = new Date(dateValue);
     return `${String(d.getDate()).padStart(2, "0")}/${String(
@@ -256,6 +258,6 @@ export default class Fec_InteractionHighlight extends LightningElement {
   }
 
   handleImageError(event) {
-    event.target.style.display = "none";
+    event.target.style.display = STR_NONE;
   }
 }

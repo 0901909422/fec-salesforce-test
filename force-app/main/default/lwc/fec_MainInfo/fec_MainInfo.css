@@ -1,19 +1,42 @@
 .detail-row {
     display: flex;
+    flex-wrap: wrap;              
     padding: 10px 0;
     border-bottom: 1px solid #dddbda;
+    column-gap: 4px;             
 }
 
 .detail-label {
-    width: 45%;
-    color: #3e3e3c;
+    flex: 0 0 180px;        
+    max-width: 180px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    font-weight: 600;
     font-size: 13px;
 }
 
 .detail-value {
-    width: 55%;
-    color: #080707;
-    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    white-space: normal;
+    word-break: break-word;
+}
+
+.help-icon {
+    display: flex;
+    align-items: center;
 }
 
 .with-icon {
@@ -23,7 +46,7 @@
 }
 
 .eye-icon {
-    margin-left: 4px;
+    margin-left: auto;
 }
 
 .sync-fail-text {

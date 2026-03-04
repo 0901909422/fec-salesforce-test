@@ -11,9 +11,9 @@ private class FEC_MasterDataSettingControllerTest {
 
         // 2. Tạo Nature of Case
         FEC_MDM_Nature_Of_Case__c noc = new FEC_MDM_Nature_Of_Case__c(
-            FEC_Product_Type_Name__c = prod.Id,
-            FEC_Business_Process_Name__c = biz.Id,
-            ExternalID__c = 'NOC_01'
+            FEC_Product_Type__c = prod.Id,
+            FEC_Business_Process__c = biz.Id,
+            FEC_Code__c = 'NOC_01'
         );
         insert noc;
 
