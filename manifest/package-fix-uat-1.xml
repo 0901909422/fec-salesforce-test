@@ -7,6 +7,7 @@
         <members>FEC_ClickToCallHandler</members>
         <members>FEC_CommonUltils</members>
         <members>FEC_InteractionInforHandler</members>
+        <members>FEC_GetRewardEligibility</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -14,6 +15,9 @@
         <members>fecInteractionCreationHighlight</members>
         <members>fec_AccountOrContractPicklistInteraction</members>
         <members>fec_InteractionSLA</members>
+        <members>fec_CommonUtils</members>
+        <members>fec_MainInfo</members>
+        <members>fec_TransactionsAccount</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
