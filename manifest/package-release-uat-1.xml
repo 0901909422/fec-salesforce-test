@@ -1828,6 +1828,10 @@
 		<members>Relevant Depts</members>
 		<name>Profile</name>
 	</types>
+    <types>
+		<members>Case</members>
+		<name>SharingRules</name>
+	</types>
 
 	<!-- channel libraty -->
 	<types>
