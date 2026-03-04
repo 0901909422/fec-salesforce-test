@@ -1335,6 +1335,11 @@ global with sharing class FEC_IntegrationFraudService {
             String requestBlock = '';
 
             // Basic fraud classification fields
+            //Check caseID existing for update
+            if (String.isNotBlank(req.CaseID)) {     
+                 requestBlock += FEC_IntegrationFraudCaseUtil.buildTag('CaseID', req.CaseID);
+            }
+         
             requestBlock += FEC_IntegrationFraudCaseUtil.buildTag('CaseType', req.CaseType);
             requestBlock += FEC_IntegrationFraudCaseUtil.buildTag('ProductType', req.ProductType);
             requestBlock += FEC_IntegrationFraudCaseUtil.buildTag('Category', req.Category);
