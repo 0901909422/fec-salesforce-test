@@ -204,7 +204,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
       productTypeId: this.productTypeSelectedId,
       categoryId: this.categorySelectedId,
       subCategoryId: this.subCategorySelectedId,
-      subCodeId: this.subCodeSelectedId
+      subCodeId: this.subCodeSelectedId,
+      natureOfCaseId: this.natureOfCase?.Id
     };
 
     publish(this.messageContext, CASE_NOC, payload);
@@ -476,12 +477,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
       })
         .then((result) => {
           this.natureOfCase = result;
+          this.handlePublishMessageChanel();
         })
         .catch((error) => {
           console.log("error", error);
         });
-
-      this.handlePublishMessageChanel();
     }
   }
 

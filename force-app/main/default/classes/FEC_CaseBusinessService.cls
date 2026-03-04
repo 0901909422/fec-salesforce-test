@@ -704,6 +704,7 @@ public with sharing class FEC_CaseBusinessService {
     ];
     if (!actualst.isEmpty()) {
       FEC_Actual_Nature_of_Case__c noc = actualst.get(0);
+      c.FEC_Actual_Nature_of_Case__c = noc.Id;
       c.FEC_Product_Type__c = noc.FEC_Product_Type__c;
       c.FEC_Category__c = noc.FEC_Category__c;
       c.FEC_SubCategory__c = noc.FEC_Sub_Category__c;
