@@ -20,5 +20,9 @@
         <members>FEC_Interaction_Case_Record_Page</members>
         <name>FlexiPage</name>
     </types>
+    <types>
+        <members>Case.FEC_Get_Next_Work__c</members>
+        <name>CustomField</name>
+    </types>
     <version>65.0</version>
 </Package>
