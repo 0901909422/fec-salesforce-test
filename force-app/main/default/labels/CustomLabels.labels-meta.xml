@@ -1349,6 +1349,27 @@
         <value>Until Case is Resolved</value>
     </labels>
     <labels>
+        <fullName>FEC_Follow_Up_Until_Unfollow</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow Up Until Unfollow</shortDescription>
+        <value>Follow Up Until Unfollow</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Follow_Up_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow Up Label</shortDescription>
+        <value>Follow Up</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Follow_Up_Until_Resolved</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow Up Until Resolved</shortDescription>
+        <value>Follow Up Until Resolved</value>
+    </labels>
+    <labels>
         <fullName>Interaction_Entitlement_Name</fullName>
         <language>en_US</language>
         <protected>false</protected>
