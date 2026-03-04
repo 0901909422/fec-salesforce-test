@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Customer_Type__c</fullName>
+    <description>Loại KH
+Trường thông tin hiển thị tại section Case Info Fix/C360</description>
     <label>Customer Type</label>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>

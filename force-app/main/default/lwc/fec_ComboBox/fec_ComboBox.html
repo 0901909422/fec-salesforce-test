@@ -1,0 +1,111 @@
+<template>
+  <div class="slds-form-element">
+    <label class="slds-form-element__label"
+      ><abbr if:true={required} title="">*</abbr> {label}</label
+    >
+    <div class="slds-form-element__control">
+      <div class="slds-combobox_container">
+        <div class={comboboxClassName}>
+          <div
+            class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right"
+            if:false={hasValue}
+          >
+            <!-- <input
+              type="text"
+              class="slds-input slds-combobox__input"
+              placeholder={placeholder}
+            /> -->
+
+            <lightning-input
+              data-id="search-input"
+              type="text"
+              variant="label-hidden"
+              placeholder={placeholder}
+              onchange={handleSearch}
+              onclick={handleFocus}
+              disabled={disabled}
+            ></lightning-input>
+            <span
+              class="slds-icon_container slds-icon-utility-search slds-input__icon slds-input__icon_right"
+            >
+              <lightning-icon
+                class="slds-icon slds-icon slds-icon_x-small slds-icon-text-default"
+                icon-name="utility:search"
+                size="x-small"
+              ></lightning-icon>
+            </span>
+          </div>
+
+          <div
+            class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_left-right"
+            if:true={hasValue}
+          >
+            <span
+              class="slds-icon_container slds-icon-standard-account slds-combobox__input-entity-icon"
+            >
+              <lightning-icon
+                class="slds-icon slds-icon_small"
+                icon-name="standard:account"
+                size="x-small"
+              ></lightning-icon>
+              <span class="slds-assistive-text"></span>
+            </span>
+            <div
+              role="combobox"
+              class="slds-input_faux slds-combobox__input slds-combobox__input-value"
+              aria-disabled={disabled}
+            >
+              <span class="slds-truncate">{optionLabel}</span>
+            </div>
+
+            <button
+              class="slds-button slds-button_icon slds-input__icon slds-input__icon_right"
+              onclick={handleRemoveSelected}
+            >
+              <lightning-icon
+                class="slds-button__icon"
+                icon-name="utility:close"
+                size="x-small"
+              ></lightning-icon>
+              <span class="slds-assistive-text">Remove selected option</span>
+            </button>
+          </div>
+          <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid">
+            <ul class="slds-listbox slds-listbox_vertical">
+              <template for:each={filteredOptionlst} for:item="item">
+                <li
+                  class="slds-listbox__item"
+                  key={item.value}
+                  onclick={handleChoose}
+                  data-id={item.value}
+                >
+                  <div
+                    class="slds-media slds-listbox__option slds-listbox__option_entity"
+                  >
+                    <span class="slds-media__figure slds-listbox__option-icon">
+                      <span
+                        class="slds-icon_container slds-icon-standard-account"
+                      >
+                        <lightning-icon
+                          class="slds-icon slds-icon_small"
+                          icon-name="standard:account"
+                          size="small"
+                        ></lightning-icon>
+                      </span>
+                    </span>
+                    <span class="slds-media__body">
+                      <span
+                        class="slds-listbox__option-text slds-listbox__option-text_entity"
+                        >{item.label}</span
+                      >
+                    </span>
+                  </div>
+                </li>
+              </template>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

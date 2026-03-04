@@ -1,4 +1,71 @@
 public with sharing class FEC_CommonUltils {
+  public static void notifyUsers(
+    Set<String> recipientsIds,
+    String targetId,
+    String targetPageRef,
+    String title,
+    String body
+  ) {
+    // Get the Id for our custom notification type
+    CustomNotificationType notificationType = [
+      SELECT Id, DeveloperName
+      FROM CustomNotificationType
+      WHERE DeveloperName = 'Custom_Notification'
+    ];
+
+    // Create a new custom notification
+    Messaging.CustomNotification notification = new Messaging.CustomNotification();
+
+    // Set the contents for the notification
+    notification.setTitle(title);
+    notification.setBody(body);
+
+    // Set the notification type and target
+    notification.setNotificationTypeId(notificationType.Id);
+    if (String.isNotBlank(targetId)) {
+      notification.setTargetId(targetId);
+    } else {
+      notification.setTargetPageRef(targetPageRef);
+    }
+
+    // Actually send the notification
+    try {
+      notification.send(recipientsIds);
+    } catch (Exception e) {
+      System.debug('Problem sending notification: ' + e.getMessage());
+    }
+  }
+
+  public static void notifyUsers(
+    Set<String> recipientsIds,
+    Id targetId,
+    String targetPageRef,
+    String title,
+    String body,
+    CustomNotificationType notificationType
+  ) {
+    // Create a new custom notification
+    Messaging.CustomNotification notification = new Messaging.CustomNotification();
+
+    // Set the contents for the notification
+    notification.setTitle(title);
+    notification.setBody(body);
+
+    // Set the notification type and target
+    notification.setNotificationTypeId(notificationType.Id);
+    if (String.isNotBlank(targetId)) {
+      notification.setTargetId(targetId);
+    } else {
+      notification.setTargetPageRef(targetPageRef);
+    }
+
+    // Actually send the notification
+    try {
+      notification.send(recipientsIds);
+    } catch (Exception e) {
+      System.debug('Problem sending notification: ' + e.getMessage());
+    }
+  }
 
   public static Boolean isLengthValid(String str, Integer maxLength) {
     if (String.isBlank(str)) {
@@ -22,6 +89,33 @@ public with sharing class FEC_CommonUltils {
     return Pattern.matches(regex, email);
   }
 
+  /**
+   * Kiểm tra Case Status có thuộc nhóm Resolved hay không (bắt đầu bằng prefix Resolved).
+   * @param status Case Status (có thể null)
+   * @return true nếu status không rỗng và bắt đầu bằng FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED
+   */
+  public static Boolean isCaseStatusResolved(String status) {
+    return String.isNotBlank(status) && status.startsWith(FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED);
+  }
+
+  /**
+   * Trả về chuỗi gốc nếu không blank, ngược lại trả về STR_EMPTY.
+   * @param str Chuỗi cần kiểm tra (có thể null)
+   * @return str nếu không blank, ngược lại FEC_ConstantCommon.STR_EMPTY
+   */
+  public static String defaultToEmpty(String str) {
+    return String.isNotBlank(str) ? str : FEC_ConstantCommon.STR_EMPTY;
+  }
+
+  /**
+   * Trả về String.valueOf(obj) nếu obj != null, ngược lại STR_EMPTY.
+   * @param obj Giá trị bất kỳ (Id, String, ... có thể null)
+   * @return Chuỗi biểu diễn obj hoặc FEC_ConstantCommon.STR_EMPTY
+   */
+  public static String defaultToEmpty(Object obj) {
+    return obj != null ? String.valueOf(obj) : FEC_ConstantCommon.STR_EMPTY;
+  }
+
   public static Boolean isPhone(String phone) {
     if (String.isBlank(phone)) {
       return false;
@@ -43,6 +137,19 @@ public with sharing class FEC_CommonUltils {
     }
 
     return false;
+  }
+
+  /**
+   * Kiểm tra AccountNumber có hợp lệ không (16 hoặc 19 chữ số)
+   * @param accountNumber - Account Number cần kiểm tra
+   * @return true nếu hợp lệ (16 hoặc 19 chữ số), false nếu không
+   */
+  public static Boolean isValidAccountNumber(String accountNumber) {
+    if (String.isBlank(accountNumber)) {
+      return false;
+    }
+    // AccountNumber phải có 16 hoặc 19 chữ số theo requirement của API GetCustomerList
+    return Pattern.matches('^\\d{16}$', accountNumber) || Pattern.matches('^\\d{19}$', accountNumber);
   }
 
   public static Boolean isValidDateByFormat(String input) {
@@ -202,10 +309,34 @@ public with sharing class FEC_CommonUltils {
     return (c == null) ? null : c.getText();
   }
 
+  public static String getXmlValueHasNamspace(Dom.XmlNode n, String name) {
+    if (n == null) return null;
+
+    for (Dom.XmlNode child : n.getChildElements()) {
+        if (child.getName() == name) {
+            return child.getText();
+        }
+    }
+    return null;
+  }
+
   public static Decimal xmlValToDecimal(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
-    return String.isBlank(v) ? null : Decimal.valueOf(v);
-  }
+    if (String.isBlank(v)) {
+      return null;
+    }
+
+    v = v.trim(); 
+    if (v == '') {
+        return null;
+    }
+    try {
+        return Decimal.valueOf(v);
+    } catch (Exception e) {
+      System.debug('Invalid decimal for tag ' + name + ': [' + v + ']');
+      return null; 
+    }
+}
 
   public static Date xmlValToDate(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
@@ -220,6 +351,14 @@ public with sharing class FEC_CommonUltils {
       }
     }
     return null;
+  }
+
+  public static String getValueSafe(Dom.XmlNode parent,String nodeName) {
+    if (parent == null) return null;
+
+    Dom.XmlNode node = findChildByName(parent, nodeName);
+
+    return node == null ? null : node.getText();
   }
 
   public static Integer toInt(String v) {
@@ -257,10 +396,6 @@ public with sharing class FEC_CommonUltils {
    */
   public static Date parseDate(String dateStr) {
     if (String.isBlank(dateStr))
-      return null;
-
-    // Loại bỏ trường hợp 00000000 (không có ngày)
-    if (dateStr == '00000000' || dateStr == '0')
       return null;
 
     try {
@@ -389,8 +524,19 @@ public with sharing class FEC_CommonUltils {
     }
     String s = value.trim();
 
-    // CCCD: 9 hoặc 12 ký tự, chỉ gồm số
-    if ((s.length() == 9 || s.length() == 12) && Pattern.matches('\\d+', s)) {
+    // Passport: bắt đầu bằng chữ → 2 ký tự đầu + 3 ký tự cuối (theo quy định)
+    if (s.length() >= 5 && Pattern.matches('^[A-Za-z].*', s)) {
+      String first2 = s.substring(0, 2);
+      String last3 = s.substring(s.length() - 3);
+      String middle = '';
+      for (Integer i = 2; i < s.length() - 3; i++) {
+        middle += '*';
+      }
+      return first2 + middle + last3;
+    }
+
+    // CCCD: chỉ gồm số → 3 số đầu + 3 số cuối
+    if (Pattern.matches('\\d+', s)) {
       if (s.length() < 6)
         return s;
       String first3 = s.substring(0, 3);
@@ -400,14 +546,6 @@ public with sharing class FEC_CommonUltils {
         middle += '*';
       }
       return first3 + middle + last3;
-    }
-
-    // Passport: 8 ký tự, ký tự đầu là chữ, 7 ký tự sau là số
-    if (s.length() == 8 && Pattern.matches('[A-Za-z]\\d{7}', s)) {
-      String first2 = s.substring(0, 2);
-      String last3 = s.substring(5, 8);
-      String middle = '***';
-      return first2 + middle + last3;
     }
 
     // Fallback: không khớp format → 3 đầu + 3 cuối
@@ -424,7 +562,7 @@ public with sharing class FEC_CommonUltils {
 
   public static void createProcessActionHistory(
     String name,
-    String stage,
+    Case selectedCase,
     Boolean isSuccess
   ) {
     List<User> userlst = [
@@ -439,10 +577,11 @@ public with sharing class FEC_CommonUltils {
 
     FEC_Process_Action_History__c action = new FEC_Process_Action_History__c(
       Name = name,
-      FEC_Stage_Name__c = stage,
+      FEC_Stage_Name__c = selectedCase.FEC_Current_Case_Stage__r?.Name,
       FEC_Action_Result__c = isSuccess ? 'Success' : 'Fail',
       FEC_User__c = userlst.get(0).Email.split('@')[0],
-      FEC_User_Role__c = userlst.get(0).UserRole.Name
+      FEC_User_Role__c = userlst.get(0).UserRole.Name,
+      Case__c = selectedCase.Id
     );
 
     insert action;
@@ -465,6 +604,21 @@ public with sharing class FEC_CommonUltils {
             + phone.substring(len - 3);
     } 
 
+    public static String cleanResponseBody(String responseBody) {
+        if (String.isBlank(responseBody)) {
+            return responseBody;
+        }
+        
+        responseBody = responseBody.trim();
+        if (responseBody.startsWith('\uFEFF')) {
+            responseBody = responseBody.substring(1);
+        }
+        while (responseBody.length() > 0 && !responseBody.startsWith('<')) {
+            responseBody = responseBody.substring(1);
+        }
+        return responseBody;
+    }
+
     public static void logApi(
         String apiName,
         String endpoint,
@@ -484,7 +638,7 @@ public with sharing class FEC_CommonUltils {
           if(response != null){
               log.FEC_Status_Code__c =  String.valueOf(response.getStatusCode());
               log.FEC_Response_String__c = response.getBody();
-              log.FEC_Is_Success__c =  (response.getStatusCode() == 200);
+              log.FEC_Is_Success__c = (response.getStatusCode() == 200);
           }
           
           log.FEC_Error_Message__c = errorMessage;

@@ -7,5 +7,6 @@
     <permissionSets>FEC_CS_Head_of_CS_Contact_Center_Dept_Master_Data_Management</permissionSets>
     <permissionSets>FEC_CS_Head_of_CS_Contact_Center_Dept_Search_Functions</permissionSets>
     <permissionSets>FEC_CS_Head_of_CS_Contact_Center_Dept_User_Management</permissionSets>
+    <permissionSets>FEC_Common_System_Setting</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>

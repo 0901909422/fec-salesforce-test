@@ -267,7 +267,7 @@ export default class FecNatureOfCaseModal extends LightningModal {
                 this.dispatchEvent(
                     new ShowToastEvent({
                         title: LABEL_TOAST_SAVE_SUCCESS_TITLE,
-                        message: `${LABEL_SUCCESS_ADD} (ID: ${result})`,
+                        message: LABEL_SUCCESS_ADD,
                         variant: VARIANT_SUCCESS
                     })
                 );

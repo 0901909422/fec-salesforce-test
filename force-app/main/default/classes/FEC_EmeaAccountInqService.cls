@@ -8,23 +8,25 @@
  * SOAPAction   : M_CMS_EMEA_ACCOUNT_INQ
  ****************************************************************************************/
 
-public with sharing class FEC_EmeaAccountInqService {
+ public with sharing class FEC_EmeaAccountInqService {
 
     // ==========================================
     // CONSTANTS & CONFIGURATION
     // ==========================================
     private static final String SERVICE_NS = 'http://fecredit.com.vn/CMS_VMXIntegrationWS';
-    private static final String WS_RESPONSE_NS = 'http://fecredit.com.vn/cms/ws/v2'; // Namespace cho WSResponse
- 
+    private static final String WS_RESPONSE_NS = 'http://fecredit.com.vn/cms/ws/v2'; // Namespace cho WSRequest/WSResponse
+
     // ==========================================
     // 1. INPUT DTO (Data Transfer Object)
     // ==========================================
     public class EmeaInput {
-        @AuraEnabled public String context { get; set; }    // VMX_MSGIN.CONTEXT
-        @AuraEnabled public String name { get; set; }       // VMX_MSGIN.NAME
-        @AuraEnabled public String org { get; set; }        // VMX_MSGIN.ORG
-        @AuraEnabled public String account { get; set; }    // VMX_MSGIN.ACCOUNT
-        @AuraEnabled public String dualInd { get; set; }    // VMX_MSGIN.DUAL_IND (Optional)
+        @AuraEnabled public String context { get; set; }     // VMX_MSGIN.CONTEXT (required)
+        @AuraEnabled public String name { get; set; }         // VMX_MSGIN.NAME (required)
+        @AuraEnabled public String org { get; set; }          // VMX_MSGIN.ORG (required)
+        @AuraEnabled public String account { get; set; }       // VMX_MSGIN.ACCOUNT (required)
+        @AuraEnabled public String dualInd { get; set; }       // VMX_MSGIN.DUAL_IND (optional)
+        // Sys.VMXVersion (optional). 
+        @AuraEnabled public String vmxVersion { get; set; }
     }
 
     // ==========================================
@@ -51,7 +53,7 @@ public with sharing class FEC_EmeaAccountInqService {
         @AuraEnabled public Decimal pmtPastDue { get; set; }
         @AuraEnabled public Decimal loanBal { get; set; }
         
-        // [NEW FIELDS] Memo Debit & Credit
+        // Memo Debit & Credit
         @AuraEnabled public Decimal amtMemoDb { get; set; }  // AMT_MEMO_DB
         @AuraEnabled public Decimal amtMemoCr { get; set; }  // AMT_MEMO_CR
         
@@ -76,27 +78,30 @@ public with sharing class FEC_EmeaAccountInqService {
             // 1. Validate Input
             validateInput(input);
 
-            // 2. Prepare Sys Data (Auto-generated)
+            // 2. Prepare Sys Data
             String transId = UUID.randomUUID().toString();
-            String requestorId = FEC_ConstantCommon.REQUESTOR_APS; 
+            String requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
             String reqTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
-            String vmxVersion = '1.0'; 
 
             // 3. Construct XML Request
             Dom.Document doc = new Dom.Document();
             Dom.XmlNode envelope = doc.createRootElement('Envelope', FEC_ConstantCommon.SOAP_ENV, 'soapenv');
-            envelope.addChildElement('Header', FEC_ConstantCommon.SOAP_ENV, null);
-            Dom.XmlNode body = envelope.addChildElement('Body', FEC_ConstantCommon.SOAP_ENV, null);
-            
-            // Root Element: M_CMS_EMEA_ACCOUNT_INQ
-            Dom.XmlNode rootRequest = body.addChildElement('M_CMS_EMEA_ACCOUNT_INQ', SERVICE_NS, 'cms');
+            envelope.setNamespace('v2', WS_RESPONSE_NS);
+            envelope.addChildElement('Header', FEC_ConstantCommon.SOAP_ENV, 'soapenv');
+            Dom.XmlNode body = envelope.addChildElement('Body', FEC_ConstantCommon.SOAP_ENV, 'soapenv');
+            Dom.XmlNode wsRequest = body.addChildElement('WSRequest', WS_RESPONSE_NS, 'v2');
 
-            // Block Sys
-            Dom.XmlNode sysNode = rootRequest.addChildElement('Sys', null, null);
+            Dom.XmlNode sysNode = wsRequest.addChildElement('Sys', null, null);
             sysNode.addChildElement('TransID', null, null).addTextNode(transId);
             sysNode.addChildElement('RequestorID', null, null).addTextNode(requestorId);
             sysNode.addChildElement('DateTime', null, null).addTextNode(reqTime);
-            sysNode.addChildElement('VMXVersion', null, null).addTextNode(vmxVersion);
+            // Sys.VMXVersion optional - chỉ thêm node khi caller truyền giá trị
+            if (String.isNotBlank(input.vmxVersion)) {
+                sysNode.addChildElement('VMXVersion', null, null).addTextNode(input.vmxVersion);
+            }
+
+            // Root Element Service: M_CMS_EMEA_ACCOUNT_INQ
+            Dom.XmlNode rootRequest = wsRequest.addChildElement('M_CMS_EMEA_ACCOUNT_INQ', null, null);
 
             // Block VMX_ROOT -> VMX_MSGIN
             Dom.XmlNode vmxRoot = rootRequest.addChildElement('VMX_ROOT', null, null);
@@ -106,11 +111,11 @@ public with sharing class FEC_EmeaAccountInqService {
             addTextNode(msgIn, 'NAME', input.name);
             addTextNode(msgIn, 'ORG', input.org);
             addTextNode(msgIn, 'ACCOUNT', input.account);
-            
-            // Optional Field
-            if(String.isNotBlank(input.dualInd)) {
+            // VMX_MSGIN.DUAL_IND optiona
+            if (String.isNotBlank(input.dualInd)) {
                 addTextNode(msgIn, 'DUAL_IND', input.dualInd);
             }
+
 
             // Lấy cấu hình API từ Custom Setting
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
@@ -119,26 +124,20 @@ public with sharing class FEC_EmeaAccountInqService {
             String endpoint = apiSetting?.FEC_Call_Mock__c
                 ? FEC_MockupEndpoint.EMEA_ACCOUNT_INQ_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, doc, '');
 
             // 5. Process Response
             if (res.getStatusCode() == 200) {
-                // Làm sạch response body trước khi parse (loại bỏ BOM và whitespace không hợp lệ)
+
                 String responseBody = res.getBody();
                 if (String.isNotBlank(responseBody)) {
-                    // Loại bỏ BOM (Byte Order Mark) và các ký tự không hợp lệ ở đầu
-                    responseBody = responseBody.trim();
-                    // Loại bỏ BOM UTF-8 (EF BB BF)
-                    if (responseBody.startsWith('\uFEFF')) {
-                        responseBody = responseBody.substring(1);
-                    }
-                    // Loại bỏ các ký tự không in được ở đầu
-                    while (responseBody.length() > 0 && !responseBody.startsWith('<')) {
-                        responseBody = responseBody.substring(1);
-                    }
+
+                    // normalize using common utility (handles BOM, leading chars, trimming)
+                    responseBody = FEC_CommonUltils.cleanResponseBody(responseBody);
+
                     System.debug('### Response Body (first 500 chars): ' + responseBody.substring(0, Math.min(500, responseBody.length())));
                     
-                    // Parse response body đã làm sạch
                     Dom.Document responseDoc = new Dom.Document();
                     responseDoc.load(responseBody);
                     return parseResponse(responseDoc);
@@ -146,7 +145,7 @@ public with sharing class FEC_EmeaAccountInqService {
                     throw new CalloutException(System.Label.FEC_MSG_Response_Null);
                 }
             } else {
-                // Log lỗi để dễ debug nếu HTTP Status != 200
+                
                 System.debug('HTTP Error: ' + res.getBody());
                 throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{res.getStatus() + ' - ' + res.getBody()}));
             }
@@ -187,19 +186,17 @@ public with sharing class FEC_EmeaAccountInqService {
         String rootName = root.getName();
         Dom.XmlNode wsResponse = null;
         
-        // Kiểm tra xem root có phải là WSResponse không (direct XML response)
         if (rootName == 'WSResponse' || rootName.contains('WSResponse')) {
             wsResponse = root;
         } else if (rootName == 'Envelope') {
-            // Nếu là SOAP envelope, tìm Body -> WSResponse hoặc M_CMS_EMEA_ACCOUNT_INQResponse
             Dom.XmlNode body = root.getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
             if (body != null) {
-                // Thử tìm WSResponse trong Body
+
                 wsResponse = body.getChildElement('WSResponse', WS_RESPONSE_NS);
                 if (wsResponse == null) {
                     wsResponse = body.getChildElement('WSResponse', null);
                 }
-                // Nếu không tìm thấy WSResponse, thử format cũ
+                
                 if (wsResponse == null) {
                     Dom.XmlNode responseNode = body.getChildElement('M_CMS_EMEA_ACCOUNT_INQResponse', SERVICE_NS);
                     if (responseNode != null) {
@@ -208,7 +205,7 @@ public with sharing class FEC_EmeaAccountInqService {
                 }
             }
         } else {
-            // Thử tìm WSResponse như child element
+            
             wsResponse = root.getChildElement('WSResponse', WS_RESPONSE_NS);
             if (wsResponse == null) {
                 wsResponse = root.getChildElement('WSResponse', null);
@@ -237,30 +234,28 @@ public with sharing class FEC_EmeaAccountInqService {
                 if (msgOut != null) {
                     result.svcReturn = FEC_CommonUltils.getXmlValue(msgOut, 'SVC_RETURN');
 
-                    // C. Parse ACCT_BS_OUTPUT (Thông tin tài khoản chính)
+                    // C. Parse ACCT_BS_OUTPUT
                     Dom.XmlNode acctBs = msgOut.getChildElement('ACCT_BS_OUTPUT', null);
                     if (acctBs != null) {
                         result.acctNbr = FEC_CommonUltils.getXmlValue(acctBs, 'ACCT_NBR');
                         result.shortName = FEC_CommonUltils.getXmlValue(acctBs, 'SHORT_NAME');
                         result.custNbr = FEC_CommonUltils.getXmlValue(acctBs, 'CUST_NBR');
                         
-                        // --- Parse Decimals ---
                         result.currBal = FEC_CommonUltils.xmlValToDecimal(acctBs, 'CURR_BAL');
                         result.income = FEC_CommonUltils.xmlValToDecimal(acctBs, 'INCOME');
                         result.pmtTotAmtDue = FEC_CommonUltils.xmlValToDecimal(acctBs, 'PMT_TOT_AMT_DUE');
                         result.pmtPastDue = FEC_CommonUltils.xmlValToDecimal(acctBs, 'PMT_PAST_DUE');
                         result.loanBal = FEC_CommonUltils.xmlValToDecimal(acctBs, 'LOAN_BAL');
                         
-                        // Memo Fields
                         result.amtMemoDb = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_DB');
                         result.amtMemoCr = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_CR');
                         
                         // --- Parse Dates ---
-                        result.dtOpened = getDateSafe(acctBs, 'DT_OPENED');
-                        result.dtPmtDue = getDateSafe(acctBs, 'DT_PMT_DUE');
-                        result.dtCardExp = getDateSafe(acctBs, 'DT_CARD_EXP');
+                        result.dtOpened = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_OPENED');
+                        result.dtPmtDue = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_PMT_DUE');
+                        result.dtCardExp = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_CARD_EXP');
 
-                        // D. Parse NA_DATA_TBL -> NA_DATA (Thông tin liên hệ)
+                        // D. Parse NA_DATA_TBL -> NA_DATA 
                         Dom.XmlNode naTbl = acctBs.getChildElement('NA_DATA_TBL', null);
                         if (naTbl != null) {
                             Dom.XmlNode naData = naTbl.getChildElement('NA_DATA', null);
@@ -297,14 +292,13 @@ public with sharing class FEC_EmeaAccountInqService {
             if (msgOut != null) {
                 result.svcReturn = FEC_CommonUltils.getXmlValue(msgOut, 'SVC_RETURN');
 
-                // C. Parse ACCT_BS_OUTPUT (Thông tin tài khoản chính)
+                // C. Parse ACCT_BS_OUTPUT
                 Dom.XmlNode acctBs = msgOut.getChildElement('ACCT_BS_OUTPUT', null);
                 if (acctBs != null) {
                     result.acctNbr = FEC_CommonUltils.getXmlValue(acctBs, 'ACCT_NBR');
                     result.shortName = FEC_CommonUltils.getXmlValue(acctBs, 'SHORT_NAME');
                     result.custNbr = FEC_CommonUltils.getXmlValue(acctBs, 'CUST_NBR');
                     
-                    // --- Parse Decimals ---
                     result.currBal = FEC_CommonUltils.xmlValToDecimal(acctBs, 'CURR_BAL');
                     result.income = FEC_CommonUltils.xmlValToDecimal(acctBs, 'INCOME');
                     result.pmtTotAmtDue = FEC_CommonUltils.xmlValToDecimal(acctBs, 'PMT_TOT_AMT_DUE');
@@ -316,11 +310,11 @@ public with sharing class FEC_EmeaAccountInqService {
                     result.amtMemoCr = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_CR');
                     
                     // --- Parse Dates ---
-                    result.dtOpened = getDateSafe(acctBs, 'DT_OPENED');
-                    result.dtPmtDue = getDateSafe(acctBs, 'DT_PMT_DUE');
-                    result.dtCardExp = getDateSafe(acctBs, 'DT_CARD_EXP');
+                    result.dtOpened = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_OPENED');
+                    result.dtPmtDue = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_PMT_DUE');
+                    result.dtCardExp = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_CARD_EXP');
 
-                    // D. Parse NA_DATA_TBL -> NA_DATA (Thông tin liên hệ)
+                    // D. Parse NA_DATA_TBL -> NA_DATA 
                     Dom.XmlNode naTbl = acctBs.getChildElement('NA_DATA_TBL', null);
                     if (naTbl != null) {
                         Dom.XmlNode naData = naTbl.getChildElement('NA_DATA', null);
@@ -338,31 +332,12 @@ public with sharing class FEC_EmeaAccountInqService {
     }
 
     // ==========================================
-    // 6. HELPERS (Tiện ích xử lý XML)
+    // 6. HELPERS
     // ==========================================
     
     // Thêm Text Node vào XML
     private static void addTextNode(Dom.XmlNode parent, String name, String value) {
         parent.addChildElement(name, null, null).addTextNode(value == null ? '' : value);
     }
-
-    // Lấy Date an toàn (Xử lý cả yyyyMMdd và yyyy-MM-dd)
-    private static Date getDateSafe(Dom.XmlNode parent, String name) {
-        String v = FEC_CommonUltils.getXmlValue(parent, name);
-        if (String.isBlank(v)) return null;
-        try {
-            // Case 1: Format yyyyMMdd (Không có dấu phân cách)
-            if (v.length() == 8 && v.isNumeric()) {
-                Integer y = Integer.valueOf(v.substring(0, 4));
-                Integer m = Integer.valueOf(v.substring(4, 6));
-                Integer d = Integer.valueOf(v.substring(6, 8));
-                return Date.newInstance(y, m, d);
-            }
-            // Case 2: Format chuẩn Salesforce yyyy-MM-dd
-            return Date.valueOf(v);
-        } catch (Exception e) {
-            System.debug('Date Parse Error for field ' + name + ': ' + v);
-            return null;
-        }
-    }
+    
 }

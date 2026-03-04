@@ -5,7 +5,8 @@
     <permissionSets>FEC_CS_Office_Based_Team_Leader_Customer_360</permissionSets>
     <permissionSets>FEC_CS_Office_Based_Team_Leader_Interaction_Case_Service_Case</permissionSets>
     <permissionSets>FEC_CS_Office_Based_Team_Leader_Master_Data_Management</permissionSets>
+    <permissionSets>FEC_CS_Office_Based_Team_Leader_Search_Functions</permissionSets>
     <permissionSets>FEC_CS_Office_Based_Team_Leader_User_Management</permissionSets>
-    <permissionSets>FEC_CS_Senior_Office_Based_Specialist_Search_Functions</permissionSets>
+    <permissionSets>FEC_Common_System_Setting</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>

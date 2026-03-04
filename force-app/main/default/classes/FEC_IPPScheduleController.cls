@@ -18,6 +18,11 @@ public with sharing class FEC_IPPScheduleController {
                 throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Ipp Id'}));
             }
 
+            /* ===== IPP MOCK RECORD: không query DB, return luôn từ FEC_MockData ===== */
+            if (FEC_IPPController.MOCK_IPP_RECORD_ID.equals(ippId)) {
+                return FEC_MockData.getHardcodedIPPScheduleDataForUI(null);
+            }
+
             /* ===== TẢI IPP RECORD (Sales Info) ===== */
             FEC_IPP__c ippRecord = [
                 SELECT Id, FEC_Application_ID__c, FEC_Customer_History__c,
@@ -39,6 +44,19 @@ public with sharing class FEC_IPPScheduleController {
                 System.debug('### Sales Info is missing, calling FEC_SalesInfoController to populate');
                 try {
                     populateSalesInfoFromAPI(ippRecord);
+                    // Re-query để lấy Sales Info vừa update, tránh reload trang hiển thị Sales Info trống
+                    ippRecord = [
+                        SELECT Id, FEC_Application_ID__c, FEC_Customer_History__c,
+                               FEC_CC_Code__c, FEC_CC_Name__c, FEC_DSA_Code__c, FEC_DSA_Name__c,
+                               FEC_TSA_Code__c, FEC_TSA_Name__c,
+                               FEC_Origination_Channel__c, FEC_Disbursement_Channel__c,
+                               FEC_Sales_Mode__c, FEC_ESign_Source__c,
+                               FEC_Total_IPP_Payment_Amount__c, FEC_Total_IPP_Monthly_Principal__c, FEC_Total_IPP_Monthly_Interest__c,
+                               FEC_IPP_Record_No__c, FEC_IPP_Plan__c
+                        FROM FEC_IPP__c
+                        WHERE Id = :ippId
+                        LIMIT 1
+                    ];
                 } catch (Exception e) {
                     System.debug('### Failed to populate Sales Info: ' + e.getMessage());
                     System.debug('### Stack Trace: ' + e.getStackTraceString());
@@ -90,11 +108,57 @@ public with sharing class FEC_IPPScheduleController {
             }
 
             /* =====================================================
-             * BƯỚC 3: CHƯA CÓ DỮ LIỆU → GỌI API, LƯU DB
+             * BƯỚC 3: CHƯA CÓ DỮ LIỆU → GỌI API (hoặc Mock fallback), LƯU DB
              * ===================================================== */
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            Boolean isMock = (apiSetting != null && apiSetting.FEC_Call_Mock__c == true);
+
             String accountNumber = getAccountNumberFromIpp(ippRecord);
             if (String.isBlank(accountNumber)) {
+                if (isMock) {
+                    return FEC_MockData.getHardcodedIPPScheduleDataForUI(ippRecord);
+                }
                 System.debug('### Account Number is blank, cannot call API');
+                return buildResult(scheduleList, ippRecord);
+            }
+
+            if (isMock) {
+                FEC_GetCardSecInfo.ResponseWrapper secResponse = null;
+                for (Integer attempt = 0; attempt < 2; attempt++) {
+                    try {
+                        secResponse = FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
+                        break;
+                    } catch (Exception e) {
+                        System.debug('### Mock: GetCardSecInfo attempt ' + (attempt + 1) + ' failed: ' + e.getMessage());
+                        if (attempt == 1) {
+                            secResponse = null;
+                        }
+                    }
+                }
+                if (secResponse != null && secResponse.CardSecInfo != null && secResponse.CardSecInfo.IPPs != null && !secResponse.CardSecInfo.IPPs.isEmpty()) {
+                    List<FEC_GetCardSecInfo.IPP> ippList = secResponse.CardSecInfo.IPPs;
+                    List<FEC_GetCardSecInfo.IPP> filtered = filterIPPByRecordNoOrPlan(ippList, null, ippRecord.FEC_IPP_Plan__c);
+                    if (filtered.isEmpty() && String.isNotBlank(ippRecord.FEC_IPP_Record_No__c)) {
+                        filtered = filterIPPByRecordNoOrPlan(ippList, ippRecord.FEC_IPP_Record_No__c, ippRecord.FEC_IPP_Plan__c);
+                    }
+                    if (filtered.isEmpty()) {
+                        if (String.isBlank(ippRecord.FEC_IPP_Plan__c)) { filtered = ippList; }
+                        else if (ippList.size() == 1) { filtered = ippList; }
+                    }
+                    if (!filtered.isEmpty()) {
+                        saveSchedulesToDatabase(filtered, ippRecord);
+                        schedules = [
+                            SELECT Id, Name, FEC_IPP_Payment_No__c, FEC_IPP_Opening_Balance__c, FEC_IPP_Payment_Amount__c,
+                                   FEC_IPP_Monthly_Principal__c, FEC_IPP_Monthly_Interest__c, CreatedDate
+                            FROM FEC_IPP_Schedule__c
+                            WHERE FEC_IPP__c = :ippId
+                            ORDER BY FEC_IPP_Payment_No__c ASC
+                        ];
+                        ippRecord = [SELECT Id, FEC_Application_ID__c, FEC_Customer_History__c, FEC_CC_Code__c, FEC_CC_Name__c, FEC_DSA_Code__c, FEC_DSA_Name__c, FEC_TSA_Code__c, FEC_TSA_Name__c, FEC_Origination_Channel__c, FEC_Disbursement_Channel__c, FEC_Sales_Mode__c, FEC_ESign_Source__c, FEC_Total_IPP_Payment_Amount__c, FEC_Total_IPP_Monthly_Principal__c, FEC_Total_IPP_Monthly_Interest__c, FEC_IPP_Record_No__c, FEC_IPP_Plan__c FROM FEC_IPP__c WHERE Id = :ippId LIMIT 1];
+                        return buildResult(schedules != null ? schedules : new List<FEC_IPP_Schedule__c>(), ippRecord);
+                    }
+                }
+                // API lỗi hoặc không có IPP: không trả về hardcode (13.5M, 50M) để tránh lần đầu click khác reload; trả về từ DB (rỗng + ippRecord)
                 return buildResult(scheduleList, ippRecord);
             }
 
@@ -103,10 +167,9 @@ public with sharing class FEC_IPPScheduleController {
                 if (secResponse != null && secResponse.CardSecInfo != null && secResponse.CardSecInfo.IPPs != null && !secResponse.CardSecInfo.IPPs.isEmpty()) {
                     List<FEC_GetCardSecInfo.IPP> ippList = secResponse.CardSecInfo.IPPs;
                     System.debug('### GetCardSecInfo API returned ' + ippList.size() + ' IPP schedule items');
-                    // Lấy nhiều bản ghi schedule: filter theo Plan để lấy tất cả kỳ trả (nhiều <IPP> cùng plan)
                     List<FEC_GetCardSecInfo.IPP> filtered = filterIPPByRecordNoOrPlan(
                         ippList,
-                        null,  // Không filter theo Record No → lấy theo Plan để có nhiều kỳ
+                        null,
                         ippRecord.FEC_IPP_Plan__c
                     );
 
@@ -152,7 +215,6 @@ public with sharing class FEC_IPPScheduleController {
                     WHERE FEC_IPP__c = :ippId
                     ORDER BY FEC_IPP_Payment_No__c ASC
                 ];
-                // Query lại IPP record để lấy Sales Info đã được update (nếu có)
                 ippRecord = [
                     SELECT Id, FEC_Application_ID__c, FEC_Customer_History__c,
                            FEC_CC_Code__c, FEC_CC_Name__c, FEC_DSA_Code__c, FEC_DSA_Name__c,
@@ -386,21 +448,16 @@ public with sharing class FEC_IPPScheduleController {
     }
 
     private static Map<String, Object> buildResult(List<FEC_IPP_Schedule__c> schedules, FEC_IPP__c ippRecord) {
-        Decimal totalPaymentAmount = ippRecord != null && ippRecord.FEC_Total_IPP_Payment_Amount__c != null
-            ? ippRecord.FEC_Total_IPP_Payment_Amount__c : 0;
-        Decimal totalMonthlyPrincipal = ippRecord != null && ippRecord.FEC_Total_IPP_Monthly_Principal__c != null
-            ? ippRecord.FEC_Total_IPP_Monthly_Principal__c : 0;
-        Decimal totalMonthlyInterest = ippRecord != null && ippRecord.FEC_Total_IPP_Monthly_Interest__c != null
-            ? ippRecord.FEC_Total_IPP_Monthly_Interest__c : 0;
-
         List<FEC_IPP_Schedule__c> listVal = schedules != null ? schedules : new List<FEC_IPP_Schedule__c>();
 
-        if (totalPaymentAmount == 0 && totalMonthlyPrincipal == 0 && totalMonthlyInterest == 0 && !listVal.isEmpty()) {
-            for (FEC_IPP_Schedule__c sch : listVal) {
-                totalPaymentAmount += (sch.FEC_IPP_Payment_Amount__c != null ? sch.FEC_IPP_Payment_Amount__c : 0);
-                totalMonthlyPrincipal += (sch.FEC_IPP_Monthly_Principal__c != null ? sch.FEC_IPP_Monthly_Principal__c : 0);
-                totalMonthlyInterest += (sch.FEC_IPP_Monthly_Interest__c != null ? sch.FEC_IPP_Monthly_Interest__c : 0);
-            }
+        // Luôn tính total từ danh sách schedule để khớp với tổng các dòng trong bảng
+        Decimal totalPaymentAmount = 0;
+        Decimal totalMonthlyPrincipal = 0;
+        Decimal totalMonthlyInterest = 0;
+        for (FEC_IPP_Schedule__c sch : listVal) {
+            totalPaymentAmount += (sch.FEC_IPP_Payment_Amount__c != null ? sch.FEC_IPP_Payment_Amount__c : 0);
+            totalMonthlyPrincipal += (sch.FEC_IPP_Monthly_Principal__c != null ? sch.FEC_IPP_Monthly_Principal__c : 0);
+            totalMonthlyInterest += (sch.FEC_IPP_Monthly_Interest__c != null ? sch.FEC_IPP_Monthly_Interest__c : 0);
         }
 
         Map<String, Object> result = new Map<String, Object>();

@@ -24,6 +24,9 @@ import FEC_REMARKS_LABEL from "@salesforce/label/c.FEC_Interaction_Remark_Label"
 import FEC_EXTERNAL_ID_LABEL from "@salesforce/label/c.FEC_External_Interaction_ID_Label";
 import FEC_INTERACTION_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_Channel_Label";
 import FEC_INTERACTION_SUB_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_Sub_Channel_Label";
+import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interaction_Information_Label";
+
+import { formatDateTime } from 'c/fec_CommonUtils';
 
 export default class FecInteractionInfo extends LightningElement {
   labels = {
@@ -35,7 +38,7 @@ export default class FecInteractionInfo extends LightningElement {
     externalId: FEC_EXTERNAL_ID_LABEL,
     channel: FEC_INTERACTION_CHANNEL_LABEL,
     subChannel: FEC_INTERACTION_SUB_CHANNEL_LABEL,
-   
+    interactionInformation: FEC_Interaction_Information_Label,
   };
   // ================= API =================
   @api recordId;
@@ -183,28 +186,14 @@ export default class FecInteractionInfo extends LightningElement {
     if (!this.record?.FEC_Created_On__c) return "";
 
     const d = new Date(this.record.FEC_Created_On__c);
-    return d.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
+    return formatDateTime(d);
   }
 
   get lastUpdatedOn() {
     if (!this.record?.FEC_Last_Updated_On__c) return "";
 
     const d = new Date(this.record.FEC_Last_Updated_On__c);
-    return d.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
+    return formatDateTime(d);
   }
 
   get createdBy() {

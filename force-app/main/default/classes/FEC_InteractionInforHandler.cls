@@ -11,7 +11,10 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Last_Updated_On__c,
                FEC_Last_Updated_By__c,
                FEC_Outcome_Code__c,
-               FEC_Interaction_Remarks__c, 
+               FEC_Interaction_Remarks__c,
+               FEC_Interaction_Email__c,
+               FEC_Send_To__c,
+               ParentId,
                IsClosed
         FROM Case
         WHERE Id = :recordId
@@ -39,21 +42,12 @@ public without sharing class FEC_InteractionInforHandler {
         
         // 🔐 Audit sensitive access
         FEC_CommonUltils.logSensitiveAccess(
-            'Interaction Details',
-        'Interaction Phone',
+            FEC_ConstantCommon.SECTION_INTERACTION_DETAILS,
+        FEC_ConstantCommon.SECTION_INTERACTION_PHONE,
         u.Username.split('@')[0],
         u.UserRole != null ? u.UserRole.Name : null,
         c.Id
             );
-        
-        // FEC_Sensitive_Data__c sensitiveData = new FEC_Sensitive_Data__c(
-        //     FEC_Section__c = 'Interaction Details',
-        // Name = 'Interaction Phone',
-        // FEC_User__c = u.Username.split('@')[0],
-        // FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
-        // FEC_Related_Case__c = c.Id
-        //     );
-        // insert sensitiveData;
         
         return c.FEC_Phone_Number__c;
     }
@@ -68,15 +62,22 @@ public without sharing class FEC_InteractionInforHandler {
         
         update new Case(
             Id = recordId,
-            FEC_Phone_Number__c = phone
-        );
+        FEC_Phone_Number__c = phone
+            );
         
         return FEC_CommonUltils.maskPhone(phone);
     }
-    
-    
-    
-    
+
+    @AuraEnabled(cacheable=false)
+    public static void updateInteractionEmail(Id recordId, String email) {
+        if (recordId == null) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Record_Id_Invalid);
+        }
+        update new Case(
+            Id = recordId,
+            FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
+        );
+    }
     
     @AuraEnabled(cacheable=true)
     public static Id getInteractionIdFromCustomerCase(Id caseId) {
@@ -95,8 +96,9 @@ public without sharing class FEC_InteractionInforHandler {
         SELECT FEC_Interaction_ID__c,
                FEC_Interaction_Status__c,
                FEC_Last_Updated_On__c,
-               FEC_Last_Updated_By__c
-               
+               FEC_Last_Updated_By__c,
+               FEC_Channel__c,
+               FEC_Interaction_Subchannel__c
         FROM Case
         WHERE Id = :recordId
     ];
@@ -158,7 +160,7 @@ public without sharing class FEC_InteractionInforHandler {
             '       FEC_Created_On__c,FEC_Created_by__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC '+
+            'ORDER BY FEC_Created_On__c DESC '+
             'LIMIT 5';
         System.debug('SOQL: ' + soql);
         return Database.query(soql);
@@ -218,7 +220,7 @@ public without sharing class FEC_InteractionInforHandler {
             '       FEC_Created_On__c,FEC_Created_by__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC ';
+            'ORDER BY FEC_Created_On__c DESC ';
         System.debug('SOQL: ' + soql);
         return Database.query(soql);
     }
@@ -297,6 +299,7 @@ public without sharing class FEC_InteractionInforHandler {
                                        FEC_SubCode__r.FEC_Name_VN__c
                                 FROM Case
                                 WHERE FEC_Interaction__c = :recordId
+                                ORDER BY FEC_Case_Created_On__c DESC
                                 LIMIT 5];
             return caseList;
         } catch (Exception e) {
@@ -415,7 +418,7 @@ public without sharing class FEC_InteractionInforHandler {
             '   FEC_SubCode__r.FEC_Name_VN__c, FEC_Account_or_Contract__r.FEC_Account_Number__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC ' +
+            'ORDER BY FEC_Case_Created_On__c DESC ' +
             'LIMIT 5';
         
         // =====================================================
@@ -492,10 +495,10 @@ public without sharing class FEC_InteractionInforHandler {
             '   FEC_SubCategory__r.FEC_Name_VN__c, ' +
             '   FEC_SubCode__c, ' +
             '   FEC_SubCode__r.FEC_Code__c, FEC_Account_or_Contract__r.FEC_Account_Number__c,' +
-            '   FEC_SubCode__r.FEC_Name_VN__c ' +
+            '   FEC_SubCode__r.FEC_Name_VN__c , FEC_Case_Created_On__c,FEC_Case_Created_By__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC' ;
+            'ORDER BY FEC_Case_Created_On__c DESC' ;
         
         // =====================================================
         // 7. EXECUTE

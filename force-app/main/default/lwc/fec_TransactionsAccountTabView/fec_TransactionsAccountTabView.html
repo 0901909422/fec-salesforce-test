@@ -8,7 +8,7 @@
     <template if:true={transaction}>
         <template if:true={sections}>
             <c-fec_-common-detail-view
-                title="Transaction"
+                title={customLabel.transactionLabel}
                 sub-title={transaction.transactionCode}
                 icon-name="standard:orders"
                 sections={sections}
@@ -21,7 +21,7 @@
     <template if:false={transaction}>
         <template if:false={isLoading}>
             <div class="slds-text-color_weak slds-p-around_medium">
-                No transaction selected
+                {customLabel.msgNoTransactionSelected}
             </div>
         </template>
     </template>

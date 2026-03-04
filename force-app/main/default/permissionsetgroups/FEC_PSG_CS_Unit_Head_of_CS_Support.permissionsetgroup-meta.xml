@@ -7,5 +7,6 @@
     <permissionSets>FEC_CS_Unit_Head_of_CS_Support_Master_Data_Management</permissionSets>
     <permissionSets>FEC_CS_Unit_Head_of_CS_Support_Search_Functions</permissionSets>
     <permissionSets>FEC_CS_Unit_Head_of_CS_Support_User_Management</permissionSets>
+    <permissionSets>FEC_Common_System_Setting</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>
