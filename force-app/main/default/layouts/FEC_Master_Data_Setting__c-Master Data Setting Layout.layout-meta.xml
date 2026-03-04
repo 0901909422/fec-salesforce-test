@@ -84,10 +84,6 @@
                 <behavior>Edit</behavior>
                 <field>FEC_Field_Reverted__c</field>
             </layoutItems>
-            <layoutItems>
-                <behavior>Edit</behavior>
-                <field>FEC_Process_Stage_Mapping__c</field>
-            </layoutItems>
         </layoutColumns>
         <layoutColumns>
             <layoutItems>

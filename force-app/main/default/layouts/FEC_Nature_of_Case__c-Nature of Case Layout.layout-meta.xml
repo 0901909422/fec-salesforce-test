@@ -139,10 +139,6 @@
         <fields>NAME</fields>
         <relatedList>FEC_Case_Stage__c.FEC_Nature_of_Cases__c</relatedList>
     </relatedLists>
-    <relatedLists>
-        <fields>NAME</fields>
-        <relatedList>Process_Stage_Mapping__c.FEC_Nature_of_Cases__c</relatedList>
-    </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>false</showHighlightsPanel>
     <showInteractionLogPanel>false</showInteractionLogPanel>
