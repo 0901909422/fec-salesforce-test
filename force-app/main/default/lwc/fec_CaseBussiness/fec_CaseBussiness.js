@@ -1073,8 +1073,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     let formlst = this.template.querySelectorAll("lightning-record-edit-form");
     let formToSubmit = [];
     formlst?.forEach((item) => {
+      if (!item) return;
       let fieldlst = item.querySelectorAll("lightning-input-field");
-      if (fieldlst && fieldlst.length > 0) {
+      if (fieldlst && fieldlst.length > 0 && item.recordId) {
         formToSubmit.push(item);
       }
     });
@@ -1310,7 +1311,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       );
 
       if (subSection) {
-        obj = subSection.objlst?.find((item) => (item.id = filter.obj));
+        obj = subSection.objlst?.find((item) => (item.id === filter.obj));
 
         if (obj) {
           field = obj.fieldlst.find((item) => item.apiName === filter.field);
@@ -1341,13 +1342,14 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   handleFormError(event) {
+    const detail = event?.detail;
     if (this._submitFormsReject != null) {
-      this._submitFormsReject(event.detail);
+      this._submitFormsReject(detail);
       this._submitFormsResolve = null;
       this._submitFormsReject = null;
     }
     if (this._saveOnlyReject != null) {
-      this._saveOnlyReject(event.detail);
+      this._saveOnlyReject(detail);
       this._saveOnlyResolve = null;
       this._saveOnlyReject = null;
     }
@@ -1361,8 +1363,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     let formlst = this.template.querySelectorAll("lightning-record-edit-form");
     let formToSubmit = [];
     formlst?.forEach((item) => {
+      if (!item) return;
       let fieldlst = item.querySelectorAll("lightning-input-field");
-      if (fieldlst && fieldlst.length > 0) {
+      if (fieldlst && fieldlst.length > 0 && item.recordId) {
         formToSubmit.push(item);
       }
     });
