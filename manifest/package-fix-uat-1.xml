@@ -8,6 +8,8 @@
         <members>FEC_CommonUltils</members>
         <members>FEC_InteractionInforHandler</members>
         <members>FEC_GetRewardEligibility</members>
+        <members>FEC_CaseBusinessService</members>
+        <members>FEC_GetNextWorkController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -18,6 +20,14 @@
         <members>fec_CommonUtils</members>
         <members>fec_MainInfo</members>
         <members>fec_TransactionsAccount</members>
+		<members>fec_CaseFollowHeadlessAction</members>
+		<members>fec_CaseUnfollowHeadlessAction</members>
+		<members>fec_CaseBussiness</members>
+		<members>fec_CommonConst</members>
+		<members>fec_RelevantCaseListViewAll</members>
+		<members>fec_RelevantInteractionCaseListViewAll</members>
+		<members>fec_RelevantInteractionListViewAll</members>
+		<members>fec_GetNextWork</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -57,5 +67,66 @@
 		<members>Case</members>
 		<name>SharingRules</name>
 	</types>
+    <types>
+        <members>Case.Follow_Up</members>
+		<members>Case.Unfollow</members>
+		<name>QuickAction</name>
+	</types>
+	<types>
+        <members>FEC_LABEL_FOLLOW_UP</members>
+		<members>FEC_LABEL_UNTIL_CASE_RESOLVED</members>
+		<members>FEC_LABEL_UNTIL_UNFOLLOW</members>
+		<members>FEC_Follow_Up_Until_Unfollow</members>
+		<members>FEC_Follow_Up_Label</members>
+		<members>FEC_Follow_Up_Until_Resolved</members>
+		<members>FEC_ACTION_SELECT_USER</members>
+		<members>FEC_ACTION_CANCEL</members>
+		<members>FEC_ACTION_CONFIRM</members>
+		<members>FEC_ACTION_CLOSE</members>
+		<members>FEC_LABEL_SELECT_FOLLOW_UP_USER</members>
+		<members>FEC_LABEL_USER</members>
+		<members>FEC_LABEL_CLEAR_USER_SELECTION</members>
+		<members>FEC_LABEL_FOLLOW_UP_TYPE</members>
+		<members>FEC_MSG_NO_USER_FOUND</members>
+		<members>FEC_LABEL_UNFOLLOW_CASE</members>
+		<members>FEC_MSG_CONFIRM_UNFOLLOW</members>
+		<members>FEC_MSG_UNFOLLOW_INFO</members>
+		<members>FEC_LABEL_CURRENT_FOLLOW_TYPE</members>
+		<members>FEC_LABEL_CASE_STATUS</members>
+		<members>FEC_ACTION_UNFOLLOW</members>
+		<members>FEC_MSG_FollowUp_Add_User_To_Watcher_Success</members>
+		<members>FEC_MSG_FollowUp_Please_Select_User</members>
+		<members>FEC_MSG_FollowUp_Type_Updated_Success</members>
+		<members>FEC_MSG_FollowUp_Error_Detail</members>
+		<members>FEC_MSG_FollowUp_Case_ID_Not_Found</members>
+		<members>FEC_MSG_FollowUp_Unfollow_Error</members>
+		<members>FEC_MSG_FollowUp_Case_Follow_Success</members>
+		<name>CustomLabel</name>
+	</types>
+    <types>
+        <members>Case.FEC_DQ_CS_Center_Case</members>
+        <members>Case.FEC_DQ_CS_Contact_Center_Dept_Case</members>
+        <members>Case.FEC_DQ_CS_Inbound_Case</members>
+        <members>Case.FEC_DQ_CS_Office_Based_Case</members>
+        <members>Case.FEC_DQ_CS_Outbound_Case</members>
+        <members>Case.FEC_DQ_CS_Ecom_Case</members>
+        <members>Case.FEC_DQ_CS_Customer_Care_Dept_Case</members>
+        <members>Case.FEC_DQ_CS_Support_Case</members>
+        <members>Case.FEC_DQ_CS_Customer_Care_Case</members>
+        <members>Case.FEC_DQ_CS_QC_OM_Case</members>
+        <members>Case.FEC_DQ_CS_Ops_Management_Case</members>
+        <members>Case.FEC_DQ_CS_Quality_Control_Case</members>
+        <members>Case.FEC_DQ_Card_Operations_Case</members>
+        <members>Case.FEC_DQ_Collections_Case</members>
+        <members>Case.FEC_DQ_Contract_Processing_Case</members>
+        <members>Case.FEC_DQ_Payment_Case</members>
+        <members>Case.FEC_DQ_Direct_Sales_Case</members>
+        <members>Case.FEC_DQ_POS_Sales_Case</members>
+        <members>Case.FEC_DQ_Telesales_Case</members>
+        <members>Case.FEC_DQ_Credit_Assessment_Case</members>
+        <members>Case.FEC_DQ_IT_Operations_Support_Case</members>
+        <members>Case.FEC_DQ_Internal_Audit_Case</members>
+        <name>ListView</name>
+    </types>
     <version>65.0</version>
 </Package>

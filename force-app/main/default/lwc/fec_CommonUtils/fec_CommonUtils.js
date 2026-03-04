@@ -28,9 +28,9 @@ const formatDateTime = (curr) => {
   const day = String(curr.getDate()).padStart(2, "0");
   const h = String(curr.getHours()).padStart(2, "0");
   const m = String(curr.getMinutes()).padStart(2, "0");
-  const s = String(curr.getSeconds()).padStart(2, "0");
+  
 
-  return `${day}/${month}/${year}, ${h}:${m}:${s}`;
+  return `${day}/${month}/${year}, ${h}:${m}`;
 };
 
 const mask = (s, keepStart = 4, keepEnd = 4) => {
