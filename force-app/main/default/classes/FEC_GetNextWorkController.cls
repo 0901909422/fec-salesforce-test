@@ -11,7 +11,7 @@
  
 ****************************************************************************************/
 
-public with sharing class FEC_GetNextWorkController {
+public without sharing class FEC_GetNextWorkController {
 
     @AuraEnabled(cacheable=true)
 
@@ -23,29 +23,51 @@ public with sharing class FEC_GetNextWorkController {
     */
     public static List<Option> getAllUserQueues() {
         Id currentUserId = UserInfo.getUserId();
-        Set<Id> queueIds = new Set<Id>();
+
+        Set<Id> memberIds = new Set<Id>();
+        memberIds.add(currentUserId);
+
         for (GroupMember gm : [
             SELECT GroupId
             FROM GroupMember
             WHERE UserOrGroupId = :currentUserId
         ]) {
-            queueIds.add(gm.GroupId);
-        }
-        if (queueIds.isEmpty()) {
-            return new List<Option>();
+            memberIds.add(gm.GroupId);
         }
 
-        List<Group> queues = [
+        User u = [
+            SELECT UserRoleId
+            FROM User
+            WHERE Id = :currentUserId
+            LIMIT 1
+        ];
+
+        if (u.UserRoleId != null) {
+
+            for (Group roleGroup : [
+                SELECT Id
+                FROM Group
+                WHERE RelatedId = :u.UserRoleId
+            ]) {
+                memberIds.add(roleGroup.Id);
+            }
+        }
+
+         List<Group> queues = [
             SELECT Id, Name
             FROM Group
-            WHERE Id IN :queueIds
-              AND Type = 'Queue'
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            AND Id IN (
+                SELECT GroupId
+                FROM GroupMember
+                WHERE UserOrGroupId IN :memberIds
+            )
             ORDER BY Name ASC
         ];
 
         List<Option> options = new List<Option>();
         for (Group q : queues) {
-            options.add(new Option(q.Name, String.valueOf(q.Id)));
+            options.add(new Option(q.Name, q.Id));
         }
         return options;
     }
@@ -86,7 +108,9 @@ public with sharing class FEC_GetNextWorkController {
 
         Case c = new Case(
             Id = caseId,
-            OwnerId = UserInfo.getUserId()
+            OwnerId = UserInfo.getUserId(),
+            FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE,
+            FEC_Get_Next_Work__c = true
         );
 
         update c;
