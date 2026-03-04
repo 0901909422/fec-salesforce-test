@@ -56,6 +56,15 @@
     <types>
 		<members>Case.Customer_Case_Compact</members>
 		<name>CompactLayout</name>
+    </types>
+    <types>
+        <members>Case</members>
+        <members>FEC_Sensitive_Data__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+		<members>Case</members>
+		<name>SharingRules</name>
 	</types>
     <version>65.0</version>
 </Package>
