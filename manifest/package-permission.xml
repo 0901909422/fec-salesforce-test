@@ -168,7 +168,12 @@
 		<members>FEC_Reference_Info__c</members>
 		<members>FEC_Country__c</members>
 		<members>FEC_District__c</members>
+		<members>FEC_Sensitive_Data__c</members>
 		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>Case</members>
+		<name>SharingRules</name>
 	</types>
 	<types>
 		<members>FEC_Corrective_Action</members>

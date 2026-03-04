@@ -264,5 +264,5 @@
         <searchResultsAdditionalFields>FEC_Case_Created_On__c</searchResultsAdditionalFields>
         <searchResultsAdditionalFields>FEC_Case_Created_By__c</searchResultsAdditionalFields>
     </searchLayouts>
-    <sharingModel>ReadWriteTransfer</sharingModel>
+    <sharingModel>Private</sharingModel>
 </CustomObject>
