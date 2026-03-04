@@ -8,6 +8,8 @@
         <members>FEC_CommonUltils</members>
         <members>FEC_InteractionInforHandler</members>
         <members>FEC_GetRewardEligibility</members>
+        <members>FEC_SearchController</members>
+        <members>FEC_CreateCaseInteractionController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -22,10 +24,12 @@
     </types>
     <types>
         <members>FEC_Interaction_Case_Record_Page</members>
+		<members>FEC_Customer_Case_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
         <members>Case.FEC_Get_Next_Work__c</members>
+		<members>Case.FEC_Interaction_View_Mode__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -46,7 +50,12 @@
         <members>FEC_Corrective_Action-en_US</members>
         <members>FEC_Risk_Level-en_US</members>
         <members>FEC_Verify_Information-en_US</members>
+		<members>KYC_Method</members>
         <name>GlobalValueSetTranslation</name>
     </types>
+    <types>
+		<members>Case.Customer_Case_Compact</members>
+		<name>CompactLayout</name>
+	</types>
     <version>65.0</version>
 </Package>

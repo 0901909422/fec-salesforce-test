@@ -59,7 +59,8 @@ public with sharing class FEC_SearchController {
         } else {
             Case objCase = new Case(
                 Id = caseId,
-                FEC_Account_or_Contract__c = rec.Id
+                FEC_Account_or_Contract__c = rec.Id,
+                FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE
             );
             update objCase;
         }
