@@ -95,7 +95,7 @@ export default class Fec_InteractionHighlight extends LightningElement {
   }
 
   get iconUrl() {
-    if (!this.data?.customerCategory || !ICONS) return STR_EMPTY;
+    if (!ICONS) return STR_EMPTY;
 
     const iconMap = {
       "Suspected Fraud": "suspected_fraud.svg",
@@ -106,8 +106,8 @@ export default class Fec_InteractionHighlight extends LightningElement {
       Neutral: "neutral.svg",
     };
 
-    const iconName = iconMap[this.data.customerCategory] || "neutral.svg";
-    return iconName ? `${ICONS}/${iconName}` : STR_EMPTY;
+    const iconName = iconMap[this.data?.customerCategory] || "neutral.svg";
+    return `${ICONS}/${iconName}`;
   }
 
   get categoryLabel() {
