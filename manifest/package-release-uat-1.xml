@@ -1894,6 +1894,9 @@
         <members>FEC_Corrective_Action-en_US</members>
         <members>FEC_Risk_Level-en_US</members>
         <members>FEC_Verify_Information-en_US</members>
+        <members>Gender-en_US</members>
+        <members>Yes_No-en_US</members>
+        <members>Yes_No_NA-en_US</members>
         <name>GlobalValueSetTranslation</name>
     </types>
 
