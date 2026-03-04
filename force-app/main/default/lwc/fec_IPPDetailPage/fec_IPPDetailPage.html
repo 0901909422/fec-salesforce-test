@@ -3,38 +3,22 @@
         <!-- Header with Back button và icon IPP -->
         <div slot="title">
             <div class="slds-media slds-media_center">
-                <!-- <div class="slds-media__figure">
-                    <lightning-button-icon
-                        icon-name="utility:back"
-                        alternative-text="Back"
-                        title="Back"
-                        onclick={handleBack}
-                        class="slds-m-right_small">
-                    </lightning-button-icon>
-                </div> -->
+                
                 <div class="slds-media__figure ipp-header-icon-wrap">
-                    <span class="ipp-header-icon" title="{customLabel.ippDetailLabel}">
+                    <span class="ipp-header-icon" title={customLabel.ippDetailLabel}>
                         <lightning-icon icon-name="standard:account" size="small" class="ipp-header-icon-svg"></lightning-icon>
                     </span>
                 </div>
                 <div class="slds-media__body">
                     <div class="ipp-header-title-block">
-                        <h2 class="slds-card__header-title ipp-header-label">{customLabel.ippDetailLabel}</h2>
+                        <h2 class="slds-card__header-title ipp-header-label">{customLabel.ippLabel}</h2>
                         <div class="ipp-header-plan-name">{planNumber}</div>
+                        <!-- <div class="ipp-header-details-label">{customLabel.detailsLabel}</div> -->
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Actions -->
-        <!-- <div slot="actions">
-            <lightning-button
-                label="View Standard Record"
-                onclick={handleViewRecord}
-                variant="neutral">
-            </lightning-button>
-        </div> -->
-
         <!-- Loading spinner -->
         <template if:true={isLoading}>
             <div class="slds-is-relative slds-p-around_large">
@@ -47,7 +31,7 @@
             <template if:true={hasData}>
                 <div class="ipp-detail-tabset-wrapper">
                 <lightning-tabset class="ipp-detail-tabset">
-                    <lightning-tab label={customLabel.ippDetailLabel}>
+                    <lightning-tab label={customLabel.detailsLabel}>
                         <div class="slds-p-around_medium">
                             
                             <!-- IPP Schedule Section -->
