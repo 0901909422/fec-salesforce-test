@@ -115,6 +115,9 @@
 		<members>FEC_LABEL_FOLLOW_UP</members>
 		<members>FEC_LABEL_UNTIL_CASE_RESOLVED</members>
 		<members>FEC_LABEL_UNTIL_UNFOLLOW</members>
+		<members>FEC_Follow_Up_Until_Unfollow</members>
+		<members>FEC_Follow_Up_Label</members>
+		<members>FEC_Follow_Up_Until_Resolved</members>
 		<members>FEC_ACTION_SELECT_USER</members>
 		<members>FEC_ACTION_CANCEL</members>
 		<members>FEC_ACTION_CONFIRM</members>
