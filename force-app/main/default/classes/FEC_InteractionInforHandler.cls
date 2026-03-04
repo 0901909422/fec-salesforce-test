@@ -660,7 +660,8 @@ public without sharing class FEC_InteractionInforHandler {
                 Id,
                 RecordType.DeveloperName,
                 FEC_First_Access__c,
-                FEC_Interaction_View_Mode__c
+                FEC_Interaction_View_Mode__c,
+                FEC_Get_Next_Work__c
             FROM Case
             WHERE Id = :recordId
         ];
@@ -668,14 +669,22 @@ public without sharing class FEC_InteractionInforHandler {
         if (caselst.isEmpty())
             return null;
 
-        viewMode = caselst.get(0).FEC_First_Access__c
-            ? caselst.get(0).FEC_Interaction_View_Mode__c
-            : viewMode;
+        Case c = caselst.get(0);
+
+        if (c.FEC_Get_Next_Work__c == true) {
+            viewMode = 'handling';
+        } else if (c.FEC_First_Access__c == true) {
+            viewMode = c.FEC_Interaction_View_Mode__c;
+        }
+        // viewMode = caselst.get(0).FEC_First_Access__c
+        //     ? caselst.get(0).FEC_Interaction_View_Mode__c
+        //     : viewMode;
 
         update new Case(
             Id = recordId,
             FEC_Interaction_View_Mode__c = viewMode,
-            FEC_First_Access__c = false
+            FEC_First_Access__c = false,
+            FEC_Get_Next_Work__c = false
         );
 
         return viewMode;

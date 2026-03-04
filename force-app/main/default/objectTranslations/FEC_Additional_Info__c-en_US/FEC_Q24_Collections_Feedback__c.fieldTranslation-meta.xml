@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q24 Collections Feedback --></label>
+    <name>FEC_Q24_Collections_Feedback__c</name>
+    <picklistValues>
+        <masterLabel>Collection Staff Attitude</masterLabel>
+        <translation>Thái độ NV THN</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Early Debt Reminder</masterLabel>
+        <translation>Nhắc nợ trước hạn</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Excessive Debt Reminders</masterLabel>
+        <translation>Nhắc nợ quá nhiều</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Inappropriate Reminder Timing</masterLabel>
+        <translation>Thời điểm nhắc nợ không phù hợp</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Improvement Needed</masterLabel>
+        <translation>Không có điểm cần cải thiện</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other (State reason)</masterLabel>
+        <translation>Khác (ghi chú chi tiết)</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other Dissatisfaction</masterLabel>
+        <translation>Không hài lòng về khía cạnh khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Reason Not Disclosed</masterLabel>
+        <translation>Không chia sẻ lý do</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unsuitable Collection Channel</masterLabel>
+        <translation>Hình thức/ kênh nhắc nợ không phù hợp</translation>
+    </picklistValues>
+</CustomFieldTranslation>

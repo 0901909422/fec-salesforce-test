@@ -1135,6 +1135,7 @@
 		<members>Case.FEC_Interaction_Duration__c</members>
 		<members>Case.FEC_Is_Routing_Action_Display__c</members>
 		<members>Case.FEC_Draft_Routing_Action_Code__c</members>
+		<members>Case.FEC_Get_Next_Work__c</members>
         <members>FEC_Customer_History__c.FEC_Customer_Type__c</members>
         <name>CustomField</name>
     </types>
@@ -1220,6 +1221,12 @@
 		<members>FEC_MSG_Recall_Action_Not_Allowed</members>
 		<members>FEC_MSG_Record_Id_Invalid</members>
 		<members>FEC_MSG_Interaction_Highlight_Prefix</members>
+		<members>FEC_Choose_Sub_Decision_Label</members>
+		<members>FEC_Choose_Decision_Label</members>
+		<members>FEC_Sub_Decision_Label</members>
+		<members>FEC_MSG_No_IPP_Schedule_Data</members>
+		<members>FEC_MSG_No_Data_To_Display</members>
+		<members>FEC_Tab_Nature_Of_Case</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -1821,5 +1828,42 @@
 		<members>Relevant Depts</members>
 		<name>Profile</name>
 	</types>
+    <types>
+		<members>Case</members>
+		<name>SharingRules</name>
+	</types>
+
+	<!-- channel libraty -->
+	<types>
+		<members>FEC_Action_Button__c-Action Button Layout</members>
+		<members>FEC_Business_Process__c-Business Process Layout</members>
+		<members>FEC_Case_Stage__c-Case Stage Layout</members>
+		<members>FEC_Category__c-Category Layout</members>
+		<members>FEC_Channel__c-Channel Layout</members>
+		<members>FEC_Hold_Case__c-Hold Case Layout</members>
+		<members>FEC_Master_Data_Setting__c-Master Data Setting Layout</members>
+		<members>FEC_Nature_of_Case__c-Nature of Case Layout</members>
+		<members>FEC_Product_Type__c-FEC Product Type Layout</members>
+		<members>FEC_Stage_Change__c-Stage Change Layout</members>
+		<members>FEC_Stage_Screen__c-Stage Screen Layout</members>
+		<members>FEC_Sub_Category__c-FEC_Sub Category Layout</members>
+		<members>FEC_Sub_Code__c-FEC_Sub Code Layout</members>
+		<name>Layout</name>
+	</types>
+
+	<!-- Translate -->
+	<types>
+		<members>FEC_Additional_Info__c-en_US</members>
+		<name>CustomObjectTranslation</name>
+	</types>
+	<types>
+        <members>FEC_Assessment_Type-en_US</members>
+        <members>FEC_Confirm_Assessment-en_US</members>
+        <members>FEC_Corrective_Action-en_US</members>
+        <members>FEC_Risk_Level-en_US</members>
+        <members>FEC_Verify_Information-en_US</members>
+        <name>GlobalValueSetTranslation</name>
+    </types>
+
     <version>65.0</version>
 </Package>

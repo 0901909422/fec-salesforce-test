@@ -157,26 +157,26 @@ public with sharing class FEC_IntegrationCreateFraudController{
         //Detect user language       
         Boolean isVietnamese = userLang != null && userLang.startsWith(FEC_FraudConstantCommon.LANG_VI);
         // List to store queried records
-        List<FEC_Case_Channel__c> records;
+        List<FEC_Channel__c> records;
         records = [
             SELECT Id,
-            FEC_Code__c,
+            FEC_Channel_ID__c,
             Name,          
-            FEC_Name_VN__c
-            FROM FEC_Case_Channel__c
+            FEC_Channel_Vietnamese_name__c
+            FROM FEC_Channel__c
             WHERE FEC_Status__c = True
         ];
 
         // Convert queried records to NodeDTO list
         List<NodeDTO> result = new List<NodeDTO>();
-        for (FEC_Case_Channel__c r : records) {
+        for (FEC_Channel__c r : records) {
             String displayName = isVietnamese
-            ? r.FEC_Name_VN__c
+            ? r.FEC_Channel_Vietnamese_name__c
             : r.Name;
             result.add(
                 new NodeDTO(
                     displayName, // label
-                    r.FEC_Code__c      // value
+                    r.FEC_Channel_ID__c      // value
                 )
             );
         }
@@ -849,6 +849,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
             FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator =
             FEC_IntegrationFraudCaseUtil.buildCreator(reqWrapper);
+            log('submitUpdateFraudCase: '+ JSON.serialize(req));
 
             // 3. Call SOAP service
             FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType apiRes =
