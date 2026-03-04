@@ -14,6 +14,8 @@
 import { LightningElement, api } from 'lwc';
 import { isNegative } from 'c/fec_CommonUtils';
 
+import FEC_Button_Refresh from '@salesforce/label/c.FEC_Button_Refresh';
+
 export default class Fec_CommonRecordDetailSection extends LightningElement {
     /* ================= API ================= */
     @api sectionTitle;
@@ -30,6 +32,10 @@ export default class Fec_CommonRecordDetailSection extends LightningElement {
     }
     get fields() {
         return this._fields;
+    }
+
+    customLabel = {
+        btnRefresh: FEC_Button_Refresh,
     }
 
     /* ================= EVENTS ================= */

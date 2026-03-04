@@ -377,6 +377,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Customer_History__c.Close_Fee_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Customer_History__c.FEC_API_Cache_Secondary_Demo__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1121,8 +1126,33 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Customer_History__c.FEC_Total_Accrued_Interest__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Customer_History__c.FEC_Total_Balance__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Customer_History__c.FEC_Total_Close_Fee_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Customer_History__c.FEC_Total_Current_Balance__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Customer_History__c.FEC_Total_Deferred_Interest__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Customer_History__c.FEC_Total_IPP_Accrued_Interest__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1143,6 +1173,16 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Customer_History__c.FEC_Total_Payment_Due__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Customer_History__c.FEC_Total_Per_Diem__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Customer_History__c.FEC_Total_Plan_Payment_Amount__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

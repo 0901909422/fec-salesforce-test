@@ -5,6 +5,8 @@
     <permissionSets>FEC_CS_Unit_Head_of_CS_Operations_Management_Customer_360</permissionSets>
     <permissionSets>FEC_CS_Unit_Head_of_CS_Operations_Management_Interaction_Case_Service_Case</permissionSets>
     <permissionSets>FEC_CS_Unit_Head_of_CS_Operations_Management_Master_Data_Management</permissionSets>
+    <permissionSets>FEC_CS_Unit_Head_of_CS_Operations_Management_Search_Functions</permissionSets>
     <permissionSets>FEC_CS_Unit_Head_of_CS_Operations_Management_User_Management</permissionSets>
+    <permissionSets>FEC_Common_System_Setting</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>

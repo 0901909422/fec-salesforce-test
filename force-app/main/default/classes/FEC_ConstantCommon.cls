@@ -6,7 +6,35 @@ public with sharing class FEC_ConstantCommon {
     public static final String API_REQUESTOR_ID = 'SALESFORE-CSM';
     public static final String SOAP_ENV = 'http://schemas.xmlsoap.org/soap/envelope/';
 
+    /** Chuỗi rỗng dùng chung (default khi value blank). */
+    public static final String STR_EMPTY = '';
+
+    /** Dấu phân tách dùng cho key (vd: RecordType|Channel). */
+    public static final String KEY_DELIMITER_PIPE = '|';
+
+    /** Dấu phân tách trong FEC_ID_Search__c (format: Prefix-Số, vd S-0001). */
+    public static final String FEC_ID_SEARCH_DELIMITER = '-';
+
+    /** Prefix cho các trạng thái Case đã resolved (Resolved-Completed, Resolved-Cancelled, ...) */
+    public static final String CASE_STATUS_PREFIX_RESOLVED = 'Resolved';
+
+    /** Follow-up: giá trị picklist "Until Case is Resolved" */
+    public static final String FOLLOW_UP_TYPE_UNTIL_RESOLVED = 'Until Case is Resolved';
+    /** Follow-up: giá trị picklist "Until choosing Unfollow" */
+    public static final String FOLLOW_UP_TYPE_UNTIL_UNFOLLOW = 'Until choosing Unfollow';
+    /** Follow-up: giá trị frontend UNTIL_RESOLVED */
+    public static final String FOLLOW_UP_FRONTEND_RESOLVED = 'UNTIL_RESOLVED';
+    /** Follow-up: giá trị frontend UNTIL_UNFOLLOW */
+    public static final String FOLLOW_UP_FRONTEND_UNFOLLOW = 'UNTIL_UNFOLLOW';
+    /** Follow-up: ký hiệu rút gọn trong FEC_Follow_Up_User__c cho Until Resolved */
+    public static final String FOLLOW_UP_COMPACT_RESOLVED = 'R';
+    /** Follow-up: ký hiệu rút gọn trong FEC_Follow_Up_User__c cho Until Unfollow */
+    public static final String FOLLOW_UP_COMPACT_UNFOLLOW = 'U';
+    /** Dấu phân tách giữa các entry trong FEC_Follow_Up_User__c */
+    public static final String FOLLOW_UP_FIELD_DELIMITER = ';';
+
     public static final String STR_DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS';
+    public static final String STR_DATETIME_FORMAT_Z = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'';
     public static final String STR_DATETIME_FORMAT_XXX = 'yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX';
     public static final String DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss';
     public static final String DATE_FORMAT = 'yyyy-MM-dd';
@@ -88,15 +116,43 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String INTERACTION_VIEW_MODE = 'view';
     public static final String INTERACTION_HANDLING_MODE = 'handling';
+    public static final String INTERACTION_REVIEW_MODE = 'review';
 
     public static final String CASE_STATUS_NEW = 'New';
     public static final String CASE_STATUS_OPEN = 'Open';
+    public static final String CASE_STATUS_PENDING = 'Pending';
 
     public static final String CASE_WEB_ORIGIN = 'Web';
+
+    public static final String GROUP_TYPE_QUEUE = 'Queue';
 
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
 
     public static final String CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER = 'Non-existing';
     public static final String CUSTOMER_HISTORY_EXISTING_CUSTOMER = 'Existing';
+
+    public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
+    public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
+
+    public static final String FEC_CATEGORY_COMPLAINT = 'Complaint';
+    public static final String FEC_COMPLAIN_TYPE_NORMAL = 'Normal';
+    public static final String FEC_COMPLAIN_TYPE_URGENT = 'Urgent';
+    public static final String FEC_COMPLAIN_TYPE_HIGH_RISK = 'High Risk';
+    public static final String FEC_SUB_CATEGORY_CODE_CL01 = 'CL01';
+    public static final String FEC_SUB_CATEGORY_CODE_CC01 = 'CC01';
+
+    public static final String CUSTOMER_CATEGORY_SUSPECTED_FRAUD = 'Suspected Fraud';
+    public static final String CUSTOMER_CATEGORY_MEDIA = 'Media';
+    public static final String CUSTOMER_CATEGORY_SERIOUS_COMPLAINT = 'Serious Complaint';
+    public static final String CUSTOMER_CATEGORY_UNHAPPY = 'Unhappy';
+    public static final String CUSTOMER_CATEGORY_VIP = 'VIP';
+    public static final String CUSTOMER_CATEGORY_NEUTRAL = 'Neutral';
+
+    public static final String SECTION_INTERACTION_DETAILS = 'Interaction Details';
+    public static final String SECTION_INTERACTION_PHONE = 'Interaction Phone';
+    public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
+
+    public static final String EMAIL = 'Email';
+    public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
 }

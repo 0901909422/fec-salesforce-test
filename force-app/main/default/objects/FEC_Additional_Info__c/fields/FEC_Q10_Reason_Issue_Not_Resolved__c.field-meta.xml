@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Q10_Reason_Issue_Not_Resolved__c</fullName>
+    <description>Q10: Lý do vấn đề của KH chưa được hỗ trợ</description>
     <label>Q10 Reason Issue Not Resolved</label>
     <length>32768</length>
     <trackHistory>false</trackHistory>

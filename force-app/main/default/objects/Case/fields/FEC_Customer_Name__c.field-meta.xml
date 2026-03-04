@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Customer_Name__c</fullName>
+    <description>Tên KH cần khi kh mới chưa có trên hệ thống, User sẽ nhập thủ công để tạo case.</description>
     <externalId>false</externalId>
     <label>Customer Name</label>
     <length>80</length>

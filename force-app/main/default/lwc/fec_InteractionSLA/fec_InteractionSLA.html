@@ -14,12 +14,12 @@
       </div>
 
       <!-- RIGHT: Picklist component (50%) - hidden when viewMode is 'review' -->
-      <template if:false={isReviewMode}>
+      <!-- <template if:false={isReviewMode}> -->
         <div class="slds-col slds-size_6-of-12">
           <c-fec_-account-or-contract-picklist-interaction
             record-id={recordId}></c-fec_-account-or-contract-picklist-interaction>
         </div>
-      </template>
+      <!-- </template> -->
     </div>
   </div>
 
@@ -34,14 +34,14 @@
 
         <!-- Modal Body -->
         <div class="slds-modal__content slds-p-around_medium">
-          <lightning-combobox name="quickOutcomeCode" label="Select Outcome Code" value={quickWrapUpOutcomeCode}
+          <lightning-combobox name="quickOutcomeCode" label={customLabel.selectOutcomeCode} value={quickWrapUpOutcomeCode}
             placeholder="--None--" options={quickOutcomeCodeOptions} disabled></lightning-combobox>
         </div>
 
         <!-- Modal Footer -->
         <footer class="slds-modal__footer">
-          <lightning-button variant="neutral" label="Cancel" onclick={handleQuickWrapUpCancelClick}></lightning-button>
-          <lightning-button variant="brand" label="Confirm" onclick={handleQuickWrapUpConfirmClick}></lightning-button>
+          <lightning-button variant="neutral" label={customLabel.btnCancel} onclick={handleQuickWrapUpCancelClick}></lightning-button>
+          <lightning-button variant="brand" label={customLabel.btnConfirm} onclick={handleQuickWrapUpConfirmClick}></lightning-button>
         </footer>
       </div>
     </section>
@@ -59,7 +59,7 @@
 
         <!-- Modal Body -->
         <div class="slds-modal__content slds-p-around_medium">
-          <lightning-combobox name="outcomeCode" label="Select Outcome Code" value={selectedOutcomeCode}
+          <lightning-combobox name="outcomeCode" label={customLabel.selectOutcomeCode} value={selectedOutcomeCode}
             placeholder="--None--" options={outcomeCodeOptions} onchange={handleOutcomeCodeChange}
             required></lightning-combobox>
 
@@ -69,15 +69,15 @@
             </label>
             <div class="slds-form-element__control">
               <textarea id="interactionRemarks" class="slds-textarea" oninput={handleInteractionRemarksChange}
-                placeholder="Enter interaction remarks...">{interactionRemarks}</textarea>
+                placeholder={customLabel.interactionRemarkPlaceholder}>{interactionRemarks}</textarea>
             </div>
           </div>
         </div>
 
         <!-- Modal Footer -->
         <footer class="slds-modal__footer">
-          <lightning-button variant="neutral" label="Cancel" onclick={handleCancelClick}></lightning-button>
-          <lightning-button variant="brand" label="Confirm" onclick={handleConfirmClick}></lightning-button>
+          <lightning-button variant="neutral" label={customLabel.btnCancel} onclick={handleCancelClick}></lightning-button>
+          <lightning-button variant="brand" label={customLabel.btnConfirm} onclick={handleConfirmClick}></lightning-button>
         </footer>
       </div>
     </section>
