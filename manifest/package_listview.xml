@@ -88,6 +88,10 @@
 		<name>WebLink</name>
 	</types>
     <types>
+		<members>Case.FEC_Get_Next_Work__c</members>
+		<name>CustomField</name>
+	</types>
+    <types>
 		<members>Case</members>
 		<name>CustomObject</name>
 	</types>
