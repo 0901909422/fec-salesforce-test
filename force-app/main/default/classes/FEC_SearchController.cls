@@ -1,0 +1,113 @@
+public with sharing class FEC_SearchController {
+    /**
+     * Returns minimal Case context for fec_Search initialization.
+     * - Runs in USER MODE and WITH SECURITY ENFORCED to respect security.
+     * - Selects only fields needed by the component.
+     */
+    @AuraEnabled(cacheable=true)
+    public static Case getCase(Id caseId) {
+        if (caseId == null) {
+            return null;
+        }
+
+        // Query with field-level security and sharing respected
+        Case c;
+        try {
+            c = [
+                SELECT Id, FEC_Channel__c, FEC_National_ID_Passport_ID__c,
+                 FEC_Phone_Number__c, FEC_Contract_Number__c, RecordType.Name,
+                 FEC_Skip_Search_Internal_Case__c, FEC_Has_Account_or_Contract__c,
+                 (SELECT Id FROM Customer_Histories__r)
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+        } catch (Exception e) {
+            // If user lacks field/object access, return null (component remains usable)
+            return null;
+        }
+        return c;
+    }
+
+    @AuraEnabled
+    public static void createHistory(String value, String fieldName, Id caseId) {
+        // Return early if no value or field name
+        if (value == null || value.trim() == '' || fieldName == null || fieldName.trim() == '') {
+            throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
+        }
+        // Build record
+        FEC_Customer_History__c rec = new FEC_Customer_History__c();
+        
+        // Set field based on fieldName parameter
+        if (fieldName == 'AccountNumber') {
+            rec.FEC_Account_Number__c = value;
+        }
+        if (fieldName == 'ContractNumber') {
+            rec.FEC_Contract_Number__c = value;
+        }
+        if (fieldName == 'UserId') {
+            rec.FEC_User_ID__c = value;
+        }
+        rec.Name = value;
+        rec.FEC_Case__c = caseId;
+
+        // Insert in USER_MODE as per security best practice
+        Database.SaveResult sr = Database.insert(rec);
+        if (!sr.isSuccess()) {
+            Database.Error err = (sr.getErrors() != null && !sr.getErrors().isEmpty()) ? sr.getErrors()[0] : null;
+            throw new AuraHandledException(err != null ? err.getMessage() : System.Label.FEC_MSG_Create_Customer_History_Error);
+        } else {
+            Case objCase = new Case(
+                Id = caseId,
+                FEC_Account_or_Contract__c = rec.Id
+            );
+            update objCase;
+        }
+    }
+
+    @AuraEnabled
+    public static Case createCustomerCase(String fullName, String nationalId) {
+        try{
+            Case c = new Case();
+            c.FEC_Customer_Name__c = fullName;
+            c.FEC_National_ID_Passport_ID__c = nationalId;
+            c.RecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName().get('Customer_Case').getRecordTypeId();
+            insert c;
+            return c;
+        }   
+        catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    /**
+   * @description Checks if the current user has edit access to specific fields on a given SObject.
+   * @param sObjectType The SObject type (e.g., 'Account', 'Custom_Object__c')
+   * @param fieldNames A list of field API names to check
+   * @return Map<String, Boolean> A map where the key is the field name and the value is true if editable.
+   */
+
+    @AuraEnabled(cacheable=true)
+    public static Map<String, Boolean> checkFieldEditPermissions(String sObjectType, List<String> fieldNames) {
+        Map<String, Boolean> fieldPermissions = new Map<String, Boolean>();
+        
+        // Get the describe result for the object
+        SObjectType targetType = Schema.getGlobalDescribe().get(sObjectType);
+        if (targetType == null) {
+            return fieldPermissions; 
+        }
+        
+        Map<String, SObjectField> fieldsMap = targetType.getDescribe().fields.getMap();
+        
+        for (String fieldName : fieldNames) {
+            if (fieldsMap.containsKey(fieldName)) {
+                // Check if the field is updateable by the current user
+                fieldPermissions.put(fieldName, fieldsMap.get(fieldName).getDescribe().isUpdateable());
+            } else {
+                fieldPermissions.put(fieldName, false); // Field doesn't exist or isn't accessible
+            }
+        }
+        
+        return fieldPermissions;
+    }
+}

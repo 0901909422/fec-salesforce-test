@@ -1,0 +1,28 @@
+<template>
+
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading"></lightning-spinner>
+    </template>
+
+    <template if:true={record}>
+        <template if:true={sections}>
+            <c-fec_-common-detail-view
+                title="Application Detail"
+                sub-title={record.applicationId}
+                icon-name="standard:orders"
+                sections={sections}
+                ontoggle={handleToggle}
+                columns="4">
+            </c-fec_-common-detail-view>
+        </template>
+    </template>
+
+    <template if:false={record}>
+        <template if:false={isLoading}>
+            <div class="slds-text-align_center slds-text-color_weak slds-p-around_medium">
+                No application selected
+            </div>
+        </template>
+    </template>
+
+</template>

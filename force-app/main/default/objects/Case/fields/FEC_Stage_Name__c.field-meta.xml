@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Stage_Name__c</fullName>
+    <description>Trường hiển thị bước xử lý của Case
+Tên bước thực hiện (lấy từ trường Stage Name trong master data liên quan)</description>
+    <externalId>false</externalId>
+    <formula>FEC_Current_Case_Stage__r.Name</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Stage Name</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
