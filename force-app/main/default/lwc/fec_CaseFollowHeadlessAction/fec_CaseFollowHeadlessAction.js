@@ -13,6 +13,18 @@ import FEC_MSG_FollowUp_Add_User_To_Watcher_Success from '@salesforce/label/c.FE
 import FEC_MSG_FollowUp_Type_Updated_Success from '@salesforce/label/c.FEC_MSG_FollowUp_Type_Updated_Success';
 import FEC_MSG_FollowUp_Case_Follow_Success from '@salesforce/label/c.FEC_MSG_FollowUp_Case_Follow_Success';
 import FEC_MSG_FollowUp_Error_Detail from '@salesforce/label/c.FEC_MSG_FollowUp_Error_Detail';
+import FEC_Follow_Up_Label from '@salesforce/label/c.FEC_Follow_Up_Label';
+import FEC_Follow_Up_Until_Resolved from '@salesforce/label/c.FEC_Follow_Up_Until_Resolved';
+import FEC_Follow_Up_Until_Unfollow from '@salesforce/label/c.FEC_Follow_Up_Until_Unfollow';
+import FEC_Action_Select_User from '@salesforce/label/c.FEC_Action_Select_User';
+import FEC_Action_Cancel from '@salesforce/label/c.FEC_Action_Cancel';
+import FEC_Action_Confirm from '@salesforce/label/c.FEC_Action_Confirm';
+import FEC_Label_Select_Follow_Up_User from '@salesforce/label/c.FEC_Label_Select_Follow_Up_User';
+import FEC_Action_Close from '@salesforce/label/c.FEC_Action_Close';
+import FEC_Label_User from '@salesforce/label/c.FEC_Label_User';
+import FEC_Label_Clear_User_Selection from '@salesforce/label/c.FEC_Label_Clear_User_Selection';
+import FEC_MSG_No_User_Found from '@salesforce/label/c.FEC_MSG_No_User_Found';
+import FEC_Label_Follow_Up_Type from '@salesforce/label/c.FEC_Label_Follow_Up_Type';
 
 export default class FecCaseFollowHeadlessAction extends LightningElement {
     @api recordId;
@@ -35,6 +47,27 @@ export default class FecCaseFollowHeadlessAction extends LightningElement {
     alreadyFollowing = false;
     currentFollowType = '';
     caseStatus = ''; // Lưu status của Case
+
+    // Custom Labels getter
+    get customLabels() {
+        return {
+            labelFollowUp: FEC_Follow_Up_Label,
+            untilResolved: FEC_Follow_Up_Until_Resolved,
+            untilUnfollow: FEC_Follow_Up_Until_Unfollow,
+            actionSelectUser: FEC_Action_Select_User,
+            actionCancel: FEC_Action_Cancel,
+            actionConfirm: FEC_Action_Confirm,
+            labelSelectFollowUpUser: FEC_Label_Select_Follow_Up_User,
+            actionClose: FEC_Action_Close,
+            labelUser: FEC_Label_User,
+            labelClearUserSelection: FEC_Label_Clear_User_Selection,
+            msgNoUserFound: FEC_MSG_No_User_Found,
+            labelFollowUpType: FEC_Label_Follow_Up_Type,
+            selectedFollowUpTypeLabel: this.selectedFollowUpTypeLabel,
+            labelCancel: FEC_Action_Cancel,
+            labelConfirm: FEC_Action_Confirm
+        };
+    }
 
     // Headless Action - invoke() được gọi khi click button
     @api
