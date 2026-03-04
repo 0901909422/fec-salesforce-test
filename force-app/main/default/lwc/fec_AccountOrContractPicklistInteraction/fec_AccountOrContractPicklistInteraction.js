@@ -4,6 +4,7 @@ import HAS_ACCOUNT_OR_CONTACT from "@salesforce/schema/Case.FEC_Has_Account_or_C
 import getInteractionAccountNumber from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.getInteractionAccountNumber";
 import GetProductsListByCif from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.GetProductsListByCif";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
+import { UBANK_PRODUCT_NAME } from 'c/fec_CommonConst';
 import {
   subscribe,
   unsubscribe,
@@ -52,36 +53,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     { label: "Product Name", fieldName: "productName" },
   ];
 
-  data = [
-    // {
-    //   id: "row-001",
-    //   product: "Loan",
-    //   accountContractNumber: "ACC-100001",
-    //   productName: "Personal Loan",
-    //   isSelected: false,
-    // },
-    // {
-    //   id: "row-002",
-    //   product: "Credit Card",
-    //   accountContractNumber: "CC-200045",
-    //   productName: "Platinum Credit Card",
-    //   isSelected: false,
-    // },
-    // {
-    //   id: "row-003",
-    //   product: "Insurance",
-    //   accountContractNumber: "INS-330021",
-    //   productName: "Health Insurance Plus",
-    //   isSelected: false,
-    // },
-    // {
-    //   id: "row-004",
-    //   product: "UBank",
-    //   accountContractNumber: "UBank",
-    //   productName: "UBank",
-    //   isSelected: false,
-    // },
-  ];
+  data = [];
 
   /* =======================
    * LMS SUBSCRIPTION
@@ -191,9 +163,9 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
 
         mappedData.push({
           id: String(mappedData.length + 1),
-          product: "UBank",
-          accountContractNumber: "UBank",
-          productName: "UBank",
+          product: UBANK_PRODUCT_NAME,
+          accountContractNumber: UBANK_PRODUCT_NAME,
+          productName: UBANK_PRODUCT_NAME,
           isSelected: false,
         });
         console.log("Mapped Data:", mappedData);
