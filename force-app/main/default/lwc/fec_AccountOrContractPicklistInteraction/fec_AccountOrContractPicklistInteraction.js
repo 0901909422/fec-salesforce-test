@@ -22,6 +22,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   @api recordId;
 
   selectedValue = "";
+  cifNumber = "";
   hasAccountOrContact = false;
   isOpen = false;
   selectedRows = [];
@@ -52,34 +53,34 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   ];
 
   data = [
-    {
-      id: "row-001",
-      product: "Loan",
-      accountContractNumber: "ACC-100001",
-      productName: "Personal Loan",
-      isSelected: false,
-    },
-    {
-      id: "row-002",
-      product: "Credit Card",
-      accountContractNumber: "CC-200045",
-      productName: "Platinum Credit Card",
-      isSelected: false,
-    },
-    {
-      id: "row-003",
-      product: "Insurance",
-      accountContractNumber: "INS-330021",
-      productName: "Health Insurance Plus",
-      isSelected: false,
-    },
-    {
-      id: "row-004",
-      product: "UBank",
-      accountContractNumber: "UBank",
-      productName: "UBank",
-      isSelected: false,
-    },
+    // {
+    //   id: "row-001",
+    //   product: "Loan",
+    //   accountContractNumber: "ACC-100001",
+    //   productName: "Personal Loan",
+    //   isSelected: false,
+    // },
+    // {
+    //   id: "row-002",
+    //   product: "Credit Card",
+    //   accountContractNumber: "CC-200045",
+    //   productName: "Platinum Credit Card",
+    //   isSelected: false,
+    // },
+    // {
+    //   id: "row-003",
+    //   product: "Insurance",
+    //   accountContractNumber: "INS-330021",
+    //   productName: "Health Insurance Plus",
+    //   isSelected: false,
+    // },
+    // {
+    //   id: "row-004",
+    //   product: "UBank",
+    //   accountContractNumber: "UBank",
+    //   productName: "UBank",
+    //   isSelected: false,
+    // },
   ];
 
   /* =======================
@@ -162,8 +163,15 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   getInteractionAccountNumber() {
     getInteractionAccountNumber({ caseId: this.recordId })
       .then((result) => {
-        console.log("[APEX] getInteractionAccountNumber result:", result);
-        this.selectedValue = result;
+        const data = JSON.parse(result);
+
+        console.log(data.accountNumber);
+        console.log(data.cifNumber);
+        this.selectedValue = data.accountNumber;
+        this.cifNumber = data.cifNumber;
+
+        // gọi tiếp sau khi đã có cif
+        return this.getProductsList();
       })
       .catch((error) => {
         console.error("[APEX] GetInteractionAccountNumber error:", error);
@@ -171,15 +179,25 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   }
 
   getProductsList() {
-    GetProductsListByCif({ cifNumber: "" })
+    GetProductsListByCif({ cifNumber: this.cifNumber })
       .then((result) => {
-        this.data = result.map((item, index) => ({
+        const mappedData = result.map((item, index) => ({
           id: String(index + 1),
           product: item.productType,
           accountContractNumber: item.accountContractNumber,
           productName: item.productName,
           isSelected: false,
         }));
+
+        mappedData.push({
+          id: String(mappedData.length + 1),
+          product: "UBank",
+          accountContractNumber: "UBank",
+          productName: "UBank",
+          isSelected: false,
+        });
+        console.log("Mapped Data:", mappedData);
+        this.data = mappedData;
       })
       .catch((error) => {
         console.error("[APEX] GetProductsListByCif error:", error);
