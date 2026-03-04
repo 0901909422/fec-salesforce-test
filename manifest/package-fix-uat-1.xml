@@ -8,6 +8,7 @@
         <members>FEC_CommonUltils</members>
         <members>FEC_InteractionInforHandler</members>
         <members>FEC_GetRewardEligibility</members>
+        <members>FEC_CaseBusinessService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -20,6 +21,7 @@
         <members>fec_TransactionsAccount</members>
 		<members>fec_CaseFollowHeadlessAction</members>
 		<members>fec_CaseUnfollowHeadlessAction</members>
+		<members>fec_CaseBussiness</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
