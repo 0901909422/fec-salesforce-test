@@ -1059,7 +1059,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     let formToSubmit = [];
     formlst?.forEach((item) => {
       let fieldlst = item.querySelectorAll("lightning-input-field");
-      if (fieldlst && fieldlst.length > 0) {
+      if (fieldlst && fieldlst.length > 0 && item.recordId) {
         formToSubmit.push(item);
       }
     });
@@ -1295,7 +1295,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       );
 
       if (subSection) {
-        obj = subSection.objlst?.find((item) => (item.id = filter.obj));
+        obj = subSection.objlst?.find((item) => (item.id === filter.obj));
 
         if (obj) {
           field = obj.fieldlst.find((item) => item.apiName === filter.field);
@@ -1347,7 +1347,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     let formToSubmit = [];
     formlst?.forEach((item) => {
       let fieldlst = item.querySelectorAll("lightning-input-field");
-      if (fieldlst && fieldlst.length > 0) {
+      if (fieldlst && fieldlst.length > 0 && item.recordId) {
         formToSubmit.push(item);
       }
     });
