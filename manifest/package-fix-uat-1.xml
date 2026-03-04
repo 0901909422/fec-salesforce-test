@@ -9,6 +9,7 @@
         <members>FEC_InteractionInforHandler</members>
         <members>FEC_GetRewardEligibility</members>
         <members>FEC_CaseBusinessService</members>
+        <members>FEC_GetNextWorkController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -26,6 +27,7 @@
 		<members>fec_RelevantCaseListViewAll</members>
 		<members>fec_RelevantInteractionCaseListViewAll</members>
 		<members>fec_RelevantInteractionListViewAll</members>
+		<members>fec_GetNextWork</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -101,5 +103,30 @@
 		<members>FEC_MSG_FollowUp_Case_Follow_Success</members>
 		<name>CustomLabel</name>
 	</types>
+    <types>
+        <members>Case.FEC_DQ_CS_Center_Case</members>
+        <members>Case.FEC_DQ_CS_Contact_Center_Dept_Case</members>
+        <members>Case.FEC_DQ_CS_Inbound_Case</members>
+        <members>Case.FEC_DQ_CS_Office_Based_Case</members>
+        <members>Case.FEC_DQ_CS_Outbound_Case</members>
+        <members>Case.FEC_DQ_CS_Ecom_Case</members>
+        <members>Case.FEC_DQ_CS_Customer_Care_Dept_Case</members>
+        <members>Case.FEC_DQ_CS_Support_Case</members>
+        <members>Case.FEC_DQ_CS_Customer_Care_Case</members>
+        <members>Case.FEC_DQ_CS_QC_OM_Case</members>
+        <members>Case.FEC_DQ_CS_Ops_Management_Case</members>
+        <members>Case.FEC_DQ_CS_Quality_Control_Case</members>
+        <members>Case.FEC_DQ_Card_Operations_Case</members>
+        <members>Case.FEC_DQ_Collections_Case</members>
+        <members>Case.FEC_DQ_Contract_Processing_Case</members>
+        <members>Case.FEC_DQ_Payment_Case</members>
+        <members>Case.FEC_DQ_Direct_Sales_Case</members>
+        <members>Case.FEC_DQ_POS_Sales_Case</members>
+        <members>Case.FEC_DQ_Telesales_Case</members>
+        <members>Case.FEC_DQ_Credit_Assessment_Case</members>
+        <members>Case.FEC_DQ_IT_Operations_Support_Case</members>
+        <members>Case.FEC_DQ_Internal_Audit_Case</members>
+        <name>ListView</name>
+    </types>
     <version>65.0</version>
 </Package>
