@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Card Not Received Reason --></label>
+    <name>FEC_Card_Not_Received_Reason__c</name>
+    <picklistValues>
+        <masterLabel>After Business Hours Only</masterLabel>
+        <translation>Chỉ nhận được sau giờ hành chính</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Borrowing from Other Provider</masterLabel>
+        <translation>Cần vay bên khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Cannot Take Calls During Work</masterLabel>
+        <translation>Không nghe điện thoại trong giờ làm việc</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Do Not Want Card</masterLabel>
+        <translation>Không muốn nhận thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Pickup at Post Office/Branch</masterLabel>
+        <translation>Muốn nhận tại bưu cục/ văn phòng</translation>
+    </picklistValues>
+</CustomFieldTranslation>
