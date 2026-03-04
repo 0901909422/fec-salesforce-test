@@ -448,12 +448,12 @@ const checkNoUpdateInSubmit = (getOriginalValue, getUpdatedValue, options) => {
   const presentSet = options?.presentUpdatedApiNames;
   const pairsToCheck =
     presentSet != null &&
-    (Set.prototype.isPrototypeOf(presentSet) || Array.isArray(presentSet))
+      (Set.prototype.isPrototypeOf(presentSet) || Array.isArray(presentSet))
       ? ORIGINAL_UPDATED_FIELD_PAIRS.filter((p) =>
-          Set.prototype.isPrototypeOf(presentSet)
-            ? presentSet.has(p.updated)
-            : presentSet.includes(p.updated),
-        )
+        Set.prototype.isPrototypeOf(presentSet)
+          ? presentSet.has(p.updated)
+          : presentSet.includes(p.updated),
+      )
       : ORIGINAL_UPDATED_FIELD_PAIRS;
 
   if (pairsToCheck.length === 0) return false;
@@ -493,13 +493,42 @@ const setConsoleTab = async (label, icon) => {
       });
     }
   } catch (e) {
-   console.error(e);
+    console.error(e);
   }
 };
 
 const urlCmpWithRecordId = (cmp, recordId) => {
   return `/lightning/cmp/c__${cmp}?c__recordId=${recordId}`;
 }
+
+/* ================= NEGATIVE HELPER ================= */
+const isNegative = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return false;
+  }
+
+  if (typeof value === 'number') {
+    return value < 0;
+  }
+
+  const cleaned = value.toString().replace(/,/g, '').trim();
+
+  if (cleaned === '' || isNaN(cleaned)) {
+    return false;
+  }
+
+  return Number(cleaned) < 0;
+};
+
+const formatNumber = (value) => {
+  if (value === null || value === undefined) return '';
+  try {
+    return new Intl.NumberFormat('en-US').format(value);
+  } catch {
+    return value;
+  }
+}
+
 
 export {
   formatDate,
@@ -520,4 +549,6 @@ export {
   isOnlyNumber,
   setConsoleTab,
   urlCmpWithRecordId,
+  isNegative,
+  formatNumber
 };

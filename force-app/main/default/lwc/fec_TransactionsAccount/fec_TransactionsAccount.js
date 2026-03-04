@@ -14,7 +14,7 @@
 import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import loadTransactions from '@salesforce/apex/FEC_TransactionsController.loadTransactions';
-import { formatDateVNI, formatDateDDMMYYYYHHMM, formatNumber } from 'c/fec_CommonUtils';
+import { formatDateVNI, formatDateTime, formatNumber } from 'c/fec_CommonUtils';
 
 import FEC_Transaction_Code from '@salesforce/label/c.FEC_Transaction_Code';
 import FEC_Unbilled_Transactions from '@salesforce/label/c.FEC_Unbilled_Transactions';
@@ -214,7 +214,7 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             merchantDescription: tx.merchantDescription || '',
             creditDebitFlag: tx.creditDebitFlag || '',
 
-            effectiveDate: formatDateDDMMYYYYHHMM(tx.effectiveDate),
+            effectiveDate: formatDateTime(tx.effectiveDate),
             postDate: formatDateVNI (tx.postingDate),
             transactionAmount: formatNumber(tx.transactionAmount),
 
@@ -233,7 +233,7 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             transactionCode: tx.transactionCode || '',
             merchantDescription: tx.merchantDescription || '',
 
-            effectiveDate: formatDateDDMMYYYYHHMM(tx.effectiveDate),
+            effectiveDate: formatDateTime(tx.effectiveDate),
             transactionAmount: formatNumber(tx.transactionAmount),
             transactionPlan: tx.transactionPlan || '',
             authorizationCode: tx.authorizationCode || '',
