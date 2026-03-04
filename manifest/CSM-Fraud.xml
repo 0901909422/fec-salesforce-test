@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        
+        <members>FEC_FraudConstantCommon</members>
+        <members>FEC_IntegrationSoapFraudcaseService</members>
+        <members>FEC_IntegrationFraudCaseUtil</members>
+        <members>FEC_FraudCaseMockData</members>
+        <members>FEC_IntegrationFraudScheduler</members>
+        <members>FEC_IntegrationFraudService</members>
+        <members>FEC_IntegrationMasterDataController</members>
+        <members>FEC_ServiceFraudTaskCaseController</members>
+        <members>FEC_IntegrationSearchFraudCaseController</members>
+        <members>FEC_IntegrationFraudCaseDetailController</members>
+        <members>FEC_IntegrationFraudCaseApi</members>
+        
+        <name>ApexClass</name>
+    </types>
+     <!-- Custom Objects -->
+    <types>
+        <members>FEC_Master_Data_Integration__c</members>
+        <members>FEC_Integration_Case__c</members>
+        <members>FEC_Integration_Service_Log__c</members>
+        <members>FEC_Integration_Case_Info__c</members>
+        <members>FEC_User_Type__c</members>
+        <members>FEC_Data_Integration_Mapping_Info__c</members>
+        <members>FEC_Data_Integration_Mapping__c</members>
+        <members>FEC_Integration_Admin_Recipient__mdt</members>
+        
+        <name>CustomObject</name>
+    </types>
+
+    <!-- Custom Labels -->
+    <types>
+        <members>CustomLabels</members>
+        <name>CustomLabel</name>
+    </types>
+    <types>
+        <members>integrationFraudMasterData</members>
+        <members>fecIntegrationCreateFraudCase</members>
+        <members>fecServiceFraudTaskCaseAction</members>
+        <members>fecIntegrationFraudCaseSearch</members>
+        <members>fecIntegrationMapping</members>
+        <members>fecIntegrationFraudCaseDetail</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <version>65.0</version>
+</Package>
