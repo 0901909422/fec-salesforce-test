@@ -4,6 +4,10 @@
 		<members>FEC_Service</members>
 		<name>CustomApplication</name>
 	</types>
+	<types>
+		<members>FEC_SearchController</members>
+		<name>ApexClass</name>
+	</types>
     <types>
 		<members>Case.FEC_User_Email_ID__c</members>
 		<name>CustomField</name>
