@@ -57,6 +57,8 @@
 		<members>fec_ComboBox</members>
 		<members>fec_CommonConst</members>
         <members>fec_ErrorPanel</members>
+		<members>fec_CaseFollowHeadlessAction</members>
+		<members>fec_CaseUnfollowHeadlessAction</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -67,6 +69,8 @@
     <types>
 		<members>Case.FEC_Execute_Customer_Case</members>
 		<members>Case.New_Assignment</members>
+		<members>Case.Follow_Up</members>
+		<members>Case.Unfollow</members>
 		<name>QuickAction</name>
 	</types>
     <types>
@@ -108,6 +112,24 @@
 		<members>FEC_MSG_Recall_Action_Not_Allowed</members>
 		<members>FEC_MSG_Record_Id_Invalid</members>
 		<members>FEC_MSG_Interaction_Highlight_Prefix</members>
+		<members>FEC_LABEL_FOLLOW_UP</members>
+		<members>FEC_LABEL_UNTIL_CASE_RESOLVED</members>
+		<members>FEC_LABEL_UNTIL_UNFOLLOW</members>
+		<members>FEC_ACTION_SELECT_USER</members>
+		<members>FEC_ACTION_CANCEL</members>
+		<members>FEC_ACTION_CONFIRM</members>
+		<members>FEC_ACTION_CLOSE</members>
+		<members>FEC_LABEL_SELECT_FOLLOW_UP_USER</members>
+		<members>FEC_LABEL_USER</members>
+		<members>FEC_LABEL_CLEAR_USER_SELECTION</members>
+		<members>FEC_LABEL_FOLLOW_UP_TYPE</members>
+		<members>FEC_MSG_NO_USER_FOUND</members>
+		<members>FEC_LABEL_UNFOLLOW_CASE</members>
+		<members>FEC_MSG_CONFIRM_UNFOLLOW</members>
+		<members>FEC_MSG_UNFOLLOW_INFO</members>
+		<members>FEC_LABEL_CURRENT_FOLLOW_TYPE</members>
+		<members>FEC_LABEL_CASE_STATUS</members>
+		<members>FEC_ACTION_UNFOLLOW</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
