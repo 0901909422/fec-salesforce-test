@@ -668,7 +668,7 @@ public without sharing class FEC_InteractionInforHandler {
         Case c = caselst.get(0);
 
         if (c.FEC_Get_Next_Work__c == true) {
-            viewMode = 'handling';
+            viewMode = FEC_Constants.HANDLING;
         } else if (c.FEC_First_Access__c == true) {
             viewMode = c.FEC_Interaction_View_Mode__c;
         }

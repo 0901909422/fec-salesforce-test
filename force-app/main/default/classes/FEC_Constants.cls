@@ -210,4 +210,8 @@ public class FEC_Constants {
     public static final String ERROR_COMMON_FIELD_PREFIX = 'commonFieldMap Error ';
     public static final String ERROR_DATA_PREFIX = 'Data Error: ';
     public static final String ERROR_SYNC_FAILED_PREFIX = 'Sync Failed: \n';
+    
+    // get next work 
+    public static final String QUEUE = 'Queue';
+    public static final String HANDLING  = 'handling';
 }

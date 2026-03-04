@@ -56,7 +56,7 @@ public without sharing class FEC_GetNextWorkController {
          List<Group> queues = [
             SELECT Id, Name
             FROM Group
-            WHERE Type = 'Queue'
+            WHERE Type = :FEC_Constants.QUEUE
             AND Id IN (
                 SELECT GroupId
                 FROM GroupMember
@@ -109,7 +109,7 @@ public without sharing class FEC_GetNextWorkController {
         Case c = new Case(
             Id = caseId,
             OwnerId = UserInfo.getUserId(),
-            FEC_Interaction_View_Mode__c = 'handling',
+            FEC_Interaction_View_Mode__c = FEC_Constants.HANDLING,
             FEC_Get_Next_Work__c = true
         );
 
