@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Account_Contract_Number_Text__c</fullName>
+    <description>Trường thông tin để hiển thị số tài khoản và số hợp đồng liên quan đến Case và Interaction</description>
     <externalId>false</externalId>
-    <formula>FEC_Account_or_Contract__r.FEC_Account_Number__c</formula>
+    <formula>FEC_Account_or_Contract__r.Name</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Account/ Contract Number</label>
     <required>false</required>

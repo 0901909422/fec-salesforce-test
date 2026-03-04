@@ -6,12 +6,39 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
         @AuraEnabled public String productName;
     }
     
+    @AuraEnabled(cacheable=true)
+    public static String getInteractionAccountNumber(String caseId){
+        try {
+            
+            Case interactionCase = [
+            SELECT Id, FEC_Account_or_Contract__r.FEC_Account_Number__c,
+                   FEC_Account_or_Contract__r.FEC_CIF_Number__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+            
+            Map<String, String> result = new Map<String, String>();
+            
+            if (interactionCase.FEC_Account_or_Contract__r != null) {
+                result.put('accountNumber', interactionCase.FEC_Account_or_Contract__r.FEC_Account_Number__c);
+                result.put('cifNumber', interactionCase.FEC_Account_or_Contract__r.FEC_CIF_Number__c);
+            }
+            
+            return JSON.serialize(result);
+            
+        } catch (Exception e) {
+            System.debug('Error getting account numbers: ' + e.getMessage());
+            return JSON.serialize(new Map<String, String>());
+        }
+    }
     
     @AuraEnabled(cacheable=true)
     public static List<GetProductsListResponse> GetProductsListByCif(String cifNumber){
         
         
         if (String.isBlank(cifNumber)) {
+            System.debug('CIF Number is blank');
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
         }
         

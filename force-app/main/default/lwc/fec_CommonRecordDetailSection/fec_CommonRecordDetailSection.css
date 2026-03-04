@@ -2,3 +2,13 @@
     color: var(--lwc-colorTextError, #ea001e);
     font-weight: 600;
 }
+.field-value-style {
+    flex: 1;
+    word-break: break-word;
+}
+.field-label-style {
+    width: 140px;
+    min-width: 170px;
+    margin-right: 4px;
+    white-space: nowrap;
+}

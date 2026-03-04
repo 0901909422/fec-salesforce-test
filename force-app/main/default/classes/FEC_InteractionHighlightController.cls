@@ -21,7 +21,8 @@ public with sharing class FEC_InteractionHighlightController {
                     FEC_Category__r.Name,
                     FEC_Complain_Type__c,
                     FEC_SubCategory__r.FEC_Code__c,
-                    Status,
+                    FEC_Case_Status__c,
+                    FEC_Case_Created_On__c,
                     CreatedDate
                 FROM Case
                 WHERE Id = :caseId
@@ -34,7 +35,7 @@ public with sharing class FEC_InteractionHighlightController {
             
             // Nếu RecordType.Name khác "Interaction", lấy data từ FEC_Interaction__c
             Case interactionCase = caseRecord;
-            if (caseRecord.RecordType.Name != 'Interaction' && caseRecord.FEC_Interaction__c != null) {
+            if (caseRecord.RecordType.Name != FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME && caseRecord.FEC_Interaction__c != null) {
                 List<Case> interactionCases = [
                     SELECT 
                         Id,
@@ -49,7 +50,8 @@ public with sharing class FEC_InteractionHighlightController {
                         FEC_Category__r.Name,
                         FEC_Complain_Type__c,
                         FEC_SubCategory__r.FEC_Code__c,
-                        Status,
+                        FEC_Case_Status__c,
+                        FEC_Case_Created_On__c,
                         CreatedDate
                     FROM Case
                     WHERE Id = :caseRecord.FEC_Interaction__c
@@ -86,6 +88,7 @@ public with sharing class FEC_InteractionHighlightController {
                     customerHistory = histories[0];
                     result.customerName = customerHistory.FEC_Customer_Name__c;
                     result.nationalId = customerHistory.FEC_National_ID_Passport_ID__c;
+                    result.nationalIdMasked = FEC_CommonUltils.maskNationalIdOrPassport(customerHistory.FEC_National_ID_Passport_ID__c);
                     result.gender = customerHistory.FEC_Gender__c;
                     result.dateOfBirth = customerHistory.FEC_Date_of_Birth__c;
                     result.primaryPhone = customerHistory.FEC_Primary_Phone__c;
@@ -94,7 +97,7 @@ public with sharing class FEC_InteractionHighlightController {
                 }
             }
             
-            result.customerCategory = determineCustomerCategory(interactionCase, customerHistory);
+            result.customerCategory = determineCustomerCategory(caseRecord, customerHistory);
             
             return result;
         } catch (Exception e) {
@@ -103,40 +106,209 @@ public with sharing class FEC_InteractionHighlightController {
     }
     
     private static String determineCustomerCategory(Case caseRecord, FEC_Customer_History__c customerHistory) {
-        if (isSuspectedFraud(caseRecord)) return 'Suspected Fraud';
-        if (isMedia(caseRecord)) return 'Media';
-        if (isSeriousComplaint(caseRecord)) return 'Serious Complaint';
-        if (isVIP(customerHistory)) return 'VIP';
-        return 'Neutral';
+        if (caseRecord.RecordType.Name == FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
+            return determineCustomerCategoryFromRelatedCases(caseRecord.Id);
+        }
+        if (caseRecord.FEC_Interaction__c != null) {
+            return determineCustomerCategoryFromRelatedCases(caseRecord.FEC_Interaction__c);
+        }
+        String uploadCategory = getCategoryFromUploadList(caseRecord);
+        if (uploadCategory != null) return uploadCategory;
+        if (isSuspectedFraud(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SUSPECTED_FRAUD;
+        if (isMedia(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_MEDIA;
+        if (isSeriousComplaint(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SERIOUS_COMPLAINT;
+        return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
+    }
+
+    private static String determineCustomerCategoryFromRelatedCases(Id interactionCaseId) {
+        List<Case> relatedCases = getRelatedCustomerCases(interactionCaseId);
+        for (Case c : relatedCases) {
+            String uploadCategory = getCategoryFromUploadList(c);
+            if (uploadCategory != null) return uploadCategory;
+        }
+        for (Case c : relatedCases) {
+            if (isSuspectedFraud(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SUSPECTED_FRAUD;
+        }
+        for (Case c : relatedCases) {
+            if (isMedia(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_MEDIA;
+        }
+        for (Case c : relatedCases) {
+            if (isSeriousComplaint(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SERIOUS_COMPLAINT;
+        }
+        return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
+    }
+
+    private static List<Case> getRelatedCustomerCases(Id interactionCaseId) {
+        return [
+            SELECT FEC_Account_or_Contract__c, FEC_Category__r.Name, FEC_Complain_Type__c,
+                   FEC_SubCategory__r.FEC_Code__c, FEC_Case_Created_On__c, FEC_Case_Status__c
+            FROM Case
+            WHERE FEC_Interaction__c = :interactionCaseId
+        ];
+    }
+
+    private static String getCategoryFromUploadList(Case caseRecord) {
+        AccountOrContractInfo info = getAccountOrContractInfo(caseRecord);
+        if (String.isBlank(info.accountOrContractName) && String.isBlank(info.cif)) return null;
+        List<FEC_Customer_Segmentation__c> segmentations;
+        if (String.isBlank(info.accountOrContractName)) {
+            segmentations = [
+                SELECT Id, FEC_Customer_Segment__c, FEC_Survey_Points__c, CreatedDate
+                FROM FEC_Customer_Segmentation__c
+                WHERE FEC_CIF_Number__c = :info.cif
+                AND (FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP OR (FEC_Survey_Points__c >= 1 AND FEC_Survey_Points__c <= 3))
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+        } else if (String.isBlank(info.cif)) {
+            segmentations = [
+                SELECT Id, FEC_Customer_Segment__c, FEC_Survey_Points__c, CreatedDate
+                FROM FEC_Customer_Segmentation__c
+                WHERE Name = :info.accountOrContractName
+                AND (FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP OR (FEC_Survey_Points__c >= 1 AND FEC_Survey_Points__c <= 3))
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+        } else {
+            segmentations = [
+                SELECT Id, FEC_Customer_Segment__c, FEC_Survey_Points__c, CreatedDate
+                FROM FEC_Customer_Segmentation__c
+                WHERE (Name = :info.accountOrContractName OR FEC_CIF_Number__c = :info.cif)
+                AND (FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP OR (FEC_Survey_Points__c >= 1 AND FEC_Survey_Points__c <= 3))
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+        }
+        if (segmentations.isEmpty()) return null;
+        FEC_Customer_Segmentation__c seg = segmentations[0];
+        if (seg.FEC_Customer_Segment__c == FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP) return FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP;
+        if (seg.FEC_Survey_Points__c >= 1 && seg.FEC_Survey_Points__c <= 3) return FEC_ConstantCommon.CUSTOMER_CATEGORY_UNHAPPY;
+        return null;
     }
     
     private static Boolean isSuspectedFraud(Case caseRecord) {
+        if (caseRecord.FEC_Category__r?.Name != FEC_ConstantCommon.FEC_CATEGORY_COMPLAINT) return false;
+        if (caseRecord.FEC_Complain_Type__c != FEC_ConstantCommon.FEC_COMPLAIN_TYPE_NORMAL && caseRecord.FEC_Complain_Type__c != FEC_ConstantCommon.FEC_COMPLAIN_TYPE_URGENT && caseRecord.FEC_Complain_Type__c != FEC_ConstantCommon.FEC_COMPLAIN_TYPE_HIGH_RISK) return false;
         String code = caseRecord.FEC_SubCategory__r?.FEC_Code__c;
-        if (code != 'CL01' && code != 'CC01') return false;
-        if (caseRecord.CreatedDate.date() < Date.today().addMonths(-6)) return false;
-        return !isExcludedStatus(caseRecord.Status);
+        if (code != FEC_ConstantCommon.FEC_SUB_CATEGORY_CODE_CL01 && code != FEC_ConstantCommon.FEC_SUB_CATEGORY_CODE_CC01) return false;
+        Date createdDate = getCaseCreatedDate(caseRecord);
+        if (createdDate == null || createdDate < Date.today().addMonths(-6)) return false;
+        return !isExcludedStatus(caseRecord.FEC_Case_Status__c);
     }
     
     private static Boolean isMedia(Case caseRecord) {
-        if (caseRecord.FEC_Category__r?.Name != 'Complaint') return false;
-        if (caseRecord.FEC_Complain_Type__c != 'Urgent') return false;
-        if (caseRecord.CreatedDate.date() < Date.today().addMonths(-3)) return false;
-        return !isExcludedStatus(caseRecord.Status);
+        if (caseRecord.FEC_Category__r?.Name != FEC_ConstantCommon.FEC_CATEGORY_COMPLAINT) return false;
+        if (caseRecord.FEC_Complain_Type__c != FEC_ConstantCommon.FEC_COMPLAIN_TYPE_URGENT) return false;
+        String code = caseRecord.FEC_SubCategory__r?.FEC_Code__c;
+        if (code == FEC_ConstantCommon.FEC_SUB_CATEGORY_CODE_CL01 || code == FEC_ConstantCommon.FEC_SUB_CATEGORY_CODE_CC01) return false;
+        Date createdDate = getCaseCreatedDate(caseRecord);
+        if (createdDate == null || createdDate < Date.today().addMonths(-3)) return false;
+        return !isExcludedStatus(caseRecord.FEC_Case_Status__c);
     }
     
     private static Boolean isSeriousComplaint(Case caseRecord) {
-        if (caseRecord.FEC_Category__r?.Name != 'Complaint') return false;
-        if (caseRecord.FEC_Complain_Type__c != 'High') return false;
-        if (caseRecord.CreatedDate.date() < Date.today().addMonths(-3)) return false;
-        return !isExcludedStatus(caseRecord.Status);
+        if (caseRecord.FEC_Category__r?.Name != FEC_ConstantCommon.FEC_CATEGORY_COMPLAINT) return false;
+        if (caseRecord.FEC_Complain_Type__c != FEC_ConstantCommon.FEC_COMPLAIN_TYPE_HIGH_RISK) return false;
+        String code = caseRecord.FEC_SubCategory__r?.FEC_Code__c;
+        if (code == FEC_ConstantCommon.FEC_SUB_CATEGORY_CODE_CL01 || code == FEC_ConstantCommon.FEC_SUB_CATEGORY_CODE_CC01) return false;
+        Date createdDate = getCaseCreatedDate(caseRecord);
+        if (createdDate == null || createdDate < Date.today().addMonths(-3)) return false;
+        return !isExcludedStatus(caseRecord.FEC_Case_Status__c);
+    }
+    
+    private static Date getCaseCreatedDate(Case caseRecord) {
+        if (caseRecord.FEC_Case_Created_On__c != null) {
+            return caseRecord.FEC_Case_Created_On__c.date();
+        }
+        return null;
     }
     
     private static Boolean isExcludedStatus(String status) {
-        return status == 'Open' || status == 'Resolved-Cancelled' || status == 'Resolved-AutoCancelled';
+        if (String.isBlank(status)) return false;
+        return status == FEC_ConstantCommon.CASE_STATUS_OPEN || status == FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED || status == FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED;
     }
     
-    private static Boolean isVIP(FEC_Customer_History__c customerHistory) {
-        return customerHistory != null && String.isNotBlank(customerHistory.FEC_Customer_Segment__c);
+    private static Boolean isUnhappy(Case caseRecord) {
+        AccountOrContractInfo info = getAccountOrContractInfo(caseRecord);
+        if (String.isBlank(info.accountOrContractName)) return false;
+        List<FEC_Customer_Segmentation__c> segmentations = [
+            SELECT Id
+            FROM FEC_Customer_Segmentation__c
+            WHERE Name = :info.accountOrContractName
+            AND FEC_Survey_Points__c >= 1
+            AND FEC_Survey_Points__c <= 3
+            LIMIT 1
+        ];
+        return !segmentations.isEmpty();
+    }
+
+    private static Boolean isVIP(Case caseRecord) {
+        AccountOrContractInfo info = getAccountOrContractInfo(caseRecord);
+        if (String.isBlank(info.accountOrContractName) && String.isBlank(info.cif)) return false;
+        List<FEC_Customer_Segmentation__c> segmentations;
+        if (String.isBlank(info.accountOrContractName)) {
+            segmentations = [
+                SELECT Id
+                FROM FEC_Customer_Segmentation__c
+                WHERE FEC_CIF_Number__c = :info.cif
+                AND FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP
+                LIMIT 1
+            ];
+        } else if (String.isBlank(info.cif)) {
+            segmentations = [
+                SELECT Id
+                FROM FEC_Customer_Segmentation__c
+                WHERE Name = :info.accountOrContractName
+                AND FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP
+                LIMIT 1
+            ];
+        } else {
+            segmentations = [
+                SELECT Id
+                FROM FEC_Customer_Segmentation__c
+                WHERE (Name = :info.accountOrContractName OR FEC_CIF_Number__c = :info.cif)
+                AND FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP
+                LIMIT 1
+            ];
+        }
+        return !segmentations.isEmpty();
+    }
+
+    private static AccountOrContractInfo getAccountOrContractInfo(Case caseRecord) {
+        AccountOrContractInfo info = new AccountOrContractInfo();
+        info.names = new List<String>();
+        if (caseRecord == null || caseRecord.FEC_Account_or_Contract__c == null) return info;
+        List<FEC_Customer_History__c> histories = [
+            SELECT Name, FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :caseRecord.FEC_Account_or_Contract__c
+            LIMIT 1
+        ];
+        if (histories.isEmpty()) return info;
+        FEC_Customer_History__c h = histories[0];
+        info.accountOrContractName = h.Name;
+        if (String.isNotBlank(h.Name)) info.names.add(h.Name);
+        if (String.isNotBlank(h.FEC_Account_Number__c) && !info.names.contains(h.FEC_Account_Number__c)) info.names.add(h.FEC_Account_Number__c);
+        if (String.isNotBlank(h.FEC_Contract_Number__c) && !info.names.contains(h.FEC_Contract_Number__c)) info.names.add(h.FEC_Contract_Number__c);
+        info.cif = h.FEC_CIF_Number__c;
+        return info;
+    }
+
+    private static List<String> getAccountOrContractNamesToMatch(Case caseRecord) {
+        List<String> namesToMatch = new List<String>();
+        if (caseRecord == null || caseRecord.FEC_Account_or_Contract__c == null) return namesToMatch;
+        List<FEC_Customer_History__c> histories = [
+            SELECT Name, FEC_Account_Number__c, FEC_Contract_Number__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :caseRecord.FEC_Account_or_Contract__c
+            LIMIT 1
+        ];
+        if (histories.isEmpty()) return namesToMatch;
+        FEC_Customer_History__c h = histories[0];
+        if (String.isNotBlank(h.Name)) namesToMatch.add(h.Name);
+        if (String.isNotBlank(h.FEC_Account_Number__c) && !namesToMatch.contains(h.FEC_Account_Number__c)) namesToMatch.add(h.FEC_Account_Number__c);
+        if (String.isNotBlank(h.FEC_Contract_Number__c) && !namesToMatch.contains(h.FEC_Contract_Number__c)) namesToMatch.add(h.FEC_Contract_Number__c);
+        return namesToMatch;
     }
     
     @AuraEnabled
@@ -150,7 +322,7 @@ public with sharing class FEC_InteractionHighlightController {
             ];
             
             FEC_CommonUltils.logSensitiveAccess(
-                'Interaction Details',
+                FEC_ConstantCommon.SECTION_CUSTOMER_INFORMATION,
                 fieldName,
                 u.Username.split('@')[0],
                 u.UserRole != null ? u.UserRole.Name : null,
@@ -161,6 +333,12 @@ public with sharing class FEC_InteractionHighlightController {
         }
     }
     
+    private class AccountOrContractInfo {
+        List<String> names;
+        String cif;
+        String accountOrContractName;
+    }
+
     public class InteractionHighlightData {
         @AuraEnabled public String interactionId;
         @AuraEnabled public String caseId;
@@ -168,6 +346,7 @@ public with sharing class FEC_InteractionHighlightController {
         @AuraEnabled public String customerCategory;
         @AuraEnabled public String customerName;
         @AuraEnabled public String nationalId;
+        @AuraEnabled public String nationalIdMasked;
         @AuraEnabled public String gender;
         @AuraEnabled public Date dateOfBirth;
         @AuraEnabled public String primaryPhone;

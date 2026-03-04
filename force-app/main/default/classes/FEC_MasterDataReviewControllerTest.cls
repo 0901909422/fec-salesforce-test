@@ -25,12 +25,12 @@ private class FEC_MasterDataReviewControllerTest {
 
         // 2. Tạo Nature of Case (NOC) tham chiếu đến bộ MDM trên
         FEC_MDM_Nature_Of_Case__c noc = new FEC_MDM_Nature_Of_Case__c(
-            FEC_Product_Type_Name__c = prod.Id,
-            FEC_Business_Process_Name__c = biz.Id,
-            FEC_Category_Name__c = cat.Id,
-            FEC_Sub_Category_Name__c = subCat.Id,
+            FEC_Product_Type__c = prod.Id,
+            FEC_Business_Process__c = biz.Id,
+            FEC_Category__c = cat.Id,
+            FEC_Sub_Category__c = subCat.Id,
             FEC_Sub_Code__c = subCode.Id,
-            ExternalID__c = 'NOC_EXT_01'
+            FEC_Code__c = 'NOC_EXT_01'
         );
         insert noc;
 
@@ -53,7 +53,7 @@ private class FEC_MasterDataReviewControllerTest {
         List<FEC_MDM_Master_Data_Setting__c> mdmList = new List<FEC_MDM_Master_Data_Setting__c>{
             // Record test updateList (Web -> App)
             new FEC_MDM_Master_Data_Setting__c(
-                ExternalID__c = 'EXT_SYNC', 
+                FEC_Code__c = 'EXT_SYNC', 
                 FEC_Channel__c = 'App', 
                 FEC_Nature_Of_Case__c = noc.Id, 
                 FEC_Additional_Field__c = addField.Id,
@@ -62,7 +62,7 @@ private class FEC_MasterDataReviewControllerTest {
             ),
             // Record test newList
             new FEC_MDM_Master_Data_Setting__c(
-                ExternalID__c = 'EXT_NEW', 
+                FEC_Code__c = 'EXT_NEW', 
                 FEC_Nature_Of_Case__c = noc.Id,
                 Process_Change_Status__c = 'New'
             )
@@ -89,17 +89,17 @@ private class FEC_MasterDataReviewControllerTest {
 
     @isTest
     static void testComparisonData() {
-        FEC_MDM_Nature_Of_Case__c noc = [SELECT FEC_Product_Type_Name__c, FEC_Business_Process_Name__c, 
-                                               FEC_Category_Name__c, FEC_Sub_Category_Name__c, FEC_Sub_Code__c 
+        FEC_MDM_Nature_Of_Case__c noc = [SELECT FEC_Product_Type__c, FEC_Business_Process__c, 
+                                               FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c 
                                         FROM FEC_MDM_Nature_Of_Case__c LIMIT 1];
 
         Test.startTest();
         // Thực thi logic so sánh dữ liệu
         FEC_MasterDataReviewController.ComparisonResult result = FEC_MasterDataReviewController.getComparisonData(
-            noc.FEC_Product_Type_Name__c, 
-            noc.FEC_Business_Process_Name__c, 
-            noc.FEC_Category_Name__c, 
-            noc.FEC_Sub_Category_Name__c, 
+            noc.FEC_Product_Type__c, 
+            noc.FEC_Business_Process__c, 
+            noc.FEC_Category__c, 
+            noc.FEC_Sub_Category__c, 
             noc.FEC_Sub_Code__c
         );
         Test.stopTest();

@@ -14,6 +14,7 @@
         <members>FEC_GetApplicationsList</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_MockupEndpoint</members>
+        <members>FEC_PaymentHistoryController</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -25,6 +26,7 @@
 		<members>FEC_Address_Info__c</members>
         <members>FEC_Sensitive_Data__c</members>
         <members>FEC_Application_List__c</members>
+        <members>FEC_Contact_List__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -37,6 +39,9 @@
         <members>fec_ApplicationsList</members>
         <members>fec_CommonUtils</members>
 		<members>fec_CommonConst</members>
+        <members>fec_PaymentHistoryAcount</members>
+        <members>fec_RelatedListPaging</members>
+        <members>fec_ApplicationsListTabView</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -82,7 +87,34 @@
         <members>FEC_Email_Label</members>
         <members>FEC_Work_Phone_Label</members>
         <members>FEC_Demographic_Label</members>
+        <members>Title_button_Get_Next_Work</members>
+        <members>title_Select_Queue</members>
+        <members>title_Queue</members>
+        <members>title_Information_Queue</members>
+        <members>messenger_Warning</members>
+        <members>title_Toast_Event</members>
+        <members>messager_Toast_Event</members>
+        <members>FEC_Last_Status</members>
+        <members>FEC_National_Passport_ID</members>
+        <members>FEC_Current_Address</members>
+        <members>FEC_Updated_Date</members>
+        <members>FEC_Registration_Phone</members>
+        <members>FEC_Permanent_Address</members>
+        <members>FEC_Product_Group</members>
+        <members>FEC_Registration_Email</members>
+        <members>FEC_Office_Address</members>
+        <members>LBL_ApplicationID</members>
+        <members>LBL_AccountNumber</members>
+        <members>LBL_ContractNumber</members>
         <name>CustomLabel</name>
+    </types>
+    <types>
+		<members>FEC_ApplicationList</members>
+		<name>CustomTab</name>
+	</types>
+    <types>
+        <members>FEC_CommonCss</members>
+        <name>StaticResource</name>
     </types>
     <version>65.0</version>
 </Package>

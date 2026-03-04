@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_CS_D2C_Required_Corrective_Action__c</fullName>
+    <description>Hành động cần thiết</description>
+    <label>CS D2C Required Corrective Action</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetName>FEC_Corrective_Action</valueSetName>
+    </valueSet>
+</CustomField>

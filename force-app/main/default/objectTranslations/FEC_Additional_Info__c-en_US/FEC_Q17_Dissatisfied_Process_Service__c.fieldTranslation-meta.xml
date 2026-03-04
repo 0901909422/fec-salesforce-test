@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q17 Dissatisfied Process/Service --></label>
+    <name>FEC_Q17_Dissatisfied_Process_Service__c</name>
+    <picklistValues>
+        <masterLabel>Application Approval Process</masterLabel>
+        <translation>Quy trình duyệt hồ sơ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Cannot Reach Hotline</masterLabel>
+        <translation>Không gọi được tổng đài CSKH</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Contract/Card Information</masterLabel>
+        <translation>Thông tin HĐ/ thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Debt Reminder Process</masterLabel>
+        <translation>Quy trình nhắc nợ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>FEOL 2.0 App Issues</masterLabel>
+        <translation>Ứng dụng FEOL 2.0 lỗi/ chưa tốt</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Loan Application</masterLabel>
+        <translation>Đăng ký vay</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Payment Process</masterLabel>
+        <translation>Quy trình thanh toán</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Payment Transaction Update</masterLabel>
+        <translation>Cập nhật giao dịch thanh toán</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Request/Complaint Resolution</masterLabel>
+        <translation>Kết quả xử lý yêu cầu/ khiếu nại</translation>
+    </picklistValues>
+</CustomFieldTranslation>

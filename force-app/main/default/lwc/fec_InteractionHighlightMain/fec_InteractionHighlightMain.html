@@ -1,5 +1,5 @@
 <template>
-  <!-- <template if:true={hasAccountOrContract}> -->
+  <template if:true={showHighlight}>
     <div class="slds-grid slds-gutters slds-grid_align-stretch">
       <div class="slds-col slds-size_8-of-12">
         <div class="slds-tabs_card full-height">
@@ -36,7 +36,7 @@
           <!-- Header -->
           <div class="slds-page-header slds-page-header_object-home">
             <div class="slds-grid slds-grid_align-spread">
-              <h1 class="slds-page-header__title">{labels.interactionDuration}</h1>
+               <h1 class="slds-page-header__title">{labels.interactionDuration}</h1>
               <div>
 
                 <template if:true={isInteractionCase}>
@@ -73,6 +73,9 @@
         </div>
       </div>
     </div>
-  <!-- </template> -->
-
+  </template>
+  <template if:false={showHighlight}>
+    <div>
+    </div>
+  </template>
 </template>

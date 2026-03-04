@@ -1,4 +1,17 @@
-public with sharing class FEC_MainInfoController {
+/****************************************************************************************
+ * File Name    : FEC_MainInfoController.Apex
+ * Author       : Quangdv7
+ * Date         : 2025-01-10
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2025-01-10     Quangdv7             Create
+ 
+****************************************************************************************/
+
+public without sharing class FEC_MainInfoController {
 
     /* =====================================================
      * DTO

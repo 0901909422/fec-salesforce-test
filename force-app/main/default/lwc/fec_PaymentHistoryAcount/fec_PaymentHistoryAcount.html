@@ -5,12 +5,20 @@
             <!-- Payment History -->
             <lightning-accordion-section name="paymentHistory" label="Payment History">
 
-                <div class="slds-text-color_error slds-text-title_bold slds-m-bottom_small">
-                    {customLabel.totalPaymentAmountLabel}: 
+                <div class="slds-m-top_xx-small slds-m-bottom_small">
+                    <span class="slds-text-heading_small slds-text-title_bold" style="color: #e11900;">
+                      {customLabel.totalPaymentAmountLabel}: 
+                    </span>
+                    <span class="slds-text-body_regular slds-m-left_x-small">
+                        {formattedTotalAmount}
+                    </span>
                 </div>
 
-                <c-fec_-related-list-paging records={paymentHistory} columns={paymentHistoryColumns}
-                    sorted-by="Payment History">
+                <c-fec_-related-list-paging 
+                        records={paymentHistory} 
+                        columns={paymentHistoryColumns}
+                        sorted-by="paymentDate"
+                        hide-row-number>
                 </c-fec_-related-list-paging>
 
             </lightning-accordion-section>
@@ -19,7 +27,7 @@
             <lightning-accordion-section name="realtimePayment" label="Real-time Payment">
 
                 <c-fec_-related-list-paging records={realtimePayments} columns={realtimePaymentColumns}
-                    sorted-by="Real-time Payment" show-refresh onrefresh={handleRefreshData}>
+                    sorted-by="paymentDate" show-refresh onrefresh={handleRefreshData}>
                 </c-fec_-related-list-paging>
 
             </lightning-accordion-section>
