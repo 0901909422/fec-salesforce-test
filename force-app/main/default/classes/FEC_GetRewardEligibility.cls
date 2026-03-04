@@ -46,7 +46,7 @@ public with sharing class FEC_GetRewardEligibility {
  
             ResponseWrapper response = parseResponse(res.getBody());
  
-            if (response.Sys != null && response.Sys.Code != 1) {
+            if (response.Sys != null && response.Sys.Code != 0) {
                 throw new CalloutException(
                     String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
                 );
