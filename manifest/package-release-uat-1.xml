@@ -1135,6 +1135,7 @@
 		<members>Case.FEC_Interaction_Duration__c</members>
 		<members>Case.FEC_Is_Routing_Action_Display__c</members>
 		<members>Case.FEC_Draft_Routing_Action_Code__c</members>
+		<members>Case.FEC_Get_Next_Work__c</members>
         <members>FEC_Customer_History__c.FEC_Customer_Type__c</members>
         <name>CustomField</name>
     </types>
