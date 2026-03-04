@@ -3290,6 +3290,62 @@
         <value>Select Sub Cat</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_FollowUp_Case_ID_Not_Found</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case ID not found</shortDescription>
+        <value>Case ID not found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Unfollow_Error</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error while unfollowing Case</shortDescription>
+        <value>An error occurred while unfollowing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Please_Select_User</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please select a User</shortDescription>
+        <value>Vui lòng chọn một User.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Add_User_To_Watcher_Success</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow-Up User added to list and Watcher Information</shortDescription>
+        <value>Follow-Up User đã được thêm vào danh sách follow-up và Watcher Information.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Type_Updated_Success</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow-up type updated successfully</shortDescription>
+        <value>Follow-up type has been updated successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Case_Follow_Success</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow Case saved successfully</shortDescription>
+        <value>Follow Case has been saved successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_FollowUp_Error_Detail</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message with detail</shortDescription>
+        <value>Error: {0}</value>
+    </labels>
+    <labels>
         <fullName>FEC_Placeholder_Select_SubCode</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -7567,6 +7623,195 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_Interaction_Highlight_Prefix</shortDescription>
         <value>Error retrieving interaction highlight data: </value>
+    </labels>
+    <labels>
+        <fullName>FEC_Last_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Status</shortDescription>
+        <value>Last Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_National_Passport_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>National / Passport ID</shortDescription>
+        <value>National / Passport ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Address</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Address</shortDescription>
+        <value>Current Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Updated_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Updated Date</shortDescription>
+        <value>Updated Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Registration_Phone</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Registration Phone</shortDescription>
+        <value>Registration Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Permanent_Address</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Permanent Address</shortDescription>
+        <value>Permanent Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Product_Group</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Product Group</shortDescription>
+        <value>Product Group</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Registration_Email</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Registration Email</shortDescription>
+        <value>Registration Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Office_Address</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Office Address</shortDescription>
+        <value>Office Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_FOLLOW_UP</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow-Up</shortDescription>
+        <value>Follow-Up</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_UNTIL_CASE_RESOLVED</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Until Case Resolved</shortDescription>
+        <value>Until Case Resolved</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_UNTIL_UNFOLLOW</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Until Unfollow</shortDescription>
+        <value>Until Unfollow</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ACTION_SELECT_USER</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select User</shortDescription>
+        <value>Select User</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ACTION_CANCEL</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ACTION_CONFIRM</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirm</shortDescription>
+        <value>Confirm</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ACTION_CLOSE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Close</shortDescription>
+        <value>Close</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_SELECT_FOLLOW_UP_USER</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Follow-Up User</shortDescription>
+        <value>Select Follow-Up User</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_USER</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User</shortDescription>
+        <value>User</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_CLEAR_USER_SELECTION</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear user selection</shortDescription>
+        <value>Clear user selection</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_FOLLOW_UP_TYPE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Follow-Up Type</shortDescription>
+        <value>Follow-Up Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_NO_USER_FOUND</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No user found</shortDescription>
+        <value>No user found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_UNFOLLOW_CASE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unfollow Case</shortDescription>
+        <value>Unfollow Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CONFIRM_UNFOLLOW</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirm Unfollow</shortDescription>
+        <value>Are you sure you want to unfollow this case?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_UNFOLLOW_INFO</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unfollow Info</shortDescription>
+        <value>You will no longer receive updates about this case.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_CURRENT_FOLLOW_TYPE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Follow Type</shortDescription>
+        <value>Current Follow Type:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_CASE_STATUS</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case Status</shortDescription>
+        <value>Case Status:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ACTION_UNFOLLOW</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unfollow</shortDescription>
+        <value>Unfollow</value>
     </labels>
     <labels>
         <fullName>FEC_Last_Status</fullName>
