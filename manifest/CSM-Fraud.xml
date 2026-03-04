@@ -13,6 +13,9 @@
         <members>FEC_IntegrationSearchFraudCaseController</members>
         <members>FEC_IntegrationFraudCaseDetailController</members>
         <members>FEC_IntegrationFraudCaseApi</members>
+        <members>FEC_IntegrationCreateFraudController</members>
+        <members>FEC_IntegrationMappingController</members>
+        
         
         <name>ApexClass</name>
     </types>
@@ -20,21 +23,26 @@
     <types>
         <members>FEC_Master_Data_Integration__c</members>
         <members>FEC_Integration_Case__c</members>
-        <members>FEC_Integration_Service_Log__c</members>
+        <members>FEC_integration_service_log__c</members>
         <members>FEC_Integration_Case_Info__c</members>
         <members>FEC_User_Type__c</members>
         <members>FEC_Data_Integration_Mapping_Info__c</members>
-        <members>FEC_Data_Integration_Mapping__c</members>
+        <members>FEC_Data_Integration_Mapping__c</members>   
+        <members>FEC_Additional_Field__c</members>   
+             
+        <name>CustomObject</name>
+    </types>
+    <!-- Custom Metadata Types -->
+    <types>
         <members>FEC_Integration_Admin_Recipient__mdt</members>
-        
         <name>CustomObject</name>
     </types>
 
     <!-- Custom Labels -->
-    <types>
+    <!--<types>
         <members>CustomLabels</members>
         <name>CustomLabel</name>
-    </types>
+    </types>-->
     <types>
         <members>integrationFraudMasterData</members>
         <members>fecIntegrationCreateFraudCase</members>
