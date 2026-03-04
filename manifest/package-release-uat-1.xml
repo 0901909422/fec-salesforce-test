@@ -1828,5 +1828,20 @@
 		<members>Relevant Depts</members>
 		<name>Profile</name>
 	</types>
+
+	<!-- Translate -->
+	<types>
+		<members>FEC_Additional_Info__c-en_US</members>
+		<name>CustomObjectTranslation</name>
+	</types>
+	<types>
+        <members>FEC_Assessment_Type-en_US</members>
+        <members>FEC_Confirm_Assessment-en_US</members>
+        <members>FEC_Corrective_Action-en_US</members>
+        <members>FEC_Risk_Level-en_US</members>
+        <members>FEC_Verify_Information-en_US</members>
+        <name>GlobalValueSetTranslation</name>
+    </types>
+
     <version>65.0</version>
 </Package>

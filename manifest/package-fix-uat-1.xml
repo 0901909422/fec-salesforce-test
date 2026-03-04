@@ -24,5 +24,25 @@
         <members>Case.FEC_Get_Next_Work__c</members>
         <name>CustomField</name>
     </types>
+	<types>
+		<members>FEC_Service</members>
+		<name>CustomApplication</name>
+	</types>
+    <types>
+		<members>FEC_API_Config.FEC_Get_Customer_List</members>
+		<name>CustomMetadata</name>
+	</types>
+	<types>
+		<members>FEC_Additional_Info__c-en_US</members>
+		<name>CustomObjectTranslation</name>
+	</types>
+    <types>
+        <members>FEC_Assessment_Type-en_US</members>
+        <members>FEC_Confirm_Assessment-en_US</members>
+        <members>FEC_Corrective_Action-en_US</members>
+        <members>FEC_Risk_Level-en_US</members>
+        <members>FEC_Verify_Information-en_US</members>
+        <name>GlobalValueSetTranslation</name>
+    </types>
     <version>65.0</version>
 </Package>
