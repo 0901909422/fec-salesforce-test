@@ -153,7 +153,7 @@ public with sharing class FEC_GetPaymentInfo {
         }
  
         // ===================== REQUESTORID =====================
-        Set<String> validRequestorIds = new Set<String>{FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP};
+        Set<String> validRequestorIds = new Set<String>{FEC_ConstantCommon.REQUESTOR_CRM,FEC_ConstantCommon.REQUESTOR_PORTAL,FEC_ConstantCommon.REQUESTOR_MOBILE_APP,FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN};
         if (String.isBlank(requestorId) || !validRequestorIds.contains(requestorId)) {
             throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }

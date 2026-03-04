@@ -23,23 +23,8 @@ import DISBURSEMENT_CHANNEL_LABEL from '@salesforce/label/c.FEC_Disbursement_Cha
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 import NO_IPP_SCHEDULE_DATA_LABEL from '@salesforce/label/c.FEC_MSG_No_IPP_Schedule_Data';
 import NO_DATA_TO_DISPLAY_LABEL from '@salesforce/label/c.FEC_MSG_No_Data_To_Display';
-
 import FEC_IPP_Label from '@salesforce/label/c.FEC_IPP_Label';
-import FEC_IPP_Schedule_Label from '@salesforce/label/c.FEC_IPP_Schedule_Label';
-import FEC_Total_IPP_Payment_Amount_Label from '@salesforce/label/c.FEC_Total_IPP_Payment_Amount_Label';
-import FEC_Total_IPP_Monthly_Principal_Label from '@salesforce/label/c.FEC_Total_IPP_Monthly_Principal_Label';
-import FEC_Total_IPP_Monthly_Interest_Label from '@salesforce/label/c.FEC_Total_IPP_Monthly_Interest_Label';
-import FEC_MSG_No_Data from '@salesforce/label/c.FEC_MSG_No_Data';
-import FEC_Sales_Info_Label from '@salesforce/label/c.FEC_Sales_Info_Label';
-import FEC_Application_ID_Label from '@salesforce/label/c.FEC_Application_ID_Label';
-import FEC_CC_Code_Label from '@salesforce/label/c.FEC_CC_Code_Label';
-import FEC_DSA_Code_Label from '@salesforce/label/c.FEC_DSA_Code_Label';
-import FEC_TSA_Code_Label from '@salesforce/label/c.FEC_TSA_Code_Label';
-import FEC_Disbursement_Channel_Label from '@salesforce/label/c.FEC_Disbursement_Channel_Label';
-import FEC_CC_Name_Label from '@salesforce/label/c.FEC_CC_Name_Label';
-import FEC_DSA_Name_Label from '@salesforce/label/c.FEC_DSA_Name_Label';
-import FEC_TSA_Name_Label from '@salesforce/label/c.FEC_TSA_Name_Label';
-import FEC_Origination_Channel_Label from '@salesforce/label/c.FEC_Origination_Channel_Label';
+import FEC_Details_Label from '@salesforce/label/c.FEC_Details_Label';
 
 export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -73,25 +58,6 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     _scheduleRetryCount = 0;
     _maxRetries = 1; // Retry tối đa 1 lần
 
-    customLabel = {
-        ippLabel: FEC_IPP_Label,
-        ippScheduleLabel: FEC_IPP_Schedule_Label,
-        totalIPPAmountLabel: FEC_Total_IPP_Payment_Amount_Label,
-        totalIPPMonthlyPrincipalLabel: FEC_Total_IPP_Monthly_Principal_Label,
-        totalIPPMonthlyInterestLabel: FEC_Total_IPP_Monthly_Interest_Label,
-        noDataLabel: FEC_MSG_No_Data,
-        salesInfoLabel: FEC_Sales_Info_Label,
-        applicationIdLabel: FEC_Application_ID_Label,
-        ccCodeLabel: FEC_CC_Code_Label,
-        dsaCodeLabel: FEC_DSA_Code_Label,
-        tsaCodeLabel: FEC_TSA_Code_Label,
-        disbursementChannelLabel: FEC_Disbursement_Channel_Label,
-        ccNameLabel: FEC_CC_Name_Label,
-        dsaNameLabel: FEC_DSA_Name_Label,
-        tsaNameLabel: FEC_TSA_Name_Label,
-        originationChannelLabel: FEC_Origination_Channel_Label,
-    }
-    
     connectedCallback() {
         this.loadHelpText();
         /* ================= SET TABNAME ================= */
@@ -114,7 +80,9 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
 
     get customLabel() {
         return {
+            ippLabel: FEC_IPP_Label,
             ippDetailLabel: IPP_DETAILS_LABEL,
+            detailsLabel: FEC_Details_Label,
             ippScheduleLabel: IPP_SCHEDULE_LABEL,
             salesInfoLabel: SALES_INFO_LABEL,
             totalIPPPaymentAmountLabel: TOTAL_IPP_PAYMENT_AMOUNT_LABEL,
@@ -165,13 +133,9 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
         }
     }
 
-    /** Data giả cho mock record - không gọi API, hiển thị IPP Schedule + Sales Info từ recordData */
+    /** Mock record: lấy IPP Schedule từ Apex (FEC_MockData.getHardcodedIPPScheduleDataForUI). */
     loadMockIPPData() {
-        this.ippSchedules = [
-            { Id: 'm1', paymentNo: '1', openingBalance: '50,000,000', paymentAmount: '5,000,000', monthlyPrincipal: '4,000,000', monthlyInterest: '100,000', openingBalanceClass: '', paymentAmountClass: '', monthlyPrincipalClass: '', monthlyInterestClass: '' },
-            { Id: 'm2', paymentNo: '2', openingBalance: '46,000,000', paymentAmount: '5,000,000', monthlyPrincipal: '4,000,000', monthlyInterest: '92,000', openingBalanceClass: '', paymentAmountClass: '', monthlyPrincipalClass: '', monthlyInterestClass: '' }
-        ];
-        this.isLoading = false;
+        this.loadIPPSchedules();
     }
     
     // Load IPP Schedule data (gọi getIPPScheduleData để trigger API GetCardSecInfo khi DB chưa có schedule)
@@ -434,6 +398,7 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
         ];
     }
     
+    /** Totals do controller (FEC_IPPScheduleController.buildResult) tính và trả về; component chỉ hiển thị */
     get totalPaymentAmount() {
         return this.formatCurrencyValue(this.ippRecord?.totalIPPPaymentAmount);
     }

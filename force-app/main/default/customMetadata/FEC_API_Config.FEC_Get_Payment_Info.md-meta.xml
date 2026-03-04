@@ -8,6 +8,6 @@
     </values>
     <values>
         <field>FEC_SOAP_Action__c</field>
-        <value xsi:type="xsd:string">http://fecredit.com.vn/RepaymentInfo#GetPaymentInfo</value>
+        <value xsi:type="xsd:string"></value>
     </values>
 </CustomMetadata>

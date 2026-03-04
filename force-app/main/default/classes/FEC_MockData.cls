@@ -82,13 +82,15 @@ public with sharing class FEC_MockData {
 
     /**
      * Trả về danh sách Card Payment records hardcode cho UI (loadCardPaymentInfo fallback).
+     * Có bản ghi với giá trị âm để test highlight đỏ (balance, interest, fee...).
      */
     public static List<Map<String, Object>> getHardcodedCardPaymentRecordsForUI() {
         List<Map<String, Object>> records = new List<Map<String, Object>>();
+        // Record 1: balance âm (credit)
         Map<String, Object> r = new Map<String, Object>();
         r.put('FEC_Rec__c', '1');
         r.put('FEC_REF_Number__c', 'REF-DEMO-001');
-        r.put('FEC_Current_Balance__c', 45000000);
+        r.put('FEC_Current_Balance__c', -45000000);
         r.put('FEC_Open_Date__c', Date.valueOf('2025-01-15'));
         r.put('FEC_Plan__c', 'PLAN-001');
         r.put('FEC_Base_Rate__c', 1.5);
@@ -102,20 +104,65 @@ public with sharing class FEC_MockData {
         r.put('FEC_Close_Fee_Amount__c', 900000);
         r.put('FEC_Plan_Payment_Amount__c', 5000000);
         records.add(r);
+        // Record 2: nhiều trường âm để test highlight đỏ
+        Map<String, Object> r2 = new Map<String, Object>();
+        r2.put('FEC_Rec__c', '2');
+        r2.put('FEC_REF_Number__c', 'REF-DEMO-002');
+        r2.put('FEC_Current_Balance__c', -12000000);
+        r2.put('FEC_Open_Date__c', Date.valueOf('2025-02-01'));
+        r2.put('FEC_Plan__c', 'PLAN-002');
+        r2.put('FEC_Base_Rate__c', 1.2);
+        r2.put('FEC_Begin_Date__c', Date.valueOf('2025-02-01'));
+        r2.put('FEC_Accrued_Interest__c', -150000);
+        r2.put('FEC_Per_Diem__c', -5000);
+        r2.put('FEC_Deferred_Interest__c', -200000);
+        r2.put('FEC_IPP_Interest__c', 1.2);
+        r2.put('FEC_IPP_Accrued_Interest__c', -30000);
+        r2.put('FEC_Close_Fee__c', 1);
+        r2.put('FEC_Close_Fee_Amount__c', -200000);
+        r2.put('FEC_Plan_Payment_Amount__c', -1000000);
+        records.add(r2);
         return records;
     }
 
     /**
-     * Trả về Card Payment Totals hardcode cho UI (loadCardPaymentTotals fallback).
-     * Toàn bộ giá trị hardcode nằm trong class mock; controller chỉ build DTO từ tham số.
+     * Trả về Card Payment Totals cho UI (loadCardPaymentTotals fallback).
+     * Bốn giá trị đầu (fullPaymentAmount, loanBalance, fullPaymentWithoutIPP, fullIPPPaymentAmount) giữ từ nguồn;
+     * bảy trường total được tính tổng từ danh sách records (getHardcodedCardPaymentRecordsForUI).
      */
     public static FEC_CardPaymentController.CardPaymentTotalsDTO getHardcodedCardPaymentTotalsForUI() {
         Map<String, String> helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Card_Payment__c.SObjectType);
+        List<Map<String, Object>> records = getHardcodedCardPaymentRecordsForUI();
+        Decimal totalCurrentBalance = 0;
+        Decimal totalCloseFeeAmount = 0;
+        Decimal totalPlanPaymentAmount = 0;
+        Decimal totalAccruedInterest = 0;
+        Decimal totalIPPAccruedInterest = 0;
+        Decimal totalPerDiem = 0;
+        Decimal totalDeferredInterest = 0;
+        for (Map<String, Object> r : records) {
+            totalCurrentBalance += toDecimal(r.get('FEC_Current_Balance__c'));
+            totalCloseFeeAmount += toDecimal(r.get('FEC_Close_Fee_Amount__c'));
+            totalPlanPaymentAmount += toDecimal(r.get('FEC_Plan_Payment_Amount__c'));
+            totalAccruedInterest += toDecimal(r.get('FEC_Accrued_Interest__c'));
+            totalIPPAccruedInterest += toDecimal(r.get('FEC_IPP_Accrued_Interest__c'));
+            totalPerDiem += toDecimal(r.get('FEC_Per_Diem__c'));
+            totalDeferredInterest += toDecimal(r.get('FEC_Deferred_Interest__c'));
+        }
+        // Bốn giá trị đầu: fullPaymentAmount, loanBalance (âm test đỏ), fullPaymentWithoutIPP, fullIPPPaymentAmount
         List<Decimal> values = new List<Decimal>{
-            55000000, 45000000, 50000000, 5000000, 45000000,
-            900000, 5000000, 675000, 67500, 22500, 0
+            55000000, -45000000, 50000000, 5000000,
+            totalCurrentBalance, totalCloseFeeAmount, totalPlanPaymentAmount,
+            totalAccruedInterest, totalIPPAccruedInterest, totalPerDiem, totalDeferredInterest
         };
         return FEC_CardPaymentController.createCardPaymentTotalsFromValues(helpTexts, values);
+    }
+
+    private static Decimal toDecimal(Object val) {
+        if (val == null) { return 0; }
+        if (val instanceof Decimal) { return (Decimal) val; }
+        if (val instanceof Integer) { return Decimal.valueOf((Integer) val); }
+        return 0;
     }
 
     // ==================== IPP ====================
@@ -139,13 +186,14 @@ public with sharing class FEC_MockData {
         dto.firstDueDate = Date.today().addMonths(-1);
         dto.matureDate = Date.today().addMonths(10);
         dto.ippBalance = 50000000;
-        dto.currentBalance = 45000000;
+        dto.currentBalance = -45000000; // Âm để test highlight đỏ
         dto.interestRate = 1.5;
         dto.ippTerm = 12;
         dto.currentTerm = 2;
-        dto.totalIPPPaymentAmount = 55000000;
-        dto.totalIPPMonthlyPrincipal = 4000000;
-        dto.totalIPPMonthlyInterest = 75000;
+        // Totals phải khớp tổng các dòng schedule (2 dòng trong loadMockIPPData: 5M+5M, 4M+4M, 100k+92k)
+        dto.totalIPPPaymentAmount = 10000000;
+        dto.totalIPPMonthlyPrincipal = 8000000;
+        dto.totalIPPMonthlyInterest = 192000;
         dto.ccCode = 'CC001';
         dto.ccName = 'Consumer Credit Center';
         dto.dsaCode = 'DSA001';
@@ -167,20 +215,25 @@ public with sharing class FEC_MockData {
      */
     public static Map<String, Object> getHardcodedIPPScheduleDataForUI(FEC_IPP__c ippRecord) {
         List<Map<String, Object>> scheduleRows = new List<Map<String, Object>>();
-        scheduleRows.add(newScheduleRow(1, 50000000, 4500000, 4000000, 75000));
-        scheduleRows.add(newScheduleRow(2, 45500000, 4500000, 4000000, 75000));
-        scheduleRows.add(newScheduleRow(3, 41000000, 4500000, 4000000, 75000));
+        // 2 dòng giống fec_IPPDetailPage (mock): dòng 1 Payment Amount âm để test highlight đỏ
+        scheduleRows.add(newScheduleRow(1, 50000000, -5000000, 4000000, 100000));
+        scheduleRows.add(newScheduleRow(2, 46000000, 5000000, 4000000, -92000));
 
-        Decimal totalPaymentAmount = 13500000;
-        Decimal totalMonthlyPrincipal = 12000000;
-        Decimal totalMonthlyInterest = 225000;
+        Decimal totalPaymentAmount = 0;
+        Decimal totalMonthlyPrincipal = 0;
+        Decimal totalMonthlyInterest = 0;
+        for (Map<String, Object> row : scheduleRows) {
+            totalPaymentAmount += toDecimal(row.get('FEC_IPP_Payment_Amount__c'));
+            totalMonthlyPrincipal += toDecimal(row.get('FEC_IPP_Monthly_Principal__c'));
+            totalMonthlyInterest += toDecimal(row.get('FEC_IPP_Monthly_Interest__c'));
+        }
 
         Map<String, Object> result = new Map<String, Object>();
         result.put('schedules', scheduleRows);
         result.put('totalPaymentAmount', totalPaymentAmount);
         result.put('totalMonthlyPrincipal', totalMonthlyPrincipal);
         result.put('totalMonthlyInterest', totalMonthlyInterest);
-        result.put('ippRecord', ippRecord != null ? ippRecordToMap(ippRecord) : buildPlaceholderIppRecordForSchedule());
+        result.put('ippRecord', ippRecord != null ? ippRecordToMap(ippRecord) : buildPlaceholderIppRecordForSchedule(scheduleRows));
         return result;
     }
 
@@ -212,7 +265,17 @@ public with sharing class FEC_MockData {
         return row;
     }
 
-    private static Map<String, Object> buildPlaceholderIppRecordForSchedule() {
+    private static Map<String, Object> buildPlaceholderIppRecordForSchedule(List<Map<String, Object>> scheduleRows) {
+        Decimal totalPaymentAmount = 0;
+        Decimal totalMonthlyPrincipal = 0;
+        Decimal totalMonthlyInterest = 0;
+        if (scheduleRows != null) {
+            for (Map<String, Object> row : scheduleRows) {
+                totalPaymentAmount += toDecimal(row.get('FEC_IPP_Payment_Amount__c'));
+                totalMonthlyPrincipal += toDecimal(row.get('FEC_IPP_Monthly_Principal__c'));
+                totalMonthlyInterest += toDecimal(row.get('FEC_IPP_Monthly_Interest__c'));
+            }
+        }
         Map<String, Object> rec = new Map<String, Object>();
         rec.put('FEC_Application_ID__c', 'APP-DEMO-2024001');
         rec.put('FEC_CC_Code__c', 'CC001');
@@ -223,9 +286,9 @@ public with sharing class FEC_MockData {
         rec.put('FEC_TSA_Name__c', 'Third Party Agent 001');
         rec.put('FEC_Origination_Channel__c', 'BRANCH');
         rec.put('FEC_Disbursement_Channel__c', 'ATM');
-        rec.put('FEC_Total_IPP_Payment_Amount__c', 55000000);
-        rec.put('FEC_Total_IPP_Monthly_Principal__c', 4000000);
-        rec.put('FEC_Total_IPP_Monthly_Interest__c', 75000);
+        rec.put('FEC_Total_IPP_Payment_Amount__c', totalPaymentAmount);
+        rec.put('FEC_Total_IPP_Monthly_Principal__c', totalMonthlyPrincipal);
+        rec.put('FEC_Total_IPP_Monthly_Interest__c', totalMonthlyInterest);
         return rec;
     }
 }
