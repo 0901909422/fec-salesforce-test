@@ -563,23 +563,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
             ai.ID    = c.INFO_REFERENCE_ID;
             ai.Value = w.serviceCaseId;
             w.additionalInfos.add(ai);
-            //Check caseID existing for update
-            if (String.isNotBlank(w.caseId)) {
-        
-                FEC_Integration_Case__c recInfo =
-                    getIntegrationCaseById(w.caseId);
-        
-                log('Check caseID existing for update: ' +
-                    JSON.serializePretty(recInfo));
-        
-                if (recInfo != null) {
-                
-                    ai.ID    = c.INFO_CASE_ID;
-                    ai.Value = w.caseId;
-        
-                    w.additionalInfos.add(ai);
-                }
-            }
+            
         }
 
         return w;
@@ -718,13 +702,21 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         req.ProductType = w.productType;
         req.Category    = w.category;
         req.SubCategory = w.subCategory;
-        req.SubCode     = w.subCode;
-
+        req.SubCode     = w.subCode;        
+        //Check caseID existing for update
+        if (String.isNotBlank(w.caseId)) {   
+            FEC_Integration_Case__c recInfo =
+                getIntegrationCaseById(w.caseId);
+            if (recInfo != null) {                
+                req.CaseID =  w.caseId;
+            }
+        }
         // Map case description / remarks
         req.Remarks = w.remarks;
 
         // Map additional key-value information (if any)
         req.AdditionalInfo = w.additionalInfos;
+        log('buildRequest-w.FraudCaseRequestWrapper: '+ JSON.serialize(req));
 
         return req;
     }
