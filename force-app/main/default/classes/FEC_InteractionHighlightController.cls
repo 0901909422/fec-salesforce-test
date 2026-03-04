@@ -97,7 +97,7 @@ public with sharing class FEC_InteractionHighlightController {
                 }
             }
             
-            result.customerCategory = determineCustomerCategory(interactionCase, customerHistory);
+            result.customerCategory = determineCustomerCategory(caseRecord, customerHistory);
             
             return result;
         } catch (Exception e) {
@@ -106,12 +106,45 @@ public with sharing class FEC_InteractionHighlightController {
     }
     
     private static String determineCustomerCategory(Case caseRecord, FEC_Customer_History__c customerHistory) {
+        if (caseRecord.RecordType.Name == FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
+            return determineCustomerCategoryFromRelatedCases(caseRecord.Id);
+        }
+        if (caseRecord.FEC_Interaction__c != null) {
+            return determineCustomerCategoryFromRelatedCases(caseRecord.FEC_Interaction__c);
+        }
         String uploadCategory = getCategoryFromUploadList(caseRecord);
         if (uploadCategory != null) return uploadCategory;
         if (isSuspectedFraud(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SUSPECTED_FRAUD;
         if (isMedia(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_MEDIA;
         if (isSeriousComplaint(caseRecord)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SERIOUS_COMPLAINT;
         return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
+    }
+
+    private static String determineCustomerCategoryFromRelatedCases(Id interactionCaseId) {
+        List<Case> relatedCases = getRelatedCustomerCases(interactionCaseId);
+        for (Case c : relatedCases) {
+            String uploadCategory = getCategoryFromUploadList(c);
+            if (uploadCategory != null) return uploadCategory;
+        }
+        for (Case c : relatedCases) {
+            if (isSuspectedFraud(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SUSPECTED_FRAUD;
+        }
+        for (Case c : relatedCases) {
+            if (isMedia(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_MEDIA;
+        }
+        for (Case c : relatedCases) {
+            if (isSeriousComplaint(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SERIOUS_COMPLAINT;
+        }
+        return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
+    }
+
+    private static List<Case> getRelatedCustomerCases(Id interactionCaseId) {
+        return [
+            SELECT FEC_Account_or_Contract__c, FEC_Category__r.Name, FEC_Complain_Type__c,
+                   FEC_SubCategory__r.FEC_Code__c, FEC_Case_Created_On__c, FEC_Case_Status__c
+            FROM Case
+            WHERE FEC_Interaction__c = :interactionCaseId
+        ];
     }
 
     private static String getCategoryFromUploadList(Case caseRecord) {

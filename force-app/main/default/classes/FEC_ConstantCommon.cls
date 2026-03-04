@@ -138,7 +138,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String FEC_CATEGORY_COMPLAINT = 'Complaint';
     public static final String FEC_COMPLAIN_TYPE_NORMAL = 'Normal';
     public static final String FEC_COMPLAIN_TYPE_URGENT = 'Urgent';
-    public static final String FEC_COMPLAIN_TYPE_HIGH_RISK = 'High risk';
+    public static final String FEC_COMPLAIN_TYPE_HIGH_RISK = 'High Risk';
     public static final String FEC_SUB_CATEGORY_CODE_CL01 = 'CL01';
     public static final String FEC_SUB_CATEGORY_CODE_CC01 = 'CC01';
 
@@ -154,5 +154,5 @@ public with sharing class FEC_ConstantCommon {
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
 
     public static final String EMAIL = 'Email';
-
+    public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
 }
