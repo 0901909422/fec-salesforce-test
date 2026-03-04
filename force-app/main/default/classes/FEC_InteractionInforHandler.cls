@@ -651,8 +651,8 @@ public without sharing class FEC_InteractionInforHandler {
     }
     
     @AuraEnabled
-    public static void resetViewMode(Id recordId, String viewMode) {
-        if (recordId == null) return;
+    public static String resetViewMode(Id recordId, String viewMode) {
+        if (recordId == null) return null;
 
         List<Case> caselst = [
             SELECT
@@ -671,7 +671,7 @@ public without sharing class FEC_InteractionInforHandler {
         Case c = caselst.get(0);
 
         if (c.FEC_Get_Next_Work__c == true) {
-            viewMode = FEC_Constants.HANDLING;
+            viewMode = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         } else if (c.FEC_First_Access__c == true) {
             viewMode = c.FEC_Interaction_View_Mode__c;
         }
