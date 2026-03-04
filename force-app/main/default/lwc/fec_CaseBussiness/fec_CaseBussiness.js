@@ -384,6 +384,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     return this.business?.natureOfCase || null;
   }
 
+  @api setNatureOfCaseId(id) {
+    if (id && this.business) this.business = { ...this.business, natureOfCase: id };
+  }
+
   _getCaseFieldValue(apiName) {
     const sections = this.business?.sectionlst ?? [];
     for (const section of sections) {
@@ -541,6 +545,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     categoryId = null,
     subCategoryId = null,
     subCodeId = null,
+    natureOfCaseIdFallback = null,
   ) {
     this.businessLoaded = false;
 
@@ -554,7 +559,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       .then((res) => {
         if (!res) return;
 
-        this.business = { ...res };
+        const natureOfCase = res.natureOfCase || natureOfCaseIdFallback;
+        this.business = { ...res, natureOfCase };
 
         this.activeSectionlst = ["routing-action"];
 
@@ -1172,7 +1178,13 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
       await run({ ...params });
     } else {
-      // Không có routing: chỉ set FEC_Is_Submited__c = true + clear draft + Status = Pending (nếu Case mở).
+      // Không có routing: lưu NOC trước rồi set FEC_Is_Submited__c = true + clear draft + Status = Pending (nếu Case mở).
+      if (this.business?.natureOfCase) {
+        await saveCaseNOC({
+          caseId: this.recordId,
+          natureOfCaseId: this.business.natureOfCase,
+        });
+      }
       await run({
         method: "Submit Without Route To",
         params: { caseId: this.recordId },
