@@ -130,6 +130,13 @@
 		<members>FEC_LABEL_CURRENT_FOLLOW_TYPE</members>
 		<members>FEC_LABEL_CASE_STATUS</members>
 		<members>FEC_ACTION_UNFOLLOW</members>
+		<members>FEC_MSG_FollowUp_Add_User_To_Watcher_Success</members>
+		<members>FEC_MSG_FollowUp_Please_Select_User</members>
+		<members>FEC_MSG_FollowUp_Type_Updated_Success</members>
+		<members>FEC_MSG_FollowUp_Error_Detail</members>
+		<members>FEC_MSG_FollowUp_Case_ID_Not_Found</members>
+		<members>FEC_MSG_FollowUp_Unfollow_Error</members>
+		<members>FEC_MSG_FollowUp_Case_Follow_Success</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
