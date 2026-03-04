@@ -22,6 +22,10 @@
 		<members>fec_CaseFollowHeadlessAction</members>
 		<members>fec_CaseUnfollowHeadlessAction</members>
 		<members>fec_CaseBussiness</members>
+		<members>fec_CommonConst</members>
+		<members>fec_RelevantCaseListViewAll</members>
+		<members>fec_RelevantInteractionCaseListViewAll</members>
+		<members>fec_RelevantInteractionListViewAll</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

@@ -7,7 +7,7 @@ import { DIV_ELEMENT } from "c/fec_CommonConst";
 import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page";
 import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
 import FEC_VIEW_ALL_LABEL from "@salesforce/label/c.FEC_View_All_Case_Label";
-
+import { formatDateTime, urlCmpWithRecordId } from 'c/fec_CommonUtils';
 const COLUMNS = [
   {
     label: "Case ID",
@@ -28,12 +28,6 @@ const COLUMNS = [
   {
     label: "Case Created Date",
     fieldName: "createdDate",
-    type: "date",
-    typeAttributes: {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    },
   },
   { label: "Case Created By", fieldName: "createdBy" },
 ];
@@ -79,10 +73,10 @@ export default class Fec_RelevantInteractionCaseListViewAll extends LightningEle
         caseIdText: this.getPlainCaseId(c.FEC_Case_ID__c),
         subCategory: c.FEC_SubCategory__r?.FEC_Name_VN__c,
         subCode: c.FEC_SubCode__r?.FEC_Name_VN__c,
-        createdDate: c.FEC_Case_Created_On__c,
+        createdDate: formatDateTime(c.FEC_Case_Created_On__c),
         createdBy: c.FEC_Case_Created_By__c,
         accountContractNumber:
-          c.FEC_Account_or_Contract__r?.FEC_Account_Number__c,
+          c.FEC_Account_or_Contract__r.FEC_Account_Number__c,
       }));
 
       this.currentPage = 1;
