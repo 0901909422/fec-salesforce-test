@@ -11,7 +11,7 @@ public with sharing class FEC_ProcessChangeStatusTriggerHandler {
      */
     public static void handleStatusBeforeInsert(List<SObject> newList) {
         if (!isTriggerEnabled || newList == null) return;
-        // Use timestamp + user suffix for low-collision ExternalID (avoids unsafe casts)
+        // Use timestamp + user suffix for low-collision unique ID
         Long ts = DateTime.now().getTime();
         String userSuffix;
         String uid = UserInfo.getUserId();
@@ -27,7 +27,6 @@ public with sharing class FEC_ProcessChangeStatusTriggerHandler {
         }
         for (SObject record : newList) {
             record.put(FEC_Constants.FIELD_PROCESS_CHANGE_STATUS, FEC_Constants.PROCESS_STATUS_NEW);
-            record.put(FEC_Constants.FIELD_EXTERNAL_ID, String.valueOf(ts) + '-' + userSuffix);
         }
     }
     

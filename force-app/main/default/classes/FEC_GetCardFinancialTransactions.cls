@@ -80,16 +80,7 @@ public with sharing class FEC_GetCardFinancialTransactions {
                 ? FEC_MockupEndpoint.GET_CARD_FINANCIAL_TRANSACTION_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
-            // ===== LOG REQUEST + RESPONSE =====
-            FEC_CommonUltils.logApi(
-                'FEC_GetCardFinancialTransactions',
-                endpoint,
-                'POST',
-                soapBody,
-                res,
-                null
-            );
- 
+            
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
                     String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()})
@@ -125,28 +116,38 @@ public with sharing class FEC_GetCardFinancialTransactions {
     ) {
 
         Dom.Document doc = new Dom.Document();
-
+        
         Dom.XmlNode envelope = doc.createRootElement(
             'soapenv:Envelope',
-           FEC_ConstantCommon.SOAP_ENV,
+            null,
             null
         );
+        
+         envelope.setAttribute(
+            'xmlns:soapenv',
+            FEC_ConstantCommon.SOAP_ENV
+        );
+        
         envelope.setAttribute(
             'xmlns:cif',
             'http://fecredit.com.vn/CIF_CardInfo'
         );
-
+        
+         // ===== Header =====
         envelope.addChildElement('soapenv:Header', null, null);
-
+        
+        // ===== Body =====
         Dom.XmlNode body =
             envelope.addChildElement('soapenv:Body', null, null);
-
+        
+        // ===== Main Action =====
         Dom.XmlNode action =
-            body.addChildElement(
-                'cif:GetCardFinancialTransactions',
-                null,
-                null
-            );
+            body.addChildElement('ns1:GetCardFinancialTransactions', null, null);
+        
+        action.setAttribute(
+            'xmlns:ns1',
+            'http://fecredit.com.vn/CIF_CardInfo'
+        );
 
         Dom.XmlNode sys = action.addChildElement('Sys', null, null);
         sys.addChildElement('TransID', null, null).addTextNode(transId);
@@ -158,12 +159,12 @@ public with sharing class FEC_GetCardFinancialTransactions {
 
         if (fromDate != null) {
             action.addChildElement('FromDate', null, null)
-                  .addTextNode(fromDate.format());
+                  .addTextNode(String.valueOf(fromDate));
         }
-
+        
         if (toDate != null) {
             action.addChildElement('ToDate', null, null)
-                  .addTextNode(toDate.format());
+                  .addTextNode(String.valueOf(toDate));
         }
 
         return doc.toXmlString();

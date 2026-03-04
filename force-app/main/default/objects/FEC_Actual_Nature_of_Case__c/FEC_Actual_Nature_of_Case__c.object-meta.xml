@@ -161,6 +161,6 @@
     </nameField>
     <pluralLabel>Actual Nature of Cases</pluralLabel>
     <searchLayouts></searchLayouts>
-    <sharingModel>ReadWrite</sharingModel>
+    <sharingModel>Read</sharingModel>
     <visibility>Public</visibility>
 </CustomObject>

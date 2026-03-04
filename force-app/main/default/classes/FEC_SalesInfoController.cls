@@ -99,15 +99,46 @@ public without sharing class FEC_SalesInfoController {
                 return result;
             }
             
-            // Step 1: Lấy Account Number từ IPP Record → Customer History
+            // Step 1: Query IPP record (bao gồm FEC_Application_ID__c và Sales Info fields)
             FEC_IPP__c ippRecord = [
-                SELECT Id, FEC_Customer_History__r.FEC_Account_Number__c
+                SELECT Id, FEC_Application_ID__c, FEC_Customer_History__c,
+                       FEC_Customer_History__r.FEC_Account_Number__c,
+                       FEC_Customer_History__r.FEC_Case__c,
+                       FEC_CC_Code__c, FEC_CC_Name__c, FEC_DSA_Code__c, FEC_DSA_Name__c,
+                       FEC_TSA_Code__c, FEC_TSA_Name__c, FEC_Origination_Channel__c, FEC_Disbursement_Channel__c
                 FROM FEC_IPP__c
                 WHERE Id = :ippRecordId
                 LIMIT 1
             ];
             
+            // Nếu IPP đã có ApplicationID → gọi getSalesInfoByApplicationId và trả về (tránh GetCustomerList)
+            if (String.isNotBlank(ippRecord.FEC_Application_ID__c)) {
+                result = getSalesInfoByApplicationId(ippRecord.FEC_Application_ID__c);
+                if (result != null && result.isSuccess) {
+                    return result;
+                }
+            }
+            
             String accountNumber = ippRecord.FEC_Customer_History__r?.FEC_Account_Number__c;
+            
+            // Fallback: Khi Interaction/Case tạo từ account number, Customer History có thể lấy qua FEC_Case__c và chưa có FEC_Account_Number__c → lấy từ Case
+            if (String.isBlank(accountNumber) && ippRecord.FEC_Customer_History__r?.FEC_Case__c != null) {
+                Id caseId = ippRecord.FEC_Customer_History__r.FEC_Case__c;
+                List<Case> cases = [
+                    SELECT Id, FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Account_Number__c
+                    FROM Case
+                    WHERE Id = :caseId
+                    LIMIT 1
+                ];
+                if (!cases.isEmpty()) {
+                    Case c = cases[0];
+                    if (String.isNotBlank(c.FEC_Account_or_Contract__r?.FEC_Account_Number__c)) {
+                        accountNumber = c.FEC_Account_or_Contract__r.FEC_Account_Number__c;
+                    } else if (String.isNotBlank(c.FEC_Account_Number__c)) {
+                        accountNumber = c.FEC_Account_Number__c;
+                    }
+                }
+            }
             
             if (String.isBlank(accountNumber)) {
                 result.errorCode = 'NO_DATA';
@@ -118,6 +149,23 @@ public without sharing class FEC_SalesInfoController {
             // Step 2: Gọi GetCustomerList với Account Number để lấy ApplicationID
             result = getSalesInfoByAccountNumber(accountNumber);
             
+            // Step 3: Đảm bảo IPP record đang xem được cập nhật Sales Info (getSalesInfoByAccountNumber có thể đã update record khác)
+            if (result != null && result.isSuccess && String.isNotBlank(result.applicationId)) {
+                updateIPPRecordWithSalesInfo(result, ippRecordId);
+                // Trả về dữ liệu từ DB của chính record này để UI hiển thị đúng
+                List<FEC_IPP__c> currentList = [
+                    SELECT Id, FEC_Application_ID__c, FEC_CC_Code__c, FEC_CC_Name__c, FEC_DSA_Code__c, FEC_DSA_Name__c,
+                           FEC_TSA_Code__c, FEC_TSA_Name__c, FEC_Origination_Channel__c, FEC_Disbursement_Channel__c
+                    FROM FEC_IPP__c
+                    WHERE Id = :ippRecordId
+                    LIMIT 1
+                ];
+                if (!currentList.isEmpty()) {
+                    result = mapSalesInfoToResult(currentList[0]);
+                    result.isSuccess = true;
+                }
+            }
+            
         } catch (QueryException e) {
             result.isSuccess = false;
             result.errorCode = 'QUERY_ERROR';
@@ -125,7 +173,7 @@ public without sharing class FEC_SalesInfoController {
         } catch (Exception e) {
             result.isSuccess = false;
             result.errorCode = 'UNKNOWN_ERROR';
-            result.errorMessage = e.getMessage();
+            result.errorMessage = System.Label.FEC_Unknown_Error;
         }
         
         return result;
@@ -223,7 +271,7 @@ public without sharing class FEC_SalesInfoController {
         } catch (Exception e) {
             result.isSuccess = false;
             result.errorCode = 'UNKNOWN_ERROR';
-            result.errorMessage = e.getMessage();
+            result.errorMessage = System.Label.FEC_Unknown_Error;
         }
         return result;
     }
@@ -271,7 +319,7 @@ public without sharing class FEC_SalesInfoController {
         } catch (Exception e) {
             result.isSuccess = false;
             result.errorCode = 'UNKNOWN_ERROR';
-            result.errorMessage = e.getMessage();
+            result.errorMessage = System.Label.FEC_Unknown_Error;
         }
         return result;
     }
@@ -383,6 +431,7 @@ public without sharing class FEC_SalesInfoController {
                 System.debug('Error saving SalesInfo to DB: ' + e.getMessage());
             }
         }
+    
     
     /**
      * Gọi GetCustomerList để lấy ApplicationID từ AccountNumber

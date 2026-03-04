@@ -40,14 +40,27 @@ import LBL_SelectAtLeastOneRow from '@salesforce/label/c.LBL_SelectAtLeastOneRow
 
 export default class FraudIntegrationMapping extends LightningElement {
 
-    userTypeOptions = [];
-    intUserTypeOptions = [];
-    channelOptions = [];
-    productLineOptions = [];
-    serviceTypeOptions = [];
-    categoryOptions = [];
-    subCategoryOptions = [];
-    subCodeOptions = [];   
+    // Dropdown options
+    @track userTypeOptions = [];
+    @track intUserTypeOptions = [];
+    @track channelOptions = [];
+    @track productLineOptions = [];
+    @track serviceTypeOptions = [];
+    @track categoryOptions = [];
+    @track subCategoryOptions = [];
+    @track subCodeOptions = [];
+    
+    // Selected values
+    @track userType = null;
+    @track channel = null;
+    @track intUserType = null;
+    @track productLine = null;
+    @track serviceType = null;
+    @track category = null;
+    @track subCategory = null;
+    @track subCode = null;
+    
+    // Constants
     inSourceType = 'intUserType';
     intProductLine = 'productLine';
     intCaseType = 'CaseType';
@@ -56,11 +69,14 @@ export default class FraudIntegrationMapping extends LightningElement {
     intSubCode = 'SubCode';
 
     @track rows = [];
-    //@api natureOfCaseId;
-    //@api caseStageId;
-    //@api screenCaseId;
+    @track loading = true;
     @api mappingId;
-    //@track loading = true;
+    @api userTypeName;           // NEW: Receive userType from parent
+    @api channelFilter;          // NEW: Receive channel from parent
+    @api natureOfCaseId;
+    @api caseStageId;
+    @api screenCaseId;
+    
     get notLoading() { return !this.loading; }
     labels = {
         Integration_Mapping_Title,
@@ -96,16 +112,102 @@ export default class FraudIntegrationMapping extends LightningElement {
 
     connectedCallback() {
         console.log('[INIT] FraudIntegrationMapping loaded');
-        console.log('[RECORD ID]', this.mappingId);     
-        //console.log('[RECORD caseStageId]', this.caseStageId);
-        //console.log('[RECORD screenCaseId]', this.screenCaseId);   
-        //this.natureOfCaseId = 'a0PBK000007ui8o2AA';
+        console.log('[INIT] Parent values:', {
+            mappingId: this.mappingId,
+            userTypeName: this.userTypeName,
+            channelFilter: this.channelFilter,
+            natureOfCaseId: this.natureOfCaseId
+        });
+        
+        // Priority 1: Edit existing mapping
         if (this.mappingId) {
             this.loadForUpdate();
-        } else {
+        }
+        // Priority 2: Initialize from parent values
+        else if (this.userTypeName && this.channelFilter) {
+            console.log('[INIT] Initialize from parent values');
+            this.initializeFromParent();
+        }
+        // Priority 3: Fresh start
+        else {
             this.loadUserTypes();
         }
-        
+    }
+
+    async initializeFromParent() {
+        try {
+            console.log('[INIT PARENT] Start loading dropdowns from parent values');
+            this.loading = true;
+
+            // Step 1: Load User Type dropdown
+            this.userTypeOptions = await loadUserTypeList();
+            console.log('[INIT PARENT] userTypeOptions loaded:', this.userTypeOptions);
+
+            // Step 2: Find and set userType by name
+            const userTypeMatch = this.userTypeOptions.find(
+                opt => opt.label === this.userTypeName || opt.value === this.userTypeName
+            );
+            
+            if (userTypeMatch) {
+                this.userType = userTypeMatch.value;
+                console.log('[INIT PARENT] userType matched:', {
+                    name: this.userTypeName,
+                    value: this.userType
+                });
+            } else {
+                console.warn('[INIT PARENT] userTypeName not found:', this.userTypeName);
+            }
+
+            // Step 3: Load Channel dropdown
+            this.channelOptions = await loadChannelList();
+            console.log('[INIT PARENT] channelOptions loaded:', this.channelOptions);
+
+            // Step 4: Find and set channel by filter
+            const channelMatch = this.channelOptions.find(
+                opt => opt.label === this.channelFilter || opt.value === this.channelFilter
+            );
+            
+            if (channelMatch) {
+                this.channel = channelMatch.value;
+                console.log('[INIT PARENT] channel matched:', {
+                    filter: this.channelFilter,
+                    value: this.channel
+                });
+
+                // Step 5: Load Int User Type based on channel
+                await this.loadIntUserTypeForChannel();
+            } else {
+                console.warn('[INIT PARENT] channelFilter not found:', this.channelFilter);
+            }
+
+            console.log('[INIT PARENT] Initialization complete');
+        } catch (error) {
+            console.error('[INIT PARENT ERROR]', error);
+            this.showToast(this.labels.error, 'Error initializing from parent', 'error');
+        } finally {
+            this.loading = false;
+        }
+    }
+
+    async loadIntUserTypeForChannel() {
+        try {
+            if (!this.channel) {
+                console.warn('[LOAD INT USER TYPE] channel not set');
+                return;
+            }
+
+            console.log('[LOAD INT USER TYPE] Loading for channel:', this.channel);
+            
+            this.intUserTypeOptions = await loadMasterIntegration({
+                sourceType: this.inSourceType,
+                parentId: this.channel,
+                channelCode: this.channel
+            });
+
+            console.log('[LOAD INT USER TYPE] Loaded:', this.intUserTypeOptions);
+        } catch (error) {
+            console.error('[LOAD INT USER TYPE ERROR]', error);
+        }
     }
 
     loadForUpdate() {
@@ -150,11 +252,13 @@ export default class FraudIntegrationMapping extends LightningElement {
         this.userTypeOptions = await loadUserTypeList();
         this.channelOptions = await loadChannelList();
         this.intUserTypeOptions = await loadMasterIntegration({ sourceType: this.inSourceType, parentId: this.channel, channelCode: this.channel });
-        this.productLineOptions = await loadMasterIntegration({ sourceType: this.intProductLine, parentId:null , channelCode: data.channel });
-        this.serviceTypeOptions = await loadMasterIntegration({ sourceType: this.intCaseType, parentId: data.productLine, channelCode: this.channel });
-        this.categoryOptions = await loadMasterIntegration({ sourceType: this.intCategory, parentId: data.serviceType, channelCode: this.channel });
+
+        this.productLineOptions = await loadMasterIntegration({ sourceType: this.intProductLine, parentId:null , channelCode: data.channel});
+        this.serviceTypeOptions = await loadMasterIntegration({ sourceType: this.intCaseType, parentId: data.productLine, channelCode: this.channel});
+        this.categoryOptions = await loadMasterIntegration({ sourceType: this.intCategory, parentId: data.serviceType, channelCode: this.channel});
         this.subCategoryOptions = await loadMasterIntegration({ sourceType: this.intSubCategory, parentId: data.category, channelCode: this.channel });
-        this.subCodeOptions = await loadMasterIntegration({ sourceType: this.intSubCode, parentId: data.subCategory, channelCode: this.channel });  
+        this.subCodeOptions = await loadMasterIntegration({ sourceType: this.intSubCode, parentId: data.subCategory, channelCode: this.channel});  
+      
     }
 
 
@@ -250,6 +354,7 @@ export default class FraudIntegrationMapping extends LightningElement {
         this.categoryOptions = [];
         this.subCategoryOptions = [];
         this.subCodeOptions = [];
+        this.channel = null;
 
         loadChannelList()
             .then(r => {
@@ -477,7 +582,9 @@ export default class FraudIntegrationMapping extends LightningElement {
             category: this.category,
             subCategory: this.subCategory,
             subCode: this.subCode,
-            channelCode: this.channel
+            channelCode: this.channel,
+            serviceType: this.serviceType
+
         })
             .then(r => {
                 console.log('[SUCCESS] Additional Properties:', r);
@@ -504,7 +611,9 @@ export default class FraudIntegrationMapping extends LightningElement {
             category: this.category,
             subCategory: this.subCategory,
             subCode: this.subCode,
-            channelCode: this.channel
+            channelCode: this.channel,
+            serviceType: this.serviceType
+
         })
             .then(r => {
                 console.log('[SUCCESS] Additional Properties:', r);
@@ -529,6 +638,7 @@ export default class FraudIntegrationMapping extends LightningElement {
         }
     }
     
+    @api
     handleSave() {
         console.log('[SAVE] Start saving mapping');
     
@@ -562,7 +672,6 @@ export default class FraudIntegrationMapping extends LightningElement {
                 console.log('[SAVE] Response:', res);
     
                 if (res?.success) {
-                    //SUCCESS TOAST
                     this.showToast(
                         this.labels.success,
                         res.message || this.labels.saveSuccess,
@@ -573,7 +682,7 @@ export default class FraudIntegrationMapping extends LightningElement {
                     this.mappingId = res.mappingId;
                     //SEND TO PARENT COMPONENT
                     this.dispatchEvent(
-                        new CustomEvent('mappingcreated', {
+                        new CustomEvent('successintegration', {
                             detail: { mappingId: res.mappingId },
                             bubbles: true,
                             composed: true
@@ -581,7 +690,6 @@ export default class FraudIntegrationMapping extends LightningElement {
                     );
     
                 } else {
-                    //FAILURE FROM SERVER
                     this.showToast(
                         this.labels.error,
                         res?.message || this.labels.saveFailed,

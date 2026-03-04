@@ -20,8 +20,12 @@
                     </div>
                     <div class="slds-page-header__col-actions">
                         <div class="slds-page-header__actions">
-                            <lightning-button label={labelUndo} onclick={handleRefresh} icon-name="utility:refresh"
-                                disabled={isUndoDisabled} class="slds-m-left_x-small"></lightning-button>
+                            <button class="slds-button slds-button_neutral slds-m-left_x-small"
+                                onclick={handleRefresh} disabled={isUndoDisabled}>
+                                <lightning-icon icon-name="utility:refresh" size="x-small"
+                                    class="slds-button__icon slds-button__icon_left"></lightning-icon>
+                                {labelUndo}
+                            </button>
                         </div>
                     </div>
                 </div>
