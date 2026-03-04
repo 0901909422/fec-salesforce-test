@@ -462,6 +462,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Case_Stage__c.FEC_Nature_of_Cases__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Case_Stage__c.FEC_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
