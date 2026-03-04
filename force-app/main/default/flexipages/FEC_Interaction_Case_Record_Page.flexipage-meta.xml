@@ -378,25 +378,6 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
-                <componentName>fecInteractionEmailInfo</componentName>
-                <identifier>c_fecInteractionEmailInfo</identifier>
-                <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Email</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>false</rightValue>
-                    </criteria>
-                </visibilityRule>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
                 <componentName>fecInteractionInfo</componentName>
                 <identifier>c_fecInteractionInfo</identifier>
                 <visibilityRule>
