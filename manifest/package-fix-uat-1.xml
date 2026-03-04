@@ -10,6 +10,9 @@
         <members>FEC_GetRewardEligibility</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_GetNextWorkController</members>
+        <members>FEC_MockData</members>
+        <members>FEC_GetPaymentInfo</members>
+        <members>FEC_MFASOUTSTANDINGAUTHINQ</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -28,6 +31,9 @@
 		<members>fec_RelevantInteractionCaseListViewAll</members>
 		<members>fec_RelevantInteractionListViewAll</members>
 		<members>fec_GetNextWork</members>
+		<members>fec_IPPDetailPage</members>
+		<members>fec_CaseDetail_Customer</members>
+		<members>fec_CaseEditNOC</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -44,6 +50,8 @@
 	</types>
     <types>
 		<members>FEC_API_Config.FEC_Get_Customer_List</members>
+		<members>FEC_API_Config.FEC_Get_Payment_Info</members>
+		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
