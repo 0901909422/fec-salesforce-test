@@ -554,22 +554,6 @@ global with sharing class FEC_IntegrationFraudService {
                                 '</ns1:DateTime>' +
                             '</ns1:Sys>' +
                         '</ns1:GetFraudMasterDataRequest>' +
-                    'xmlns:urn="urn:PegaRULES:SOAP:FraudCase:Services">' +
-                    '<soapenv:Header/>' +
-                    '<soapenv:Body>' +
-                        '<urn:GetFraudMasterDataRequest>' +
-                            '<urn:Sys>' +
-                                '<urn:Channel>' +
-                                    FEC_FraudConstantCommon.SYSTEM_CHANNEL +
-                                '</urn:Channel>' +
-                                '<urn:TransactionID>' +
-                                    FEC_IntegrationFraudCaseUtil.generateUUID() +
-                                '</urn:TransactionID>' +
-                                '<urn:DateTime>' +
-                                    Datetime.now().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss') +
-                                '</urn:DateTime>' +
-                            '</urn:Sys>' +
-                        '</urn:GetFraudMasterDataRequest>' +
                     '</soapenv:Body>' +
                 '</soapenv:Envelope>';
             
