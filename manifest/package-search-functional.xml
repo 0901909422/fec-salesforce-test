@@ -22,5 +22,12 @@
 		<members>Case.Reopen</members>
 		<name>QuickAction</name>
 	</types>
+	<types>
+		<members>FEC_Toast_Error</members>
+		<members>FEC_Toast_Recall_Success</members>
+		<members>FEC_Toast_Reopen_Success</members>
+		<members>FEC_Toast_Save_Success_Title</members>
+		<name>CustomLabel</name>
+	</types>
     <version>65.0</version>
 </Package>
