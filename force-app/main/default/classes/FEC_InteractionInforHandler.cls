@@ -160,7 +160,7 @@ public without sharing class FEC_InteractionInforHandler {
             '       FEC_Created_On__c,FEC_Created_by__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC '+
+            'ORDER BY FEC_Created_On__c DESC '+
             'LIMIT 5';
         System.debug('SOQL: ' + soql);
         return Database.query(soql);
@@ -220,7 +220,7 @@ public without sharing class FEC_InteractionInforHandler {
             '       FEC_Created_On__c,FEC_Created_by__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC ';
+            'ORDER BY FEC_Created_On__c DESC ';
         System.debug('SOQL: ' + soql);
         return Database.query(soql);
     }
@@ -418,7 +418,7 @@ public without sharing class FEC_InteractionInforHandler {
             '   FEC_SubCode__r.FEC_Name_VN__c, FEC_Account_or_Contract__r.FEC_Account_Number__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC ' +
+            'ORDER BY FEC_Case_Created_On__c DESC ' +
             'LIMIT 5';
         
         // =====================================================
@@ -495,10 +495,10 @@ public without sharing class FEC_InteractionInforHandler {
             '   FEC_SubCategory__r.FEC_Name_VN__c, ' +
             '   FEC_SubCode__c, ' +
             '   FEC_SubCode__r.FEC_Code__c, FEC_Account_or_Contract__r.FEC_Account_Number__c,' +
-            '   FEC_SubCode__r.FEC_Name_VN__c ' +
+            '   FEC_SubCode__r.FEC_Name_VN__c , FEC_Case_Created_On__c,FEC_Case_Created_By__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC' ;
+            'ORDER BY FEC_Case_Created_On__c DESC' ;
         
         // =====================================================
         // 7. EXECUTE
