@@ -10,6 +10,7 @@
         <members>FEC_GetRewardEligibility</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_GetNextWorkController</members>
+        <members>FEC_MockData</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -28,6 +29,7 @@
 		<members>fec_RelevantInteractionCaseListViewAll</members>
 		<members>fec_RelevantInteractionListViewAll</members>
 		<members>fec_GetNextWork</members>
+		<members>fec_IPPDetailPage</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
