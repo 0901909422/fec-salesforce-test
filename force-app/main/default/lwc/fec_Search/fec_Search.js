@@ -11,6 +11,7 @@ import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getCase from "@salesforce/apex/FEC_SearchController.getCase";
 import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
+import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
 import {
@@ -276,7 +277,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   }
 
   async connectedCallback() {
-    this.isLoaded = true;
+    this.isLoaded = false;
     // Load styles
     loadStyle(this, COMMON_STYLES)
       .then(() => console.log("Common styles loaded"))
@@ -296,11 +297,12 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Search_Email_Address__c : null;
       this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
       if (this.phoneNumber || this.nationalId || this.contractNumber) {
-        this.seedSampleRows(true);
+        await this.processSearch();
       }
     } catch (error) {
       console.error("Error fetching case data:", error);
     }
+    this.isLoaded = true;
     if (!this.recordId) {
       this.isDisplay = true;
     }
@@ -513,6 +515,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   }
 
   handleClear() {
+    this.isNoCustomerFound = false;
     this.nationalId = null;
     this.phoneNumber = null;
     this.applicationId = null;
@@ -545,7 +548,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     this.ubankData = [];
   }
 
-  handleSearch() {
+  async handleSearch() {
     // Validate all inputs and ensure at least one search field is provided
     const inputs = this.template.querySelectorAll(
       ".responsive-layout lightning-input",
@@ -587,8 +590,104 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
     // Example: populate data sets based on current criteria.
     // Replace with actual Apex calls and set the dataset corresponding to each tab.
-    this.seedSampleRows(true);
+    //this.seedSampleRows(true);
+    this.processSearch() 
   }
+
+  async processSearch() {
+    this.isLoaded = false;
+    try {
+      const params = {
+          requestorId: 'PEGA_CSM', // Assuming these exist in your JS properties
+          phoneNumber: null,
+          isReferenceSearch: null,      // Or your logic for this boolean
+          fullName: null,
+          nationalId: null,
+          applicationId: null,
+          creditCardNumber: '1111',
+          accountNumber: null,
+          contractNumber: null,
+          email: null,
+          personId: null
+        };
+        let result = await getCustomerList(params);
+        console.log('getCustomerList', result);
+        if (result && result.Customers && result.Customers.length > 0) {
+            this.processCustomerResults(result.Customers);
+            this.isNoCustomerFound = false;
+        } else {
+            this.cardData = [];
+            this.isNoCustomerFound = true;
+        }
+    } catch (e) {
+      console.error('Error fetching customer list: ', e);
+      this.showToast("Error", "Unable to fetch customer list. " + e?.body?.message, "error");
+    } finally {
+      this.isLoaded = true;
+    }
+  }
+
+  processCustomerResults(customers) {
+    // 1. Chỉ lấy 5 bản ghi đầu tiên từ danh sách 103 bản ghi trả về
+    const top5 = customers.slice(0, 5);
+
+    // 2. Reset các mảng dữ liệu trước khi nạp mới
+    this.cardData = [];
+    this.loanContractData = [];
+    this.insuranceData = [];
+
+    top5.forEach(cust => {
+      if (cust.Applications && cust.Applications.length > 0) {
+        cust.Applications.forEach(app => {
+          // Định nghĩa logic phân loại dựa trên trường 'Product' trong JSON
+          const productCode = app.Product ? app.Product.toUpperCase() : '';
+
+          // --- PHÂN LOẠI VÀO CARD ---
+          // Trong JSON, Card thường có Product để trống và có AccountNumber
+          if (productCode === '' && app.AccountNumber) {
+            this.cardData = [...this.cardData, {
+              id: app.ApplicationID,
+              FullName: cust.FullName,
+              NationalID1: cust.NationalID,
+              DateOfBirth: cust.DateOfBirth,
+              AccountNumber: app.AccountNumber,
+              AccountStatus: app.Status,
+              PlasticID: 'N/A' // Field này không có trong JSON
+            }];
+          }
+
+          // --- PHÂN LOẠI VÀO LOAN (Vay) ---
+          // Các mã sản phẩm như CDL, PL, TW, FC_...
+          else if (['CDL', 'PL', 'TW', 'FC_CDL', 'FC_TW', 'FC_CDL_G'].includes(productCode)) {
+            this.loanContractData = [...this.loanContractData, {
+              id: app.ApplicationID,
+              FullName: cust.FullName,
+              NationalID1: cust.NationalID,
+              DateOfBirth: cust.DateOfBirth,
+              ContractNumber: app.ContractNumber,
+              ProductCode: app.Product,
+              ContractStatus: app.Status
+            }];
+          }
+
+          // --- PHÂN LOẠI VÀO INSURANCE (Bảo hiểm) ---
+          // Giả sử mã bảo hiểm là INS hoặc dựa trên SchemeDesc (do JSON mẫu chưa có mã rõ ràng cho INS)
+          else if (productCode === 'INS' || (app.SchemeDesc && app.SchemeDesc.includes('INSURED'))) {
+            this.insuranceData = [...this.insuranceData, {
+              id: app.ApplicationID,
+              UserId: cust.CIFNumber,
+              FullName: cust.FullName,
+              BuyerNID: cust.NationalID,
+              ProductName: app.SchemeDesc || 'Insurance Product',
+              Status: app.Status,
+              EffectiveDate: 'N/A' // Cần map thêm field nếu có
+            }];
+          }
+        });
+      }
+    });
+  }
+
 
   handleTabChange(event) {
     // lightning-tabset fires 'active' with event.target.value on the tab element
