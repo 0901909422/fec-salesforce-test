@@ -26,12 +26,12 @@
     <label>Outgoing Payment</label>
     <queue>FEC_Outgoing_Payment</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Disbursement_Accounting_Manager</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Disbursement_Accounting_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_Of_Outgoing_Payment_Accounting</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Partners_Payment_Accounting_Manager</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Partners_Payment_Accounting_Officer</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Disbursement_Accounting_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Partners_Payment_Accounting_Specialist</roleAndSubordinatesInternal>
+        <role>FEC_Disbursement_Accounting_Manager</role>
+        <role>FEC_Disbursement_Accounting_Specialist</role>
+        <role>FEC_Head_Of_Outgoing_Payment_Accounting</role>
+        <role>FEC_Partners_Payment_Accounting_Manager</role>
+        <role>FEC_Partners_Payment_Accounting_Officer</role>
+        <role>FEC_Senior_Disbursement_Accounting_Specialist</role>
+        <role>FEC_Senior_Partners_Payment_Accounting_Specialist</role>
     </sharedTo>
 </ListView>

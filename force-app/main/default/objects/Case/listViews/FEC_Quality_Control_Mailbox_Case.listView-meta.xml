@@ -26,13 +26,13 @@
     <label>Quality Control Mailbox</label>
     <queue>FEC_Quality_Control_Mailbox</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Quality_Control_Manager</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Quality_Control_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_of_Quality_Control_Ops_Management_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Operations_Automation_Project_Manager</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Customer_Service_Quality_Control_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Software_Development_Expert_Digital_Customer</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Unit_Head_of_Customer_Service_Operations_Management</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Unit_Head_of_Customer_Service_Quality_Control</roleAndSubordinatesInternal>
+        <role>FEC_Customer_Service_Quality_Control_Manager</role>
+        <role>FEC_Customer_Service_Quality_Control_Specialist</role>
+        <role>FEC_Head_of_Quality_Control_Ops_Management_Department</role>
+        <role>FEC_Operations_Automation_Project_Manager</role>
+        <role>FEC_Senior_Customer_Service_Quality_Control_Specialist</role>
+        <role>FEC_Software_Development_Expert_Digital_Customer</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Operations_Management</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Quality_Control</role>
     </sharedTo>
 </ListView>

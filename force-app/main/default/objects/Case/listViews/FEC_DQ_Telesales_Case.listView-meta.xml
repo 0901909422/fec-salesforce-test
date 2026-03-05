@@ -26,10 +26,10 @@
     <label>DQ - Telesales</label>
     <queue>FEC_DQ_Telesales</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Senior_Telesales_Process_Management_Specialist_1</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Telesales_Coordination_Specialist_1</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Telesales_Process_Management_Expert_1</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Telesales_Process_Management_Specialist_1</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Telesales_System_Management_Supervisor_1</roleAndSubordinatesInternal>
+        <role>FEC_Senior_Telesales_Process_Management_Specialist_1</role>
+        <role>FEC_Telesales_Coordination_Specialist_1</role>
+        <role>FEC_Telesales_Process_Management_Expert_1</role>
+        <role>FEC_Telesales_Process_Management_Specialist_1</role>
+        <role>FEC_Telesales_System_Management_Supervisor_1</role>
     </sharedTo>
 </ListView>

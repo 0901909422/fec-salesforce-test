@@ -26,8 +26,8 @@
     <label>Card Ops Control &amp; Support</label>
     <queue>FEC_Card_Ops_Control_Support</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Card_Operations_Control_Support_Expert</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_Of_Card_Operations_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Card_Operations_Control_Support_Specialist</roleAndSubordinatesInternal>
+        <role>FEC_Card_Operations_Control_Support_Expert</role>
+        <role>FEC_Head_Of_Card_Operations_Department</role>
+        <role>FEC_Senior_Card_Operations_Control_Support_Specialist</role>
     </sharedTo>
 </ListView>

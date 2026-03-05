@@ -26,10 +26,10 @@
     <label>Incoming Payment</label>
     <queue>FEC_Incoming_Payment</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Head_Of_Incoming_Payment_Accounting</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Incoming_Payment_Accounting_Manager</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Incoming_Payment_Accounting_Officer</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Incoming_Payment_Accounting_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Incoming_Payment_Accounting_Specialist</roleAndSubordinatesInternal>
+        <role>FEC_Head_Of_Incoming_Payment_Accounting</role>
+        <role>FEC_Incoming_Payment_Accounting_Manager</role>
+        <role>FEC_Incoming_Payment_Accounting_Officer</role>
+        <role>FEC_Incoming_Payment_Accounting_Specialist</role>
+        <role>FEC_Senior_Incoming_Payment_Accounting_Specialist</role>
     </sharedTo>
 </ListView>
