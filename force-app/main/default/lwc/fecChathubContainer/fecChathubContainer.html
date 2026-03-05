@@ -1,30 +1,10 @@
 <template>
-    <div class="">
-        <template if:true={isInitialized}>           
-            <!-- <div class="button-group-chathub slds-grid slds-grid_align-end">
-                <lightning-button 
-                    label="ChatHub" 
-                    icon-name="utility:chat" 
-                    onclick={handleShowChatHub} 
-                    class="slds-m-left_x-small"
-                    title="Open ChatHub"
-                ></lightning-button>
-                
-                <c-fec-chathub-status
-                    options={agentStatusOptions}
-                    value={currentAgentStatus}
-                    onstatuschange={handleStatusChange}
-                ></c-fec-chathub-status>
-            </div> -->
-             
+    <div data-id="containerChathub" style="position: relative; height: 100%; display: flex; flex-direction: column;">
+        <template if:true={isInitialized}>
             <template if:true={isChatHubVisible}>
-                <div class="chathub-iframe-wrapper" style="height: 665px; width: 100%;">
-                    <iframe 
-                        src={chatHubUrl} 
-                        class="chathub-iframe" 
-                        style="height: 100%; width: 100%; border: none;"
-                        title="ChatHub"
-                    ></iframe>
+                <div class="chathub-iframe-wrapper" style="flex-grow: 1; min-height: 700px; width: 100%;">
+                    <iframe src={chatHubUrl} class="chathub-iframe" style="height: 100%; width: 100%; border: none;"
+                        title="ChatHub"></iframe>
                 </div>
             </template>
         </template>

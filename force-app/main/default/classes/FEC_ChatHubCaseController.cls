@@ -8,16 +8,28 @@ public with sharing class FEC_ChatHubCaseController {
     
     // Naming convention: String: strName, Datetime: dtStartDate, List: listAccounts
     
+    // Wrapper class for Case creation response
+    public class CaseCreationResponse {
+        @AuraEnabled
+        public String caseId { get; set; }
+        @AuraEnabled
+        public String caseNo { get; set; }
+        
+        public CaseCreationResponse(String caseId, String caseNo) {
+            this.caseId = caseId;
+            this.caseNo = caseNo;
+        }
+    }
+    
     /** * createCaseOnNewSession
     * Handles the incoming 'createCaseRequestEvent' to create a new Case record.
     * @param strJsonData: JSON string containing chat session and customer info.
-    * @return strCaseID: ID of the newly created Case or null/error string.
+    * @return CaseCreationResponse: Object containing caseId and caseNo of the newly created Case.
     * @created: 2025/12/03 long.nguyen.50
     * @modified: 
     */
     @AuraEnabled
-    public static String createCaseOnNewSession(String strJsonData) {
-        // System.debug('### [FEC] createChatSessionCase Input: ' + strJsonData);
+    public static CaseCreationResponse createCaseOnNewSession(String strJsonData) {
         try {
             if (String.isBlank(strJsonData)) {
                 // System.debug('### [FEC] Input JSON is empty');
@@ -66,7 +78,7 @@ public with sharing class FEC_ChatHubCaseController {
             // 4. Call existing Handler to create Case
             FEC_CreateCaseHanlder.FEC_InteractionCaseResponse response = FEC_CreateCaseHanlder.createInteractionCase(strDtoJson);
             System.debug('response: ' + response);
-            return response.caseId;
+            return new CaseCreationResponse(response.caseId, response.caseNo);
     
         } catch (Exception e) {
             // System.debug('### [FEC] Error in createChatSessionCase: ' + e.getMessage() + ' ' + e.getStackTraceString());
@@ -128,7 +140,8 @@ public with sharing class FEC_ChatHubCaseController {
             Map<String, Object> mapItem = (Map<String, Object>)obj;
             
             if(String.isBlank(strCaseId)) {
-                strCaseId = (String)mapItem.get('pegaID');
+                String pegaID = (String)mapItem.get('pegaID');
+                strCaseId = FEC_Utils.getInteractionIdFromPegaId(pegaID);
             }
             
             String strMessageType = (String)mapItem.get('messageType');
@@ -148,21 +161,6 @@ public with sharing class FEC_ChatHubCaseController {
             // setSignaturesInInput.add(sig);
         }
         System.debug('strCaseId: ' + strCaseId);
-        // -------------------------------------------------------
-        Set<String> setExistingSignatures = new Set<String>();
-        for(FEC_ChatHistory__c existing : [SELECT FEC_Case__c, FEC_SessionID__c, FEC_SenderName__c, FEC_MessageType__c, FEC_CreatedAt__c 
-                                            FROM FEC_ChatHistory__c 
-                                            WHERE FEC_Case__c = :strCaseId]) {
-            String existingSig = existing.FEC_Case__c + '|' + 
-                                existing.FEC_SessionID__c + '|' + 
-                                existing.FEC_SenderName__c + '|' + 
-                                existing.FEC_MessageType__c + '|' + 
-                                String.valueOf(existing.FEC_CreatedAt__c.getTime());
-            setExistingSignatures.add(existingSig);
-        }
-        System.debug('### Existing Signatures Count: ' + setExistingSignatures.size());
-        System.debug('### Existing Signatures: ' + setExistingSignatures);
-        // -------------------------------------------------------
 
         // Batch query all existing files at once
         Map<String, Boolean> mapExistingFiles = new Map<String, Boolean>();
@@ -192,24 +190,13 @@ public with sharing class FEC_ChatHubCaseController {
         // 1. Process Chat History
         for(Object obj : listRawHistory) {
             Map<String, Object> mapItem = (Map<String, Object>)obj;
-            Datetime dtCreatedAt = FEC_Utils.parseChatHubDatetime((String)mapItem.get('createdAt'));
-            String currentSig = (String)mapItem.get('pegaID') + '|' + 
-                        (String)mapItem.get('sessionID') + '|' + 
-                        (String)mapItem.get('senderName') + '|' + 
-                        (String)mapItem.get('messageType') + '|' + 
-                        String.valueOf(dtCreatedAt.getTime());
-            if(setExistingSignatures.contains(currentSig)) {
-                System.debug('### Duplicate chat data, skipping this line.');
-                continue; 
-            }
-
             // Get PegaID (mapped to Case ID in SF)
             if(String.isBlank(strCaseId)) {
-                strCaseId = (String)mapItem.get('pegaID');
+                strCaseId = FEC_Utils.getInteractionIdFromPegaId((String)mapItem.get('pegaID'));
             }
 
             FEC_ChatHistory__c objHistory = new FEC_ChatHistory__c();
-            objHistory.FEC_Case__c = (String)mapItem.get('pegaID'); // Assuming pegaID is SF Case ID sent back earlier
+            objHistory.FEC_Case__c = strCaseId; // Assuming pegaID is SF Case ID sent back earlier
             objHistory.FEC_SessionID__c = (String)mapItem.get('sessionID');
             objHistory.FEC_SenderName__c = (String)mapItem.get('senderName');
             objHistory.FEC_Message__c = (String)mapItem.get('message');
@@ -220,10 +207,9 @@ public with sharing class FEC_ChatHubCaseController {
             // Handle Timestamp using Util
             // objHistory.FEC_ExternalCreatedAt__c = FEC_Utils.parseChatHubDatetime(strCreatedAt);
 
-            // System.debug('dtCreatedAt: ' + dtCreatedAt);
-            objHistory.FEC_CreatedAt__c = dtCreatedAt;
+            objHistory.FEC_CreatedAt__c = FEC_Utils.parseChatHubDatetime((String)mapItem.get('createdAt'));
             if (objHistory.FEC_MessageType__c == 'attachment' || objHistory.FEC_MessageType__c == 'image') {
-                String fileNameConvert = (FEC_Utils.formatDateTimeToString(dtCreatedAt) + '_' + (String)mapItem.get('fileName')).trim();
+                String fileNameConvert = (FEC_Utils.formatDateTimeToString(objHistory.FEC_CreatedAt__c) + '_' + (String)mapItem.get('fileName')).trim();
                 System.debug('(String)mapItem.get fileName: ' + (String)mapItem.get('fileName'));
                 System.debug('fileNameConvert: ' + fileNameConvert);
                 objHistory.FEC_Message__c = fileNameConvert;

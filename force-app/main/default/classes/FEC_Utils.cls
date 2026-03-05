@@ -197,4 +197,15 @@ public with sharing class FEC_Utils {
         }
         return 'Other';
     }
+
+    @AuraEnabled
+    public static String getInteractionIdFromPegaId(String pegaID) {
+        List<Case> cases = [
+            SELECT Id
+            FROM Case
+            WHERE FEC_ID_Search__c = :pegaID
+            LIMIT 1
+        ];
+        return cases.isEmpty() ? null : cases[0].Id;
+    }
 }
