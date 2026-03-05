@@ -37,7 +37,7 @@ public with sharing class FEC_SearchController {
     public static void createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType) {
         // Return early if no value or field name
         if (value == null || value.trim() == '' || fieldName == null || fieldName.trim() == '') {
-            throw new AuraHandledException('Value and fieldName must be provided.');
+            throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
         }
         // Build record
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
@@ -65,7 +65,7 @@ public with sharing class FEC_SearchController {
             Case objCase = new Case(
                     Id = caseId,
                     FEC_Account_or_Contract__c = rec.Id,
-                    FEC_Interaction_View_Mode__c = 'handling',
+                    FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE,
                     FEC_CIF_Number__c = randomCIF,
                     FEC_First_Access__c = true,
                     FEC_Search_Products__c = searchProducts,

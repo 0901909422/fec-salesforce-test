@@ -1,0 +1,22 @@
+<template>
+    <lightning-card>
+        <!-- Header -->
+        <div class="header">
+            <lightning-icon icon-name="utility:lock" size="small" class="header-icon"></lightning-icon>
+            <span class="header-title">Sensitive Data Viewing</span>
+        </div>
+
+        <template if:true={showViewAll}>
+            <lightning-datatable key-field="Id" data={rows} columns={columns} hide-checkbox-column>
+            </lightning-datatable>
+            <lightning-button variant="base" label="View All" onclick={handleViewAll}>
+            </lightning-button>
+        </template>
+        <template if:false={showViewAll}>
+            <div class="slds-align_absolute-center slds-text-color_weak slds-m-around_medium">
+                No sensitive data available
+            </div>
+        </template>
+
+    </lightning-card>
+</template>

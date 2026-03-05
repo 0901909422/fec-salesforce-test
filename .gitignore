@@ -54,3 +54,7 @@ force-app/main/default/aura/.eslintrc.json
 force-app/main/default/lwc/.eslintrc.json
 scripts/apex/hello.apex
 scripts/soql/account.soql
+README.md
+
+# Ignore MainPrompt.prompt.md
+.github/prompts/MainPrompt.prompt.md

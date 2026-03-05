@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Queue xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Team Queue</description>
+    <doesSendEmailToMembers>false</doesSendEmailToMembers>
+    <name>LG</name>
+    <queueMembers>
+        <roles>
+            <role>FEC_Senior_Telesales_Process_Management_Specialist_1</role>
+            <role>FEC_Senior_Telesales_Process_Management_Specialist_2</role>
+            <role>FEC_Telesales_Coordination_Specialist_2</role>
+            <role>FEC_Telesales_Process_Management_Expert_2</role>
+            <role>FEC_Telesales_Process_Management_Specialist_2</role>
+            <role>FEC_Telesales_System_Management_Supervisor_2</role>
+        </roles>
+    </queueMembers>
+    <queueSobject>
+        <sobjectType>Case</sobjectType>
+    </queueSobject>
+</Queue>

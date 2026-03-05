@@ -131,15 +131,6 @@ public with sharing class FEC_GetCustomerList {
                     
         HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
                
-        // ===== LOG REQUEST + RESPONSE =====
-            // FEC_CommonUltils.logApi(
-            //     'FEC_GetCustomerList',
-            //     endpoint,
-            //     'POST',
-            //     soapBody,  
-            //     res,       
-            //     null        
-            // );
         System.debug('Status code: ' + res.getStatusCode());
         System.debug('Response body: ' + res.getBody());
         if (res.getStatusCode() == 200 && String.isNotBlank(res.getBody())) {
@@ -380,7 +371,14 @@ public with sharing class FEC_GetCustomerList {
         String email,
         String personId
     ) {
-        Set<String> validRequestors = new Set<String>{'CRM', 'CORE', 'MOBILE', 'PORTAL','PEGA','PEGA_CSM'};
+        Set<String> validRequestors = new Set<String>{
+            FEC_ConstantCommon.REQUESTOR_CRM, 
+            FEC_ConstantCommon.REQUESTOR_CORE, 
+            FEC_ConstantCommon.REQUESTOR_MOBILE, 
+            FEC_ConstantCommon.REQUESTOR_PORTAL,
+            FEC_ConstantCommon.REQUESTOR_PEGA,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN
+        };
         /* ================= TransID ================= */
         if (String.isBlank(transId) || transId.length() > 36) {
             throw new CalloutException(

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Team__c</fullName>
+    <description>Hiển thị Team của User đang phụ trách Interaction /Service Case dựa trên thông tin Owner hiện tại trên Case và interaction so sánh với bảng Case status để định nghĩa</description>
+    <externalId>false</externalId>
+    <label>Team</label>
+    <length>255</length>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
