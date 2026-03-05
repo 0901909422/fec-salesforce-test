@@ -19,6 +19,7 @@
         <members>FEC_CardPaymentController</members>
         <members>FEC_CardInfoController</members>
         <members>FEC_InteractionSLAController</members>
+        <members>FEC_GetProductListCallout</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -60,6 +61,7 @@
 		<members>FEC_API_Config.FEC_Get_Customer_List</members>
 		<members>FEC_API_Config.FEC_Get_Payment_Info</members>
 		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_API_Config.FEC_Get_Product_List</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
