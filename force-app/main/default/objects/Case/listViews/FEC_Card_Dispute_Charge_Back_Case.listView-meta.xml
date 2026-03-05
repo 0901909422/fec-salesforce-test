@@ -26,8 +26,8 @@
     <label>Card Dispute &amp; Charge Back</label>
     <queue>FEC_Card_Dispute_Charge_Back</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Card_Dispute_Charge_Back_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Card_Dispute_Charge_Back_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Unit_Head_of_Card_Risk_Management</roleAndSubordinatesInternal>
+        <role>FEC_Card_Dispute_Charge_Back_Specialist</role>
+        <role>FEC_Senior_Card_Dispute_Charge_Back_Specialist</role>
+        <role>FEC_Unit_Head_of_Card_Risk_Management</role>
     </sharedTo>
 </ListView>
