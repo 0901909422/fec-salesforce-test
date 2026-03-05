@@ -86,9 +86,9 @@ public with sharing class FEC_IPPController {
             return new List<IPPRecordDTO>();
         }
 
-        // 2a. Mock bật: thử gọi 3 API (Postman mock); có data thì lưu DB và return; không/lỗi thì fallback hardcode
+        /* ===== Khi bật Mock: gọi API (Postman mock), có data thì save DB và return; không thì fallback hardcode ===== */
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        if (apiSetting?.FEC_Call_Mock__c == true) {
+        if (apiSetting != null && apiSetting.FEC_Call_Mock__c == false) {
             try {
                 List<IPPRecordDTO> result = fetchIPPRecordsFromAPI(caseId, accountNumber);
                 if (result != null && !result.isEmpty()) {
@@ -111,6 +111,7 @@ public with sharing class FEC_IPPController {
             return mockResult;
         }
 
+        /* ===== Không có Mock: gọi API thực ===== */
         List<IPPRecordDTO> result = fetchIPPRecordsFromAPI(caseId, accountNumber);
         sortByOpenDate(result);
         saveIPPRecordsToDatabase(caseId, result);
@@ -122,9 +123,6 @@ public with sharing class FEC_IPPController {
 
         return result;
     }
-
-    /** Id giả cho mock record - dùng để điều hướng tới IPP Detail Page (không gọi API) */
-    public static final String MOCK_IPP_RECORD_ID = 'mock-PLAN-DEMO-001';
 
     private static IPPRecordDTO mapFECIPPToDTO(FEC_IPP__c rec) {
         IPPRecordDTO dto = new IPPRecordDTO();
@@ -327,7 +325,7 @@ public with sharing class FEC_IPPController {
             dto.currentBalance = (ipp.IPPCurrentBalance != null) ? ipp.IPPCurrentBalance : 0;
             dto.currentTerm = ipp.CurrentTerm;
         } else {
-            dto.recordNo = '';
+            dto.recordNo = (cardPlan.recordNumber != null) ? cardPlan.recordNumber.trim() : '';
             dto.currentBalance = 0;
         }
         
@@ -392,7 +390,7 @@ public with sharing class FEC_IPPController {
         }
 
         // Mock: nếu chưa có interestRate/ippTerm (API lỗi hoặc không trả data) thì dùng hardcode
-        if (apiSetting?.FEC_Call_Mock__c == true) {
+        if (apiSetting != null && apiSetting.FEC_Call_Mock__c == false) {
             if (dto.interestRate == null) {
                 dto.interestRate = FEC_MockData.getDefaultIPPInterestRateForMock();
             }
