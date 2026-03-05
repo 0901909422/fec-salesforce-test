@@ -5,12 +5,10 @@
 		<name>CustomApplication</name>
 	</types>
 	<types>
+		<members>FEC_ConstantCommon</members>
 		<members>FEC_SearchController</members>
+		<members>FEC_GetCustomerList</members>
 		<name>ApexClass</name>
-	</types>
-    <types>
-		<members>Case.FEC_User_Email_ID__c</members>
-		<name>CustomField</name>
 	</types>
     <types>
 		<members>FEC_Customer_Search</members>
@@ -19,6 +17,7 @@
     <types>
 		<members>fec_RecallAction</members>
 		<members>fec_ReopenAction</members>
+		<members>fec_Search</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
