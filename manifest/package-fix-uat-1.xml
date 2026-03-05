@@ -68,7 +68,6 @@
         <members>FEC_Corrective_Action-en_US</members>
         <members>FEC_Risk_Level-en_US</members>
         <members>FEC_Verify_Information-en_US</members>
-		<members>KYC_Method</members>
         <members>Gender-en_US</members>
         <members>Yes_No-en_US</members>
         <members>Yes_No_NA-en_US</members>
@@ -77,6 +76,10 @@
     <types>
 		<members>Case.Customer_Case_Compact</members>
 		<name>CompactLayout</name>
+    </types>
+    <types>
+        <members>Case.Customer_Case</members>
+        <name>RecordType</name>
     </types>
     <types>
         <members>Case</members>
