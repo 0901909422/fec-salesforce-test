@@ -13,6 +13,8 @@
         <members>FEC_CaseBusinessService</members>
         <members>FEC_GetNextWorkController</members>
         <members>FEC_MockData</members>
+        <members>FEC_GetPaymentInfo</members>
+        <members>FEC_MFASOUTSTANDINGAUTHINQ</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -32,6 +34,8 @@
 		<members>fec_RelevantInteractionListViewAll</members>
 		<members>fec_GetNextWork</members>
 		<members>fec_IPPDetailPage</members>
+		<members>fec_CaseDetail_Customer</members>
+		<members>fec_CaseEditNOC</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -50,6 +54,8 @@
 	</types>
     <types>
 		<members>FEC_API_Config.FEC_Get_Customer_List</members>
+		<members>FEC_API_Config.FEC_Get_Payment_Info</members>
+		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -63,6 +69,9 @@
         <members>FEC_Risk_Level-en_US</members>
         <members>FEC_Verify_Information-en_US</members>
 		<members>KYC_Method</members>
+        <members>Gender-en_US</members>
+        <members>Yes_No-en_US</members>
+        <members>Yes_No_NA-en_US</members>
         <name>GlobalValueSetTranslation</name>
     </types>
     <types>
