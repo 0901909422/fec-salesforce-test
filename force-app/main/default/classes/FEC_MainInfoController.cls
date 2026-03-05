@@ -87,10 +87,6 @@ public without sharing class FEC_MainInfoController {
             LIMIT 1
         ];
 
-        if (String.isBlank(hist.FEC_CIF_Number__c)) {
-            hist.FEC_CIF_Number__c = FEC_ConstantCommon.CIF_NUMBER;
-        }
-
         /* ===== CACHE HIT ===== */
         if (String.isNotBlank(hist.FEC_API_Cache__c)) {
             return (MainInfoDTO) JSON.deserialize(

@@ -73,10 +73,6 @@ public without sharing class FEC_SecondaryController {
             LIMIT 1
         ];
 
-        if (String.isBlank(hist.FEC_CIF_Number__c)) {
-            hist.FEC_CIF_Number__c = FEC_ConstantCommon.CIF_NUMBER;
-        }
-
         /* =====================================================
          * CACHE HIT 
          * ===================================================== */
