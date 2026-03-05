@@ -103,10 +103,6 @@ public without sharing class FEC_MainInfoAccountController {
             }
         }
 
-        if (String.isBlank(c.FEC_Account_Number__c)) {
-            c.FEC_Account_Number__c = FEC_ConstantCommon.ACCOUNT_NUMBER;
-        }
-
         /* ========= 2. CALL API ========= */
 
         FEC_GetCardBasicInfo.ResponseWrapper response;
@@ -157,9 +153,6 @@ public without sharing class FEC_MainInfoAccountController {
             ];
             
             String accountNumber = acc.FEC_Account_Number__c;
-            if (String.isBlank(accountNumber)) {
-                accountNumber = FEC_ConstantCommon.ACCOUNT_NUMBER;
-            }
             
             if (String.isBlank(accountNumber)) {
                 throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'AccountNumber'}));
@@ -283,10 +276,6 @@ public without sharing class FEC_MainInfoAccountController {
             WHERE Id = :caseId
             LIMIT 1
         ];
-
-        if (String.isBlank(c.FEC_Account_Number__c)) {
-            c.FEC_Account_Number__c = FEC_ConstantCommon.ACCOUNT_NUMBER;
-        }
 
         FEC_GetCardBasicInfo.ResponseWrapper response;
 

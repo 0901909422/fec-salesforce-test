@@ -84,10 +84,6 @@ public without sharing class FEC_StatementsAccountController {
             LIMIT 1
         ];
 
-        if (String.isBlank(c.FEC_Account_Number__c)) {
-            c.FEC_Account_Number__c = FEC_ConstantCommon.ACCOUNT_NUMBER;
-        }
-
         /* ================= CALL API ================= */
         FEC_GetCardBasicInfo.ResponseWrapper res =
             FEC_GetCardBasicInfo.callGetCardBasicInfo(
