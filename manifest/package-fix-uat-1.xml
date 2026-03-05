@@ -18,6 +18,7 @@
         <members>FEC_IPPController</members>
         <members>FEC_CardPaymentController</members>
         <members>FEC_CardInfoController</members>
+        <members>FEC_InteractionSLAController</members>
         <name>ApexClass</name>
     </types>
     <types>
