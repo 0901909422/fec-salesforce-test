@@ -801,6 +801,9 @@ public with sharing class FEC_CaseBusinessService {
           String queueId = (String) params.get('queueId');
           String natureOfCaseId = (String) params.get('natureOfCaseId');
           String actionId = (String) params.get('actionId');
+          if (String.isBlank(queueId)) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Can_Not_Find_Next_Stage);
+          }
           route(caseId, queueId, natureOfCaseId, actionId);
           markCaseSubmittedAndClearDrafts(caseId);
           return null;

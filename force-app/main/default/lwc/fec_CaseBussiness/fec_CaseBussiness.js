@@ -26,6 +26,9 @@ import {
 
 import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
+import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
+import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
+import FEC_Warning_Title from "@salesforce/label/c.FEC_Warning_Title";
 import FEC_ACTION_PHONE_UPDATE_HEADER from "@salesforce/label/c.FEC_ACTION_PHONE_UPDATE_HEADER";
 import FEC_MSG_ACTION_PHONE_UPDATE from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE";
 import FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS";
@@ -479,7 +482,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       { presentUpdatedApiNames: this._getPresentCaseFieldApiNames() },
     );
     if (noUpdate) {
-      this.showToast("Validation", FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
+      this.showToast(FEC_Warning_Title, FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
       return true;
     }
     return false;
@@ -1144,7 +1147,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     );
     // Chỉ chặn khi có dropdown routing và user chưa cập nhật bất kỳ trường Updated nào.
     if (routeToEle && noUpdate) {
-      this.showToast("Validation", FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
+      this.showToast(FEC_Warning_Title, FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
       return false;
     }
 
@@ -1194,6 +1197,10 @@ export default class Fec_CaseBussiness extends LightningElement {
         default:
           params = { ...params, params: { caseId: this.recordId } };
           break;
+      }
+      if (method === ACTION_ROUTE_TO && !this.business.nextQueue?.value) {
+        this.showToast(FEC_Error_Title, FEC_MSG_Can_Not_Find_Next_Stage, "error");
+        return false;
       }
       if (
         ACTIONS_NEED_NOC_BEFORE_RUN.includes(method) &&
