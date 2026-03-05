@@ -1,0 +1,16 @@
+/* Ensure even distribution controlled by lightning-layout size attributes */
+/* Centered buttons already handled by SLDS utilities in HTML */
+
+/* Mobile: stack each field full width for readability */
+@media (max-width: 600px) {
+    .responsive-layout {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    /* Match the new class used on layout items */
+    .field-item {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}

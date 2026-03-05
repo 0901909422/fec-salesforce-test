@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Account_Contract_Number_PL__c</fullName>
+    <description>Trường thông tin hiển thị loại Account/Contract trên case của Non - Existing Customer</description>
+    <label>Account/ Contract Number</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Non-Existing Customer</fullName>
+                <default>false</default>
+                <label>Non-Existing Customer</label>
+            </value>
+            <value>
+                <fullName>Ubank</fullName>
+                <default>false</default>
+                <label>Ubank</label>
+            </value>
+            <value>
+                <fullName>Internal</fullName>
+                <default>false</default>
+                <label>Internal</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

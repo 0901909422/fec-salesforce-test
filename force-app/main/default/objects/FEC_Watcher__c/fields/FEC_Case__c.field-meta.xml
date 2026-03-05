@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Case__c</fullName>
+    <description>Watcher đến Case</description>
+    <label>Case</label>
+    <referenceTo>Case</referenceTo>
+    <relationshipLabel>Watchers</relationshipLabel>
+    <relationshipName>Watchers</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>
