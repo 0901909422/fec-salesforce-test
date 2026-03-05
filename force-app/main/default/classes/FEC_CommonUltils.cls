@@ -549,6 +549,18 @@ public with sharing class FEC_CommonUltils {
         return responseBody;
     }
 
+  public static String normalizeInsuranceFlag(String value) {
+    if (String.isBlank(value)) return null;
+
+    value = value.trim().toUpperCase();
+
+    switch on value {
+        when 'Y' { return 'Yes'; }
+        when 'N' { return 'No'; }
+        when else { return null; }
+    }
+  }
+
     public static void logApi(
         String apiName,
         String endpoint,
