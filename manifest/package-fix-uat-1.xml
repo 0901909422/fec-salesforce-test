@@ -8,6 +8,8 @@
         <members>FEC_CommonUltils</members>
         <members>FEC_InteractionInforHandler</members>
         <members>FEC_GetRewardEligibility</members>
+        <members>FEC_SearchController</members>
+        <members>FEC_CreateCaseInteractionController</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_GetNextWorkController</members>
         <members>FEC_MockData</members>
@@ -38,10 +40,12 @@
     </types>
     <types>
         <members>FEC_Interaction_Case_Record_Page</members>
+		<members>FEC_Customer_Case_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
         <members>Case.FEC_Get_Next_Work__c</members>
+		<members>Case.FEC_Interaction_View_Mode__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -68,6 +72,14 @@
         <members>Yes_No-en_US</members>
         <members>Yes_No_NA-en_US</members>
         <name>GlobalValueSetTranslation</name>
+    </types>
+    <types>
+		<members>Case.Customer_Case_Compact</members>
+		<name>CompactLayout</name>
+    </types>
+    <types>
+        <members>Case.Customer_Case</members>
+        <name>RecordType</name>
     </types>
     <types>
         <members>Case</members>
@@ -139,5 +151,13 @@
         <members>Case.FEC_DQ_Internal_Audit_Case</members>
         <name>ListView</name>
     </types>
+    <types>
+		<members>Chatter</members>
+		<name>Settings</name>
+	</types>
+    <types>
+		<members>KYC_Method</members>
+		<name>GlobalValueSet</name>
+	</types>
     <version>65.0</version>
 </Package>
