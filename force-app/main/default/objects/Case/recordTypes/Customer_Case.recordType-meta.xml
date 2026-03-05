@@ -3,6 +3,7 @@
     <fullName>Customer_Case</fullName>
     <active>true</active>
     <businessProcess>Customer Case Process</businessProcess>
+    <compactLayoutAssignment>Customer_Case_Compact</compactLayoutAssignment>
     <label>Customer Case</label>
     <picklistValues>
         <picklist>Origin</picklist>

@@ -1588,6 +1588,7 @@
 		<members>RD_IT_User_Master_Data_Management</members>
 		<members>RD_IT_User_System_Management</members>
 		<members>RD_IT_User_User_Management</members>
+		<members>RD_IT_User_Search_Functions</members>
 		<members>FEC_CS_CS_Ecom_Officer_Customer_360</members>
 		<members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
 		<members>FEC_CS_CS_Ecom_Officer_Master_Data_Management</members>
@@ -1881,6 +1882,40 @@
 		<members>FEC_Sub_Category__c-FEC_Sub Category Layout</members>
 		<members>FEC_Sub_Code__c-FEC_Sub Code Layout</members>
 		<name>Layout</name>
+	</types>
+
+	<!-- search functional -->
+	<types>
+		<members>FEC_Service</members>
+		<name>CustomApplication</name>
+	</types>
+	<types>
+		<members>FEC_ConstantCommon</members>
+		<members>FEC_SearchController</members>
+		<members>FEC_GetCustomerList</members>
+		<name>ApexClass</name>
+	</types>
+    <types>
+		<members>FEC_Customer_Search</members>
+		<name>CustomTab</name>
+	</types>
+    <types>
+		<members>fec_RecallAction</members>
+		<members>fec_ReopenAction</members>
+		<members>fec_Search</members>
+		<name>LightningComponentBundle</name>
+	</types>
+	<types>
+		<members>Case.Recall</members>
+		<members>Case.Reopen</members>
+		<name>QuickAction</name>
+	</types>
+	<types>
+		<members>FEC_Toast_Error</members>
+		<members>FEC_Toast_Recall_Success</members>
+		<members>FEC_Toast_Reopen_Success</members>
+		<members>FEC_Toast_Save_Success_Title</members>
+		<name>CustomLabel</name>
 	</types>
 
 	<!-- Translate -->
