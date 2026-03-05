@@ -3,6 +3,8 @@ import { NavigationMixin } from 'lightning/navigation';
 import { EnclosingUtilityId, minimize } from 'lightning/platformUtilityBarApi';
 import { notifyRecordUpdateAvailable } from 'lightning/uiRecordApi';
 import { IsConsoleNavigation, getAllTabInfo, refreshTab } from 'lightning/platformWorkspaceApi';
+import { publish, MessageContext } from 'lightning/messageService';
+import FEC_CHAT_UPDATE from '@salesforce/messageChannel/FecChatUpdate__c';
 
 import getChatHubInfo from '@salesforce/apex/FEC_ChatHubInitController.getChatHubInfo';
 import createCaseOnNewSession from '@salesforce/apex/FEC_ChatHubCaseController.createCaseOnNewSession';
@@ -61,15 +63,17 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
 
     // --- Event Management ---
     isEventAttached = false;
-    isObserverAttached = false; // THÊM DÒNG NÀY
-    panelObserver = null;       // THÊM DÒNG NÀY
-    restoreTimeout = null;      // THÊM DÒNG NÀY
+    isObserverAttached = false;
+    panelObserver = null;
+    restoreTimeout = null;
     boundHandleMouseMove = null;
     boundHandleMouseUp = null;
     boundInitResize = null;
     boundHandleWindowResize = null;
     _handleResizeMove = null;
     _handleResizeUp = null;
+
+    @wire(MessageContext) messageContext;
     // ===== WIRE ADAPTERS =====
 
     /**
@@ -101,7 +105,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             } else {
                 console.warn('%c⚠ Invalid Config Format', LOG_WARN);
             }
-            // console.groupEnd();
+            console.groupEnd();
         } else if (error) {
             console.error(LOG_PREFIX + 'Apex Init Error:', LOG_STYLE, error);
         }
@@ -128,7 +132,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {void}
      */
     connectedCallback() {
-        // mousemove và mouseup gắn vào document (toàn trang)
+        // Attach mousemove and mouseup to document (entire page)
         document.addEventListener('mousemove', this.boundHandleMouseMove, { capture: true });
         document.addEventListener('mouseup', this.boundHandleMouseUp, { capture: true });
         window.addEventListener('resize', this.boundHandleWindowResize);
@@ -150,44 +154,37 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             const parentElement = targetElement ? targetElement.closest('.oneUtilityBarPanel') : null;
 
             if (parentElement) {
-                // 1. Tìm Header mặc định của Salesforce
+                // Find Salesforce default header
                 const sfHeader = parentElement.querySelector('.slds-utility-panel__header');
 
                 if (sfHeader) {
-                    console.log('[FEC-ChatHub] Đã tìm thấy Salesforce Header, tiến hành ghi đè sự kiện.');
-
-                    // Thay đổi UI con trỏ chuột để báo hiệu có thể kéo
                     sfHeader.style.cursor = 'grab';
 
-                    // 2. Gắn sự kiện mousedown vào CỤ THỂ header này
                     sfHeader.addEventListener('mousedown', (e) => {
-                        // Bỏ qua nếu user click vào nút thu nhỏ (icon ở góc phải)
+                        // Ignore if user clicked on the minimize button (icon in top right)
                         if (e.target.closest('button')) return;
 
                         this.handleMouseDown(e);
                     }, { capture: true });
 
-                    // 3. Ghi đè hành động Đóng Tab (chặn click event nổi bọt lên Salesforce)
+                    // Override the Close Tab action (prevent click event bubbling to Salesforce)
                     sfHeader.addEventListener('click', (e) => {
-                        // Nếu là nút thu nhỏ thì vẫn cho phép Salesforce xử lý
+                        // Allow Salesforce to handle minimize button
                         if (e.target.closest('button')) return;
 
-                        // Chặn hành động thu nhỏ tab của header
+                        // Prevent tab collapse action from header
                         e.stopPropagation();
                         e.preventDefault();
                     }, { capture: true });
 
                     this.isEventAttached = true;
-                } else {
-                    console.warn('[FEC-ChatHub] Không tìm thấy slds-utility-panel__header');
                 }
 
-                // --- LOGIC MỚI: BƠM 4 THANH RESIZE RA VIỀN NGOÀI ---
+                // --- NEW LOGIC: INJECT 4 RESIZE HANDLES ON OUTER BORDER ---
                 if (!this.isResizerAttached) {
                     this.isResizerAttached = true;
 
-                    // Định nghĩa 4 cạnh với style inline.
-                    // Dùng tọa độ âm (-3px hoặc -4px) để thanh div nằm vắt ngang lên viền ngoài cùng.
+                    // Define edges with inline styles
                     const edges = [
                         { dir: 'top', cursor: 'ns-resize', css: 'top: -4px; left: 0; width: 100%; height: 8px;' },
                         { dir: 'bottom', cursor: 'ns-resize', css: 'bottom: -4px; left: 0; width: 100%; height: 8px;' },
@@ -202,23 +199,22 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
 
                     edges.forEach(edge => {
                         const resizer = document.createElement('div');
-                        // Gắn style trực tiếp vì element này nằm ngoài Shadow DOM
+                        // Apply styles directly as element is outside Shadow DOM
                         resizer.style.cssText = `position: absolute; z-index: 999999; cursor: ${edge.cursor}; ${edge.css}; background: transparent;`;
                         resizer.setAttribute('data-dir', edge.dir);
 
-                        // Lắng nghe sự kiện mousedown
+                        // Listen for mousedown event
                         resizer.addEventListener('mousedown', this.boundInitResize, { capture: true });
 
-                        // Append trực tiếp vào `.oneUtilityBarPanel`
+                        // Append directly to `.oneUtilityBarPanel`
                         parentElement.appendChild(resizer);
 
-                        // Lưu lại để dọn dẹp sau này
+                        // Save for cleanup later
                         this.injectedResizers.push(resizer);
                     });
-                    console.log('[FEC-ChatHub] Đã gắn 4 thanh resize ngoài viền.');
                 }
 
-                // --- LOGIC MỚI: THEO DÕI SỰ THAY ĐỔI STYLE CỦA SALESFORCE ---
+                // --- NEW LOGIC: MONITOR SALESFORCE STYLE CHANGES ---
                 if (!this.isObserverAttached) {
                     this.isObserverAttached = true;
                     this.panelObserver = new MutationObserver((mutations) => {
@@ -226,17 +222,17 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                             if (mutation.attributeName === 'style') {
                                 const currentBottom = parentElement.style.bottom;
 
-                                // Điều kiện: 
-                                // 1. Có giá trị bottom
-                                // 2. Không chứa dấu "-" (tức là không phải lúc Salesforce đang giấu tab đi: -800px)
-                                // 3. Người dùng không đang thực hiện thao tác kéo/resize
+                                // Conditions:
+                                // 1. Has bottom value
+                                // 2. Doesn't contain "-" (not when Salesforce hides tab: -800px)
+                                // 3. User is not dragging/resizing
                                 if (currentBottom && !currentBottom.includes('-') && !this.isDragging && !this.isResizing) {
                                     const savedBottom = localStorage.getItem('FEC_ChatHub_Bottom');
 
-                                    // Nếu tọa độ bottom của Salesforce khác với tọa độ ta đã lưu, tiến hành ép lại state
+                                    // If Salesforce's bottom differs from saved value, reapply our state
                                     if (savedBottom && parseInt(currentBottom, 10) !== parseInt(savedBottom, 10)) {
                                         clearTimeout(this.restoreTimeout);
-                                        // Delay 50ms để đợi Salesforce hoàn tất việc ghi đè inline style của nó
+                                        // Delay 50ms to let Salesforce finish overwriting inline styles
                                         this.restoreTimeout = setTimeout(() => {
                                             this.applySavedState();
                                         }, 50);
@@ -246,7 +242,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                         });
                     });
 
-                    // Bắt đầu theo dõi thuộc tính 'style' của parentElement
+                    // Start monitoring 'style' attribute changes
                     this.panelObserver.observe(parentElement, { attributes: true, attributeFilter: ['style'] });
                 }
             }
@@ -261,12 +257,11 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      */
     disconnectedCallback() {
         window.removeEventListener('message', this.handleMessage.bind(this));
-        console.log(LOG_PREFIX + 'Disconnected - Listener Removed', LOG_STYLE);
         document.removeEventListener('mousemove', this.boundHandleMouseMove);
         document.removeEventListener('mouseup', this.boundHandleMouseUp);
         window.removeEventListener('resize', this.boundHandleWindowResize);
 
-        // Dọn dẹp các thanh resize đã chèn
+        // Clean up injected resize handles
         if (this.injectedResizers && this.injectedResizers.length > 0) {
             this.injectedResizers.forEach(resizer => {
                 resizer.removeEventListener('mousedown', this.boundInitResize, { capture: true });
@@ -276,7 +271,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             this.isResizerAttached = false;
         }
 
-        // --- THÊM DÒNG NÀY: Dọn dẹp Observer ---
+        // Clean up Observer
         if (this.panelObserver) {
             this.panelObserver.disconnect();
             this.panelObserver = null;
@@ -294,7 +289,6 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      */
     handleMessage(event) {
         const trustedUrl = localStorage.getItem(CHATHUB_URL_KEY);
-        console.log('event: ', event);
         // Log origin for debugging if messages are not received
         // console.log('DEBUG Origin:', event.origin, 'Expected:', trustedUrl);
 
@@ -302,10 +296,8 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         // if (!trustedUrl || (event.origin !== new URL(trustedUrl).origin)) return;
 
         const { action, data } = event.data;
-
-        // Only log events with action (ignore noise from other extensions)
         if (action) {
-            console.log(LOG_PREFIX + '📩 RECEIVED: ' + action, LOG_STYLE);
+            console.groupCollapsed(LOG_PREFIX + '📩 RECEIVED: ' + action, LOG_STYLE);
             console.log('%cPayload:', LOG_INFO, JSON.parse(JSON.stringify(data || {})));
         }
 
@@ -331,9 +323,8 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                 break;
 
             default:
-                if (action) console.warn('%c⚠ Unhandled Action:', LOG_WARN, action);
+                if (action) console.log('%c⚠ Unhandled Action:', LOG_WARN, action);
         }
-
         if (action) console.groupEnd();
     }
 
@@ -388,33 +379,33 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         const dx = event.clientX - this.startX;
         const dy = event.clientY - this.startY;
 
-        // 1. Tính toán vị trí mới thô
+        // 1. Calculate initial new position
         let newRight = this.initialRight - dx;
         let newBottom = this.initialBottom - dy;
 
-        // 2. Kích thước của cửa sổ trình duyệt (Viewport)
+        // 2. Browser viewport dimensions
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
 
-        // 3. LOGIC CHẶN RANH GIỚI
+        // 3. BOUNDARY LOGIC
 
-        // Ranh giới Bottom:
-        // - Không tụt quá mép dưới: newBottom phải >= 0
-        // - Không vượt quá mép trên: newBottom không được lớn hơn (chiều cao màn hình - chiều cao panel)
+        // Bottom boundary:
+        // - Cannot go below bottom edge: newBottom >= 0
+        // - Cannot go above top edge: newBottom <= (viewport height - panel height)
         const maxBottom = viewportHeight - this.panelHeight;
         newBottom = Math.max(0, Math.min(newBottom, maxBottom));
 
-        // Ranh giới Right:
-        // - Không tụt quá mép phải: newRight phải >= 0
-        // - Không vượt quá mép trái: newRight không được lớn hơn (chiều rộng màn hình - chiều rộng panel)
+        // Right boundary:
+        // - Cannot go past right edge: newRight >= 0
+        // - Cannot go past left edge: newRight <= (viewport width - panel width)
         const maxRight = viewportWidth - this.panelWidth;
         newRight = Math.max(0, Math.min(newRight, maxRight));
 
-        // 4. Áp dụng tọa độ mới đã được bọc an toàn
+        // 4. Apply constrained position
         this.dragElement.style.right = `${newRight}px`;
         this.dragElement.style.bottom = `${newBottom}px`;
 
-        // 5. Ngăn chặn các sự kiện không mong muốn
+        // 5. Prevent unwanted events
         event.preventDefault();
         event.stopImmediatePropagation();
     }
@@ -429,10 +420,10 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         if (this.isDragging) {
             const iframe = this.template.querySelector('iframe');
             if (iframe) {
-                iframe.style.pointerEvents = 'auto'; // Mở khóa iframe
+                iframe.style.pointerEvents = 'auto'; // Unlock iframe
             }
 
-            // TRẢ CON TRỎ CHUỘT VỀ BÌNH THƯỜNG TRÊN HEADER
+            // Return cursor to normal state on header
             const targetElement = this.template.querySelector('[data-id="containerChathub"]');
             const parentElement = targetElement ? targetElement.closest('.oneUtilityBarPanel') : null;
             if (parentElement) {
@@ -462,7 +453,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         event.preventDefault();
 
         this.isResizing = true;
-        this.resizeDirection = event.target.getAttribute('data-dir'); // Lấy hướng đang kéo (top, bottom, left, right)
+        this.resizeDirection = event.target.getAttribute('data-dir'); // Get resize direction (top, bottom, left, right)
 
         this.resizeStartX = event.clientX;
         this.resizeStartY = event.clientY;
@@ -471,21 +462,21 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         this.resizeElement = targetElement ? targetElement.closest('.oneUtilityBarPanel') : null;
 
         if (this.resizeElement) {
-            // Lấy kích thước và vị trí hiện tại của Utility Panel
+            // Get current size and position of Utility Panel
             const style = window.getComputedStyle(this.resizeElement);
             this.initialWidth = parseFloat(style.width) || this.resizeElement.offsetWidth;
             this.initialHeight = parseFloat(style.height) || this.resizeElement.offsetHeight;
             this.initialRight = parseFloat(style.right) || 0;
             this.initialBottom = parseFloat(style.bottom) || 0;
 
-            // 🛑 TẮT ANIMATION MẶC ĐỊNH CỦA SALESFORCE ĐỂ CHỐNG RUNG
+            // 🛑 Disable Salesforce default animation to prevent jitter
             this.resizeElement.style.setProperty('transition', 'none', 'important');
 
-            // Tắt sự kiện chuột của iframe để kéo không bị giật lag
+            // Disable iframe mouse events to prevent lag during resize
             const iframe = this.template.querySelector('iframe');
             if (iframe) iframe.style.pointerEvents = 'none';
 
-            // Bind hàm để dọn dẹp (nếu chưa có trong constructor thì bind tại đây)
+            // Bind functions for cleanup (if not already bound in constructor)
             this._handleResizeMove = this.handleResizeMove.bind(this);
             this._handleResizeUp = this.handleResizeUp.bind(this);
 
@@ -506,14 +497,14 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         let dx = event.clientX - this.resizeStartX;
         let dy = event.clientY - this.resizeStartY;
 
-        // Xóa giới hạn maxHeight/maxWidth mặc định của Salesforce để tự do kéo
+        // Remove Salesforce default maxHeight/maxWidth constraints
         this.resizeElement.style.maxHeight = 'none';
         this.resizeElement.style.maxWidth = 'none';
 
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
 
-        // Kích thước tối thiểu
+        // Minimum dimensions
         const MIN_WIDTH = 350;
         const MIN_HEIGHT = 700;
 
@@ -531,7 +522,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             this.resizeElement.style.bottom = `${this.initialBottom - dy}px`;
         }
 
-        // --- XỬ LÝ THEO PHƯƠNG NGANG (LEFT / RIGHT) ---
+        // --- HANDLE HORIZONTAL RESIZE (LEFT / RIGHT) ---
         if (this.resizeDirection.includes('left')) {
             let newWidth = this.initialWidth - dx;
             let maxWidth = viewportWidth - this.initialRight;
@@ -545,7 +536,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             this.resizeElement.style.width = `${this.initialWidth + dx}px`;
             this.resizeElement.style.right = `${this.initialRight - dx}px`;
         }
-        // Ngăn trình duyệt vô tình bôi đen text bên dưới khi bạn kéo chuột nhanh
+        // Prevent browser text selection during fast mouse drag
         event.preventDefault();
     }
 
@@ -562,9 +553,9 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             const iframe = this.template.querySelector('iframe');
             if (iframe) iframe.style.pointerEvents = 'auto';
 
-            // BỔ SUNG: LƯU KÍCH THƯỚC VÀ VỊ TRÍ TRƯỚC KHI KẾT THÚC RESIZE
+            // Save dimensions and position before ending resize
             if (this.resizeElement) {
-                // 🟢 BẬT LẠI ANIMATION CHO SALESFORCE KHI THẢ CHUỘT
+                // 🟢 Re-enable animation for Salesforce when mouse is released
                 this.resizeElement.style.removeProperty('transition');
 
                 localStorage.setItem('FEC_ChatHub_Width', this.resizeElement.style.width);
@@ -590,13 +581,13 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {void}
      */
     handleWindowResize() {
-        // Xóa timeout cũ nếu sự kiện resize liên tục xảy ra
+        // Clear old timeout if resize events occur continuously
         if (this.resizeTimeout) {
             clearTimeout(this.resizeTimeout);
         }
 
-        // Đặt timeout 100ms để đợi Salesforce hoàn tất việc ghi đè layout của nó
-        // Sau đó mới gọi hàm applySavedState của chúng ta để giành lại vị trí
+        // Delay 100ms to let Salesforce finish overwriting layout
+        // Then call applySavedState to reclaim position
         this.resizeTimeout = setTimeout(() => {
             if (this.isChatHubVisible) {
                 this.applySavedState();
@@ -613,8 +604,6 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {void}
      */
     async handleCreateCaseRequest(data) {
-        console.log('🚀 Calling Apex: createCaseOnNewSession...');
-        console.log('data: ', data);
         if (data.customerInfo.nationalID !== '') {
             const dataNationID = await decryptDataKYC(data.customerInfo.nationalID, this.#secretKey)
             data.customerInfo.nationalID = dataNationID;
@@ -624,7 +613,6 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             data.customerInfo.phoneNumber = dataPhoneNumber;
         }
         const payload = JSON.stringify(data);
-        console.log('payload', payload);
         if (!this.verifyUsernameAndAgent(data)) {
             return;
         }
@@ -698,45 +686,40 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                         const caseId = await checkExistCaseByExtInteractionID({ strExtInteractionID: sessionId });
 
                         if (caseId && this.isConsoleNavigation) {
-                            window.dispatchEvent(new CustomEvent('fec_chathistory_updated', {
-                                detail: { updatedCaseId: caseId }
-                            }));
+                            publish(this.messageContext, FEC_CHAT_UPDATE, { recordId: caseId });
                             const allTabs = await getAllTabInfo();
                             let targetTabId = null;
 
-                            // Vòng lặp quét tìm Case ID trong TẤT CẢ các tab và subtab
+                            // Loop through all tabs and subtabs to find the Case ID
                             for (const tab of allTabs) {
-                                // 1. Kiểm tra nếu Case là Primary Tab
+                                // 1. Check if Case is a Primary Tab
                                 if (tab.recordId === caseId) {
                                     targetTabId = tab.tabId;
                                     break;
                                 }
 
-                                // 2. Kiểm tra nếu Case là Subtab nằm trong Primary Tab này
+                                // 2. Check if Case is a Subtab within this Primary Tab
                                 if (tab.subtabs && tab.subtabs.length > 0) {
                                     for (const subtab of tab.subtabs) {
                                         if (subtab.recordId === caseId) {
-                                            targetTabId = subtab.tabId; // Lấy ID của chính subtab đó
+                                            targetTabId = subtab.tabId; // Get the ID of the subtab
                                             break;
                                         }
                                     }
                                 }
-                                if (targetTabId) break; // Thoát vòng lặp ngoài nếu đã tìm thấy
+                                if (targetTabId) break; // Exit outer loop if found
                             }
 
                             if (targetTabId) {
-                                console.log(`[FEC-ChatHub] Đã tìm thấy Tab cho Case: ${caseId} với TabID: ${targetTabId}`);
-
                                 setTimeout(async () => {
                                     try {
-                                        // Bước 1: Báo cho Salesforce biết record này đã thay đổi để xóa cache bộ nhớ
+                                        // Step 1: Notify Salesforce that record has changed to clear cache
                                         await notifyRecordUpdateAvailable([{ recordId: caseId }]);
 
-                                        // Bước 2: Bắn lệnh refresh Tab
+                                        // Step 2: Refresh the tab
                                         await refreshTab(targetTabId, {
                                             includeAllSubtabs: true
                                         });
-                                        console.log(`[FEC-ChatHub] Đã refresh xong sau thời gian chờ!`);
                                     } catch (err) {
                                         console.warn('[FEC-ChatHub] Lỗi khi đang refresh tab:', err);
                                     }
@@ -754,86 +737,6 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             }
         };
 
-        executeWithLock(lockName, processHistoryAction, true);
-    }
-    /**
-     * Handles session history request
-     * Saves chat history and attachments to Salesforce with duplicate prevention
-     * @param {Array} data - Array of chat history records
-     * @return {void}
-     */
-    handleSessionHistory(data) {
-        if (!data || data.length === 0) {
-            console.warn('%c⚠ History Data is Empty', LOG_WARN);
-            return;
-        }
-        // Create unique lock identifier for the entire history batch of this session
-        const sessionId = data[0].sessionID;
-        const lockName = 'LOCK_HISTORY_' + sessionId;
-
-        // Encapsulate Apex call logic
-        const processHistoryAction = async () => {
-            const payload = JSON.stringify(data);
-            try {
-                const success = await saveChatHistoryAndAttachment({ strJsonData: payload });
-                if (success) {
-                    showToast(this, 'Success', 'Chat history saved successfully.', 'success');
-                    try {
-                        const caseId = await checkExistCaseByExtInteractionID({ strExtInteractionID: sessionId });
-                        if (caseId && this.isConsoleNavigation) {
-                            const allTabs = await getAllTabInfo();
-                            let targetTabId = null;
-                            // Vòng lặp quét tìm Case ID trong TẤT CẢ các tab và subtab
-                            for (const tab of allTabs) {
-                                // 1. Kiểm tra nếu Case là Primary Tab
-                                if (tab.recordId === caseId) {
-                                    targetTabId = tab.tabId;
-                                    break;
-                                }
-
-                                // 2. Kiểm tra nếu Case là Subtab nằm trong Primary Tab này
-                                if (tab.subtabs && tab.subtabs.length > 0) {
-                                    for (const subtab of tab.subtabs) {
-                                        if (subtab.recordId === caseId) {
-                                            targetTabId = subtab.tabId; // Lấy ID của chính subtab đó
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (targetTabId) break; // Thoát vòng lặp ngoài nếu đã tìm thấy
-                            }
-
-                            if (targetTabId) {
-                                console.log(`[FEC-ChatHub] Đã tìm thấy Tab cho Case: ${caseId} với TabID: ${targetTabId}`);
-
-                                setTimeout(async () => {
-                                    try {
-                                        // Bước 1: Báo cho Salesforce biết record này đã thay đổi để xóa cache bộ nhớ
-                                        await notifyRecordUpdateAvailable([{ recordId: caseId }]);
-
-                                        // Bước 2: Bắn lệnh refresh Tab
-                                        await refreshTab(targetTabId, {
-                                            includeAllSubtabs: true
-                                        });
-                                        console.log(`[FEC-ChatHub] Đã refresh xong sau thời gian chờ!`);
-                                    } catch (err) {
-                                        console.warn('[FEC-ChatHub] Lỗi khi đang refresh tab:', err);
-                                    }
-                                }, 4000);
-                            } else {
-                                console.log(`[FEC-ChatHub] Không tìm thấy Tab nào đang mở chứa Case ID: ${caseId}`);
-                            }
-                        }
-                    } catch (refreshErr) {
-                        console.warn('[FEC-ChatHub] Lỗi Workspace API:', refreshErr);
-                    }
-                }
-            } catch (error) {
-                console.error('[FEC-ChatHub] Lỗi gọi saveChatHistoryAndAttachment:', error);
-            }
-        };
-
-        // Call lock function (true parameter ensures active tab is prioritized)
         executeWithLock(lockName, processHistoryAction, true);
     }
 
@@ -929,15 +832,15 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             const savedWidth = localStorage.getItem('FEC_ChatHub_Width');
             const savedHeight = localStorage.getItem('FEC_ChatHub_Height');
 
-            // 1. Phục hồi kích thước trước
+            // 1. Restore dimensions first
             if (savedWidth) parentElement.style.width = savedWidth;
             if (savedHeight) parentElement.style.height = savedHeight;
 
-            // Xóa giới hạn của Salesforce để apply được size/position tùy chỉnh
+            // Remove Salesforce constraints to apply custom size/position
             parentElement.style.maxHeight = 'none';
             parentElement.style.maxWidth = 'none';
 
-            // 2. Phục hồi vị trí (Kèm logic an toàn, tránh văng ra ngoài màn hình)
+            // 2. Restore position with safety logic to prevent off-screen placement
             if (savedRight !== null && savedBottom !== null) {
                 savedRight = parseInt(savedRight, 10);
                 savedBottom = parseInt(savedBottom, 10);
@@ -949,7 +852,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                 const maxRight = Math.max(0, viewportWidth - rect.width);
                 const maxBottom = Math.max(0, viewportHeight - rect.height);
 
-                // Ép tọa độ vào ranh giới an toàn
+                // Constrain coordinates to safe boundaries
                 savedRight = Math.max(0, Math.min(savedRight, maxRight));
                 savedBottom = Math.max(0, Math.min(savedBottom, maxBottom));
 
@@ -967,7 +870,6 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {void}
      */
     postMessageToChatHub(action, data) {
-        console.log('vao postMessageToChatHub');
         const iframe = this.template.querySelector('iframe');
         const targetUrl = localStorage.getItem(CHATHUB_URL_KEY);
 
@@ -1032,12 +934,8 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {void}
      */
     navigateToRecord(recordId) {
-        console.log(`Navigating to record: ${recordId}`);
         if (this.utilityId) {
             minimize(this.utilityId)
-                .then((isMinimized) => {
-                    console.log(`Thu nhỏ Utility ${isMinimized ? "thành công" : "thất bại"}`);
-                })
                 .catch(err => {
                     console.error('[FEC-ChatHub] Lỗi gọi minimize:', err);
                 });

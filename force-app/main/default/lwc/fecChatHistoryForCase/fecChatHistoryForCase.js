@@ -1,6 +1,9 @@
 import { LightningElement, api, wire } from 'lwc';
 import getChatMessages from '@salesforce/apex/FEC_ChatHistoryController.getChatMessages';
 import { formatDatetimeLocal } from 'c/fecUtils';
+import { refreshApex } from '@salesforce/apex';
+import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
+import FEC_CHAT_UPDATE from '@salesforce/messageChannel/FecChatUpdate__c';
 
 /**
  * Chat history component for displaying messages associated with a Case record
@@ -10,6 +13,46 @@ export default class ChatHistory extends LightningElement {
     @api recordId;
     chatMessages;
     error;
+    wiredMessagesResult;
+    @wire(MessageContext) messageContext;
+    subscription = null;
+
+    /**
+     * Lifecycle hook: Register listener when component is connected
+     * Subscribe to message channel to listen for chat updates
+     */
+    connectedCallback() {
+        if (!this.subscription) {
+            this.subscription = subscribe(
+                this.messageContext,
+                FEC_CHAT_UPDATE,
+                (message) => this.handleMessage(message),
+                { scope: APPLICATION_SCOPE } // Important to capture events from Utility Bar
+            );
+        }
+    }
+
+    /**
+     * Lifecycle hook: Unsubscribe when component is disconnected
+     * Prevent memory leaks by cleaning up message channel subscriptions
+     */
+    disconnectedCallback() {
+        unsubscribe(this.subscription);
+        this.subscription = null;
+    }
+
+    /**
+     * Handle incoming message from the chat update channel
+     * Refresh chat messages if the update is for the current case
+     * @param {Object} message - Message object containing recordId from the channel
+     */
+    handleMessage(message) {
+        // Verify the correct Case ID is open before refreshing
+        if (message.recordId === this.recordId && this.wiredMessagesResult) {
+            refreshApex(this.wiredMessagesResult);
+        }
+    }
+
 
     /**
      * Wire adapter to fetch chat messages for the current case
@@ -18,7 +61,9 @@ export default class ChatHistory extends LightningElement {
      * @return {void}
      */
     @wire(getChatMessages, { caseId: '$recordId' })
-    wiredMessages({ error, data }) {
+    wiredMessages(result) {
+        this.wiredMessagesResult = result;
+        const { error, data } = result;
         if (data) {
             const messages = data.messages;
             const fileMap = data.fileMap;
