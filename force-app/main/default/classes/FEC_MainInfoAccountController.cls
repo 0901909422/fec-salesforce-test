@@ -103,6 +103,10 @@ public without sharing class FEC_MainInfoAccountController {
             }
         }
 
+        if (String.isBlank(c.FEC_Account_Number__c)) {
+            c.FEC_Account_Number__c = FEC_ConstantCommon.ACCOUNT_NUMBER;
+        }
+
         /* ========= 2. CALL API ========= */
 
         FEC_GetCardBasicInfo.ResponseWrapper response;
@@ -154,7 +158,7 @@ public without sharing class FEC_MainInfoAccountController {
             
             String accountNumber = acc.FEC_Account_Number__c;
             if (String.isBlank(accountNumber)) {
-                accountNumber = c.FEC_Account_Number__c;
+                accountNumber = FEC_ConstantCommon.ACCOUNT_NUMBER;
             }
             
             if (String.isBlank(accountNumber)) {
@@ -169,7 +173,7 @@ public without sharing class FEC_MainInfoAccountController {
                     accountNumber
                 );
             
-            Boolean isEligible = (apiResponse.Sys.Code == 1);
+            Boolean isEligible = (apiResponse.Sys.Code == 0);
             String remark = '';
             
             if (isEligible) {
@@ -280,6 +284,10 @@ public without sharing class FEC_MainInfoAccountController {
             LIMIT 1
         ];
 
+        if (String.isBlank(c.FEC_Account_Number__c)) {
+            c.FEC_Account_Number__c = FEC_ConstantCommon.ACCOUNT_NUMBER;
+        }
+
         FEC_GetCardBasicInfo.ResponseWrapper response;
 
         try {
@@ -389,7 +397,7 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Reason_2__c     = m.RsnBlockCode2,
 
             /* ===== CARD ===== */
-            FEC_Insurance_Flag__c = m.InsuranceFlag,
+            FEC_Insurance_Flag__c = FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag),
             FEC_Customer_Segment__c = m.CustomerSegment,
             FEC_Expiry_Date__c = m.ExpiryDate
         );
@@ -425,7 +433,7 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Block_Date_2__c = m.AccountBlockCode2Date,
             FEC_Reason_2__c     = m.RsnBlockCode2,
             /* ===== CARD ===== */
-            FEC_Insurance_Flag__c = m.InsuranceFlag,
+            FEC_Insurance_Flag__c = FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag),
             FEC_Customer_Segment__c = m.CustomerSegment,
             FEC_Expiry_Date__c = m.ExpiryDate
         );

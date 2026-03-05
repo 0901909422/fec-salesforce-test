@@ -52,6 +52,9 @@ public without sharing class FEC_TransactionsController {
 
         FEC_Customer_History__c ch = getCustomerHistory(caseId);
         String accNumber = ch.FEC_Account_Number__c;
+        if (String.isBlank(accNumber)) {
+            accNumber = FEC_ConstantCommon.ACCOUNT_NUMBER;
+        }
 
         TransactionsResponse res = new TransactionsResponse();
         res.unbilledTransactions = new List<TransactionDTO>();

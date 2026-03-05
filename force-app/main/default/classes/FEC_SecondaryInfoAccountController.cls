@@ -100,6 +100,10 @@ public without sharing class FEC_SecondaryInfoAccountController {
             LIMIT 1
         ];
 
+        if (String.isBlank(c.FEC_Account_Number__c)) {
+            c.FEC_Account_Number__c = FEC_ConstantCommon.ACCOUNT_NUMBER;
+        }
+
         /* ===== CARD API ===== */
         try {
             FEC_GetCardSecInfo.ResponseWrapper res =
