@@ -704,6 +704,7 @@ public with sharing class FEC_CaseBusinessService {
     ];
     if (!actualst.isEmpty()) {
       FEC_Actual_Nature_of_Case__c noc = actualst.get(0);
+      c.FEC_Actual_Nature_of_Case__c = noc.Id;
       c.FEC_Product_Type__c = noc.FEC_Product_Type__c;
       c.FEC_Category__c = noc.FEC_Category__c;
       c.FEC_SubCategory__c = noc.FEC_Sub_Category__c;
@@ -932,7 +933,9 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(
+          String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Case Id' })
+        );
 
       Case updatedCase = caselst.get(0);
 
@@ -1014,7 +1017,9 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (changelst.isEmpty()) {
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Cannot_Find_Stage_Change);
+        throw new CaseBusinessServiceException(
+          String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Stage Change for action' })
+        );
       }
 
       FEC_Stage_Change__c selectedChange = changelst.get(0);
@@ -1108,7 +1113,9 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(
+          String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Case Id' })
+        );
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
@@ -1128,7 +1135,9 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(
+          String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Case Id' })
+        );
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
@@ -1148,7 +1157,9 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(
+          String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Case Id' })
+        );
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED;
@@ -1168,7 +1179,9 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(
+          String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Case Id' })
+        );
 
       Case updatedCase = caselst.get(0);
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
@@ -1186,10 +1199,14 @@ public with sharing class FEC_CaseBusinessService {
     ];
 
     if (caselst.isEmpty())
-      throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+      throw new CaseBusinessServiceException(
+        String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Case Id' })
+      );
 
     if (userOrQueueId == null) {
-      throw new CaseBusinessServiceException(System.Label.FEC_MSG_User_Queue_Id_Invalid);
+      throw new CaseBusinessServiceException(
+        String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'User/Queue Id' })
+      );
     }
     try {
       Case updatedCase = caselst.get(0);
@@ -1216,7 +1233,9 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty()) {
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(
+          String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Case Id' })
+        );
       }
 
       Case updatedCase = caselst.get(0);
@@ -1263,7 +1282,9 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (caselst.isEmpty())
-        throw new CaseBusinessServiceException(System.Label.FEC_MSG_Case_Id_Invalid);
+        throw new CaseBusinessServiceException(
+          String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Case Id' })
+        );
 
       Case updatedCase = caselst.get(0);
 
@@ -1385,7 +1406,9 @@ public with sharing class FEC_CaseBusinessService {
     ];
 
     if (sourcelst.isEmpty())
-      throw new CaseBusinessServiceException(System.Label.FEC_MSG_Nature_Of_Case_Id_Invalid);
+      throw new CaseBusinessServiceException(
+        String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Nature of Case Id' })
+      );
 
     FEC_Nature_of_Case__c src = sourcelst.get(0);
 
@@ -1438,7 +1461,9 @@ public with sharing class FEC_CaseBusinessService {
     ];
 
     if (sourcelst.isEmpty())
-      throw new CaseBusinessServiceException(System.Label.FEC_MSG_No_Master_Data_Setting_Found);
+      throw new CaseBusinessServiceException(
+        String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Master Data Setting for Nature of Case' })
+      );
 
     List<FEC_Actual_Master_Data_Setting__c> targetlst = new List<FEC_Actual_Master_Data_Setting__c>();
 
@@ -2242,7 +2267,7 @@ public with sharing class FEC_CaseBusinessService {
       } else {
         // Ném lỗi nếu không tìm thấy Queue cấu hình trong hệ thống
         throw new AuraHandledException(
-          String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Queue ' + targetQueueName })
+          String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Queue' })
         );
       }
     }

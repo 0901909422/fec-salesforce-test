@@ -135,6 +135,21 @@ const DECISION_USER = "User";
 const DECISION_QUEUE = "Queue";
 const NONE_STRING = '--None--';
 
+const SLDS_MEDIUM_SIZE_OF_12 = {
+  1: 'slds-medium-size_1-of-12',
+  2: 'slds-medium-size_2-of-12',
+  3: 'slds-medium-size_3-of-12',
+  4: 'slds-medium-size_4-of-12',
+  5: 'slds-medium-size_5-of-12',
+  6: 'slds-medium-size_6-of-12',
+  7: 'slds-medium-size_7-of-12',
+  8: 'slds-medium-size_8-of-12',
+  9: 'slds-medium-size_9-of-12',
+  10: 'slds-medium-size_10-of-12',
+  11: 'slds-medium-size_11-of-12',
+  12: 'slds-medium-size_12-of-12'
+};
+
 export default class Fec_CaseBussiness extends LightningElement {
   @api recordId;
 
@@ -369,6 +384,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     return this.business?.natureOfCase || null;
   }
 
+  @api setNatureOfCaseId(id) {
+    if (id && this.business) this.business = { ...this.business, natureOfCase: id };
+  }
+
   _getCaseFieldValue(apiName) {
     const sections = this.business?.sectionlst ?? [];
     for (const section of sections) {
@@ -526,6 +545,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     categoryId = null,
     subCategoryId = null,
     subCodeId = null,
+    natureOfCaseIdFallback = null,
   ) {
     this.businessLoaded = false;
 
@@ -539,7 +559,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       .then((res) => {
         if (!res) return;
 
-        this.business = { ...res };
+        const natureOfCase = res.natureOfCase || natureOfCaseIdFallback;
+        this.business = { ...res, natureOfCase };
 
         this.activeSectionlst = ["routing-action"];
 
@@ -587,7 +608,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           section.isLastSection = index === this.business.sectionlst.length - 1;
 
           section.subSectionlst?.forEach((sub, subIndex) => {
-            sub.className = `slds-col slds-size_1-of-1 slds-medium-size_${sub.layout}-of-12  slds-m-top--medium`;
+            sub.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[sub.layout] || SLDS_MEDIUM_SIZE_OF_12[12]) + ' slds-m-top_medium';
             sub.objlst.forEach((obj) => {
               let assignmentType;
 
@@ -596,7 +617,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.value = STR_EMPTY;
                 }
 
-                field.className = `slds-col slds-size_1-of-1 slds-medium-size_${field.layout}-of-12`;
+                field.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[field.layout] || SLDS_MEDIUM_SIZE_OF_12[12]);
 
                 if (!this.isEdit) {
                   field.readonly = true;
@@ -998,7 +1019,13 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.actionValue = e.detail.value;
   }
 
+  @api validateNatureOfCase() {
+    return !!this.business?.natureOfCase;
+  }
+
   @api validate() {
+    if (!this.validateNatureOfCase()) return false;
+
     let isAllValid = true;
 
     let inputFiellst = this.template.querySelectorAll("lightning-input-field");
@@ -1052,8 +1079,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     let formlst = this.template.querySelectorAll("lightning-record-edit-form");
     let formToSubmit = [];
     formlst?.forEach((item) => {
+      if (!item) return;
       let fieldlst = item.querySelectorAll("lightning-input-field");
-      if (fieldlst && fieldlst.length > 0) {
+      if (fieldlst && fieldlst.length > 0 && item.recordId) {
         formToSubmit.push(item);
       }
     });
@@ -1150,7 +1178,13 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
       await run({ ...params });
     } else {
-      // Không có routing: chỉ set FEC_Is_Submited__c = true + clear draft + Status = Pending (nếu Case mở).
+      // Không có routing: lưu NOC trước rồi set FEC_Is_Submited__c = true + clear draft + Status = Pending (nếu Case mở).
+      if (this.business?.natureOfCase) {
+        await saveCaseNOC({
+          caseId: this.recordId,
+          natureOfCaseId: this.business.natureOfCase,
+        });
+      }
       await run({
         method: "Submit Without Route To",
         params: { caseId: this.recordId },
@@ -1289,7 +1323,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       );
 
       if (subSection) {
-        obj = subSection.objlst?.find((item) => (item.id = filter.obj));
+        obj = subSection.objlst?.find((item) => (item.id === filter.obj));
 
         if (obj) {
           field = obj.fieldlst.find((item) => item.apiName === filter.field);
@@ -1320,13 +1354,14 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   handleFormError(event) {
+    const detail = event?.detail;
     if (this._submitFormsReject != null) {
-      this._submitFormsReject(event.detail);
+      this._submitFormsReject(detail);
       this._submitFormsResolve = null;
       this._submitFormsReject = null;
     }
     if (this._saveOnlyReject != null) {
-      this._saveOnlyReject(event.detail);
+      this._saveOnlyReject(detail);
       this._saveOnlyResolve = null;
       this._saveOnlyReject = null;
     }
@@ -1340,8 +1375,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     let formlst = this.template.querySelectorAll("lightning-record-edit-form");
     let formToSubmit = [];
     formlst?.forEach((item) => {
+      if (!item) return;
       let fieldlst = item.querySelectorAll("lightning-input-field");
-      if (fieldlst && fieldlst.length > 0) {
+      if (fieldlst && fieldlst.length > 0 && item.recordId) {
         formToSubmit.push(item);
       }
     });

@@ -160,7 +160,7 @@ public without sharing class FEC_InteractionInforHandler {
             '       FEC_Created_On__c,FEC_Created_by__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC '+
+            'ORDER BY FEC_Created_On__c DESC '+
             'LIMIT 5';
         System.debug('SOQL: ' + soql);
         return Database.query(soql);
@@ -220,7 +220,7 @@ public without sharing class FEC_InteractionInforHandler {
             '       FEC_Created_On__c,FEC_Created_by__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC ';
+            'ORDER BY FEC_Created_On__c DESC ';
         System.debug('SOQL: ' + soql);
         return Database.query(soql);
     }
@@ -418,7 +418,7 @@ public without sharing class FEC_InteractionInforHandler {
             '   FEC_SubCode__r.FEC_Name_VN__c, FEC_Account_or_Contract__r.FEC_Account_Number__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC ' +
+            'ORDER BY FEC_Case_Created_On__c DESC ' +
             'LIMIT 5';
         
         // =====================================================
@@ -495,10 +495,10 @@ public without sharing class FEC_InteractionInforHandler {
             '   FEC_SubCategory__r.FEC_Name_VN__c, ' +
             '   FEC_SubCode__c, ' +
             '   FEC_SubCode__r.FEC_Code__c, FEC_Account_or_Contract__r.FEC_Account_Number__c,' +
-            '   FEC_SubCode__r.FEC_Name_VN__c ' +
+            '   FEC_SubCode__r.FEC_Name_VN__c , FEC_Case_Created_On__c,FEC_Case_Created_By__c ' +
             'FROM Case ' +
             'WHERE ' + String.join(whereConditions, ' AND ') + ' ' +
-            'ORDER BY FEC_Last_Updated_On__c DESC' ;
+            'ORDER BY FEC_Case_Created_On__c DESC' ;
         
         // =====================================================
         // 7. EXECUTE
@@ -652,15 +652,15 @@ public without sharing class FEC_InteractionInforHandler {
     
     @AuraEnabled
     public static String resetViewMode(Id recordId, String viewMode) {
-        if (recordId == null)
-        return null;
+        if (recordId == null) return null;
 
         List<Case> caselst = [
             SELECT
                 Id,
                 RecordType.DeveloperName,
                 FEC_First_Access__c,
-                FEC_Interaction_View_Mode__c
+                FEC_Interaction_View_Mode__c,
+                FEC_Get_Next_Work__c
             FROM Case
             WHERE Id = :recordId
         ];
@@ -668,16 +668,20 @@ public without sharing class FEC_InteractionInforHandler {
         if (caselst.isEmpty())
             return null;
 
-        viewMode = caselst.get(0).FEC_First_Access__c
-            ? caselst.get(0).FEC_Interaction_View_Mode__c
-            : viewMode;
+        Case c = caselst.get(0);
 
+        if (c.FEC_Get_Next_Work__c == true) {
+            viewMode = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+        } else if (c.FEC_First_Access__c == true) {
+            viewMode = c.FEC_Interaction_View_Mode__c;
+        }
+        
         update new Case(
             Id = recordId,
             FEC_Interaction_View_Mode__c = viewMode,
-            FEC_First_Access__c = false
+            FEC_First_Access__c = false,
+            FEC_Get_Next_Work__c = false
         );
-
         return viewMode;
     }
     

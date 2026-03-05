@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SharingRules xmlns="http://soap.sforce.com/2006/04/metadata">
+    <sharingCriteriaRules>
+        <fullName>FEC_Share_all_Interaction_Cases_to_Back_Office_user</fullName>
+        <accessLevel>Read</accessLevel>
+        <description>Chia sẻ toàn bộ bản ghi Interaction trên hệ thống cho toàn bộ người dùng thuộc Back Office (bao gồm SP, CC, QC, OM, CX)</description>
+        <label>Share all Interaction Cases to Back Office user</label>
+        <sharedTo>
+            <group>FEC_CS_Back_Office</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>RecordTypeId</field>
+            <operation>equals</operation>
+            <value>Customer Case,Interaction,Internal Case</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>FEC_Share_all_Interaction_Cases_to_Frontline_User</fullName>
+        <accessLevel>Read</accessLevel>
+        <description>Chia sẻ toàn bộ bản ghi Interaction trên hệ thống cho toàn bộ người dùng thuộc Frontline (bao gồm IB, OB, EC, F2F)</description>
+        <label>Share all Interaction Cases to Frontline User</label>
+        <sharedTo>
+            <group>FEC_CS_Frontline</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>RecordTypeId</field>
+            <operation>equals</operation>
+            <value>Customer Case,Interaction,Internal Case</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>FEC_Share_all_Interaction_Cases_to_IT_User</fullName>
+        <accessLevel>Read</accessLevel>
+        <description>Chia sẻ toàn bộ bản ghi Interaction trên hệ thống cho toàn bộ người dùng thuộc IT</description>
+        <label>Share all Interaction Cases to IT User</label>
+        <sharedTo>
+            <group>FEC_IT_Operations_Support</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>RecordTypeId</field>
+            <operation>equals</operation>
+            <value>Customer Case,Interaction,Internal Case</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>FEC_Share_all_Interaction_Cases_to_Internal_Audit_User</fullName>
+        <accessLevel>Read</accessLevel>
+        <description>Chia sẻ toàn bộ bản ghi Interaction trên hệ thống cho toàn bộ người dùng thuộc Internal Audit (bao gồm IA)</description>
+        <label>Share all Interaction Cases to Internal Audit User</label>
+        <sharedTo>
+            <group>FEC_Internal_Audit</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>RecordTypeId</field>
+            <operation>equals</operation>
+            <value>Customer Case,Interaction,Internal Case</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+</SharingRules>

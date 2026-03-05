@@ -20,6 +20,7 @@ import FEC_Button_Save_Close from "@salesforce/label/c.FEC_Button_Save_Close";
 import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
 import FEC_MSG_Submit from "@salesforce/label/c.FEC_MSG_Submit";
 import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
+import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
 
 import { RefreshEvent } from "lightning/refresh";
 
@@ -69,7 +70,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   }
 
   get caseRemarkSectionLabel() {
-    return '* ' + FEC_Case_Remark_Label;
+    return "* " + FEC_Case_Remark_Label;
   }
 
   /** Disable nút Submit khi đang xử lý để tránh double-click tạo 2 bản ghi. */
@@ -90,6 +91,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   }
 
   loadRemarklst = false;
+
+  /** Lưu natureOfCaseId cuối từ message NOC để dùng khi Submit (fallback khi getData không set). */
+  lastNatureOfCaseIdFromNOC = null;
 
   /** Load lại Case Remarks History (dùng khi mở trang và sau khi submit remark). */
   loadRemarkHistory() {
@@ -167,6 +171,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   handleNOCMsg(message) {
     if (message == null) return;
+    if (message.natureOfCaseId) this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId;
     const caseBusinessEle = this.template.querySelector(
       "c-fec_-case-bussiness",
     );
@@ -177,6 +182,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         message.categoryId,
         message.subCategoryId,
         message.subCodeId,
+        message.natureOfCaseId,
       );
     }
   }
@@ -266,7 +272,19 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       "c-fec_-case-bussiness",
     );
 
-    if (caseBusinessEle && !caseBusinessEle.validate()) isAllValid = false;
+    if (caseBusinessEle && !caseBusinessEle.getNatureOfCaseId() && this.lastNatureOfCaseIdFromNOC) {
+      caseBusinessEle.setNatureOfCaseId(this.lastNatureOfCaseIdFromNOC);
+    }
+    if (caseBusinessEle) {
+      const validateResult = caseBusinessEle.validate();
+      const validateNatureResult = caseBusinessEle.validateNatureOfCase();
+      if (!validateResult) {
+        isAllValid = false;
+        if (!validateNatureResult) {
+          this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Tab_Nature_Of_Case));
+        }
+      }
+    }
     if (!caseRemarksEle || !caseRemarksEle.validate()) {
       isAllValid = false;
       this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
@@ -309,11 +327,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       }, 0);
     } catch (error) {
       console.error("Submit failed:", error);
-      this.errlst = [
-        error?.body?.message ||
-          error?.message ||
-          FEC_MSG_Submit,
-      ];
+      this.errlst = [error?.body?.message || error?.message || FEC_MSG_Submit];
     } finally {
       this.isLoaded = true;
       this.isSubmitting = false;

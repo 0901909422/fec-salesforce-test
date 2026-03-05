@@ -796,6 +796,7 @@
 		<members>FEC_Total_Accrued_Interest_Label</members>
 		<members>FEC_Total_Close_Fee_Amount_Label</members>
 		<members>FEC_Total_Current_Balance_Label</members>
+		<members>FEC_Button_Refresh</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -907,7 +908,19 @@
         <members>title_Information_Queue</members>
         <members>messenger_Warning</members>
         <members>title_Toast_Event</members>
-         <members>messager_Toast_Event</members>
+        <members>messager_Toast_Event</members>
+        <members>FEC_Last_Status</members>
+        <members>FEC_National_Passport_ID</members>
+        <members>FEC_Current_Address</members>
+        <members>FEC_Updated_Date</members>
+        <members>FEC_Registration_Phone</members>
+        <members>FEC_Permanent_Address</members>
+        <members>FEC_Product_Group</members>
+        <members>FEC_Registration_Email</members>
+        <members>FEC_Office_Address</members>
+        <members>LBL_ApplicationID</members>
+        <members>LBL_AccountNumber</members>
+        <members>LBL_ContractNumber</members>
         <name>CustomLabel</name>
     </types>
     <types>
@@ -1011,6 +1024,90 @@
 		<members>FEC_CaseBusinessService_Msg_004</members>
 		<members>FEC_CaseBusinessService_Msg_005</members>
 		<members>FEC_CaseBusinessService_Msg_006</members>
+		<members>FEC_IPP_Label</members>
+        <members>FEC_IPP_Schedule_Label</members>
+        <members>FEC_Total_IPP_Payment_Amount_Label</members>
+        <members>FEC_Total_IPP_Monthly_Principal_Label</members>
+        <members>FEC_Total_IPP_Monthly_Interest_Label</members>
+        <members>FEC_MSG_No_Data</members>
+        <members>FEC_Application_ID_Label</members>
+        <members>FEC_CC_Code_Label</members>
+        <members>FEC_DSA_Code_Label</members>
+        <members>FEC_TSA_Code_Label</members>
+        <members>FEC_Disbursement_Channel_Label</members>
+        <members>FEC_CC_Name_Label</members>
+        <members>FEC_DSA_Name_Label</members>
+        <members>FEC_TSA_Name_Label</members>
+        <members>FEC_Origination_Channel_Label</members>
+		<members>FEC_Select_Outcome_Code_Label</members>
+        <members>FEC_Interaction_Remark_Placeholder</members>
+        <members>FEC_Btn_Cancel</members>
+        <members>FEC_Button_Confirm</members>
+		<members>FEC_Success_Title</members>
+        <members>FEC_Error_Title</members>
+        <members>FEC_Unknown_Error</members>
+        <members>FEC_Warning_Title</members>
+        <members>FEC_MSG_Interaction_wrapped_up_success</members>
+        <members>FEC_MSG_Wrap_Up_Warning</members>
+        <members>FEC_MSG_Close_Interaction_Warning</members>
+        <members>FEC_MSG_Close_Interaction_Complete_Case_Warning</members>
+        <members>FEC_MSG_Select_outcome_code</members>
+        <members>FEC_MSG_check_related_case_error</members>
+        <members>FEC_MSG_check_case_type_error</members>
+		<members>FEC_KYC_Details_Label</members>
+        <members>FEC_Suggested_answer_Label</members>
+        <members>FEC_Button_Fail</members>
+        <members>FEC_Button_Pass</members>
+		<members>FEC_Daily_Retail_Limit</members>
+		<members>FEC_Daily_Cash_Limit</members>
+		<members>FEC_Last_Credit_Limit</members>
+		<members>FEC_Daily_Retail_Number</members>
+		<members>FEC_Daily_Cash_Number</members>
+		<members>FEC_Last_Credit_Limit_Date</members>
+		<members>FEC_Embossing_Name</members>
+		<members>FEC_Statement_Notification_Type</members>
+		<members>FEC_Responsible_Unit</members>
+		<members>FEC_Date_Assigned</members>
+		<members>FEC_Responsible_Person</members>
+		<members>FEC_Delinquency_Date</members>
+		<members>FEC_MSG_Section_Refresh_Success</members>
+        <members>FEC_MSG_Section_Refresh_Fail</members>
+        <members>FEC_Billing_Cycle</members>
+        <members>FEC_Total_Payment_Due</members>
+        <members>FEC_Last_Statement_Date</members>
+        <members>FEC_Payment_Due_Date</members>
+        <members>FEC_Minimum_Payment_Due</members>
+        <members>FEC_Next_Statement_Date</members>
+        <members>FEC_Statement</members>
+        <members>FEC_Billed_Transactions</members>
+        <members>FEC_MSG_No_statement_selected</members>
+        <members>FEC_Statement_Date</members>
+        <members>FEC_Total_Interest</members>
+        <members>FEC_Beginning_Balance</members>
+        <members>FEC_IPP_Principal</members>
+        <members>FEC_End_Balance</members>
+        <members>FEC_Total_Past_Due</members>
+        <members>FEC_Current_Payment_Due</members>
+        <members>FEC_IPP_Interest</members>
+        <members>FEC_Statement_Details</members>
+        <members>FEC_Transaction_Code</members>
+        <members>FEC_Unbilled_Transactions</members>
+        <members>FEC_Transaction_Plan</members>
+        <members>FEC_Effective_Date</members>
+        <members>FEC_Authorization_Code</members>
+        <members>FEC_Post_Date</members>
+        <members>FEC_Credit_Debit_Flag</members>
+        <members>FEC_Transaction_Amount</members>
+        <members>FEC_Currency_Code</members>
+        <members>FEC_Merchant_Description</members>
+        <members>FEC_OTP_Sent</members>
+        <members>FEC_Merchant_Category_Code</members>
+        <members>FEC_Pending_Transactions</members>
+        <members>FEC_Authorization_Response</members>
+        <members>FEC_Decline_Description</members>
+        <members>FEC_Approval_Code</members>
+        <members>FEC_Transaction</members>
+        <members>FEC_MSG_No_transaction_selected</members>
         <name>CustomLabel</name>
     </types>
 
@@ -1038,6 +1135,7 @@
 		<members>Case.FEC_Interaction_Duration__c</members>
 		<members>Case.FEC_Is_Routing_Action_Display__c</members>
 		<members>Case.FEC_Draft_Routing_Action_Code__c</members>
+		<members>Case.FEC_Get_Next_Work__c</members>
         <members>FEC_Customer_History__c.FEC_Customer_Type__c</members>
         <name>CustomField</name>
     </types>
@@ -1072,6 +1170,8 @@
 		<members>fec_ComboBox</members>
 		<members>fec_CommonConst</members>
         <members>fec_ErrorPanel</members>
+		<members>fec_CaseFollowHeadlessAction</members>
+		<members>fec_CaseUnfollowHeadlessAction</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -1082,6 +1182,8 @@
     <types>
 		<members>Case.FEC_Execute_Customer_Case</members>
 		<members>Case.New_Assignment</members>
+		<members>Case.Follow_Up</members>
+		<members>Case.Unfollow</members>
 		<name>QuickAction</name>
 	</types>
     <types>
@@ -1123,6 +1225,40 @@
 		<members>FEC_MSG_Recall_Action_Not_Allowed</members>
 		<members>FEC_MSG_Record_Id_Invalid</members>
 		<members>FEC_MSG_Interaction_Highlight_Prefix</members>
+		<members>FEC_Choose_Sub_Decision_Label</members>
+		<members>FEC_Choose_Decision_Label</members>
+		<members>FEC_Sub_Decision_Label</members>
+		<members>FEC_MSG_No_IPP_Schedule_Data</members>
+		<members>FEC_MSG_No_Data_To_Display</members>
+		<members>FEC_Tab_Nature_Of_Case</members>
+		<members>FEC_LABEL_FOLLOW_UP</members>
+		<members>FEC_LABEL_UNTIL_CASE_RESOLVED</members>
+		<members>FEC_LABEL_UNTIL_UNFOLLOW</members>
+		<members>FEC_Follow_Up_Until_Unfollow</members>
+		<members>FEC_Follow_Up_Label</members>
+		<members>FEC_Follow_Up_Until_Resolved</members>
+		<members>FEC_ACTION_SELECT_USER</members>
+		<members>FEC_ACTION_CANCEL</members>
+		<members>FEC_ACTION_CONFIRM</members>
+		<members>FEC_ACTION_CLOSE</members>
+		<members>FEC_LABEL_SELECT_FOLLOW_UP_USER</members>
+		<members>FEC_LABEL_USER</members>
+		<members>FEC_LABEL_CLEAR_USER_SELECTION</members>
+		<members>FEC_LABEL_FOLLOW_UP_TYPE</members>
+		<members>FEC_MSG_NO_USER_FOUND</members>
+		<members>FEC_LABEL_UNFOLLOW_CASE</members>
+		<members>FEC_MSG_CONFIRM_UNFOLLOW</members>
+		<members>FEC_MSG_UNFOLLOW_INFO</members>
+		<members>FEC_LABEL_CURRENT_FOLLOW_TYPE</members>
+		<members>FEC_LABEL_CASE_STATUS</members>
+		<members>FEC_ACTION_UNFOLLOW</members>
+		<members>FEC_MSG_FollowUp_Add_User_To_Watcher_Success</members>
+		<members>FEC_MSG_FollowUp_Please_Select_User</members>
+		<members>FEC_MSG_FollowUp_Type_Updated_Success</members>
+		<members>FEC_MSG_FollowUp_Error_Detail</members>
+		<members>FEC_MSG_FollowUp_Case_ID_Not_Found</members>
+		<members>FEC_MSG_FollowUp_Unfollow_Error</members>
+		<members>FEC_MSG_FollowUp_Case_Follow_Success</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -1452,6 +1588,7 @@
 		<members>RD_IT_User_Master_Data_Management</members>
 		<members>RD_IT_User_System_Management</members>
 		<members>RD_IT_User_User_Management</members>
+		<members>RD_IT_User_Search_Functions</members>
 		<members>FEC_CS_CS_Ecom_Officer_Customer_360</members>
 		<members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
 		<members>FEC_CS_CS_Ecom_Officer_Master_Data_Management</members>
@@ -1724,5 +1861,79 @@
 		<members>Relevant Depts</members>
 		<name>Profile</name>
 	</types>
+    <types>
+		<members>Case</members>
+		<name>SharingRules</name>
+	</types>
+
+	<!-- channel libraty -->
+	<types>
+		<members>FEC_Action_Button__c-Action Button Layout</members>
+		<members>FEC_Business_Process__c-Business Process Layout</members>
+		<members>FEC_Case_Stage__c-Case Stage Layout</members>
+		<members>FEC_Category__c-Category Layout</members>
+		<members>FEC_Channel__c-Channel Layout</members>
+		<members>FEC_Hold_Case__c-Hold Case Layout</members>
+		<members>FEC_Master_Data_Setting__c-Master Data Setting Layout</members>
+		<members>FEC_Nature_of_Case__c-Nature of Case Layout</members>
+		<members>FEC_Product_Type__c-FEC Product Type Layout</members>
+		<members>FEC_Stage_Change__c-Stage Change Layout</members>
+		<members>FEC_Stage_Screen__c-Stage Screen Layout</members>
+		<members>FEC_Sub_Category__c-FEC_Sub Category Layout</members>
+		<members>FEC_Sub_Code__c-FEC_Sub Code Layout</members>
+		<name>Layout</name>
+	</types>
+
+	<!-- search functional -->
+	<types>
+		<members>FEC_Service</members>
+		<name>CustomApplication</name>
+	</types>
+	<types>
+		<members>FEC_ConstantCommon</members>
+		<members>FEC_SearchController</members>
+		<members>FEC_GetCustomerList</members>
+		<name>ApexClass</name>
+	</types>
+    <types>
+		<members>FEC_Customer_Search</members>
+		<name>CustomTab</name>
+	</types>
+    <types>
+		<members>fec_RecallAction</members>
+		<members>fec_ReopenAction</members>
+		<members>fec_Search</members>
+		<name>LightningComponentBundle</name>
+	</types>
+	<types>
+		<members>Case.Recall</members>
+		<members>Case.Reopen</members>
+		<name>QuickAction</name>
+	</types>
+	<types>
+		<members>FEC_Toast_Error</members>
+		<members>FEC_Toast_Recall_Success</members>
+		<members>FEC_Toast_Reopen_Success</members>
+		<members>FEC_Toast_Save_Success_Title</members>
+		<name>CustomLabel</name>
+	</types>
+
+	<!-- Translate -->
+	<types>
+		<members>FEC_Additional_Info__c-en_US</members>
+		<name>CustomObjectTranslation</name>
+	</types>
+	<types>
+        <members>FEC_Assessment_Type-en_US</members>
+        <members>FEC_Confirm_Assessment-en_US</members>
+        <members>FEC_Corrective_Action-en_US</members>
+        <members>FEC_Risk_Level-en_US</members>
+        <members>FEC_Verify_Information-en_US</members>
+        <members>Gender-en_US</members>
+        <members>Yes_No-en_US</members>
+        <members>Yes_No_NA-en_US</members>
+        <name>GlobalValueSetTranslation</name>
+    </types>
+
     <version>65.0</version>
 </Package>

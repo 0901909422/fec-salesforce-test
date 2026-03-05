@@ -84,6 +84,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_RES = 'RES';
     public static final String REQUESTOR_PEGA = 'PEGA';
     public static final String REQUESTOR_ESB = 'ESB';
+    public static final String REQUESTOR_CORE = 'CORE';
+    public static final String REQUESTOR_MOBILE = 'MOBILE';
 
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
@@ -138,7 +140,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String FEC_CATEGORY_COMPLAINT = 'Complaint';
     public static final String FEC_COMPLAIN_TYPE_NORMAL = 'Normal';
     public static final String FEC_COMPLAIN_TYPE_URGENT = 'Urgent';
-    public static final String FEC_COMPLAIN_TYPE_HIGH_RISK = 'High risk';
+    public static final String FEC_COMPLAIN_TYPE_HIGH_RISK = 'High Risk';
     public static final String FEC_SUB_CATEGORY_CODE_CL01 = 'CL01';
     public static final String FEC_SUB_CATEGORY_CODE_CC01 = 'CC01';
 
@@ -157,4 +159,5 @@ public with sharing class FEC_ConstantCommon {
     
     public static final String CIF_NUMBER = '19863515';
     public static final String APPLICATION_ID = '23785006';
+    public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
 }
