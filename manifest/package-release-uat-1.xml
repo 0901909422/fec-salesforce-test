@@ -1588,6 +1588,7 @@
 		<members>RD_IT_User_Master_Data_Management</members>
 		<members>RD_IT_User_System_Management</members>
 		<members>RD_IT_User_User_Management</members>
+		<members>RD_IT_User_Search_Functions</members>
 		<members>FEC_CS_CS_Ecom_Officer_Customer_360</members>
 		<members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
 		<members>FEC_CS_CS_Ecom_Officer_Master_Data_Management</members>
