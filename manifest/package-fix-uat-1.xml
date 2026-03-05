@@ -148,5 +148,13 @@
         <members>Case.FEC_DQ_Internal_Audit_Case</members>
         <name>ListView</name>
     </types>
+    <types>
+		<members>Chatter</members>
+		<name>Settings</name>
+	</types>
+    <types>
+		<members>KYC_Method</members>
+		<name>GlobalValueSet</name>
+	</types>
     <version>65.0</version>
 </Package>
