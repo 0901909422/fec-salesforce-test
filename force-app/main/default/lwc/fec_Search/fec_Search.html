@@ -39,13 +39,6 @@
                             <lightning-input type="email" data-id="emailAddress" label="Email Address"
                                 value={emailAddress} onchange={handleInputChange} disabled={isDisabledEmailAddress}></lightning-input>
                         </lightning-layout-item>
-                        <!-- <template if:true={isShowCustomerNumber}>
-                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
-                                medium-device-size="4" large-device-size="3">
-                                <lightning-input type="number" data-id="customerNumber" label="Customer Number" value={customerNumber}
-                                    onchange={handleInputChange} disabled={isDisabledCustomerNumber}></lightning-input>
-                            </lightning-layout-item>
-                        </template> -->
                         
                     </lightning-layout>
 
@@ -64,6 +57,7 @@
 
                 <!-- Tabset area also wrapped in an always-open accordion section -->
                 <lightning-accordion-section class="search-result" name="results" label="Search Result">
+
                     <template if:true={isNoCustomerFound}>
                         <div class="slds-p-vertical_medium">
 
@@ -131,10 +125,7 @@
                                     columns={insuranceColumns} hide-checkbox-column onrowaction={handleRowAction}>
                                 </c-masked-toggle-datatable>
                             </lightning-tab>
-                            <!-- <lightning-tab label="Ubank" value="Ubank">
-                            <c-masked-toggle-datatable key-field="id" data={ubankData} columns={ubankColumns} hide-checkbox-column>
-                            </c-masked-toggle-datatable>
-                        </lightning-tab> -->
+                            
                         </lightning-tabset>
                     </template>
                 </lightning-accordion-section>

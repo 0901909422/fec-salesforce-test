@@ -7911,4 +7911,32 @@
         <shortDescription>Office Address</shortDescription>
         <value>Office Address</value>
     </labels>
+    <labels>
+        <fullName>FEC_Toast_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Recall_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Toast Recall Success</shortDescription>
+        <value>Thực hiện Recall thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Reopen_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Toast Reopen Success</shortDescription>
+        <value>Thực hiện Reopen thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Success_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Success</value>
+    </labels>
 </CustomLabels>
