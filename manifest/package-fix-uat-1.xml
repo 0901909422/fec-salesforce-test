@@ -15,6 +15,9 @@
         <members>FEC_MockData</members>
         <members>FEC_GetPaymentInfo</members>
         <members>FEC_MFASOUTSTANDINGAUTHINQ</members>
+        <members>FEC_IPPController</members>
+        <members>FEC_CardPaymentController</members>
+        <members>FEC_CardInfoController</members>
         <name>ApexClass</name>
     </types>
     <types>
