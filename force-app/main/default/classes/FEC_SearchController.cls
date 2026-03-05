@@ -17,6 +17,10 @@ public with sharing class FEC_SearchController {
                 SELECT Id, FEC_Channel__c, FEC_National_ID_Passport_ID__c,
                  FEC_Phone_Number__c, FEC_Contract_Number__c, RecordType.Name,
                  FEC_Skip_Search_Internal_Case__c, FEC_Has_Account_or_Contract__c,
+                 FEC_Search_Account_Number__c, FEC_Search_Application_ID__c,
+                 FEC_Search_Contract_Number__c, FEC_Search_Customer_Number__c,
+                 FEC_Search_Email_Address__c, FEC_Search_National_ID__c,
+                 FEC_Search_Phone_Number__c,
                  (SELECT Id FROM Customer_Histories__r)
                 FROM Case
                 WHERE Id = :caseId
@@ -30,7 +34,7 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
-    public static void createHistory(String value, String fieldName, Id caseId) {
+    public static void createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType) {
         // Return early if no value or field name
         if (value == null || value.trim() == '' || fieldName == null || fieldName.trim() == '') {
             throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
@@ -51,18 +55,25 @@ public with sharing class FEC_SearchController {
         rec.Name = value;
         rec.FEC_Case__c = caseId;
 
-        // Insert in USER_MODE as per security best practice
-        Database.SaveResult sr = Database.insert(rec);
-        if (!sr.isSuccess()) {
-            Database.Error err = (sr.getErrors() != null && !sr.getErrors().isEmpty()) ? sr.getErrors()[0] : null;
-            throw new AuraHandledException(err != null ? err.getMessage() : System.Label.FEC_MSG_Create_Customer_History_Error);
-        } else {
+        try {
+            insert rec;
+            FEC_Product_Type__c productType;
+            if (!String.isBlank(selectedType)) {
+                productType = [SELECT Id FROM FEC_Product_Type__c WHERE Name = :selectedType LIMIT 1];
+            }
+            String randomCIF = String.valueOf(Math.round(Math.random() * 89999999 + 10000000));
             Case objCase = new Case(
-                Id = caseId,
-                FEC_Account_or_Contract__c = rec.Id,
-                FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE
-            );
+                    Id = caseId,
+                    FEC_Account_or_Contract__c = rec.Id,
+                    FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE,
+                    FEC_CIF_Number__c = randomCIF,
+                    FEC_First_Access__c = true,
+                    FEC_Search_Products__c = searchProducts,
+                    FEC_Product_Type__c = productType != null ? productType.Id : null
+                );
             update objCase;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
         }
     }
 
