@@ -25,11 +25,11 @@
     <label>OB03</label>
     <queue>FEC_OB03</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Outbound_Officer_3</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Outbound_Specialist_3</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Outbound_Team_3_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_of_Customer_Service_Contact_Center_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Customer_Service_Outbound_Specialist_3</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Unit_Head_of_Customer_Service_Outbound</roleAndSubordinatesInternal>
+        <role>FEC_Customer_Service_Outbound_Officer_3</role>
+        <role>FEC_Customer_Service_Outbound_Specialist_3</role>
+        <role>FEC_Customer_Service_Outbound_Team_3_Leader</role>
+        <role>FEC_Head_of_Customer_Service_Contact_Center_Department</role>
+        <role>FEC_Senior_Customer_Service_Outbound_Specialist_3</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Outbound</role>
     </sharedTo>
 </ListView>

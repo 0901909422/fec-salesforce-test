@@ -26,7 +26,7 @@
     <label>DQ - CS Customer Care Dept</label>
     <queue>FEC_DQ_CS_Customer_Care_Dept</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Head_of_Customer_Care_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Operations_Automation_Project_Manager</roleAndSubordinatesInternal>
+        <role>FEC_Head_of_Customer_Care_Department</role>
+        <role>FEC_Senior_Operations_Automation_Project_Manager</role>
     </sharedTo>
 </ListView>

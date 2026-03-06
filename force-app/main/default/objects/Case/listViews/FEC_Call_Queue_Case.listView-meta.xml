@@ -26,7 +26,7 @@
     <label>Call Queue</label>
     <queue>FEC_Call_Queue</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Senior_Call_Collections_Operations_Support_Team_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Call_Queue_Management_Specialist</roleAndSubordinatesInternal>
+        <role>FEC_Senior_Call_Collections_Operations_Support_Team_Leader</role>
+        <role>FEC_Senior_Call_Queue_Management_Specialist</role>
     </sharedTo>
 </ListView>

@@ -153,6 +153,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   getProductsList() {
     GetProductsListByCif({ cifNumber: this.cifNumber })
       .then((result) => {
+        console.log("[APEX] GetProductsListByCif result:", JSON.stringify(result));
         const mappedData = result.map((item, index) => ({
           id: String(index + 1),
           product: item.productType,
