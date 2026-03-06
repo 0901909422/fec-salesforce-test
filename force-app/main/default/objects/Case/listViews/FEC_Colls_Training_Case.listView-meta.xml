@@ -26,8 +26,8 @@
     <label>Colls Training</label>
     <queue>FEC_Colls_Training</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Collections_Inbound_Activities_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Collections_Quality_Assurance_Expert</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_Of_Collections_Training_Department</roleAndSubordinatesInternal>
+        <role>FEC_Collections_Inbound_Activities_Specialist</role>
+        <role>FEC_Collections_Quality_Assurance_Expert</role>
+        <role>FEC_Head_Of_Collections_Training_Department</role>
     </sharedTo>
 </ListView>

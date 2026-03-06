@@ -26,6 +26,6 @@
     <label>DQ - CS QC &amp; OM</label>
     <queue>FEC_DQ_CS_QC_OM</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Head_of_Quality_Control_Ops_Management_Department</roleAndSubordinatesInternal>
+        <role>FEC_Head_of_Quality_Control_Ops_Management_Department</role>
     </sharedTo>
 </ListView>

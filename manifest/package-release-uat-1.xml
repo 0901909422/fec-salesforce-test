@@ -652,6 +652,10 @@
         <members>FEC_CaseTrigger</members>
         <name>ApexTrigger</name>
     </types>
+	<types>
+		<members>FEC_KYC__c</members>
+		<name>CustomTab</name>
+	</types>
 
     <!-- cus360 account information -->
     <types>
@@ -1265,6 +1269,10 @@
         <members>vi</members>
         <name>Translations</name>
     </types>
+	<types>
+		<members>Case-Customer Case</members>
+		<name>Layout</name>
+	</types>
 
     <!-- hold case library -->
     <types>
@@ -1298,9 +1306,9 @@
         <members>Case.X2_My_Follow_Up_Cases</members>
         <members>Case.X3_My_Completed_Cases</members>
         <members>Case.My_Team</members>
-        <members>Case.FEC_CS_Center_Case</members>
-        <members>Case.FEC_CS_Contact_Center_Dept_Case</members>
-        <members>Case.FEC_CS_Inbound_Case</members>
+        <members>Case.FEC_DQ_CS_Center_Case</members>
+        <members>Case.FEC_DQ_CS_Contact_Center_Dept_Case</members>
+        <members>Case.FEC_DQ_CS_Inbound_Case</members>
         <members>Case.FEC_IB01_Case</members>
         <members>Case.FEC_IB02_Case</members>
         <members>Case.FEC_IB03_Case</members>
@@ -1308,64 +1316,64 @@
         <members>Case.FEC_IB05_Case</members>
         <members>Case.FEC_IB06_Case</members>
         <members>Case.FEC_IB07_Case</members>
-        <members>Case.FEC_CS_Office_Based_Case</members>
+        <members>Case.FEC_DQ_CS_Office_Based_Case</members>
         <members>Case.FEC_Office_Based_Mailbox_Case</members>
-        <members>Case.FEC_CS_Outbound_Case</members>
+        <members>Case.FEC_DQ_CS_Outbound_Case</members>
         <members>Case.FEC_OB01_Case</members>
         <members>Case.FEC_OB02_Case</members>
         <members>Case.FEC_OB03_Case</members>
-        <members>Case.FEC_CS_Ecom_Case</members>
+        <members>Case.FEC_DQ_CS_Ecom_Case</members>
         <members>Case.FEC_EC01_Case</members>
         <members>Case.FEC_EC02_Case</members>
         <members>Case.FEC_Ecom_Mailbox_Case</members>
-        <members>Case.FEC_CS_Customer_Care_Dept_Case</members>
-        <members>Case.FEC_CS_Support_Case</members>
+        <members>Case.FEC_DQ_CS_Customer_Care_Dept_Case</members>
+        <members>Case.FEC_DQ_CS_Support_Case</members>
         <members>Case.FEC_Business_Admin_Case</members>
         <members>Case.FEC_CSM_Mailbox_Case</members>
         <members>Case.FEC_Document_Processing_Case</members>
         <members>Case.FEC_Shared_Task_Case</members>
         <members>Case.FEC_Support_Mailbox_Case</members>
-        <members>Case.FEC_CS_Customer_Care_Case</members>
+        <members>Case.FEC_DQ_CS_Customer_Care_Case</members>
         <members>Case.FEC_Handling_Case</members>
         <members>Case.FEC_Care_Internal_Task_Case</members>
         <members>Case.FEC_Care_Mailbox_Case</members>
         <members>Case.FEC_Customer_Experience_Case</members>
-        <members>Case.FEC_CS_QC_OM_Case</members>
-        <members>Case.FEC_CS_Ops_Management_Case</members>
+        <members>Case.FEC_DQ_CS_QC_OM_Case</members>
+        <members>Case.FEC_DQ_CS_Ops_Management_Case</members>
         <members>Case.FEC_Card_Risk_Monitoring_Case</members>
         <members>Case.FEC_Day_2_Check_Case</members>
         <members>Case.FEC_Analyst_Case</members>
         <members>Case.FEC_WFM_Case</members>
         <members>Case.FEC_OM_Mailbox_Case</members>
-        <members>Case.FEC_CS_Quality_Control_Case</members>
+        <members>Case.FEC_DQ_CS_Quality_Control_Case</members>
         <members>Case.FEC_Quality_Control_Mailbox_Case</members>
-        <members>Case.FEC_Card_Operations_Case</members>
+        <members>Case.FEC_DQ_Card_Operations_Case</members>
         <members>Case.FEC_Card_Ops_Control_Support_Case</members>
         <members>Case.FEC_Card_Issuance_Case</members>
         <members>Case.FEC_Card_Settlement_Case</members>
         <members>Case.FEC_Card_Transaction_Case</members>
         <members>Case.FEC_Card_Dispute_Charge_Back_Case</members>
-        <members>Case.FEC_Collections_Case</members>
+        <members>Case.FEC_DQ_Collections_Case</members>
         <members>Case.FEC_Call_Colls_Support_Case</members>
         <members>Case.FEC_Colls_Coordination_Reporting_Case</members>
         <members>Case.FEC_Call_Queue_Case</members>
         <members>Case.FEC_Colls_Complaint_Handling_Case</members>
         <members>Case.FEC_Colls_Training_Case</members>
-        <members>Case.FEC_Contract_Processing_Case</members>
+        <members>Case.FEC_DQ_Contract_Processing_Case</members>
         <members>Case.FEC_Disbursal_Document_Case</members>
         <members>Case.FEC_Doc_Processing_Archiving_Case</members>
         <members>Case.FEC_MRC_Support_Case</members>
-        <members>Case.FEC_Payment_Case</members>
+        <members>Case.FEC_DQ_Payment_Case</members>
         <members>Case.FEC_Incoming_Payment_Case</members>
         <members>Case.FEC_Loan_Management_Case</members>
         <members>Case.FEC_Outgoing_Payment_Case</members>
-        <members>Case.FEC_Direct_Sales_Case</members>
-        <members>Case.FEC_POS_Sales_Case</members>
-        <members>Case.FEC_Telesales_Case</members>
+        <members>Case.FEC_DQ_Direct_Sales_Case</members>
+        <members>Case.FEC_DQ_POS_Sales_Case</members>
+        <members>Case.FEC_DQ_Telesales_Case</members>
         <members>Case.FEC_LG_Case</members>
-        <members>Case.FEC_Credit_Assessment_Case</members>
-        <members>Case.FEC_IT_Operations_Support_Case</members>
-        <members>Case.FEC_Internal_Audit_Case</members>
+        <members>Case.FEC_DQ_Credit_Assessment_Case</members>
+        <members>Case.FEC_DQ_IT_Operations_Support_Case</members>
+        <members>Case.FEC_DQ_Internal_Audit_Case</members>
         <name>ListView</name>
     </types>
     <types>
@@ -1934,6 +1942,20 @@
         <members>Yes_No_NA-en_US</members>
         <name>GlobalValueSetTranslation</name>
     </types>
+
+	<!-- validation rule -->
+	<types>
+		<members>FEC_Action_Button__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Business_Process__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Case_Stage__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Category__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Product_Type__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Stage_Change__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Stage_Screen__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Sub_Category__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Sub_Code__c.FEC_Restrict_Update_Code</members>
+		<name>ValidationRule</name>
+	</types>
 
     <version>65.0</version>
 </Package>
