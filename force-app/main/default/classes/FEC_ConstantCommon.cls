@@ -115,6 +115,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_STATUS_RESOLVED_COMPLETED = 'Resolved-Completed';
     public static final String CASE_STATUS_AUTO_CANCELLED = 'Resolved-AutoCancelled';
     public static final String CASE_STATUS_AUTO_CLOSED = 'Auto-Closed';
+    public static final String INTERACTION_STATUS_CLOSED = 'Closed';
 
     public static final String INTERACTION_VIEW_MODE = 'view';
     public static final String INTERACTION_HANDLING_MODE = 'handling';
