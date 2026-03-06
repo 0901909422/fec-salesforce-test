@@ -88,7 +88,7 @@ public without sharing class FEC_ApplicationsListController {
         FEC_GetCustomerList.ResponseWrapper cusRes;
         try {
             cusRes = FEC_GetCustomerList.getCustomerList(
-                FEC_ConstantCommon.REQUESTOR_CRM, null, false,
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false,
                 null, null, null, null, null, null, null, null
             );
         } catch (Exception e) {
@@ -110,7 +110,7 @@ public without sharing class FEC_ApplicationsListController {
             try {
                 statusRes =
                     FEC_GetApplicationsList.callGetApplicationsList(
-                        FEC_ConstantCommon.REQUESTOR_RES,
+                        FEC_CommonUltils.generateTransactionId(),
                         FEC_ConstantCommon.REQUESTOR_CRM,
                         Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
                         cif
@@ -126,7 +126,7 @@ public without sharing class FEC_ApplicationsListController {
             try {
                 addrRes =
                     FEC_GetAddressesList.callGetAddressesList(
-                        FEC_ConstantCommon.REQUESTOR_RES,
+                        FEC_CommonUltils.generateTransactionId(),
                         FEC_ConstantCommon.REQUESTOR_CRM,
                         Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
                         cif
@@ -203,7 +203,6 @@ public without sharing class FEC_ApplicationsListController {
 
                 /* =====================================================
                 * API 4 – CUSTOMER SALE DISBURSE INFO
-                * (Independent – fail thì bỏ qua)
                 * ===================================================== */
                 FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleDisburseInfoResponse saleRes;
                 try {

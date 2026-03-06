@@ -68,14 +68,14 @@
 
                             <div class="slds-grid slds-gutters slds-m-bottom_medium">
                                 <div class="slds-col slds-size_1-of-2">
-                                    <lightning-input label="Full Name" placeholder="Nhập Full Name"
-                                        value={fullNameForCreate} required onchange={handleFullNameChange}>
+                                    <lightning-input label="Customer Name" placeholder="Nhập Customer Name"
+                                        value={custNameForCreate} onchange={handleCustNameChange}>
                                     </lightning-input>
                                 </div>
 
                                 <div class="slds-col slds-size_1-of-2">
                                     <lightning-input label="National ID" placeholder="Nhập National ID"
-                                        value={nationalIdForCreate} onchange={handleNationalIdChange}>
+                                        value={nationalIdForCreate} data-id="national-id" onchange={handleNationalIdChange}>
                                     </lightning-input>
                                 </div>
                             </div>
