@@ -255,9 +255,8 @@ public with sharing class FEC_GetCustomerInfoBasic {
         Dom.XmlNode bodyNode =
             doc.getRootElement().getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
  
-        // ===== FIX: ignore namespace for response =====
         Dom.XmlNode responseNode =
-            bodyNode.getChildElement('GetCustomerInfoBasicResponse', null);
+            bodyNode.getChildElement('GetCustomerInfoBasicResponse', CIF_NS);
  
         if (responseNode == null)
             throw new CalloutException(System.Label.FEC_MSG_Response_Null);

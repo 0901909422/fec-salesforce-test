@@ -26,6 +26,6 @@
     <label>DQ - CS Contact Center Dept</label>
     <queue>FEC_DQ_CS_Contact_Center_Dept</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Head_of_Customer_Service_Contact_Center_Department</roleAndSubordinatesInternal>
+        <role>FEC_Head_of_Customer_Service_Contact_Center_Department</role>
     </sharedTo>
 </ListView>

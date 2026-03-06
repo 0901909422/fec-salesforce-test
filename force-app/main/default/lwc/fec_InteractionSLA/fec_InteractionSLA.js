@@ -1,5 +1,5 @@
 import { LightningElement, api, track, wire } from "lwc";
-import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+import { getRecord, getFieldValue, notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { IsConsoleNavigation, openTab } from 'lightning/platformWorkspaceApi';
@@ -277,7 +277,14 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
         this.record.FEC_Outcome_Code__c = quickOutcomeCode;
         this.record.Status = 'Closed';
         this.isQuickWrapUpModalOpen = false;
-        window.location.reload();
+        
+        // Notify LDS that record has been updated to refresh all components
+        notifyRecordUpdateAvailable([{recordId: this.recordId}]);
+        
+        // Reload page after a short delay to ensure data is refreshed
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       })
       .catch((error) => {
         console.error('Full error object:', JSON.stringify(error));
@@ -404,6 +411,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
         
         // Refresh the record
         this.record.FEC_Outcome_Code__c = this.selectedOutcomeCode;
+        this.record.FEC_Interaction_Remarks__c = this.interactionRemarks;
         this.record.FEC_Interaction_Status__c = 'Closed';
         
         // Close modal and reset
@@ -411,8 +419,13 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
         this.selectedOutcomeCode = '';
         this.interactionRemarks = '';
         
-        // Refresh the page
-        window.location.reload();
+        // Notify LDS that record has been updated to refresh all components
+        notifyRecordUpdateAvailable([{recordId: this.recordId}]);
+        
+        // Reload page after a short delay to ensure data is refreshed
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       })
       .catch((error) => {
         console.error('Full error object:', JSON.stringify(error));

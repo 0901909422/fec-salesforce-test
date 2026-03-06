@@ -26,9 +26,9 @@
     <label>DQ - Collections</label>
     <queue>FEC_DQ_Collections</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Collections_Operations_Coordination_Reporting_Team_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_Of_Collections_Training_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Call_Collections_Operations_Support_Team_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Collections_Complaint_Handling_Team_Leader</roleAndSubordinatesInternal>
+        <role>FEC_Collections_Operations_Coordination_Reporting_Team_Leader</role>
+        <role>FEC_Head_Of_Collections_Training_Department</role>
+        <role>FEC_Senior_Call_Collections_Operations_Support_Team_Leader</role>
+        <role>FEC_Senior_Collections_Complaint_Handling_Team_Leader</role>
     </sharedTo>
 </ListView>

@@ -26,7 +26,7 @@
     <label>DQ - POS Sales</label>
     <queue>FEC_DQ_POS_Sales</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Direct_Sales_Analysis_Process_Management_Team_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_POS_Sales_Process_Management_Specialist</roleAndSubordinatesInternal>
+        <role>FEC_Direct_Sales_Analysis_Process_Management_Team_Leader</role>
+        <role>FEC_POS_Sales_Process_Management_Specialist</role>
     </sharedTo>
 </ListView>

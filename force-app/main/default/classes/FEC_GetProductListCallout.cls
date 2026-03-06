@@ -31,9 +31,9 @@ public without sharing class FEC_GetProductListCallout {
         
         // Root Envelope + soapenv namespace
         Dom.XmlNode envelope = doc.createRootElement(
-            'soapenv:Envelope',
+            'Envelope',
             FEC_ConstantCommon.SOAP_ENV,
-            null
+            'soapenv'
         );
         
         // Header
@@ -45,9 +45,9 @@ public without sharing class FEC_GetProductListCallout {
         // cif:GetProductsList
         Dom.XmlNode getProductsList =
             body.addChildElement(
-            'cif:GetProductsList',
+            'GetProductsList',
             CIF_NS,
-            null
+            'cif'
         );
         
         // Sys
