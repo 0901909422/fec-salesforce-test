@@ -95,8 +95,14 @@ const FIELD_NEW_ISSUE_DATE = "FEC_New_Issue_Date__c";
 const FIELD_OLD_ISSUE_DATE = "FEC_Old_Issue_Date__c";
 const FIELD_NEW_CITIZEN_ID_NUMBER = "FEC_New_Citizen_ID_Number__c";
 const FIELD_OLD_CITIZEN_ID_NUMBER = "FEC_Old_Citizen_ID_Number__c";
+const FIELD_ORIGINAL_INFO_NATIONAL_ID = "FEC_Original_Info_National_ID__c";
 const FIELD_UPDATED_INFO_NATIONAL_ID = "FEC_Updated_Info_National_ID__c";
 const FIELD_NATIONAL_ID_PASSPORT_ID = "FEC_National_ID_Passport_ID__c";
+const NATIONAL_ID_PASSPORT_FIELDS = new Set([
+  FIELD_ORIGINAL_INFO_NATIONAL_ID,
+  FIELD_UPDATED_INFO_NATIONAL_ID,
+  FIELD_NATIONAL_ID_PASSPORT_ID,
+]);
 const FIELD_CORRECT_DATE_OF_BIRTH = "FEC_Correct_Date_of_Birth__c";
 const FIELD_INCORRECT_DATE_OF_BIRTH = "FEC_Incorrect_Date_of_Birth__c";
 const DATE_FIELDS = new Set([
@@ -532,7 +538,13 @@ export default class Fec_CaseBussiness extends LightningElement {
     e.target.iconName = isPreview ? "utility:hide" : "utility:preview";
 
     if (isPreview) {
-      field.value = mask(field.original, 4);
+      if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
+        field.value = isOnlyNumber(field.original)
+          ? mask(field.original, 3, 3)
+          : mask(field.original, 2, 3);
+      } else {
+        field.value = mask(field.original, 4);
+      }
     } else {
       field.value = field.original;
 
@@ -687,18 +699,23 @@ export default class Fec_CaseBussiness extends LightningElement {
                         field.value = mask(field.original, 4, 3);
                       }
                       break;
-                  
                     case MASKING_TYPE_PASSPORT:
-                      if(isOnlyNumber(field.original)) {
+                        if (isOnlyNumber(field.original)) {
                         field.value = mask(field.original, 3, 3);
                       } else {
                         field.value = mask(field.original, 2, 3);
-
                       }
                       break;
-                  
                     default:
-                      field.value = mask(field.original, 4, 4);
+                      if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
+                        if (isOnlyNumber(field.original)) {
+                          field.value = mask(field.original, 3, 3);
+                        } else {
+                          field.value = mask(field.original, 2, 3);
+                        }
+                      } else {
+                        field.value = mask(field.original, 4, 4);
+                      }
                       break;
                   }
                 }
