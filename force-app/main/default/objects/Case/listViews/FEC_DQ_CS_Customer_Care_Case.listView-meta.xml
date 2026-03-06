@@ -26,10 +26,10 @@
     <label>DQ - CS Customer Care</label>
     <queue>FEC_DQ_CS_Customer_Care</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Customer_Care_Manager</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Customer_Care_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_of_Customer_Care_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Customer_Care_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Unit_Head_of_Customer_Care</roleAndSubordinatesInternal>
+        <role>FEC_Customer_Care_Manager</role>
+        <role>FEC_Customer_Care_Specialist</role>
+        <role>FEC_Head_of_Customer_Care_Department</role>
+        <role>FEC_Senior_Customer_Care_Specialist</role>
+        <role>FEC_Unit_Head_of_Customer_Care</role>
     </sharedTo>
 </ListView>

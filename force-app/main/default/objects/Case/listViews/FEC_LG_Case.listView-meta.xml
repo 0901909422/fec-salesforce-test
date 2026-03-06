@@ -26,11 +26,11 @@
     <label>LG</label>
     <queue>FEC_LG</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Senior_Telesales_Process_Management_Specialist_1</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Telesales_Process_Management_Specialist_2</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Telesales_Coordination_Specialist_2</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Telesales_Process_Management_Expert_2</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Telesales_Process_Management_Specialist_2</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Telesales_System_Management_Supervisor_2</roleAndSubordinatesInternal>
+        <role>FEC_Senior_Telesales_Process_Management_Specialist_1</role>
+        <role>FEC_Senior_Telesales_Process_Management_Specialist_2</role>
+        <role>FEC_Telesales_Coordination_Specialist_2</role>
+        <role>FEC_Telesales_Process_Management_Expert_2</role>
+        <role>FEC_Telesales_Process_Management_Specialist_2</role>
+        <role>FEC_Telesales_System_Management_Supervisor_2</role>
     </sharedTo>
 </ListView>
