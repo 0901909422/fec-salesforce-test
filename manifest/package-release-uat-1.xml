@@ -1269,6 +1269,10 @@
         <members>vi</members>
         <name>Translations</name>
     </types>
+	<types>
+		<members>Case-Customer Case</members>
+		<name>Layout</name>
+	</types>
 
     <!-- hold case library -->
     <types>
