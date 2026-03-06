@@ -1072,7 +1072,8 @@ public with sharing class FEC_CaseBusinessService {
         FEC_User_Role__c = userlst.get(0).UserRole?.Name
       );
 
-      insert history;
+      // insert history;
+      Database.insert(history, AccessLevel.SYSTEM_MODE);
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
