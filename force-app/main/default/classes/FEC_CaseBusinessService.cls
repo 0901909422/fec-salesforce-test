@@ -14,6 +14,7 @@ public with sharing class FEC_CaseBusinessService {
   public static final String FULLNAME_UPDATE = 'Full Name Update';
   public static final String DOB_UPDATE = 'Date of Birth Update';
   public static final String GENDER_UPDATE = 'Gender Update';
+  public static final String INDENTIFICATION_UPDATE = 'Identification Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
   public static final String SUBMIT_WITHOUT_ROUTE_TO = 'Submit Without Route To';
 
@@ -37,6 +38,7 @@ public with sharing class FEC_CaseBusinessService {
     FULLNAME_UPDATE,
     DOB_UPDATE,
     GENDER_UPDATE,
+    INDENTIFICATION_UPDATE,
     OC_001,
     SUBMIT_WITHOUT_ROUTE_TO
   }
@@ -57,6 +59,7 @@ public with sharing class FEC_CaseBusinessService {
     FULLNAME_UPDATE => Method.FULLNAME_UPDATE,
     DOB_UPDATE => Method.DOB_UPDATE,
     GENDER_UPDATE => Method.GENDER_UPDATE,
+    INDENTIFICATION_UPDATE => Method.INDENTIFICATION_UPDATE,
     OC_001 => Method.OC_001,
     SUBMIT_WITHOUT_ROUTE_TO => Method.SUBMIT_WITHOUT_ROUTE_TO
   };
@@ -107,6 +110,9 @@ public with sharing class FEC_CaseBusinessService {
           FEC_Account_or_Contract__r.FEC_Email__c,
           FEC_Account_or_Contract__r.FEC_Date_of_Birth__c,
           FEC_Account_or_Contract__r.FEC_Gender__c,
+          FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
+          FEC_Account_or_Contract__r.FEC_Date_of_Issue__c,
+          FEC_Account_or_Contract__r.FEC_Place_of_Issue__c,
           FEC_Process_Action_Count__c,
           FEC_Original_Info_Phone_Number__c,
           FEC_Updated_Info_Phone_Number__c,
@@ -362,6 +368,11 @@ public with sharing class FEC_CaseBusinessService {
         when GENDER_UPDATE {
           if (selectedCase.FEC_Account_or_Contract__c != null) {
             genderUpdate(selectedCase);
+          }
+        }
+        when INDENTIFICATION_UPDATE {
+          if (selectedCase.FEC_Account_or_Contract__c != null) {
+            identificationUpdate(selectedCase);
           }
         }
         when else {
@@ -2452,6 +2463,40 @@ public with sharing class FEC_CaseBusinessService {
     );
     if (String.isBlank(selectedCase.FEC_Updated_Info_Gender__c)) {
       selectedCase.FEC_Updated_Info_Gender__c = selectedCase.FEC_Original_Info_Gender__c;
+    }
+    update selectedCase;
+  }
+
+  /**
+   * Lấy FEC_National_ID_Passport_ID__c, FEC_Date_of_Issue__c, FEC_Place_of_Issue__c
+   * từ Customer History (FEC_Account_or_Contract__c) và cập nhật vào các trường
+   * FEC_Original_Info_National_ID__c, FEC_Original_Info_Date_of_Issue__c, FEC_Original_Info_Place_of_Issue__c trên Case.
+   * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
+   */
+  private static void identificationUpdate(Case selectedCase) {
+    SObject accountOrContract = selectedCase.getSObject(
+      'FEC_Account_or_Contract__r'
+    );
+    if (accountOrContract == null) {
+      return;
+    }
+    selectedCase.FEC_Original_Info_National_ID__c = (String) accountOrContract.get(
+      'FEC_National_ID_Passport_ID__c'
+    );
+    selectedCase.FEC_Original_Info_Date_of_Issue__c = (Date) accountOrContract.get(
+      'FEC_Date_of_Issue__c'
+    );
+    selectedCase.FEC_Original_Info_Place_of_Issue__c = (String) accountOrContract.get(
+      'FEC_Place_of_Issue__c'
+    );
+    if (String.isBlank(selectedCase.FEC_Updated_Info_National_ID__c)) {
+      selectedCase.FEC_Updated_Info_National_ID__c = selectedCase.FEC_Original_Info_National_ID__c;
+    }
+    if (selectedCase.FEC_Updated_Info_Date_of_Issue__c == null) {
+      selectedCase.FEC_Updated_Info_Date_of_Issue__c = selectedCase.FEC_Original_Info_Date_of_Issue__c;
+    }
+    if (String.isBlank(selectedCase.FEC_Updated_Info_Place_of_Issue__c)) {
+      selectedCase.FEC_Updated_Info_Place_of_Issue__c = selectedCase.FEC_Original_Info_Place_of_Issue__c;
     }
     update selectedCase;
   }
