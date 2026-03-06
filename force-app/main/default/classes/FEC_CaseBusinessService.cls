@@ -129,6 +129,7 @@ public with sharing class FEC_CaseBusinessService {
           FEC_Updated_Info_Date_of_Birth__c,
           FEC_Original_Info_Gender__c,
           FEC_Updated_Info_Gender__c,
+          FEC_Original_Info_National_ID__c,
           FEC_Is_Submited__c,
           FEC_Business_Process__c,
           FEC_Account_Contract_Number_Text__c,
