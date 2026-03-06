@@ -14,7 +14,7 @@ public with sharing class FEC_CaseBusinessService {
   public static final String FULLNAME_UPDATE = 'Full Name Update';
   public static final String DOB_UPDATE = 'Date of Birth Update';
   public static final String GENDER_UPDATE = 'Gender Update';
-  public static final String INDENTIFICATION_UPDATE = 'Identification Update';
+  public static final String IDENTIFICATION_UPDATE = 'Identification Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
   public static final String SUBMIT_WITHOUT_ROUTE_TO = 'Submit Without Route To';
 
@@ -38,7 +38,7 @@ public with sharing class FEC_CaseBusinessService {
     FULLNAME_UPDATE,
     DOB_UPDATE,
     GENDER_UPDATE,
-    INDENTIFICATION_UPDATE,
+    IDENTIFICATION_UPDATE,
     OC_001,
     SUBMIT_WITHOUT_ROUTE_TO
   }
@@ -59,7 +59,7 @@ public with sharing class FEC_CaseBusinessService {
     FULLNAME_UPDATE => Method.FULLNAME_UPDATE,
     DOB_UPDATE => Method.DOB_UPDATE,
     GENDER_UPDATE => Method.GENDER_UPDATE,
-    INDENTIFICATION_UPDATE => Method.INDENTIFICATION_UPDATE,
+    IDENTIFICATION_UPDATE => Method.IDENTIFICATION_UPDATE,
     OC_001 => Method.OC_001,
     SUBMIT_WITHOUT_ROUTE_TO => Method.SUBMIT_WITHOUT_ROUTE_TO
   };
@@ -370,7 +370,7 @@ public with sharing class FEC_CaseBusinessService {
             genderUpdate(selectedCase);
           }
         }
-        when INDENTIFICATION_UPDATE {
+        when IDENTIFICATION_UPDATE {
           if (selectedCase.FEC_Account_or_Contract__c != null) {
             identificationUpdate(selectedCase);
           }
