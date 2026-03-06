@@ -29,6 +29,7 @@
         <members>FEC_GetCustomerList</members>
         <members>FEC_LogApiQueueable</members>
         <members>FEC_IPPScheduleController</members>
+        <members>fec_AccountOrContractPicklistInteraction</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -50,6 +51,11 @@
 		<members>fec_IPPDetailPage</members>
 		<members>fec_CaseDetail_Customer</members>
 		<members>fec_CaseEditNOC</members>
+		<members>customDblclickCell</members>
+		<members>fec_Search</members>
+		<members>maskedToggleDatatable</members>
+		<members>fec_CustomAccountTable</members>
+		<members>fec_CustomDblClickRadio</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -141,6 +147,7 @@
 		<members>FEC_MSG_FollowUp_Case_ID_Not_Found</members>
 		<members>FEC_MSG_FollowUp_Unfollow_Error</members>
 		<members>FEC_MSG_FollowUp_Case_Follow_Success</members>
+		<members>FEC_MSG_Can_Not_Find_Next_Stage</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
