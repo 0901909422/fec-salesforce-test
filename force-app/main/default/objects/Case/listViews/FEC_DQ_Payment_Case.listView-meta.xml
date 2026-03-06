@@ -26,7 +26,7 @@
     <label>DQ - Payment</label>
     <queue>FEC_DQ_Payment</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Head_Of_Incoming_Payment_Accounting</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_Of_Outgoing_Payment_Accounting</roleAndSubordinatesInternal>
+        <role>FEC_Head_Of_Incoming_Payment_Accounting</role>
+        <role>FEC_Head_Of_Outgoing_Payment_Accounting</role>
     </sharedTo>
 </ListView>

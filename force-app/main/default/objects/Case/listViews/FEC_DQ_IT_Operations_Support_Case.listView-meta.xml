@@ -26,15 +26,15 @@
     <label>DQ - IT Operations Support</label>
     <queue>FEC_DQ_IT_Operations_Support</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_IT_System_Operation_Expert_Risk</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_IT_System_Operation_Officer_Risk</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_IT_System_Operation_Specialist_Risk</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_IT_System_Operation_Expert_Risk</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_IT_System_Operation_Specialist_Risk</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Software_Development_Expert_Risk</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Software_Development_Specialist_Risk</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Software_Development_Expert_Risk</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Software_Development_Specialist_Risk</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Unit_Head_Of_Apps_Risk</roleAndSubordinatesInternal>
+        <role>FEC_IT_System_Operation_Expert_Risk</role>
+        <role>FEC_IT_System_Operation_Officer_Risk</role>
+        <role>FEC_IT_System_Operation_Specialist_Risk</role>
+        <role>FEC_Senior_IT_System_Operation_Expert_Risk</role>
+        <role>FEC_Senior_IT_System_Operation_Specialist_Risk</role>
+        <role>FEC_Senior_Software_Development_Expert_Risk</role>
+        <role>FEC_Senior_Software_Development_Specialist_Risk</role>
+        <role>FEC_Software_Development_Expert_Risk</role>
+        <role>FEC_Software_Development_Specialist_Risk</role>
+        <role>FEC_Unit_Head_Of_Apps_Risk</role>
     </sharedTo>
 </ListView>

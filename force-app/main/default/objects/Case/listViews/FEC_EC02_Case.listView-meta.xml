@@ -26,13 +26,13 @@
     <label>EC02</label>
     <queue>FEC_EC02</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Ecom_Officer_2</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Ecom_Specialist_2</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Ecom_Team_1_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Ecom_Team_2_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_of_Customer_Service_Contact_Center_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Customer_Service_Ecom_Specialist_1</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Customer_Service_Ecom_Specialist_2</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Unit_Head_of_Customer_Service_Ecom</roleAndSubordinatesInternal>
+        <role>FEC_Customer_Service_Ecom_Officer_2</role>
+        <role>FEC_Customer_Service_Ecom_Specialist_2</role>
+        <role>FEC_Customer_Service_Ecom_Team_1_Leader</role>
+        <role>FEC_Customer_Service_Ecom_Team_2_Leader</role>
+        <role>FEC_Head_of_Customer_Service_Contact_Center_Department</role>
+        <role>FEC_Senior_Customer_Service_Ecom_Specialist_1</role>
+        <role>FEC_Senior_Customer_Service_Ecom_Specialist_2</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Ecom</role>
     </sharedTo>
 </ListView>

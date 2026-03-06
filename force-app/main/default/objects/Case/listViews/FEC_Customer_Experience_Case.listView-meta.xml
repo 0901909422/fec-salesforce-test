@@ -26,11 +26,11 @@
     <label>Customer Experience</label>
     <queue>FEC_Customer_Experience</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Operations_Management_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_of_Customer_Care_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Operations_Automation_Project_Manager</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Customer_Service_Operations_Management_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Operations_Automation_Project_Manager</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Software_Development_Expert_Digital_Customer</roleAndSubordinatesInternal>
+        <role>FEC_Customer_Service_Operations_Management_Specialist</role>
+        <role>FEC_Head_of_Customer_Care_Department</role>
+        <role>FEC_Operations_Automation_Project_Manager</role>
+        <role>FEC_Senior_Customer_Service_Operations_Management_Specialist</role>
+        <role>FEC_Senior_Operations_Automation_Project_Manager</role>
+        <role>FEC_Software_Development_Expert_Digital_Customer</role>
     </sharedTo>
 </ListView>
