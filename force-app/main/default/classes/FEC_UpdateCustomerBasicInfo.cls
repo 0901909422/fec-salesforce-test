@@ -179,7 +179,7 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
     if (String.isNotBlank(info.gender)) {
       List<FEC_CommonUltils.PicklistOption> genderOptionlst = FEC_CommonUltils.getPicklistOptions(
         'Case',
-        'FEC_Updated_Gender__c'
+        'FEC_Updated_Info_Gender__c'
       );
 
       Set<String> validGenderlst = new Set<String>();

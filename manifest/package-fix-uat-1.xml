@@ -15,11 +15,15 @@
         <members>FEC_MockData</members>
         <members>FEC_GetPaymentInfo</members>
         <members>FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_UpdateCustomerBasicInfo</members>
         <members>FEC_IPPController</members>
         <members>FEC_CardPaymentController</members>
         <members>FEC_CardInfoController</members>
         <members>FEC_InteractionSLAController</members>
         <members>FEC_GetProductListCallout</members>
+        <members>FEC_GetDigitalAccountStatus</members>
+        <members>FEC_MainInfoAccountController</members>
+        <members>FEC_GetCustomerInfoBasic</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -51,6 +55,7 @@
     <types>
         <members>Case.FEC_Get_Next_Work__c</members>
 		<members>Case.FEC_Interaction_View_Mode__c</members>
+		<members>Case.FEC_Account_Contract_Number_PL__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -85,6 +90,7 @@
     </types>
     <types>
         <members>Case.Customer_Case</members>
+		<members>Case.Interaction</members>
         <name>RecordType</name>
     </types>
     <types>
@@ -265,6 +271,10 @@
 	<types>
 		<members>PSG_RD_IT_User</members>
 		<name>PermissionSetGroup</name>
+	</types>
+	<types>
+		<members>Case-Customer Case</members>
+		<name>Layout</name>
 	</types>
     <version>65.0</version>
 </Package>
