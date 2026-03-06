@@ -55,6 +55,7 @@
 		<members>maskedToggleDatatable</members>
 		<members>fec_CustomAccountTable</members>
 		<members>fec_CustomDblClickRadio</members>
+		<members>fec_InteractionHighlightMain</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
