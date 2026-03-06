@@ -1237,7 +1237,7 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Additional_Info__c.NPS_Q15_Score__c</field>
+        <field>FEC_Additional_Info__c.FEC_Q15_NPS_Score__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

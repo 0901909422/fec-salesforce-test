@@ -1086,6 +1086,7 @@ public with sharing class FEC_CaseBusinessService {
 
       Database.insert(history, AccessLevel.SYSTEM_MODE);
       Database.update(updatedCase, AccessLevel.SYSTEM_MODE);
+
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
