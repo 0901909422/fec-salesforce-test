@@ -26,8 +26,8 @@
     <label>Colls Coordination &amp; Reporting</label>
     <queue>FEC_Colls_Coordination_Reporting</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Collections_Operations_Coordination_Reporting_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Collections_Operations_Coordination_Reporting_Team_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Collections_Operations_Coordination_Reporting_Specialist</roleAndSubordinatesInternal>
+        <role>FEC_Collections_Operations_Coordination_Reporting_Specialist</role>
+        <role>FEC_Collections_Operations_Coordination_Reporting_Team_Leader</role>
+        <role>FEC_Senior_Collections_Operations_Coordination_Reporting_Specialist</role>
     </sharedTo>
 </ListView>

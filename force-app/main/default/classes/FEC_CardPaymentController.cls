@@ -78,7 +78,7 @@ public with sharing class FEC_CardPaymentController {
 
         /* ===== Khi bật Mock: gọi GetCardPlanInfo (Postman mock), có data thì save DB và return; không thì fallback hardcode ===== */
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        if (apiSetting != null && apiSetting.FEC_Call_Mock__c == true) {
+        if (apiSetting != null && apiSetting.FEC_Call_Mock__c == false) {
             try {
                 if (String.isNotBlank(accountNumber)) {
                     Id custHistoryId = customerHistoryId;
@@ -800,7 +800,8 @@ public with sharing class FEC_CardPaymentController {
             Decimal ippAccruedInterest = p.additionalAccruedInt != null ? p.additionalAccruedInt : 0;
             
             record.FEC_Current_Balance__c = currentBalance;       // PlanCurrentBalance
-            record.FEC_Base_Rate__c = p.baseRate;                 // BaseRate
+            // API trả BaseRate scale x100 (vd: 2920000 = 29200.00%) -> chia 100 để hiển thị đúng
+            record.FEC_Base_Rate__c = (p.baseRate != null ? p.baseRate / 100 : null);
             record.FEC_Deferred_Interest__c = deferredInterest;   // DeferredInterest
             record.FEC_Accrued_Interest__c = accruedInterest;     // AccruedInterest
             record.FEC_Per_Diem__c = perDiem;                     // PerDiem

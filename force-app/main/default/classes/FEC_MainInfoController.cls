@@ -160,7 +160,6 @@ public without sharing class FEC_MainInfoController {
         /* =====================================================
          * DML
          * ===================================================== */
-        System.debug('### FEC_GetDocumentsList: ' + hist);
         update hist;
 
         if (!addrResult.toUpdate.isEmpty()) {
@@ -177,8 +176,6 @@ public without sharing class FEC_MainInfoController {
         /* ===== SAVE CACHE ===== */
         hist.FEC_API_Cache__c = JSON.serialize(dto);
         update hist;
-        System.debug('### dto: ' + dto);
-        System.debug('### addrResult: ' + addrResult);
         return dto;
     }
 
@@ -207,12 +204,12 @@ public without sharing class FEC_MainInfoController {
         );
     }
 
-    /* ================= HELPER METHODS – GIỮ NGUYÊN ================= */
+    /* ================= HELPER METHODS ================= */
 
     private static String getPrimaryPhoneOnly() {
         FEC_GetCustomerList.ResponseWrapper res =
             FEC_GetCustomerList.getCustomerList(
-                FEC_ConstantCommon.REQUESTOR_PORTAL, null, false,
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false,
                 null, null, null, null, null, null, null, null
             );
 
@@ -229,7 +226,6 @@ public without sharing class FEC_MainInfoController {
         FEC_Customer_History__c hist
     ) {
         AddressUpdateResult result = new AddressUpdateResult();
-        System.debug('### CIF BEFORE ADDRESS API = ' + hist.FEC_CIF_Number__c);
         FEC_GetAddressesList.ResponseWrapper res =
             FEC_GetAddressesList.callGetAddressesList(
                 FEC_ConstantCommon.REQUESTOR_APS,FEC_ConstantCommon.REQUESTOR_PORTAL,

@@ -13,6 +13,7 @@
                     <div class="ipp-header-title-block">
                         <h2 class="slds-card__header-title ipp-header-label">{customLabel.ippLabel}</h2>
                         <div class="ipp-header-plan-name">{planNumber}</div>
+                        <!-- <div class="ipp-header-details-label">{customLabel.detailsLabel}</div> -->
                     </div>
                 </div>
             </div>
@@ -30,7 +31,7 @@
             <template if:true={hasData}>
                 <div class="ipp-detail-tabset-wrapper">
                 <lightning-tabset class="ipp-detail-tabset">
-                    <lightning-tab label={customLabel.ippDetailLabel}>
+                    <lightning-tab label={customLabel.detailsLabel}>
                         <div class="slds-p-around_medium">
                             
                             <!-- IPP Schedule Section -->

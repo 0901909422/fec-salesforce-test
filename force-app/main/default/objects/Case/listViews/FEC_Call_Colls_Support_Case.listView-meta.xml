@@ -26,10 +26,10 @@
     <label>Call Colls Support</label>
     <queue>FEC_Call_Colls_Support</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Call_Collections_Operations_Support_Officer</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Call_Collections_Operations_Support_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Call_Collections_Operations_Support_Team_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Collections_Operations_Coordination_Reporting_Team_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Call_Collections_Operations_Support_Specialist</roleAndSubordinatesInternal>
+        <role>FEC_Call_Collections_Operations_Support_Officer</role>
+        <role>FEC_Call_Collections_Operations_Support_Specialist</role>
+        <role>FEC_Call_Collections_Operations_Support_Team_Leader</role>
+        <role>FEC_Collections_Operations_Coordination_Reporting_Team_Leader</role>
+        <role>FEC_Senior_Call_Collections_Operations_Support_Specialist</role>
     </sharedTo>
 </ListView>

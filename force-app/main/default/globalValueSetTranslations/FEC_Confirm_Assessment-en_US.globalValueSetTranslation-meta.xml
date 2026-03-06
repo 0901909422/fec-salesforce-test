@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSetTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <valueTranslation>
+        <masterLabel>Agree</masterLabel>
+        <translation>Đồng ý</translation>
+    </valueTranslation>
+    <valueTranslation>
+        <masterLabel>Disagree</masterLabel>
+        <translation>Không đồng ý</translation>
+    </valueTranslation>
+</GlobalValueSetTranslation>

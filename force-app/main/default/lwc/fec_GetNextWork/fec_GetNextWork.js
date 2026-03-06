@@ -81,6 +81,15 @@ export default class Fec_GetNextWork extends NavigationMixin(LightningElement) {
     * @return null
     */
     async closeTab() {
+
+        this[NavigationMixin.Navigate]({
+            type: 'standard__objectPage',
+            attributes: {
+                objectApiName: 'Case',
+                actionName: 'list'
+            }
+        });
+
         if (!this.isConsoleNavigation) {
             return;
         }
@@ -96,13 +105,6 @@ export default class Fec_GetNextWork extends NavigationMixin(LightningElement) {
     */
     async handleCancel() {
         this.isShowModal = false;
-        this[NavigationMixin.Navigate]({
-            type: 'standard__objectPage',
-            attributes: {
-                objectApiName: 'Case',
-                actionName: 'list'
-            }
-        });
         await this.closeTab();
     }
 
@@ -120,7 +122,6 @@ export default class Fec_GetNextWork extends NavigationMixin(LightningElement) {
 
         try {
             const caseId = await getOldestCase({ queueId: this.selectedQueue });
-            console.log('selectedQueue ====>' + this.selectedQueue);
             if (!caseId) {
                 this.dispatchEvent(
                     new ShowToastEvent({
