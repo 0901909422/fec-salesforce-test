@@ -26,10 +26,10 @@
     <label>Shared Task</label>
     <queue>FEC_Shared_Task</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Support_Manager</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Support_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_of_Customer_Care_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Customer_Service_Support_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Unit_Head_of_Customer_Service_Support</roleAndSubordinatesInternal>
+        <role>FEC_Customer_Service_Support_Manager</role>
+        <role>FEC_Customer_Service_Support_Specialist</role>
+        <role>FEC_Head_of_Customer_Care_Department</role>
+        <role>FEC_Senior_Customer_Service_Support_Specialist</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Support</role>
     </sharedTo>
 </ListView>

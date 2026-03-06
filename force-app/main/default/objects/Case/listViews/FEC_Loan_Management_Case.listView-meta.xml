@@ -26,9 +26,9 @@
     <label>Loan Management</label>
     <queue>FEC_Loan_Management</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Loan_Management_Accounting_Expert</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Loan_Management_Accounting_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Loan_Management_Officer</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Loan_Management_Accounting_Specialist</roleAndSubordinatesInternal>
+        <role>FEC_Loan_Management_Accounting_Expert</role>
+        <role>FEC_Loan_Management_Accounting_Specialist</role>
+        <role>FEC_Loan_Management_Officer</role>
+        <role>FEC_Senior_Loan_Management_Accounting_Specialist</role>
     </sharedTo>
 </ListView>
