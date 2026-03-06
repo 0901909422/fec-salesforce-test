@@ -1059,8 +1059,6 @@ public with sharing class FEC_CaseBusinessService {
       updatedCase.OwnerId = queueId;
       updatedCase.FEC_Current_Case_Stage__c = selectedChange.FEC_Next_Stage__c;
 
-      Database.update(updatedCase, AccessLevel.SYSTEM_MODE);
-
       List<Group> queuelst = [
         SELECT Id, Name, DeveloperName, Type
         FROM Group
@@ -1086,7 +1084,8 @@ public with sharing class FEC_CaseBusinessService {
         FEC_User_Role__c = userlst.get(0).UserRole?.Name
       );
 
-      insert history;
+      Database.insert(history, AccessLevel.SYSTEM_MODE);
+      Database.update(updatedCase, AccessLevel.SYSTEM_MODE);
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
