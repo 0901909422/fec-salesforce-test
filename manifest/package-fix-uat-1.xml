@@ -21,6 +21,9 @@
         <members>FEC_CardInfoController</members>
         <members>FEC_InteractionSLAController</members>
         <members>FEC_GetProductListCallout</members>
+        <members>FEC_GetDigitalAccountStatus</members>
+        <members>FEC_MainInfoAccountController</members>
+        <members>FEC_GetCustomerInfoBasic</members>
         <name>ApexClass</name>
     </types>
     <types>
