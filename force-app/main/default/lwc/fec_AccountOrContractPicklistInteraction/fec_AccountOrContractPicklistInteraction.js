@@ -54,22 +54,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     },
     { label: "Product Name", fieldName: "productName" },
   ];
-  data = [
-    {
-      id: "APP123",
-      product: "loan",
-      accountContractNumber: "99887766",
-      productName: "Cash Loan",
-      isSelected: false,
-    },
-    {
-      id: "CT4455",
-      product: "card",
-      accountContractNumber: "44556677",
-      productName: "Credit Card Platinum",
-      isSelected: false,
-    },
-  ];
+  data = [];
 
   /* =======================
    * LMS SUBSCRIPTION
