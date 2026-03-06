@@ -401,6 +401,8 @@
 		<members>fec_ErrorPanel</members>
 		<members>fec_CommonConst</members>
 		<members>fec_SensitiveDataViewAll</members>
+		<members>fec_CustomAccountTable</members>
+		<members>fec_CustomDblClickRadio</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -1263,6 +1265,7 @@
 		<members>FEC_MSG_FollowUp_Case_ID_Not_Found</members>
 		<members>FEC_MSG_FollowUp_Unfollow_Error</members>
 		<members>FEC_MSG_FollowUp_Case_Follow_Success</members>
+		<members>FEC_MSG_Can_Not_Find_Next_Stage</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -1901,6 +1904,7 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_SearchController</members>
 		<members>FEC_GetCustomerList</members>
+        <members>FEC_LogApiQueueable</members>
 		<name>ApexClass</name>
 	</types>
     <types>
