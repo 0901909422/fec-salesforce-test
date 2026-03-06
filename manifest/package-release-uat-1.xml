@@ -652,6 +652,10 @@
         <members>FEC_CaseTrigger</members>
         <name>ApexTrigger</name>
     </types>
+	<types>
+		<members>FEC_KYC__c</members>
+		<name>CustomTab</name>
+	</types>
 
     <!-- cus360 account information -->
     <types>
