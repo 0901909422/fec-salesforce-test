@@ -14,7 +14,7 @@ public with sharing class FEC_CaseBusinessService {
   public static final String FULLNAME_UPDATE = 'Full Name Update';
   public static final String DOB_UPDATE = 'Date of Birth Update';
   public static final String GENDER_UPDATE = 'Gender Update';
-  public static final String IDENTIFICATION_UPDATE = 'Identification Update';
+  public static final String IDENTIFICATION_UPDATE = 'National ID Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
   public static final String SUBMIT_WITHOUT_ROUTE_TO = 'Submit Without Route To';
 
