@@ -14,21 +14,6 @@ public with sharing class FEC_Utils {
     */ 
     @AuraEnabled
     public static String checkExistCaseByExtInteractionID(String strExtInteractionID) {
-        // String strCaseID = null;
-        
-        // Find Case by the External Interaction ID field
-        // Sử dụng SOQL for Loop để tránh limit heap size (nếu cần xử lý nhiều bản ghi)
-        // Ở đây là hàm check đơn lẻ, nhưng vẫn đảm bảo cú pháp.
-        // for (Case caseRecord : [
-        //     SELECT Id
-        //     FROM Case
-        //     WHERE FEC_External_Interaction_ID__c = :strExtInteractionID
-        //     LIMIT 1
-        // ]) {
-        //     strCaseID = caseRecord.Id;
-        // }
-        // return strCaseID;
-
         List<Case> cases = [
             SELECT Id
             FROM Case
@@ -74,66 +59,13 @@ public with sharing class FEC_Utils {
     * Converts a Datetime to a custom formatted string (e.g., YYYYMMDDThhmmss.0 GMT).
     * @param dtDateTime: Datetime value to format.
     * @return strFormatted: Formatted Datetime string.
-    * @created: 2025/12/03 long.nguyen.50
-    * @modified: 
     */ 
-    // old code
-    // @AuraEnabled
-    // public static String formatDateTimeToString(Datetime dtDateTime) {
-    //     // Example of using standard Salesforce methods
-    //     // Link Refer: https://developer.salesforce.com/docs/atlas.en-us.apexref.meta/apexref/apex_methods_system_datetime.htm
-    //     String strYear = String.valueOf(dtDateTime.yearGmt());
-    //     String strMonth = String.valueOf(dtDateTime.monthGmt()).leftPad(2, '0');
-    //     String strDay = String.valueOf(dtDateTime.dayGmt()).leftPad(2, '0');
-    //     String strHour = String.valueOf(dtDateTime.hourGmt()).leftPad(2, '0');
-    //     String strMinute = String.valueOf(dtDateTime.minuteGmt()).leftPad(2, '0');
-    //     String strSecond = String.valueOf(dtDateTime.secondGmt()).leftPad(2, '0');
-
-    //     return strYear + strMonth + strDay + 'T' + strHour + strMinute + strSecond + '.0 GMT';
-    // }
-
-    // new code
     @AuraEnabled
     public static String formatDateTimeToString(Datetime dtDateTime) {
         if (dtDateTime == null) return '';
         return dtDateTime.formatGmt('yyyyMMdd\'T\'HHmmss\'.0 GMT\'');
     }
 
-    /** * parseChatHubDatetime
-    * Parses datetime string from ChatHub to Datetime object.
-    * Handles ISO 8601 format and similar datetime strings.
-    * @param strDateTime: Datetime string from ChatHub.
-    * @return dtParsed: Parsed Datetime object, or null if parsing fails.
-    * @created: 2025/12/03 long.nguyen.50
-    * @modified: 
-    */
-    // Old code
-    // public static Datetime parseChatHubDatetime(String strDateTime) {
-    //     if (String.isBlank(strDateTime)) {
-    //         return null;
-    //     }
-        
-    //     try {
-    //         // Try parsing ISO 8601 format (e.g., 2025-12-03T10:30:45.000Z or 2025-12-03T10:30:45)
-    //         // Remove 'Z' suffix if present
-    //         System.debug('### [FEC] parseChatHubDatetime Input strDateTime: ' + strDateTime);
-
-    //         String strCleanDateTime = strDateTime.removeEnd('Z');
-            
-    //         // Handle format like "2025-12-03T10:30:45.000"
-    //         if (strCleanDateTime.contains('T')) {
-    //             return Datetime.valueOfGmt(strCleanDateTime.replace('T', ' '));
-    //         }
-            
-    //         // Fallback: Try standard parsing
-    //         return Datetime.valueOf(strDateTime);
-    //     } catch (Exception e) {
-    //         System.debug('### [FEC] Error parsing datetime: ' + strDateTime + ' - Error: ' + e.getMessage());
-    //         return null;
-    //     }
-    // }
-
-    // New code
     /**
      * Parses datetime string from ChatHub (supports GMT+XXXX format).
      * Input: string datetime example "2026-02-03 14:39:02 GMT+0700"
@@ -148,7 +80,7 @@ public with sharing class FEC_Utils {
             String jsonStr = strDateTime;
 
             // Handle special cases containing "GMT" (e.g., "2026-02-03 14:39:02 GMT+0700")
-            // Goal: Transform "2026-02-03 14:39:02 GMT+0700" into ISO 8601 format "2026-02-03T14:39:02+0700"
+            // Example: Transform "2026-02-03 14:39:02 GMT+0700" into ISO 8601 format "2026-02-03T14:39:02+0700"
             if (jsonStr.contains('GMT')) {
                 // 1. Remove the redundant " GMT" string
                 // Result: "2026-02-03 14:39:02+0700"
@@ -164,8 +96,6 @@ public with sharing class FEC_Utils {
             return (Datetime)JSON.deserialize('"' + jsonStr + '"', Datetime.class);
 
         } catch (Exception e) {
-            System.debug('### [FEC] Error parsing datetime: ' + strDateTime + ' - Error: ' + e.getMessage());
-            
             // Fallback: Attempt standard Datetime.valueOf parsing if the above method fails
             try {
                 return Datetime.valueOf(strDateTime);
@@ -198,6 +128,12 @@ public with sharing class FEC_Utils {
         return 'Other';
     }
 
+    /** * getInteractionIdFromPegaId
+    * Retrieves the Case ID by searching for the Pega ID.
+    * @param pegaID: Pega ID to search for.
+    * @return caseId: ID of the found Case, or null if not found.
+    * @created: 
+    */ 
     @AuraEnabled
     public static String getInteractionIdFromPegaId(String pegaID) {
         List<Case> cases = [
@@ -207,5 +143,30 @@ public with sharing class FEC_Utils {
             LIMIT 1
         ];
         return cases.isEmpty() ? null : cases[0].Id;
+    }
+
+    /**
+     * Tải file từ URL và trả về định dạng Blob
+     * @param fileUrl: Đường dẫn (S3 URL) của file cần tải
+     * @return Blob: Dữ liệu nhị phân của file
+     */
+    public static Blob downloadFileAsBlob(String fileUrl) {
+        if (String.isBlank(fileUrl)) {
+            throw new CalloutException('File URL is empty');
+        }
+
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint(fileUrl);
+        request.setMethod('GET');
+        request.setTimeout(60000); // Timeout 60s
+        
+        Http http = new Http();
+        HttpResponse response = http.send(request);
+        
+        if (response.getStatusCode() == 200) {
+            return response.getBodyAsBlob();
+        } else {
+            throw new CalloutException('Error downloading file: HTTP ' + response.getStatusCode());
+        }
     }
 }

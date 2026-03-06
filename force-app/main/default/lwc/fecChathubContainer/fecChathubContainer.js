@@ -289,6 +289,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      */
     handleMessage(event) {
         const trustedUrl = localStorage.getItem(CHATHUB_URL_KEY);
+        console.log('event: ', event);
         // Log origin for debugging if messages are not received
         // console.log('DEBUG Origin:', event.origin, 'Expected:', trustedUrl);
 
@@ -348,7 +349,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             this.initialRight = parseInt(style.right, 10) || 0;
             this.initialBottom = parseInt(style.bottom, 10) || 0;
 
-            // BỔ SUNG LẤY KÍCH THƯỚC PANEL ĐỂ TÍNH TOÁN RANH GIỚI
+            // SUPPLEMENT: Get panel size to calculate boundary constraints
             const rect = this.dragElement.getBoundingClientRect();
             this.panelWidth = rect.width;
             this.panelHeight = rect.height;
@@ -356,7 +357,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
 
         const iframe = this.template.querySelector('iframe');
         if (iframe) {
-            iframe.style.pointerEvents = 'none'; // Khóa iframe chống lỗi chuột
+            iframe.style.pointerEvents = 'none'; // Lock iframe to prevent mouse errors
         }
 
         if (event.currentTarget) {
@@ -713,6 +714,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                             if (targetTabId) {
                                 setTimeout(async () => {
                                     try {
+                                        console.log('refresh cho nay');
                                         // Step 1: Notify Salesforce that record has changed to clear cache
                                         await notifyRecordUpdateAvailable([{ recordId: caseId }]);
 
@@ -721,19 +723,19 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                                             includeAllSubtabs: true
                                         });
                                     } catch (err) {
-                                        console.warn('[FEC-ChatHub] Lỗi khi đang refresh tab:', err);
+                                        console.warn('[FEC-ChatHub] Error while refreshing tab:', err);
                                     }
                                 }, 4000);
                             } else {
-                                console.log(`[FEC-ChatHub] Không tìm thấy Tab nào đang mở chứa Case ID: ${caseId}`);
+                                console.log(`[FEC-ChatHub] Could not find any open tab containing Case ID: ${caseId}`);
                             }
                         }
                     } catch (refreshErr) {
-                        console.warn('[FEC-ChatHub] Lỗi Workspace API:', refreshErr);
+                        console.warn('[FEC-ChatHub] Error calling Workspace API:', refreshErr);
                     }
                 }
             } catch (error) {
-                console.error('[FEC-ChatHub] Lỗi gọi saveChatHistory:', error);
+                console.error('[FEC-ChatHub] Error calling saveChatHistoryAndAttachment:', error);
             }
         };
 
@@ -794,7 +796,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                 showToast(this, 'Thành công', 'File đã được tải và lưu vào Case.', 'success');
             } catch (error) {
                 showToast(this, 'Lỗi', 'Không thể tải và lưu file.', 'error');
-                console.error('Lỗi Apex:', error);
+                console.error('Apex: error', error);
             }
         }
     }
@@ -937,7 +939,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         if (this.utilityId) {
             minimize(this.utilityId)
                 .catch(err => {
-                    console.error('[FEC-ChatHub] Lỗi gọi minimize:', err);
+                    console.error('[FEC-ChatHub] Error calling minimize:', err);
                 });
         }
         this[NavigationMixin.Navigate]({

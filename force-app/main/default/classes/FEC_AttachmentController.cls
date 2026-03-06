@@ -117,10 +117,7 @@ public with sharing class FEC_AttachmentController {
     @AuraEnabled
     public static void attachFileToInteractionCase(String interactionCaseId, String base64File, String fileName, String uniqueMessageId){
         try {
-            System.debug('Entering attachFileToInteractionCase');
-
             if(uniqueMessageId != null) {
-                System.debug('interactionCaseId: ' + interactionCaseId);
                 // FOR UPDATE lock ensures concurrent queries are queued and processed sequentially
                 List<Case> lockCase = [SELECT Id FROM Case WHERE Id = :interactionCaseId FOR UPDATE];
                 List<ContentVersion> existingFiles = [
@@ -129,28 +126,19 @@ public with sharing class FEC_AttachmentController {
                     AND Description = :uniqueMessageId
                     LIMIT 1
                 ];
-                System.debug('existingFiles:');
-                System.debug(existingFiles);
                 if (!existingFiles.isEmpty()) {
-                    System.debug('Message with this file has already been processed, skipping to avoid duplicate multi-tab.');
                     return; 
                 }
             }
             Blob fileBody = EncodingUtil.base64Decode(base64File);
-            System.debug('fileBody Blob: ' + fileBody);
-            System.debug('fileName: ' + fileName);
             ContentVersion cv = new ContentVersion();
             cv.Title = fileName;          
             cv.PathOnClient = fileName;     
             cv.VersionData = fileBody;
             cv.FirstPublishLocationId = interactionCaseId;
             cv.Description = uniqueMessageId ?? ''; // Use Description field to store uniqueMessageId for duplicate checking
-            System.debug('ContentVersion to insert: ' + cv);
             insert cv;
-            System.debug('Inserted ContentVersion Id: ' + cv.Id);
-            System.debug('Success! File has been saved to Case.');
         } catch (Exception e) {
-            System.debug('Error: ' + e.getMessage());
             throw new AuraHandledException(e.getMessage());
         }
     }
@@ -163,41 +151,15 @@ public with sharing class FEC_AttachmentController {
     * @param fileName: Name of the file to be uploaded.
     * @param uniqueMessageId: Unique message identifier for duplicate detection.
     * @return void
-    * @created: 
-    * @modified: 
     */ 
     @AuraEnabled
     public static void downloadAndSaveBase64(String s3Url, String interactionCaseId, String fileName, String uniqueMessageId){
-        // System.debug('vào downloadAndSaveBase64');
-        // System.debug('S3 URL: ' + s3Url);
-        // System.debug('Interaction Case ID: ' + interactionCaseId);
-        // System.debug('File Name: ' + fileName);
         try {
-            // 1. Fetch file from S3 using HttpRequest
-            HttpRequest request = new HttpRequest();
-            request.setEndpoint(s3Url);
-            request.setMethod('GET');
-            request.setTimeout(60000); // 60 seconds timeout
-            
-            Http http = new Http();
-            HttpResponse response = http.send(request);
-            // System.debug('HTTP Response Status: ' + response.getStatusCode());
-            // System.debug('HTTP Response Body: ' + response.getBody());
-            if (response.getStatusCode() != 200) {
-                throw new AuraHandledException('Error downloading file from S3: HTTP ' + response.getStatusCode());
-            }
-            
-            // 2. Get Blob from response and convert to Base64
-            Blob fileBlob = response.getBodyAsBlob();
-            // System.debug('File Blob: ' + fileBlob);
+            Blob fileBlob = FEC_Utils.downloadFileAsBlob(s3Url);
             String base64String = EncodingUtil.base64Encode(fileBlob);
-            // System.debug('Base64 String length: ' + base64String);
-            // 3. Call attachFileToInteractionCase method to save file
             attachFileToInteractionCase(interactionCaseId, base64String, fileName, uniqueMessageId);
             
-            // System.debug('downloadAndSaveBase64: Success! File from S3 has been saved to Case.');
         } catch (Exception e) {
-            System.debug('downloadAndSaveBase64 Error: ' + e.getMessage());
             throw new AuraHandledException('Error processing file: ' + e.getMessage());
         }
     }

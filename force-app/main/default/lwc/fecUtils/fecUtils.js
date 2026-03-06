@@ -52,24 +52,23 @@ const formatDatetime = (timeString, onlyNumber) => {
  */
 const executeWithLock = (lockName, callback, prioritizeActiveTab = true) => {
     return new Promise((resolve, reject) => {
-        // Xác định thời gian delay để ưu tiên tab đang active
         let delayTime = 0;
         if (prioritizeActiveTab) {
             const isFocused = document.hasFocus();
-            delayTime = isFocused ? 0 : 300; // Background tab đợi 300ms
+            delayTime = isFocused ? 0 : 300;
         }
 
         setTimeout(() => {
             if (navigator && navigator.locks) {
                 navigator.locks.request(lockName, { mode: 'exclusive', ifAvailable: true }, async (lock) => {
                     if (!lock) {
-                        console.log(`[Lock: ${lockName}] Another tab is processing. Yielded priority.`);
+                        // uncomment this code to check lock status multi tab browswer
+                        // console.log(`[Lock: ${lockName}] Another tab is processing. Yielded priority.`);
                         resolve(false); // Return false to signal safe blocking
                         return;
                     }
 
                     try {
-                        // If lock acquired, run the actual logic provided
                         await callback();
                         resolve(true);
                     } catch (error) {
@@ -78,7 +77,6 @@ const executeWithLock = (lockName, callback, prioritizeActiveTab = true) => {
                     }
                 });
             } else {
-                // Fallback if browser doesn't support Web Locks API
                 console.warn('Browser does not support Web Locks API, running fallback.');
                 callback().then(() => resolve(true)).catch(reject);
             }
@@ -110,7 +108,6 @@ const fetchFileFromUrl = async (fileUrl) => {
 
 /**
  * Displays toast notification on UI
- * @created: 2025/12/29 long.nguyen.50
  * @param context - Component context (this) to dispatch the event
  * @param {string} title - Toast title
  * @param {string} message - Toast message content
@@ -118,14 +115,13 @@ const fetchFileFromUrl = async (fileUrl) => {
  * @return {void}
  */
 const showToast = (context, title, message, variant) => {
-    console.log('show toast utils')
-    // console.log(`showToast: [${variant.toUpperCase()}] ${title} - ${message}`);
     context.dispatchEvent(new ShowToastEvent({ title, message, variant }));
 }
 
-
 /**
- * Chuyển đổi chuỗi Base64 thành Uint8Array
+ * Converts Base64 encoded string to Uint8Array
+ * @param {string} base64 - Base64 encoded string
+ * @return {Uint8Array} - Byte array representation of the string
  */
 const base64ToUint8Array = (base64) => {
     const binaryString = atob(base64);
@@ -136,10 +132,6 @@ const base64ToUint8Array = (base64) => {
     return bytes;
 }
 
-/**
- * Hàm giải mã chính xác theo chuẩn PBEWITHHMACSHA256ANDAES_256 của Java
- * pass: 4mX2SmAeoLy9n8c1zsEpH+L37XrwsCGxvc1tAyOdaTpxgcOQuXitLA==
- */
 const decryptDataKYC = async (encryptedBase64, password) => {
     if (!password) {
         throw new Error("SecretKey parameter must not be null or empty.");
@@ -147,15 +139,15 @@ const decryptDataKYC = async (encryptedBase64, password) => {
     if (!encryptedBase64) return "";
     const encoder = new TextEncoder();
     const decoder = new TextDecoder('utf-8');
-    // 1. Chuẩn bị dữ liệu
+    // 1. Prepare encrypted data
     const encryptedBytes = base64ToUint8Array(encryptedBase64);
     const passwordBytes = encoder.encode(password);
-    const saltBytes = encoder.encode("12345678"); // Salt cứng từ code Java
-    // 2. Tạo IV 16-byte từ password (cắt hoặc đệm số 0 giống Java)
+    const saltBytes = encoder.encode("12345678"); // Fixed salt from Java implementation
+    // 2. Create 16-byte IV from password (truncate or pad with 0 like Java)
     const iv = new Uint8Array(16);
     iv.set(passwordBytes.slice(0, 16));
     try {
-        // 3. Import password vào định dạng key của Web Crypto
+        // 3. Import password into Web Crypto format
         const keyMaterial = await window.crypto.subtle.importKey(
             "raw",
             passwordBytes,
@@ -164,7 +156,7 @@ const decryptDataKYC = async (encryptedBase64, password) => {
             ["deriveBits", "deriveKey"]
         );
 
-        // 4. Tạo khóa AES-256-CBC bằng thuật toán PBKDF2 (HMAC-SHA256, 20 iterations)
+        // 4. Create AES-256-CBC key using PBKDF2 algorithm (HMAC-SHA256, 20 iterations)
         const aesKey = await window.crypto.subtle.deriveKey(
             {
                 name: "PBKDF2",
@@ -177,8 +169,7 @@ const decryptDataKYC = async (encryptedBase64, password) => {
             false,
             ["decrypt"]
         );
-        console.log('i')
-        // 5. Thực thi giải mã
+        // 5. Execute decryption
         const decryptedBuffer = await window.crypto.subtle.decrypt(
             {
                 name: "AES-CBC",
@@ -187,20 +178,12 @@ const decryptDataKYC = async (encryptedBase64, password) => {
             aesKey,
             encryptedBytes
         );
-        console.log("✅ KẾT QUẢ GIẢI MÃ:", decoder.decode(decryptedBuffer));
-        // 6. Trả về chuỗi kết quả
         return decoder.decode(decryptedBuffer);
 
     } catch (error) {
-        console.error("Lỗi giải mã:", error);
-        return ""; // Hoặc throw error tùy logic xử lý UI của bạn
+        console.error("Decryption error:", error);
+        return "";
     }
 }
-
-
-
-
-
-
 
 export { formatDatetimeLocal, executeWithLock, fetchFileFromUrl, formatDatetime, showToast, decryptDataKYC };

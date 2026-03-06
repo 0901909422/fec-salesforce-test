@@ -7,26 +7,20 @@ public with sharing class FEC_ChatHubInitController {
     // Custom Metadata Type Developer Name
     private static final String CHATHUB_METADATA_DEV_NAME = 'ChatHub_Settings';
     
-    /** * Lấy thông tin cấu hình ChatHub, kiểm tra quyền và tạo encrypted token.
+    /** Lấy thông tin cấu hình ChatHub, kiểm tra quyền và tạo encrypted token.
     * @return strResult: Chuỗi thông tin (Username|URL|Token) hoặc 'false'
-    * @created: 2025/12/03 long.nguyen.50
     */ 
     @AuraEnabled(cacheable=true)
     public static String getChatHubInfo() {
-        System.debug('### [FEC_ChatHub] Start getChatHubInfo');
-        
         // 1. Kiểm tra quyền truy cập của User
         if (!checkSystemAndUserAccess()) {
-            System.debug('### [FEC_ChatHub] Access Denied: User does not have Permission or Feature is Disabled');
             return 'false';
         }
 
         // 2. Truy vấn cấu hình từ Custom Metadata
         FEC_SystemSetting__mdt chatHubSettings = getChatHubSettings();
-        System.debug('### [FEC_ChatHub] Metadata Settings: ' + chatHubSettings);
 
         if (chatHubSettings == null || !chatHubSettings.FEC_ChatHubEnabled__c) {
-            System.debug('### [FEC_ChatHub] ChatHub is not enabled in System Settings');
             return 'false';
         }
 
@@ -36,28 +30,22 @@ public with sharing class FEC_ChatHubInitController {
         String strEncryptKey = chatHubSettings.FEC_ChatHubEncryptKey__c;
         String strSalt = chatHubSettings.FEC_ChatHubStaticSalt__c; 
 
-        System.debug('### [FEC_ChatHub] User: ' + strUsername);
-        System.debug('### [FEC_ChatHub] URL: ' + strChatHubUrl);
-
         // 4. Thực hiện mã hóa Token
         String strUsernameEncrypted = buildEncryptedToken(strUsername, strEncryptKey, strSalt); 
-        System.debug('### [FEC_ChatHub] Encrypted Token generated: ' + strUsernameEncrypted);
 
         // Định dạng trả về: username | urlChatHub | usernameEncrypted
         String strResult = strUsername + '|' + strChatHubUrl + '|' + strUsernameEncrypted;
-        System.debug('### [FEC_ChatHub] Final Result String: ' + strResult);
 
         return strResult;
     }
     
-    /** * Kiểm tra Custom Permission và trạng thái Enable trong Metadata
+    /** Kiểm tra Custom Permission và trạng thái Enable trong Metadata
     * @return isAllowed: Boolean
     * @created: 2025/12/03 long.nguyen.50
     */ 
     private static Boolean checkSystemAndUserAccess() {
         // Kiểm tra Custom Permission (Gán qua Permission Set)
         Boolean isAllowed = FeatureManagement.checkPermission('FEC_ChatHubAccess');
-        System.debug('### [FEC_ChatHub] Check Permission (FEC_ChatHubAccess): ' + isAllowed);
 
         // Kiểm tra xem record Metadata có tồn tại và đang được Enable không
         List<FEC_SystemSetting__mdt> listSettings = [
@@ -66,9 +54,7 @@ public with sharing class FEC_ChatHubInitController {
             WHERE DeveloperName = :CHATHUB_METADATA_DEV_NAME 
             LIMIT 1
         ];
-        System.debug('### [FEC_ChatHub] Retrieved Metadata Settings: ' + listSettings);
         Boolean isEnabled = !listSettings.isEmpty() && listSettings[0].FEC_ChatHubEnabled__c;
-        System.debug('### [FEC_ChatHub] Check System Enabled: ' + isEnabled);
         return isAllowed && isEnabled;
     }
 
@@ -84,8 +70,6 @@ public with sharing class FEC_ChatHubInitController {
      * Output format: salt:iv:cipher (Base64)
      */
     private static String buildEncryptedToken(String strText, String strKeyB64, String strSaltB64) {
-        System.debug('### [FEC_ChatHub] ========== START ENCRYPTION ==========');
-        
         try {
             /* ===== 1. PAYLOAD ===== */
             // Cắt domain email (giống Pega)
@@ -96,8 +80,6 @@ public with sharing class FEC_ChatHubInitController {
             
             String payload = shortUsername + '|' + String.valueOf(expiredTime);
             Blob data = Blob.valueOf(payload);
-            System.debug('### [FEC_ChatHub] Payload: ' + payload);
-            System.debug('### [FEC_ChatHub] strKeyB64 ' + strKeyB64);
             /* ===== 2. KEY & SALT ===== */
             Blob aesKey = EncodingUtil.base64Decode(strKeyB64);
             /* ===== 3. ENCRYPT (Managed IV) ===== */
@@ -124,26 +106,11 @@ public with sharing class FEC_ChatHubInitController {
             
             String ivB64 = EncodingUtil.base64Encode(iv);
             String cipherB64 = EncodingUtil.base64Encode(cipher);
-            ///// new code
-            // 1. Định nghĩa độ dài salt (16 bytes)
-            Integer saltLength = 16;
-
-            // 2. Tạo Salt ngẫu nhiên 
-            // Trong Apex, Crypto.generateAesKey(128) sẽ tạo ra một Blob 128 bit (tương đương 16 bytes)
-            Blob salt = Crypto.generateAesKey(128);
-
-            // 3. Mã hóa sang chuỗi Base64
-            String encodedSalt = EncodingUtil.base64Encode(salt);
-            System.debug('### [FEC_ChatHub] Generated Salt (Base64): ');
-            System.debug(encodedSalt);
-            //////
+            
             // Format: iv:cipher
             return strSaltB64 + ':' + ivB64 + ':' + cipherB64;
-            // return encodedSalt + ':' + ivB64 + ':' + cipherB64;
 
         } catch (Exception e) {
-            System.debug('### [FEC_ChatHub] ERROR: ' + e.getMessage());
-            System.debug('Line: ' + e.getLineNumber());
             return '';
         }
     }

@@ -45,29 +45,19 @@ public without sharing class FEC_CreateCaseHanlder {
     */
     @AuraEnabled 
     public static FEC_InteractionCaseResponse createInteractionCase(String jsonInput) {
-        // System.debug('### [FEC] Raw JSON: ' + jsonInput);
-        // Tự ép kiểu để xem lỗi ở đâu
         FEC_InteractionCaseDTO dto = (FEC_InteractionCaseDTO)JSON.deserialize(jsonInput, FEC_InteractionCaseDTO.class);
-        // System.debug('### [FEC] DTO after manual deserialize: ' + dto);
-        // System.debug('### [FEC] Start createInteractionCase with DTO: ' + JSON.serialize(dto)); // Log Input Data
         
         if (dto == null) {
-            System.debug('### [FEC] Error: InteractionCaseDTO is null');
             throw new IllegalArgumentException('InteractionCaseDTO cannot be null');
         }
 
         try {
             Map<String, Id> rtMap = getRecordTypeIds();
-            // System.debug('### [FEC] RecordType Mapping: ' + rtMap);
 
             Case interactionCase = new Case();
             interactionCase.RecordTypeId = rtMap.get('Interaction');
             
             // CHANNEL / STATUS
-            // CHANNEL / STATUS
-            // ---------------------------
-                // CHANNEL / STATUS
-            // ---------------------------
             interactionCase.FEC_Channel__c = dto.channel;
             interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
             interactionCase.FEC_Other_Subchannel__c = (dto.subChannel == 'Other' ? dto.otherSubChannel : null);
@@ -80,31 +70,17 @@ public without sharing class FEC_CreateCaseHanlder {
             }
             
             // CUSTOMER INFO
-            // CUSTOMER INFO
-            // ---------------------------
-                // CUSTOMER INFO
-            // ---------------------------
             interactionCase.FEC_Phone_Number__c = dto.phoneNumber;
             interactionCase.FEC_National_ID_Passport_ID__c = dto.nationalId;
             interactionCase.FEC_Account_Number__c = dto.accountNumber;
             interactionCase.FEC_Customer_Username__c = dto.customerName;
-        
-        
-            // ---------------------------
-                
-            // ---------------------------
+              
             // INTERACTION DATA
-            // INTERACTION DATA
-            // ---------------------------
-                // INTERACTION DATA
-            // ---------------------------
             interactionCase.FEC_Transcription__c = dto.transcription;
             interactionCase.FEC_KYC_Method__c = dto.kycMethod;
             interactionCase.FEC_KYC_Result__c = dto.kycResult;
             
-            // System.debug('### [FEC] Inserting Interaction Case: ' + interactionCase);
             insert interactionCase;
-            // System.debug('### [FEC] Insert Success. New Case ID: ' + interactionCase.Id);
 
             // Re-query to get formula/auto-number fields if necessary
             interactionCase = [
@@ -112,7 +88,6 @@ public without sharing class FEC_CreateCaseHanlder {
                 FROM Case 
                 WHERE Id = :interactionCase.Id
             ];
-            System.debug('interactionCase: ' + interactionCase);
             
             FEC_InteractionCaseResponse res = new FEC_InteractionCaseResponse();
             res.caseId = interactionCase.Id;
@@ -123,11 +98,9 @@ public without sharing class FEC_CreateCaseHanlder {
                 res.caseNo = res.linkId.substringBetween('>', '</');
             }
             
-            System.debug('### [FEC] Final Response: ' + JSON.serialize(res));
             return res;
 
         } catch (Exception e) {
-            System.debug('### [FEC] Exception in createInteractionCase: ' + e.getMessage() + ' | StackTrace: ' + e.getStackTraceString());
             throw new AuraHandledException('Lỗi khi tạo Case tương tác: ' + e.getMessage());
         }
     }
@@ -139,8 +112,6 @@ public without sharing class FEC_CreateCaseHanlder {
     * @created: 2025/12/29 long.nguyen.50
     */
     public static Case createCustomerCase(FEC_CustomerCaseDTO dto, Id interactionCaseId) {
-        System.debug('### [FEC] Start createCustomerCase for Interaction ID: ' + interactionCaseId);
-        
         try {
             Map<String, Id> rtMap = getRecordTypeIds();
             Case c = new Case();
@@ -158,11 +129,9 @@ public without sharing class FEC_CreateCaseHanlder {
             c.FEC_Interaction__c = interactionCaseId;
             
             insert c;
-            System.debug('### [FEC] Customer Case Created Success: ' + c.Id);
             return c;
 
         } catch (Exception e) {
-            System.debug('### [FEC] Exception in createCustomerCase: ' + e.getMessage());
             return null;
         }
     }
