@@ -24,6 +24,8 @@
         <members>FEC_GetDigitalAccountStatus</members>
         <members>FEC_MainInfoAccountController</members>
         <members>FEC_GetCustomerInfoBasic</members>
+        <members>FEC_ApplicationsListController</members>
+        <members>FEC_MainInfoController</members>
         <name>ApexClass</name>
     </types>
     <types>
