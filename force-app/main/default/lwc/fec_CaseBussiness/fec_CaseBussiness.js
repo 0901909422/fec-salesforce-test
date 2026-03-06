@@ -259,6 +259,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     return [...pendingList, vendorOption, ...bottomList];
   }
 
+  draftKey = 'case-draft';
   handleChange(event) {
     const fieldName = event.target.name;
     const value = event.detail.value;
@@ -522,7 +523,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.updateRoutingActionDisplay(STR_EMPTY);
   }
 
-  disconnectedCallback() {}
+  disconnectedCallback() {
+    localStorage.removeItem(this.draftKey);
+  }
 
   handleToggleMask(e) {
     let filter = {
@@ -745,6 +748,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         this.businessLoaded = true;
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
+        this.applyDraft();
+        console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
       })
       .catch((err) => {
         console.error(
@@ -837,6 +842,20 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
   }
 
+  handleDateChange(e) {
+    let value = e.target.value;
+    let fieldName = e.target.fieldName || e.target.dataset?.field;
+    let objId = e.target.dataset.obj;
+    this.setDraft(objId, fieldName, value);
+  }
+
+  handlePhoneChange(e) {
+    let value = e.target.value;
+    let fieldName = e.target.fieldName || e.target.dataset?.field;
+    let objId = e.target.dataset.obj;
+    this.setDraft(objId, fieldName, value);
+  }
+
   handleChangeInput(e) {
     let value = e.target.value;
 
@@ -845,6 +864,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     let fieldName = e.target.fieldName || e.target.dataset?.field;
     let objName = e.target.dataset.objName;
     let objId = e.target.dataset.obj;
+
+    this.setDraft(objId, fieldName, value);
 
     if (
       fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
@@ -1447,5 +1468,31 @@ export default class Fec_CaseBussiness extends LightningElement {
         item.submit();
       });
     });
+  }
+
+  applyDraft() {
+    const draft = JSON.parse(localStorage.getItem(this.draftKey));
+    if (!draft || !this.business) return;
+    this.business.sectionlst.forEach(section => {
+        section.subSectionlst.forEach(sub => {
+            sub.objlst.forEach(obj => {
+                obj.fieldlst.forEach(field => {
+            if (!field.editable) return; // ignore non editable
+                    const key = obj.id + '_' + field.apiName;
+            if (draft[key] && !field.value) {
+              field.value = draft[key];
+              field.displayValue = draft[key];
+            }
+          });
+        });
+      });
+    });
+  }
+
+  setDraft(objId, fieldName, value) {
+    let draft = JSON.parse(localStorage.getItem(this.draftKey)) || {};
+    const key = objId + '_' + fieldName;
+    draft[key] = value;
+    localStorage.setItem(this.draftKey, JSON.stringify(draft));
   }
 }
