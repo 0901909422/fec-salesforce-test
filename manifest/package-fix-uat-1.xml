@@ -26,6 +26,8 @@
         <members>FEC_GetCustomerInfoBasic</members>
         <members>FEC_ApplicationsListController</members>
         <members>FEC_MainInfoController</members>
+        <members>FEC_GetCustomerList</members>
+        <members>FEC_LogApiQueueable</members>
         <name>ApexClass</name>
     </types>
     <types>

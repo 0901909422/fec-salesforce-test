@@ -1897,6 +1897,7 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_SearchController</members>
 		<members>FEC_GetCustomerList</members>
+        <members>FEC_LogApiQueueable</members>
 		<name>ApexClass</name>
 	</types>
     <types>
