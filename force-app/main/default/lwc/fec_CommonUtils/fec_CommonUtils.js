@@ -1,5 +1,5 @@
 import { getFocusedTabInfo, setTabLabel, setTabIcon } from 'lightning/platformWorkspaceApi';
-import { STR_EMPTY, MSG_PHONE_ONLY_NUMBERS, MSG_PHONE_FORMAT_0_OR_84, MSG_INVALID_NATIONAL_ID_OR_PASSPORT, MSG_NATIONAL_ID_9_OR_12_CHARS, MSG_PASSPORT_1_LETTER_7_DIGITS, MSG_PASSPORT_START_UPPERCASE_THEN_7, MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7, MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY, MSG_NATIONAL_ID_9_OR_12_DIGITS, MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY, MSG_NATIONAL_ID_PASSPORT_RULES, MSG_INVALID_NATIONAL_ID, MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12 } from 'c/fec_CommonConst';
+import { STR_EMPTY, MSG_PHONE_ONLY_NUMBERS, MSG_PHONE_FORMAT_0_OR_84, MSG_INVALID_NATIONAL_ID_OR_PASSPORT, MSG_NATIONAL_ID_9_OR_12_CHARS, MSG_PASSPORT_1_LETTER_7_DIGITS, MSG_PASSPORT_START_UPPERCASE_THEN_7, MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7, MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY, MSG_NATIONAL_ID_9_OR_12_DIGITS, MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY, MSG_NATIONAL_ID_PASSPORT_RULES, MSG_INVALID_NATIONAL_ID, MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12, MSG_INVALID_EMAIL_FORMAT } from 'c/fec_CommonConst';
 
 const formatDate = (curr) => {
   if (!curr) {
@@ -202,6 +202,9 @@ const applyPhoneInputMaxLength = (value) => {
 
 /* =========================
  * EMAIL VALIDATION
+ * - Phải có đúng một @
+ * - Sau @ bắt buộc có ít nhất một dấu chấm (domain.tld)
+ * - TLD (phần sau dấu chấm cuối) chỉ 2-5 chữ cái (a-zA-Z), ví dụ .com, .vn
  * ========================= */
 const EMAIL_TLD_2_5 = "[a-zA-Z]{2,5}";
 const EMAIL_LOCAL = "[a-zA-Z0-9._%+-]+";
@@ -210,8 +213,10 @@ const EMAIL_PART_1 = `${EMAIL_LOCAL}@${EMAIL_DOMAIN}\\.${EMAIL_TLD_2_5}`;
 const EMAIL_PART_2 = `${EMAIL_LOCAL}@${EMAIL_DOMAIN}\\.${EMAIL_TLD_2_5}\\.${EMAIL_TLD_2_5}`;
 
 const UPDATED_INFO_EMAIL_REGEX = new RegExp(
-  `^\\s*(${EMAIL_PART_1}|${EMAIL_PART_2})\\s*$`,
+  "^\\s*(" + EMAIL_PART_1 + "|" + EMAIL_PART_2 + ")\\s*$",
 );
+
+const TLD_ONLY_LETTERS_REGEX = /^[a-zA-Z]{2,5}$/;
 
 const validateUpdatedInfoEmail = (value) => {
   if (value == null || typeof value !== "string") {
@@ -223,10 +228,21 @@ const validateUpdatedInfoEmail = (value) => {
     return { valid: true };
   }
 
+  const atIdx = trimmed.indexOf("@");
+  if (atIdx === -1) {
+    return { valid: false, message: MSG_INVALID_EMAIL_FORMAT };
+  }
+  const afterAt = trimmed.slice(atIdx + 1);
+  const lastDotIdx = afterAt.lastIndexOf(".");
+  if (lastDotIdx === -1) {
+    return { valid: false, message: MSG_INVALID_EMAIL_FORMAT };
+  }
+  const tld = afterAt.slice(lastDotIdx + 1);
+  if (!TLD_ONLY_LETTERS_REGEX.test(tld)) {
+    return { valid: false, message: MSG_INVALID_EMAIL_FORMAT };
+  }
   if (!UPDATED_INFO_EMAIL_REGEX.test(trimmed)) {
-    return {
-      valid: false,
-    };
+    return { valid: false, message: MSG_INVALID_EMAIL_FORMAT };
   }
 
   return { valid: true };
@@ -448,12 +464,12 @@ const checkNoUpdateInSubmit = (getOriginalValue, getUpdatedValue, options) => {
   const presentSet = options?.presentUpdatedApiNames;
   const pairsToCheck =
     presentSet != null &&
-      (Set.prototype.isPrototypeOf(presentSet) || Array.isArray(presentSet))
+    (Set.prototype.isPrototypeOf(presentSet) || Array.isArray(presentSet))
       ? ORIGINAL_UPDATED_FIELD_PAIRS.filter((p) =>
-        Set.prototype.isPrototypeOf(presentSet)
-          ? presentSet.has(p.updated)
-          : presentSet.includes(p.updated),
-      )
+          Set.prototype.isPrototypeOf(presentSet)
+            ? presentSet.has(p.updated)
+            : presentSet.includes(p.updated),
+        )
       : ORIGINAL_UPDATED_FIELD_PAIRS;
 
   if (pairsToCheck.length === 0) return false;
@@ -493,7 +509,7 @@ const setConsoleTab = async (label, icon) => {
       });
     }
   } catch (e) {
-    console.error(e);
+   console.error(e);
   }
 };
 

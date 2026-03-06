@@ -41,6 +41,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_CaseTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_ClickToCallHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -90,6 +94,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_FileActionOnReviewService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_FollowUpController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -226,6 +234,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_KYCService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_LogApiQueueable</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
