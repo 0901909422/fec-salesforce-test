@@ -210,7 +210,7 @@ public without sharing class FEC_MainInfoController {
         FEC_GetCustomerList.ResponseWrapper res =
             FEC_GetCustomerList.getCustomerList(
                 FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false,
-                null, null, FEC_ConstantCommon.APPLICATION_ID, null, null, null, null, null
+                null, null, null, null, null, null, null, null
             );
 
         if (res == null) return null;

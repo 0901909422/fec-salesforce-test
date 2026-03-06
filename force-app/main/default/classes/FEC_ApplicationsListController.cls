@@ -89,7 +89,7 @@ public without sharing class FEC_ApplicationsListController {
         try {
             cusRes = FEC_GetCustomerList.getCustomerList(
                 FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false,
-                null, null, FEC_ConstantCommon.APPLICATION_ID, null, null, null, null, null
+                null, null, null, null, null, null, null, null
             );
         } catch (Exception e) {
             cusRes = null;

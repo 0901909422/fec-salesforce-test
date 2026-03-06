@@ -156,7 +156,5 @@ public with sharing class FEC_ConstantCommon {
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
 
     public static final String EMAIL = 'Email';
-    
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
-    public static final String APPLICATION_ID = '23785006';
 }
