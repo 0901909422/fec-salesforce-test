@@ -1059,7 +1059,7 @@ public with sharing class FEC_CaseBusinessService {
       updatedCase.OwnerId = queueId;
       updatedCase.FEC_Current_Case_Stage__c = selectedChange.FEC_Next_Stage__c;
 
-      update updatedCase;
+      Database.update(updatedCase, AccessLevel.SYSTEM_MODE);
 
       List<Group> queuelst = [
         SELECT Id, Name, DeveloperName, Type
