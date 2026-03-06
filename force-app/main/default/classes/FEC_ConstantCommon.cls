@@ -84,6 +84,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_RES = 'RES';
     public static final String REQUESTOR_PEGA = 'PEGA';
     public static final String REQUESTOR_ESB = 'ESB';
+    public static final String REQUESTOR_CORE = 'CORE';
+    public static final String REQUESTOR_MOBILE = 'MOBILE';
 
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
@@ -155,4 +157,8 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String EMAIL = 'Email';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
+
+    public static final String CIF_NUMBER = '19863515';
+    public static final String APPLICATION_ID = '23785006';
+    public static final String ACCOUNT_NUMBER = '0001500010000000022';
 }
