@@ -276,5 +276,17 @@
 		<members>Case-Customer Case</members>
 		<name>Layout</name>
 	</types>
+    <types>
+		<members>FEC_Action_Button__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Business_Process__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Case_Stage__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Category__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Product_Type__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Stage_Change__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Stage_Screen__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Sub_Category__c.FEC_Restrict_Update_Code</members>
+		<members>FEC_Sub_Code__c.FEC_Restrict_Update_Code</members>
+		<name>ValidationRule</name>
+	</types>
     <version>65.0</version>
 </Package>
