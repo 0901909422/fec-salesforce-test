@@ -4,12 +4,15 @@ import HAS_ACCOUNT_OR_CONTACT from "@salesforce/schema/Case.FEC_Has_Account_or_C
 import getInteractionAccountNumber from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.getInteractionAccountNumber";
 import GetProductsListByCif from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.GetProductsListByCif";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
+import { UBANK_PRODUCT_NAME } from "c/fec_CommonConst";
 import {
   subscribe,
   unsubscribe,
   APPLICATION_SCOPE,
   MessageContext,
 } from "lightning/messageService";
+
+import createHistory from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.createHistory";
 
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import FEC_ACCOUNT_CONTRACT_NUMBER_LABEL from "@salesforce/label/c.FEC_Account_Contract_Number_Label";
@@ -22,6 +25,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   @api recordId;
 
   selectedValue = "";
+  cifNumber = "";
   hasAccountOrContact = false;
   isOpen = false;
   selectedRows = [];
@@ -50,37 +54,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     },
     { label: "Product Name", fieldName: "productName" },
   ];
-
-  data = [
-    {
-      id: "row-001",
-      product: "Loan",
-      accountContractNumber: "ACC-100001",
-      productName: "Personal Loan",
-      isSelected: false,
-    },
-    {
-      id: "row-002",
-      product: "Credit Card",
-      accountContractNumber: "CC-200045",
-      productName: "Platinum Credit Card",
-      isSelected: false,
-    },
-    {
-      id: "row-003",
-      product: "Insurance",
-      accountContractNumber: "INS-330021",
-      productName: "Health Insurance Plus",
-      isSelected: false,
-    },
-    {
-      id: "row-004",
-      product: "UBank",
-      accountContractNumber: "UBank",
-      productName: "UBank",
-      isSelected: false,
-    },
-  ];
+  data = [];
 
   /* =======================
    * LMS SUBSCRIPTION
@@ -109,8 +83,6 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
 
       console.log("[LMS] isEditMode:", this.isEditMode);
 
-      // // UI reaction
-      // this.isOpen = this.isEditMode;
     }
   }
 
@@ -162,8 +134,15 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   getInteractionAccountNumber() {
     getInteractionAccountNumber({ caseId: this.recordId })
       .then((result) => {
-        console.log("[APEX] getInteractionAccountNumber result:", result);
-        this.selectedValue = result;
+        const data = JSON.parse(result);
+
+        console.log(data.accountNumber);
+        console.log(data.cifNumber);
+        this.selectedValue = data.accountNumber;
+        this.cifNumber = data.cifNumber;
+
+        // gọi tiếp sau khi đã có cif
+        return this.getProductsList();
       })
       .catch((error) => {
         console.error("[APEX] GetInteractionAccountNumber error:", error);
@@ -171,15 +150,29 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   }
 
   getProductsList() {
-    GetProductsListByCif({ cifNumber: "" })
+    GetProductsListByCif({ cifNumber: this.cifNumber })
       .then((result) => {
-        this.data = result.map((item, index) => ({
+        console.log(
+          "[APEX] GetProductsListByCif result:",
+          JSON.stringify(result),
+        );
+        const mappedData = result.map((item, index) => ({
           id: String(index + 1),
           product: item.productType,
           accountContractNumber: item.accountContractNumber,
           productName: item.productName,
           isSelected: false,
         }));
+
+        mappedData.push({
+          id: String(mappedData.length + 1),
+          product: UBANK_PRODUCT_NAME,
+          accountContractNumber: UBANK_PRODUCT_NAME,
+          productName: UBANK_PRODUCT_NAME,
+          isSelected: false,
+        });
+        console.log("Mapped Data:", mappedData);
+        this.data = mappedData;
       })
       .catch((error) => {
         console.error("[APEX] GetProductsListByCif error:", error);
@@ -205,22 +198,38 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     this.isOpen = !this.isOpen;
   }
 
-  handleRowSelection(event) {
-    const selected = event.detail.selectedRows;
-    if (!selected.length) return;
+  handleRowAction(event) {
+    const rowId = event.detail.row;
 
-    const row = selected[0];
+    const row = this.data.find((r) => r.id === rowId);
+
+    if (!row) return;
 
     this.selectedRows = [row.id];
+
     this.data = this.data.map((r) => ({
       ...r,
       isSelected: r.id === row.id,
     }));
-
     this.selectedValue = row.accountContractNumber;
+    this.createHistory();
+    this.isOpen = false;
   }
 
-  handleUbankClick() {
-    this.selectedValue = "UBANK";
+  createHistory() {
+    createHistory({
+      caseId: this.recordId,
+      selectedAccountContractNumber: this.selectedValue,
+      selectedType: this.data.find(
+        (r) => r.accountContractNumber === this.selectedValue,
+      )?.product,
+      cifNumber: this.cifNumber,
+    })
+      .then(() => {
+        console.log("History created successfully");
+      })
+      .catch((error) => {
+        console.error("Error creating history:", error);
+      });
   }
 }

@@ -11,6 +11,7 @@ import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getCase from "@salesforce/apex/FEC_SearchController.getCase";
 import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
+import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
 import {
@@ -47,9 +48,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   emailAddress;
   customerNumber;
   fullName = "";
-  fullNameForCreate = "";
+  custNameForCreate = "";
   nationalIdForCreate = "";
-  isNoCustomerFound = false;
+  @api isNoCustomerFound = false;
   showNewCaseModal = false;
   isSkip;
   wiredCaseResult;
@@ -82,11 +83,12 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
           ? {
               value: { fieldName: "AccountNumber" },
               fieldName: "AccountNumber",
+              selectedType: "Card"
             }
           : {},
         sortable: false,
       },
-      { label: "Full Name", fieldName: "FullName", sortable: true },
+      { label: "Customer Name", fieldName: "FullName", sortable: true },
       {
         label: "National ID 1",
         fieldName: "NationalID1",
@@ -99,7 +101,15 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         type: "maskedToggle",
         sortable: true,
       },
-      { label: "Date of Birth", fieldName: "DateOfBirth", sortable: true },
+      { label: "Date of Birth", 
+        fieldName: "DateOfBirth", 
+        type: "date", 
+        typeAttributes:{
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        },
+        sortable: true },
       { label: "Plastic ID", fieldName: "PlasticID", sortable: true },
       { label: "Account Status", fieldName: "AccountStatus", sortable: true },
     ];
@@ -123,7 +133,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
           : {},
         sortable: false,
       },
-      { label: "Full Name", fieldName: "FullName", sortable: true },
+      { label: "Customer Name", fieldName: "FullName", sortable: true },
       {
         label: "National ID 1",
         fieldName: "NationalID1",
@@ -136,7 +146,15 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         type: "maskedToggle",
         sortable: true,
       },
-      { label: "Date of Birth", fieldName: "DateOfBirth", sortable: true },
+      { label: "Date of Birth", 
+        fieldName: "DateOfBirth", 
+        type: "date", 
+        typeAttributes:{
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        }, 
+        sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
       { label: "Contract Status", fieldName: "ContractStatus", sortable: true },
     ];
@@ -145,7 +163,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   get loanB2Columns() {
     return [
       { label: "Contract Number", fieldName: "ContractNumber", sortable: true },
-      { label: "Full Name", fieldName: "FullName", sortable: true },
+      { label: "Customer Name", fieldName: "FullName", sortable: true },
       {
         label: "National ID",
         fieldName: "NationalID1",
@@ -187,8 +205,16 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
           : {},
         sortable: false,
       },
-      { label: "Full Name", fieldName: "FullName", sortable: true },
-      { label: "Date of Birth", fieldName: "DateOfBirth", sortable: true },
+      { label: "Customer Name", fieldName: "FullName", sortable: true },
+      { label: "Date of Birth", 
+        fieldName: "DateOfBirth", 
+        type: "date", 
+        typeAttributes:{
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        },
+        sortable: true },
       {
         label: "Buyer NID",
         fieldName: "BuyerNID",
@@ -206,7 +232,12 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       {
         label: "Effective Date",
         fieldName: "EffectiveDate",
-        type: "date",
+        type: "date", 
+        typeAttributes:{
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        },
         sortable: true,
       },
       { label: "Status", fieldName: "Status", sortable: true },
@@ -215,7 +246,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   get ubankColumns() {
     return [
-      { label: "Full Name", fieldName: "FullName", sortable: true },
+      { label: "Customer Name", fieldName: "FullName", sortable: true },
       {
         label: "National ID 1",
         fieldName: "NationalID1",
@@ -276,7 +307,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   }
 
   async connectedCallback() {
-    this.isLoaded = true;
+    this.isLoaded = false;
     // Load styles
     loadStyle(this, COMMON_STYLES)
       .then(() => console.log("Common styles loaded"))
@@ -296,11 +327,12 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Search_Email_Address__c : null;
       this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
       if (this.phoneNumber || this.nationalId || this.contractNumber) {
-        this.seedSampleRows(true);
+        await this.processSearch();
       }
     } catch (error) {
       console.error("Error fetching case data:", error);
     }
+    this.isLoaded = true;
     if (!this.recordId) {
       this.isDisplay = true;
     }
@@ -513,6 +545,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   }
 
   handleClear() {
+    this.isNoCustomerFound = false;
     this.nationalId = null;
     this.phoneNumber = null;
     this.applicationId = null;
@@ -545,7 +578,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     this.ubankData = [];
   }
 
-  handleSearch() {
+  async handleSearch() {
     // Validate all inputs and ensure at least one search field is provided
     const inputs = this.template.querySelectorAll(
       ".responsive-layout lightning-input",
@@ -587,8 +620,177 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
     // Example: populate data sets based on current criteria.
     // Replace with actual Apex calls and set the dataset corresponding to each tab.
-    this.seedSampleRows(true);
+    //this.seedSampleRows(true);
+    this.processSearch() 
   }
+
+  async processSearch() {
+  this.isLoaded = false;
+  this.isNoCustomerFound = false;
+
+  // Optional: clear old results before new search
+  this.cardData = [];
+  this.loanData = [];
+  this.loanContractData = [];
+  this.loanB2Data = [];
+  this.loanCash24Data = [];
+  this.insuranceData = [];
+  this.ubankData = [];
+
+  try {
+    const params = this.buildSearchParams();
+
+    // Guard (extra safety). handleSearch() already checks this.
+    if (!this.hasAnySearchCriteria(params)) {
+      this.showToast("Validation", "Enter at least one search criterion.", "warning");
+      return;
+    }
+
+    const result = await getCustomerList(params);
+    console.log("getCustomerList params:", params);
+    console.log("getCustomerList result:", result);
+
+    const customers = result?.Customers || [];
+    if (customers.length > 0) {
+      this.processCustomerResults(customers);
+      this.isNoCustomerFound = false;
+    } else {
+      this.isNoCustomerFound = true;
+    }
+  } catch (e) {
+    console.error("Error fetching customer list:", e);
+    this.showToast(
+      "Error",
+      "Unable to fetch customer list. " + (e?.body?.message || e?.message || ""),
+      "error"
+    );
+  } finally {
+    this.isLoaded = true;
+  }
+}
+
+/**
+ * Build Apex params from UI inputs (NO hard-coding).
+ * Matches Apex signature: getCustomerList({ requestorId, phoneNumber, ... })
+ */
+buildSearchParams() {
+  const val = (v) => (v === null || v === undefined ? null : String(v).trim() || null);
+
+  const nationalId = val(this.nationalId);
+  const phoneNumber = val(this.phoneNumber);
+  const applicationId = val(this.applicationId);
+  const contractNumber = val(this.contractNumber);
+  const accountNumber = val(this.accountNumber);
+  const email = val(this.emailAddress);
+  const personId = val(this.customerNumber);
+  const fullName = val(this.fullName);
+
+  return {
+    // Keep this if required by integration; remove/adjust if your API expects something else.
+    requestorId: "PEGA_CSM",
+
+    // Use actual search fields
+    phoneNumber,
+    fullName,
+    nationalId,
+    applicationId,
+    contractNumber,
+    accountNumber,
+    email,
+    personId,
+
+    // If your backend supports "reference search", set it based on a field like personId/customerNumber.
+    // Update logic if your business definition differs.
+    isReferenceSearch: personId ? true : false,
+
+    // Keep as null unless you truly have a card number input field
+    creditCardNumber: null
+  };
+}
+
+/**
+ * Validate at least one criteria exists (based on built params).
+ */
+hasAnySearchCriteria(params) {
+  return Boolean(
+    params?.phoneNumber ||
+      params?.fullName ||
+      params?.nationalId ||
+      params?.applicationId ||
+      params?.contractNumber ||
+      params?.accountNumber ||
+      params?.email ||
+      params?.personId
+  );
+}
+
+  processCustomerResults(customers) {
+    const top5 = customers.slice(0, 5);
+    this.cardData = [];
+    this.loanContractData = [];
+    this.insuranceData = [];
+
+    top5.forEach(cust => {
+      if (cust.Applications && cust.Applications.length > 0) {
+        cust.Applications.forEach(app => {
+          // Định nghĩa logic phân loại dựa trên trường 'Product' trong JSON
+          const productCode = app.Product ? app.Product.toUpperCase() : '';
+
+          // --- PHÂN LOẠI VÀO CARD ---
+          // Trong JSON, Card thường có Product để trống và có AccountNumber
+          if (productCode === '' && app.AccountNumber) {
+              this.cardData = [...this.cardData, {
+              id: app.ApplicationID,
+              FullName: cust.FullName,
+              NationalID1: cust.NationalID,
+              DateOfBirth: cust.DateOfBirth,
+              AccountNumber: app.AccountNumber,
+              AccountStatus: app.Status,
+              PlasticID: "N/A",
+
+              // ✅ add flat field
+              CIFNumber: cust.CIFNumber
+            }];
+            
+          }
+
+          // --- PHÂN LOẠI VÀO LOAN (Vay) ---
+          // Các mã sản phẩm như CDL, PL, TW, FC_...
+          else if (['CDL', 'PL', 'TW', 'FC_CDL', 'FC_TW', 'FC_CDL_G'].includes(productCode)) {
+            this.loanContractData = [...this.loanContractData, {
+              id: app.ApplicationID,
+              FullName: cust.FullName,
+              NationalID1: cust.NationalID,
+              DateOfBirth: cust.DateOfBirth,
+              ContractNumber: app.ContractNumber,
+              ProductCode: app.Product,
+              ContractStatus: app.Status,
+              _customer: cust,
+              _application: app 
+            }];
+          }
+
+          // --- PHÂN LOẠI VÀO INSURANCE (Bảo hiểm) ---
+          // Giả sử mã bảo hiểm là INS hoặc dựa trên SchemeDesc (do JSON mẫu chưa có mã rõ ràng cho INS)
+          else if (productCode === 'INS' || (app.SchemeDesc && app.SchemeDesc.includes('INSURED'))) {
+            this.insuranceData = [...this.insuranceData, {
+              id: app.ApplicationID,
+              UserId: cust.CIFNumber,
+              FullName: cust.FullName,
+              BuyerNID: cust.NationalID,
+              ProductName: app.SchemeDesc || 'Insurance Product',
+              Status: app.Status,
+              EffectiveDate: 'N/A',
+              _customer: cust,
+              _application: app // Cần map thêm field nếu có
+            }];
+          }
+
+        });
+      }
+    });
+  }
+
 
   handleTabChange(event) {
     // lightning-tabset fires 'active' with event.target.value on the tab element
@@ -600,9 +802,18 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   async handleNewCase() {
     try {
+      let input = this.template.querySelector('[data-id="national-id"]');
+      if (!input.reportValidity()) {
+        this.showToast(
+          "Validation",
+          "Please correct the highlighted errors before creating.",
+          "error",
+        );
+        return;
+      }
       console.log(
         "Creating case with:",
-        this.fullNameForCreate,
+        this.custNameForCreate,
         this.nationalIdForCreate,
       );
 
@@ -613,7 +824,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         },
         state: {
           c__recordId: this.recordId,
-          c__customerName: this.fullNameForCreate,
+          c__customerName: this.custNameForCreate,
           c__identityNo: this.nationalIdForCreate,
         },
       });
@@ -656,8 +867,8 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     }
   }
 
-  handleFullNameChange(event) {
-    this.fullNameForCreate = event.target.value;
+  handleCustNameChange(event) {
+    this.custNameForCreate = event.target.value;
   }
 
   handleNationalIdChange(event) {
@@ -678,7 +889,11 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   }
 
   get isNewCaseDisabled() {
-    return !this.fullNameForCreate;
+    return !this.custNameForCreate;
+  }
+
+  validateNewCaseFields() {
+
   }
 
   // Shared toast helper with de-duplication by title+message+variant signature
@@ -697,10 +912,28 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   // Handle button actions from datatable rows
   handleRowAction(event) {
     console.log("Row action event:", event);
-    const { action, row } = event.detail || {};
+    let { action, row } = event.detail || {};
     if (!action || !action.name) {
       return;
     }
+    let id = row;
+    console.log('Row JSON yy1:', JSON.stringify(row, null, 2));
+    if (action.name == "create_history") {
+      switch (action.label.fieldName) {
+        case "AccountNumber":
+          row = this.cardData.find(r => r.AccountNumber == row);
+          break;
+        case "ContractNumber":
+          row = this.loanData.find(r => r.ContractNumber == row);
+          break;
+        case "UserId":
+          row = this.insuranceData.find(r => r.UserId == row);
+          break;
+      }
+    } 
+    const cifNumber = row?.CIFNumber ?? '';
+    console.log('cifNumber ', cifNumber );
+    
     switch (action.name) {
       case "create_history": {
         if (!this.recordId) {
@@ -741,27 +974,29 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         let searchProducts = categories.join(";");
 
         createHistory({
-          value: row,
+          value: id,
           fieldName: action.label.fieldName,
           caseId: this.recordId,
           searchProducts: searchProducts,
+          selectedType: action.type,
+          cifNumber: cifNumber
         })
           .then(async (res) => {
             // const payload = {
             //     isModeEdit: true
             // };
-
+            this.showToast(
+              "Success",
+              "History created successfully",
+              "success",
+            );
             //publish(this.messageContext, IS_MODE_EDIT, payload);
             await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
             // await refreshApex(this.wiredCaseResult);
             this.dispatchEvent(new RefreshEvent());
 
             //await this.refreshTab();
-            this.showToast(
-              "Success",
-              "History created successfully",
-              "success",
-            );
+            
           })
           .catch((e) => {
             this.showToast("Error", "Failed to create history", "error");

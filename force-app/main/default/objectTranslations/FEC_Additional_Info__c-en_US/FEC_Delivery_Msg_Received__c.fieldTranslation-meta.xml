@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Delivery Msg Received --></label>
+    <name>FEC_Delivery_Msg_Received__c</name>
+    <picklistValues>
+        <masterLabel>Call Disconnected</masterLabel>
+        <translation>Cúp máy ngang</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Not Received</masterLabel>
+        <translation>Không nhận</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Received</masterLabel>
+        <translation>Có nhận</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unknown</masterLabel>
+        <translation>Không rõ</translation>
+    </picklistValues>
+</CustomFieldTranslation>

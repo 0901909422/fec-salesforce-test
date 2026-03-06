@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q16 BOT Dissatisfaction Reason --></label>
+    <name>FEC_Q16_BOT_Dissatisfaction_Reason__c</name>
+    <picklistValues>
+        <masterLabel>BOT Feature Not Supported</masterLabel>
+        <translation>BOT không hỗ trợ tính năng</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>BOT Incorrect/Missing Info</masterLabel>
+        <translation>BOT cung cấp thông tin sai/ thiếu</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>BOT Slow Response</masterLabel>
+        <translation>BOT phản hồi chậm</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>BOT Unclear Info</masterLabel>
+        <translation>BOT cung cấp thông tin khó hiểu</translation>
+    </picklistValues>
+</CustomFieldTranslation>

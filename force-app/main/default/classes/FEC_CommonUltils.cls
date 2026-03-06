@@ -619,34 +619,39 @@ public with sharing class FEC_CommonUltils {
         return responseBody;
     }
 
-    public static void logApi(
-        String apiName,
-        String endpoint,
-        String method,
-        String requestBody,
-        HttpResponse response,
-        String errorMessage
-  ){
-      try{
-          FEC_API_Log__c log = new FEC_API_Log__c();
+  public static String normalizeInsuranceFlag(String value) {
+    if (String.isBlank(value)) return null;
 
-          log.Name = apiName;
-          log.FEC_Endpoint__c = endpoint;
-          log.FEC_Method__c = method;
-          log.FEC_Request_String__c = requestBody;
+    value = value.trim().toUpperCase();
 
-          if(response != null){
-              log.FEC_Status_Code__c =  String.valueOf(response.getStatusCode());
-              log.FEC_Response_String__c = response.getBody();
-              log.FEC_Is_Success__c = (response.getStatusCode() == 200);
-          }
-          
-          log.FEC_Error_Message__c = errorMessage;
-
-          insert log;
-
-        }catch(Exception e){
-            System.debug('LOG INSERT ERROR: ' + e.getMessage());
-        }
+    switch on value {
+        when 'Y' { return 'Yes'; }
+        when 'N' { return 'No'; }
+        when else { return null; }
     }
+  }
+
+  public static void logApi(
+    String apiName,
+    String endpoint,
+    String method,
+    String requestBody,
+    HttpResponse response,
+    String errorMessage
+  ){
+    Boolean isSuccess = (response.getStatusCode() == 200);
+    String statusCode =  String.valueOf(response.getStatusCode());
+    String responseBody = response.getBody();
+    FEC_LogApiQueueable logApiQueueable = new FEC_LogApiQueueable(
+      apiName,
+      endpoint,
+      method,
+      requestBody,
+      isSuccess,
+      statusCode,
+      errorMessage,
+      responseBody
+    );
+    System.enqueueJob(logApiQueueable);
+  }
 }
