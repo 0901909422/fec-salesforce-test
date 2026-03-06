@@ -315,6 +315,7 @@
 		<members>FEC_CS_Unit_Head_of_Office_Based_Interaction_Case_Service_Case</members>
 		<members>RD_IT_User_Interaction_Case_Service_Case</members>
 		<members>FEC_Common_System_Setting</members>
+		<members>RD_IT_User_System_Management</members>
 		<name>PermissionSet</name>
 	</types>
 	<types>
