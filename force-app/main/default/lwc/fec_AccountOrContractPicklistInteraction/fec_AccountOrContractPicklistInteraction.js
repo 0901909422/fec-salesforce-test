@@ -83,8 +83,6 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
 
       console.log("[LMS] isEditMode:", this.isEditMode);
 
-      // // UI reaction
-      // this.isOpen = this.isEditMode;
     }
   }
 

@@ -42,10 +42,6 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CifNumber'}));
         }
         
-        if (String.isBlank(cifNumber)) {
-            cifNumber = FEC_ConstantCommon.CIF_NUMBER;
-        }
-        
         List<GetProductsListResponse> results = new List<GetProductsListResponse>();
         FEC_GetProductListCallout.CIF_GetProductsListResponse res =
             FEC_GetProductListCallout.callService(cifNumber);
@@ -69,19 +65,6 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
                 System.debug('DealId: ' + p.dealId);
                 
                 GetProductsListResponse item = new GetProductsListResponse();
-                // if (p.productType == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE) {
-                    //     item.accountContractNumber = p.contractNumber;
-                    //     item.productType = p.productType;
-                    //     item.productName = p.productName;
-                // } else if (p.productType == FEC_ConstantCommon.PRODUCT_TYPE_LOAN) {
-                    //     item.accountContractNumber = p.contractNumber;
-                    //     item.productType = p.productType;
-                    //     item.productName = p.productName;
-                // } else if (p.productType == FEC_ConstantCommon.PRODUCT_TYPE_CARD) {
-                    //     item.accountContractNumber = p.cardNumber;
-                    //     item.productType = p.productType;
-                    //     item.productName = p.productName;
-                // }
                 if(p.contractNumber != null || p.contractNumber != '') {
                     item.accountContractNumber = p.contractNumber;
                     item.productType = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE;

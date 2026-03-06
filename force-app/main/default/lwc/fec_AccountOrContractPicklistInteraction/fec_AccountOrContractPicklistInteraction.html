@@ -15,13 +15,6 @@
                 <!-- Popover -->
                 <template if:true={isOpen}>
                     <section class="popover">
-                        <!-- <lightning-datatable key-field="id" data={data} columns={columns}
-                            onrowselection={handleRowSelection} selected-rows={selectedRows}
-                            max-row-selection="1"></lightning-datatable> -->
-                        <!-- <lightning-datatable key-field="id" data={data} columns={columns} onrowaction={handleRowAction}
-                            selected-rows={selectedRows} max-row-selection="1">
-                        </lightning-datatable> -->
-
                         <c-fec_-custom-account-table key-field="id" data={data} columns={columns}
                             onrowaction={handleRowAction} hide-checkbox-column>
                         </c-fec_-custom-account-table>
