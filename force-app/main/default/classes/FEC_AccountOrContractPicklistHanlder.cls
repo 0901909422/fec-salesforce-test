@@ -65,25 +65,55 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
                 System.debug('DealId: ' + p.dealId);
                 
                 GetProductsListResponse item = new GetProductsListResponse();
-                item.productType = p.productType;
-                if (p.productType == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE) {
+                if(p.contractNumber != null || p.contractNumber != '') {
                     item.accountContractNumber = p.contractNumber;
-                    item.productType = p.productType;
-                    item.productName = p.productName;
-                } else if (p.productType == FEC_ConstantCommon.PRODUCT_TYPE_LOAN) {
-                    item.accountContractNumber = p.contractNumber;
-                    item.productType = p.productType;
-                    item.productName = p.productName;
-                } else if (p.productType == FEC_ConstantCommon.PRODUCT_TYPE_CARD) {
+                    item.productType = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE;
+                } else if (p.dealId != null || p.dealId != '') { 
+                    item.accountContractNumber = p.dealId;
+                    item.productType = FEC_ConstantCommon.PRODUCT_TYPE_LOAN;
+                } else if (p.cardNumber != null || p.cardNumber != '') {
                     item.accountContractNumber = p.cardNumber;
-                    item.productType = p.productType;
-                    item.productName = p.productName;
+                    item.productType = FEC_ConstantCommon.PRODUCT_TYPE_CARD;
                 }
+                item.productName = p.productName;
                 results.add(item);
             }
         }
         return results;
         
+    }
+    
+    @AuraEnabled
+    public static void createHistory( Id caseId, String selectedAccountContractNumber, String selectedType, String cifNumber) {
+        
+        System.debug('Creating history with caseId: ' + caseId + ', selectedAccountContractNumber: ' + selectedAccountContractNumber + ', selectedType: ' + selectedType + ', cifNumber: ' + cifNumber);
+        // Return early if no value or field name
+        if (selectedAccountContractNumber == null || selectedAccountContractNumber.trim() == '') {
+            throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
+        }
+        // Build record
+        FEC_Customer_History__c rec = new FEC_Customer_History__c();
+        
+        if (selectedType == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE) {
+            rec.FEC_Contract_Number__c = selectedAccountContractNumber;
+        } else if (selectedType == FEC_ConstantCommon.PRODUCT_TYPE_LOAN) {
+            rec.FEC_Contract_Number__c = selectedAccountContractNumber;
+            
+        } else if (selectedType == FEC_ConstantCommon.PRODUCT_TYPE_CARD) {
+            rec.FEC_Card_Number__c = selectedAccountContractNumber;
+        }
+        
+        rec.Name = selectedAccountContractNumber;
+        rec.FEC_Account_Number__c = selectedAccountContractNumber;
+        rec.FEC_Case__c = caseId;
+        rec.FEC_Product_Code__c = selectedType;
+        rec.FEC_CIF_Number__c = cifNumber;
+        
+        try {
+            insert rec;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
     }
     
 }

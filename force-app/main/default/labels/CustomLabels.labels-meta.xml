@@ -7939,4 +7939,12 @@
         <shortDescription>Auto-generated label</shortDescription>
         <value>Success</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_Can_Not_Find_Next_Stage</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Can_Not_Find_Next_Stage</shortDescription>
+        <value>Can&apos;t find next stage</value>
+    </labels>
 </CustomLabels>

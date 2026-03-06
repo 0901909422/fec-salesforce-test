@@ -812,4 +812,8 @@
         <name>No_Record_To_Display_Msg</name>
         <label>Không có bản ghi nào để hiển thị</label>
     </customLabels>
+    <customLabels>
+        <name>FEC_MSG_Can_Not_Find_Next_Stage</name>
+        <label>Không tìm thấy giai đoạn tiếp theo</label>
+    </customLabels>
 </Translations>
