@@ -517,6 +517,34 @@ const urlCmpWithRecordId = (cmp, recordId) => {
   return `/lightning/cmp/c__${cmp}?c__recordId=${recordId}`;
 }
 
+/* ================= NEGATIVE HELPER ================= */
+const isNegative = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return false;
+  }
+
+  if (typeof value === 'number') {
+    return value < 0;
+  }
+
+  const cleaned = value.toString().replace(/,/g, '').trim();
+
+  if (cleaned === '' || isNaN(cleaned)) {
+    return false;
+  }
+
+  return Number(cleaned) < 0;
+};
+
+const formatNumber = (value) => {
+  if (value === null || value === undefined) return '';
+  try {
+    return new Intl.NumberFormat('en-US').format(value);
+  } catch {
+    return value;
+  }
+}
+
 export {
   formatDate,
   formatDateTime,
@@ -536,4 +564,6 @@ export {
   isOnlyNumber,
   setConsoleTab,
   urlCmpWithRecordId,
+  isNegative,
+  formatNumber
 };
