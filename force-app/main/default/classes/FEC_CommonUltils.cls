@@ -448,18 +448,12 @@ public with sharing class FEC_CommonUltils {
     String contentType,
     String soapAction,
     Dom.Document docBody,
-    String body,
-    Map<String,String> headers
+    String body
   ) {
     HttpRequest req = new HttpRequest();
     req.setEndpoint(endpoint);
     req.setMethod(method);
     req.setHeader('Content-Type', contentType);
-     if(headers != null){
-        for(String key : headers.keySet()){
-            req.setHeader(key, headers.get(key));
-        }
-    }
     if (String.isNotBlank(soapAction)) {
       req.setHeader('SOAPAction', soapAction);
     }
@@ -474,6 +468,34 @@ public with sharing class FEC_CommonUltils {
     HttpResponse res = http.send(req);
     return res;
   }
+
+  public static HttpResponse calloutApiWithHeaders(
+    String endpoint,
+    String method,
+    Map<String,String> headers,
+    String body
+){
+    HttpRequest req = new HttpRequest();
+    req.setEndpoint(endpoint);
+    req.setMethod(method);
+
+    if(headers != null){
+        for(String key : headers.keySet()){
+            req.setHeader(key, headers.get(key));
+        }
+    }
+
+    if(body != null){
+        req.setBody(body);
+    }
+
+    req.setTimeout(120000);
+
+    Http http = new Http();
+    HttpResponse res = http.send(req);
+
+    return res;
+}
 
   public static String generateTransactionId() {
     return Datetime.now().getTime() +

@@ -129,12 +129,13 @@ public without sharing class FEC_GetCardTransactions {
             + '&ToDate=' + EncodingUtil.urlEncode(strToDate,'UTF-8');
 
             Map<String,String> headers = new Map<String,String>{
+                'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
                 'TransID' => transId,
                 'RequestorID' => requestorId,
                 'DateTime' => dateTimeStr
             };
 
-            HttpResponse resp = FEC_CommonUltils.calloutApi( endpoint,'GET', FEC_ConstantCommon.API_CONTENT_TYPE_JSON, null, null,'',headers);
+            HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders( endpoint,'GET', headers, null);
         
             if (resp.getStatusCode() == 200) {
 
