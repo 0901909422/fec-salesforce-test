@@ -94,37 +94,76 @@ public without sharing class FEC_MainInfoAccountController {
             LIMIT 1
         ];
 
-        /* ========= 1. TRY LOCAL ========= */
+        String accountNumber;
 
+        /* ========= 1. TRY LOCAL ========= */
         if (c.FEC_Account_or_Contract__c != null) {
-            MainInfoDTO dto = getAccountInfoLocal(c.FEC_Account_or_Contract__c);
-            if (dto != null) {
-                return dto;
-            }
+            FEC_Customer_History__c acc = [
+                SELECT FEC_Account_Number__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :c.FEC_Account_or_Contract__c
+                LIMIT 1
+            ];
+            accountNumber = acc.FEC_Account_Number__c;
         }
 
         /* ========= 2. CALL API ========= */
 
-        FEC_GetCardBasicInfo.ResponseWrapper response;
+        FEC_GetCardBasicInfo.ResponseWrapper cardRes;
 
         try {
-            response = FEC_GetCardBasicInfo.callGetCardBasicInfo(
+            cardRes = FEC_GetCardBasicInfo.callGetCardBasicInfo(
                 FEC_CommonUltils.generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                c.FEC_Account_Number__c
+                accountNumber
             );
         } catch (Exception e) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
         }
 
-        FEC_Customer_History__c acc = createAccountFromAPI(response,caseId);
-        update new Case(
-            Id = caseId,
-            FEC_Account_or_Contract__c = acc.Id
-        );
+        /* ========= CALL CUSTOMER LIST ========= */
+        FEC_GetCustomerList.ResponseWrapper cusRes;
 
-        return mapToDTO(acc);
+        try {
+            cusRes = FEC_GetCustomerList.getCustomerList(
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                accountNumber,
+                null,
+                null,
+                null
+            );
+        } catch (Exception e) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+        }
+
+        /* ========= CALL FEC_MFASOUTSTANDINGAUTHINQ ========= */
+        FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper mfaRes;
+
+        try {
+            mfaRes = FEC_MFASOUTSTANDINGAUTHINQ.callService(    
+                FEC_CommonUltils.generateTransactionId(), 
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,                            
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT), 
+                FEC_ConstantCommon.REQUESTOR_VMXVERSION,          
+                FEC_ConstantCommon.REQUESTOR_CONTEXT,
+                UserInfo.getUserId(), 
+                FEC_ConstantCommon.REQUESTOR_ORG,
+                accountNumber                       
+            );
+        } catch (Exception e) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+        }
+
+        updateAccountFromAPI(c.FEC_Account_or_Contract__c, cardRes, cusRes, mfaRes);
+
+        return getAccountInfoLocal(c.FEC_Account_or_Contract__c);
     }
 
     @AuraEnabled
@@ -277,20 +316,72 @@ public without sharing class FEC_MainInfoAccountController {
             LIMIT 1
         ];
 
-        FEC_GetCardBasicInfo.ResponseWrapper response;
+        String accountNumber;
+
+        if (c.FEC_Account_or_Contract__c != null) {
+            FEC_Customer_History__c acc = [
+                SELECT FEC_Account_Number__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :c.FEC_Account_or_Contract__c
+                LIMIT 1
+            ];
+
+            accountNumber = acc.FEC_Account_Number__c;
+        }
+        
+        FEC_GetCardBasicInfo.ResponseWrapper cardRes;
 
         try {
-            response = FEC_GetCardBasicInfo.callGetCardBasicInfo(
+            cardRes = FEC_GetCardBasicInfo.callGetCardBasicInfo(
                 FEC_CommonUltils.generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                c.FEC_Account_Number__c
+                accountNumber
             );
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
 
-        updateAccountFromAPI(c.FEC_Account_or_Contract__c, response);
+        /* ========= CALL CUSTOMER LIST ========= */
+        FEC_GetCustomerList.ResponseWrapper cusRes;
+
+        try {
+            cusRes = FEC_GetCustomerList.getCustomerList(
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                accountNumber,
+                null,
+                null,
+                null
+            );
+        } catch (Exception e) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+        }
+
+        /* ========= CALL FEC_MFASOUTSTANDINGAUTHINQ ========= */
+        FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper mfaRes;
+
+        try {
+            mfaRes = FEC_MFASOUTSTANDINGAUTHINQ.callService(
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                    FEC_ConstantCommon.REQUESTOR_VMXVERSION,
+                    FEC_ConstantCommon.REQUESTOR_CONTEXT,
+                    UserInfo.getUserId(),
+                    FEC_ConstantCommon.REQUESTOR_ORG,
+                    accountNumber
+            );
+        } catch (Exception e) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+        }
+
+        updateAccountFromAPI(c.FEC_Account_or_Contract__c, cardRes, cusRes, mfaRes);
 
         return getAccountInfoLocal(c.FEC_Account_or_Contract__c);
     }
@@ -306,8 +397,6 @@ public without sharing class FEC_MainInfoAccountController {
         dto.accountStatus   = acc.FEC_Account_Status__c;
         dto.applicationId   = acc.FEC_Application_ID__c;
         dto.accountOpenDate = FEC_CommonUltils.formatDate(acc.FEC_Account_Open_Date__c);
-        dto.accountCloseDate= FEC_CommonUltils.formatDate(acc.FEC_Account_Close_Date__c);
-        dto.eSignStatus     = acc.FEC_E_sign_Status__c;
         dto.creditLimit     = FEC_CommonUltils.formatCurrency(acc.FEC_Credit_Limit__c, 0);
         dto.otb             = FEC_CommonUltils.formatCurrency(acc.FEC_OTB__c, 0);
         dto.currentBalance  = FEC_CommonUltils.formatCurrency(acc.FEC_Current_Balance__c, 2);
@@ -358,61 +447,36 @@ public without sharing class FEC_MainInfoAccountController {
 
     /* ===================== HELPERS ===================== */
 
-    private static FEC_Customer_History__c createAccountFromAPI(
-        FEC_GetCardBasicInfo.ResponseWrapper response,
-        Id caseId
-    ) {
-        FEC_GetCardBasicInfo.MainCard m = response.CardBasicInfo.MainCard;
-
-        FEC_Customer_History__c acc = new FEC_Customer_History__c(
-            FEC_Case__c = caseId,
-            Name = 'Account ' + m.AccountNumber,
-            FEC_Account_Number__c = m.AccountNumber,
-            FEC_Contract_Number__c = m.ContractNumber,
-            FEC_Credit_Limit__c = m.CreditLimit,
-            FEC_OTB__c = m.OTB,
-            FEC_Current_Balance__c = response.CardBasicInfo.Statement?.StatementBalance,
-            FEC_Hold_Amount__c = m.HoldAmount,
-            FEC_Total_Balance__c = response.CardBasicInfo.Statement?.StatementBalance,
-            FEC_E_sign_Status__c = 'Yes',
-
-            /* ===== ACCOUNT STATUS ===== */
-            FEC_Warning_Code__c = m.WarningCode,
-            FEC_Block_Code_1__c = m.BlockCode1,
-            FEC_Block_Date_1__c = m.AccountBlockCode1Date,
-            FEC_Reason_1__c     = m.RsnBlockCode1,
-            FEC_Block_Code_2__c = m.BlockCode2,
-            FEC_Block_Date_2__c = m.AccountBlockCode2Date,
-            FEC_Reason_2__c     = m.RsnBlockCode2,
-
-            /* ===== CARD ===== */
-            FEC_Insurance_Flag__c = FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag),
-            FEC_Customer_Segment__c = m.CustomerSegment,
-            FEC_Expiry_Date__c = m.ExpiryDate
-        );
-
-        insert acc;
-        return acc;
-    }
-
     private static void updateAccountFromAPI(
         Id accountId,
-        FEC_GetCardBasicInfo.ResponseWrapper response
+        FEC_GetCardBasicInfo.ResponseWrapper cardRes,
+        FEC_GetCustomerList.ResponseWrapper cusRes,
+        FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper mfaRes
     ) {
         if (accountId == null) return;
 
-        FEC_GetCardBasicInfo.MainCard m = response.CardBasicInfo.MainCard;
-
+        FEC_GetCardBasicInfo.MainCard m = cardRes.CardBasicInfo.MainCard;
+        FEC_GetCustomerList.Application a;
+            if(cusRes != null 
+                && cusRes.Customers != null 
+                && !cusRes.Customers.isEmpty()
+                && cusRes.Customers[0].Applications != null
+                && !cusRes.Customers[0].Applications.isEmpty()){
+                a = cusRes.Customers[0].Applications[0];
+            }
+        //FEC_MFASOUTSTANDINGAUTHINQ.
         update new FEC_Customer_History__c(
             Id = accountId,
             FEC_Account_Number__c = m.AccountNumber,
             FEC_Contract_Number__c = m.ContractNumber,
+            FEC_Account_Status__c = m.Status,
             FEC_Credit_Limit__c = m.CreditLimit,
             FEC_OTB__c = m.OTB,
-            FEC_Current_Balance__c = response.CardBasicInfo.Statement?.StatementBalance,
+            FEC_Current_Balance__c = cardRes.CardBasicInfo.Statement?.StatementBalance,
             FEC_Hold_Amount__c = m.HoldAmount,
-            FEC_Total_Balance__c = response.CardBasicInfo.Statement?.StatementBalance,
+            FEC_Total_Balance__c = cardRes.CardBasicInfo.Statement?.StatementBalance,
             FEC_E_sign_Status__c = 'Yes',
+            FEC_Application_ID__c = a != null ? a.ApplicationId : null,
             /* ===== ACCOUNT STATUS ===== */
             FEC_Warning_Code__c = m.WarningCode,
             FEC_Block_Code_1__c = m.BlockCode1,
@@ -421,10 +485,15 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Block_Code_2__c = m.BlockCode2,
             FEC_Block_Date_2__c = m.AccountBlockCode2Date,
             FEC_Reason_2__c     = m.RsnBlockCode2,
+            //FEC_Days_Past_Due__c = m.PaymentDate,
             /* ===== CARD ===== */
+            FEC_Card_Number__c = m.CardNumber,
             FEC_Insurance_Flag__c = FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag),
             FEC_Customer_Segment__c = m.CustomerSegment,
-            FEC_Expiry_Date__c = m.ExpiryDate
+            FEC_Expiry_Date__c = m.ExpiryDate,
+            FEC_Card_Activation_Status__c = m.CardActivationDate,
+            FEC_Scheme_ID__c      = a != null ? a.SchemeId : null,
+            FEC_Scheme_Desc__c    = a != null ? a.SchemeDesc : null
         );
     }
     

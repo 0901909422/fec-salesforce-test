@@ -78,7 +78,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
     public static final String REQUESTOR_APS = 'APS';
     public static final String REQUESTOR_SD = 'SD';
-    public static final String REQUESTOR_VMXVERSION = '2.0';
+    public static final String REQUESTOR_VMXVERSION = '150';
     public static final String REQUESTOR_CONTEXT = 'CRM';
     public static final String REQUESTOR_ORG = 'FEC';
     public static final String REQUESTOR_RES = 'RES';

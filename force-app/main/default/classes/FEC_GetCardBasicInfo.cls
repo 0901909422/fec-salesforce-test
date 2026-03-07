@@ -67,6 +67,8 @@ public with sharing class FEC_GetCardBasicInfo {
         public String WarningCode360;
         public String MailingInd;
         public Decimal LoanBalance;
+        public String CardNumber;
+        public String CardActivationDate;
     }
  
     public class StatementInfo {
@@ -332,7 +334,9 @@ public with sharing class FEC_GetCardBasicInfo {
         result.CardBasicInfo.MainCard.MaskedCardNumber      = FEC_CommonUltils.getXmlValue(main, 'MaskedCardNumber');
         result.CardBasicInfo.MainCard.PaymentHoliday        = FEC_CommonUltils.getXmlValue(main, 'PaymentHoliday');
         result.CardBasicInfo.MainCard.DigitalCardIndicator  = FEC_CommonUltils.getXmlValue(main, 'DigitalCardIndicator');
-        result.CardBasicInfo.MainCard.MailingInd             = FEC_CommonUltils.getXmlValue(main, 'MailingInd');
+        result.CardBasicInfo.MainCard.MailingInd            = FEC_CommonUltils.getXmlValue(main, 'MailingInd');
+        result.CardBasicInfo.MainCard.CardNumber            = FEC_CommonUltils.getXmlValue(main, 'CardNumber');
+        result.CardBasicInfo.MainCard.CardActivationDate    = FEC_CommonUltils.getXmlValue(main, 'CardActivationDate');
  
         /// STATEMENT
         Dom.XmlNode stmt = infoNode.getChildElement('Statement', null);
