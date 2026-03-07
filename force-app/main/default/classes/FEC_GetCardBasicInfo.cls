@@ -33,6 +33,11 @@ public with sharing class FEC_GetCardBasicInfo {
         public PassDue PassDUE;
         public List<StatementPeriod> Statements;
         public List<TransactionInfo> Transactions;
+        public CardHistories CardHistories;
+    }
+
+    public class CardHistories {
+        public List<CardHistory> CardHistory;
     }
  
     public class MainCard {
@@ -109,6 +114,14 @@ public with sharing class FEC_GetCardBasicInfo {
         public String PlanType;
         public String LogicMod;
         public Integer OTPSent;
+    }
+    public class CardHistory {
+        public String CardNumber;
+        public String EmbossingName;
+        public String ActivationDate;
+        public String CardIssueDate;
+        public String CardExpDate;
+        public Date CardActivationDate;
     }
  
     // =========================================================================
@@ -422,6 +435,23 @@ public with sharing class FEC_GetCardBasicInfo {
                 ti.OTPSent           = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(t, 'OTPSent'));
  
                 result.CardBasicInfo.Transactions.add(ti);
+            }
+        }
+
+        // CARD HISTORIES
+        Dom.XmlNode historiesNode = infoNode.getChildElement('CardHistories', null);
+        if (historiesNode != null) {
+            result.CardBasicInfo.CardHistories = new CardHistories();
+            result.CardBasicInfo.CardHistories.CardHistory = new List<CardHistory>();
+            for (Dom.XmlNode h : historiesNode.getChildElements()) {
+                CardHistory ch = new CardHistory();
+                ch.CardNumber = FEC_CommonUltils.getXmlValue(h, 'CardNumber');
+                ch.EmbossingName = FEC_CommonUltils.getXmlValue(h, 'EmbossingName');
+                ch.ActivationDate = FEC_CommonUltils.getXmlValue(h, 'ActivationDate');
+                ch.CardIssueDate = FEC_CommonUltils.getXmlValue(h, 'CardIssueDate');
+                ch.CardExpDate = FEC_CommonUltils.getXmlValue(h, 'CardExpDate');
+                ch.CardActivationDate = FEC_CommonUltils.xmlValToDate(h, 'CardActivationDate'); 
+                result.CardBasicInfo.CardHistories.CardHistory.add(ch);
             }
         }
  
