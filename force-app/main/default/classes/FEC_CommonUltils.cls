@@ -448,12 +448,18 @@ public with sharing class FEC_CommonUltils {
     String contentType,
     String soapAction,
     Dom.Document docBody,
-    String body
+    String body,
+    Map<String,String> headers
   ) {
     HttpRequest req = new HttpRequest();
     req.setEndpoint(endpoint);
     req.setMethod(method);
     req.setHeader('Content-Type', contentType);
+     if(headers != null){
+        for(String key : headers.keySet()){
+            req.setHeader(key, headers.get(key));
+        }
+    }
     if (String.isNotBlank(soapAction)) {
       req.setHeader('SOAPAction', soapAction);
     }
