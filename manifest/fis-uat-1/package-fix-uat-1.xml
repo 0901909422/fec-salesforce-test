@@ -29,6 +29,7 @@
         <members>FEC_GetCustomerList</members>
         <members>FEC_LogApiQueueable</members>
         <members>FEC_IPPScheduleController</members>
+        <members>FEC_FollowUpController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -56,6 +57,7 @@
 		<members>fec_CustomAccountTable</members>
 		<members>fec_CustomDblClickRadio</members>
 		<members>fec_InteractionHighlightMain</members>
+		<members>fec_IPPDetails</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
