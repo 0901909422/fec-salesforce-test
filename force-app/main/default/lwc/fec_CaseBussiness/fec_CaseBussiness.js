@@ -24,7 +24,7 @@ import {
   isOnlyNumber
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY, ICON_HIDE, ICON_PREVIEW } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -203,6 +203,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     } else if (error) {
       console.error("Error fetching user group", error);
     }
+  }
+
+  get iconHideConst() {
+    return ICON_HIDE;
   }
 
   // Danh sách cố định cho Decision
@@ -537,8 +541,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     let { field } = this.find(filter);
 
-    let isPreview = e.target.iconName === "utility:preview";
-    e.target.iconName = isPreview ? "utility:hide" : "utility:preview";
+    let isPreview = e.target.iconName === ICON_PREVIEW;
+    e.target.iconName = isPreview ? ICON_HIDE : ICON_PREVIEW;
 
     if (isPreview) {
       if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
