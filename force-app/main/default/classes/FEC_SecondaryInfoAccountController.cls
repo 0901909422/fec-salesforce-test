@@ -69,17 +69,21 @@ public without sharing class FEC_SecondaryInfoAccountController {
         ];
       
         String accountNumber;
+        String cifNumber;
+        String applicationID;
         FEC_Customer_History__c acc;
 
         /* ========= 1. TRY LOCAL ========= */
         if (c.FEC_Account_or_Contract__c != null){
             acc = [
-                SELECT Id,FEC_Account_Number__c,FEC_CIF_Number__c
+                SELECT Id,FEC_Account_Number__c,FEC_CIF_Number__c,FEC_Application_ID__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :c.FEC_Account_or_Contract__c
                 LIMIT 1
             ];
             accountNumber = acc.FEC_Account_Number__c;
+            cifNumber = acc.FEC_CIF_Number__c;
+            applicationID = acc.FEC_Application_ID__c;
         }
 
         /* ===== CARD API ===== */
@@ -125,31 +129,28 @@ public without sharing class FEC_SecondaryInfoAccountController {
 
         /* ===== SALE API ===== */
         try {
+
             FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleDisburseInfoResponse saleRes =
-                FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo(
-                    accountNumber
-                );
+                FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo(applicationID);
 
-            if (saleRes != null &&
-                saleRes.Sys != null &&
-                saleRes.Sys.Code == 1 &&
-                saleRes.CustomerSaleInfos != null &&
-                !saleRes.CustomerSaleInfos.isEmpty()
-            ) {
+            if (FEC_GetCustomerSaleDisburseInfoCallout.isSuccess(saleRes)) {
+
                 FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleInfo s =
-                    saleRes.CustomerSaleInfos[0];
+                    FEC_GetCustomerSaleDisburseInfoCallout.getFirstSaleInfo(saleRes);
 
-                acc.FEC_CC_Code__c  = s.CC_CODE;
-                acc.FEC_CC_Name__c  = s.CC_NAME;
-                acc.FEC_DSA_Code__c = s.DSA_CODE;
-                acc.FEC_DSA_Name__c = s.DSA_NAME;
-                acc.FEC_TSA_Code__c = s.TSA_CODE;
-                acc.FEC_TSA_Name__c = s.TSA_NAME;
+                if (s != null) {
+                    acc.FEC_CC_Code__c  = s.CC_CODE;
+                    acc.FEC_CC_Name__c  = s.CC_NAME;
+                    acc.FEC_DSA_Code__c = s.DSA_CODE;
+                    acc.FEC_DSA_Name__c = s.DSA_NAME;
+                    acc.FEC_TSA_Code__c = s.TSA_CODE;
+                    acc.FEC_TSA_Name__c = s.TSA_NAME;
+                }
             }
+
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
-
         update acc;
     }
 
