@@ -144,7 +144,7 @@ public without sharing class FEC_MainInfoController {
 
         /* ===== 3. GetCustomerList ===== */
         try {
-            hist.FEC_Primary_Phone__c = getPrimaryPhoneOnly();
+            hist.FEC_Primary_Phone__c = getPrimaryPhoneOnly(hist);
         } catch (Exception e) {
             System.debug('### GetCustomerList FAILED: ' + e.getMessage());
         }
@@ -206,11 +206,11 @@ public without sharing class FEC_MainInfoController {
 
     /* ================= HELPER METHODS ================= */
 
-    private static String getPrimaryPhoneOnly() {
+    private static String getPrimaryPhoneOnly (FEC_Customer_History__c hist) {
         FEC_GetCustomerList.ResponseWrapper res =
             FEC_GetCustomerList.getCustomerList(
                 FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false,
-                null, null, null, null, null, null, null, null
+                null, null, null, null,hist.FEC_Account_Number__c, null, null, null
             );
 
         if (res == null) return null;
