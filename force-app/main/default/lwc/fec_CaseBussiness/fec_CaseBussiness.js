@@ -24,7 +24,7 @@ import {
   isOnlyNumber
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY, ICON_HIDE, ICON_PREVIEW } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -95,8 +95,14 @@ const FIELD_NEW_ISSUE_DATE = "FEC_New_Issue_Date__c";
 const FIELD_OLD_ISSUE_DATE = "FEC_Old_Issue_Date__c";
 const FIELD_NEW_CITIZEN_ID_NUMBER = "FEC_New_Citizen_ID_Number__c";
 const FIELD_OLD_CITIZEN_ID_NUMBER = "FEC_Old_Citizen_ID_Number__c";
+const FIELD_ORIGINAL_INFO_NATIONAL_ID = "FEC_Original_Info_National_ID__c";
 const FIELD_UPDATED_INFO_NATIONAL_ID = "FEC_Updated_Info_National_ID__c";
 const FIELD_NATIONAL_ID_PASSPORT_ID = "FEC_National_ID_Passport_ID__c";
+const NATIONAL_ID_PASSPORT_FIELDS = new Set([
+  FIELD_ORIGINAL_INFO_NATIONAL_ID,
+  FIELD_UPDATED_INFO_NATIONAL_ID,
+  FIELD_NATIONAL_ID_PASSPORT_ID,
+]);
 const FIELD_CORRECT_DATE_OF_BIRTH = "FEC_Correct_Date_of_Birth__c";
 const FIELD_INCORRECT_DATE_OF_BIRTH = "FEC_Incorrect_Date_of_Birth__c";
 const DATE_FIELDS = new Set([
@@ -199,6 +205,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
   }
 
+  get iconHideConst() {
+    return ICON_HIDE;
+  }
+
   // Danh sách cố định cho Decision
   get decisionOptions() {
     return [
@@ -253,6 +263,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     return [...pendingList, vendorOption, ...bottomList];
   }
 
+  draftKey = 'case-draft';
   handleChange(event) {
     const fieldName = event.target.name;
     const value = event.detail.value;
@@ -516,7 +527,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.updateRoutingActionDisplay(STR_EMPTY);
   }
 
-  disconnectedCallback() {}
+  disconnectedCallback() {
+    localStorage.removeItem(this.draftKey);
+  }
 
   handleToggleMask(e) {
     let filter = {
@@ -528,11 +541,17 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     let { field } = this.find(filter);
 
-    let isPreview = e.target.iconName === "utility:preview";
-    e.target.iconName = isPreview ? "utility:hide" : "utility:preview";
+    let isPreview = e.target.iconName === ICON_PREVIEW;
+    e.target.iconName = isPreview ? ICON_HIDE : ICON_PREVIEW;
 
     if (isPreview) {
-      field.value = mask(field.original, 4);
+      if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
+        field.value = isOnlyNumber(field.original)
+          ? mask(field.original, 3, 3)
+          : mask(field.original, 2, 3);
+      } else {
+        field.value = mask(field.original, 4);
+      }
     } else {
       field.value = field.original;
 
@@ -687,18 +706,23 @@ export default class Fec_CaseBussiness extends LightningElement {
                         field.value = mask(field.original, 4, 3);
                       }
                       break;
-                  
                     case MASKING_TYPE_PASSPORT:
-                      if(isOnlyNumber(field.original)) {
+                        if (isOnlyNumber(field.original)) {
                         field.value = mask(field.original, 3, 3);
                       } else {
                         field.value = mask(field.original, 2, 3);
-
                       }
                       break;
-                  
                     default:
-                      field.value = mask(field.original, 4, 4);
+                      if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
+                        if (isOnlyNumber(field.original)) {
+                          field.value = mask(field.original, 3, 3);
+                        } else {
+                          field.value = mask(field.original, 2, 3);
+                        }
+                      } else {
+                        field.value = mask(field.original, 4, 4);
+                      }
                       break;
                   }
                 }
@@ -728,6 +752,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         this.businessLoaded = true;
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
+        this.applyDraft();
+        console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
       })
       .catch((err) => {
         console.error(
@@ -820,6 +846,20 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
   }
 
+  handleDateChange(e) {
+    let value = e.target.value;
+    let fieldName = e.target.fieldName || e.target.dataset?.field;
+    let objId = e.target.dataset.obj;
+    this.setDraft(objId, fieldName, value);
+  }
+
+  handlePhoneChange(e) {
+    let value = e.target.value;
+    let fieldName = e.target.fieldName || e.target.dataset?.field;
+    let objId = e.target.dataset.obj;
+    this.setDraft(objId, fieldName, value);
+  }
+
   handleChangeInput(e) {
     let value = e.target.value;
 
@@ -828,6 +868,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     let fieldName = e.target.fieldName || e.target.dataset?.field;
     let objName = e.target.dataset.objName;
     let objId = e.target.dataset.obj;
+
+    this.setDraft(objId, fieldName, value);
 
     if (
       fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
@@ -1430,5 +1472,31 @@ export default class Fec_CaseBussiness extends LightningElement {
         item.submit();
       });
     });
+  }
+
+  applyDraft() {
+    const draft = JSON.parse(localStorage.getItem(this.draftKey));
+    if (!draft || !this.business) return;
+    this.business.sectionlst.forEach(section => {
+        section.subSectionlst.forEach(sub => {
+            sub.objlst.forEach(obj => {
+                obj.fieldlst.forEach(field => {
+            if (!field.editable) return; // ignore non editable
+                    const key = obj.id + '_' + field.apiName;
+            if (draft[key] && !field.value) {
+              field.value = draft[key];
+              field.displayValue = draft[key];
+            }
+          });
+        });
+      });
+    });
+  }
+
+  setDraft(objId, fieldName, value) {
+    let draft = JSON.parse(localStorage.getItem(this.draftKey)) || {};
+    const key = objId + '_' + fieldName;
+    draft[key] = value;
+    localStorage.setItem(this.draftKey, JSON.stringify(draft));
   }
 }
