@@ -30,6 +30,7 @@
         <members>FEC_LogApiQueueable</members>
         <members>FEC_IPPScheduleController</members>
         <members>FEC_FollowUpController</members>
+        <members>FEC_GetCardTransactions</members>
         <name>ApexClass</name>
     </types>
     <types>
