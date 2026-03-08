@@ -673,6 +673,34 @@ public with sharing class FEC_CommonUltils {
     return 'Inactive';
   }
 
+  public static Date toDateStr(String v) {
+    if (String.isBlank(v)) return null;
+
+    v = v.trim();
+
+    try {
+
+        // Format: yyyy-MM-dd
+        if (v.contains('-')) {
+            return Date.valueOf(v);
+        }
+
+        // Format: dd/MM/yyyy
+        if (v.contains('/')) {
+            List<String> parts = v.split('/');
+            Integer day = Integer.valueOf(parts[0]);
+            Integer month = Integer.valueOf(parts[1]);
+            Integer year = Integer.valueOf(parts[2]);
+            return Date.newInstance(year, month, day);
+        }
+
+    } catch (Exception e) {
+        System.debug('Invalid date: ' + v);
+    }
+
+    return null;
+  }
+
   public static void logApi(
     String apiName,
     String endpoint,
