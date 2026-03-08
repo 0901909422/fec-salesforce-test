@@ -157,6 +157,16 @@ public without sharing class FEC_GetAppStatusCallout {
 
         HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, 'POST', headers, requestBodyJson);
 
+        FEC_CommonUltils.logApi(
+            'FEC_GetAppStatusCallout',
+            endpoint,
+            'POST',
+            requestBodyJson,
+            resp,
+            null
+        );
+
+
         // Parse response
         AppStatusResponse response;
         if (resp.getStatusCode() == 200) {

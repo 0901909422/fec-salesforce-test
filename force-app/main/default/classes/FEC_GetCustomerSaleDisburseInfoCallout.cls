@@ -148,8 +148,6 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
             return errorResponse;
         }
         
-        String requestBodyJson = '{"APPLICATION_ID":"' + applicationId + '"}';
-        
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_Sale_Disburse_Info');
 
@@ -167,6 +165,16 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
         };
 
         HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, 'GET', headers, null);
+
+        FEC_CommonUltils.logApi(
+            'FEC_GetCustomerSaleDisburseInfoCallout',
+            endpoint,
+            'GET',
+            null,
+            resp,
+            null
+        );
+
 
         // Parse response
         CustomerSaleDisburseInfoResponse response;
