@@ -795,7 +795,7 @@ public with sharing class FEC_CaseBusinessService {
     if (c.IsClosed == false) {
       toUpdate.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
     }
-    update toUpdate;
+    Database.update(toUpdate, AccessLevel.SYSTEM_MODE);
   }
 
   @AuraEnabled
@@ -1092,7 +1092,6 @@ public with sharing class FEC_CaseBusinessService {
 
       Database.insert(history, AccessLevel.SYSTEM_MODE);
       Database.update(updatedCase, AccessLevel.SYSTEM_MODE);
-
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
