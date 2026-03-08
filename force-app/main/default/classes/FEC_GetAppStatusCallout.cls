@@ -148,27 +148,14 @@ public without sharing class FEC_GetAppStatusCallout {
             ? FEC_MockupEndpoint.GET_APP_STATUS_ENDPOINT_MOCKUP
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
         
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(endpoint);
-        req.setMethod('POST');
-        req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
-        req.setHeader('TransID', transactionId);
-        req.setHeader('DateTime', dateTimeValue);
-        req.setHeader('RequestorID', requestorId);
-        req.setBody(requestBodyJson);
-        req.setTimeout(120000);
-        
-        Http http = new Http();
-        HttpResponse resp = http.send(req);
+        Map<String,String> headers = new Map<String,String>{
+            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+            'TransID'      => transactionId,
+            'DateTime'     => dateTimeValue,
+            'RequestorID'  => requestorId
+        };
 
-        // FEC_CommonUltils.logApi(
-        //     'FEC_GetAppStatusCallout',
-        //     endpoint,
-        //     'POST',
-        //     requestBodyJson,
-        //     resp,
-        //     null
-        // );
+        HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, 'POST', headers, requestBodyJson);
 
         // Parse response
         AppStatusResponse response;

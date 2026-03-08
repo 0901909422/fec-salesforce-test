@@ -150,9 +150,6 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
         
         String requestBodyJson = '{"APPLICATION_ID":"' + applicationId + '"}';
         
-        // Build HTTP request
-        HttpRequest req = new HttpRequest();
-        
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_Sale_Disburse_Info');
 
@@ -161,26 +158,15 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
         
         endpoint += '?APPLICATION_ID=' + EncodingUtil.urlEncode(applicationId, 'UTF-8');
-        
-        req.setEndpoint(endpoint);
-        req.setMethod('GET');
-        req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
-        req.setHeader('TransID', transactionId);
-        req.setHeader('DateTime', dateTimeValue);
-        req.setHeader('RequestorID', requestorId);
-        req.setTimeout(120000);
-        
-        Http http = new Http();
-        HttpResponse resp = http.send(req);
 
-        // FEC_CommonUltils.logApi(
-        //     'FEC_GetCustomerSaleDisburseInfoCallout',
-        //     endpoint,
-        //     'GET',
-        //     requestBodyJson,
-        //     resp,
-        //     null
-        // );
+        Map<String,String> headers = new Map<String,String>{
+            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+            'TransID'      => transactionId,
+            'DateTime'     => dateTimeValue,
+            'RequestorID'  => requestorId
+        };
+
+        HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, 'GET', headers, null);
 
         // Parse response
         CustomerSaleDisburseInfoResponse response;
