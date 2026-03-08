@@ -29,6 +29,10 @@
         <members>FEC_GetCustomerList</members>
         <members>FEC_LogApiQueueable</members>
         <members>FEC_IPPScheduleController</members>
+        <members>FEC_FollowUpController</members>
+        <members>FEC_GetCardTransactions</members>
+        <members>FEC_GetApplicationsList</members>
+        <members>FEC_GetCardBasicInfo</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -55,6 +59,8 @@
 		<members>maskedToggleDatatable</members>
 		<members>fec_CustomAccountTable</members>
 		<members>fec_CustomDblClickRadio</members>
+		<members>fec_InteractionHighlightMain</members>
+		<members>fec_IPPDetails</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

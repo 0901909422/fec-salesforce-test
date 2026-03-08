@@ -9,7 +9,7 @@ import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getR
 import FIRST_ACCESS from "@salesforce/schema/Case.FEC_First_Access__c";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import ISCLOSED from "@salesforce/schema/Case.IsClosed";
-import ISOWNER from "@salesforce/schema/Case.FEC_Is_Owner__c";
+import ISOWNER from "@salesforce/schema/Case.FEC_Is_Owner__c"; 
 import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 import INTERACTION_RECORD_ID from "@salesforce/schema/Case.FEC_Interaction__c";
@@ -74,6 +74,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   isConsoleNavigation;
 
   isCaseClosed = false;
+  isInteractionClosed;
   isOwner = false;
 
   // ===============================
@@ -111,6 +112,20 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     }
   }
 
+  @wire(getRecord, {
+    recordId: "$interactionRecordId",
+    fields: [
+      ISCLOSED
+    ],
+  })
+  getInteraction({ data, error }) {
+    if (data) {
+      this.isInteractionClosed = getFieldValue(data, ISCLOSED);
+    } else if (error) {
+      console.error("getRecord error:", error);
+    }
+  }
+
   // ===============================
   // LOAD RECORD TYPE NAME
   // ===============================
@@ -131,8 +146,12 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     return this.viewMode === "handling";
   }
 
+  get showWrapupAndCreateCase() {
+    return ( !this.isInteractionCase || this.isHandling ) && (this.isInteractionClosed === false || (this.isInteractionClosed === undefined && !this.isCaseClosed) ) && this.isOwner;
+  }
+
   get showExecute() {
-    return !this.isHandling && !this.isCaseClosed && this.isOwner;
+    return !this.isHandling && (this.isInteractionClosed === false || (this.isInteractionClosed === undefined && !this.isCaseClosed) ) && this.isOwner;
   }
 
   get isInteractionCase() {
