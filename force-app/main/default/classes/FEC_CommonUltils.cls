@@ -659,6 +659,20 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  public static String checkEcomFlag(Boolean eComFlag) {
+    if (eComFlag == true) {
+        return 'Inactive';
+    }
+    return 'Active';
+  }
+
+  public static String checkActiveAndInacive(String cardStatus) {
+    if (cardStatus == 'Y') {
+        return 'Active';
+    }
+    return 'Inactive';
+  }
+
   public static void logApi(
     String apiName,
     String endpoint,
