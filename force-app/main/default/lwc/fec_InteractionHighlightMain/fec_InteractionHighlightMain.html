@@ -41,20 +41,20 @@
 
                 <template if:true={isInteractionCase}>
                   <div>
-                    <template if:true={isHandling}>
+                    <template if:true={showWrapupAndCreateCase}>
                       <button class="slds-button slds-button_neutral" onclick={handleWrapUpClick}>{labels.wrapUp}</button>
                     </template>
                     <!-- Chỉ có nút Execute khi ở trạng thái review -->
                     <template if:true={showExecute}>
                       <button class="slds-button slds-button_neutral" onclick={handleExecute}>{labels.execute}</button>
                     </template>
-                    <template if:true={isHandling}>
+                    <template if:true={showWrapupAndCreateCase}>
                       <button class="slds-button slds-button_neutral" onclick={handleCreateCase}>{labels.createCase}</button>
                     </template>
                   </div>
                 </template>
                 <template if:false={isInteractionCase}>
-                  <div>
+                  <div if:true={showWrapupAndCreateCase}>
                     <button class="slds-button slds-button_neutral" onclick={handleWrapUpClick}>{labels.wrapUp}</button>
                     <button class="slds-button slds-button_neutral" onclick={handleCreateCase}>{labels.createCase}</button>
                   </div>
