@@ -564,21 +564,10 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Insurance_Flag__c = FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag),
             FEC_Customer_Segment__c = m.CustomerSegment,
             FEC_Expiry_Date__c = m.ExpiryDate,
-            //FEC_Card_Type__c = 
-            //FEC_Plastic_ID__c = 
             FEC_Scheme_ID__c      = a != null ? a.SchemeId : null,
             FEC_Scheme_Desc__c    = a != null ? a.SchemeDesc : null,
             /* ===== CARD STATUS ===== */
-            //FEC_Block_Code__c = m.
-            //FEC_Block_Date__c   = m.,
-            //FEC_Blocked_By__c = m
             FEC_Card_Activation_Status__c = FEC_CommonUltils.checkActiveAndInacive(m.ActivatedFlag),
-            // FEC_Card_Activation_Date__c = (cardRes != null && cardRes.CardBasicInfo != null
-            //                 && cardRes.CardBasicInfo.CardHistories != null
-            //                 && cardRes.CardBasicInfo.CardHistories.CardHistory != null
-            //                 && !cardRes.CardBasicInfo.CardHistories.CardHistory.isEmpty())
-            //                 ? cardRes.CardBasicInfo.CardHistories.CardHistory[0].CardActivationDate
-            //                 : null,
             FEC_E_Commerce_Status__c = FEC_CommonUltils.checkEcomFlag(cardSecRes.CardSecInfo.MainCardPlastic.EcomActiveFlag)
             /* ===== DEBT SALE ===== */
            
