@@ -121,6 +121,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
                 if (pd != null) {
                     acc.FEC_Responsible_Unit__c    = pd.ResponsibleUnit;
                     acc.FEC_Responsible_Person__c = pd.ResposiblePerson;
+                    acc.FEC_Date_Assigned__c = pd.DateAssgined;
                 }
             }
         } catch (Exception e) {
@@ -207,6 +208,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
         d.responsibleUnit     = a.FEC_Responsible_Unit__c;
         d.responsiblePerson   = a.FEC_Responsible_Person__c;
         d.delinquencyDate     = FEC_CommonUltils.formatDate(a.FEC_Delinquency_Date__c);
+        d.dateAssigned        = FEC_CommonUltils.formatDate(a.FEC_Date_Assigned__c);
 
         d.ccCode  = a.FEC_CC_Code__c;
         d.ccName  = a.FEC_CC_Name__c;
