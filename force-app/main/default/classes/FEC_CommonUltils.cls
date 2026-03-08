@@ -469,6 +469,34 @@ public with sharing class FEC_CommonUltils {
     return res;
   }
 
+  public static HttpResponse calloutApiWithHeaders(
+    String endpoint,
+    String method,
+    Map<String,String> headers,
+    String body
+){
+    HttpRequest req = new HttpRequest();
+    req.setEndpoint(endpoint);
+    req.setMethod(method);
+
+    if(headers != null){
+        for(String key : headers.keySet()){
+            req.setHeader(key, headers.get(key));
+        }
+    }
+
+    if(body != null){
+        req.setBody(body);
+    }
+
+    req.setTimeout(120000);
+
+    Http http = new Http();
+    HttpResponse res = http.send(req);
+
+    return res;
+}
+
   public static String generateTransactionId() {
     return Datetime.now().getTime() +
       '_' +
