@@ -7939,4 +7939,53 @@
         <shortDescription>Auto-generated label</shortDescription>
         <value>Success</value>
     </labels>
+    <labels>
+        <fullName>FEC_Tab_Action_Button</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Tab Action Button</shortDescription>
+        <value>Action Button</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Tab_Stage_Change</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Tab Stage Change</shortDescription>
+        <value>Stage Change</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Previous_Stage</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Col Previous Stage</shortDescription>
+        <value>Previous Stage</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Next_Stage</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Col Next Stage</shortDescription>
+        <value>Next Stage</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Action_Button</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Col Action Button</shortDescription>
+        <value>Action Button</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Next_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Col Next Queue</shortDescription>
+        <value>Next Queue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Team_User_Group</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Col Team User Group</shortDescription>
+        <value>Team/User Group</value>
+    </labels>
 </CustomLabels>
