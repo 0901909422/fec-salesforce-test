@@ -718,7 +718,9 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
                 'CreatedByName'  => c.CreatedBy.Name,                                       
 
                 //Hyperlink for LWC
-                'ServiceCaseLink' => (c.FEC_Service_Case_ID__c != null ? FEC_FraudConstantCommon.SERVICE_CASE_LINK + c.FEC_Service_Case_ID__c : null),
+                 'ServiceCaseLink'        => (c.FEC_Service_Case_ID__c != null && (c.FEC_Service_Case_ID__c.startsWith(fraudConstant.CASE_SERVICE)))
+                ? + FEC_FraudConstantCommon.SERVICE_CASE_LINK + c.Id
+                : + FEC_FraudConstantCommon.SERVICE_SFT_CASE_LINK + c.FEC_CaseID__c,
                 'FraudCaseLink'        => (c.FEC_CaseID__c != null && (c.FEC_CaseID__c.startsWith(fraudConstant.CASEFH) || c.FEC_CaseID__c.startsWith(fraudConstant.CASETK)))
                 ? '/lightning/n/'+ FEC_FraudConstantCommon.FRAUD_HANDLING_CASE_DETAIL_PATH + '?c__caseId=' + c.FEC_CaseID__c
                 : null,

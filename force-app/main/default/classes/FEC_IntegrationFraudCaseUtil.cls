@@ -161,7 +161,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
          * required by the integration service.
          */
         public List<FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element> additionalInfos;
-        public List<FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element> additionalInfoOrginal;
+        public List<FEC_IntegrationSoapFraudcaseService.AdditionalInfoCustom_element> additionalInfoOrginal;
     }
 
     /**
@@ -511,7 +511,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
 
         // Initialize AdditionalInfo list for SOAP request
         w.additionalInfos = new List<FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element>();      
-        w.additionalInfoOrginal =new List<FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element>(); 
+        w.additionalInfoOrginal =new List<FEC_IntegrationSoapFraudcaseService.AdditionalInfoCustom_element>(); 
         // Extract AdditionalInfo entries if present
         List<Object> rawList = (List<Object>) payload.get(c.ADDITIONAL_INFO);
         
@@ -526,12 +526,14 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
                 FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element ai =
                     new FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element();
                 
-                FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element originalAI =
-                new FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element();              
+                FEC_IntegrationSoapFraudcaseService.AdditionalInfoCustom_element originalAI =
+                new FEC_IntegrationSoapFraudcaseService.AdditionalInfoCustom_element();              
                 
                 String infoValue = (String) row.get(c.INFO_VALUE);
                 originalAI.ID = (String) row.get(c.INFO_ID);
                 originalAI.Value = infoValue;  
+                originalAI.Type = (String) row.get(c.INFO_TYPE);
+                originalAI.Mandatory = (Boolean) row.get(c.INFO_MANDATORY);
                 w.additionalInfoOrginal.add(originalAI);
                  //Check Attached file
                 if((String) row.get(c.INFO_TYPE) == fileType.TYPE_FILE) {
@@ -721,12 +723,12 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         return req;
     }
 
-    public static FEC_IntegrationSoapFraudcaseService.RequestInfo_element
+    public static FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element
     buildRequestOriginal(FraudCaseRequestWrapper w) {
 
         // Initialize RequestInfo element for SOAP request
-        FEC_IntegrationSoapFraudcaseService.RequestInfo_element req =
-            new FEC_IntegrationSoapFraudcaseService.RequestInfo_element();
+        FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element req =
+            new FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element();
 
         // Map fraud classification fields
         req.CaseType    = w.caseType;
