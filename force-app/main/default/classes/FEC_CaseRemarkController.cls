@@ -84,7 +84,7 @@ public with sharing class FEC_CaseRemarkController {
       existingRemarks.add(caseRemark);
       caselst[0].FEC_Draft_Remarks__c = remarksToJson(existingRemarks);
 
-      update caselst;
+      Database.update(caselst, AccessLevel.SYSTEM_MODE);
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
@@ -104,7 +104,7 @@ public with sharing class FEC_CaseRemarkController {
     if (caselst.isEmpty())
       return;
     caselst[0].FEC_Draft_Remarks__c = null;
-    update caselst;
+    Database.update(caselst, AccessLevel.SYSTEM_MODE);
   }
 
   /** Submit chỉ tạo 1 bản ghi: lấy bản nháp mới nhất (phần tử cuối trong draft). */
@@ -149,7 +149,7 @@ public with sharing class FEC_CaseRemarkController {
       }
 
       caselst[0].FEC_Draft_Remarks__c = null;
-      update caselst;
+      Database.update(caselst, AccessLevel.SYSTEM_MODE);
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }

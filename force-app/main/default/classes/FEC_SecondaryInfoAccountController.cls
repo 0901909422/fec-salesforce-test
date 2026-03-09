@@ -19,39 +19,15 @@ public without sharing class FEC_SecondaryInfoAccountController {
 
         /* ===== LIMIT ===== */
         @AuraEnabled public String dailyRetailLimit;
-        @AuraEnabled public String oneTimeRetailLimit;
         @AuraEnabled public String dailyRetailNumber;
-
         @AuraEnabled public String dailyCashLimit;
-        @AuraEnabled public String oneTimeCashLimit;
         @AuraEnabled public String dailyCashNumber;
-        @AuraEnabled public String availableCashLimit;
-
-        @AuraEnabled public String dailyECommerceLimit;
-        @AuraEnabled public String oneTimeECommerceLimit;
-        @AuraEnabled public String dailyECommerceNumber;
-
         @AuraEnabled public String lastCreditLimit;
         @AuraEnabled public String lastCreditLimitDate;
 
         /* ===== MAIN CARD ===== */
         @AuraEnabled public String embossingName;
         @AuraEnabled public String statementNotificationType;
-        @AuraEnabled public String firstTransactionAmount;
-        @AuraEnabled public String firstEffectiveDate;
-        @AuraEnabled public String lastTransactionAmount;
-        @AuraEnabled public String lastEffectiveDate;
-        @AuraEnabled public String lastAdvanceAmount;
-        @AuraEnabled public String lastAdvanceDate;
-        @AuraEnabled public String memorableQuestion;
-
-        /* ===== PIN ===== */
-        @AuraEnabled public String lastPinStatus;
-        @AuraEnabled public String lastPinActionDate;
-
-        /* ===== FEE ===== */
-        @AuraEnabled public String annualFee;
-        @AuraEnabled public String lastAFDate;
 
         /* ===== COLLECTION ===== */
         @AuraEnabled public String responsibleUnit;
@@ -91,14 +67,24 @@ public without sharing class FEC_SecondaryInfoAccountController {
             WHERE Id = :caseId
             LIMIT 1
         ];
-        if (c.FEC_Account_or_Contract__c == null) return;
+      
+        String accountNumber;
+        String cifNumber;
+        String applicationID;
+        FEC_Customer_History__c acc;
 
-        FEC_Customer_History__c acc = [
-            SELECT Id
-            FROM FEC_Customer_History__c
-            WHERE Id = :c.FEC_Account_or_Contract__c
-            LIMIT 1
-        ];
+        /* ========= 1. TRY LOCAL ========= */
+        if (c.FEC_Account_or_Contract__c != null){
+            acc = [
+                SELECT Id,FEC_Account_Number__c,FEC_CIF_Number__c,FEC_Application_ID__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :c.FEC_Account_or_Contract__c
+                LIMIT 1
+            ];
+            accountNumber = acc.FEC_Account_Number__c;
+            cifNumber = acc.FEC_CIF_Number__c;
+            applicationID = acc.FEC_Application_ID__c;
+        }
 
         /* ===== CARD API ===== */
         try {
@@ -107,7 +93,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
                     FEC_CommonUltils.generateTransactionId(),
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                    c.FEC_Account_Number__c
+                    accountNumber
                 );
 
             if (res != null && res.CardSecInfo != null) {
@@ -123,6 +109,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
                     acc.FEC_Last_Credit_Limit__c      = p.LastCreditLimit;
                     acc.FEC_Last_Credit_Limit_Date__c = p.LastCreditLimitDate;
                     acc.FEC_Delinquency_Date__c       = p.LastDelinquencyDate;
+                    acc.FEC_Statement_Notification_Type__c = P.StatementNotificationType;
                 }
 
                 FEC_GetCardSecInfo.MainCardPlastic pl = info.MainCardPlastic;
@@ -134,6 +121,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
                 if (pd != null) {
                     acc.FEC_Responsible_Unit__c    = pd.ResponsibleUnit;
                     acc.FEC_Responsible_Person__c = pd.ResposiblePerson;
+                    acc.FEC_Date_Assigned__c = pd.DateAssgined;
                 }
             }
         } catch (Exception e) {
@@ -142,31 +130,28 @@ public without sharing class FEC_SecondaryInfoAccountController {
 
         /* ===== SALE API ===== */
         try {
+
             FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleDisburseInfoResponse saleRes =
-                FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo(
-                    c.FEC_Account_Number__c
-                );
+                FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo(applicationID);
 
-            if (saleRes != null &&
-                saleRes.Sys != null &&
-                saleRes.Sys.Code == 1 &&
-                saleRes.CustomerSaleInfos != null &&
-                !saleRes.CustomerSaleInfos.isEmpty()
-            ) {
+            if (FEC_GetCustomerSaleDisburseInfoCallout.isSuccess(saleRes)) {
+
                 FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleInfo s =
-                    saleRes.CustomerSaleInfos[0];
+                    FEC_GetCustomerSaleDisburseInfoCallout.getFirstSaleInfo(saleRes);
 
-                acc.FEC_CC_Code__c  = s.CC_CODE;
-                acc.FEC_CC_Name__c  = s.CC_NAME;
-                acc.FEC_DSA_Code__c = s.DSA_CODE;
-                acc.FEC_DSA_Name__c = s.DSA_NAME;
-                acc.FEC_TSA_Code__c = s.TSA_CODE;
-                acc.FEC_TSA_Name__c = s.TSA_NAME;
+                if (s != null) {
+                    acc.FEC_CC_Code__c  = s.CC_CODE;
+                    acc.FEC_CC_Name__c  = s.CC_NAME;
+                    acc.FEC_DSA_Code__c = s.DSA_CODE;
+                    acc.FEC_DSA_Name__c = s.DSA_NAME;
+                    acc.FEC_TSA_Code__c = s.TSA_CODE;
+                    acc.FEC_TSA_Name__c = s.TSA_NAME;
+                }
             }
+
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
-
         update acc;
     }
 
@@ -191,6 +176,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
                 FEC_Responsible_Unit__c,
                 FEC_Responsible_Person__c,
                 FEC_Delinquency_Date__c,
+                FEC_Statement_Notification_Type__c,
                 FEC_CC_Code__c,
                 FEC_CC_Name__c,
                 FEC_DSA_Code__c,
@@ -218,9 +204,11 @@ public without sharing class FEC_SecondaryInfoAccountController {
         d.lastCreditLimitDate = FEC_CommonUltils.formatDate(a.FEC_Last_Credit_Limit_Date__c);
 
         d.embossingName       = a.FEC_Embossing_Name__c;
+        d.statementNotificationType = a.FEC_Statement_Notification_Type__c;
         d.responsibleUnit     = a.FEC_Responsible_Unit__c;
         d.responsiblePerson   = a.FEC_Responsible_Person__c;
         d.delinquencyDate     = FEC_CommonUltils.formatDate(a.FEC_Delinquency_Date__c);
+        d.dateAssigned        = FEC_CommonUltils.formatDate(a.FEC_Date_Assigned__c);
 
         d.ccCode  = a.FEC_CC_Code__c;
         d.ccName  = a.FEC_CC_Name__c;

@@ -1352,8 +1352,8 @@
         <fullName>FEC_Follow_Up_Until_Unfollow</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Follow Up Until Unfollow</shortDescription>
-        <value>Follow Up Until Unfollow</value>
+        <shortDescription>Until Unfollow</shortDescription>
+        <value>Until Unfollow</value>
     </labels>
     <labels>
         <fullName>FEC_Follow_Up_Label</fullName>
@@ -1366,8 +1366,8 @@
         <fullName>FEC_Follow_Up_Until_Resolved</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Follow Up Until Resolved</shortDescription>
-        <value>Follow Up Until Resolved</value>
+        <shortDescription>Until Resolved</shortDescription>
+        <value>Until Resolved</value>
     </labels>
     <labels>
         <fullName>Interaction_Entitlement_Name</fullName>
