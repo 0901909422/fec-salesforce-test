@@ -37,11 +37,11 @@ public with sharing class FEC_GetInteractionCases {
         for (Case c : cases) {
             InteractionRow row = new InteractionRow();
             row.interactionId = c.Id;
-            row.interactionIdText = c.FEC_ID_Search__c != null ? c.FEC_ID_Search__c : '';
+            row.interactionIdText = c.FEC_ID_Search__c != null ? c.FEC_ID_Search__c : FEC_ConstantCommon.STR_EMPTY;
             row.interactionStatus = c.FEC_Interaction_Status__c;
             row.interactionCreatedOn = c.FEC_Created_On__c;
-            row.interactionCreatedBy = c.FEC_Created_by__c != null ? String.valueOf(c.FEC_Created_by__c) : '';
-            row.interactionDuration = c.FEC_Interaction_Duration__c != null ? String.valueOf(c.FEC_Interaction_Duration__c) : '';
+            row.interactionCreatedBy = c.FEC_Created_by__c != null ? String.valueOf(c.FEC_Created_by__c) : FEC_ConstantCommon.STR_EMPTY;
+            row.interactionDuration = c.FEC_Interaction_Duration__c != null ? String.valueOf(c.FEC_Interaction_Duration__c) : FEC_ConstantCommon.STR_EMPTY;
             row.interactionPhone = c.FEC_Phone_Number__c;
             row.channel = c.FEC_Channel__c;
             row.interactionSubChannel = c.FEC_Interaction_Subchannel__c;

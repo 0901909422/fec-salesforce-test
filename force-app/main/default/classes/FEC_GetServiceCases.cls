@@ -35,7 +35,7 @@ public with sharing class FEC_GetServiceCases {
         for (Case c : cases) {
             PendingCaseRow row = new PendingCaseRow();
             row.caseId = c.Id;
-            row.caseIdText = c.FEC_ID_Search__c != null ? c.FEC_ID_Search__c : '';
+            row.caseIdText = c.FEC_ID_Search__c != null ? c.FEC_ID_Search__c : FEC_ConstantCommon.STR_EMPTY;
             row.caseStatus = c.FEC_Case_Status__c;
             row.accountContractNumber = c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Account_Number__c : null;
             row.productTypeId = c.FEC_Product_Type__c;
@@ -93,7 +93,7 @@ public with sharing class FEC_GetServiceCases {
         for (Case c : cases) {
             ClosedCaseRow row = new ClosedCaseRow();
             row.caseId = c.Id;
-            row.caseIdText = c.FEC_ID_Search__c != null ? c.FEC_ID_Search__c : '';
+            row.caseIdText = c.FEC_ID_Search__c != null ? c.FEC_ID_Search__c : FEC_ConstantCommon.STR_EMPTY;
             row.caseStatus = c.FEC_Case_Status__c;
             row.accountContractNumber = c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Account_Number__c : null;
             row.productTypeId = c.FEC_Product_Type__c;
