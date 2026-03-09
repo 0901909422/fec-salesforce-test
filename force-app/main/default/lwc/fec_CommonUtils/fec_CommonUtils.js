@@ -33,6 +33,33 @@ const formatDateTime = (curr) => {
   return `${day}/${month}/${year}, ${h}:${m}`;
 };
 
+/**
+ * Format date-time as DD/MM/YYYY HH:mm:ss (VN display)
+ */
+const formatDateTimeVN = (val) => {
+  if (!val) return '';
+  const d = new Date(val);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+  return `${day}/${m}/${y} ${h}:${min}:${s}`;
+};
+
+/**
+ * Format seconds as HH:mm:ss
+ */
+const formatDuration = (seconds) => {
+  if (seconds == null || isNaN(Number(seconds))) return '';
+  const n = Math.floor(Number(seconds));
+  const h = Math.floor(n / 3600);
+  const m = Math.floor((n % 3600) / 60);
+  const s = n % 60;
+  return [h, m, s].map((x) => String(x).padStart(2, "0")).join(':');
+};
+
 const mask = (s, keepStart = 4, keepEnd = 4) => {
   if (!s) return STR_EMPTY;
   s = String(s);
@@ -516,7 +543,7 @@ const setConsoleTab = async (label, icon) => {
 const urlCmpWithRecordId = (cmp, recordId) => {
   return `/lightning/cmp/c__${cmp}?c__recordId=${recordId}`;
 }
-
+                                                                                                                                                                                                            
 /* ================= NEGATIVE HELPER ================= */
 const isNegative = (value) => {
   if (value === null || value === undefined || value === '') {
@@ -549,6 +576,8 @@ const formatNumber = (value) => {
 export {
   formatDate,
   formatDateTime,
+  formatDateTimeVN,
+  formatDuration,
   mask,
   formatDateVNI,
   formatToDDMMYYYY,

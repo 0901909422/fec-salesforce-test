@@ -2,18 +2,7 @@ import { LightningElement, track, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import getPendingServiceCases from '@salesforce/apex/FEC_GetServiceCases.getPendingServiceCases';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetServiceCases.getCaseFieldHelpTexts';
-
-function formatDateTimeVN(val) {
-  if (!val) return '';
-  const d = new Date(val);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const h = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  const s = String(d.getSeconds()).padStart(2, '0');
-  return `${day}/${m}/${y} ${h}:${min}:${s}`;
-}
+import { formatDateTimeVN } from 'c/fec_CommonUtils';
 
 export default class Fec_PendingServiceCases extends NavigationMixin(LightningElement) {
   @track data = [];

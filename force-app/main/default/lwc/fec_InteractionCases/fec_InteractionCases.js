@@ -3,27 +3,7 @@ import { NavigationMixin } from 'lightning/navigation';
 import getAllInteractions from '@salesforce/apex/FEC_GetInteractionCases.getAllInteractions';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetInteractionCases.getCaseFieldHelpTexts';
 import logSensitiveAccess from '@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess';
-
-function formatDateTimeVN(val) {
-  if (!val) return '';
-  const d = new Date(val);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const h = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  const s = String(d.getSeconds()).padStart(2, '0');
-  return `${day}/${m}/${y} ${h}:${min}:${s}`;
-}
-
-function formatDuration(seconds) {
-  if (seconds == null || isNaN(Number(seconds))) return '';
-  const n = Math.floor(Number(seconds));
-  const h = Math.floor(n / 3600);
-  const m = Math.floor((n % 3600) / 60);
-  const s = n % 60;
-  return [h, m, s].map((x) => String(x).padStart(2, '0')).join(':');
-}
+import { formatDateTimeVN, formatDuration } from 'c/fec_CommonUtils';
 
 export default class Fec_InteractionCases extends NavigationMixin(LightningElement) {
   @track data = [];
