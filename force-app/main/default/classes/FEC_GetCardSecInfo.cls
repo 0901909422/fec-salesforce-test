@@ -120,6 +120,7 @@ public with sharing class FEC_GetCardSecInfo {
         public String ResponsibleUnit;
         public String ResposiblePerson;
         public String ResposiblePersonPhone;
+        public Date DateAssgined;
     }
  
     // =========================================================================
@@ -326,6 +327,7 @@ public with sharing class FEC_GetCardSecInfo {
             result.CardSecInfo.PassDue.ResponsibleUnit = FEC_CommonUltils.getXmlValue(mcb3,'ResponsibleUnit');
             result.CardSecInfo.PassDue.ResposiblePerson = FEC_CommonUltils.getXmlValue(mcb3,'ResposiblePerson');
             result.CardSecInfo.PassDue.ResposiblePersonPhone = FEC_CommonUltils.getXmlValue(mcb3,'ResposiblePersonPhone');
+            result.CardSecInfo.PassDue.DateAssgined = FEC_CommonUltils.parseDate(FEC_CommonUltils.getXmlValue(mcb3,'DateAssgined'));
         }
  
         // SupplementaryCards
