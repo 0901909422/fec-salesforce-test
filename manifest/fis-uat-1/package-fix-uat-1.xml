@@ -63,6 +63,7 @@
 		<members>fec_CustomDblClickRadio</members>
 		<members>fec_InteractionHighlightMain</members>
 		<members>fec_IPPDetails</members>
+		<members>fec_ComboBox</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
