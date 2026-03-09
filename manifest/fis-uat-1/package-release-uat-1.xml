@@ -1270,6 +1270,7 @@
 	</types>
 	<types>
         <members>vi</members>
+        <members>en_US</members>
         <name>Translations</name>
     </types>
 	<types>

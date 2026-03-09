@@ -35,6 +35,11 @@
         <members>FEC_GetAppStatusCallout</members>
         <members>FEC_GetCustomerSaleDisburseInfoCallout</members>
         <members>FEC_CaseRemarkController</members>
+        <members>FEC_GetCardSecInfo</members>
+        <members>FEC_SecondaryInfoAccountController</members>
+        <members>FEC_TransactionsController</members>
+        <members>FEC_StatementsAccountController</members>
+        <members>FEC_PaymentHistoryController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -64,6 +69,7 @@
 		<members>fec_InteractionHighlightMain</members>
 		<members>fec_IPPDetails</members>
 		<members>fec_ComboBox</members>
+		<members>fec_StatementsAccountTabView</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -358,5 +364,9 @@
 		<members>FEC_KYC__c</members>
 		<name>CustomTab</name>
 	</types>
+	<types>
+        <members>en_US</members>
+        <name>Translations</name>
+    </types>
     <version>65.0</version>
 </Package>
