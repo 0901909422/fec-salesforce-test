@@ -1,0 +1,361 @@
+<template>
+  <div class="decision-table-wrapper slds-grid">
+
+    <!-- ═══════════════════════════════════════════════════════
+         LEFT PANEL: Business Process Tree
+    ════════════════════════════════════════════════════════════ -->
+    <div class="tree-panel">
+      <!-- Header -->
+      <div class="panel-header">
+        <div class="slds-grid slds-grid_vertical-align-center">
+          <lightning-icon icon-name="utility:data_mapping" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+          <span class="panel-title">Business Process</span>
+        </div>
+        <button class="slds-button slds-button_icon slds-button_icon-small"
+                title="Toggle Tree"
+                onclick={handleToggleTree}>
+          <lightning-icon icon-name={treeArrowIcon} size="x-small"></lightning-icon>
+        </button>
+      </div>
+
+      <!-- Tree Content -->
+      <div class="tree-body">
+        <!-- Tree Error -->
+        <template if:true={treeError}>
+          <div class="slds-notify slds-notify_alert slds-alert_error slds-m-around_x-small">
+            <lightning-icon icon-name="utility:error" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+            <span class="slds-text-body_small">{treeError}</span>
+          </div>
+        </template>
+
+        <!-- Tree Items -->
+        <template if:true={isTreeExpanded}>
+          <template if:true={hasTreeData}>
+            <lightning-tree items={treeData}
+                            onselect={handleNodeSelect}
+                            class="bp-tree">
+            </lightning-tree>
+          </template>
+          <template if:false={hasTreeData}>
+            <div class="empty-state">
+              <lightning-icon icon-name="utility:info" size="small" variant="bare"></lightning-icon>
+              <p>Không có Business Process</p>
+            </div>
+          </template>
+        </template>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         RIGHT PANEL: Decision Table
+    ════════════════════════════════════════════════════════════ -->
+    <div class="content-panel">
+
+      <!-- Panel Header -->
+      <div class="panel-header">
+        <div class="slds-grid slds-grid_vertical-align-center">
+          <lightning-icon icon-name="utility:flow" size="x-small" variant="brand" class="slds-m-right_x-small"></lightning-icon>
+          <span class="panel-title">Decision Table — Flow Control</span>
+          <template if:true={hasSelection}>
+            <span class="selected-badge slds-m-left_small">{selectedItemLabel}</span>
+          </template>
+        </div>
+        <template if:true={hasDecisionData}>
+          <div class="slds-grid slds-grid_vertical-align-center slds-gap_x-small">
+            <span class="slds-badge slds-badge_inverse">{stageCount} Stages</span>
+            <span class="slds-badge">{totalRuleCount} Rules</span>
+          </div>
+        </template>
+      </div>
+
+      <!-- Panel Body -->
+      <div class="content-body slds-is-relative">
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+          <lightning-spinner alternative-text="Loading..." size="medium" variant="brand"></lightning-spinner>
+        </template>
+
+        <!-- Error -->
+        <template if:true={error}>
+          <div class="slds-notify slds-notify_alert slds-alert_error slds-m-around_small" role="alert">
+            <lightning-icon icon-name="utility:error" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+            <span>{error}</span>
+          </div>
+        </template>
+
+        <!-- Decision Table -->
+        <template if:true={hasDecisionData}>
+          <!-- Toolbar: Search + Add Button -->
+          <div class="decision-toolbar">
+            <div class="slds-grid slds-grid_vertical-align-center slds-gap_small">
+              <!-- Search Bar -->
+              <div class="search-container slds-grow">
+                <div class="search-input-wrapper">
+                  <span class="search-icon-wrap">&#128269;</span>
+                  <input type="text" 
+                         class="search-input"
+                         placeholder="Tìm kiếm theo Action hoặc Stage..."
+                         value={searchFilter}
+                         onchange={handleSearchChange}
+                         onkeyup={handleSearchChange}/>
+                  <template if:true={hasSearchFilter}>
+                    <button class="slds-button slds-button_icon clear-search-btn"
+                            title="Clear Search"
+                            onclick={handleClearSearch}>
+                      <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                    </button>
+                  </template>
+                </div>
+                <template if:true={hasSearchFilter}>
+                  <p class="search-message slds-text-body_small slds-m-top_x-small">{displaySearchMessage}</p>
+                </template>
+              </div>
+
+              <!-- Add Rule Button -->
+              <template if:true={isBPSelected}>
+                <button class="slds-button slds-button_brand slds-m-left_small"
+                        onclick={handleAddRule}
+                        title="Add New Rule">
+                  <lightning-icon icon-name="utility:add" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                  Thêm Rule
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <!-- No search results -->
+          <template if:true={hasNoSearchResults}>
+            <div class="empty-state slds-p_large">
+              <lightning-icon icon-name="utility:search" size="medium" variant="bare"></lightning-icon>
+              <p class="slds-m-top_small">Không tìm thấy kết quả cho "<strong>{searchFilter}</strong>"</p>
+              <button class="slds-button slds-button_neutral slds-m-top_small" onclick={handleClearSearch}>
+                Xóa bộ lọc
+              </button>
+            </div>
+          </template>
+
+          <!-- Table -->
+          <template if:false={hasNoSearchResults}>
+            <div class="table-scroll">
+              <table class="decision-table slds-table slds-table_bordered slds-table_cell-buffer">
+                <thead>
+                  <!-- Group headers: Conditions | Actions -->
+                  <tr class="group-header-row">
+                    <th colspan="2" class="group-header conditions-group">CONDITIONS</th>
+                    <th colspan="5" class="group-header actions-group">ACTIONS</th>
+                  </tr>
+                  <!-- Column headers -->
+                  <tr class="col-header-row">
+                    <th scope="col" class="col-current-stage">{colCurrentStage}</th>
+                    <th scope="col" class="col-conditions">{colConditions}</th>
+                    <th scope="col" class="col-action">{colAction}</th>
+                    <th scope="col" class="col-next-stage">{colNextStage}</th>
+                    <th scope="col" class="col-next-queue">{colNextQueue}</th>
+                    <th scope="col" class="col-team-group">{colTeamUserGroup}</th>
+                    <th scope="col" class="col-actions"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={filteredGroupedRows} for:item="group">
+                    <template for:each={group.rules} for:item="rule">
+                      <tr key={rule.rowId} class="decision-row">
+                        <!-- Current Stage: hiển thị ở tất cả các row -->
+                        <td class="col-current-stage stage-cell">
+                          <span class="stage-badge stage-current">{group.stageName}</span>
+                        </td>
+                        <!-- Conditions: để trống vì dữ liệu hiện tại chưa có -->
+                        <td class="col-conditions conditions-cell">
+                          <span class="condition-any">Bất kỳ</span>
+                        </td>
+                        <!-- Action -->
+                        <td class="col-action action-cell">
+                          <span class="action-badge">{rule.action}</span>
+                        </td>
+                        <!-- Next Stage -->
+                        <td class="col-next-stage next-stage-cell">
+                          <span class="stage-badge stage-next">{rule.nextStage}</span>
+                        </td>
+                        <!-- Next Queue -->
+                        <td class="col-next-queue queue-cell">
+                          <span class="queue-value">{rule.nextQueue}</span>
+                        </td>
+                        <!-- Team/User Group -->
+                        <td class="col-team-group team-cell">
+                          <span class="team-value">{rule.teamUserGroup}</span>
+                        </td>
+                        <!-- Actions -->
+                        <td class="col-actions action-buttons">
+                          <button class="slds-button slds-button_icon slds-button_icon-x-small"
+                                  data-row-id={rule.rowId}
+                                  onclick={handleEditRule}
+                                  title="Edit Rule">
+                            <lightning-icon icon-name="utility:edit" size="x-small"></lightning-icon>
+                          </button>
+                          <button class="slds-button slds-button_icon slds-button_icon-x-small slds-button_icon-error"
+                                  data-row-id={rule.rowId}
+                                  onclick={handleDeleteRule}
+                                  title="Delete Rule">
+                            <lightning-icon icon-name="utility:delete" size="x-small"></lightning-icon>
+                          </button>
+                        </td>
+                      </tr>
+                    </template>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+        </template>
+
+        <!-- Đã chọn BP nhưng không có data -->
+        <template if:true={isBPSelected}>
+          <template if:false={hasDecisionData}>
+            <template if:false={isLoading}>
+              <div class="empty-state large slds-p_large">
+                <lightning-icon icon-name="utility:table" size="large" variant="bare"></lightning-icon>
+                <p class="slds-m-top_small">Không có routing rules cho Business Process này.</p>
+                <button class="slds-button slds-button_brand slds-m-top_medium"
+                        onclick={handleAddRule}>
+                  <lightning-icon icon-name="utility:add" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                  Tạo Rule Đầu Tiên
+                </button>
+              </div>
+            </template>
+          </template>
+        </template>
+
+        <!-- Đã chọn Stage (không phải BP) -->
+        <template if:true={isStageSelected}>
+          <div class="empty-state large slds-p_large">
+            <lightning-icon icon-name="utility:info" size="large" variant="bare"></lightning-icon>
+            <p class="slds-m-top_small">
+              Hãy chọn node <strong>Business Process</strong> để xem Decision Table.<br/>
+              Stage là đơn vị con trong Business Process.
+            </p>
+          </div>
+        </template>
+
+        <!-- Chưa chọn gì -->
+        <template if:false={hasSelection}>
+          <div class="empty-state large slds-p_large">
+            <lightning-icon icon-name="utility:data_mapping" size="large" variant="bare"></lightning-icon>
+            <p class="slds-m-top_small">Chọn một <strong>Business Process</strong> từ danh sách bên trái để xem Decision Table.</p>
+          </div>
+        </template>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal Overlay: Add/Edit Rule -->
+  <template if:true={showAddRuleModal}>
+    <div class="modal-overlay" onclick={handleOverlayClick}>
+      <div class="modal-dialog" onclick={handleDialogClick}>
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <div class="slds-grid slds-grid_vertical-align-center">
+            <lightning-icon icon-name="utility:flow" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+            <h2 class="modal-title">{modalTitle}</h2>
+          </div>
+          <button class="slds-button slds-button_icon slds-button_icon-inverse"
+                  onclick={handleCloseModal}
+                  title="Đóng">
+            <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <!-- Row 1: Current Stage & Action Button -->
+          <div class="modal-form-row">
+            <!-- Current Stage -->
+            <div class="modal-form-group">
+              <label class="modal-label"><span class="required-mark">*</span> Current Stage</label>
+              <lightning-combobox
+                name="previousStageId"
+                placeholder="-- Chọn Stage --"
+                options={stageOptions}
+                value={formData.previousStageId}
+                onchange={handleModalInputChange}
+                class="modal-combobox">
+              </lightning-combobox>
+              <template if:true={formErrors.previousStageId}>
+                <span class="modal-error">{formErrors.previousStageId}</span>
+              </template>
+            </div>
+
+            <!-- Action Button -->
+            <div class="modal-form-group">
+              <label class="modal-label"><span class="required-mark">*</span> Action Button</label>
+              <lightning-combobox
+                name="actionButtonId"
+                placeholder="-- Chọn Action --"
+                options={actionOptions}
+                value={formData.actionButtonId}
+                onchange={handleModalInputChange}
+                class="modal-combobox">
+              </lightning-combobox>
+              <template if:true={formErrors.actionButtonId}>
+                <span class="modal-error">{formErrors.actionButtonId}</span>
+              </template>
+            </div>
+          </div>
+
+          <!-- Row 2: Next Stage (Full Width) -->
+          <div class="modal-form-group modal-form-group-full">
+            <label class="modal-label"><span class="required-mark">*</span> Next Stage</label>
+            <lightning-combobox
+              name="nextStageId"
+              placeholder="-- Chọn Stage --"
+              options={stageOptions}
+              value={formData.nextStageId}
+              onchange={handleModalInputChange}
+              class="modal-combobox">
+            </lightning-combobox>
+            <template if:true={formErrors.nextStageId}>
+              <span class="modal-error">{formErrors.nextStageId}</span>
+            </template>
+          </div>
+
+          <!-- Row 3: Next Queue & Team/User Group -->
+          <div class="modal-form-row">
+            <div class="modal-form-group">
+              <label class="modal-label">Next Queue</label>
+              <input type="text" class="modal-input"
+                     placeholder="e.g., Queue_Name"
+                     data-field-name="nextQueue"
+                     value={formData.nextQueue}
+                     onchange={handleModalInputChange}/>
+            </div>
+            <div class="modal-form-group">
+              <label class="modal-label">Team/User Group</label>
+              <input type="text" class="modal-input"
+                     placeholder="e.g., Team_Name"
+                     data-field-name="teamUserGroup"
+                     value={formData.teamUserGroup}
+                     onchange={handleModalInputChange}/>
+            </div>
+          </div>
+
+          <!-- Info -->
+          <div class="modal-info">
+            <lightning-icon icon-name="utility:info" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+            Các trường đánh dấu <span class="required-mark">*</span> là bắt buộc
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <button class="slds-button slds-button_neutral" onclick={handleCloseModal}>Hủy bỏ</button>
+          <button class="slds-button slds-button_brand" onclick={handleSaveRule} disabled={isLoading}>
+            <template if:true={isLoading}>Đang lưu...</template>
+            <template if:false={isLoading}>{modalSaveLabel}</template>
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+</template>

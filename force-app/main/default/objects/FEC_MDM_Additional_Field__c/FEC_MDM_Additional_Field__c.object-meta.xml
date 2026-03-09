@@ -53,7 +53,7 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>FEC_MDM_Additional_Field__c</label>
+    <label>MDM Additional Field</label>
     <nameField>
         <label>FEC_MDM_Additional_Field_Name__c</label>
         <trackHistory>false</trackHistory>
