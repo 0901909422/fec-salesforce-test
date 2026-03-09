@@ -125,6 +125,17 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     ];
   }
 
+  get isSearch() {
+    return !!(
+      (this.nationalId && this.nationalId.trim()) ||
+      (this.phoneNumber && this.phoneNumber.trim()) ||
+      (this.applicationId && this.applicationId.trim()) ||
+      (this.contractNumber && this.contractNumber.trim()) ||
+      (this.accountNumber && this.accountNumber.trim()) ||
+      (this.emailAddress && this.emailAddress.trim())
+    );
+  }
+
   get isShowCustomerNumber() {
     return this.recordId ? true : false;
   }
