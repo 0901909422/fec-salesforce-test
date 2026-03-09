@@ -138,10 +138,6 @@
         <fields>NAME</fields>
         <relatedList>FEC_Routing_Action_History__c.FEC_Next_Stage__c</relatedList>
     </relatedLists>
-    <relatedLists>
-        <fields>NAME</fields>
-        <relatedList>Process_Stage_Mapping__c.FEC_Case_Stage__c</relatedList>
-    </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>false</showHighlightsPanel>
     <showInteractionLogPanel>false</showInteractionLogPanel>
