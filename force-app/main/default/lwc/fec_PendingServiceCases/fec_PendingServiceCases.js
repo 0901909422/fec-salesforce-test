@@ -3,6 +3,7 @@ import { NavigationMixin } from 'lightning/navigation';
 import getPendingServiceCases from '@salesforce/apex/FEC_GetServiceCases.getPendingServiceCases';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetServiceCases.getCaseFieldHelpTexts';
 import { formatDateTimeVN } from 'c/fec_CommonUtils';
+import { STR_NA } from 'c/fec_CommonConst';
 
 export default class Fec_PendingServiceCases extends NavigationMixin(LightningElement) {
   @track data = [];
@@ -105,7 +106,7 @@ export default class Fec_PendingServiceCases extends NavigationMixin(LightningEl
         ...row,
         Id: row.caseId,
         caseIdText: row.caseIdText || '',
-        interactionIdLabel: row.interactionIdText || 'N/A',
+        interactionIdLabel: row.interactionIdText || STR_NA,
         caseCreatedOnFormatted: formatDateTimeVN(row.caseCreatedOn),
         lastUpdatedOnFormatted: formatDateTimeVN(row.lastUpdatedOn),
       }));

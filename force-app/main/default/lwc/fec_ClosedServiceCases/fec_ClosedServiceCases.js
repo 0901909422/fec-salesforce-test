@@ -3,6 +3,7 @@ import { NavigationMixin } from 'lightning/navigation';
 import getClosedServiceCases from '@salesforce/apex/FEC_GetServiceCases.getClosedServiceCases';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetServiceCases.getCaseFieldHelpTexts';
 import { formatDateTimeVN } from 'c/fec_CommonUtils';
+import { STR_NA, MSG_NO_RESULTS } from 'c/fec_CommonConst';
 
 export default class Fec_ClosedServiceCases extends NavigationMixin(LightningElement) {
   @track data = [];
@@ -14,7 +15,7 @@ export default class Fec_ClosedServiceCases extends NavigationMixin(LightningEle
 
   activeSections = ['closedServiceCases'];
 
-  emptyMessage = 'Không tìm thấy kết quả';
+  emptyMessage = MSG_NO_RESULTS;
 
   labels = {
     sectionTitle: 'Closed Service Cases',
@@ -111,7 +112,7 @@ export default class Fec_ClosedServiceCases extends NavigationMixin(LightningEle
         ...row,
         Id: row.caseId,
         caseIdText: row.caseIdText || '',
-        interactionIdLabel: row.interactionIdText || 'N/A',
+        interactionIdLabel: row.interactionIdText || STR_NA,
         caseCreatedOnFormatted: formatDateTimeVN(row.caseCreatedOn),
         lastUpdatedOnFormatted: formatDateTimeVN(row.lastUpdatedOn),
       }));

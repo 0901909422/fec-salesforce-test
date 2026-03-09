@@ -4,6 +4,7 @@ import getAllInteractions from '@salesforce/apex/FEC_GetInteractionCases.getAllI
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetInteractionCases.getCaseFieldHelpTexts';
 import logSensitiveAccess from '@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess';
 import { formatDateTimeVN, formatDuration } from 'c/fec_CommonUtils';
+import { MSG_NO_RESULTS } from 'c/fec_CommonConst';
 
 export default class Fec_InteractionCases extends NavigationMixin(LightningElement) {
   @track data = [];
@@ -15,7 +16,7 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
 
   activeSections = ['interactions'];
 
-  emptyMessage = 'Không tìm thấy kết quả';
+  emptyMessage = MSG_NO_RESULTS;
 
   labels = {
     sectionTitle: 'Interactions',

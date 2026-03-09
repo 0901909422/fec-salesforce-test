@@ -45,6 +45,7 @@
         <name>ApexClass</name>
     </types>
     <types>
+        <members>fec_CommonConst</members>
         <members>fec_CommonUtils</members>
         <members>fec_RelatedListPaging</members>
         <members>fec_PendingServiceCases</members>
