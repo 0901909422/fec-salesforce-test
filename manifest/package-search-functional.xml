@@ -8,6 +8,7 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_SearchController</members>
 		<members>FEC_GetCustomerList</members>
+		<members>FEC_CreateCaseInteractionController</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -18,6 +19,8 @@
 		<members>fec_RecallAction</members>
 		<members>fec_ReopenAction</members>
 		<members>fec_Search</members>
+		<members>customDblclickCell</members>
+		<members>maskedToggleDatatable</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -31,6 +34,11 @@
 		<members>FEC_Toast_Reopen_Success</members>
 		<members>FEC_Toast_Save_Success_Title</members>
 		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>FEC_B2_Contract__c</members>
+		<members>FEC_Cash_24_Contract__c</members>
+		<name>CustomObject</name>
 	</types>
     <version>65.0</version>
 </Package>

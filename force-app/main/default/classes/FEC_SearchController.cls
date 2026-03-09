@@ -78,6 +78,30 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
+    public static List<FEC_B2_Contract__c> getB2Contracts(String contractNumber) {
+        try {
+            return [
+                SELECT Name, FEC_ID_Card__c, FEC_Code__c, FEC_Full_Name__c, FEC_Product_Code__c, FEC_Installment__c, FEC_Principal__c, FEC_Monthly_Fee__c, FEC_Term__c, FEC_City__c
+                FROM FEC_B2_Contract__c WHERE Name =: contractNumber
+                ];
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static List<FEC_Cash_24_Contract__c> getCash24Contracts(String contractNumber) {
+        try {
+            return [
+                SELECT Name, FEC_Sold_Date__c, FEC_Balance_Amount__c, FEC_Note__c, FEC_Contract_Status__c, FEC_Product__c
+                FROM FEC_Cash_24_Contract__c WHERE Name =: contractNumber
+                ];
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    @AuraEnabled
     public static Case createCustomerCase(String fullName, String nationalId) {
         try{
             Case c = new Case();
