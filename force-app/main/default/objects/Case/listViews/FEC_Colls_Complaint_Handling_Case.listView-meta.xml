@@ -26,9 +26,9 @@
     <label>Colls Complaint Handling</label>
     <queue>FEC_Colls_Complaint_Handling</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Collections_Complaint_Handling_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Collections_Complaint_Handling_Team_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Collections_Complaint_Handling_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Collections_Complaint_Handling_Team_Leader</roleAndSubordinatesInternal>
+        <role>FEC_Collections_Complaint_Handling_Specialist</role>
+        <role>FEC_Collections_Complaint_Handling_Team_Leader</role>
+        <role>FEC_Senior_Collections_Complaint_Handling_Specialist</role>
+        <role>FEC_Senior_Collections_Complaint_Handling_Team_Leader</role>
     </sharedTo>
 </ListView>

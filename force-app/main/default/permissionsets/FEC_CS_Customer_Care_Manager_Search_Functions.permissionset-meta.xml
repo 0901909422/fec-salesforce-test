@@ -114,4 +114,8 @@
         <tab>standard-Case</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <tabSettings>
+        <tab>FEC_Customer_Search</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>

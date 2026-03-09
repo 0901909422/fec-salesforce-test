@@ -26,10 +26,10 @@
     <label>Doc Processing &amp; Archiving</label>
     <queue>FEC_Doc_Processing_Archiving</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Document_Processing_Archiving_Manager</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Document_Processing_Archiving_Officer</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Document_Processing_Archiving_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_Of_Record_Management_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Document_Processing_Archiving_Specialist</roleAndSubordinatesInternal>
+        <role>FEC_Document_Processing_Archiving_Manager</role>
+        <role>FEC_Document_Processing_Archiving_Officer</role>
+        <role>FEC_Document_Processing_Archiving_Specialist</role>
+        <role>FEC_Head_Of_Record_Management_Department</role>
+        <role>FEC_Senior_Document_Processing_Archiving_Specialist</role>
     </sharedTo>
 </ListView>

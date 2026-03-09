@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
     <label><!-- Q15 NPS Score --></label>
-    <name>NPS_Q15_Score__c</name>
+    <name>FEC_Q15_NPS_Score__c</name>
     <picklistValues>
         <masterLabel>1</masterLabel>
         <translation>1</translation>

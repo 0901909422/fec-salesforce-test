@@ -130,7 +130,16 @@ public with sharing class FEC_GetCustomerList {
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
                     
         HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
-               
+        // ===== LOG REQUEST + RESPONSE =====
+        FEC_CommonUltils.logApi(
+            'FEC_GetCustomerList',
+            endpoint,
+            'POST',
+            soapBody,
+            res,
+            null
+        );
+
         System.debug('Status code: ' + res.getStatusCode());
         System.debug('Response body: ' + res.getBody());
         if (res.getStatusCode() == 200 && String.isNotBlank(res.getBody())) {
