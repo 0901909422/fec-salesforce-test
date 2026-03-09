@@ -821,56 +821,56 @@ public with sharing class FEC_CaseBusinessService {
           if (String.isBlank(queueId)) {
             throw new AuraHandledException(System.Label.FEC_MSG_Can_Not_Find_Next_Stage);
           }
-          route(caseId, queueId, natureOfCaseId, actionId);
           markCaseSubmittedAndClearDrafts(caseId);
+          route(caseId, queueId, natureOfCaseId, actionId);
           return null;
         }
         when REVERT {
-          revert(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
+          revert(caseId);
           return null;
         }
         when RECALL {
+          markCaseSubmittedAndClearDrafts(caseId);
           recall(caseId);
           createRoutingActionHis('Recall', '', oldOwnerName, caseId, stageName);
-          markCaseSubmittedAndClearDrafts(caseId);
           return null;
         }
         when CANCEL {
+          markCaseSubmittedAndClearDrafts(caseId);
           cancel(caseId);
           createRoutingActionHis('Cancel', '', oldOwnerName, caseId, stageName);
-          markCaseSubmittedAndClearDrafts(caseId);
           return null;
         }
         when REOPEN {
+          markCaseSubmittedAndClearDrafts(caseId);
           reopen(caseId);
           createRoutingActionHis('Reopen', '', oldOwnerName, caseId, stageName);
-          markCaseSubmittedAndClearDrafts(caseId);
           return null;
         }
         when ESCALATE {
+          markCaseSubmittedAndClearDrafts(caseId);
           escalate(caseId);
           createRoutingActionHis('Escalate', '', oldOwnerName, caseId, stageName);
-          markCaseSubmittedAndClearDrafts(caseId);
           return null;
         }
         when REJECT {
+          markCaseSubmittedAndClearDrafts(caseId);
           reject(caseId);
           createRoutingActionHis('Reject', '', oldOwnerName, caseId, stageName);
-          markCaseSubmittedAndClearDrafts(caseId);
           return null;
         }
         when RESOLVE {
+          markCaseSubmittedAndClearDrafts(caseId);
           resolve(caseId);
           createRoutingActionHis('Resolve', '', oldOwnerName, caseId, stageName);
-          markCaseSubmittedAndClearDrafts(caseId);
           return null;
         }
         when TRANSFER {
+          markCaseSubmittedAndClearDrafts(caseId);
           String userOrQueueId = (String) params.get('userOrQueueId');
           createRoutingActionHis('Transfer', '', oldOwnerName, caseId, stageName);
           transfer(caseId, userOrQueueId);
-          markCaseSubmittedAndClearDrafts(caseId);
           return null;
         }
         when UPDATEACTION {

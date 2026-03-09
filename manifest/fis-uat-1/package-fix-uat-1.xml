@@ -33,6 +33,9 @@
         <members>FEC_GetCardTransactions</members>
         <members>FEC_GetApplicationsList</members>
         <members>FEC_GetCardBasicInfo</members>
+        <members>FEC_GetAppStatusCallout</members>
+        <members>FEC_GetCustomerSaleDisburseInfoCallout</members>
+        <members>FEC_CaseRemarkController</members>
         <name>ApexClass</name>
     </types>
     <types>
