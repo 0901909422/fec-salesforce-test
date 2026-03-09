@@ -295,16 +295,18 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       return;
     }
 
-    // Kiểm tra chặn submit (vd: original === updated phone) trước khi bật spinner
+    this.isLoaded = false;
+    await Promise.resolve();
+
+    // Kiểm tra chặn submit (vd: original === updated phone)
     if (caseBusinessEle?.checkSubmitBlock) {
       const blocked = await caseBusinessEle.checkSubmitBlock();
       if (blocked) {
+        this.isLoaded = true;
         this.isSubmitting = false;
         return;
       }
     }
-
-    this.isLoaded = false;
 
     try {
       // Xóa draft cũ, chỉ lưu 1 bản ghi = nội dung hiện tại trong ô (tránh sinh nhiều bản ghi từ Save & Close trước đó)

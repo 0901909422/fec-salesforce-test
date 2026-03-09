@@ -252,17 +252,22 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
 
                     this.ippData = records.map((record) => {
                         const recordNo = (getValue(record, 'recordNo', 'FEC_IPP_Record_No__c') ?? '').toString();
-                        const ippBalance = Number(getValue(record, 'ippBalance', 'IppBalance', 'FEC_IPP_Balance__c')) || 0;
+                        const ippBalanceRaw = getValue(record, 'ippBalance', 'IppBalance', 'FEC_IPP_Balance__c');
+                        const ippBalance = ippBalanceRaw != null ? Number(ippBalanceRaw) : null;
                         const firstDueDate = getValue(record, 'firstDueDate', 'FirstDueDate', 'FEC_IPP_First_Due_Date__c') ?? null;
                         const matureDate = getValue(record, 'matureDate', 'MatureDate', 'FEC_IPP_Mature_Date__c') ?? null;
-                        const currentBalance = Number(getValue(record, 'currentBalance', 'CurrentBalance', 'FEC_IPP_Current_Balance__c')) || 0;
+                        const currentBalanceRaw = getValue(record, 'currentBalance', 'CurrentBalance', 'FEC_IPP_Current_Balance__c');
+                        const currentBalance = currentBalanceRaw != null ? Number(currentBalanceRaw) : null;
                         const currentTerm = getValue(record, 'currentTerm', 'CurrentTerm', 'FEC_IPP_Current_Term__c') ?? null;
                         const ippTerm = getValue(record, 'ippTerm', 'IppTerm', 'FEC_IPP_Term__c') ?? null;
                         const openDate = getValue(record, 'openDate', 'OpenDate', 'FEC_IPP_Open_Date__c') ?? null;
                         const interestRate = getValue(record, 'interestRate', 'InterestRate', 'FEC_IPP_Interest_Rate__c') ?? null;
-                        const totalIPPPaymentAmount = Number(getValue(record, 'totalIPPPaymentAmount', 'FEC_Total_IPP_Payment_Amount__c')) || 0;
-                        const totalIPPMonthlyPrincipal = Number(getValue(record, 'totalIPPMonthlyPrincipal', 'FEC_Total_IPP_Monthly_Principal__c')) || 0;
-                        const totalIPPMonthlyInterest = Number(getValue(record, 'totalIPPMonthlyInterest', 'FEC_Total_IPP_Monthly_Interest__c')) || 0;
+                        const totalIPPPaymentAmountRaw = getValue(record, 'totalIPPPaymentAmount', 'FEC_Total_IPP_Payment_Amount__c');
+                        const totalIPPPaymentAmount = totalIPPPaymentAmountRaw != null ? Number(totalIPPPaymentAmountRaw) : null;
+                        const totalIPPMonthlyPrincipalRaw = getValue(record, 'totalIPPMonthlyPrincipal', 'FEC_Total_IPP_Monthly_Principal__c');
+                        const totalIPPMonthlyPrincipal = totalIPPMonthlyPrincipalRaw != null ? Number(totalIPPMonthlyPrincipalRaw) : null;
+                        const totalIPPMonthlyInterestRaw = getValue(record, 'totalIPPMonthlyInterest', 'FEC_Total_IPP_Monthly_Interest__c');
+                        const totalIPPMonthlyInterest = totalIPPMonthlyInterestRaw != null ? Number(totalIPPMonthlyInterestRaw) : null;
 
                         const planNumber = (getValue(record, 'planNumber', 'PlanNumber', 'FEC_IPP_Plan__c') ?? '').toString();
                         const interestRateNum = interestRate != null ? Number(interestRate) : null;
@@ -278,11 +283,11 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
                             matureDate: matureDate,
                             matureDateFormatted: formatDate(matureDate) || '',
                             ippBalance: ippBalance,
-                            ippBalanceFormatted: formatCurrency(ippBalance, 0),
-                            ippBalanceClass: isNegative(ippBalance) ? 'slds-text-color_error' : '',
+                            ippBalanceFormatted: ippBalance != null ? formatCurrency(ippBalance, 0) : '-',
+                            ippBalanceClass: ippBalance != null && isNegative(ippBalance) ? 'slds-text-color_error' : '',
                             currentBalance: currentBalance,
-                            currentBalanceFormatted: formatCurrency(currentBalance, 0),
-                            currentBalanceClass: isNegative(currentBalance) ? 'slds-text-color_error' : '',
+                            currentBalanceFormatted: currentBalance != null ? formatCurrency(currentBalance, 0) : '-',
+                            currentBalanceClass: currentBalance != null && isNegative(currentBalance) ? 'slds-text-color_error' : '',
                             interestRate: interestRateNum,
                             interestRateFormatted: interestRateNum != null ? interestRateNum + '%' : '-',
                             currentTerm: currentTerm,
@@ -290,11 +295,11 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
                             ippTerm: ippTerm,
                             ippTermFormatted: ippTerm != null ? formatCurrency(ippTerm, 0) : '-',
                             totalIPPPaymentAmount: totalIPPPaymentAmount,
-                            totalIPPPaymentAmountFormatted: formatCurrency(totalIPPPaymentAmount, 0),
+                            totalIPPPaymentAmountFormatted: totalIPPPaymentAmount != null ? formatCurrency(totalIPPPaymentAmount, 0) : '-',
                             totalIPPMonthlyPrincipal: totalIPPMonthlyPrincipal,
-                            totalIPPMonthlyPrincipalFormatted: formatCurrency(totalIPPMonthlyPrincipal, 0),
+                            totalIPPMonthlyPrincipalFormatted: totalIPPMonthlyPrincipal != null ? formatCurrency(totalIPPMonthlyPrincipal, 0) : '-',
                             totalIPPMonthlyInterest: totalIPPMonthlyInterest,
-                            totalIPPMonthlyInterestFormatted: formatCurrency(totalIPPMonthlyInterest, 0),
+                            totalIPPMonthlyInterestFormatted: totalIPPMonthlyInterest != null ? formatCurrency(totalIPPMonthlyInterest, 0) : '-',
                             ccCode: (getValue(record, 'ccCode', 'FEC_CC_Code__c') ?? '-').toString(),
                             ccName: (getValue(record, 'ccName', 'FEC_CC_Name__c') ?? '-').toString(),
                             dsaCode: (getValue(record, 'dsaCode', 'FEC_DSA_Code__c') ?? '-').toString(),
