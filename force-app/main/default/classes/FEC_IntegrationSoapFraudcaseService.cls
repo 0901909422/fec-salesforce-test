@@ -121,6 +121,16 @@ public class FEC_IntegrationSoapFraudcaseService {
         private String[] apex_schema_type_info = new String[]{'urn:PegaRULES:SOAP:FraudCase:Services','false','false'};
         private String[] field_order_type_info = new String[]{'ID','Name','NameVN','PosOrder','ApplyTo','Type_x','AdditionalProperties','Children'};
     }
+    public class RequestInfoCustom_element {
+        public String CaseID;
+        public String CaseType;
+        public String ProductType;
+        public String Category;
+        public String SubCategory;
+        public String SubCode;
+        public String Remarks;
+        public FEC_IntegrationSoapFraudcaseService.AdditionalInfoCustom_element[] AdditionalInfo;       
+    }
     public class RequestInfo_element {
         public String CaseID;
         public String CaseType;
@@ -240,6 +250,13 @@ public class FEC_IntegrationSoapFraudcaseService {
         private String[] AdditionalInfo_type_info = new String[]{'AdditionalInfo','urn:PegaRULES:SOAP:FraudCase:Services',null,'0','-1','false'};
         private String[] apex_schema_type_info = new String[]{'urn:PegaRULES:SOAP:FraudCase:Services','false','false'};
         private String[] field_order_type_info = new String[]{'CaseType','ProductType','Category','SubCategory','SubCode','Remarks','AdditionalInfo'};
+    }
+    public class AdditionalInfoCustom_element {
+        public String ID;
+        public String Value;
+        public String Type;
+        public Boolean Mandatory;
+       
     }
     public class AdditionalInfo_element {
         public String ID;
