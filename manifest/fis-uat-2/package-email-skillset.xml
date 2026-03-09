@@ -38,5 +38,21 @@
 		<members>ServiceResourceSkill.FEC_Validation_Skill_Level</members>
 		<name>ValidationRule</name>
 	</types>
+    <types>
+        <members>FEC_GetServiceCases</members>
+        <members>FEC_GetInteractionCases</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>fec_RelatedListPaging</members>
+        <members>fec_PendingServiceCases</members>
+        <members>fec_ClosedServiceCases</members>
+        <members>fec_InteractionCases</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>FEC_CommonCss</members>
+        <name>StaticResource</name>
+    </types>
     <version>65.0</version>
 </Package>

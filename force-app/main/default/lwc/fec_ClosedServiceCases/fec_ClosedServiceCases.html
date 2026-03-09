@@ -1,0 +1,42 @@
+<template>
+  <div class="closed-service-cases slds-card slds-p-around_small">
+    <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
+      <lightning-accordion-section name="closedServiceCases" label={labels.sectionTitle}>
+        <div slot="actions">
+          <lightning-button
+            label="Refresh"
+            variant="brand"
+            onclick={handleRefresh}
+            disabled={isLoading}
+          ></lightning-button>
+        </div>
+        <div class="section-body">
+          <template if:true={error}>
+            <div class="slds-m-around_medium slds-text-color_error">{error}</div>
+          </template>
+
+          <template if:true={showTable}>
+            <template if:true={hasClosedRecords}>
+              <c-fec_-related-list-paging
+                records={closedRecords}
+                columns={closedColumns}
+                sorted-by={sortedBy}
+                default-sorted-by={sortedBy}
+                default-sort-direction="desc"
+                updated-time={lastRefreshTime}
+                onrowselect={handleRowSelect}
+              ></c-fec_-related-list-paging>
+            </template>
+            <template if:false={hasClosedRecords}>
+              <div class="slds-m-around_medium slds-text-align_center">{emptyMessage}</div>
+            </template>
+          </template>
+
+          <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+          </template>
+        </div>
+      </lightning-accordion-section>
+    </lightning-accordion>
+  </div>
+</template>
