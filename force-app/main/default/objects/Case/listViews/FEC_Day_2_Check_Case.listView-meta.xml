@@ -26,10 +26,10 @@
     <label>Day 2 Check</label>
     <queue>FEC_Day_2_Check</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Card_Risk_Monitoring_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Operations_Manager</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_of_Quality_Control_Ops_Management_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Card_Risk_Monitoring_Specialist</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Unit_Head_of_Customer_Service_Operations_Management</roleAndSubordinatesInternal>
+        <role>FEC_Card_Risk_Monitoring_Specialist</role>
+        <role>FEC_Customer_Service_Operations_Manager</role>
+        <role>FEC_Head_of_Quality_Control_Ops_Management_Department</role>
+        <role>FEC_Senior_Card_Risk_Monitoring_Specialist</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Operations_Management</role>
     </sharedTo>
 </ListView>

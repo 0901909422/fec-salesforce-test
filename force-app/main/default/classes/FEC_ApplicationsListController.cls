@@ -46,17 +46,18 @@ public without sharing class FEC_ApplicationsListController {
     @AuraEnabled
     public static void loadApplicationInfo(Id caseId) {
 
-        if (caseId == null) return;
+        if (caseId == null) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
+        }
 
         Case cs = [
-            SELECT FEC_Account_or_Contract__c
+            SELECT FEC_Account_or_Contract__c,FEC_Account_or_Contract__r.FEC_Account_Number__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
         ];
 
-        if (cs.FEC_Account_or_Contract__c == null) return;
-
+        String accountNumber = cs.FEC_Account_or_Contract__r.FEC_Account_Number__c;
         Id historyId = cs.FEC_Account_or_Contract__c;
 
         FEC_Application_List__c cacheRec;
@@ -88,8 +89,8 @@ public without sharing class FEC_ApplicationsListController {
         FEC_GetCustomerList.ResponseWrapper cusRes;
         try {
             cusRes = FEC_GetCustomerList.getCustomerList(
-                FEC_ConstantCommon.REQUESTOR_CRM, null, false,
-                null, null, null, null, null, null, null, null
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false,
+                null, null, null, null, accountNumber, null, null, null
             );
         } catch (Exception e) {
             cusRes = null;
@@ -110,7 +111,7 @@ public without sharing class FEC_ApplicationsListController {
             try {
                 statusRes =
                     FEC_GetApplicationsList.callGetApplicationsList(
-                        FEC_ConstantCommon.REQUESTOR_RES,
+                        FEC_CommonUltils.generateTransactionId(),
                         FEC_ConstantCommon.REQUESTOR_CRM,
                         Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
                         cif
@@ -126,7 +127,7 @@ public without sharing class FEC_ApplicationsListController {
             try {
                 addrRes =
                     FEC_GetAddressesList.callGetAddressesList(
-                        FEC_ConstantCommon.REQUESTOR_RES,
+                        FEC_CommonUltils.generateTransactionId(),
                         FEC_ConstantCommon.REQUESTOR_CRM,
                         Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
                         cif
@@ -203,7 +204,6 @@ public without sharing class FEC_ApplicationsListController {
 
                 /* =====================================================
                 * API 4 – CUSTOMER SALE DISBURSE INFO
-                * (Independent – fail thì bỏ qua)
                 * ===================================================== */
                 FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleDisburseInfoResponse saleRes;
                 try {

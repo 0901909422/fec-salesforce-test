@@ -4,13 +4,15 @@ import HAS_ACCOUNT_OR_CONTACT from "@salesforce/schema/Case.FEC_Has_Account_or_C
 import getInteractionAccountNumber from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.getInteractionAccountNumber";
 import GetProductsListByCif from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.GetProductsListByCif";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
-import { UBANK_PRODUCT_NAME } from 'c/fec_CommonConst';
+import { UBANK_PRODUCT_NAME } from "c/fec_CommonConst";
 import {
   subscribe,
   unsubscribe,
   APPLICATION_SCOPE,
   MessageContext,
 } from "lightning/messageService";
+
+import createHistory from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.createHistory";
 
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import FEC_ACCOUNT_CONTRACT_NUMBER_LABEL from "@salesforce/label/c.FEC_Account_Contract_Number_Label";
@@ -52,7 +54,6 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     },
     { label: "Product Name", fieldName: "productName" },
   ];
-
   data = [];
 
   /* =======================
@@ -82,8 +83,6 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
 
       console.log("[LMS] isEditMode:", this.isEditMode);
 
-      // // UI reaction
-      // this.isOpen = this.isEditMode;
     }
   }
 
@@ -153,6 +152,10 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   getProductsList() {
     GetProductsListByCif({ cifNumber: this.cifNumber })
       .then((result) => {
+        console.log(
+          "[APEX] GetProductsListByCif result:",
+          JSON.stringify(result),
+        );
         const mappedData = result.map((item, index) => ({
           id: String(index + 1),
           product: item.productType,
@@ -195,22 +198,38 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     this.isOpen = !this.isOpen;
   }
 
-  handleRowSelection(event) {
-    const selected = event.detail.selectedRows;
-    if (!selected.length) return;
+  handleRowAction(event) {
+    const rowId = event.detail.row;
 
-    const row = selected[0];
+    const row = this.data.find((r) => r.id === rowId);
+
+    if (!row) return;
 
     this.selectedRows = [row.id];
+
     this.data = this.data.map((r) => ({
       ...r,
       isSelected: r.id === row.id,
     }));
-
     this.selectedValue = row.accountContractNumber;
+    this.createHistory();
+    this.isOpen = false;
   }
 
-  handleUbankClick() {
-    this.selectedValue = "UBANK";
+  createHistory() {
+    createHistory({
+      caseId: this.recordId,
+      selectedAccountContractNumber: this.selectedValue,
+      selectedType: this.data.find(
+        (r) => r.accountContractNumber === this.selectedValue,
+      )?.product,
+      cifNumber: this.cifNumber,
+    })
+      .then(() => {
+        console.log("History created successfully");
+      })
+      .catch((error) => {
+        console.error("Error creating history:", error);
+      });
   }
 }

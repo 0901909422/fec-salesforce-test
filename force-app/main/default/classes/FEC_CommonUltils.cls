@@ -469,6 +469,34 @@ public with sharing class FEC_CommonUltils {
     return res;
   }
 
+  public static HttpResponse calloutApiWithHeaders(
+    String endpoint,
+    String method,
+    Map<String,String> headers,
+    String body
+){
+    HttpRequest req = new HttpRequest();
+    req.setEndpoint(endpoint);
+    req.setMethod(method);
+
+    if(headers != null){
+        for(String key : headers.keySet()){
+            req.setHeader(key, headers.get(key));
+        }
+    }
+
+    if(body != null){
+        req.setBody(body);
+    }
+
+    req.setTimeout(120000);
+
+    Http http = new Http();
+    HttpResponse res = http.send(req);
+
+    return res;
+}
+
   public static String generateTransactionId() {
     return Datetime.now().getTime() +
       '_' +
@@ -619,34 +647,87 @@ public with sharing class FEC_CommonUltils {
         return responseBody;
     }
 
-    public static void logApi(
-        String apiName,
-        String endpoint,
-        String method,
-        String requestBody,
-        HttpResponse response,
-        String errorMessage
-  ){
-      try{
-          FEC_API_Log__c log = new FEC_API_Log__c();
+  public static String normalizeInsuranceFlag(String value) {
+    if (String.isBlank(value)) return null;
 
-          log.Name = apiName;
-          log.FEC_Endpoint__c = endpoint;
-          log.FEC_Method__c = method;
-          log.FEC_Request_String__c = requestBody;
+    value = value.trim().toUpperCase();
 
-          if(response != null){
-              log.FEC_Status_Code__c =  String.valueOf(response.getStatusCode());
-              log.FEC_Response_String__c = response.getBody();
-              log.FEC_Is_Success__c = (response.getStatusCode() == 200);
-          }
-          
-          log.FEC_Error_Message__c = errorMessage;
-
-          insert log;
-
-        }catch(Exception e){
-            System.debug('LOG INSERT ERROR: ' + e.getMessage());
-        }
+    switch on value {
+        when 'Y' { return 'Yes'; }
+        when 'N' { return 'No'; }
+        when else { return null; }
     }
+  }
+
+  public static String checkEcomFlag(Boolean eComFlag) {
+    if (eComFlag == true) {
+        return 'Inactive';
+    }
+    return 'Active';
+  }
+
+  public static String checkActiveAndInacive(String cardStatus) {
+    if (cardStatus == 'Y') {
+        return 'Active';
+    }
+    return 'Inactive';
+  }
+
+  public static Date toDateStr(String v) {
+    if (String.isBlank(v)) return null;
+
+    v = v.trim();
+
+    try {
+
+        // Format: yyyy-MM-dd
+        if (v.contains('-')) {
+            return Date.valueOf(v);
+        }
+
+        // Format: dd/MM/yyyy
+        if (v.contains('/')) {
+            List<String> parts = v.split('/');
+            Integer day = Integer.valueOf(parts[0]);
+            Integer month = Integer.valueOf(parts[1]);
+            Integer year = Integer.valueOf(parts[2]);
+            return Date.newInstance(year, month, day);
+        }
+
+    } catch (Exception e) {
+        System.debug('Invalid date: ' + v);
+    }
+
+    return null;
+  }
+
+  public static void logApi(
+    String apiName,
+    String endpoint,
+    String method,
+    String requestBody,
+    HttpResponse response,
+    String errorMessage
+  ){
+    Boolean isSuccess = (response.getStatusCode() == 200);
+    String statusCode =  String.valueOf(response.getStatusCode());
+    String responseBody = response.getBody();
+    try {
+      FEC_API_Log__c log = new FEC_API_Log__c();
+
+      log.Name = apiName;
+      log.FEC_Endpoint__c = endpoint;
+      log.FEC_Method__c = method;
+      log.FEC_Request_String__c = requestBody;
+      log.FEC_Status_Code__c =  statusCode;
+      log.FEC_Response_String__c = responseBody;
+      log.FEC_Is_Success__c = isSuccess;
+      log.FEC_Error_Message__c = errorMessage;
+
+      insert log;
+
+    } catch(Exception e) {
+      System.debug('LOG INSERT ERROR: ' + e.getMessage());
+    }
+  }
 }

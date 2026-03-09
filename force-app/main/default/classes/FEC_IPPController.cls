@@ -89,9 +89,9 @@ public with sharing class FEC_IPPController {
             return new List<IPPRecordDTO>();
         }
 
-        // 2a. Mock bật: thử gọi 3 API (Postman mock); có data thì lưu DB và return; không/lỗi thì fallback hardcode
+        /* ===== Khi bật Mock: gọi API (Postman mock), có data thì save DB và return; không thì fallback hardcode ===== */
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        if (apiSetting?.FEC_Call_Mock__c == true) {
+        if (apiSetting != null && apiSetting.FEC_Call_Mock__c == false) {
             try {
                 List<IPPRecordDTO> result = fetchIPPRecordsFromAPI(caseId, accountNumber);
                 if (result != null && !result.isEmpty()) {
@@ -114,6 +114,7 @@ public with sharing class FEC_IPPController {
             return mockResult;
         }
 
+        /* ===== Không có Mock: gọi API thực ===== */
         List<IPPRecordDTO> result = fetchIPPRecordsFromAPI(caseId, accountNumber);
         sortByOpenDate(result);
         saveIPPRecordsToDatabase(caseId, result);
@@ -126,9 +127,6 @@ public with sharing class FEC_IPPController {
         return result;
     }
 
-    /** Id giả cho mock record - dùng để điều hướng tới IPP Detail Page (không gọi API) */
-    public static final String MOCK_IPP_RECORD_ID = 'mock-PLAN-DEMO-001';
-
     private static IPPRecordDTO mapFECIPPToDTO(FEC_IPP__c rec) {
         IPPRecordDTO dto = new IPPRecordDTO();
         dto.Id = rec.Id;
@@ -137,14 +135,14 @@ public with sharing class FEC_IPPController {
         dto.openDate = rec.FEC_IPP_Open_Date__c;
         dto.firstDueDate = rec.FEC_IPP_First_Due_Date__c;
         dto.matureDate = rec.FEC_IPP_Mature_Date__c;
-        dto.ippBalance = rec.FEC_IPP_Balance__c != null ? rec.FEC_IPP_Balance__c : 0;
-        dto.currentBalance = rec.FEC_IPP_Current_Balance__c != null ? rec.FEC_IPP_Current_Balance__c : 0;
+        dto.ippBalance = rec.FEC_IPP_Balance__c;
+         dto.currentBalance = rec.FEC_IPP_Current_Balance__c;
         dto.interestRate = rec.FEC_IPP_Interest_Rate__c;
         dto.ippTerm = rec.FEC_IPP_Term__c;
         dto.currentTerm = rec.FEC_IPP_Current_Term__c;
-        dto.totalIPPPaymentAmount = rec.FEC_Total_IPP_Payment_Amount__c != null ? rec.FEC_Total_IPP_Payment_Amount__c : 0;
-        dto.totalIPPMonthlyPrincipal = rec.FEC_Total_IPP_Monthly_Principal__c != null ? rec.FEC_Total_IPP_Monthly_Principal__c : 0;
-        dto.totalIPPMonthlyInterest = rec.FEC_Total_IPP_Monthly_Interest__c != null ? rec.FEC_Total_IPP_Monthly_Interest__c : 0;
+        dto.totalIPPPaymentAmount = rec.FEC_Total_IPP_Payment_Amount__c;
+        dto.totalIPPMonthlyPrincipal = rec.FEC_Total_IPP_Monthly_Principal__c;
+        dto.totalIPPMonthlyInterest = rec.FEC_Total_IPP_Monthly_Interest__c;
         dto.ccCode = rec.FEC_CC_Code__c;
         dto.ccName = rec.FEC_CC_Name__c;
         dto.dsaCode = rec.FEC_DSA_Code__c;
@@ -320,26 +318,26 @@ public with sharing class FEC_IPPController {
         dto.planNumber = planNumberKey;
         dto.Id = API_PREFIX + dto.planNumber + HYPHEN + (ipp != null && ipp.IPPRecordNo != null ? ipp.IPPRecordNo : '');
         dto.openDate = FEC_CommonUltils.parseDate(cardPlan.openDate);
-        dto.ippBalance = (cardPlan.currentBalance != null) ? cardPlan.currentBalance : 0;
+        dto.ippBalance = cardPlan.currentBalance;
         
         // Dữ liệu từ GetCardSecInfo IPP (nếu match)
         if (ipp != null) {
             dto.recordNo = (ipp.IPPRecordNo != null) ? ipp.IPPRecordNo.trim() : '';
             dto.firstDueDate = FEC_CommonUltils.parseDate(ipp.IPPStartDate);
             dto.matureDate = FEC_CommonUltils.parseDate(ipp.IPPMatureDate);
-            dto.currentBalance = (ipp.IPPCurrentBalance != null) ? ipp.IPPCurrentBalance : 0;
+            dto.currentBalance = ipp.IPPCurrentBalance;
             dto.currentTerm = ipp.CurrentTerm;
         } else {
-            dto.recordNo = '';
-            dto.currentBalance = 0;
+            dto.recordNo = (cardPlan.recordNumber != null) ? cardPlan.recordNumber.trim() : '';
+            dto.currentBalance = null;
         }
         
         // Khởi tạo các fields sẽ được điền bởi GetIPPDetails
         dto.interestRate = null;
         dto.ippTerm = null;
-        dto.totalIPPPaymentAmount = 0;
-        dto.totalIPPMonthlyPrincipal = 0;
-        dto.totalIPPMonthlyInterest = 0;
+        dto.totalIPPPaymentAmount = null;
+        dto.totalIPPMonthlyPrincipal = null;
+        dto.totalIPPMonthlyInterest = null;
         
         // Giá trị mặc định cho các fields sales info
         dto.ccCode = HYPHEN;
@@ -395,7 +393,7 @@ public with sharing class FEC_IPPController {
         }
 
         // Mock: nếu chưa có interestRate/ippTerm (API lỗi hoặc không trả data) thì dùng hardcode
-        if (apiSetting?.FEC_Call_Mock__c == true) {
+        if (apiSetting != null && apiSetting.FEC_Call_Mock__c == false) {
             if (dto.interestRate == null) {
                 dto.interestRate = FEC_MockData.getDefaultIPPInterestRateForMock();
             }

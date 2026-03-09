@@ -24,7 +24,8 @@ public with sharing class FEC_InteractionSLAController {
         'FEC_Interaction_Subchannel__c',
         'CreatedDate',
         'FEC_Is_Submited__c',
-        'RecordType.DeveloperName'
+        'RecordType.DeveloperName',
+        'IsClosed'
       };
       
       List<Case> caselst = FEC_CaseService.getById(new Set<Id>{ recordId }, fields);
@@ -81,23 +82,26 @@ public with sharing class FEC_InteractionSLAController {
   @AuraEnabled
   public static void updateInteractionOutcome(String recordId, String outcomeCode, String interactionRemarks) {
     try {
-      // Lấy Interaction cha (nếu recordId là case con)
-      Id parentInteractionId = getParentInteractionId(recordId);
-
-      Case caseToUpdate = new Case(
-        Id = recordId,
+      // Nếu record có FEC_Interaction__c = case con (link tới Interaction cha) → chỉ đóng Interaction cha, không đóng case con
+      Id targetId = recordId;
+      List<Case> cases = [SELECT Id, FEC_Interaction__c FROM Case WHERE Id = :recordId LIMIT 1];
+      if (!cases.isEmpty() && cases[0].FEC_Interaction__c != null) {
+        targetId = cases[0].FEC_Interaction__c;
+      }
+      
+      Case interaction = new Case(
+        Id = targetId,
         FEC_Outcome_Code__c = outcomeCode,
-        Status = 'Closed'
+        Status = FEC_ConstantCommon.INTERACTION_STATUS_CLOSED,
+        FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE
       );
+      
+      // Update FEC_Interaction_Remarks__c field with Interaction Remarks if provided
       if (String.isNotBlank(interactionRemarks)) {
-        caseToUpdate.FEC_Interaction_Remarks__c = interactionRemarks;
+        interaction.FEC_Interaction_Remarks__c = interactionRemarks;
       }
-      update caseToUpdate;
-
-      // Nếu là case con: đồng bộ đóng Interaction cha
-      if (parentInteractionId != null) {
-        updateParentInteraction(parentInteractionId, outcomeCode, interactionRemarks);
-      }
+      
+      update interaction;
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
@@ -106,49 +110,24 @@ public with sharing class FEC_InteractionSLAController {
   @AuraEnabled
   public static void updateInteractionQuickWrapUp(String recordId, String outcomeCode) {
     try {
-      Id parentInteractionId = getParentInteractionId(recordId);
-
-      Case caseToUpdate = new Case(
-        Id = recordId,
-        FEC_Outcome_Code__c = outcomeCode,
-        Status = 'Closed'
-      );
-      update caseToUpdate;
-
-      if (parentInteractionId != null) {
-        updateParentInteraction(parentInteractionId, outcomeCode, null);
+      // Nếu record có FEC_Interaction__c = case con → chỉ đóng Interaction cha, không đóng case con
+      Id targetId = recordId;
+      List<Case> cases = [SELECT Id, FEC_Interaction__c FROM Case WHERE Id = :recordId LIMIT 1];
+      if (!cases.isEmpty() && cases[0].FEC_Interaction__c != null) {
+        targetId = cases[0].FEC_Interaction__c;
       }
+
+      Case interaction = new Case(
+        Id = targetId,
+        FEC_Outcome_Code__c = outcomeCode,
+        Status = FEC_ConstantCommon.INTERACTION_STATUS_CLOSED,
+        FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE
+      );
+      
+      update interaction;
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
-  }
-
-  /**
-   * Lấy Id Interaction cha nếu recordId là case con (có FEC_Interaction__c).
-   * @param caseId Id của Case (con hoặc Interaction)
-   * @return Id của Interaction cha, hoặc null nếu là Interaction hoặc không có cha
-   */
-  private static Id getParentInteractionId(Id caseId) {
-    List<Case> cases = [SELECT FEC_Interaction__c FROM Case WHERE Id = :caseId LIMIT 1];
-    if (cases.isEmpty() || cases.get(0).FEC_Interaction__c == null) {
-      return null;
-    }
-    return cases.get(0).FEC_Interaction__c;
-  }
-
-  /**
-   * Cập nhật Interaction (case cha): đóng và gán Outcome Code / Remarks.
-   */
-  private static void updateParentInteraction(Id interactionId, String outcomeCode, String interactionRemarks) {
-    Case parent = new Case(
-      Id = interactionId,
-      FEC_Outcome_Code__c = outcomeCode,
-      Status = 'Closed'
-    );
-    if (String.isNotBlank(interactionRemarks)) {
-      parent.FEC_Interaction_Remarks__c = interactionRemarks;
-    }
-    update parent;
   }
 
   /**

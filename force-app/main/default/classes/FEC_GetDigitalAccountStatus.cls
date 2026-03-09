@@ -104,37 +104,52 @@ public with sharing class FEC_GetDigitalAccountStatus {
     ) {
 
         Dom.Document doc = new Dom.Document();
+
         Dom.XmlNode envelope = doc.createRootElement(
-            'soapenv:Envelope',
+            'Envelope',
             FEC_ConstantCommon.SOAP_ENV,
-            null
+            'soapenv'
         );
 
-        envelope.setAttribute('xmlns:dig', 'http://fecredit.com.vn/DigitalChannelWS');
+        envelope.setAttribute(
+            'xmlns:ns1',
+            'http://fecredit.com.vn/DigitalChannelWS'
+        );
 
-        envelope.addChildElement('soapenv:Header', null, null);
+        // Header
+        envelope.addChildElement(
+            'Header',
+            FEC_ConstantCommon.SOAP_ENV,
+            'soapenv'
+        );
 
-        Dom.XmlNode body =
-            envelope.addChildElement('soapenv:Body', null, null);
+        // Body
+        Dom.XmlNode body = envelope.addChildElement(
+            'Body',
+            FEC_ConstantCommon.SOAP_ENV,
+            'soapenv'
+        );
 
-        Dom.XmlNode getStatus =
-            body.addChildElement(
-                'dig:GetDigitalAccountStatus',
-                null,
-                null
-            );
+        // Action
+        Dom.XmlNode action = body.addChildElement(
+            'GetDigitalAccountStatus',
+            'http://fecredit.com.vn/DigitalChannelWS',
+            'ns1'
+        );
 
-        Dom.XmlNode sys = getStatus.addChildElement('Sys', null, null);
+        action.setAttribute(
+            'xmlns:xsi',
+            'http://www.w3.org/2001/XMLSchema-instance'
+        );
+
+        Dom.XmlNode sys = action.addChildElement('Sys', null, null);
+
         sys.addChildElement('TransID', null, null).addTextNode(transId);
-        sys.addChildElement('RequestorID', null, null)
-           .addTextNode(requestorId);
-        sys.addChildElement('DateTime', null, null)
-           .addTextNode(dateTimeStr);
+        sys.addChildElement('RequestorID', null, null).addTextNode(requestorId);
+        sys.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
 
-        getStatus.addChildElement('Phone', null, null)
-                 .addTextNode(phone);
-        getStatus.addChildElement('CIFNumber', null, null)
-                 .addTextNode(cifNumber);
+        action.addChildElement('Phone', null, null).addTextNode(phone);
+        action.addChildElement('CIFNumber', null, null).addTextNode(cifNumber);
 
         return doc.toXmlString();
     }

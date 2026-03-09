@@ -117,51 +117,87 @@ public with sharing class FEC_CardInfoController {
          * KHI BẬT MOCK: đã có data trong DB → return; chưa có thì gọi API, lưu DB rồi return
          * ===================================================== */
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        if (apiSetting != null && apiSetting.FEC_Call_Mock__c == true) {
+        if (apiSetting != null && apiSetting.FEC_Call_Mock__c == false) {
             if (hasCardDeliveryData && hasOtherCardData) {
                 return dto;
             }
-            try {
-                if (String.isNotBlank(accountNumber) && customerHistoryId != null) {
-                    FEC_GetStatus.CardDeliveryInfo getStatusInfo = FEC_GetStatus.getDeliveryStatus(accountNumber);
-                    FEC_GetCardSecInfo.ResponseWrapper cardSecResponse = FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
-                    CardInfoDTO mockDto = buildCardInfoFromResponses(getStatusInfo, cardSecResponse);
-                    if (mockDto != null) {
-                        Boolean hasData = (mockDto.cardDeliveries != null && !mockDto.cardDeliveries.isEmpty())
-                            || (mockDto.otherCards != null && !mockDto.otherCards.isEmpty());
-                        if (hasData) {
-                            if (!hasCardDeliveryData && getStatusInfo != null && getStatusInfo.responseCode == '1') {
-                                FEC_Card_Delivery__c insertedCard = insertCardDeliveryFromGetStatus(getStatusInfo, caseId, customerHistoryId);
-                                if (insertedCard != null && cardSecResponse != null && cardSecResponse.CardSecInfo != null && cardSecResponse.CardSecInfo.CardsDeliveries != null && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
-                                    Boolean needsUpdate = false;
-                                    FEC_GetCardSecInfo.CardsDelivery matchedDelivery = null;
-                                    for (FEC_GetCardSecInfo.CardsDelivery delivery : cardSecResponse.CardSecInfo.CardsDeliveries) {
-                                        Boolean isMatch = String.isNotBlank(delivery.CardNumber) && compareCardNumbers(insertedCard.FEC_Card_Number__c, delivery.CardNumber);
-                                        if (isMatch) { matchedDelivery = delivery; break; }
-                                    }
-                                    if (matchedDelivery == null && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
-                                        matchedDelivery = cardSecResponse.CardSecInfo.CardsDeliveries[0];
-                                    }
-                                    if (matchedDelivery != null) {
-                                        if (String.isNotBlank(matchedDelivery.KindOfIssue)) { insertedCard.FEC_Type_of_Issue__c = matchedDelivery.KindOfIssue; needsUpdate = true; }
-                                        if (String.isNotBlank(matchedDelivery.DeliveryDate)) {
-                                            try { insertedCard.FEC_Delivery_Date__c = parseDeliveryDate(matchedDelivery.DeliveryDate); needsUpdate = true; } catch (Exception ex) { }
-                                        }
-                                    }
-                                    if (needsUpdate) { update insertedCard; }
+            if (String.isNotBlank(accountNumber) && customerHistoryId != null) {
+                // Gọi GetCardSecInfo trước (độc lập với GetStatus)
+                FEC_GetCardSecInfo.ResponseWrapper cardSecResponse = null;
+                try {
+                    cardSecResponse = FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
+                } catch (Exception e) {
+                    System.debug('Mock GetCardSecInfo error: ' + e.getMessage());
+                }
+
+                // Gọi GetStatus độc lập - thất bại không ảnh hưởng GetCardSecInfo
+                FEC_GetStatus.CardDeliveryInfo getStatusInfo = null;
+                try {
+                    getStatusInfo = FEC_GetStatus.getDeliveryStatus(accountNumber);
+                } catch (Exception e) {
+                    System.debug('Mock GetStatus error: ' + e.getMessage());
+                }
+
+                // Xử lý Card Delivery từ GetStatus hoặc fallback sang GetCardSecInfo
+                if (!hasCardDeliveryData) {
+                    try {
+                        // Ưu tiên GetStatus nếu thành công
+                        if (getStatusInfo != null && getStatusInfo.responseCode == '1') {
+                            FEC_Card_Delivery__c insertedCard = insertCardDeliveryFromGetStatus(getStatusInfo, caseId, customerHistoryId);
+                            if (insertedCard != null && cardSecResponse != null && cardSecResponse.CardSecInfo != null
+                                && cardSecResponse.CardSecInfo.CardsDeliveries != null
+                                && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
+                                Boolean needsUpdate = false;
+                                FEC_GetCardSecInfo.CardsDelivery matchedDelivery = null;
+                                for (FEC_GetCardSecInfo.CardsDelivery delivery : cardSecResponse.CardSecInfo.CardsDeliveries) {
+                                    Boolean isMatch = String.isNotBlank(delivery.CardNumber) && compareCardNumbers(insertedCard.FEC_Card_Number__c, delivery.CardNumber);
+                                    if (isMatch) { matchedDelivery = delivery; break; }
                                 }
+                                if (matchedDelivery == null && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
+                                    matchedDelivery = cardSecResponse.CardSecInfo.CardsDeliveries[0];
+                                }
+                                if (matchedDelivery != null) {
+                                    if (String.isNotBlank(matchedDelivery.KindOfIssue)) { insertedCard.FEC_Type_of_Issue__c = matchedDelivery.KindOfIssue; needsUpdate = true; }
+                                    if (String.isNotBlank(matchedDelivery.DeliveryDate)) {
+                                        try { insertedCard.FEC_Delivery_Date__c = parseDeliveryDate(matchedDelivery.DeliveryDate); needsUpdate = true; } catch (Exception ex) { }
+                                    }
+                                }
+                                if (needsUpdate) { update insertedCard; }
                             }
-                            if (!hasOtherCardData && cardSecResponse != null && cardSecResponse.CardSecInfo != null && cardSecResponse.CardSecInfo.SupplementaryCards != null && !cardSecResponse.CardSecInfo.SupplementaryCards.isEmpty()) {
-                                insertSupplementaryCards(cardSecResponse.CardSecInfo.SupplementaryCards, customerHistoryId);
-                            }
-                            return mockDto;
+                        } 
+                        // Fallback: Nếu GetStatus thất bại nhưng GetCardSecInfo có CardsDeliveries
+                        else if (cardSecResponse != null && cardSecResponse.CardSecInfo != null
+                            && cardSecResponse.CardSecInfo.CardsDeliveries != null
+                            && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
+                            insertCardDeliveriesFromCardSecInfo(cardSecResponse.CardSecInfo.CardsDeliveries, caseId, customerHistoryId);
                         }
+                    } catch (Exception e) {
+                        System.debug('Mock insert Card Delivery error: ' + e.getMessage());
                     }
                 }
-            } catch (Exception e) {
-                System.debug('Mock GetStatus/GetCardSecInfo error: ' + e.getMessage());
+
+                // Xử lý Other Card từ GetCardSecInfo (độc lập với GetStatus)
+                if (!hasOtherCardData && cardSecResponse != null && cardSecResponse.CardSecInfo != null
+                    && cardSecResponse.CardSecInfo.SupplementaryCards != null
+                    && !cardSecResponse.CardSecInfo.SupplementaryCards.isEmpty()) {
+                    try {
+                        insertSupplementaryCards(cardSecResponse.CardSecInfo.SupplementaryCards, customerHistoryId);
+                    } catch (Exception e) {
+                        System.debug('Mock insert Supplementary Cards error: ' + e.getMessage());
+                    }
+                }
+
+                // Build DTO để trả về từ dữ liệu API (không cần query lại DB ở đây)
+                CardInfoDTO mockDto = buildCardInfoFromResponses(getStatusInfo, cardSecResponse);
+                if (mockDto != null) {
+                    Boolean hasData = (mockDto.cardDeliveries != null && !mockDto.cardDeliveries.isEmpty())
+                        || (mockDto.otherCards != null && !mockDto.otherCards.isEmpty());
+                    if (hasData) {
+                        return mockDto;
+                    }
+                }
             }
-            return FEC_MockData.getHardcodedCardInfo();
+            return dto;
         }
 
         /* =====================================================
@@ -186,7 +222,9 @@ public with sharing class FEC_CardInfoController {
                 if (response != null && response.Sys != null && response.Sys.Code == 1 && response.CardSecInfo != null) {
                     /* ===== Card Deliveries - CHỈ INSERT NẾU CHƯA CÓ ===== */
                     if (!hasCardDeliveryData) {
-                        // Gọi GetStatus API để lấy thông tin cơ bản
+                        Boolean cardDeliveryInserted = false;
+                        
+                        // Ưu tiên: Gọi GetStatus API để lấy thông tin cơ bản
                         try {
                             FEC_GetStatus.CardDeliveryInfo cardDeliveryInfo = 
                             FEC_GetStatus.getDeliveryStatus(accountNumber);
@@ -242,9 +280,19 @@ public with sharing class FEC_CardInfoController {
                                         update insertedCard;
                                     }
                                 }
+                                cardDeliveryInserted = true;
                             }
                         } catch (Exception e) {
                             System.debug('GetStatus API error: ' + e.getMessage());
+                        }
+                        
+                        // Fallback: Nếu GetStatus thất bại, lấy từ CardsDeliveries của GetCardSecInfo
+                        if (!cardDeliveryInserted && response.CardSecInfo.CardsDeliveries != null && !response.CardSecInfo.CardsDeliveries.isEmpty()) {
+                            try {
+                                insertCardDeliveriesFromCardSecInfo(response.CardSecInfo.CardsDeliveries, caseId, customerHistoryId);
+                            } catch (Exception e) {
+                                System.debug('Insert Card Deliveries from CardSecInfo error: ' + e.getMessage());
+                            }
                         }
                     }
                     
@@ -325,6 +373,82 @@ public with sharing class FEC_CardInfoController {
             }
         }
         return c.FEC_Account_Number__c;
+    }
+    
+    /**
+     * INSERT Card Deliveries từ GetCardSecInfo API (fallback khi GetStatus thất bại)
+     * @param deliveries - Danh sách CardsDelivery từ GetCardSecInfo
+     * @param caseId - ID của Case record
+     * @param customerHistoryId - ID của Customer History record (required field)
+     */
+    private static List<FEC_Card_Delivery__c> insertCardDeliveriesFromCardSecInfo(
+        List<FEC_GetCardSecInfo.CardsDelivery> deliveries, 
+        String caseId, 
+        Id customerHistoryId
+    ) {
+        if (deliveries == null || deliveries.isEmpty() || customerHistoryId == null) {
+            return new List<FEC_Card_Delivery__c>();
+        }
+        
+        List<FEC_Card_Delivery__c> recordsToInsert = new List<FEC_Card_Delivery__c>();
+        Set<String> processedCardNumbers = new Set<String>();
+        
+        for (FEC_GetCardSecInfo.CardsDelivery delivery : deliveries) {
+            if (String.isBlank(delivery.CardNumber)) {
+                continue;
+            }
+            
+            String maskedCardNumber = FEC_CommonUltils.maskCardNumber(delivery.CardNumber);
+            
+            // Tránh duplicate trong cùng response
+            if (processedCardNumbers.contains(maskedCardNumber)) {
+                continue;
+            }
+            
+            // Kiểm tra xem đã có record chưa
+            List<FEC_Card_Delivery__c> existing = [
+                SELECT Id 
+                FROM FEC_Card_Delivery__c 
+                WHERE FEC_Card_Number__c = :maskedCardNumber 
+                AND FEC_Customer_History__c = :customerHistoryId
+                LIMIT 1
+            ];
+            
+            if (!existing.isEmpty()) {
+                continue;
+            }
+            
+            // Tạo record mới
+            FEC_Card_Delivery__c record = new FEC_Card_Delivery__c();
+            record.FEC_Card_Number__c = maskedCardNumber;
+            record.FEC_Case__c = caseId;
+            record.FEC_Customer_History__c = customerHistoryId;
+            record.FEC_Type_of_Issue__c = delivery.KindOfIssue;
+            
+            // Parse Delivery Date
+            if (String.isNotBlank(delivery.DeliveryDate)) {
+                try {
+                    record.FEC_Delivery_Date__c = parseDeliveryDate(delivery.DeliveryDate);
+                } catch (Exception e) {
+                    System.debug('Parse delivery date error: ' + e.getMessage());
+                }
+            }
+            
+            recordsToInsert.add(record);
+            processedCardNumbers.add(maskedCardNumber);
+        }
+        
+        if (!recordsToInsert.isEmpty()) {
+            try {
+                insert recordsToInsert;
+                return recordsToInsert;
+            } catch (Exception e) {
+                System.debug('Insert Card Deliveries from CardSecInfo error: ' + e.getMessage());
+                throw new AuraHandledException(e.getMessage());
+            }
+        }
+        
+        return new List<FEC_Card_Delivery__c>();
     }
     
     /**
@@ -573,45 +697,53 @@ public with sharing class FEC_CardInfoController {
      * Dùng khi đã có sẵn getStatusInfo và cardSecResponse (Mock: gọi 1 lần rồi build + insert).
      */
     private static CardInfoDTO buildCardInfoFromResponses(FEC_GetStatus.CardDeliveryInfo getStatusInfo, FEC_GetCardSecInfo.ResponseWrapper cardSecResponse) {
-        if (getStatusInfo == null || getStatusInfo.responseCode != '1') {
-            return null;
-        }
         if (cardSecResponse != null && (cardSecResponse.Sys == null || cardSecResponse.Sys.Code != 1 || cardSecResponse.CardSecInfo == null)) {
             cardSecResponse = null;
+        }
+
+        // Nếu cả 2 đều không có dữ liệu → return null
+        Boolean getStatusOk = getStatusInfo != null && getStatusInfo.responseCode == '1';
+        Boolean cardSecOk = cardSecResponse != null;
+        if (!getStatusOk && !cardSecOk) {
+            return null;
         }
 
         CardInfoDTO dto = new CardInfoDTO();
         dto.cardDeliveries = new List<CardDeliveryDTO>();
         dto.otherCards = new List<OtherCardDTO>();
 
-        CardDeliveryDTO deliveryDto = new CardDeliveryDTO();
-        deliveryDto.cardNumber = String.isNotBlank(getStatusInfo.cardNumber) ? FEC_CommonUltils.maskCardNumber(getStatusInfo.cardNumber) : getStatusInfo.cardNumber;
-        deliveryDto.issueDate = String.isNotBlank(getStatusInfo.issueDate) ? parseDeliveryDate(getStatusInfo.issueDate) : null;
-        if (deliveryDto.issueDate == null && String.isNotBlank(getStatusInfo.issueDate)) {
-            try { deliveryDto.issueDate = Date.valueOf(getStatusInfo.issueDate); } catch (Exception ex) { }
-        }
-        deliveryDto.typeOfIssue = null;
-        deliveryDto.deliveryStatus = getStatusInfo.status;
-        deliveryDto.deliveryDate = null;
-        deliveryDto.recipient = getStatusInfo.receiverName;
-        deliveryDto.trackingNumber = getStatusInfo.trackingNo;
-        deliveryDto.deliveryNote = getStatusInfo.deliveryNotes;
-        if (cardSecResponse != null && cardSecResponse.CardSecInfo.CardsDeliveries != null && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
-            for (FEC_GetCardSecInfo.CardsDelivery cd : cardSecResponse.CardSecInfo.CardsDeliveries) {
-                if (String.isNotBlank(cd.CardNumber) && compareCardNumbers(deliveryDto.cardNumber, cd.CardNumber)) {
-                    deliveryDto.typeOfIssue = cd.KindOfIssue;
-                    deliveryDto.deliveryDate = parseDeliveryDate(cd.DeliveryDate);
-                    break;
+        // Build Card Delivery - chỉ khi GetStatus thành công
+        if (getStatusOk) {
+            CardDeliveryDTO deliveryDto = new CardDeliveryDTO();
+            deliveryDto.cardNumber = String.isNotBlank(getStatusInfo.cardNumber) ? FEC_CommonUltils.maskCardNumber(getStatusInfo.cardNumber) : getStatusInfo.cardNumber;
+            deliveryDto.issueDate = String.isNotBlank(getStatusInfo.issueDate) ? parseDeliveryDate(getStatusInfo.issueDate) : null;
+            if (deliveryDto.issueDate == null && String.isNotBlank(getStatusInfo.issueDate)) {
+                try { deliveryDto.issueDate = Date.valueOf(getStatusInfo.issueDate); } catch (Exception ex) { }
+            }
+            deliveryDto.typeOfIssue = null;
+            deliveryDto.deliveryStatus = getStatusInfo.status;
+            deliveryDto.deliveryDate = null;
+            deliveryDto.recipient = getStatusInfo.receiverName;
+            deliveryDto.trackingNumber = getStatusInfo.trackingNo;
+            deliveryDto.deliveryNote = getStatusInfo.deliveryNotes;
+            if (cardSecResponse != null && cardSecResponse.CardSecInfo.CardsDeliveries != null && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
+                for (FEC_GetCardSecInfo.CardsDelivery cd : cardSecResponse.CardSecInfo.CardsDeliveries) {
+                    if (String.isNotBlank(cd.CardNumber) && compareCardNumbers(deliveryDto.cardNumber, cd.CardNumber)) {
+                        deliveryDto.typeOfIssue = cd.KindOfIssue;
+                        deliveryDto.deliveryDate = parseDeliveryDate(cd.DeliveryDate);
+                        break;
+                    }
+                }
+                if (deliveryDto.typeOfIssue == null && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
+                    FEC_GetCardSecInfo.CardsDelivery first = cardSecResponse.CardSecInfo.CardsDeliveries[0];
+                    deliveryDto.typeOfIssue = first.KindOfIssue;
+                    deliveryDto.deliveryDate = parseDeliveryDate(first.DeliveryDate);
                 }
             }
-            if (deliveryDto.typeOfIssue == null && !cardSecResponse.CardSecInfo.CardsDeliveries.isEmpty()) {
-                FEC_GetCardSecInfo.CardsDelivery first = cardSecResponse.CardSecInfo.CardsDeliveries[0];
-                deliveryDto.typeOfIssue = first.KindOfIssue;
-                deliveryDto.deliveryDate = parseDeliveryDate(first.DeliveryDate);
-            }
+            dto.cardDeliveries.add(deliveryDto);
         }
-        dto.cardDeliveries.add(deliveryDto);
 
+        // Build Other Card - độc lập với GetStatus, chỉ cần GetCardSecInfo thành công
         if (cardSecResponse != null && cardSecResponse.CardSecInfo.SupplementaryCards != null) {
             for (FEC_GetCardSecInfo.SupplementaryCard sc : cardSecResponse.CardSecInfo.SupplementaryCards) {
                 if (String.isBlank(sc.CardNumber)) continue;

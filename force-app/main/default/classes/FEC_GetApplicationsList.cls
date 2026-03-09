@@ -31,7 +31,7 @@ public with sharing class FEC_GetApplicationsList {
     public class ApplicationInfo {
         public String ApplicationID;
         public String ProductGroup;
-        public String DateStatus;
+        public Date DateStatus;
         public String LastStatus;
         public String SaleName;
         public String SaleUnitCode;
@@ -222,7 +222,7 @@ public with sharing class FEC_GetApplicationsList {
                 ApplicationInfo app = new ApplicationInfo();
                 app.ApplicationID = FEC_CommonUltils.getXmlValue(a, 'ApplicationID');
                 app.ProductGroup = FEC_CommonUltils.getXmlValue(a, 'ProductGroup');
-                app.DateStatus = FEC_CommonUltils.getXmlValue(a, 'DateStatus');
+                app.DateStatus = FEC_CommonUltils.xmlValToDate(a, 'DateStatus');
                 app.LastStatus = FEC_CommonUltils.getXmlValue(a, 'LastStatus');
                 app.SaleName = FEC_CommonUltils.getXmlValue(a, 'SaleName');
                 app.SaleUnitCode = FEC_CommonUltils.getXmlValue(a, 'SaleUnitCode');
