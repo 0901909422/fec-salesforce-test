@@ -684,16 +684,22 @@ public with sharing class FEC_CommonUltils {
     Boolean isSuccess = (response.getStatusCode() == 200);
     String statusCode =  String.valueOf(response.getStatusCode());
     String responseBody = response.getBody();
-    FEC_LogApiQueueable logApiQueueable = new FEC_LogApiQueueable(
-      apiName,
-      endpoint,
-      method,
-      requestBody,
-      isSuccess,
-      statusCode,
-      errorMessage,
-      responseBody
-    );
-    System.enqueueJob(logApiQueueable);
+    try {
+      FEC_API_Log__c log = new FEC_API_Log__c();
+
+      log.Name = apiName;
+      log.FEC_Endpoint__c = endpoint;
+      log.FEC_Method__c = method;
+      log.FEC_Request_String__c = requestBody;
+      log.FEC_Status_Code__c =  statusCode;
+      log.FEC_Response_String__c = responseBody;
+      log.FEC_Is_Success__c = isSuccess;
+      log.FEC_Error_Message__c = errorMessage;
+
+      insert log;
+
+    } catch(Exception e) {
+      System.debug('LOG INSERT ERROR: ' + e.getMessage());
+    }
   }
 }

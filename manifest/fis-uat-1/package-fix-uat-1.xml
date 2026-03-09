@@ -27,7 +27,6 @@
         <members>FEC_ApplicationsListController</members>
         <members>FEC_MainInfoController</members>
         <members>FEC_GetCustomerList</members>
-        <members>FEC_LogApiQueueable</members>
         <members>FEC_IPPScheduleController</members>
         <members>FEC_FollowUpController</members>
         <members>FEC_GetCardTransactions</members>
