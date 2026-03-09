@@ -423,17 +423,13 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             if (!val) {
               input.setCustomValidity("");
             } else if (/^0/.test(val)) {
-              if (!/^\d{10}$/.test(val)) {
-                input.setCustomValidity(
-                  "Phone number must be 10 digits if it starts with 0",
-                );
-              } else {
-                input.setCustomValidity("");
-              }
+              input.setCustomValidity(
+                "No data available. Please use prefix 84.",
+              );
             } else if (/^84/.test(val)) {
               if (!/^\d{11}$/.test(val)) {
                 input.setCustomValidity(
-                  "Phone number must be 11 digits if it starts with 84",
+                  "Phone number must be 11 digits if it starts with 84.",
                 );
               } else {
                 input.setCustomValidity("");
@@ -441,7 +437,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             } else {
               // If it doesn't start with 0 or 84, consider invalid per rules
               input.setCustomValidity(
-                "Phone number must start with 0 (10 digits) or 84 (11 digits)",
+                "Phone number must start with 84 (11 digits).",
               );
             }
             input.reportValidity();
