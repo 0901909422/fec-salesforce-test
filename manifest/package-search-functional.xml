@@ -33,6 +33,11 @@
 		<members>FEC_Toast_Recall_Success</members>
 		<members>FEC_Toast_Reopen_Success</members>
 		<members>FEC_Toast_Save_Success_Title</members>
+		<members>FEC_Error_Title</members>
+		<members>FEC_Toast_Error_Generic</members>
+		<members>FEC_Toast_Validation_Message</members>
+		<members>FEC_Toast_Validation_Title</members>
+		<members>FEC_Toast_Search_Validation</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

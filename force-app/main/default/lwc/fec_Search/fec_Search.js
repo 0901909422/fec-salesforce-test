@@ -14,6 +14,10 @@ import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
 import getB2Contracts from "@salesforce/apex/FEC_SearchController.getB2Contracts";
 import getCash24Contracts from "@salesforce/apex/FEC_SearchController.getCash24Contracts";
 import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
+import FEC_Toast_Search_Validation from '@salesforce/label/c.FEC_Toast_Search_Validation';
+import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
+import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
+import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
 import {
@@ -57,6 +61,10 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   isSkip;
   wiredCaseResult;
   fieldPermissions;
+  FEC_Toast_Search_Validation = FEC_Toast_Search_Validation;
+  FEC_Toast_Validation_Title = FEC_Toast_Validation_Title;
+  FEC_Toast_Error = FEC_Toast_Error;
+  FEC_Toast_Error_Generic = FEC_Toast_Error_Generic;
 
   @wire(MessageContext)
   messageContext;
@@ -642,7 +650,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
       // Guard (extra safety). handleSearch() already checks this.
       if (!this.hasAnySearchCriteria(params)) {
-        this.showToast("Validation", "Enter at least one search criterion.", "warning");
+        this.showToast(FEC_Toast_Validation_Title, FEC_Toast_Search_Validation, "warning");
         return;
       }
       if (this.contractNumber) {
@@ -691,8 +699,8 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     } catch (e) {
       console.error("Error fetching customer list:", e);
       this.showToast(
-        "Error",
-        "Unable to fetch customer list. " + (e?.body?.message || e?.message || ""),
+        FEC_Toast_Error,
+        FEC_Toast_Error_Generic + ' ' + (e?.body?.message || e?.message || ""),
         "error"
       );
     } finally {
