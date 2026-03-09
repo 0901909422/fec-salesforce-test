@@ -245,9 +245,9 @@ public without sharing class FEC_MainInfoAccountController {
             String remark = '';
             
             if (isEligible) {
-                remark = System.Label.FEC_MSG_Eligible;
-            } else {
                 remark = apiResponse.Sys.Description;
+            } else {
+                remark = System.Label.FEC_MSG_Eligible;
             }
             
             FEC_Customer_History__c accToUpdate = new FEC_Customer_History__c(
