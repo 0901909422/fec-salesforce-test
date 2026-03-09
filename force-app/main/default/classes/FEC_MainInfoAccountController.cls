@@ -121,7 +121,8 @@ public without sharing class FEC_MainInfoAccountController {
                 accountNumber
             );
         } catch (Exception e) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+            cardRes = null;
         }
 
         /* ========= 3. CALL CUSTOMER LIST ========= */
@@ -142,7 +143,8 @@ public without sharing class FEC_MainInfoAccountController {
                 null
             );
         } catch (Exception e) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+            cusRes = null;
         }
 
         /* ========= 4. CALL GetApplicationsList ========= */
@@ -157,7 +159,8 @@ public without sharing class FEC_MainInfoAccountController {
                         
                     );
             } catch (Exception e) {
-                throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+                System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+                appRes = null;
         }
 
         /* ========= 5. CALL MFASOUTSTANDINGAUTHINQ ========= */
@@ -175,7 +178,8 @@ public without sharing class FEC_MainInfoAccountController {
                 accountNumber                       
             );
         } catch (Exception e) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+            mfaRes = null;
         }
 
         /* ========= 6. CALL GetCardSecInfo ========= */
@@ -189,7 +193,8 @@ public without sharing class FEC_MainInfoAccountController {
                     accountNumber
                 );
         } catch (Exception e) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+            cardSecRes = null;
         }
 
         updateAccountFromAPI(c.FEC_Account_or_Contract__c, cardRes, cusRes, mfaRes, appRes, cardSecRes);
@@ -373,7 +378,8 @@ public without sharing class FEC_MainInfoAccountController {
                 accountNumber
             );
         } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
+            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+            cardRes = null;
         }
 
         /* ========= 2. CALL CUSTOMER LIST ========= */
@@ -394,7 +400,8 @@ public without sharing class FEC_MainInfoAccountController {
                 null
             );
         } catch (Exception e) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+            cusRes = null;
         }
 
         /* ========= 3. CALL FEC_GetApplicationsList ========= */
@@ -406,8 +413,9 @@ public without sharing class FEC_MainInfoAccountController {
                         Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
                         cifNumber
                     );
-            } catch (Exception e) {
-                throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+        } catch (Exception e) {
+            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+            appRes = null;
         }
 
         /* ========= 4. CALL FEC_MFASOUTSTANDINGAUTHINQ ========= */
@@ -425,7 +433,8 @@ public without sharing class FEC_MainInfoAccountController {
                     accountNumber
             );
         } catch (Exception e) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+            mfaRes = null;
         }
 
         /* ========= 5. CALL GetCardSecInfo ========= */
@@ -439,14 +448,14 @@ public without sharing class FEC_MainInfoAccountController {
                     accountNumber
                 );
         } catch (Exception e) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+            cardSecRes = null;
         }
 
         updateAccountFromAPI(c.FEC_Account_or_Contract__c, cardRes, cusRes, mfaRes, appRes, cardSecRes);
 
         return getAccountInfoLocal(c.FEC_Account_or_Contract__c);
     }
-
 
     /* ===================== MAPPER ===================== */
 
@@ -518,7 +527,18 @@ public without sharing class FEC_MainInfoAccountController {
     ) {
         if (accountId == null) return;
 
-        FEC_GetCardBasicInfo.MainCard m = cardRes.CardBasicInfo.MainCard;
+        FEC_GetCardBasicInfo.MainCard m;
+            if(cardRes != null && cardRes.CardBasicInfo != null){
+                m = cardRes.CardBasicInfo.MainCard;
+            }
+
+            Decimal dpd;
+            if(cardRes != null 
+                && cardRes.CardBasicInfo != null 
+                && cardRes.CardBasicInfo.PassDue != null){
+                dpd = cardRes.CardBasicInfo.PassDue.DPD;
+            }
+
         FEC_GetCustomerList.Application a;
             if(cusRes != null 
                 && cusRes.Customers != null 
@@ -536,42 +556,64 @@ public without sharing class FEC_MainInfoAccountController {
                 l = appRes.Applications[0];
             }
 
-        FEC_GetCardSecInfo.MainCardBalance cs = cardSecRes.CardSecInfo.MainCardBalance;
-        
+        FEC_GetCardSecInfo.MainCardBalance cs;
+
+            if(cardSecRes != null 
+                && cardSecRes.CardSecInfo != null
+                && cardSecRes.CardSecInfo.MainCardBalance != null){
+                cs = cardSecRes.CardSecInfo.MainCardBalance;
+            }
+
+        Boolean ecomFlag;
+            if(cardSecRes != null
+                && cardSecRes.CardSecInfo != null
+                && cardSecRes.CardSecInfo.MainCardPlastic != null){
+
+                ecomFlag = cardSecRes.CardSecInfo.MainCardPlastic.EcomActiveFlag;
+            }
         update new FEC_Customer_History__c(
             Id = accountId,
-            FEC_Account_Number__c = m.AccountNumber,
-            FEC_Contract_Number__c = m.ContractNumber,
-            FEC_Account_Status__c = m.Status,
-            FEC_Credit_Limit__c = m.CreditLimit,
-            FEC_OTB__c = m.OTB,
-            FEC_Current_Balance__c = cs.CurrentBalance,
-            FEC_Hold_Amount__c = m.HoldAmount,
-            FEC_Total_Balance__c = cs.TotalBalance,
+            FEC_Account_Number__c = m != null ? m.AccountNumber : null,
+            FEC_Contract_Number__c = m != null ? m.ContractNumber : null,
+            FEC_Account_Status__c = m != null ? m.Status : null,
+            FEC_Credit_Limit__c = m != null ? m.CreditLimit : null,
+            FEC_OTB__c = m != null ? m.OTB : null,
+            FEC_Current_Balance__c = cs != null ? cs.CurrentBalance : null,
+            FEC_Hold_Amount__c = m != null ? m.HoldAmount : null,
+            FEC_Total_Balance__c = cs != null ? cs.TotalBalance : null,
             FEC_Application_ID__c = a != null ? a.ApplicationId : null,
             FEC_Account_Open_Date__c = l != null ? l.DateStatus : null,
             /* ===== ACCOUNT STATUS ===== */
-            FEC_Warning_Code__c = m.WarningCode,
-            FEC_Block_Code_1__c = m.BlockCode1,
-            FEC_Block_Date_1__c = m.AccountBlockCode1Date,
-            FEC_Reason_1__c     = m.RsnBlockCode1,
-            FEC_Block_Code_2__c = m.BlockCode2,
-            FEC_Block_Date_2__c = m.AccountBlockCode2Date,
-            FEC_Reason_2__c     = m.RsnBlockCode2,
-            FEC_Days_Past_Due__c = cardRes.CardBasicInfo.PassDue.DPD,
+            FEC_Warning_Code__c = m != null ? m.WarningCode : null,
+            FEC_Block_Code_1__c = m != null ? m.BlockCode1 : null,
+            FEC_Block_Date_1__c = m != null ? m.AccountBlockCode1Date : null,
+            FEC_Reason_1__c = m != null ? m.RsnBlockCode1 : null,
+            FEC_Block_Code_2__c = m != null ? m.BlockCode2 : null,
+            FEC_Block_Date_2__c = m != null ? m.AccountBlockCode2Date : null,
+            FEC_Reason_2__c = m != null ? m.RsnBlockCode2 : null,
+            FEC_Days_Past_Due__c = dpd,
             /* ===== CARD ===== */
-            FEC_Card_Number__c = m.MaskedCardNumber,
-            FEC_Insurance_Flag__c = FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag),
-            FEC_Customer_Segment__c = m.CustomerSegment,
-            FEC_Expiry_Date__c = m.ExpiryDate,
+            FEC_Card_Number__c = m != null ? m.MaskedCardNumber : null,
+            FEC_Insurance_Flag__c = m != null ? FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag) : null,
+            FEC_Customer_Segment__c = m != null ? m.CustomerSegment : null,
+            FEC_Expiry_Date__c = m != null ? m.ExpiryDate : null,
+            //FEC_Card_Type__c = 
+            //FEC_Plastic_ID__c = 
             FEC_Scheme_ID__c      = a != null ? a.SchemeId : null,
             FEC_Scheme_Desc__c    = a != null ? a.SchemeDesc : null,
             /* ===== CARD STATUS ===== */
-            FEC_Card_Activation_Status__c = FEC_CommonUltils.checkActiveAndInacive(m.ActivatedFlag),
-            FEC_E_Commerce_Status__c = FEC_CommonUltils.checkEcomFlag(cardSecRes.CardSecInfo.MainCardPlastic.EcomActiveFlag)
+            //FEC_Block_Code__c = m.
+            //FEC_Block_Date__c   = m.,
+            //FEC_Blocked_By__c = m
+            FEC_Card_Activation_Status__c = m != null ? FEC_CommonUltils.checkActiveAndInacive(m.ActivatedFlag) : null,
+            // FEC_Card_Activation_Date__c = (cardRes != null && cardRes.CardBasicInfo != null
+            //                 && cardRes.CardBasicInfo.CardHistories != null
+            //                 && cardRes.CardBasicInfo.CardHistories.CardHistory != null
+            //                 && !cardRes.CardBasicInfo.CardHistories.CardHistory.isEmpty())
+            //                 ? cardRes.CardBasicInfo.CardHistories.CardHistory[0].CardActivationDate
+            //                 : null,
+            FEC_E_Commerce_Status__c = ecomFlag != null ? FEC_CommonUltils.checkEcomFlag(ecomFlag): null
             /* ===== DEBT SALE ===== */
-           
         );
-    }
-    
+    } 
 }
