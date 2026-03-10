@@ -4,6 +4,7 @@
         <members>FEC_CardLockUnLockCallout</members>
 		<members>FEC_PINReissueServiceCallout</members>
 		<members>FEC_ReplacementCardCallout</members>
+		<members>FEC_ConstantCommon</members>
         <name>ApexClass</name>
     </types>
     <types>
