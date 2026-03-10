@@ -36,6 +36,7 @@ const MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12 = 'National ID must contain digits onl
 const MSG_INVALID_EMAIL_FORMAT = 'Email must be one of (randomString1)@(randomString2).(2-5 chars) or (randomString1)@(randomString2).(2-5 chars).(2-5 chars)';
 const UBANK_PRODUCT_NAME = 'UBank';
 const MSG_NO_RESULTS = 'Không tìm thấy kết quả';
+const MSG_UNKNOWN_ERROR = 'Unknown error';
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -75,4 +76,5 @@ export {
     MSG_INVALID_EMAIL_FORMAT,
     UBANK_PRODUCT_NAME,
     MSG_NO_RESULTS,
+    MSG_UNKNOWN_ERROR,
 };

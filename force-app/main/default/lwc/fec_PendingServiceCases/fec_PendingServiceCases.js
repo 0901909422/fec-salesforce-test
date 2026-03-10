@@ -3,7 +3,7 @@ import { NavigationMixin } from 'lightning/navigation';
 import getPendingServiceCases from '@salesforce/apex/FEC_GetServiceCases.getPendingServiceCases';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetServiceCases.getCaseFieldHelpTexts';
 import { formatDateTimeVN } from 'c/fec_CommonUtils';
-import { STR_NA } from 'c/fec_CommonConst';
+import { STR_NA, MSG_UNKNOWN_ERROR } from 'c/fec_CommonConst';
 
 export default class Fec_PendingServiceCases extends NavigationMixin(LightningElement) {
   @track data = [];
@@ -111,7 +111,7 @@ export default class Fec_PendingServiceCases extends NavigationMixin(LightningEl
         lastUpdatedOnFormatted: formatDateTimeVN(row.lastUpdatedOn),
       }));
     } catch (e) {
-      this.error = e.body?.message || e.message || 'Unknown error';
+      this.error = e.body?.message || e.message || MSG_UNKNOWN_ERROR;
       this.data = [];
     } finally {
       this.isLoading = false;

@@ -3,7 +3,7 @@ import { NavigationMixin } from 'lightning/navigation';
 import getClosedServiceCases from '@salesforce/apex/FEC_GetServiceCases.getClosedServiceCases';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetServiceCases.getCaseFieldHelpTexts';
 import { formatDateTimeVN } from 'c/fec_CommonUtils';
-import { STR_NA, MSG_NO_RESULTS } from 'c/fec_CommonConst';
+import { STR_NA, MSG_NO_RESULTS, MSG_UNKNOWN_ERROR } from 'c/fec_CommonConst';
 
 export default class Fec_ClosedServiceCases extends NavigationMixin(LightningElement) {
   @track data = [];
@@ -117,7 +117,7 @@ export default class Fec_ClosedServiceCases extends NavigationMixin(LightningEle
         lastUpdatedOnFormatted: formatDateTimeVN(row.lastUpdatedOn),
       }));
     } catch (e) {
-      this.error = e.body?.message || e.message || 'Unknown error';
+      this.error = e.body?.message || e.message || MSG_UNKNOWN_ERROR;
       this.data = [];
     } finally {
       this.isLoading = false;

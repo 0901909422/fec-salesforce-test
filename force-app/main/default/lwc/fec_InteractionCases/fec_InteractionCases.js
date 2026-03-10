@@ -4,7 +4,7 @@ import getAllInteractions from '@salesforce/apex/FEC_GetInteractionCases.getAllI
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetInteractionCases.getCaseFieldHelpTexts';
 import logSensitiveAccess from '@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess';
 import { formatDateTimeVN, formatDuration } from 'c/fec_CommonUtils';
-import { MSG_NO_RESULTS } from 'c/fec_CommonConst';
+import { MSG_NO_RESULTS, MSG_UNKNOWN_ERROR } from 'c/fec_CommonConst';
 
 export default class Fec_InteractionCases extends NavigationMixin(LightningElement) {
   @track data = [];
@@ -93,7 +93,7 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
         interactionDurationFormatted: formatDuration(row.interactionDuration),
       }));
     } catch (e) {
-      this.error = e.body?.message || e.message || 'Unknown error';
+      this.error = e.body?.message || e.message || MSG_UNKNOWN_ERROR;
       this.data = [];
     } finally {
       this.isLoading = false;
