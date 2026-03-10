@@ -688,9 +688,11 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       console.log("getCustomerList result:", result);
 
       const customers = result?.Customers || [];
-      if (customers.length > 0) {
-        this.processCustomerResults(customers);
+      if (this.loanB2Data.length > 0 || this.loanCash24Data.length > 0 || customers.length > 0) {
         this.isNoCustomerFound = false;
+        if (customers.length > 0) {
+          this.processCustomerResults(customers);
+        }
       } else {
         this.isNoCustomerFound = true;
       }
