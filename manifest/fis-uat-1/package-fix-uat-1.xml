@@ -121,6 +121,8 @@
     <types>
         <members>Case</members>
         <members>FEC_Sensitive_Data__c</members>
+		<members>FEC_B2_Contract__c</members>
+		<members>FEC_Cash_24_Contract__c</members>
         <name>CustomObject</name>
     </types>
     <types>
@@ -162,6 +164,11 @@
 		<members>FEC_MSG_FollowUp_Unfollow_Error</members>
 		<members>FEC_MSG_FollowUp_Case_Follow_Success</members>
 		<members>FEC_MSG_Can_Not_Find_Next_Stage</members>
+		<members>FEC_Error_Title</members>
+		<members>FEC_Toast_Error_Generic</members>
+		<members>FEC_Toast_Validation_Message</members>
+		<members>FEC_Toast_Validation_Title</members>
+		<members>FEC_Toast_Search_Validation</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
