@@ -49,7 +49,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   subscription = null;
   nocSubscription = null;
 
-  activeSections = ["case-remark", "case-remark-history"];
+  @track activeSections = ["case-remark-history"];
 
   @track errlst = [];
 
@@ -156,8 +156,18 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .then((res) => {
         this.dispatchEvent(new RefreshEvent());
       })
-      .catch((err) => {})
-      .finally(() => {});
+      .catch((err) => { })
+      .finally(() => {
+        if (this.modeEditCase) {
+          if (!this.activeSections.includes("case-remark")) {
+            this.activeSections = [...this.activeSections, "case-remark"];
+          }
+        } else {
+          this.activeSections = this.activeSections.filter(
+            (sec) => sec !== "case-remark",
+          );
+        }
+      });
 
     const caseBusinessEle = this.template.querySelector(
       "c-fec_-case-bussiness",
