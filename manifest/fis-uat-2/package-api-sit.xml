@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        
+        <members>FEC_CardLockUnLockCallout</members>
+		<members>FEC_PINReissueServiceCallout</members>
+		<members>FEC_ReplacementCardCallout</members>
         <name>ApexClass</name>
     </types>
     <version>65.0</version>
