@@ -96,8 +96,8 @@ public without sharing class FEC_SecondaryController {
         try {
             FEC_GetDigitalAccountStatus.ResponseWrapper digitalRes =
                 FEC_GetDigitalAccountStatus.callGetDigitalAccountStatus(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
                     hist.FEC_Work_Phone__c,
                     hist.FEC_CIF_Number__c
@@ -123,9 +123,9 @@ public without sharing class FEC_SecondaryController {
         try {
             FEC_GetCustomerInfoBasic.ResponseWrapper contactRes =
                 FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
-                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z),
                     hist.FEC_CIF_Number__c
                 );
 
@@ -155,8 +155,8 @@ public without sharing class FEC_SecondaryController {
         try {
             relativesRes =
                 FEC_GetRelativesList.callGetRelativesList(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
                     hist.FEC_CIF_Number__c
                 );
