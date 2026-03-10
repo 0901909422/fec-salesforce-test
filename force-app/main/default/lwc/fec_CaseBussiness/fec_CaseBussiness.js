@@ -604,7 +604,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           ? draftCode
           : this.business.routingActionlst[0]?.value;
 
-        if(OUTBOUND_CAMPAIGN == this.business.code) {
+        if (OUTBOUND_CAMPAIGN == this.business.code) {
           this.actionValue = ACTION_RESOLVE;
         }
 
@@ -695,7 +695,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.helpText !== undefined &&
                   field.helpText !== STR_EMPTY;
 
-                field.masked = field.masked && field.value;
+                field.masked = field.masked && field.value && !field.editable;
 
                 if (field.masked) {
                   switch (field.maskingType) {
@@ -761,7 +761,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           JSON.stringify(err),
         );
       })
-      .finally(() => {});
+      .finally(() => { });
   }
 
   handleInputKeydown(e) {

@@ -93,7 +93,7 @@ public with sharing class FEC_InteractionSLAController {
         Id = targetId,
         FEC_Outcome_Code__c = outcomeCode,
         Status = FEC_ConstantCommon.INTERACTION_STATUS_CLOSED,
-        FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_VIEW_MODE
+        FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE
       );
       
       // Update FEC_Interaction_Remarks__c field with Interaction Remarks if provided
@@ -121,7 +121,7 @@ public with sharing class FEC_InteractionSLAController {
         Id = targetId,
         FEC_Outcome_Code__c = outcomeCode,
         Status = FEC_ConstantCommon.INTERACTION_STATUS_CLOSED,
-        FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_VIEW_MODE
+        FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE
       );
       
       update interaction;

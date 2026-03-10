@@ -34,7 +34,7 @@ public without sharing class FEC_PaymentHistoryController {
     /* =====================================================
        GET CUSTOMER HISTORY ID FROM CASE
        ===================================================== */
-    private static Id getCustomerHistoryId(Id caseId) {
+    private static String getCustomerAccountNumber(Id caseId) {
         Case c = [
             SELECT FEC_Account_or_Contract__c
             FROM Case
@@ -47,7 +47,15 @@ public without sharing class FEC_PaymentHistoryController {
                 System.Label.FEC_MSG_Not_Account_Linked
             );
         }
-        return c.FEC_Account_or_Contract__c;
+
+        FEC_Customer_History__c ch = [
+            SELECT FEC_Account_Number__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :c.FEC_Account_or_Contract__c
+            LIMIT 1
+        ];
+
+        return ch.FEC_Account_Number__c;
     }
 
     /* =====================================================
@@ -58,7 +66,7 @@ public without sharing class FEC_PaymentHistoryController {
 
         Id customerHistoryId;
         try {
-            customerHistoryId = getCustomerHistoryId(caseId);
+            customerHistoryId = getCustomerAccountNumber(caseId);
         } catch (Exception e) {
             return;
         }
@@ -137,7 +145,7 @@ public without sharing class FEC_PaymentHistoryController {
 
         Id customerHistoryId;
         try {
-            customerHistoryId = getCustomerHistoryId(caseId);
+            customerHistoryId = getCustomerAccountNumber(caseId);
         } catch (Exception e) {
             return new List<PaymentHistoryDTO>();
         }
@@ -178,7 +186,7 @@ public without sharing class FEC_PaymentHistoryController {
 
         Id customerHistoryId;
         try {
-            customerHistoryId = getCustomerHistoryId(caseId);
+            customerHistoryId = getCustomerAccountNumber(caseId);
         } catch (Exception e) {
             return;
         }
@@ -245,7 +253,7 @@ public without sharing class FEC_PaymentHistoryController {
 
         Id customerHistoryId;
         try {
-            customerHistoryId = getCustomerHistoryId(caseId);
+            customerHistoryId = getCustomerAccountNumber(caseId);
         } catch (Exception e) {
             return new List<RealtimePaymentDTO>();
         }
