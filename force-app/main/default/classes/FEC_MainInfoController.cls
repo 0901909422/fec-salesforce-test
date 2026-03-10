@@ -290,7 +290,7 @@ public without sharing class FEC_MainInfoController {
     private static String mapApiAddressTypeToSF(String apiType) {
         if (apiType == 'CURRES') return 'Current Address';
         if (apiType == 'OFFICE') return 'Office Address';
-        if (apiType == 'PERMENT') return 'Permanent Address';
+        if (apiType == 'PERMNENT') return 'Permanent Address';
         return null;
     }
 
