@@ -106,13 +106,19 @@ public with sharing class FEC_InteractionHighlightController {
     }
     
     private static String determineCustomerCategory(Case caseRecord, FEC_Customer_History__c customerHistory) {
+        Set<Id> customerIds = new Set<Id>();
         if (caseRecord.RecordType.Name == FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
             String uploadCategory = getCategoryFromUploadList(caseRecord);
             if (uploadCategory != null) return uploadCategory;
-            return determineCustomerCategoryFromRelatedCases(caseRecord.Id);
+            customerIds = getCustomerIdsFromInteraction(caseRecord.Id);
+        } else if (caseRecord.FEC_Interaction__c != null) {
+            customerIds = getCustomerIdsFromInteraction(caseRecord.FEC_Interaction__c);
         }
-        if (caseRecord.FEC_Interaction__c != null) {
-            return determineCustomerCategoryFromRelatedCases(caseRecord.FEC_Interaction__c);
+        if (caseRecord.FEC_Account_or_Contract__c != null) {
+            customerIds.add(caseRecord.FEC_Account_or_Contract__c);
+        }
+        if (!customerIds.isEmpty()) {
+            return determineCustomerCategoryFromCustomerIds(customerIds);
         }
         String uploadCategory = getCategoryFromUploadList(caseRecord);
         if (uploadCategory != null) return uploadCategory;
@@ -122,30 +128,50 @@ public with sharing class FEC_InteractionHighlightController {
         return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
     }
 
-    private static String determineCustomerCategoryFromRelatedCases(Id interactionCaseId) {
-        List<Case> relatedCases = getRelatedCustomerCases(interactionCaseId);
-        for (Case c : relatedCases) {
+    private static String determineCustomerCategoryFromCustomerIds(Set<Id> customerIds) {
+        if (customerIds == null || customerIds.isEmpty()) return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
+        List<Case> allCustomerCases = getAllCasesForCustomers(customerIds);
+        for (Case c : allCustomerCases) {
             String uploadCategory = getCategoryFromUploadList(c);
             if (uploadCategory != null) return uploadCategory;
         }
-        for (Case c : relatedCases) {
+        for (Case c : allCustomerCases) {
             if (isSuspectedFraud(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SUSPECTED_FRAUD;
         }
-        for (Case c : relatedCases) {
+        for (Case c : allCustomerCases) {
             if (isMedia(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_MEDIA;
         }
-        for (Case c : relatedCases) {
+        for (Case c : allCustomerCases) {
             if (isSeriousComplaint(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SERIOUS_COMPLAINT;
         }
         return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
     }
 
-    private static List<Case> getRelatedCustomerCases(Id interactionCaseId) {
+    private static String determineCustomerCategoryFromRelatedCases(Id interactionCaseId) {
+        Set<Id> customerIds = getCustomerIdsFromInteraction(interactionCaseId);
+        return determineCustomerCategoryFromCustomerIds(customerIds);
+    }
+
+    private static Set<Id> getCustomerIdsFromInteraction(Id interactionCaseId) {
+        Set<Id> customerIds = new Set<Id>();
+        for (Case c : [
+            SELECT FEC_Account_or_Contract__c
+            FROM Case
+            WHERE FEC_Interaction__c = :interactionCaseId
+            AND FEC_Account_or_Contract__c != null
+        ]) {
+            customerIds.add(c.FEC_Account_or_Contract__c);
+        }
+        return customerIds;
+    }
+
+    private static List<Case> getAllCasesForCustomers(Set<Id> customerIds) {
+        if (customerIds == null || customerIds.isEmpty()) return new List<Case>();
         return [
             SELECT FEC_Account_or_Contract__c, FEC_Category__r.Name, FEC_Complain_Type__c,
                    FEC_SubCategory__r.FEC_Code__c, FEC_Case_Created_On__c, FEC_Case_Status__c
             FROM Case
-            WHERE FEC_Interaction__c = :interactionCaseId
+            WHERE FEC_Account_or_Contract__c IN :customerIds
         ];
     }
 

@@ -112,7 +112,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .catch((err) => {
         console.log("🚀 ~ Fec_CaseRemarks ~ loadRemarks ~ err:", err);
       })
-      .finally(() => {});
+      .finally(() => { });
   }
 
   connectedCallback() {
