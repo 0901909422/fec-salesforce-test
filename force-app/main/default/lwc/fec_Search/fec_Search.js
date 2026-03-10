@@ -1015,7 +1015,7 @@ hasAnySearchCriteria(params) {
 
         // Combine them into a string (e.g., "Card, Loan, Insurance")
         let searchProducts = categories.join(";");
-
+        this.isLoaded = false;
         createHistory({
           value: id,
           fieldName: action.label.fieldName,
@@ -1048,15 +1048,14 @@ hasAnySearchCriteria(params) {
                 },
               });
             }
-            
-
             //await this.refreshTab();
-            
           })
           .catch((e) => {
             this.showToast("Error", "Failed to create history", "error");
+          })
+          .finally(() => {
+            this.isLoaded = true;
           });
-
         break;
       }
       default:
