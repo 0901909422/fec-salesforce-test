@@ -87,15 +87,13 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return [
       {
         label: "Account Number",
-        type: this.recordId ? "dblclickText" : "text",
+        type: "dblclickText",
         fieldName: "AccountNumber",
-        typeAttributes: this.recordId
-          ? {
+        typeAttributes:  {
               value: { fieldName: "AccountNumber" },
               fieldName: "AccountNumber",
               selectedType: "Card"
-            }
-          : {},
+            },
         sortable: false,
       },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
@@ -144,14 +142,13 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return [
       {
         label: "Contract Number",
-        type: this.recordId ? "dblclickText" : "text",
+        type: "dblclickText",
         fieldName: "ContractNumber",
-        typeAttributes: this.recordId
-          ? {
+        typeAttributes:  {
               value: { fieldName: "ContractNumber" },
               fieldName: "ContractNumber",
-            }
-          : {},
+              selectedType: "Loan"
+            },
         sortable: false,
       },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
@@ -216,14 +213,13 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return [
       {
         label: "User ID",
-        type: this.recordId ? "dblclickText" : "text",
+        type: "dblclickText",
         fieldName: "UserId",
-        typeAttributes: this.recordId
-          ? {
+        typeAttributes:  {
               value: { fieldName: "UserId" },
               fieldName: "UserId",
-            }
-          : {},
+              selectedType: "Insurance"
+            },
         sortable: false,
       },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
@@ -994,7 +990,7 @@ hasAnySearchCriteria(params) {
               composed: true,
             }),
           );
-          return;
+
         }
         let categories = [];
 
@@ -1037,10 +1033,22 @@ hasAnySearchCriteria(params) {
               "History created successfully",
               "success",
             );
-            //publish(this.messageContext, IS_MODE_EDIT, payload);
-            await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
-            // await refreshApex(this.wiredCaseResult);
-            this.dispatchEvent(new RefreshEvent());
+            if (this.recordId) {
+                //publish(this.messageContext, IS_MODE_EDIT, payload);
+                await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+                // await refreshApex(this.wiredCaseResult);
+                this.dispatchEvent(new RefreshEvent());
+            } else {
+              this[NavigationMixin.Navigate]({
+                type: "standard__recordPage",
+                attributes: {
+                  recordId: res,
+                  objectApiName: "Case",
+                  actionName: "view",
+                },
+              });
+            }
+            
 
             //await this.refreshTab();
             
