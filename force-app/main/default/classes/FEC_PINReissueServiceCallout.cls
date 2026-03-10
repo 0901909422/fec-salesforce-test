@@ -71,14 +71,15 @@ public without sharing class FEC_PINReissueServiceCallout {
         PINResponse response = new PINResponse();
         try{
             PINRequest request = new PINRequest();
-
+            request.headers = new Map<String, String>{};
+            request.body = new Map<String, String>{};
             request.parameters = new List<String>{
                 cardNumber,
                 transId,
                 customerId
             };
 
-            String requestBodyJson = JSON.serialize(request.parameters);
+            String requestBodyJson = JSON.serialize(request);
 
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_PINReissueService');
@@ -92,7 +93,7 @@ public without sharing class FEC_PINReissueServiceCallout {
                 'FEC_PINReissue',
                 endpoint,
                 FEC_ConstantCommon.API_METHOD_POST,
-                'parameters: ' + requestBodyJson,
+                requestBodyJson,
                 res,
                 null
             );
