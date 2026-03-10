@@ -87,6 +87,8 @@ public with sharing class FEC_CreateCSCaseService {
             // -------------------------
             // UPLOAD DOCUMENTS (OPTIONAL)
             // -------------------------
+            List<String> filePayloads = new List<String>();
+            
             if (req.RequestInfo.AdditionalInfo != null) {
                 for (AdditionalInfoType info : req.RequestInfo.AdditionalInfo) {
                     if (
@@ -94,9 +96,13 @@ public with sharing class FEC_CreateCSCaseService {
                         info.ID == FEC_ConstantCommon.UPLOAD_DOCUMENT &&
                         String.isNotBlank(info.Value)
                     ) {
-                        uploadFileToCase(customerCase.Id, info.Value);
+                        filePayloads.add(info.Value);
                     }
                 }
+            }
+            
+            if (!filePayloads.isEmpty()) {
+                uploadFilesToCase(customerCase.Id, filePayloads);
             }
             
             // -------------------------
@@ -422,21 +428,32 @@ public with sharing class FEC_CreateCSCaseService {
         return c.Id;
     }
     
-    public static void uploadFileToCase(Id caseId, String payload) {
-        List<String> parts = payload.split('\\|');
+    private static void uploadFilesToCase(Id caseId, List<String> payloads) {
         
-        if(parts.size() != 3){
-            throw new ValidationException(null,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_ADDITIONAL_INFO_VALUE_MSG);
+        List<ContentVersion> versions = new List<ContentVersion>();
+        
+        for (String payload : payloads) {
+            
+            List<String> parts = payload.split('\\|');
+            
+            if (parts.size() != 3) {
+                continue; // skip invalid payload
+            }
+            
+            Blob body = EncodingUtil.base64Decode(parts[2]);
+            
+            ContentVersion cv = new ContentVersion();
+            cv.Title = parts[0];
+            cv.PathOnClient = '/' + parts[0];
+            cv.VersionData = body;
+            cv.FirstPublishLocationId = caseId;
+            
+            versions.add(cv);
         }
         
-        Blob body = EncodingUtil.base64Decode(parts[2]);
-        
-        ContentVersion cv = new ContentVersion();
-        cv.Title = parts[0];
-        cv.PathOnClient = parts[0];
-        cv.VersionData = body;
-        cv.FirstPublishLocationId = caseId;
-        insert cv;
+        if (!versions.isEmpty()) {
+            insert versions;
+        }
     }
     
     private static CreateCSCaseResponse createCaseResponse(
