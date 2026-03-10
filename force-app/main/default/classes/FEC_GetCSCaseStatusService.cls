@@ -71,9 +71,9 @@ public with sharing class FEC_GetCSCaseStatusService {
     
     private static void validateRequest(GetCSCaseStatusRequest req){
         
-        if(req==null) throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_REQUEST_INVALID_MSG);
+        if(req==null) throw new ServiceException(System.Label.FEC_CS_CASE_REQUEST_IS_NULL_MSG);
         
-        if(req.Sys==null) throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_SYS_REQUIRED_MSG);
+        if(req.Sys==null) throw new ServiceException(System.Label.FEC_CS_CASE_SYS_MISSING_MSG);
         
         if(String.isBlank(req.Sys.Channel))
             throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_CHANNEL_REQUIRED_MSG);
