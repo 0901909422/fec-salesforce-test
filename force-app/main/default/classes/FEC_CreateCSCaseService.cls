@@ -1,9 +1,10 @@
-global with sharing class FEC_CreateCSCaseService {
+public with sharing class FEC_CreateCSCaseService {
     
     // =================================================
     // SOAP ENTRY POINT (WSDL COMPATIBLE)
     // =================================================
-    webservice static CreateCSCaseResponse CreateCSCaseRequest(
+    @AuraEnabled
+    public static CreateCSCaseResponse CreateCSCaseRequest(
         CaseRequestType req
     ) {
         try {
@@ -497,64 +498,64 @@ global with sharing class FEC_CreateCSCaseService {
     // =================================================
     // REQUEST / RESPONSE TYPES (WSDL)
     // =================================================
-    global class CaseRequestType {
-        webservice SysType Sys;
-        webservice CustomerInfoType CustomerInfo;
-        webservice RequestInfoType RequestInfo;
-        webservice CreatorInfoType CreatorInfo;
+    public class CaseRequestType {
+        @AuraEnabled public SysType Sys;
+        @AuraEnabled public CustomerInfoType CustomerInfo;
+        @AuraEnabled public RequestInfoType RequestInfo;
+        @AuraEnabled public CreatorInfoType CreatorInfo;
     }
     
-    global class SysType {
-        webservice String Channel;
-        webservice String TransactionID;
-        webservice Datetime DateTime_x;
+    public class SysType {
+        @AuraEnabled public String Channel;
+        @AuraEnabled public String TransactionID;
+        @AuraEnabled public Datetime DateTime_x;
     }
     
-    global class CustomerInfoType {
-        webservice String Name;
-        webservice String PhoneNumber;
-        webservice String UserType;
-        webservice String NationalID;
-        webservice String ContractOrAccountNumber;
-        webservice String EmailAddress;
+    public class CustomerInfoType {
+        @AuraEnabled public String Name;
+        @AuraEnabled public String PhoneNumber;
+        @AuraEnabled public String UserType;
+        @AuraEnabled public String NationalID;
+        @AuraEnabled public String ContractOrAccountNumber;
+        @AuraEnabled public String EmailAddress;
     }
     
-    global class RequestInfoType {
-        webservice String CaseType;
-        webservice String RequestType;
-        webservice String ProductType;
-        webservice String Category;
-        webservice String SubCategory;
-        webservice String SubCode;
-        webservice String Remarks;
-        webservice List<AdditionalInfoType> AdditionalInfo;
+    public class RequestInfoType {
+        @AuraEnabled public String CaseType;
+        @AuraEnabled public String RequestType;
+        @AuraEnabled public String ProductType;
+        @AuraEnabled public String Category;
+        @AuraEnabled public String SubCategory;
+        @AuraEnabled public String SubCode;
+        @AuraEnabled public String Remarks;
+        @AuraEnabled public List<AdditionalInfoType> AdditionalInfo;
     }
     
-    global class AdditionalInfoType {
-        webservice String ID;
-        webservice String Value;
+    public class AdditionalInfoType {
+        @AuraEnabled public String ID;
+        @AuraEnabled public String Value;
     }
     
-    global class CreatorInfoType {
-        webservice String CreatorName;
-        webservice String CreatorCode;
-        webservice String CreatorDepartment;
-        webservice String CreatorPosition;
-        webservice String CreatorEmail;
+    public class CreatorInfoType {
+        @AuraEnabled public String CreatorName;
+        @AuraEnabled public String CreatorCode;
+        @AuraEnabled public String CreatorDepartment;
+        @AuraEnabled public String CreatorPosition;
+        @AuraEnabled public String CreatorEmail;
     }
     
-    global class CreateCSCaseResponse {
-        webservice SysType2 Sys;
-        webservice String CaseID;
+    public class CreateCSCaseResponse {
+        @AuraEnabled public SysType2 Sys;
+        @AuraEnabled public String CaseID;
     }
     
     
     
-    global class SysType2 {
-        webservice String TransactionID;
-        webservice String DateTime_x;
-        webservice String Code;
-        webservice String Description;
+    public class SysType2 {
+        @AuraEnabled public String TransactionID;
+        @AuraEnabled public String DateTime_x;
+        @AuraEnabled public String Code;
+        @AuraEnabled public String Description;
     }
     
     // =================================================
