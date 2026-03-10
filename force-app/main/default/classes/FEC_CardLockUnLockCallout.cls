@@ -1,26 +1,19 @@
 public without sharing class FEC_CardLockUnLockCallout {
 
+    private static ResponseLog responseLog;
+
     // ============================================================
     // REQUEST CLASSES
     // ============================================================
-
     public class LockUnlockRequest {
         public Map<String, String> parameters;
         public Map<String, String> headers;
         public Map<String, String> body;
     }
 
-    public class RequestBody {
-        public String BlockCode;
-        public String Func;
-        public String Last4Digit;
-        public String AccountNumber;
-    }
-
     // ============================================================
     // RESPONSE CLASSES
     // ============================================================
-
     public class LockUnlockResponse {
         public String pxObjClass;
         public Sys2 Sys2;
@@ -39,33 +32,36 @@ public without sharing class FEC_CardLockUnLockCallout {
     }
 
     // ============================================================
-    // RESULT WRAPPER
-    // ============================================================
-
-    public class ResultWrapper {
-
-        @AuraEnabled public Boolean isSuccess;
-        @AuraEnabled public String errorCode;
-        @AuraEnabled public String errorMessage;
-        @AuraEnabled public String transId;
-        @AuraEnabled public String description;
-
-        public ResultWrapper(){
-            isSuccess = false;
-        }
-    }
-
-    // ============================================================
     // VALIDATION CLASS
     // ============================================================
-
     public class ValidationResult {
 
         public Boolean isValid;
         public String errorMessage;
 
-        public ValidationResult(Boolean isValid,String errorMessage){
+        public ValidationResult(Boolean isValid, String errorMessage) {
             this.isValid = isValid;
+            this.errorMessage = errorMessage;
+        }
+    }
+
+    // ============================================================
+    // RESPONSE LOG CLASS
+    // ============================================================
+    public class ResponseLog {
+        public String apiName;
+        public String endpoint;
+        public String method;
+        public String requestBody;
+        public HttpResponse response;
+        public String errorMessage;
+
+        public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
+            this.apiName = apiName;
+            this.endpoint = endpoint;
+            this.method = method;
+            this.requestBody = requestBody;
+            this.response = response;
             this.errorMessage = errorMessage;
         }
     }
@@ -109,13 +105,24 @@ public without sharing class FEC_CardLockUnLockCallout {
 
             String endpoint = apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c;
                 
-            HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_GET, request.headers, requestBodyJson);
+            HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_GET, request.headers, requestBodyJson);
             
-            if (resp.getStatusCode() == 200) {
-                response = (LockUnlockResponse)JSON.deserialize(resp.getBody(), LockUnlockResponse.class);
+            // Log response
+            String requestHeaderJson = JSON.serialize(request.headers);
+            responseLog = new ResponseLog(
+                'FEC_CardLockUnLock',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_GET,
+                'headers: ' + requestHeaderJson + ', body: ' + requestBodyJson,
+                res,
+                null
+            );
+
+            if (res.getStatusCode() == 200) {
+                response = (LockUnlockResponse)JSON.deserialize(res.getBody(), LockUnlockResponse.class);
             } else {
-                response.errorCode = String.valueOf(resp.getStatusCode());
-                response.errorMessage = resp.getStatus();
+                response.errorCode = String.valueOf(res.getStatusCode());
+                response.errorMessage = res.getBody();
             }
         } catch(Exception e) {
             response.errorCode = 'CALLOUT_ERROR';
@@ -170,44 +177,16 @@ public without sharing class FEC_CardLockUnLockCallout {
         return new ValidationResult(true, null);
     }
 
-    // ============================================================
-    // VALIDATE RESPONSE
-    // ============================================================
-
-    public static ValidationResult validateResponse(LockUnlockResponse response){
-
-        if(response == null)
-            return new ValidationResult(false,System.Label.FEC_MSG_Response_Null);
-
-        if(String.isNotBlank(response.errorCode))
-            return new ValidationResult(false,
-                response.errorCode + ' - ' + response.errorMessage);
-
-        if(response.Sys2 == null)
-            return new ValidationResult(false,System.Label.FEC_MSG_Response_Sys_Null);
-
-        if(response.Sys2.Code != '1')
-            return new ValidationResult(false,response.Sys2.Description);
-
-        return new ValidationResult(true,null);
-    }
-
-    // ============================================================
-    // CONVERT RESULT WRAPPER
-    // ============================================================
-
-    public static ResultWrapper convertToResultWrapper(LockUnlockResponse response){
-        ResultWrapper result = new ResultWrapper();
-        ValidationResult validation = validateResponse(response);
-        if(!validation.isValid){
-
-            result.errorCode = response != null ? response.errorCode : null;
-            result.errorMessage = validation.errorMessage;
-            return result;
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName, 
+                responseLog.endpoint, 
+                responseLog.method, 
+                responseLog.requestBody, 
+                responseLog.response, 
+                responseLog.errorMessage);
         }
-        result.isSuccess = true;
-        result.transId = response.Sys2.TransID;
-        result.description = response.Sys2.Description;
-        return result;
     }
+
 }
