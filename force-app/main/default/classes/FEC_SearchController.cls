@@ -34,48 +34,64 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
-    public static void createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType) {
-        // Return early if no value or field name
-        if (value == null || value.trim() == '' || fieldName == null || fieldName.trim() == '') {
-            throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
+    public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber) {
+    // 1. Validation
+    if (String.isBlank(value) || String.isBlank(fieldName)) {
+        throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
+    }
+
+    try {
+        // 2. Xử lý Product Type
+        Id productTypeId = null;
+        if (String.isNotBlank(selectedType)) {
+            List<FEC_Product_Type__c> types = [SELECT Id FROM FEC_Product_Type__c WHERE Name = :selectedType LIMIT 1];
+            if (!types.isEmpty()) { productTypeId = types[0].Id; }
         }
-        // Build record
+
+        // 3. Khởi tạo và xử lý Case TRƯỚC (để lấy ID cho trường bắt buộc của History)
+        Case objCase = new Case();
+        if (caseId != null) {
+            objCase.Id = caseId;
+        } else {
+            objCase.RecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+                .get(FEC_ConstantCommon.CASE_SEARCH_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+        }
+
+        // Gán các field cơ bản cho Case
+        objCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+        objCase.FEC_CIF_Number__c = cifNumber;
+        objCase.FEC_First_Access__c = true;
+        objCase.FEC_Search_Products__c = searchProducts;
+        objCase.FEC_Product_Type__c = productTypeId;
+
+        // Thực hiện Upsert Case ngay để có Id
+        upsert objCase;
+
+        // 4. Khởi tạo và Insert History (Trường FEC_Case__c bây giờ chắc chắn có giá trị)
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
-        
-        // Set field based on fieldName parameter
         if (fieldName == 'AccountNumber') {
             rec.FEC_Account_Number__c = value;
-        }
-        if (fieldName == 'ContractNumber') {
+        } else if (fieldName == 'ContractNumber') {
             rec.FEC_Contract_Number__c = value;
-        }
-        if (fieldName == 'UserId') {
+        } else if (fieldName == 'UserId') {
             rec.FEC_User_ID__c = value;
         }
         rec.Name = value;
-        rec.FEC_Case__c = caseId;
+        rec.FEC_CIF_Number__c = cifNumber;
+        rec.FEC_Case__c = objCase.Id; // Gán ID vừa tạo/update vào trường bắt buộc
 
-        try {
-            insert rec;
-            FEC_Product_Type__c productType;
-            if (!String.isBlank(selectedType)) {
-                productType = [SELECT Id FROM FEC_Product_Type__c WHERE Name = :selectedType LIMIT 1];
-            }
-            String randomCIF = String.valueOf(Math.round(Math.random() * 89999999 + 10000000));
-            Case objCase = new Case(
-                    Id = caseId,
-                    FEC_Account_or_Contract__c = rec.Id,
-                    FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE,
-                    FEC_CIF_Number__c = randomCIF,
-                    FEC_First_Access__c = true,
-                    FEC_Search_Products__c = searchProducts,
-                    FEC_Product_Type__c = productType != null ? productType.Id : null
-                );
-            update objCase;
-        } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
-        }
+        insert rec;
+
+        // 5. Cập nhật lại Case để liên kết ngược với History record vừa tạo
+        objCase.FEC_Account_or_Contract__c = rec.Id;
+        update objCase;
+
+        return objCase.Id;
+
+    } catch (Exception e) {
+        throw new AuraHandledException(e.getMessage());
     }
+}
 
     @AuraEnabled
     public static List<FEC_B2_Contract__c> getB2Contracts(String contractNumber) {
