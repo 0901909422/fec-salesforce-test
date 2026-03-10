@@ -50,14 +50,12 @@ public without sharing class FEC_CreateCaseHanlder {
         public String customerName;
         public String phoneNumber;
         public String userType;
-        public String customerHistoryId;
         public String businessProcessId;
         public String productTypeId;
         public String categoryId;
         public String subCategoryId;
         public String subCodeId;
         public String remarks;
-        
     }
     
     @AuraEnabled
@@ -206,7 +204,6 @@ public without sharing class FEC_CreateCaseHanlder {
         c.FEC_Customer_Name__c = dto.customerName;
         c.FEC_Phone_Number__c = dto.phoneNumber;
         c.FEC_Customer_Type__c = dto.userType;
-        c.FEC_Account_or_Contract__c = dto.customerHistoryId;
         c.FEC_Business_Process__c = dto.businessProcessId;
         c.FEC_Product_Type__c = dto.productTypeId;
         c.FEC_Category__c = dto.categoryId;
