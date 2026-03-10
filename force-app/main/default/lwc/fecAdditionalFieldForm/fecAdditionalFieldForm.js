@@ -65,11 +65,6 @@ export default class FecAdditionalFieldForm extends LightningElement {
      * @param {Event} event
      */
     handleSuccess(event) {
-        const evt = new ShowToastEvent({
-            title: LABEL_SUCCESS_TITLE,
-            message: LABEL_SAVE_SUCCESS_MSG,
-            variant: 'success'
-        });
         this.dispatchEvent(new CustomEvent('success', { detail: event.detail }));
     }
 
@@ -78,13 +73,23 @@ export default class FecAdditionalFieldForm extends LightningElement {
      * @param {Event} event
      */
     handleError(event) {
-        const errMsg = (event.detail && event.detail.detail) ? event.detail.detail : JSON.stringify(event.detail);
-        const evt = new ShowToastEvent({
+        event.preventDefault();
+        event.stopPropagation();
+        // Extract the most concise error message
+        let errMsg = 'An error occurred. Please try again.';
+        if (event.detail) {
+            if (event.detail.detail) {
+                errMsg = event.detail.detail;
+            } else if (event.detail.message) {
+                errMsg = event.detail.message;
+            }
+        }
+        this.dispatchEvent(new ShowToastEvent({
             title: LABEL_ERROR_TITLE,
             message: errMsg,
-            variant: 'error'
-        });
-        this.dispatchEvent(evt);
+            variant: 'error',
+            mode: 'dismissable'
+        }));
     }
 
     /**

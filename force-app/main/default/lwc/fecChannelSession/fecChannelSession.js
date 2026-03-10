@@ -49,10 +49,12 @@ const COLUMNS = [
 
 export default class FecChannelManager extends LightningElement {
     @track channels = [];
+    @track filteredChannels = [];
     @track selectedId; // null = Add Mode, has ID = Edit Mode
     @track showForm = false;
     @track sortBy;
     @track sortDirection;
+    @track searchTerm = '';
     columns = COLUMNS;
     wiredResult;
 
@@ -91,9 +93,30 @@ export default class FecChannelManager extends LightningElement {
         this.wiredResult = result;
         if (result.data) {
             this.channels = result.data;
+            this.applySearch(); // Apply search filter after data loads
             showLog('Load Channels Success', result.data);
         } else if (result.error) {
             showLog('Load Channels Error', result.error);
+        }
+    }
+
+    handleSearch(event) {
+        this.searchTerm = event.target.value;
+        this.applySearch();
+    }
+
+    applySearch() {
+        if (!this.searchTerm || this.searchTerm.trim() === '') {
+            // No search term, display all channels
+            this.filteredChannels = [...this.channels];
+        } else {
+            // Filter channels by Name or Channel ID (case-insensitive)
+            const searchKey = this.searchTerm.toLowerCase().trim();
+            this.filteredChannels = this.channels.filter(channel => {
+                const name = (channel[FIELD_NAME] || '').toLowerCase();
+                const channelId = (channel[FIELD_CHANNEL_ID] || '').toLowerCase();
+                return name.includes(searchKey) || channelId.includes(searchKey);
+            });
         }
     }
 
@@ -144,8 +167,33 @@ export default class FecChannelManager extends LightningElement {
     }
 
     handleError(event) {
-        const msg = event?.detail?.detail || LABEL_TOAST_ERROR_GENERIC;
-        this.showToast(LABEL_TOAST_ERROR_GENERIC, msg, VARIANT_ERROR);
+        const errorDetail = event?.detail?.detail || LABEL_TOAST_ERROR_GENERIC;
+        
+        // Extract user-friendly error message from Apex error
+        let userMessage = LABEL_TOAST_ERROR_GENERIC;
+        
+        if (errorDetail) {
+            const errorMsg = String(errorDetail).toLowerCase();
+            
+            // Map technical errors to user-friendly messages based on field names
+            if (errorMsg.includes('required') || errorMsg.includes('required_field_missing')) {
+                userMessage = 'Please fill in all required fields (Name, Channel ID, Channel Name VN, Status).';
+            } else if (errorMsg.includes('duplicate') || errorMsg.includes('duplicate_value')) {
+                userMessage = 'This Channel ID or Name already exists. Please use a different value.';
+            } else if (errorMsg.includes('invalid') || errorMsg.includes('invalid_field_value')) {
+                userMessage = 'One or more fields contain invalid data. Please check and try again.';
+            } else if (errorMsg.includes('update') && errorMsg.includes('failed')) {
+                userMessage = 'Failed to update the channel. Please check your data and try again.';
+            } else if (errorMsg.includes('insert') && errorMsg.includes('failed')) {
+                userMessage = 'Failed to create the channel. Please check your data and try again.';
+            } else {
+                // For other errors, extract first sentence only
+                const firstSentence = errorDetail.split('.')[0];
+                userMessage = firstSentence ? firstSentence + '.' : LABEL_TOAST_ERROR_GENERIC;
+            }
+        }
+        
+        this.showToast(LABEL_TOAST_ERROR_GENERIC, userMessage, VARIANT_ERROR);
     }
 
     showToast(title, message, variant) {
@@ -161,7 +209,7 @@ export default class FecChannelManager extends LightningElement {
     }
 
     sortData(fieldName, direction) {
-        const parseData = JSON.parse(JSON.stringify(this.channels));
+        const parseData = JSON.parse(JSON.stringify(this.filteredChannels));
         const keyValue = (a) => {
             return a[fieldName];
         };
@@ -171,7 +219,7 @@ export default class FecChannelManager extends LightningElement {
             y = keyValue(y) ? keyValue(y) : '';
             return isReverse * ((x > y) - (y > x));
         });
-        this.channels = parseData;
+        this.filteredChannels = parseData;
     }
 
     // Add spinner property to manage loading state

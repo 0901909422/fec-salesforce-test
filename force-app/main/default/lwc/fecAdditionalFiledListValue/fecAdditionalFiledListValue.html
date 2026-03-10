@@ -36,9 +36,36 @@
 
                         <lightning-messages></lightning-messages>
 
-                        <lightning-input-field field-name={FIELD_NAME} required aria-label={labelListValueName}></lightning-input-field>
-                        <lightning-input-field field-name={FIELD_NAME_VN} required aria-label={labelListValueNameVN}></lightning-input-field>
-                        <lightning-input-field field-name={FIELD_ORDER} aria-label={labelOrder}></lightning-input-field>
+                        <!-- Code Field - Readonly on Edit, Required -->
+                        <lightning-input-field
+                            field-name={FIELD_CODE}
+                            read-only={listValueRecordIdForEdit}>
+                        </lightning-input-field>
+
+                        <!-- Name EN - Required -->
+                        <lightning-input-field
+                            field-name={FIELD_NAME}>
+                        </lightning-input-field>
+
+                        <!-- Name VN - Required -->
+                        <lightning-input-field
+                            field-name={FIELD_NAME_VN}>
+                        </lightning-input-field>
+
+                        <!-- Order -->
+                        <template if:false={listValueRecordIdForEdit}>
+                            <lightning-input
+                                type="number"
+                                label="Order"
+                                value={nextOrder}
+                                required>
+                            </lightning-input>
+                        </template>
+                        <template if:true={listValueRecordIdForEdit}>
+                            <lightning-input-field
+                                field-name={FIELD_ORDER}>
+                            </lightning-input-field>
+                        </template>
 
                         <div class="slds-m-top_medium slds-align_absolute-center">
                             <lightning-button label={labelCancel} onclick={closeAddEditModal} class="slds-m-right_x-small" title={labelCancel}></lightning-button>
