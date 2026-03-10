@@ -45,10 +45,8 @@
                     <!-- Buttons centered -->
                     <div class="slds-p-top_medium slds-align_absolute-center slds-grid slds-gutters_x-small">
                         <lightning-button variant="neutral" label="Clear" onclick={handleClear}></lightning-button>
-                        <template if:true={isSearch}>
-                            <lightning-button class="slds-m-left_x-small" variant="brand" label="Search"
-                            onclick={handleSearch}></lightning-button>
-                        </template>
+                        <lightning-button class="slds-m-left_x-small" variant="brand" label="Search"
+                        onclick={handleSearch} disabled={isDisabledSearch}></lightning-button>
                         <template if:true={isSkip}>
                             <lightning-button class="slds-m-left_x-small" variant="brand" label="Skip"
                             onclick={handleSkip}></lightning-button> 
