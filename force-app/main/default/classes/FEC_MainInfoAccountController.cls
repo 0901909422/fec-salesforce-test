@@ -567,6 +567,28 @@ public without sharing class FEC_MainInfoAccountController {
                 cs = cardSecRes.CardSecInfo.MainCardBalance;
             }
 
+        Date activationDateParsed = null;
+
+        if (cardRes != null &&
+            cardRes.CardBasicInfo != null &&
+            cardRes.CardBasicInfo.CardHistories != null &&
+            cardRes.CardBasicInfo.CardHistories.CardHistory != null &&
+            !cardRes.CardBasicInfo.CardHistories.CardHistory.isEmpty()) {
+
+          String activationDate = String.valueOf(cardRes.CardBasicInfo.CardHistories.CardHistory[0].CardActivationDate);
+
+            if (!String.isBlank(activationDate) &&
+                activationDate != '00000000' &&
+                activationDate.length() == 8) {
+
+                activationDateParsed = Date.newInstance(
+                    Integer.valueOf(activationDate.substring(0,4)),
+                    Integer.valueOf(activationDate.substring(4,6)),
+                    Integer.valueOf(activationDate.substring(6,8))
+                );
+            }
+        }
+
         Boolean ecomFlag;
             if(cardSecRes != null
                 && cardSecRes.CardSecInfo != null
@@ -613,12 +635,7 @@ public without sharing class FEC_MainInfoAccountController {
             //FEC_Block_Date__c   = m.,
             //FEC_Blocked_By__c = m
             FEC_Card_Activation_Status__c = m != null ? FEC_CommonUltils.checkActiveAndInacive(m.ActivatedFlag) : null,
-            // FEC_Card_Activation_Date__c = (cardRes != null && cardRes.CardBasicInfo != null
-            //                 && cardRes.CardBasicInfo.CardHistories != null
-            //                 && cardRes.CardBasicInfo.CardHistories.CardHistory != null
-            //                 && !cardRes.CardBasicInfo.CardHistories.CardHistory.isEmpty())
-            //                 ? cardRes.CardBasicInfo.CardHistories.CardHistory[0].CardActivationDate
-            //                 : null,
+            FEC_Card_Activation_Date__c = activationDateParsed,
             FEC_E_Commerce_Status__c = ecomFlag != null ? FEC_CommonUltils.checkEcomFlag(ecomFlag): null,
             FEC_Local_Use__c = localUse
             /* ===== DEBT SALE ===== */
