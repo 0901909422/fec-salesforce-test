@@ -177,6 +177,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
                 FEC_Responsible_Person__c,
                 FEC_Delinquency_Date__c,
                 FEC_Statement_Notification_Type__c,
+                FEC_Date_Assigned__c,
                 FEC_CC_Code__c,
                 FEC_CC_Name__c,
                 FEC_DSA_Code__c,
