@@ -2008,6 +2008,13 @@
         <shortDescription>Label for Field ID</shortDescription>
         <value>Field ID</value>
     </labels>
+        <labels>
+        <fullName>FEC_Label_Code_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label for Code ID</shortDescription>
+        <value>Code ID</value>
+    </labels>
     <labels>
         <fullName>FEC_Label_Field_Object_Name</fullName>
         <language>en_US</language>

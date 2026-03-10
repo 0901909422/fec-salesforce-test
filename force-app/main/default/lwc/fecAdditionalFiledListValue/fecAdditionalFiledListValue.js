@@ -3,7 +3,8 @@ import getFieldListValues from '@salesforce/apex/FEC_AdditionalFieldController.g
 import deleteFieldListValue from '@salesforce/apex/FEC_AdditionalFieldController.deleteFieldListValue';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
-import { OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE, FIELD_ORDER, FIELD_PARENT_FIELD, FIELD_NAME, FIELD_NAME_VN, FIELD_PROCESS_CHANGE_STATUS, VARIANT_SUCCESS, VARIANT_ERROR } from 'c/fecConstants';
+import { OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE, FIELD_ORDER, FIELD_PARENT_FIELD, FIELD_NAME, FIELD_NAME_VN, FIELD_CODE, FIELD_PROCESS_CHANGE_STATUS, VARIANT_SUCCESS, VARIANT_ERROR } from 'c/fecConstants';
+// Make sure FIELD_CODE is exported from fecConstants as: export const FIELD_CODE = 'FEC_Code__c';
 import LABEL_NEW_LIST_VALUE from '@salesforce/label/c.FEC_New_List_Value';
 import LABEL_NAME from '@salesforce/label/c.FEC_Label_Name';
 import LABEL_NAME_VN from '@salesforce/label/c.FEC_Label_Name_VN';
@@ -19,14 +20,15 @@ import LABEL_SAVE_SUCCESS_MSG from '@salesforce/label/c.FEC_Save_Success_Message
 import LABEL_DELETE_SUCCESS_MSG from '@salesforce/label/c.FEC_Delete_Success_Message';
 
 const COLUMNS = [
+    { label: 'Code', fieldName: 'FEC_Code__c', type: 'text', initialWidth: 120 },
     { label: 'Name EN', fieldName: FIELD_NAME, type: 'text' },
     { label: 'Name VN', fieldName: FIELD_NAME_VN, type: 'text' },
-    { label: 'Order', fieldName: FIELD_ORDER, type: 'number', sortable: true },
+    { label: 'Order', fieldName: FIELD_ORDER, type: 'number', sortable: true, initialWidth: 90 },
     {
         label: 'Process Status',
         fieldName: FIELD_PROCESS_CHANGE_STATUS,
         type: 'text',
-        initialWidth: 120
+        initialWidth: 130
     },
     {
         type: 'action',
@@ -55,10 +57,12 @@ export default class FecAdditionalFiledListValue extends LightningElement {
     OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE = OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE;
     FIELD_ORDER = FIELD_ORDER;
     FIELD_PARENT_FIELD = FIELD_PARENT_FIELD;
+    FIELD_CODE = FIELD_CODE;
     FIELD_NAME = FIELD_NAME;
     FIELD_NAME_VN = FIELD_NAME_VN;
     labelListValueName = LABEL_NAME;
     labelListValueNameVN = LABEL_NAME_VN;
+    labelCode = 'Code';
     labelOrder = LABEL_ORDER || 'Order';
     labelConfirmDeleteTitle = LABEL_LIST_VALUE_CONFIRM_DELETE_TITLE;
     labelConfirmDeleteMsg = LABEL_LIST_VALUE_CONFIRM_DELETE_MSG;
@@ -79,8 +83,13 @@ export default class FecAdditionalFiledListValue extends LightningElement {
         this.wiredListValuesResult = result;
         if (result.data) {
             this.listValues = result.data;
+            // Debug: Check if Code field exists in data
+            if (this.listValues && this.listValues.length > 0) {
+                console.log('First record data:', JSON.stringify(this.listValues[0]));
+            }
         } else if (result.error) {
             this.showToast('Error', 'Failed to load list values', 'error');
+            console.error('Error loading list values:', result.error);
         }
     }
 
@@ -99,6 +108,16 @@ export default class FecAdditionalFiledListValue extends LightningElement {
     openAddEditModal() {
         this.listValueRecordIdForEdit = null;
         this.isAddEditModalOpen = true;
+        // Store next order to be used in form
+        this.nextOrder = this.calculateNextOrder();
+    }
+
+    calculateNextOrder() {
+        if (!this.listValues || this.listValues.length === 0) {
+            return 1;
+        }
+        const maxOrder = Math.max(...this.listValues.map(item => item[FIELD_ORDER] || 0));
+        return maxOrder + 1;
     }
 
     closeAddEditModal() {
@@ -110,13 +129,38 @@ export default class FecAdditionalFiledListValue extends LightningElement {
         this.recordIdToDelete = null;
     }
 
+    handleFormSubmit() {
+        this.template.querySelector('lightning-record-edit-form').submit();
+    }
+
     handleSubmit(event) {
         event.preventDefault();
         const fields = event.detail.fields;
         
+        // Validate required fields - only Code validation for new records
+        if (!this.listValueRecordIdForEdit) {
+            if (!fields[FIELD_CODE] || fields[FIELD_CODE].trim() === '') {
+                this.showToast('Error', 'Code is required', 'error');
+                return;
+            }
+        }
+        
+        if (!fields[FIELD_NAME] || fields[FIELD_NAME].trim() === '') {
+            this.showToast('Error', 'Name EN is required', 'error');
+            return;
+        }
+        if (!fields[FIELD_NAME_VN] || fields[FIELD_NAME_VN].trim() === '') {
+            this.showToast('Error', 'Name VN is required', 'error');
+            return;
+        }
+        
         // Ensure parent link is set for new records
         if (!this.listValueRecordIdForEdit) {
             fields[FIELD_PARENT_FIELD] = this.fieldRecord ? this.fieldRecord.Id : null;
+            // Set Order to nextOrder if it's a new record and not already set
+            if (!fields[FIELD_ORDER] || fields[FIELD_ORDER] === '') {
+                fields[FIELD_ORDER] = this.nextOrder;
+            }
         }
 
         // Logic check: if it's a new record and parent ID is still null, block it
