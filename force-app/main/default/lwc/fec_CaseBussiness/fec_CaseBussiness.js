@@ -695,7 +695,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.helpText !== undefined &&
                   field.helpText !== STR_EMPTY;
 
-                field.masked = field.masked && field.value;
+                field.masked = field.masked && field.value && !field.editable;
 
                 if (field.masked) {
                   switch (field.maskingType) {

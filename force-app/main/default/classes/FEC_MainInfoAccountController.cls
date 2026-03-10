@@ -163,23 +163,25 @@ public without sharing class FEC_MainInfoAccountController {
                 appRes = null;
         }
 
-        /* ========= 5. CALL MFASOUTSTANDINGAUTHINQ ========= */
-        FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper mfaRes;
+        /* ========= 5. CALL EMEA_ACCOUNT_INQ ========= */
+        FEC_EmeaAccountInqService.EmeaResult emeaRes;
 
         try {
-            mfaRes = FEC_MFASOUTSTANDINGAUTHINQ.callService(    
-                FEC_CommonUltils.generateTransactionId(), 
-                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,                            
-                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT), 
-                FEC_ConstantCommon.REQUESTOR_VMXVERSION,          
-                FEC_ConstantCommon.REQUESTOR_CONTEXT,
-                UserInfo.getUserId(), 
-                FEC_ConstantCommon.REQUESTOR_ORG,
-                accountNumber                       
-            );
+            FEC_EmeaAccountInqService.EmeaInput input =
+                new FEC_EmeaAccountInqService.EmeaInput();
+
+            input.context    = FEC_ConstantCommon.REQUESTOR_CONTEXT;
+            input.name       = UserInfo.getUserId();
+            input.org        = FEC_ConstantCommon.REQUESTOR_ORG;
+            input.account    = accountNumber;
+            input.dualInd    = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
+            input.vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
+
+            emeaRes = FEC_EmeaAccountInqService.callAccountInquiry(input);
+
         } catch (Exception e) {
             System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
-            mfaRes = null;
+            emeaRes = null;
         }
 
         /* ========= 6. CALL GetCardSecInfo ========= */
@@ -197,7 +199,7 @@ public without sharing class FEC_MainInfoAccountController {
             cardSecRes = null;
         }
 
-        updateAccountFromAPI(c.FEC_Account_or_Contract__c, cardRes, cusRes, mfaRes, appRes, cardSecRes);
+        updateAccountFromAPI(c.FEC_Account_or_Contract__c, cardRes, cusRes, emeaRes, appRes, cardSecRes);
 
         return getAccountInfoLocal(c.FEC_Account_or_Contract__c);
     }
@@ -245,9 +247,9 @@ public without sharing class FEC_MainInfoAccountController {
             String remark = '';
             
             if (isEligible) {
-                remark = System.Label.FEC_MSG_Eligible;
-            } else {
                 remark = apiResponse.Sys.Description;
+            } else {
+                remark = System.Label.FEC_MSG_Eligible;
             }
             
             FEC_Customer_History__c accToUpdate = new FEC_Customer_History__c(
@@ -419,22 +421,24 @@ public without sharing class FEC_MainInfoAccountController {
         }
 
         /* ========= 4. CALL FEC_MFASOUTSTANDINGAUTHINQ ========= */
-        FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper mfaRes;
+        FEC_EmeaAccountInqService.EmeaResult emeaRes;
 
         try {
-            mfaRes = FEC_MFASOUTSTANDINGAUTHINQ.callService(
-                    FEC_CommonUltils.generateTransactionId(),
-                    FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
-                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                    FEC_ConstantCommon.REQUESTOR_VMXVERSION,
-                    FEC_ConstantCommon.REQUESTOR_CONTEXT,
-                    UserInfo.getUserId(),
-                    FEC_ConstantCommon.REQUESTOR_ORG,
-                    accountNumber
-            );
+            FEC_EmeaAccountInqService.EmeaInput input =
+                new FEC_EmeaAccountInqService.EmeaInput();
+
+            input.context    = FEC_ConstantCommon.REQUESTOR_CONTEXT;
+            input.name       = UserInfo.getUserId();
+            input.org        = FEC_ConstantCommon.REQUESTOR_ORG;
+            input.account    = accountNumber;
+            input.dualInd    = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
+            input.vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
+
+            emeaRes = FEC_EmeaAccountInqService.callAccountInquiry(input);
+
         } catch (Exception e) {
             System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
-            mfaRes = null;
+            emeaRes = null;
         }
 
         /* ========= 5. CALL GetCardSecInfo ========= */
@@ -452,7 +456,7 @@ public without sharing class FEC_MainInfoAccountController {
             cardSecRes = null;
         }
 
-        updateAccountFromAPI(c.FEC_Account_or_Contract__c, cardRes, cusRes, mfaRes, appRes, cardSecRes);
+        updateAccountFromAPI(c.FEC_Account_or_Contract__c, cardRes, cusRes, emeaRes, appRes, cardSecRes);
 
         return getAccountInfoLocal(c.FEC_Account_or_Contract__c);
     }
@@ -521,7 +525,7 @@ public without sharing class FEC_MainInfoAccountController {
         Id accountId,
         FEC_GetCardBasicInfo.ResponseWrapper cardRes,
         FEC_GetCustomerList.ResponseWrapper cusRes,
-        FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper mfaRes,
+        FEC_EmeaAccountInqService.EmeaResult emeaRes,
         FEC_GetApplicationsList.ResponseWrapper appRes,
         FEC_GetCardSecInfo.ResponseWrapper cardSecRes
     ) {
@@ -547,7 +551,6 @@ public without sharing class FEC_MainInfoAccountController {
                 && !cusRes.Customers[0].Applications.isEmpty()){
                 a = cusRes.Customers[0].Applications[0];
             }
-        //FEC_MFASOUTSTANDINGAUTHINQ.
        FEC_GetApplicationsList.ApplicationInfo l;
             if (appRes != null 
                 && appRes.Applications != null 
@@ -571,6 +574,10 @@ public without sharing class FEC_MainInfoAccountController {
 
                 ecomFlag = cardSecRes.CardSecInfo.MainCardPlastic.EcomActiveFlag;
             }
+        String localUse;
+        if (emeaRes != null) {
+            localUse = emeaRes.localUseInd;
+        }
         update new FEC_Customer_History__c(
             Id = accountId,
             FEC_Account_Number__c = m != null ? m.AccountNumber : null,
@@ -612,7 +619,8 @@ public without sharing class FEC_MainInfoAccountController {
             //                 && !cardRes.CardBasicInfo.CardHistories.CardHistory.isEmpty())
             //                 ? cardRes.CardBasicInfo.CardHistories.CardHistory[0].CardActivationDate
             //                 : null,
-            FEC_E_Commerce_Status__c = ecomFlag != null ? FEC_CommonUltils.checkEcomFlag(ecomFlag): null
+            FEC_E_Commerce_Status__c = ecomFlag != null ? FEC_CommonUltils.checkEcomFlag(ecomFlag): null,
+            FEC_Local_Use__c = localUse
             /* ===== DEBT SALE ===== */
         );
     } 
