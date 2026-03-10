@@ -4,6 +4,7 @@ import getPendingServiceCases from '@salesforce/apex/FEC_GetServiceCases.getPend
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetServiceCases.getCaseFieldHelpTexts';
 import { formatDateTimeVN } from 'c/fec_CommonUtils';
 import { STR_NA, MSG_UNKNOWN_ERROR } from 'c/fec_CommonConst';
+import FEC_Button_Refresh from '@salesforce/label/c.FEC_Button_Refresh';
 
 export default class Fec_PendingServiceCases extends NavigationMixin(LightningElement) {
   @track data = [];
@@ -17,6 +18,7 @@ export default class Fec_PendingServiceCases extends NavigationMixin(LightningEl
 
   labels = {
     sectionTitle: 'Pending Service Cases',
+    refresh: FEC_Button_Refresh,
   };
 
   _helpTexts = {};

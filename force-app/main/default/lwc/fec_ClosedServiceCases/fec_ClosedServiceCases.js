@@ -3,7 +3,8 @@ import { NavigationMixin } from 'lightning/navigation';
 import getClosedServiceCases from '@salesforce/apex/FEC_GetServiceCases.getClosedServiceCases';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetServiceCases.getCaseFieldHelpTexts';
 import { formatDateTimeVN } from 'c/fec_CommonUtils';
-import { STR_NA, MSG_NO_RESULTS, MSG_UNKNOWN_ERROR } from 'c/fec_CommonConst';
+import { STR_NA, MSG_NO_RESULTS, MSG_UNKNOWN_ERROR,STR_EMPTY, CASE_OBJECT_API_NAME } from 'c/fec_CommonConst';
+import FEC_Button_Refresh from '@salesforce/label/c.FEC_Button_Refresh';
 
 export default class Fec_ClosedServiceCases extends NavigationMixin(LightningElement) {
   @track data = [];
@@ -19,6 +20,7 @@ export default class Fec_ClosedServiceCases extends NavigationMixin(LightningEle
 
   labels = {
     sectionTitle: 'Closed Service Cases',
+    refresh: FEC_Button_Refresh,
   };
 
   _helpTexts = {};
@@ -111,7 +113,7 @@ export default class Fec_ClosedServiceCases extends NavigationMixin(LightningEle
       this.data = (result || []).map((row) => ({
         ...row,
         Id: row.caseId,
-        caseIdText: row.caseIdText || '',
+        caseIdText: row.caseIdText || STR_EMPTY,
         interactionIdLabel: row.interactionIdText || STR_NA,
         caseCreatedOnFormatted: formatDateTimeVN(row.caseCreatedOn),
         lastUpdatedOnFormatted: formatDateTimeVN(row.lastUpdatedOn),
@@ -131,7 +133,7 @@ export default class Fec_ClosedServiceCases extends NavigationMixin(LightningEle
   handleRowSelect(event) {
     const recordId = event.detail?.recordId;
     if (!recordId) return;
-    const objectApiName = event.detail?.objectApiName || 'Case';
+    const objectApiName = event.detail?.objectApiName || CASE_OBJECT_API_NAME;
     this[NavigationMixin.Navigate]({
       type: 'standard__recordPage',
       attributes: {

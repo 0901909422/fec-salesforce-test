@@ -5,6 +5,7 @@ import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetInteractionCases.getC
 import logSensitiveAccess from '@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess';
 import { formatDateTimeVN, formatDuration } from 'c/fec_CommonUtils';
 import { MSG_NO_RESULTS, MSG_UNKNOWN_ERROR } from 'c/fec_CommonConst';
+import FEC_Button_Refresh from '@salesforce/label/c.FEC_Button_Refresh';
 
 export default class Fec_InteractionCases extends NavigationMixin(LightningElement) {
   @track data = [];
@@ -20,6 +21,7 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
 
   labels = {
     sectionTitle: 'Interactions',
+    refresh: FEC_Button_Refresh,
   };
 
   _helpTexts = {};
