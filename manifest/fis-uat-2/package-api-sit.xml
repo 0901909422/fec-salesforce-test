@@ -8,6 +8,8 @@
     </types>
     <types>
 		<members>FEC_API_Config.FEC_CardLockUnlock</members>
+        <members>FEC_API_Config.FEC_ReplacementCard</members>
+        <members>FEC_API_Config.FEC_PINReissueService</members>
 		<name>CustomMetadata</name>
 	</types>
     <version>65.0</version>

@@ -1,12 +1,14 @@
 public without sharing class FEC_ReplacementCardCallout {
 
+    private static ResponseLog responseLog;
+
     // ============================================================
     // REQUEST CLASSES
     // ============================================================
     public class ReplaceCardRequest {
-        public Map<String,String> parameters;
-        public Map<String,Object> headers;
-        public Map<String,Object> body;
+        public Map<String, String> parameters;
+        public Map<String, String> headers;
+        public Map<String, String> body;
     }
 
     // ============================================================
@@ -47,9 +49,30 @@ public without sharing class FEC_ReplacementCardCallout {
     }
 
     // ============================================================
+    // RESPONSE LOG CLASS
+    // ============================================================
+    public class ResponseLog {
+        public String apiName;
+        public String endpoint;
+        public String method;
+        public String requestBody;
+        public HttpResponse response;
+        public String errorMessage;
+
+        public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
+            this.apiName = apiName;
+            this.endpoint = endpoint;
+            this.method = method;
+            this.requestBody = requestBody;
+            this.response = response;
+            this.errorMessage = errorMessage;
+        }
+    }
+
+    // ============================================================
     // MAIN CALLOUT
     // ============================================================
-    public static ReplaceCardResponse replaceCard(
+    public static ReplaceCardResponse callReplaceCard(
         String transId,
         String requestorId,
         String cardBlk,
@@ -61,13 +84,13 @@ public without sharing class FEC_ReplacementCardCallout {
         try{
             String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX);
             ReplaceCardRequest request = new ReplaceCardRequest();
-            request.headers = new Map<String,Object>{
+            request.headers = new Map<String, String>{
                 'TransID' => transId,
                 'RequestorID' => requestorId,
                 'DateTime' => dateTimeStr,
                 'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
             };
-            request.body = new Map<String,Object>{
+            request.body = new Map<String, String>{
                 'CARD_BLK' => cardBlk,
                 '4LastCardNumber' => last4CardNumber,
                 'REPL_FEE_FLAG' => replacementFeeFlag,
@@ -80,12 +103,12 @@ public without sharing class FEC_ReplacementCardCallout {
 
             String endpoint = apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c;
 
-            HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_POST, request.headers, requestBodyJson);
+            HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_POST, request.headers, requestBodyJson);
 
             // Log response
             String requestHeaderJson = JSON.serialize(request.headers);
             responseLog = new ResponseLog(
-                'FEC_CardLockUnLock',
+                'FEC_ReplacementCard',
                 endpoint,
                 FEC_ConstantCommon.API_METHOD_POST,
                 'headers: ' + requestHeaderJson + ', body: ' + requestBodyJson,
@@ -94,7 +117,7 @@ public without sharing class FEC_ReplacementCardCallout {
             );
 
             if (res.getStatusCode() == 200) {
-                response = (ReplaceCardResponse)JSON.deserialize(res.getBody(), LockUnlockResponse.class);
+                response = (ReplaceCardResponse)JSON.deserialize(res.getBody(), ReplaceCardResponse.class);
             } else {
                 response.errorCode = String.valueOf(res.getStatusCode());
                 response.errorMessage = res.getBody();
@@ -163,4 +186,15 @@ public without sharing class FEC_ReplacementCardCallout {
         return new ValidationResult(true, null);
     }
 
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName, 
+                responseLog.endpoint, 
+                responseLog.method, 
+                responseLog.requestBody, 
+                responseLog.response, 
+                responseLog.errorMessage);
+        }
+    }
 }
