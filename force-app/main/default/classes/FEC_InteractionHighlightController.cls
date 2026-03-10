@@ -18,6 +18,7 @@ public with sharing class FEC_InteractionHighlightController {
                     FEC_Last_Updated_On__c,
                     FEC_Last_Updated_By__c,
                     FEC_Account_or_Contract__c,
+                    FEC_CIF_Number__c,
                     FEC_Category__r.Name,
                     FEC_Complain_Type__c,
                     FEC_SubCategory__r.FEC_Code__c,
@@ -47,6 +48,7 @@ public with sharing class FEC_InteractionHighlightController {
                         FEC_Last_Updated_On__c,
                         FEC_Last_Updated_By__c,
                         FEC_Account_or_Contract__c,
+                        FEC_CIF_Number__c,
                         FEC_Category__r.Name,
                         FEC_Complain_Type__c,
                         FEC_SubCategory__r.FEC_Code__c,
@@ -106,13 +108,19 @@ public with sharing class FEC_InteractionHighlightController {
     }
     
     private static String determineCustomerCategory(Case caseRecord, FEC_Customer_History__c customerHistory) {
+        Set<Id> customerIds = new Set<Id>();
         if (caseRecord.RecordType.Name == FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
             String uploadCategory = getCategoryFromUploadList(caseRecord);
             if (uploadCategory != null) return uploadCategory;
-            return determineCustomerCategoryFromRelatedCases(caseRecord.Id);
+            customerIds = getCustomerIdsFromInteraction(caseRecord.Id);
+        } else if (caseRecord.FEC_Interaction__c != null) {
+            customerIds = getCustomerIdsFromInteraction(caseRecord.FEC_Interaction__c);
         }
-        if (caseRecord.FEC_Interaction__c != null) {
-            return determineCustomerCategoryFromRelatedCases(caseRecord.FEC_Interaction__c);
+        if (caseRecord.FEC_Account_or_Contract__c != null) {
+            customerIds.add(caseRecord.FEC_Account_or_Contract__c);
+        }
+        if (!customerIds.isEmpty()) {
+            return determineCustomerCategoryFromCustomerIds(customerIds);
         }
         String uploadCategory = getCategoryFromUploadList(caseRecord);
         if (uploadCategory != null) return uploadCategory;
@@ -122,25 +130,29 @@ public with sharing class FEC_InteractionHighlightController {
         return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
     }
 
-    private static String determineCustomerCategoryFromRelatedCases(Id interactionCaseId) {
-        Set<Id> customerIds = getCustomerIdsFromInteraction(interactionCaseId);
-        if (customerIds.isEmpty()) return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
-        List<Case> casesForUpload = getCasesLinkedToCustomers(customerIds);
-        for (Case c : casesForUpload) {
+    private static String determineCustomerCategoryFromCustomerIds(Set<Id> customerIds) {
+        if (customerIds == null || customerIds.isEmpty()) return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
+        Set<Id> expandedCustomerIds = expandCustomerIdsBySameNameOrCif(customerIds);
+        List<Case> allCustomerCases = getAllCasesForCustomers(expandedCustomerIds);
+        for (Case c : allCustomerCases) {
             String uploadCategory = getCategoryFromUploadList(c);
             if (uploadCategory != null) return uploadCategory;
         }
-        List<Case> casesForFaceIcons = getCustomerCasesForFaceIcons(customerIds);
-        for (Case c : casesForFaceIcons) {
+        for (Case c : allCustomerCases) {
             if (isSuspectedFraud(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SUSPECTED_FRAUD;
         }
-        for (Case c : casesForFaceIcons) {
+        for (Case c : allCustomerCases) {
             if (isMedia(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_MEDIA;
         }
-        for (Case c : casesForFaceIcons) {
+        for (Case c : allCustomerCases) {
             if (isSeriousComplaint(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SERIOUS_COMPLAINT;
         }
         return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
+    }
+
+    private static String determineCustomerCategoryFromRelatedCases(Id interactionCaseId) {
+        Set<Id> customerIds = getCustomerIdsFromInteraction(interactionCaseId);
+        return determineCustomerCategoryFromCustomerIds(customerIds);
     }
 
     private static Set<Id> getCustomerIdsFromInteraction(Id interactionCaseId) {
@@ -156,55 +168,111 @@ public with sharing class FEC_InteractionHighlightController {
         return customerIds;
     }
 
-    private static List<Case> getCasesLinkedToCustomers(Set<Id> customerIds) {
+    private static List<Case> getAllCasesForCustomers(Set<Id> customerIds) {
         if (customerIds == null || customerIds.isEmpty()) return new List<Case>();
+        Set<String> cifNumbers = getCustomerCifNumbers(customerIds);
+        String rtDevName = FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME;
+        if (cifNumbers.isEmpty()) {
+            return [
+                SELECT FEC_Account_or_Contract__c, FEC_CIF_Number__c, FEC_Category__r.Name, FEC_Complain_Type__c,
+                       FEC_SubCategory__r.FEC_Code__c, FEC_Case_Created_On__c, FEC_Case_Status__c
+                FROM Case
+                WHERE RecordType.DeveloperName = :rtDevName
+                AND FEC_Account_or_Contract__c IN :customerIds
+            ];
+        }
         return [
-            SELECT FEC_Account_or_Contract__c, FEC_Category__r.Name, FEC_Complain_Type__c,
+            SELECT FEC_Account_or_Contract__c, FEC_CIF_Number__c, FEC_Category__r.Name, FEC_Complain_Type__c,
                    FEC_SubCategory__r.FEC_Code__c, FEC_Case_Created_On__c, FEC_Case_Status__c
             FROM Case
-            WHERE FEC_Account_or_Contract__c IN :customerIds
+            WHERE RecordType.DeveloperName = :rtDevName
+            AND (FEC_Account_or_Contract__c IN :customerIds OR FEC_CIF_Number__c IN :cifNumbers)
         ];
     }
 
-    private static List<Case> getCustomerCasesForFaceIcons(Set<Id> customerIds) {
-        if (customerIds == null || customerIds.isEmpty()) return new List<Case>();
-        Set<String> cifSet = new Set<String>();
+    private static Set<Id> expandCustomerIdsBySameNameOrCif(Set<Id> customerIds) {
+        if (customerIds == null || customerIds.isEmpty()) return new Set<Id>();
+        Set<String> names = new Set<String>();
+        Set<String> cifNumbers = new Set<String>();
+        for (FEC_Customer_History__c h : [
+            SELECT Name, FEC_CIF_Number__c
+            FROM FEC_Customer_History__c
+            WHERE Id IN :customerIds
+        ]) {
+            if (String.isNotBlank(h.Name)) names.add(h.Name);
+            if (String.isNotBlank(h.FEC_CIF_Number__c)) cifNumbers.add(h.FEC_CIF_Number__c);
+        }
+        if (names.isEmpty() && cifNumbers.isEmpty()) return customerIds;
+        Set<Id> expanded = new Set<Id>(customerIds);
+        List<FEC_Customer_History__c> sameNameOrCif;
+        if (!names.isEmpty() && !cifNumbers.isEmpty()) {
+            sameNameOrCif = [
+                SELECT Id
+                FROM FEC_Customer_History__c
+                WHERE Id NOT IN :customerIds
+                AND (Name IN :names OR FEC_CIF_Number__c IN :cifNumbers)
+            ];
+        } else if (!names.isEmpty()) {
+            sameNameOrCif = [
+                SELECT Id
+                FROM FEC_Customer_History__c
+                WHERE Id NOT IN :customerIds
+                AND Name IN :names
+            ];
+        } else {
+            sameNameOrCif = [
+                SELECT Id
+                FROM FEC_Customer_History__c
+                WHERE Id NOT IN :customerIds
+                AND FEC_CIF_Number__c IN :cifNumbers
+            ];
+        }
+        for (FEC_Customer_History__c h : sameNameOrCif) {
+            expanded.add(h.Id);
+        }
+        return expanded;
+    }
+
+    private static Set<String> getCustomerCifNumbers(Set<Id> customerIds) {
+        Set<String> cifNumbers = new Set<String>();
+        if (customerIds == null || customerIds.isEmpty()) return cifNumbers;
         for (FEC_Customer_History__c h : [
             SELECT FEC_CIF_Number__c
             FROM FEC_Customer_History__c
             WHERE Id IN :customerIds
             AND FEC_CIF_Number__c != null
         ]) {
-            cifSet.add(h.FEC_CIF_Number__c);
+            cifNumbers.add(h.FEC_CIF_Number__c);
         }
-        return [
-            SELECT FEC_Account_or_Contract__c, FEC_Category__r.Name, FEC_Complain_Type__c,
-                   FEC_SubCategory__r.FEC_Code__c, FEC_Case_Created_On__c, FEC_Case_Status__c
-            FROM Case
-            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
-            AND (FEC_Account_or_Contract__c IN :customerIds OR (FEC_CIF_Number__c IN :cifSet AND FEC_CIF_Number__c != null))
-        ];
+        return cifNumbers;
     }
 
     private static String getCategoryFromUploadList(Case caseRecord) {
         AccountOrContractInfo info = getAccountOrContractInfo(caseRecord);
-        if (String.isBlank(info.accountOrContractName) && String.isBlank(info.cif)) return null;
+        String accountOrContractName = info.accountOrContractName;
+        String caseCif = caseRecord != null ? caseRecord.FEC_CIF_Number__c : null;
+        if (String.isBlank(accountOrContractName) && String.isBlank(caseCif)) return null;
+        Datetime dt90DaysAgo = Datetime.now().addDays(-90);
         List<FEC_Customer_Segmentation__c> segmentations;
-        if (String.isBlank(info.accountOrContractName)) {
+        if (String.isNotBlank(accountOrContractName) && String.isNotBlank(caseCif)) {
             segmentations = [
                 SELECT Id, FEC_Customer_Segment__c, FEC_Survey_Points__c, CreatedDate
                 FROM FEC_Customer_Segmentation__c
-                WHERE FEC_CIF_Number__c = :info.cif
-                AND (FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP OR (FEC_Survey_Points__c >= 1 AND FEC_Survey_Points__c <= 3))
+                WHERE (
+                    ( (Name = :accountOrContractName OR FEC_CIF_Number__c = :caseCif) AND FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP )
+                    OR ( Name = :accountOrContractName AND CreatedDate >= :dt90DaysAgo AND FEC_Survey_Points__c >= 1 AND FEC_Survey_Points__c <= 3 )
+                )
                 ORDER BY CreatedDate DESC
                 LIMIT 1
             ];
-        } else if (String.isBlank(info.cif)) {
+        } else if (String.isNotBlank(accountOrContractName)) {
             segmentations = [
                 SELECT Id, FEC_Customer_Segment__c, FEC_Survey_Points__c, CreatedDate
                 FROM FEC_Customer_Segmentation__c
-                WHERE Name = :info.accountOrContractName
-                AND (FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP OR (FEC_Survey_Points__c >= 1 AND FEC_Survey_Points__c <= 3))
+                WHERE (
+                    ( Name = :accountOrContractName AND FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP )
+                    OR ( Name = :accountOrContractName AND CreatedDate >= :dt90DaysAgo AND FEC_Survey_Points__c >= 1 AND FEC_Survey_Points__c <= 3 )
+                )
                 ORDER BY CreatedDate DESC
                 LIMIT 1
             ];
@@ -212,8 +280,8 @@ public with sharing class FEC_InteractionHighlightController {
             segmentations = [
                 SELECT Id, FEC_Customer_Segment__c, FEC_Survey_Points__c, CreatedDate
                 FROM FEC_Customer_Segmentation__c
-                WHERE (Name = :info.accountOrContractName OR FEC_CIF_Number__c = :info.cif)
-                AND (FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP OR (FEC_Survey_Points__c >= 1 AND FEC_Survey_Points__c <= 3))
+                WHERE FEC_CIF_Number__c = :caseCif
+                AND FEC_Customer_Segment__c = :FEC_ConstantCommon.CUSTOMER_CATEGORY_VIP
                 ORDER BY CreatedDate DESC
                 LIMIT 1
             ];
