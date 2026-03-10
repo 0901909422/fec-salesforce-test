@@ -106,19 +106,13 @@ public with sharing class FEC_InteractionHighlightController {
     }
     
     private static String determineCustomerCategory(Case caseRecord, FEC_Customer_History__c customerHistory) {
-        Set<Id> customerIds = new Set<Id>();
         if (caseRecord.RecordType.Name == FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
             String uploadCategory = getCategoryFromUploadList(caseRecord);
             if (uploadCategory != null) return uploadCategory;
-            customerIds = getCustomerIdsFromInteraction(caseRecord.Id);
-        } else if (caseRecord.FEC_Interaction__c != null) {
-            customerIds = getCustomerIdsFromInteraction(caseRecord.FEC_Interaction__c);
+            return determineCustomerCategoryFromRelatedCases(caseRecord.Id);
         }
-        if (caseRecord.FEC_Account_or_Contract__c != null) {
-            customerIds.add(caseRecord.FEC_Account_or_Contract__c);
-        }
-        if (!customerIds.isEmpty()) {
-            return determineCustomerCategoryFromCustomerIds(customerIds);
+        if (caseRecord.FEC_Interaction__c != null) {
+            return determineCustomerCategoryFromRelatedCases(caseRecord.FEC_Interaction__c);
         }
         String uploadCategory = getCategoryFromUploadList(caseRecord);
         if (uploadCategory != null) return uploadCategory;
@@ -128,28 +122,25 @@ public with sharing class FEC_InteractionHighlightController {
         return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
     }
 
-    private static String determineCustomerCategoryFromCustomerIds(Set<Id> customerIds) {
-        if (customerIds == null || customerIds.isEmpty()) return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
-        List<Case> allCustomerCases = getAllCasesForCustomers(customerIds);
-        for (Case c : allCustomerCases) {
+    private static String determineCustomerCategoryFromRelatedCases(Id interactionCaseId) {
+        Set<Id> customerIds = getCustomerIdsFromInteraction(interactionCaseId);
+        if (customerIds.isEmpty()) return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
+        List<Case> casesForUpload = getCasesLinkedToCustomers(customerIds);
+        for (Case c : casesForUpload) {
             String uploadCategory = getCategoryFromUploadList(c);
             if (uploadCategory != null) return uploadCategory;
         }
-        for (Case c : allCustomerCases) {
+        List<Case> casesForFaceIcons = getCustomerCasesForFaceIcons(customerIds);
+        for (Case c : casesForFaceIcons) {
             if (isSuspectedFraud(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SUSPECTED_FRAUD;
         }
-        for (Case c : allCustomerCases) {
+        for (Case c : casesForFaceIcons) {
             if (isMedia(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_MEDIA;
         }
-        for (Case c : allCustomerCases) {
+        for (Case c : casesForFaceIcons) {
             if (isSeriousComplaint(c)) return FEC_ConstantCommon.CUSTOMER_CATEGORY_SERIOUS_COMPLAINT;
         }
         return FEC_ConstantCommon.CUSTOMER_CATEGORY_NEUTRAL;
-    }
-
-    private static String determineCustomerCategoryFromRelatedCases(Id interactionCaseId) {
-        Set<Id> customerIds = getCustomerIdsFromInteraction(interactionCaseId);
-        return determineCustomerCategoryFromCustomerIds(customerIds);
     }
 
     private static Set<Id> getCustomerIdsFromInteraction(Id interactionCaseId) {
@@ -165,13 +156,33 @@ public with sharing class FEC_InteractionHighlightController {
         return customerIds;
     }
 
-    private static List<Case> getAllCasesForCustomers(Set<Id> customerIds) {
+    private static List<Case> getCasesLinkedToCustomers(Set<Id> customerIds) {
         if (customerIds == null || customerIds.isEmpty()) return new List<Case>();
         return [
             SELECT FEC_Account_or_Contract__c, FEC_Category__r.Name, FEC_Complain_Type__c,
                    FEC_SubCategory__r.FEC_Code__c, FEC_Case_Created_On__c, FEC_Case_Status__c
             FROM Case
             WHERE FEC_Account_or_Contract__c IN :customerIds
+        ];
+    }
+
+    private static List<Case> getCustomerCasesForFaceIcons(Set<Id> customerIds) {
+        if (customerIds == null || customerIds.isEmpty()) return new List<Case>();
+        Set<String> cifSet = new Set<String>();
+        for (FEC_Customer_History__c h : [
+            SELECT FEC_CIF_Number__c
+            FROM FEC_Customer_History__c
+            WHERE Id IN :customerIds
+            AND FEC_CIF_Number__c != null
+        ]) {
+            cifSet.add(h.FEC_CIF_Number__c);
+        }
+        return [
+            SELECT FEC_Account_or_Contract__c, FEC_Category__r.Name, FEC_Complain_Type__c,
+                   FEC_SubCategory__r.FEC_Code__c, FEC_Case_Created_On__c, FEC_Case_Status__c
+            FROM Case
+            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            AND (FEC_Account_or_Contract__c IN :customerIds OR (FEC_CIF_Number__c IN :cifSet AND FEC_CIF_Number__c != null))
         ];
     }
 
