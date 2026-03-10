@@ -398,6 +398,10 @@ public with sharing class FEC_CommonUltils {
     if (String.isBlank(dateStr))
       return null;
 
+    if (dateStr == '00000000' || dateStr == '99999999') {
+      return null;
+    }
+    
     try {
       // Format API trả về: yyyyMMdd (VD: 20281031)
       if (dateStr.length() == 8 && dateStr.isNumeric()) {
