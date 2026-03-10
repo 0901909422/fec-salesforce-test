@@ -4,8 +4,17 @@ import getAllInteractions from '@salesforce/apex/FEC_GetInteractionCases.getAllI
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetInteractionCases.getCaseFieldHelpTexts';
 import logSensitiveAccess from '@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess';
 import { formatDateTimeVN, formatDuration } from 'c/fec_CommonUtils';
-import { MSG_NO_RESULTS, MSG_UNKNOWN_ERROR } from 'c/fec_CommonConst';
+import { MSG_NO_RESULTS, MSG_UNKNOWN_ERROR, CASE_OBJECT_API_NAME, NAV_ACTION_VIEW } from 'c/fec_CommonConst';
 import FEC_Button_Refresh from '@salesforce/label/c.FEC_Button_Refresh';
+import FEC_Interactions_Section_Title from '@salesforce/label/c.FEC_Interactions_Section_Title';
+import FEC_Interaction_ID from '@salesforce/label/c.FEC_Interaction_ID';
+import FEC_Interaction_Status_Label from '@salesforce/label/c.FEC_Interaction_Status_Label';
+import FEC_Interaction_Created_On_Label from '@salesforce/label/c.FEC_Interaction_Created_On_Label';
+import FEC_Last_Updated_On_Label from '@salesforce/label/c.FEC_Last_Updated_On_Label';
+import FEC_Interaction_Duration_Label from '@salesforce/label/c.FEC_Interaction_Duration_Label';
+import FEC_Interaction_Phone_Label from '@salesforce/label/c.FEC_Interaction_Phone_Label';
+import FEC_Interaction_Channel_Label from '@salesforce/label/c.FEC_Interaction_Channel_Label';
+import FEC_Interaction_Sub_Channel_Label from '@salesforce/label/c.FEC_Interaction_Sub_Channel_Label';
 
 export default class Fec_InteractionCases extends NavigationMixin(LightningElement) {
   @track data = [];
@@ -20,38 +29,38 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
   emptyMessage = MSG_NO_RESULTS;
 
   labels = {
-    sectionTitle: 'Interactions',
+    sectionTitle: FEC_Interactions_Section_Title,
     refresh: FEC_Button_Refresh,
   };
 
   _helpTexts = {};
   _baseInteractionColumns = [
     {
-      label: 'Interaction ID',
+      label: FEC_Interaction_ID,
       fieldName: 'interactionIdText',
       fieldApiName: 'FEC_ID_Search__c',
       type: 'link',
       recordIdField: 'Id',
-      hoverTitle: 'Interactions',
+      hoverTitle: FEC_Interactions_Section_Title,
       cellAlign: 'center',
       hoverFields: [
-        { label: 'Interaction ID', fieldName: 'interactionIdText' },
-        { label: 'Interaction Status', fieldName: 'interactionStatus' },
-        { label: 'Interaction Created On', fieldName: 'interactionCreatedOnFormatted' },
-        { label: 'Last Updated On', fieldName: 'lastUpdatedOnFormatted' },
-        { label: 'Interaction Duration', fieldName: 'interactionDurationFormatted' },
-        { label: 'Interaction Phone', fieldName: 'interactionPhone' },
-        { label: 'Interaction Channel', fieldName: 'channel' },
-        { label: 'Interaction Sub Channel', fieldName: 'interactionSubChannel' },
+        { label: FEC_Interaction_ID, fieldName: 'interactionIdText' },
+        { label: FEC_Interaction_Status_Label, fieldName: 'interactionStatus' },
+        { label: FEC_Interaction_Created_On_Label, fieldName: 'interactionCreatedOnFormatted' },
+        { label: FEC_Last_Updated_On_Label, fieldName: 'lastUpdatedOnFormatted' },
+        { label: FEC_Interaction_Duration_Label, fieldName: 'interactionDurationFormatted' },
+        { label: FEC_Interaction_Phone_Label, fieldName: 'interactionPhone' },
+        { label: FEC_Interaction_Channel_Label, fieldName: 'channel' },
+        { label: FEC_Interaction_Sub_Channel_Label, fieldName: 'interactionSubChannel' },
       ],
     },
-    { label: 'Interaction Status', fieldName: 'interactionStatus', fieldApiName: 'FEC_Interaction_Status__c', type: 'text', cellAlign: 'center' },
-    { label: 'Interaction Created On', fieldName: 'interactionCreatedOnFormatted', fieldApiName: 'FEC_Created_On__c', type: 'text', cellAlign: 'center' },
-    { label: 'Last Updated On', fieldName: 'lastUpdatedOnFormatted', fieldApiName: 'FEC_Last_Updated_On__c', type: 'text', cellAlign: 'center' },
-    { label: 'Interaction Duration', fieldName: 'interactionDurationFormatted', fieldApiName: 'FEC_Interaction_Duration__c', type: 'text', cellAlign: 'center' },
-    { label: 'Interaction Phone', fieldName: 'interactionPhone', fieldApiName: 'FEC_Phone_Number__c', type: 'eye', eyeMaskType: 'phone', cellAlign: 'center' },
-    { label: 'Interaction Channel', fieldName: 'channel', fieldApiName: 'FEC_Channel__c', type: 'text', cellAlign: 'center' },
-    { label: 'Interaction Sub Channel', fieldName: 'interactionSubChannel', fieldApiName: 'FEC_Interaction_Subchannel__c', type: 'text' },
+    { label: FEC_Interaction_Status_Label, fieldName: 'interactionStatus', fieldApiName: 'FEC_Interaction_Status__c', type: 'text', cellAlign: 'center' },
+    { label: FEC_Interaction_Created_On_Label, fieldName: 'interactionCreatedOnFormatted', fieldApiName: 'FEC_Created_On__c', type: 'text', cellAlign: 'center' },
+    { label: FEC_Last_Updated_On_Label, fieldName: 'lastUpdatedOnFormatted', fieldApiName: 'FEC_Last_Updated_On__c', type: 'text', cellAlign: 'center' },
+    { label: FEC_Interaction_Duration_Label, fieldName: 'interactionDurationFormatted', fieldApiName: 'FEC_Interaction_Duration__c', type: 'text', cellAlign: 'center' },
+    { label: FEC_Interaction_Phone_Label, fieldName: 'interactionPhone', fieldApiName: 'FEC_Phone_Number__c', type: 'eye', eyeMaskType: 'phone', cellAlign: 'center' },
+    { label: FEC_Interaction_Channel_Label, fieldName: 'channel', fieldApiName: 'FEC_Channel__c', type: 'text', cellAlign: 'center' },
+    { label: FEC_Interaction_Sub_Channel_Label, fieldName: 'interactionSubChannel', fieldApiName: 'FEC_Interaction_Subchannel__c', type: 'text' },
   ];
 
   @wire(getCaseFieldHelpTexts)
@@ -113,8 +122,8 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
       type: 'standard__recordPage',
       attributes: {
         recordId: recordId,
-        objectApiName: 'Case',
-        actionName: 'view',
+        objectApiName: CASE_OBJECT_API_NAME,
+        actionName: NAV_ACTION_VIEW,
       },
     });
   }
@@ -122,7 +131,7 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
   handleSensitiveLog(event) {
     const recordId = event.detail?.recordId;
     logSensitiveAccess({
-      fieldName: 'Interaction Phone',
+      fieldName: FEC_Interaction_Phone_Label,
       caseId: recordId,
     }).catch((e) => {
       console.error('Sensitive log failed', e);

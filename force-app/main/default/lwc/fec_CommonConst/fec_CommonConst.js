@@ -38,6 +38,8 @@ const UBANK_PRODUCT_NAME = 'UBank';
 const MSG_NO_RESULTS = 'Không tìm thấy kết quả';
 const MSG_UNKNOWN_ERROR = 'Unknown error';
 const CASE_OBJECT_API_NAME = 'Case';
+const NAV_ACTION_VIEW = 'view';
+const NAV_ACTION_LIST = 'list';
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -78,5 +80,7 @@ export {
     UBANK_PRODUCT_NAME,
     MSG_NO_RESULTS,
     MSG_UNKNOWN_ERROR,
-    CASE_OBJECT_API_NAME
+    CASE_OBJECT_API_NAME,
+    NAV_ACTION_VIEW,
+    NAV_ACTION_LIST
 };

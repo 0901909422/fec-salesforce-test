@@ -57,5 +57,20 @@
         <members>FEC_CommonCss</members>
         <name>StaticResource</name>
     </types>
+    <types>
+		<members>FEC_Case_Created_By_Label</members>
+		<members>FEC_Case_Created_On_Label</members>
+        <members>FEC_Closed_Service_Cases_Section_Title</members>
+        <members>FEC_Interaction_Title_Label</members>
+        <members>FEC_Interactions_Section_Title</members>
+        <members>FEC_Label_Sub_Channel</members>
+        <members>FEC_Pending_Service_Cases_Section_Title</members>
+        <members>FEC_Button_Refresh</members>
+		<name>CustomLabel</name>
+	</types>
+    <types>
+        <members>vi</members>
+        <name>Translations</name>
+    </types>
     <version>65.0</version>
 </Package>
