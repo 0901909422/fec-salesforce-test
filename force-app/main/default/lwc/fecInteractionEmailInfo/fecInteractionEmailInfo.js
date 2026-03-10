@@ -1,0 +1,227 @@
+import { LightningElement, api, track, wire } from "lwc";
+import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+import { NavigationMixin } from "lightning/navigation";
+import { loadStyle } from "lightning/platformResourceLoader";
+import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
+
+// ================= APEX =================
+import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInteraction";
+import updateInteractionEmail from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionEmail";
+import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
+import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionIdFromCustomerCase";
+
+// ================= SCHEMA =================
+import ISCLOSED from "@salesforce/schema/Case.IsClosed";
+import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
+import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
+
+// Regex validate email
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export default class FecInteractionEmailInfo extends NavigationMixin(LightningElement) {
+  @api recordId;
+
+  @track record;
+  @track emailDraft = "";
+  @track emailError = "";
+
+  isLoaded = false;
+  isEditingEmail = false;
+
+  isClosed = false;
+  viewMode;
+  recordTypeId;
+  recordTypeDevName;
+
+  interactionId;
+  activeSections = ["interactionEmailInfo"];
+
+  @wire(getRecord, {
+    recordId: "$recordId",
+    fields: [ISCLOSED, VIEW_MODE, RECORDTYPE_ID],
+  })
+  async wiredCase({ data, error }) {
+    if (data) {
+      this.isClosed = getFieldValue(data, ISCLOSED);
+      this.viewMode = getFieldValue(data, VIEW_MODE);
+      this.recordTypeId = getFieldValue(data, RECORDTYPE_ID);
+      await this.resolveRecordType();
+      await this.resolveInteractionId();
+      this.loadInteraction();
+    } else if (error) {
+      console.error("getRecord error", error);
+    }
+  }
+
+  connectedCallback() {
+    this.loadStyles();
+  }
+
+  loadStyles() {
+    loadStyle(this, COMMON_STYLES).catch((e) =>
+      console.error("Load style error", e)
+    );
+  }
+
+  async resolveRecordType() {
+    if (!this.recordTypeId) return;
+    try {
+      this.recordTypeDevName = await getRecordTypeName({
+        recordId: this.recordId,
+      });
+    } catch (e) {
+      console.error("getRecordTypeName error", e);
+    }
+  }
+
+  async resolveInteractionId() {
+    if (this.isInteractionCase) {
+      this.interactionId = this.recordId;
+    } else if (this.isCustomerCase) {
+      try {
+        this.interactionId = await getInteractionIdFromCustomerCase({
+          caseId: this.recordId,
+        });
+      } catch (e) {
+        console.error("getInteractionIdFromCustomerCase error", e);
+      }
+    }
+  }
+
+  loadInteraction() {
+    if (!this.interactionId) return;
+    getInteraction({ recordId: this.interactionId })
+      .then((result) => {
+        this.record = result;
+        this.isLoaded = true;
+      })
+      .catch((error) => {
+        console.error("getInteraction error", error);
+      });
+  }
+
+  // ================= GETTERS =================
+  get isInteractionCase() {
+    return this.recordTypeDevName === "Interaction";
+  }
+
+  get isCustomerCase() {
+    return this.recordTypeDevName === "Customer_Case";
+  }
+
+  get hasInteractionEmail() {
+    return !!this.record?.FEC_Interaction_Email__c;
+  }
+
+  /**
+   * Readonly: chỉ hiển thị text khi đã có dữ liệu và không đang edit.
+   * Edit enable: khi đã có dữ liệu (click icon edit) hoặc khi trống (nhập mới).
+   */
+  get isEmailReadOnly() {
+    return this.hasInteractionEmail && !this.isEditingEmail;
+  }
+
+  /** Chỉ hiện icon Edit khi trường trống (cho phép nhập mới). Có dữ liệu thì không hiện icon edit. */
+  get showEmailEditIcon() {
+    return !this.hasInteractionEmail && !this.isEditingEmail;
+  }
+
+  get displayInteractionEmail() {
+    return this.record?.FEC_Interaction_Email__c || "";
+  }
+
+  get createdOn() {
+    if (!this.record?.FEC_Created_On__c) return "";
+    const d = new Date(this.record.FEC_Created_On__c);
+    return d.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  }
+
+  get createdBy() {
+    return this.record?.FEC_Created_By__c || this.record?.FEC_Created_by__c || "";
+  }
+
+  get sendTo() {
+    return this.record?.FEC_Send_To__c || "";
+  }
+
+  get parentId() {
+    return this.record?.ParentId || "";
+  }
+
+  get parentIdUrl() {
+    if (!this.parentId) return null;
+    return `/lightning/r/Case/${this.parentId}/view`;
+  }
+
+  get showParentIdLink() {
+    return !!this.parentId;
+  }
+
+  // ================= EMAIL ACTIONS =================
+  handleEditEmail() {
+    this.isEditingEmail = true;
+    this.emailDraft = this.displayInteractionEmail || "";
+    this.emailError = "";
+  }
+
+  handleEmailChange(event) {
+    this.emailDraft = event.target.value;
+    this.emailError = "";
+  }
+
+  validateEmail(value) {
+    if (!value || !value.trim()) return "Vui lòng nhập email.";
+    if (!EMAIL_REGEX.test(value.trim())) return "Định dạng email không hợp lệ.";
+    return "";
+  }
+
+  handleSaveEmail() {
+    const trimmed = this.emailDraft?.trim() || "";
+    this.emailError = this.validateEmail(trimmed);
+    if (this.emailError) return;
+    if (!this.interactionId) return;
+
+    updateInteractionEmail({
+      recordId: this.interactionId,
+      email: trimmed,
+    })
+      .then(() => {
+        this.record = {
+          ...this.record,
+          FEC_Interaction_Email__c: trimmed,
+        };
+        this.isEditingEmail = false;
+        this.emailDraft = "";
+        this.emailError = "";
+      })
+      .catch((error) => { 
+        console.error("updateInteractionEmail error", error);
+        this.emailError = error?.body?.message || "Lưu email thất bại.";
+      });
+  }
+
+  handleCancelEditEmail() {
+    this.isEditingEmail = false;
+    this.emailDraft = "";
+    this.emailError = "";
+  }
+
+  handleNavigateToParent() {
+    if (!this.parentId) return;
+    this[NavigationMixin.Navigate]({
+      type: "standard__recordPage",
+      attributes: {
+        recordId: this.parentId,
+        objectApiName: "Case",
+        actionName: "view",
+      },
+    });
+  }
+}
