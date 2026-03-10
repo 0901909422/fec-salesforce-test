@@ -22,34 +22,6 @@
         <value>CSM Property</value>
     </labels>
     <labels>
-        <fullName>FEC_Toast_Error</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Error</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Error_Generic</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Generic error toast message</shortDescription>
-        <value>An error occurred. Please try again.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Search_Validation</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Toast Search Validation</shortDescription>
-        <value>Enter at least one search criterion.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Toast_Validation_Title</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Validation Error</value>
-    </labels>
-    <labels>
         <fullName>CSM_Property_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -1380,8 +1352,8 @@
         <fullName>FEC_Follow_Up_Until_Unfollow</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Follow Up Until Unfollow</shortDescription>
-        <value>Follow Up Until Unfollow</value>
+        <shortDescription>Until Unfollow</shortDescription>
+        <value>Until Unfollow</value>
     </labels>
     <labels>
         <fullName>FEC_Follow_Up_Label</fullName>
@@ -1394,8 +1366,8 @@
         <fullName>FEC_Follow_Up_Until_Resolved</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Follow Up Until Resolved</shortDescription>
-        <value>Follow Up Until Resolved</value>
+        <shortDescription>Until Resolved</shortDescription>
+        <value>Until Resolved</value>
     </labels>
     <labels>
         <fullName>Interaction_Entitlement_Name</fullName>
@@ -3856,11 +3828,95 @@
         <value>An error occurred. Please try again.</value>
     </labels>
     <labels>
+        <fullName>FEC_Toast_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Refresh_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Failed to refresh data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Refresh_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Data refreshed successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Save failed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Error_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>An error occurred while saving.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Error_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Saved successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Success_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Record saved successfully. ID: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Save_Success_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
         <fullName>FEC_Toast_Search_Validation</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Toast Search Validation</shortDescription>
         <value>Enter at least one search criterion.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Update_Status_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Status updated</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Validation_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto-generated label</shortDescription>
+        <value>Please complete all required fields.</value>
     </labels>
     <labels>
         <fullName>FEC_Toast_Validation_Title</fullName>
@@ -7875,5 +7931,13 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Can_Not_Find_Next_Stage</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Can_Not_Find_Next_Stage</shortDescription>
+        <value>Can&apos;t find next stage</value>
     </labels>
 </CustomLabels>
