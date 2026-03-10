@@ -6,5 +6,9 @@
 		<members>FEC_ReplacementCardCallout</members>
         <name>ApexClass</name>
     </types>
+    <types>
+		<members>FEC_API_Config.FEC_CardLockUnlock</members>
+		<name>CustomMetadata</name>
+	</types>
     <version>65.0</version>
 </Package>

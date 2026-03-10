@@ -5,9 +5,9 @@ public without sharing class FEC_CardLockUnLockCallout {
     // ============================================================
 
     public class LockUnlockRequest {
-        public Map<String,String> parameters;
-        public Map<String,Object> headers;
-        public Map<String,Object> body;
+        public Map<String, String> parameters;
+        public Map<String, String> headers;
+        public Map<String, String> body;
     }
 
     public class RequestBody {
@@ -82,70 +82,45 @@ public without sharing class FEC_CardLockUnLockCallout {
         String last4Digit,
         String accountNumber
     ){
-
-        LockUnlockResponse response;
-
+        LockUnlockResponse response = new LockUnlockResponse();
         try{
-
-            String dateTimeStr =
-                Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX);
+            String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX);
 
             LockUnlockRequest request = new LockUnlockRequest();
 
-            request.headers = new Map<String,Object>{
+            request.headers = new Map<String, String>{
                 'TransID' => transId,
                 'RequestorID' => requestorId,
                 'DateTime' => dateTimeStr,
                 'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
             };
 
-            request.parameters = new Map<String,String>();
-            request.body = new Map<String,Object>{
+            request.body = new Map<String, String>{
                 'BlockCode' => blockCode,
                 'Func' => funcCode,
                 'Last4Digit' => last4Digit,
                 'AccountNumber' => accountNumber
             };
 
-            String requestBodyJson = JSON.serialize(request);
+            String requestBodyJson = JSON.serialize(request.body);
+
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_CardLockUnlock');
 
-            String endpoint =
-                apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_CARD_LOCK_UNLOCK_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-
-            Map<String,String> headers = new Map<String,String>{
-                'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
-                'TransID' => transId,
-                'RequestorID' => requestorId,
-                'DateTime' => dateTimeStr
-            };
-
-            HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, 'GET', headers, requestBodyJson);
+            String endpoint = apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c;
+                
+            HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_GET, request.headers, requestBodyJson);
             
-            if(resp.getStatusCode() == 200){
-                response =
-                    (LockUnlockResponse)JSON.deserialize(
-                        resp.getBody(),
-                        LockUnlockResponse.class
-                    );
-            } else{
-                response = new LockUnlockResponse();
+            if (resp.getStatusCode() == 200) {
+                response = (LockUnlockResponse)JSON.deserialize(resp.getBody(), LockUnlockResponse.class);
+            } else {
                 response.errorCode = String.valueOf(resp.getStatusCode());
                 response.errorMessage = resp.getStatus();
-
             }
-
-        } catch(Exception e){
-
-            response = new LockUnlockResponse();
+        } catch(Exception e) {
             response.errorCode = 'CALLOUT_ERROR';
             response.errorMessage = e.getMessage();
-
         }
-
         return response;
     }
 
@@ -154,7 +129,6 @@ public without sharing class FEC_CardLockUnLockCallout {
     // ============================================================
 
     public static Boolean isSuccess(LockUnlockResponse response){
-
         return response != null
             && response.Sys2 != null
             && response.Sys2.Code == '1';
@@ -173,23 +147,27 @@ public without sharing class FEC_CardLockUnLockCallout {
         String accountNumber
     ){
 
-        if(String.isBlank(transId))
+        if(String.isBlank(transId)) {
             return new ValidationResult(false,System.Label.FEC_MSG_TransID_Null);
+        }
 
-        if(String.isBlank(requestorId))
+        if(String.isBlank(requestorId)) {
             return new ValidationResult(false,System.Label.FEC_MSG_RequestorID_Null);
+        }
 
-        if(String.isBlank(accountNumber))
+        if(String.isBlank(accountNumber)) {
             return new ValidationResult(false,
                 String.format(System.Label.FEC_MSG_Param_Required,
                 new List<String>{'AccountNumber'}));
+        }
 
-        if(String.isBlank(last4Digit))
+        if(String.isBlank(last4Digit)) {
             return new ValidationResult(false,
                 String.format(System.Label.FEC_MSG_Param_Required,
                 new List<String>{'Last4Digit'}));
+        }
 
-        return new ValidationResult(true,null);
+        return new ValidationResult(true, null);
     }
 
     // ============================================================
