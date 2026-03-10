@@ -107,6 +107,8 @@ public with sharing class FEC_InteractionHighlightController {
     
     private static String determineCustomerCategory(Case caseRecord, FEC_Customer_History__c customerHistory) {
         if (caseRecord.RecordType.Name == FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
+            String uploadCategory = getCategoryFromUploadList(caseRecord);
+            if (uploadCategory != null) return uploadCategory;
             return determineCustomerCategoryFromRelatedCases(caseRecord.Id);
         }
         if (caseRecord.FEC_Interaction__c != null) {
