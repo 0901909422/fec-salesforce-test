@@ -76,6 +76,7 @@
     <types>
         <members>FEC_Interaction_Case_Record_Page</members>
 		<members>FEC_Customer_Case_Record_Page</members>
+		<members>FEC_Search_Case_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -117,6 +118,7 @@
     <types>
         <members>Case.Customer_Case</members>
 		<members>Case.Interaction</members>
+		<members>Case.Search_Interaction</members>
         <name>RecordType</name>
     </types>
     <types>

@@ -1938,6 +1938,14 @@
 		<members>FEC_Cash_24_Contract__c</members>
 		<name>CustomObject</name>
 	</types>
+	<types>
+		<members>Case.Search_Interaction</members>
+		<name>RecordType</name>
+	</types>
+	<types>
+		<members>FEC_Search_Case_Record_Page</members>
+		<name>FlexiPage</name>
+	</types>
 
 	<!-- Translate -->
 	<types>
