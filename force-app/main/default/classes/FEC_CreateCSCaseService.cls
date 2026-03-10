@@ -12,7 +12,7 @@ global with sharing class FEC_CreateCSCaseService {
             // BASIC NULL CHECK
             // -------------------------
             if (req == null) {
-                return errorResponse(null, '110', 'Request is null');
+                return errorResponse(null, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_REQUEST_IS_NULL_MSG);
             }
             
             // -------------------------
@@ -30,8 +30,8 @@ global with sharing class FEC_CreateCSCaseService {
             // -------------------------
             FEC_CreateCaseHanlder.FEC_InteractionCaseDTO interactionDTO =
                 new FEC_CreateCaseHanlder.FEC_InteractionCaseDTO();
-            interactionDTO.channel = 'External';
-            interactionDTO.subChannel = 'Other';
+            interactionDTO.channel = FEC_ConstantCommon.CHANNEL_EXTERNAL;
+            interactionDTO.subChannel = FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
             
             FEC_CreateCaseHanlder.FEC_InteractionCaseResponse interactionResp =
                 FEC_CreateCaseHanlder.createInteractionCase(interactionDTO);
@@ -104,7 +104,7 @@ global with sharing class FEC_CreateCSCaseService {
             return createCaseResponse(
                 caseNo,
             req.Sys.TransactionID,
-            'Case created successfully.'
+            System.Label.FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG
                 );
             
         } catch (ValidationException ve) {
@@ -130,32 +130,30 @@ global with sharing class FEC_CreateCSCaseService {
         ValidationContext ctx = new ValidationContext();
         
         if (sys == null) {
-            throw new ValidationException(null, '110', 'Sys is missing');
+            throw new ValidationException(null, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_SYS_MISSING_MSG);
         }
         
         if (String.isBlank(sys.TransactionID) || sys.TransactionID.length() > 36) {
-            throw new ValidationException(null, '110', 'Invalid TransactionID');
+            throw new ValidationException(null, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_TRANSACTION_ID_MSG);
         }
         
         validateCustomerInfo(customer, sys.TransactionID);
         
         if (request == null) {
-            throw new ValidationException(sys.TransactionID, '110', 'RequestInfo is missing');
+            throw new ValidationException(sys.TransactionID, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_REQUEST_INFO_MISSING_MSG);
         }
         
         if (!String.isBlank(request.Remarks) && request.Remarks.length() > 4000) {
-            throw new ValidationException(sys.TransactionID, '110', 'Remarks too long');
+            throw new ValidationException(sys.TransactionID, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_REMARKS_TOO_LONG_MSG);
         }
         
         if (creator != null && !String.isBlank(creator.CreatorEmail)) {
             
             if (creator.CreatorEmail.length() > 255 ||
-                !Pattern.matches(
-                '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$',
-            creator.CreatorEmail.toUpperCase()
-            )) {
+                !Pattern.matches(FEC_ConstantCommon.PATTERN_EMAIL, creator.CreatorEmail.toUpperCase())
+            ) {
                 
-                throw new ValidationException(sys.TransactionID,'110','Invalid CreatorEmail');
+                throw new ValidationException(sys.TransactionID,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_CREATOR_EMAIL_MSG);
             }
         }
         
@@ -169,21 +167,21 @@ global with sharing class FEC_CreateCSCaseService {
         }
         
         if(String.isBlank(request.SubCode)){
-            throw new ValidationException(sys.TransactionID,'110','SubCode required');
+            throw new ValidationException(sys.TransactionID,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_SUBCODE_REQUIRED_MSG);
         }
         
         if(String.isBlank(request.Remarks)){
-            throw new ValidationException(sys.TransactionID,'110','Remarks required');
+            throw new ValidationException(sys.TransactionID,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_REMARKS_REQUIRED_MSG);
         }
         
         if(request.AdditionalInfo!=null){
             for(AdditionalInfoType a: request.AdditionalInfo){
                 
                 if(String.isBlank(a.ID))
-                    throw new ValidationException(sys.TransactionID,'110','AdditionalInfo.ID required');
+                    throw new ValidationException(sys.TransactionID,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_ADDITIONAL_INFO_ID_REQUIRED_MSG);
                 
                 if(String.isBlank(a.Value))
-                    throw new ValidationException(sys.TransactionID,'110','AdditionalInfo.Value required');
+                    throw new ValidationException(sys.TransactionID,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_ADDITIONAL_INFO_VALUE_REQUIRED_MSG);
             }
         }
         return ctx;
@@ -194,39 +192,39 @@ global with sharing class FEC_CreateCSCaseService {
     // =================================================
     private static void validateCustomerInfo(CustomerInfoType c, String txnId) {
         if (c == null) {
-            throw new ValidationException(txnId, '110', 'CustomerInfo is missing');
+            throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_CUSTOMER_INFO_MISSING_MSG);
         }
         
         if (String.isBlank(c.Name) || c.Name.length() > 255) {
-            throw new ValidationException(txnId, '110', 'Invalid customer name');
+            throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_CUSTOMER_NAME_MSG);
         }
         
         if (String.isBlank(c.UserType) || c.UserType.length() > 15) {
-            throw new ValidationException(txnId, '110', 'Invalid user type');
+            throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_USER_TYPE_MSG);
         }
         
         if (String.isBlank(c.PhoneNumber)
             || c.PhoneNumber.length() > 15
-            || !Pattern.matches('^[0-9+]{8,15}$', c.PhoneNumber)
+            || !Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, c.PhoneNumber)
         ) {
-            throw new ValidationException(txnId, '110', 'Invalid phone number');
+            throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG);
         }
         
         if (String.isBlank(c.EmailAddress)
             || c.EmailAddress.length() > 255
             || !Pattern.matches(
-            '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$',
+            FEC_ConstantCommon.PATTERN_EMAIL,
         c.EmailAddress.toUpperCase()
             )
         ) {
-            throw new ValidationException(txnId, '110', 'Invalid email');
+            throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_EMAIL_ADDRESS_MSG);
         }
         
         if(String.isBlank(c.NationalID) || c.NationalID.length()>15)
-            throw new ValidationException(txnId,'110','Invalid NationalID');
+            throw new ValidationException(txnId,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_NATIONAL_ID_MSG);
         
         if(String.isBlank(c.ContractOrAccountNumber) || c.ContractOrAccountNumber.length()>255)
-            throw new ValidationException(txnId,'110','Invalid ContractOrAccountNumber');
+            throw new ValidationException(txnId,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG);
     }
     
     // =================================================
@@ -242,16 +240,16 @@ global with sharing class FEC_CreateCSCaseService {
         if (String.isBlank(caseType)) {
             throw new ValidationException(
                 transactionId,
-            '110',
-            'Casetype is blank or invalid'
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_TYPE_REQUIRED_MSG
                 );
         }
         
         if (caseType.length() > 255) {
             throw new ValidationException(
                 transactionId,
-            '110',
-            'CaseType is invalid or no longer than 255 characters'
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_TYPE_TOO_LONG_MSG
                 );
         }
         
@@ -265,8 +263,8 @@ global with sharing class FEC_CreateCSCaseService {
         if (processes.isEmpty() || processes[0].FEC_Active__c != true) {
             throw new ValidationException(
                 transactionId,
-            '110',
-            'CaseType is invalid or no longer than 255 characters'
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_TYPE_TOO_LONG_MSG
                 );
         }
         
@@ -283,8 +281,8 @@ global with sharing class FEC_CreateCSCaseService {
         if (String.isBlank(productType) || productType.length() > 255) {
             throw new ValidationException(
                 transactionId,
-            '110',
-            'ProductType is blank or invalid or no longer than 255 characters'
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_PRODUCT_TYPE_INVALID_MSG
                 );
         }
         
@@ -298,8 +296,8 @@ global with sharing class FEC_CreateCSCaseService {
         if (productTypes.isEmpty() || productTypes[0].FEC_Active__c != true) {
             throw new ValidationException(
                 transactionId,
-            '110',
-            'ProductType is blank or invalid or no longer than 255 characters'
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_PRODUCT_TYPE_INVALID_MSG
                 );
         }
         
@@ -316,8 +314,8 @@ global with sharing class FEC_CreateCSCaseService {
         if (String.isBlank(category) || category.length() > 255) {
             throw new ValidationException(
                 transactionId,
-            '110',
-            'Category is blank or invalid or no longer than 255 characters'
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_CATEGORY_INVALID_MSG
                 );
         }
         
@@ -331,8 +329,8 @@ global with sharing class FEC_CreateCSCaseService {
         if (categories.isEmpty() || categories[0].FEC_Active__c != true) {
             throw new ValidationException(
                 transactionId,
-            '110',
-            'Category is blank or invalid or no longer than 255 characters'
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_CATEGORY_INVALID_MSG
                 );
         }
         
@@ -349,8 +347,8 @@ global with sharing class FEC_CreateCSCaseService {
         if (String.isBlank(subCategory) || subCategory.length() > 255) {
             throw new ValidationException(
                 transactionId,
-            '110',
-            'SubCategory is blank or invalid or no longer than 255 characters'
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_SUB_CATEGORY_INVALID_MSG
                 );
         }
         
@@ -364,8 +362,8 @@ global with sharing class FEC_CreateCSCaseService {
         if (subCategories.isEmpty() || subCategories[0].FEC_Active__c != true) {
             throw new ValidationException(
                 transactionId,
-            '110',
-            'SubCategory is blank or invalid or no longer than 255 characters'
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_SUB_CATEGORY_INVALID_MSG
                 );
         }
         
@@ -386,8 +384,8 @@ global with sharing class FEC_CreateCSCaseService {
         if (subCode.length() > 255) {
             throw new ValidationException(
                 transactionId,
-            '110',
-            'Subcode is invalid or no longer than 255 characters'
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_SUBCODE_TOO_LONG_MSG
                 );
         }
         
@@ -401,8 +399,8 @@ global with sharing class FEC_CreateCSCaseService {
         if (subCodes.isEmpty() || subCodes[0].FEC_Active__c != true) {
             throw new ValidationException(
                 transactionId,
-            '110',
-            'Subcode is invalid or no longer than 255 characters'
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_SUBCODE_TOO_LONG_MSG
                 );
         }
         
@@ -427,7 +425,7 @@ global with sharing class FEC_CreateCSCaseService {
         List<String> parts = payload.split('\\|');
         
         if(parts.size() != 3){
-            throw new ValidationException(null,'110','Invalid upload payload format');
+            throw new ValidationException(null,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_ADDITIONAL_INFO_VALUE_MSG);
         }
         
         Blob body = EncodingUtil.base64Decode(parts[2]);
@@ -482,18 +480,10 @@ global with sharing class FEC_CreateCSCaseService {
         null               // personId
             );
         
-        System.debug('===== RESPONSE =====');
-        System.debug(res);
         
         if (res == null || res.Customers == null || res.Customers.isEmpty()) {
             return null;
         }
-        
-        if (res.Sys != null) {
-            System.debug('SYS CODE: ' + res.Sys.Code);
-        }
-        
-        System.debug('CUSTOMER COUNT: ' + res.Count);
         
         FEC_GetCustomerList.Customer c = res.Customers[0];
         resp.name = c.FullName;

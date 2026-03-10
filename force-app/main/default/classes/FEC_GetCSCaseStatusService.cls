@@ -28,7 +28,6 @@ global with sharing class FEC_GetCSCaseStatusService {
             
             result.CaseID = c.Id;
             result.CaseStatus = c.FEC_Case_Status__c;
-            // result.CaseStatus = 'Open'; // Hardcoded as 'Open' per new requirement
             result.Remarks = c.FEC_Remarks__c;
             result.CreatedTime = String.valueOf(c.CreatedDate);
             result.UpdatedTime = String.valueOf(c.LastModifiedDate);
@@ -63,7 +62,7 @@ global with sharing class FEC_GetCSCaseStatusService {
         ];
         
         if (cases.isEmpty()) {
-            throw new ServiceException('Case not found with ID: ' + caseId);
+            throw new ServiceException(System.Label.FEC_CS_CASE_NOT_FOUND_MSG + caseId);
         }
         
         return cases[0];
@@ -71,12 +70,12 @@ global with sharing class FEC_GetCSCaseStatusService {
     
     private static void validateRequest(GetCSCaseStatusRequest req){
         
-        if(req==null) throw new ServiceException('Request cannot be null');
+        if(req==null) throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_REQUEST_INVALID_MSG);
         
-        if(req.Sys==null) throw new ServiceException('Sys required');
+        if(req.Sys==null) throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_SYS_REQUIRED_MSG);
         
         if(String.isBlank(req.Sys.Channel))
-            throw new ServiceException('Channel required');
+            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_CHANNEL_REQUIRED_MSG);
         
         // FIX #2 Channel must exist
         // if(!VALID_CHANNELS.contains(req.Sys.Channel))
@@ -84,51 +83,48 @@ global with sharing class FEC_GetCSCaseStatusService {
         
         // FIX #4 TransactionID required + <=36
         if(String.isBlank(req.Sys.TransactionID))
-            throw new ServiceException('TransactionID required');
+            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_TRANSACTIONID_REQUIRED_MSG);
         
         if(req.Sys.TransactionID.length()>36)
-            throw new ServiceException('TransactionID max 36');
+            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_TRANSACTIONID_MAX_MSG);
         
         // FIX #3 ISO 8601 check
         if(!isISO8601(req.Sys.DateTime_x))
-            throw new ServiceException('Datetime must be ISO-8601');
+            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_DATETIME_INVALID_MSG);
         
         if(req.CaseRequestInfo==null)
-            throw new ServiceException('CaseRequestInfo required');
+            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_CASEREQUESTINFO_REQUIRED_MSG);
         
         if(String.isBlank(req.CaseRequestInfo.CaseID))
-            throw new ServiceException('Missing CaseID');
-        
-        // if(!isValidSalesforceId(req.CaseRequestInfo.CaseID))
-        //     throw new ServiceException('Invalid CaseID');
+            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_CASEID_REQUIRED_MSG);
         
         // FIX #5 ContractOrAccountInfos required
         if(req.CaseRequestInfo.ContractOrAccountInfos==null ||
             req.CaseRequestInfo.ContractOrAccountInfos.isEmpty())
-            throw new ServiceException('ContractOrAccountInfos required');
+            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_CONTRACT_OR_ACCOUNT_INFOS_REQUIRED_MSG);
         
         for(ContractOrAccountInfosType info : req.CaseRequestInfo.ContractOrAccountInfos){
             
             // FIX #6 length <=255
             if(info.ContractOrAccountNumber!=null &&
                 info.ContractOrAccountNumber.length()>255)
-                throw new ServiceException('ContractOrAccountNumber max 255');
+                throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_MAX_MSG);
             
             // FIX #7 ProductType required
             if(String.isBlank(info.ProductType))
-                throw new ServiceException('ProductType required');
+                throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_PRODUCT_TYPE_REQUIRED_MSG);
         }
         
         // FIX #8 Phone required
         if(String.isBlank(req.CaseRequestInfo.PhoneNumber))
-            throw new ServiceException('PhoneNumber required');
+            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_PHONE_REQUIRED_MSG);
         
         // FIX #9 UserType required + <=15
         if(String.isBlank(req.CaseRequestInfo.UserType))
-            throw new ServiceException('UserType required');
+            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_USERTYPE_REQUIRED_MSG);
         
         if(req.CaseRequestInfo.UserType.length()>15)
-            throw new ServiceException('UserType max 15');
+            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_USERTYPE_MAX_MSG);
     }
     
     private static Boolean isISO8601(String s){
