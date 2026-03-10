@@ -43,7 +43,7 @@ public with sharing class FEC_GetCSCaseStatusService {
         } catch (Exception e) {
             // Error response
             result.CaseID = (req != null && req.CaseRequestInfo != null) ? req.CaseRequestInfo.CaseID : null;
-            result.CaseStatus = 'ERROR';
+            result.CaseStatus = FEC_ConstantCommon.CASE_STATUS_ERROR;
             result.Remarks = e.getMessage();
             result.CreatedTime = String.valueOf(System.now());
             result.UpdatedTime = String.valueOf(System.now());

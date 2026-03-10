@@ -91,7 +91,7 @@ public with sharing class FEC_CreateCSCaseService {
                 for (AdditionalInfoType info : req.RequestInfo.AdditionalInfo) {
                     if (
                         info != null &&
-                        info.ID == 'UploadDocument' &&
+                        info.ID == FEC_ConstantCommon.UPLOAD_DOCUMENT &&
                         String.isNotBlank(info.Value)
                     ) {
                         uploadFileToCase(customerCase.Id, info.Value);
