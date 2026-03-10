@@ -1539,7 +1539,13 @@ public with sharing class FEC_CaseBusinessService {
     for (String fieldName : objToFieldlstMap.get(objName)) {
       if (fieldsMap.containsKey(fieldName)) {
         Schema.DescribeFieldResult fieldDescribe = fieldsMap.get(fieldName).getDescribe();
-        fields.add(fieldName);
+        
+        if (fieldDescribe.getType() == Schema.DisplayType.Picklist ||
+          fieldDescribe.getType() == Schema.DisplayType.MultiPicklist) {
+          fields.add('toLabel(' + fieldName + ')');
+        } else {
+          fields.add(fieldName);
+        }
       }
     }
 
