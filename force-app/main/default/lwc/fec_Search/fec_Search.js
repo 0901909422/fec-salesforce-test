@@ -409,35 +409,30 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         break;
       case "phoneNumber":
         this.phoneNumber = value;
-        // Validate Phone Number:
-        // - If starts with '0' -> must be exactly 10 digits
-        // - If starts with '84' -> must be exactly 11 digits
-        {
-          const input = this.template.querySelector('[data-id="phoneNumber"]');
-          if (input) {
+        const input = this.template.querySelector('[data-id="phoneNumber"]');
+        if (input) {
             const val = value ? value.toString().trim() : "";
             if (!val) {
-              input.setCustomValidity("");
-            } else if (/^0/.test(val)) {
-              input.setCustomValidity(
-                "No data available. Please use prefix 84.",
-              );
-            } else if (/^84/.test(val)) {
-              if (!/^\d{11}$/.test(val)) {
-                input.setCustomValidity(
-                  "Phone number must be 11 digits if it starts with 84.",
-                );
-              } else {
                 input.setCustomValidity("");
-              }
+            } else if (val.startsWith('0')) {
+                // Check if starts with 0 and has exactly 10 digits
+                if (!/^0\d{9}$/.test(val)) {
+                    input.setCustomValidity("Phone number starting with 0 must be exactly 10 digits.");
+                } else {
+                    input.setCustomValidity("");
+                }
+            } else if (val.startsWith('84')) {
+                // Check if starts with 84 and has exactly 11 digits
+                if (!/^84\d{9}$/.test(val)) {
+                    input.setCustomValidity("Phone number starting with 84 must be exactly 11 digits.");
+                } else {
+                    input.setCustomValidity("");
+                }
             } else {
-              // If it doesn't start with 0 or 84, consider invalid per rules
-              input.setCustomValidity(
-                "Phone number must start with 84 (11 digits).",
-              );
+                // Fallback for invalid prefixes
+                input.setCustomValidity("Phone number must start with 0 (10 digits) or 84 (11 digits).");
             }
             input.reportValidity();
-          }
         }
         break;
       case "applicationId":
