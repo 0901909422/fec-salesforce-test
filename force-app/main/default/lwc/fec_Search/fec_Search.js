@@ -764,17 +764,17 @@ hasAnySearchCriteria(params) {
 }
 
   processCustomerResults(customers) {
-    const top5 = customers.slice(0, 5);
+    //const top5 = customers.slice(0, 5);
     this.cardData = [];
     this.loanContractData = [];
     this.insuranceData = [];
 
-    top5.forEach(cust => {
+    customers.forEach(cust => {
       if (cust.Applications && cust.Applications.length > 0) {
         cust.Applications.forEach(app => {
           // Định nghĩa logic phân loại dựa trên trường 'Product' trong JSON
           const productCode = app.Product ? app.Product.toUpperCase() : '';
-
+          const phone = (cust?.Phones && cust.Phones.length > 0) ? cust.Phones[0].Phone : null;
           // --- PHÂN LOẠI VÀO CARD ---
           // Trong JSON, Card thường có Product để trống và có AccountNumber
           if (productCode === '' && app.AccountNumber) {
@@ -788,7 +788,8 @@ hasAnySearchCriteria(params) {
               PlasticID: "N/A",
 
               // ✅ add flat field
-              CIFNumber: cust.CIFNumber
+              CIFNumber: cust.CIFNumber,
+              Phone: phone,
             }];
             
           }
@@ -804,6 +805,7 @@ hasAnySearchCriteria(params) {
               ContractNumber: app.ContractNumber,
               ProductCode: app.Product,
               ContractStatus: app.Status,
+              Phone: phone,
               _customer: cust,
               _application: app 
             }];
@@ -820,6 +822,7 @@ hasAnySearchCriteria(params) {
               ProductName: app.SchemeDesc || 'Insurance Product',
               Status: app.Status,
               EffectiveDate: 'N/A',
+              Phone: phone,
               _customer: cust,
               _application: app // Cần map thêm field nếu có
             }];
@@ -1019,7 +1022,8 @@ hasAnySearchCriteria(params) {
           caseId: this.recordId,
           searchProducts: searchProducts,
           selectedType: action.type,
-          cifNumber: cifNumber
+          cifNumber: cifNumber,
+          phone: row?.Phone
         })
           .then(async (res) => {
             // const payload = {
