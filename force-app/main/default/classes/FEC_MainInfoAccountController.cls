@@ -575,18 +575,9 @@ public without sharing class FEC_MainInfoAccountController {
             cardRes.CardBasicInfo.CardHistories.CardHistory != null &&
             !cardRes.CardBasicInfo.CardHistories.CardHistory.isEmpty()) {
 
-          String activationDate = String.valueOf(cardRes.CardBasicInfo.CardHistories.CardHistory[0].CardActivationDate);
-
-            if (!String.isBlank(activationDate) &&
-                activationDate != '00000000' &&
-                activationDate.length() == 8) {
-
-                activationDateParsed = Date.newInstance(
-                    Integer.valueOf(activationDate.substring(0,4)),
-                    Integer.valueOf(activationDate.substring(4,6)),
-                    Integer.valueOf(activationDate.substring(6,8))
-                );
-            }
+            activationDateParsed = FEC_CommonUltils.parseDate(
+                String.valueOf(cardRes.CardBasicInfo.CardHistories.CardHistory[0].CardActivationDate)
+            );
         }
 
         Boolean ecomFlag;
