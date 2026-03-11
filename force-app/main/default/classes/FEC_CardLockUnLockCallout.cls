@@ -108,12 +108,12 @@ public without sharing class FEC_CardLockUnLockCallout {
             HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_POST, request.headers, requestBodyJson);
             
             // Log response
-            String requestHeaderJson = JSON.serialize(request.headers);
+            String requestJson = JSON.serialize(request);
             responseLog = new ResponseLog(
                 'FEC_CardLockUnLock',
                 endpoint,
-                FEC_ConstantCommon.API_METHOD_GET,
-                'headers: ' + requestHeaderJson + ', body: ' + requestBodyJson,
+                FEC_ConstantCommon.API_METHOD_POST,
+                requestJson,
                 res,
                 null
             );
