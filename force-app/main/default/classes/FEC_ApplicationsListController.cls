@@ -142,7 +142,7 @@ public without sharing class FEC_ApplicationsListController {
                     new Map<String, Object>();
 
                 row.put('applicationId', app.ApplicationID);
-                row.put('accountNumber', app.AccountNumber);
+                row.put('accountNumber', String.isBlank(app.AccountNumber) ? 'N/A' : app.AccountNumber);
                 row.put('contractNumber', app.ContractNumber);
                 row.put('nationalPassportID',cus.NationalID);
 
@@ -176,27 +176,62 @@ public without sharing class FEC_ApplicationsListController {
                     }
                 }
 
+                if (cus.Addresses != null) {
+                    for (FEC_GetCustomerList.Address ad : cus.Addresses) {
+
+                        if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_CURRES) {
+
+                            row.put(
+                                'currentAddress',
+                                FEC_CommonUltils.formatAddress(
+                                    ad.HouseNumber,
+                                    ad.Building,
+                                    ad.Street,
+                                    ad.Ward,
+                                    ad.District,
+                                    ad.City,
+                                    ad.CountryName,
+                                    ad.ZipCode
+                                )
+                            );
+
+                            break;
+                        }
+                    }
+                }
+
                 /* ADDRESS */
                 if (addrRes != null && addrRes.Addresses != null) {
                     for (FEC_GetAddressesList.AddressInfo ad
                         : addrRes.Addresses) {
-
-                        if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_CURRES) {
-                            row.put(
-                                'currentAddress',
-                                formatAddress(ad)
-                            );
-                        }
                         if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
                             row.put(
                                 'permanentAddress',
-                                formatAddress(ad)
+                                FEC_CommonUltils.formatAddress(
+                                    ad.NumberStr,
+                                    ad.Building,
+                                    ad.Street,
+                                    ad.Ward,
+                                    ad.District,
+                                    ad.City,
+                                    ad.CountryName,
+                                    ad.ZipCode
+                                )
                             );
                         }
                         if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_OFFICE) {
                             row.put(
                                 'officeAddress',
-                                formatAddress(ad)
+                                FEC_CommonUltils.formatAddress(
+                                    ad.NumberStr,
+                                    ad.Building,
+                                    ad.Street,
+                                    ad.Ward,
+                                    ad.District,
+                                    ad.City,
+                                    ad.CountryName,
+                                    ad.ZipCode
+                                )
                             );
                         }
                     }
@@ -354,19 +389,5 @@ public without sharing class FEC_ApplicationsListController {
             u.UserRole != null ? u.UserRole.Name : null,
             relatedCaseId
         );
-    }
-
-    /* =====================================================
-     * HELPERS
-     * ===================================================== */
-
-    private static String formatAddress(
-        FEC_GetAddressesList.AddressInfo ad
-    ) {
-        List<String> parts = new List<String>();
-        if (!String.isBlank(ad.Street)) parts.add(ad.Street);
-        if (!String.isBlank(ad.City)) parts.add(ad.City);
-        if (!String.isBlank(ad.CountryName)) parts.add(ad.CountryName);
-        return String.join(parts, ', ');
     }
 }
