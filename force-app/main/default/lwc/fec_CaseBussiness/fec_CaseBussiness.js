@@ -147,6 +147,8 @@ const TYPE_DISAGREE = "Disagree";
 const DECISION_USER = "User";
 const DECISION_QUEUE = "Queue";
 const NONE_STRING = '--None--';
+const FIELD_ACCOUNT_CONTRACT_NUMBER_PL = 'FEC_Account_Contract_Number_PL__c';
+const LABEL_ACCOUNT_CONTRACT_NUMBER = 'Account/ Contract Number';
 
 const SLDS_MEDIUM_SIZE_OF_12 = {
   1: 'slds-medium-size_1-of-12',
@@ -400,6 +402,10 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   @api getNatureOfCaseId() {
     return this.business?.natureOfCase || null;
+  }
+
+  @api getStageName() {
+    return this.business?.stageName ?? STR_EMPTY;
   }
 
   @api setNatureOfCaseId(id) {
@@ -1102,6 +1108,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   @api validate() {
     if (!this.validateNatureOfCase()) return false;
 
+    //this._lastValidationError = null;
     let isAllValid = true;
 
     let inputFiellst = this.template.querySelectorAll("lightning-input-field");
@@ -1143,8 +1150,23 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (routeToEle)
       isAllValid = routeToEle && routeToEle.reportValidity() && isAllValid;
 
+    // let accountContractField = this.template.querySelector(
+    //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
+    // );
+    // if (accountContractField) {
+    //   let val = accountContractField.value;
+    //   if (val == null || val === STR_EMPTY || val === NONE_STRING) {
+    //     isAllValid = false;
+    //     this._lastValidationError = LABEL_ACCOUNT_CONTRACT_NUMBER;
+    //   }
+    // }
+
     return isAllValid;
   }
+
+  // @api getLastValidationError() {
+  //   return this._lastValidationError || null;
+  // }
 
   /**
    * Chỉ lưu dữ liệu form (Nature of Case, Account Info, Case Info, Process Action, Routing Action)

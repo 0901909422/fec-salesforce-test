@@ -396,7 +396,7 @@ public with sharing class FEC_CaseBusinessService {
 
       if (String.isNotBlank(selectedCaseStageId)) {
         caseStageQuery =
-          'SELECT Id ' +
+          'SELECT Id, Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE Id = :id ' +
           'AND FEC_Active__c = TRUE ' +
@@ -407,7 +407,7 @@ public with sharing class FEC_CaseBusinessService {
         bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
       } else {
         caseStageQuery =
-          'SELECT Id ' +
+          'SELECT Id, Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
           'AND FEC_Active__c = TRUE ' +
@@ -437,6 +437,7 @@ public with sharing class FEC_CaseBusinessService {
       // }
 
       result.stage = selectedStage.Id;
+      result.stageName = selectedStage.Name;
 
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
@@ -808,7 +809,10 @@ public with sharing class FEC_CaseBusinessService {
       
       if (params != null) {
         caseId = (String) params.get('caseId');
-        Case c = [SELECT Id, Owner.Name, FEC_Stage_Name__c FROM Case WHERE Id = :caseId];
+        Case c = [SELECT Id, Owner.Name, FEC_Stage_Name__c, FEC_Customer_Type__c, FEC_Account_Contract_Number_PL__c FROM Case WHERE Id = :caseId];
+        // if (FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER.equals(c.FEC_Customer_Type__c) && String.isBlank(c.FEC_Account_Contract_Number_PL__c)) {
+        //   throw new AuraHandledException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Account/ Contract Number' }));
+        // }
         oldOwnerName = c.Owner.Name;
         stageName = c.FEC_Stage_Name__c;
       }
@@ -1739,6 +1743,9 @@ public with sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public String stage;
+
+    @AuraEnabled
+    public String stageName;
 
     @AuraEnabled
     public FEC_CommonUltils.PicklistOption nextQueue;
