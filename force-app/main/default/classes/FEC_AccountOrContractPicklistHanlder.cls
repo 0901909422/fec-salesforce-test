@@ -65,22 +65,48 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
                 System.debug('DealId: ' + p.dealId);
                 
                 GetProductsListResponse item = new GetProductsListResponse();
-                if (String.isNotBlank(p.accountNumber)) {
+                // if (String.isNotBlank(p.accountNumber)) {
+                    //     // CARD
+                    //     item.accountContractNumber = p.accountNumber;
+                    //     item.productType = FEC_ConstantCommon.PRODUCT_TYPE_CARD;
+                    
+                // } else if (String.isNotBlank(p.contractNumber)) {
+                    //     // LOAN
+                    //     item.accountContractNumber = p.contractNumber;
+                    //     item.productType = FEC_ConstantCommon.PRODUCT_TYPE_LOAN;
+                    
+                // } else if (String.isNotBlank(p.applicationId)) {
+                    //     // INSURANCE
+                    //     item.accountContractNumber = p.applicationId;
+                    //     item.productType = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE;
+                // }
+                
+                if (String.isNotBlank(p.accountNumber) && Pattern.matches(FEC_ConstantCommon.PATTERN_CARD, p.accountNumber)) {
+                    
                     // CARD
                     item.accountContractNumber = p.accountNumber;
                     item.productType = FEC_ConstantCommon.PRODUCT_TYPE_CARD;
                     
-                } else if (String.isNotBlank(p.contractNumber)) {
-                    // LOAN
-                    item.accountContractNumber = p.contractNumber;
-                    item.productType = FEC_ConstantCommon.PRODUCT_TYPE_LOAN;
-                    
-                } else if (String.isNotBlank(p.applicationId)) {
-                    // INSURANCE
-                    item.accountContractNumber = p.applicationId;
-                    item.productType = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE;
                 }
-                
+                else if (String.isNotBlank(p.contractNumber)) {
+                    
+                    String contract = p.contractNumber;
+                    
+                    if (Pattern.matches(FEC_ConstantCommon.PATTERN_INSURANCE, contract)) {
+                        
+                        // INSURANCE
+                        item.accountContractNumber = contract;
+                        item.productType = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE;
+                        
+                    }
+                    else if (Pattern.matches(FEC_ConstantCommon.PATTERN_LOAN, contract)) {
+                        
+                        // LOAN
+                        item.accountContractNumber = contract;
+                        item.productType = FEC_ConstantCommon.PRODUCT_TYPE_LOAN;
+                        
+                    }
+                }
                 item.productName = p.productName;
                 results.add(item);
             }
