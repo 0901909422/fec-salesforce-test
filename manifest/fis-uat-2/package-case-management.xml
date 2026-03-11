@@ -58,5 +58,8 @@
 		<members>FEC_Interaction_Case_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
+        <members>FEC_CreateCaseHanlder</members>
+        <name>ApexClass</name>
+    </types>
     <version>65.0</version>
 </Package>
