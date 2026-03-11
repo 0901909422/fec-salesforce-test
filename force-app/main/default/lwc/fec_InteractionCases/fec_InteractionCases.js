@@ -4,7 +4,7 @@ import getAllInteractions from '@salesforce/apex/FEC_GetInteractionCases.getAllI
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetInteractionCases.getCaseFieldHelpTexts';
 import logSensitiveAccess from '@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess';
 import { formatDateTimeVN, formatDuration } from 'c/fec_CommonUtils';
-import { MSG_NO_RESULTS, MSG_UNKNOWN_ERROR, CASE_OBJECT_API_NAME, NAV_ACTION_VIEW } from 'c/fec_CommonConst';
+import { MSG_NO_RESULTS, STR_EMPTY, MSG_UNKNOWN_ERROR, CASE_OBJECT_API_NAME, NAV_ACTION_VIEW } from 'c/fec_CommonConst';
 import FEC_Button_Refresh from '@salesforce/label/c.FEC_Button_Refresh';
 import FEC_Interactions_Section_Title from '@salesforce/label/c.FEC_Interactions_Section_Title';
 import FEC_Interaction_ID from '@salesforce/label/c.FEC_Interaction_ID';
@@ -107,7 +107,7 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
       this.data = (result || []).map((row) => ({
         ...row,
         Id: row.interactionId,
-        interactionIdText: row.interactionIdText || '',
+        interactionIdText: row.interactionIdText || STR_EMPTY,
         interactionCreatedOn: row.interactionCreatedOn,
         interactionCreatedOnFormatted: formatDateTimeVN(row.interactionCreatedOn),
         lastUpdatedOnFormatted: formatDateTimeVN(row.lastUpdatedOn),

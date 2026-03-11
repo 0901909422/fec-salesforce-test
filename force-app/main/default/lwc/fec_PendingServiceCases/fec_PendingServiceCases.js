@@ -3,7 +3,7 @@ import { NavigationMixin } from 'lightning/navigation';
 import getPendingServiceCases from '@salesforce/apex/FEC_GetServiceCases.getPendingServiceCases';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetServiceCases.getCaseFieldHelpTexts';
 import { formatDateTimeVN } from 'c/fec_CommonUtils';
-import { STR_NA, MSG_UNKNOWN_ERROR, CASE_OBJECT_API_NAME, NAV_ACTION_VIEW } from 'c/fec_CommonConst';
+import { STR_NA, STR_EMPTY, MSG_UNKNOWN_ERROR, CASE_OBJECT_API_NAME, NAV_ACTION_VIEW } from 'c/fec_CommonConst';
 import FEC_Button_Refresh from '@salesforce/label/c.FEC_Button_Refresh';
 import FEC_Pending_Service_Cases_Section_Title from '@salesforce/label/c.FEC_Pending_Service_Cases_Section_Title';
 import FEC_Case_ID_Label from '@salesforce/label/c.FEC_Case_ID_Label';
@@ -144,7 +144,7 @@ export default class Fec_PendingServiceCases extends NavigationMixin(LightningEl
       this.data = (result || []).map((row) => ({
         ...row,
         Id: row.caseId,
-        caseIdText: row.caseIdText || '',
+        caseIdText: row.caseIdText || STR_EMPTY,
         interactionIdLabel: row.interactionIdText || STR_NA,
         caseCreatedOnFormatted: formatDateTimeVN(row.caseCreatedOn),
         lastUpdatedOnFormatted: formatDateTimeVN(row.lastUpdatedOn),
