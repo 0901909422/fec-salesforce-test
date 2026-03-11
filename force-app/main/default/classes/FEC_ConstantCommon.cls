@@ -157,5 +157,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
 
     public static final String EMAIL = 'Email';
+    public static final String SUBCHANNEL_INCOMING_EMAIL = 'Incoming Email';
+    public static final String CASE_ORIGIN_EMAIL2CASE = 'Email2Case';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
 }

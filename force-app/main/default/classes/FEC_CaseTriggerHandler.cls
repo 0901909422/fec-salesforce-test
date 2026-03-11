@@ -304,7 +304,7 @@ public without sharing class FEC_CaseTriggerHandler {
         List<Id> caseIdsToUpdate = new List<Id>();
 
         for (Case c : newCases) {
-            if (c.Origin == 'Email2Case' && c.RecordTypeId == interactionRecordTypeId) {
+            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE && c.RecordTypeId == interactionRecordTypeId) {
                 caseIdsToUpdate.add(c.Id);
             }
         }
@@ -325,14 +325,12 @@ public without sharing class FEC_CaseTriggerHandler {
         if (interactionRecordTypeId == null) {
             return;
         }
-        final String channelEmail = 'Email';
-        final String subchannelIncomingEmail = 'Incoming Email';
         for (Case c : newCases) {
-            if (c.Origin == 'Email2Case'
+            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE
                     && c.RecordTypeId == interactionRecordTypeId
                     && String.isBlank(c.FEC_Channel__c)) {
-                c.FEC_Channel__c = channelEmail;
-                c.FEC_Interaction_Subchannel__c = subchannelIncomingEmail;
+                c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
+                c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
             }
         }
     }
@@ -360,7 +358,6 @@ public without sharing class FEC_CaseTriggerHandler {
             }
         }
 
-        final String subchannelIncomingEmail = 'Incoming Email';
         List<Case> casesToDml = new List<Case>();
         for (Id caseId : caseIds) {
             String fromAddr = caseIdToFromAddress.get(caseId);
@@ -368,7 +365,7 @@ public without sharing class FEC_CaseTriggerHandler {
                 Id = caseId,
                 FEC_Interaction_Email__c = fromAddr,
                 FEC_Send_To__c = sendToValue,
-                FEC_Interaction_Subchannel__c = subchannelIncomingEmail
+                FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL
             ));
         }
 

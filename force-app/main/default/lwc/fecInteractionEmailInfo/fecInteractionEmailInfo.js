@@ -26,6 +26,7 @@ import FEC_Interaction_Email_Input_Placeholder from "@salesforce/label/c.FEC_Int
 import FEC_Interaction_Email_Required_Msg from "@salesforce/label/c.FEC_Interaction_Email_Required_Msg";
 import FEC_Interaction_Email_Invalid_Msg from "@salesforce/label/c.FEC_Interaction_Email_Invalid_Msg";
 import FEC_Interaction_Email_Save_Error from "@salesforce/label/c.FEC_Interaction_Email_Save_Error";
+import FEC_Empty from "@salesforce/label/c.FEC_Empty";
 
 // Regex validate email
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -41,7 +42,8 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     inputPlaceholder: FEC_Interaction_Email_Input_Placeholder,
     emailRequiredMsg: FEC_Interaction_Email_Required_Msg,
     emailInvalidMsg: FEC_Interaction_Email_Invalid_Msg,
-    emailSaveError: FEC_Interaction_Email_Save_Error
+    emailSaveError: FEC_Interaction_Email_Save_Error,
+    empty: FEC_Empty
   };
 
   @api recordId;

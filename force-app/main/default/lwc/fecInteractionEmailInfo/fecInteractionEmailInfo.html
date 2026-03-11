@@ -15,14 +15,14 @@
                   <template if:false={isEmailReadOnly}>
                     <template if:true={isEditingEmail}>
                       <lightning-input type="email" value={emailDraft} onchange={handleEmailChange}
-                        variant="label-hidden" placeholder="Nhập email"
-                        message-when-value-missing="Vui lòng nhập email."></lightning-input>
+                        variant="label-hidden" placeholder={labels.inputPlaceholder}
+                        message-when-value-missing={labels.emailRequiredMsg}></lightning-input>
                       <template if:true={emailError}>
                         <span class="error-text">{emailError}</span>
                       </template>
                     </template>
                     <template if:false={isEditingEmail}>
-                      <span class="empty">--</span>
+                      <span class="empty">{labels.empty}</span>
                     </template>
                   </template>
                 </span>
@@ -65,7 +65,7 @@
                     </a>
                   </template>
                   <template if:false={showParentIdLink}>
-                    <span class="empty">--</span>
+                    <span class="empty">{labels.empty}</span>
                   </template>
                 </span>
                 <span></span>
@@ -88,13 +88,13 @@
                   <template if:false={isEmailReadOnly}>
                     <template if:true={isEditingEmail}>
                       <lightning-input type="email" value={emailDraft} onchange={handleEmailChange}
-                        variant="label-hidden" placeholder="Nhập email"></lightning-input>
+                        variant="label-hidden" placeholder={labels.inputPlaceholder}></lightning-input>
                       <template if:true={emailError}>
                         <span class="error-text">{emailError}</span>
                       </template>
                     </template>
                     <template if:false={isEditingEmail}>
-                      <span class="empty">--</span>
+                      <span class="empty">{labels.empty}</span>
                     </template>
                   </template>
                 </span>
