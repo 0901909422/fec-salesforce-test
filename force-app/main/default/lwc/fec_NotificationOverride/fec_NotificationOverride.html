@@ -1,0 +1,164 @@
+<template>
+  <div class="slds-card">
+    <div class="slds-modal__header header">
+      <h2 class="slds-modal__title slds-hyphenate slds-text-heading--medium">
+        {headerLabel}
+      </h2>
+    </div>
+
+    <lightning-record-edit-form object-api-name={notificationObject} record-id={recordId} onsuccess={handleSuccess}
+      onsubmit={handleSubmit} onerror={handleError} record-type-id={recordTypeId}>
+      <!-- Section 1: General Information -->
+      <article class="slds-card slds-m-around_medium">
+        <div class="slds-card__header slds-grid">
+          <header class="slds-media slds-media_center slds-has-flexi-truncate">
+            <div class="slds-media__figure">
+              <span class="slds-icon_container slds-icon-standard-account" title="General Information">
+                <lightning-icon icon-name="standard:account" size="small"></lightning-icon>
+              </span>
+            </div>
+            <div class="slds-media__body">
+              <h2 class="slds-card__header-title slds-text-heading_medium">General Information</h2>
+            </div>
+          </header>
+        </div>
+        <div class="slds-card__body slds-card__body_inner edit-form">
+          <div class="slds-grid">
+            <div class="slds-col slds-size_1-of-2 column">
+              <lightning-input-field field-name={nameField} required></lightning-input-field>
+              <lightning-input-field field-name={targetGroupField} value={targetGroup} onchange={handleChange}
+                required></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2 column">
+              <template if:true={showCustomerType}>
+                <lightning-input-field field-name={customerTypeField}></lightning-input-field>
+              </template>
+              <template if:true={isDisplay}>
+                <c-fec_-lookup label="Channel" placeholder="Search Channel..." is-multi-select data-id="channel"
+                  object-api-name="FEC_Channel__c" required field-api-name="Name" icon-name="standard:contact"
+                  onselect={handleSelected}></c-fec_-lookup>
+              </template>
+
+              <!-- <c-lwc-multi-lookup object-name="FEC_Channel__c" field-name="Name" label="Channel"></c-lwc-multi-lookup> -->
+              <!-- <lightning-input-field field-name={channelField}></lightning-input-field> -->
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Section 2: Nature of Case -->
+      <article class="slds-card slds-m-around_medium">
+        <div class="slds-card__header slds-grid">
+          <header class="slds-media slds-media_center slds-has-flexi-truncate">
+            <div class="slds-media__figure">
+              <span class="slds-icon_container slds-icon-standard-case" title="Nature of Case">
+                <lightning-icon icon-name="standard:case" size="small"></lightning-icon>
+              </span>
+            </div>
+            <div class="slds-media__body">
+              <h2 class="slds-card__header-title slds-text-heading_medium">Nature of Case</h2>
+            </div>
+          </header>
+        </div>
+        <template if:true={isDisplay}>
+          <div class="slds-card__body slds-card__body_inner edit-form">
+            <div class="slds-grid">
+              <div class="slds-col slds-size_1-of-2 column">
+                <c-fec_-lookup label="Product Type" placeholder="Search Product Type..." data-id="productType"
+                  object-api-name="FEC_Product_Type__c" field-api-name="Name" icon-name="standard:contact"
+                  onselect={handleSelected} required></c-fec_-lookup>
+                <c-fec_-lookup label="Category" placeholder="Search Category..." data-id="category"
+                  object-api-name="FEC_Category__c" field-api-name="Name" icon-name="standard:contact"
+                  onselect={handleSelected} disabled={isProductType} selected-product-type-id={selectedProductTypeId}
+                  required></c-fec_-lookup>
+              </div>
+              <div class="slds-col slds-size_1-of-2 column">
+                <c-fec_-lookup label="Sub Category" placeholder="Search Sub Category..." data-id="subCategory"
+                  object-api-name="FEC_Sub_Category__c" field-api-name="Name" icon-name="standard:contact"
+                  disabled={isCategory} selected-product-type-id={selectedProductTypeId}
+                  selected-category-id={selectedCategoryId} onselect={handleSelected} required></c-fec_-lookup>
+                <c-fec_-lookup label="Sub Code" placeholder="Search Sub Code..." data-id="subCode"
+                  object-api-name="FEC_Sub_Code__c" disabled={isSubCategory}
+                  selected-product-type-id={selectedProductTypeId} selected-category-id={selectedCategoryId}
+                  selected-sub-category-id={selectedSubCategoryId}
+                  field-api-name="Name" icon-name="standard:contact" onselect={handleSelected} required></c-fec_-lookup>
+              </div>
+            </div>
+          </div>
+        </template>
+
+      </article>
+
+      <!-- Section 3: Notification Information -->
+      <article class="slds-card slds-m-around_medium">
+        <div class="slds-card__header slds-grid">
+          <header class="slds-media slds-media_center slds-has-flexi-truncate">
+            <div class="slds-media__figure">
+              <span class="slds-icon_container slds-icon-standard-announcement" title="Notification Information">
+                <lightning-icon icon-name="standard:announcement" size="small"></lightning-icon>
+              </span>
+            </div>
+            <div class="slds-media__body">
+              <h2 class="slds-card__header-title slds-text-heading_medium">Notification Information</h2>
+            </div>
+          </header>
+        </div>
+        <div class="slds-card__body slds-card__body_inner edit-form">
+          <div class="slds-grid">
+            <div class="slds-col slds-size_1-of-2 column">
+              <template if:true={showStatusPair}>
+                <lightning-input-field field-name={currentStatusField}></lightning-input-field>
+                <lightning-input-field field-name={changedStatusField}></lightning-input-field>
+              </template>
+
+              <template if:true={showApplicableUserGroups}>
+                <lightning-input-field field-name={applicableUserGroupsField} required></lightning-input-field>
+              </template>
+
+              <template if:true={showCaseStage}>
+                <lightning-input-field field-name={caseStageField}></lightning-input-field>
+              </template>
+
+              <template if:true={showAssignedToQueue}>
+                <lightning-input-field field-name={assignedToQueueField}></lightning-input-field>
+              </template>
+            </div>
+            <div class="slds-col slds-size_1-of-2 column">
+              <template if:true={isDisplay}>
+                <lightning-input-field field-name={notificationStatusField}></lightning-input-field>
+                <lightning-input-field field-name={notificationChannelField} required></lightning-input-field>
+              </template>
+              <template if:true={showReceivers}>
+                <lightning-input-field field-name={receiversField}></lightning-input-field>
+              </template>
+
+              <template if:true={showScheduleWindow}>
+                <lightning-input-field field-name={scheduleStartTimeField}></lightning-input-field>
+                <lightning-input-field field-name={scheduleEndTimeField}></lightning-input-field>
+              </template>
+
+              <!-- <lightning-input-field field-name={notificationTemplateField}></lightning-input-field> -->
+              <template if:true={isDisplay}>
+                <c-fec_-lookup label="Notification Template" placeholder="Search Notification Template..."
+                  data-id="notificationTemplate" object-api-name="EmailTemplate" field-api-name="Name"
+                  icon-name="standard:contact" onselect={handleSelected} required></c-fec_-lookup>
+              </template>
+
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Actions -->
+      <div class="slds-col slds-m-top_medium submit">
+        <lightning-button label="Cancel" class="cancel-button" onclick={handleCancel}></lightning-button>
+        <template if:true={isCreate}>
+          <lightning-button type="submit" label="Save & New" onclick={handleSaveAndNew} variant="neutral"
+            class="slds-m-horizontal_x-small">
+          </lightning-button>
+        </template>
+        <lightning-button type="submit" variant="brand" label="Save"></lightning-button>
+      </div>
+    </lightning-record-edit-form>
+  </div>
+</template>

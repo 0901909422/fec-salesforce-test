@@ -1,0 +1,410 @@
+import { api, LightningElement, track, wire } from "lwc";
+import { NavigationMixin } from "lightning/navigation";
+import { getObjectInfo } from 'lightning/uiObjectInfoApi';
+import { IsConsoleNavigation, getFocusedTabInfo, closeTab } from 'lightning/platformWorkspaceApi';
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import { loadStyle } from "lightning/platformResourceLoader";
+import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
+import NOTIFICATION_OBJECT from "@salesforce/schema/FEC_Notification__c";
+import NAME_FIELD from "@salesforce/schema/FEC_Notification__c.Name";
+import TARGET_GROUP_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Target_Group__c";
+import CUSTOMER_TYPE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Customer_Type__c";
+import CHANNEL_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Channel__c";
+import PRODUCT_TYPE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Product_Type__c";
+import CATEGORY_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Category__c";
+import SUB_CATEGORY_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Sub_Category__c";
+import SUB_CODE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Sub_Code__c";
+import CURRENT_STATUS_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Current_Status__c";
+import CHANGED_STATUS_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Changed_Status__c";
+import NOTIFICATION_STATUS_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Notification_Status__c";
+import NOTIFICATION_CHANNEL_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Notification_Channel__c";
+import NOTIFICATION_TEMPLATE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Notification_Template__c";
+import APPLICABLE_USER_GROUPS_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Applicable_User_Groups__c";
+import CASE_STAGE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Case_Stage__c";
+import ASSIGNED_TO_QUEUE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Assigned_to_Queue__c";
+import RECEIVERS_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Receivers__c";
+import SCHEDULE_START_TIME_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Schedule_Start_Time__c";
+import SCHEDULE_END_TIME_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Schedule_End_Time__c";
+import getRecordTypeName from "@salesforce/apex/FEC_Notification.getRecordTypeName";
+import getNotificationById from "@salesforce/apex/FEC_Notification.getNotificationById";
+import {
+  AUTO_NOTIFICATION_HEADER_VI,
+  MANUAL_NOTIFICATION_HEADER_VI,
+  AUTO_NOTIFICATION_TYPE,
+  MANUAL_NOTIFICATION_TYPE
+} from "c/fec_CommonConst";
+
+/**
+ * FEC Notification Override
+ * Provides three-section edit form for FEC_Notification__c
+ */
+export default class Fec_Notification extends NavigationMixin(LightningElement) {
+  @api recordId;
+  @api recordTypeId;
+
+  isMultiRequired = false;
+
+  headerLabel;
+  @track recordType = {};
+  notificationObject = NOTIFICATION_OBJECT;
+
+  // General Information fields
+  nameField = NAME_FIELD;
+  targetGroupField = TARGET_GROUP_FIELD;
+  customerTypeField = CUSTOMER_TYPE_FIELD;
+  channelField = CHANNEL_FIELD;
+
+  // Nature of Case fields
+  productTypeField = PRODUCT_TYPE_FIELD;
+  categoryField = CATEGORY_FIELD;
+  subCategoryField = SUB_CATEGORY_FIELD;
+  subCodeField = SUB_CODE_FIELD;
+
+  // Notification Information fields
+  currentStatusField = CURRENT_STATUS_FIELD;
+  changedStatusField = CHANGED_STATUS_FIELD;
+  notificationStatusField = NOTIFICATION_STATUS_FIELD;
+  notificationChannelField = NOTIFICATION_CHANNEL_FIELD;
+  notificationTemplateField = NOTIFICATION_TEMPLATE_FIELD;
+  applicableUserGroupsField = APPLICABLE_USER_GROUPS_FIELD;
+  caseStageField = CASE_STAGE_FIELD;
+  assignedToQueueField = ASSIGNED_TO_QUEUE_FIELD;
+  receiversField = RECEIVERS_FIELD;
+  scheduleStartTimeField = SCHEDULE_START_TIME_FIELD;
+  scheduleEndTimeField = SCHEDULE_END_TIME_FIELD;
+  targetGroup;
+  isSaveAndNew = false;
+  // Hold selected values from FEC lookup components
+  selectedChannelId = null;
+
+  selectedProductTypeId = null;
+
+  selectedCategoryId = null;
+
+  selectedSubCategoryId = null;
+
+  selectedSubCodeId = null;
+
+  selectedNotificationTemplateId = null;
+
+  @wire(IsConsoleNavigation) isConsoleNavigation;
+
+  @wire(getObjectInfo, { objectApiName: '$notificationObject' })
+  objectInfo;
+
+  get objectLabel() {
+    return this.objectInfo?.data?.label;
+  }
+
+  handleSelected(event) {
+    const ids = event.detail.map(e => e?.id);
+    const joined = ids.join(',');
+    const source = event?.target?.objectApiName;
+
+    switch (source) {
+      // Use related Object API Names from lookup components
+      case CHANNEL_FIELD.fieldApiName:
+        this.selectedChannelId = joined || null;
+        break;
+      case PRODUCT_TYPE_FIELD.fieldApiName:
+        this.selectedProductTypeId = joined || null;
+        // Clear any prior client-side error styling/validation on Product Type lookup
+        try {
+          const productTypeCmp = this.template.querySelector('c-fec_-lookup[data-id="productType"]');
+          if (productTypeCmp) {
+            if (typeof productTypeCmp.setCustomValidity === 'function' && typeof productTypeCmp.reportValidity === 'function') {
+              productTypeCmp.setCustomValidity('');
+              productTypeCmp.reportValidity();
+            } else {
+              productTypeCmp.classList?.remove?.('invalid');
+            }
+          }
+        } catch (e) {
+          // no-op: defensive
+        }
+        break;
+      case CATEGORY_FIELD.fieldApiName:
+        this.selectedCategoryId = joined || null;
+        break;
+      case SUB_CATEGORY_FIELD.fieldApiName:
+        this.selectedSubCategoryId = joined || null;
+        break;
+      case SUB_CODE_FIELD.fieldApiName:
+        this.selectedSubCodeId = joined || null;
+        break;
+      case 'EmailTemplate':
+        this.selectedNotificationTemplateId = joined || null;
+        break;
+      default:
+        // no-op
+        break;
+    }
+  }
+
+  async closeTab() {
+    if (!this.isConsoleNavigation) {
+      return;
+    }
+    const { tabId } = await getFocusedTabInfo();
+    await closeTab(tabId);
+  }
+
+  get isCreate() {
+    return this.recordId == null;
+  }
+
+  // ====== BASE FLAGS ======
+  get isAuto() {
+    return this.recordType.DeveloperName === 'Auto_Notification';
+  }
+
+  get isProductType() {
+    return this.selectedProductTypeId == null;
+  }
+
+  get isCategory() {
+    return this.selectedCategoryId == null;
+  }
+
+  get isSubCategory() {
+    return this.selectedSubCategoryId == null;
+  }
+
+  get isManual() {
+    return this.recordType.DeveloperName === 'Manual_Notification';
+  }
+
+  get isCustomer() {
+    return this.targetGroup === 'Customer';
+  }
+
+  get isInternal() {
+    return this.targetGroup === 'Internal User';
+  }
+
+  get isDisplay() {
+    return this.isCustomer || this.isInternal;
+  }
+
+  // ====== FIELD VISIBILITY RULES ======
+  // A. Customer Type: show when sending to Customer (Auto & Manual)
+  get showCustomerType() {
+    return this.isCustomer;
+  }
+
+  // B & C. Current Status + Changed Status: Auto + Customer
+  get showStatusPair() {
+    return this.isAuto && this.isCustomer;
+  }
+
+  // D. Applicable User Groups: Manual (Customer or Internal)
+  get showApplicableUserGroups() {
+    return this.isManual && this.isDisplay;
+  }
+
+  // E. Case Stage: Manual (Customer or Internal)
+  get showCaseStage() {
+    return this.isManual && this.isDisplay;
+  }
+
+  // F. Assigned to Queue: Auto + Internal User
+  get showAssignedToQueue() {
+    return this.isAuto && this.isInternal;
+  }
+
+  // G. Receivers: when sending to Internal User (Auto or Manual)
+  get showReceivers() {
+    return this.isAuto && this.isInternal;
+  }
+
+  // H & I. Schedule Start/End Time: Auto + Internal User
+  get showScheduleWindow() {
+    return this.isAuto && this.isInternal;
+  }
+
+  connectedCallback() {
+    loadStyle(this, COMMON_STYLES).catch(() => { });
+    if (this.recordTypeId) {
+      getRecordTypeName({ recordTypeId: this.recordTypeId })
+        .then((res) => {
+          if (res) {
+            this.recordType = res;
+            switch (res.DeveloperName) {
+              case AUTO_NOTIFICATION_TYPE:
+                this.headerLabel = AUTO_NOTIFICATION_HEADER_VI;
+                break;
+              case MANUAL_NOTIFICATION_TYPE:
+                this.headerLabel = MANUAL_NOTIFICATION_HEADER_VI;
+                break;
+              default:
+                this.headerLabel = "";
+            }
+          }
+        })
+        .catch((e) => {
+          console.log('Error getting record type name:', e);
+        });
+    }
+    if (this.recordId) {
+      getNotificationById({ recordId: this.recordId })
+        .then((res) => {
+          if (res) {
+            this.headerLabel = 'Edit ' + res.Name;
+            this.targetGroup = res.FEC_Target_Group__c;
+            this.recordType.DeveloperName = res.RecordType.DeveloperName;
+            this.recordTypeId = res.RecordTypeId;
+          }
+        })
+        .catch((e) => {
+          console.log('Error getting record:', e);
+        });
+    }
+  }
+
+  // Keep compatibility in case template uses onchange={handleChange}
+  handleChange(event) {
+    this.targetGroup = event.target.value;
+  }
+
+  async handleSubmit(event) {
+    event.preventDefault();
+    // Collect fields from lightning-record-edit-form
+    const fields = { ...event.detail.fields };
+    // Map selected lookup IDs into fields if present
+    fields[CHANNEL_FIELD.fieldApiName] = this.selectedChannelId || fields[CHANNEL_FIELD.fieldApiName];
+    fields[PRODUCT_TYPE_FIELD.fieldApiName] = this.selectedProductTypeId || fields[PRODUCT_TYPE_FIELD.fieldApiName];
+    fields[CATEGORY_FIELD.fieldApiName] = this.selectedCategoryId || fields[CATEGORY_FIELD.fieldApiName];
+    fields[SUB_CATEGORY_FIELD.fieldApiName] = this.selectedSubCategoryId || fields[SUB_CATEGORY_FIELD.fieldApiName];
+    fields[SUB_CODE_FIELD.fieldApiName] = this.selectedSubCodeId || fields[SUB_CODE_FIELD.fieldApiName];
+    fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName] = this.selectedNotificationTemplateId || fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName];
+
+    let isFormValid = true;
+    const lookupComponents = this.template.querySelectorAll('c-fec_-lookup');
+
+    lookupComponents.forEach(lookup => {
+      // Only check validity if the lookup is currently active (not disabled)
+      if (!lookup.disabled && lookup.reportValidity && !lookup.reportValidity()) {
+        isFormValid = false;
+      }
+    });
+
+    // Block the submission if any active lookup failed validation
+    if (!isFormValid) {
+      return;
+    }
+
+    const recordInput = {
+      apiName: NOTIFICATION_OBJECT.objectApiName || 'FEC_Notification__c',
+      fields
+    };
+    this.template.querySelector('lightning-record-edit-form').submit(fields);
+  }
+
+  handleSaveAndNew() {
+    this.isSaveAndNew = true;
+  }
+
+  async handleSuccess(event) {
+    const id = event?.detail?.id;
+    const name = event?.detail?.fields?.Name?.value;
+    if (this.recordId) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: 'Success',
+          // Cộng thêm ' "' và '" ' vào hai đầu của biến name
+          message: this.objectLabel + ' "' + name + '" was saved.',
+          variant: 'success'
+        })
+      );
+    } else if (this.isSaveAndNew) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: 'Notification created',
+          message: this.objectLabel + ' "' + name + '" was created.',
+          variant: 'success'
+        })
+      );
+      this[NavigationMixin.Navigate]({
+        type: 'standard__objectPage',
+        attributes: {
+          objectApiName: 'FEC_Notification__c',
+          actionName: 'new'
+        },
+        state: {
+          useRecordTypeCheck: 'true',
+          nooverride: '0'
+        }
+      });
+    } else {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: 'Notification created',
+          message: this.objectLabel + ' "' + name + '" was created.',
+          variant: 'success'
+        })
+      );
+      this[NavigationMixin.Navigate]({
+        type: 'standard__recordPage',
+        attributes: {
+          recordId: id,
+          objectApiName: 'FEC_Notification__c',
+          actionName: 'view'
+        }
+      });
+    }
+    await this.closeTab();
+
+  }
+
+  handleError(event) {
+    let message = 'An error occurred while saving';
+    if (event?.detail?.detail) {
+      message = event.detail.detail;
+    } else if (event?.detail?.message) {
+      message = event.detail.message;
+    }
+    this.dispatchEvent(
+      new ShowToastEvent({
+        title: 'Save failed',
+        message,
+        variant: 'error',
+        mode: 'sticky'
+      })
+    );
+  }
+
+  handleCancel() {
+    // Back-compatible cancel: try to navigate back, else close tab
+    try {
+      this.reset();
+      this.closeTab();
+      //window.history.back();
+    } catch (e) {
+      // no-op
+    }
+
+  }
+
+  reset() {
+    // Reset local UI-driving state
+    this.targetGroup = undefined;
+
+    // Reset stored lookup selections
+    this.selectedChannelId = null;
+    this.selectedProductTypeId = null;
+    this.selectedCategoryId = null;
+    this.selectedSubCategoryId = null;
+    this.selectedSubCodeId = null;
+    this.selectedNotificationTemplateId = null;
+
+    // Reset all fields within the lightning-record-edit-form
+    const form = this.template.querySelector('lightning-record-edit-form');
+    if (form && typeof form.reset === 'function') {
+      try {
+        form.reset();
+      } catch (e) {
+        // Swallow to avoid disrupting UX
+      }
+    }
+  }
+}
