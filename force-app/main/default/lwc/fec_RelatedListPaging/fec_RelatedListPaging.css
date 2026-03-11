@@ -142,12 +142,15 @@
     color: #c9c7c5;
 }
 
+/* Số âm: chỉ highlight đỏ, không in đậm (áp dụng cả td và span bên trong) */
 .address-table td.currency-negative,
 .address-table td.slds-text-color_error,
+.address-table td.currency-negative span,
+.address-table td.slds-text-color_error span,
 .currency-negative,
 .slds-text-color_error {
     color: #ea001e !important;
-    font-weight: normal; 
+    font-weight: 400 !important;
 }
 
 /* Table Pagination */
