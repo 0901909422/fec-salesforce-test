@@ -19,5 +19,4 @@ public without sharing class FEC_ContentDocumentTriggerHandler {
       }
     }
   }
-  
 }
