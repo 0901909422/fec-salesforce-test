@@ -638,55 +638,55 @@
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Additional_Field</name>
-        <label>Additional Field</label>
+        <label>Trường bổ sung</label>
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Additional_Field_List_Value</name>
-        <label>List Value</label>
+        <label>Giá trị danh sách</label>
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Business_Process</name>
-        <label>Business Process</label>
+        <label>Quy trình nghiệp vụ</label>
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Case_Stage</name>
-        <label>Case Stage</label>
+        <label>Giai đoạn</label>
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Category</name>
-        <label>Category</label>
+        <label>Danh mục</label>
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Channel</name>
-        <label>Channel</label>
+        <label>Kênh</label>
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Master_Data_Settings</name>
-        <label>Master Data Settings</label>
+        <label>Cấu hình Master Data</label>
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Master_Setting</name>
-        <label>Master Setting</label>
+        <label>Cài đặt chính</label>
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Nature_Of_Case</name>
-        <label>Nature Of Case</label>
+        <label>Bản chất vụ việc</label>
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Node_Details</name>
-        <label>Node Details</label>
+        <label>Chi tiết Node</label>
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Product_Type</name>
-        <label>Product Type</label>
+        <label>Loại sản phẩm</label>
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Sub_Category</name>
-        <label>Sub Category</label>
+        <label>Danh mục con</label>
     </customLabels>
     <customLabels>
         <name>FEC_Tab_Sub_Code</name>
-        <label>Sub Code</label>
+        <label>Mã con</label>
     </customLabels>
     <customLabels>
         <name>FEC_TableHeader_PropertyName</name>
