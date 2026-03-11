@@ -15,6 +15,13 @@ import ISCLOSED from "@salesforce/schema/Case.IsClosed";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 
+import CASE_OBJECT from "@salesforce/schema/Case";
+import INTERACTION_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Interaction_Email__c";
+import CREATED_ON_FIELD from "@salesforce/schema/Case.FEC_Created_On__c";
+import CREATED_BY_FIELD from "@salesforce/schema/Case.FEC_Created_By__c";
+import SEND_TO_FIELD from "@salesforce/schema/Case.FEC_Send_To__c";
+import PARENT_ID_FIELD from "@salesforce/schema/Case.ParentId";
+
 // ================= LABELS =================
 import FEC_Interaction_Email_Info_Label from "@salesforce/label/c.FEC_Interaction_Email_Info_Label";
 import FEC_Interaction_Email_Label from "@salesforce/label/c.FEC_Interaction_Email_Label";
@@ -137,7 +144,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   }
 
   get hasInteractionEmail() {
-    return !!this.record?.FEC_Interaction_Email__c;
+    return !!this.record?.[INTERACTION_EMAIL_FIELD.fieldApiName];
   }
 
   /**
@@ -154,12 +161,12 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   }
 
   get displayInteractionEmail() {
-    return this.record?.FEC_Interaction_Email__c || "";
+    return this.record?.[INTERACTION_EMAIL_FIELD.fieldApiName] || "";
   }
 
   get createdOn() {
-    if (!this.record?.FEC_Created_On__c) return "";
-    const d = new Date(this.record.FEC_Created_On__c);
+    if (!this.record?.[CREATED_ON_FIELD.fieldApiName]) return "";
+    const d = new Date(this.record[CREATED_ON_FIELD.fieldApiName]);
     return d.toLocaleString("en-GB", {
       day: "2-digit",
       month: "2-digit",
@@ -171,20 +178,20 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   }
 
   get createdBy() {
-    return this.record?.FEC_Created_By__c || this.record?.FEC_Created_by__c || "";
+    return this.record?.[CREATED_BY_FIELD.fieldApiName] || this.record?.FEC_Created_by__c || "";
   }
 
   get sendTo() {
-    return this.record?.FEC_Send_To__c || "";
+    return this.record?.[SEND_TO_FIELD.fieldApiName] || "";
   }
 
   get parentId() {
-    return this.record?.ParentId || "";
+    return this.record?.[PARENT_ID_FIELD.fieldApiName] || "";
   }
 
   get parentIdUrl() {
     if (!this.parentId) return null;
-    return `/lightning/r/Case/${this.parentId}/view`;
+    return `/lightning/r/${CASE_OBJECT.objectApiName}/${this.parentId}/view`;
   }
 
   get showParentIdLink() {
@@ -222,7 +229,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
       .then(() => {
         this.record = {
           ...this.record,
-          FEC_Interaction_Email__c: trimmed,
+          [INTERACTION_EMAIL_FIELD.fieldApiName]: trimmed,
         };
         this.isEditingEmail = false;
         this.emailDraft = "";
@@ -246,7 +253,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
       type: "standard__recordPage",
       attributes: {
         recordId: this.parentId,
-        objectApiName: "Case",
+        objectApiName: CASE_OBJECT.objectApiName,
         actionName: "view",
       },
     });
