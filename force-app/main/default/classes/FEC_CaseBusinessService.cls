@@ -16,7 +16,6 @@ public with sharing class FEC_CaseBusinessService {
   public static final String GENDER_UPDATE = 'Gender Update';
   public static final String IDENTIFICATION_UPDATE = 'National ID Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
-  public static final String SUBMIT_WITHOUT_ROUTE_TO = 'Submit Without Route To';
 
   public static final String CATEGORY_UNDELIVERED_CARD = 'Undelivered Card';
 
@@ -39,8 +38,7 @@ public with sharing class FEC_CaseBusinessService {
     DOB_UPDATE,
     GENDER_UPDATE,
     IDENTIFICATION_UPDATE,
-    OC_001,
-    SUBMIT_WITHOUT_ROUTE_TO
+    OC_001
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -60,8 +58,7 @@ public with sharing class FEC_CaseBusinessService {
     DOB_UPDATE => Method.DOB_UPDATE,
     GENDER_UPDATE => Method.GENDER_UPDATE,
     IDENTIFICATION_UPDATE => Method.IDENTIFICATION_UPDATE,
-    OC_001 => Method.OC_001,
-    SUBMIT_WITHOUT_ROUTE_TO => Method.SUBMIT_WITHOUT_ROUTE_TO
+    OC_001 => Method.OC_001
   };
 
   @AuraEnabled
@@ -881,10 +878,6 @@ public with sharing class FEC_CaseBusinessService {
           String decision = (String) params.get('decision');
           updateCaseTeamAndOwner(caseId, decision);
           createRoutingActionHis('Update', decision, oldOwnerName, caseId, stageName);
-        }
-        when SUBMIT_WITHOUT_ROUTE_TO {
-          markCaseSubmittedAndClearDrafts(caseId);
-          return null;
         }
         when PHONE_UPDATE {
           return FEC_UpdateCustomerContact.updateValue(caseId, PHONE_UPDATE);

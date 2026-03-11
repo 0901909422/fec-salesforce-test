@@ -1280,17 +1280,12 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
       await run({ ...params });
     } else {
-      // Không có routing: lưu NOC trước rồi set FEC_Is_Submited__c = true + clear draft + Status = Pending (nếu Case mở).
       if (this.business?.natureOfCase) {
         await saveCaseNOC({
           caseId: this.recordId,
           natureOfCaseId: this.business.natureOfCase,
         });
       }
-      await run({
-        method: "Submit Without Route To",
-        params: { caseId: this.recordId },
-      });
     }
     return true;
   }
