@@ -23,11 +23,7 @@
 	<types>
 		<members>*</members>
 		<name>AuraDefinitionBundle</name>
-	</types>
-	<types>
-		<members>FEC_New_Interaction_Record_For_E2C</members>
-		<name>Flow</name>
-	</types>
+	</types>>
 	<types>
 		<members>*</members>
 		<name>LightningComponentBundle</name>
