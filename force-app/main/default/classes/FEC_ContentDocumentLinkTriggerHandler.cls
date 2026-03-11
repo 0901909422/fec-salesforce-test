@@ -52,44 +52,6 @@ public without sharing class FEC_ContentDocumentLinkTriggerHandler {
   // Share: một số luồng Lightning chỉ fire after insert; xóa CDL vi phạm để share không lưu.
   private void onAfterInsert(List<ContentDocumentLink> newlst) {
     undoShareWhenFileOnReviewCase(newlst);
-    setContentVersionStageWhenAttachToCase(newlst);
-  }
-
-  // Lưu FEC_Current_Case_Stage__c của Case vào FEC_Stage_ID__c trên ContentVersion khi attach file vào Case.
-  private void setContentVersionStageWhenAttachToCase(List<ContentDocumentLink> newlst) {
-    Set<Id> caseIds = new Set<Id>();
-    Set<Id> docIds = new Set<Id>();
-    for (ContentDocumentLink cdl : newlst) {
-      if (cdl.LinkedEntityId != null && cdl.LinkedEntityId.getSObjectType() == Case.SObjectType) {
-        caseIds.add(cdl.LinkedEntityId);
-        docIds.add(cdl.ContentDocumentId);
-      }
-    }
-    if (caseIds.isEmpty() || docIds.isEmpty()) {
-      return;
-    }
-    Map<Id, Id> caseIdToStageId = new Map<Id, Id>();
-    for (Case c : [SELECT Id, FEC_Current_Case_Stage__c FROM Case WHERE Id IN :caseIds]) {
-      caseIdToStageId.put(c.Id, c.FEC_Current_Case_Stage__c);
-    }
-    Map<Id, Id> docIdToLatestCvId = new Map<Id, Id>();
-    for (ContentVersion cv : [SELECT Id, ContentDocumentId FROM ContentVersion WHERE ContentDocumentId IN :docIds AND IsLatest = true]) {
-      docIdToLatestCvId.put(cv.ContentDocumentId, cv.Id);
-    }
-    Map<Id, ContentVersion> toUpdate = new Map<Id, ContentVersion>();
-    for (ContentDocumentLink cdl : newlst) {
-      if (cdl.LinkedEntityId == null || cdl.LinkedEntityId.getSObjectType() != Case.SObjectType) {
-        continue;
-      }
-      Id stageId = caseIdToStageId.get(cdl.LinkedEntityId);
-      Id cvId = docIdToLatestCvId.get(cdl.ContentDocumentId);
-      if (stageId != null && cvId != null) {
-        toUpdate.put(cvId, new ContentVersion(Id = cvId, FEC_Stage_ID__c = stageId));
-      }
-    }
-    if (!toUpdate.isEmpty()) {
-      update toUpdate.values();
-    }
   }
 
   // Chặn gắn file vào Case đang review hoặc Interaction không handling.
