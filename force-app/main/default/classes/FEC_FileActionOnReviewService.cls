@@ -1,6 +1,5 @@
 public without sharing class FEC_FileActionOnReviewService {
   public static final String ERROR_FILE_ACTION_IN_REVIEW = 'Cannot perform this action on the file while the Case is in Review mode.';
-  public static final String ERROR_FILE_DELETE_STAGE_MISMATCH = 'Cannot delete file: Case must be in the same stage as when the file was attached.';
 
   // Trả về Set Case Id đang ở trạng thái chặn thao tác file (review hoặc Interaction không handling).
   public static Set<Id> getCaseIdsThatBlockFileActions(Set<Id> caseIds) {
