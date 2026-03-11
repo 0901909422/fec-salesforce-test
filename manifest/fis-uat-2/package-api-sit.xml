@@ -7,6 +7,10 @@
 		<members>FEC_PINReissueServiceCallout</members>
 		<members>FEC_ReplacementCardCallout</members>
 		<members>FEC_ConstantCommon</members>
+		<members>FEC_UpdateCustomerAddress</members>
+		<members>FEC_GetRemovablePhoneStatus</members>
+		<members>FEC_GetLoanBasicInfo</members>
+		<members>FEC_GetLoanSecInfo</members>
         <name>ApexClass</name>
     </types>
     <types>
