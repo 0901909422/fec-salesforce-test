@@ -7933,4 +7933,289 @@
         <shortDescription>FEC_MSG_Can_Not_Find_Next_Stage</shortDescription>
         <value>Can&apos;t find next stage</value>
     </labels>
+        <labels>
+        <fullName>FEC_Activity_ID_Label</fullName>
+        <categories>fec_AppInfo</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Activity_ID_Label</shortDescription>
+        <value>Activity ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Additional_Info_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Additional_Info_Label</shortDescription>
+        <value>Additional Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Amount_Pledged_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Amount_Pledged_Label</shortDescription>
+        <value>Amount Pledged</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Application_History_Label</fullName>
+        <categories>fec_AppInfo</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Application_History_Label</shortDescription>
+        <value>Application History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Area</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Area</shortDescription>
+        <value>Area</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Asset_Color_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Asset_Color_Label</shortDescription>
+        <value>Asset Color</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Asset_Cost_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Asset_Cost_Label</shortDescription>
+        <value>Asset Cost</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Asset_Description_Label</fullName>
+        <categories>fec_Asset</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Asset_Description_Label</shortDescription>
+        <value>Asset Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Asset_Label</fullName>
+        <categories>fec_Asset</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Asset_Label</shortDescription>
+        <value>Asset</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Asset_Model_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Asset_Model_Label</shortDescription>
+        <value>Asset Model</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Asset_Type_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Asset_Type_Label</shortDescription>
+        <value>Asset Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Bought_Date_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Bought_Date_Label</shortDescription>
+        <value>Bought Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Category_Code_Label</fullName>
+        <categories>fec_Asset</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Category_Code_Label</shortDescription>
+        <value>Category Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chasis_No_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Chasis_No_Label</shortDescription>
+        <value>Chasis No.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delivery_Date</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Delivery_Date</shortDescription>
+        <value>Delivery Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Edit_Date_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Edit_Date_Label</shortDescription>
+        <value>Edit Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Engine_No_Label</fullName>
+        <categories>fec_Asset</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Engine_No_Label</shortDescription>
+        <value>Engine No.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ID</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_ID</shortDescription>
+        <value>ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_Zone</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MRC_Zone</shortDescription>
+        <value>MRC Zone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Error_API_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Error API Label</shortDescription>
+        <value>Tải Dữ liệu Không Thành Công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Make_Date_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Make_Date_Label</shortDescription>
+        <value>Make Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Modified_Date</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Modified_Date</shortDescription>
+        <value>Modified Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notarized_MRC</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notarized_MRC</shortDescription>
+        <value>Notarized MRC</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Original_MRC</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Original_MRC</shortDescription>
+        <value>Original MRC</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Plate_Number</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Plate_Number</shortDescription>
+        <value>Plate Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Postal_Code</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Postal_Code</shortDescription>
+        <value>Postal Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Posted_Date</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Posted_Date</shortDescription>
+        <value>Posted Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Provided_Number</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Provided_Number</shortDescription>
+        <value>Provided Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Received_Date</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Received_Date</shortDescription>
+        <value>Received Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Receiver</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Receiver</shortDescription>
+        <value>Receiver</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reg_No_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Reg_No_Label</shortDescription>
+        <value>Reg No.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Remark</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Remark</shortDescription>
+        <value>Remark</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status</shortDescription>
+        <value>Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_ID</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_ID</shortDescription>
+        <value>Status ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Label</fullName>
+        <categories>fec_AppInfo</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Label</shortDescription>
+        <value>Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Supplier_Name_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Supplier_Name_Label</shortDescription>
+        <value>Supplier Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_User_Label</fullName>
+        <categories>fec_AppInfo</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_User_Label</shortDescription>
+        <value>User</value>
+    </labels>
+
 </CustomLabels>
