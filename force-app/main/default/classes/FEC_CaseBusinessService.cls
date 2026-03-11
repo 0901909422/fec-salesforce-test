@@ -1981,6 +1981,9 @@ public with sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public String maskingType;
 
+    @AuraEnabled
+    public Boolean hidden;
+
     public Field() {
     }
 
@@ -2796,8 +2799,8 @@ public with sharing class FEC_CaseBusinessService {
           'FEC_National_ID_Passport_ID__c',
           'National ID/Passport ID',
           c.FEC_National_ID_Passport_ID__c,
-          false,
-          true,
+          String.isNotBlank(c.FEC_National_ID_Passport_ID__c),
+          String.isBlank(c.FEC_National_ID_Passport_ID__c),
           false,
           1,
           true,
@@ -2837,6 +2840,26 @@ public with sharing class FEC_CaseBusinessService {
           3, 
           null
         )
+      );
+
+      Field customerTypeField = new Field(
+        'FEC_Customer_Type__c',
+        'Customer Type',
+        c.FEC_Customer_Type__c,
+        String.isNotBlank(c.FEC_National_ID_Passport_ID__c),
+        String.isBlank(c.FEC_National_ID_Passport_ID__c),
+        false,
+        1,
+        true,
+        null,
+        3,
+        FEC_ConstantCommon.MASKING_TYPE_PASSPORT
+      );
+
+      customerTypeField.hidden  = true;
+
+      caseObj.fieldlst.add(
+        customerTypeField
       );
     }
 
