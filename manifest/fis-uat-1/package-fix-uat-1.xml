@@ -72,6 +72,8 @@
 		<members>fec_IPPDetails</members>
 		<members>fec_ComboBox</members>
 		<members>fec_StatementsAccountTabView</members>
+		<members>fec_RelatedListPaging</members>
+		<members>fecInteractionInfo</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
