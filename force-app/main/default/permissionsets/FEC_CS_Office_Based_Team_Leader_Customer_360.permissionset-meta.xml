@@ -1632,11 +1632,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_Case__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>FEC_RePayment_Schedule__c.FEC_Closing_Principal__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1698,11 +1693,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Termination__c.FEC_Assessed_Amount__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Termination__c.FEC_Case__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
