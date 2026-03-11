@@ -8213,4 +8213,11 @@
         <shortDescription>FEC_MSG_Can_Not_Find_Next_Stage</shortDescription>
         <value>Can&apos;t find next stage</value>
     </labels>
+    <labels>
+        <fullName>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CREATE CS CASE SUCCESSFULLY MSG</shortDescription>
+        <value>Case created successfully.</value>
+    </labels>
 </CustomLabels>
