@@ -1,10 +1,10 @@
 <template>
   <div class="pending-service-cases slds-card slds-p-around_small">
     <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
-      <lightning-accordion-section name="pendingServiceCases" label={labels.sectionTitle}>
+      <lightning-accordion-section name="pendingServiceCases" label={customLabel.sectionTitle}>
         <div slot="actions">
           <lightning-button
-            label={labels.refresh}
+            label={customLabel.refresh}
             variant="brand"
             onclick={handleRefresh}
             disabled={isLoading}

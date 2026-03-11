@@ -28,40 +28,50 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
 
   emptyMessage = MSG_NO_RESULTS;
 
-  labels = {
+  customLabel = {
     sectionTitle: FEC_Interactions_Section_Title,
     refresh: FEC_Button_Refresh,
+    interactionIdLabel: FEC_Interaction_ID,
+    interactionStatusLabel: FEC_Interaction_Status_Label,
+    interactionCreatedOnLabel: FEC_Interaction_Created_On_Label,
+    lastUpdatedOnLabel: FEC_Last_Updated_On_Label,
+    interactionDurationLabel: FEC_Interaction_Duration_Label,
+    interactionPhoneLabel: FEC_Interaction_Phone_Label,
+    interactionChannelLabel: FEC_Interaction_Channel_Label,
+    interactionSubChannelLabel: FEC_Interaction_Sub_Channel_Label,
   };
 
   _helpTexts = {};
-  _baseInteractionColumns = [
-    {
-      label: FEC_Interaction_ID,
-      fieldName: 'interactionIdText',
-      fieldApiName: 'FEC_ID_Search__c',
-      type: 'link',
-      recordIdField: 'Id',
-      hoverTitle: FEC_Interactions_Section_Title,
-      cellAlign: 'center',
-      hoverFields: [
-        { label: FEC_Interaction_ID, fieldName: 'interactionIdText' },
-        { label: FEC_Interaction_Status_Label, fieldName: 'interactionStatus' },
-        { label: FEC_Interaction_Created_On_Label, fieldName: 'interactionCreatedOnFormatted' },
-        { label: FEC_Last_Updated_On_Label, fieldName: 'lastUpdatedOnFormatted' },
-        { label: FEC_Interaction_Duration_Label, fieldName: 'interactionDurationFormatted' },
-        { label: FEC_Interaction_Phone_Label, fieldName: 'interactionPhone' },
-        { label: FEC_Interaction_Channel_Label, fieldName: 'channel' },
-        { label: FEC_Interaction_Sub_Channel_Label, fieldName: 'interactionSubChannel' },
-      ],
-    },
-    { label: FEC_Interaction_Status_Label, fieldName: 'interactionStatus', fieldApiName: 'FEC_Interaction_Status__c', type: 'text', cellAlign: 'center' },
-    { label: FEC_Interaction_Created_On_Label, fieldName: 'interactionCreatedOnFormatted', fieldApiName: 'FEC_Created_On__c', type: 'text', cellAlign: 'center' },
-    { label: FEC_Last_Updated_On_Label, fieldName: 'lastUpdatedOnFormatted', fieldApiName: 'FEC_Last_Updated_On__c', type: 'text', cellAlign: 'center' },
-    { label: FEC_Interaction_Duration_Label, fieldName: 'interactionDurationFormatted', fieldApiName: 'FEC_Interaction_Duration__c', type: 'text', cellAlign: 'center' },
-    { label: FEC_Interaction_Phone_Label, fieldName: 'interactionPhone', fieldApiName: 'FEC_Phone_Number__c', type: 'eye', eyeMaskType: 'phone', cellAlign: 'center' },
-    { label: FEC_Interaction_Channel_Label, fieldName: 'channel', fieldApiName: 'FEC_Channel__c', type: 'text', cellAlign: 'center' },
-    { label: FEC_Interaction_Sub_Channel_Label, fieldName: 'interactionSubChannel', fieldApiName: 'FEC_Interaction_Subchannel__c', type: 'text' },
-  ];
+  get _baseInteractionColumns() {
+    return [
+      {
+        label: this.customLabel.interactionIdLabel,
+        fieldName: 'interactionIdText',
+        fieldApiName: 'FEC_ID_Search__c',
+        type: 'link',
+        recordIdField: 'Id',
+        hoverTitle: this.customLabel.sectionTitle,
+        cellAlign: 'center',
+        hoverFields: [
+          { label: this.customLabel.interactionIdLabel, fieldName: 'interactionIdText' },
+          { label: this.customLabel.interactionStatusLabel, fieldName: 'interactionStatus' },
+          { label: this.customLabel.interactionCreatedOnLabel, fieldName: 'interactionCreatedOnFormatted' },
+          { label: this.customLabel.lastUpdatedOnLabel, fieldName: 'lastUpdatedOnFormatted' },
+          { label: this.customLabel.interactionDurationLabel, fieldName: 'interactionDurationFormatted' },
+          { label: this.customLabel.interactionPhoneLabel, fieldName: 'interactionPhone' },
+          { label: this.customLabel.interactionChannelLabel, fieldName: 'channel' },
+          { label: this.customLabel.interactionSubChannelLabel, fieldName: 'interactionSubChannel' },
+        ],
+      },
+      { label: this.customLabel.interactionStatusLabel, fieldName: 'interactionStatus', fieldApiName: 'FEC_Interaction_Status__c', type: 'text', cellAlign: 'center' },
+      { label: this.customLabel.interactionCreatedOnLabel, fieldName: 'interactionCreatedOnFormatted', fieldApiName: 'FEC_Created_On__c', type: 'text', cellAlign: 'center' },
+      { label: this.customLabel.lastUpdatedOnLabel, fieldName: 'lastUpdatedOnFormatted', fieldApiName: 'FEC_Last_Updated_On__c', type: 'text', cellAlign: 'center' },
+      { label: this.customLabel.interactionDurationLabel, fieldName: 'interactionDurationFormatted', fieldApiName: 'FEC_Interaction_Duration__c', type: 'text', cellAlign: 'center' },
+      { label: this.customLabel.interactionPhoneLabel, fieldName: 'interactionPhone', fieldApiName: 'FEC_Phone_Number__c', type: 'eye', eyeMaskType: 'phone', cellAlign: 'center' },
+      { label: this.customLabel.interactionChannelLabel, fieldName: 'channel', fieldApiName: 'FEC_Channel__c', type: 'text', cellAlign: 'center' },
+      { label: this.customLabel.interactionSubChannelLabel, fieldName: 'interactionSubChannel', fieldApiName: 'FEC_Interaction_Subchannel__c', type: 'text' },
+    ];
+  }
 
   @wire(getCaseFieldHelpTexts)
   wiredHelpTexts({ data }) {
@@ -131,7 +141,7 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
   handleSensitiveLog(event) {
     const recordId = event.detail?.recordId;
     logSensitiveAccess({
-      fieldName: FEC_Interaction_Phone_Label,
+      fieldName: this.customLabel.interactionPhoneLabel,
       caseId: recordId,
     }).catch((e) => {
       console.error('Sensitive log failed', e);
