@@ -644,6 +644,9 @@ export default class Fec_CaseBussiness extends LightningElement {
                 }
 
                 field.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[field.layout] || SLDS_MEDIUM_SIZE_OF_12[12]);
+                if(field.hidden) {
+                  field.className += ' slds-hide';
+                }
 
                 if (!this.isEdit) {
                   field.readonly = true;
