@@ -144,7 +144,6 @@ public without sharing class FEC_ApplicationsListController {
                 row.put('applicationId', app.ApplicationID);
                 row.put('accountNumber', app.AccountNumber);
                 row.put('contractNumber', app.ContractNumber);
-                row.put('productGroup', app.Product);
                 row.put('nationalPassportID',cus.NationalID);
 
                 if (cus.Phones != null && !cus.Phones.isEmpty()) {
@@ -171,6 +170,7 @@ public without sharing class FEC_ApplicationsListController {
                         if (st.ApplicationID == app.ApplicationID) {
                             row.put('lastStatus', st.LastStatus);
                             row.put('updateDate', st.DateStatus);
+                            row.put('productGroup',st.productGroup);
                             break;
                         }
                     }
