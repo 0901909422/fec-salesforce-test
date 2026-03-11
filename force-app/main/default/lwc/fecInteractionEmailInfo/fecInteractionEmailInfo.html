@@ -1,13 +1,13 @@
 <template>
   <lightning-accordion class="interaction-email-infor" allow-multiple-sections-open
     active-section-name={activeSections}>
-    <lightning-accordion-section name="interactionEmailInfo" label="Interaction Information (Email)">
+    <lightning-accordion-section name="interactionEmailInfo" label={labels.interactionEmailInfo}>
       <template if:true={isInteractionCase}>
         <div class="slds-p-horizontal_medium slds-p-vertical_small">
           <div class="interaction-grid">
             <div class="col">
               <div class="row">
-                <span class="label">Interaction Email</span>
+                <span class="label">{labels.interactionEmail}</span>
                 <span class="value">
                   <template if:true={isEmailReadOnly}>
                     {displayInteractionEmail}
@@ -40,24 +40,24 @@
                 </span>
               </div>
               <div class="row">
-                <span class="label">Interaction Created On</span>
+                <span class="label">{labels.interactionCreatedOn}</span>
                 <span class="value">{createdOn}</span>
                 <span></span>
               </div>
               <div class="row">
-                <span class="label">Interaction Created By</span>
+                <span class="label">{labels.interactionCreatedBy}</span>
                 <span class="value">{createdBy}</span>
                 <span></span>
               </div>
             </div>
             <div class="col">
               <div class="row">
-                <span class="label">Send To</span>
+                <span class="label">{labels.sendTo}</span>
                 <span class="value">{sendTo}</span>
                 <span></span>
               </div>
               <div class="row">
-                <span class="label">Parent ID</span>
+                <span class="label">{labels.parentId}</span>
                 <span class="value">
                   <template if:true={showParentIdLink}>
                     <a href="javascript:void(0);" class="parent-link" onclick={handleNavigateToParent}>
@@ -80,7 +80,7 @@
           <div class="interaction-grid">
             <div class="col">
               <div class="row">
-                <span class="label">Interaction Email</span>
+                <span class="label">{labels.interactionEmail}</span>
                 <span class="value">
                   <template if:true={isEmailReadOnly}>
                     {displayInteractionEmail}
@@ -112,24 +112,24 @@
                 </span>
               </div>
               <div class="row">
-                <span class="label">Interaction Created On</span>
+                <span class="label">{labels.interactionCreatedOn}</span>
                 <span class="value">{createdOn}</span>
                 <span></span>
               </div>
               <div class="row">
-                <span class="label">Interaction Created By</span>
+                <span class="label">{labels.interactionCreatedBy}</span>
                 <span class="value">{createdBy}</span>
                 <span></span>
               </div>
             </div>
             <div class="col">
               <div class="row">
-                <span class="label">Send To</span>
+                <span class="label">{labels.sendTo}</span>
                 <span class="value">{sendTo}</span>
                 <span></span>
               </div>
               <div class="row">
-                <span class="label">Parent ID</span>
+                <span class="label">{labels.parentId}</span>
                 <span class="value">
                   <template if:true={showParentIdLink}>
                     <a href="javascript:void(0);" class="parent-link" onclick={handleNavigateToParent}>

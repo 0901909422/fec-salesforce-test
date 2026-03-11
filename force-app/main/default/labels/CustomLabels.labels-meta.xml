@@ -7933,4 +7933,132 @@
         <shortDescription>FEC_MSG_Can_Not_Find_Next_Stage</shortDescription>
         <value>Can&apos;t find next stage</value>
     </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Info_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Information (Email)</shortDescription>
+        <value>Interaction Information (Email)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Email</shortDescription>
+        <value>Interaction Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Input_Placeholder</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Nhập email</shortDescription>
+        <value>Nhập email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Required_Msg</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Vui lòng nhập email.</shortDescription>
+        <value>Vui lòng nhập email.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Invalid_Msg</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Định dạng email không hợp lệ.</shortDescription>
+        <value>Định dạng email không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Save_Error</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lưu email thất bại.</shortDescription>
+        <value>Lưu email thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Send_To_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Send To</shortDescription>
+        <value>Send To</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Parent_ID_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Parent ID</shortDescription>
+        <value>Parent ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Info_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Information (Email)</shortDescription>
+        <value>Interaction Information (Email)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Email</shortDescription>
+        <value>Interaction Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Input_Placeholder</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Nhập email</shortDescription>
+        <value>Nhập email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Required_Msg</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Vui lòng nhập email.</shortDescription>
+        <value>Vui lòng nhập email.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Invalid_Msg</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Định dạng email không hợp lệ.</shortDescription>
+        <value>Định dạng email không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Save_Error</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lưu email thất bại.</shortDescription>
+        <value>Lưu email thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Send_To_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Send To</shortDescription>
+        <value>Send To</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Parent_ID_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Parent ID</shortDescription>
+        <value>Parent ID</value>
+    </labels>
 </CustomLabels>

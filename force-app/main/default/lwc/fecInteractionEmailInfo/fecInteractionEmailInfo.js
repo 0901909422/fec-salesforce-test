@@ -15,10 +15,35 @@ import ISCLOSED from "@salesforce/schema/Case.IsClosed";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 
+// ================= LABELS =================
+import FEC_Interaction_Email_Info_Label from "@salesforce/label/c.FEC_Interaction_Email_Info_Label";
+import FEC_Interaction_Email_Label from "@salesforce/label/c.FEC_Interaction_Email_Label";
+import FEC_Interaction_Created_On_Label from "@salesforce/label/c.FEC_Interaction_Created_On_Label";
+import FEC_Interaction_Created_By_Label from "@salesforce/label/c.FEC_Interaction_Created_By_Label";
+import FEC_Send_To_Label from "@salesforce/label/c.FEC_Send_To_Label";
+import FEC_Parent_ID_Label from "@salesforce/label/c.FEC_Parent_ID_Label";
+import FEC_Interaction_Email_Input_Placeholder from "@salesforce/label/c.FEC_Interaction_Email_Input_Placeholder";
+import FEC_Interaction_Email_Required_Msg from "@salesforce/label/c.FEC_Interaction_Email_Required_Msg";
+import FEC_Interaction_Email_Invalid_Msg from "@salesforce/label/c.FEC_Interaction_Email_Invalid_Msg";
+import FEC_Interaction_Email_Save_Error from "@salesforce/label/c.FEC_Interaction_Email_Save_Error";
+
 // Regex validate email
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default class FecInteractionEmailInfo extends NavigationMixin(LightningElement) {
+  labels = {
+    interactionEmailInfo: FEC_Interaction_Email_Info_Label,
+    interactionEmail: FEC_Interaction_Email_Label,
+    interactionCreatedOn: FEC_Interaction_Created_On_Label,
+    interactionCreatedBy: FEC_Interaction_Created_By_Label,
+    sendTo: FEC_Send_To_Label,
+    parentId: FEC_Parent_ID_Label,
+    inputPlaceholder: FEC_Interaction_Email_Input_Placeholder,
+    emailRequiredMsg: FEC_Interaction_Email_Required_Msg,
+    emailInvalidMsg: FEC_Interaction_Email_Invalid_Msg,
+    emailSaveError: FEC_Interaction_Email_Save_Error
+  };
+
   @api recordId;
 
   @track record;
@@ -177,8 +202,8 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   }
 
   validateEmail(value) {
-    if (!value || !value.trim()) return "Vui lòng nhập email.";
-    if (!EMAIL_REGEX.test(value.trim())) return "Định dạng email không hợp lệ.";
+    if (!value || !value.trim()) return this.labels.emailRequiredMsg;
+    if (!EMAIL_REGEX.test(value.trim())) return this.labels.emailInvalidMsg;
     return "";
   }
 
@@ -203,7 +228,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
       })
       .catch((error) => { 
         console.error("updateInteractionEmail error", error);
-        this.emailError = error?.body?.message || "Lưu email thất bại.";
+        this.emailError = error?.body?.message || this.labels.emailSaveError;
       });
   }
 
