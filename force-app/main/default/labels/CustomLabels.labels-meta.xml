@@ -1,11 +1,12 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
-        <fullName>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</fullName>
+        <fullName>Auto_Mapping</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC CREATE CS CASE  SUCCESSFULLY MSG</shortDescription>
-        <value>Case created successfully.</value>
+        <shortDescription>Auto Mapping Property</shortDescription>
+        <value>Auto Mapping Property</value>
     </labels>
     <labels>
         <fullName>Cancel</fullName>
@@ -8212,5 +8213,12 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_Can_Not_Find_Next_Stage</shortDescription>
         <value>Can&apos;t find next stage</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CREATE CS CASE  SUCCESSFULLY MSG</shortDescription>
+        <value>Case created successfully.</value>
     </labels>
 </CustomLabels>
