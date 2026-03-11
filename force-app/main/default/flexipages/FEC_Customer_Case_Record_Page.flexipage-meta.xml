@@ -161,6 +161,18 @@
                 <identifier>RecordFEC_Interaction_rFEC_Last_Updated_By_cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.FEC_Interaction__r.FEC_Channel__c</fieldItem>
+                <identifier>RecordFEC_Interaction_rFEC_Channel_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.FEC_Interaction__r.FEC_Interaction_Subchannel__c</fieldItem>
+                <identifier>RecordFEC_Interaction_rFEC_Interaction_Subchannel_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-b2ccf4d4-e823-4b23-b25a-cd1f5ebe8401</name>
         <type>Facet</type>
     </flexiPageRegions>
