@@ -657,9 +657,15 @@ public with sharing class FEC_CommonUltils {
     value = value.trim().toUpperCase();
 
     switch on value {
-        when 'Y' { return 'Yes'; }
-        when 'N' { return 'No'; }
-        when else { return null; }
+        when 'Y', 'YES' { 
+            return 'Yes'; 
+        }
+        when 'N', 'NO' { 
+            return 'No'; 
+        }
+        when else { 
+            return null; 
+        }
     }
   }
 

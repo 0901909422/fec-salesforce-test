@@ -67,7 +67,8 @@ public without sharing class FEC_SecondaryController {
                    FEC_Zalo_Follower__c,
                    FEC_Website_Account__c,
                    FEC_Mobile_App_Account__c,
-                   FEC_API_Cache_Secondary_Demo__c
+                   FEC_API_Cache_Secondary_Demo__c,
+                   FEC_Work_Phone__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
