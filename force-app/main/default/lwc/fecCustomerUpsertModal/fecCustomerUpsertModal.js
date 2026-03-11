@@ -3,7 +3,7 @@ import LightningConfirm from 'lightning/confirm';
 import USER_ID from '@salesforce/user/Id';
 import { getRecord } from 'lightning/uiRecordApi';
 import USER_NAME_FIELD from '@salesforce/schema/User.Name'
-import { ACCOUNT_LINKAGE_OPTIONS, formatDateDDMMYYYY, DELETE_CONFIRMATION_TITLE, DELETE_CONFIRMATION_MSG, SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE } from 'c/fecUtils';
+import { formatDateDDMMYYYY, getTomorrowDate, ACCOUNT_LINKAGE_OPTIONS, DELETE_CONFIRMATION_TITLE, DELETE_CONFIRMATION_MSG, SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE } from 'c/fecUtils';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import saveCustomerData from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.saveCustomerData';
 import getRelatedFiles from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getRelatedFiles';
@@ -78,8 +78,8 @@ export default class FecCustomerUpsertModal extends LightningElement {
     currentUserName;
     currentSelectedFile;
 
-    get todayDate() {
-        return new Date().toISOString().split('T')[0];
+    get tomorrowDate() {
+        return getTomorrowDate();
     }
 
     @wire(getRecord, { recordId: USER_ID, fields: [USER_NAME_FIELD] })
@@ -98,7 +98,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
             FEC_FieldID__c: this.initialData.FEC_FieldID__c || '',
             FEC_FieldName__c: this.initialData.FEC_FieldName__c || '',
             FEC_IsActive__c: this.initialData.FEC_IsActive__c !== undefined ? this.initialData.FEC_IsActive__c : false,
-            FEC_StartDate__c: this.initialData.FEC_StartDate__c || this.todayDate,
+            FEC_StartDate__c: this.initialData.FEC_StartDate__c || this.tomorrowDate,
             FEC_EndDate__c: this.initialData.FEC_EndDate__c || null,
         };
 
@@ -260,7 +260,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
         }
 
         const endDate = this.localData.FEC_EndDate__c;
-        if (endDate && endDate < this.todayDate) {
+        if (endDate && endDate < this.tomorrowDate) {
             this.showToast(FAIL_TITLE, endDateLessThanTodayMsg, 'error');
             return;
         }
