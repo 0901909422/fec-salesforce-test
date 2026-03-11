@@ -57,6 +57,7 @@
 		<members>FEC_CS_CASE_SYS_MISSING_MSG</members>
 		<members>FEC_CS_CASE_TYPE_REQUIRED_MSG</members>
 		<members>FEC_CS_CASE_TYPE_TOO_LONG_MSG</members>
+		<members>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</members>
 		<name>CustomLabel</name>
 	</types>
     <version>65.0</version>
