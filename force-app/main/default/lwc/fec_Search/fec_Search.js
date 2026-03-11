@@ -87,15 +87,13 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return [
       {
         label: "Account Number",
-        type: this.recordId ? "dblclickText" : "text",
+        type: "dblclickText",
         fieldName: "AccountNumber",
-        typeAttributes: this.recordId
-          ? {
+        typeAttributes:  {
               value: { fieldName: "AccountNumber" },
               fieldName: "AccountNumber",
               selectedType: "Card"
-            }
-          : {},
+            },
         sortable: false,
       },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
@@ -125,8 +123,8 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     ];
   }
 
-  get isSearch() {
-    return !!(
+  get isDisabledSearch() {
+    return !(
       (this.nationalId && this.nationalId.trim()) ||
       (this.phoneNumber && this.phoneNumber.trim()) ||
       (this.applicationId && this.applicationId.trim()) ||
@@ -144,14 +142,13 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return [
       {
         label: "Contract Number",
-        type: this.recordId ? "dblclickText" : "text",
+        type: "dblclickText",
         fieldName: "ContractNumber",
-        typeAttributes: this.recordId
-          ? {
+        typeAttributes:  {
               value: { fieldName: "ContractNumber" },
               fieldName: "ContractNumber",
-            }
-          : {},
+              selectedType: "Loan"
+            },
         sortable: false,
       },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
@@ -216,14 +213,13 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return [
       {
         label: "User ID",
-        type: this.recordId ? "dblclickText" : "text",
+        type: "dblclickText",
         fieldName: "UserId",
-        typeAttributes: this.recordId
-          ? {
+        typeAttributes:  {
               value: { fieldName: "UserId" },
               fieldName: "UserId",
-            }
-          : {},
+              selectedType: "Insurance"
+            },
         sortable: false,
       },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
@@ -413,35 +409,30 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         break;
       case "phoneNumber":
         this.phoneNumber = value;
-        // Validate Phone Number:
-        // - If starts with '0' -> must be exactly 10 digits
-        // - If starts with '84' -> must be exactly 11 digits
-        {
-          const input = this.template.querySelector('[data-id="phoneNumber"]');
-          if (input) {
+        const input = this.template.querySelector('[data-id="phoneNumber"]');
+        if (input) {
             const val = value ? value.toString().trim() : "";
             if (!val) {
-              input.setCustomValidity("");
-            } else if (/^0/.test(val)) {
-              input.setCustomValidity(
-                "No data available. Please use prefix 84.",
-              );
-            } else if (/^84/.test(val)) {
-              if (!/^\d{11}$/.test(val)) {
-                input.setCustomValidity(
-                  "Phone number must be 11 digits if it starts with 84.",
-                );
-              } else {
                 input.setCustomValidity("");
-              }
+            } else if (val.startsWith('0')) {
+                // Check if starts with 0 and has exactly 10 digits
+                if (!/^0\d{9}$/.test(val)) {
+                    input.setCustomValidity("Phone number starting with 0 must be exactly 10 digits.");
+                } else {
+                    input.setCustomValidity("");
+                }
+            } else if (val.startsWith('84')) {
+                // Check if starts with 84 and has exactly 11 digits
+                if (!/^84\d{9}$/.test(val)) {
+                    input.setCustomValidity("Phone number starting with 84 must be exactly 11 digits.");
+                } else {
+                    input.setCustomValidity("");
+                }
             } else {
-              // If it doesn't start with 0 or 84, consider invalid per rules
-              input.setCustomValidity(
-                "Phone number must start with 84 (11 digits).",
-              );
+                // Fallback for invalid prefixes
+                input.setCustomValidity("Phone number must start with 0 (10 digits) or 84 (11 digits).");
             }
             input.reportValidity();
-          }
         }
         break;
       case "applicationId":
@@ -697,9 +688,11 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       console.log("getCustomerList result:", result);
 
       const customers = result?.Customers || [];
-      if (customers.length > 0) {
-        this.processCustomerResults(customers);
+      if (this.loanB2Data.length > 0 || this.loanCash24Data.length > 0 || customers.length > 0) {
         this.isNoCustomerFound = false;
+        if (customers.length > 0) {
+          this.processCustomerResults(customers);
+        }
       } else {
         this.isNoCustomerFound = true;
       }
@@ -771,17 +764,17 @@ hasAnySearchCriteria(params) {
 }
 
   processCustomerResults(customers) {
-    const top5 = customers.slice(0, 5);
+    //const top5 = customers.slice(0, 5);
     this.cardData = [];
     this.loanContractData = [];
     this.insuranceData = [];
 
-    top5.forEach(cust => {
+    customers.forEach(cust => {
       if (cust.Applications && cust.Applications.length > 0) {
         cust.Applications.forEach(app => {
           // Định nghĩa logic phân loại dựa trên trường 'Product' trong JSON
           const productCode = app.Product ? app.Product.toUpperCase() : '';
-
+          const phone = (cust?.Phones && cust.Phones.length > 0) ? cust.Phones[0].Phone : null;
           // --- PHÂN LOẠI VÀO CARD ---
           // Trong JSON, Card thường có Product để trống và có AccountNumber
           if (productCode === '' && app.AccountNumber) {
@@ -795,7 +788,8 @@ hasAnySearchCriteria(params) {
               PlasticID: "N/A",
 
               // ✅ add flat field
-              CIFNumber: cust.CIFNumber
+              CIFNumber: cust.CIFNumber,
+              Phone: phone,
             }];
             
           }
@@ -811,6 +805,7 @@ hasAnySearchCriteria(params) {
               ContractNumber: app.ContractNumber,
               ProductCode: app.Product,
               ContractStatus: app.Status,
+              Phone: phone,
               _customer: cust,
               _application: app 
             }];
@@ -827,6 +822,7 @@ hasAnySearchCriteria(params) {
               ProductName: app.SchemeDesc || 'Insurance Product',
               Status: app.Status,
               EffectiveDate: 'N/A',
+              Phone: phone,
               _customer: cust,
               _application: app // Cần map thêm field nếu có
             }];
@@ -994,7 +990,7 @@ hasAnySearchCriteria(params) {
               composed: true,
             }),
           );
-          return;
+
         }
         let categories = [];
 
@@ -1019,14 +1015,15 @@ hasAnySearchCriteria(params) {
 
         // Combine them into a string (e.g., "Card, Loan, Insurance")
         let searchProducts = categories.join(";");
-
+        this.isLoaded = false;
         createHistory({
           value: id,
           fieldName: action.label.fieldName,
           caseId: this.recordId,
           searchProducts: searchProducts,
           selectedType: action.type,
-          cifNumber: cifNumber
+          cifNumber: cifNumber,
+          phone: row?.Phone
         })
           .then(async (res) => {
             // const payload = {
@@ -1037,18 +1034,29 @@ hasAnySearchCriteria(params) {
               "History created successfully",
               "success",
             );
-            //publish(this.messageContext, IS_MODE_EDIT, payload);
-            await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
-            // await refreshApex(this.wiredCaseResult);
-            this.dispatchEvent(new RefreshEvent());
-
+            if (this.recordId) {
+                //publish(this.messageContext, IS_MODE_EDIT, payload);
+                await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+                // await refreshApex(this.wiredCaseResult);
+                this.dispatchEvent(new RefreshEvent());
+            } else {
+              this[NavigationMixin.Navigate]({
+                type: "standard__recordPage",
+                attributes: {
+                  recordId: res,
+                  objectApiName: "Case",
+                  actionName: "view",
+                },
+              });
+            }
             //await this.refreshTab();
-            
           })
           .catch((e) => {
             this.showToast("Error", "Failed to create history", "error");
+          })
+          .finally(() => {
+            this.isLoaded = true;
           });
-
         break;
       }
       default:
