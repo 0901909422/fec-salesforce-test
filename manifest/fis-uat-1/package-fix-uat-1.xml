@@ -86,6 +86,7 @@
         <members>Case.FEC_Get_Next_Work__c</members>
 		<members>Case.FEC_Interaction_View_Mode__c</members>
 		<members>Case.FEC_Account_Contract_Number_PL__c</members>
+		<members>FEC_Contact_List__c.FEC_Contact_ID__c	</members>
         <name>CustomField</name>
     </types>
 	<types>
