@@ -196,10 +196,12 @@ public with sharing class FEC_GetLoanBasicInfo {
                 );
             }
 
-            logApiResponse();
             return response;
 
         } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
             System.debug('### GET LOAN BASIC INFO ERROR: ' + ex.getMessage());
             throw ex;
         }
@@ -424,20 +426,11 @@ public with sharing class FEC_GetLoanBasicInfo {
         return listData;
     }
 
-    // =========================================================================
-    // LOGGING
-    // =========================================================================
-    private static void logApiResponse() {
-        if (responseLog != null) {
-            FEC_CommonUltils.logApi(
-                responseLog.apiName,
-                responseLog.endpoint,
-                responseLog.method,
-                responseLog.requestBody,
-                responseLog.response,
-                responseLog.errorMessage
-            );
-        }
+    /**
+     * Trả về ResponseLog để controller gọi FEC_CommonUltils.logApi sau khi call xong API.
+     */
+    public static ResponseLog getResponseLog() {
+        return responseLog;
     }
 
     // =========================================================================

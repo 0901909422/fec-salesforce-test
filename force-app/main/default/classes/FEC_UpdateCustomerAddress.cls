@@ -187,17 +187,19 @@ public with sharing class FEC_UpdateCustomerAddress {
         if (finalResult.rawResponse == null)
           finalResult.rawResponse = resBody;
 
-        logApiResponse();
       } catch (Exception ex) {
-        responseLog = new ResponseLog(
-          'FEC_UpdateCustomerAddress',
-          endpoint,
-          FEC_ConstantCommon.API_METHOD_POST,
-          doc.toXmlString(),
-          null,
-          ex.getMessage()
-        );
-        logApiResponse();
+        if (responseLog != null) {
+          responseLog.errorMessage = ex.getMessage();
+        } else {
+          responseLog = new ResponseLog(
+            'FEC_UpdateCustomerAddress',
+            endpoint,
+            FEC_ConstantCommon.API_METHOD_POST,
+            doc.toXmlString(),
+            null,
+            ex.getMessage()
+          );
+        }
         finalResult.errorMessage = ex.getMessage();
         finalResult.success = false;
       }
@@ -209,20 +211,11 @@ public with sharing class FEC_UpdateCustomerAddress {
     }
   }
 
-  // ==========================================
-  // LOGGING
-  // ==========================================
-  private static void logApiResponse() {
-    if (responseLog != null) {
-      FEC_CommonUltils.logApi(
-        responseLog.apiName,
-        responseLog.endpoint,
-        responseLog.method,
-        responseLog.requestBody,
-        responseLog.response,
-        responseLog.errorMessage
-      );
-    }
+  /**
+   * Trả về ResponseLog để controller gọi FEC_CommonUltils.logApi sau khi call xong API.
+   */
+  public static ResponseLog getResponseLog() {
+    return responseLog;
   }
 
   // ==========================================
@@ -353,8 +346,4 @@ public with sharing class FEC_UpdateCustomerAddress {
 
     return result;
   }
-
-  // ==========================================
-  // HELPERS
-  // ==========================================
 }

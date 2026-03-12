@@ -120,17 +120,12 @@ public with sharing class FEC_GetLoanSecInfo {
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
             HttpResponse res = FEC_CommonUltils.calloutApi(
-                endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE,
+                endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE,
                 apiConfig?.FEC_SOAP_Action__c, null, soapBody
             );
 
             responseLog = new ResponseLog(
-                'FEC_GetLoanSecInfo',
-                endpoint,
-                FEC_ConstantCommon.API_METHOD_POST,
-                soapBody,
-                res,
-                null
+                'FEC_GetLoanSecInfo', endpoint, 'POST', soapBody, res, null
             );
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
@@ -147,13 +142,22 @@ public with sharing class FEC_GetLoanSecInfo {
                 );
             }
 
-            logApiResponse();
             return response;
 
         } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
             System.debug('### GET LOAN SEC INFO ERROR: ' + ex.getMessage());
             throw ex;
         }
+    }
+
+    /**
+     * Trả về ResponseLog để controller gọi FEC_CommonUltils.logApi sau khi call xong API.
+     */
+    public static ResponseLog getResponseLog() {
+        return responseLog;
     }
 
     // =========================================================================
@@ -285,22 +289,6 @@ public with sharing class FEC_GetLoanSecInfo {
             listData.add(ph);
         }
         return listData;
-    }
-
-    // =========================================================================
-    // LOGGING
-    // =========================================================================
-    private static void logApiResponse() {
-        if (responseLog != null) {
-            FEC_CommonUltils.logApi(
-                responseLog.apiName,
-                responseLog.endpoint,
-                responseLog.method,
-                responseLog.requestBody,
-                responseLog.response,
-                responseLog.errorMessage
-            );
-        }
     }
 
     // =========================================================================
