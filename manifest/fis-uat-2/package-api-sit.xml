@@ -11,6 +11,7 @@
 		<members>FEC_GetMRCInfo</members>
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_TranferInformationCallout</members>
+		<members>FEC_CommonUltils</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -23,6 +24,12 @@
 		<members>FEC_API_Config.FEC_Get_MRC_Info</members>
 		<members>FEC_API_Config.FEC_Transfer_Call</members>
 		<name>CustomMetadata</name>
+	</types>
+	<types>
+		<members>FEC_Application_History__c</members>
+		<members>FEC_Asset__c</members>
+		<members>FEC_MRC__c</members>
+		<name>CustomObject</name>
 	</types>
     <version>65.0</version>
 </Package>
