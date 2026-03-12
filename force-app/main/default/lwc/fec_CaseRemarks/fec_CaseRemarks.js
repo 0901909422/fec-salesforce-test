@@ -81,7 +81,7 @@ export default class Fec_CaseRemarks extends LightningElement {
     return true;
   }
 
-  @api async createRemark() {
+  @api async createRemark(stageNameFromClient) {
     const textarea = this.template.querySelector('lightning-textarea');
     const remarkText =
       (textarea && textarea.value) || this.draftRemarkValue || STR_EMPTY;
@@ -91,14 +91,18 @@ export default class Fec_CaseRemarks extends LightningElement {
       result = await createRemark({
         remark: remarkText,
         caseId: this.caseId,
+        stageNameFromClient: stageNameFromClient ?? STR_EMPTY,
       });
     }
 
     return result;
   }
 
-  @api async submitRemark() {
-    await submitRemark({ caseId: this.caseId });
+  @api async submitRemark(stageNameFromClient) {
+    await submitRemark({
+      caseId: this.caseId,
+      stageNameFromClient: stageNameFromClient ?? STR_EMPTY,
+    });
   }
 
   handleRemarkInput(e) {

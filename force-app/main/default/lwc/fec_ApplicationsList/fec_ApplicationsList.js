@@ -37,7 +37,7 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
             label: 'Application ID',
             fieldName: 'applicationId',
             type: 'link',
-            recordIdField: 'Id',
+            recordIdField: 'applicationId',
             hoverFields: [
                 {
                       section: 'Registration Info',
@@ -136,17 +136,26 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
     }
 
     handleRegistrationSelect(event) {
-        const applicationListId = event.detail.recordId;
-        if (!applicationListId) return;
 
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: 'FEC_ApplicationList'
-            },
-            state: {
-                c__ApplicationList: applicationListId
-            }
-        });
+    const applicationId = event.detail.recordId;
+
+    const row = this.registration.find(r => r.applicationId === applicationId);
+
+    if (!row) {
+        console.error('Application not found:', applicationId);
+        return;
     }
+
+    this[NavigationMixin.Navigate]({
+        type: 'standard__navItemPage',
+        attributes: {
+            apiName: 'FEC_ApplicationList'
+        },
+        state: {
+            c__ApplicationList: row.Id,
+            c__appId: row.applicationId
+        }
+    });
+}
+    
 }
