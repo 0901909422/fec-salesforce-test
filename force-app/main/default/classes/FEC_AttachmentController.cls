@@ -110,10 +110,8 @@ public with sharing class FEC_AttachmentController {
     * @param interactionCaseId: ID of the Interaction Case (target for file upload).
     * @param base64File: Base64 encoded file content.
     * @param fileName: Name of the file to be uploaded.
-    * @created: nam.vo.3@fecredit.com.vn
-    * @modified: 
+    * @param uniqueMessageId: Unique message identifier for duplicate detection (optional).
     */ 
-    // @future(callout=true)
     @AuraEnabled
     public static void attachFileToInteractionCase(String interactionCaseId, String base64File, String fileName, String uniqueMessageId){
         try {

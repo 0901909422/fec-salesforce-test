@@ -1,6 +1,6 @@
 import { LightningElement, track, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
-import { EnclosingUtilityId, minimize } from 'lightning/platformUtilityBarApi';
+import { EnclosingUtilityId, minimize, getInfo, updateUtility, onUtilityClick } from 'lightning/platformUtilityBarApi';
 import { notifyRecordUpdateAvailable } from 'lightning/uiRecordApi';
 import { IsConsoleNavigation, getAllTabInfo, refreshTab } from 'lightning/platformWorkspaceApi';
 import { publish, MessageContext } from 'lightning/messageService';
@@ -12,6 +12,8 @@ import saveChatHistoryAndAttachment from '@salesforce/apex/FEC_ChatHubCaseContro
 import checkExistCaseByExtInteractionID from '@salesforce/apex/FEC_Utils.checkExistCaseByExtInteractionID';
 import downloadAndSaveBase64 from '@salesforce/apex/FEC_AttachmentController.downloadAndSaveBase64';
 import { executeWithLock, fetchFileFromUrl, formatDatetime, showToast, decryptDataKYC } from 'c/fecUtils';
+import FEC_CHATHUB_STATUS from '@salesforce/messageChannel/FecChatHubStatus__c';
+import { subscribe, APPLICATION_SCOPE } from 'lightning/messageService';
 
 const CHATHUB_URL_KEY = 'https://portal-chathub-uat.fecredit.cloud';
 // Log formatting for better console visibility
@@ -31,8 +33,15 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
     @track chatHubUrl = '';
     @track chatHubUsername = '';
 
-    // --- Wire Adapters ---
-    @wire(EnclosingUtilityId) utilityId;
+    // --- Wire Adapters ---\
+    utilityId;
+    @wire(EnclosingUtilityId)
+    wiredUtilityId(value) {
+        if (value) {
+            this.utilityId = value;
+            this.registerUtilityClickListener();
+        }
+    }
     @wire(IsConsoleNavigation) isConsoleNavigation;
 
     // --- Configuration & Constants ---
@@ -115,7 +124,6 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
 
     /**
      * Constructor - Initializes bound event handlers
-     * Binds context to methods that will be used as event listeners
      * @return {void}
      */
     constructor() {
@@ -128,7 +136,6 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
 
     /**
      * connectedCallback - Lifecycle hook when component is inserted into DOM
-     * Sets up global event listeners for mouse and window events
      * @return {void}
      */
     connectedCallback() {
@@ -141,11 +148,22 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         localStorage.removeItem('FEC_ChatHub_Bottom');
         localStorage.removeItem('FEC_ChatHub_Width');
         localStorage.removeItem('FEC_ChatHub_Height');
+
+        this.subscription = subscribe(
+            this.messageContext,
+            FEC_CHATHUB_STATUS,
+            (message) => {
+                if (message.action === 'STATUS_CHANGED_FROM_UTILITY') {
+                    // Post event to iframe to update status when changed from Utility Bar
+                    this.postMessageToChatHub('pegaUpdateStatus', message.newStatusId);
+                }
+            },
+            { scope: APPLICATION_SCOPE }
+        );
     }
 
     /**
       * renderedCallback - Lifecycle hook after component is rendered
-      * Sets up drag/drop and resize functionality on the utility panel
       * @return {void}
       */
     async renderedCallback() {
@@ -252,7 +270,6 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
 
     /**
      * disconnectedCallback - Lifecycle hook when component is removed from DOM
-     * Cleans up all event listeners and injected elements
      * @return {void}
      */
     disconnectedCallback() {
@@ -288,14 +305,14 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {void}
      */
     handleMessage(event) {
-        const trustedUrl = localStorage.getItem(CHATHUB_URL_KEY);
-        console.log('event: ', event);
         // Log origin for debugging if messages are not received
+        // const trustedUrl = localStorage.getItem(CHATHUB_URL_KEY);
         // console.log('DEBUG Origin:', event.origin, 'Expected:', trustedUrl);
 
         // Uncomment the line below when running in Production for security
         // if (!trustedUrl || (event.origin !== new URL(trustedUrl).origin)) return;
 
+        console.log('event: ', event);
         const { action, data } = event.data;
         if (action) {
             console.groupCollapsed(LOG_PREFIX + '📩 RECEIVED: ' + action, LOG_STYLE);
@@ -323,6 +340,18 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                 this.postMessageToChatHub('isAgentAvailable', true);
                 break;
 
+            case 'getAgentInfomation':
+                publish(this.messageContext, FEC_CHATHUB_STATUS, {
+                    action: 'INIT_STATUS_FROM_IFRAME',
+                    payload: data
+                });
+                break;
+            case 'agentStatusChanged':
+                publish(this.messageContext, FEC_CHATHUB_STATUS, {
+                    action: 'STATUS_CHANGED_FROM_IFRAME',
+                    newStatusId: data
+                });
+                break;
             default:
                 if (action) console.log('%c⚠ Unhandled Action:', LOG_WARN, action);
         }
@@ -617,6 +646,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         if (!this.verifyUsernameAndAgent(data)) {
             return;
         }
+        this.notifyIfPanelClosed();
 
         createCaseOnNewSession({ strJsonData: payload })
             .then(res => {
@@ -714,7 +744,6 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                             if (targetTabId) {
                                 setTimeout(async () => {
                                     try {
-                                        console.log('refresh cho nay');
                                         // Step 1: Notify Salesforce that record has changed to clear cache
                                         await notifyRecordUpdateAvailable([{ recordId: caseId }]);
 
@@ -725,7 +754,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                                     } catch (err) {
                                         console.warn('[FEC-ChatHub] Error while refreshing tab:', err);
                                     }
-                                }, 4000);
+                                }, 50);
                             } else {
                                 console.log(`[FEC-ChatHub] Could not find any open tab containing Case ID: ${caseId}`);
                             }
@@ -749,8 +778,9 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {Promise<void>}
      */
     async saveAttachmentNewMessage(data) {
+        if (!this.verifyUsernameAndAgent(data)) return;
+        this.notifyIfPanelClosed();
         if (data && (data.messageType === 'attachment' || data.messageType === 'image')) {
-            if (!this.verifyUsernameAndAgent(data)) return;
 
             const uniqueMessageId = data.sessionID + '_' + data.createdAt;
             const lockName = 'LOCK_FILE_' + uniqueMessageId;
@@ -987,6 +1017,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         // Extract agent ID from available fields and add domain if needed
         let agentID = data.chatSession ? data.chatSession.agentID : data.agentName ? data.agentName : data.senderName;
         if (!agentID.includes('@fecredit.com.vn')) {
+            // Alert: change this string before go to UAT
             agentID += '@fecredit.com.vn.fecdevlong';
         }
         if (this.chatHubUsername && this.chatHubUsername != agentID) {
@@ -1026,5 +1057,49 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      */
     removeReAssignSessionID(sessionID) {
         localStorage.removeItem(PREFIX_INTERACTION_CASE_REASSIGN + sessionID);
+    }
+
+    async notifyIfPanelClosed() {
+        if (!this.utilityId) return;
+
+        try {
+            const utilityInfo = await getInfo(this.utilityId);
+            if (utilityInfo && !utilityInfo.utilityVisible) {
+                this.utilityAttrs = {
+                    label: 'ChatHub (new message)',
+                    icon: 'alert',
+                    highlighted: true
+                }
+                await updateUtility(this.utilityId, this.utilityAttrs);
+            }
+        } catch (err) {
+            console.warn('[FEC-ChatHub] Lỗi khi set Utility Highlight:', err);
+        }
+    }
+
+    async clearUtilityHighlight() {
+        if (!this.utilityId) return;
+
+        try {
+            this.utilityAttrs = {
+                label: 'ChatHub',
+                icon: 'chat',
+                highlighted: true
+            }
+            await updateUtility(this.utilityId, this.utilityAttrs);
+            await updateUtility(this.utilityId, { highlighted: false });
+        } catch (err) {
+            console.warn('[FEC-ChatHub] Lỗi tắt highlight:', err);
+        }
+    }
+
+    registerUtilityClickListener() {
+        if (!this.utilityId) return;
+
+        onUtilityClick(this.utilityId, (eventInfo) => {
+            if (eventInfo.panelVisible) {
+                this.clearUtilityHighlight();
+            }
+        }).catch(err => console.error('[FEC-ChatHub] Lỗi đăng ký utility click:', err));
     }
 }
