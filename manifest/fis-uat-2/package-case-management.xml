@@ -1,6 +1,64 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
+		<members>interstion sla main_v3</members>
+		<name>EntitlementProcess</name>
+	</types>
+	<types>
+		<members>InteractionTime</members>
+		<name>MilestoneType</name>
+	</types>
+	<types>
+		<members>FEC_Application_History_Label</members>
+		<members>FEC_User_Label</members>
+		<members>FEC_Activity_ID_Label</members>
+		<members>FEC_Status_Label</members>
+		<members>FEC_Edit_Date_Label</members>
+		<members>FEC_MSG_Error_API_Label</members>
+		<members>FEC_Asset_Label</members>
+		<members>FEC_Category_Code_Label</members>
+		<members>FEC_Asset_Type_Label</members>
+		<members>FEC_Asset_Description_Label</members>
+		<members>FEC_Additional_Info_Label</members>
+		<members>FEC_Asset_Model_Label</members>
+		<members>FEC_Asset_Color_Label</members>
+		<members>FEC_Engine_No_Label</members>
+		<members>FEC_Chasis_No_Label</members>
+		<members>FEC_Reg_No_Label</members>
+		<members>FEC_Supplier_Name_Label</members>
+		<members>FEC_Asset_Cost_Label</members>
+		<members>FEC_Amount_Pledged_Label</members>
+		<members>FEC_Make_Date_Label</members>
+		<members>FEC_Bought_Date_Label</members>
+		<members>FEC_Original_MRC</members>
+		<members>FEC_Notarized_MRC</members>
+		<members>FEC_MRC_Zone</members>
+		<members>FEC_Area</members>
+		<members>FEC_Plate_Number</members>
+		<members>FEC_Status</members>
+		<members>FEC_Status_ID</members>
+		<members>FEC_ID</members>
+		<members>FEC_Remark</members>
+		<members>FEC_Modified_Date</members>
+		<members>FEC_Delivery_Date</members>
+		<members>FEC_Received_Date</members>
+		<members>FEC_Receiver</members>
+		<members>FEC_Posted_Date</members>
+		<members>FEC_Postal_Code</members>
+		<members>FEC_Provided_Number</members>
+		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>fec_AppInfo</members>
+		<members>fec_Asset</members>
+		<members>fec_MRC</members>
+		<name>LightningComponentBundle</name>
+	</types>
+	<types>
+		<members>FEC_Interaction_Case_Record_Page</members>
+		<name>FlexiPage</name>
+	</types>
+	<types>
         <members>FEC_CreateCaseHanlder</members>
         <name>ApexClass</name>
     </types>
