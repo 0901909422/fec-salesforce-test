@@ -1067,6 +1067,21 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Sensitive_Data__c.FEC_Section__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Sensitive_Data__c.FEC_User_Role__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Sensitive_Data__c.FEC_User__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Service_Resource_Absence__c.FEC_Absence_Period__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1298,6 +1313,10 @@
     </recordTypeVisibilities>
     <recordTypeVisibilities>
         <recordType>Case.Internal_Case</recordType>
+        <visible>true</visible>
+    </recordTypeVisibilities>
+    <recordTypeVisibilities>
+        <recordType>Case.Search_Interaction</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
     <tabSettings>

@@ -3,6 +3,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String API_CONTENT_TYPE = 'text/xml; charset=utf-8';
     public static final String API_CONTENT_TYPE_JSON = 'application/json';
     public static final String API_METHOD_POST = 'POST';
+    public static final String API_METHOD_GET = 'GET';
     public static final String API_REQUESTOR_ID = 'SALESFORE-CSM';
     public static final String SOAP_ENV = 'http://schemas.xmlsoap.org/soap/envelope/';
 
@@ -44,6 +45,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
     public static final String CASE_INTERNAL_RECORD_TYPE_DEV_NAME = 'Internal_Case';
+    public static final String CASE_SEARCH_RECORD_TYPE_DEV_NAME = 'Search_Interaction';
 
     public static final String CHANNEL_INBOUND_API = 'InboundRinging';
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
@@ -52,9 +54,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_ZALO = 'ZALO';
     public static final String CHANNEL_WEBSITE = 'WEBSITE';
     public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
+    public static final String CHANNEL_EXTERNAL = 'External';
 
     public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';
     public static final String CHANNEL_OUTBOUND_SUBCHANNEL_NAME = 'Outbound Call';
+    public static final String CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME = 'Other';
 
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
@@ -78,14 +82,15 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
     public static final String REQUESTOR_APS = 'APS';
     public static final String REQUESTOR_SD = 'SD';
-    public static final String REQUESTOR_VMXVERSION = '150';
+    public static final String REQUESTOR_VMXVERSION = 'R8V3';
     public static final String REQUESTOR_CONTEXT = 'CRM';
-    public static final String REQUESTOR_ORG = 'FEC';
+    public static final String REQUESTOR_ORG = '150';
     public static final String REQUESTOR_RES = 'RES';
     public static final String REQUESTOR_PEGA = 'PEGA';
     public static final String REQUESTOR_ESB = 'ESB';
     public static final String REQUESTOR_CORE = 'CORE';
     public static final String REQUESTOR_MOBILE = 'MOBILE';
+    public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
 
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
@@ -158,4 +163,7 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String EMAIL = 'Email';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
+
+    public static final String UPLOAD_DOCUMENT = 'UploadDocument';
+    public static final String CASE_STATUS_ERROR = 'ERROR';
 }

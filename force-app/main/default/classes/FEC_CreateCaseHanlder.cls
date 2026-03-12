@@ -50,12 +50,14 @@ public without sharing class FEC_CreateCaseHanlder {
         public String customerName;
         public String phoneNumber;
         public String userType;
+        public String customerHistoryId;
         public String businessProcessId;
         public String productTypeId;
         public String categoryId;
         public String subCategoryId;
         public String subCodeId;
         public String remarks;
+        
     }
     
     @AuraEnabled
@@ -106,7 +108,6 @@ public without sharing class FEC_CreateCaseHanlder {
         // ---------------------------
         interactionCase.FEC_Transcription__c = dto.transcription;
         interactionCase.FEC_KYC_Method__c = dto.kycMethod;
-        // interactionCase.FEC_KYC_Result__c = dto.kycResult;
 
       
         
@@ -117,14 +118,6 @@ public without sharing class FEC_CreateCaseHanlder {
             FROM Case
             WHERE Id = :interactionCase.Id
         ];
-        
-        // if(dto.agentId != null && dto.agentId != '') {
-            //     System.debug('Assigning Agent ID: ' + dto.agentId + ' to User Id    : ' + interactionCase.OwnerId);
-            //     User userInfo = [SELECT Id, FEC_Agent_ID__c FROM User WHERE Id = :interactionCase.OwnerId];
-            //     userInfo.FEC_Agent_ID__c = dto.agentId;
-            //     update userInfo;
-        // }
-        
         
         FEC_InteractionCaseResponse res = new FEC_InteractionCaseResponse();
         res.caseId = interactionCase.Id;
@@ -184,7 +177,6 @@ public without sharing class FEC_CreateCaseHanlder {
             System.debug('Assigning Agent ID: ' + dto.agentId + ' to User Id    : ' + createdInteraction.OwnerId);
             User userInfo = [SELECT Id, FEC_Agent_ID__c,FEC_Main_Queue__c FROM User WHERE Id = :createdInteraction.OwnerId];
             userInfo.FEC_Agent_ID__c = dto.agentId;
-            // userInfo.FEC_Main_Queue__c = 'default value';
             update userInfo;
         }
         
@@ -204,6 +196,7 @@ public without sharing class FEC_CreateCaseHanlder {
         c.FEC_Customer_Name__c = dto.customerName;
         c.FEC_Phone_Number__c = dto.phoneNumber;
         c.FEC_Customer_Type__c = dto.userType;
+        c.FEC_Account_or_Contract__c = dto.customerHistoryId;
         c.FEC_Business_Process__c = dto.businessProcessId;
         c.FEC_Product_Type__c = dto.productTypeId;
         c.FEC_Category__c = dto.categoryId;
