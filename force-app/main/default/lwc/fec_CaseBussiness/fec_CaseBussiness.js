@@ -147,6 +147,8 @@ const TYPE_DISAGREE = "Disagree";
 const DECISION_USER = "User";
 const DECISION_QUEUE = "Queue";
 const NONE_STRING = '--None--';
+const FIELD_ACCOUNT_CONTRACT_NUMBER_PL = 'FEC_Account_Contract_Number_PL__c';
+const LABEL_ACCOUNT_CONTRACT_NUMBER = 'Account/ Contract Number';
 
 const SLDS_MEDIUM_SIZE_OF_12 = {
   1: 'slds-medium-size_1-of-12',
@@ -402,6 +404,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     return this.business?.natureOfCase || null;
   }
 
+  @api getStageName() {
+    return this.business?.stageName ?? STR_EMPTY;
+  }
+
   @api setNatureOfCaseId(id) {
     if (id && this.business) this.business = { ...this.business, natureOfCase: id };
   }
@@ -644,6 +650,9 @@ export default class Fec_CaseBussiness extends LightningElement {
                 }
 
                 field.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[field.layout] || SLDS_MEDIUM_SIZE_OF_12[12]);
+                if(field.hidden) {
+                  field.className += ' slds-hide';
+                }
 
                 if (!this.isEdit) {
                   field.readonly = true;
@@ -1099,6 +1108,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   @api validate() {
     if (!this.validateNatureOfCase()) return false;
 
+    //this._lastValidationError = null;
     let isAllValid = true;
 
     let inputFiellst = this.template.querySelectorAll("lightning-input-field");
@@ -1140,8 +1150,23 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (routeToEle)
       isAllValid = routeToEle && routeToEle.reportValidity() && isAllValid;
 
+    // let accountContractField = this.template.querySelector(
+    //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
+    // );
+    // if (accountContractField) {
+    //   let val = accountContractField.value;
+    //   if (val == null || val === STR_EMPTY || val === NONE_STRING) {
+    //     isAllValid = false;
+    //     this._lastValidationError = LABEL_ACCOUNT_CONTRACT_NUMBER;
+    //   }
+    // }
+
     return isAllValid;
   }
+
+  // @api getLastValidationError() {
+  //   return this._lastValidationError || null;
+  // }
 
   /**
    * Chỉ lưu dữ liệu form (Nature of Case, Account Info, Case Info, Process Action, Routing Action)
@@ -1169,6 +1194,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveOnlyFormTotal = total;
 
       formToSubmit.forEach((item) => {
+        this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
     });
@@ -1255,17 +1281,12 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
       await run({ ...params });
     } else {
-      // Không có routing: lưu NOC trước rồi set FEC_Is_Submited__c = true + clear draft + Status = Pending (nếu Case mở).
       if (this.business?.natureOfCase) {
         await saveCaseNOC({
           caseId: this.recordId,
           natureOfCaseId: this.business.natureOfCase,
         });
       }
-      await run({
-        method: "Submit Without Route To",
-        params: { caseId: this.recordId },
-      });
     }
     return true;
   }
@@ -1445,6 +1466,33 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   /**
+   * Gán lại API value cho các trường picklist trước khi submit (data từ Apex dùng toLabel nên value đang là label).
+   * Giữ toLabel để hiển thị tiếng Việt; khi gửi lên server phải dùng API name.
+   */
+  _applyPicklistLabelToApiValue(form) {
+    const map = this.business?.picklistOptionsMap;
+    if (!map) return;
+
+    const fieldlst = form.querySelectorAll("lightning-input-field");
+    fieldlst?.forEach((inputField) => {
+      const objName = inputField.dataset?.objName;
+      const fieldName = inputField.dataset?.field;
+      if (!objName || !fieldName) return;
+
+      const options = map[objName]?.[fieldName];
+      if (!options || !Array.isArray(options) || options.length === 0) return;
+
+      const currentVal = inputField.value;
+      if (currentVal == null || currentVal === STR_EMPTY) return;
+
+      const found = options.find((opt) => opt.label === currentVal);
+      if (found) {
+        inputField.value = found.value;
+      }
+    });
+  }
+
+  /**
    * Submit toàn bộ form và chờ tất cả hoàn thành.
    * Đảm bảo Account Info, Case Info đã lưu trước khi run().
    */
@@ -1469,6 +1517,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._submitFormsTotal = total;
 
       formToSubmit.forEach((item) => {
+        this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
     });

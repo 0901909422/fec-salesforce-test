@@ -1360,7 +1360,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Follow Up Label</shortDescription>
-        <value>Follow Up</value>
+        <value>Follow-Up</value>
     </labels>
     <labels>
         <fullName>FEC_Follow_Up_Until_Resolved</fullName>
@@ -2662,7 +2662,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Error API Label</shortDescription>
-        <value>Tải Dữ liệu Không Thành Công</value>
+        <value>Tải dữ liệu không thành công</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Error_Panel_Body</fullName>
