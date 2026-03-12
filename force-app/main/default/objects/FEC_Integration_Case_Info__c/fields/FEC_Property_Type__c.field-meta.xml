@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_Response_Data__c</fullName>
+    <fullName>FEC_Property_Type__c</fullName>
     <externalId>false</externalId>
-    <label>Response data</label>
-    <length>32768</length>
+    <label>Property Type</label>
+    <length>100</length>
+    <required>false</required>
     <trackTrending>false</trackTrending>
-    <type>LongTextArea</type>
-    <visibleLines>3</visibleLines>
+    <type>Text</type>
+    <unique>false</unique>
 </CustomField>

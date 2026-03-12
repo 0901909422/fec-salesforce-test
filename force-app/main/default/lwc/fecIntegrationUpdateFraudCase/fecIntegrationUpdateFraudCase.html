@@ -246,9 +246,15 @@
                         onclick={onSubmit}
                         disabled={isUpdateSubmitting}>
                     </lightning-button>
-                  
+                    <lightning-button
+                    label={labels.Cancel_Fraud_Case_Button}
+                    variant="brand"
+                    class="slds-m-left_small"
+                    onclick={onSubmitCancel}
+                    disabled={isCancelSubmitting}>
+                </lightning-button>
                 </div>
-
+                
 
                 <!-- Result -->
                 <template lwc:if={resultMessage}>

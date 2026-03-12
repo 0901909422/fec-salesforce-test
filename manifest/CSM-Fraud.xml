@@ -50,6 +50,7 @@
         <members>fecIntegrationFraudCaseSearch</members>
         <members>fecIntegrationMapping</members>
         <members>fecIntegrationFraudCaseDetail</members>
+        <members>fecIntegrationUpdateFraudCase</members>
         <name>LightningComponentBundle</name>
     </types>
     <version>65.0</version>
