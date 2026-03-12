@@ -46,17 +46,18 @@ public without sharing class FEC_ApplicationsListController {
     @AuraEnabled
     public static void loadApplicationInfo(Id caseId) {
 
-        if (caseId == null) return;
+        if (caseId == null) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
+        }
 
         Case cs = [
-            SELECT FEC_Account_or_Contract__c
+            SELECT FEC_Account_or_Contract__c,FEC_Account_or_Contract__r.FEC_Account_Number__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
         ];
 
-        if (cs.FEC_Account_or_Contract__c == null) return;
-
+        String accountNumber = cs.FEC_Account_or_Contract__r.FEC_Account_Number__c;
         Id historyId = cs.FEC_Account_or_Contract__c;
 
         FEC_Application_List__c cacheRec;
@@ -89,7 +90,7 @@ public without sharing class FEC_ApplicationsListController {
         try {
             cusRes = FEC_GetCustomerList.getCustomerList(
                 FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false,
-                null, null, null, null, null, null, null, null
+                null, null, null, null, accountNumber, null, null, null
             );
         } catch (Exception e) {
             cusRes = null;
@@ -102,6 +103,15 @@ public without sharing class FEC_ApplicationsListController {
             if (cus.Applications == null) continue;
 
             String cif = cus.CIFNumber;
+
+            Map<String, FEC_GetCustomerList.Application> appMap = new Map<String, FEC_GetCustomerList.Application>();
+
+            if (cus.Applications != null) {
+
+                for (FEC_GetCustomerList.Application a : cus.Applications) {
+                    appMap.put(a.ApplicationID, a);
+                }
+            }
 
             /* =================================================
              * API 2 – APPLICATION STATUS 
@@ -123,53 +133,64 @@ public without sharing class FEC_ApplicationsListController {
              * API 3 – ADDRESS
              * ================================================= */
             FEC_GetAddressesList.ResponseWrapper addrRes;
-            try {
-                addrRes =
-                    FEC_GetAddressesList.callGetAddressesList(
-                        FEC_CommonUltils.generateTransactionId(),
-                        FEC_ConstantCommon.REQUESTOR_CRM,
-                        Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                        cif
-                    );
-            } catch (Exception e) {
-                addrRes = null;
-            }
+                try {
+                    addrRes =
+                        FEC_GetAddressesList.callGetAddressesList(
+                            FEC_CommonUltils.generateTransactionId(),
+                            FEC_ConstantCommon.REQUESTOR_CRM,
+                            Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                            cif
+                        );
+                } catch (Exception e) {
+                    addrRes = null;
+                }
 
-            for (FEC_GetCustomerList.Application app : cus.Applications) {
+            for (FEC_GetApplicationsList.ApplicationInfo st: statusRes.Applications) {
+                String accountNumbers = FEC_ConstantCommon.STR_NA;
+                Map<String,Object> row = new Map<String,Object>();
+                
+                row.put('applicationId', st.ApplicationID);
+                row.put('lastStatus', st.LastStatus);
+                row.put('updateDate', st.DateStatus);
+                row.put('productGroup', st.ProductGroup);
 
-                Map<String, Object> row =
-                    new Map<String, Object>();
-
-                row.put('applicationId', app.ApplicationID);
-                row.put('accountNumber', app.AccountNumber);
-                row.put('contractNumber', app.ContractNumber);
-                row.put('productGroup', app.Product);
-                row.put('nationalPassportID',cus.NationalID);
+                row.put('nationalPassportID', cus.NationalID);
 
                 if (cus.Phones != null && !cus.Phones.isEmpty()) {
-                    row.put(
-                        'registrationPhone',
-                       cus.Phones[0].Phone
-                    );
+                    row.put('registrationPhone', cus.Phones[0].Phone);
                 }
 
                 if (cus.Emails != null && !cus.Emails.isEmpty()) {
-                    row.put(
-                        'registrationEmail',
-                        cus.Emails[0].Email
-                    );
+                    row.put('registrationEmail', cus.Emails[0].Email);
                 }
 
-                /* STATUS */
-                if (statusRes != null &&
-                    statusRes.Applications != null) {
+                if (appMap.containsKey(st.ApplicationID)) {
 
-                    for (FEC_GetApplicationsList.ApplicationInfo st
-                        : statusRes.Applications) {
+                    FEC_GetCustomerList.Application ca = appMap.get(st.ApplicationID);
+                        accountNumbers = String.isBlank(ca.AccountNumber) ? FEC_ConstantCommon.STR_NA : ca.AccountNumber;
+                        row.put('contractNumber', ca.ContractNumber);
+                }
+                row.put('accountNumber', accountNumbers);
 
-                        if (st.ApplicationID == app.ApplicationID) {
-                            row.put('lastStatus', st.LastStatus);
-                            row.put('updateDate', st.DateStatus);
+                if (cus.Addresses != null) {
+                    for (FEC_GetCustomerList.Address ad : cus.Addresses) {
+
+                        if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_CURRES) {
+
+                            row.put(
+                                'currentAddress',
+                                FEC_CommonUltils.formatAddress(
+                                    ad.HouseNumber,
+                                    ad.Building,
+                                    ad.Street,
+                                    ad.Ward,
+                                    ad.District,
+                                    ad.City,
+                                    ad.CountryName,
+                                    ad.ZipCode
+                                )
+                            );
+
                             break;
                         }
                     }
@@ -179,23 +200,34 @@ public without sharing class FEC_ApplicationsListController {
                 if (addrRes != null && addrRes.Addresses != null) {
                     for (FEC_GetAddressesList.AddressInfo ad
                         : addrRes.Addresses) {
-
-                        if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_CURRES) {
-                            row.put(
-                                'currentAddress',
-                                formatAddress(ad)
-                            );
-                        }
                         if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
                             row.put(
                                 'permanentAddress',
-                                formatAddress(ad)
+                                FEC_CommonUltils.formatAddress(
+                                    ad.NumberStr,
+                                    ad.Building,
+                                    ad.Street,
+                                    ad.Ward,
+                                    ad.District,
+                                    ad.City,
+                                    ad.CountryName,
+                                    ad.ZipCode
+                                )
                             );
                         }
                         if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_OFFICE) {
                             row.put(
                                 'officeAddress',
-                                formatAddress(ad)
+                                FEC_CommonUltils.formatAddress(
+                                    ad.NumberStr,
+                                    ad.Building,
+                                    ad.Street,
+                                    ad.Ward,
+                                    ad.District,
+                                    ad.City,
+                                    ad.CountryName,
+                                    ad.ZipCode
+                                )
                             );
                         }
                     }
@@ -206,7 +238,7 @@ public without sharing class FEC_ApplicationsListController {
                 * ===================================================== */
                 FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleDisburseInfoResponse saleRes;
                 try {
-                    saleRes = FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo(app.ApplicationID);
+                    saleRes = FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo(st.ApplicationID);
                     if (saleRes != null &&
                         saleRes.CustomerSaleInfos != null &&
                         !saleRes.CustomerSaleInfos.isEmpty()) {
@@ -236,7 +268,11 @@ public without sharing class FEC_ApplicationsListController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static ApplicationRowDTO loadApplicationDetail(Id applicationListId) {
+    public static ApplicationRowDTO loadApplicationDetail( Id applicationListId, String applicationId) {
+
+        if (applicationListId == null) {
+            return null;
+        }
 
         FEC_Application_List__c rec = [
             SELECT Id, FEC_API_Cache_Applications__c,
@@ -255,27 +291,46 @@ public without sharing class FEC_ApplicationsListController {
                 rec.FEC_API_Cache_Applications__c
             );
 
-        if (rawList.isEmpty()) return null;
+        if (rawList.isEmpty()) {
+            return null;
+        }
 
-        ApplicationRowDTO dto =
-            (ApplicationRowDTO) JSON.deserialize(
-                JSON.serialize(rawList[0]),
-                ApplicationRowDTO.class
-            );
+        ApplicationRowDTO dto;
 
-        dto.id = rec.Id;
-        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Application_List__c.SObjectType);
+        for (Object obj : rawList) {
+
+            ApplicationRowDTO temp =
+                (ApplicationRowDTO) JSON.deserialize(
+                    JSON.serialize(obj),
+                    ApplicationRowDTO.class
+                );
+
+            if (temp.applicationId == applicationId) {
+                dto = temp;
+                break;
+            }
+        }
+
+        if (dto == null) {
+            return null;
+        }
+
+       dto.id = rec.Id;
+
+        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap( FEC_Application_List__c.SObjectType );
         if (rec.FEC_Customer_History__c != null) {
             List<Case> cases = [
-                SELECT Id,FEC_Account_or_Contract__c
+                SELECT Id, FEC_Account_or_Contract__c
                 FROM Case
                 WHERE FEC_Account_or_Contract__c = :rec.FEC_Customer_History__c
                 LIMIT 1
             ];
+
             if (!cases.isEmpty()) {
                 dto.caseId = cases[0].Id;
             }
         }
+
         return dto;
     }
 
@@ -353,19 +408,5 @@ public without sharing class FEC_ApplicationsListController {
             u.UserRole != null ? u.UserRole.Name : null,
             relatedCaseId
         );
-    }
-
-    /* =====================================================
-     * HELPERS
-     * ===================================================== */
-
-    private static String formatAddress(
-        FEC_GetAddressesList.AddressInfo ad
-    ) {
-        List<String> parts = new List<String>();
-        if (!String.isBlank(ad.Street)) parts.add(ad.Street);
-        if (!String.isBlank(ad.City)) parts.add(ad.City);
-        if (!String.isBlank(ad.CountryName)) parts.add(ad.CountryName);
-        return String.join(parts, ', ');
     }
 }

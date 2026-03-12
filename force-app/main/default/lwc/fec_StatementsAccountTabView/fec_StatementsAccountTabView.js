@@ -123,12 +123,9 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
                 loadStatementDetails({ statementId: this.statementId }),
                 getBilledTransactions({ statementId: this.statementId })
             ]);
-
-            this.statement =
-                Array.isArray(statementRes) && statementRes.length
-                    ? statementRes[0]
-                    : null;
-
+           this.statement = Array.isArray(statementRes)
+            ? statementRes.find(s => s.statementId === this.statementId)
+            : null;
             this.billedTransactions = this.formatBilledTransactions(billedTxRes);
             setConsoleTab('Statements Detail', 'standard:record');
 
@@ -161,15 +158,15 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
         const fields = [
             { label: this.customLabel.statementDateLabel, value: this.formatDate(this.statement.statementDate), apiName: 'FEC_Statement_Date__c' },
             { label: this.customLabel.totalPaymentDueLabel, value: this.formatNumber(this.statement.totalPaymentDue), apiName: 'FEC_Total_Payment_Due__c' },
-            { label: this.customLabel.totalInterestLabel, value: this.formatNumber(this.statement.FEC_Total_Interest__c), apiName: 'FEC_Total_Interest__c' },
+            { label: this.customLabel.totalInterestLabel, value: this.formatNumber(this.statement.totalInterest), apiName: 'FEC_Total_Interest__c' },
             { label: this.customLabel.beginningBalanceLabel, value: this.formatNumber(this.statement.beginningBalance), apiName: 'FEC_Beginning_Balance__c' },
             { label: this.customLabel.paymentDueDateLabel, value: this.formatDate(this.statement.paymentDueDate), apiName: 'FEC_Payment_Due_Date__c' },
             { label: this.customLabel.minimumPaymentDueLabel, value: this.formatNumber(this.statement.minimumPaymentDue), apiName: 'FEC_Minimum_Payment_Due__c' },
-            { label: this.customLabel.ippPrincipalLabel, value: this.formatNumber(this.statement.FEC_IPP_Principal__c), apiName: 'FEC_IPP_Principal__c' },
+            { label: this.customLabel.ippPrincipalLabel, value: this.formatNumber(this.statement.iPPPrincipal), apiName: 'FEC_IPP_Principal__c' },
             { label: this.customLabel.endBalanceLabel, value: this.formatNumber(this.statement.endBalance), apiName: 'FEC_End_Balance__c' },
-            { label: this.customLabel.totalPastDueLabel, value: this.formatNumber(this.statement.FEC_Total_Past_Due__c), apiName: 'FEC_Total_Past_Due__c' },
+            { label: this.customLabel.totalPastDueLabel, value: this.formatNumber(this.statement.totalPastDue), apiName: 'FEC_Total_Past_Due__c' },
             { label: this.customLabel.currentPaymentDueLabel, value: this.formatNumber(this.statement.currentPaymentDue), apiName: 'FEC_Current_Payment_Due__c' },
-            { label: this.customLabel.ippInterestLabel, value: this.formatNumber(this.statement.FEC_IPP_Interest__c), apiName: 'FEC_IPP_Interest__c' }
+            { label: this.customLabel.ippInterestLabel, value: this.formatNumber(this.statement.iPPInterest), apiName: 'FEC_IPP_Interest__c' }
         ];
         return [
             {
