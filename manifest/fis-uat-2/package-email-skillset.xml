@@ -18,6 +18,12 @@
         <name>CustomField</name>
     </types>
     <types>
+		<members>FEC_Service_Resource_Absence__c</members>
+		<members>ServiceResource</members>
+		<members>ServiceResourceSkill</members>
+		<name>CustomObject</name>
+	</types>
+    <types>
         <members>FEC_Interaction_Case_Record_Page</members>
 		<members>Service_Resource_Absence_Record_Page</members>
 		<members>Service_Resource_Record_Page</members>

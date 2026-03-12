@@ -4,7 +4,7 @@
     <description>Cấp độ skill
 User có thể nhập giá trị số nguyên từ 1~100</description>
     <externalId>false</externalId>
-    <label>FEC Skill Level</label>
+    <label>Skill Level</label>
     <precision>3</precision>
     <required>false</required>
     <scale>0</scale>
