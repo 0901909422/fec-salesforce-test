@@ -11,12 +11,23 @@
 		<members>FEC_GetRemovablePhoneStatus</members>
 		<members>FEC_GetLoanBasicInfo</members>
 		<members>FEC_GetLoanSecInfo</members>
+        <members>FEC_AddIPP</members>
+		<members>FEC_GetAssetsList</members>
+		<members>FEC_GetLoanApplicationHistory</members>
+		<members>FEC_GetMRCInfo</members>
+		<members>FEC_MockupEndpoint</members>
+		<members>FEC_TranferInformationCallout</members>
         <name>ApexClass</name>
     </types>
     <types>
 		<members>FEC_API_Config.FEC_CardLockUnlock</members>
         <members>FEC_API_Config.FEC_ReplacementCard</members>
         <members>FEC_API_Config.FEC_PINReissueService</members>
+        <members>FEC_API_Config.FEC_Add_IPP</members>
+		<members>FEC_API_Config.FEC_Get_Assets_List</members>
+		<members>FEC_API_Config.FEC_Get_Loan_Application_History</members>
+		<members>FEC_API_Config.FEC_Get_MRC_Info</members>
+		<members>FEC_API_Config.FEC_Transfer_Call</members>
 		<name>CustomMetadata</name>
 	</types>
 
