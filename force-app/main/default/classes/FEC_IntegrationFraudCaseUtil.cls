@@ -27,6 +27,12 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         }
     }
 
+    public class UpdateCaseResponse {
+        public String caseId;
+        public String caseMessage;
+        public String caseCode;
+    }
+
 
     /**
      * Wrapper response object for Fraud Case integration services.
@@ -435,7 +441,10 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         String integrationCaseId,
         String serviceCaseId,
         String requestData,
-        String responseData
+        String responseData,
+        String messageStatus,
+        String requestor,
+        String description
     ) {
 
         FEC_Integration_Service_Log__c logRec =
@@ -448,6 +457,9 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         logRec.FEC_Service_Case_Id__c     = serviceCaseId;
         logRec.FEC_Request_Data__c        = safeText(requestData);
         logRec.FEC_Response_Data__c       = safeText(responseData);
+        logRec.FEC_Message_Status__c      = messageStatus;
+        logRec.FEC_Requestor__c           = requestor;
+        logRec.FEC_Description__c         = description;
 
         insert logRec;
     }
@@ -852,27 +864,39 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
      * </Response>
      *
      * @param xml  Raw XML response from the integration service
-     * @return     Extracted CaseID value, or null if not found or XML is invalid
+     * @return     Extracted caseId, caseMessage, caseCode  value, or null if not found or XML is invalid
      */
-    public static String extractCaseIdFromResponse(String xml) {
-        FEC_FraudConstantCommon.IntegrationMappingField caseField = new FEC_FraudConstantCommon.IntegrationMappingField();
-        if (String.isBlank(xml)) return null;
-    
+    public static UpdateCaseResponse extractCaseIdFromResponse(String xml) {
+        FEC_FraudConstantCommon.IntegrationMappingField caseField = 
+            new FEC_FraudConstantCommon.IntegrationMappingField();
+
+        UpdateCaseResponse response = new UpdateCaseResponse();
+
+        if (String.isBlank(xml)) {
+            return response;
+        }
+
         try {
             Dom.Document doc = new Dom.Document();
             doc.load(xml);
-    
+
             Dom.XmlNode root = doc.getRootElement();
+            log('extractCaseIdFromResponse: '+ xml);
+
             Dom.XmlNode caseNode = root.getChildElement(caseField.SOURCE_CASEID, null);
-    
-            if (caseNode != null) {
-                return caseNode.getText();
-            }
+            Dom.XmlNode caseMessage = root.getChildElement(caseField.NODE_MESSAGE, null);
+            Dom.XmlNode caseCode = root.getChildElement(caseField.NODE_SUCCESS, null);
+
+            response.caseId = caseNode != null ? caseNode.getText() : null;
+            response.caseMessage = caseMessage != null ? caseMessage.getText() : null;
+            response.caseCode = caseCode != null ? caseCode.getText() : null;
+            log('extractCaseIdFromResponse-response: '+ response);
+
         } catch (Exception ex) {
             log('extractCaseIdFromResponse error: ' + ex.getMessage());
         }
-    
-        return null;
+
+        return response;
     }
 
     /**
