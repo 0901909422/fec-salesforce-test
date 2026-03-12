@@ -1,5 +1,5 @@
 import { LightningElement, track, wire } from 'lwc';
-import { EnclosingUtilityId, updateUtility, updatePanel, minimizeUtility } from 'lightning/platformUtilityBarApi';
+import { EnclosingUtilityId, updateUtility, updatePanel, minimize } from 'lightning/platformUtilityBarApi';
 import { publish, subscribe, MessageContext, APPLICATION_SCOPE } from 'lightning/messageService';
 import FEC_CHATHUB_STATUS from '@salesforce/messageChannel/FecChatHubStatus__c';
 
@@ -120,9 +120,10 @@ export default class FecAgentStatusUtility extends LightningElement {
             newStatusId: this.selectedStatus
         });
         if (this.utilityId) {
-            minimizeUtility(this.utilityId).catch(error => {
-                console.error('Lỗi khi đóng Utility Item:', error);
-            });
+            minimize(this.utilityId)
+                .catch(err => {
+                    console.error('[FEC-AgentStatus] Error calling minimize:', err);
+                });
         }
     }
 
