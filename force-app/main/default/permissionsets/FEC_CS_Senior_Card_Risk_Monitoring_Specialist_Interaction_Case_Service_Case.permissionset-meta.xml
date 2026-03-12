@@ -1445,6 +1445,10 @@
         <recordType>Case.Internal_Case</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
+    <recordTypeVisibilities>
+        <recordType>Case.Search_Interaction</recordType>
+        <visible>true</visible>
+    </recordTypeVisibilities>
     <tabSettings>
         <tab>FEC_Customer_Search</tab>
         <visibility>Visible</visibility>

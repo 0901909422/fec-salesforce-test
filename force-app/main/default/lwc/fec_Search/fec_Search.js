@@ -11,7 +11,13 @@ import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getCase from "@salesforce/apex/FEC_SearchController.getCase";
 import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
+import getB2Contracts from "@salesforce/apex/FEC_SearchController.getB2Contracts";
+import getCash24Contracts from "@salesforce/apex/FEC_SearchController.getCash24Contracts";
 import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
+import FEC_Toast_Search_Validation from '@salesforce/label/c.FEC_Toast_Search_Validation';
+import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
+import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
+import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
 import {
@@ -55,6 +61,10 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   isSkip;
   wiredCaseResult;
   fieldPermissions;
+  FEC_Toast_Search_Validation = FEC_Toast_Search_Validation;
+  FEC_Toast_Validation_Title = FEC_Toast_Validation_Title;
+  FEC_Toast_Error = FEC_Toast_Error;
+  FEC_Toast_Error_Generic = FEC_Toast_Error_Generic;
 
   @wire(MessageContext)
   messageContext;
@@ -77,15 +87,13 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return [
       {
         label: "Account Number",
-        type: this.recordId ? "dblclickText" : "text",
+        type: "dblclickText",
         fieldName: "AccountNumber",
-        typeAttributes: this.recordId
-          ? {
+        typeAttributes:  {
               value: { fieldName: "AccountNumber" },
               fieldName: "AccountNumber",
               selectedType: "Card"
-            }
-          : {},
+            },
         sortable: false,
       },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
@@ -115,6 +123,17 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     ];
   }
 
+  get isDisabledSearch() {
+    return !(
+      (this.nationalId && this.nationalId.trim()) ||
+      (this.phoneNumber && this.phoneNumber.trim()) ||
+      (this.applicationId && this.applicationId.trim()) ||
+      (this.contractNumber && this.contractNumber.trim()) ||
+      (this.accountNumber && this.accountNumber.trim()) ||
+      (this.emailAddress && this.emailAddress.trim())
+    );
+  }
+
   get isShowCustomerNumber() {
     return this.recordId ? true : false;
   }
@@ -123,14 +142,13 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return [
       {
         label: "Contract Number",
-        type: this.recordId ? "dblclickText" : "text",
+        type: "dblclickText",
         fieldName: "ContractNumber",
-        typeAttributes: this.recordId
-          ? {
+        typeAttributes:  {
               value: { fieldName: "ContractNumber" },
               fieldName: "ContractNumber",
-            }
-          : {},
+              selectedType: "Loan"
+            },
         sortable: false,
       },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
@@ -195,14 +213,13 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return [
       {
         label: "User ID",
-        type: this.recordId ? "dblclickText" : "text",
+        type: "dblclickText",
         fieldName: "UserId",
-        typeAttributes: this.recordId
-          ? {
+        typeAttributes:  {
               value: { fieldName: "UserId" },
               fieldName: "UserId",
-            }
-          : {},
+              selectedType: "Insurance"
+            },
         sortable: false,
       },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
@@ -392,39 +409,30 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         break;
       case "phoneNumber":
         this.phoneNumber = value;
-        // Validate Phone Number:
-        // - If starts with '0' -> must be exactly 10 digits
-        // - If starts with '84' -> must be exactly 11 digits
-        {
-          const input = this.template.querySelector('[data-id="phoneNumber"]');
-          if (input) {
+        const input = this.template.querySelector('[data-id="phoneNumber"]');
+        if (input) {
             const val = value ? value.toString().trim() : "";
             if (!val) {
-              input.setCustomValidity("");
-            } else if (/^0/.test(val)) {
-              if (!/^\d{10}$/.test(val)) {
-                input.setCustomValidity(
-                  "Phone number must be 10 digits if it starts with 0",
-                );
-              } else {
                 input.setCustomValidity("");
-              }
-            } else if (/^84/.test(val)) {
-              if (!/^\d{11}$/.test(val)) {
-                input.setCustomValidity(
-                  "Phone number must be 11 digits if it starts with 84",
-                );
-              } else {
-                input.setCustomValidity("");
-              }
+            } else if (val.startsWith('0')) {
+                // Check if starts with 0 and has exactly 10 digits
+                if (!/^0\d{9}$/.test(val)) {
+                    input.setCustomValidity("Phone number starting with 0 must be exactly 10 digits.");
+                } else {
+                    input.setCustomValidity("");
+                }
+            } else if (val.startsWith('84')) {
+                // Check if starts with 84 and has exactly 11 digits
+                if (!/^84\d{9}$/.test(val)) {
+                    input.setCustomValidity("Phone number starting with 84 must be exactly 11 digits.");
+                } else {
+                    input.setCustomValidity("");
+                }
             } else {
-              // If it doesn't start with 0 or 84, consider invalid per rules
-              input.setCustomValidity(
-                "Phone number must start with 0 (10 digits) or 84 (11 digits)",
-              );
+                // Fallback for invalid prefixes
+                input.setCustomValidity("Phone number must start with 0 (10 digits) or 84 (11 digits).");
             }
             input.reportValidity();
-          }
         }
         break;
       case "applicationId":
@@ -618,95 +626,126 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       return;
     }
 
-    // Example: populate data sets based on current criteria.
-    // Replace with actual Apex calls and set the dataset corresponding to each tab.
     //this.seedSampleRows(true);
     this.processSearch() 
   }
 
   async processSearch() {
-  this.isLoaded = false;
-  this.isNoCustomerFound = false;
+    this.isLoaded = false;
+    this.isNoCustomerFound = false;
 
-  // Optional: clear old results before new search
-  this.cardData = [];
-  this.loanData = [];
-  this.loanContractData = [];
-  this.loanB2Data = [];
-  this.loanCash24Data = [];
-  this.insuranceData = [];
-  this.ubankData = [];
+    // Optional: clear old results before new search
+    this.cardData = [];
+    this.loanData = [];
+    this.loanContractData = [];
+    this.loanB2Data = [];
+    this.loanCash24Data = [];
+    this.insuranceData = [];
+    this.ubankData = [];
 
-  try {
-    const params = this.buildSearchParams();
+    try {
+      const params = this.buildSearchParams();
 
-    // Guard (extra safety). handleSearch() already checks this.
-    if (!this.hasAnySearchCriteria(params)) {
-      this.showToast("Validation", "Enter at least one search criterion.", "warning");
-      return;
+      // Guard (extra safety). handleSearch() already checks this.
+      if (!this.hasAnySearchCriteria(params)) {
+        this.showToast(FEC_Toast_Validation_Title, FEC_Toast_Search_Validation, "warning");
+        return;
+      }
+      if (this.contractNumber) {
+        const [b2Result, cash24Result] = await Promise.all([
+          getB2Contracts({ contractNumber: this.contractNumber }),
+          getCash24Contracts({ contractNumber: this.contractNumber })
+        ]);
+
+        // 3. Process B2 Data
+        this.loanB2Data = b2Result ? b2Result.map(record => ({
+          id: record.Id || record.Name,
+          ContractNumber: record.Name,
+          FullName: record.FEC_Full_Name__c,
+          NationalID1: record.FEC_ID_Card__c,
+          Code: record.FEC_Code__c,
+          ProductCode: record.FEC_Product_Code__c,
+          Installment: record.FEC_Installment__c,
+          Principal: record.FEC_Principal__c,
+          MonthlyFee: record.FEC_Monthly_Fee__c,
+          Term: record.FEC_Term__c,
+          City: record.FEC_City__c
+        })) : [];
+
+        // 4. Process Cash24 Data
+        this.loanCash24Data = cash24Result ? cash24Result.map(record => ({
+          id: record.Id || record.Name,
+          ContractNumber: record.Name,
+          SoldDate: record.FEC_Sold_Date__c,
+          BalanceAmount: record.FEC_Balance_Amount__c,
+          ProductCode: record.FEC_Product__c,
+          ContractStatus: record.FEC_Contract_Status__c,
+          Note: record.FEC_Note__c
+        })) : [];
+      }
+      const result = await getCustomerList(params);
+      console.log("getCustomerList params:", params);
+      console.log("getCustomerList result:", result);
+
+      const customers = result?.Customers || [];
+      if (this.loanB2Data.length > 0 || this.loanCash24Data.length > 0 || customers.length > 0) {
+        this.isNoCustomerFound = false;
+        if (customers.length > 0) {
+          this.processCustomerResults(customers);
+        }
+      } else {
+        this.isNoCustomerFound = true;
+      }
+    } catch (e) {
+      console.error("Error fetching customer list:", e);
+      this.showToast(
+        FEC_Toast_Error,
+        FEC_Toast_Error_Generic + ' ' + (e?.body?.message || e?.message || ""),
+        "error"
+      );
+    } finally {
+      this.isLoaded = true;
     }
-
-    const result = await getCustomerList(params);
-    console.log("getCustomerList params:", params);
-    console.log("getCustomerList result:", result);
-
-    const customers = result?.Customers || [];
-    if (customers.length > 0) {
-      this.processCustomerResults(customers);
-      this.isNoCustomerFound = false;
-    } else {
-      this.isNoCustomerFound = true;
-    }
-  } catch (e) {
-    console.error("Error fetching customer list:", e);
-    this.showToast(
-      "Error",
-      "Unable to fetch customer list. " + (e?.body?.message || e?.message || ""),
-      "error"
-    );
-  } finally {
-    this.isLoaded = true;
   }
-}
 
 /**
  * Build Apex params from UI inputs (NO hard-coding).
  * Matches Apex signature: getCustomerList({ requestorId, phoneNumber, ... })
  */
-buildSearchParams() {
-  const val = (v) => (v === null || v === undefined ? null : String(v).trim() || null);
+  buildSearchParams() {
+    const val = (v) => (v === null || v === undefined ? null : String(v).trim() || null);
 
-  const nationalId = val(this.nationalId);
-  const phoneNumber = val(this.phoneNumber);
-  const applicationId = val(this.applicationId);
-  const contractNumber = val(this.contractNumber);
-  const accountNumber = val(this.accountNumber);
-  const email = val(this.emailAddress);
-  const personId = val(this.customerNumber);
-  const fullName = val(this.fullName);
+    const nationalId = val(this.nationalId);
+    const phoneNumber = val(this.phoneNumber);
+    const applicationId = val(this.applicationId);
+    const contractNumber = val(this.contractNumber);
+    const accountNumber = val(this.accountNumber);
+    const email = val(this.emailAddress);
+    const personId = val(this.customerNumber);
+    const fullName = val(this.fullName);
 
-  return {
-    // Keep this if required by integration; remove/adjust if your API expects something else.
-    requestorId: "PEGA_CSM",
+    return {
+      // Keep this if required by integration; remove/adjust if your API expects something else.
+      requestorId: "PEGA_CSM",
 
-    // Use actual search fields
-    phoneNumber,
-    fullName,
-    nationalId,
-    applicationId,
-    contractNumber,
-    accountNumber,
-    email,
-    personId,
+      // Use actual search fields
+      phoneNumber,
+      fullName,
+      nationalId,
+      applicationId,
+      contractNumber,
+      accountNumber,
+      email,
+      personId,
 
-    // If your backend supports "reference search", set it based on a field like personId/customerNumber.
-    // Update logic if your business definition differs.
-    isReferenceSearch: personId ? true : false,
+      // If your backend supports "reference search", set it based on a field like personId/customerNumber.
+      // Update logic if your business definition differs.
+      isReferenceSearch: personId ? true : false,
 
-    // Keep as null unless you truly have a card number input field
-    creditCardNumber: null
-  };
-}
+      // Keep as null unless you truly have a card number input field
+      creditCardNumber: null
+    };
+  }
 
 /**
  * Validate at least one criteria exists (based on built params).
@@ -725,17 +764,17 @@ hasAnySearchCriteria(params) {
 }
 
   processCustomerResults(customers) {
-    const top5 = customers.slice(0, 5);
+    //const top5 = customers.slice(0, 5);
     this.cardData = [];
     this.loanContractData = [];
     this.insuranceData = [];
 
-    top5.forEach(cust => {
+    customers.forEach(cust => {
       if (cust.Applications && cust.Applications.length > 0) {
         cust.Applications.forEach(app => {
           // Định nghĩa logic phân loại dựa trên trường 'Product' trong JSON
           const productCode = app.Product ? app.Product.toUpperCase() : '';
-
+          const phone = (cust?.Phones && cust.Phones.length > 0) ? cust.Phones[0].Phone : null;
           // --- PHÂN LOẠI VÀO CARD ---
           // Trong JSON, Card thường có Product để trống và có AccountNumber
           if (productCode === '' && app.AccountNumber) {
@@ -749,7 +788,8 @@ hasAnySearchCriteria(params) {
               PlasticID: "N/A",
 
               // ✅ add flat field
-              CIFNumber: cust.CIFNumber
+              CIFNumber: cust.CIFNumber,
+              Phone: phone,
             }];
             
           }
@@ -765,6 +805,7 @@ hasAnySearchCriteria(params) {
               ContractNumber: app.ContractNumber,
               ProductCode: app.Product,
               ContractStatus: app.Status,
+              Phone: phone,
               _customer: cust,
               _application: app 
             }];
@@ -781,6 +822,7 @@ hasAnySearchCriteria(params) {
               ProductName: app.SchemeDesc || 'Insurance Product',
               Status: app.Status,
               EffectiveDate: 'N/A',
+              Phone: phone,
               _customer: cust,
               _application: app // Cần map thêm field nếu có
             }];
@@ -942,12 +984,13 @@ hasAnySearchCriteria(params) {
               detail: {
                 fullName: row?.FullName || "",
                 nationalId: row?.AccountNumber || row?.ContractNumber || "",
+                cifNumber: cifNumber
               },
               bubbles: true,
               composed: true,
             }),
           );
-          return;
+
         }
         let categories = [];
 
@@ -972,14 +1015,15 @@ hasAnySearchCriteria(params) {
 
         // Combine them into a string (e.g., "Card, Loan, Insurance")
         let searchProducts = categories.join(";");
-
+        this.isLoaded = false;
         createHistory({
           value: id,
           fieldName: action.label.fieldName,
           caseId: this.recordId,
           searchProducts: searchProducts,
           selectedType: action.type,
-          cifNumber: cifNumber
+          cifNumber: cifNumber,
+          phone: row?.Phone
         })
           .then(async (res) => {
             // const payload = {
@@ -990,18 +1034,29 @@ hasAnySearchCriteria(params) {
               "History created successfully",
               "success",
             );
-            //publish(this.messageContext, IS_MODE_EDIT, payload);
-            await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
-            // await refreshApex(this.wiredCaseResult);
-            this.dispatchEvent(new RefreshEvent());
-
+            if (this.recordId) {
+                //publish(this.messageContext, IS_MODE_EDIT, payload);
+                await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+                // await refreshApex(this.wiredCaseResult);
+                this.dispatchEvent(new RefreshEvent());
+            } else {
+              this[NavigationMixin.Navigate]({
+                type: "standard__recordPage",
+                attributes: {
+                  recordId: res,
+                  objectApiName: "Case",
+                  actionName: "view",
+                },
+              });
+            }
             //await this.refreshTab();
-            
           })
           .catch((e) => {
             this.showToast("Error", "Failed to create history", "error");
+          })
+          .finally(() => {
+            this.isLoaded = true;
           });
-
         break;
       }
       default:
