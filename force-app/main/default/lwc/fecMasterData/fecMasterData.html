@@ -9,9 +9,6 @@
           <c-fec-master-data-container onrefreshall={handleRefreshTree}
             item={selectedItem}></c-fec-master-data-container>
         </div>
-        <div class="right-panel">
-          <c-fec-flow-control-data-view item={selectedItem}></c-fec-flow-control-data-view>
-        </div>
       </div>
     </lightning-tab>
     <lightning-tab label="Channels" icon-name="standard:channel_programs">
@@ -44,5 +41,10 @@
         <c-fec-all-master-data-mdm></c-fec-all-master-data-mdm>
       </div>
     </lightning-tab>
+    <lightning-tab label="Decision Table" icon-name="utility:flow">
+      <div class="slds-p-around_medium">
+        <c-fec-decision-table-view></c-fec-decision-table-view>
+      </div>
+    </lightning-tab>
   </lightning-tabset>
-</template>
+</template>  

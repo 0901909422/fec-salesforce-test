@@ -7,7 +7,6 @@
             <template if:true={showForm}>
                 <lightning-record-edit-form object-api-name={objectApiName} record-id={selectedId}
                     onsuccess={handleSuccess} onerror={handleError}>
-                    <lightning-messages></lightning-messages>
                     <div class="slds-grid slds-gutters">
                         <div class="slds-col slds-size_1-of-2">
                             <template if:true={selectedId}>
@@ -45,8 +44,22 @@
             <template if:false={showForm}>
                 <lightning-button label={labelAddChannel} variant="brand" onclick={handleShowForm}></lightning-button>
             </template>
+
+            <!-- Search bar -->
+            <div class="slds-m-bottom_medium">
+                <lightning-input
+                    type="search"
+                    placeholder="Search by Name or Channel ID..."
+                    value={searchTerm}
+                    onchange={handleSearch}
+                    icon-name="utility:search"
+                    class="search-input">
+                </lightning-input>
+            </div>
+
+            <!-- Display filtered datatable -->
             <div class="slds-m-top_large" style="height: 400px;">
-                <lightning-datatable key-field="Id" data={channels} columns={columns} hide-checkbox-column
+                <lightning-datatable key-field="Id" data={filteredChannels} columns={columns} hide-checkbox-column
                     onrowaction={handleRowAction} onsort={handleSort} sorted-by={sortBy}
                     sorted-direction={sortDirection}>
                 </lightning-datatable>

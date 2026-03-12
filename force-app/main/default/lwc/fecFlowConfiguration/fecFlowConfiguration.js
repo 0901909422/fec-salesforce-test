@@ -120,40 +120,46 @@ export default class FecFlowConfiguration extends LightningElement {
             const newStageNumber = this.stages.length + 1;
             const stageName = LABEL_STAGE_PREFIX + ' ' + newStageNumber;
             const businessProcessId = this.nodeData?.idType;
-            const code = businessProcessId + '-' + stageName;
+
+            // Get BP name from nodeData.label or nodeData.name
+            const businessProcessName = this.nodeData?.label || this.nodeData?.name || '';
+            const fullName = `${businessProcessName}-${stageName}`;
+            const code = `${businessProcessName}-${stageName}`;
 
             const params = {
-                name: stageName, 
+                // Use combined BusinessProcessName-StageName as the record Name
+                name: fullName,
                 code: code,
                 businessProcessId: businessProcessId,
-                nameVN: stageName,
+                nameVN: fullName,
                 status: true,
-                alias: stageName,
+                alias: fullName,
                 posOrder: newStageNumber
             };
-            
+
             showLog('[handleAddStage] Creating stage with params:', params);
             const newStageId = await createCaseStage(params);
             showLog('[handleAddStage] Stage created with ID:', newStageId);
 
             const newStage = {
                 id: newStageId,
-                name: stageName,
+                // store the full record name, but keep label as simple Stage label for UI
+                name: fullName,
                 label: stageName,
                 order: newStageNumber,
                 properties: [],
                 isActive: false
             };
             this.stages = [...this.stages, newStage];
-            
+
             showLog('[handleAddStage] New stage added to local state. Total stages:', this.stages.length);
             this.showToast('Success', 'Stage added successfully', VARIANT_SUCCESS);
-            
+
             // Trigger wire adapter refresh by incrementing refreshCounter
             // This forces getCaseStageOptionsByBP to re-execute and reload fresh data from server
             this.refreshCounter++;
             showLog('[handleAddStage] Triggered wire adapter refresh with refreshCounter:', this.refreshCounter);
-            
+
         } catch (error) {
             showLog('Error creating stage:', error);
             this.showToast('Error', 'Failed to add stage: ' + error.body?.message, VARIANT_ERROR);

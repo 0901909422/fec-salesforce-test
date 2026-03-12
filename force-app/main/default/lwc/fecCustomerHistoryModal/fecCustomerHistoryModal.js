@@ -6,6 +6,7 @@ import btnClose from '@salesforce/label/c.FEC_Btn_Close';
 import LBL_DATA_LINKAGE from '@salesforce/label/c.FEC_Lbl_Data_Linkage';
 import LBL_FIELD_NAME from '@salesforce/label/c.FEC_Lbl_Field_Name';
 import LBL_STATUS from '@salesforce/label/c.FEC_Lbl_Status';
+import LBL_IS_ACTIVE from '@salesforce/label/c.FEC_Lbl_Is_Active';
 import LBL_START_DATE from '@salesforce/label/c.FEC_Lbl_Start_Date';
 import LBL_END_DATE_FINISH from '@salesforce/label/c.FEC_Lbl_End_Date_Finish';
 import LBL_CREATED_BY from '@salesforce/label/c.FEC_Lbl_Created_By';
