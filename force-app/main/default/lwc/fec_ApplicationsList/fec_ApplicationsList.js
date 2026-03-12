@@ -14,7 +14,7 @@
 import { LightningElement, api, track } from 'lwc';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import { NavigationMixin } from 'lightning/navigation';
-import { maskValue,formatDateVNI } from 'c/fec_CommonUtils';
+import { maskValue,formatDateVNI,parseDateVNI } from 'c/fec_CommonUtils';
 
 import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
 
@@ -37,7 +37,7 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
             label: 'Application ID',
             fieldName: 'applicationId',
             type: 'link',
-            recordIdField: 'Id',
+            recordIdField: 'applicationId',
             hoverFields: [
                 {
                       section: 'Registration Info',
@@ -123,7 +123,9 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
                 tSAName: row.tSAName
 
             }));
-
+            this.registration.sort((a,b)=>{
+                return new Date(parseDateVNI(b.updateDate)) - new Date(parseDateVNI(a.updateDate));
+            });
             this.hasData = this.registration.length > 0;
 
         } catch (err) {
@@ -136,8 +138,13 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
     }
 
     handleRegistrationSelect(event) {
-        const applicationListId = event.detail.recordId;
-        if (!applicationListId) return;
+        const applicationId = event.detail.recordId;
+        const row = this.registration.find(r => r.applicationId === applicationId);
+
+        if (!row) {
+            console.error('Application not found:', applicationId);
+            return;
+        }
 
         this[NavigationMixin.Navigate]({
             type: 'standard__navItemPage',
@@ -145,8 +152,9 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
                 apiName: 'FEC_ApplicationList'
             },
             state: {
-                c__ApplicationList: applicationListId
+                c__ApplicationList: row.Id,
+                c__appId: row.applicationId
             }
         });
-    }
+    }   
 }
