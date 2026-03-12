@@ -1483,7 +1483,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       if (!options || !Array.isArray(options) || options.length === 0) return;
 
       const currentVal = inputField.value;
-      if (currentVal == null || currentVal === "") return;
+      if (currentVal == null || currentVal === STR_EMPTY) return;
 
       const found = options.find((opt) => opt.label === currentVal);
       if (found) {
