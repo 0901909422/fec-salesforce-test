@@ -14,6 +14,7 @@ import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
 import getB2Contracts from "@salesforce/apex/FEC_SearchController.getB2Contracts";
 import getCash24Contracts from "@salesforce/apex/FEC_SearchController.getCash24Contracts";
 import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
+import FEC_National_ID_Passport_ID_Label  from '@salesforce/label/c.FEC_National_ID_Passport_ID_Label';
 import FEC_Toast_Search_Validation from '@salesforce/label/c.FEC_Toast_Search_Validation';
 import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
@@ -65,6 +66,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   FEC_Toast_Validation_Title = FEC_Toast_Validation_Title;
   FEC_Toast_Error = FEC_Toast_Error;
   FEC_Toast_Error_Generic = FEC_Toast_Error_Generic;
+  FEC_National_ID_Passport_ID_Label = FEC_National_ID_Passport_ID_Label;
 
   @wire(MessageContext)
   messageContext;
@@ -136,6 +138,10 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   get isShowCustomerNumber() {
     return this.recordId ? true : false;
+  }
+
+  get nationalId_PassPortId_PlaceHolder() {
+    return 'Nhập ' + this.FEC_National_ID_Passport_ID_Label;
   }
 
   get loanContractColumns() {
