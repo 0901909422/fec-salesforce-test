@@ -788,15 +788,6 @@ export default class Fec_CaseBussiness extends LightningElement {
     const fieldName = e.target.fieldName || e.target.dataset?.field;
     if (!fieldName) return;
 
-    // Chặn paste (Ctrl+V / Cmd+V) trên trường phone
-    if (
-      phoneFields.includes(fieldName) &&
-      (e.ctrlKey || e.metaKey) &&
-      e.key.toLowerCase() === "v"
-    ) {
-      e.preventDefault();
-      return;
-    }
     if (e.ctrlKey || e.metaKey) return;
 
     const key = e.key;
@@ -842,17 +833,14 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
   }
 
-  /** Chặn paste vào trường FEC_Updated_Info_Phone_Number__c & FEC_Registered_Phone_Number__c */
+  /** Cho phép paste; sau khi paste chạy validation theo từng field (phone, email, full name, DOB, gender, ...). */
   handlePaste(e) {
-    const fieldName = e.target.fieldName || e.target.dataset?.field;
-    const phoneFields = [
-      FIELD_UPDATED_INFO_PHONE_NUMBER,
-      FIELD_REGISTERED_PHONE_NUMBER,
-      FIELD_CASE_PHONE_NUMBER,
-    ];
-    if (fieldName && phoneFields.includes(fieldName)) {
-      e.preventDefault();
-    }
+    const target = e.target;
+    setTimeout(() => {
+      if (target && target.value !== undefined) {
+        this.handleChangeInput({ target });
+      }
+    }, 0);
   }
 
   handleDateChange(e) {
