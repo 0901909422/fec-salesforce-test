@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
+        <members>FEC_GetCSCaseStatusService</members>
+        <members>FEC_CreateCSCaseService</members>
         <members>FEC_CardLockUnLockCallout</members>
 		<members>FEC_PINReissueServiceCallout</members>
 		<members>FEC_ReplacementCardCallout</members>
@@ -30,6 +32,50 @@
 		<members>FEC_Asset__c</members>
 		<members>FEC_MRC__c</members>
 		<name>CustomObject</name>
+	</types>
+    <types>
+		<members>FEC_CS_CASE_ADDITIONAL_INFO_ID_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_ADDITIONAL_INFO_VALUE_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_CATEGORY_INVALID_MSG</members>
+		<members>FEC_CS_CASE_CUSTOMER_INFO_MISSING_MSG</members>
+		<members>FEC_CS_CASE_ERROR_CODE</members>
+		<members>FEC_CS_CASE_INVALID_ADDITIONAL_INFO_VALUE_MSG</members>
+		<members>FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG</members>
+		<members>FEC_CS_CASE_INVALID_CREATOR_EMAIL_MSG</members>
+		<members>FEC_CS_CASE_INVALID_CUSTOMER_NAME_MSG</members>
+		<members>FEC_CS_CASE_INVALID_EMAIL_ADDRESS_MSG</members>
+		<members>FEC_CS_CASE_INVALID_NATIONAL_ID_MSG</members>
+		<members>FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG</members>
+		<members>FEC_CS_CASE_INVALID_TRANSACTION_ID_MSG</members>
+		<members>FEC_CS_CASE_INVALID_USER_TYPE_MSG</members>
+		<members>FEC_CS_CASE_NOT_FOUND_MSG</members>
+		<members>FEC_CS_CASE_PRODUCT_TYPE_INVALID_MSG</members>
+		<members>FEC_CS_CASE_REMARKS_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_REMARKS_TOO_LONG_MSG</members>
+		<members>FEC_CS_CASE_REQUEST_INFO_MISSING_MSG</members>
+		<members>FEC_CS_CASE_REQUEST_IS_NULL_MSG</members>
+		<members>FEC_CS_CASE_STATUS_CASEID_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_STATUS_CASEREQUESTINFO_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_STATUS_CHANNEL_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_STATUS_CONTRACT_OR_ACCOUNT_INFOS_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_MAX_MSG</members>
+		<members>FEC_CS_CASE_STATUS_DATETIME_INVALID_MSG</members>
+		<members>FEC_CS_CASE_STATUS_PHONE_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_STATUS_PRODUCT_TYPE_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_STATUS_REQUEST_INVALID_MSG</members>
+		<members>FEC_CS_CASE_STATUS_SYS_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_STATUS_TRANSACTIONID_MAX_MSG</members>
+		<members>FEC_CS_CASE_STATUS_TRANSACTIONID_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_STATUS_USERTYPE_MAX_MSG</members>
+		<members>FEC_CS_CASE_STATUS_USERTYPE_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_SUBCODE_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_SUBCODE_TOO_LONG_MSG</members>
+		<members>FEC_CS_CASE_SUB_CATEGORY_INVALID_MSG</members>
+		<members>FEC_CS_CASE_SYS_MISSING_MSG</members>
+		<members>FEC_CS_CASE_TYPE_REQUIRED_MSG</members>
+		<members>FEC_CS_CASE_TYPE_TOO_LONG_MSG</members>
+		<members>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</members>
+		<name>CustomLabel</name>
 	</types>
     <version>65.0</version>
 </Package>
