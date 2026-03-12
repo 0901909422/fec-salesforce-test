@@ -2662,7 +2662,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Error API Label</shortDescription>
-        <value>Tải Dữ liệu Không Thành Công</value>
+        <value>Tải dữ liệu không thành công</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Error_Panel_Body</fullName>
