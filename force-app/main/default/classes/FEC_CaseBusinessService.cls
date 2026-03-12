@@ -540,6 +540,8 @@ public with sharing class FEC_CaseBusinessService {
           objToFieldlstMap
         );
 
+        result.picklistOptionsMap = getPicklistOptionsMap(objToFieldlstMap);
+
         // ================================== CONVERT MASTER DATA SETTING FIELD TO FIELD ================================
         for (Section sectionItem : result.sectionlst) {
           for (Section subSectionItem : sectionItem.subSectionlst) {
@@ -1589,6 +1591,50 @@ public with sharing class FEC_CaseBusinessService {
     return soqlMap;
   }
 
+  /**
+   * Build map of picklist options (value + label) per object/field for fields that use toLabel in getData.
+   * LWC uses this to convert label back to API value before submit.
+   */
+  private static Map<String, Map<String, List<PicklistOptionDto>>> getPicklistOptionsMap(
+    Map<String, Set<String>> objToFieldlstMap
+  ) {
+    Map<String, Map<String, List<PicklistOptionDto>>> result = new Map<String, Map<String, List<PicklistOptionDto>>>();
+
+    for (String objName : objToFieldlstMap.keySet()) {
+      Schema.SObjectType objType = Schema.getGlobalDescribe().get(objName);
+      if (objType == null)
+        continue;
+
+      Map<String, Schema.SObjectField> fieldsMap = objType.getDescribe().fields.getMap();
+      Map<String, List<PicklistOptionDto>> fieldToOptions = new Map<String, List<PicklistOptionDto>>();
+
+      for (String fieldName : objToFieldlstMap.get(objName)) {
+        if (!fieldsMap.containsKey(fieldName))
+          continue;
+
+        Schema.DescribeFieldResult fieldDescribe = fieldsMap.get(fieldName).getDescribe();
+        if (fieldDescribe.getType() != Schema.DisplayType.Picklist &&
+          fieldDescribe.getType() != Schema.DisplayType.MultiPicklist) {
+          continue;
+        }
+
+        List<PicklistOptionDto> options = new List<PicklistOptionDto>();
+        for (Schema.PicklistEntry entry : fieldDescribe.getPicklistValues()) {
+          if (entry.isActive()) {
+            options.add(new PicklistOptionDto(entry.getValue(), entry.getLabel()));
+          }
+        }
+        fieldToOptions.put(fieldName, options);
+      }
+
+      if (!fieldToOptions.isEmpty()) {
+        result.put(objName, fieldToOptions);
+      }
+    }
+
+    return result;
+  }
+
   private static Field transform(
     Sobject masterDataItem,
     SObject objTemp,
@@ -1751,6 +1797,9 @@ public with sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public String code;
+
+    @AuraEnabled
+    public Map<String, Map<String, List<PicklistOptionDto>>> picklistOptionsMap;
 
     // @AuraEnabled
     // public FEC_CommonUltils.PicklistOption lastQueue;
@@ -2027,6 +2076,21 @@ public with sharing class FEC_CaseBusinessService {
         return -1;
 
       return Integer.valueOf(this.order - o.order); // ascending
+    }
+  }
+
+  public class PicklistOptionDto {
+    @AuraEnabled
+    public String value;
+    @AuraEnabled
+    public String label;
+
+    public PicklistOptionDto() {
+    }
+
+    public PicklistOptionDto(String value, String label) {
+      this.value = value;
+      this.label = label;
     }
   }
 

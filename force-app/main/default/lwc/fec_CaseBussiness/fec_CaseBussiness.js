@@ -1194,6 +1194,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveOnlyFormTotal = total;
 
       formToSubmit.forEach((item) => {
+        this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
     });
@@ -1465,6 +1466,33 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   /**
+   * Gán lại API value cho các trường picklist trước khi submit (data từ Apex dùng toLabel nên value đang là label).
+   * Giữ toLabel để hiển thị tiếng Việt; khi gửi lên server phải dùng API name.
+   */
+  _applyPicklistLabelToApiValue(form) {
+    const map = this.business?.picklistOptionsMap;
+    if (!map) return;
+
+    const fieldlst = form.querySelectorAll("lightning-input-field");
+    fieldlst?.forEach((inputField) => {
+      const objName = inputField.dataset?.objName;
+      const fieldName = inputField.dataset?.field;
+      if (!objName || !fieldName) return;
+
+      const options = map[objName]?.[fieldName];
+      if (!options || !Array.isArray(options) || options.length === 0) return;
+
+      const currentVal = inputField.value;
+      if (currentVal == null || currentVal === "") return;
+
+      const found = options.find((opt) => opt.label === currentVal);
+      if (found) {
+        inputField.value = found.value;
+      }
+    });
+  }
+
+  /**
    * Submit toàn bộ form và chờ tất cả hoàn thành.
    * Đảm bảo Account Info, Case Info đã lưu trước khi run().
    */
@@ -1489,6 +1517,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._submitFormsTotal = total;
 
       formToSubmit.forEach((item) => {
+        this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
     });
