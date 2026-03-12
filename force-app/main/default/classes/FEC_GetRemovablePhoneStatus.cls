@@ -13,6 +13,7 @@
 
 public with sharing class FEC_GetRemovablePhoneStatus {
 
+  private static ResponseLog responseLog;
   private static final String PHONE_CHECK_NS = 'http://fecredit.com.vn/PhoneCheckWS';
 
   public class PhoneCheckResult {
@@ -24,6 +25,27 @@ public with sharing class FEC_GetRemovablePhoneStatus {
     @AuraEnabled public String rawResponse;
     @AuraEnabled public Boolean success;
     @AuraEnabled public String errorMessage;
+  }
+
+  // ==========================================
+  // RESPONSE LOG CLASS
+  // ==========================================
+  public class ResponseLog {
+    public String apiName;
+    public String endpoint;
+    public String method;
+    public String requestBody;
+    public HttpResponse response;
+    public String errorMessage;
+
+    public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
+      this.apiName = apiName;
+      this.endpoint = endpoint;
+      this.method = method;
+      this.requestBody = requestBody;
+      this.response = response;
+      this.errorMessage = errorMessage;
+    }
   }
 
   // ==========================================
@@ -86,7 +108,7 @@ public with sharing class FEC_GetRemovablePhoneStatus {
           ''
         );
 
-        FEC_CommonUltils.logApi(
+        responseLog = new ResponseLog(
           'FEC_GetRemovablePhoneStatus',
           endpoint,
           FEC_ConstantCommon.API_METHOD_POST,
@@ -108,8 +130,10 @@ public with sharing class FEC_GetRemovablePhoneStatus {
 
         if (finalResult.rawResponse == null)
           finalResult.rawResponse = resBody;
+
+        logApiResponse();
       } catch (Exception ex) {
-        FEC_CommonUltils.logApi(
+        responseLog = new ResponseLog(
           'FEC_GetRemovablePhoneStatus',
           endpoint,
           FEC_ConstantCommon.API_METHOD_POST,
@@ -117,6 +141,7 @@ public with sharing class FEC_GetRemovablePhoneStatus {
           null,
           ex.getMessage()
         );
+        logApiResponse();
         finalResult.errorMessage = ex.getMessage();
         finalResult.success = false;
       }
@@ -125,6 +150,22 @@ public with sharing class FEC_GetRemovablePhoneStatus {
     } catch (Exception e) {
       System.debug('Error: ' + e.getMessage());
       throw new AuraHandledException(e.getMessage());
+    }
+  }
+
+  // ==========================================
+  // LOGGING
+  // ==========================================
+  private static void logApiResponse() {
+    if (responseLog != null) {
+      FEC_CommonUltils.logApi(
+        responseLog.apiName,
+        responseLog.endpoint,
+        responseLog.method,
+        responseLog.requestBody,
+        responseLog.response,
+        responseLog.errorMessage
+      );
     }
   }
 

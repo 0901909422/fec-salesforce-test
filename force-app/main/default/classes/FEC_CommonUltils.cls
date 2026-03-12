@@ -673,6 +673,19 @@ public with sharing class FEC_CommonUltils {
     return 'Inactive';
   }
 
+  public static void checkLength(String fieldName, String value, Integer length) {
+    if (String.isNotBlank(value) && value.length() > length) {
+      throw new FEC_APIServiceException(
+        String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{fieldName, String.valueOf(length)})
+      );
+    }
+  }
+
+  public static void addTextNodeSafe(Dom.XmlNode parent, String tagName, String value) {
+    parent.addChildElement(tagName, null, null)
+      .addTextNode(value == null ? '' : value);
+  }
+
   public static void logApi(
     String apiName,
     String endpoint,

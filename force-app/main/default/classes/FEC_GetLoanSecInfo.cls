@@ -10,6 +10,8 @@
 
 public with sharing class FEC_GetLoanSecInfo {
 
+    private static ResponseLog responseLog;
+
     // =========================================================================
     // RESPONSE MODELS
     // =========================================================================
@@ -65,6 +67,27 @@ public with sharing class FEC_GetLoanSecInfo {
     }
 
     // =========================================================================
+    // RESPONSE LOG CLASS
+    // =========================================================================
+    public class ResponseLog {
+        public String apiName;
+        public String endpoint;
+        public String method;
+        public String requestBody;
+        public HttpResponse response;
+        public String errorMessage;
+
+        public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
+            this.apiName = apiName;
+            this.endpoint = endpoint;
+            this.method = method;
+            this.requestBody = requestBody;
+            this.response = response;
+            this.errorMessage = errorMessage;
+        }
+    }
+
+    // =========================================================================
     // PUBLIC METHOD - Simplified
     // =========================================================================
     public static ResponseWrapper getLoanSecInfo(String contractNumber) {
@@ -97,12 +120,17 @@ public with sharing class FEC_GetLoanSecInfo {
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
             HttpResponse res = FEC_CommonUltils.calloutApi(
-                endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE,
+                endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE,
                 apiConfig?.FEC_SOAP_Action__c, null, soapBody
             );
 
-            FEC_CommonUltils.logApi(
-                'FEC_GetLoanSecInfo', endpoint, 'POST', soapBody, res, null
+            responseLog = new ResponseLog(
+                'FEC_GetLoanSecInfo',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                soapBody,
+                res,
+                null
             );
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
@@ -119,6 +147,7 @@ public with sharing class FEC_GetLoanSecInfo {
                 );
             }
 
+            logApiResponse();
             return response;
 
         } catch (Exception ex) {
@@ -256,6 +285,22 @@ public with sharing class FEC_GetLoanSecInfo {
             listData.add(ph);
         }
         return listData;
+    }
+
+    // =========================================================================
+    // LOGGING
+    // =========================================================================
+    private static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+        }
     }
 
     // =========================================================================

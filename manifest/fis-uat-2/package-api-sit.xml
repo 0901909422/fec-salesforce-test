@@ -28,6 +28,10 @@
 		<members>FEC_API_Config.FEC_Get_Loan_Application_History</members>
 		<members>FEC_API_Config.FEC_Get_MRC_Info</members>
 		<members>FEC_API_Config.FEC_Transfer_Call</members>
+		<members>FEC_API_Config.FEC_Get_Loan_Basic_Info</members>
+		<members>FEC_API_Config.FEC_Get_Loan_Sec_Info</members
+		<members>FEC_API_Config.FEC_Get_Removable_Phone_Status</members>
+		<members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<name>CustomMetadata</name>
 	</types>
 

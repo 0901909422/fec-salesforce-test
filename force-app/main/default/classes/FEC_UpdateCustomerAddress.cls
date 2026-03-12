@@ -12,6 +12,7 @@
 
 public with sharing class FEC_UpdateCustomerAddress {
 
+  private static ResponseLog responseLog;
   private static final String CIF_NS = 'http://fecredit.com.vn/CIF_CustomerInfoUpdate';
 
   public class CustomerAddressInfo {
@@ -42,6 +43,27 @@ public with sharing class FEC_UpdateCustomerAddress {
     @AuraEnabled public Boolean success;
     @AuraEnabled public String errorMessage;
     @AuraEnabled public Decimal actionCount;
+  }
+
+  // ==========================================
+  // RESPONSE LOG CLASS
+  // ==========================================
+  public class ResponseLog {
+    public String apiName;
+    public String endpoint;
+    public String method;
+    public String requestBody;
+    public HttpResponse response;
+    public String errorMessage;
+
+    public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
+      this.apiName = apiName;
+      this.endpoint = endpoint;
+      this.method = method;
+      this.requestBody = requestBody;
+      this.response = response;
+      this.errorMessage = errorMessage;
+    }
   }
 
   // ==========================================
@@ -79,49 +101,49 @@ public with sharing class FEC_UpdateCustomerAddress {
       sysNode.addChildElement('DateTime', null, null).addTextNode(timestamp);
 
       // --- CIFNumber ---
-      addTextNodeSafe(requestNode, 'CIFNumber', info.cifNumber);
+      FEC_CommonUltils.addTextNodeSafe(requestNode, 'CIFNumber', info.cifNumber);
 
       // --- Address ---
       Dom.XmlNode addrNode = requestNode.addChildElement('Address', null, null);
 
-      addTextNodeSafe(addrNode, 'AddressId', info.addressId);
-      addTextNodeSafe(addrNode, 'AddressType', info.addressType);
+      FEC_CommonUltils.addTextNodeSafe(addrNode, 'AddressId', info.addressId);
+      FEC_CommonUltils.addTextNodeSafe(addrNode, 'AddressType', info.addressType);
 
       if (String.isNotBlank(info.number_x))
-        addTextNodeSafe(addrNode, 'Number', info.number_x);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'Number', info.number_x);
 
       if (String.isNotBlank(info.building))
-        addTextNodeSafe(addrNode, 'Building', info.building);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'Building', info.building);
 
       if (String.isNotBlank(info.street))
-        addTextNodeSafe(addrNode, 'Street', info.street);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'Street', info.street);
 
       if (String.isNotBlank(info.ward))
-        addTextNodeSafe(addrNode, 'Ward', info.ward);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'Ward', info.ward);
 
       if (String.isNotBlank(info.city))
-        addTextNodeSafe(addrNode, 'City', info.city);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'City', info.city);
 
       if (String.isNotBlank(info.propertyStatus))
-        addTextNodeSafe(addrNode, 'PropertyStatus', info.propertyStatus);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'PropertyStatus', info.propertyStatus);
 
       if (String.isNotBlank(info.years))
-        addTextNodeSafe(addrNode, 'Years', info.years);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'Years', info.years);
 
       if (String.isNotBlank(info.months))
-        addTextNodeSafe(addrNode, 'Months', info.months);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'Months', info.months);
 
       if (String.isNotBlank(info.isMailingAddress))
-        addTextNodeSafe(addrNode, 'IsMailingAddress', info.isMailingAddress);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'IsMailingAddress', info.isMailingAddress);
 
       if (String.isNotBlank(info.isPrimary))
-        addTextNodeSafe(addrNode, 'IsPrimary', info.isPrimary);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'IsPrimary', info.isPrimary);
 
       if (String.isNotBlank(info.receiveStatement))
-        addTextNodeSafe(addrNode, 'ReceiveStatement', info.receiveStatement);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'ReceiveStatement', info.receiveStatement);
 
       if (String.isNotBlank(info.cardDelivery))
-        addTextNodeSafe(addrNode, 'CardDelivery', info.cardDelivery);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'CardDelivery', info.cardDelivery);
 
       UpdateResult finalResult = new UpdateResult();
       String endpoint = '';
@@ -142,7 +164,7 @@ public with sharing class FEC_UpdateCustomerAddress {
           ''
         );
 
-        FEC_CommonUltils.logApi(
+        responseLog = new ResponseLog(
           'FEC_UpdateCustomerAddress',
           endpoint,
           FEC_ConstantCommon.API_METHOD_POST,
@@ -164,8 +186,10 @@ public with sharing class FEC_UpdateCustomerAddress {
 
         if (finalResult.rawResponse == null)
           finalResult.rawResponse = resBody;
+
+        logApiResponse();
       } catch (Exception ex) {
-        FEC_CommonUltils.logApi(
+        responseLog = new ResponseLog(
           'FEC_UpdateCustomerAddress',
           endpoint,
           FEC_ConstantCommon.API_METHOD_POST,
@@ -173,6 +197,7 @@ public with sharing class FEC_UpdateCustomerAddress {
           null,
           ex.getMessage()
         );
+        logApiResponse();
         finalResult.errorMessage = ex.getMessage();
         finalResult.success = false;
       }
@@ -181,6 +206,22 @@ public with sharing class FEC_UpdateCustomerAddress {
     } catch (Exception e) {
       System.debug('Error: ' + e.getMessage());
       throw new AuraHandledException(e.getMessage());
+    }
+  }
+
+  // ==========================================
+  // LOGGING
+  // ==========================================
+  private static void logApiResponse() {
+    if (responseLog != null) {
+      FEC_CommonUltils.logApi(
+        responseLog.apiName,
+        responseLog.endpoint,
+        responseLog.method,
+        responseLog.requestBody,
+        responseLog.response,
+        responseLog.errorMessage
+      );
     }
   }
 
@@ -212,24 +253,24 @@ public with sharing class FEC_UpdateCustomerAddress {
       );
     }
 
-    checkLength('CIFNumber', info.cifNumber, 255);
-    checkLength('AddressId', info.addressId, 255);
-    checkLength('AddressType', info.addressType, 255);
+    FEC_CommonUltils.checkLength('CIFNumber', info.cifNumber, 255);
+    FEC_CommonUltils.checkLength('AddressId', info.addressId, 255);
+    FEC_CommonUltils.checkLength('AddressType', info.addressType, 255);
 
     if (String.isNotBlank(info.number_x))
-      checkLength('Number', info.number_x, 255);
+      FEC_CommonUltils.checkLength('Number', info.number_x, 255);
 
     if (String.isNotBlank(info.building))
-      checkLength('Building', info.building, 255);
+      FEC_CommonUltils.checkLength('Building', info.building, 255);
 
     if (String.isNotBlank(info.street))
-      checkLength('Street', info.street, 255);
+      FEC_CommonUltils.checkLength('Street', info.street, 255);
 
     if (String.isNotBlank(info.ward))
-      checkLength('Ward', info.ward, 255);
+      FEC_CommonUltils.checkLength('Ward', info.ward, 255);
 
     if (String.isNotBlank(info.city))
-      checkLength('City', info.city, 255);
+      FEC_CommonUltils.checkLength('City', info.city, 255);
   }
 
   // ==========================================
@@ -316,16 +357,4 @@ public with sharing class FEC_UpdateCustomerAddress {
   // ==========================================
   // HELPERS
   // ==========================================
-  private static void checkLength(String fieldName, String value, Integer length) {
-    if (String.isNotBlank(value) && value.length() > length) {
-      throw new FEC_APIServiceException(
-        String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{fieldName, String.valueOf(length)})
-      );
-    }
-  }
-
-  private static void addTextNodeSafe(Dom.XmlNode parent, String tagName, String value) {
-    parent.addChildElement(tagName, null, null)
-      .addTextNode(value == null ? '' : value);
-  }
 }
