@@ -58,7 +58,7 @@
               <span class="slds-truncate">{optionLabel}</span>
             </div>
 
-            <button
+            <button if:true={showClose}
               class="slds-button slds-button_icon slds-input__icon slds-input__icon_right"
               onclick={handleRemoveSelected}
             >

@@ -265,8 +265,8 @@ public without sharing class FEC_FollowUpController {
                 return System.Label.FEC_MSG_FollowUp_Already_Unfollowed;
             }
             
-            // Unfollow: Set Active = false, remove from Case Team and Follow Up User field
-            update new FEC_Watcher__c(Id = watchers[0].Id, FEC_Active__c = false);
+            // Unfollow: Delete watcher record, remove from Case Team and Follow Up User field
+            delete watchers[0];
             removeUserFromFollowUpField(caseId, currentUserId);
             removeUserFromCaseTeam(caseId, currentUserId);
             publishFollowUpdateEvent(caseId);
@@ -298,12 +298,8 @@ public without sharing class FEC_FollowUpController {
                 userIds.add(w.FEC_Watcher_User__c);
             }
             
-            // Set Active = false
-            List<FEC_Watcher__c> watchersToUpdate = new List<FEC_Watcher__c>();
-            for (FEC_Watcher__c w : activeWatchers) {
-                watchersToUpdate.add(new FEC_Watcher__c(Id = w.Id, FEC_Active__c = false));
-            }
-            update watchersToUpdate;
+            // Delete watcher records
+            delete activeWatchers;
             
             // Clear Follow Up User field
             List<Case> casesToUpdate = new List<Case>();

@@ -40,6 +40,7 @@
   </lightning-accordion>
 
   <div class="case-footer" if:true={modeEditCase}>
+    <c-fec_-error-panel if:true={hasError} errors={errlst}></c-fec_-error-panel>
     <lightning-button
       label={labelSaveClose}
       onclick={handleSave}
@@ -51,7 +52,5 @@
       onclick={handleSubmit}
       disabled={isSubmitDisabled}
     ></lightning-button>
-
-    <c-fec_-error-panel if:true={hasError} errors={errlst}></c-fec_-error-panel>
   </div>
 </template>

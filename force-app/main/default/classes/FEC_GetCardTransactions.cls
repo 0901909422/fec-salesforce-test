@@ -17,7 +17,7 @@ public without sharing class FEC_GetCardTransactions {
     // ============================================================
 
     public class CardTxnRequest {
-        public List<String> parameters;
+        public Map<String,String> parameters;
         public Map<String, Object> headers;
         public Map<String, Object> body;
     }
@@ -38,7 +38,7 @@ public without sharing class FEC_GetCardTransactions {
         public String TransID;
         public String RequestorID;
         public String DateTimeStr;
-        public String Code;
+        public Integer Code;
         public String Description;
     }
 
@@ -84,7 +84,6 @@ public without sharing class FEC_GetCardTransactions {
 
     public static CardTxnResponse getCardTransactions(
         String transId,
-        String dateTimeStr,
         String requestorId,
         String accountNumber,
         Date startDate,
@@ -95,19 +94,23 @@ public without sharing class FEC_GetCardTransactions {
 
         try {
 
+            String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX);
             CardTxnRequest request = new CardTxnRequest();
 
             request.headers = new Map<String, Object>{
                 'TransID'     => transId,
                 'RequestorID' => requestorId,
                 'DateTime'    => dateTimeStr,
-                'Content-Type'=> FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+                'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
             };
 
-            request.parameters = new List<String>{
-                accountNumber,
-                startDate != null ? startDate.format() : null,
-                endDate != null ? endDate.format() : null
+            String strFromDate = startDate != null ? String.valueOf(startDate) : '';
+            String strToDate   = endDate != null ? String.valueOf(endDate) : '';
+
+            request.parameters = new Map<String, String>{
+                'AccountNumber' => accountNumber,
+                'FromDate'      => strFromDate,
+                'ToDate'        => strToDate
             };
 
             request.body = new Map<String, Object>();
@@ -120,7 +123,20 @@ public without sharing class FEC_GetCardTransactions {
             String endpoint = apiSetting?.FEC_Call_Mock__c
                 ? FEC_MockupEndpoint.FEC_GET_CARD_TXN_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse resp = FEC_CommonUltils.calloutApi( endpoint,'POST', FEC_ConstantCommon.API_CONTENT_TYPE_JSON, '', null, requestBodyJson );
+            
+            endpoint += '?AccountNumber=' + EncodingUtil.urlEncode(accountNumber,'UTF-8')
+            + '&FromDate=' + EncodingUtil.urlEncode(strFromDate,'UTF-8')
+            + '&ToDate=' + EncodingUtil.urlEncode(strToDate,'UTF-8');
+
+            Map<String,String> headers = new Map<String,String>{
+                'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+                'TransID' => transId,
+                'RequestorID' => requestorId,
+                'DateTime' => dateTimeStr
+            };
+
+            HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders( endpoint,'GET', headers, null);
+        
             if (resp.getStatusCode() == 200) {
 
                 response = (CardTxnResponse)
@@ -149,7 +165,7 @@ public without sharing class FEC_GetCardTransactions {
     public static Boolean isSuccess(CardTxnResponse response) {
         return response != null
             && response.Sys != null
-            && response.Sys.Code == '1';
+            && response.Sys.Code == 1;
     }
 
     // ============================================================
@@ -170,9 +186,10 @@ public without sharing class FEC_GetCardTransactions {
         Set<String> validRequestorIds = new Set<String>{
             FEC_ConstantCommon.REQUESTOR_CRM,
             FEC_ConstantCommon.REQUESTOR_PORTAL,
-            FEC_ConstantCommon.REQUESTOR_MOBILE_APP
+            FEC_ConstantCommon.REQUESTOR_MOBILE_APP,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN
         };
-
+        
         if (String.isBlank(requestorId) || !validRequestorIds.contains(requestorId))
             return new ValidationResult(false, System.Label.FEC_MSG_RequestorID_Null);
 
@@ -203,7 +220,7 @@ public without sharing class FEC_GetCardTransactions {
         if (response.Sys == null)
             return new ValidationResult(false, System.Label.FEC_MSG_Response_Sys_Null);
 
-        if (response.Sys.Code != '1')
+        if (response.Sys.Code != 1)
             return new ValidationResult(false,
                 response.Sys.Description);
 
