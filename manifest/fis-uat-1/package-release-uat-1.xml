@@ -1199,6 +1199,7 @@
 	</types>
 	<types>
 		<members>GenesysCall</members>
+		<members>FEC_Watcher_Refresh</members>
 		<name>LightningMessageChannel</name>
 	</types>
     <types>
