@@ -1360,7 +1360,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Follow Up Label</shortDescription>
-        <value>Follow Up</value>
+        <value>Follow-Up</value>
     </labels>
     <labels>
         <fullName>FEC_Follow_Up_Until_Resolved</fullName>
