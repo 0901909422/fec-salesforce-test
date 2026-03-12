@@ -432,5 +432,9 @@
         <members>en_US</members>
         <name>Translations</name>
     </types>
+	<types>
+		<members>FEC_Watcher_Refresh</members>
+		<name>LightningMessageChannel</name>
+	</types>
     <version>65.0</version>
 </Package>
