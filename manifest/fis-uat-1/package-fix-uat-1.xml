@@ -42,6 +42,7 @@
         <members>FEC_PaymentHistoryController</members>
         <members>FEC_EmeaAccountInqService</members>
         <members>FEC_SecondaryController</members>
+		<members>FEC_UpdateCustomerContact</members>
         <name>ApexClass</name>
     </types>
     <types>
