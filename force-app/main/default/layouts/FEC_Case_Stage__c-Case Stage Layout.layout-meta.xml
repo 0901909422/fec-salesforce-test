@@ -120,10 +120,6 @@
         <relatedList>FEC_Master_Data_Setting__c.FEC_Stage_Name__c</relatedList>
     </relatedLists>
     <relatedLists>
-        <fields>NAME</fields>
-        <relatedList>FEC_Notification__c.FEC_Case_Stage__c</relatedList>
-    </relatedLists>
-    <relatedLists>
         <fields>CASES.CASE_NUMBER</fields>
         <fields>CASES.SUBJECT</fields>
         <fields>CASES.CREATED_DATE</fields>
