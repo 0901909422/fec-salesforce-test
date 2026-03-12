@@ -10,6 +10,7 @@ import getIntegrationFieldTypes
 import submitUpdateFraudCase from '@salesforce/apex/FEC_IntegrationCreateFraudController.submitUpdateFraudCase';
 import loadMasterDataIntegrationMappingById from '@salesforce/apex/FEC_IntegrationCreateFraudController.loadMasterDataIntegrationMappingById';
 import loadCategoryMapping from '@salesforce/apex/FEC_IntegrationCreateFraudController.loadCategoryMapping';
+import submitCancelFraudCase from '@salesforce/apex/FEC_IntegrationCreateFraudController.submitCancelFraudCase';
 
 
 
@@ -609,12 +610,8 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             const payload = this.buildPayload();
             this.previewJson = JSON.stringify(payload, null, 2);
             //this.showPreview = true;
-            const isUpdate =
-                this.fraudCase && Object.keys(this.fraudCase).length > 0;
     
-            this.actionType = isUpdate
-                ? this.updateActionType
-                : this.createActionType;         
+            this.actionType = this.updateActionType;        
             console.log('onSUbmit: ', this.previewJson);  
             await this.confirmSubmit();
             
@@ -663,8 +660,13 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         }
     
         let actionPromise;
-    
-        actionPromise = await submitUpdateFraudCase({ payload });
+       
+        if (this.actionType === this.cancelActionType) {
+            actionPromise = await submitCancelFraudCase({ payload });
+        } 
+        else if (this.actionType === this.updateActionType) {
+            actionPromise = await submitUpdateFraudCase({ payload });
+        }        
         if (actionPromise && actionPromise.success) {
             this.showSuccessToast(
                 this.labels.responseSuccess,
