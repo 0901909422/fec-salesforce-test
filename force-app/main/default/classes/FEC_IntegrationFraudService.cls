@@ -655,6 +655,9 @@ global with sharing class FEC_IntegrationFraudService {
             Integer statusCode = 0;
             String responseBody = null;
             HttpResponse response = null;
+            String messageStatus = null;
+            String requestor = creator.CreatorEmail;
+            String description = null; 
             //isConnectisConnected = false;
             if(isConnectisConnected) {
                  // ---------------------------------------------------------
@@ -672,9 +675,13 @@ global with sharing class FEC_IntegrationFraudService {
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callCreateFraudCaseService MOCKUP: ');
             }
+            FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType resultData = parseCreateFraudCaseResponse(responseBody);
             //Central integration logging
             String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_CREATE_NAME;
-            writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody);
+            description =  String.valueOf(statusCode);
+            messageStatus = resultData.Sys.Description;
+            writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, 
+            reqWrapper.serviceCaseId, requestBody, responseBody, messageStatus, requestor, description);
     
            
             log('SOAP CREATE STATUS: ' + statusCode);
@@ -692,7 +699,7 @@ global with sharing class FEC_IntegrationFraudService {
             // ---------------------------------------------------------
             // Parse SOAP XML Response → Convert to ResponseType
             // ---------------------------------------------------------
-            return parseCreateFraudCaseResponse(responseBody);
+            return resultData;
     
         } catch (CalloutException ce) {
     
@@ -754,6 +761,9 @@ global with sharing class FEC_IntegrationFraudService {
             Integer statusCode = 0;
             String responseBody = null;
             HttpResponse response = null;
+            String messageStatus = null;
+            String requestor = creator.CreatorEmail;
+            String description = null; 
             if(isConnectisConnected) {
                  // ---------------------------------------------------------
                 // Execute callout
@@ -768,9 +778,12 @@ global with sharing class FEC_IntegrationFraudService {
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callCreateFraudCaseService MOCKUP: ');
             }
+            FEC_IntegrationSoapFraudcaseService.ProcessCaseResponseType resultData = parseProcessFraudCaseResponse(responseBody);
             //Central integration logging
             String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_PROCESS_NAME;
-            writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody);
+            description =  String.valueOf(statusCode);
+            messageStatus = resultData.Sys.Description;
+            writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, messageStatus, requestor, description);
     
            
             log('SOAP CREATE STATUS: ' + statusCode);
@@ -788,7 +801,7 @@ global with sharing class FEC_IntegrationFraudService {
             // ---------------------------------------------------------
             // Parse SOAP XML Response → Convert to ResponseType
             // ---------------------------------------------------------
-            return parseProcessFraudCaseResponse(responseBody);
+            return resultData;
     
         } catch (CalloutException ce) {
     
@@ -851,6 +864,9 @@ global with sharing class FEC_IntegrationFraudService {
             Integer statusCode = 0;
             String responseBody = null;
             HttpResponse response = null;
+            String messageStatus = null;
+            String requestor = creator.CreatorEmail;
+            String description = null; 
             if(isConnectisConnected) {
                  // ---------------------------------------------------------
                 // Execute callout
@@ -865,9 +881,13 @@ global with sharing class FEC_IntegrationFraudService {
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callUpdateFraudCaseService MOCKUP: ');
             }
+            FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType resultData = parseCreateFraudCaseResponse(responseBody);
+
             //Central integration logging
             String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_UPDATE_NAME;
-            writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody);
+            description =  String.valueOf(statusCode);
+            messageStatus = resultData.Sys.Description;
+            writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, messageStatus, requestor, description);
     
            
             log('SOAP UPDATE STATUS: ' + statusCode);
@@ -885,7 +905,7 @@ global with sharing class FEC_IntegrationFraudService {
             // ---------------------------------------------------------
             // Parse SOAP XML Response → Convert to ResponseType
             // ---------------------------------------------------------
-            return parseCreateFraudCaseResponse(responseBody);
+            return resultData;
     
         } catch (CalloutException ce) {
     
@@ -972,6 +992,9 @@ global with sharing class FEC_IntegrationFraudService {
             Integer statusCode = 0;
             String responseBody = null;
             HttpResponse response = null;
+            String messageStatus = null;
+            String requestor = creator.CreatorEmail;
+            String description = null; 
             if(isConnectisConnected) {
                  // ---------------------------------------------------------
                 // Execute callout
@@ -986,9 +1009,13 @@ global with sharing class FEC_IntegrationFraudService {
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callCancelFraudCaseService MOCKUP: ');
             }
+            FEC_IntegrationSoapFraudcaseService.CancelFraudCaseResponseType resultData = parseCancelFraudCaseResponse(responseBody);
+
             //Central integration logging
             String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_CANCEL_NAME;
-            writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody);
+            description =  String.valueOf(statusCode);
+            messageStatus = resultData.Sys.Description;
+            writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, messageStatus, requestor, description);
     
            
             log('SOAP CANCEL STATUS: ' + statusCode);
@@ -1006,7 +1033,7 @@ global with sharing class FEC_IntegrationFraudService {
             // ---------------------------------------------------------
             // Parse SOAP XML Response → Convert to ResponseType
             // ---------------------------------------------------------
-            return parseCancelFraudCaseResponse(responseBody);
+            return resultData;
     
         } catch (CalloutException ce) {
     
@@ -1039,7 +1066,10 @@ global with sharing class FEC_IntegrationFraudService {
         String caseId,
         String serviceCaseId,
         String requestBody,
-        String responseXml
+        String responseXml,
+        String messageStatus,
+        String requestor,
+        String description
     ) {
         try {
             // Call centralized logging utility
@@ -1049,7 +1079,10 @@ global with sharing class FEC_IntegrationFraudService {
                 caseId,
                 serviceCaseId,
                 requestBody,
-                responseXml
+                responseXml,
+                messageStatus,
+                requestor,
+                description
             );
  
             // Log success for debugging & monitoring
