@@ -26,4 +26,8 @@ public with sharing class FEC_MockupEndpoint {
     public static final String UPDATE_CUSTOMER_CONTACT_ENDPOINT_MOCKUP = 'https://0b78db69-eb98-4c57-9924-dc958e4388df.mock.pstmn.io/CIF_CustomerInfoUpdate';
     public static final String FEC_GET_CARD_TXN_ENDPOINT_MOCKUP = 'https://f0e1b845-8481-4ebd-8a89-5ca8452c4182.mock.pstmn.io';
     public static final String GET_PRODUCTS_LIST_ENDPOINT_MOCKUP = 'https://2585e1bc-373f-45b8-8b0b-d25f87bd6422.mock.pstmn.io/CIF_CustomerInfo';
+  public static final String GET_MRC_INFO_ENDPOINT_MOCKUP = 'https://0b78db69-eb98-4c57-9924-dc958e4388df.mock.pstmn.io/MRC_Info';
+  public static final String GET_ASSETS_LIST_ENDPOINT_MOCKUP = 'https://0b78db69-eb98-4c57-9924-dc958e4388df.mock.pstmn.io/CIF_LoanInfo';
+  public static final String GET_APP_INFOS_ENDPOINT_MOCKUP = 'https://0b78db69-eb98-4c57-9924-dc958e4388df.mock.pstmn.io/cif_applicationhistory/GetApplicationHistory';
+  public static final String ADD_IPP_ENDPOINT_MOCKUP = 'https://159f99a4-6074-434e-94d7-49cf48012dd6.mock.pstmn.io/AddIPP';
 }
