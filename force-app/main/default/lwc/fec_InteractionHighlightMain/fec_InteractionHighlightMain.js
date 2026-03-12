@@ -1,5 +1,5 @@
 import { LightningElement, api, track, wire } from "lwc";
-import { IsConsoleNavigation, openTab } from "lightning/platformWorkspaceApi";
+import { IsConsoleNavigation, openTab, EnclosingTabId, setTabLabel } from "lightning/platformWorkspaceApi";
 import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
@@ -14,6 +14,7 @@ import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 import OWNERID from "@salesforce/schema/Case.OwnerId";
 import INTERACTION_RECORD_ID from "@salesforce/schema/Case.FEC_Interaction__c";
+import FEC_ID_SEARCH from "@salesforce/schema/Case.FEC_ID_Search__c";
 import {
   publish,
   subscribe,
@@ -30,9 +31,6 @@ import FEC_LAST_UPDATED_ON_LABEL from "@salesforce/label/c.FEC_Last_Updated_On_L
 import FEC_EXECUTE_LABEL from "@salesforce/label/c.FEC_Execute_Label";
 import FEC_CREATE_CASE_BTN_LABEL from "@salesforce/label/c.FEC_Create_Case_Btn_Label";
 import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
-
-import { urlCmpWithRecordId } from "c/fec_CommonUtils";
-import { DIV_ELEMENT } from "c/fec_CommonConst";
 
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import CUSTOMER_TYPE from "@salesforce/schema/Case.FEC_Customer_Type__c";
@@ -83,6 +81,9 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   // ===============================
   // LOAD CASE DATA
   // ===============================
+  @wire(EnclosingTabId)
+  enclosingTabId;
+
   @wire(getRecord, {
     recordId: "$recordId",
     fields: [
@@ -93,7 +94,8 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       ISOWNER,
       INTERACTION_RECORD_ID,
       CUSTOMER_TYPE,
-      OWNERID
+      OWNERID,
+      FEC_ID_SEARCH
     ],
   })
   wiredCase({ data, error }) {
@@ -107,6 +109,12 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       this.isOwner = getFieldValue(data, ISOWNER);
       this.customerType = getFieldValue(data, CUSTOMER_TYPE);
       this.ownerId = getFieldValue(data, OWNERID);
+
+      const fecIdSearch = getFieldValue(data, FEC_ID_SEARCH);
+      if (fecIdSearch && this.enclosingTabId) {
+        setTabLabel(this.enclosingTabId, fecIdSearch);
+      }
+
       if (this.recordTypeId) {
         this.loadRecordType();
       }
@@ -278,7 +286,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       data.interactionId || data.interactionIdSearch || "";
 
     if (interactionIdValue) {
-      const tempDiv = document.createElement(DIV_ELEMENT);
+      const tempDiv = document.createElement("div");
       tempDiv.innerHTML = interactionIdValue;
       this.interactionId =
         tempDiv.textContent || tempDiv.innerText || interactionIdValue;
@@ -317,7 +325,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     console.log("handleCreateCase from creation highlight");
     if (this.isConsoleNavigation) {
       await openTab({
-        url: urlCmpWithRecordId("fec_InteractionCreateCase", this.createCaseSourceId),
+        url: `/lightning/cmp/c__fec_InteractionCreateCase?c__recordId=${this.createCaseSourceId}`,
         focus: true,
       });
     } else {
@@ -341,13 +349,42 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
 
-  // subscription = null;
+  subscription = null;
 
   // ===============================
   // LIFECYCLE HOOKS (SUBSCRIBE)
   // ===============================
   connectedCallback() {
     console.log("connectedCallback");
+    this.subscribeToMessageChannel();
   }
 
+  disconnectedCallback() {
+    this.unsubscribeToMessageChannel();
+  }
+
+  // ===============================
+  // LMS HANDLERS
+  // ===============================
+  subscribeToMessageChannel() {
+    if (!this.subscription) {
+      this.subscription = subscribe(
+        this.messageContext,
+        IS_MODE_EDIT,
+        (message) => this.handleMessage(message),
+        { scope: APPLICATION_SCOPE }
+      );
+    }
+  }
+
+  unsubscribeToMessageChannel() {
+    unsubscribe(this.subscription);
+    this.subscription = null;
+  }
+
+  handleMessage(message) {
+    if (!this.isInteractionCase && message && typeof message.isModeEdit !== 'undefined') {
+      this.viewMode = message.isModeEdit ? 'handling' : 'review';
+    }
+  }
 }
