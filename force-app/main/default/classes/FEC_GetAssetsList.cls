@@ -107,13 +107,6 @@ public with sharing class FEC_GetAssetsList {
     public String currencyCode;
   }
 
-  public static String generateTransId() {
-    return String.valueOf(UUID.randomUUID());
-  }
-
-  public static String formatTimestamp() {
-    return Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
-  }
 
   private static String escapeXml(String s) {
     if (s == null)
@@ -311,8 +304,8 @@ public with sharing class FEC_GetAssetsList {
   @AuraEnabled
   public static AssetsListResult getAssetsList(AssetsListRequest req) {
     AssetsListResult finalResult = new AssetsListResult();
-    String transId = generateTransId();
-    String timestamp = formatTimestamp();
+    String transId = FEC_CommonUltils.generateTransactionId();
+    String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
     String envelope = buildEnvelope(req, transId, timestamp);
     try {
       HttpResponse res = sendRequest(envelope);
@@ -337,7 +330,7 @@ public with sharing class FEC_GetAssetsList {
     String transId,
     String timestamp
   ) {
-    if (String.isBlank(transId) || transId.length() > 36) {
+    if (String.isBlank(transId)) {
       throw new FEC_APIServiceException(System.Label.FEC_MSG_TransID_Null);
     }
 

@@ -70,17 +70,13 @@ public without sharing class FEC_TranferInformationCallout {
   // ============================================================
   // 3. Hàm tạo Transaction ID (UUID)
   // ============================================================
-  public static String generateTransactionID() {
-    return String.valueOf(UUID.randomUUID());
-  }
 
   // ============================================================
   // 4. Các Phương thức Gọi API (Refactored like FEC_GetLoanApplicationHistory)
   // ============================================================
   public static HttpResponse sendRequest(TransferCallInput reqObj) {
-    String transId = generateTransactionID();
-    String timestamp = Datetime.now()
-      .formatGMT(FEC_ConstantCommon.DATETIME_FORMAT_GMT_OUTPUT);
+    String transId = FEC_CommonUltils.generateTransactionId();
+    String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
 
     RequestBody reqBody = new RequestBody();
     reqBody.genesysId = reqObj.genesysId;
@@ -117,17 +113,17 @@ public without sharing class FEC_TranferInformationCallout {
       ? FEC_MockupEndpoint.UPDATE_CUSTOMER_CONTACT_ENDPOINT_MOCKUP
       : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
-    Http http = new Http();
-    HttpRequest req = new HttpRequest();
-    req.setEndpoint(endpoint);
-    req.setMethod(FEC_ConstantCommon.API_METHOD_POST);
-    req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
-    req.setHeader('Accept', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
-    req.setBody(jsonPayload);
-    req.setTimeout(60000);
+    Map<String, String> headers = new Map<String, String>{
+      'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+      'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+    };
 
-    HttpResponse res = http.send(req);
-    return res;
+    return FEC_CommonUltils.calloutApiWithHeaders(
+      endpoint,
+      FEC_ConstantCommon.API_METHOD_POST,
+      headers,
+      jsonPayload
+    );
   }
 
   public static TransferCallResponse parseResponse(
@@ -180,7 +176,7 @@ public without sharing class FEC_TranferInformationCallout {
       finalResult = parseResponse(body, status);
 
       if (finalResult.TransID == null)
-        finalResult.TransID = generateTransactionID();
+        finalResult.TransID = FEC_CommonUltils.generateTransactionId();
       if (finalResult.httpStatus == null)
         finalResult.httpStatus = status;
       if (finalResult.rawResponse == null)

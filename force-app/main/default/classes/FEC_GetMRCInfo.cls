@@ -87,24 +87,6 @@ public with sharing class FEC_GetMRCInfo {
     public String provideNumber;
   }
 
-  public static String generateTransId() {
-    return String.valueOf(UUID.randomUUID());
-  }
-
-  public static String formatTimestamp() {
-    return Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
-  }
-
-  private static String escapeXml(String s) {
-    if (s == null)
-      return '';
-    return s.replace('&', '&amp;')
-      .replace('<', '&lt;')
-      .replace('>', '&gt;')
-      .replace('"', '&quot;')
-      .replace('\'', '&apos;');
-  }
-
   public static String buildEnvelope(
     MRCInfoRequest req,
     String transId,
@@ -118,13 +100,13 @@ public with sharing class FEC_GetMRCInfo {
     env += '<soapenv:Body>';
     env += '<ns1:GetMRCInfo>';
     env += '<Sys>';
-    env += '<TransID>' + escapeXml(transId) + '</TransID>';
+    env += '<TransID>' + FEC_CommonUltils.escapeXml(transId) + '</TransID>';
     env += '<RequestorID>PEGA_CSM</RequestorID>';
-    env += '<DateTime>' + escapeXml(timestamp) + '</DateTime>';
+    env += '<DateTime>' + FEC_CommonUltils.escapeXml(timestamp) + '</DateTime>';
     env += '</Sys>';
     env +=
       '<ContractNumber>' +
-      escapeXml(req.ContractNumber) +
+      FEC_CommonUltils.escapeXml(req.ContractNumber) +
       '</ContractNumber>';
     env += '</ns1:GetMRCInfo>';
     env += '</soapenv:Body>';
@@ -279,8 +261,8 @@ public with sharing class FEC_GetMRCInfo {
   @AuraEnabled
   public static MRCInfoResult getMRCInfo(MRCInfoRequest req) {
     MRCInfoResult finalResult = new MRCInfoResult();
-    String transId = generateTransId();
-    String timestamp = formatTimestamp();
+    String transId = FEC_CommonUltils.generateTransactionId();
+    String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
     String envelope = buildEnvelope(req, transId, timestamp);
     try {
       HttpResponse res = sendRequest(envelope);
@@ -305,7 +287,7 @@ public with sharing class FEC_GetMRCInfo {
     String transId,
     String timestamp
   ) {
-    if (String.isBlank(transId) || transId.length() > 36) {
+    if (String.isBlank(transId)) {
       throw new FEC_APIServiceException(System.Label.FEC_MSG_TransID_Null);
     }
 

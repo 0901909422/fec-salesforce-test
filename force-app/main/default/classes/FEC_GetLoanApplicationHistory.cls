@@ -63,13 +63,6 @@ public with sharing class FEC_GetLoanApplicationHistory {
     public String createdDate;
   }
 
-  public static String generateTransId() {
-    return String.valueOf(UUID.randomUUID());
-  }
-
-  public static String formatTimestamp() {
-    return Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
-  }
 
   public static HttpResponse sendRequest(String applicationId) {
     FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
@@ -83,18 +76,19 @@ public with sharing class FEC_GetLoanApplicationHistory {
 
     String endpoint = baseEndpoint + '/' + applicationId;
 
-    Http http = new Http();
-    HttpRequest req = new HttpRequest();
-    req.setEndpoint(endpoint);
-    req.setMethod(FEC_ConstantCommon.API_METHOD_POST);
-    req.setHeader('TransID', generateTransId());
-    req.setHeader('DateTime', formatTimestamp());
-    req.setHeader('RequestorID', FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN);
-    req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
-    req.setBody('{}');
+    Map<String, String> headers = new Map<String, String>{
+      'TransID'      => FEC_CommonUltils.generateTransactionId(),
+      'DateTime'     => FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT),
+      'RequestorID'  => FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+      'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+    };
 
-    HttpResponse res = http.send(req);
-    return res;
+    return FEC_CommonUltils.calloutApiWithHeaders(
+      endpoint,
+      FEC_ConstantCommon.API_METHOD_POST,
+      headers,
+      FEC_ConstantCommon.API_BLANK_BODY
+    );
   }
 
   public static LoanApplicationHistoryResult parseResponse(
@@ -170,7 +164,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
       String body = (res == null) ? null : res.getBody();
       finalResult = parseResponse(body, status);
       if (finalResult.transId == null)
-        finalResult.transId = generateTransId();
+        finalResult.transId = FEC_CommonUltils.generateTransactionId();
       if (finalResult.httpStatus == null)
         finalResult.httpStatus = status;
       if (finalResult.rawResponse == null)

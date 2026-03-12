@@ -70,20 +70,14 @@ public with sharing class FEC_AddIPP {
     public String ippKey { get; set; }
   }
 
-  public static String generateTransId() {
-    return String.valueOf(UUID.randomUUID());
-  }
 
-  public static String formatTimestamp() {
-    return Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
-  }
 
   @AuraEnabled
   public static AddIPPResult addIPP(IPPRequest request) {
     validate(request);
     AddIPPResult finalResult = new AddIPPResult();
-    String transId = generateTransId();
-    String timestamp = formatTimestamp();
+    String transId = FEC_CommonUltils.generateTransactionId();
+    String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
 
     Dom.Document doc = buildRequestDocument(request, transId, timestamp);
 
