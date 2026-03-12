@@ -1178,6 +1178,7 @@
         <members>fec_ErrorPanel</members>
 		<members>fec_CaseFollowHeadlessAction</members>
 		<members>fec_CaseUnfollowHeadlessAction</members>
+		<members>fec_WatchersInformation</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>

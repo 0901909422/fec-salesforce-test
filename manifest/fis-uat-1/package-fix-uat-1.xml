@@ -76,6 +76,8 @@
 		<members>fecInteractionInfo</members>
 		<members>fec_ApplicationsList</members>
 		<members>fec_ApplicationsListTabView</members>
+		<members>fec_CaseRemarks</members>
+		<members>fec_WatchersInformation</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -178,6 +180,7 @@
 		<members>FEC_Toast_Validation_Message</members>
 		<members>FEC_Toast_Validation_Title</members>
 		<members>FEC_Toast_Search_Validation</members>
+		<members>FEC_MSG_Error_API_Label</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
