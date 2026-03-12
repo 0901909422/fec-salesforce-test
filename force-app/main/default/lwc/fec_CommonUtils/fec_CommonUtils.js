@@ -145,11 +145,20 @@ const maskValue = (value, showFull) => {
   }
 
   /* =====================
-   * PHONE NUMBER (10 số)
-   * Hiển thị: 4 số đầu + 3 số cuối
-   * Ví dụ: 0906***678
+   * PHONE bắt đầu bằng 84 (11 số)
+   * Hiển thị: 5 số đầu + 3 số cuối
+   * Ví dụ: 84123***456
    * ===================== */
-  if (/^\d{10}$/.test(v)) {
+  if (/^84\d{9}$/.test(v)) {
+    return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
+  }
+
+  /* =====================
+   * PHONE bắt đầu bằng 0 (10 số)
+   * Hiển thị: 4 số đầu + 3 số cuối
+   * Ví dụ: 0123***456
+   * ===================== */
+  if (/^0\d{9}$/.test(v)) {
     return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
   }
 
