@@ -337,6 +337,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Contact_List__c.FEC_Contact_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Contact_List__c.FEC_Contact_String__c</field>
         <readable>true</readable>
     </fieldPermissions>

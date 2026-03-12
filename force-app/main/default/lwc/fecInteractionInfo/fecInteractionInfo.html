@@ -105,38 +105,10 @@
                   <template if:true={hasPhone}>
                     {displayPhone}
                   </template>
-
-                  <!-- Không có phone -->
-                  <template if:false={hasPhone}>
-                    <template if:true={isEditingPhone}>
-                      <lightning-input type="tel" value={phoneDraft} onchange={handlePhoneChange}
-                        variant="label-hidden">
-                      </lightning-input>
-                    </template>
-
-                    <template if:false={isEditingPhone}>
-                      <span class="empty">--</span>
-                    </template>
-                  </template>
                 </span>
                 <!-- ICON -->
                 <template if:true={hasPhone}>
                   <lightning-icon icon-name={eyeIcon} size="x-small" class="eye-icon" onclick={handleToggleMask}>
-                  </lightning-icon>
-                </template>
-
-                <!-- ICON EDIT: chỉ hiện khi CHƯA edit -->
-                <template if:false={hasPhone}>
-                  <template if:false={isEditingPhone}>
-                    <lightning-icon icon-name="utility:edit" size="x-small" class="eye-icon" onclick={handleEditPhone}>
-                    </lightning-icon>
-                  </template>
-                </template>
-
-                <!-- SAVE ICON -->
-                <template if:true={isEditingPhone}>
-                  <lightning-icon icon-name="utility:check" size="x-small" class="eye-icon save-icon"
-                    onclick={handleSavePhone}>
                   </lightning-icon>
                 </template>
               </div>
@@ -162,7 +134,7 @@
 
             <!-- RIGHT -->
             <div class="col">
-              <div class="row">
+              <!-- <div class="row">
                 <span class="label">{labels.channel}</span>
                 <span class="value">{channel}</span>
                 <span></span>
@@ -172,7 +144,7 @@
                 <span class="label">{labels.subChannel}</span>
                 <span class="value">{subChannel}</span>
                 <span></span>
-              </div>
+              </div> -->
 
               <div class="row">
                 <span class="label">{labels.externalId}</span>
