@@ -657,9 +657,15 @@ public with sharing class FEC_CommonUltils {
     value = value.trim().toUpperCase();
 
     switch on value {
-        when 'Y' { return 'Yes'; }
-        when 'N' { return 'No'; }
-        when else { return null; }
+        when 'Y', 'YES' { 
+            return 'Yes'; 
+        }
+        when 'N', 'NO' { 
+            return 'No'; 
+        }
+        when else { 
+            return null; 
+        }
     }
   }
 
@@ -703,6 +709,33 @@ public with sharing class FEC_CommonUltils {
     }
 
     return null;
+  }
+
+  /**
+   * Format address 
+   */
+  public static String formatAddress(
+    String numberStr,
+    String building,
+    String street,
+    String ward,
+    String district,
+    String city,
+    String countryName,
+    String zipCode
+  ) {
+    List<String> parts = new List<String>();
+
+    if (!String.isBlank(numberStr)) parts.add(numberStr);
+    if (!String.isBlank(building)) parts.add(building);
+    if (!String.isBlank(street)) parts.add(street);
+    if (!String.isBlank(ward)) parts.add(ward);
+    if (!String.isBlank(district)) parts.add(district);
+    if (!String.isBlank(city)) parts.add(city);
+    if (!String.isBlank(countryName)) parts.add(countryName);
+    if (!String.isBlank(zipCode)) parts.add(zipCode);
+
+    return String.join(parts, ', ');
   }
 
   public static void logApi(

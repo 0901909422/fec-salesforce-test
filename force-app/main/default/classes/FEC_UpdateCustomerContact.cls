@@ -278,6 +278,7 @@ public with sharing class FEC_UpdateCustomerContact {
       SELECT
         Id,
         FEC_Channel__c,
+        FEC_Account_or_Contract__c,
         FEC_Updated_Info_Phone_Number__c,
         FEC_Updated_Info_Email__c,
         FEC_Account_or_Contract__r.FEC_CIF_Number__c,
@@ -306,6 +307,15 @@ public with sharing class FEC_UpdateCustomerContact {
       req.ContactString = selectedCase.FEC_Updated_Info_Email__c;
     }
 
+    List<FEC_Contact_List__c> contactlst = getMatchingContactList(
+      selectedCase,
+      req
+    );
+
+    if (!contactlst.isEmpty()) {
+      req.ContactId = contactlst.get(0).FEC_Contact_ID__c;
+    }
+
     UpdateContactResult result = updateCustomerContact(req);
 
     if (result.success) {
@@ -330,5 +340,32 @@ public with sharing class FEC_UpdateCustomerContact {
 
     return result;
   }
+
+  /**
+   * @description Queries FEC_Contact_List__c records matching the Case's account/contract,
+   *              and the CommunicationType + Channel from the given CustomerContactRequest.
+   * @param caseId  The Id of the Case record.
+   * @param req     A CustomerContactRequest containing CommunicationType and Channel.
+   * @return        List of matching FEC_Contact_List__c records.
+   */
+  public static List<FEC_Contact_List__c> getMatchingContactList(
+    Case selectedCase,
+    CustomerContactRequest req
+  ) {
+    Id accountOrContractId = selectedCase.FEC_Account_or_Contract__c;
+
+    return [
+      SELECT
+        Id,
+        FEC_Customer_History__c,
+        FEC_Communication_Type__c,
+        FEC_Channel__c,
+        FEC_Contact_ID__c
+      FROM FEC_Contact_List__c
+      WHERE
+        FEC_Customer_History__c = :accountOrContractId
+        AND FEC_Communication_Type__c = :req.CommunicationType
+        AND FEC_Channel__c = :req.Channel
+    ];
+  }
 }
-// ...existing code...
