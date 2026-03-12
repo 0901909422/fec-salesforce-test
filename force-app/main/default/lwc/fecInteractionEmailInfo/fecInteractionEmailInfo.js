@@ -34,6 +34,7 @@ import FEC_Interaction_Email_Required_Msg from "@salesforce/label/c.FEC_Interact
 import FEC_Interaction_Email_Invalid_Msg from "@salesforce/label/c.FEC_Interaction_Email_Invalid_Msg";
 import FEC_Interaction_Email_Save_Error from "@salesforce/label/c.FEC_Interaction_Email_Save_Error";
 import FEC_Empty from "@salesforce/label/c.FEC_Empty";
+import { STR_EMPTY } from "c/fec_CommonConst";
 
 // Regex validate email
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -56,8 +57,8 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   @api recordId;
 
   @track record;
-  @track emailDraft = "";
-  @track emailError = "";
+  @track emailDraft = STR_EMPTY;
+  @track emailError = STR_EMPTY;
 
   isLoaded = false;
   isEditingEmail = false;
@@ -134,13 +135,18 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
       });
   }
 
+  // ================= CONSTANTS =================
+  TARGET_ACTION_VIEW = "view";
+  RECORD_TYPE_INTERACTION = "Interaction";
+  RECORD_TYPE_CUSTOMER_CASE = "Customer_Case";
+
   // ================= GETTERS =================
   get isInteractionCase() {
-    return this.recordTypeDevName === "Interaction";
+    return this.recordTypeDevName === this.RECORD_TYPE_INTERACTION;
   }
 
   get isCustomerCase() {
-    return this.recordTypeDevName === "Customer_Case";
+    return this.recordTypeDevName === this.RECORD_TYPE_CUSTOMER_CASE;
   }
 
   get hasInteractionEmail() {
@@ -161,11 +167,11 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   }
 
   get displayInteractionEmail() {
-    return this.record?.[INTERACTION_EMAIL_FIELD.fieldApiName] || "";
+    return this.record?.[INTERACTION_EMAIL_FIELD.fieldApiName] || STR_EMPTY;
   }
 
   get createdOn() {
-    if (!this.record?.[CREATED_ON_FIELD.fieldApiName]) return "";
+    if (!this.record?.[CREATED_ON_FIELD.fieldApiName]) return STR_EMPTY;
     const d = new Date(this.record[CREATED_ON_FIELD.fieldApiName]);
     return d.toLocaleString("en-GB", {
       day: "2-digit",
@@ -178,15 +184,15 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   }
 
   get createdBy() {
-    return this.record?.[CREATED_BY_FIELD.fieldApiName] || this.record?.FEC_Created_by__c || "";
+    return this.record?.[CREATED_BY_FIELD.fieldApiName] || STR_EMPTY;
   }
 
   get sendTo() {
-    return this.record?.[SEND_TO_FIELD.fieldApiName] || "";
+    return this.record?.[SEND_TO_FIELD.fieldApiName] || STR_EMPTY;
   }
 
   get parentId() {
-    return this.record?.[PARENT_ID_FIELD.fieldApiName] || "";
+    return this.record?.[PARENT_ID_FIELD.fieldApiName] || STR_EMPTY;
   }
 
   get parentIdUrl() {
@@ -201,19 +207,19 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   // ================= EMAIL ACTIONS =================
   handleEditEmail() {
     this.isEditingEmail = true;
-    this.emailDraft = this.displayInteractionEmail || "";
-    this.emailError = "";
+    this.emailDraft = this.displayInteractionEmail || STR_EMPTY;
+    this.emailError = STR_EMPTY;
   }
 
   handleEmailChange(event) {
     this.emailDraft = event.target.value;
-    this.emailError = "";
+    this.emailError = STR_EMPTY;
   }
 
   validateEmail(value) {
     if (!value || !value.trim()) return this.labels.emailRequiredMsg;
     if (!EMAIL_REGEX.test(value.trim())) return this.labels.emailInvalidMsg;
-    return "";
+    return STR_EMPTY;
   }
 
   handleSaveEmail() {
@@ -232,8 +238,8 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
           [INTERACTION_EMAIL_FIELD.fieldApiName]: trimmed,
         };
         this.isEditingEmail = false;
-        this.emailDraft = "";
-        this.emailError = "";
+        this.emailDraft = STR_EMPTY;
+        this.emailError = STR_EMPTY;
       })
       .catch((error) => { 
         console.error("updateInteractionEmail error", error);
@@ -243,8 +249,8 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
 
   handleCancelEditEmail() {
     this.isEditingEmail = false;
-    this.emailDraft = "";
-    this.emailError = "";
+    this.emailDraft = STR_EMPTY;
+    this.emailError = STR_EMPTY;
   }
 
   handleNavigateToParent() {
@@ -254,7 +260,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
       attributes: {
         recordId: this.parentId,
         objectApiName: CASE_OBJECT.objectApiName,
-        actionName: "view",
+        actionName: this.TARGET_ACTION_VIEW,
       },
     });
   }
