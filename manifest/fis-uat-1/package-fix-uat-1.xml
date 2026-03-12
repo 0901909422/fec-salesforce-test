@@ -79,6 +79,7 @@
 		<members>fec_ApplicationsListTabView</members>
 		<members>fec_CaseRemarks</members>
 		<members>fec_WatchersInformation</members>
+		<members>fec_CommonDetailView</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
