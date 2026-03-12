@@ -74,6 +74,8 @@
 		<members>fec_StatementsAccountTabView</members>
 		<members>fec_RelatedListPaging</members>
 		<members>fecInteractionInfo</members>
+		<members>fec_ApplicationsList</members>
+		<members>fec_ApplicationsListTabView</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
