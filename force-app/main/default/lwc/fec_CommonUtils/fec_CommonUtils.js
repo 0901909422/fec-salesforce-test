@@ -161,6 +161,14 @@ const maskValue = (value, showFull) => {
   if (/^0\d{9}$/.test(v)) {
     return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
   }
+  /* =====================
+   * LANDLINE bắt đầu bằng 02
+   * Hiển thị: 3 số đầu + 3 số cuối
+   * Ví dụ: 028*****456
+  * ===================== */
+  if (/^02\d{8,9}$/.test(v)) {
+  return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
+  }
 
   /* =====================
    * CCCD (toàn số, > 6)
