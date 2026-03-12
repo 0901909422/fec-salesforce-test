@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Validation_Skill_Level</fullName>
+    <active>true</active>
+    <errorConditionFormula>OR(
+     FEC_Skill_Level__c  &lt; 1,
+     FEC_Skill_Level__c  &gt; 100
+)</errorConditionFormula>
+    <errorDisplayField>FEC_Skill_Level__c</errorDisplayField>
+    <errorMessage>Skill Level must be between 1 and 100</errorMessage>
+</ValidationRule>

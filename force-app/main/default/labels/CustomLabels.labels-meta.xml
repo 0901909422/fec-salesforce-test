@@ -8227,4 +8227,53 @@
         <shortDescription>FEC CREATE CS CASE SUCCESSFULLY MSG</shortDescription>
         <value>Case created successfully.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Case_Created_By_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Case_Created_By_Label</shortDescription>
+        <value>Case Created By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Case_Created_On_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Case_Created_On_Label</shortDescription>
+        <value>Case Created On</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Closed_Service_Cases_Section_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Closed_Service_Cases_Section_Title</shortDescription>
+        <value>Closed Service Cases</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Title_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Interaction_Title_Label</shortDescription>
+        <value>Interaction</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interactions_Section_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Interactions_Section_Title</shortDescription>
+        <value>Interactions</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Sub_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Label_Sub_Channel</shortDescription>
+        <value>Sub Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Pending_Service_Cases_Section_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Pending_Service_Cases_Section_Title</shortDescription>
+        <value>Pending Service Cases</value>
+    </labels>
 </CustomLabels>
