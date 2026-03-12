@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>OwnerId</fullName>
+    <description>Người phụ trách quản lý Agent (mặc định ban đầu là người đã tạo bản ghi Service Resource)</description>
+    <trackHistory>true</trackHistory>
+    <type>Lookup</type>
+</CustomField>
