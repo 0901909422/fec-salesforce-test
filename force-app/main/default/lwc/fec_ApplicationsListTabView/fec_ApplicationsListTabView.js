@@ -103,12 +103,14 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
     @wire(CurrentPageReference)
     handlePageRef(pageRef) {
         const listId = pageRef?.state?.c__ApplicationList;
-        if (listId && listId !== this.applicationListId) {
+        const appId = pageRef?.state?.c__appId;
+
+        if (listId) {
             this.applicationListId = listId;
+            this.applicationId = appId;
             this.loadDetail();
         }
     }
-
     /* ================= LOAD DATA ================= */
 
     loadDetail() {
@@ -119,7 +121,10 @@ export default class Fec_ApplicationsListTabView extends LightningElement {
         this.showNationalID = false;
         this.showPhone = false;
 
-        loadApplicationDetail({ applicationListId: this.applicationListId })
+       loadApplicationDetail({
+                applicationListId: this.applicationListId,
+                applicationId: this.applicationId
+            })
             .then(res => {
                 this.record = res;
                 setConsoleTab(

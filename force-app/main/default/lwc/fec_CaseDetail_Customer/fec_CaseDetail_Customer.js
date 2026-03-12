@@ -225,14 +225,15 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     const routingActionCode = caseBusinessEle?.getRoutingActionCode?.() ?? null;
     const saveDraftsPromise = this.recordId
       ? saveCaseDrafts({
-          caseId: this.recordId,
-          natureOfCaseId: natureOfCaseId ?? STR_EMPTY,
-          updatedPhoneNumber: updatedPhoneNumber ?? STR_EMPTY,
-          routingActionCode: routingActionCode ?? null,
-        })
+        caseId: this.recordId,
+        natureOfCaseId: natureOfCaseId ?? STR_EMPTY,
+        updatedPhoneNumber: updatedPhoneNumber ?? STR_EMPTY,
+        routingActionCode: routingActionCode ?? null,
+      })
       : Promise.resolve();
+    const stageNameForSave = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
     const saveRemarkPromise = caseRemarksEle
-      ? caseRemarksEle.createRemark()
+      ? caseRemarksEle.createRemark(stageNameForSave)
       : Promise.resolve();
     const saveBusinessPromise = caseBusinessEle
       ? Promise.resolve(caseBusinessEle.saveOnly())
@@ -293,6 +294,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         if (!validateNatureResult) {
           this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Tab_Nature_Of_Case));
         }
+        // const accountContractErr = caseBusinessEle.getLastValidationError?.();
+        // if (accountContractErr) {
+        //   this.errlst.push(REQUIRED_MSG.replace("{0}", accountContractErr));
+        // }
       }
     }
     if (!caseRemarksEle || !caseRemarksEle.validate()) {
@@ -319,12 +324,13 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     }
 
     try {
+      const stageName = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
       // Xóa draft cũ, chỉ lưu 1 bản ghi = nội dung hiện tại trong ô (tránh sinh nhiều bản ghi từ Save & Close trước đó)
       await clearDraftRemarks({ caseId: this.recordId });
-      await caseRemarksEle.createRemark();
+      await caseRemarksEle.createRemark(stageName);
 
       // Luôn đẩy Case Remark vào History khi user đã nhập và bấm Submit (tránh mất nội dung khi business submit bị chặn)
-      await caseRemarksEle.submitRemark();
+      await caseRemarksEle.submitRemark(stageName);
       this.loadRemarkHistory();
 
       const submitted = await caseBusinessEle.submit();
