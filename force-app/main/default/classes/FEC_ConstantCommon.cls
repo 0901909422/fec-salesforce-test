@@ -52,11 +52,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_ZALO = 'ZALO';
     public static final String CHANNEL_WEBSITE = 'WEBSITE';
     public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
-    public static final String CHANNEL_EXTERNAL = 'External';
 
     public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';
     public static final String CHANNEL_OUTBOUND_SUBCHANNEL_NAME = 'Outbound Call';
-    public static final String CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME = 'Other';
 
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
@@ -80,9 +78,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
     public static final String REQUESTOR_APS = 'APS';
     public static final String REQUESTOR_SD = 'SD';
-    public static final String REQUESTOR_VMXVERSION = 'R8V3';
+    public static final String REQUESTOR_VMXVERSION = '150';
     public static final String REQUESTOR_CONTEXT = 'CRM';
-    public static final String REQUESTOR_ORG = '150';
+    public static final String REQUESTOR_ORG = 'FEC';
     public static final String REQUESTOR_RES = 'RES';
     public static final String REQUESTOR_PEGA = 'PEGA';
     public static final String REQUESTOR_ESB = 'ESB';
@@ -162,7 +160,4 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUBCHANNEL_INCOMING_EMAIL = 'Incoming Email';
     public static final String CASE_ORIGIN_EMAIL2CASE = 'Email2Case';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
-
-    public static final String UPLOAD_DOCUMENT = 'UploadDocument';
-    public static final String CASE_STATUS_ERROR = 'ERROR';
 }
