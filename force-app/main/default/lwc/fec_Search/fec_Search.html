@@ -46,7 +46,7 @@
                     <div class="slds-p-top_medium slds-align_absolute-center slds-grid slds-gutters_x-small">
                         <lightning-button variant="neutral" label="Clear" onclick={handleClear}></lightning-button>
                         <lightning-button class="slds-m-left_x-small" variant="brand" label="Search"
-                            onclick={handleSearch}></lightning-button>
+                        onclick={handleSearch} disabled={isDisabledSearch}></lightning-button>
                         <template if:true={isSkip}>
                             <lightning-button class="slds-m-left_x-small" variant="brand" label="Skip"
                             onclick={handleSkip}></lightning-button> 
@@ -69,7 +69,7 @@
                             <div class="slds-grid slds-gutters slds-m-bottom_medium">
                                 <div class="slds-col slds-size_1-of-2">
                                     <lightning-input label="Customer Name" placeholder="Nhập Customer Name"
-                                        value={custNameForCreate} onchange={handleCustNameChange}>
+                                        value={custNameForCreate} required onchange={handleCustNameChange}>
                                     </lightning-input>
                                 </div>
 

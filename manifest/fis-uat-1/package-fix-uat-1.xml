@@ -27,8 +27,21 @@
         <members>FEC_ApplicationsListController</members>
         <members>FEC_MainInfoController</members>
         <members>FEC_GetCustomerList</members>
-        <members>FEC_LogApiQueueable</members>
         <members>FEC_IPPScheduleController</members>
+        <members>FEC_FollowUpController</members>
+        <members>FEC_GetCardTransactions</members>
+        <members>FEC_GetApplicationsList</members>
+        <members>FEC_GetCardBasicInfo</members>
+        <members>FEC_GetAppStatusCallout</members>
+        <members>FEC_GetCustomerSaleDisburseInfoCallout</members>
+        <members>FEC_CaseRemarkController</members>
+        <members>FEC_GetCardSecInfo</members>
+        <members>FEC_SecondaryInfoAccountController</members>
+        <members>FEC_TransactionsController</members>
+        <members>FEC_StatementsAccountController</members>
+        <members>FEC_PaymentHistoryController</members>
+        <members>FEC_EmeaAccountInqService</members>
+        <members>FEC_SecondaryController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -55,11 +68,16 @@
 		<members>maskedToggleDatatable</members>
 		<members>fec_CustomAccountTable</members>
 		<members>fec_CustomDblClickRadio</members>
+		<members>fec_InteractionHighlightMain</members>
+		<members>fec_IPPDetails</members>
+		<members>fec_ComboBox</members>
+		<members>fec_StatementsAccountTabView</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
         <members>FEC_Interaction_Case_Record_Page</members>
 		<members>FEC_Customer_Case_Record_Page</members>
+		<members>FEC_Search_Case_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -101,11 +119,14 @@
     <types>
         <members>Case.Customer_Case</members>
 		<members>Case.Interaction</members>
+		<members>Case.Search_Interaction</members>
         <name>RecordType</name>
     </types>
     <types>
         <members>Case</members>
         <members>FEC_Sensitive_Data__c</members>
+		<members>FEC_B2_Contract__c</members>
+		<members>FEC_Cash_24_Contract__c</members>
         <name>CustomObject</name>
     </types>
     <types>
@@ -147,6 +168,11 @@
 		<members>FEC_MSG_FollowUp_Unfollow_Error</members>
 		<members>FEC_MSG_FollowUp_Case_Follow_Success</members>
 		<members>FEC_MSG_Can_Not_Find_Next_Stage</members>
+		<members>FEC_Error_Title</members>
+		<members>FEC_Toast_Error_Generic</members>
+		<members>FEC_Toast_Validation_Message</members>
+		<members>FEC_Toast_Validation_Title</members>
+		<members>FEC_Toast_Search_Validation</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -330,7 +356,7 @@
 		<name>PermissionSetGroup</name>
 	</types>
 	<types>
-		<members>Case-Customer Case</members>
+		<members>Case-Custom Case Layout</members>
 		<name>Layout</name>
 	</types>
     <types>
@@ -349,5 +375,9 @@
 		<members>FEC_KYC__c</members>
 		<name>CustomTab</name>
 	</types>
+	<types>
+        <members>en_US</members>
+        <name>Translations</name>
+    </types>
     <version>65.0</version>
 </Package>

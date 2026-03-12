@@ -12,6 +12,7 @@ import ISCLOSED from "@salesforce/schema/Case.IsClosed";
 import ISOWNER from "@salesforce/schema/Case.FEC_Is_Owner__c";
 import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
+import OWNERID from "@salesforce/schema/Case.OwnerId";
 import INTERACTION_RECORD_ID from "@salesforce/schema/Case.FEC_Interaction__c";
 import {
   publish,
@@ -65,6 +66,8 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   recordTypeDevName;
   hasAccountOrContract;
   customerType;
+  ownerId;
+  interactionOwnerId;
   _resetDone = false;
 
   // ===============================
@@ -74,6 +77,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   isConsoleNavigation;
 
   isCaseClosed = false;
+  isInteractionClosed;
   isOwner = false;
 
   // ===============================
@@ -89,6 +93,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       ISOWNER,
       INTERACTION_RECORD_ID,
       CUSTOMER_TYPE,
+      OWNERID
     ],
   })
   wiredCase({ data, error }) {
@@ -101,11 +106,28 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       this.isCaseClosed = getFieldValue(data, ISCLOSED);
       this.isOwner = getFieldValue(data, ISOWNER);
       this.customerType = getFieldValue(data, CUSTOMER_TYPE);
+      this.ownerId = getFieldValue(data, OWNERID);
       if (this.recordTypeId) {
         this.loadRecordType();
       }
 
       this.tryResetViewMode();
+    } else if (error) {
+      console.error("getRecord error:", error);
+    }
+  }
+
+  @wire(getRecord, {
+    recordId: "$interactionRecordId",
+    fields: [
+      ISCLOSED,
+      OWNERID
+    ],
+  })
+  getInteraction({ data, error }) {
+    if (data) {
+      this.isInteractionClosed = getFieldValue(data, ISCLOSED);
+      this.interactionOwnerId = getFieldValue(data, OWNERID);
     } else if (error) {
       console.error("getRecord error:", error);
     }
@@ -131,8 +153,59 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     return this.viewMode === "handling";
   }
 
+  get showWrapupAndCreateCase() {
+    // 1. Chỉ người sở hữu (Owner) mới được quyền thấy nút
+    if (!this.isOwner) {
+      return false;
+    }
+
+    // 4. Interaction & Customer Case là cùng owner
+    if (this.isCustomerCase && this.interactionOwnerId !== this.ownerId) {
+      return false;
+    }
+
+    // 2. Trạng thái bản ghi (Interaction/Case) hiện tại phải đang mở (Open)
+    // Nếu có Interaction đính kèm thì dùng isInteractionClosed để xét.
+    // Nếu undefined thì dùng trạng thái của parent Case (isCaseClosed).
+    const isRecordOpen = (this.isInteractionCase && !this.isCaseClosed)
+      || !this.isInteractionClosed;
+
+    if (!isRecordOpen) {
+      return false;
+    }
+
+    // 3. Logic hiển thị thao tác (Wrapup/Create Case)
+    // - Trường hợp không phải Interaction -> cho phép thao tác ở mọi chế độ
+    // - Trường hợp là Interaction -> chỉ được phép khi cờ isHandling = true
+    if (!this.isInteractionCase || this.isHandling) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   get showExecute() {
-    return !this.isHandling && !this.isCaseClosed && this.isOwner;
+    // 1. Chỉ người sở hữu (Owner) mới được quyền thấy nút
+    if (!this.isOwner) {
+      return false;
+    }
+
+    // 2. Trạng thái bản ghi hiện tại phải đang mở (Open)
+    const isRecordOpen =
+      this.isInteractionClosed === false ||
+      (this.isInteractionClosed === undefined && !this.isCaseClosed);
+
+    if (!isRecordOpen) {
+      return false;
+    }
+
+    // 3. Logic hiển thị nút "Execute" (Bắt đầu xử lý)
+    // - Phải CHƯA Ở TRONG trong chế độ xử lý (!isHandling)
+    if (!this.isHandling) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   get isInteractionCase() {
@@ -162,7 +235,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       }
     } else if (this.isCustomerCase) {
       // Nếu là Customer Case thì hiển thị highlight khi có tài khoản liên kết và customer type = existing
-      if (this.hasAccountOrContract && this.customerType != "Non-existing") {
+      if (this.isHandling && this.hasAccountOrContract && this.customerType != "Non-existing") {
         return true;
       } else {
         return false;

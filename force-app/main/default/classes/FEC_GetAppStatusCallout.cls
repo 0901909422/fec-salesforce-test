@@ -120,25 +120,22 @@ public without sharing class FEC_GetAppStatusCallout {
     
     public static AppStatusResponse getAppStatus(String applicationId, Integer ageOfRecords, String businessStatus) {
         
-        // Generate unique UUID for tracking
         String transactionId = String.valueOf(UUID.randomUUID());
+        String dateTimeValue = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX);
+        String requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM;
         
-        // Build request body
         AppStatusRequestBody requestBody = new AppStatusRequestBody();
         requestBody.AgeOfRecords = ageOfRecords != null ? ageOfRecords : 17;
         requestBody.ApplicationID = applicationId;
         requestBody.BusinessStatus = businessStatus != null ? businessStatus : '';
         
-        // Build request
         AppStatusRequest request = new AppStatusRequest();
-        
         request.headers = new Map<String, Object>{
             'TransID'      => transactionId,
-            'DateTime'     => Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX),
-            'RequestorID'  => FEC_ConstantCommon.REQUESTOR_PEGA_CSM,
+            'DateTime'     => dateTimeValue,
+            'RequestorID'  => requestorId,
             'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
         };
-        
         request.parameters = new List<String>();
         request.body = requestBody;
         
@@ -150,7 +147,25 @@ public without sharing class FEC_GetAppStatusCallout {
         String endpoint = apiSetting?.FEC_Call_Mock__c
             ? FEC_MockupEndpoint.GET_APP_STATUS_ENDPOINT_MOCKUP
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-        HttpResponse resp = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE_JSON, '', null, requestBodyJson);
+        
+        Map<String,String> headers = new Map<String,String>{
+            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+            'TransID'      => transactionId,
+            'DateTime'     => dateTimeValue,
+            'RequestorID'  => requestorId
+        };
+
+        HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, 'POST', headers, requestBodyJson);
+
+        FEC_CommonUltils.logApi(
+            'FEC_GetAppStatusCallout',
+            endpoint,
+            'POST',
+            requestBodyJson,
+            resp,
+            null
+        );
+
 
         // Parse response
         AppStatusResponse response;

@@ -44,6 +44,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
     public static final String CASE_INTERNAL_RECORD_TYPE_DEV_NAME = 'Internal_Case';
+    public static final String CASE_SEARCH_RECORD_TYPE_DEV_NAME = 'Search_Interaction';
 
     public static final String CHANNEL_INBOUND_API = 'InboundRinging';
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
@@ -78,14 +79,15 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
     public static final String REQUESTOR_APS = 'APS';
     public static final String REQUESTOR_SD = 'SD';
-    public static final String REQUESTOR_VMXVERSION = '2.0';
+    public static final String REQUESTOR_VMXVERSION = 'R8V3';
     public static final String REQUESTOR_CONTEXT = 'CRM';
-    public static final String REQUESTOR_ORG = 'FEC';
+    public static final String REQUESTOR_ORG = '150';
     public static final String REQUESTOR_RES = 'RES';
     public static final String REQUESTOR_PEGA = 'PEGA';
     public static final String REQUESTOR_ESB = 'ESB';
     public static final String REQUESTOR_CORE = 'CORE';
     public static final String REQUESTOR_MOBILE = 'MOBILE';
+    public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
 
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';

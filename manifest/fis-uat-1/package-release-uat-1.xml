@@ -1270,10 +1270,11 @@
 	</types>
 	<types>
         <members>vi</members>
+        <members>en_US</members>
         <name>Translations</name>
     </types>
 	<types>
-		<members>Case-Customer Case</members>
+		<members>Case-Custom Case Layout</members>
 		<name>Layout</name>
 	</types>
 
@@ -1904,7 +1905,6 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_SearchController</members>
 		<members>FEC_GetCustomerList</members>
-        <members>FEC_LogApiQueueable</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -1927,7 +1927,24 @@
 		<members>FEC_Toast_Recall_Success</members>
 		<members>FEC_Toast_Reopen_Success</members>
 		<members>FEC_Toast_Save_Success_Title</members>
+		<members>FEC_Toast_Error_Generic</members>
+		<members>FEC_Toast_Validation_Message</members>
+		<members>FEC_Toast_Validation_Title</members>
+		<members>FEC_Toast_Search_Validation</members>
 		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>FEC_B2_Contract__c</members>
+		<members>FEC_Cash_24_Contract__c</members>
+		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>Case.Search_Interaction</members>
+		<name>RecordType</name>
+	</types>
+	<types>
+		<members>FEC_Search_Case_Record_Page</members>
+		<name>FlexiPage</name>
 	</types>
 
 	<!-- Translate -->
