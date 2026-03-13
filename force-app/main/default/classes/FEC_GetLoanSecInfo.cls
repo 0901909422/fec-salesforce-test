@@ -331,4 +331,16 @@ public with sharing class FEC_GetLoanSecInfo {
             throw new CalloutException(System.Label.FEC_MSG_RequestorID_Null);
         }
     }
+
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName, 
+                responseLog.endpoint, 
+                responseLog.method, 
+                responseLog.requestBody, 
+                responseLog.response, 
+                responseLog.errorMessage);
+        }
+    }
 }

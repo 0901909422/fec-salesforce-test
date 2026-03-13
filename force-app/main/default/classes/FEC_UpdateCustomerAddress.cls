@@ -218,6 +218,18 @@ public with sharing class FEC_UpdateCustomerAddress {
     return responseLog;
   }
 
+  public static void logApiResponse() {
+    if (responseLog != null) {
+      FEC_CommonUltils.logApi(
+        responseLog.apiName,
+        responseLog.endpoint,
+        responseLog.method,
+        responseLog.requestBody,
+        responseLog.response,
+        responseLog.errorMessage);
+    }
+  }
+
   // ==========================================
   // VALIDATION
   // ==========================================
