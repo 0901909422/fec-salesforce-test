@@ -1,5 +1,5 @@
 import { LightningElement, track, wire } from 'lwc';
-import { HEADER_ACTIONS, VIEW_HISTORY_ACTION, EDIT_ACTION, DELETE_ACTION, DELETED_DATA_SUCCESSFULLY_MSG, DELETE_CONFIRMATION_TITLE, DELETE_CONFIRMATION_MSG, SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE } from 'c/fecUtils';
+import { getTomorrowDate, HEADER_ACTIONS, VIEW_HISTORY_ACTION, EDIT_ACTION, DELETE_ACTION, DELETED_DATA_SUCCESSFULLY_MSG, DELETE_CONFIRMATION_TITLE, DELETE_CONFIRMATION_MSG, SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE } from 'c/fecUtils';
 import { refreshApex } from '@salesforce/apex';
 import LightningConfirm from 'lightning/confirm';
 import deleteConfig from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.deleteConfig';
@@ -116,7 +116,7 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
         FEC_FieldName__c: '',
         FEC_IsActive__c: true,
         FEC_Status__c: 'New',
-        FEC_StartDate__c: new Date()
+        FEC_StartDate__c: getTomorrowDate()
     };
     
     @track uploadedData = []; 

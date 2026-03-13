@@ -49,7 +49,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   subscription = null;
   nocSubscription = null;
 
-  activeSections = ["case-remark", "case-remark-history"];
+  @track activeSections = ["case-remark-history"];
 
   @track errlst = [];
 
@@ -112,7 +112,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .catch((err) => {
         console.log("🚀 ~ Fec_CaseRemarks ~ loadRemarks ~ err:", err);
       })
-      .finally(() => {});
+      .finally(() => { });
   }
 
   connectedCallback() {
@@ -156,8 +156,18 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .then((res) => {
         this.dispatchEvent(new RefreshEvent());
       })
-      .catch((err) => {})
-      .finally(() => {});
+      .catch((err) => { })
+      .finally(() => {
+        if (this.modeEditCase) {
+          if (!this.activeSections.includes("case-remark")) {
+            this.activeSections = [...this.activeSections, "case-remark"];
+          }
+        } else {
+          this.activeSections = this.activeSections.filter(
+            (sec) => sec !== "case-remark",
+          );
+        }
+      });
 
     const caseBusinessEle = this.template.querySelector(
       "c-fec_-case-bussiness",
@@ -215,14 +225,15 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     const routingActionCode = caseBusinessEle?.getRoutingActionCode?.() ?? null;
     const saveDraftsPromise = this.recordId
       ? saveCaseDrafts({
-          caseId: this.recordId,
-          natureOfCaseId: natureOfCaseId ?? STR_EMPTY,
-          updatedPhoneNumber: updatedPhoneNumber ?? STR_EMPTY,
-          routingActionCode: routingActionCode ?? null,
-        })
+        caseId: this.recordId,
+        natureOfCaseId: natureOfCaseId ?? STR_EMPTY,
+        updatedPhoneNumber: updatedPhoneNumber ?? STR_EMPTY,
+        routingActionCode: routingActionCode ?? null,
+      })
       : Promise.resolve();
+    const stageNameForSave = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
     const saveRemarkPromise = caseRemarksEle
-      ? caseRemarksEle.createRemark()
+      ? caseRemarksEle.createRemark(stageNameForSave)
       : Promise.resolve();
     const saveBusinessPromise = caseBusinessEle
       ? Promise.resolve(caseBusinessEle.saveOnly())
@@ -283,6 +294,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         if (!validateNatureResult) {
           this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Tab_Nature_Of_Case));
         }
+        // const accountContractErr = caseBusinessEle.getLastValidationError?.();
+        // if (accountContractErr) {
+        //   this.errlst.push(REQUIRED_MSG.replace("{0}", accountContractErr));
+        // }
       }
     }
     if (!caseRemarksEle || !caseRemarksEle.validate()) {
@@ -295,24 +310,27 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       return;
     }
 
-    // Kiểm tra chặn submit (vd: original === updated phone) trước khi bật spinner
+    this.isLoaded = false;
+    await Promise.resolve();
+
+    // Kiểm tra chặn submit (vd: original === updated phone)
     if (caseBusinessEle?.checkSubmitBlock) {
       const blocked = await caseBusinessEle.checkSubmitBlock();
       if (blocked) {
+        this.isLoaded = true;
         this.isSubmitting = false;
         return;
       }
     }
 
-    this.isLoaded = false;
-
     try {
+      const stageName = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
       // Xóa draft cũ, chỉ lưu 1 bản ghi = nội dung hiện tại trong ô (tránh sinh nhiều bản ghi từ Save & Close trước đó)
       await clearDraftRemarks({ caseId: this.recordId });
-      await caseRemarksEle.createRemark();
+      await caseRemarksEle.createRemark(stageName);
 
       // Luôn đẩy Case Remark vào History khi user đã nhập và bấm Submit (tránh mất nội dung khi business submit bị chặn)
-      await caseRemarksEle.submitRemark();
+      await caseRemarksEle.submitRemark(stageName);
       this.loadRemarkHistory();
 
       const submitted = await caseBusinessEle.submit();

@@ -1,5 +1,5 @@
 import { LightningElement, api, track, wire } from "lwc";
-import { IsConsoleNavigation, openTab } from "lightning/platformWorkspaceApi";
+import { IsConsoleNavigation, openTab, EnclosingTabId, setTabLabel } from "lightning/platformWorkspaceApi";
 import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
@@ -9,10 +9,12 @@ import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getR
 import FIRST_ACCESS from "@salesforce/schema/Case.FEC_First_Access__c";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import ISCLOSED from "@salesforce/schema/Case.IsClosed";
-import ISOWNER from "@salesforce/schema/Case.FEC_Is_Owner__c"; 
+import ISOWNER from "@salesforce/schema/Case.FEC_Is_Owner__c";
 import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
+import OWNERID from "@salesforce/schema/Case.OwnerId";
 import INTERACTION_RECORD_ID from "@salesforce/schema/Case.FEC_Interaction__c";
+import FEC_ID_SEARCH from "@salesforce/schema/Case.FEC_ID_Search__c";
 import {
   publish,
   subscribe,
@@ -65,6 +67,8 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   recordTypeDevName;
   hasAccountOrContract;
   customerType;
+  ownerId;
+  interactionOwnerId;
   _resetDone = false;
 
   // ===============================
@@ -80,6 +84,9 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   // ===============================
   // LOAD CASE DATA
   // ===============================
+  @wire(EnclosingTabId)
+  enclosingTabId;
+
   @wire(getRecord, {
     recordId: "$recordId",
     fields: [
@@ -90,6 +97,8 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       ISOWNER,
       INTERACTION_RECORD_ID,
       CUSTOMER_TYPE,
+      OWNERID,
+      FEC_ID_SEARCH
     ],
   })
   wiredCase({ data, error }) {
@@ -102,6 +111,13 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       this.isCaseClosed = getFieldValue(data, ISCLOSED);
       this.isOwner = getFieldValue(data, ISOWNER);
       this.customerType = getFieldValue(data, CUSTOMER_TYPE);
+      this.ownerId = getFieldValue(data, OWNERID);
+
+      const fecIdSearch = getFieldValue(data, FEC_ID_SEARCH);
+      if (fecIdSearch && this.enclosingTabId) {
+        setTabLabel(this.enclosingTabId, fecIdSearch);
+      }
+
       if (this.recordTypeId) {
         this.loadRecordType();
       }
@@ -115,12 +131,14 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   @wire(getRecord, {
     recordId: "$interactionRecordId",
     fields: [
-      ISCLOSED
+      ISCLOSED,
+      OWNERID
     ],
   })
   getInteraction({ data, error }) {
     if (data) {
       this.isInteractionClosed = getFieldValue(data, ISCLOSED);
+      this.interactionOwnerId = getFieldValue(data, OWNERID);
     } else if (error) {
       console.error("getRecord error:", error);
     }
@@ -147,11 +165,58 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   }
 
   get showWrapupAndCreateCase() {
-    return ( !this.isInteractionCase || this.isHandling ) && (this.isInteractionClosed === false || (this.isInteractionClosed === undefined && !this.isCaseClosed) ) && this.isOwner;
+    // 1. Chỉ người sở hữu (Owner) mới được quyền thấy nút
+    if (!this.isOwner) {
+      return false;
+    }
+
+    // 4. Interaction & Customer Case là cùng owner
+    if (this.isCustomerCase && this.interactionOwnerId !== this.ownerId) {
+      return false;
+    }
+
+    // 2. Trạng thái bản ghi (Interaction/Case) hiện tại phải đang mở (Open)
+    // Nếu có Interaction đính kèm thì dùng isInteractionClosed để xét.
+    // Nếu undefined thì dùng trạng thái của parent Case (isCaseClosed).
+    const isRecordOpen = (this.isInteractionCase && !this.isCaseClosed)
+      || !this.isInteractionClosed;
+
+    if (!isRecordOpen) {
+      return false;
+    }
+
+    // 3. Logic hiển thị thao tác (Wrapup/Create Case)
+    // - Trường hợp không phải Interaction -> cho phép thao tác ở mọi chế độ
+    // - Trường hợp là Interaction -> chỉ được phép khi cờ isHandling = true
+    if (!this.isInteractionCase || this.isHandling) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   get showExecute() {
-    return !this.isHandling && (this.isInteractionClosed === false || (this.isInteractionClosed === undefined && !this.isCaseClosed) ) && this.isOwner;
+    // 1. Chỉ người sở hữu (Owner) mới được quyền thấy nút
+    if (!this.isOwner) {
+      return false;
+    }
+
+    // 2. Trạng thái bản ghi hiện tại phải đang mở (Open)
+    const isRecordOpen =
+      this.isInteractionClosed === false ||
+      (this.isInteractionClosed === undefined && !this.isCaseClosed);
+
+    if (!isRecordOpen) {
+      return false;
+    }
+
+    // 3. Logic hiển thị nút "Execute" (Bắt đầu xử lý)
+    // - Phải CHƯA Ở TRONG trong chế độ xử lý (!isHandling)
+    if (!this.isHandling) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   get isInteractionCase() {
@@ -181,7 +246,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       }
     } else if (this.isCustomerCase) {
       // Nếu là Customer Case thì hiển thị highlight khi có tài khoản liên kết và customer type = existing
-      if (this.hasAccountOrContract && this.customerType != "Non-existing") {
+      if (this.isHandling && this.hasAccountOrContract && this.customerType != "Non-existing") {
         return true;
       } else {
         return false;
@@ -287,13 +352,42 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
 
-  // subscription = null;
+  subscription = null;
 
   // ===============================
   // LIFECYCLE HOOKS (SUBSCRIBE)
   // ===============================
   connectedCallback() {
     console.log("connectedCallback");
+    this.subscribeToMessageChannel();
   }
 
+  disconnectedCallback() {
+    this.unsubscribeToMessageChannel();
+  }
+
+  // ===============================
+  // LMS HANDLERS
+  // ===============================
+  subscribeToMessageChannel() {
+    if (!this.subscription) {
+      this.subscription = subscribe(
+        this.messageContext,
+        IS_MODE_EDIT,
+        (message) => this.handleMessage(message),
+        { scope: APPLICATION_SCOPE }
+      );
+    }
+  }
+
+  unsubscribeToMessageChannel() {
+    unsubscribe(this.subscription);
+    this.subscription = null;
+  }
+
+  handleMessage(message) {
+    if (!this.isInteractionCase && message && typeof message.isModeEdit !== 'undefined') {
+      this.viewMode = message.isModeEdit ? 'handling' : 'review';
+    }
+  }
 }

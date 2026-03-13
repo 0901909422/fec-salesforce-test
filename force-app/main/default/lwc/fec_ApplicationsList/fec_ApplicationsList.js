@@ -14,7 +14,8 @@
 import { LightningElement, api, track } from 'lwc';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import { NavigationMixin } from 'lightning/navigation';
-import { maskValue,formatDateVNI } from 'c/fec_CommonUtils';
+import { maskValue,formatDateVNI,parseDateVNI } from 'c/fec_CommonUtils';
+import { getFocusedTabInfo, openSubtab } from 'lightning/platformWorkspaceApi';
 
 import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
 
@@ -37,7 +38,7 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
             label: 'Application ID',
             fieldName: 'applicationId',
             type: 'link',
-            recordIdField: 'Id',
+            recordIdField: 'applicationId',
             hoverFields: [
                 {
                       section: 'Registration Info',
@@ -98,9 +99,8 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
             await refreshApplications({ caseId: this.recordId });
 
             const data = await getApplications({ caseId: this.recordId });
-
             this.registration = (data || []).map(row => ({
-                Id: row.id,
+                Id: row.Id,  
                 applicationId: row.applicationId,
                 accountNumber: row.accountNumber,
                 contractNumber: row.contractNumber,
@@ -123,7 +123,9 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
                 tSAName: row.tSAName
 
             }));
-
+            this.registration.sort((a,b)=>{
+                return new Date(parseDateVNI(b.updateDate)) - new Date(parseDateVNI(a.updateDate));
+            });
             this.hasData = this.registration.length > 0;
 
         } catch (err) {
@@ -135,18 +137,32 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
         }
     }
 
-    handleRegistrationSelect(event) {
-        const applicationListId = event.detail.recordId;
-        if (!applicationListId) return;
+    async handleRegistrationSelect(event) {
+        const appId = event.detail.recordId;
+        const row = this.registration.find(r => r.applicationId === appId);
 
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: 'FEC_ApplicationList'
+        if (!row) {
+            console.error('Application not found:', appId);
+            return;
+        }
+
+        const tabInfo = await getFocusedTabInfo();
+        const parentTabId = tabInfo.isSubtab ? tabInfo.parentTabId : tabInfo.tabId;
+
+        await openSubtab(parentTabId, {
+            pageReference: {
+                type: 'standard__navItemPage',
+                attributes: {
+                    apiName: 'FEC_ApplicationList'
+                },
+                state: {
+                    c__ApplicationList: row.Id,
+                    c__appId: row.applicationId,
+                    uid: row.applicationId
+                }
             },
-            state: {
-                c__ApplicationList: applicationListId
-            }
+            focus: true,
+            label: `Application ${row.applicationId}`
         });
     }
 }

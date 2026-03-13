@@ -246,8 +246,8 @@ public with sharing class FEC_NatureOfCaseTreeService {
                         FEC_Name_VN__c = (String)data.get(FEC_Constants.PAYLOAD_NAMEVN),
                         FEC_Alias__c = (String)data.get(FEC_Constants.PAYLOAD_ALIAS),
                         FEC_Code__c = (String)data.get(FEC_Constants.PAYLOAD_CODE),
-                        FEC_Pos_Order__c = Decimal.valueOf(String.valueOf(data.get(FEC_Constants.PAYLOAD_POSORDER))),
-                        FEC_Status__c = (Boolean)data.get(FEC_Constants.PAYLOAD_STATUS)
+                        FEC_Pos_Order__c = data.get(FEC_Constants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_Constants.PAYLOAD_POSORDER))) : null,
+                        FEC_Active__c = data.get(FEC_Constants.PAYLOAD_STATUS) != null ? Boolean.valueOf(data.get(FEC_Constants.PAYLOAD_STATUS)) : false
                     ));
                 } else if (type == FEC_Constants.LABEL_BUSINESS_PROCESS) {
                     bpUpdates.add(new FEC_MDM_Business_Process__c(
@@ -256,8 +256,8 @@ public with sharing class FEC_NatureOfCaseTreeService {
                         FEC_Name_VN__c = (String)data.get(FEC_Constants.PAYLOAD_NAMEVN),
                         FEC_Alias__c = (String)data.get(FEC_Constants.PAYLOAD_ALIAS),
                         FEC_Code__c = (String)data.get(FEC_Constants.PAYLOAD_CODE),
-                        FEC_Pos_Order__c = Decimal.valueOf(String.valueOf(data.get(FEC_Constants.PAYLOAD_POSORDER))),
-                        FEC_Status__c = (Boolean)data.get(FEC_Constants.PAYLOAD_STATUS)
+                        FEC_Pos_Order__c = data.get(FEC_Constants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_Constants.PAYLOAD_POSORDER))) : null,
+                        FEC_Active__c = data.get(FEC_Constants.PAYLOAD_STATUS) != null ? Boolean.valueOf(data.get(FEC_Constants.PAYLOAD_STATUS)) : false
                     ));
                 } else if (type == FEC_Constants.LABEL_CATEGORY) {
                     catUpdates.add(new FEC_MDM_Category__c(
@@ -266,8 +266,8 @@ public with sharing class FEC_NatureOfCaseTreeService {
                         FEC_Name_VN__c = (String)data.get(FEC_Constants.PAYLOAD_NAMEVN),
                         FEC_Alias__c = (String)data.get(FEC_Constants.PAYLOAD_ALIAS),
                         FEC_Code__c = (String)data.get(FEC_Constants.PAYLOAD_CODE),
-                        FEC_Pos_Order__c = Decimal.valueOf(String.valueOf(data.get(FEC_Constants.PAYLOAD_POSORDER))),
-                        FEC_Status__c = (Boolean)data.get(FEC_Constants.PAYLOAD_STATUS)
+                        FEC_Pos_Order__c = data.get(FEC_Constants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_Constants.PAYLOAD_POSORDER))) : null,
+                        FEC_Active__c = data.get(FEC_Constants.PAYLOAD_STATUS) != null ? Boolean.valueOf(data.get(FEC_Constants.PAYLOAD_STATUS)) : false
                     ));
                 } else if (type == FEC_Constants.LABEL_SUB_CATEGORY) {
                     scatUpdates.add(new FEC_MDM_Sub_Category__c(
@@ -276,8 +276,8 @@ public with sharing class FEC_NatureOfCaseTreeService {
                         FEC_Name_VN__c = (String)data.get(FEC_Constants.PAYLOAD_NAMEVN),
                         FEC_Alias__c = (String)data.get(FEC_Constants.PAYLOAD_ALIAS),
                         FEC_Code__c = (String)data.get(FEC_Constants.PAYLOAD_CODE),
-                        FEC_Pos_Order__c = Decimal.valueOf(String.valueOf(data.get(FEC_Constants.PAYLOAD_POSORDER))),
-                        FEC_Status__c = (Boolean)data.get(FEC_Constants.PAYLOAD_STATUS)
+                        FEC_Pos_Order__c = data.get(FEC_Constants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_Constants.PAYLOAD_POSORDER))) : null,
+                        FEC_Active__c = data.get(FEC_Constants.PAYLOAD_STATUS) != null ? Boolean.valueOf(data.get(FEC_Constants.PAYLOAD_STATUS)) : false
                     ));
                 } else if (type == FEC_Constants.LABEL_SUB_CODE) {
                     scodeUpdates.add(new FEC_MDM_Sub_Code__c(
@@ -286,8 +286,8 @@ public with sharing class FEC_NatureOfCaseTreeService {
                         FEC_Name_VN__c = (String)data.get(FEC_Constants.PAYLOAD_NAMEVN),
                         FEC_Alias__c = (String)data.get(FEC_Constants.PAYLOAD_ALIAS),
                         FEC_Code__c = (String)data.get(FEC_Constants.PAYLOAD_CODE),
-                        FEC_Pos_Order__c = Decimal.valueOf(String.valueOf(data.get(FEC_Constants.PAYLOAD_POSORDER))),
-                        FEC_Status__c = (Boolean)data.get(FEC_Constants.PAYLOAD_STATUS)
+                        FEC_Pos_Order__c = data.get(FEC_Constants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_Constants.PAYLOAD_POSORDER))) : null,
+                        FEC_Active__c = data.get(FEC_Constants.PAYLOAD_STATUS) != null ? Boolean.valueOf(data.get(FEC_Constants.PAYLOAD_STATUS)) : false
                     ));
                 }
             }
@@ -349,9 +349,19 @@ public with sharing class FEC_NatureOfCaseTreeService {
         if (fm.containsKey(FEC_Constants.FIELD_ALIAS) && fm.get(FEC_Constants.FIELD_ALIAS).getDescribe().isUpdateable()) targetSObject.put(FEC_Constants.FIELD_ALIAS, (String)updateData.get(FEC_Constants.PAYLOAD_ALIAS));
         if (fm.containsKey(FEC_Constants.FIELD_CODE) && fm.get(FEC_Constants.FIELD_CODE).getDescribe().isUpdateable()) targetSObject.put(FEC_Constants.FIELD_CODE, (String)updateData.get(FEC_Constants.PAYLOAD_CODE));
         if (fm.containsKey(FEC_Constants.FIELD_NAME_VN) && fm.get(FEC_Constants.FIELD_NAME_VN).getDescribe().isUpdateable()) targetSObject.put(FEC_Constants.FIELD_NAME_VN, (String)updateData.get(FEC_Constants.PAYLOAD_NAMEVN));
-        if (fm.containsKey(FEC_Constants.FIELD_STATUS) && fm.get(FEC_Constants.FIELD_STATUS).getDescribe().isUpdateable()) targetSObject.put(FEC_Constants.FIELD_STATUS, (Boolean)updateData.get(FEC_Constants.PAYLOAD_STATUS));
+        
+        // Fix Status/Active mapping
+        String statusField = fm.containsKey(FEC_Constants.FIELD_ACTIVE) ? FEC_Constants.FIELD_ACTIVE : (fm.containsKey(FEC_Constants.FIELD_STATUS) ? FEC_Constants.FIELD_STATUS : null);
+        if (statusField != null && fm.get(statusField).getDescribe().isUpdateable()) {
+            Object statusVal = updateData.get(FEC_Constants.PAYLOAD_STATUS);
+            targetSObject.put(statusField, statusVal != null ? Boolean.valueOf(statusVal) : false);
+        }
+
         if (fm.containsKey(FEC_Constants.FIELD_NAME) && fm.get(FEC_Constants.FIELD_NAME).getDescribe().isUpdateable()) targetSObject.put(FEC_Constants.FIELD_NAME, (String)updateData.get(FEC_Constants.PAYLOAD_NAMEEN));
-        if (fm.containsKey(FEC_Constants.FIELD_POS_ORDER) && fm.get(FEC_Constants.FIELD_POS_ORDER).getDescribe().isUpdateable()) targetSObject.put(FEC_Constants.FIELD_POS_ORDER, (Decimal)updateData.get(FEC_Constants.PAYLOAD_POSORDER));
+        if (fm.containsKey(FEC_Constants.FIELD_POS_ORDER) && fm.get(FEC_Constants.FIELD_POS_ORDER).getDescribe().isUpdateable()) {
+            Object posVal = updateData.get(FEC_Constants.PAYLOAD_POSORDER);
+            targetSObject.put(FEC_Constants.FIELD_POS_ORDER, posVal != null ? Decimal.valueOf(String.valueOf(posVal)) : null);
+        }
 
         try {
             update targetSObject;

@@ -15,6 +15,8 @@
             <lightning-button variant="base" label={labels.viewAllBtn} onclick={handleViewAll}>
             </lightning-button>
         </template>
-
+        <template if:false={showViewAll}>
+            <p class="slds-text-align_center">{labels.listEmpty}</p>
+        </template>
     </section>
 </template>

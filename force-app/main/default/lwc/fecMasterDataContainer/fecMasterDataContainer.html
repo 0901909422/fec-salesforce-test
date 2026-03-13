@@ -13,8 +13,12 @@
 
             <lightning-tabset variant="scoped">
                 <lightning-tab label={labelTabNodeDetails} value="nodeDetail">
-                    <c-fec-master-data-item-detail item={displayItem} onsave={handleItemSave}
-                        is-dirty={currentItemIsDirty} onnodebufferreset={handleNodeBufferReset}
+                    <c-fec-master-data-item-detail 
+                        data-id="detailComponent" 
+                        item={displayItem} 
+                        onsave={handleItemSave}
+                        is-dirty={currentItemIsDirty} 
+                        onnodebufferreset={handleNodeBufferReset}
                         onnodebufferchange={handleNodeBufferChange}>
                     </c-fec-master-data-item-detail>
                 </lightning-tab>
