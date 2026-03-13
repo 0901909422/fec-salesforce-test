@@ -45,6 +45,15 @@ import LABEL_TAB_ADD_FIELD_LIST from '@salesforce/label/c.FEC_Tab_Additional_Fie
 import LABEL_TAB_CASE_STAGE from '@salesforce/label/c.FEC_Tab_Case_Stage';
 import LABEL_BP from '@salesforce/label/c.FEC_Label_Business_Process';
 
+// New Labels for Stage Change and Action Button
+import LABEL_TAB_ACTION_BUTTON from '@salesforce/label/c.FEC_Tab_Action_Button';
+import LABEL_TAB_STAGE_CHANGE from '@salesforce/label/c.FEC_Tab_Stage_Change';
+import LABEL_COL_PREVIOUS_STAGE from '@salesforce/label/c.FEC_Col_Previous_Stage';
+import LABEL_COL_NEXT_STAGE from '@salesforce/label/c.FEC_Col_Next_Stage';
+import LABEL_COL_ACTION_BUTTON from '@salesforce/label/c.FEC_Col_Action_Button';
+import LABEL_COL_NEXT_QUEUE from '@salesforce/label/c.FEC_Col_Next_Queue';
+import LABEL_COL_TEAM_USER_GROUP from '@salesforce/label/c.FEC_Col_Team_User_Group';
+
 import { showLog } from 'c/fecMDMUtils';
 
 export default class FecAllMasterDataMDM extends LightningElement {
@@ -55,6 +64,7 @@ export default class FecAllMasterDataMDM extends LightningElement {
     // Cột cho 5 Object lookup cơ bản
     columnsBasic = [
         { label: LABEL_COL_ID, fieldName: FIELD_ID },
+        { label: LABEL_COL_CODE, fieldName: FIELD_CODE },
         { label: LABEL_COL_EXTERNALID, fieldName: FIELD_EXTERNAL_ID },
         { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
         { label: LABEL_COL_ALIAS, fieldName: FIELD_ALIAS },
@@ -69,6 +79,7 @@ export default class FecAllMasterDataMDM extends LightningElement {
     // Cột cho Master Setting
     columnsMsSetting = [
         { label: LABEL_COL_ID, fieldName: FIELD_ID },
+        { label: LABEL_COL_CODE, fieldName: FIELD_CODE },
         { label: LABEL_COL_EXTERNALID, fieldName: FIELD_EXTERNAL_ID },
         { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
         { label: LABEL_COL_CUSTOMER_TYPE, fieldName: FIELD_CUSTOMER_TYPE },
@@ -84,6 +95,7 @@ export default class FecAllMasterDataMDM extends LightningElement {
     // Cột cho Master Setting
     columnsSetting = [
         { label: LABEL_COL_ID, fieldName: FIELD_ID },
+        { label: LABEL_COL_CODE, fieldName: FIELD_CODE },
         { label: 'FEC_Additional_Field__c', fieldName: 'FEC_Additional_Field__c' },
         { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
         { label: LABEL_COL_PROCESS_STATUS, fieldName: FIELD_PROCESS_STATUS }
@@ -92,6 +104,7 @@ export default class FecAllMasterDataMDM extends LightningElement {
     // Cột cho Nature of Case (Mapped to NatureOfCaseMDMWrapper)
     columnsNOC = [
         { label: LABEL_COL_ID, fieldName: FIELD_ID },
+        { label: LABEL_COL_CODE, fieldName: FIELD_CODE },
         { label: LABEL_COL_EXTERNALID, fieldName: FIELD_EXTERNAL_ID },
         { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
         { label: LABEL_COL_CUSTOMER_TYPE, fieldName: FIELD_FEC_CUSTOMER_TYPE },
@@ -106,6 +119,7 @@ export default class FecAllMasterDataMDM extends LightningElement {
     // Cột cho Additional Field
     columnsField = [
         { label: LABEL_COL_ID, fieldName: FIELD_ID },
+        { label: LABEL_COL_CODE, fieldName: FIELD_CODE },
         { label: LABEL_COL_EXTERNALID, fieldName: FIELD_EXTERNAL_ID },
         { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
         { label: LABEL_TYPE, fieldName: FIELD_FEC_TYPE },
@@ -116,11 +130,38 @@ export default class FecAllMasterDataMDM extends LightningElement {
     // Cột cho Case Stage
     columnsStage = [
         { label: LABEL_COL_ID, fieldName: FIELD_ID },
+        { label: LABEL_COL_CODE, fieldName: FIELD_CODE },
         { label: LABEL_COL_EXTERNALID, fieldName: FIELD_EXTERNAL_ID },
         { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
         { label: LABEL_BP, fieldName: FIELD_BUSINESS_PROCESS_NAME },
         { label: LABEL_COL_ORDER, fieldName: FIELD_ORDER_GENERIC, type: TYPE_NUMBER },
         { label: LABEL_COL_PROCESS_STATUS, fieldName: FIELD_PROCESS_STATUS }
+    ];
+
+    // Cột cho Action Button
+    columnsActionButton = [
+        { label: LABEL_COL_ID, fieldName: FIELD_ID },
+        { label: LABEL_COL_CODE, fieldName: FIELD_CODE },
+        { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
+        { label: LABEL_TYPE, fieldName: 'FEC_Type__c' },
+        { label: 'Apex Class', fieldName: 'FEC_Apex_Class__c' },
+        { label: 'Flow ID', fieldName: 'FEC_FlowID__c' },
+        { label: 'Active', fieldName: 'FEC_Active__c', type: 'boolean' },
+        { label: LABEL_COL_PROCESS_STATUS, fieldName: FIELD_PROCESS_STATUS }
+    ];
+
+    // Cột cho Stage Change (Mapped to StageChangeMDMWrapper)
+    columnsStageChange = [
+        { label: LABEL_COL_ID, fieldName: FIELD_ID },
+        { label: LABEL_COL_CODE, fieldName: 'Code' },
+        { label: LABEL_COL_NAME, fieldName: FIELD_NAME },
+        { label: LABEL_COL_PREVIOUS_STAGE, fieldName: 'FEC_Previous_Stage_Name' },
+        { label: LABEL_COL_ACTION_BUTTON, fieldName: 'FEC_Action_Button_Name' },
+        { label: LABEL_COL_NEXT_STAGE, fieldName: 'FEC_Next_Stage_Name' },
+        { label: LABEL_COL_NEXT_QUEUE, fieldName: 'FEC_Next_Queue' },
+        { label: LABEL_COL_TEAM_USER_GROUP, fieldName: 'FEC_Team_User_Group' },
+        { label: 'Active', fieldName: 'FEC_Active', type: 'boolean' },
+        { label: LABEL_COL_PROCESS_STATUS, fieldName: 'Process_Change_Status' }
     ];
 
     @wire(getAllMasterDataMDM)
@@ -163,4 +204,6 @@ export default class FecAllMasterDataMDM extends LightningElement {
     labelTabAddField = LABEL_TAB_ADD_FIELD;
     labelTabAddFieldList = LABEL_TAB_ADD_FIELD_LIST;
     labelTabCaseStage = LABEL_TAB_CASE_STAGE;
+    labelTabActionButton = LABEL_TAB_ACTION_BUTTON;
+    labelTabStageChange = LABEL_TAB_STAGE_CHANGE;
 }

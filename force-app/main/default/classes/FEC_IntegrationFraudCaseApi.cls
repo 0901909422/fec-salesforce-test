@@ -2,6 +2,7 @@
 global with sharing class FEC_IntegrationFraudCaseApi {
     public static final Boolean DEBUG_LOG = true;    
     public static final String userLang = UserInfo.getLanguage();
+    public static String REQUESTOR_DATA = null;
     // Error messages (from Custom Labels)  
     public static final String MSG_MISSING_DETAIL =
     System.Label.LBL_API_Missing_Detail;
@@ -62,6 +63,10 @@ global with sharing class FEC_IntegrationFraudCaseApi {
         String caseId;
         String serviceCaseId;
         String channelId = '';
+        String messageStatus = null;
+        String requestor = null;
+        String description = null;
+        String xmlInput = null;
     
         try {
             FEC_IntegrationFraudCaseUtil.FraudExtractResult extractData =
@@ -106,7 +111,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             }
     
             String normalized = caseId.trim().toUpperCase();
-            String xmlInput   =
+            xmlInput   =
                 FEC_IntegrationFraudCaseUtil.normalizeXml(xmlData);
     
             //Route case
@@ -142,13 +147,14 @@ global with sharing class FEC_IntegrationFraudCaseApi {
     
         } finally {
             try {
-    
-                if (String.isBlank(caseId) && responseStr != null) {
-                    caseId =
-                        FEC_IntegrationFraudCaseUtil.extractCaseIdFromResponse(
-                            responseStr
-                        );
+                FEC_IntegrationFraudCaseUtil.UpdateCaseResponse res = FEC_IntegrationFraudCaseUtil.extractCaseIdFromResponse(responseStr);
+                if (String.isBlank(caseId) && responseStr != null) {                    
+                    caseId = res.caseId;                    
                 }
+                messageStatus = res.caseMessage;
+                description = res.caseCode;
+                requestor = REQUESTOR_DATA;
+
     
                 FEC_IntegrationFraudCaseUtil.logIntegrationService(
                     serviceName,
@@ -156,7 +162,10 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                     caseId,
                     serviceCaseId,
                     requestBody,
-                    responseStr
+                    responseStr,
+                    messageStatus,
+                    requestor,
+                    description
                 );
             } catch (Exception logEx) {
                 log('Logging failed: ' + logEx.getMessage());
@@ -300,6 +309,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             String xmlCreated     = FEC_IntegrationFraudCaseUtil.val(caseNode, caseField.CREATEDTIME_FIELD);
             String xmlUpdated     = FEC_IntegrationFraudCaseUtil.val(caseNode, caseField.UPDATEDTIME_FIELD);
             String xmlCreatorEmail      = FEC_IntegrationFraudCaseUtil.val(creatorInfoNode, caseField.CREATOR_EMAIL_FIELD);
+            REQUESTOR_DATA = xmlCreatorEmail;
 
             log('XML Fields:\ninvestigationConclusion='+investigationConclusion+'\nCreated='+xmlCreated+'\nUpdated='+xmlUpdated);
 
@@ -347,6 +357,16 @@ global with sharing class FEC_IntegrationFraudCaseApi {
 
             //Update child info
             Map<String, FEC_Integration_Case_Info__c> existingInfoMap = new Map<String, FEC_Integration_Case_Info__c>();
+            
+            Map<String, FEC_Master_Data_Integration__c> sourceConfigMap = new Map<String, FEC_Master_Data_Integration__c>();
+
+            for (FEC_Master_Data_Integration__c recMaster : [
+                SELECT FEC_Source_Id__c, FEC_Source_Type__c, FEC_Source_Is_Mandatory__c,FEC_Source_Field_Type__c
+                FROM FEC_Master_Data_Integration__c
+                WHERE FEC_Channel__c = :channelID
+            ]) {
+                sourceConfigMap.put(recMaster.FEC_Source_Id__c, recMaster);
+            }
 
             for (FEC_Integration_Case_Info__c info : [
                 SELECT Id, FEC_Info_ID__c, FEC_Info_Value__c
@@ -370,10 +390,13 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 if (String.isBlank(idVal)) {
                     continue; // nothing to process
                 }
+                FEC_Master_Data_Integration__c config = sourceConfigMap.get(idVal);
+                String fileType = config != null ? config.FEC_Source_Field_Type__c : null;
+                Boolean sourceMandatory = config != null ? config.FEC_Source_Is_Mandatory__c : false;
+
                 FEC_Integration_Case_Info__c existing = existingInfoMap.get(idVal);
                 if (existing != null) {
-                    // Update
-                    String fileType = getFileType(idVal, channelID);
+                    // Update                    
                     Boolean isFile = (fileType != null && fileType.equalsIgnoreCase(caseFileType.TYPE_FILE));
             
                     if (!isFile && existing.FEC_Info_Value__c != valVal) {
@@ -386,7 +409,9 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                     toInsert.add(new FEC_Integration_Case_Info__c(
                         FEC_Parent_Case__c = rec.Id,
                         FEC_Info_ID__c     = idVal,
-                        FEC_Info_Value__c  = valVal
+                        FEC_Info_Value__c  = valVal,
+                        FEC_Property_Type__c = fileType,
+                        FEC_Source_Is_Mandatory__c = sourceMandatory
                     ));
                 }        
 
@@ -412,38 +437,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
 
     }
 
-    /**
-     * Retrieves the file type for a given file name and integration channel.
-     *
-     * This method looks up the FEC_Master_Data_Integration__c configuration table
-     * to determine the source type associated with the provided file name and
-     * channel ID. It returns the corresponding FEC_Source_Type__c value if found.
-     *
-     * @param fileName              The name or identifier of the file to look up.
-     * @param integrationChannelId The integration channel in which the file is used.
-     * @return The file type (FEC_Source_Type__c) if a matching record is found;
-     *         otherwise returns null.
-     */
-    private static String getFileType(String fieldName, String integrationChannelId) {
-        log('getFileType.fieldName: ' + fieldName);
-        log('getFileType.integrationChannelId: ' + integrationChannelId);
-        List<FEC_Master_Data_Integration__c> records = [
-            SELECT FEC_Source_Type__c
-            FROM FEC_Master_Data_Integration__c
-            WHERE FEC_Channel__c = :integrationChannelId
-            AND FEC_Source_Id__c = :fieldName
-            LIMIT 1
-        ];
-
-        if (!records.isEmpty()) {
-            return records[0].FEC_Source_Type__c;
-        }
-
-        return null;
-    }
-
-
-
+    
     /**
      * Processes a Business Unit (BU) fraud case update request by combining
      * structured JSON detail data with nested XML request information and
@@ -548,7 +542,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
 
             String xmlCreated     = FEC_IntegrationFraudCaseUtil.val(caseNode, caseField.CREATEDTIME_FIELD);
             String xmlUpdated     = FEC_IntegrationFraudCaseUtil.val(caseNode, caseField.UPDATEDTIME_FIELD);
-
+            REQUESTOR_DATA = xmlCreatorEmail;
             log('XML Fields:\nRemark='+xmlRemark+'\nCreated='+xmlCreated+'\nUpdated='+xmlUpdated);
             
              
@@ -726,7 +720,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             String xmlUpdated     = FEC_IntegrationFraudCaseUtil.val(caseNode, caseField.UPDATEDTIME_FIELD);
             String xmlCreatorEmail = FEC_IntegrationFraudCaseUtil.val(creatorInfoNode, caseField.CREATOR_EMAIL_FIELD);
             String xmlUserType     = FEC_IntegrationFraudCaseUtil.val(customerInfoNode, caseField.USER_TYPE_FIELD);
-    
+            REQUESTOR_DATA = xmlCreatorEmail;
             // =======================
             // 5. Upsert main record
             // =======================

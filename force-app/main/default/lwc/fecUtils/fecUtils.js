@@ -21,3 +21,4 @@ export const WARNING_TITLE = Constants.WARNING_TITLE;
 export const sortData = Helpers.sortData;
 export const formatDateDDMMYYYY = Helpers.formatDateDDMMYYYY;
 export const formatString = Helpers.formatString;
+export const getTomorrowDate = Helpers.getTomorrowDate;
