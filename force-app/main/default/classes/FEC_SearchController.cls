@@ -70,13 +70,7 @@ public with sharing class FEC_SearchController {
 
         // 4. Khởi tạo và Insert History (Trường FEC_Case__c bây giờ chắc chắn có giá trị)
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
-        if (fieldName == 'AccountNumber') {
-            rec.FEC_Account_Number__c = value;
-        } else if (fieldName == 'ContractNumber') {
-            rec.FEC_Contract_Number__c = value;
-        } else if (fieldName == 'UserId') {
-            rec.FEC_User_ID__c = value;
-        }
+        rec.FEC_Account_Number__c = value;
         rec.Name = value;
         rec.FEC_CIF_Number__c = cifNumber;
         rec.FEC_Work_Phone__c = phone;
