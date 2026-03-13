@@ -1,668 +1,510 @@
+/**
+ * @description LWC Controller for Custom Decision Table UI (Dynamic EAV)
+ * @date 2026-03-10
+ * @author DAT NGO
+ */
 import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
-import getBusinessProcessTree from '@salesforce/apex/FEC_BusinessProcessService.getBusinessProcessTree';
-import getDecisionTableByBP from '@salesforce/apex/FEC_BusinessProcessService.getDecisionTableByBP';
-import getStagesByBP from '@salesforce/apex/FEC_BusinessProcessService.getStagesByBP';
-import getActionButtonsByBP from '@salesforce/apex/FEC_BusinessProcessService.getActionButtonsByBP';
-import saveStagChangeRule from '@salesforce/apex/FEC_BusinessProcessService.saveStagChangeRule';
-import deleteStagChangeRule from '@salesforce/apex/FEC_BusinessProcessService.deleteStagChangeRule';
+
+import getBusinessProcessTree from '@salesforce/apex/FEC_DecisionTableController.getBusinessProcessTree';
+import getDynamicDecisionTable from '@salesforce/apex/FEC_DecisionTableController.getDynamicDecisionTable';
+import saveDynamicRule from '@salesforce/apex/FEC_DecisionTableController.saveDynamicRule';
+import deleteDynamicRule from '@salesforce/apex/FEC_DecisionTableController.deleteDynamicRule';
+import addDynamicColumn from '@salesforce/apex/FEC_DecisionTableController.addDynamicColumn';
+import deleteDynamicColumn from '@salesforce/apex/FEC_DecisionTableController.deleteDynamicColumn';
+import addDynamicRow from '@salesforce/apex/FEC_DecisionTableController.addDynamicRow';
+import getMDMFieldOptions from '@salesforce/apex/FEC_DecisionTableController.getMDMFieldOptions';
 
 export default class FecDecisionTableView extends LightningElement {
-    // Tree state
-    @track selectedNode = null;
+    @track modalConditionCols = [];
+    @track modalActionCols = [];
+    @track editingRuleId = null;
+
     @track isTreeExpanded = true;
     @track treeData = [];
     @track treeError = null;
+    @track selectedNode = null;
 
-    // Decision Table state
     @track isLoading = false;
     @track error = null;
-    @track decisionRows = [];
-    @track groupedRows = [];
     @track searchFilter = '';
-    @track filteredGroupedRows = [];
 
-    // Column headers
-    colCurrentStage = 'Current Stage';
-    colConditions   = 'Điều kiện';
-    colAction       = 'Action';
-    colNextStage    = 'Next Stage';
-    colNextQueue    = 'Next Queue';
-    colTeamUserGroup = 'Team/User Group';
-
-    // Modal & Edit state
-    @track showAddRuleModal = false;
-    @track editingRule = null;
-    @track selectedRuleForEdit = null;
-    @track formData = {
-        previousStageId: '',
-        actionButtonId: '',
-        nextStageId: '',
-        nextQueue: '',
-        teamUserGroup: ''
+    // --- Biến lưu trữ Dữ liệu Động ---
+    @track dynamicData = {
+        tableId: null,
+        conditionCols: [],
+        actionCols: [],
+        rows: []
     };
-    @track formErrors = {};
-    
-    // Form options
-    @track stageOptions = [];
-    @track actionOptions = [];
+    @track originalRows = []; // Backup dữ liệu gốc khi filter
 
-    // Giữ wire result để dùng refreshApex
-    _wiredDecisionTable;
+    // --- Modal States ---
+    @track showAddRuleModal = false;
+
+    // ==========================================
+    // TRACK SELECTION STATES
+    // ==========================================
+    @track selectedColId = null;
+    @track selectedColType = null;
+    @track selectedRowId = null;
+
+    // --- Add Column Modal States ---
+    @track showAddColModal = false;
+    @track newColPosition = '';
+    @track newColName = '';
+    @track newColDataType = 'Text';
+    @track newColType = 'Condition'; // Mặc định
+
+    // BIẾN CHO TÍNH NĂNG SMART UI
+    @track mdmFieldOptions = [];
+    @track rawMdmFields = [];
+    @track newMdmFieldId = null;
+
+    colTypeOptions = [
+        { label: 'Điều Kiện (Condition)', value: 'Condition' },
+        { label: 'Hành Động (Action)', value: 'Action' }
+    ];
+
+    dataTypeOptions = [
+        { label: 'Văn bản (Text)', value: 'Text' },
+        { label: 'Đúng/Sai (Boolean)', value: 'Boolean' },
+        { label: 'Số (Number)', value: 'Number' }
+    ];
+
+    _wiredDynamicTable;
     _currentBPId = null;
 
-    /**
-     * Load Business Process tree data từ Apex
-     */
+    showLog(methodName, message) {
+        console.log(`[${methodName}] ${message}`);
+    }
+
+    // ==========================================
+    // 1. LOAD BUSINESS PROCESS TREE
+    // ==========================================
     @wire(getBusinessProcessTree)
     wiredBusinessProcessTree({ error, data }) {
-        console.log('[DecisionTableView] wiredBusinessProcessTree called');
+        this.showLog('wiredBusinessProcessTree', 'START');
         if (data) {
-            console.log('[DecisionTableView] Tree data loaded:', data);
             this.treeData = this.buildTreeData(data);
             this.treeError = null;
         } else if (error) {
-            console.error('[DecisionTableView] Error loading tree:', error);
             this.treeError = error?.body?.message || 'Lỗi khi tải Business Process tree';
             this.treeData = [];
         }
     }
 
-    /**
-     * Xây dựng tree structure từ Apex data
-     * Convert flat list thành hierarchical tree
-     */
     buildTreeData(data) {
         const treeItems = [];
-
-        if (!Array.isArray(data) || data.length === 0) {
-            console.log('[DecisionTableView] No data to build tree');
-            return treeItems;
-        }
+        if (!Array.isArray(data)) return treeItems;
 
         data.forEach((bp) => {
             const bpItem = {
-                label: bp.label,
-                name: bp.id,
-                expanded: false,
-                type: bp.type,
-                icon: bp.icon,
-                code: bp.code,
-                nameVN: bp.nameVN,
-                items: []
+                label: bp.label, name: bp.id, expanded: false, type: bp.type,
+                icon: bp.icon, code: bp.code, nameVN: bp.nameVN, items: []
             };
-
-            // Thêm children (Stages) vào node Business Process
-            if (Array.isArray(bp.children) && bp.children.length > 0) {
+            if (Array.isArray(bp.children)) {
                 bp.children.forEach((stage) => {
                     bpItem.items.push({
                         label: `${stage.label}${stage.code ? ' (' + stage.code + ')' : ''}`,
-                        name: stage.id,
-                        type: stage.type,
-                        icon: stage.icon,
-                        parentId: stage.parentId,
-                        disabled: false
+                        name: stage.id, type: stage.type, icon: stage.icon,
+                        parentId: stage.parentId, disabled: false
                     });
                 });
             }
-
             treeItems.push(bpItem);
         });
-
-        console.log('[DecisionTableView] Built tree items:', treeItems);
         return treeItems;
     }
 
-    /**
-     * Nhận event từ tree khi người dùng chọn node
-     */
-    handleNodeSelect(event) {
-        console.log('[DecisionTableView] handleNodeSelect called:', event);
-        console.log('[DecisionTableView] event.detail:', event.detail);
-        
-        const name = event.detail?.name;
-        console.log('[DecisionTableView] Extracted name:', name);
-        
-        if (!name) {
-            console.warn('[DecisionTableView] Node name is empty, skipping');
-            return;
-        }
+    // ==========================================
+    // 2. LOAD DYNAMIC DECISION TABLE
+    // ==========================================
+    @wire(getDynamicDecisionTable, { businessProcessId: '$_currentBPId' })
+    wiredDynamicDecisionTable(result) {
+        this._wiredDynamicTable = result;
+        const { data, error } = result;
+        if (data) {
+            this.showLog('wiredDynamicDecisionTable', 'Loaded dynamic data successfully');
 
-        // Tìm node trong treeData để lấy type
-        let nodeType = 'BUSINESS_PROCESS';
-        let nodeLabel = name;
-        for (const bp of this.treeData) {
-            if (bp.name === name) {
-                nodeType = bp.type || 'BUSINESS_PROCESS';
-                nodeLabel = bp.label;
-                console.log('[DecisionTableView] Found BP node:', { nodeType, nodeLabel });
-                break;
-            }
-            const stage = (bp.items || []).find(s => s.name === name);
-            if (stage) {
-                nodeType = stage.type || 'STAGE';
-                nodeLabel = stage.label;
-                console.log('[DecisionTableView] Found Stage node:', { nodeType, nodeLabel });
-                break;
-            }
-        }
+            // CÁCH FIX LỖI PROXY: Clone dữ liệu ra mảng mới (dùng .map) trước khi gán cssClass
+            const clonedConditionCols = (data.conditionCols || []).map(c => ({ ...c, cssClass: 'conditions-cell' }));
+            const clonedActionCols = (data.actionCols || []).map(c => ({ ...c, cssClass: 'action-cell' }));
+            const clonedRows = (data.rows || []).map(r => ({ ...r, cssClass: 'decision-row' }));
 
-        this.selectedNode = { idType: name, label: nodeLabel, type: nodeType };
-        console.log('[DecisionTableView] Node selected:', this.selectedNode);
-        console.log('[DecisionTableView] selectedNode state updated, hasSelection:', this.hasSelection);
+            // Gán dữ liệu đã clone vào biến state của LWC
+            this.dynamicData = {
+                tableId: data.tableId,
+                conditionCols: clonedConditionCols,
+                actionCols: clonedActionCols,
+                rows: clonedRows
+            };
 
-        // Chỉ load Decision Table khi chọn Business Process
-        if (nodeType === 'BUSINESS_PROCESS') {
-            console.log('[DecisionTableView] Loading Decision Table for BP:', name);
-            this.loadDecisionTable(name);
-            this.loadStageAndActionOptions(name); // Load options ngay, không đợi Decision Table
-        } else {
-            console.log('[DecisionTableView] Node is Stage, clearing Decision Table');
-            this.decisionRows = [];
-            this.groupedRows = [];
+            this.originalRows = [...clonedRows];
             this.error = null;
+        } else if (error) {
+            this.error = error?.body?.message || 'Lỗi tải Decision Table động';
+            this.dynamicData = { tableId: null, conditionCols: [], actionCols: [], rows: [] };
+            this.originalRows = [];
         }
+        this.isLoading = false;
     }
-
-    /**
-     * Expand/Collapse tree
-     */
+    // ==========================================
+    // 3. UI EVENTS & ACTIONS
+    // ==========================================
     handleToggleTree() {
         this.isTreeExpanded = !this.isTreeExpanded;
     }
 
-    /**
-     * Wire: Load Decision Table — dùng @wire để có thể refreshApex
-     */
-    @wire(getDecisionTableByBP, { businessProcessId: '$_currentBPId' })
-    wiredDecisionTable(result) {
-        this._wiredDecisionTable = result;
-        const { data, error } = result;
-        if (data) {
-            console.log('[DecisionTableView] Decision Table wired data:', data.length, 'rows');
-            const rows = Array.isArray(data) ? data : [];
-            this.decisionRows = rows;
-            this.groupedRows = this.buildGroupedRows(rows);
-            this.applySearchFilter();
-            this.error = null;
-        } else if (error) {
-            console.error('[DecisionTableView] Wire error:', error);
-            this.error = error?.body?.message || 'Lỗi khi tải Decision Table';
-            this.decisionRows = [];
-            this.groupedRows = [];
-            this.filteredGroupedRows = [];
+    handleNodeSelect(event) {
+        const name = event.detail?.name;
+        if (!name) return;
+
+        let nodeType = 'BUSINESS_PROCESS';
+        let nodeLabel = name;
+        for (const bp of this.treeData) {
+            if (bp.name === name) {
+                nodeType = bp.type || 'BUSINESS_PROCESS'; nodeLabel = bp.label; break;
+            }
+            const stage = (bp.items || []).find(s => s.name === name);
+            if (stage) {
+                nodeType = stage.type || 'STAGE'; nodeLabel = stage.label; break;
+            }
         }
-        this.isLoading = false;
+
+        this.selectedNode = { idType: name, label: nodeLabel, type: nodeType };
+
+        if (nodeType === 'BUSINESS_PROCESS') {
+            this.isLoading = true;
+            this._currentBPId = name;
+            // Clear selection states when switching BP
+            this.selectedColId = null;
+            this.selectedRowId = null;
+        } else {
+            this.dynamicData = { tableId: null, conditionCols: [], actionCols: [], rows: [] };
+            this.originalRows = [];
+            this.error = null;
+        }
     }
 
-    /**
-     * Load Decision Table — set _currentBPId để trigger @wire
-     */
-    loadDecisionTable(businessProcessId) {
-        if (!businessProcessId) return;
-        console.log('[DecisionTableView] loadDecisionTable:', businessProcessId);
-        this.isLoading = true;
-        this.error = null;
-        this.decisionRows = [];
-        this.groupedRows = [];
-        this.filteredGroupedRows = [];
-        this._currentBPId = businessProcessId;
+    // ==========================================
+    // 4. SEARCH & FILTER
+    // ==========================================
+    handleSearchChange(event) {
+        this.searchFilter = event.target.value.toLowerCase();
+        this.applySearchFilter();
     }
 
-    /**
-     * Refresh Decision Table sau khi add/edit/delete
-     */
-    refreshDecisionTable() {
+    handleClearSearch() {
+        this.searchFilter = '';
+        this.applySearchFilter();
+    }
+
+    applySearchFilter() {
+        if (!this.searchFilter.trim()) {
+            this.dynamicData.rows = [...this.originalRows];
+            return;
+        }
+        this.dynamicData.rows = this.originalRows.filter(row => {
+            return row.allSearchableCells.some(cell =>
+                cell.value && cell.value.toLowerCase().includes(this.searchFilter)
+            );
+        });
+    }
+
+    // ==========================================
+    // 5. GETTERS (Dành cho HTML)
+    // ==========================================
+    get hasTreeData() { return this.treeData && this.treeData.length > 0; }
+    get conditionColSpan() { return this.dynamicData?.conditionCols?.length || 0; }
+    get actionColSpan() { return this.dynamicData?.actionCols?.length || 0; }
+    get hasDecisionData() { return this.originalRows.length > 0; }
+    get hasNoSearchResults() { return this.hasSearchFilter && this.dynamicData?.rows?.length === 0; }
+
+    get totalRuleCount() { return this.originalRows.length; }
+    get stageCount() { return this.originalRows.length > 0 ? 'Dynamic' : 0; }
+
+    get treeArrowIcon() { return this.isTreeExpanded ? 'utility:chevrondown' : 'utility:chevronright'; }
+    get selectedItemLabel() { return this.selectedNode?.label || ''; }
+    get hasSelection() { return !!this.selectedNode?.idType; }
+    get isBPSelected() { return this.selectedNode?.type === 'BUSINESS_PROCESS'; }
+    get isStageSelected() { return this.selectedNode?.type === 'STAGE'; }
+    get hasSearchFilter() { return this.searchFilter.trim().length > 0; }
+    get displaySearchMessage() { return `Kết quả tìm kiếm: ${this.dynamicData?.rows?.length || 0} rule`; }
+    get modalTitle() { return this.editingRuleId ? 'Sửa Rule' : 'Thêm Rule Mới'; }
+
+    // Disable các nút Xóa nếu không chọn, nhưng các nút Thêm thì luôn Mở để thêm mới
+    get disableColButtons() { return !this.selectedColId; }
+    get disableRowButtons() { return !this.selectedRowId; }
+
+    showToast(title, message, variant) {
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    }
+
+    handleOverlayClick() { this.handleCloseModal(); this.closeAddColModal(); }
+    handleDialogClick(event) { event.stopPropagation(); }
+
+    // ==========================================
+    // 6.XỬ LÝ CLICK CHỌN (SELECTION)
+    // ==========================================
+    handleSelectColumn(event) {
+        this.selectedColId = event.currentTarget.dataset.colId;
+        this.selectedColType = event.currentTarget.dataset.colType;
+        this.selectedRowId = null;
+        this.updateSelectionCSS();
+    }
+
+    handleSelectRow(event) {
+        if (event.target.tagName === 'LIGHTNING-ICON' || event.target.tagName === 'BUTTON') return;
+        this.selectedRowId = event.currentTarget.dataset.rowId;
+        this.selectedColId = null;
+        this.updateSelectionCSS();
+    }
+
+    updateSelectionCSS() {
+        if (!this.dynamicData) return;
+
+        if (this.dynamicData.conditionCols) {
+            this.dynamicData.conditionCols.forEach(c => {
+                c.cssClass = (c.id === this.selectedColId) ? 'conditions-cell selected-header' : 'conditions-cell';
+            });
+        }
+
+        if (this.dynamicData.actionCols) {
+            this.dynamicData.actionCols.forEach(c => {
+                c.cssClass = (c.id === this.selectedColId) ? 'action-cell selected-header' : 'action-cell';
+            });
+        }
+
+        if (this.dynamicData.rows) {
+            this.dynamicData.rows.forEach(r => {
+                r.cssClass = (r.rowId === this.selectedRowId) ? 'decision-row selected-row' : 'decision-row';
+            });
+        }
+
+        this.dynamicData = { ...this.dynamicData };
+    }
+
+    // ==========================================
+    // 7.LOGIC THÊM / XÓA CỘT (DYNAMIC COLUMN)
+    // ==========================================
+    handleAddColLeft() { this.openAddColModal('left'); }
+    handleAddColRight() { this.openAddColModal('right'); }
+
+    openAddColModal(position) {
+        this.newColPosition = position;
+        this.newMdmFieldId = null;
+        this.newColName = '';
+        this.newColDataType = 'Text';
+        this.newColType = this.selectedColType || 'Condition';
+        this.showAddColModal = true;
+    }
+
+    // Hàm bắt sự kiện khi Admin chọn một Field trong Dropdown
+    handleMdmFieldChange(e) {
+        this.newMdmFieldId = e.detail.value;
+        const selectedField = this.rawMdmFields.find(f => f.value === this.newMdmFieldId);
+
+        if (selectedField) {
+            // Tự động điền Tên Cột bằng Label của Field
+            this.newColName = selectedField.label;
+            // Tự động map Loại Dữ Liệu
+            let mappedType = selectedField.dataType || 'Text';
+            if (mappedType === 'Picklist') mappedType = 'Text'; // Quy picklist về Text để dùng chung Input
+            this.newColDataType = mappedType;
+        }
+    }
+
+    closeAddColModal() { this.showAddColModal = false; }
+    handleNewColNameChange(e) { this.newColName = e.target.value; }
+    handleNewColTypeChange(e) { this.newColType = e.detail.value; }
+    handleNewColDataTypeChange(e) { this.newColDataType = e.detail.value; }
+
+    submitAddColumn() {
+        if (!this.newMdmFieldId) {
+            this.showToast('Lỗi', 'Vui lòng chọn một Trường dữ liệu (Field) từ danh sách', 'error');
+            return;
+        }
+
         this.isLoading = true;
-        refreshApex(this._wiredDecisionTable)
+        addDynamicColumn({
+            tableId: this.dynamicData.tableId,
+            targetColId: this.selectedColId,
+            position: this.newColPosition || 'right',
+            colName: this.newColName,
+            colType: this.newColType,
+            dataType: this.newColDataType,
+            mdmFieldId: this.newMdmFieldId // Truyền ID này xuống Apex
+        }).then(() => {
+            this.showToast('Thành công', 'Đã thêm cột mới', 'success');
+            this.closeAddColModal();
+            this.selectedColId = null;
+            return refreshApex(this._wiredDynamicTable);
+        }).catch(err => {
+            this.showToast('Lỗi', err.body?.message || err.message, 'error');
+        }).finally(() => {
+            this.isLoading = false;
+        });
+    }
+    
+    handleDeleteCol() {
+        if (!this.selectedColId) return;
+        if (!confirm('Cảnh báo: Xóa cột sẽ làm mất toàn bộ dữ liệu của cột này trên mọi dòng. Tiếp tục?')) return;
+
+        this.isLoading = true;
+        deleteDynamicColumn({ colId: this.selectedColId })
             .then(() => {
-                console.log('[DecisionTableView] refreshApex success');
-            })
-            .catch((err) => {
-                console.error('[DecisionTableView] refreshApex error:', err);
-            })
-            .finally(() => {
+                this.showToast('Thành công', 'Đã xóa cột', 'success');
+                this.selectedColId = null;
+                return refreshApex(this._wiredDynamicTable);
+            }).catch(err => {
+                this.showToast('Lỗi', err.body?.message || err.message, 'error');
+            }).finally(() => {
                 this.isLoading = false;
             });
     }
 
-    /**
-     * Load Stage và Action options từ Apex theo BP ID
-     */
-    loadStageAndActionOptions(businessProcessId) {
-        if (!businessProcessId) return;
+    // ==========================================
+    // 8.LOGIC THÊM / XÓA DÒNG (DYNAMIC ROW)
+    // ==========================================
+    handleAddRowAbove() { this.callAddRowAPI('above'); }
+    handleAddRowBelow() { this.callAddRowAPI('below'); }
 
-        // Load Stages của BP
-        getStagesByBP({ businessProcessId })
-            .then((stages) => {
-                console.log('[DecisionTableView] Stages loaded:', stages);
-                this.stageOptions = Array.isArray(stages)
-                    ? stages.map(s => ({ label: s.label, value: s.value }))
-                    : [];
-            })
-            .catch((err) => {
-                console.error('[DecisionTableView] Error loading stages:', err);
-            });
-
-        // Load Action Buttons của BP
-        getActionButtonsByBP({ businessProcessId })
-            .then((actions) => {
-                console.log('[DecisionTableView] Actions loaded:', actions);
-                this.actionOptions = Array.isArray(actions)
-                    ? actions.map(a => ({ label: a.label, value: a.value }))
-                    : [];
-            })
-            .catch((err) => {
-                console.error('[DecisionTableView] Error loading actions:', err);
-            });
-    }
-
-    /**
-     * Group rows theo Current Stage, đánh dấu isFirst cho rowspan
-     */
-    buildGroupedRows(data) {
-        const groups = [];
-        const stageMap = new Map();
-
-        data.forEach((row, index) => {
-            const stageKey = row.currentStage || '--';
-            if (!stageMap.has(stageKey)) {
-                const group = { stageName: stageKey, stageId: row.currentStageId, rules: [], rowCount: 0 };
-                stageMap.set(stageKey, group);
-                groups.push(group);
-            }
-            const group = stageMap.get(stageKey);
-            group.rules.push({
-                rowId:          row.rowId         || `row-${index}`,
-                action:         row.action         || '--',
-                actionCode:     row.actionCode     || '--',
-                nextStage:      row.nextStage       || '--',
-                nextQueue:      row.nextQueue       || '--',
-                teamUserGroup:  row.teamUserGroup   || '--',
-                currentStageId: row.currentStageId || '',
-                nextStageId:    row.nextStageId     || '',
-                actionButtonId: row.actionButtonId  || '',
-                isFirst:        false,
-                isLast:         false
-            });
-            group.rowCount++;
+    callAddRowAPI(position) {
+        // Cho phép thêm dòng kể cả khi không click chọn dòng nào
+        this.isLoading = true;
+        addDynamicRow({
+            tableId: this.dynamicData.tableId,
+            targetRowId: this.selectedRowId, // Có thể null
+            position: position || 'below'
+        }).then(() => {
+            this.showToast('Thành công', 'Đã thêm dòng mới', 'success');
+            this.selectedRowId = null; // Clear selection
+            return refreshApex(this._wiredDynamicTable);
+        }).catch(err => {
+            this.showToast('Lỗi', err.body?.message || err.message, 'error');
+        }).finally(() => {
+            this.isLoading = false;
         });
-
-        groups.forEach(group => {
-            if (group.rules.length > 0) {
-                group.rules[0].isFirst = true;
-                group.rules[group.rules.length - 1].isLast = true;
-                // Thêm rowClass cho mỗi rule
-                group.rules.forEach((rule, idx) => {
-                    const classes = ['decision-row'];
-                    if (rule.isFirst) classes.push('row-group-first');
-                    if (rule.isLast) classes.push('row-group-last');
-                    if (!rule.isFirst) classes.push('row-group-middle');
-                    rule.rowClass = classes.join(' ');
-                });
-            }
-        });
-
-        console.log('[DecisionTableView] Grouped rows:', groups);
-        this.filteredGroupedRows = groups;
-        return groups;
     }
 
-    /**
-     * Filter grouped rows theo search text
-     */
-    applySearchFilter() {
-        if (!this.searchFilter.trim()) {
-            this.filteredGroupedRows = [...this.groupedRows];
-            return;
-        }
+    handleDeleteRowToolbar() {
+        if (!this.selectedRowId) return;
+        if (!confirm('Bạn có chắc muốn xóa dòng này?')) return;
 
-        const searchText = this.searchFilter.toLowerCase();
-        const filtered = [];
-
-        this.groupedRows.forEach(group => {
-            const filteredRules = group.rules.filter(rule => {
-                return (
-                    rule.action.toLowerCase().includes(searchText) ||
-                    rule.actionCode.toLowerCase().includes(searchText) ||
-                    rule.nextStage.toLowerCase().includes(searchText) ||
-                    group.stageName.toLowerCase().includes(searchText)
-                );
+        this.isLoading = true;
+        deleteDynamicRule({ rowId: this.selectedRowId })
+            .then(() => {
+                this.showToast('Thành công', 'Đã xóa dòng', 'success');
+                this.selectedRowId = null;
+                return refreshApex(this._wiredDynamicTable);
+            }).catch(err => {
+                this.showToast('Lỗi', err.body?.message || err.message, 'error');
+            }).finally(() => {
+                this.isLoading = false;
             });
-
-            if (filteredRules.length > 0) {
-                // Đánh dấu isFirst cho rule đầu tiên của group
-                filteredRules.forEach((rule, index) => {
-                    rule.isFirst = (index === 0);
-                });
-                filtered.push({
-                    ...group,
-                    rules: filteredRules,
-                    rowCount: filteredRules.length
-                });
-            }
-        });
-
-        console.log('[DecisionTableView] Filtered rows:', filtered);
-        this.filteredGroupedRows = filtered;
     }
 
-    /**
-     * Handle search input change
-     */
-    handleSearchChange(event) {
-        this.searchFilter = event.target.value;
-        this.applySearchFilter();
-        console.log('[DecisionTableView] Search filter updated:', this.searchFilter);
-    }
-
-    /**
-     * Clear search filter
-     */
-    handleClearSearch() {
-        this.searchFilter = '';
-        this.filteredGroupedRows = [...this.groupedRows];
-        console.log('[DecisionTableView] Search cleared');
-    }
-
-    /**
-     * Open modal để thêm rule mới
-     */
+    // ==========================================
+    // 9.LOGIC SỬA DỮ LIỆU RULE (EDIT CELLS)
+    // ==========================================
     handleAddRule() {
-        if (!this.isBPSelected) {
-            this.error = 'Vui lòng chọn Business Process trước';
-            return;
-        }
-        console.log('[DecisionTableView] Opening Add Rule modal for BP:', this.selectedNode.idType);
-        
-        // Reset form data cho rule mới
-        this.editingRule = null;
-        this.selectedRuleForEdit = null;
-        this.formData = {
-            previousStageId: '',
-            actionButtonId: '',
-            nextStageId: '',
-            nextQueue: '',
-            teamUserGroup: ''
-        };
-        this.formErrors = {};
-        
+        this.editingRuleId = null;
+        this.modalConditionCols = this.dynamicData.conditionCols.map(c => ({ id: c.id, label: c.label, value: '' }));
+        this.modalActionCols = this.dynamicData.actionCols.map(c => ({ id: c.id, label: c.label, value: '' }));
         this.showAddRuleModal = true;
     }
 
-    /**
-     * Edit existing rule
-     */
     handleEditRule(event) {
         const rowId = event.currentTarget.dataset.rowId;
-        console.log('[DecisionTableView] Editing rule rowId:', rowId);
-        
-        // Tìm rule từ groupedRows (có lưu IDs)
-        let foundRule = null;
-        for (const group of this.groupedRows) {
-            foundRule = group.rules.find(r => r.rowId === rowId);
-            if (foundRule) break;
-        }
+        this.editingRuleId = rowId;
+        const targetRow = this.dynamicData.rows.find(r => r.rowId === rowId);
 
-        console.log('[DecisionTableView] Rule found for edit:', foundRule);
-
-        if (foundRule) {
-            this.editingRule = rowId;
-            this.selectedRuleForEdit = { ...foundRule };
-            this.formErrors = {};
-
-            // Populate form với dữ liệu rule hiện tại
-            this.formData = {
-                previousStageId: foundRule.currentStageId || '',
-                actionButtonId:  foundRule.actionButtonId  || '',
-                nextStageId:     foundRule.nextStageId     || '',
-                nextQueue:       foundRule.nextQueue !== '--' ? foundRule.nextQueue : '',
-                teamUserGroup:   foundRule.teamUserGroup !== '--' ? foundRule.teamUserGroup : ''
-            };
-
-            console.log('[DecisionTableView] formData for edit:', this.formData);
+        if (targetRow) {
+            this.modalConditionCols = this.dynamicData.conditionCols.map(c => {
+                const existingCell = targetRow.conditionCells.find(cell => cell.colId === c.id);
+                return { id: c.id, label: c.label, value: existingCell && existingCell.value !== '--' ? existingCell.value : '' };
+            });
+            this.modalActionCols = this.dynamicData.actionCols.map(c => {
+                const existingCell = targetRow.actionCells.find(cell => cell.colId === c.id);
+                return { id: c.id, label: c.label, value: existingCell && existingCell.value !== '--' ? existingCell.value : '' };
+            });
             this.showAddRuleModal = true;
-        } else {
-            console.warn('[DecisionTableView] Rule not found for rowId:', rowId);
         }
     }
 
-    /**
-     * Delete rule
-     */
-    handleDeleteRule(event) {
-        const rowId = event.currentTarget.dataset.rowId;
-        console.log('[DecisionTableView] Deleting rule:', rowId);
-        
-        if (!confirm('Bạn có chắc chắn muốn xóa rule này?')) {
-            return;
+    handleDynamicInputChange(event) {
+        const colId = event.target.dataset.id;
+        const colType = event.target.dataset.type;
+        const val = event.target.value;
+
+        if (colType === 'condition') {
+            const col = this.modalConditionCols.find(c => c.id === colId);
+            if (col) col.value = val;
+        } else {
+            const col = this.modalActionCols.find(c => c.id === colId);
+            if (col) col.value = val;
         }
+    }
 
+    handleSaveRule() {
         this.isLoading = true;
-        this.error = null;
+        let cellDataMap = {};
+        this.modalConditionCols.forEach(c => { if (c.value) cellDataMap[c.id] = c.value; });
+        this.modalActionCols.forEach(c => { if (c.value) cellDataMap[c.id] = c.value; });
 
-        console.log('[DecisionTableView] Calling Apex deleteStagChangeRule:', rowId);
-
-        deleteStagChangeRule({ recordId: rowId })
-            .then((result) => {
-                console.log('[DecisionTableView] Rule deleted successfully');
-                
-                this.dispatchEvent(
-                    new ShowToastEvent({
-                        title: 'Thành công!',
-                        message: 'Rule đã được xóa',
-                        variant: 'success'
-                    })
-                );
-
-                this.refreshDecisionTable();
+        saveDynamicRule({
+            tableId: this.dynamicData.tableId,
+            rowId: this.editingRuleId,
+            cellDataMap: cellDataMap
+        })
+            .then(() => {
+                this.showToast('Thành công', 'Lưu Rule thành công!', 'success');
+                this.handleCloseModal();
+                refreshApex(this._wiredDynamicTable);
             })
-            .catch((err) => {
-                console.error('[DecisionTableView] Error deleting rule:', err);
-                this.error = err?.body?.message || 'Lỗi khi xóa Rule';
-                
-                this.dispatchEvent(
-                    new ShowToastEvent({
-                        title: 'Lỗi!',
-                        message: this.error,
-                        variant: 'error'
-                    })
-                );
+            .catch(error => {
+                this.showToast('Lỗi', error.body ? error.body.message : error.message, 'error');
             })
             .finally(() => {
                 this.isLoading = false;
             });
     }
 
-    /**
-     * Close modal
-     */
+    handleDeleteRule(event) {
+        if (!confirm('Bạn có chắc muốn xóa Rule này không?')) return;
+        const rowId = event.currentTarget.dataset.rowId;
+        this.isLoading = true;
+
+        deleteDynamicRule({ rowId: rowId })
+            .then(() => {
+                this.showToast('Thành công', 'Đã xóa Rule', 'success');
+                refreshApex(this._wiredDynamicTable);
+            })
+            .catch(error => {
+                this.showToast('Lỗi', error.body ? error.body.message : error.message, 'error');
+            })
+            .finally(() => {
+                this.isLoading = false;
+            });
+    }
+
     handleCloseModal() {
         this.showAddRuleModal = false;
-        this.editingRule = null;
-        this.selectedRuleForEdit = null;
     }
 
-    /**
-     * Save rule (add or edit)
-     */
-    handleSaveRule(event) {
-        console.log('[DecisionTableView] handleSaveRule called');
-        
-        // Validation
-        const errors = {};
-        if (!this.formData.previousStageId) {
-            errors.previousStageId = 'Current Stage là bắt buộc';
+    // ==========================================
+    // 10.LẤY DANH SÁCH FIELD TỪ MDM THƯ VIỆN
+    // ==========================================
+    @wire(getMDMFieldOptions, { businessProcessId: '$_currentBPId' })
+    wiredMdmFields({ error, data }) {
+        if (data) {
+            this.rawMdmFields = data;
+            this.mdmFieldOptions = data.map(f => ({ label: f.label, value: f.value }));
+        } else if (error) {
+            this.mdmFieldOptions = [];
+            this.rawMdmFields = [];
+            console.error('Lỗi tải danh sách MDM Fields:', error);
         }
-        if (!this.formData.actionButtonId) {
-            errors.actionButtonId = 'Action Button là bắt buộc';
-        }
-        if (!this.formData.nextStageId) {
-            errors.nextStageId = 'Next Stage là bắt buộc';
-        }
-
-        if (Object.keys(errors).length > 0) {
-            this.formErrors = errors;
-            console.log('[DecisionTableView] Validation errors:', errors);
-            return;
-        }
-
-        this.isLoading = true;
-        this.error = null;
-
-        // Prepare data for Apex
-        const stagChangeData = {
-            previousStageId: this.formData.previousStageId,
-            actionButtonId: this.formData.actionButtonId,
-            nextStageId: this.formData.nextStageId,
-            nextQueue: this.formData.nextQueue || '',
-            teamUserGroup: this.formData.teamUserGroup || '',
-            businessProcessId: this.selectedNode.idType
-        };
-
-        if (this.editingRule) {
-            stagChangeData.recordId = this.editingRule;
-        }
-
-        console.log('[DecisionTableView] Calling Apex saveStagChangeRule:', stagChangeData);
-
-        saveStagChangeRule({ stagChangeData })
-            .then((result) => {
-                console.log('[DecisionTableView] Rule saved successfully:', result);
-                
-                this.dispatchEvent(
-                    new ShowToastEvent({
-                        title: 'Thành công!',
-                        message: this.editingRule ? 'Rule đã được cập nhật' : 'Rule mới đã được thêm',
-                        variant: 'success'
-                    })
-                );
-
-                this.handleCloseModal();
-                this.refreshDecisionTable();
-            })
-            .catch((err) => {
-                console.error('[DecisionTableView] Error saving rule:', err);
-                this.error = err?.body?.message || 'Lỗi khi lưu Rule';
-                
-                this.dispatchEvent(
-                    new ShowToastEvent({
-                        title: 'Lỗi!',
-                        message: this.error,
-                        variant: 'error'
-                    })
-                );
-            })
-            .finally(() => {
-                this.isLoading = false;
-            });
-    }
-
-    /**
-     * Handle modal input changes (lightning-combobox & input)
-     */
-    handleModalInputChange(event) {
-        // lightning-combobox dùng event.detail.value, input dùng event.target.value
-        const fieldName = event.target.name || event.target.dataset.fieldName;
-        const value = event.detail?.value !== undefined ? event.detail.value : event.target.value;
-        
-        this.formData = { ...this.formData, [fieldName]: value };
-        
-        // Clear error khi user chỉnh sửa
-        if (this.formErrors[fieldName]) {
-            const updatedErrors = { ...this.formErrors };
-            delete updatedErrors[fieldName];
-            this.formErrors = updatedErrors;
-        }
-        
-        console.log('[DecisionTableView] Modal input changed:', { fieldName, value });
-    }
-
-    /**
-     * Handle overlay click (close modal when clicking outside)
-     */
-    handleOverlayClick() {
-        this.handleCloseModal();
-    }
-
-    /**
-     * Handle dialog click (prevent closing when clicking inside dialog)
-     */
-    handleDialogClick(event) {
-        event.stopPropagation();
-    }
-
-    get treeArrowIcon() {
-        return this.isTreeExpanded ? 'utility:chevrondown' : 'utility:chevronright';
-    }
-
-    get selectedItemLabel() {
-        return this.selectedNode?.label || '';
-    }
-
-    get hasSelection() {
-        return !!this.selectedNode?.idType;
-    }
-
-    get isBPSelected() {
-        return this.selectedNode?.type === 'BUSINESS_PROCESS';
-    }
-
-    get isStageSelected() {
-        return this.selectedNode?.type === 'STAGE';
-    }
-
-    get hasTreeData() {
-        return this.treeData && this.treeData.length > 0;
-    }
-
-    get hasDecisionData() {
-        return this.groupedRows && this.groupedRows.length > 0;
-    }
-
-    get hasNoSearchResults() {
-        return this.hasSearchFilter && this.filteredGroupedRows && this.filteredGroupedRows.length === 0;
-    }
-
-    get totalRuleCount() {
-        return this.decisionRows.length;
-    }
-
-    get stageCount() {
-        return this.groupedRows.length;
-    }
-
-    get hasSearchFilter() {
-        return this.searchFilter.trim().length > 0;
-    }
-
-    get displaySearchMessage() {
-        if (!this.hasSearchFilter) return '';
-        const matchCount = this.filteredGroupedRows.reduce((sum, g) => sum + g.rowCount, 0);
-        return `Kết quả tìm kiếm: ${matchCount} rule`;
-    }
-
-    get previousStageClass() {
-        return this.formErrors?.previousStageId ? 'slds-select select-error' : 'slds-select';
-    }
-
-    get actionButtonClass() {
-        return this.formErrors?.actionButtonId ? 'slds-select select-error' : 'slds-select';
-    }
-
-    get nextStageClass() {
-        return this.formErrors?.nextStageId ? 'slds-select select-error' : 'slds-select';
-    }
-
-    get modalSaveLabel() {
-        return this.editingRule ? 'Cập nhật' : 'Thêm Rule';
-    }
-
-    /**
-     * Lifecycle hook
-     */
-    connectedCallback() {
-        console.log('[DecisionTableView] Component initialized');
     }
 }

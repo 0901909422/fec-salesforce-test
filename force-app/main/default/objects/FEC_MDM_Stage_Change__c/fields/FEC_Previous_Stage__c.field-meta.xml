@@ -8,4 +8,5 @@
     <reparentableMasterDetail>false</reparentableMasterDetail>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
+    <trackHistory>true</trackHistory>
 </CustomField>
