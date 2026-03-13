@@ -15,6 +15,7 @@ import { LightningElement, api, track } from 'lwc';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import { NavigationMixin } from 'lightning/navigation';
 import { maskValue,formatDateVNI,parseDateVNI } from 'c/fec_CommonUtils';
+import { getFocusedTabInfo, openSubtab } from 'lightning/platformWorkspaceApi';
 
 import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
 
@@ -98,9 +99,8 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
             await refreshApplications({ caseId: this.recordId });
 
             const data = await getApplications({ caseId: this.recordId });
-
             this.registration = (data || []).map(row => ({
-                Id: row.id,
+               Id: row.id,  
                 applicationId: row.applicationId,
                 accountNumber: row.accountNumber,
                 contractNumber: row.contractNumber,
@@ -137,24 +137,32 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
         }
     }
 
-    handleRegistrationSelect(event) {
-        const applicationId = event.detail.recordId;
-        const row = this.registration.find(r => r.applicationId === applicationId);
+    async handleRegistrationSelect(event) {
+        const appId = event.detail.recordId;
+        const row = this.registration.find(r => r.applicationId === appId);
 
         if (!row) {
-            console.error('Application not found:', applicationId);
+            console.error('Application not found:', appId);
             return;
         }
 
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: 'FEC_ApplicationList'
+        const tabInfo = await getFocusedTabInfo();
+        const parentTabId = tabInfo.isSubtab ? tabInfo.parentTabId : tabInfo.tabId;
+
+        await openSubtab(parentTabId, {
+            pageReference: {
+                type: 'standard__navItemPage',
+                attributes: {
+                    apiName: 'FEC_ApplicationList'
+                },
+                state: {
+                    c__ApplicationList: row.Id,
+                    c__appId: row.applicationId,
+                    uid: row.applicationId
+                }
             },
-            state: {
-                c__ApplicationList: row.Id,
-                c__appId: row.applicationId
-            }
+            focus: true,
+            label: `Application ${row.applicationId}`
         });
-    }   
+    }
 }

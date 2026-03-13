@@ -22,7 +22,7 @@ import FEC_CASE_STATUS_LABEL from "@salesforce/label/c.FEC_Case_Status_Label";
 import FEC_SUB_CATEGORY_LABEL from "@salesforce/label/c.FEC_Sub_Category_Label";
 import FEC_SUB_CODE_LABEL from "@salesforce/label/c.FEC_Sub_Code_Label";
 import FEC_VIEW_ALL_BTN_LABEL from "@salesforce/label/c.FEC_View_All_Btn_Label";
-
+import FEC_LIST_EMPTY from "@salesforce/label/c.FEC_List_relevant_case_empty";
 import { urlCmpWithRecordId } from 'c/fec_CommonUtils';
 import { DIV_ELEMENT, ICON_CASE } from "c/fec_CommonConst";
 
@@ -53,6 +53,7 @@ export default class FecRelevantInteractionCase extends NavigationMixin(
   labels = {
     caseList: FEC_CASE_LIST_LABEL,
     viewAllBtn: FEC_VIEW_ALL_BTN_LABEL,
+    listEmpty: FEC_LIST_EMPTY,
   };
   @api recordId;
 
