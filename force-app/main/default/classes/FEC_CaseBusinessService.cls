@@ -677,7 +677,13 @@ public with sharing class FEC_CaseBusinessService {
         ? null
         : selectedCase.FEC_Draft_Routing_Action_Code__c;
 
-      update selectedCase;
+      if (Schema.sObjectType.Case.isUpdateable()) {
+        try {
+          update selectedCase;
+        } catch (DmlException e) {
+          // User có thể không có quyền sửa Case (vd: Case đã assign Queue). Vẫn trả result để hiển thị section.
+        }
+      }
 
       return result;
     } catch (CaseBusinessServiceException e) {

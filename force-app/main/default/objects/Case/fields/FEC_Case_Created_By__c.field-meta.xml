@@ -4,7 +4,7 @@
     <description>Trường tạo mới để hiển thị trên Case details và interaction details do trường standard không hiển thị được đúng  yêu cầu. Hiển thị Email ID của người tạo Case</description>
     <externalId>false</externalId>
     <formula>IF( RecordType.Name &lt;&gt; &apos;Interaction&apos;,(IF(ISBLANK(Owner:Queue.Id),
-LEFT(Owner:User.Email,FIND(&quot;@&quot;, Owner:User.Email) - 1),
+LEFT(CreatedBy.Email, FIND(&quot;@&quot;, CreatedBy.Email) - 1),
 Owner:Queue.Name)),&apos;&apos;)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Case Created By</label>

@@ -7940,4 +7940,11 @@
         <shortDescription>FEC_MSG_Can_Not_Find_Next_Stage</shortDescription>
         <value>Can&apos;t find next stage</value>
     </labels>
+    <labels>
+        <fullName>FEC_List_relevant_case_empty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>List relevant case empty</shortDescription>
+        <value>Không tìm thấy kết quả</value>
+    </labels>
 </CustomLabels>
