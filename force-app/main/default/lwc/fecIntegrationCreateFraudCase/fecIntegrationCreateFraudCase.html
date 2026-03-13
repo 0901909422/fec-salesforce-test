@@ -221,28 +221,7 @@
                                 value={remarks}
                                 onchange={onSimpleChange}>
                             </lightning-textarea>
-                        </div>
-                
-                        <!-- Column 2 -->
-                        <div class="slds-col slds-size_1-of-3">
-                            <lightning-input
-                                label="Fraud Case"
-                                data-field="fraudCase"
-                                value={fraudCase}
-                                onchange={onSimpleChange}>
-                            </lightning-input>
-                        </div>
-                
-                        <!-- Column 3 -->
-                        <div class="slds-col slds-size_1-of-3">
-                            <lightning-input
-                                label="Service Case"
-                                data-field="ServiceCaseId"
-                                value={ServiceCaseId}
-                                onchange={onSimpleChange}>
-                            </lightning-input>
-                        </div>
-                
+                        </div>                
                     </div>
                 </div>
                 
@@ -256,13 +235,7 @@
                         disabled={isCreateSubmitting}>
                     </lightning-button>
                 
-                    <lightning-button
-                        label={labels.Cancel_Fraud_Case_Button}
-                        variant="brand"
-                        class="slds-m-left_small"
-                        onclick={onSubmitCancel}
-                        disabled={isCancelSubmitting}>
-                    </lightning-button>
+                    
                 </div>
 
 

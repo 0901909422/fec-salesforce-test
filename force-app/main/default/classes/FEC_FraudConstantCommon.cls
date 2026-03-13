@@ -56,7 +56,8 @@ public with sharing class FEC_FraudConstantCommon {
 
 	
 
-	public static final String SERVICE_CASE_LINK = '/lightning/n/Service_Fraud_Task_Case_Action?c__caseId=';
+	public static final String SERVICE_CASE_LINK = '/lightning/n/integration_fraud_handling_case_update?c__caseId=';
+	public static final String SERVICE_SFT_CASE_LINK = '/lightning/n/Service_Fraud_Task_Case_Action?c__caseId=';
 	public static final String FRAUD_HANDLING_CASE_DETAIL_PATH = 'integration_fraud_handling_case_detail';
 	public static final String SYSTEM_CHANNEL = 'PEGACSM';
     public static final String DEFAULT_CHANNEL_INTEGRATION_CODE = 'FIMA';
@@ -141,6 +142,7 @@ public with sharing class FEC_FraudConstantCommon {
 		public final String INFO_ID     = 'ID';
 		public final String INFO_REFERENCE_ID     = 'ReferenceID';
 		public final String INFO_CASE_ID     = 'CaseID';
+		public final String INFO_MANDATORY     = 'Mandatory';	
 		
 		
 	}

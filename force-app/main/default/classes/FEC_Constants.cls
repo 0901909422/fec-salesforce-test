@@ -238,4 +238,17 @@ public class FEC_Constants {
     public static final String KEY_DATETIME = 'DateTime';
     public static final String KEY_NUMBER = 'Number';
     public static final String KEY_TEXT = 'Text';
+    
+    // Stage Change & Action Button Objects
+    public static final String OBJ_STAGE_CHANGE              = 'FEC_Stage_Change__c';
+    public static final String OBJ_ACTION_BUTTON             = 'FEC_Action_Button__c';
+    public static final String OBJ_MDM_STAGE_CHANGE          = 'FEC_MDM_Stage_Change__c';
+    public static final String OBJ_MDM_ACTION_BUTTON         = 'FEC_MDM_Action_Button__c';
+
+    // Stage Change Fields
+    public static final String FIELD_PREVIOUS_STAGE          = 'FEC_Previous_Stage__c';
+    public static final String FIELD_ACTION_BUTTON           = 'FEC_Action_Button__c';
+    public static final String FIELD_NEXT_STAGE              = 'FEC_Next_Stage__c';
+    public static final String FIELD_NEXT_QUEUE              = 'FEC_Next_Queue__c';
+    public static final String FIELD_TEAM_USER_GROUP         = 'FEC_Team_User_Group__c';
 }
