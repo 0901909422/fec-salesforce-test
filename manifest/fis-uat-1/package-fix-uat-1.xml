@@ -47,6 +47,7 @@
 		<members>FEC_ContentDocumentTriggerHandler</members>
 		<members>FEC_ContentVersionTriggerHandler</members>
 		<members>FEC_FileActionOnReviewService</members>
+		<members>FEC_GetCSMasterDataService</members>
         <name>ApexClass</name>
     </types>
     <types>
