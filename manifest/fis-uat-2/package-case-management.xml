@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
-		<members>FEC_Service_Resource_Absence__c.FEC_End_On__c</members>
-		<members>FEC_Service_Resource_Absence__c.FEC_Start_On__c</members>
-		<name>CustomField</name>
+		<members>interstion sla main_v3</members>
+		<name>EntitlementProcess</name>
+	</types>
+	<types>
+		<members>InteractionTime</members>
+		<name>MilestoneType</name>
 	</types>
 	<types>
 		<members>FEC_Application_History_Label</members>
@@ -46,14 +49,6 @@
 		<name>CustomLabel</name>
 	</types>
 	<types>
-		<members>interstion sla main_v3</members>
-		<name>EntitlementProcess</name>
-	</types>
-	<types>
-		<members>FEC_Interaction_Case_Record_Page</members>
-		<name>FlexiPage</name>
-	</types>
-	<types>
 		<members>FEC_New_Interaction_Record_For_E2C</members>
 		<name>Flow</name>
 	</types>
@@ -66,8 +61,8 @@
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
-		<members>InteractionTime</members>
-		<name>MilestoneType</name>
+		<members>FEC_Interaction_Case_Record_Page</members>
+		<name>FlexiPage</name>
 	</types>
 	<types>
         <members>FEC_CreateCaseHanlder</members>
