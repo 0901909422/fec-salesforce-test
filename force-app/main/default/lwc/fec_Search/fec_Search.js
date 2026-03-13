@@ -207,8 +207,16 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   get loanCash24Columns() {
     return [
       { label: "Contract Number", fieldName: "ContractNumber", sortable: true },
-      { label: "Sold Date", fieldName: "SoldDate", sortable: true },
-      { label: "Balance Amount", fieldName: "BalanceAmount ", sortable: true },
+      { label: "Sold Date", fieldName: "SoldDate", sortable: true,
+        type: "date", 
+        typeAttributes:{
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            dateStyle: "short"
+        },
+       },
+      { label: "Balance Amount", fieldName: "BalanceAmount", sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
       { label: "Contract Status", fieldName: "ContractStatus", sortable: true },
       { label: "Note", fieldName: "Note", sortable: true },
