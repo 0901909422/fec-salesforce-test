@@ -4,6 +4,7 @@
 import { LightningElement, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import createInteraction from "@salesforce/apex/FEC_CreateInteractionGenesys.createInteraction";
+import executeRoutingAssignments from "@salesforce/apex/FEC_InteractionRoutingController.executeRoutingAssignments";
 
 import { subscribe, MessageContext } from "lightning/messageService";
 import GENESYS_CHANNEL from "@salesforce/messageChannel/GenesysCall__c";
@@ -30,6 +31,7 @@ export default class fec_genesysSoftphone extends NavigationMixin(
 
   connectedCallback() {
     this.setupPostMessageListener();
+    executeRoutingAssignments();
   }
 
   subscribeLMS() {

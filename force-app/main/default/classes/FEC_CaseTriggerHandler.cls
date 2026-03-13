@@ -65,6 +65,8 @@ public without sharing class FEC_CaseTriggerHandler {
     private void onBeforeUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         updateCaseParticipantsOnUpdate(newCases, oldMap);
         syncChannelFromInteractionForCustomerCase(newCases);
+        FEC_InteractionRoutingService.assignInteractionReply(newCases);
+        FEC_InteractionRoutingService.assignNewInteractionEmail(newCases);
     }
 
     /**
