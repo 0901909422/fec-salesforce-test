@@ -226,4 +226,14 @@ public class FEC_Constants {
     public static final String ERROR_COMMON_FIELD_PREFIX = 'commonFieldMap Error ';
     public static final String ERROR_DATA_PREFIX = 'Data Error: ';
     public static final String ERROR_SYNC_FAILED_PREFIX = 'Sync Failed: \n';
+
+    // Master data response keys for FEC_GetCSMasterDataByCodeService
+    public static final String KEY_DATA_ERROR = 'ERROR';
+    
+      public static final String KEY_ERROR_MSG_SYS = 'Sys is required';
+      public static final String KEY_ERROR_MSG_CHANNEL = 'Channel is null or invalid ""';
+      public static final String KEY_ERROR_MSG_TRANSACTIONID = 'TransactionID is null or invalid ""';
+      public static final String KEY_ERROR_MSG_NO_LONGER = 'or no longer than 255 characters';
+      public static final String KEY_ERROR_MSG_PRODUCT_TYPE = 'ProductType is invalid or no longer than 255 characters';
+
 }
