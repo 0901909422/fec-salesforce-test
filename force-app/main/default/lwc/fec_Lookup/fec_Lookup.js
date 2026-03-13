@@ -2,6 +2,10 @@ import { LightningElement, track, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import searchLookupRecords from '@salesforce/apex/FEC_LookupController.searchLookupRecords'; // Apex method 
 import getRecentlyCreatedRecord from '@salesforce/apex/FEC_LookupController.getRecentlyCreatedRecord'; // Apex method 
+import FEC_Toast_Success  from '@salesforce/label/c.FEC_Toast_Success';
+import FEC_Successfully_Created from '@salesforce/label/c.FEC_Successfully_Created';
+import FEC_Lookup_Error from '@salesforce/label/c.FEC_Lookup_Error';
+import FEC_Lookup_Search_Error from '@salesforce/label/c.FEC_Lookup_Search_Error';
 
 const MINIMAL_SEARCH_TERM_LENGTH = 1; // Min number of chars required to search
 const SEARCH_DELAY = 300; // Wait 300 ms after user stops typing then, peform search
@@ -44,6 +48,10 @@ export default class Lookup extends LightningElement {
     @track isNewRecordForm = false;
     @track noRecordFound = false;
 
+    FEC_Toast_Success = FEC_Toast_Success;
+    FEC_Successfully_Created = FEC_Successfully_Created;
+    FEC_Lookup_Error = FEC_Lookup_Error;
+    FEC_Lookup_Search_Error = FEC_Lookup_Search_Error;
     cleanSearchTerm;
     blurTimeout;
     searchThrottlingTimeout;
@@ -119,7 +127,7 @@ export default class Lookup extends LightningElement {
 
     handleSuccess(event) {
 
-        this.notifyUser('Success', "Successfully created " + this.labelOfObject, 'success');
+        this.notifyUser(FEC_Toast_Success, FEC_Successfully_Created + ' ' + this.labelOfObject, 'success');
 
         const params = {
             'sObjectName': this.objectApiName,
@@ -196,8 +204,8 @@ export default class Lookup extends LightningElement {
             this.searchResults = results;
             this.noRecordFound = (results.length == 0);
         }).catch(error => {
-            this.notifyUser('Lookup Error', 'An error occured while searching with the lookup field.', 'error');
-            console.error('Lookup error', JSON.stringify(error));
+            this.notifyUser(FEC_Lookup_Error, FEC_Lookup_Search_Error, 'error');
+            console.error(FEC_Lookup_Error, JSON.stringify(error));
             this.errors = [error];
         });
     }

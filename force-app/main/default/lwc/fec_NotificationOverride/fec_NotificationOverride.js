@@ -27,6 +27,20 @@ import SCHEDULE_START_TIME_FIELD from "@salesforce/schema/FEC_Notification__c.FE
 import SCHEDULE_END_TIME_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Schedule_End_Time__c";
 import getRecordTypeName from "@salesforce/apex/FEC_Notification.getRecordTypeName";
 import getNotificationById from "@salesforce/apex/FEC_Notification.getNotificationById";
+import FEC_Tab_Nature_Of_Case from '@salesforce/label/c.FEC_Tab_Nature_Of_Case';
+import FEC_Col_Channel from '@salesforce/label/c.FEC_Col_Channel';
+import LBL_SearchBtn from '@salesforce/label/c.LBL_SearchBtn';
+import FEC_Label_Product_Type from '@salesforce/label/c.FEC_Label_Product_Type';
+import FEC_Label_Category from '@salesforce/label/c.FEC_Label_Category';
+import FEC_Label_Sub_Category from '@salesforce/label/c.FEC_Label_Sub_Category';
+import FEC_Label_Sub_Code from '@salesforce/label/c.FEC_Label_Sub_Code';
+import FEC_Notification_Information from '@salesforce/label/c.FEC_Notification_Information';
+import FEC_Notification_Template from '@salesforce/label/c.FEC_Notification_Template';
+import Cancel from '@salesforce/label/c.Cancel';
+import FEC_Button_SaveAndNew from '@salesforce/label/c.FEC_Button_SaveAndNew';
+import FEC_Save from '@salesforce/label/c.FEC_Save';
+import FEC_Toast_Save_Error_Message from '@salesforce/label/c.FEC_Toast_Save_Error_Message';
+
 import {
   AUTO_NOTIFICATION_HEADER_VI,
   MANUAL_NOTIFICATION_HEADER_VI,
@@ -43,7 +57,19 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   @api recordTypeId;
 
   isMultiRequired = false;
-
+  FEC_Tab_Nature_Of_Case = FEC_Tab_Nature_Of_Case;
+  FEC_Col_Channel = FEC_Col_Channel;
+  FEC_Label_Product_Type = FEC_Label_Product_Type;
+  LBL_SearchBtn = LBL_SearchBtn;
+  FEC_Label_Category = FEC_Label_Category;
+  FEC_Label_Sub_Category = FEC_Label_Sub_Category;
+  FEC_Label_Sub_Code = FEC_Label_Sub_Code;
+  FEC_Notification_Information = FEC_Notification_Information;
+  FEC_Notification_Template = FEC_Notification_Template;
+  Cancel = Cancel;
+  FEC_Button_SaveAndNew = FEC_Button_SaveAndNew;
+  FEC_Save = FEC_Save;
+  FEC_Toast_Save_Error_Message = FEC_Toast_Save_Error_Message;
   headerLabel;
   @track recordType = {};
   notificationObject = NOTIFICATION_OBJECT;
@@ -147,6 +173,30 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     }
     const { tabId } = await getFocusedTabInfo();
     await closeTab(tabId);
+  }
+
+  get placeholderSearchChannel() {
+    return LBL_SearchBtn + ' ' + FEC_Col_Channel + '...';
+  }
+
+  get placeholderSearchProductType() {
+    return LBL_SearchBtn + ' ' + FEC_Label_Product_Type + '...';
+  }
+
+  get placeholderSearchCategory() {
+    return LBL_SearchBtn + ' ' + FEC_Label_Category + '...';
+  }
+
+  get placeholderSearchSubCategory() {
+    return LBL_SearchBtn + ' ' + FEC_Label_Sub_Category + '...';
+  }
+
+  get placeholderSearchSubCode() {
+    return LBL_SearchBtn + ' ' + FEC_Label_Sub_Code + '...';
+  }
+
+  get placeholderSearchNotificationTemplate() {
+    return LBL_SearchBtn + ' ' + FEC_Notification_Template + '...';
   }
 
   get isCreate() {
@@ -357,7 +407,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   }
 
   handleError(event) {
-    let message = 'An error occurred while saving';
+    let message = FEC_Toast_Save_Error_Message;
     if (event?.detail?.detail) {
       message = event.detail.detail;
     } else if (event?.detail?.message) {

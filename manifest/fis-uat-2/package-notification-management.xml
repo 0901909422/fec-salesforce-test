@@ -21,6 +21,10 @@
 		<name>FlexiPage</name>
 	</types>
 	<types>
+		<members>*</members>
+		<name>CustomLabel</name>
+	</types>
+	<types>
 		<members>fec_Lookup</members>
 		<members>fec_NotificationOverride</members>
 		<members>fec_Spinner</members>
