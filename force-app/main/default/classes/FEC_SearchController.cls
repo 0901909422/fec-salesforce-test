@@ -34,7 +34,7 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
-    public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone) {
+    public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone, String customerName) {
     // 1. Validation
     if (String.isBlank(value) || String.isBlank(fieldName)) {
         throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
@@ -63,6 +63,7 @@ public with sharing class FEC_SearchController {
         objCase.FEC_First_Access__c = true;
         objCase.FEC_Search_Products__c = searchProducts;
         objCase.FEC_Product_Type__c = productTypeId;
+        objCase.FEC_Customer_Name__c = customerName;
 
         // Thực hiện Upsert Case ngay để có Id
         upsert objCase;
