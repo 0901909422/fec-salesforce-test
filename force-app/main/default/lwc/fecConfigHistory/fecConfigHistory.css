@@ -1,0 +1,26 @@
+/* Bắt buộc ngắt dòng đối với các chuỗi ký tự dính liền quá dài */
+.word-break-all {
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
+}
+
+/* Tùy chỉnh màu sắc cho giá trị mới để dễ nhận diện */
+.text-success {
+    color: #04844b; /* Màu xanh lá chuẩn của Salesforce */
+}
+
+/* Custom scrollbar cho đẹp mắt (tùy chọn) */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+}
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1; 
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8; 
+}

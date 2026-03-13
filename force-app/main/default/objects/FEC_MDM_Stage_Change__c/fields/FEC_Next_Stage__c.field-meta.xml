@@ -7,4 +7,5 @@
     <relationshipName>Next_Stage_Changes</relationshipName>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
+    <trackHistory>true</trackHistory>
 </CustomField>

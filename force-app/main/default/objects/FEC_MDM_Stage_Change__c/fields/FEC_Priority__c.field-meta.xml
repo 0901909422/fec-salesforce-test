@@ -6,7 +6,7 @@
     <label>Priority</label>
     <precision>5</precision>
     <scale>0</scale>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Number</type>
     <unique>false</unique>
