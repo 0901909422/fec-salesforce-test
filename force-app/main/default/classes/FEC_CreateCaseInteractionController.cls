@@ -96,6 +96,13 @@ public with sharing class FEC_CreateCaseInteractionController {
         FEC_Case__c = newCase.Id
         );
       insert newInfo;
+
+      FEC_Customer_History__c rec = new FEC_Customer_History__c();
+      rec.FEC_Customer_Type__c = 'Non-existing';
+      rec.FEC_Customer_Name__c = customerName;
+      rec.FEC_Case__c = newCase.Id;
+
+        insert rec;
       
       return newCase.Id;
     } catch (Exception e) {
