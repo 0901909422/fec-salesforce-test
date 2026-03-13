@@ -288,11 +288,16 @@ export default class FecNatureOfCaseTree extends LightningElement {
             parentLabel: parentLabel,
             parentCustomerType: parentCustomerType,
         });
-        console.log('openAddNodeModal:', result);
-
+        console.log('openAddNodeModal result:', result);
 
         if (result != null) {
-            this.handleSaveSuccess();
+            // Refresh tree for both 'saved' and 'refreshAndReopen' actions
+            await this.handleSaveSuccess();
+
+            // If Save & New was clicked, reopen the modal after tree refresh
+            if (result.action === 'refreshAndReopen') {
+                this.openAddNodeModal(parentId, objectType, parentLabel, parentCustomerType);
+            }
         }
     }
 
