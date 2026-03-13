@@ -46,6 +46,14 @@
 		<members>FEC_Posted_Date</members>
 		<members>FEC_Postal_Code</members>
 		<members>FEC_Provided_Number</members>
+		<members>FEC_Interaction_Email_Info_Label</members>
+		<members>FEC_Interaction_Email_Label</members>
+		<members>FEC_Interaction_Email_Input_Placeholder</members>
+		<members>FEC_Interaction_Email_Required_Msg</members>
+		<members>FEC_Interaction_Email_Invalid_Msg</members>
+		<members>FEC_Interaction_Email_Save_Error</members>
+		<members>FEC_Send_To_Label</members>
+		<members>FEC_Parent_ID_Label</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -69,7 +77,6 @@
 		<members>FEC_CaseTriggerHandler</members>
 		<members>FEC_InteractionRoutingController</members>
 		<members>FEC_InteractionRoutingService</members>
-		<members>FEC_InteractionInforHandler</members>
         <name>ApexClass</name>
     </types>
 	<types>
