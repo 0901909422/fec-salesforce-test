@@ -88,6 +88,7 @@
 		<members>fecRelevantInteractionCard</members>
 		<members>fecRelevantInteractionCase</members>
 		<members>fec_StatementsAccount</members>
+		<members>fec_InteractionCreateCase</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
