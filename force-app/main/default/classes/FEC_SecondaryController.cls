@@ -34,6 +34,7 @@ public without sharing class FEC_SecondaryController {
         @AuraEnabled public String zaloFollower;
         @AuraEnabled public String websiteAccount;
         @AuraEnabled public String mobileAppAccount;
+         @AuraEnabled public String email;
         @AuraEnabled public List<ContactDTO> contactList;
         @AuraEnabled public List<ReferenceDTO> references;
         @AuraEnabled public Map<String, String> helpTexts;
@@ -69,7 +70,8 @@ public without sharing class FEC_SecondaryController {
                    FEC_Website_Account__c,
                    FEC_Mobile_App_Account__c,
                    FEC_API_Cache_Secondary_Demo__c,
-                   FEC_Work_Phone__c
+                   FEC_Work_Phone__c,
+                   FEC_Email__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
@@ -147,6 +149,10 @@ public without sharing class FEC_SecondaryController {
                         FEC_Contact_String__c     = pc.Contact.ContactString,
                         FEC_Contact_ID__c         = pc.Contact.ContactId
                     ));
+
+                   if( pc.Contact.Channel == 'Email' && String.isBlank(hist.FEC_Email__c)){
+                        hist.FEC_Email__c = pc.Contact.ContactString;
+                    }
                 }
             }
         } catch (Exception e) {
@@ -305,6 +311,7 @@ public without sharing class FEC_SecondaryController {
         dto.zaloFollower     = h.FEC_Zalo_Follower__c;
         dto.websiteAccount   = h.FEC_Website_Account__c;
         dto.mobileAppAccount = h.FEC_Mobile_App_Account__c;
+        dto.email            = h.FEC_Email__c;
         return dto;
     }
 }
