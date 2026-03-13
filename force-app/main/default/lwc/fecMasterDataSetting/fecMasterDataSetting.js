@@ -128,6 +128,28 @@ export default class FecMasterDataSetting extends LightningElement {
     @track sortDirection = DEFAULT_SORT_DIRECTION_ASC;
     modalTitle = '';
 
+    // ==========================================================
+    // KHỐI CODE HISTORY
+    // ==========================================================
+    @track isHistoryVisible = false;
+
+    get mainPanelSize() { return this.isHistoryVisible ? 9 : 12; }
+    get toggleHistoryIcon() { return this.isHistoryVisible ? 'utility:close' : 'utility:history'; }
+    get toggleHistoryLabel() { return this.isHistoryVisible ? 'Đóng Lịch sử' : 'Xem Lịch sử'; }
+    get toggleButtonVariant() { return this.isHistoryVisible ? 'neutral' : 'brand-outline'; }
+
+    handleToggleHistory() {
+        this.isHistoryVisible = !this.isHistoryVisible;
+    }
+
+    refreshHistoryPanel() {
+        const historyComp = this.template.querySelector('[data-id="historyComponent"]');
+        if (historyComp) {
+            historyComp.refreshData();
+        }
+    }
+    // ==========================================================
+
     @api
     get item() {
         return this._item;
@@ -402,16 +424,10 @@ export default class FecMasterDataSetting extends LightningElement {
         let child;
         
         if (buttonDataId) {
-            // Edit mode - find the child component in the expanded row
-            // The expanded row contains data-id attribute on the button
-            // We need to find the nearest parent that contains the integration-mapping component
-            
-            // Method 1: Find parent with matching data-id and look for c-fec-integration-mapping inside
             const parentButton = this.template.querySelector(`lightning-button[data-id="${buttonDataId}"]`);
             showLog('[handleSaveIntegration] Found parentButton:', !!parentButton);
             
             if (parentButton) {
-                // Go up to find the expanded section container
                 let container = parentButton.closest('.slds-p-around_medium');
                 showLog('[handleSaveIntegration] Found container (slds-p-around_medium):', !!container);
                 
@@ -421,13 +437,11 @@ export default class FecMasterDataSetting extends LightningElement {
                 }
             }
             
-            // Fallback: Search all c-fec-integration-mapping components
             if (!child) {
                 showLog('[handleSaveIntegration] Fallback: searching all c-fec-integration-mapping');
                 const allMappingComponents = this.template.querySelectorAll('c-fec-integration-mapping');
                 showLog('[handleSaveIntegration] Total c-fec-integration-mapping found:', allMappingComponents.length);
                 
-                // In edit mode, should be the last one (not the add form)
                 if (allMappingComponents.length > 1) {
                     child = allMappingComponents[allMappingComponents.length - 1];
                     showLog('[handleSaveIntegration] Using last mapping component');
@@ -437,7 +451,6 @@ export default class FecMasterDataSetting extends LightningElement {
                 }
             }
         } else {
-            // Create mode - find the first component in the add section (isIntegrationAdd = true)
             const addSection = this.template.querySelector('.slds-box.slds-theme_default');
             showLog('[handleSaveIntegration] Found addSection:', !!addSection);
             
@@ -445,7 +458,6 @@ export default class FecMasterDataSetting extends LightningElement {
                 child = addSection.querySelector('c-fec-integration-mapping');
                 showLog('[handleSaveIntegration] Found child in add section:', !!child);
             } else {
-                // Fallback: Get first c-fec-integration-mapping
                 const allMappingComponents = this.template.querySelectorAll('c-fec-integration-mapping');
                 if (allMappingComponents.length > 0) {
                     child = allMappingComponents[0];
@@ -503,8 +515,6 @@ export default class FecMasterDataSetting extends LightningElement {
         this.isLoading = true; // Bật spinner để chặn thao tác trùng lặp
 
         try {
-            // 2. Gọi Apex để update (Sử dụng lại hàm save hoặc update tùy Controller của bạn)
-            // Ở đây tôi giả định dùng chung hàm saveMasterDataSetting có chức năng upsert
             await saveMasterDataSetting({ mappingReq: updateReq });
 
             // 3. Thông báo thành công
@@ -513,6 +523,11 @@ export default class FecMasterDataSetting extends LightningElement {
 
             // 4. Refresh dữ liệu để UI cập nhật Badge mới
             await refreshApex(this.wiredFraudResult);
+            
+            // HISTORY: Refresh history panel
+            if (this.isHistoryVisible) {
+                this.refreshHistoryPanel();
+            }
 
         } catch (error) {
             showLog('[handleToggleStatus] ERROR', error);
@@ -566,12 +581,19 @@ export default class FecMasterDataSetting extends LightningElement {
                 };
                 return refreshApex(this.wiredFraudResult);
             })
+            .then(() => {
+                // HISTORY: Refresh history panel
+                if (this.isHistoryVisible) {
+                    this.refreshHistoryPanel();
+                }
+            })
             .catch(error => this.showToast(LABEL_TOAST_ERROR, error.body?.message || error.message, VARIANT_ERROR))
             .finally(() => {
                 this.isLoading = false;
                 showLog('[handleSuccessIntegration] RETURN');
             });
     }
+
     handleEditRow(id) {
         showLog('[handleEditRow] START - RecordId:', id);
         this.recordIdForEdit = id;
@@ -618,7 +640,12 @@ export default class FecMasterDataSetting extends LightningElement {
             try {
                 await deleteMasterDataSetting({ recordId });
                 this.showToast(LABEL_TOAST_DELETED_SUCCESS, '', VARIANT_SUCCESS);
-                refreshApex(this.wiredMasterDataResult);
+                await refreshApex(this.wiredMasterDataResult);
+
+                // HISTORY: Refresh history panel
+                if (this.isHistoryVisible) {
+                    this.refreshHistoryPanel();
+                }
             } catch (error) {
                 this.showToast(LABEL_TOAST_ERROR, error.body.message, VARIANT_ERROR);
             }
@@ -658,6 +685,11 @@ export default class FecMasterDataSetting extends LightningElement {
                         // Data should be updated now via wiredProperties callback
                         // processedData should be updated automatically
                         this.isLoading = false;
+
+                        // HISTORY: Refresh history panel
+                        if (this.isHistoryVisible) {
+                            this.refreshHistoryPanel();
+                        }
                     })
                     .catch(refreshError => {
                         showLog('[handleSuccess] refreshApex error:', refreshError);
@@ -876,6 +908,11 @@ export default class FecMasterDataSetting extends LightningElement {
             .then(() => {
                 showLog('[handleDeleteFraud] Data refreshed successfully');
                 this.isLoading = false;
+
+                // HISTORY: Refresh history panel
+                if (this.isHistoryVisible) {
+                    this.refreshHistoryPanel();
+                }
             })
             .catch(error => {
                 this.isLoading = false;

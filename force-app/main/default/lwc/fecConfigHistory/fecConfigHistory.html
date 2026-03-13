@@ -1,0 +1,54 @@
+<template>
+    <div class="slds-p-around_small slds-is-relative" style="min-height: 150px;">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Đang tải dữ liệu..." size="small"></lightning-spinner>
+        </template>
+
+        <template if:true={lstHistory}>
+            <ul class="slds-has-dividers_bottom-space">
+                <template for:each={lstHistory} for:item="history">
+                    <li class="slds-item slds-p-vertical_small" key={history.historyId}>
+                        <article class="slds-tile">
+                            <div class="slds-grid slds-grid_align-spread slds-has-flexi-truncate slds-m-bottom_xx-small">
+                                <h3 class="slds-tile__title slds-truncate slds-text-heading_small slds-text-color_default" title={history.actionText}>
+                                    <strong>{history.actionText}</strong>
+                                </h3>
+                                <div class="slds-text-body_small slds-text-color_weak slds-shrink-none slds-m-left_small">
+                                    <lightning-formatted-date-time value={history.modifiedDate} year="numeric" month="short" day="2-digit" hour="2-digit" minute="2-digit"></lightning-formatted-date-time>
+                                </div>
+                            </div>
+
+                            <div class="slds-m-bottom_xx-small word-break-all slds-text-body_regular">
+                                <span class="slds-text-color_weak">Field:</span> <strong class="slds-m-left_xx-small">{history.fieldName}</strong>
+                            </div>
+
+                            <div class="slds-tile__detail slds-m-bottom_xx-small">
+                                <div class="word-break-all slds-text-body_regular">
+                                    <span class="slds-text-color_weak">Cũ:</span> 
+                                    <s class="slds-m-left_xx-small slds-m-right_medium">{history.oldValue}</s> 
+                                    <br/>
+                                    <span class="slds-text-color_weak">Mới:</span> 
+                                    <b class="slds-m-left_xx-small text-success">{history.newValue}</b>
+                                </div>
+                            </div>
+
+                            <div class="slds-tile__detail">
+                                <p class="slds-text-body_small slds-text-color_weak">
+                                    <lightning-icon icon-name="utility:user" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                    Bởi {history.modifiedByName}
+                                </p>
+                            </div>
+
+                        </article>
+                    </li>
+                </template>
+            </ul>
+        </template>
+        
+        <template if:true={error}>
+            <div class="slds-text-color_error slds-p-around_small slds-box slds-theme_alert-texture">
+                {error}
+            </div>
+        </template>
+    </div>
+</template>

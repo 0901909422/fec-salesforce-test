@@ -6,7 +6,7 @@
     <label>Order</label>
     <precision>3</precision>
     <scale>0</scale>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Number</type>
     <unique>false</unique>

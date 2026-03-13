@@ -7,7 +7,7 @@
     <referenceTo>FEC_MDM_Stage_Change__c</referenceTo>
     <relationshipLabel>Stage Change Conditions</relationshipLabel>
     <relationshipName>FEC_MDM_Stage_Change_Conditions</relationshipName>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

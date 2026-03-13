@@ -6,7 +6,7 @@
     <label>FEC Unique ID</label>
     <length>255</length>
     <required>true</required>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Text</type>
     <unique>true</unique>
