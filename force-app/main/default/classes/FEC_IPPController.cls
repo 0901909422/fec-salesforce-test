@@ -69,7 +69,7 @@ public with sharing class FEC_IPPController {
                        FEC_Origination_Channel__c, FEC_Disbursement_Channel__c
                 FROM FEC_IPP__c
                 WHERE FEC_Customer_History__c = :customerHistoryId
-                ORDER BY FEC_IPP_Open_Date__c ASC NULLS LAST
+                ORDER BY FEC_IPP_Open_Date__c DESC NULLS LAST
             ];
             if (fromDb != null && !fromDb.isEmpty()) {
                 List<IPPRecordDTO> result = new List<IPPRecordDTO>();
@@ -106,12 +106,7 @@ public with sharing class FEC_IPPController {
             } catch (Exception e) {
                 System.debug('FEC_IPPController Mock API error: ' + e.getMessage());
             }
-            List<IPPRecordDTO> mockResult = FEC_MockData.getHardcodedIPPRecordsForUI();
-            Map<String, String> helpTextMap = getIPPHelpTextMap();
-            for (IPPRecordDTO dto : mockResult) {
-                dto.helpTexts = helpTextMap;
-            }
-            return mockResult;
+            return new List<IPPRecordDTO>();
         }
 
         /* ===== Không có Mock: gọi API thực ===== */
@@ -391,16 +386,6 @@ public with sharing class FEC_IPPController {
         } catch (Exception e) {
             System.debug('FEC_IPPController.enrichIPPRecordWithDetails for plan ' + dto.planNumber + ': ' + e.getMessage());
         }
-
-        // Mock: nếu chưa có interestRate/ippTerm (API lỗi hoặc không trả data) thì dùng hardcode
-        if (apiSetting != null && apiSetting.FEC_Call_Mock__c == false) {
-            if (dto.interestRate == null) {
-                dto.interestRate = FEC_MockData.getDefaultIPPInterestRateForMock();
-            }
-            if (dto.ippTerm == null) {
-                dto.ippTerm = FEC_MockData.getDefaultIPPTermForMock();
-            }
-        }
     }
 
     /**
@@ -498,7 +483,7 @@ public with sharing class FEC_IPPController {
                 if (da == null && db != null) {
                     listToSort[i] = b;
                     listToSort[j] = a;
-                } else if (da != null && db != null && da > db) {
+                } else if (da != null && db != null && da < db) {
                     listToSort[i] = b;
                     listToSort[j] = a;
                 }
