@@ -820,6 +820,7 @@ hasAnySearchCriteria(params) {
               ProductCode: app.Product,
               ContractStatus: app.Status,
               Phone: phone,
+              CIFNumber: cust.CIFNumber,
               _customer: cust,
               _application: app 
             }];
@@ -837,6 +838,7 @@ hasAnySearchCriteria(params) {
               Status: app.Status,
               EffectiveDate: 'N/A',
               Phone: phone,
+              CIFNumber: cust.CIFNumber,
               _customer: cust,
               _application: app // Cần map thêm field nếu có
             }];
@@ -980,7 +982,7 @@ hasAnySearchCriteria(params) {
           row = this.cardData.find(r => r.AccountNumber == row);
           break;
         case "ContractNumber":
-          row = this.loanData.find(r => r.ContractNumber == row);
+          row = this.loanContractData.find(r => r.ContractNumber == row);
           break;
         case "UserId":
           row = this.insuranceData.find(r => r.UserId == row);
