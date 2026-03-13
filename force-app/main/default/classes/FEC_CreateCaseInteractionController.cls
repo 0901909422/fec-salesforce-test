@@ -14,7 +14,7 @@ public with sharing class FEC_CreateCaseInteractionController {
     
     Case newCase = new Case();
     newCase.RecordTypeId = customerCaseRtId;
-    newCase.OwnerId = UserInfo.getUserId(); // Case thuộc user tạo → hiện trong My Pending Cases (filterScope = Mine)
+    newCase.OwnerId = UserInfo.getUserId(); 
     newCase.FEC_Account_or_Contract__c = interation.FEC_Account_or_Contract__c;
     newCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
     newCase.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
@@ -82,7 +82,7 @@ public with sharing class FEC_CreateCaseInteractionController {
       
       Case newCase = new Case();
       newCase.RecordTypeId = customerCaseRtId;
-      newCase.OwnerId = UserInfo.getUserId(); // Case thuộc user tạo → hiện trong My Pending Cases (filterScope = Mine)
+      newCase.OwnerId = UserInfo.getUserId();
       newCase.FEC_Customer_Name__c = customerName;
       newCase.FEC_National_ID_Passport_ID__c = nationalPassportId;
       newCase.Status = FEC_ConstantCommon.CASE_STATUS_NEW;
