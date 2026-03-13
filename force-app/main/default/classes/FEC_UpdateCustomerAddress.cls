@@ -211,11 +211,17 @@ public with sharing class FEC_UpdateCustomerAddress {
     }
   }
 
-  /**
-   * Trả về ResponseLog để controller gọi FEC_CommonUltils.logApi sau khi call xong API.
-   */
-  public static ResponseLog getResponseLog() {
-    return responseLog;
+
+  public static void logApiResponse() {
+    if (responseLog != null) {
+      FEC_CommonUltils.logApi(
+        responseLog.apiName,
+        responseLog.endpoint,
+        responseLog.method,
+        responseLog.requestBody,
+        responseLog.response,
+        responseLog.errorMessage);
+    }
   }
 
   // ==========================================
