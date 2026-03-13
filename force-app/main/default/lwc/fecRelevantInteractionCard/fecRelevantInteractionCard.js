@@ -15,8 +15,8 @@ import FEC_RELEVANT_INTERACTION_LABEL from "@salesforce/label/c.FEC_Relevant_Int
 import FEC_INTERACTION_ID_LABEL from "@salesforce/label/c.FEC_Interaction_ID";
 import FEC_INTERACTION_CREATED_ON_LABEL from "@salesforce/label/c.FEC_Interaction_Created_On_Label";
 import FEC_INTERACTION_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_Channel_Label";
-
-import { formatDateTime, urlCmpWithRecordId } from 'c/fec_CommonUtils';
+import FEC_LIST_EMPTY from "@salesforce/label/c.FEC_List_relevant_case_empty";
+import { formatDateTime, urlCmpWithRecordId } from "c/fec_CommonUtils";
 import { DIV_ELEMENT, ICON_CASE } from "c/fec_CommonConst";
 
 const COLUMNS = [
@@ -39,10 +39,10 @@ const COLUMNS = [
 export default class FecRelevantInteractionCard extends NavigationMixin(
   LightningElement,
 ) {
-
   labels = {
     viewAllBtn: FEC_VIEW_ALL_BTN_LABEL,
     relevantInteraction: FEC_RELEVANT_INTERACTION_LABEL,
+    listEmpty: FEC_LIST_EMPTY,
   };
 
   @api recordId;
@@ -88,7 +88,10 @@ export default class FecRelevantInteractionCard extends NavigationMixin(
     console.log("focusedTab:", JSON.stringify(focusedTab));
 
     const subtabId = await openSubtab(focusedTab.tabId, {
-      url: urlCmpWithRecordId("fec_RelevantInteractionListViewAll", this.recordId),
+      url: urlCmpWithRecordId(
+        "fec_RelevantInteractionListViewAll",
+        this.recordId,
+      ),
       focus: true,
     });
     await setTabLabel(subtabId, "Relevant Interactions - View All");
