@@ -100,7 +100,7 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
 
             const data = await getApplications({ caseId: this.recordId });
             this.registration = (data || []).map(row => ({
-               Id: row.id,  
+                Id: row.Id,  
                 applicationId: row.applicationId,
                 accountNumber: row.accountNumber,
                 contractNumber: row.contractNumber,

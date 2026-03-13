@@ -5,7 +5,7 @@
     <columns>CASES.STATUS</columns>
     <columns>FEC_Channel__c</columns>
     <columns>FEC_Customer_Name__c</columns>
-    <columns>FEC_Account_or_Contract__c</columns>
+    <columns>FEC_Account_Contract_Number_Text__c</columns>
     <columns>FEC_Category__c</columns>
     <columns>FEC_SubCategory__c</columns>
     <columns>FEC_SubCode__c</columns>
