@@ -717,6 +717,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Master_Data_Setting__c.FEC_Additional_Field__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Active__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1098,6 +1103,77 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Sub_Code__c.FEC_Order__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Field__c.FEC_Data_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Field__c.Field_Label_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Field__c.Field_Object_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Column__c.FEC_Field_API_Mapping__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Column__c.FEC_MDM_Field__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Column__c.FEC_Order__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Cell__c.FEC_Value__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Column__c.FEC_Field_API_Mapping__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Column__c.FEC_MDM_Field__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Column__c.FEC_Order__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Row__c.FEC_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Row__c.FEC_Priority__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Table__c.FEC_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Table__c.FEC_Description__c</field>
         <readable>true</readable>
     </fieldPermissions>
 
@@ -1514,7 +1590,6 @@
         <object>FEC_Sub_Code__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
@@ -1626,6 +1701,42 @@
         <modifyAllRecords>false</modifyAllRecords>
         <object>FEC_MDM_Master_Data_Setting__c</object>
         <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>FEC_Decision_Cell__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>FEC_Decision_Column__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>FEC_Decision_Row__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>FEC_Decision_Table__c</object>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
 
     <recordTypeVisibilities>

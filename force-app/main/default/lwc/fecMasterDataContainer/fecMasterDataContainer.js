@@ -59,28 +59,48 @@ export default class FecMasterDataContainer extends LightningElement {
         const nodeKey = updatedNode.idType;
 
         if (nodeKey) {
+            // Normalize Status to Boolean to avoid type mismatch when sending to Apex
+            const normalizedNode = {
+                ...updatedNode,
+                Status: Boolean(updatedNode.Status)
+            };
+
             // Cập nhật Map
-            this.pendingChanges.set(nodeKey, { ...updatedNode });
+            this.pendingChanges.set(nodeKey, normalizedNode);
 
             // Ép LWC nhận diện sự thay đổi bằng cách gán lại chính nó (nếu cần render count lên UI)
             this.pendingChanges = new Map(this.pendingChanges);
-            this.displayItem = { ...updatedNode };
-            console.log('Current Pending Changes Count:', this.pendingChanges.size);
+            this.displayItem = { ...normalizedNode };
+            console.log('[DEBUG][handleNodeBufferChange] nodeKey:', nodeKey, '| Status:', normalizedNode.Status, '| Pending count:', this.pendingChanges.size);
         }
     }
 
     // Khi người dùng nhấn Save All
     async handleSaveAll() {
-        const listToUpdate = Array.from(this.pendingChanges.values());
+        // Normalize each node's Status field to Boolean before sending to Apex
+        const listToUpdate = Array.from(this.pendingChanges.values()).map(node => ({
+            ...node,
+            Status: Boolean(node.Status)
+        }));
+
+        console.log('[DEBUG][handleSaveAll] listToUpdate:', JSON.stringify(listToUpdate));
+
         this.loading = true;
         try {
             await updateMultipleNodes({ listData: listToUpdate });
             this.showToast(LABEL_TOAST_SUCCESS, LABEL_NOTIFY_SAVE_ALL.replace('{0}', listToUpdate.length), VARIANT_SUCCESS);
+
             this.pendingChanges.clear();
             this.pendingChanges = new Map(); // Reset map
 
+            // Gửi event báo cho Tree biết để làm mới toàn bộ
             this.dispatchEvent(new CustomEvent(EVENT_REFRESH_ALL, { bubbles: true, composed: true }));
+            const detailCmp = this.template.querySelector('[data-id="detailComponent"]');
+            detailCmp.refreshHistory();
+            detailCmp.markAsSaved();
+
         } catch (error) {
+            console.error('[DEBUG][handleSaveAll] ERROR:', error);
             this.showToast(LABEL_TOAST_ERROR, error.body?.message || 'Lỗi lưu', VARIANT_ERROR);
         } finally {
             this.loading = false;

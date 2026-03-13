@@ -5,7 +5,7 @@
     <description>Indicates if this Nature of Case record is active</description>
     <externalId>false</externalId>
     <label>Active</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>
