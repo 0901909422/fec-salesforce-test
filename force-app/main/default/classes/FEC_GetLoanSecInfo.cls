@@ -120,12 +120,12 @@ public with sharing class FEC_GetLoanSecInfo {
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
             HttpResponse res = FEC_CommonUltils.calloutApi(
-                endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE,
+                endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE,
                 apiConfig?.FEC_SOAP_Action__c, null, soapBody
             );
 
             responseLog = new ResponseLog(
-                'FEC_GetLoanSecInfo', endpoint, 'POST', soapBody, res, null
+                'FEC_GetLoanSecInfo', endpoint, FEC_ConstantCommon.API_METHOD_POST, soapBody, res, null
             );
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
