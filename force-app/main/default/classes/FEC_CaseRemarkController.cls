@@ -43,7 +43,7 @@ public with sharing class FEC_CaseRemarkController {
   }
 
   @AuraEnabled
-  public static void createRemark(String remark, String caseId) {
+  public static void createRemark(String remark, String caseId, String stageNameFromClient) {
     try {
       List<User> userlst = [
         SELECT Id, Email, UserRole.Name
@@ -70,11 +70,12 @@ public with sharing class FEC_CaseRemarkController {
 
       String roleName = userlst.get(0).UserRole?.Name;
 
+      String stageName = String.isNotBlank(stageNameFromClient) ? stageNameFromClient : caselst[0].FEC_Stage_Name__c;
       FEC_Case_Remarks__c caseRemark = new FEC_Case_Remarks__c();
       caseRemark.FEC_Case_Remarks__c = remark;
       caseRemark.FEC_User__c = emailId;
       caseRemark.FEC_User_Role__c = roleName;
-      caseRemark.FEC_Stage_Name__c = caselst[0].FEC_Stage_Name__c;
+      caseRemark.FEC_Stage_Name__c = stageName;
       caseRemark.FEC_Case__c = caseId;
 
       List<FEC_Case_Remarks__c> existingRemarks = jsonToRemarks(
@@ -84,7 +85,7 @@ public with sharing class FEC_CaseRemarkController {
       existingRemarks.add(caseRemark);
       caselst[0].FEC_Draft_Remarks__c = remarksToJson(existingRemarks);
 
-      update caselst;
+      Database.update(caselst, AccessLevel.SYSTEM_MODE);
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
@@ -104,12 +105,12 @@ public with sharing class FEC_CaseRemarkController {
     if (caselst.isEmpty())
       return;
     caselst[0].FEC_Draft_Remarks__c = null;
-    update caselst;
+    Database.update(caselst, AccessLevel.SYSTEM_MODE);
   }
 
   /** Submit chỉ tạo 1 bản ghi: lấy bản nháp mới nhất (phần tử cuối trong draft). */
   @AuraEnabled
-  public static void submitRemark(String caseId) {
+  public static void submitRemark(String caseId, String stageNameFromClient) {
     try {
       List<Case> caselst = [
         SELECT Id, FEC_Stage_Name__c, FEC_Draft_Remarks__c
@@ -144,12 +145,15 @@ public with sharing class FEC_CaseRemarkController {
           latestRemark.FEC_Case_Remarks__c.equals(
             recentForCase[0].FEC_Case_Remarks__c
           );
-        if (!isDuplicate)
+        if (!isDuplicate) {
+          latestRemark.FEC_Case__c = caseId;
+          latestRemark.FEC_Stage_Name__c = String.isNotBlank(stageNameFromClient) ? stageNameFromClient : caselst[0].FEC_Stage_Name__c;
           insert latestRemark;
+        }
       }
 
       caselst[0].FEC_Draft_Remarks__c = null;
-      update caselst;
+      Database.update(caselst, AccessLevel.SYSTEM_MODE);
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }

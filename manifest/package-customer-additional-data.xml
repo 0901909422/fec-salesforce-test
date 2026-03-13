@@ -28,6 +28,7 @@
         <members>fecCustomPopoverFilter</members>
         <members>fecGenericModal</members>
         <members>fecUtils</members>
+        <members>fecNoRecordDisplay</members>
         <name>LightningComponentBundle</name>
     </types>
 

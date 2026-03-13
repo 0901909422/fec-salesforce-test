@@ -65,15 +65,30 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
                 System.debug('DealId: ' + p.dealId);
                 
                 GetProductsListResponse item = new GetProductsListResponse();
-                if(p.contractNumber != null || p.contractNumber != '') {
-                    item.accountContractNumber = p.contractNumber;
-                    item.productType = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE;
-                } else if (p.dealId != null || p.dealId != '') { 
-                    item.accountContractNumber = p.dealId;
-                    item.productType = FEC_ConstantCommon.PRODUCT_TYPE_LOAN;
-                } else if (p.cardNumber != null || p.cardNumber != '') {
-                    item.accountContractNumber = p.cardNumber;
+                if (String.isNotBlank(p.accountNumber) && Pattern.matches(FEC_ConstantCommon.PATTERN_CARD, p.accountNumber)) {
+                    
+                    // CARD
+                    item.accountContractNumber = p.accountNumber;
                     item.productType = FEC_ConstantCommon.PRODUCT_TYPE_CARD;
+                }
+                else if (String.isNotBlank(p.contractNumber)) {
+                    
+                    String contract = p.contractNumber;
+                    
+                    if (Pattern.matches(FEC_ConstantCommon.PATTERN_INSURANCE, contract)) {
+                        
+                        // INSURANCE
+                        item.accountContractNumber = contract;
+                        item.productType = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE;
+                        
+                    }
+                    else if (Pattern.matches(FEC_ConstantCommon.PATTERN_LOAN, contract)) {
+                        
+                        // LOAN
+                        item.accountContractNumber = contract;
+                        item.productType = FEC_ConstantCommon.PRODUCT_TYPE_LOAN;
+                        
+                    }
                 }
                 item.productName = p.productName;
                 results.add(item);
@@ -111,9 +126,25 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
         
         try {
             insert rec;
+            // Update interaction with new customer history
+            updateInteractionWithNewCustomerHistory(caseId, rec.Id);
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
     }
     
+    @AuraEnabled
+    public static void updateInteractionWithNewCustomerHistory(Id caseId, Id customerHistoryId) {
+        System.debug('Updating interaction with caseId: ' + caseId + ', customerHistoryId: ' + customerHistoryId);
+        Case c = new Case(
+            Id = caseId,
+        FEC_Account_or_Contract__c = customerHistoryId
+            );
+        
+        try {
+            update c;
+        } catch (DmlException e) {
+            throw new AuraHandledException(e.getDmlMessage(0));
+        }
+    }
 }

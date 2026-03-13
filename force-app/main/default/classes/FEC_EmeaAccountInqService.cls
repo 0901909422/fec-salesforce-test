@@ -56,6 +56,9 @@
         // Memo Debit & Credit
         @AuraEnabled public Decimal amtMemoDb { get; set; }  // AMT_MEMO_DB
         @AuraEnabled public Decimal amtMemoCr { get; set; }  // AMT_MEMO_CR
+
+        // Local User
+        @AuraEnabled public String localUseInd { get; set; }
         
         // Dates
         @AuraEnabled public Date dtOpened { get; set; }
@@ -249,6 +252,7 @@
                         
                         result.amtMemoDb = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_DB');
                         result.amtMemoCr = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_CR');
+                        result.localUseInd = FEC_CommonUltils.getXmlValue(acctBs, 'LOCAL_USE_IND');
                         
                         // --- Parse Dates ---
                         result.dtOpened = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_OPENED');
@@ -308,6 +312,7 @@
                     // Memo Fields
                     result.amtMemoDb = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_DB');
                     result.amtMemoCr = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AMT_MEMO_CR');
+                    result.localUseInd = FEC_CommonUltils.getXmlValue(acctBs, 'LOCAL_USE_IND');
                     
                     // --- Parse Dates ---
                     result.dtOpened = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_OPENED');

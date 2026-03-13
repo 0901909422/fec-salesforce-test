@@ -3,9 +3,15 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
     //=============== REQUEST CLASSES ===============//
     
     public class CustomerSaleDisburseInfoRequest {
-        public List<String> parameters;
         public Map<String, Object> headers;
+        public List<String> parameters;
         public Map<String, Object> body;
+        
+        public CustomerSaleDisburseInfoRequest() {
+            this.headers = new Map<String, Object>();
+            this.parameters = new List<String>();
+            this.body = new Map<String, Object>();
+        }
     }
     
     //=============== RESPONSE CLASSES ===============//
@@ -142,27 +148,33 @@ public without sharing class FEC_GetCustomerSaleDisburseInfoCallout {
             return errorResponse;
         }
         
-        // Build request
-        CustomerSaleDisburseInfoRequest request = new CustomerSaleDisburseInfoRequest();
-        
-        request.headers = new Map<String, Object>{
-            'TransID'      => transactionId,
-            'DateTime'     => dateTimeValue,
-            'RequestorID'  => requestorId,
-            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
-        };
-        
-        request.parameters = new List<String>{ applicationId };
-        request.body = new Map<String, Object>();
-        String requestBody = JSON.serialize(request);
-        
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_Sale_Disburse_Info');
 
         String endpoint = apiSetting?.FEC_Call_Mock__c
             ? FEC_MockupEndpoint.GET_CUSTOMER_SALE_DISBURSE_INFO_ENDPOINT_MOCKUP
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-        HttpResponse resp = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE_JSON, '', null, requestBody);
+        
+        endpoint += '?APPLICATION_ID=' + EncodingUtil.urlEncode(applicationId, 'UTF-8');
+
+        Map<String,String> headers = new Map<String,String>{
+            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+            'TransID'      => transactionId,
+            'DateTime'     => dateTimeValue,
+            'RequestorID'  => requestorId
+        };
+
+        HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, 'GET', headers, null);
+
+        FEC_CommonUltils.logApi(
+            'FEC_GetCustomerSaleDisburseInfoCallout',
+            endpoint,
+            'GET',
+            null,
+            resp,
+            null
+        );
+
 
         // Parse response
         CustomerSaleDisburseInfoResponse response;

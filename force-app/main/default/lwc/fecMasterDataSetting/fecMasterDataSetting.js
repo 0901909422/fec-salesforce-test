@@ -173,16 +173,6 @@ export default class FecMasterDataSetting extends LightningElement {
             this.processedData = data.map(row => {
                 const rowStatus = row.Process_Change_Status__c || '';
                 
-                // Handle channel - could be from lookup relationship or text field
-                let channelDisplay = '';
-                if (row.FEC_Case_Channel__r?.Name) {
-                    channelDisplay = row.FEC_Case_Channel__r.Name;
-                } else if (row.FEC_Channel__c) {
-                    channelDisplay = row.FEC_Channel__c;
-                } else {
-                    channelDisplay = LABEL_DEFAULT_CHANNEL_NAME;
-                }
-                
                 // 1. Xác định màu icon Status
                 let statusClass = STATUS_CLASS_BLUE;
                 if (rowStatus === STATUS_NEW) statusClass = STATUS_CLASS_RED;
@@ -195,10 +185,8 @@ export default class FecMasterDataSetting extends LightningElement {
 
                 return {
                     ...row,
-                    // Map thêm label cho Property Name từ quan hệ __r
                     FEC_Additional_Field_Name: row.FEC_Additional_Field__r ? row.FEC_Additional_Field__r.Name : '',
-                    FEC_Channel_Name_Name: channelDisplay,
-                    // Ensure all fields have values (FLS might strip them)
+                    FEC_Channel_Name_Name: row.FEC_Channel__r ? row.FEC_Channel__r.Name : row.FEC_Channel__c,
                     FEC_Applicable_Role__c: row.FEC_Applicable_Role__c || '',
                     FEC_Section__c: row.FEC_Section__c || '',
                     FEC_Field_Order_Display__c: row.FEC_Field_Order_Display__c || 0,

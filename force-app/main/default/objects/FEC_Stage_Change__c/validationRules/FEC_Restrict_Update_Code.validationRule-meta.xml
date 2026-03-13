@@ -4,7 +4,8 @@
     <active>true</active>
     <errorConditionFormula>AND(
     NOT(ISNEW()),
-    ISCHANGED( FEC_Code__c )
+    ISCHANGED( FEC_Code__c ),
+    NOT( ISBLANK( PRIORVALUE(FEC_Code__c) ) )
 )</errorConditionFormula>
     <errorDisplayField>FEC_Code__c</errorDisplayField>
     <errorMessage>Cannot edit field after creation</errorMessage>

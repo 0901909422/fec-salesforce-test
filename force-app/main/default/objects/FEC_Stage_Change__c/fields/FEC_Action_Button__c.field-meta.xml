@@ -3,6 +3,7 @@
     <fullName>FEC_Action_Button__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Routing Action tương ứng để chuyển sang Stage tiếp theo</description>
+    <externalId>false</externalId>
     <label>Action Button</label>
     <referenceTo>FEC_Action_Button__c</referenceTo>
     <relationshipLabel>Stage Change</relationshipLabel>

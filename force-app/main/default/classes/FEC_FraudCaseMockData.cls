@@ -276,19 +276,19 @@ public static String responseSuccessCancelFraudCase() {
 
     public static List<Map<String, Object>> getCategoryMockupData() {
         List<Map<String, Object>> categoryMock = new List<Map<String, Object>>{
-            new Map<String, Object>{ 'label' => 'Customer Complaint', 'value' => 'CC', 'mappingId' => 'a068500000GqumTAAR' },
-            new Map<String, Object>{ 'label' => 'Fraud Transaction', 'value' => 'FraudTransaction', 'mappingId' => 'a068500000Gquo5AAB' },
+            new Map<String, Object>{ 'label' => 'Customer Complaint', 'value' => 'CC', 'mappingId' => 'a0q86000002IRlPAAW' },
+            new Map<String, Object>{ 'label' => 'Fraud Transaction', 'value' => 'FraudTransaction', 'mappingId' => 'a0q86000002IUuXAAW' },
             new Map<String, Object>{ 'label' => 'No Mapping', 'value' => 'NoMapping', 'mappingId' => null }
         };
         return categoryMock;
     }
     public static List<Map<String, Object>> getSubCategoryMockupData() {
         List<Map<String, Object>> subCategoryMock = new List<Map<String, Object>>{
-            new Map<String, Object>{ 'label' => 'KH không làm hồ sơ vay', 'value' => 'CC01', 'parentId' => 'CC', 'mappingId' => 'a068500000GqumTAAR' },
-            new Map<String, Object>{ 'label' => 'KH bị chiếm dụng', 'value' => 'CC02', 'parentId' => 'CC', 'mappingId' => 'a068500000Gqv93AAB' },
-            new Map<String, Object>{ 'label' => 'KH bị yêu cầu tiền phí', 'value' => 'CC03', 'parentId' => 'CC', 'mappingId' => 'a068500000GquMgAAJ' },
-            new Map<String, Object>{ 'label' => 'Hack Sim', 'value' => 'HackSim', 'parentId' => 'FraudTransaction', 'mappingId' => 'a068500000GfODHAA3' },
-            new Map<String, Object>{ 'label' => 'OTP Compromised_No need feedback', 'value' => 'NoCashReceive', 'parentId' => 'FraudTransaction', 'mappingId' => 'a068500000GpqjMAAR' },
+            new Map<String, Object>{ 'label' => 'KH không làm hồ sơ vay', 'value' => 'CC01', 'parentId' => 'CC', 'mappingId' => 'a0q86000002IT2RAAW' },
+            new Map<String, Object>{ 'label' => 'KH bị chiếm dụng', 'value' => 'CC02', 'parentId' => 'CC', 'mappingId' => 'a0q86000002IRlPAAW' },
+            new Map<String, Object>{ 'label' => 'KH bị yêu cầu tiền phí', 'value' => 'CC03', 'parentId' => 'CC', 'mappingId' => 'a0q86000002IUjGAAW' },
+            new Map<String, Object>{ 'label' => 'Hack Sim', 'value' => 'HackSim', 'parentId' => 'FraudTransaction', 'mappingId' => 'a0q86000002IUuXAAW' },
+            new Map<String, Object>{ 'label' => 'OTP Compromised_No need feedback', 'value' => 'NoCashReceive', 'parentId' => 'FraudTransaction', 'mappingId' => 'a0q86000002ISnuAAG' },
             new Map<String, Object>{ 'label' => 'Test no mapping Subcategory', 'value' => 'nomapping', 'parentId' => 'FraudTransaction', 'mappingId' => null },
             new Map<String, Object>{ 'label' => 'Test no mapping All', 'value' => 'nomapping-9393', 'parentId' => 'NoMapping', 'mappingId' => null }
         };
@@ -296,10 +296,10 @@ public static String responseSuccessCancelFraudCase() {
     }
     public static List<Map<String, Object>> getCategorySubCodeMockupData() {
         List<Map<String, Object>> subCodeMock = new List<Map<String, Object>>{
-            new Map<String, Object>{ 'label' => 'Khoản vay tiền mặt', 'value' => 'CC01-01', 'parentId' => 'CC01', 'mappingId' => 'a068500000GqumTAAR' },
-            new Map<String, Object>{ 'label' => 'Khoản vay CD-TW', 'value' => 'CC01-02', 'parentId' => 'CC01', 'mappingId' => 'a068500000GqupiAAB' },
-            new Map<String, Object>{ 'label' => 'Hợp đồng mở thẻ', 'value' => 'CC01-03', 'parentId' => 'CC01', 'mappingId' => 'a068500000GqpzwAAB' },
-            new Map<String, Object>{ 'label' => 'Khoản giải ngân', 'value' => 'CC02-01', 'parentId' => 'CC02', 'mappingId' => 'a068500000Gqv93AAB' },
+            new Map<String, Object>{ 'label' => 'Khoản vay tiền mặt', 'value' => 'CC01-01', 'parentId' => 'CC01', 'mappingId' => 'a0q86000002IT2RAAW' },
+            new Map<String, Object>{ 'label' => 'Khoản vay CD-TW', 'value' => 'CC01-02', 'parentId' => 'CC01', 'mappingId' => 'a0q86000002IUeQAAW' },
+            new Map<String, Object>{ 'label' => 'Hợp đồng mở thẻ', 'value' => 'CC01-03', 'parentId' => 'CC01', 'mappingId' => 'a0q86000002ITQgAAO' },
+            new Map<String, Object>{ 'label' => 'Khoản giải ngân', 'value' => 'CC02-01', 'parentId' => 'CC02', 'mappingId' => 'a0q86000002IRlPAAW' },
             new Map<String, Object>{ 'label' => 'Test only category mapping', 'value' => 'nomapping-01', 'parentId' => 'nomapping-9393', 'mappingId' => null },
             new Map<String, Object>{ 'label' => 'No Mapping All', 'value' => 'nomapping-02', 'parentId' => 'nomapping-9393', 'mappingId' => null }
         };

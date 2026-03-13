@@ -265,8 +265,8 @@ public without sharing class FEC_FollowUpController {
                 return System.Label.FEC_MSG_FollowUp_Already_Unfollowed;
             }
             
-            // Unfollow: Set Active = false, remove from Case Team and Follow Up User field
-            update new FEC_Watcher__c(Id = watchers[0].Id, FEC_Active__c = false);
+            // Unfollow: Delete watcher record, remove from Case Team and Follow Up User field
+            delete watchers[0];
             removeUserFromFollowUpField(caseId, currentUserId);
             removeUserFromCaseTeam(caseId, currentUserId);
             publishFollowUpdateEvent(caseId);
@@ -279,47 +279,65 @@ public without sharing class FEC_FollowUpController {
     }
     
     /**
-     * @description Auto unfollow tất cả users khi Case resolved
+     * @description Auto unfollow Chỉ các users có followType = "Until Case is Resolved" khi Case resolved.
+     * Users chọn "Until choosing Unfollow" vẫn giữ follow để có thể bấm Unfollow sau khi case đóng.
      * Called from Trigger
      */
     public static void removeWatchersOnCaseResolved(Set<Id> caseIds) {
         try {
             if (caseIds == null || caseIds.isEmpty()) return;
             
-            List<FEC_Watcher__c> activeWatchers = [
-                SELECT Id, FEC_Case__c, FEC_Watcher_User__c FROM FEC_Watcher__c
-                WHERE FEC_Case__c IN :caseIds AND FEC_Active__c = true
+            // Chỉ lấy watchers có follow type "Until Case is Resolved" (không xóa "Until Unfollow")
+            List<FEC_Watcher__c> resolvedTypeWatchers = [
+                SELECT Id, FEC_Case__c, FEC_Watcher_User__c
+                FROM FEC_Watcher__c
+                WHERE FEC_Case__c IN :caseIds
+                  AND FEC_Active__c = true
+                  AND FEC_Follow_up_Type__c = :FEC_ConstantCommon.FOLLOW_UP_TYPE_UNTIL_RESOLVED
             ];
             
-            if (activeWatchers.isEmpty()) return;
+            if (resolvedTypeWatchers.isEmpty()) return;
             
-            Set<Id> userIds = new Set<Id>();
-            for (FEC_Watcher__c w : activeWatchers) {
+            Set<Id> userIdsToRemove = new Set<Id>();
+            for (FEC_Watcher__c w : resolvedTypeWatchers) {
+                userIdsToRemove.add(w.FEC_Watcher_User__c);
+            }
+            
+            // Xóa watcher records (chỉ Until Resolved)
+            delete resolvedTypeWatchers;
+            
+            // Cập nhật FEC_Follow_Up_User__c: chỉ xóa các user Until Resolved, giữ lại user Until Unfollow
+            Map<Id, Case> caseMap = new Map<Id, Case>([
+                SELECT Id, FEC_Follow_Up_User__c FROM Case WHERE Id IN :caseIds
+            ]);
+            Map<Id, Set<Id>> caseToUserIdsToRemove = new Map<Id, Set<Id>>();
+            for (FEC_Watcher__c w : resolvedTypeWatchers) {
+                if (w.FEC_Watcher_User__c == null) continue;
+                Set<Id> userIds = caseToUserIdsToRemove.get(w.FEC_Case__c);
+                if (userIds == null) {
+                    userIds = new Set<Id>();
+                    caseToUserIdsToRemove.put(w.FEC_Case__c, userIds);
+                }
                 userIds.add(w.FEC_Watcher_User__c);
             }
-            
-            // Set Active = false
-            List<FEC_Watcher__c> watchersToUpdate = new List<FEC_Watcher__c>();
-            for (FEC_Watcher__c w : activeWatchers) {
-                watchersToUpdate.add(new FEC_Watcher__c(Id = w.Id, FEC_Active__c = false));
-            }
-            update watchersToUpdate;
-            
-            // Clear Follow Up User field
             List<Case> casesToUpdate = new List<Case>();
             for (Id caseId : caseIds) {
-                casesToUpdate.add(new Case(Id = caseId, FEC_Follow_Up_User__c = FEC_ConstantCommon.STR_EMPTY));
+                Case c = caseMap.get(caseId);
+                if (c == null) continue;
+                Set<Id> removeUserIds = caseToUserIdsToRemove.get(caseId);
+                if (removeUserIds == null || removeUserIds.isEmpty()) continue;
+                String newValue = removeUsersFromFollowUpFieldValue(c.FEC_Follow_Up_User__c, removeUserIds);
+                casesToUpdate.add(new Case(Id = caseId, FEC_Follow_Up_User__c = newValue));
             }
-            update casesToUpdate;
+            if (!casesToUpdate.isEmpty()) update casesToUpdate;
             
-            // Remove from Case Team
+            // Remove from Case Team chỉ các user Until Resolved
             List<CaseTeamMember> teamMembers = [
                 SELECT Id FROM CaseTeamMember
-                WHERE ParentId IN :caseIds AND MemberId IN :userIds
+                WHERE ParentId IN :caseIds AND MemberId IN :userIdsToRemove
             ];
             if (!teamMembers.isEmpty()) delete teamMembers;
             
-            // Publish events
             for (Id caseId : caseIds) {
                 publishFollowUpdateEvent(caseId);
             }
@@ -327,6 +345,35 @@ public without sharing class FEC_FollowUpController {
         } catch (Exception e) {
             System.debug('Error in removeWatchersOnCaseResolved: ' + e.getMessage());
         }
+    }
+    
+    /**
+     * @description Xóa các userId khỏi chuỗi FEC_Follow_Up_User__c (format: id1|R;id2|U;...)
+     */
+    private static String removeUsersFromFollowUpFieldValue(String currentValue, Set<Id> userIdsToRemove) {
+        if (String.isBlank(currentValue)) return FEC_ConstantCommon.STR_EMPTY;
+        if (userIdsToRemove == null || userIdsToRemove.isEmpty()) return currentValue;
+        List<String> entries = currentValue.split(FEC_ConstantCommon.FOLLOW_UP_FIELD_DELIMITER);
+        List<String> remaining = new List<String>();
+        for (String entry : entries) {
+            String entryTrim = entry.trim();
+            if (String.isBlank(entryTrim)) continue;
+            Integer pipeIdx = entryTrim.indexOf(FEC_ConstantCommon.KEY_DELIMITER_PIPE);
+            String partUserId = pipeIdx >= 0 ? entryTrim.substring(0, pipeIdx) : entryTrim;
+            String shortId = partUserId.length() > 15 ? partUserId.substring(0, 15) : partUserId;
+            Boolean shouldRemove = false;
+            for (Id rid : userIdsToRemove) {
+                String sid = String.valueOf(rid);
+                if (partUserId == sid || shortId == sid
+                    || (sid.length() >= 15 && partUserId == sid.substring(0, 15))
+                    || (sid.length() >= 15 && shortId == sid.substring(0, 15))) {
+                    shouldRemove = true;
+                    break;
+                }
+            }
+            if (!shouldRemove) remaining.add(entryTrim);
+        }
+        return remaining.isEmpty() ? FEC_ConstantCommon.STR_EMPTY : String.join(remaining, FEC_ConstantCommon.FOLLOW_UP_FIELD_DELIMITER);
     }
     
     /**
