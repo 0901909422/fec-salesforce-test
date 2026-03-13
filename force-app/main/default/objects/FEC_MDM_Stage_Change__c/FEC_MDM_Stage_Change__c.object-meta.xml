@@ -12,4 +12,5 @@
     <pluralLabel>FEC MDM Stage Changes</pluralLabel>
     <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>
+    <enableHistory>true</enableHistory>
 </CustomObject>

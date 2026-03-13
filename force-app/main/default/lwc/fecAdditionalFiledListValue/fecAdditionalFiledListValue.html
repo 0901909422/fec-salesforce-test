@@ -34,22 +34,23 @@
                     <lightning-record-edit-form object-api-name={OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE}
                          record-id={listValueRecordIdForEdit} onsubmit={handleSubmit} onsuccess={handleFormSuccess} onerror={handleFormError} oncancel={closeAddEditModal}>
 
-                        <lightning-messages></lightning-messages>
-
                         <!-- Code Field - Readonly on Edit, Required -->
                         <lightning-input-field
                             field-name={FIELD_CODE}
+                            required
                             read-only={listValueRecordIdForEdit}>
                         </lightning-input-field>
 
                         <!-- Name EN - Required -->
                         <lightning-input-field
-                            field-name={FIELD_NAME}>
+                            field-name={FIELD_NAME}
+                            required>
                         </lightning-input-field>
 
                         <!-- Name VN - Required -->
                         <lightning-input-field
-                            field-name={FIELD_NAME_VN}>
+                            field-name={FIELD_NAME_VN}
+                            required>
                         </lightning-input-field>
 
                         <!-- Order -->
@@ -63,7 +64,8 @@
                         </template>
                         <template if:true={listValueRecordIdForEdit}>
                             <lightning-input-field
-                                field-name={FIELD_ORDER}>
+                                field-name={FIELD_ORDER}
+                                required>
                             </lightning-input-field>
                         </template>
 

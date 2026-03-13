@@ -186,11 +186,45 @@ export default class FecAdditionalFiledListValue extends LightningElement {
     }
 
     handleFormError(event) {
-        let message = 'Lỗi khi lưu dữ liệu';
-        if (event && event.detail && event.detail.message) {
-            message = event.detail.message;
+        event.preventDefault(); // Ngăn chặn thông báo lỗi default của Salesforce "Sorry to interrupt"
+        this.isLoading = false;
+        
+        // Ngăn chặn component lightning-messages tự động hiển thị lỗi xấu từ API
+        const messagesCmp = this.template.querySelector('lightning-messages');
+        if (messagesCmp) {
+            messagesCmp.clear();
         }
-        this.showToast('Error', message, 'error');
+
+        let errorMessage = 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+        const detailMsg = event.detail?.message || '';
+        const detailDetail = event.detail?.detail || '';
+        const outputMsg = event.detail?.output?.errors?.[0]?.message || '';
+        // Extract field error messages if present
+        let fieldErrorMsg = '';
+        if (event.detail?.output?.fieldErrors) {
+            for (let field in event.detail.output.fieldErrors) {
+                const fErrors = event.detail.output.fieldErrors[field];
+                if (fErrors && fErrors.length > 0) {
+                    fieldErrorMsg += fErrors.map(e => e.message).join('; ');
+                }
+            }
+        }
+        
+        const fullMessage = detailMsg + ' ' + detailDetail + ' ' + outputMsg + ' ' + fieldErrorMsg;
+
+        if (fullMessage.includes('DUPLICATE_VALUE') || fullMessage.includes('duplicate value found')) {
+            errorMessage = 'Mã Code này đã tồn tại. Vui lòng nhập Code khác.';
+        } else if (fullMessage.includes('FIELD_CUSTOM_VALIDATION_EXCEPTION')) {
+            errorMessage = detailDetail || detailMsg || outputMsg || fieldErrorMsg;
+        } else if (fieldErrorMsg) {
+            errorMessage = fieldErrorMsg;
+        } else if (outputMsg) {
+            errorMessage = outputMsg;
+        } else if (detailMsg) {
+            errorMessage = detailMsg;
+        }
+
+        this.showToast('Lỗi', errorMessage, 'error');
     }
 
     async confirmDelete() {
