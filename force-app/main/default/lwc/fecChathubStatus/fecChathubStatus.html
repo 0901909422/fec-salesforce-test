@@ -1,14 +1,12 @@
 <template>
-    <div class="slds-p-left_small" if:false={isHidden}>
-        <lightning-combobox
-            name="progress"
-            label="Agent Status"
-            value={value}
-            placeholder="Select Status"
-            options={options}
-            onchange={handleChange}
-            variant="label-hidden"
-            class="slds-size_medium"
-        ></lightning-combobox>
+    <div class="slds-p-around_medium" style="background: white; height: 100%;">
+        <template if:true={agentStatuses}>
+            <lightning-combobox name="agentStatus" label="Trạng thái hiện tại" value={selectedStatus}
+                options={agentStatuses} onchange={handleStatusChange}>
+            </lightning-combobox>
+        </template>
+        <template if:false={agentStatuses}>
+            <p class="slds-text-color_weak">Đang chờ dữ liệu từ hệ thống...</p>
+        </template>
     </div>
 </template>
