@@ -47,14 +47,42 @@ const COLUMNS = [
     }
 ];
 
-export default class FecChannelManager extends LightningElement {
+export default class FecChannelSession extends LightningElement {
     @track channels = [];
     @track filteredChannels = [];
-    @track selectedId; // null = Add Mode, has ID = Edit Mode
+    @track selectedId = ''; // QUAN TRỌNG: Khởi tạo chuỗi rỗng để @wire không bị chặn vì undefined
     @track showForm = false;
     @track sortBy;
     @track sortDirection;
     @track searchTerm = '';
+
+    // --- BỔ SUNG STATE CHO TÍNH NĂNG TOGGLE HISTORY ---
+    @track isHistoryVisible = false; // Mặc định ĐÓNG panel History khi mới vào trang
+
+    // Getter tính toán kích thước cột chính (Left Panel)
+    get mainPanelSize() {
+        return this.isHistoryVisible ? 9 : 12;
+    }
+
+    // UX: Icon cái đồng hồ trực quan khi đóng, đổi thành dấu X khi mở
+    get toggleHistoryIcon() {
+        return this.isHistoryVisible ? 'utility:close' : 'utility:history';
+    }
+
+    get toggleTitle() {
+        return this.isHistoryVisible ? 'Đóng Lịch sử' : 'Xem Lịch sử';
+    }
+
+    // UX: Call to Action rõ ràng (Đổi chữ linh hoạt)
+    get toggleHistoryLabel() {
+        return this.isHistoryVisible ? 'Đóng Lịch sử' : 'Xem Lịch sử';
+    }
+
+    // Getter thay đổi variant nút bấm
+    get toggleButtonVariant() {
+        return this.isHistoryVisible ? 'neutral' : 'brand-outline';
+    }
+
     columns = COLUMNS;
     wiredResult;
 
@@ -69,6 +97,11 @@ export default class FecChannelManager extends LightningElement {
     fieldName = FIELD_NAME;
     fieldChannelVnName = FIELD_CHANNEL_VN_NAME;
     fieldChannelStatus = FIELD_CHANNEL_STATUS;
+
+    // --- TIỆN ÍCH LOG ---
+    showLogCustom(methodName, message) {
+        console.log(`[fecChannelSession][${methodName}]: ${message}`);
+    }
 
     get defaultChannelStatus() {
         // Return true for new records, undefined for existing records to allow form to load value
@@ -93,7 +126,7 @@ export default class FecChannelManager extends LightningElement {
         this.wiredResult = result;
         if (result.data) {
             this.channels = result.data;
-            this.applySearch(); // Apply search filter after data loads
+            this.applySearch(); // Quan trọng: Đổ data mới nhất ra UI
             showLog('Load Channels Success', result.data);
         } else if (result.error) {
             showLog('Load Channels Error', result.error);
@@ -132,22 +165,72 @@ export default class FecChannelManager extends LightningElement {
         }
     }
 
-    async handleSuccess() {
-        this.showToast(LABEL_TOAST_SAVE_SUCCESS, '', VARIANT_SUCCESS);
-        this.selectedId = null;
+    // --- HÀM XỬ LÝ CLICK TOGGLE ---
+    handleToggleHistory() {
+        this.showLogCustom('handleToggleHistory', 'START');
+        this.isHistoryVisible = !this.isHistoryVisible;
+        
+        /* ĐÃ XÓA đoạn mã setTimeout gọi refreshHistoryPanel() ở đây.
+           Bởi vì: Khi this.isHistoryVisible = true, thẻ <c-fec-config-history> mới được đưa vào DOM.
+           Lúc này, @wire bên trong nó sẽ tự động nhận giá trị selectedId (là '' hoặc ID thực) và tự gọi server lần đầu tiên rất chuẩn xác.
+        */
+    }
+
+    // --- BỔ SUNG HÀM REFRESH HISTORY ---
+    refreshHistoryPanel() {
+        this.showLogCustom('refreshHistoryPanel', 'START');
+        // Tìm component history thông qua data-id
+        const historyComp = this.template.querySelector('[data-id="historyComponent"]');
+        if (historyComp) {
+            // Gọi hàm được @api expose bên trong fecConfigHistory
+            historyComp.refreshData();
+            this.showLogCustom('refreshHistoryPanel', 'Triggered refreshData on child component');
+        }
+    }
+
+    async handleSuccess(event) {
+        this.showLogCustom('handleSuccess', 'START');
+        
+        // 1. Hiển thị thông báo thành công
+        const evt = new ShowToastEvent({
+            title: 'Thành công',
+            message: 'Bản ghi đã được lưu thành công.',
+            variant: 'success',
+        });
+        this.dispatchEvent(evt);
+        
+        // 2. Đóng form và reset ID về chuỗi rỗng
+        this.selectedId = '';
         this.showForm = false;
-        await refreshApex(this.wiredResult);
+        
+        // 3. Quan trọng nhất: Gọi refreshApex để cập nhật Datatable
+        try {
+            await refreshApex(this.wiredResult);
+            this.showLogCustom('handleSuccess', 'refreshApex completed');
+        } catch(error) {
+            console.error('Error refreshing apex:', error);
+        }
+        
+        // 4. Refresh History Panel nếu nó đang mở
+        if (this.isHistoryVisible) {
+            this.refreshHistoryPanel();
+        }
     }
 
     async handleCancel() {
-        this.selectedId = null;
+        this.selectedId = '';
         this.showForm = false;
         await refreshApex(this.wiredResult);
     }
 
     async handleDelete(id) {
+        this.showLogCustom('handleDelete', 'START with ID: ' + id);
         if (!id) {
-            this.showToast(LABEL_TOAST_ERROR_GENERIC, LABEL_ERROR_INVALID_RECORD_ID, VARIANT_ERROR);
+            this.dispatchEvent(new ShowToastEvent({
+                title: LABEL_TOAST_ERROR_GENERIC,
+                message: LABEL_ERROR_INVALID_RECORD_ID,
+                variant: 'error'
+            }));
             return;
         }
         // Show confirmation dialog and disable UI during delete operation
@@ -155,11 +238,28 @@ export default class FecChannelManager extends LightningElement {
             try {
                 this.showSpinner = true; // Add spinner to indicate processing
                 await deleteChannel({ recordId: id });
-                this.showToast(LABEL_TOAST_DELETE_SUCCESS, '', VARIANT_SUCCESS);
+                
+                // Hiển thị thông báo xóa thành công
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Thành công',
+                    message: 'Đã xóa bản ghi.',
+                    variant: 'success'
+                }));
+                
+                // Refresh Datatable
                 await refreshApex(this.wiredResult);
+                
+                // Refresh History Panel
+                if(this.isHistoryVisible) {
+                    this.refreshHistoryPanel();
+                }
             } catch (error) {
                 const msg = error?.body?.message || LABEL_TOAST_ERROR_GENERIC;
-                this.showToast(LABEL_TOAST_ERROR_GENERIC, msg, VARIANT_ERROR);
+                this.dispatchEvent(new ShowToastEvent({
+                    title: LABEL_TOAST_ERROR_GENERIC,
+                    message: msg,
+                    variant: 'error'
+                }));
             } finally {
                 this.showSpinner = false; // Hide spinner after operation
             }
@@ -179,7 +279,7 @@ export default class FecChannelManager extends LightningElement {
             if (errorMsg.includes('required') || errorMsg.includes('required_field_missing')) {
                 userMessage = 'Please fill in all required fields (Name, Channel ID, Channel Name VN, Status).';
             } else if (errorMsg.includes('duplicate') || errorMsg.includes('duplicate_value')) {
-                userMessage = 'This Channel ID or Name already exists. Please use a different value.';
+                userMessage = 'This Channel ID already exists. Please use a different value.';
             } else if (errorMsg.includes('invalid') || errorMsg.includes('invalid_field_value')) {
                 userMessage = 'One or more fields contain invalid data. Please check and try again.';
             } else if (errorMsg.includes('update') && errorMsg.includes('failed')) {
@@ -193,11 +293,7 @@ export default class FecChannelManager extends LightningElement {
             }
         }
         
-        this.showToast(LABEL_TOAST_ERROR_GENERIC, userMessage, VARIANT_ERROR);
-    }
-
-    showToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+        this.dispatchEvent(new ShowToastEvent({ title: LABEL_TOAST_ERROR_GENERIC, message: userMessage, variant: VARIANT_ERROR }));
     }
 
     // Sort handler

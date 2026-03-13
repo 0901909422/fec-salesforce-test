@@ -5,7 +5,7 @@
     <externalId>false</externalId>
     <label>Condition Logic</label>
     <length>255</length>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Text</type>
     <unique>false</unique>
