@@ -77,6 +77,7 @@
 		<members>FEC_CaseTriggerHandler</members>
 		<members>FEC_InteractionRoutingController</members>
 		<members>FEC_InteractionRoutingService</members>
+		<members>FEC_ConstantCommon</members>
         <name>ApexClass</name>
     </types>
 	<types>
