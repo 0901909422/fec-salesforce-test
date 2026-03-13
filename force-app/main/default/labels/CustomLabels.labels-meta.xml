@@ -8023,18 +8023,18 @@
         <value>Không tìm thấy kết quả</value>
     </labels>
     <labels>
-        <fullName>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC CREATE CS CASE SUCCESSFULLY MSG</shortDescription>
-        <value>Case created successfully.</value>
-    </labels>
-    <labels>
         <fullName>FEC_Case_Created_By_Label</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Case_Created_By_Label</shortDescription>
         <value>Case Created By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CREATE CS CASE SUCCESSFULLY MSG</shortDescription>
+        <value>Case created successfully.</value>
     </labels>
     <labels>
         <fullName>FEC_Case_Created_On_Label</fullName>
