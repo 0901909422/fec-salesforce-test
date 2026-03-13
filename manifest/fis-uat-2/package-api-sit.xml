@@ -17,6 +17,7 @@
 		<members>FEC_GetMRCInfo</members>
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_TranferInformationCallout</members>
+		<members>FEC_CommonUltils</members>
         <name>ApexClass</name>
     </types>
     <types>
