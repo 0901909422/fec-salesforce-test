@@ -55,11 +55,12 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
     public static final String STR_NA = 'N/A';
     public static final String CHANNEL_EXTERNAL = 'External';
-
+    public static final String CHANNEL_INTERNAL = 'Internal';
+    
     public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';
     public static final String CHANNEL_OUTBOUND_SUBCHANNEL_NAME = 'Outbound Call';
     public static final String CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME = 'Other';
-
+    
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
     public static final String PATTERN_APPLICATION_ID = '^(\\d{6}|\\d{8}|\\d{9})$';
@@ -176,7 +177,16 @@ public with sharing class FEC_ConstantCommon {
     
     public static final String EMAIL = 'Email';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
-
+    
     public static final String UPLOAD_DOCUMENT = 'UploadDocument';
     public static final String CASE_STATUS_ERROR = 'ERROR';
+    
+    
+    public static final String SYSTEM_SOURCE_VTIGER   = 'VTiger';
+    public static final String SYSTEM_SOURCE_ISALE    = 'iSale';
+    public static final String SYSTEM_SOURCE_ICOLLECT = 'iCollect';
+    
+    public static final String SYSTEM_SOURCE_WEBSITE  = 'Website';
+    public static final String SYSTEM_SOURCE_FEOL     = 'FEOL';
+    public static final String SYSTEM_SOURCE_ZALO     = 'Zalo';
 }
