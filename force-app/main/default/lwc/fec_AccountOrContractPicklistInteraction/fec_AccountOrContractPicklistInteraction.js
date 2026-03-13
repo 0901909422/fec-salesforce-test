@@ -161,7 +161,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
           product: item.productType,
           accountContractNumber: item.accountContractNumber,
           productName: item.productName,
-          isSelected: false,
+          isSelected: item.accountContractNumber === this.selectedValue
         }));
 
         mappedData.push({
@@ -169,7 +169,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
           product: UBANK_PRODUCT_NAME,
           accountContractNumber: UBANK_PRODUCT_NAME,
           productName: UBANK_PRODUCT_NAME,
-          isSelected: false,
+          isSelected: UBANK_PRODUCT_NAME === this.selectedValue
         });
         console.log("Mapped Data:", mappedData);
         this.data = mappedData;
