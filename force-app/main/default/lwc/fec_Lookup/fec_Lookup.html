@@ -137,8 +137,8 @@
 
             <!-- Errors start -->
             <template for:each={errors} for:item="error">
-                <label key={error.id} role="alert" style="color: rgb(182, 5, 84);margin-top: 0;font-size: 0.75rem;font-weight: 400;"
-                class="slds-form-element__label slds-m-top_xx-small form-error">{error.message}</label>
+                <label key={error.id} role="alert"
+                class="slds-form-element__label slds-m-top_xx-small form-error error">{error.message}</label>
                 
             </template>
             <!-- Errors end -->
