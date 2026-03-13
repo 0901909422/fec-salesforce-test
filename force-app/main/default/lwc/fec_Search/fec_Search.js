@@ -1029,7 +1029,8 @@ hasAnySearchCriteria(params) {
           searchProducts: searchProducts,
           selectedType: action.type,
           cifNumber: cifNumber,
-          phone: row?.Phone
+          phone: row?.Phone,
+          customerName: row?.FullName
         })
           .then(async (res) => {
             // const payload = {

@@ -118,11 +118,6 @@
                 <span class="value">{createdOn}</span>
                 <span></span>
               </div>
-              <div class="row">
-                <span class="label">{labels.interactionCreatedBy}</span>
-                <span class="value">{createdBy}</span>
-                <span></span>
-              </div>
               <template if:true={showField}>
                 <div class="row">
                   <span class="label">{labels.outcomeCode}</span>
@@ -151,8 +146,11 @@
                 <span class="value">{externalId}</span>
                 <span></span>
               </div>
-
-
+              <div class="row">
+                <span class="label">{labels.interactionCreatedBy}</span>
+                <span class="value">{createdBy}</span>
+                <span></span>
+              </div>
               <template if:true={showField}>
                 <div class="row">
                   <span class="label">{labels.remarks}</span>

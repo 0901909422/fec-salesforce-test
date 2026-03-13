@@ -1,5 +1,12 @@
 public without sharing class FEC_FileActionOnReviewService {
+  /** Giới hạn dung lượng file đơn (2GB) khi upload, đơn vị byte. */
+  public static final Long MAX_FILE_SIZE_BYTES = 2L * 1024 * 1024 * 1024;
   public static final String ERROR_FILE_ACTION_IN_REVIEW = 'Cannot perform this action on the file while the Case is in Review mode.';
+  public static final String ERROR_FILE_DELETE_STAGE_MISMATCH = 'Cannot delete file: Case must be in the same stage as when the file was attached.';
+  /** Thông báo khi upload file đơn vượt quá 2GB. */
+  public static final String ERROR_FILE_SIZE_EXCEEDS_2GB = 'Dung lượng file vượt quá 2GB. Hệ thống không cho phép upload file có dung lượng lớn hơn 2GB.';
+  /** Thông báo khi tổng file gắn Case vượt 2GB (file không được gắn). */
+  public static final String ERROR_CASE_FILE_TOTAL_EXCEEDS_2GB = 'Tổng dung lượng file gắn Case không được vượt quá 2GB. File này không được gắn vào Case.';
 
   // Trả về Set Case Id đang ở trạng thái chặn thao tác file (review hoặc Interaction không handling).
   public static Set<Id> getCaseIdsThatBlockFileActions(Set<Id> caseIds) {
