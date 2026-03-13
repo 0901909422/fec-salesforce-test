@@ -1981,5 +1981,11 @@
 		<name>ValidationRule</name>
 	</types>
 
+	<!-- additional -->
+	<types>
+		<members>ContentVersion.FEC_Stage_ID__c</members>
+        <name>CustomField</name>
+    </types>
+
     <version>65.0</version>
 </Package>
