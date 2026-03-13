@@ -155,12 +155,6 @@ public with sharing class FEC_GetRemovablePhoneStatus {
     }
   }
 
-  /**
-   * Trả về ResponseLog để controller gọi FEC_CommonUltils.logApi sau khi call xong API.
-   */
-  public static ResponseLog getResponseLog() {
-    return responseLog;
-  }
 
   // ==========================================
   // PARSE RESPONSE
