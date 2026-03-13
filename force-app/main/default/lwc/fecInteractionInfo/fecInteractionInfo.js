@@ -26,7 +26,7 @@ import FEC_INTERACTION_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_C
 import FEC_INTERACTION_SUB_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_Sub_Channel_Label";
 import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interaction_Information_Label";
 
-import { formatDateTime } from 'c/fec_CommonUtils';
+import { formatDateTime } from "c/fec_CommonUtils";
 
 export default class FecInteractionInfo extends LightningElement {
   labels = {
@@ -139,6 +139,11 @@ export default class FecInteractionInfo extends LightningElement {
     return this.recordTypeDevName === "Interaction";
   }
 
+  get isInteractionClosed() {
+    if (this.record?.FEC_Interaction_Status__c === "Closed") return true;
+    return false;
+  }
+
   get isCustomerCase() {
     return this.recordTypeDevName === "Customer_Case";
   }
@@ -148,7 +153,7 @@ export default class FecInteractionInfo extends LightningElement {
   }
 
   get showField() {
-    return this.isReview && this.isClosed;
+    return this.isReview && this.isInteractionClosed;
   }
 
   get hasPhone() {

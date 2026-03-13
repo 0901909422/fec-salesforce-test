@@ -52,6 +52,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_ZALO = 'ZALO';
     public static final String CHANNEL_WEBSITE = 'WEBSITE';
     public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
+    public static final String CHANNEL_EXTERNAL = 'External';
+    public static final String CHANNEL_INTERNAL = 'Internal';
     public static final String STR_NA = 'N/A';
     
     public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';

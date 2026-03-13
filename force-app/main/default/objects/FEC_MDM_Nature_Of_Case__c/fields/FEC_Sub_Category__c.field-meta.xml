@@ -8,7 +8,7 @@
     <relationshipLabel>Nature of Case MDM</relationshipLabel>
     <relationshipName>FEC_NatureOfCaseSubCategory</relationshipName>
     <required>false</required>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

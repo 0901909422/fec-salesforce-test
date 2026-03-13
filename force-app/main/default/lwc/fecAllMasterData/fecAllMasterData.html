@@ -46,9 +46,33 @@
                     <lightning-datatable key-field="Id" data={data.AdditionalFieldList}
                         columns={columnsSetting}></lightning-datatable>
                 </lightning-tab>
-                <lightning-tab label={labelTabCaseStage}>
-                    <lightning-datatable key-field="Id" data={data.CaseStage}
-                        columns={columnsStage}></lightning-datatable>
+                <lightning-tab label={labelTabCaseStage} value="CaseStage">
+                    <lightning-datatable
+                        key-field="Id"
+                        data={data.CaseStage}
+                        columns={columnsStage}
+                        hide-checkbox-column>
+                    </lightning-datatable>
+                </lightning-tab>
+
+                <!-- 10. Action Button -->
+                <lightning-tab label={labelTabActionButton} value="ActionButton">
+                    <lightning-datatable
+                        key-field="Id"
+                        data={data.ActionButton}
+                        columns={columnsActionButton}
+                        hide-checkbox-column>
+                    </lightning-datatable>
+                </lightning-tab>
+
+                <!-- 11. Stage Change -->
+                <lightning-tab label={labelTabStageChange} value="StageChange">
+                    <lightning-datatable
+                        key-field="Id"
+                        data={data.StageChange}
+                        columns={columnsStageChange}
+                        hide-checkbox-column>
+                    </lightning-datatable>
                 </lightning-tab>
             </lightning-tabset>
         </div>

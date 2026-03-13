@@ -88,7 +88,6 @@ public with sharing class FEC_CreateCaseInteractionController {
       newCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
       newCase.FEC_Interaction__c = interaction.Id;
       newCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
-      newCase.FEC_Customer_Name__c = interaction.FEC_Account_or_Contract__r?.FEC_Customer_Name__c;
       newCase.FEC_Product_Type__c = interaction.FEC_Product_Type__c;
 
       insert newCase;
@@ -97,6 +96,13 @@ public with sharing class FEC_CreateCaseInteractionController {
         FEC_Case__c = newCase.Id
         );
       insert newInfo;
+
+      FEC_Customer_History__c rec = new FEC_Customer_History__c();
+      rec.FEC_Customer_Type__c = 'Non-existing';
+      rec.FEC_Customer_Name__c = customerName;
+      rec.FEC_Case__c = newCase.Id;
+
+        insert rec;
       
       return newCase.Id;
     } catch (Exception e) {

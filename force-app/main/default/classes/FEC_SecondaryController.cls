@@ -27,6 +27,7 @@ public without sharing class FEC_SecondaryController {
         @AuraEnabled public String channel;
         @AuraEnabled public String communicationType;
         @AuraEnabled public String contactString;
+        @AuraEnabled public String contactId;
     }
 
     public class SecondaryInfoDTO {
@@ -67,7 +68,8 @@ public without sharing class FEC_SecondaryController {
                    FEC_Zalo_Follower__c,
                    FEC_Website_Account__c,
                    FEC_Mobile_App_Account__c,
-                   FEC_API_Cache_Secondary_Demo__c
+                   FEC_API_Cache_Secondary_Demo__c,
+                   FEC_Work_Phone__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
@@ -96,8 +98,8 @@ public without sharing class FEC_SecondaryController {
         try {
             FEC_GetDigitalAccountStatus.ResponseWrapper digitalRes =
                 FEC_GetDigitalAccountStatus.callGetDigitalAccountStatus(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
                     hist.FEC_Work_Phone__c,
                     hist.FEC_CIF_Number__c
@@ -105,13 +107,13 @@ public without sharing class FEC_SecondaryController {
 
             if (digitalRes != null && digitalRes.DigitalAccounts != null) {
                 hist.FEC_Zalo_Follower__c =
-                    getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_ZALO);
+                    FEC_CommonUltils.normalizeInsuranceFlag(getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_ZALO));
 
                 hist.FEC_Website_Account__c =
-                    getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_WEBSITE);
+                    FEC_CommonUltils.normalizeInsuranceFlag(getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_WEBSITE));
 
                 hist.FEC_Mobile_App_Account__c =
-                    getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_FE_MOBILE_APP);
+                    FEC_CommonUltils.normalizeInsuranceFlag(getStatusByType(digitalRes.DigitalAccounts, FEC_ConstantCommon.CHANNEL_FE_MOBILE_APP));
             }
         } catch (Exception e) {
             System.debug('### DigitalAccountStatus FAILED: ' + e.getMessage());
@@ -123,9 +125,9 @@ public without sharing class FEC_SecondaryController {
         try {
             FEC_GetCustomerInfoBasic.ResponseWrapper contactRes =
                 FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
-                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z),
                     hist.FEC_CIF_Number__c
                 );
 
@@ -142,7 +144,8 @@ public without sharing class FEC_SecondaryController {
                         FEC_Customer_History__c   = hist.Id,
                         FEC_Channel__c            = pc.Contact.Channel,
                         FEC_Communication_Type__c = pc.Contact.CommunicationType,
-                        FEC_Contact_String__c     = pc.Contact.ContactString
+                        FEC_Contact_String__c     = pc.Contact.ContactString,
+                        FEC_Contact_ID__c         = pc.Contact.ContactId
                     ));
                 }
             }
@@ -155,8 +158,8 @@ public without sharing class FEC_SecondaryController {
         try {
             relativesRes =
                 FEC_GetRelativesList.callGetRelativesList(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
                     hist.FEC_CIF_Number__c
                 );
@@ -277,7 +280,8 @@ public without sharing class FEC_SecondaryController {
         List<FEC_Contact_List__c> contactRecords = [
             SELECT FEC_Channel__c,
                 FEC_Communication_Type__c,
-                FEC_Contact_String__c
+                FEC_Contact_String__c,
+                FEC_Contact_ID__c
             FROM FEC_Contact_List__c
             WHERE FEC_Customer_History__c = :customerHistoryId
         ];
@@ -287,6 +291,7 @@ public without sharing class FEC_SecondaryController {
             dto.channel = c.FEC_Channel__c;
             dto.communicationType = c.FEC_Communication_Type__c;
             dto.contactString = c.FEC_Contact_String__c;
+            dto.contactId = c.FEC_Contact_ID__c;
             result.add(dto);
         }
 
