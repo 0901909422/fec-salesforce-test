@@ -31,6 +31,7 @@ import {
   getFocusedTabInfo,
   refreshTab,
 } from "lightning/platformWorkspaceApi";
+import { CurrentPageReference } from 'lightning/navigation';
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -70,6 +71,21 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   @wire(MessageContext)
   messageContext;
+
+  @wire(CurrentPageReference)
+  pageRef;
+
+  get tabName() {
+    return this.pageRef?.attributes?.apiName; // e.g. 'Customer_Search'
+  }
+
+  get tabLabel() {
+    return this.tabName == 'FEC_Account_Contract_Search' ? 'Account/Contract Search' : 'Customer Search';
+  }
+
+  get isAccountContractSearch() {
+    return this.tabName === 'FEC_Account_Contract_Search'; // your tab's API name
+  }
 
   @wire(IsConsoleNavigation) isConsoleNavigation;
   async refreshTab() {
