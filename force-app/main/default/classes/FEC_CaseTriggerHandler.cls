@@ -7,6 +7,7 @@ public without sharing class FEC_CaseTriggerHandler {
     
     // Trigger guard để tránh recursive
     private static Boolean isExecuting = false;
+    public static Boolean skipTrigger = false;
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -16,6 +17,10 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/16 - Added onAfterInsert handler for auto follow-up
      */
     public static void run() {
+        if (skipTrigger) {
+            return;
+        }
+
         FEC_CaseTriggerHandler handler = new FEC_CaseTriggerHandler();
         
         if (Trigger.isBefore && Trigger.isInsert) {
@@ -53,6 +58,7 @@ public without sharing class FEC_CaseTriggerHandler {
         updateCaseParticipantsOnInsert(newCases);
         syncChannelFromInteractionForCustomerCase(newCases);
         assignEntitlement(newCases);
+        setEmail2CaseChannelBeforeInsert(newCases);
     }
 
     /**
@@ -85,6 +91,7 @@ public without sharing class FEC_CaseTriggerHandler {
         
         try {
             handleAutoFollowUpOnInsert(newCases);
+            updateEmail2CaseFieldsOnInsert(newCases);
         } finally {
             isExecuting = false;
         }
@@ -298,6 +305,11 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/02/10 LongNH76
      */
       private void updateEmail2CaseFieldsOnInsert(List<Case> newCases) {
+        // Tận dụng cờ isExecuting (đã có sẵn) để chặn Trigger chạy lại hàm này nếu update kích hoạt lại
+        if (isExecuting) {
+            return;
+        }
+
         Id interactionRecordTypeId = getInteractionRecordTypeId();
         if (interactionRecordTypeId == null) {
             return;
@@ -347,7 +359,7 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
 
-        final String sendToValue = System.Label.UBankCustomberServiceEmail;
+        String sendToValue = System.Label.UBankCustomberServiceEmail;
 
         Map<Id, String> caseIdToFromAddress = new Map<Id, String>();
         for (EmailMessage em : [SELECT Id, ParentId, FromAddress, CreatedDate
@@ -374,7 +386,12 @@ public without sharing class FEC_CaseTriggerHandler {
         // assignCases(casesToDml);
 
         if (!casesToDml.isEmpty()) {
-            update casesToDml;
+            FEC_CaseTriggerHandler.skipTrigger = true;
+            try {
+                update casesToDml;
+            } finally {
+                FEC_CaseTriggerHandler.skipTrigger = false;
+            }
         }
     }
 
