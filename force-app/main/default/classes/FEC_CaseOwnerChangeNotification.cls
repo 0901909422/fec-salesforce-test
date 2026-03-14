@@ -1,16 +1,20 @@
 /**
- * Service gửi email thông báo khi Case được chuyển Owner (Change Owner từ Listview hoặc bất kỳ thao tác nào đổi OwnerId).
+ * Class Description: Service gửi email thông báo khi Case được chuyển Owner (Change Owner từ Listview hoặc bất kỳ thao tác nào đổi OwnerId).
  * Gửi tới: New Owner (User) - email của User, hoặc New Queue - Queue Email (nếu Queue có cấu hình Email).
- * @created 2026/03/14
+ * @created  : 2026/03/14
+ * @modified :
  */
 public without sharing class FEC_CaseOwnerChangeNotification {
 
     private static final Integer MAX_EMAILS_PER_CALL = 100;
 
     /**
-     * Gửi email thông báo tới New Owner (User email hoặc Queue Email) cho các Case có OwnerId thay đổi.
-     * @param newCases Trigger.new
-     * @param oldMap Trigger.oldMap
+     * Method Description: Gửi email thông báo tới New Owner (User email hoặc Queue Email) cho các Case có OwnerId thay đổi.
+     * @param newCases Danh sách Case mới (Trigger.new)
+     * @param oldMap Map chứa giá trị cũ của Case (Trigger.oldMap)
+     * @return void
+     * @created: 2026/03/14
+     * @modified:
      */
     public static void sendNotificationToNewOwner(List<Case> newCases, Map<Id, Case> oldMap) {
         if (newCases == null || oldMap == null) {
@@ -35,10 +39,9 @@ public without sharing class FEC_CaseOwnerChangeNotification {
         List<Id> userIds = new List<Id>();
         List<Id> queueIds = new List<Id>();
         for (Id ownerId : newOwnerIds) {
-            String prefix = String.valueOf(ownerId).substring(0, 3);
-            if (prefix == '005') {
+            if (ownerId.getSObjectType() == User.SObjectType) {
                 userIds.add(ownerId);
-            } else if (prefix == '00G') {
+            } else if (ownerId.getSObjectType() == Group.SObjectType) {
                 queueIds.add(ownerId);
             }
         }
@@ -96,6 +99,10 @@ public without sharing class FEC_CaseOwnerChangeNotification {
         }
     }
 
+    /**
+     * @description Lấy nội dung subject email từ Custom Label.
+     * @return Chuỗi subject (có placeholder {0} cho Case number)
+     */
     private static String getSubjectLabel() {
         try {
             return System.Label.FEC_Email_Subject_Case_Owner_Change;
@@ -104,6 +111,10 @@ public without sharing class FEC_CaseOwnerChangeNotification {
         }
     }
 
+    /**
+     * @description Lấy nội dung body email từ Custom Label.
+     * @return Chuỗi body (placeholder {0}: Case number, {1}: Case link)
+     */
     private static String getBodyLabel() {
         try {
             return System.Label.FEC_Email_Body_Case_Owner_Change;
@@ -112,6 +123,10 @@ public without sharing class FEC_CaseOwnerChangeNotification {
         }
     }
 
+    /**
+     * @description Lấy base URL của org.
+     * @return Base URL hoặc chuỗi rỗng nếu lỗi
+     */
     private static String getBaseUrl() {
         try {
             return System.URL.getOrgDomainUrl().toExternalForm();
