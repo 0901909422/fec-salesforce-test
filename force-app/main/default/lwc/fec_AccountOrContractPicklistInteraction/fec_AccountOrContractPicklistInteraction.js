@@ -135,7 +135,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     getInteractionAccountNumber({ caseId: this.recordId })
       .then((result) => {
         const data = JSON.parse(result);
-
+        console.log(data)
         console.log(data.accountNumber);
         console.log(data.cifNumber);
         this.selectedValue = data.accountNumber;
@@ -167,8 +167,8 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
         mappedData.push({
           id: String(mappedData.length + 1),
           product: UBANK_PRODUCT_NAME,
-          accountContractNumber: UBANK_PRODUCT_NAME,
-          productName: UBANK_PRODUCT_NAME,
+          accountContractNumber: null,
+          productName: null,
           isSelected: UBANK_PRODUCT_NAME === this.selectedValue
         });
         console.log("Mapped Data:", mappedData);
@@ -214,6 +214,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     this.selectedValue = row.accountContractNumber;
     this.createHistory();
     this.isOpen = false;
+    window.location.reload();
   }
 
   createHistory() {

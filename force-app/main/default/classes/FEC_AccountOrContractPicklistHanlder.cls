@@ -103,8 +103,10 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
         
         System.debug('Creating history with caseId: ' + caseId + ', selectedAccountContractNumber: ' + selectedAccountContractNumber + ', selectedType: ' + selectedType + ', cifNumber: ' + cifNumber);
         // Return early if no value or field name
-        if (selectedAccountContractNumber == null || selectedAccountContractNumber.trim() == '') {
-            throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
+        if(selectedType != FEC_ConstantCommon.PRODUCT_TYPE_UBANK){
+            if (selectedAccountContractNumber == null || selectedAccountContractNumber.trim() == '') {
+                throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
+            }
         }
         // Build record
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
@@ -118,8 +120,14 @@ public without sharing class FEC_AccountOrContractPicklistHanlder {
             rec.FEC_Card_Number__c = selectedAccountContractNumber;
         }
         
-        rec.Name = selectedAccountContractNumber;
-        rec.FEC_Account_Number__c = selectedAccountContractNumber;
+        if(selectedType != FEC_ConstantCommon.PRODUCT_TYPE_UBANK){
+            rec.Name = selectedAccountContractNumber;
+            rec.FEC_Account_Number__c = selectedAccountContractNumber;
+        }else{
+            rec.Name = FEC_ConstantCommon.PRODUCT_TYPE_UBANK;
+            rec.FEC_Account_Number__c = FEC_ConstantCommon.PRODUCT_TYPE_UBANK;
+        }
+        
         rec.FEC_Case__c = caseId;
         rec.FEC_Product_Code__c = selectedType;
         rec.FEC_CIF_Number__c = cifNumber;
