@@ -50,6 +50,7 @@ public without sharing class FEC_CreateCaseHanlder {
         public String customerName;
         public String phoneNumber;
         public String userType;
+        public String customerHistoryId;
         public String businessProcessId;
         public String productTypeId;
         public String categoryId;
@@ -106,9 +107,6 @@ public without sharing class FEC_CreateCaseHanlder {
         // ---------------------------
         interactionCase.FEC_Transcription__c = dto.transcription;
         interactionCase.FEC_KYC_Method__c = dto.kycMethod;
-        // interactionCase.FEC_KYC_Result__c = dto.kycResult;
-
-      
         
         insert interactionCase;
         
@@ -118,13 +116,50 @@ public without sharing class FEC_CreateCaseHanlder {
             WHERE Id = :interactionCase.Id
         ];
         
-        // if(dto.agentId != null && dto.agentId != '') {
-            //     System.debug('Assigning Agent ID: ' + dto.agentId + ' to User Id    : ' + interactionCase.OwnerId);
-            //     User userInfo = [SELECT Id, FEC_Agent_ID__c FROM User WHERE Id = :interactionCase.OwnerId];
-            //     userInfo.FEC_Agent_ID__c = dto.agentId;
-            //     update userInfo;
-        // }
+        FEC_InteractionCaseResponse res = new FEC_InteractionCaseResponse();
+        res.caseId = interactionCase.Id;
+        res.linkId = interactionCase.FEC_Link_ID__c;
         
+        if (res.linkId != null && res.linkId.contains('>')) {
+            res.caseNo = res.linkId.substringBetween('>', '</');
+        }
+        
+        return res;
+    }
+    
+    @AuraEnabled
+    public static FEC_InteractionCaseResponse createInteractionCaseManual(FEC_InteractionCaseDTO dto) {
+        
+        if (dto == null) {
+            throw new IllegalArgumentException(System.Label.FEC_MSG_Interaction_Case_DTO_Null);
+        }
+        Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+            .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+        Case interactionCase = new Case();
+        interactionCase.RecordTypeId = interactionRecordTypeId;
+        
+        // ---------------------------
+        // CHANNEL / STATUS
+        // ---------------------------
+        interactionCase.FEC_Channel__c = dto.channel;
+        interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
+        
+        
+        if (dto.channel == 'Chat') {
+            interactionCase.Status = 'Pending';
+        } else {
+            interactionCase.Status = 'Open';
+        }
+        interactionCase.FEC_Interaction_View_Mode__c  = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+        interactionCase.FEC_First_Access__c = true;
+        
+        insert interactionCase;
+        
+        interactionCase = [
+            SELECT Id, FEC_Link_ID__c, OwnerId
+            FROM Case
+            WHERE Id = :interactionCase.Id
+        ];
         
         FEC_InteractionCaseResponse res = new FEC_InteractionCaseResponse();
         res.caseId = interactionCase.Id;
@@ -151,7 +186,7 @@ public without sharing class FEC_CreateCaseHanlder {
         if( dto.type == FEC_ConstantCommon.CHANNEL_INBOUND_API ) {
             interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
             interactionCase.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.CHANNEL_INBOUND_SUBCHANNEL_NAME;
-
+            
         }else if ( dto.type == FEC_ConstantCommon.CHANNEL_OUTBOUND_API ) {
             interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
             interactionCase.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_SUBCHANNEL_NAME;
@@ -164,8 +199,8 @@ public without sharing class FEC_CreateCaseHanlder {
         interactionCase.FEC_National_ID_Passport_ID__c = dto.nationalId;
         interactionCase.FEC_Account_Number__c = dto.cardAccountNum;
         interactionCase.FEC_Contract_Number__c = dto.contractNum;
-          if(dto.method == 'Auto') {
-            interactionCase.FEC_Interaction_View_Mode__c  = 'handling';
+        if(dto.method == 'Auto') {
+            interactionCase.FEC_Interaction_View_Mode__c  = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         }
         insert interactionCase;
         
@@ -204,6 +239,7 @@ public without sharing class FEC_CreateCaseHanlder {
         c.FEC_Customer_Name__c = dto.customerName;
         c.FEC_Phone_Number__c = dto.phoneNumber;
         c.FEC_Customer_Type__c = dto.userType;
+        c.FEC_Account_or_Contract__c = dto.customerHistoryId;
         c.FEC_Business_Process__c = dto.businessProcessId;
         c.FEC_Product_Type__c = dto.productTypeId;
         c.FEC_Category__c = dto.categoryId;
