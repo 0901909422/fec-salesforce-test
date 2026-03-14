@@ -3,7 +3,7 @@
     <types>
         <members>FEC_ConstantCommon</members>
         <members>FEC_InteractionHighlightController</members>
-        <members>FEC_AccountOrContractPicklistHanlder</members>
+        <members>FEC_AccountOrContractPicklistHandler</members>
         <members>FEC_ClickToCallHandler</members>
         <members>FEC_CommonUltils</members>
         <members>FEC_InteractionInforHandler</members>
