@@ -6,7 +6,7 @@
  */
 public without sharing class FEC_CaseOwnerChangeNotification {
 
-    private static final Integer MAX_EMAILS_PER_CALL = 100;
+    private static final Integer MAX_EMAILS_PER_CALL = 10;
 
     /**
      * Method Description: Gửi email thông báo tới New Owner (User email hoặc Queue Email) cho các Case có OwnerId thay đổi.
@@ -86,15 +86,15 @@ public without sharing class FEC_CaseOwnerChangeNotification {
                     emails.add(mail);
                 }
             }
-            if (emails.size() >= MAX_EMAILS_PER_CALL) {
-                break;
-            }
         }
-        if (!emails.isEmpty()) {
+        // Gửi theo từng batch để không vượt governor limit (10 email/lần gọi trong sync)
+        for (Integer i = 0; i < emails.size(); i += MAX_EMAILS_PER_CALL) {
+            Integer endIndex = Math.min(i + MAX_EMAILS_PER_CALL, emails.size());
+            List<Messaging.SingleEmailMessage> batch = emails.subList(i, endIndex);
             try {
-                Messaging.sendEmail(emails);
+                Messaging.sendEmail(batch);
             } catch (Exception e) {
-                System.debug('FEC_CaseOwnerChangeNotification.sendNotificationToNewOwner failed: ' + e.getMessage());
+                System.debug('FEC_CaseOwnerChangeNotification.sendNotificationToNewOwner batch failed: ' + e.getMessage());
             }
         }
     }
