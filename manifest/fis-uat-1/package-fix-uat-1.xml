@@ -43,6 +43,10 @@
         <members>FEC_EmeaAccountInqService</members>
         <members>FEC_SecondaryController</members>
 		<members>FEC_UpdateCustomerContact</members>
+		<members>FEC_ContentDocumentLinkTriggerHandler</members>
+		<members>FEC_ContentDocumentTriggerHandler</members>
+		<members>FEC_ContentVersionTriggerHandler</members>
+		<members>FEC_FileActionOnReviewService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -80,6 +84,11 @@
 		<members>fec_CaseRemarks</members>
 		<members>fec_WatchersInformation</members>
 		<members>fec_CommonDetailView</members>
+		<members>fecRelevantCaseCard</members>
+		<members>fecRelevantInteractionCard</members>
+		<members>fecRelevantInteractionCase</members>
+		<members>fec_StatementsAccount</members>
+		<members>fec_InteractionCreateCase</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -92,7 +101,9 @@
         <members>Case.FEC_Get_Next_Work__c</members>
 		<members>Case.FEC_Interaction_View_Mode__c</members>
 		<members>Case.FEC_Account_Contract_Number_PL__c</members>
+		<members>Case.FEC_Case_Created_By__c</members>
 		<members>FEC_Contact_List__c.FEC_Contact_ID__c	</members>
+		<members>ContentVersion.FEC_Stage_ID__c</members>
         <name>CustomField</name>
     </types>
 	<types>
