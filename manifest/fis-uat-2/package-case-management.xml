@@ -53,6 +53,7 @@
 		<members>fec_Asset</members>
 		<members>fec_MRC</members>
 		<members>fec_GenesysSoftphone</members>
+		<members>fec_Search</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -64,6 +65,7 @@
 		<members>FEC_CaseTriggerHandler</members>
 		<members>FEC_InteractionRoutingController</members>
 		<members>FEC_InteractionRoutingService</members>
+		<members>FEC_SearchController</members>
         <name>ApexClass</name>
     </types>
     <version>65.0</version>
