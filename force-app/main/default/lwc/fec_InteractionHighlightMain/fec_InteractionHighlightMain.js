@@ -35,6 +35,7 @@ import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import CUSTOMER_TYPE from "@salesforce/schema/Case.FEC_Customer_Type__c";
 import {
+  DIV_ELEMENT,
   RECORD_TYPE_INTERACTION,
   RECORD_TYPE_CUSTOMER_CASE,
   RECORD_TYPE_INTERNAL_CASE,
@@ -247,21 +248,10 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     if (this.isInternalCase) {
       return false;
     }
-    if (this.isInteractionCase) {
-      if (this.hasAccountOrContract) {
-        return true;
-      } else {
-        // Nếu là Interaction nhưng không có Account hoặc Contract liên kết
-        return false;
-      }
-    } else if (this.isCustomerCase) {
-      // Customer Case: hiển thị highlight khi đang handling và có Customer History hoặc Account/Contract liên kết (bao gồm Non-Existing có ghi nhận Customer History)
-      if (this.isHandling && this.hasAccountOrContract) {
-        return true;
-      } else {
-        return false;
-      }
+    if (this.isInteractionCase || this.isCustomerCase) {
+      return true;
     }
+    return false;
   }
   // ===============================
   // RESET VIEW MODE (ONE TIME ONLY)
