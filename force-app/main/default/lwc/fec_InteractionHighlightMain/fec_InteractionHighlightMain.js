@@ -32,11 +32,13 @@ import FEC_EXECUTE_LABEL from "@salesforce/label/c.FEC_Execute_Label";
 import FEC_CREATE_CASE_BTN_LABEL from "@salesforce/label/c.FEC_Create_Case_Btn_Label";
 import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
 
-import { urlCmpWithRecordId } from "c/fec_CommonUtils";
-import { DIV_ELEMENT } from "c/fec_CommonConst";
-
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import CUSTOMER_TYPE from "@salesforce/schema/Case.FEC_Customer_Type__c";
+import {
+  RECORD_TYPE_INTERACTION,
+  RECORD_TYPE_CUSTOMER_CASE,
+  RECORD_TYPE_INTERNAL_CASE,
+} from "c/fec_CommonConst";
 
 export default class Fec_InteractionHighlightMain extends NavigationMixin(
   LightningElement,
@@ -220,12 +222,17 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   }
 
   get isInteractionCase() {
-    return this.recordTypeDevName === "Interaction";
+    return this.recordTypeDevName === RECORD_TYPE_INTERACTION;
   }
 
   get isCustomerCase() {
-    return this.recordTypeDevName === "Customer_Case";
+    return this.recordTypeDevName === RECORD_TYPE_CUSTOMER_CASE;
   }
+
+  get isInternalCase() {
+    return this.recordTypeDevName === RECORD_TYPE_INTERNAL_CASE;
+  }
+
   get createCaseSourceId() {
     // Nếu là Interaction → dùng record hiện tại
     if (this.isInteractionCase) {
@@ -237,6 +244,9 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   }
 
   get showHighlight() {
+    if (this.isInternalCase) {
+      return false;
+    }
     if (this.isInteractionCase) {
       if (this.hasAccountOrContract) {
         return true;
@@ -245,8 +255,8 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
         return false;
       }
     } else if (this.isCustomerCase) {
-      // Nếu là Customer Case thì hiển thị highlight khi có tài khoản liên kết và customer type = existing
-      if (this.isHandling && this.hasAccountOrContract && this.customerType != "Non-existing") {
+      // Customer Case: hiển thị highlight khi đang handling và có Customer History hoặc Account/Contract liên kết (bao gồm Non-Existing có ghi nhận Customer History)
+      if (this.isHandling && this.hasAccountOrContract) {
         return true;
       } else {
         return false;
