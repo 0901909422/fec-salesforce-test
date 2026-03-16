@@ -31,29 +31,16 @@
         <replyWithNewContentOnly>false</replyWithNewContentOnly>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
-            <casePriority>Medium</casePriority>
-            <createTask>false</createTask>
-            <emailAddress>anhdt36@fpt.com</emailAddress>
-            <emailServicesAddress>anhdt36@8-29h47kjbch317mj0b00klz04uqjv025olchco3qidc1w7byp48.az-8ajcfmag.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
-            <isPermsetControlled>false</isPermsetControlled>
-            <isVerified>true</isVerified>
-            <routingName>FEC_EmailToCase</routingName>
-            <saveEmailHeaders>false</saveEmailHeaders>
-        </routingAddresses>
-        <routingAddresses>
-            <addressType>EmailToCase</addressType>
             <caseOrigin>Email2Case</caseOrigin>
             <caseOwner>FEC_Ubank_Email</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>High</casePriority>
             <createTask>true</createTask>
-            <emailAddress>tsalesforce63@gmail.com</emailAddress>
-            <emailServicesAddress>longanhsalesforce@t-1agv8eh4j65i63gzyip3qbfa7yqt336rk5ek79fcr1xgzmfzbq.az-8ajcfmag.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
+            <emailAddress>phuongnt204@fpt.com</emailAddress>
             <isPermsetControlled>false</isPermsetControlled>
             <isVerified>true</isVerified>
             <newEntityRecordType>Case.Interaction</newEntityRecordType>
-            <routingName>Mail to Case</routingName>
+            <routingName>FEC_EmailToCase</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
             <taskStatus>Open</taskStatus>
         </routingAddresses>
@@ -88,7 +75,6 @@
     <rtaCaseDescription>false</rtaCaseDescription>
     <showEmailAttachmentsInCaseAttachmentsRL>true</showEmailAttachmentsInCaseAttachmentsRL>
     <showFewerCloseActions>false</showFewerCloseActions>
-    <systemUserEmail>noreply@00dd500000bu3bdead</systemUserEmail>
     <useSystemEmailAddress>true</useSystemEmailAddress>
     <useSystemUserAsDefaultCaseUser>true</useSystemUserAsDefaultCaseUser>
     <visibleInCssCheckbox>false</visibleInCssCheckbox>

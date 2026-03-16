@@ -6480,6 +6480,41 @@
         <value>Get next work</value>
     </labels>
     <labels>
+        <fullName>title_Select_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>You&apos;ve selected 1 record.</value>
+    </labels>
+    <labels>
+        <fullName>title_Toast_Event</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>No Case Found</value>
+    </labels>
+    <labels>
+        <fullName>UBankCustomberServiceEmail</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UBankCustomberServiceEmail</shortDescription>
+        <value>tsalesforce63@gmail.com</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Ubank_Email_DevName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Ubank_Email_DevName</shortDescription>
+        <value>FEC_Ubank_Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Ubank_Skill_DevName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Ubank_Skill_DevName</shortDescription>
+        <value>Ubank_Email</value>
+    </labels>
+    <labels>
         <fullName>User_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>
