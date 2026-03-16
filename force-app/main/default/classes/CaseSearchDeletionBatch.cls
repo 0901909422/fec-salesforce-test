@@ -5,7 +5,7 @@ public class CaseSearchDeletionBatch implements Database.Batchable<sObject> {
         return Database.getQueryLocator([
             SELECT Id FROM Case 
             WHERE RecordType.Name = 'Search Interaction' 
-            AND DAY_ONLY(CreatedDate) <= :targetDate
+            AND DAY_ONLY(CreatedDate) = :targetDate
         ]);
     }
 
