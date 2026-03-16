@@ -9,7 +9,7 @@
     <relationshipLabel>Master MDM Data Setting</relationshipLabel>
     <relationshipName>Master_Data_Setting</relationshipName>
     <required>false</required>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

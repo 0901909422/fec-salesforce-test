@@ -258,11 +258,11 @@
     </customLabels>
     <customLabels>
         <name>FEC_Error_Expected_Key</name>
-        <label>Cột A: Mong muốn {0}, Thực tế {1}</label>
+        <label>Cột A: Mong muốn "{0}", Thực tế "{1}"</label>
     </customLabels>
     <customLabels>
         <name>FEC_Error_Expected_Value</name>
-        <label>Cột B: Mong muốn {0}, Thực tế {1}</label>
+        <label>Cột B: Mong muốn "{0}", Thực tế "{1}"</label>
     </customLabels>
     <customLabels>
         <name>FEC_Error_File_Invalid</name>
@@ -390,10 +390,6 @@
     </customLabels>
     <customLabels>
         <name>FEC_Lbl_Is_Active</name>
-        <label>Khả dụng?</label>
-    </customLabels>
-    <customLabels>
-        <name>FEC_Lbl_Is_Active_Table</name>
         <label>Khả dụng</label>
     </customLabels>
     <customLabels>
@@ -803,6 +799,18 @@
     <customLabels>
         <name>FEC_Choose_Sub_Decision_Label</name>
         <label>Chọn Quyết định phụ</label>
+    </customLabels>
+    <customLabels>
+        <name>End_Date_Less_Than_Today_Validation_Msg</name>
+        <label>Ngày kết thúc không được nhỏ hơn ngày hôm nay</label>
+    </customLabels>
+    <customLabels>
+        <name>End_Date_After_Or_Equal_Start_Date_Validation_Msg</name>
+        <label>Ngày kết thúc phải sau hoặc bằng ngày bắt đầu</label>
+    </customLabels>
+    <customLabels>
+        <name>No_Record_To_Display_Msg</name>
+        <label>Không có bản ghi nào để hiển thị</label>
     </customLabels>
     <customLabels>
         <name>FEC_MSG_Can_Not_Find_Next_Stage</name>
