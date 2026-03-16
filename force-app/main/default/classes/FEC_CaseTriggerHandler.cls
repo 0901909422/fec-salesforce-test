@@ -7,7 +7,6 @@ public without sharing class FEC_CaseTriggerHandler {
     
     // Trigger guard để tránh recursive
     private static Boolean isExecuting = false;
-    public static Boolean skipTrigger = false;
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -17,32 +16,30 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/16 - Added onAfterInsert handler for auto follow-up
      */
     public static void run() {
-        if (skipTrigger) {
+        if (isExecuting) {
             return;
         }
 
-        FEC_CaseTriggerHandler handler = new FEC_CaseTriggerHandler();
-        
         if (Trigger.isBefore && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            handler.onBeforeInsert(newCases);
+            onBeforeInsert(newCases);
         }
         
         if (Trigger.isBefore && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            handler.onBeforeUpdate(newCases, oldMap);
+            onBeforeUpdate(newCases, oldMap);
         }
         
         if (Trigger.isAfter && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            handler.onAfterInsert(newCases);
+            onAfterInsert(newCases);
         }
         
         if (Trigger.isAfter && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            handler.onAfterUpdate(newCases, oldMap);
+            onAfterUpdate(newCases, oldMap);
         }
     }
 
@@ -82,10 +79,6 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/01/16 Toannd61
      */
     private void onAfterInsert(List<Case> newCases) {
-        // Tránh recursive trigger
-        if (isExecuting) {
-            return;
-        }
         
         isExecuting = true;
         
@@ -107,10 +100,6 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/02/02
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
-        // Tránh recursive trigger
-        if (isExecuting) {
-            return;
-        }
         
         isExecuting = true;
         
@@ -305,11 +294,7 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/02/10 LongNH76
      */
       private void updateEmail2CaseFieldsOnInsert(List<Case> newCases) {
-        // Tận dụng cờ isExecuting (đã có sẵn) để chặn Trigger chạy lại hàm này nếu update kích hoạt lại
-        if (isExecuting) {
-            return;
-        }
-
+        
         Id interactionRecordTypeId = getInteractionRecordTypeId();
         if (interactionRecordTypeId == null) {
             return;
@@ -386,11 +371,11 @@ public without sharing class FEC_CaseTriggerHandler {
         // assignCases(casesToDml);
 
         if (!casesToDml.isEmpty()) {
-            FEC_CaseTriggerHandler.skipTrigger = true;
+            isExecuting = true;
             try {
                 update casesToDml;
             } finally {
-                FEC_CaseTriggerHandler.skipTrigger = false;
+                isExecuting = false;
             }
         }
     }
