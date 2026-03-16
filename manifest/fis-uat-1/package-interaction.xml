@@ -15,7 +15,7 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CommonUltils</members>
-		<members>FEC_AccountOrContractPicklistHanlder</members>
+		<members>FEC_AccountOrContractPicklistHandler</members>
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_GenesysCreateDummyInteraction</members>
