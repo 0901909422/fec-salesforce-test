@@ -74,6 +74,8 @@ public with sharing class FEC_GetCardBasicInfo {
         public Decimal LoanBalance;
         public String CardNumber;
         public String CardActivationDate;
+        public String BlockCode;
+        public Date BlckDate;
     }
  
     public class StatementInfo {
@@ -350,6 +352,8 @@ public with sharing class FEC_GetCardBasicInfo {
         result.CardBasicInfo.MainCard.MailingInd            = FEC_CommonUltils.getXmlValue(main, 'MailingInd');
         result.CardBasicInfo.MainCard.CardNumber            = FEC_CommonUltils.getXmlValue(main, 'CardNumber');
         result.CardBasicInfo.MainCard.CardActivationDate    = FEC_CommonUltils.getXmlValue(main, 'CardActivationDate');
+        result.CardBasicInfo.MainCard.BlockCode             = FEC_CommonUltils.getXmlValue(main, 'BlockCode');
+        result.CardBasicInfo.MainCard.BlckDate              = FEC_CommonUltils.xmlValToDate(main, 'BlckDate');
  
         /// STATEMENT
         Dom.XmlNode stmt = infoNode.getChildElement('Statement', null);
