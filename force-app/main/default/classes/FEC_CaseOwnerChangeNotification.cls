@@ -90,7 +90,10 @@ public without sharing class FEC_CaseOwnerChangeNotification {
         // Gửi theo từng batch để không vượt governor limit (10 email/lần gọi trong sync)
         for (Integer i = 0; i < emails.size(); i += MAX_EMAILS_PER_CALL) {
             Integer endIndex = Math.min(i + MAX_EMAILS_PER_CALL, emails.size());
-            List<Messaging.SingleEmailMessage> batch = emails.subList(i, endIndex);
+            List<Messaging.SingleEmailMessage> batch = new List<Messaging.SingleEmailMessage>();
+            for (Integer j = i; j < endIndex; j++) {
+                batch.add(emails[j]);
+            }
             try {
                 Messaging.sendEmail(batch);
             } catch (Exception e) {
