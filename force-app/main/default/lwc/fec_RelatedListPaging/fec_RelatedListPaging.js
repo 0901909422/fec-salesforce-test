@@ -65,15 +65,9 @@ export default class Fec_RelatedListPaging extends LightningElement {
     set records(value) {
         this._records = Array.isArray(value) ? [...value] : [];
         this.currentPage = 1;
-
-        // Re-apply existing sort if any
-        if (this.sortedBy) {
-            this.sortData(this.sortedBy, this.sortedDirection);
-        }
-
+        this.applyDefaultSort();
         this.eyeStates = {};
     }
-
     /* ================= GETTERS ================= */
     get hasRecords() {
         return this._records.length > 0;
@@ -136,28 +130,37 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
     /* ================= SORT UI ================= */
     get columnsWithSort() {
-        return this.columns.map(col => {
-            const isSorted = this.sortedBy === col.fieldName;
-            const headerClass = col.headerClass || 'header-center';
-            const widthStyle = this.compactColumns
-                ? 'width:40px; min-width:40px; max-width:40px;'
-                : (col.width ? `width:${col.width};` : null);
-            return {
-                ...col,
-                headerClass,
-                fullHeaderClass: 'sortable-header ' + headerClass,
-                headerStyle: widthStyle,
-                iconName: isSorted
-                    ? (this.sortedDirection === 'desc'
-                        ? 'utility:arrowup'
-                        : 'utility:arrowdown')
-                    : 'utility:arrowdown',
-                iconClass: isSorted
-                    ? 'sort-icon active'
-                    : 'sort-icon inactive'
-            };
-        });
-    }
+    return this.columns.map(col => {
+        const isSorted = this.sortedBy === col.fieldName;
+        const headerClass = col.headerClass || 'header-center';
+        const widthStyle = this.compactColumns
+            ? 'width:40px; min-width:40px; max-width:40px;'
+            : (col.width ? `width:${col.width};` : null);
+
+        let iconName;
+
+        if (isSorted) {
+            // Column đang sort
+            iconName = this.sortedDirection === 'desc'
+                ? 'utility:arrowup'
+                : 'utility:arrowdown';
+        } else {
+            // Column chưa sort
+            iconName = 'utility:arrowdown';
+        }
+
+        return {
+            ...col,
+            headerClass,
+            fullHeaderClass: 'sortable-header ' + headerClass,
+            headerStyle: widthStyle,
+            iconName,
+            iconClass: isSorted
+                ? 'sort-icon active'
+                : 'sort-icon inactive'
+        };
+    });
+}
 
     /* ================= PAGING ================= */
     get pagedRecords() {
@@ -418,6 +421,20 @@ export default class Fec_RelatedListPaging extends LightningElement {
         this.hoverCell = { rowId: null, fieldName: null };
     }
 
+    applyDefaultSort() {
+        if (this._defaultSortApplied) {
+            return;
+        }
+        if (!this.defaultSortedBy || !this._records.length) {
+            return;
+        }
+        this.sortedBy = this.defaultSortedBy;
+        this.sortedDirection = this.defaultSortDirection || 'desc';
+        this.sortData(this.sortedBy, this.sortedDirection);
+        this._records = [...this._records];
+        this._defaultSortApplied = true;
+    }
+
     /* ================= SORT LOGIC ================= */
     handleSort(event) {
         const fieldName = event.currentTarget.dataset.field;
@@ -433,7 +450,8 @@ export default class Fec_RelatedListPaging extends LightningElement {
         }
 
         this.currentPage = 1;
-        this.sortData(fieldName, this.sortedDirection);
+        this.sortData(this.sortedBy, this.sortedDirection);
+        this._records = [...this._records];
     }
 
     sortData(fieldName, direction) {
@@ -454,7 +472,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
             return isNaN(t) ? null : t;
         };
 
-        this._records = records.sort((a, b) => {
+        this._records = [...records].sort((a, b) => {
             const rawA = a[fieldName];
             const rawB = b[fieldName];
 
@@ -475,6 +493,10 @@ export default class Fec_RelatedListPaging extends LightningElement {
     }
 
     renderedCallback() {
+        if (!this._defaultSortApplied) {
+            this.applyDefaultSort();
+            this._defaultSortApplied = true;
+        }
         this.template
             .querySelectorAll('span[lwc\\:dom="manual"]')
             .forEach(el => {
