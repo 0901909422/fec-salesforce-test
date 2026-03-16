@@ -1,5 +1,7 @@
 public with sharing class FEC_CreateCSCaseService {
     
+    
+    
     // =================================================
     // SOAP ENTRY POINT (WSDL COMPATIBLE)
     // =================================================
@@ -31,8 +33,19 @@ public with sharing class FEC_CreateCSCaseService {
             // -------------------------
             FEC_CreateCaseHanlder.FEC_InteractionCaseDTO interactionDTO =
                 new FEC_CreateCaseHanlder.FEC_InteractionCaseDTO();
-            interactionDTO.channel = FEC_ConstantCommon.CHANNEL_EXTERNAL;
-            interactionDTO.subChannel = FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
+            
+            String subChannel = String.isNotBlank(req.Sys.SubChannel)? req.Sys.SubChannel.trim(): null;
+            
+            if (internalSystems.contains(subChannel)) {
+                interactionDTO.channel = FEC_ConstantCommon.CHANNEL_INTERNAL;
+                interactionDTO.subChannel = subChannel;
+            } else if (externalSystems.contains(subChannel)) {
+                interactionDTO.channel = FEC_ConstantCommon.CHANNEL_EXTERNAL;
+                interactionDTO.subChannel = subChannel;
+            } else {
+                interactionDTO.channel = FEC_ConstantCommon.CHANNEL_EXTERNAL;
+                interactionDTO.subChannel = FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
+            }
             
             FEC_CreateCaseHanlder.FEC_InteractionCaseResponse interactionResp =
                 FEC_CreateCaseHanlder.createInteractionCase(interactionDTO);
@@ -524,6 +537,7 @@ public with sharing class FEC_CreateCSCaseService {
     
     public class SysType {
         @AuraEnabled public String Channel;
+        @AuraEnabled public String SubChannel;
         @AuraEnabled public String TransactionID;
         @AuraEnabled public Datetime DateTime_x;
     }
@@ -602,4 +616,16 @@ public with sharing class FEC_CreateCSCaseService {
         public String cifNumber;
     }
     
+    
+    private static Set<String> internalSystems = new Set<String>{
+        FEC_ConstantCommon.SYSTEM_SOURCE_VTIGER,
+        FEC_ConstantCommon.SYSTEM_SOURCE_ISALE,
+        FEC_ConstantCommon.SYSTEM_SOURCE_ICOLLECT
+    };
+    
+    private static Set<String> externalSystems = new Set<String>{
+        FEC_ConstantCommon.SYSTEM_SOURCE_WEBSITE,
+        FEC_ConstantCommon.SYSTEM_SOURCE_FEOL,
+        FEC_ConstantCommon.SYSTEM_SOURCE_ZALO
+    };
 }

@@ -17,7 +17,7 @@ public without sharing class FEC_ApplicationsListController {
      * DTO 
      * ===================================================== */
     public class ApplicationRowDTO {
-        @AuraEnabled public Id id;
+        @AuraEnabled public Id Id;
         @AuraEnabled public Id caseId; 
         @AuraEnabled public String applicationId;
         @AuraEnabled public String accountNumber;
@@ -315,7 +315,7 @@ public without sharing class FEC_ApplicationsListController {
             return null;
         }
 
-       dto.id = rec.Id;
+       dto.Id = rec.Id;
 
         dto.helpTexts = FEC_CommonUltils.buildHelpTextMap( FEC_Application_List__c.SObjectType );
         if (rec.FEC_Customer_History__c != null) {
@@ -377,7 +377,7 @@ public without sharing class FEC_ApplicationsListController {
                     JSON.serialize(o),
                     ApplicationRowDTO.class
                 );
-            dto.id = rec.Id;
+            dto.Id = rec.Id;
             dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Application_List__c.SObjectType);
             result.add(dto);
         }
