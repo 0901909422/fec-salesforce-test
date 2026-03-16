@@ -340,46 +340,49 @@ public with sharing class FEC_CaseBusinessService {
 
       Error err = new Error();
 
-      switch on METHOD_MAP.get(businessProcessCode) {
-        when PHONE_UPDATE {
-          err = phoneUpdateValidate(selectedCase.FEC_Account_or_Contract__c);
-          if (err.errorlst.isEmpty()) {
-            if (historylst.isEmpty())
-              // &&
-              // (String.isBlank(selectedCase.FEC_Current_Case_Stage__c) ||
-              // selectedCase.FEC_Current_Case_Stage__r?.FEC_Default_Stage__c)
-              phoneUpdate(selectedCase);
-          } else {
-            result.sectionlst.add(new Section('Case Information', err));
+      try {
+        switch on METHOD_MAP.get(businessProcessCode) {
+          when PHONE_UPDATE {
+            err = phoneUpdateValidate(selectedCase.FEC_Account_or_Contract__c);
+            if (err.errorlst.isEmpty()) {
+              if (historylst.isEmpty())
+                // &&
+                // (String.isBlank(selectedCase.FEC_Current_Case_Stage__c) ||
+                // selectedCase.FEC_Current_Case_Stage__r?.FEC_Default_Stage__c)
+                phoneUpdate(selectedCase);
+            } else {
+              result.sectionlst.add(new Section('Case Information', err));
+            }
+          }
+          when FULLNAME_UPDATE {
+            if (selectedCase.FEC_Account_or_Contract__c != null) {
+              fullNameUpdate(selectedCase);
+            }
+          }
+          when EMAIL_UPDATE {
+            if (selectedCase.FEC_Account_or_Contract__c != null) {
+              emailUpdate(selectedCase);
+            }
+          }
+          when DOB_UPDATE {
+            if (selectedCase.FEC_Account_or_Contract__c != null) {
+              dobUpdate(selectedCase);
+            }
+          }
+          when GENDER_UPDATE {
+            if (selectedCase.FEC_Account_or_Contract__c != null) {
+              genderUpdate(selectedCase);
+            }
+          }
+          when IDENTIFICATION_UPDATE {
+            if (selectedCase.FEC_Account_or_Contract__c != null) {
+              identificationUpdate(selectedCase);
+            }
+          }
+          when else {
           }
         }
-        when FULLNAME_UPDATE {
-          if (selectedCase.FEC_Account_or_Contract__c != null) {
-            fullNameUpdate(selectedCase);
-          }
-        }
-        when EMAIL_UPDATE {
-          if (selectedCase.FEC_Account_or_Contract__c != null) {
-            emailUpdate(selectedCase);
-          }
-        }
-        when DOB_UPDATE {
-          if (selectedCase.FEC_Account_or_Contract__c != null) {
-            dobUpdate(selectedCase);
-          }
-        }
-        when GENDER_UPDATE {
-          if (selectedCase.FEC_Account_or_Contract__c != null) {
-            genderUpdate(selectedCase);
-          }
-        }
-        when IDENTIFICATION_UPDATE {
-          if (selectedCase.FEC_Account_or_Contract__c != null) {
-            identificationUpdate(selectedCase);
-          }
-        }
-        when else {
-        }
+      } catch (DmlException e) {
       }
 
       // ================================= GET CASE STAGE ===========================
@@ -677,7 +680,13 @@ public with sharing class FEC_CaseBusinessService {
         ? null
         : selectedCase.FEC_Draft_Routing_Action_Code__c;
 
-      update selectedCase;
+      if (Schema.sObjectType.Case.isUpdateable()) {
+        try {
+          update selectedCase;
+        } catch (DmlException e) {
+          // User có thể không có quyền sửa Case (vd: Case đã assign Queue). Vẫn trả result để hiển thị section.
+        }
+      }
 
       return result;
     } catch (CaseBusinessServiceException e) {

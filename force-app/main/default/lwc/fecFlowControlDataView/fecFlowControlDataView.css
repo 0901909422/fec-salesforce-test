@@ -1,30 +1,956 @@
-.flow-control-container {
-    display: flex;
+/* ════════════════════════════════════════════════════════
+   fecFlowControlDataView.css - MDM Decision Table Styles
+════════════════════════════════════════════════════════ */
+
+/* ── Container ────────────────────────────────────────────── */
+.content-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Panel Header ──────────────────────────────────────────── */
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e5e5e5;
+  background-color: #f8f9fa;
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0070d2;
+  margin: 0;
+}
+
+.selected-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: #e6f2ff;
+  color: #0070d2;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ── Panel Body ────────────────────────────────────────────── */
+.content-body {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+}
+
+/* ── Loading & Error ───────────────────────────────────────── */
+lightning-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.slds-notify_alert {
+  margin: 12px !important;
+  border-left: 4px solid #c23030;
+}
+
+/* ── Empty State ───────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 300px;
+  color: #706e6b;
+}
+
+.empty-state.large {
+  min-height: 400px;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+/* ── Toolbar ───────────────────────────────────────────────── */
+.decision-toolbar {
+  padding: 12px 16px;
+  background-color: #fafbfc;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.search-container {
+  flex: 1;
+  max-width: 350px;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.search-icon-wrap {
+  padding: 0 8px;
+  font-size: 14px;
+  color: #999;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  padding: 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+.search-input:focus {
+  box-shadow: inset 0 0 0 2px #0070d2;
+}
+
+.clear-search-btn {
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.search-message {
+  margin-top: 4px;
+  color: #999;
+}
+
+/* ── Table ─────────────────────────────────────────────────── */
+.table-scroll {
+  overflow-x: auto;
+  border-top: 1px solid #e5e5e5;
+}
+
+.decision-table {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.decision-table thead {
+  background-color: #f3f3f3;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.group-header-row {
+  border-bottom: 2px solid #0070d2;
+  display: none;
+}
+
+.group-header {
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: #0070d2;
+  background-color: #f8f9fa;
+}
+
+.conditions-group {
+  border-right: 1px solid #e5e5e5;
+}
+
+.actions-group {
+  border-left: 1px solid #e5e5e5;
+}
+
+.col-header-row {
+  background-color: #f3f3f3;
+  border-bottom: 1px solid #ddd;
+}
+
+.col-header-row th {
+  padding: 8px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-right: 1px solid #e5e5e5;
+  white-space: nowrap;
+}
+
+.col-header-row th:last-child {
+  border-right: none;
+}
+
+.decision-table tbody tr {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.decision-table tbody tr:hover td {
+  background-color: #eaf4ff !important;
+}
+
+.decision-table tbody tr:hover td.stage-cell {
+  background-color: #daeeff !important;
+}
+
+.decision-table td {
+  padding: 8px;
+  border-right: 1px solid #e5e5e5;
+  vertical-align: top;
+}
+
+.decision-table td:last-child {
+  border-right: none;
+}
+
+/* ── Table Columns ─────────────────────────────────────────── */
+.col-current-stage {
+  width: 120px;
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.stage-cell {
+  background-color: #f0f8ff;
+  padding: 8px !important;
+}
+
+.stage-cell-hidden {
+  display: none;
+}
+
+.stage-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.stage-current {
+  background-color: #e6f2ff;
+  color: #0070d2;
+}
+
+.stage-next {
+  background-color: #f0e8ff;
+  color: #6f42c1;
+}
+
+.stage-code {
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.col-conditions {
+  width: 80px;
+  min-width: 80px;
+}
+
+.condition-any {
+  display: inline-block;
+  padding: 2px 6px;
+  background-color: #fff3cd;
+  color: #856404;
+  border-radius: 2px;
+  font-size: 11px;
+}
+
+.col-action {
+  width: 100px;
+  min-width: 100px;
+}
+
+.action-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: #d4edda;
+  color: #155724;
+  border-radius: 3px;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.row-code {
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.col-next-stage {
+  width: 120px;
+  min-width: 120px;
+}
+
+.col-next-queue {
+  width: 100px;
+  min-width: 100px;
+}
+
+.queue-value {
+  font-size: 11px;
+  color: #666;
+}
+
+.col-team-group {
+  width: 120px;
+  min-width: 120px;
+}
+
+.team-value {
+  font-size: 11px;
+  color: #666;
+}
+
+.col-active {
+  width: 60px;
+  text-align: center;
+  min-width: 60px;
+}
+
+.col-status {
+  width: 90px;
+  min-width: 90px;
+}
+
+.col-actions {
+  width: 70px;
+  text-align: center;
+  min-width: 70px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+
+.btn-edit lightning-icon {
+  color: #0070d2 !important;
+}
+
+.btn-delete lightning-icon {
+  color: #c23030 !important;
+}
+
+/* ── Badges ────────────────────────────────────────────────── */
+.slds-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-modified {
+  background-color: #fff3cd !important;
+  color: #856404 !important;
+}
+
+.status-updated {
+  background-color: #fff3cd !important;
+  color: #856404 !important;
+}
+
+.status-pending {
+  background-color: #d1ecf1 !important;
+  color: #0c5460 !important;
+}
+
+.status-new {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-synced {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+/* ════════════════════════════════════════════════════════
+   MODAL STYLES
+════════════════════════════════════════════════════════ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-dialog {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: #0070d2;
+  color: #fff;
+  border-bottom: 1px solid #e5e5e5;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.modal-body {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 20px !important;
+  position: relative !important;
+}
+
+.modal-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.modal-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-form-group-full {
+  grid-column: 1 / -1;
+}
+
+.modal-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.required-mark {
+  color: #c23030;
+}
+
+.modal-combobox {
+  width: 100%;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: #0070d2;
+  box-shadow: 0 0 0 3px rgba(0, 112, 210, 0.1);
+}
+
+.modal-error {
+  display: block;
+  margin-top: 4px;
+  color: #c23030;
+  font-size: 11px;
+}
+
+.modal-info {
+  display: flex;
+  align-items: flex-start;
+  padding: 10px;
+  background-color: #f0f8ff;
+  border-left: 3px solid #0070d2;
+  border-radius: 2px;
+  font-size: 12px;
+  color: #0070d2;
+  margin-top: 16px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e5e5e5;
+  flex-shrink: 0;
+}
+
+.modal-footer button {
+  min-width: 100px;
+  padding: 8px 16px;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .decision-toolbar {
     flex-direction: column;
-    height: 100%;
-    background-color: #fff;
+    gap: 12px;
+  }
+
+  .modal-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-dialog {
+    width: 95%;
+  }
 }
 
-.scroll-area {
-    flex: 1;
-    overflow-y: auto;
+/* ════════════════════════════════════════════════════════ */
+/* CONDITIONS IN TABLE                                     */
+/* ════════════════════════════════════════════════════════ */
+.condition-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #0070d2;
+  transition: background 0.15s;
+}
+.condition-toggle-btn:hover {
+  background: #f0f7ff;
 }
 
-.tech-table {
-    border: 1px solid #dddbda;
+.condition-count-badge {
+  background: #e8f4fd;
+  color: #0070d2;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
 }
 
-.label-cell {
-    background-color: #f3f3f3;
-    color: #3e3e3c;
-    font-weight: 600;
+.condition-any-badge {
+  background: #f3f3f3;
+  color: #706e6b;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 12px;
 }
 
-.value-cell {
-    color: #0176d3; /* Màu xanh Salesforce Tech */
+.condition-details {
+  margin-top: 6px;
+  padding: 8px;
+  background: #fafbfc;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
 }
 
-/* Hiệu ứng khi hover vào hàng */
-.tech-table tbody tr:hover td {
-    background-color: #faffbd !important;
+.condition-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 12px;
+}
+
+.condition-field {
+  font-weight: 600;
+  color: #333;
+}
+
+.condition-operator {
+  color: #0070d2;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.condition-value {
+  background: #fff8e1;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.condition-type-tag {
+  background: #eef;
+  color: #555;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+}
+
+.condition-logic-row {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed #ddd;
+  font-size: 11px;
+}
+
+.condition-logic-label {
+  font-weight: 600;
+  color: #706e6b;
+  margin-right: 4px;
+}
+
+.condition-logic-value {
+  font-family: monospace;
+  color: #0070d2;
+}
+
+/* ════════════════════════════════════════════════════════ */
+/* MODAL — LARGER for CONDITIONS                           */
+/* ════════════════════════════════════════════════════════ */
+.modal-large {
+  max-width: 800px !important;
+  width: 95% !important;
+  max-height: 90vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.modal-section {
+  margin-bottom: 20px;
+}
+
+.modal-section-title {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #0070d2;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-header .modal-section-title {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* ════════════════════════════════════════════════════════ */
+/* MODAL — CONDITIONS FORM                                 */
+/* ════════════════════════════════════════════════════════ */
+.condition-logic-input {
+  padding: 8px 12px;
+  background: #f7f9fb;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+}
+
+.condition-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  z-index: 10;
+}
+
+.condition-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #fafbfc;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  transition: border-color 0.15s;
+  position: relative;
+  z-index: auto;
+}
+
+.condition-row:hover {
+  border-color: #0070d2;
+  z-index: 15;
+}
+
+.condition-order {
+  font-weight: 700;
+  color: #0070d2;
+  min-width: 28px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.condition-field-input {
+  flex: 2;
+  position: relative;
+  z-index: 20;
+}
+
+.condition-field-input ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.condition-field-input ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.condition-field-input ::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.condition-operator-input {
+  flex: 1.5;
+}
+
+.condition-value-input {
+  flex: 2;
+}
+
+.condition-type-input {
+  flex: 1;
+}
+
+.condition-remove-btn {
+  flex-shrink: 0;
+}
+
+.no-conditions-msg {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f0f7ff;
+  border: 1px solid #d8eafd;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+}
+
+/* Force combobox dropdown to appear above modal content */
+:host ::part(combobox-dropdown) {
+  z-index: 9999 !important;
+  position: fixed !important;
+}
+
+/* Alternative: use CSS class on lightning-combobox parent */
+.condition-field-input lightning-combobox {
+  --lwc-comboboxPositionZIndex: 9999;
+}
+
+/* ── Native Select (replaces lightning-combobox in condition rows) ── */
+.native-select {
+  width: 100%;
+  height: 32px;
+  padding: 0 28px 0 10px;
+  border: 1px solid #dddbda;
+  border-radius: 4px;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23706e6b' d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font-size: 13px;
+  color: #3e3e3c;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.native-select:focus {
+  outline: none;
+  border-color: #0070d2;
+  box-shadow: 0 0 0 1px #0070d2;
+}
+
+.native-select:hover {
+  border-color: #0070d2;
+}
+
+/* Condition row layout */
+.condition-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: #fafbfc;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+}
+
+.condition-field-input    { flex: 2.5; min-width: 0; }
+.condition-operator-input { flex: 1.5; min-width: 0; }
+.condition-value-input    { flex: 1.8; min-width: 0; }
+.condition-type-input     { flex: 1;   min-width: 80px; }
+
+.condition-field-input .native-select,
+.condition-operator-input .native-select,
+.condition-type-input .native-select {
+  width: 100%;
+}
+
+/* ════════════════════════════════════════════════════════ */
+/* EXPANDABLE CONDITIONS ROW (Enterprise UX)               */
+/* ════════════════════════════════════════════════════════ */
+.condition-expand-row {
+  background: #f3f3f3 !important;
+  transition: background 0.1s;
+}
+
+.condition-expand-row:hover {
+  background: #ebebeb !important;
+}
+
+.condition-expand-cell {
+  padding: 0 !important;
+}
+
+.condition-expand-content {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.condition-expand-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dddbda;
+  font-weight: 600;
+}
+
+.expand-title {
+  font-size: 13px;
+  color: #0070d2;
+  font-weight: 700;
+}
+
+.condition-logic-inline {
+  font-size: 12px;
+  background: #fff3e0;
+  color: #e65100;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.condition-expand-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.condition-expand-item {
+  display: grid;
+  grid-template-columns: 40px 1fr 70px 120px 100px;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 10px;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: border-color 0.1s;
+}
+
+.condition-expand-item:hover {
+  border-color: #dddbda;
+  background: #fafbfc;
+}
+
+.expand-cond-order {
+  font-weight: 700;
+  color: #0070d2;
+  font-size: 11px;
+  text-align: center;
+}
+
+.expand-cond-field {
+  font-weight: 600;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.expand-cond-op {
+  display: inline-block;
+  background: #fff3e0;
+  color: #e65100;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.expand-cond-value {
+  font-family: monospace;
+  color: #1a1a1a;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.expand-cond-type {
+  color: #706e6b;
+  font-size: 11px;
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Toggle button style */
+.condition-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: #e8f0fe;
+  color: #0070d2;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.condition-toggle-btn:hover {
+  background: #cce0ff;
 }

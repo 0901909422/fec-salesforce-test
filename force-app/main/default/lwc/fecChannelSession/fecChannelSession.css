@@ -1,0 +1,98 @@
+/* fecChannelSession.css */
+.transition-width {
+    transition: width 0.3s ease-in-out;
+}
+
+/* Container tổng */
+.main-container {
+    align-items: stretch;
+    min-height: 500px;
+    flex-wrap: nowrap !important; 
+    overflow: hidden !important; /* CHẶN ĐỨNG MỌI CHIỀU CUỘN KHI ANIMATION */
+    width: 100%;
+}
+
+/* Vùng làm việc chính */
+.main-panel {
+    transition: flex 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+                max-width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Dùng flex thay vì width để tương thích SLDS Grid */
+    overflow: hidden !important;
+    min-width: 0; /* QUAN TRỌNG: Cho phép flex item thu nhỏ dưới kích thước content */
+}
+
+/* Khung bọc Datatable cho viền mỏng, bo góc đẹp */
+.table-container {
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    background-color: white;
+}
+
+/* Vùng History (Drawer) */
+.history-panel {
+    /* Đây là đường phân tách rõ ràng */
+    border-left: 4px solid #e5e5e5; 
+    
+    background-color: #fbfcfa; /* Nền xám cực nhạt để tách biệt với nền trắng của Main */
+    padding-left: 16px; /* Cách đường kẻ ra một chút */
+    animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Hiệu ứng trượt vào từ bên phải */
+}
+
+/* Header của History */
+.history-header {
+    padding: 12px 16px;
+    background-color: #fafaf9;
+    border-bottom: 2px solid #e5e5e5;
+}
+
+/* Body chứa dữ liệu History */
+.history-body {
+    padding: 16px;
+    height: calc(100% - 50px); /* Chừa chỗ cho header */
+    max-height: 500px;
+}
+
+/* Giới hạn chiều cao cho thanh cuộn lịch sử */
+.history-content {
+    height: 100%;
+    max-height: 500px; 
+}
+
+/* Style cho khung Datatable */
+.table-wrapper {
+    border: 1px solid #d8dde6;
+    border-radius: 4px;
+    background-color: white;
+    overflow: hidden !important;
+    max-width: 100%; /* Không được to hơn container cha */
+    box-sizing: border-box;
+}
+
+/* Ép Datatable con không tràn ra ngoài khung wrapper */
+.table-wrapper lightning-datatable,
+.table-wrapper * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Hiệu ứng trượt cho Panel History */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

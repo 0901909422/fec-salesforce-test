@@ -3,7 +3,9 @@
     <fullName>FEC_Interaction_Status__c</fullName>
     <description>Trường thông tin trạng thái Case lấy theo Final status để phục vụ hiển thị ở giao diện Case theo yêu cầu FEC</description>
     <externalId>false</externalId>
-    <formula>IF( RecordType.Name = &apos;Interaction&apos; ,  FEC_Final_Status__c  , &apos;&apos;)</formula>
+    <formula>IF( RecordType.Name = &apos;Interaction&apos; ,  FEC_Final_Status__c  , 
+IF( FEC_Interaction__c &lt;&gt; null,   FEC_Interaction__r.FEC_Final_Status__c  , &apos;&apos;)
+)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Interaction Status</label>
     <required>false</required>

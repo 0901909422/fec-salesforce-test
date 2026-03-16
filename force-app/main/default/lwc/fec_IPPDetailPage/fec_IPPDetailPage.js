@@ -60,8 +60,6 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
 
     connectedCallback() {
         this.loadHelpText();
-        /* ================= SET TABNAME ================= */
-        setConsoleTab('IPP Detail', 'standard:record');
     }
     
     loadHelpText() {
@@ -148,6 +146,8 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
 
         getIPPScheduleData({ ippId: this.recordId })
             .then(data => {
+
+                setConsoleTab('IPP Detail', 'standard:record');
                 const schedules = (data && data.schedules) ? data.schedules : [];
                 
                 // Nếu không có schedules và chưa retry, đợi 1s rồi retry (API đã insert nhưng query chưa kịp thấy)

@@ -45,6 +45,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
     public static final String CASE_INTERNAL_RECORD_TYPE_DEV_NAME = 'Internal_Case';
+    public static final String CASE_SEARCH_RECORD_TYPE_DEV_NAME = 'Search_Interaction';
     
     public static final String CHANNEL_INBOUND_API = 'InboundRinging';
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
@@ -55,6 +56,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
     public static final String CHANNEL_EXTERNAL = 'External';
     public static final String CHANNEL_INTERNAL = 'Internal';
+    public static final String STR_NA = 'N/A';
     
     public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';
     public static final String CHANNEL_OUTBOUND_SUBCHANNEL_NAME = 'Outbound Call';
@@ -75,6 +77,16 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
     public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
     
+    // CARD: 16 hoặc 19 digits
+    public static final String PATTERN_CARD = '^(\\d{16}|\\d{19})$';
+    
+    // LOAN: nhiều format khác nhau
+    public static final String PATTERN_LOAN = '^(\\d{8}-\\d{6}-\\d{4}|\\d{8}-\\d{7}-\\d{3}|\\d{8}-\\d{7}-\\d{2}|\\d{8}-\\d{7}-\\d{1}|\\d{8}-\\d{7}|\\d{2}-\\d{2}-\\d{2}-\\d{2})$';
+    
+    // INSURANCE
+    public static final String PATTERN_INSURANCE = '^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z0-9]+$';
+    
+    
     public static final String REQUESTOR_CRM = 'CRM';
     public static final String REQUESTOR_PORTAL = 'PORTAL';
     public static final String REQUESTOR_MOBILE_APP = 'MOBILE_APP';
@@ -90,6 +102,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_ESB = 'ESB';
     public static final String REQUESTOR_CORE = 'CORE';
     public static final String REQUESTOR_MOBILE = 'MOBILE';
+    public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
     
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
@@ -103,6 +116,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String JSON_EXTENSION = '.json';
     public static final String SUCCESS_MESSAGE = 'Success';
     public static final String SUCCESS_STATUS_CODE = '0';
+    public static final String SUCCESS_CODE_1 = '1';
+    public static final String SUCCESS_CODE_Y = 'Y';
+    public static final String SUCCESS_CODE_E = 'E';
+    public static final String SUCCESS_CODE_200 = '200';
+    public static final String SUCCESS_CODE_203 = '203';
     public static final String KEY_ID = 'id';
     public static final String KEY_NAME = 'name';
     public static final String KEY_UPLOADED_BY = 'uploadedBy';
@@ -110,9 +128,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String KEY_STATUS = 'status';
     public static final String YES_VALUE = 'yes';
     
-    public static final String PRODUCT_TYPE_INSURANCE = 'Insurance';
-    public static final String PRODUCT_TYPE_LOAN = 'Loan';
-    public static final String PRODUCT_TYPE_CARD = 'Card';
+    public static final String PRODUCT_TYPE_INSURANCE = 'INSURANCE';
+    public static final String PRODUCT_TYPE_LOAN = 'LOAN';
+    public static final String PRODUCT_TYPE_CARD = 'CARD';
+    public static final String PRODUCT_TYPE_UBANK = 'Ubank';
     
     public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
     public static final String CASE_STATUS_RESOLVED_REJECTED = 'Resolved-Rejected';
@@ -132,6 +151,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_WEB_ORIGIN = 'Web';
     
     public static final String GROUP_TYPE_QUEUE = 'Queue';
+    public static final String SOBJECT_USER = 'User';
+    public static final String SOBJECT_GROUP = 'Group';
+    public static final String DELIMITER_SEMICOLON = ';';
     
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
@@ -164,6 +186,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUBCHANNEL_INCOMING_EMAIL = 'Incoming Email';
     public static final String CASE_ORIGIN_EMAIL2CASE = 'Email2Case';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
+    
+    public static final String API_BLANK_BODY = '{}';
     
     public static final String UPLOAD_DOCUMENT = 'UploadDocument';
     public static final String CASE_STATUS_ERROR = 'ERROR';

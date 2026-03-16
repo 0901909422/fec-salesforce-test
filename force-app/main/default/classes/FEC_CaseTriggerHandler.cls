@@ -20,26 +20,28 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
 
+        FEC_CaseTriggerHandler handler = new FEC_CaseTriggerHandler();
+
         if (Trigger.isBefore && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            onBeforeInsert(newCases);
+            handler.onBeforeInsert(newCases);
         }
         
         if (Trigger.isBefore && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            onBeforeUpdate(newCases, oldMap);
+            handler.onBeforeUpdate(newCases, oldMap);
         }
         
         if (Trigger.isAfter && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            onAfterInsert(newCases);
+            handler.onAfterInsert(newCases);
         }
         
         if (Trigger.isAfter && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            onAfterUpdate(newCases, oldMap);
+            handler.onAfterUpdate(newCases, oldMap);
         }
     }
 
@@ -106,6 +108,7 @@ public without sharing class FEC_CaseTriggerHandler {
         try {
             handleFollowUpOnResolved(newCases, oldMap);
             handleAutoFollowUpOnUpdate(newCases, oldMap);
+            FEC_CaseOwnerChangeNotification.sendNotificationToNewOwner(newCases, oldMap);
         } finally {
             isExecuting = false;
         }

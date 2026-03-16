@@ -566,7 +566,7 @@
                     <value>All Service Cases</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab17</identifier>
+                <identifier>flexipage_tab19</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -580,7 +580,7 @@
                     <value>All Interactions</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab18</identifier>
+                <identifier>flexipage_tab20</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-31112629-518f-4685-a368-cb6f9202d0bf</name>
@@ -808,7 +808,7 @@
                     <value>Interaction History</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab16</identifier>
+                <identifier>flexipage_tab21</identifier>
                 <visibilityRule>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
