@@ -9,6 +9,8 @@
 		<members>FEC_SearchController</members>
 		<members>FEC_GetCustomerList</members>
 		<members>FEC_CreateCaseInteractionController</members>
+		<members>CaseSearchDeletionBatch</members>
+		<members>CaseSearchDeletionScheduler</members>
 		<name>ApexClass</name>
 	</types>
     <types>
