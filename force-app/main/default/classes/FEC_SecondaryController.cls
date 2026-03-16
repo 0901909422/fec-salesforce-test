@@ -150,7 +150,7 @@ public without sharing class FEC_SecondaryController {
                         FEC_Contact_ID__c         = pc.Contact.ContactId
                     ));
 
-                   if( pc.Contact.Channel == 'Email' && String.isBlank(hist.FEC_Email__c)){
+                   if( pc.Contact.Channel == FEC_ConstantCommon.EMAIL && String.isBlank(hist.FEC_Email__c)){
                         hist.FEC_Email__c = pc.Contact.ContactString;
                     }
                 }
@@ -240,7 +240,7 @@ public without sharing class FEC_SecondaryController {
         List<FEC_GetContactsList.ContactInfo> contacts
     ) {
         for (FEC_GetContactsList.ContactInfo c : contacts) {
-            if (c != null && c.Channel == 'Email') {
+            if (c != null && c.Channel == FEC_ConstantCommon.EMAIL) {
                 return c.ContactString;
             }
         }
