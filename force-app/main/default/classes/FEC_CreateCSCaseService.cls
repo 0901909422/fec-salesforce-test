@@ -31,8 +31,8 @@ public with sharing class FEC_CreateCSCaseService {
             // -------------------------
             // CREATE INTERACTION CASE
             // -------------------------
-            FEC_CreateCaseHanlder.FEC_InteractionCaseDTO interactionDTO =
-                new FEC_CreateCaseHanlder.FEC_InteractionCaseDTO();
+            FEC_CreateCaseHandler.FEC_InteractionCaseDTO interactionDTO =
+                new FEC_CreateCaseHandler.FEC_InteractionCaseDTO();
             
             String subChannel = String.isNotBlank(req.Sys.SubChannel)? req.Sys.SubChannel.trim(): null;
             
@@ -47,8 +47,8 @@ public with sharing class FEC_CreateCSCaseService {
                 interactionDTO.subChannel = FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
             }
             
-            FEC_CreateCaseHanlder.FEC_InteractionCaseResponse interactionResp =
-                FEC_CreateCaseHanlder.createInteractionCase(interactionDTO);
+            FEC_CreateCaseHandler.FEC_InteractionCaseResponse interactionResp =
+                FEC_CreateCaseHandler.createInteractionCase(interactionDTO);
             
             //--------------------------
             //CREATE CUSTOMER HISTORY IF CUSTOMER IS EXISTED
@@ -66,8 +66,8 @@ public with sharing class FEC_CreateCSCaseService {
             // -------------------------
             // CREATE CUSTOMER CASE
             // -------------------------
-            FEC_CreateCaseHanlder.FEC_CustomerCaseDTO customerDTO =
-                new FEC_CreateCaseHanlder.FEC_CustomerCaseDTO();
+            FEC_CreateCaseHandler.FEC_CustomerCaseDTO customerDTO =
+                new FEC_CreateCaseHandler.FEC_CustomerCaseDTO();
             
             customerDTO.businessProcessId = ctx.businessProcessId;
             customerDTO.productTypeId     = ctx.productTypeId;
@@ -83,7 +83,7 @@ public with sharing class FEC_CreateCSCaseService {
             }
             customerDTO.remarks     = req.RequestInfo.Remarks;
             
-            Case customerCase = FEC_CreateCaseHanlder.createCustomerCase(
+            Case customerCase = FEC_CreateCaseHandler.createCustomerCase(
                 customerDTO,
             interactionResp.caseId
                 );

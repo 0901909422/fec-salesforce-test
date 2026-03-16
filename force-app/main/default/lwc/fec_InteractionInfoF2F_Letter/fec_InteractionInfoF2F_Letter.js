@@ -21,7 +21,12 @@ import FEC_INTERACTION_CREATED_ON_LABEL from "@salesforce/label/c.FEC_Interactio
 import FEC_INTERACTION_CREATED_BY_LABEL from "@salesforce/label/c.FEC_Interaction_Created_By_Label";
 import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interaction_Information_Label";
 
-import { formatDateTime } from "c/fec_CommonUtils";
+import {
+  formatDateTime,
+  RECORD_TYPES,
+  VIEW_MODE_HANDLING,
+  VIEW_MODE_REVIEW,
+} from "c/fec_CommonUtils";
 
 export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
   labels = {
@@ -34,9 +39,9 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
   @api recordId;
 
   // ================= STATE =================
-  @track record;
-  @track revealedPhone;
-  @track phoneDraft;
+  record;
+  revealedPhone;
+  phoneDraft;
 
   isLoaded = false;
   isMasked = true;
@@ -126,15 +131,15 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
 
   // ================= GETTERS =================
   get isInteractionCase() {
-    return this.recordTypeDevName === "Interaction";
+    return this.recordTypeDevName === RECORD_TYPES.INTERACTION;
   }
 
   get isCustomerCase() {
-    return this.recordTypeDevName === "Customer_Case";
+    return this.recordTypeDevName === RECORD_TYPES.CUSTOMER_CASE;
   }
 
   get isReview() {
-    return this.viewMode === "review";
+    return this.viewMode === VIEW_MODE_REVIEW;
   }
 
   get hasPhone() {
@@ -156,19 +161,15 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
     return this.isMasked ? "utility:hide" : "utility:preview";
   }
 
-
   get createdOn() {
-    if (!this.record?.FEC_Created_On__c) return "";
-
-    const d = new Date(this.record.FEC_Created_On__c);
-    return formatDateTime(d);
+    const value = this.record?.FEC_Created_On__c;
+    if (!value) return "";
+    return formatDateTime(new Date(value));
   }
-
 
   get createdBy() {
     return this.record?.FEC_Created_by__c;
   }
-
 
   // ================= PHONE ACTIONS =================
   handleToggleMask() {

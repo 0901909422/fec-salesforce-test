@@ -52,7 +52,7 @@ public without sharing class FEC_CreateInteractionGenesys {
                 return new InteractionResult(false, validationError, null,null);
             }
             
-            FEC_CreateCaseHanlder.FEC_InteractionCaseGenesysDTO dto = new FEC_CreateCaseHanlder.FEC_InteractionCaseGenesysDTO();
+            FEC_CreateCaseHandler.FEC_InteractionCaseGenesysDTO dto = new FEC_CreateCaseHandler.FEC_InteractionCaseGenesysDTO();
             dto.phoneNumber = request.phoneNumber;
             dto.nationalID = request.nationalID;
             dto.genesysInteractionID = request.genesysInteractionID;
@@ -62,7 +62,7 @@ public without sharing class FEC_CreateInteractionGenesys {
             dto.campaignName = request.campaignName;
             dto.type = request.type;
             dto.method = request.method;
-            Case createdCase = FEC_CreateCaseHanlder.createInteractionCaseGenesys(dto);
+            Case createdCase = FEC_CreateCaseHandler.createInteractionCaseGenesys(dto);
 
             GenesysResposnse response = new GenesysResposnse();
             response.phoneNumber = createdCase.FEC_Phone_Number__c;
