@@ -622,8 +622,8 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Scheme_ID__c      = a != null ? a.SchemeId : null,
             FEC_Scheme_Desc__c    = a != null ? a.SchemeDesc : null,
             /* ===== CARD STATUS ===== */
-            //FEC_Block_Code__c = m.
-            //FEC_Block_Date__c   = m.,
+            FEC_Block_Code__c = m != null ? m.BlockCode: null,
+            FEC_Block_Date__c   = m != null ? m.BlckDate : null,
             //FEC_Blocked_By__c = m
             FEC_Card_Activation_Status__c = m != null ? FEC_CommonUltils.checkActiveAndInacive(m.ActivatedFlag) : null,
             FEC_Card_Activation_Date__c = activationDateParsed,

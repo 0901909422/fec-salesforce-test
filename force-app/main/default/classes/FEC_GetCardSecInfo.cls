@@ -429,20 +429,11 @@ public with sharing class FEC_GetCardSecInfo {
                     childName = childName.substring(childName.indexOf(':') + 1);
                 }
                 if (childName == 'IPP') {
-                    IPP ipp = new IPP();
-                    ipp.IPPPlan = FEC_CommonUltils.getXmlValue(child, 'IPPPlan');
-                    ipp.IPPBalance = FEC_CommonUltils.xmlValToDecimal(child, 'IPPBalance');
-                    ipp.InterestRate = FEC_CommonUltils.xmlValToDecimal(child, 'InterestRate');
-                    ipp.currentTerm = FEC_CommonUltils.xmlValToDecimal(child, 'CurrentTerm');
-                    ipp.IPPStartDate = FEC_CommonUltils.getXmlValue(child, 'IPPStartDate');
-                    ipp.IPPMatureDate = FEC_CommonUltils.getXmlValue(child, 'IPPMatureDate');
-                    ipp.IPPCurrentBalance = FEC_CommonUltils.xmlValToDecimal(child, 'IPPCurrentBalance');
-                    ipp.PaymentAmount = FEC_CommonUltils.xmlValToDecimal(child, 'PaymentAmount');
-                    ipp.IPPRecordNo = FEC_CommonUltils.getXmlValue(child, 'IPPRecordNo');
-                    ipp.OpeningBalance = FEC_CommonUltils.xmlValToDecimal(child, 'OpeningBalance');
-                    ipp.MonthlyPrincipal = FEC_CommonUltils.xmlValToDecimal(child, 'MonthlyPrincipal');
-                    ipp.MonthlyInterest = FEC_CommonUltils.xmlValToDecimal(child, 'MonthlyInterest');
-                    result.CardSecInfo.IPPs.add(ipp);
+                    // Dùng expandIPPToScheduleItems để tách OPENING_BALANCE_1..36, PAYMENT_AMT_k, ... thành từng kỳ.
+                    List<IPP> expanded = expandIPPToScheduleItems(child);
+                    if (expanded != null && !expanded.isEmpty()) {
+                        result.CardSecInfo.IPPs.addAll(expanded);
+                    }
                 }
             }
         }
@@ -503,8 +494,8 @@ public with sharing class FEC_GetCardSecInfo {
     }
 
     /**
-     * Một <IPP> có thể có OPENING_BALANCE_1, _2, ... _36 (nhiều kỳ) hoặc chỉ OpeningBalance (1 kỳ).
-     * Trả về danh sách IPP (1 item per kỳ) để lưu nhiều bản ghi IPP Schedule.
+     * Tách <IPP> có OPENING_BALANCE_1, _2, ... _36 thành danh sách IPP (1 item per kỳ) để lưu IPP Schedule.
+     * Chỉ trả về item khi có OPENING_BALANCE_k; không fallback sang OpeningBalance root.
      */
     private static List<IPP> expandIPPToScheduleItems(Dom.XmlNode ippNode) {
         List<IPP> listOut = new List<IPP>();
@@ -541,7 +532,7 @@ public with sharing class FEC_GetCardSecInfo {
                     ipp.IPPRecordNo = ippRecordNo;
                     ipp.IPPBalance = ippBalance;
                     ipp.InterestRate = interestRate;
-                    ipp.CurrentTerm = currentTerm;
+                    ipp.currentTerm = currentTerm;
                     ipp.IPPStartDate = ippStartDate;
                     ipp.IPPMatureDate = ippMatureDate;
                     ipp.IPPCurrentBalance = ippCurrentBalance;
@@ -552,24 +543,6 @@ public with sharing class FEC_GetCardSecInfo {
                     listOut.add(ipp);
                 } catch (Exception e) { /* skip invalid number */ }
             }
-        }
-
-        if (listOut.isEmpty()) {
-            Decimal openingBalance = FEC_CommonUltils.xmlValToDecimal(ippNode, 'OpeningBalance');
-            IPP ipp = new IPP();
-            ipp.IPPPlan = ippPlan;
-            ipp.IPPRecordNo = ippRecordNo;
-            ipp.IPPBalance = ippBalance;
-            ipp.InterestRate = interestRate;
-            ipp.CurrentTerm = currentTerm;
-            ipp.IPPStartDate = ippStartDate;
-            ipp.IPPMatureDate = ippMatureDate;
-            ipp.IPPCurrentBalance = ippCurrentBalance;
-            ipp.PaymentAmount = paymentAmount;
-            ipp.MonthlyPrincipal = monthlyPrincipal;
-            ipp.MonthlyInterest = monthlyInterest;
-            ipp.OpeningBalance = openingBalance != null ? openingBalance : 0;
-            listOut.add(ipp);
         }
         return listOut;
     }
@@ -622,7 +595,3 @@ public with sharing class FEC_GetCardSecInfo {
         }
     }
 }
-
- 
- 
-
