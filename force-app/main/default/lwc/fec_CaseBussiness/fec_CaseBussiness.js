@@ -682,10 +682,10 @@ export default class Fec_CaseBussiness extends LightningElement {
                   ) {
                     field.isHidden =
                       !assignmentType || assignmentType === TYPE_DISAGREE;
-                  } else {
-                    field.isHidden = false;
-                  }
+                } else {
+                  field.isHidden = false;
                 }
+              }
 
                 field.original = field.value;
 
@@ -699,6 +699,15 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.displayValue = formatToDDMMYYYY(field.value);
                 } else {
                   field.displayValue = field.value;
+                }
+
+                // Convert label to value for picklist fields
+                const picklistOptions = this.business.picklistOptionsMap?.[obj.name]?.[field.apiName];
+                if (picklistOptions?.length && field.value) {
+                  const opt = picklistOptions.find((o) => o.label === field.value);
+                  if (opt) {
+                    field.value = opt.value;
+                  }
                 }
 
                 field.hasHelpText =
