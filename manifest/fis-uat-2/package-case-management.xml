@@ -69,6 +69,7 @@
 		<members>fec_CreateInteractionCaseInListView</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
 		<members>fecInteractionEmailInfo</members>
+		<members>fec_InteractionMyCaseInfo</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
