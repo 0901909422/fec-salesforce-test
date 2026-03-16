@@ -49,6 +49,7 @@
 		<members>ServiceResourceSkill.FEC_Validation_Skill_Level</members>
         <members>ServiceResourceSkill.FEC_Validation_Capacity</members>
 		<members>ServiceResourceSkill.FEC_Validation_Effective_Start_Date</members>
+		<members>ServiceResourceSkill.FEC_Validation_Effective_End_Date</members>
 		<name>ValidationRule</name>
 	</types>
     <types>
