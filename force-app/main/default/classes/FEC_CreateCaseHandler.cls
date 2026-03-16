@@ -57,7 +57,6 @@ public without sharing class FEC_CreateCaseHandler {
         public String subCategoryId;
         public String subCodeId;
         public String remarks;
-        
     }
     
     @AuraEnabled

@@ -24,7 +24,6 @@ import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interacti
 import {
   formatDateTime,
   RECORD_TYPES,
-  VIEW_MODE_HANDLING,
   VIEW_MODE_REVIEW,
 } from "c/fec_CommonUtils";
 
