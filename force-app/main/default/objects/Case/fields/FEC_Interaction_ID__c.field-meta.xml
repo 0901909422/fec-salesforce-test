@@ -3,7 +3,9 @@
     <fullName>FEC_Interaction_ID__c</fullName>
     <description>Trường thông tin trạng thái Case lấy theo ID để phục vụ hiển thị ở giao diện Case theo yêu cầu FEC</description>
     <externalId>false</externalId>
-    <formula>IF(  RecordType.Name = &apos;Interaction&apos;, HYPERLINK(&quot;/&quot; &amp; Id, FEC_ID_Search__c, &quot;_self&quot;), &apos;&apos;)</formula>
+    <formula>IF(  RecordType.Name = &apos;Interaction&apos;, HYPERLINK(&quot;/&quot; &amp; Id, FEC_ID_Search__c, &quot;_self&quot;), 
+IF(  FEC_Interaction__c &lt;&gt; null, HYPERLINK(&quot;/&quot; &amp; Id, FEC_Interaction__r.FEC_ID_Search__c, &quot;_self&quot;), &apos;&apos;)
+)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Interaction ID</label>
     <required>false</required>

@@ -6,6 +6,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { showLog } from 'c/fecMDMUtils';
 import LABEL_LABEL_CUSTOMERTYPE from '@salesforce/label/c.FEC_Label_CustomerType';
 import LABEL_FIELD_ID from '@salesforce/label/c.FEC_Label_Field_ID';
+import LABEL_CODE_ID from '@salesforce/label/c.FEC_Label_Code_ID';
 import LABEL_ALIAS from '@salesforce/label/c.FEC_Label_Alias';
 import LABEL_NAME_EN from '@salesforce/label/c.FEC_Label_Name_EN';
 import LABEL_NAME_VN from '@salesforce/label/c.FEC_Label_Name_VN';
@@ -49,6 +50,7 @@ export default class FecNatureOfCaseModal extends LightningModal {
     // expose labels for template binding
     labelCustomerType = LABEL_LABEL_CUSTOMERTYPE;
     labelFieldId = LABEL_FIELD_ID;
+    labelCodeId = LABEL_CODE_ID;
     labelAlias = LABEL_ALIAS;
     labelNameEn = LABEL_NAME_EN;
     labelNameVn = LABEL_NAME_VN;
@@ -273,23 +275,34 @@ export default class FecNatureOfCaseModal extends LightningModal {
                 );
                 if (keepOpen) {
                     showLog('Resetting form for new entry');
-                    this.strName = '';
-                    this.customerTypeValue = CUST_TYPE_ALL;
-                    this.strAlias = '';
-                    this.strCode = '';
-                    this.strNameVN = '';
-                    this.intPosOrder = this.intPosOrder + 1; // Tăng order cho lần tiếp theo
-                    this.isStatus = true;
+                    // Close current modal with 'refreshAndReopen' signal so parent can refresh tree
+                    this.close({ action: 'refreshAndReopen' });
                 } else {
                     showLog('Closing modal with result:', result);
-                    this.close(result);
+                    this.close({ action: 'saved', result });
                 }
             })
             .catch(error => {
+                // Extract user-friendly error message
+                let userMessage = 'An error occurred while saving. Please try again.';
+                if (error.body && error.body.message) {
+                    const errorMsg = error.body.message;
+                    // Extract only the essential error info for BU
+                    if (errorMsg.includes('DUPLICATE_VALUE')) {
+                        userMessage = 'This code or field value already exists. Please use a different value.';
+                    } else if (errorMsg.includes('required')) {
+                        userMessage = 'Please fill in all required fields.';
+                    } else if (errorMsg.includes('Insert failed')) {
+                        userMessage = 'Failed to save record. Please check your data and try again.';
+                    } else {
+                        // For other errors, show first sentence only
+                        userMessage = errorMsg.split('.')[0] + '.';
+                    }
+                }
                 this.dispatchEvent(
                     new ShowToastEvent({
                         title: LABEL_ERROR_SAVE_LOOKUP,
-                        message: error.body && error.body.message ? error.body.message : LABEL_UNKNOWN_ERROR,
+                        message: userMessage,
                         variant: VARIANT_ERROR
                     })
                 );

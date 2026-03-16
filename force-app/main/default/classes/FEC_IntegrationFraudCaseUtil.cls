@@ -27,6 +27,12 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         }
     }
 
+    public class UpdateCaseResponse {
+        public String caseId;
+        public String caseMessage;
+        public String caseCode;
+    }
+
 
     /**
      * Wrapper response object for Fraud Case integration services.
@@ -161,7 +167,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
          * required by the integration service.
          */
         public List<FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element> additionalInfos;
-        public List<FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element> additionalInfoOrginal;
+        public List<FEC_IntegrationSoapFraudcaseService.AdditionalInfoCustom_element> additionalInfoOrginal;
     }
 
     /**
@@ -435,7 +441,10 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         String integrationCaseId,
         String serviceCaseId,
         String requestData,
-        String responseData
+        String responseData,
+        String messageStatus,
+        String requestor,
+        String description
     ) {
 
         FEC_Integration_Service_Log__c logRec =
@@ -448,6 +457,9 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         logRec.FEC_Service_Case_Id__c     = serviceCaseId;
         logRec.FEC_Request_Data__c        = safeText(requestData);
         logRec.FEC_Response_Data__c       = safeText(responseData);
+        logRec.FEC_Message_Status__c      = messageStatus;
+        logRec.FEC_Requestor__c           = requestor;
+        logRec.FEC_Description__c         = description;
 
         insert logRec;
     }
@@ -511,7 +523,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
 
         // Initialize AdditionalInfo list for SOAP request
         w.additionalInfos = new List<FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element>();      
-        w.additionalInfoOrginal =new List<FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element>(); 
+        w.additionalInfoOrginal =new List<FEC_IntegrationSoapFraudcaseService.AdditionalInfoCustom_element>(); 
         // Extract AdditionalInfo entries if present
         List<Object> rawList = (List<Object>) payload.get(c.ADDITIONAL_INFO);
         
@@ -526,12 +538,14 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
                 FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element ai =
                     new FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element();
                 
-                FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element originalAI =
-                new FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element();              
+                FEC_IntegrationSoapFraudcaseService.AdditionalInfoCustom_element originalAI =
+                new FEC_IntegrationSoapFraudcaseService.AdditionalInfoCustom_element();              
                 
                 String infoValue = (String) row.get(c.INFO_VALUE);
                 originalAI.ID = (String) row.get(c.INFO_ID);
                 originalAI.Value = infoValue;  
+                originalAI.Type = (String) row.get(c.INFO_TYPE);
+                originalAI.Mandatory = (Boolean) row.get(c.INFO_MANDATORY);
                 w.additionalInfoOrginal.add(originalAI);
                  //Check Attached file
                 if((String) row.get(c.INFO_TYPE) == fileType.TYPE_FILE) {
@@ -563,23 +577,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
             ai.ID    = c.INFO_REFERENCE_ID;
             ai.Value = w.serviceCaseId;
             w.additionalInfos.add(ai);
-            //Check caseID existing for update
-            if (String.isNotBlank(w.caseId)) {
-        
-                FEC_Integration_Case__c recInfo =
-                    getIntegrationCaseById(w.caseId);
-        
-                log('Check caseID existing for update: ' +
-                    JSON.serializePretty(recInfo));
-        
-                if (recInfo != null) {
-                
-                    ai.ID    = c.INFO_CASE_ID;
-                    ai.Value = w.caseId;
-        
-                    w.additionalInfos.add(ai);
-                }
-            }
+            
         }
 
         return w;
@@ -718,23 +716,31 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         req.ProductType = w.productType;
         req.Category    = w.category;
         req.SubCategory = w.subCategory;
-        req.SubCode     = w.subCode;
-
+        req.SubCode     = w.subCode;        
+        //Check caseID existing for update
+        if (String.isNotBlank(w.caseId)) {   
+            FEC_Integration_Case__c recInfo =
+                getIntegrationCaseById(w.caseId);
+            if (recInfo != null) {                
+                req.CaseID =  w.caseId;
+            }
+        }
         // Map case description / remarks
         req.Remarks = w.remarks;
 
         // Map additional key-value information (if any)
         req.AdditionalInfo = w.additionalInfos;
+        log('buildRequest-w.FraudCaseRequestWrapper: '+ JSON.serialize(req));
 
         return req;
     }
 
-    public static FEC_IntegrationSoapFraudcaseService.RequestInfo_element
+    public static FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element
     buildRequestOriginal(FraudCaseRequestWrapper w) {
 
         // Initialize RequestInfo element for SOAP request
-        FEC_IntegrationSoapFraudcaseService.RequestInfo_element req =
-            new FEC_IntegrationSoapFraudcaseService.RequestInfo_element();
+        FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element req =
+            new FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element();
 
         // Map fraud classification fields
         req.CaseType    = w.caseType;
@@ -858,27 +864,39 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
      * </Response>
      *
      * @param xml  Raw XML response from the integration service
-     * @return     Extracted CaseID value, or null if not found or XML is invalid
+     * @return     Extracted caseId, caseMessage, caseCode  value, or null if not found or XML is invalid
      */
-    public static String extractCaseIdFromResponse(String xml) {
-        FEC_FraudConstantCommon.IntegrationMappingField caseField = new FEC_FraudConstantCommon.IntegrationMappingField();
-        if (String.isBlank(xml)) return null;
-    
+    public static UpdateCaseResponse extractCaseIdFromResponse(String xml) {
+        FEC_FraudConstantCommon.IntegrationMappingField caseField = 
+            new FEC_FraudConstantCommon.IntegrationMappingField();
+
+        UpdateCaseResponse response = new UpdateCaseResponse();
+
+        if (String.isBlank(xml)) {
+            return response;
+        }
+
         try {
             Dom.Document doc = new Dom.Document();
             doc.load(xml);
-    
+
             Dom.XmlNode root = doc.getRootElement();
+            log('extractCaseIdFromResponse: '+ xml);
+
             Dom.XmlNode caseNode = root.getChildElement(caseField.SOURCE_CASEID, null);
-    
-            if (caseNode != null) {
-                return caseNode.getText();
-            }
+            Dom.XmlNode caseMessage = root.getChildElement(caseField.NODE_MESSAGE, null);
+            Dom.XmlNode caseCode = root.getChildElement(caseField.NODE_SUCCESS, null);
+
+            response.caseId = caseNode != null ? caseNode.getText() : null;
+            response.caseMessage = caseMessage != null ? caseMessage.getText() : null;
+            response.caseCode = caseCode != null ? caseCode.getText() : null;
+            log('extractCaseIdFromResponse-response: '+ response);
+
         } catch (Exception ex) {
             log('extractCaseIdFromResponse error: ' + ex.getMessage());
         }
-    
-        return null;
+
+        return response;
     }
 
     /**

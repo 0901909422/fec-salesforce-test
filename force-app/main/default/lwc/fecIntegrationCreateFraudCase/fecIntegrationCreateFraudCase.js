@@ -420,9 +420,10 @@ export default class IntegrationCreateFraudCase extends LightningElement {
                     ? String(p.value)
                     : null,
                 FileName: p.fileName || null,
-                Type: p.type
+                Type: p.type,
+                Mandatory: p.mandatory
             }));
-    
+    console.log('additionalInfoPayload: ', JSON.stringify(additionalInfoPayload));
         return {
             CaseType: this.fraudIntServiceType,
             ProductType: this.fraudIntProductLine,
