@@ -28,9 +28,36 @@ const formatDateTime = (curr) => {
   const day = String(curr.getDate()).padStart(2, "0");
   const h = String(curr.getHours()).padStart(2, "0");
   const m = String(curr.getMinutes()).padStart(2, "0");
-  
+  const s = String(curr.getSeconds()).padStart(2, "0");
 
-  return `${day}/${month}/${year}, ${h}:${m}`;
+  return `${day}/${month}/${year}, ${h}:${m}:${s}`;
+};
+
+/**
+ * Format date-time as DD/MM/YYYY HH:mm:ss (VN display)
+ */
+const formatDateTimeVN = (val) => {
+  if (!val) return '';
+  const d = new Date(val);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+  return `${day}/${m}/${y} ${h}:${min}:${s}`;
+};
+
+/**
+ * Format seconds as HH:mm:ss
+ */
+const formatDuration = (seconds) => {
+  if (seconds == null || isNaN(Number(seconds))) return '';
+  const n = Math.floor(Number(seconds));
+  const h = Math.floor(n / 3600);
+  const m = Math.floor((n % 3600) / 60);
+  const s = n % 60;
+  return [h, m, s].map((x) => String(x).padStart(2, "0")).join(':');
 };
 
 const mask = (s, keepStart = 4, keepEnd = 4) => {
@@ -145,12 +172,29 @@ const maskValue = (value, showFull) => {
   }
 
   /* =====================
-   * PHONE NUMBER (10 số)
-   * Hiển thị: 4 số đầu + 3 số cuối
-   * Ví dụ: 0906***678
+   * PHONE bắt đầu bằng 84 (11 số)
+   * Hiển thị: 5 số đầu + 3 số cuối
+   * Ví dụ: 84123***456
    * ===================== */
-  if (/^\d{10}$/.test(v)) {
+  if (/^84\d{9}$/.test(v)) {
+    return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
+  }
+
+  /* =====================
+   * PHONE bắt đầu bằng 0 (10 số)
+   * Hiển thị: 4 số đầu + 3 số cuối
+   * Ví dụ: 0123***456
+   * ===================== */
+  if (/^0\d{9}$/.test(v)) {
     return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
+  }
+  /* =====================
+   * LANDLINE bắt đầu bằng 02
+   * Hiển thị: 3 số đầu + 3 số cuối
+   * Ví dụ: 028*****456
+  * ===================== */
+  if (/^02\d{8,9}$/.test(v)) {
+  return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
   }
 
   /* =====================
@@ -516,7 +560,7 @@ const setConsoleTab = async (label, icon) => {
 const urlCmpWithRecordId = (cmp, recordId) => {
   return `/lightning/cmp/c__${cmp}?c__recordId=${recordId}`;
 }
-
+                                                                                                                                                                                                            
 /* ================= NEGATIVE HELPER ================= */
 const isNegative = (value) => {
   if (value === null || value === undefined || value === '') {
@@ -549,6 +593,8 @@ const formatNumber = (value) => {
 export {
   formatDate,
   formatDateTime,
+  formatDateTimeVN,
+  formatDuration,
   mask,
   formatDateVNI,
   formatToDDMMYYYY,

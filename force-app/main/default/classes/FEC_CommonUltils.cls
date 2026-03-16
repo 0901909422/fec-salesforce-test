@@ -398,6 +398,10 @@ public with sharing class FEC_CommonUltils {
     if (String.isBlank(dateStr))
       return null;
 
+    if (dateStr == '00000000' || dateStr == '99999999') {
+      return null;
+    }
+    
     try {
       // Format API trả về: yyyyMMdd (VD: 20281031)
       if (dateStr.length() == 8 && dateStr.isNumeric()) {
@@ -653,9 +657,15 @@ public with sharing class FEC_CommonUltils {
     value = value.trim().toUpperCase();
 
     switch on value {
-        when 'Y' { return 'Yes'; }
-        when 'N' { return 'No'; }
-        when else { return null; }
+        when 'Y', 'YES' { 
+            return 'Yes'; 
+        }
+        when 'N', 'NO' { 
+            return 'No'; 
+        }
+        when else { 
+            return null; 
+        }
     }
   }
 
@@ -673,6 +683,61 @@ public with sharing class FEC_CommonUltils {
     return 'Inactive';
   }
 
+  public static Date toDateStr(String v) {
+    if (String.isBlank(v)) return null;
+
+    v = v.trim();
+
+    try {
+
+        // Format: yyyy-MM-dd
+        if (v.contains('-')) {
+            return Date.valueOf(v);
+        }
+
+        // Format: dd/MM/yyyy
+        if (v.contains('/')) {
+            List<String> parts = v.split('/');
+            Integer day = Integer.valueOf(parts[0]);
+            Integer month = Integer.valueOf(parts[1]);
+            Integer year = Integer.valueOf(parts[2]);
+            return Date.newInstance(year, month, day);
+        }
+
+    } catch (Exception e) {
+        System.debug('Invalid date: ' + v);
+    }
+
+    return null;
+  }
+
+  /**
+   * Format address 
+   */
+  public static String formatAddress(
+    String numberStr,
+    String building,
+    String street,
+    String ward,
+    String district,
+    String city,
+    String countryName,
+    String zipCode
+  ) {
+    List<String> parts = new List<String>();
+
+    if (!String.isBlank(numberStr)) parts.add(numberStr);
+    if (!String.isBlank(building)) parts.add(building);
+    if (!String.isBlank(street)) parts.add(street);
+    if (!String.isBlank(ward)) parts.add(ward);
+    if (!String.isBlank(district)) parts.add(district);
+    if (!String.isBlank(city)) parts.add(city);
+    if (!String.isBlank(countryName)) parts.add(countryName);
+    if (!String.isBlank(zipCode)) parts.add(zipCode);
+
+    return String.join(parts, ', ');
+  }
+
   public static void logApi(
     String apiName,
     String endpoint,
@@ -684,16 +749,22 @@ public with sharing class FEC_CommonUltils {
     Boolean isSuccess = (response.getStatusCode() == 200);
     String statusCode =  String.valueOf(response.getStatusCode());
     String responseBody = response.getBody();
-    FEC_LogApiQueueable logApiQueueable = new FEC_LogApiQueueable(
-      apiName,
-      endpoint,
-      method,
-      requestBody,
-      isSuccess,
-      statusCode,
-      errorMessage,
-      responseBody
-    );
-    System.enqueueJob(logApiQueueable);
+    try {
+      FEC_API_Log__c log = new FEC_API_Log__c();
+
+      log.Name = apiName;
+      log.FEC_Endpoint__c = endpoint;
+      log.FEC_Method__c = method;
+      log.FEC_Request_String__c = requestBody;
+      log.FEC_Status_Code__c =  statusCode;
+      log.FEC_Response_String__c = responseBody;
+      log.FEC_Is_Success__c = isSuccess;
+      log.FEC_Error_Message__c = errorMessage;
+
+      insert log;
+
+    } catch(Exception e) {
+      System.debug('LOG INSERT ERROR: ' + e.getMessage());
+    }
   }
 }

@@ -57,6 +57,7 @@ public without sharing class FEC_CreateCaseHandler {
         public String subCategoryId;
         public String subCodeId;
         public String remarks;
+        
     }
     
     @AuraEnabled
@@ -218,7 +219,6 @@ public without sharing class FEC_CreateCaseHandler {
             System.debug('Assigning Agent ID: ' + dto.agentId + ' to User Id    : ' + createdInteraction.OwnerId);
             User userInfo = [SELECT Id, FEC_Agent_ID__c,FEC_Main_Queue__c FROM User WHERE Id = :createdInteraction.OwnerId];
             userInfo.FEC_Agent_ID__c = dto.agentId;
-            // userInfo.FEC_Main_Queue__c = 'default value';
             update userInfo;
         }
         

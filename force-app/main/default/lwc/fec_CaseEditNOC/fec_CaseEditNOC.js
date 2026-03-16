@@ -67,6 +67,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
   subCodeSelectedId;
   natureOfCase;
 
+  disableProdType;
+
   get disableCategory() {
     return !this.productTypeSelectedId;
   }
@@ -106,6 +108,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
     })
       .then((res) => {
         this.productTypeSelectedId = res.FEC_Product_Type__c;
+
+        if (this.productTypeSelectedId) {
+          this.disableProdType = true;
+        } else {
+          this.disableProdType = false;
+        }
 
         this.categorySelectedId = res.FEC_Category__c;
 
