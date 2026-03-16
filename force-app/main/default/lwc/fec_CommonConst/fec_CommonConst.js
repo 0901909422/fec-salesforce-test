@@ -40,6 +40,8 @@ const MSG_UNKNOWN_ERROR = 'Unknown error';
 const CASE_OBJECT_API_NAME = 'Case';
 const NAV_ACTION_VIEW = 'view';
 const NAV_ACTION_LIST = 'list';
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -82,5 +84,6 @@ export {
     MSG_UNKNOWN_ERROR,
     CASE_OBJECT_API_NAME,
     NAV_ACTION_VIEW,
-    NAV_ACTION_LIST
+    NAV_ACTION_LIST,
+    EMAIL_REGEX,
 };

@@ -16,28 +16,30 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/16 - Added onAfterInsert handler for auto follow-up
      */
     public static void run() {
-        FEC_CaseTriggerHandler handler = new FEC_CaseTriggerHandler();
-        
+        if (isExecuting) {
+            return;
+        }
+
         if (Trigger.isBefore && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            handler.onBeforeInsert(newCases);
+            onBeforeInsert(newCases);
         }
         
         if (Trigger.isBefore && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            handler.onBeforeUpdate(newCases, oldMap);
+            onBeforeUpdate(newCases, oldMap);
         }
         
         if (Trigger.isAfter && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            handler.onAfterInsert(newCases);
+            onAfterInsert(newCases);
         }
         
         if (Trigger.isAfter && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            handler.onAfterUpdate(newCases, oldMap);
+            onAfterUpdate(newCases, oldMap);
         }
     }
 
@@ -53,6 +55,7 @@ public without sharing class FEC_CaseTriggerHandler {
         updateCaseParticipantsOnInsert(newCases);
         syncChannelFromInteractionForCustomerCase(newCases);
         assignEntitlement(newCases);
+        setEmail2CaseChannelBeforeInsert(newCases);
     }
 
     /**
@@ -76,15 +79,12 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/01/16 Toannd61
      */
     private void onAfterInsert(List<Case> newCases) {
-        // Tránh recursive trigger
-        if (isExecuting) {
-            return;
-        }
         
         isExecuting = true;
         
         try {
             handleAutoFollowUpOnInsert(newCases);
+            updateEmail2CaseFieldsOnInsert(newCases);
         } finally {
             isExecuting = false;
         }
@@ -100,10 +100,6 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/02/02
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
-        // Tránh recursive trigger
-        if (isExecuting) {
-            return;
-        }
         
         isExecuting = true;
         
@@ -289,8 +285,103 @@ public without sharing class FEC_CaseTriggerHandler {
     }
     
     /**
-     * Lấy RecordType Id của Case có DeveloperName = CASE_INTERACTION_RECORD_TYPE_DEV_NAME (Interaction).
-     * Dùng Schema describe, không query.
+     * Method Description: Cập nhật Case (Email2Case) sau insert khi thỏa điều kiện:
+     * Origin = Email2Case, RecordType DeveloperName = Interaction, FEC_Channel__c rỗng.
+     * Gán FEC_Interaction_Email__c từ EmailMessage.FromAddress, FEC_Send_To__c, FEC_Channel__c = Email.
+     * Gọi @future để tránh thời điểm After Insert chưa có EmailMessage / FromAddress (Email-to-Case tạo EmailMessage sau Case).
+     * @param newCases Danh sách Case mới vừa được insert
+     * @return void
+     * @created: 2026/02/10 LongNH76
+     */
+      private void updateEmail2CaseFieldsOnInsert(List<Case> newCases) {
+        
+        Id interactionRecordTypeId = getInteractionRecordTypeId();
+        if (interactionRecordTypeId == null) {
+            return;
+        }
+
+        List<Id> caseIdsToUpdate = new List<Id>();
+
+        for (Case c : newCases) {
+            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE && c.RecordTypeId == interactionRecordTypeId) {
+                caseIdsToUpdate.add(c.Id);
+            }
+        }
+
+        if (caseIdsToUpdate.isEmpty()) {
+            return;
+        }
+
+        // Chạy bất đồng bộ: sau khi transaction insert commit, EmailMessage đã có và FromAddress đã fill
+        updateEmail2CaseFieldsAsync(caseIdsToUpdate);
+    }
+
+    /**
+     * Before Insert: Gán FEC_Channel__c = 'Email', FEC_Interaction_Subchannel__c = 'Incoming Email' cho Case Email2Case.
+     */
+    private void setEmail2CaseChannelBeforeInsert(List<Case> newCases) {
+        Id interactionRecordTypeId = getInteractionRecordTypeId();
+        if (interactionRecordTypeId == null) {
+            return;
+        }
+        for (Case c : newCases) {
+            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE
+                    && c.RecordTypeId == interactionRecordTypeId
+                    && String.isBlank(c.FEC_Channel__c)) {
+                c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
+                c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+            }
+        }
+    }
+
+    /**
+     * Cập nhật Case (FEC_Interaction_Email__c, FEC_Send_To__c) chạy sau transaction insert.
+     * FEC_Channel__c đã được set trong Before Insert.
+     */
+    @future
+    public static void updateEmail2CaseFieldsAsync(List<Id> caseIds) {
+        if (caseIds == null || caseIds.isEmpty()) {
+            return;
+        }
+
+        String sendToValue = System.Label.UBankCustomberServiceEmail;
+
+        Map<Id, String> caseIdToFromAddress = new Map<Id, String>();
+        for (EmailMessage em : [SELECT Id, ParentId, FromAddress, CreatedDate
+                                FROM EmailMessage
+                                WHERE ParentId IN :caseIds
+                                AND FromAddress != NULL AND ToAddress  = :sendToValue
+                                ORDER BY CreatedDate ASC]) {
+            if (!caseIdToFromAddress.containsKey(em.ParentId)) {
+                caseIdToFromAddress.put(em.ParentId, em.FromAddress);
+            }
+        }
+
+        List<Case> casesToDml = new List<Case>();
+        for (Id caseId : caseIds) {
+            String fromAddr = caseIdToFromAddress.get(caseId);
+            casesToDml.add(new Case(
+                Id = caseId,
+                FEC_Interaction_Email__c = fromAddr,
+                FEC_Send_To__c = sendToValue,
+                FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL
+            ));
+        }
+
+        // assignCases(casesToDml);
+
+        if (!casesToDml.isEmpty()) {
+            isExecuting = true;
+            try {
+                update casesToDml;
+            } finally {
+                isExecuting = false;
+            }
+        }
+    }
+
+    /**
+     * Lấy RecordType Id của Case có DeveloperName = "Interaction".
      * @return Id hoặc null nếu không tìm thấy
      */
     private static Id getInteractionRecordTypeId() {
