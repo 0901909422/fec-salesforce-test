@@ -519,6 +519,10 @@ public with sharing class FEC_CommonUltils {
     return d.format();
   }
 
+  public static String formatTimestamp(Datetime timestamp ,String format) {
+    return Datetime.valueOf(timestamp).format(format);
+  }
+
   public static String decimalToString(Decimal d) {
     return d == null ? '' : d.format();
   }
