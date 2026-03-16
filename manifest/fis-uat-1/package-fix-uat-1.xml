@@ -47,6 +47,8 @@
 		<members>FEC_ContentDocumentTriggerHandler</members>
 		<members>FEC_ContentVersionTriggerHandler</members>
 		<members>FEC_FileActionOnReviewService</members>
+		<members>FEC_CaseOwnerChangeNotification</members>
+		<members>FEC_CaseTriggerHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -195,6 +197,8 @@
 		<members>FEC_Toast_Search_Validation</members>
 		<members>FEC_MSG_Error_API_Label</members>
 		<members>FEC_List_relevant_case_empty</members>
+		<members>FEC_Email_Subject_Case_Owner_Change</members>
+		<members>FEC_Email_Body_Case_Owner_Change</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -435,6 +439,8 @@
 		<members>FEC_Stage_Screen__c.FEC_Restrict_Update_Code</members>
 		<members>FEC_Sub_Category__c.FEC_Restrict_Update_Code</members>
 		<members>FEC_Sub_Code__c.FEC_Restrict_Update_Code</members>
+		<members>Case.FEC_Restrict_Change_Owner_Non_Owner</members>
+		<members>Case.FEC_Restrict_Change_Owner_When_Resolved</members>
 		<name>ValidationRule</name>
 	</types>
 	<types>
