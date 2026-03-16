@@ -104,6 +104,8 @@
 		<members>Case.FEC_Interaction_View_Mode__c</members>
 		<members>Case.FEC_Account_Contract_Number_PL__c</members>
 		<members>Case.FEC_Case_Created_By__c</members>
+		<members>Case.FEC_Interaction_ID__c</members>
+		<members>Case.FEC_Interaction_Status__c</members>
 		<members>FEC_Contact_List__c.FEC_Contact_ID__c	</members>
 		<members>ContentVersion.FEC_Stage_ID__c</members>
         <name>CustomField</name>
