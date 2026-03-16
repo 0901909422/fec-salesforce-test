@@ -1,6 +1,6 @@
 .master-data-layout {
     display: grid;
-    grid-template-columns: 300px 1fr 300px;
+    grid-template-columns: 370px 1fr;
     gap: 1rem;
     height: calc(100vh - 200px);
     padding: 1rem;
@@ -8,15 +8,6 @@
 }
 
 .tree-panel {
-    background-color: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow-y: auto;
-    max-height: 100%;
-}
-
-/* Thêm style cho panel bên phải mới */
-.right-panel {
     background-color: white;
     border-radius: 0.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -58,7 +49,7 @@
 /* Responsive Design */
 @media (max-width: 1024px) {
     .master-data-layout {
-        grid-template-columns: 250px 1fr;
+        grid-template-columns: 300px 1fr;
     }
 }
 

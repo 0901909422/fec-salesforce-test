@@ -1,81 +1,111 @@
 <template>
     <div class="detail-container">
+        
+        <lightning-layout class="main-container slds-grid_stretch">
+            
+            <lightning-layout-item size="12" large-device-size={mainPanelSize} class="main-panel">
+                
+                <template if:true={editedItem.name}>
 
-        <template if:true={editedItem.name}>
-
-            <div class="slds-page-header slds-p-around_medium slds-clearfix">
-                <div class="slds-page-header__row">
-                    <div class="slds-page-header__col-title">
-                        <div class="slds-media">
-                            <div class="slds-media__figure">
-                                <lightning-icon icon-name={nodeIcon} size="small"></lightning-icon>
+                    <div class="slds-page-header slds-p-around_medium slds-clearfix">
+                        <div class="slds-page-header__row">
+                            <div class="slds-page-header__col-title">
+                                <div class="slds-media">
+                                    <div class="slds-media__figure">
+                                        <lightning-icon icon-name={nodeIcon} size="small"></lightning-icon>
+                                    </div>
+                                    <div class="slds-media__body">
+                                        <p class="slds-page-header__name-meta">{nodeTypeLabel}</p>
+                                        <h1 class="slds-page-header__title slds-truncate slds-align-middle">
+                                            {targetObjectType}
+                                        </h1>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="slds-media__body">
-                                <p class="slds-page-header__name-meta">{nodeTypeLabel}</p>
-                                <h1 class="slds-page-header__title slds-truncate slds-align-middle">
-                                    {targetObjectType}
-                                </h1>
+                            <div class="slds-page-header__col-actions">
+                                <div class="slds-page-header__actions">
+                                    <button class="slds-button slds-button_neutral slds-m-left_x-small"
+                                        onclick={handleRefresh} disabled={isUndoDisabled}>
+                                        <lightning-icon icon-name="utility:refresh" size="x-small"
+                                            class="slds-button__icon slds-button__icon_left"></lightning-icon>
+                                        {labelUndo}
+                                    </button>
+                                    
+                                    <lightning-button 
+                                        label={toggleHistoryLabel} 
+                                        icon-name={toggleHistoryIcon} 
+                                        variant="neutral"
+                                        class="slds-m-left_x-small"
+                                        onclick={handleToggleHistory}>
+                                    </lightning-button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="slds-page-header__col-actions">
-                        <div class="slds-page-header__actions">
-                            <button class="slds-button slds-button_neutral slds-m-left_x-small"
-                                onclick={handleRefresh} disabled={isUndoDisabled}>
-                                <lightning-icon icon-name="utility:refresh" size="x-small"
-                                    class="slds-button__icon slds-button__icon_left"></lightning-icon>
-                                {labelUndo}
-                            </button>
-                        </div>
+
+                    <div class="slds-grid slds-wrap slds-gutters_small slds-p-horizontal_medium slds-p-vertical_small">
+                        <lightning-layout-item size="12" medium-device-size="12"
+                            class="slds-p-horizontal_small slds-m-bottom_small">
+                            <lightning-input type="text" name="Alias" label={labelAlias} value={editedItem.Alias}
+                                onchange={handleInputChange} required></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" medium-device-size="12"
+                            class="slds-p-horizontal_small slds-m-bottom_small">
+                            <lightning-input type="text" name="NameEN" label={labelNameEN} value={editedItem.NameEN}
+                                onchange={handleInputChange} required></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" medium-device-size="12"
+                            class="slds-p-horizontal_small slds-m-bottom_small">
+                            <lightning-input type="text" name="nameVN" label={labelNameVN} value={editedItem.nameVN}
+                                onchange={handleInputChange} required></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" medium-device-size="12"
+                            class="slds-p-horizontal_small slds-m-bottom_small">
+                            <lightning-input type="number" name="PosOrder" label={labelOrder} value={editedItem.PosOrder}
+                                onchange={handleInputChange} required></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" medium-device-size="12"
+                            class="slds-p-horizontal_small slds-m-bottom_small">
+                            <lightning-input type="checkbox" name="Status" label={labelStatus} checked={editedItem.Status}
+                                onchange={handleInputChange}></lightning-input>
+                        </lightning-layout-item>
                     </div>
-                </div>
-            </div>
 
-            <div class="slds-grid slds-wrap slds-gutters_small slds-p-horizontal_medium slds-p-vertical_small">
-                <lightning-layout-item size="12" medium-device-size="12"
-                    class="slds-p-horizontal_small slds-m-bottom_small">
-                    <lightning-input type="text" name="Alias" label={labelAlias} value={editedItem.Alias}
-                        onchange={handleInputChange} required></lightning-input>
-                </lightning-layout-item>
-                <lightning-layout-item size="12" medium-device-size="12"
-                    class="slds-p-horizontal_small slds-m-bottom_small">
-                    <lightning-input type="text" name="NameEN" label={labelNameEN} value={editedItem.NameEN}
-                        onchange={handleInputChange} required></lightning-input>
-                </lightning-layout-item>
-                <lightning-layout-item size="12" medium-device-size="12"
-                    class="slds-p-horizontal_small slds-m-bottom_small">
-                    <lightning-input type="text" name="nameVN" label={labelNameVN} value={editedItem.nameVN}
-                        onchange={handleInputChange} required></lightning-input>
-                </lightning-layout-item>
-                <lightning-layout-item size="12" medium-device-size="12"
-                    class="slds-p-horizontal_small slds-m-bottom_small">
-                    <lightning-input type="number" name="PosOrder" label={labelOrder} value={editedItem.PosOrder}
-                        onchange={handleInputChange} required></lightning-input>
-                </lightning-layout-item>
-                <lightning-layout-item size="12" medium-device-size="12"
-                    class="slds-p-horizontal_small slds-m-bottom_small">
-                    <lightning-input type="checkbox" name="Status" label={labelStatus} checked={editedItem.Status}
-                        onchange={handleInputChange}></lightning-input>
-                </lightning-layout-item>
-            </div>
+                    <template if:true={loading}>
+                        <div class="loading-container">
+                            <lightning-spinner alternative-text={labelSpinnerLoading} size="medium"></lightning-spinner>
+                        </div>
+                    </template>
+                    <template if:true={hasError}>
+                        <div class="error-container">
+                            <lightning-icon icon-name="utility:error" size="small"></lightning-icon>
+                            <span class="error-message">{labelError}: {errorMessage}</span>
+                        </div>
+                    </template>
 
-            <template if:true={loading}>
-                <div class="loading-container">
-                    <lightning-spinner alternative-text={labelSpinnerLoading} size="medium"></lightning-spinner>
-                </div>
-            </template>
-            <template if:true={hasError}>
-                <div class="error-container">
-                    <lightning-icon icon-name="utility:error" size="small"></lightning-icon>
-                    <span class="error-message">{labelError}: {errorMessage}</span>
-                </div>
+                </template>
+
+                <template if:false={editedItem.name}>
+                    <div class="empty-state-container">
+                        <p class="slds-text-color_weak slds-p-around_medium">{labelPromptSelectNode}</p>
+                    </div>
+                </template>
+
+            </lightning-layout-item>
+
+            <template if:true={isHistoryVisible}>
+                <lightning-layout-item size="12" large-device-size="3" class="history-panel">
+                    <div class="history-content slds-scrollable_y">
+                        <c-fec-config-history 
+                            data-id="historyComponent"
+                            object-api-name={historyObjectApiName}
+                            record-id={nodeId}>
+                        </c-fec-config-history>
+                    </div>
+                </lightning-layout-item>
             </template>
 
-        </template>
-
-        <template if:false={editedItem.name}>
-            <p class="slds-text-color_weak slds-p-around_medium">{labelPromptSelectNode}</p>
-        </template>
+        </lightning-layout>
 
     </div>
 </template>

@@ -46,46 +46,24 @@
         <name>ApexTrigger</name>
     </types>
     <types>
-        <members>FEC_Additional_Field_List_Value__c.ExternalID__c</members>
         <members>FEC_Additional_Field_List_Value__c.FEC_Additional_Field__c</members>
         <members>FEC_Additional_Field_List_Value__c.FEC_Name_VN__c</members>
         <members>FEC_Additional_Field_List_Value__c.FEC_Order__c</members>
-        <members>FEC_Additional_Field_List_Value__c.Process_Change_Status__c</members>
-        <members>FEC_Additional_Field__c.ExternalID__c</members>
         <members>FEC_Additional_Field__c.FEC_Field_Mandatory__c</members>
         <members>FEC_Additional_Field__c.FEC_Field_Status__c</members>
         <members>FEC_Additional_Field__c.FEC_Name_VN__c</members>
         <members>FEC_Additional_Field__c.FEC_Type__c</members>
         <members>FEC_Additional_Field__c.FEC_Unique_ID__c</members>
-        <members>FEC_Additional_Field__c.Process_Change_Status__c</members>
-        <members>FEC_Data_Integration_Mapping__c.ExternalID__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_Auto_Mapping__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_Case_Stage__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_Int_Category_Id__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_Int_Channel__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_Int_Product_Line_Id__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_Int_Service_Type_Id__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_Int_Sub_Category_Id__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_Int_Sub_Code_Id__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_Int_User_Type_Id__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_Nature_Of_Case__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_Process_Change_Status__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_ScreenId__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_Status__c</members>
-        <members>FEC_Data_Integration_Mapping__c.FEC_User_Type_Id__c</members>
-        <members>FEC_MDM_Additional_Field_List_Value__c.ExternalID__c</members>
         <members>FEC_MDM_Additional_Field_List_Value__c.FEC_Additional_Field__c</members>
         <members>FEC_MDM_Additional_Field_List_Value__c.FEC_Name_VN__c</members>
         <members>FEC_MDM_Additional_Field_List_Value__c.FEC_Order__c</members>
         <members>FEC_MDM_Additional_Field_List_Value__c.Process_Change_Status__c</members>
-        <members>FEC_MDM_Additional_Field__c.ExternalID__c</members>
         <members>FEC_MDM_Additional_Field__c.FEC_Field_Mandatory__c</members>
         <members>FEC_MDM_Additional_Field__c.FEC_Field_Status__c</members>
         <members>FEC_MDM_Additional_Field__c.FEC_Name_VN__c</members>
         <members>FEC_MDM_Additional_Field__c.FEC_Type__c</members>
         <members>FEC_MDM_Additional_Field__c.FEC_Unique_ID__c</members>
         <members>FEC_MDM_Additional_Field__c.Process_Change_Status__c</members>
-        <members>FEC_MDM_Business_Process__c.ExternalID__c</members>
         <members>FEC_MDM_Business_Process__c.FEC_Alias__c</members>
         <members>FEC_MDM_Business_Process__c.FEC_Business_Process_Status__c</members>
         <members>FEC_MDM_Business_Process__c.FEC_Business_Process_Vietnamese_Name__c</members>
@@ -94,7 +72,6 @@
         <members>FEC_MDM_Business_Process__c.FEC_Pos_Order__c</members>
         <members>FEC_MDM_Business_Process__c.FEC_Status__c</members>
         <members>FEC_MDM_Business_Process__c.Process_Change_Status__c</members>
-        <members>FEC_MDM_Case_Channel__c.ExternalID__c</members>
         <members>FEC_MDM_Case_Channel__c.FEC_Alias__c</members>
         <members>FEC_MDM_Case_Channel__c.FEC_Channel_Status__c</members>
         <members>FEC_MDM_Case_Channel__c.FEC_Code__c</members>
@@ -102,7 +79,6 @@
         <members>FEC_MDM_Case_Channel__c.FEC_Self_Service_Flag__c</members>
         <members>FEC_MDM_Case_Channel__c.FEC_Status__c</members>
         <members>FEC_MDM_Case_Channel__c.Process_Change_Status__c</members>
-        <members>FEC_MDM_Case_Stage__c.ExternalID__c</members>
         <members>FEC_MDM_Case_Stage__c.FEC_Alias__c</members>
         <members>FEC_MDM_Case_Stage__c.FEC_Business_Process__c</members>
         <members>FEC_MDM_Case_Stage__c.FEC_Code__c</members>
@@ -110,7 +86,6 @@
         <members>FEC_MDM_Case_Stage__c.FEC_Pos_Order__c</members>
         <members>FEC_MDM_Case_Stage__c.FEC_Status__c</members>
         <members>FEC_MDM_Case_Stage__c.Process_Change_Status__c</members>
-        <members>FEC_MDM_Category__c.ExternalID__c</members>
         <members>FEC_MDM_Category__c.FEC_Alias__c</members>
         <members>FEC_MDM_Category__c.FEC_Code__c</members>
         <members>FEC_MDM_Category__c.FEC_Name_VN__c</members>
@@ -118,13 +93,11 @@
         <members>FEC_MDM_Category__c.FEC_Pos_Order__c</members>
         <members>FEC_MDM_Category__c.FEC_Status__c</members>
         <members>FEC_MDM_Category__c.Process_Change_Status__c</members>
-        <members>FEC_MDM_Channel__c.ExternalID__c</members>
         <members>FEC_MDM_Channel__c.FEC_Channel_ID__c</members>
         <members>FEC_MDM_Channel__c.FEC_Channel_Status__c</members>
         <members>FEC_MDM_Channel__c.FEC_Channel_Vietnamese_name__c</members>
         <members>FEC_MDM_Channel__c.FEC_Self_Service_Flag__c</members>
         <members>FEC_MDM_Channel__c.Process_Change_Status__c</members>
-        <members>FEC_MDM_Master_Data_Setting__c.ExternalID__c</members>
         <members>FEC_MDM_Master_Data_Setting__c.FEC_Additional_Field__c</members>
         <members>FEC_MDM_Master_Data_Setting__c.FEC_Applicable_Role__c</members>
         <members>FEC_MDM_Master_Data_Setting__c.FEC_Case_Channel__c</members>
@@ -145,7 +118,6 @@
         <members>FEC_MDM_Master_Data_Setting__c.FEC_Stage_Name__c</members>
         <members>FEC_MDM_Master_Data_Setting__c.Process_Change_Status__c</members>
         <members>FEC_MDM_Master_Data_Setting__c.Property_Reference__c</members>
-        <members>FEC_MDM_Nature_Of_Case__c.ExternalID__c</members>
         <members>FEC_MDM_Nature_Of_Case__c.FEC_Business_Process__c</members>
         <members>FEC_MDM_Nature_Of_Case__c.FEC_Category__c</members>
         <members>FEC_MDM_Nature_Of_Case__c.FEC_Customer_Type__c</members>
@@ -155,7 +127,6 @@
         <members>FEC_MDM_Nature_Of_Case__c.FEC_Sub_Category__c</members>
         <members>FEC_MDM_Nature_Of_Case__c.FEC_Sub_Code__c</members>
         <members>FEC_MDM_Nature_Of_Case__c.Process_Change_Status__c</members>
-        <members>FEC_MDM_Product_Type__c.ExternalID__c</members>
         <members>FEC_MDM_Product_Type__c.FEC_Alias__c</members>
         <members>FEC_MDM_Product_Type__c.FEC_Code__c</members>
         <members>FEC_MDM_Product_Type__c.FEC_Name_VN__c</members>
@@ -163,14 +134,12 @@
         <members>FEC_MDM_Product_Type__c.FEC_Pos_Order__c</members>
         <members>FEC_MDM_Product_Type__c.FEC_Status__c</members>
         <members>FEC_MDM_Product_Type__c.Process_Change_Status__c</members>
-        <members>FEC_MDM_Sub_Category__c.ExternalID__c</members>
         <members>FEC_MDM_Sub_Category__c.FEC_Alias__c</members>
         <members>FEC_MDM_Sub_Category__c.FEC_Code__c</members>
         <members>FEC_MDM_Sub_Category__c.FEC_Name_VN__c</members>
         <members>FEC_MDM_Sub_Category__c.FEC_Pos_Order__c</members>
         <members>FEC_MDM_Sub_Category__c.FEC_Status__c</members>
         <members>FEC_MDM_Sub_Category__c.Process_Change_Status__c</members>
-        <members>FEC_MDM_Sub_Code__c.ExternalID__c</members>
         <members>FEC_MDM_Sub_Code__c.FEC_Alias__c</members>
         <members>FEC_MDM_Sub_Code__c.FEC_Code__c</members>
         <members>FEC_MDM_Sub_Code__c.FEC_Name_VN__c</members>
@@ -490,7 +459,6 @@
         <name>LightningComponentBundle</name>
     </types>
     <types>
-        <members>FEC_Additional_Field__c.All</members>
         <members>FEC_Data_Integration_Mapping__c.All</members>
         <members>FEC_MDM_Additional_Field__c.All</members>
         <members>FEC_MDM_Business_Process__c.All</members>
