@@ -109,6 +109,7 @@
 		<members>Case.FEC_Interaction_Status__c</members>
 		<members>FEC_Contact_List__c.FEC_Contact_ID__c	</members>
 		<members>ContentVersion.FEC_Stage_ID__c</members>
+		<members>FEC_Additional_Info__c.FEC_Card_Retention_Decline_Reason__c</members>
         <name>CustomField</name>
     </types>
 	<types>
