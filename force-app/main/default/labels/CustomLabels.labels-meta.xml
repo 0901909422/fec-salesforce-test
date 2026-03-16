@@ -1790,7 +1790,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Follow Up Label</shortDescription>
-        <value>Follow Up</value>
+        <value>Follow-up</value>
     </labels>
     <labels>
         <fullName>FEC_Follow_Up_Until_Resolved</fullName>
@@ -1924,41 +1924,6 @@
         <protected>false</protected>
         <shortDescription>Interaction Duration</shortDescription>
         <value>Interaction Duration</value>
-    </labels>
-    <labels>
-        <fullName>FEC_FollowUp_Type_Until_Case_Resolved</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Follow-up type: Until Case is Resolved</shortDescription>
-        <value>Until Case is Resolved</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Follow_Up_Until_Unfollow</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Until Unfollow</shortDescription>
-        <value>Until Unfollow</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Follow_Up_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Follow Up Label</shortDescription>
-        <value>Follow-Up</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Follow_Up_Until_Resolved</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Until Resolved</shortDescription>
-        <value>Until Resolved</value>
-    </labels>
-    <labels>
-        <fullName>Interaction_Entitlement_Name</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Name of Entitlement record for Interaction Case</shortDescription>
-        <value>Interaction Entitlement</value>
     </labels>
     <labels>
         <fullName>FEC_Interaction_ID</fullName>
@@ -8021,6 +7986,20 @@
         <protected>false</protected>
         <shortDescription>List relevant case empty</shortDescription>
         <value>Không tìm thấy kết quả</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Subject_Case_Owner_Change</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email subject when Case owner changes (Send Notification)</shortDescription>
+        <value>Case {0} đã được phân công cho bạn</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Body_Case_Owner_Change</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email body when Case owner changes. {0}=Case Number, {1}=Case link URL</shortDescription>
+        <value>Case {0} đã được phân công cho bạn. Vui lòng xem và xử lý: {1}</value>
     </labels>
     <labels>
         <fullName>FEC_Case_Created_By_Label</fullName>

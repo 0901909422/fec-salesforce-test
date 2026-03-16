@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Card_Retention_Decline_Reason__c</fullName>
+    <description>Lý do không đồng ý giữ thẻ</description>
+    <label>Card Retention Decline Reason</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Borrowing from Other Provider</fullName>
+                <default>false</default>
+                <label>Borrowing from Other Provider</label>
+            </value>
+            <value>
+                <fullName>Unattractive Promotions</fullName>
+                <default>false</default>
+                <label>Unattractive Promotions</label>
+            </value>
+            <value>
+                <fullName>Overseas</fullName>
+                <default>false</default>
+                <label>Overseas</label>
+            </value>
+            <value>
+                <fullName>Low Credit Limit</fullName>
+                <default>false</default>
+                <label>Low Credit Limit</label>
+            </value>
+            <value>
+                <fullName>No Longer Need Card</fullName>
+                <default>false</default>
+                <label>No Longer Need Card</label>
+            </value>
+            <value>
+                <fullName>Not Tech-Savvy</fullName>
+                <default>false</default>
+                <label>Not Tech-Savvy</label>
+            </value>
+            <value>
+                <fullName>High Interest/Fees</fullName>
+                <default>false</default>
+                <label>High Interest/Fees</label>
+            </value>
+            <value>
+                <fullName>Sales Advice Unclear/Inaccurate</fullName>
+                <default>false</default>
+                <label>Sales Advice Unclear/Inaccurate</label>
+            </value>
+            <value>
+                <fullName>Sales Requested Cancel &amp; Reapply</fullName>
+                <default>false</default>
+                <label>Sales Requested Cancel &amp; Reapply</label>
+            </value>
+            <value>
+                <fullName>Annual Fee</fullName>
+                <default>false</default>
+                <label>Annual Fee</label>
+            </value>
+            <value>
+                <fullName>Loan/Card Opening Process</fullName>
+                <default>false</default>
+                <label>Loan/Card Opening Process</label>
+            </value>
+            <value>
+                <fullName>Debt Reminder Process</fullName>
+                <default>false</default>
+                <label>Debt Reminder Process</label>
+            </value>
+            <value>
+                <fullName>Payment Process</fullName>
+                <default>false</default>
+                <label>Payment Process</label>
+            </value>
+            <value>
+                <fullName>Collection Staff Attitude</fullName>
+                <default>false</default>
+                <label>Collection Staff Attitude</label>
+            </value>
+            <value>
+                <fullName>Mandatory Card Cancellation</fullName>
+                <default>false</default>
+                <label>Mandatory Card Cancellation</label>
+            </value>
+            <value>
+                <fullName>Survey Failed (Details)</fullName>
+                <default>false</default>
+                <label>Survey Failed (Details)</label>
+            </value>
+            <value>
+                <fullName>Other (Details)</fullName>
+                <default>false</default>
+                <label>Other (Details)</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

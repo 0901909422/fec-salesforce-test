@@ -110,6 +110,7 @@ public without sharing class FEC_CaseTriggerHandler {
         try {
             handleFollowUpOnResolved(newCases, oldMap);
             handleAutoFollowUpOnUpdate(newCases, oldMap);
+            FEC_CaseOwnerChangeNotification.sendNotificationToNewOwner(newCases, oldMap);
         } finally {
             isExecuting = false;
         }
