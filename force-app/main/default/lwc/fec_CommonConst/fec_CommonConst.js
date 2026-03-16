@@ -35,6 +35,9 @@ const MSG_INVALID_NATIONAL_ID = 'Invalid National ID number';
 const MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12 = 'National ID must contain digits only (9 or 12 digits)';
 const MSG_INVALID_EMAIL_FORMAT = 'Email must be one of (randomString1)@(randomString2).(2-5 chars) or (randomString1)@(randomString2).(2-5 chars).(2-5 chars)';
 const UBANK_PRODUCT_NAME = 'UBank';
+const RECORD_TYPE_INTERACTION = 'Interaction';
+const RECORD_TYPE_CUSTOMER_CASE = 'Customer_Case';
+const RECORD_TYPE_INTERNAL_CASE = 'Internal_Case';
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -70,7 +73,10 @@ export {
     MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY,
     MSG_NATIONAL_ID_PASSPORT_RULES,
     MSG_INVALID_NATIONAL_ID,
-  MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12,
-  MSG_INVALID_EMAIL_FORMAT,
-  UBANK_PRODUCT_NAME,
+    MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12,
+    MSG_INVALID_EMAIL_FORMAT,
+    UBANK_PRODUCT_NAME,
+    RECORD_TYPE_INTERACTION,
+    RECORD_TYPE_CUSTOMER_CASE,
+    RECORD_TYPE_INTERNAL_CASE
 };

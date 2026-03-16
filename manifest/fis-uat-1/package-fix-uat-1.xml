@@ -3,7 +3,7 @@
     <types>
         <members>FEC_ConstantCommon</members>
         <members>FEC_InteractionHighlightController</members>
-        <members>FEC_AccountOrContractPicklistHanlder</members>
+        <members>FEC_AccountOrContractPicklistHandler</members>
         <members>FEC_ClickToCallHandler</members>
         <members>FEC_CommonUltils</members>
         <members>FEC_InteractionInforHandler</members>
@@ -48,6 +48,8 @@
 		<members>FEC_ContentVersionTriggerHandler</members>
 		<members>FEC_FileActionOnReviewService</members>
 		<members>FEC_GetCSMasterDataService</members>
+		<members>FEC_CaseOwnerChangeNotification</members>
+		<members>FEC_CaseTriggerHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -90,6 +92,7 @@
 		<members>fecRelevantInteractionCase</members>
 		<members>fec_StatementsAccount</members>
 		<members>fec_InteractionCreateCase</members>
+		<members>fec_MainInfoAccount</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -103,6 +106,8 @@
 		<members>Case.FEC_Interaction_View_Mode__c</members>
 		<members>Case.FEC_Account_Contract_Number_PL__c</members>
 		<members>Case.FEC_Case_Created_By__c</members>
+		<members>Case.FEC_Interaction_ID__c</members>
+		<members>Case.FEC_Interaction_Status__c</members>
 		<members>FEC_Contact_List__c.FEC_Contact_ID__c	</members>
 		<members>ContentVersion.FEC_Stage_ID__c</members>
         <name>CustomField</name>
@@ -196,6 +201,8 @@
 		<members>FEC_Toast_Search_Validation</members>
 		<members>FEC_MSG_Error_API_Label</members>
 		<members>FEC_List_relevant_case_empty</members>
+		<members>FEC_Email_Subject_Case_Owner_Change</members>
+		<members>FEC_Email_Body_Case_Owner_Change</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -436,6 +443,8 @@
 		<members>FEC_Stage_Screen__c.FEC_Restrict_Update_Code</members>
 		<members>FEC_Sub_Category__c.FEC_Restrict_Update_Code</members>
 		<members>FEC_Sub_Code__c.FEC_Restrict_Update_Code</members>
+		<members>Case.FEC_Restrict_Change_Owner_Non_Owner</members>
+		<members>Case.FEC_Restrict_Change_Owner_When_Resolved</members>
 		<name>ValidationRule</name>
 	</types>
 	<types>

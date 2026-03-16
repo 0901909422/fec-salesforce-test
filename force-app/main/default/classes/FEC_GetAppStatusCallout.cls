@@ -139,7 +139,7 @@ public without sharing class FEC_GetAppStatusCallout {
         request.parameters = new List<String>();
         request.body = requestBody;
         
-        String requestBodyJson = JSON.serialize(request);
+        String requestBodyJson = JSON.serialize(requestBody);
         
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_App_Status');
