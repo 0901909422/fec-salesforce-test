@@ -59,6 +59,11 @@ public with sharing class FEC_GetRemovablePhoneStatus {
           String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Phone'})
         );
       }
+      if (phone.length() > 40) {
+        throw new FEC_APIServiceException(
+          String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Phone', '40'})
+        );
+      }
 
       String transId = UUID.randomUUID().toString();
       String timestamp = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);

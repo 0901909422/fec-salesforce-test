@@ -1,8 +1,8 @@
 import { LightningElement, api, wire, track } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import HAS_ACCOUNT_OR_CONTACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
-import getInteractionAccountNumber from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.getInteractionAccountNumber";
-import GetProductsListByCif from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.GetProductsListByCif";
+import getInteractionAccountNumber from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionAccountNumber";
+import getProductsListByCif from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getProductsListByCif";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import { UBANK_PRODUCT_NAME } from "c/fec_CommonConst";
 import {
@@ -12,7 +12,7 @@ import {
   MessageContext,
 } from "lightning/messageService";
 
-import createHistory from "@salesforce/apex/FEC_AccountOrContractPicklistHanlder.createHistory";
+import createHistory from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.createHistory";
 
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import FEC_ACCOUNT_CONTRACT_NUMBER_LABEL from "@salesforce/label/c.FEC_Account_Contract_Number_Label";
@@ -135,7 +135,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     getInteractionAccountNumber({ caseId: this.recordId })
       .then((result) => {
         const data = JSON.parse(result);
-
+        console.log(data)
         console.log(data.accountNumber);
         console.log(data.cifNumber);
         this.selectedValue = data.accountNumber;
@@ -150,10 +150,10 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   }
 
   getProductsList() {
-    GetProductsListByCif({ cifNumber: this.cifNumber })
+    getProductsListByCif({ cifNumber: this.cifNumber })
       .then((result) => {
         console.log(
-          "[APEX] GetProductsListByCif result:",
+          "[APEX] getProductsListByCif result:",
           JSON.stringify(result),
         );
         const mappedData = result.map((item, index) => ({
@@ -161,21 +161,21 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
           product: item.productType,
           accountContractNumber: item.accountContractNumber,
           productName: item.productName,
-          isSelected: false,
+          isSelected: item.accountContractNumber === this.selectedValue
         }));
 
         mappedData.push({
           id: String(mappedData.length + 1),
           product: UBANK_PRODUCT_NAME,
-          accountContractNumber: UBANK_PRODUCT_NAME,
-          productName: UBANK_PRODUCT_NAME,
-          isSelected: false,
+          accountContractNumber: null,
+          productName: null,
+          isSelected: UBANK_PRODUCT_NAME === this.selectedValue
         });
         console.log("Mapped Data:", mappedData);
         this.data = mappedData;
       })
       .catch((error) => {
-        console.error("[APEX] GetProductsListByCif error:", error);
+        console.error("[APEX] getProductsListByCif error:", error);
       });
   }
 
@@ -214,6 +214,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     this.selectedValue = row.accountContractNumber;
     this.createHistory();
     this.isOpen = false;
+    window.location.reload();
   }
 
   createHistory() {

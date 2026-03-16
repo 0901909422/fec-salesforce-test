@@ -199,10 +199,14 @@ public with sharing class FEC_GetCustomerList {
 
         if (String.isNotBlank(phoneNumber)) {
             Dom.XmlNode phone = params.addChildElement('PhoneNumber', null, null);
-            phone.setAttribute(
-                'IsReferencesSearch',
-                String.valueOf(isReferenceSearch)
-            );
+
+            if (isReferenceSearch != null) {
+                phone.setAttribute(
+                    'IsReferencesSearch',
+                    String.valueOf(isReferenceSearch)
+                );
+            }
+            
             phone.addTextNode(phoneNumber);
         }
 
