@@ -784,7 +784,7 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
-  private static String escapeXml(String s) {
+  public static String escapeXml(String s) {
     if (s == null)
       return '';
     return s.replace('&', '&amp;')
