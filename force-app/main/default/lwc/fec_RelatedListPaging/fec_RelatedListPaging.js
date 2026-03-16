@@ -439,16 +439,15 @@ export default class Fec_RelatedListPaging extends LightningElement {
     handleSort(event) {
         const fieldName = event.currentTarget.dataset.field;
         if (!fieldName) return;
-
-        // Toggle sort direction if clicking the same column
         if (this.sortedBy === fieldName) {
-            this.sortedDirection = this.sortedDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            // Sort by new column, default to asc
-            this.sortedBy = fieldName;
-            this.sortedDirection = 'asc';
-        }
+            this.sortedDirection =
+                this.sortedDirection === 'asc' ? 'desc' : 'asc';
 
+        } else {
+            this.sortedBy = fieldName;
+            this.sortedDirection = 'desc';
+        }
+        
         this.currentPage = 1;
         this.sortData(this.sortedBy, this.sortedDirection);
         this._records = [...this._records];
