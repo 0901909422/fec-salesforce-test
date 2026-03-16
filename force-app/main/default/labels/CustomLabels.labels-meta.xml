@@ -5857,7 +5857,27 @@
         <value>No Case Found</value>
     </labels>
     <labels>
-
+        <fullName>UBankCustomberServiceEmail</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UBankCustomberServiceEmail</shortDescription>
+        <value>tsalesforce63@gmail.com</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Ubank_Email_DevName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Ubank_Email_DevName</shortDescription>
+        <value>FEC_Ubank_Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Ubank_Skill_DevName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Ubank_Skill_DevName</shortDescription>
+        <value>Ubank_Email</value>
+    </labels>
+    <labels>
         <fullName>User_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>

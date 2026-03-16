@@ -54,6 +54,9 @@
 		<members>FEC_Interaction_Email_Save_Error</members>
 		<members>FEC_Send_To_Label</members>
 		<members>FEC_Parent_ID_Label</members>
+		<members>UBankCustomberServiceEmail</members>
+        <members>FEC_Ubank_Email_DevName</members>
+        <members>FEC_Ubank_Skill_DevName</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -83,6 +86,18 @@
 	<types>
 		<members>Case</members>
 		<name>Settings</name>
+	</types>
+	<types>
+        <members>Channel</members>
+        <name>GlobalValueSet</name>
+    </types>
+	<types>
+        <members>CaseOrigin</members>
+        <name>StandardValueSet</name>
+    </types>
+	<types>
+		<members>FEC_Ubank_Email</members>
+		<name>Queue</name>
 	</types>
 	<version>65.0</version>
 </Package>
