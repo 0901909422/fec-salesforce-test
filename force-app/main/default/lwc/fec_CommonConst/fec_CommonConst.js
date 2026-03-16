@@ -55,6 +55,7 @@ const MSG_UNKNOWN_ERROR = "Unknown error";
 const CASE_OBJECT_API_NAME = "Case";
 const NAV_ACTION_VIEW = "view";
 const NAV_ACTION_LIST = "list";
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CHANNEL_OPTIONS = [
   { label: "Inbound", value: "Inbound" },
   { label: "Outbound", value: "Outbound" },
@@ -154,6 +155,7 @@ export {
   CASE_OBJECT_API_NAME,
   NAV_ACTION_VIEW,
   NAV_ACTION_LIST,
+  EMAIL_REGEX,
   CHANNEL_OPTIONS,
   SUB_CHANNEL_MAP,
   RECORD_TYPES,

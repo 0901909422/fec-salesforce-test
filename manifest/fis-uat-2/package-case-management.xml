@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
-    <types>
+	<types>
 		<members>interstion sla main_v3</members>
 		<name>EntitlementProcess</name>
 	</types>
@@ -46,7 +46,19 @@
 		<members>FEC_Posted_Date</members>
 		<members>FEC_Postal_Code</members>
 		<members>FEC_Provided_Number</members>
+		<members>FEC_Interaction_Email_Info_Label</members>
+		<members>FEC_Interaction_Email_Label</members>
+		<members>FEC_Interaction_Email_Input_Placeholder</members>
+		<members>FEC_Interaction_Email_Required_Msg</members>
+		<members>FEC_Interaction_Email_Invalid_Msg</members>
+		<members>FEC_Interaction_Email_Save_Error</members>
+		<members>FEC_Send_To_Label</members>
+		<members>FEC_Parent_ID_Label</members>
 		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>FEC_New_Interaction_Record_For_E2C</members>
+		<name>Flow</name>
 	</types>
 	<types>
 		<members>fec_AppInfo</members>
@@ -56,6 +68,7 @@
 		<members>fec_CommonConst</members>
 		<members>fec_CreateInteractionCaseInListView</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
+		<members>fecInteractionEmailInfo</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -72,5 +85,9 @@
 		<members>FEC_CreateInteractionManualHandler</members>
         <name>ApexClass</name>
     </types>
-    <version>65.0</version>
+	<types>
+		<members>Case</members>
+		<name>Settings</name>
+	</types>
+	<version>65.0</version>
 </Package>
