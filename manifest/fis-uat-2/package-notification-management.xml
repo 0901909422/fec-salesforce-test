@@ -42,5 +42,9 @@
 		<members>FEC_Notification__c.Manual_Notification_for_Internal_User</members>
 		<name>ListView</name>
 	</types>
+	<types>
+        <members>FEC_Service</members>
+        <name>CustomApplication</name>
+    </types>
     <version>66.0</version>
 </Package>

@@ -179,6 +179,186 @@
     </profileActionOverrides>
     <profileActionOverrides>
         <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Auto</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Auto_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>Admin</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Auto</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Auto_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>Admin</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Manual</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Manual_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>Admin</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Manual</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Manual_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>Admin</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Auto</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Auto_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>CS Back Office</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Auto</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Auto_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>CS Back Office</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Auto</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Auto_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>CS Frontline</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Auto</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Auto_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>CS Frontline</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Auto</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Auto_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>Relevant Depts</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Auto</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Auto_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>Relevant Depts</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Auto</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Auto_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>RD - IT User</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Auto</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Auto_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>RD - IT User</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Manual</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Manual_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>CS Back Office</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Manual</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Manual_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>CS Back Office</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Manual</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Manual_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>CS Frontline</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Manual</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Manual_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>CS Frontline</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Manual</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Manual_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>RD - IT User</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Manual</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Manual_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>RD - IT User</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Manual</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Manual_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>Relevant Depts</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Notification_Record_Page_Manual</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>FEC_Notification__c</pageOrSobjectType>
+        <recordType>FEC_Notification__c.Manual_Notification</recordType>
+        <type>Flexipage</type>
+        <profile>Relevant Depts</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
         <content>FEC_Search_Case_Record_Page</content>
         <formFactor>Small</formFactor>
         <pageOrSobjectType>Case</pageOrSobjectType>
