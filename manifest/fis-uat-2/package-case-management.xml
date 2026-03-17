@@ -105,5 +105,9 @@
 		<members>FEC_Ubank_Email</members>
 		<name>Queue</name>
 	</types>
+	<types>
+        <members>Case.Interaction</members>
+        <name>RecordType</name>
+    </types>
 	<version>65.0</version>
 </Package>
