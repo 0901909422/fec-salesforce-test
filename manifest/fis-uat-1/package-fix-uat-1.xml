@@ -49,6 +49,7 @@
 		<members>FEC_FileActionOnReviewService</members>
 		<members>FEC_CaseOwnerChangeNotification</members>
 		<members>FEC_CaseTriggerHandler</members>
+		<members>FEC_KYCController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -92,6 +93,7 @@
 		<members>fec_StatementsAccount</members>
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_MainInfoAccount</members>
+		<members>fec_KYC</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -458,6 +460,10 @@
 	<types>
 		<members>FEC_Watcher_Refresh</members>
 		<name>LightningMessageChannel</name>
+	</types>
+	<types>
+		<members>CaseStatus</members>
+		<name>StandardValueSet</name>
 	</types>
     <version>65.0</version>
 </Package>

@@ -257,6 +257,8 @@ export default class Fec_RelatedListPaging extends LightningElement {
                         }
 
                         const eyeKey = `${rowIndex}-${col.fieldName}`;
+                        // Eye-type columns: ALL rows are masked by default;
+                        // isMasked is always true unless user has explicitly toggled it off
                         const isMasked = this.eyeStates[eyeKey] !== false;
                         const rawValue = row[col.fieldName];
 
@@ -269,7 +271,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
                             iconName: isMasked ? 'utility:hide' : 'utility:preview'
                         };
                     }
-                    
+
                     /* ===== RICH TEXT TYPE ===== */
                     if (col.type === 'richText') {
                         return {
@@ -301,6 +303,21 @@ export default class Fec_RelatedListPaging extends LightningElement {
                         || (col.cellAttributes && col.cellAttributes.alignment)
                         || 'left';
                     const fullCellClass = [cellClass || '', 'cell-' + align].filter(Boolean).join(' ').trim();
+
+                    // isMaskable column + masked row → render as eye-type cell with toggle icon
+                    if (col.isMaskable === true && row.masked === true) {
+                        const eyeKey = `${rowIndex}-${col.fieldName}`;
+                        const isMasked = this.eyeStates[eyeKey] !== false;
+                        return {
+                            key: col.fieldName,
+                            isEye: true,
+                            fieldName: col.fieldName,
+                            rowIndex,
+                            value: this.getEyeDisplayValue(row[col.fieldName], isMasked),
+                            iconName: isMasked ? 'utility:hide' : 'utility:preview'
+                        };
+                    }
+
                     return {
                         key: col.fieldName,
                         isLink: false,
