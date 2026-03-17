@@ -6,6 +6,24 @@ import FEC_Collections_Info_Label from '@salesforce/label/c.FEC_Collections_Info
 import FEC_Sales_Info_Label from '@salesforce/label/c.FEC_Sales_Info_Label';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 import FEC_Termination_Loading_Alt from '@salesforce/label/c.FEC_Termination_Loading_Alt';
+import FEC_Disbursement_Channel_Label from '@salesforce/label/c.FEC_Disbursement_Channel_Label';
+import FEC_CC_Code_Label from '@salesforce/label/c.FEC_CC_Code_Label';
+import FEC_CC_Name_Label from '@salesforce/label/c.FEC_CC_Name_Label';
+import FEC_DSA_Code_Label from '@salesforce/label/c.FEC_DSA_Code_Label';
+import FEC_DSA_Name_Label from '@salesforce/label/c.FEC_DSA_Name_Label';
+import FEC_SecondaryInfo_Bank_Name_Label from '@salesforce/label/c.FEC_SecondaryInfo_Bank_Name_Label';
+import FEC_SecondaryInfo_Top_Up_Loan_Amount_Requested_Label from '@salesforce/label/c.FEC_SecondaryInfo_Top_Up_Loan_Amount_Requested_Label';
+import FEC_SecondaryInfo_Branch_Name_Label from '@salesforce/label/c.FEC_SecondaryInfo_Branch_Name_Label';
+import FEC_SecondaryInfo_Disbursement_Date_Label from '@salesforce/label/c.FEC_SecondaryInfo_Disbursement_Date_Label';
+import FEC_SecondaryInfo_Top_Up_Old_Ac_Outstanding_Label from '@salesforce/label/c.FEC_SecondaryInfo_Top_Up_Old_Ac_Outstanding_Label';
+import FEC_SecondaryInfo_Account_Number_Label from '@salesforce/label/c.FEC_SecondaryInfo_Account_Number_Label';
+import FEC_SecondaryInfo_Is_Top_Up_Account_Label from '@salesforce/label/c.FEC_SecondaryInfo_Is_Top_Up_Account_Label';
+import FEC_SecondaryInfo_Top_Up_Old_Ac_App_ID_Label from '@salesforce/label/c.FEC_SecondaryInfo_Top_Up_Old_Ac_App_ID_Label';
+import FEC_SecondaryInfo_Responsible_Unit_Label from '@salesforce/label/c.FEC_SecondaryInfo_Responsible_Unit_Label';
+import FEC_SecondaryInfo_Date_Assigned_Label from '@salesforce/label/c.FEC_SecondaryInfo_Date_Assigned_Label';
+import FEC_SecondaryInfo_Responsible_Person_Label from '@salesforce/label/c.FEC_SecondaryInfo_Responsible_Person_Label';
+import FEC_SecondaryInfo_TSA_Code_Label from '@salesforce/label/c.FEC_SecondaryInfo_TSA_Code_Label';
+import FEC_SecondaryInfo_TSA_Name_Label from '@salesforce/label/c.FEC_SecondaryInfo_TSA_Name_Label';
 
 export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
     @api recordId;
@@ -111,15 +129,15 @@ export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
         if (!this.accountData) return [];
 
         return [
-            this.buildField('Bank Name', this.accountData?.bankName, 'FEC_Bank_Name__c'),
-            this.buildField('Disbursement Channel', this.accountData?.disbursementChannel, 'FEC_Disbursement_Channel__c'),
-            this.buildMoneyField('Top Up Loan Amount Requested', this.accountData?.topUpLoanAmountRequested, 'FEC_Top_Up_Loan_Amount_Requested__c'),
-            this.buildField('Branch Name', this.accountData?.branchName, 'FEC_Branch_Name__c'),
-            this.buildField('Disbursement Date', this.accountData?.disbursementDate, 'FEC_Disbursement_Date__c'),
-            this.buildMoneyField('Top Up Old A/c Outstanding', this.accountData?.topUpOldAcOutstanding, 'FEC_Top_Up_Old_A_c_Outstanding__c'),
-            this.buildField('Account Number', this.accountData?.accountNumber, 'FEC_Account_Number__c'),
-            this.buildField('Is Top Up Account', this.accountData?.isTopUpAccount, 'FEC_Is_Top_Up_Account__c'),
-            this.buildField('Top Up Old A/c App ID', this.accountData?.topUpOldAcAppId, 'FEC_Top_Up_Old_Account_App_ID__c'),
+            this.buildField(FEC_SecondaryInfo_Bank_Name_Label, this.accountData?.bankName, 'FEC_Bank_Name__c'),
+            this.buildField(FEC_Disbursement_Channel_Label, this.accountData?.disbursementChannel, 'FEC_Disbursement_Channel__c'),
+            this.buildMoneyField(FEC_SecondaryInfo_Top_Up_Loan_Amount_Requested_Label, this.accountData?.topUpLoanAmountRequested, 'FEC_Top_Up_Loan_Amount_Requested__c'),
+            this.buildField(FEC_SecondaryInfo_Branch_Name_Label, this.accountData?.branchName, 'FEC_Branch_Name__c'),
+            this.buildField(FEC_SecondaryInfo_Disbursement_Date_Label, this.accountData?.disbursementDate, 'FEC_Disbursement_Date__c'),
+            this.buildMoneyField(FEC_SecondaryInfo_Top_Up_Old_Ac_Outstanding_Label, this.accountData?.topUpOldAcOutstanding, 'FEC_Top_Up_Old_A_c_Outstanding__c'),
+            this.buildField(FEC_SecondaryInfo_Account_Number_Label, this.accountData?.accountNumber, 'FEC_Account_Number__c'),
+            this.buildField(FEC_SecondaryInfo_Is_Top_Up_Account_Label, this.accountData?.isTopUpAccount, 'FEC_Is_Top_Up_Account__c'),
+            this.buildField(FEC_SecondaryInfo_Top_Up_Old_Ac_App_ID_Label, this.accountData?.topUpOldAcAppId, 'FEC_Top_Up_Old_Account_App_ID__c'),
         ];
     }
 
@@ -127,10 +145,10 @@ export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
         if (!this.accountData) return [];
 
         return [
-            this.buildField('Responsible Unit', this.accountData?.responsibleUnit, 'FEC_Responsible_Unit__c'),
-            this.buildField('Date Assigned', this.accountData?.dateAssigned, 'FEC_Date_Assigned__c'),
+            this.buildField(FEC_SecondaryInfo_Responsible_Unit_Label, this.accountData?.responsibleUnit, 'FEC_Responsible_Unit__c'),
+            this.buildField(FEC_SecondaryInfo_Date_Assigned_Label, this.accountData?.dateAssigned, 'FEC_Date_Assigned__c'),
             { label: '', value: '' }, // Ô trống cột 3 hàng 1
-            this.buildField('Responsible Person', this.accountData?.responsiblePerson, 'FEC_Responsible_Person__c'),
+            this.buildField(FEC_SecondaryInfo_Responsible_Person_Label, this.accountData?.responsiblePerson, 'FEC_Responsible_Person__c'),
         ];
     }
 
@@ -138,12 +156,12 @@ export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
         if (!this.accountData) return [];
 
         return [
-            this.buildField('CC Code', this.accountData?.ccCode, 'FEC_CC_Code__c'),
-            this.buildField('DSA Code', this.accountData?.dsaCode, 'FEC_DSA_Code__c'),
-            this.buildField('TSA Code', this.accountData?.tsaCode, 'FEC_TSA_Code__c'),
-            this.buildField('CC Name', this.accountData?.ccName, 'FEC_CC_Name__c'),
-            this.buildField('DSA Name', this.accountData?.dsaName, 'FEC_DSA_Name__c'),
-            this.buildField('TSA Name', this.accountData?.tsaName, 'FEC_TSA_Name__c'),
+            this.buildField(FEC_CC_Code_Label, this.accountData?.ccCode, 'FEC_CC_Code__c'),
+            this.buildField(FEC_DSA_Code_Label, this.accountData?.dsaCode, 'FEC_DSA_Code__c'),
+            this.buildField(FEC_SecondaryInfo_TSA_Code_Label, this.accountData?.tsaCode, 'FEC_TSA_Code__c'),
+            this.buildField(FEC_CC_Name_Label, this.accountData?.ccName, 'FEC_CC_Name__c'),
+            this.buildField(FEC_DSA_Name_Label, this.accountData?.dsaName, 'FEC_DSA_Name__c'),
+            this.buildField(FEC_SecondaryInfo_TSA_Name_Label, this.accountData?.tsaName, 'FEC_TSA_Name__c'),
         ];
     }
 

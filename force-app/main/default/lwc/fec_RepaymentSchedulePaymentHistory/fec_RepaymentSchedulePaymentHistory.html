@@ -14,7 +14,7 @@
                         <div class="repay-schedule-summary-item">
                             <div class="repay-schedule-row-inner">
                                 <span class="repay-schedule-label repay-schedule-label-gray slds-text-title_bold">
-                                    Total Installment Amount
+                                    {customLabel.totalInstallmentAmount}
                                     <span class="repay-helptext-wrap">
                                         <template if:true={helpTextMap.FEC_Total_Installment_Amount__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_Installment_Amount__c}></lightning-helptext>
@@ -27,7 +27,7 @@
                         <div class="repay-schedule-summary-item">
                             <div class="repay-schedule-row-inner">
                                 <span class="repay-schedule-label repay-schedule-label-gray slds-text-title_bold">
-                                    Total Principal
+                                    {customLabel.totalPrincipal}
                                     <span class="repay-helptext-wrap">
                                         <template if:true={helpTextMap.FEC_Total_Principal__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_Principal__c}></lightning-helptext>
@@ -40,7 +40,7 @@
                         <div class="repay-schedule-summary-item">
                             <div class="repay-schedule-row-inner">
                                 <span class="repay-schedule-label repay-schedule-label-gray slds-text-title_bold">
-                                    Total Interest
+                                    {customLabel.totalInterest}
                                     <span class="repay-helptext-wrap">
                                         <template if:true={helpTextMap.FEC_Total_Interest__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_Interest__c}></lightning-helptext>
@@ -52,7 +52,7 @@
                         </div>
                     </div>
                     <template if:true={hasRepaymentScheduleTableData}>
-                        <c-fec_-related-list-addresses-paging
+                        <c-fec_-related-list-paging
                             columns={repaymentSchedulePagingColumns}
                             records={repaymentSchedulePagingRecords}
                             default-sorted-by="dueDate"
@@ -60,10 +60,10 @@
                             page-size={repaymentSchedulePageSize}
                             hide-row-number
                             hide-updated-time>
-                        </c-fec_-related-list-addresses-paging>
+                        </c-fec_-related-list-paging>
                     </template>
                     <template if:false={hasRepaymentScheduleTableData}>
-                        <div class="repay-no-data">No data</div>
+                        <div class="repay-no-data">{customLabel.noData}</div>
                     </template>
                     </template>
                 </div>
@@ -81,7 +81,7 @@
                         <div class="repay-schedule-summary-item">
                             <div class="repay-schedule-row-inner">
                                 <span class="repay-schedule-label repay-schedule-label-red slds-text-title_bold">
-                                    Total Payment Amount
+                                    {customLabel.totalPaymentAmount}
                                     <span class="repay-helptext-wrap">
                                         <template if:true={helpTextMap.FEC_Total_Payment_Amount__c}>
                                             <lightning-helptext content={helpTextMap.FEC_Total_Payment_Amount__c}></lightning-helptext>
@@ -95,7 +95,7 @@
                         <div class="repay-schedule-summary-item"></div>
                     </div>
                     <template if:true={hasPaymentHistoryTableData}>
-                        <c-fec_-related-list-addresses-paging
+                        <c-fec_-related-list-paging
                             columns={paymentHistoryPagingColumns}
                             records={paymentHistoryPagingRecords}
                             default-sorted-by="paymentDate"
@@ -103,17 +103,17 @@
                             page-size={paymentHistoryPageSize}
                             hide-row-number
                             hide-updated-time>
-                        </c-fec_-related-list-addresses-paging>
+                        </c-fec_-related-list-paging>
                     </template>
                     <template if:false={hasPaymentHistoryTableData}>
-                        <div class="repay-no-data">No data</div>
+                        <div class="repay-no-data">{customLabel.noData}</div>
                     </template>
                     </template>
                 </div>
             </lightning-accordion-section>
             <lightning-accordion-section name={realTimePaymentSectionName} label={customLabel.realTimePayment} class="slds-accordion__section">
                 <div slot="actions">
-                    <lightning-button label="Refresh" variant="brand" onclick={handleRealTimeRefresh} disabled={isRefreshingRealTime}></lightning-button>
+                    <lightning-button label={customLabel.refreshButton} variant="brand" onclick={handleRealTimeRefresh} disabled={isRefreshingRealTime}></lightning-button>
                 </div>
                 <div class="slds-form slds-p-around_small repay-realtime-content repay-section-content">
                     <template if:true={isLoading}>
@@ -129,7 +129,7 @@
                     </template>
                     <template if:false={isRefreshingRealTime}>
                         <template if:true={hasRealTimePaymentTableData}>
-                            <c-fec_-related-list-addresses-paging
+                            <c-fec_-related-list-paging
                                 columns={realTimePaymentPagingColumns}
                                 records={realTimePaymentPagingRecords}
                                 default-sorted-by="paymentDate"
@@ -137,10 +137,10 @@
                                 page-size={realTimePaymentPageSize}
                                 hide-row-number
                                 hide-updated-time>
-                            </c-fec_-related-list-addresses-paging>
+                            </c-fec_-related-list-paging>
                         </template>
                         <template if:false={hasRealTimePaymentTableData}>
-                            <div class="repay-no-data">No data</div>
+                            <div class="repay-no-data">{customLabel.noData}</div>
                         </template>
                     </template>
                     </template>
@@ -157,7 +157,7 @@
                     <!-- Section 4: một bảng gộp Repayment Schedule + Payment History -->
                     <div class="repay-section4-block">
                         <template if:true={hasSection4CombinedData}>
-                            <c-fec_-related-list-addresses-paging
+                            <c-fec_-related-list-paging
                                 columns={section4CombinedColumns}
                                 records={section4CombinedRecords}
                                 default-sorted-by="sortKey"
@@ -165,10 +165,10 @@
                                 page-size={section4PageSize}
                                 hide-row-number
                                 hide-updated-time>
-                            </c-fec_-related-list-addresses-paging>
+                            </c-fec_-related-list-paging>
                         </template>
                         <template if:false={hasSection4CombinedData}>
-                            <div class="repay-no-data">No data</div>
+                            <div class="repay-no-data">{customLabel.noData}</div>
                         </template>
                     </div>
                     </template>

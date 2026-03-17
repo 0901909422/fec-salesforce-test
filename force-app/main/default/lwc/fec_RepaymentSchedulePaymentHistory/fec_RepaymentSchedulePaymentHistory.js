@@ -7,6 +7,27 @@ import FEC_Real_Time_Payment_Label from '@salesforce/label/c.FEC_Real_Time_Payme
 import FEC_Repayment_Schedule_Payment_History_Label from '@salesforce/label/c.FEC_Repayment_Schedule_Payment_History_Label';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 import FEC_Termination_Loading_Alt from '@salesforce/label/c.FEC_Termination_Loading_Alt';
+import FEC_Repay_Total_Installment_Amount_Label from '@salesforce/label/c.FEC_Repay_Total_Installment_Amount_Label';
+import FEC_Repay_Total_Principal_Label from '@salesforce/label/c.FEC_Repay_Total_Principal_Label';
+import FEC_Repay_Total_Interest_Label from '@salesforce/label/c.FEC_Repay_Total_Interest_Label';
+import FEC_Repay_Total_Payment_Amount_Label from '@salesforce/label/c.FEC_Repay_Total_Payment_Amount_Label';
+import FEC_Repay_Installment_No_Label from '@salesforce/label/c.FEC_Repay_Installment_No_Label';
+import FEC_Repay_Installment_Due_Date_Label from '@salesforce/label/c.FEC_Repay_Installment_Due_Date_Label';
+import FEC_Repay_EMI_Label from '@salesforce/label/c.FEC_Repay_EMI_Label';
+import FEC_Repay_Repayment_Fee_Label from '@salesforce/label/c.FEC_Repay_Repayment_Fee_Label';
+import FEC_Repay_Installment_Amount_Label from '@salesforce/label/c.FEC_Repay_Installment_Amount_Label';
+import FEC_Repay_Principal_Label from '@salesforce/label/c.FEC_Repay_Principal_Label';
+import FEC_Repay_Interest_Label from '@salesforce/label/c.FEC_Repay_Interest_Label';
+import FEC_Repay_Opening_Principal_Label from '@salesforce/label/c.FEC_Repay_Opening_Principal_Label';
+import FEC_Repay_Closing_Principal_Label from '@salesforce/label/c.FEC_Repay_Closing_Principal_Label';
+import FEC_Repay_Payment_No_Label from '@salesforce/label/c.FEC_Repay_Payment_No_Label';
+import FEC_Repay_Payment_Date_Label from '@salesforce/label/c.FEC_Repay_Payment_Date_Label';
+import FEC_Repay_Booking_Date_Label from '@salesforce/label/c.FEC_Repay_Booking_Date_Label';
+import FEC_Repay_Payment_Amount_Label from '@salesforce/label/c.FEC_Repay_Payment_Amount_Label';
+import FEC_Repay_Particulars_Label from '@salesforce/label/c.FEC_Repay_Particulars_Label';
+import FEC_Repay_Payment_Channel_Label from '@salesforce/label/c.FEC_Repay_Payment_Channel_Label';
+import FEC_Repay_No_Data_Label from '@salesforce/label/c.FEC_Repay_No_Data_Label';
+import FEC_Repay_Refresh_Button_Label from '@salesforce/label/c.FEC_Repay_Refresh_Button_Label';
 
 const SECTION4_EMPTY_CELL = '-';
 const SECTION4_TYPE_SCHEDULE = 'Repayment Schedule';
@@ -35,6 +56,12 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         repaymentSchedulePaymentHistory: FEC_Repayment_Schedule_Payment_History_Label,
         msgErrorAPI: FEC_MSG_Error_API_Label,
         loadingAlt: FEC_Termination_Loading_Alt,
+        totalInstallmentAmount: FEC_Repay_Total_Installment_Amount_Label,
+        totalPrincipal: FEC_Repay_Total_Principal_Label,
+        totalInterest: FEC_Repay_Total_Interest_Label,
+        totalPaymentAmount: FEC_Repay_Total_Payment_Amount_Label,
+        noData: FEC_Repay_No_Data_Label,
+        refreshButton: FEC_Repay_Refresh_Button_Label,
     };
 
     get activeSections() {
@@ -70,15 +97,15 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     get repaymentSchedulePagingColumns() {
         const cols = [
-            { label: 'Installment No', fieldName: 'installmentNo' },
-            { label: 'Installment Due Date', fieldName: 'dueDate' },
-            { label: 'EMI', fieldName: 'emi', cellAlign: 'right' },
-            { label: 'Repayment Fee', fieldName: 'repaymentFee', cellAlign: 'right' },
-            { label: 'Installment Amount', fieldName: 'installmentAmount', cellAlign: 'right' },
-            { label: 'Principal', fieldName: 'principal', cellAlign: 'right' },
-            { label: 'Interest', fieldName: 'interest', cellAlign: 'right' },
-            { label: 'Opening Principal', fieldName: 'openingPrincipal', cellAlign: 'right' },
-            { label: 'Closing Principal', fieldName: 'closingPrincipal', cellAlign: 'right' },
+            { label: FEC_Repay_Installment_No_Label, fieldName: 'installmentNo' },
+            { label: FEC_Repay_Installment_Due_Date_Label, fieldName: 'dueDate' },
+            { label: FEC_Repay_EMI_Label, fieldName: 'emi', cellAlign: 'right' },
+            { label: FEC_Repay_Repayment_Fee_Label, fieldName: 'repaymentFee', cellAlign: 'right' },
+            { label: FEC_Repay_Installment_Amount_Label, fieldName: 'installmentAmount', cellAlign: 'right' },
+            { label: FEC_Repay_Principal_Label, fieldName: 'principal', cellAlign: 'right' },
+            { label: FEC_Repay_Interest_Label, fieldName: 'interest', cellAlign: 'right' },
+            { label: FEC_Repay_Opening_Principal_Label, fieldName: 'openingPrincipal', cellAlign: 'right' },
+            { label: FEC_Repay_Closing_Principal_Label, fieldName: 'closingPrincipal', cellAlign: 'right' },
         ];
         return cols.map((c) => ({
             ...c,
@@ -117,12 +144,12 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     get paymentHistoryPagingColumns() {
         const cols = [
-            { label: 'Payment No.', fieldName: 'paymentNo' },
-            { label: 'Payment Date', fieldName: 'paymentDate' },
-            { label: 'Booking Date', fieldName: 'bookingDate' },
-            { label: 'Payment Amount', fieldName: 'paymentAmount', cellAlign: 'right' },
-            { label: 'Particulars', fieldName: 'particulars' },
-            { label: 'Payment Channel', fieldName: 'paymentChannel' },
+            { label: FEC_Repay_Payment_No_Label, fieldName: 'paymentNo' },
+            { label: FEC_Repay_Payment_Date_Label, fieldName: 'paymentDate' },
+            { label: FEC_Repay_Booking_Date_Label, fieldName: 'bookingDate' },
+            { label: FEC_Repay_Payment_Amount_Label, fieldName: 'paymentAmount', cellAlign: 'right' },
+            { label: FEC_Repay_Particulars_Label, fieldName: 'particulars' },
+            { label: FEC_Repay_Payment_Channel_Label, fieldName: 'paymentChannel' },
         ];
         return cols.map((c) => ({
             ...c,
@@ -151,9 +178,9 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     get realTimePaymentPagingColumns() {
         const cols = [
-            { label: 'Payment Date', fieldName: 'paymentDate' },
-            { label: 'Payment Amount', fieldName: 'paymentAmount', cellAlign: 'right' },
-            { label: 'Payment Channel', fieldName: 'paymentChannel' },
+            { label: FEC_Repay_Payment_Date_Label, fieldName: 'paymentDate' },
+            { label: FEC_Repay_Payment_Amount_Label, fieldName: 'paymentAmount', cellAlign: 'right' },
+            { label: FEC_Repay_Payment_Channel_Label, fieldName: 'paymentChannel' },
         ];
         return cols.map((c) => ({
             ...c,
@@ -182,21 +209,21 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     get section4CombinedColumns() {
         const cols = [
-            { label: 'Installment No.', fieldName: 'installmentNo' },
-            { label: 'Payment No.', fieldName: 'paymentNo' },
-            { label: 'Installment Due Date', fieldName: 'dueDate' },
-            { label: 'Opening Principal', fieldName: 'openingPrincipal', cellAlign: 'right' },
-            { label: 'EMI', fieldName: 'emi', cellAlign: 'right' },
-            { label: 'Repayment Fee', fieldName: 'repaymentFee', cellAlign: 'right' },
-            { label: 'Installment Amount', fieldName: 'installmentAmount', cellAlign: 'right' },
-            { label: 'Principal', fieldName: 'principal', cellAlign: 'right' },
-            { label: 'Interest', fieldName: 'interest', cellAlign: 'right' },
-            { label: 'Closing Principal', fieldName: 'closingPrincipal', cellAlign: 'right' },
-            { label: 'Payment Date', fieldName: 'paymentDate' },
-            { label: 'Booking Date', fieldName: 'bookingDate' },
-            { label: 'Payment Amount', fieldName: 'paymentAmount', cellAlign: 'right' },
-            { label: 'Particulars', fieldName: 'particulars' },
-            { label: 'Payment Channel', fieldName: 'paymentChannel' },
+            { label: FEC_Repay_Installment_No_Label, fieldName: 'installmentNo' },
+            { label: FEC_Repay_Payment_No_Label, fieldName: 'paymentNo' },
+            { label: FEC_Repay_Installment_Due_Date_Label, fieldName: 'dueDate' },
+            { label: FEC_Repay_Opening_Principal_Label, fieldName: 'openingPrincipal', cellAlign: 'right' },
+            { label: FEC_Repay_EMI_Label, fieldName: 'emi', cellAlign: 'right' },
+            { label: FEC_Repay_Repayment_Fee_Label, fieldName: 'repaymentFee', cellAlign: 'right' },
+            { label: FEC_Repay_Installment_Amount_Label, fieldName: 'installmentAmount', cellAlign: 'right' },
+            { label: FEC_Repay_Principal_Label, fieldName: 'principal', cellAlign: 'right' },
+            { label: FEC_Repay_Interest_Label, fieldName: 'interest', cellAlign: 'right' },
+            { label: FEC_Repay_Closing_Principal_Label, fieldName: 'closingPrincipal', cellAlign: 'right' },
+            { label: FEC_Repay_Payment_Date_Label, fieldName: 'paymentDate' },
+            { label: FEC_Repay_Booking_Date_Label, fieldName: 'bookingDate' },
+            { label: FEC_Repay_Payment_Amount_Label, fieldName: 'paymentAmount', cellAlign: 'right' },
+            { label: FEC_Repay_Particulars_Label, fieldName: 'particulars' },
+            { label: FEC_Repay_Payment_Channel_Label, fieldName: 'paymentChannel' },
         ];
         return cols.map((c) => ({
             ...c,

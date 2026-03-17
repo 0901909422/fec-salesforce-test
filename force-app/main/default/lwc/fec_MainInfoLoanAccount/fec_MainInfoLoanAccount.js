@@ -7,6 +7,30 @@ import FEC_Payment_Label from '@salesforce/label/c.FEC_Payment_Label';
 import FEC_Debt_Sale_Label from '@salesforce/label/c.FEC_Debt_Sale_Label';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 import FEC_Termination_Loading_Alt from '@salesforce/label/c.FEC_Termination_Loading_Alt';
+import FEC_Application_ID_Label from '@salesforce/label/c.FEC_Application_ID_Label';
+import FEC_MainInfo_Contract_Number_Label from '@salesforce/label/c.FEC_MainInfo_Contract_Number_Label';
+import FEC_MainInfo_Contract_Type_Label from '@salesforce/label/c.FEC_MainInfo_Contract_Type_Label';
+import FEC_MainInfo_Charge_Off_Date_Label from '@salesforce/label/c.FEC_MainInfo_Charge_Off_Date_Label';
+import FEC_MainInfo_Contract_Status_Label from '@salesforce/label/c.FEC_MainInfo_Contract_Status_Label';
+import FEC_MainInfo_Product_Code_Label from '@salesforce/label/c.FEC_MainInfo_Product_Code_Label';
+import FEC_MainInfo_Rate_Label from '@salesforce/label/c.FEC_MainInfo_Rate_Label';
+import FEC_MainInfo_Agreement_Date_Label from '@salesforce/label/c.FEC_MainInfo_Agreement_Date_Label';
+import FEC_MainInfo_Scheme_ID_Label from '@salesforce/label/c.FEC_MainInfo_Scheme_ID_Label';
+import FEC_MainInfo_Account_Status_Change_Date_Label from '@salesforce/label/c.FEC_MainInfo_Account_Status_Change_Date_Label';
+import FEC_MainInfo_Scheme_Desc_Label from '@salesforce/label/c.FEC_MainInfo_Scheme_Desc_Label';
+import FEC_MainInfo_Loan_Amount_Label from '@salesforce/label/c.FEC_MainInfo_Loan_Amount_Label';
+import FEC_MainInfo_Tenure_Label from '@salesforce/label/c.FEC_MainInfo_Tenure_Label';
+import FEC_MainInfo_Installment_Remaining_Label from '@salesforce/label/c.FEC_MainInfo_Installment_Remaining_Label';
+import FEC_MainInfo_Insurance_Amount_Label from '@salesforce/label/c.FEC_MainInfo_Insurance_Amount_Label';
+import FEC_MainInfo_EMI_Label from '@salesforce/label/c.FEC_MainInfo_EMI_Label';
+import FEC_MainInfo_First_Payment_Date_Label from '@salesforce/label/c.FEC_MainInfo_First_Payment_Date_Label';
+import FEC_MainInfo_Last_Payment_Date_Label from '@salesforce/label/c.FEC_MainInfo_Last_Payment_Date_Label';
+import FEC_MainInfo_Next_Due_Date_Label from '@salesforce/label/c.FEC_MainInfo_Next_Due_Date_Label';
+import FEC_MainInfo_Days_Past_Due_Label from '@salesforce/label/c.FEC_MainInfo_Days_Past_Due_Label';
+import FEC_MainInfo_Company_Name_Label from '@salesforce/label/c.FEC_MainInfo_Company_Name_Label';
+import FEC_MainInfo_Sold_Amount_Label from '@salesforce/label/c.FEC_MainInfo_Sold_Amount_Label';
+import FEC_MainInfo_Sold_Date_Label from '@salesforce/label/c.FEC_MainInfo_Sold_Date_Label';
+import FEC_MainInfo_Sold_Note_Label from '@salesforce/label/c.FEC_MainInfo_Sold_Note_Label';
 
 export default class Fec_MainInfoLoanAccount extends LightningElement {
     /* ================= INPUT ================= */
@@ -82,17 +106,17 @@ export default class Fec_MainInfoLoanAccount extends LightningElement {
         if (!this.accountData) return [];
 
         return [
-            this.buildField('Contract Number', this.accountData?.contractNumber, 'FEC_Contract_Number__c'),
-            this.buildField('Contract Type', this.accountData?.contractType, 'FEC_Contract_Type__c'),
-            this.buildField('Charge Off Date', this.accountData?.chargeOffDate, 'FEC_Charge_Off_Date__c'),
-            this.buildField('Contract Status', this.accountData?.contractStatus, 'FEC_Contract_Status__c'),
-            this.buildField('Product Code', this.accountData?.productCode, 'FEC_Product_Code__c'),
-            this.buildField('Rate', this.accountData?.rate, 'FEC_Rate__c'),
-            this.buildField('Agreement Date', this.accountData?.agreementDate, 'FEC_Agreement_Date__c'),
-            this.buildField('Scheme ID', this.accountData?.schemeID, 'FEC_Scheme_ID__c'),
-            this.buildField('Application ID', this.accountData?.applicationId, 'FEC_Application_ID__c'),
-            this.buildField('Account Status Change Date', this.accountData?.accountStatusChangeDate, 'FEC_Account_Status_Change_Date__c'),
-            this.buildField('Scheme Desc', this.accountData?.schemeDesc, 'FEC_Scheme_Desc__c'),
+            this.buildField(FEC_MainInfo_Contract_Number_Label, this.accountData?.contractNumber, 'FEC_Contract_Number__c'),
+            this.buildField(FEC_MainInfo_Contract_Type_Label, this.accountData?.contractType, 'FEC_Contract_Type__c'),
+            this.buildField(FEC_MainInfo_Charge_Off_Date_Label, this.accountData?.chargeOffDate, 'FEC_Charge_Off_Date__c'),
+            this.buildField(FEC_MainInfo_Contract_Status_Label, this.accountData?.contractStatus, 'FEC_Contract_Status__c'),
+            this.buildField(FEC_MainInfo_Product_Code_Label, this.accountData?.productCode, 'FEC_Product_Code__c'),
+            this.buildField(FEC_MainInfo_Rate_Label, this.accountData?.rate, 'FEC_Rate__c'),
+            this.buildField(FEC_MainInfo_Agreement_Date_Label, this.accountData?.agreementDate, 'FEC_Agreement_Date__c'),
+            this.buildField(FEC_MainInfo_Scheme_ID_Label, this.accountData?.schemeID, 'FEC_Scheme_ID__c'),
+            this.buildField(FEC_Application_ID_Label, this.accountData?.applicationId, 'FEC_Application_ID__c'),
+            this.buildField(FEC_MainInfo_Account_Status_Change_Date_Label, this.accountData?.accountStatusChangeDate, 'FEC_Account_Status_Change_Date__c'),
+            this.buildField(FEC_MainInfo_Scheme_Desc_Label, this.accountData?.schemeDesc, 'FEC_Scheme_Desc__c'),
         ];
     }
 
@@ -100,33 +124,39 @@ export default class Fec_MainInfoLoanAccount extends LightningElement {
         if (!this.accountData) return [];
 
         return [
-            this.buildMoneyField('Loan Amount', this.accountData?.loanAmount, 'FEC_Loan_Amount__c'),
-            this.buildField('Tenure', this.accountData?.tenure, 'FEC_Tenure__c'),
-            this.buildField('Installment Remaining', this.accountData?.installmentRemaining, 'FEC_Installments_Remaining__c'),
-            this.buildMoneyField('Insurance Amount', this.accountData?.insuranceAmount, 'FEC_Insurance_Amount__c'),
-            this.buildMoneyField('EMI', this.accountData?.emi, 'FEC_EMI__c'),
+            this.buildMoneyField(FEC_MainInfo_Loan_Amount_Label, this.accountData?.loanAmount, 'FEC_Loan_Amount__c'),
+            this.buildField(FEC_MainInfo_Tenure_Label, this.accountData?.tenure, 'FEC_Tenure__c'),
+            this.buildField(FEC_MainInfo_Installment_Remaining_Label, this.accountData?.installmentRemaining, 'FEC_Installments_Remaining__c'),
+            this.buildMoneyField(FEC_MainInfo_Insurance_Amount_Label, this.accountData?.insuranceAmount, 'FEC_Insurance_Amount__c'),
+            this.buildMoneyField(FEC_MainInfo_EMI_Label, this.accountData?.emi, 'FEC_EMI__c'),
         ];
     }
 
+    /** 2 cột nội dung, cột 3 để trống (grid 3 cột). */
     get paymentFields() {
         if (!this.accountData) return [];
-
+        const emptyCell = { label: '', value: '' };
         return [
-            this.buildField('First Payment Date', this.accountData?.firstPaymentDate, 'FEC_First_Payment_Date__c'),
-            this.buildField('Last Payment Date', this.accountData?.lastPaymentDate, 'FEC_Last_Payment_Date__c'),
-            this.buildField('Next Due Date', this.accountData?.nextDueDate, 'FEC_Next_Due_Date__c'),
-            this.buildField('Days Past Due', this.accountData?.daysPastDue, 'FEC_Days_Past_Due__c'),
+            this.buildField(FEC_MainInfo_First_Payment_Date_Label, this.accountData?.firstPaymentDate, 'FEC_First_Payment_Date__c'),
+            this.buildField(FEC_MainInfo_Last_Payment_Date_Label, this.accountData?.lastPaymentDate, 'FEC_Last_Payment_Date__c'),
+            emptyCell,
+            this.buildField(FEC_MainInfo_Next_Due_Date_Label, this.accountData?.nextDueDate, 'FEC_Next_Due_Date__c'),
+            this.buildField(FEC_MainInfo_Days_Past_Due_Label, this.accountData?.daysPastDue, 'FEC_Days_Past_Due__c'),
+            emptyCell,
         ];
     }
 
+    /** 2 cột nội dung, cột 3 để trống (grid 3 cột). */
     get debtSaleFields() {
         if (!this.accountData) return [];
-
+        const emptyCell = { label: '', value: '' };
         return [
-            this.buildField('Company Name', this.accountData?.companyName, 'FEC_Company_Name__c'),
-            this.buildMoneyField('Sold Amount', this.accountData?.soldAmount, 'FEC_Sold_Amount__c'),
-            this.buildField('Sold Date', this.accountData?.soldDate, 'FEC_Sold_Date__c'),
-            this.buildField('Sold Note', this.accountData?.soldNote, 'FEC_Sold_Note__c'),
+            this.buildField(FEC_MainInfo_Company_Name_Label, this.accountData?.companyName, 'FEC_Company_Name__c'),
+            this.buildMoneyField(FEC_MainInfo_Sold_Amount_Label, this.accountData?.soldAmount, 'FEC_Sold_Amount__c'),
+            emptyCell,
+            this.buildField(FEC_MainInfo_Sold_Date_Label, this.accountData?.soldDate, 'FEC_Sold_Date__c'),
+            this.buildField(FEC_MainInfo_Sold_Note_Label, this.accountData?.soldNote, 'FEC_Sold_Note__c'),
+            emptyCell,
         ];
     }
 

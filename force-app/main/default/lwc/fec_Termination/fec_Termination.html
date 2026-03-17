@@ -20,32 +20,14 @@
             <lightning-accordion-section name={customLabel.feeCharge} label={customLabel.feeCharge} class="slds-accordion__section fec-termination-fee-section">
                 <div class="slds-form slds-p-around_small fec-termination-fee-content" role="list">
                     <template if:true={hasFeeChargeData}>
-                        <c-fec_-related-list-addresses-paging
+                        <c-fec_-related-list-paging
                             columns={feeChargePagingColumns}
                             records={feeChargePagingRecords}
                             default-sorted-by={feeChargeDefaultSortedBy}
                             page-size={feeChargePageSize}
                             hide-row-number
                             hide-updated-time>
-                        </c-fec_-related-list-addresses-paging>
-                    </template>
-                    <template if:false={hasFeeChargeData}>
-                        <div class="fec-fee-charge-table-wrapper">
-                            <table class="fec-fee-charge-table slds-table slds-table_cell-buffer slds-table_bordered">
-                                <thead>
-                                    <tr class="slds-line-height_reset">
-                                        <template for:each={feeChargePagingColumns} for:item="col">
-                                            <th key={col.fieldName} class={col.thClass} data-label={col.label}>
-                                                {col.label}
-                                            </th>
-                                        </template>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Không có dữ liệu: chỉ hiển thị header bảng -->
-                                </tbody>
-                            </table>
-                        </div>
+                        </c-fec_-related-list-paging>
                     </template>
                 </div>
             </lightning-accordion-section>

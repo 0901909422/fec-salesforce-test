@@ -13,6 +13,23 @@ import FEC_Termination_Assessed_Amount_Label from '@salesforce/label/c.FEC_Termi
 import FEC_Termination_Collected_Amount_Label from '@salesforce/label/c.FEC_Termination_Collected_Amount_Label';
 import FEC_Termination_Waived_Amount_Label from '@salesforce/label/c.FEC_Termination_Waived_Amount_Label';
 import FEC_Termination_Outstanding_Amount_Label from '@salesforce/label/c.FEC_Termination_Outstanding_Amount_Label';
+import FEC_Termination_Field_Termination_Amount_Label from '@salesforce/label/c.FEC_Termination_Field_Termination_Amount_Label';
+import FEC_Termination_Field_Excess_Amount_Label from '@salesforce/label/c.FEC_Termination_Field_Excess_Amount_Label';
+import FEC_Termination_Field_Pre_Payment_Penalty_Label from '@salesforce/label/c.FEC_Termination_Field_Pre_Payment_Penalty_Label';
+import FEC_Termination_Field_Total_Installment_Paid_Label from '@salesforce/label/c.FEC_Termination_Field_Total_Installment_Paid_Label';
+import FEC_Termination_Field_Current_Balance_Principal_Label from '@salesforce/label/c.FEC_Termination_Field_Current_Balance_Principal_Label';
+import FEC_Termination_Field_Pending_Penal_Interest_Label from '@salesforce/label/c.FEC_Termination_Field_Pending_Penal_Interest_Label';
+import FEC_Termination_Field_Total_Principal_Paid_Label from '@salesforce/label/c.FEC_Termination_Field_Total_Principal_Paid_Label';
+import FEC_Termination_Field_Interest_On_Termination_Label from '@salesforce/label/c.FEC_Termination_Field_Interest_On_Termination_Label';
+import FEC_Termination_Field_LPI_Paid_Label from '@salesforce/label/c.FEC_Termination_Field_LPI_Paid_Label';
+import FEC_Termination_Field_Total_Interest_Paid_Label from '@salesforce/label/c.FEC_Termination_Field_Total_Interest_Paid_Label';
+import FEC_Termination_Field_Total_Overdue_Amount_Label from '@salesforce/label/c.FEC_Termination_Field_Total_Overdue_Amount_Label';
+import FEC_Termination_Field_Principal_Overdue_Label from '@salesforce/label/c.FEC_Termination_Field_Principal_Overdue_Label';
+import FEC_Termination_Field_Interest_Overdue_Label from '@salesforce/label/c.FEC_Termination_Field_Interest_Overdue_Label';
+import FEC_Termination_Field_Installments_Overdue_Label from '@salesforce/label/c.FEC_Termination_Field_Installments_Overdue_Label';
+import FEC_Termination_Field_Repayment_Fee_Overdue_Label from '@salesforce/label/c.FEC_Termination_Field_Repayment_Fee_Overdue_Label';
+import FEC_Termination_Field_Penalty_Fee_Overdue_Label from '@salesforce/label/c.FEC_Termination_Field_Penalty_Fee_Overdue_Label';
+import FEC_Termination_Field_Overdue_Penalty_Label from '@salesforce/label/c.FEC_Termination_Field_Overdue_Penalty_Label';
 
 export default class Fec_Termination extends LightningElement {
     /* ================= INPUT ================= */
@@ -43,6 +60,35 @@ export default class Fec_Termination extends LightningElement {
 
     get activeSections() {
         return [FEC_Early_Termination_Label, FEC_Overdue_Label, FEC_Fee_Charge_Label];
+    }
+
+    /** Map fieldApiName -> Custom Label cho Early Termination (hiển thị cột). */
+    get earlyTerminationFieldLabelByApi() {
+        return {
+            'FEC_Termination_Amount__c': FEC_Termination_Field_Termination_Amount_Label,
+            'FEC_Excess_Amount__c': FEC_Termination_Field_Excess_Amount_Label,
+            'FEC_Pre_Payment_Penalty__c': FEC_Termination_Field_Pre_Payment_Penalty_Label,
+            'FEC_Total_Installment_Paid__c': FEC_Termination_Field_Total_Installment_Paid_Label,
+            'FEC_Current_Balance_Principal__c': FEC_Termination_Field_Current_Balance_Principal_Label,
+            'FEC_Pending_Penal_Interest__c': FEC_Termination_Field_Pending_Penal_Interest_Label,
+            'FEC_Total_Principal_Paid__c': FEC_Termination_Field_Total_Principal_Paid_Label,
+            'FEC_Interest_On_Termination__c': FEC_Termination_Field_Interest_On_Termination_Label,
+            'FEC_LPI_Paid__c': FEC_Termination_Field_LPI_Paid_Label,
+            'FEC_Total_Interest_Paid__c': FEC_Termination_Field_Total_Interest_Paid_Label,
+        };
+    }
+
+    /** Map fieldApiName -> Custom Label cho Overdue (hiển thị cột). */
+    get overdueFieldLabelByApi() {
+        return {
+            'FEC_Total_Overdue_Amount__c': FEC_Termination_Field_Total_Overdue_Amount_Label,
+            'FEC_Principal_Overdue__c': FEC_Termination_Field_Principal_Overdue_Label,
+            'FEC_Interest_Overdue__c': FEC_Termination_Field_Interest_Overdue_Label,
+            'FEC_Installments_Overdue__c': FEC_Termination_Field_Installments_Overdue_Label,
+            'FEC_Repayment_Fee_Overdue__c': FEC_Termination_Field_Repayment_Fee_Overdue_Label,
+            'FEC_Penalty_Fee_Overdue__c': FEC_Termination_Field_Penalty_Fee_Overdue_Label,
+            'FEC_Overdue_Penalty__c': FEC_Termination_Field_Overdue_Penalty_Label,
+        };
     }
 
     connectedCallback() {
@@ -162,6 +208,8 @@ export default class Fec_Termination extends LightningElement {
 
     get earlyTerminationFields() {
         const labelToApi = this.earlyTerminationLabelToApi;
+        const labelByApi = this.earlyTerminationFieldLabelByApi;
+        const displayLabel = (fieldApiName, fallback) => labelByApi[fieldApiName] || fallback;
         if (this.earlyTermination && this.earlyTermination.length > 0) {
             return this.earlyTermination.map((item) => {
                 let value = item.valueFormatted != null && item.valueFormatted !== '' ? item.valueFormatted : '0.00';
@@ -169,27 +217,34 @@ export default class Fec_Termination extends LightningElement {
                     value = '-' + value;
                 }
                 const fieldApiName = labelToApi[item.label];
+                const label = displayLabel(fieldApiName, item.label);
                 return item.isNegative
-                    ? this.buildMoneyField(item.label, value, fieldApiName)
-                    : this.buildField(item.label, value, fieldApiName);
+                    ? this.buildMoneyField(label, value, fieldApiName)
+                    : this.buildField(label, value, fieldApiName);
             });
         }
-        return this.defaultEarlyTerminationLabels.map((label) =>
-            this.buildField(label, '-', labelToApi[label])
-        );
+        return this.defaultEarlyTerminationLabels.map((label) => {
+            const fieldApiName = labelToApi[label];
+            return this.buildField(displayLabel(fieldApiName, label), '-', fieldApiName);
+        });
     }
 
     get overdueFields() {
         const labelToApi = this.overdueLabelToApi;
+        const labelByApi = this.overdueFieldLabelByApi;
+        const displayLabel = (fieldApiName, fallback) => labelByApi[fieldApiName] || fallback;
         if (this.overdue && this.overdue.length > 0) {
             return this.overdue.map((item) => {
                 const value = item.valueFormatted != null && item.valueFormatted !== '' ? item.valueFormatted : '0.00';
-                return this.buildField(item.label, value, labelToApi[item.label]);
+                const fieldApiName = labelToApi[item.label];
+                const label = displayLabel(fieldApiName, item.label);
+                return this.buildField(label, value, fieldApiName);
             });
         }
-        return this.defaultOverdueLabels.map((label) =>
-            this.buildField(label, '-', labelToApi[label])
-        );
+        return this.defaultOverdueLabels.map((label) => {
+            const fieldApiName = labelToApi[label];
+            return this.buildField(displayLabel(fieldApiName, label), '-', fieldApiName);
+        });
     }
 
     /* ================= FEE/CHARGE BẢNG 5 CỘT (trong Termination, dùng related-list-addresses-paging) ================= */
