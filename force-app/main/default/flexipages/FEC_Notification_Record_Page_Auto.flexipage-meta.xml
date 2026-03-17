@@ -150,7 +150,7 @@
                     <name>uiBehavior</name>
                     <value>readonly</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Sub_Category__c</fieldItem>
+                <fieldItem>Record.FEC_SubCategory__c</fieldItem>
                 <identifier>RecordFEC_SubCategory_cField</identifier>
             </fieldInstance>
         </itemInstances>
@@ -174,7 +174,7 @@
                     <name>uiBehavior</name>
                     <value>readonly</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Sub_Code__c</fieldItem>
+                <fieldItem>Record.FEC_SubCode__c</fieldItem>
                 <identifier>RecordFEC_SubCode_cField</identifier>
             </fieldInstance>
         </itemInstances>
