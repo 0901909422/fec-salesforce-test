@@ -93,10 +93,6 @@ public class FEC_Constants {
     public static final String KEY_ADDITIONAL_FIELD = 'AdditionalField';
     public static final String KEY_ADDITIONAL_FIELD_LIST = 'AdditionalFieldList';
     public static final String KEY_CASE_STAGE = 'CaseStage';
-    public static final String KEY_PRODUCT_TYPE_PRODUCT = 'Product';
-    public static final String KEY_CASE_TYPE = 'CaseType';
-    public static final String KEY_CODE_SUCCESS = 'SUCCESS';
-    public static final String KEY_GET_CS_DATA_SUCCESS = 'Get CS Master Data successfully';
     
     // Debug / log prefixes
     public static final String DEBUG_NOC_LIST_PREFIX = 'NOC Wrapper List nocList: ';
@@ -230,14 +226,6 @@ public class FEC_Constants {
     public static final String ERROR_COMMON_FIELD_PREFIX = 'commonFieldMap Error ';
     public static final String ERROR_DATA_PREFIX = 'Data Error: ';
     public static final String ERROR_SYNC_FAILED_PREFIX = 'Sync Failed: \n';
-
-    // Call api FEC_GetCSMasterDataService
-    public static final String KEY_PICKLIST = 'Picklist';
-    public static final String KEY_CHECKBOX = 'Checkbox';
-    public static final String KEY_DATE = 'Date';
-    public static final String KEY_DATETIME = 'DateTime';
-    public static final String KEY_NUMBER = 'Number';
-    public static final String KEY_TEXT = 'Text';
     
     // Stage Change & Action Button Objects
     public static final String OBJ_STAGE_CHANGE              = 'FEC_Stage_Change__c';

@@ -197,4 +197,17 @@ public with sharing class FEC_ConstantCommon {
     public static final String SYSTEM_SOURCE_WEBSITE  = 'Website';
     public static final String SYSTEM_SOURCE_FEOL     = 'FEOL';
     public static final String SYSTEM_SOURCE_ZALO     = 'Zalo';
+
+    // Call api FEC_GetCSMasterDataService
+    public static final String KEY_PICKLIST = 'Picklist';
+    public static final String KEY_CHECKBOX = 'Checkbox';
+    public static final String KEY_DATE = 'Date';
+    public static final String KEY_DATETIME = 'DateTime';
+    public static final String KEY_NUMBER = 'Number';
+    public static final String KEY_TEXT = 'Text';
+    public static final String KEY_PRODUCT_TYPE_PRODUCT = 'Product';
+    public static final String KEY_CASE_TYPE = 'CaseType';
+    public static final String KEY_CATEGORY = 'Category';
+    public static final String KEY_SUB_CATEGORY = 'SubCategory';
+    public static final String KEY_SUB_CODE = 'SubCode';
 }
