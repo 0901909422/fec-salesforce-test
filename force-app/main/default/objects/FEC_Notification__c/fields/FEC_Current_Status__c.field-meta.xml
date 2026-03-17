@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Current_Status__c</fullName>
-    <description>Trạng thái hiện tại của Case trước khi được cập nhật</description>
-    <externalId>false</externalId>
+    <description>Ghi nhận trạng thái cũ của Case – dùng làm điều kiện kích hoạt thông báo tự động</description>
     <label>Current Status</label>
-    <length>255</length>
     <required>false</required>
-    <trackHistory>true</trackHistory>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
-    <type>Text</type>
-    <unique>false</unique>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetName>Case_Status</valueSetName>
+    </valueSet>
 </CustomField>
