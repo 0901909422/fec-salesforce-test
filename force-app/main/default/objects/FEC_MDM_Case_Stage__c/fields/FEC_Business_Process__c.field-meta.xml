@@ -8,7 +8,7 @@
     <referenceTo>FEC_MDM_Business_Process__c</referenceTo>
     <relationshipName>Case_Stage</relationshipName>
     <required>false</required>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

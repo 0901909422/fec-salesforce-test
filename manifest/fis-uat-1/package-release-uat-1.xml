@@ -354,7 +354,7 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CommonUltils</members>
-		<members>FEC_AccountOrContractPicklistHanlder</members>
+		<members>FEC_AccountOrContractPicklistHandler</members>
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_GenesysCreateDummyInteraction</members>
@@ -927,6 +927,7 @@
         <members>LBL_ApplicationID</members>
         <members>LBL_AccountNumber</members>
         <members>LBL_ContractNumber</members>
+		<members>FEC_Wrap_Up_Modal_Btn_Cancel</members>
         <name>CustomLabel</name>
     </types>
     <types>
@@ -1908,6 +1909,8 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_SearchController</members>
 		<members>FEC_GetCustomerList</members>
+		<members>CaseSearchDeletionBatch</members>
+		<members>CaseSearchDeletionScheduler</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -1986,6 +1989,20 @@
 		<members>ContentVersion.FEC_Stage_ID__c</members>
         <name>CustomField</name>
     </types>
+	<types>
+		<members>FEC_CaseOwnerChangeNotification</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+		<members>FEC_Email_Subject_Case_Owner_Change</members>
+		<members>FEC_Email_Body_Case_Owner_Change</members>
+		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>Case.FEC_Restrict_Change_Owner_Non_Owner</members>
+		<members>Case.FEC_Restrict_Change_Owner_When_Resolved</members>
+		<name>ValidationRule</name>
+	</types>
 
     <version>65.0</version>
 </Package>

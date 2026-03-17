@@ -35,6 +35,7 @@ import FEC_INTERACTION_LAST_UPDATED_BY from "@salesforce/label/c.FEC_Last_Update
 import FEC_INTERACTION_LAST_UPDATED_ON from "@salesforce/label/c.FEC_Last_Updated_On_Label";
 
 import { STR_EMPTY, STR_NONE } from "c/fec_CommonConst";
+import { maskWorkPhone } from "c/fec_CommonUtils";
 
 export default class Fec_InteractionHighlight extends LightningElement {
   //=========================== Labels ===========================
@@ -142,15 +143,7 @@ export default class Fec_InteractionHighlight extends LightningElement {
   get maskedPhone() {
     const phone = this.data?.primaryPhone;
     if (!phone) return STR_EMPTY;
-
-    if (this.isPhoneMasked) {
-      if (phone.length < 7) return phone;
-      const first4 = phone.substring(0, 4);
-      const last3 = phone.substring(phone.length - 3);
-      const middle = "*".repeat(Math.max(0, phone.length - 7));
-      return `${first4}${middle}${last3}`;
-    }
-    return phone;
+    return this.isPhoneMasked ? maskWorkPhone(phone) : phone;
   }
 
   get email() {

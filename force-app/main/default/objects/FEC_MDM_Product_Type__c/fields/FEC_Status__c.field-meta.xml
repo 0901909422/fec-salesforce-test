@@ -5,7 +5,7 @@
     <description>Trạng thái loại sản phẩm</description>
     <externalId>false</externalId>
     <label>Status</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>
