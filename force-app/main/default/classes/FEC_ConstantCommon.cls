@@ -178,6 +178,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String CUSTOMER_CATEGORY_NEUTRAL = 'Neutral';
     
     public static final String SECTION_INTERACTION_DETAILS = 'Interaction Details';
+    public static final String SECTION_SEARCH_INFORMARION = 'Search Information';
+    public static final String SECTION_NATIONAL_PASSPORT = 'National ID/ Passport ID';
     public static final String SECTION_INTERACTION_PHONE = 'Interaction Phone';
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
     

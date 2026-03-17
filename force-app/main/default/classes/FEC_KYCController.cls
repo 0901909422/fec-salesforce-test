@@ -156,7 +156,6 @@ public without sharing class FEC_KYCController {
             ? 'true'
             : 'false';
           temp.isEditable = kycResultMap.get(item.Id).FEC_Editable__c;
-
         }
 
         if (!typeMap.containsKey(item.FEC_Product_Type__r.Name)) {
@@ -233,12 +232,13 @@ public without sharing class FEC_KYCController {
           FEC_KYC_Product__c,
           FEC_KYC_Result__c,
           FEC_KYC__c,
+          FEC_KYC__r.FEC_Masking__c,
           Name,
           Id,
           CreatedDate
         FROM FEC_KYC_Result__c
         WHERE FEC_Case_Interaction__c = :caseId
-        ORDER BY CreatedDate DESC
+        ORDER BY CreatedDate ASC
       ];
 
       KYCResultDTO resultTemp;
@@ -251,6 +251,7 @@ public without sharing class FEC_KYCController {
         resultTemp.answer = item.FEC_KYC_Answer__c;
         resultTemp.result = item.FEC_KYC_Result__c;
         resultTemp.performedOn = item.CreatedDate?.format();
+        resultTemp.masked = item.FEC_KYC__r?.FEC_Masking__c;
 
         result.add(resultTemp);
       }
@@ -325,6 +326,8 @@ public without sharing class FEC_KYCController {
     public String question;
     @AuraEnabled
     public String answer;
+    @AuraEnabled
+    public Boolean masked;
     @AuraEnabled
     public String result;
     @AuraEnabled
