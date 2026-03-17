@@ -113,5 +113,10 @@
         <members>Case.Interaction</members>
         <name>RecordType</name>
     </types>
+	<types>
+		<members>FEC_Common_System_Setting</members>
+		<members>RD_IT_User_Search_Functions</members>
+		<name>PermissionSet</name>
+	</types>
 	<version>65.0</version>
 </Package>
