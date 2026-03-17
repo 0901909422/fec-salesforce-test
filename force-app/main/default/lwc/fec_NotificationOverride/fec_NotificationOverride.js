@@ -12,8 +12,8 @@ import CUSTOMER_TYPE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Cust
 import CHANNEL_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Channel__c";
 import PRODUCT_TYPE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Product_Type__c";
 import CATEGORY_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Category__c";
-import SUB_CATEGORY_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Sub_Category__c";
-import SUB_CODE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Sub_Code__c";
+import SUB_CATEGORY_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_SubCategory__c";
+import SUB_CODE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_SubCode__c";
 import CURRENT_STATUS_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Current_Status__c";
 import CHANGED_STATUS_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Changed_Status__c";
 import NOTIFICATION_STATUS_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Notification_Status__c";
@@ -47,6 +47,9 @@ import {
   AUTO_NOTIFICATION_TYPE,
   MANUAL_NOTIFICATION_TYPE
 } from "c/fec_CommonConst";
+
+const SUB_CATEGORY_OBJECT = "FEC_Sub_Category__c";
+const SUB_CODE_OBJECT = "FEC_Sub_Code__c";
 
 /**
  * FEC Notification Override
@@ -134,28 +137,14 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
         break;
       case PRODUCT_TYPE_FIELD.fieldApiName:
         this.selectedProductTypeId = joined || null;
-        // Clear any prior client-side error styling/validation on Product Type lookup
-        try {
-          const productTypeCmp = this.template.querySelector('c-fec_-lookup[data-id="productType"]');
-          if (productTypeCmp) {
-            if (typeof productTypeCmp.setCustomValidity === 'function' && typeof productTypeCmp.reportValidity === 'function') {
-              productTypeCmp.setCustomValidity('');
-              productTypeCmp.reportValidity();
-            } else {
-              productTypeCmp.classList?.remove?.('invalid');
-            }
-          }
-        } catch (e) {
-          // no-op: defensive
-        }
         break;
       case CATEGORY_FIELD.fieldApiName:
         this.selectedCategoryId = joined || null;
         break;
-      case SUB_CATEGORY_FIELD.fieldApiName:
+      case SUB_CATEGORY_OBJECT:
         this.selectedSubCategoryId = joined || null;
         break;
-      case SUB_CODE_FIELD.fieldApiName:
+      case SUB_CODE_OBJECT:
         this.selectedSubCodeId = joined || null;
         break;
       case 'EmailTemplate':
@@ -324,8 +313,8 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     fields[CHANNEL_FIELD.fieldApiName] = this.selectedChannelId || fields[CHANNEL_FIELD.fieldApiName];
     fields[PRODUCT_TYPE_FIELD.fieldApiName] = this.selectedProductTypeId || fields[PRODUCT_TYPE_FIELD.fieldApiName];
     fields[CATEGORY_FIELD.fieldApiName] = this.selectedCategoryId || fields[CATEGORY_FIELD.fieldApiName];
-    fields[SUB_CATEGORY_FIELD.fieldApiName] = this.selectedSubCategoryId || fields[SUB_CATEGORY_FIELD.fieldApiName];
-    fields[SUB_CODE_FIELD.fieldApiName] = this.selectedSubCodeId || fields[SUB_CODE_FIELD.fieldApiName];
+    fields[SUB_CATEGORY_FIELD.fieldApiName] = this.selectedSubCategoryId;
+    fields[SUB_CODE_FIELD.fieldApiName] = this.selectedSubCodeId;
     fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName] = this.selectedNotificationTemplateId || fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName];
 
     let isFormValid = true;
