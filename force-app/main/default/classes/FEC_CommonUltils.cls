@@ -784,6 +784,18 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  public static String pickNameByLanguage(String nameEN, String nameVN, String language) {
+      String lang = String.valueOf(language);
+      if (lang != null && lang.toUpperCase() == FEC_ConstantCommon.LANGUAGE_VN) {
+          return String.isNotBlank(nameVN)
+              ? nameVN
+              : (String.isNotBlank(nameEN) ? nameEN : '');
+      }
+      return String.isNotBlank(nameEN)
+          ? nameEN
+          : (String.isNotBlank(nameVN) ? nameVN : '');
+  }
+
   public static String getFieldType(String objectName, String fieldName) {
     try {
 

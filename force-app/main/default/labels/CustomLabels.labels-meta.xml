@@ -8043,4 +8043,100 @@
         <shortDescription>FEC CREATE CS CASE SUCCESSFULLY MSG</shortDescription>
         <value>Case created successfully.</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_CaseType_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG CaseType Null</shortDescription>
+        <value>Casetype is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Category_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Category Null</shortDescription>
+        <value>Category is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Channel_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Channel Null</shortDescription>
+        <value>Channel is null or invalid &quot;&quot;</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Datetime_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Datetime Null</shortDescription>
+        <value>DateTime is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Get_CS_Data_Success</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Get CS Data Success</shortDescription>
+        <value>Get CS master data successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_No_Longer</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG No Longer</shortDescription>
+        <value>&quot; or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ProductType_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG ProductType Null</shortDescription>
+        <value>ProductType is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SubCategory_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG SubCategory Null</shortDescription>
+        <value>SubCategory is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SubCode_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG SubCode Null</shortDescription>
+        <value>SubCode is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Sys_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG_Sys_Null</shortDescription>
+        <value>Sys is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_TransactionId_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG TransactionId Null</shortDescription>
+        <value>TransactionID is null or invalid &quot;&quot;</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_UserType_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG UserType Null</shortDescription>
+        <value>UserType is invalid or no longer than 15 characters</value>
+    </labels>
 </CustomLabels>
