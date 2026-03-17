@@ -4110,6 +4110,166 @@
         <value>Cancel</value>
     </labels>
     <labels>
+        <fullName>FEC_Contract_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract section label</shortDescription>
+        <value>Contract</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Loan_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loan section label</shortDescription>
+        <value>Loan</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Payment_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment section label</shortDescription>
+        <value>Payment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Loading_Alt</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loading spinner alternative text</shortDescription>
+        <value>Loading...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Disbursement_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Disbursement section label</shortDescription>
+        <value>Disbursement</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Termination card title</shortDescription>
+        <value>Termination</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Early_Termination_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Early Termination section label</shortDescription>
+        <value>Early Termination</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Overdue_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Overdue section label</shortDescription>
+        <value>Overdue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Fee_Charge_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fee Charge section label</shortDescription>
+        <value>Fee &amp; Charge</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_No_Fee_Charge_Data</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No fee charge data message</shortDescription>
+        <value>No fee charge data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_No_Data</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No data message</shortDescription>
+        <value>No data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Type_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Termination type column label</shortDescription>
+        <value>Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Assessed_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assessed amount column label</shortDescription>
+        <value>Assessed Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Collected_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Collected amount column label</shortDescription>
+        <value>Collected Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Waived_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Waived amount column label</shortDescription>
+        <value>Waived Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Outstanding_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Outstanding amount column label</shortDescription>
+        <value>Outstanding Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repayment_Schedule_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Repayment Schedule section label</shortDescription>
+        <value>Repayment Schedule</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Payment_History_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment History section label</shortDescription>
+        <value>Payment History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Real_Time_Payment_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Real-Time Payment section label</shortDescription>
+        <value>Real-Time Payment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repayment_Schedule_Payment_History_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Repayment Schedule &amp; Payment History section label</shortDescription>
+        <value>Repayment Schedule &amp; Payment History</value>
+    </labels>
+    <labels>
         <fullName>Err_Missing_Fraud_Case</fullName>
         <language>en_US</language>
         <protected>false</protected>

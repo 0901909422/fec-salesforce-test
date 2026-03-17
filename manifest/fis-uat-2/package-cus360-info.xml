@@ -50,6 +50,14 @@
         <name>ListView</name>
     </types>
     <types>
+        <members>FEC_MainInfoLoanAccount</members>
+        <members>FEC_RepaymentSchedulePaymentHistory</members>
+        <members>FEC_SecondaryInfoLoanAccount</members>
+        <members>FEC_Termination</members>
+        <name>LightningComponentBundle</name>
+    </types>
+
+    <types>
         <members>FEC_CS_Card_Risk_Monitoring_Specialist_Customer_360</members>
         <members>FEC_CS_Center_Director_Customer_360</members>
         <members>FEC_CS_CS_Ecom_Officer_Customer_360</members>
