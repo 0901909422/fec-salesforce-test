@@ -158,4 +158,34 @@ public with sharing class FEC_SearchController {
         
         return fieldPermissions;
     }
+
+    @AuraEnabled
+    public static void revealNationalId(Id recordId) {
+        
+        try {
+            Case c = [
+            SELECT Id
+            FROM Case
+            WHERE Id = :recordId
+            LIMIT 1
+            ];
+            
+            User u = [
+            SELECT Username, UserRole.Name
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            ];
+            
+            
+            // 🔐 Audit sensitive access
+            FEC_CommonUltils.logSensitiveAccess(
+                FEC_ConstantCommon.SECTION_SEARCH_INFORMARION,
+                FEC_ConstantCommon.SECTION_NATIONAL_PASSPORT,
+                u.Username.split('@')[0],
+                u.UserRole != null ? u.UserRole.Name : null,
+                c.Id);
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
 }
