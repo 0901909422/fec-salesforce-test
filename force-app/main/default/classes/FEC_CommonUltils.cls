@@ -785,16 +785,92 @@ public with sharing class FEC_CommonUltils {
   }
 
   public static String pickNameByLanguage(String nameEN, String nameVN, String language) {
-        String lang = String.valueOf(language);
-        if (lang != null && lang.toUpperCase() == FEC_ConstantCommon.LANGUAGE_VN) {
-            return String.isNotBlank(nameVN)
-                ? nameVN
-                : (String.isNotBlank(nameEN) ? nameEN : '');
+      String lang = String.valueOf(language);
+      if (lang != null && lang.toUpperCase() == FEC_ConstantCommon.LANGUAGE_VN) {
+          return String.isNotBlank(nameVN)
+              ? nameVN
+              : (String.isNotBlank(nameEN) ? nameEN : '');
+      }
+      return String.isNotBlank(nameEN)
+          ? nameEN
+          : (String.isNotBlank(nameVN) ? nameVN : '');
+  }
+
+  public static String getFieldType(String objectName, String fieldName) {
+    try {
+
+        Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+        if (sObjectType == null) return null;
+        Schema.DescribeSObjectResult objDescribe = sObjectType.getDescribe();
+        Schema.SObjectField fieldToken = objDescribe.fields.getMap().get(fieldName);
+        if (fieldToken == null) return null;
+        Schema.DisplayType t = fieldToken.getDescribe().getType();
+        switch on t {
+            when Picklist {
+                return FEC_ConstantCommon.KEY_PICKLIST;
+            }
+            when Boolean {
+                return FEC_ConstantCommon.KEY_CHECKBOX;
+            }
+            when Date {
+                return FEC_ConstantCommon.KEY_DATE;
+            }
+            when DateTime {
+                return FEC_ConstantCommon.KEY_DATETIME;
+            }
+            when Integer, Double {
+                return FEC_ConstantCommon.KEY_NUMBER;
+            }
+            when else {
+                return FEC_ConstantCommon.KEY_TEXT;
+            }
         }
-        return String.isNotBlank(nameEN)
-            ? nameEN
-            : (String.isNotBlank(nameVN) ? nameVN : '');
+    } catch (Exception e) {
+        System.debug('getFieldType error: ' + e.getMessage());
+        return null;
     }
+  }
+
+  public static Integer toInt(Decimal d) {
+    return d == null ? null : Integer.valueOf(d);
+  }
+
+  public static String getFieldLabel(String objectName, String fieldName) {
+    try {
+        Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+        if (sObjectType == null) return null;
+
+        Schema.DescribeSObjectResult objDescribe = sObjectType.getDescribe();
+        Schema.SObjectField fieldToken = objDescribe.fields.getMap().get(fieldName);
+        if (fieldToken == null) return null;
+
+        return fieldToken.getDescribe().getLabel();
+    } catch (Exception e) {
+        System.debug('getFieldLabel error: ' + e.getMessage());
+        return null;
+    }
+  }
+  public class AvailableValueType {
+    @AuraEnabled public String ID;
+    @AuraEnabled public String Name;
+    @AuraEnabled public String NameVN;
+  }
+
+  public static List<AvailableValueType> mapToAvailableValues(
+    List<PicklistOption> options
+  ) {
+      List<AvailableValueType> result = new List<AvailableValueType>();
+
+      for (PicklistOption opt : options) {
+          AvailableValueType v = new AvailableValueType();
+          v.ID = opt.value;
+          v.Name = opt.label;
+          v.NameVN = opt.label;
+          result.add(v);
+      }
+    return result;
+  }
+  
   public static String escapeXml(String s) {
     if (s == null)
       return '';

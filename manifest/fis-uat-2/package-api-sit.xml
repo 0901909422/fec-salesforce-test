@@ -19,6 +19,7 @@
 		<members>FEC_TranferInformationCallout</members>
 		<members>FEC_CommonUltils</members>
 		<members>FEC_GetCSMasterDataByCodeService</members>
+		<members>FEC_GetCSMasterDataService</members>
         <name>ApexClass</name>
     </types>
     <types>
