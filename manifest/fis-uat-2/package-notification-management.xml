@@ -3,6 +3,7 @@
     <types>
 		<members>FEC_LookupController</members>
 		<members>FEC_Notification</members>
+		<members>FEC_RecordTypeDAO</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
