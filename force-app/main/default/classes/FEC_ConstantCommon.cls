@@ -207,4 +207,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String SYSTEM_SOURCE_WEBSITE  = 'Website';
     public static final String SYSTEM_SOURCE_FEOL     = 'FEOL';
     public static final String SYSTEM_SOURCE_ZALO     = 'Zalo';
+
+   public static final String LANGUAGE_EN = 'EN';
+   public static final String LANGUAGE_VN = 'VN';
 }

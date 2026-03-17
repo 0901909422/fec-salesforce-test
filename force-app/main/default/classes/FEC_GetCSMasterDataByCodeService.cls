@@ -66,7 +66,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             String subCategoryCode = (MasterDataCode != null) ? MasterDataCode.SubCategory : null;
             String subCode = (MasterDataCode != null) ? MasterDataCode.SubCode : null;
             String language = (CustomerType != null && String.isNotBlank(CustomerType.Language))
-                             ? CustomerType.Language : 'EN';
+                             ? CustomerType.Language : FEC_ConstantCommon.LANGUAGE_EN;
 
             // Query Nature of Case records
             List<FEC_Nature_of_Case__c> records = queryNatureOfCase(
@@ -86,26 +86,26 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
 
             // ===== Build Response =====
             res.RequestInfo = new RequestInfoType();
-            res.RequestInfo.Category = ensureNotBlank(categoryCode);
-            res.RequestInfo.SubCategory = ensureNotBlank(subCategoryCode);
-            res.RequestInfo.SubCode = ensureNotBlank(subCode);
-            res.RequestInfo.ProductLineId = ensureNotBlank(productTypeCode);
-            res.RequestInfo.CaseType = ensureNotBlank(caseTypeCode);
-            res.RequestInfo.Remarks = ensureNotBlank(Remarks);
+            res.RequestInfo.Category = FEC_CommonUltils.defaultToEmpty(categoryCode);
+            res.RequestInfo.SubCategory = FEC_CommonUltils.defaultToEmpty(subCategoryCode);
+            res.RequestInfo.SubCode = FEC_CommonUltils.defaultToEmpty(subCode);
+            res.RequestInfo.ProductLineId = FEC_CommonUltils.defaultToEmpty(productTypeCode);
+            res.RequestInfo.CaseType = FEC_CommonUltils.defaultToEmpty(caseTypeCode);
+            res.RequestInfo.Remarks = FEC_CommonUltils.defaultToEmpty(Remarks);
 
             res.CustomerInfo = (CustomerType != null) ? CustomerType : new CustomerTypeRequest();
-            if (res.CustomerInfo.Language == null) res.CustomerInfo.Language = '';
-            if (res.CustomerInfo.UserType == null) res.CustomerInfo.UserType = '';
+            if (res.CustomerInfo.Language == null) res.CustomerInfo.Language = FEC_ConstantCommon.STR_EMPTY;
+            if (res.CustomerInfo.UserType == null) res.CustomerInfo.UserType = FEC_ConstantCommon.STR_EMPTY;
 
             res.AdditionalInfo = (AdditionalInfo != null) ? AdditionalInfo : new AdditionalInfoRequest();
-            if (res.AdditionalInfo.ID == null) res.AdditionalInfo.ID = '';
-            if (res.AdditionalInfo.Value == null) res.AdditionalInfo.Value = '';
+            if (res.AdditionalInfo.ID == null) res.AdditionalInfo.ID = FEC_ConstantCommon.STR_EMPTY;
+            if (res.AdditionalInfo.Value == null) res.AdditionalInfo.Value = FEC_ConstantCommon.STR_EMPTY;
 
             res.DataItems = new List<DataItemType>();
             if (!productMap.isEmpty()) {
                 res.DataItems.addAll(productMap.values());
             } else {
-                DataItemType emptyProduct = new DataItemType('', '', '', null, '', FEC_ConstantCommon.KEY_PRODUCT_TYPE_PRODUCT);
+                DataItemType emptyProduct = new DataItemType(FEC_ConstantCommon.STR_EMPTY, FEC_ConstantCommon.STR_EMPTY, FEC_ConstantCommon.STR_EMPTY, null, FEC_ConstantCommon.STR_EMPTY, FEC_ConstantCommon.KEY_PRODUCT_TYPE_PRODUCT);
                 ensureFullChildLevelsForProduct(emptyProduct);
                 res.DataItems.add(emptyProduct);
             }
@@ -364,7 +364,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         
         ValidationResult() {
             this.isValid = false;
-            this.errorMessage = '';
+            this.errorMessage = FEC_ConstantCommon.STR_EMPTY;
         }
     }
 
@@ -446,9 +446,9 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                 ChildItemType caseType = getOrCreateChild(
                     product,
                     noc.FEC_Business_Process__r.FEC_Code__c,
-                    pickNameByLanguage(noc.FEC_Business_Process__r.Name, noc.FEC_Business_Process__r.FEC_Name_VN__c, language),
-                    ensureNotBlank(noc.FEC_Business_Process__r.FEC_Name_VN__c),
-                    toInt(noc.FEC_Business_Process__r.FEC_Order__c),
+                    FEC_CommonUltils.pickNameByLanguage(noc.FEC_Business_Process__r.Name, noc.FEC_Business_Process__r.FEC_Name_VN__c, language),
+                    FEC_CommonUltils.defaultToEmpty(noc.FEC_Business_Process__r.FEC_Name_VN__c),
+                    FEC_CommonUltils.toInt(noc.FEC_Business_Process__r.FEC_Order__c),
                     noc.FEC_Customer_Type__c,
                     FEC_ConstantCommon.KEY_CASETYPE
                 );
@@ -459,9 +459,9 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                     ChildItemType category = getOrCreateChild(
                         caseType,
                         noc.FEC_Category__r.FEC_Code__c,
-                        pickNameByLanguage(noc.FEC_Category__r.Name, noc.FEC_Category__r.FEC_Name_VN__c, language),
-                        ensureNotBlank(noc.FEC_Category__r.FEC_Name_VN__c),
-                        toInt(noc.FEC_Category__r.FEC_Order__c),
+                        FEC_CommonUltils.pickNameByLanguage(noc.FEC_Category__r.Name, noc.FEC_Category__r.FEC_Name_VN__c, language),
+                        FEC_CommonUltils.defaultToEmpty(noc.FEC_Category__r.FEC_Name_VN__c),
+                        FEC_CommonUltils.toInt(noc.FEC_Category__r.FEC_Order__c),
                         noc.FEC_Customer_Type__c,
                         FEC_ConstantCommon.KEY_CATEGORY
                     );
@@ -472,9 +472,9 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                         ChildItemType subCategory = getOrCreateChild(
                             category,
                             noc.FEC_Sub_Category__r.FEC_Code__c,
-                            pickNameByLanguage(noc.FEC_Sub_Category__r.Name, noc.FEC_Sub_Category__r.FEC_Name_VN__c, language),
-                            ensureNotBlank(noc.FEC_Sub_Category__r.FEC_Name_VN__c),
-                            toInt(noc.FEC_Sub_Category__r.FEC_Order__c),
+                            FEC_CommonUltils.pickNameByLanguage(noc.FEC_Sub_Category__r.Name, noc.FEC_Sub_Category__r.FEC_Name_VN__c, language),
+                            FEC_CommonUltils.defaultToEmpty(noc.FEC_Sub_Category__r.FEC_Name_VN__c),
+                            FEC_CommonUltils.toInt(noc.FEC_Sub_Category__r.FEC_Order__c),
                             noc.FEC_Customer_Type__c,
                             FEC_ConstantCommon.KEY_SUBCATEGORY
                         );
@@ -485,9 +485,9 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                             getOrCreateChild(
                                 subCategory,
                                 noc.FEC_Sub_Code__r.FEC_Code__c,
-                                pickNameByLanguage(noc.FEC_Sub_Code__r.Name, noc.FEC_Sub_Code__r.FEC_Name_VN__c, language),
-                                ensureNotBlank(noc.FEC_Sub_Code__r.FEC_Name_VN__c),
-                                toInt(noc.FEC_Sub_Code__r.FEC_Order__c),
+                                FEC_CommonUltils.pickNameByLanguage(noc.FEC_Sub_Code__r.Name, noc.FEC_Sub_Code__r.FEC_Name_VN__c, language),
+                                FEC_CommonUltils.defaultToEmpty(noc.FEC_Sub_Code__r.FEC_Name_VN__c),
+                                FEC_CommonUltils.toInt(noc.FEC_Sub_Code__r.FEC_Order__c),
                                 noc.FEC_Customer_Type__c,
                                 FEC_ConstantCommon.KEY_SUBCODE
                             );
@@ -518,8 +518,8 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         DataItemType product = new DataItemType(
             pCode,
             pickNameByLanguage(noc.FEC_Product_Type__r.Name, noc.FEC_Product_Type__r.FEC_Name_VN__c, language),
-            ensureNotBlank(noc.FEC_Product_Type__r.FEC_Name_VN__c),
-            toInt(noc.FEC_Product_Type__r.FEC_Order__c),
+            FEC_CommonUltils.defaultToEmpty(noc.FEC_Product_Type__r.FEC_Name_VN__c),
+            FEC_CommonUltils.toInt(noc.FEC_Product_Type__r.FEC_Order__c),
             noc.FEC_Customer_Type__c,
             FEC_ConstantCommon.KEY_PRODUCT_TYPE_PRODUCT
         );
@@ -543,12 +543,12 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         }
 
         ChildItemType newChild = new ChildItemType();
-        newChild.ID = ensureNotBlank(id);
-        newChild.Name = ensureNotBlank(name);
-        newChild.NameVN = ensureNotBlank(nameVN);
+        newChild.ID = FEC_CommonUltils.defaultToEmpty(id);
+        newChild.Name = FEC_CommonUltils.defaultToEmpty(name);
+        newChild.NameVN = FEC_CommonUltils.defaultToEmpty(nameVN);
         newChild.PosOrder = order;
-        newChild.ApplyTo = ensureNotBlank(applyTo);
-        newChild.Type = ensureNotBlank(type);
+        newChild.ApplyTo = FEC_CommonUltils.defaultToEmpty(applyTo);
+        newChild.Type = FEC_CommonUltils.defaultToEmpty(type);
         parent.Children.add(newChild);
         return newChild;
     }
@@ -569,24 +569,24 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         }
 
         ChildItemType newChild = new ChildItemType();
-        newChild.ID = ensureNotBlank(id);
-        newChild.Name = ensureNotBlank(name);
-        newChild.NameVN = ensureNotBlank(nameVN);
+        newChild.ID = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(id);
+        newChild.Name = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(name);
+        newChild.NameVN = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(nameVN);
         newChild.PosOrder = order;
-        newChild.ApplyTo = ensureNotBlank(applyTo);
-        newChild.Type = ensureNotBlank(type);
+        newChild.ApplyTo = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(applyTo);
+        newChild.Type = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(type);
         parent.Children.add(newChild);
         return newChild;
     }
 
     private static ChildItemType newEmptyNode(String type) {
         ChildItemType node = new ChildItemType();
-        node.ID = '';
-        node.Name = '';
-        node.NameVN = '';
+        node.ID = FEC_ConstantCommon.STR_EMPTY;
+        node.Name = FEC_ConstantCommon.STR_EMPTY;
+        node.NameVN = FEC_ConstantCommon.STR_EMPTY;
         node.PosOrder = null;
-        node.ApplyTo = '';
-        node.Type = ensureNotBlank(type);
+        node.ApplyTo = FEC_ConstantCommon.STR_EMPTY;
+        node.Type = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(type);
         node.Children = new List<ChildItemType>();
         return node;
     }
@@ -626,34 +626,34 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         if (res == null) return;
 
         if (res.Sys == null) res.Sys = new SysResponseType();
-        res.Sys.TransactionID = ensureNotBlank(res.Sys.TransactionID);
-        res.Sys.Code = ensureNotBlank(res.Sys.Code);
-        res.Sys.Description = ensureNotBlank(res.Sys.Description);
+        res.Sys.TransactionID = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.Sys.TransactionID);
+        res.Sys.Code = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.Sys.Code);
+        res.Sys.Description = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.Sys.Description);
         if (res.Sys.DateTime_x == null) res.Sys.DateTime_x = System.now();
 
         if (res.RequestInfo == null) res.RequestInfo = new RequestInfoType();
-        res.RequestInfo.Category = ensureNotBlank(res.RequestInfo.Category);
-        res.RequestInfo.SubCategory = ensureNotBlank(res.RequestInfo.SubCategory);
-        res.RequestInfo.SubCode = ensureNotBlank(res.RequestInfo.SubCode);
-        res.RequestInfo.ProductLineId = ensureNotBlank(res.RequestInfo.ProductLineId);
-        res.RequestInfo.CaseType = ensureNotBlank(res.RequestInfo.CaseType);
-        res.RequestInfo.Remarks = ensureNotBlank(res.RequestInfo.Remarks);
+        res.RequestInfo.Category = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.RequestInfo.Category);
+        res.RequestInfo.SubCategory = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.RequestInfo.SubCategory);
+        res.RequestInfo.SubCode = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.RequestInfo.SubCode);
+        res.RequestInfo.ProductLineId = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.RequestInfo.ProductLineId);
+        res.RequestInfo.CaseType = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.RequestInfo.CaseType);
+        res.RequestInfo.Remarks = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.RequestInfo.Remarks);
 
         if (res.CustomerInfo == null) res.CustomerInfo = new CustomerTypeRequest();
-        res.CustomerInfo.UserType = ensureNotBlank(res.CustomerInfo.UserType);
-        res.CustomerInfo.Language = ensureNotBlank(res.CustomerInfo.Language);
+        res.CustomerInfo.UserType = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.CustomerInfo.UserType);
+        res.CustomerInfo.Language = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.CustomerInfo.Language);
 
         if (res.AdditionalInfo == null) res.AdditionalInfo = new AdditionalInfoRequest();
-        res.AdditionalInfo.ID = ensureNotBlank(res.AdditionalInfo.ID);
-        res.AdditionalInfo.Value = ensureNotBlank(res.AdditionalInfo.Value);
+        res.AdditionalInfo.ID = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.AdditionalInfo.ID);
+        res.AdditionalInfo.Value = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.AdditionalInfo.Value);
 
         if (res.DataItems == null) res.DataItems = new List<DataItemType>();
         for (DataItemType di : res.DataItems) {
-            di.ID = ensureNotBlank(di.ID);
-            di.Name = ensureNotBlank(di.Name);
-            di.NameVN = ensureNotBlank(di.NameVN);
-            di.ApplyTo = ensureNotBlank(di.ApplyTo);
-            di.Type = ensureNotBlank(di.Type);
+            di.ID = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(di.ID);
+            di.Name = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(di.Name);
+            di.NameVN = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(di.NameVN);
+            di.ApplyTo = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(di.ApplyTo);
+            di.Type = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(di.Type);
             if (di.Children == null) di.Children = new List<ChildItemType>();
             for (ChildItemType c1 : di.Children) {
                 normalizeChild(c1);
@@ -662,11 +662,11 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
     }
 
     private static void normalizeChild(ChildItemType node) {
-        node.ID = ensureNotBlank(node.ID);
-        node.Name = ensureNotBlank(node.Name);
-        node.NameVN = ensureNotBlank(node.NameVN);
-        node.ApplyTo = ensureNotBlank(node.ApplyTo);
-        node.Type = ensureNotBlank(node.Type);
+        node.ID = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(node.ID);
+        node.Name = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(node.Name);
+        node.NameVN = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(node.NameVN);
+        node.ApplyTo = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(node.ApplyTo);
+        node.Type = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(node.Type);
         if (node.Children == null) node.Children = new List<ChildItemType>();
         for (ChildItemType child : node.Children) {
             normalizeChild(child);
@@ -674,31 +674,15 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
     }
 
     // =========================================================================
-    // STRING / UTIL
+    // InitResponse 
     // =========================================================================
-    private static String pickNameByLanguage(String nameEN, String nameVN, String language) {
-        String lang = String.valueOf(language);
-        if (lang != null && lang.toUpperCase() == 'VN') {
-            return String.isNotBlank(nameVN) ? nameVN : (String.isNotBlank(nameEN) ? nameEN : '');
-        }
-        return String.isNotBlank(nameEN) ? nameEN : (String.isNotBlank(nameVN) ? nameVN : '');
-    }
-
-    private static String ensureNotBlank(String value) {
-        return String.isNotBlank(value) ? value : '';
-    }
-
-    private static Integer toInt(Decimal d) {
-        return d == null ? null : Integer.valueOf(d);
-    }
-
     private static GetCSMasterDataByCodeResponse initResponse(SysRequestType Sys) {
         GetCSMasterDataByCodeResponse res = new GetCSMasterDataByCodeResponse();
         res.Sys = new SysResponseType();
         res.Sys.TransactionID = (Sys != null) ? Sys.TransactionID : null;
         res.Sys.DateTime_x = System.now();
-        res.Sys.Code = '';
-        res.Sys.Description = '';
+        res.Sys.Code = FEC_ConstantCommon.STR_EMPTY;
+        res.Sys.Description = FEC_ConstantCommon.STR_EMPTY;
         res.RequestInfo = new RequestInfoType();
         res.CustomerInfo = new CustomerTypeRequest();
         res.AdditionalInfo = new AdditionalInfoRequest();
@@ -770,12 +754,12 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             String id, String name, String nameVN,
             Integer order, String applyTo, String type
         ) {
-            this.ID = ensureNotBlank(id);
-            this.Name = ensureNotBlank(name);
-            this.NameVN = ensureNotBlank(nameVN);
+            this.ID = FEC_CommonUltils.defaultToEmpty(id);
+            this.Name = FEC_CommonUltils.defaultToEmpty(name);
+            this.NameVN = FEC_CommonUltils.defaultToEmpty(nameVN);
             this.PosOrder = order;
-            this.ApplyTo = ensureNotBlank(applyTo);
-            this.Type = ensureNotBlank(type);
+            this.ApplyTo = FEC_CommonUltils.defaultToEmpty(applyTo);
+            this.Type = FEC_CommonUltils.defaultToEmpty(type);
             this.Children = new List<ChildItemType>();
         }
     }
@@ -790,11 +774,11 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         webservice List<ChildItemType> Children;
 
         global ChildItemType() {
-            this.ID = '';
-            this.Name = '';
-            this.NameVN = '';
-            this.ApplyTo = '';
-            this.Type = '';
+            this.ID = FEC_ConstantCommon.STR_EMPTY;
+            this.Name = FEC_ConstantCommon.STR_EMPTY;
+            this.NameVN = FEC_ConstantCommon.STR_EMPTY;
+            this.ApplyTo = FEC_ConstantCommon.STR_EMPTY;
+            this.Type = FEC_ConstantCommon.STR_EMPTY;
             this.PosOrder = null;
             this.Children = new List<ChildItemType>();
         }
