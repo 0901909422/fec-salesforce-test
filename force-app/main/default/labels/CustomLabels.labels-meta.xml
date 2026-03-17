@@ -273,6 +273,13 @@
         <value>Cancel</value>
     </labels>
     <labels>
+        <fullName>FEC_Wrap_Up_Modal_Btn_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Wrap-up Information modal Cancel button</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
         <fullName>FEC_Btn_Clear_Filter</fullName>
         <language>en_US</language>
         <protected>false</protected>
