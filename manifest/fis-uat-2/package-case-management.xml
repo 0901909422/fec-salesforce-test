@@ -68,6 +68,7 @@
 		<members>fec_Asset</members>
 		<members>fec_MRC</members>
 		<members>fec_GenesysSoftphone</members>
+		<members>fec_Search</members>
 		<members>fecInteractionEmailInfo</members>
 		<name>LightningComponentBundle</name>
 	</types>
@@ -80,9 +81,18 @@
 		<members>FEC_CaseTriggerHandler</members>
 		<members>FEC_InteractionRoutingController</members>
 		<members>FEC_InteractionRoutingService</members>
+		<members>FEC_SearchController</members>
 		<members>FEC_ConstantCommon</members>
         <name>ApexClass</name>
     </types>
+	<types>
+		<members>FEC_Service</members>
+		<name>CustomApplication</name>
+	</types>
+	<types>
+		<members>FEC_Account_Contract_Search</members>
+		<name>CustomTab</name>
+	</types>
 	<types>
 		<members>Case</members>
 		<name>Settings</name>
@@ -103,5 +113,10 @@
         <members>Case.Interaction</members>
         <name>RecordType</name>
     </types>
+	<types>
+		<members>FEC_Common_System_Setting</members>
+		<members>RD_IT_User_Search_Functions</members>
+		<name>PermissionSet</name>
+	</types>
 	<version>65.0</version>
 </Package>
