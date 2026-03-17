@@ -308,6 +308,10 @@
     <label>Common System Setting</label>
     <license>Salesforce</license>
     <tabSettings>
+        <tab>FEC_Account_Contract_Search</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Action_Button__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
