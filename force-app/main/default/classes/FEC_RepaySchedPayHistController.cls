@@ -65,18 +65,6 @@ public with sharing class FEC_RepaySchedPayHistController {
 
     private static final String HYPHEN = '-';
 
-    private static String str(Object o) {
-        return o == null ? '' : String.valueOf(o);
-    }
-
-    private static String formatDecimal(Decimal d) {
-        return d == null ? HYPHEN : String.valueOf(d);
-    }
-
-    private static String formatDate(Date dt) {
-        return dt == null ? HYPHEN : dt.format();
-    }
-
     private static String parsePaymentDate(String transactionDate) {
         if (String.isBlank(transactionDate)) return HYPHEN;
         try {
@@ -141,15 +129,15 @@ public with sharing class FEC_RepaySchedPayHistController {
             for (FEC_GetLoanBasicInfo.RepaymentSchedule rs : schedules) {
                 RepaymentScheduleRowDTO row = new RepaymentScheduleRowDTO();
                 row.rowIndex = ++idx;
-                row.installmentNo = str(rs.InstallmentNo);
-                row.dueDate = formatDate(rs.DueDate);
-                row.openingPrincipal = formatDecimal(rs.OpeningPrincipal);
-                row.emi = formatDecimal(rs.EMI);
-                row.repaymentFee = formatDecimal(rs.RepaymentFee);
-                row.installmentAmount = formatDecimal(rs.InstallmentAmount);
-                row.principal = formatDecimal(rs.Principal);
-                row.interest = formatDecimal(rs.Interest);
-                row.closingPrincipal = formatDecimal(rs.ClosingPrincipal);
+                row.installmentNo = FEC_CommonUltils.defaultToEmpty(rs.InstallmentNo);
+                row.dueDate = FEC_CommonUltils.formatDate(rs.DueDate);
+                row.openingPrincipal = FEC_CommonUltils.decimalToString(rs.OpeningPrincipal);
+                row.emi = FEC_CommonUltils.decimalToString(rs.EMI);
+                row.repaymentFee = FEC_CommonUltils.decimalToString(rs.RepaymentFee);
+                row.installmentAmount = FEC_CommonUltils.decimalToString(rs.InstallmentAmount);
+                row.principal = FEC_CommonUltils.decimalToString(rs.Principal);
+                row.interest = FEC_CommonUltils.decimalToString(rs.Interest);
+                row.closingPrincipal = FEC_CommonUltils.decimalToString(rs.ClosingPrincipal);
                 result.repaymentScheduleTable.add(row);
                 if (rs.Principal != null) sumPrincipal += rs.Principal;
                 if (rs.Interest != null) sumInterest += rs.Interest;
@@ -233,9 +221,9 @@ public with sharing class FEC_RepaySchedPayHistController {
         for (Integer i = 0; i < rowCount; i++) {
             PaymentHistoryRowDTO row = new PaymentHistoryRowDTO();
             row.paymentNo = i + 1;
-            row.paymentDate = i < basicPh.size() ? formatDate(basicPh[i].ValueDate) : HYPHEN;
-            row.bookingDate = i < secPh.size() ? formatDate(secPh[i].BookingDate) : HYPHEN;
-            row.paymentAmount = i < secPh.size() ? formatDecimal(secPh[i].AmountOfMoney) : HYPHEN;
+            row.paymentDate = i < basicPh.size() ? FEC_CommonUltils.formatDate(basicPh[i].ValueDate) : HYPHEN;
+            row.bookingDate = i < secPh.size() ? FEC_CommonUltils.formatDate(secPh[i].BookingDate) : HYPHEN;
+            row.paymentAmount = i < secPh.size() ? FEC_CommonUltils.decimalToString(secPh[i].AmountOfMoney) : HYPHEN;
             if (i < secPh.size() && secPh[i].AmountOfMoney != null) {
                 sumPaymentAmount += secPh[i].AmountOfMoney;
             }
@@ -314,7 +302,7 @@ public with sharing class FEC_RepaySchedPayHistController {
             RealTimePaymentRowDTO row = new RealTimePaymentRowDTO();
             row.rowIndex = ++idx;
             row.paymentDate = parsePaymentDate(p.TransactionDate);
-            row.paymentAmount = formatDecimal(p.AmountPaid);
+            row.paymentAmount = FEC_CommonUltils.decimalToString(p.AmountPaid);
             row.paymentChannel = p.Username != null ? p.Username : HYPHEN;
             result.realTimePaymentTable.add(row);
         }
@@ -324,35 +312,35 @@ public with sharing class FEC_RepaySchedPayHistController {
         result.repaymentSchedulePaymentHistory = new List<FieldItemDTO>();
 
         if (result.repaymentScheduleTotals != null) {
-            result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Total Installment Amount', result.repaymentScheduleTotals.totalInstallmentAmount != null ? result.repaymentScheduleTotals.totalInstallmentAmount : HYPHEN));
-            result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Total Principal', result.repaymentScheduleTotals.totalPrincipal != null ? result.repaymentScheduleTotals.totalPrincipal : HYPHEN));
-            result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Total Interest', result.repaymentScheduleTotals.totalInterest != null ? result.repaymentScheduleTotals.totalInterest : HYPHEN));
+            result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Total_Installment_Amount_Label, result.repaymentScheduleTotals.totalInstallmentAmount != null ? result.repaymentScheduleTotals.totalInstallmentAmount : HYPHEN));
+            result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Total_Principal_Label, result.repaymentScheduleTotals.totalPrincipal != null ? result.repaymentScheduleTotals.totalPrincipal : HYPHEN));
+            result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Total_Interest_Label, result.repaymentScheduleTotals.totalInterest != null ? result.repaymentScheduleTotals.totalInterest : HYPHEN));
         }
         if (result.repaymentScheduleTable != null && !result.repaymentScheduleTable.isEmpty()) {
             for (RepaymentScheduleRowDTO row : result.repaymentScheduleTable) {
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Installment No', row.installmentNo != null ? row.installmentNo : HYPHEN));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Due Date', row.dueDate != null ? row.dueDate : HYPHEN));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Opening Principal', row.openingPrincipal != null ? row.openingPrincipal : HYPHEN));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('EMI', row.emi != null ? row.emi : HYPHEN));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Repayment Fee', row.repaymentFee != null ? row.repaymentFee : HYPHEN));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Installment Amount', row.installmentAmount != null ? row.installmentAmount : HYPHEN));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Principal', row.principal != null ? row.principal : HYPHEN));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Interest', row.interest != null ? row.interest : HYPHEN));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Closing Principal', row.closingPrincipal != null ? row.closingPrincipal : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Installment_No_Label, row.installmentNo != null ? row.installmentNo : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Installment_Due_Date_Label, row.dueDate != null ? row.dueDate : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Opening_Principal_Label, row.openingPrincipal != null ? row.openingPrincipal : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_EMI_Label, row.emi != null ? row.emi : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Repayment_Fee_Label, row.repaymentFee != null ? row.repaymentFee : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Installment_Amount_Label, row.installmentAmount != null ? row.installmentAmount : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Principal_Label, row.principal != null ? row.principal : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Interest_Label, row.interest != null ? row.interest : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Closing_Principal_Label, row.closingPrincipal != null ? row.closingPrincipal : HYPHEN));
             }
         }
 
         if (result.paymentHistoryTotals != null && result.paymentHistoryTotals.totalPaymentAmount != null) {
-            result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Total Payment Amount', result.paymentHistoryTotals.totalPaymentAmount));
+            result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Total_Payment_Amount_Label, result.paymentHistoryTotals.totalPaymentAmount));
         }
         if (result.paymentHistoryTable != null && !result.paymentHistoryTable.isEmpty()) {
             for (PaymentHistoryRowDTO row : result.paymentHistoryTable) {
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Payment No.', str(row.paymentNo)));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Payment Date', row.paymentDate != null ? row.paymentDate : HYPHEN));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Booking Date', row.bookingDate != null ? row.bookingDate : HYPHEN));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Payment Amount', row.paymentAmount != null ? row.paymentAmount : HYPHEN));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Particulars', row.particulars != null ? row.particulars : HYPHEN));
-                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO('Payment Channel', row.paymentChannel != null ? row.paymentChannel : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Payment_No_Label, FEC_CommonUltils.defaultToEmpty(row.paymentNo)));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Payment_Date_Label, row.paymentDate != null ? row.paymentDate : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Booking_Date_Label, row.bookingDate != null ? row.bookingDate : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Payment_Amount_Label, row.paymentAmount != null ? row.paymentAmount : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Particulars_Label, row.particulars != null ? row.particulars : HYPHEN));
+                result.repaymentSchedulePaymentHistory.add(new FieldItemDTO(System.Label.FEC_Repay_Payment_Channel_Label, row.paymentChannel != null ? row.paymentChannel : HYPHEN));
             }
         }
     }

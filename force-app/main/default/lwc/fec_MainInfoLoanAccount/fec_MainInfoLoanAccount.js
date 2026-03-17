@@ -1,6 +1,7 @@
 import { LightningElement, api, track } from 'lwc';
 import loadLoanAccountInfo from '@salesforce/apex/FEC_MainInfoLoanAccountController.loadLoanAccountInfo';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { isNegative } from 'c/fec_CommonUtils';
 import FEC_Contract_Label from '@salesforce/label/c.FEC_Contract_Label';
 import FEC_Loan_Label from '@salesforce/label/c.FEC_Loan_Label';
 import FEC_Payment_Label from '@salesforce/label/c.FEC_Payment_Label';
@@ -180,13 +181,9 @@ export default class Fec_MainInfoLoanAccount extends LightningElement {
         return {
             label,
             value: value || '-',
-            type: this.isNegative(value) ? 'negative' : 'regular',
+            type: isNegative(value) ? 'negative' : 'regular',
             helpText: helpText || undefined
         };
-    }
-
-    isNegative(value) {
-        return value && value.toString().startsWith('-');
     }
 
     /* ================= ERROR + TOAST ================= */

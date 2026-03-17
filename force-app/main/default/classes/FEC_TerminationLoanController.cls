@@ -106,16 +106,16 @@ public with sharing class FEC_TerminationLoanController {
             terminationAmount = secLoan.PrincipalOutstanding;
         }
 
-        addField(rows, 'Termination Amount', terminationAmount, true);
-        addField(rows, 'Excess Amount', termSim?.ExcessAmounts, false);
-        addField(rows, 'Pre Payment Penalty', termSim?.PrePaymentPenalty, false);
-        addField(rows, 'Total Installment Paid', secLoan?.TotalInstallmentPaid, false);
-        addField(rows, 'Current Balance Principal', termSim?.CurrentBalancePrincipal, false);
-        addField(rows, 'Pending Penal Interest', lpi?.PendingPenalInt, false);
-        addField(rows, 'Total Principal Paid', secLoan?.TotalPrincipalPaid, false);
-        addField(rows, 'Interest On Termination', termSim?.InterestOnTermination, false);
-        addField(rows, 'LPI Paid', lpi?.AppliedLPI, false);
-        addField(rows, 'Total Interest Paid', secLoan?.TotalInterestPaid, false);
+        addField(rows, System.Label.FEC_Termination_Field_Termination_Amount_Label, terminationAmount, true);
+        addField(rows, System.Label.FEC_Termination_Field_Excess_Amount_Label, termSim?.ExcessAmounts, false);
+        addField(rows, System.Label.FEC_Termination_Field_Pre_Payment_Penalty_Label, termSim?.PrePaymentPenalty, false);
+        addField(rows, System.Label.FEC_Termination_Field_Total_Installment_Paid_Label, secLoan?.TotalInstallmentPaid, false);
+        addField(rows, System.Label.FEC_Termination_Field_Current_Balance_Principal_Label, termSim?.CurrentBalancePrincipal, false);
+        addField(rows, System.Label.FEC_Termination_Field_Pending_Penal_Interest_Label, lpi?.PendingPenalInt, false);
+        addField(rows, System.Label.FEC_Termination_Field_Total_Principal_Paid_Label, secLoan?.TotalPrincipalPaid, false);
+        addField(rows, System.Label.FEC_Termination_Field_Interest_On_Termination_Label, termSim?.InterestOnTermination, false);
+        addField(rows, System.Label.FEC_Termination_Field_LPI_Paid_Label, lpi?.AppliedLPI, false);
+        addField(rows, System.Label.FEC_Termination_Field_Total_Interest_Paid_Label, secLoan?.TotalInterestPaid, false);
         result.put('earlyTermination', rows);
     }
 
@@ -205,13 +205,13 @@ public with sharing class FEC_TerminationLoanController {
         FEC_GetLoanBasicInfo.Product product = basicRes?.LoanBasicInfo?.Product;
         FEC_GetLoanBasicInfo.RepaymentFeeOverdue rfo = basicRes?.LoanBasicInfo?.RepaymentFeeOverdue;
 
-        addField(rows, 'Total Overdue Amount', passDue?.TotalOverdueAmount, false);
-        addField(rows, 'Principal Overdue', product?.PrincipalDue, false);
-        addField(rows, 'Interest Overdue', product?.InterestDue, false);
-        addField(rows, 'Installments Overdue', null, false);
-        addField(rows, 'Repayment Fee Overdue', rfo?.OutstandingAmount, false);
-        addField(rows, 'Penalty Fee Overdue', null, false);
-        addField(rows, 'Overdue Penalty', passDue?.OverduePenalty, false);
+        addField(rows, System.Label.FEC_Termination_Field_Total_Overdue_Amount_Label, passDue?.TotalOverdueAmount, false);
+        addField(rows, System.Label.FEC_Termination_Field_Principal_Overdue_Label, product?.PrincipalDue, false);
+        addField(rows, System.Label.FEC_Termination_Field_Interest_Overdue_Label, product?.InterestDue, false);
+        addField(rows, System.Label.FEC_Termination_Field_Installments_Overdue_Label, null, false);
+        addField(rows, System.Label.FEC_Termination_Field_Repayment_Fee_Overdue_Label, rfo?.OutstandingAmount, false);
+        addField(rows, System.Label.FEC_Termination_Field_Penalty_Fee_Overdue_Label, null, false);
+        addField(rows, System.Label.FEC_Termination_Field_Overdue_Penalty_Label, passDue?.OverduePenalty, false);
 
         result.put('overdue', rows);
     }

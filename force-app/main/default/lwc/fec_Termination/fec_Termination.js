@@ -1,4 +1,5 @@
 import { LightningElement, api, track } from 'lwc';
+import { isNegative, formatNum } from 'c/fec_CommonUtils';
 import getTerminationData from '@salesforce/apex/FEC_TerminationLoanController.getTerminationData';
 import FEC_Termination_Label from '@salesforce/label/c.FEC_Termination_Label';
 import FEC_Early_Termination_Label from '@salesforce/label/c.FEC_Early_Termination_Label';
@@ -136,45 +137,57 @@ export default class Fec_Termination extends LightningElement {
     /* Nhãn mặc định cho Early Termination khi API trả về rỗng (đồng bộ với controller) */
     get defaultEarlyTerminationLabels() {
         return [
-            'Termination Amount', 'Excess Amount', 'Pre Payment Penalty', 'Total Installment Paid',
-            'Current Balance Principal', 'Pending Penal Interest', 'Total Principal Paid',
-            'Interest On Termination', 'LPI Paid', 'Total Interest Paid'
+            FEC_Termination_Field_Termination_Amount_Label,
+            FEC_Termination_Field_Excess_Amount_Label,
+            FEC_Termination_Field_Pre_Payment_Penalty_Label,
+            FEC_Termination_Field_Total_Installment_Paid_Label,
+            FEC_Termination_Field_Current_Balance_Principal_Label,
+            FEC_Termination_Field_Pending_Penal_Interest_Label,
+            FEC_Termination_Field_Total_Principal_Paid_Label,
+            FEC_Termination_Field_Interest_On_Termination_Label,
+            FEC_Termination_Field_LPI_Paid_Label,
+            FEC_Termination_Field_Total_Interest_Paid_Label,
         ];
     }
 
     /* Nhãn mặc định cho Overdue khi API trả về rỗng (đồng bộ với controller) */
     get defaultOverdueLabels() {
         return [
-            'Total Overdue Amount', 'Principal Overdue', 'Interest Overdue', 'Installments Overdue',
-            'Repayment Fee Overdue', 'Penalty Fee Overdue', 'Overdue Penalty'
+            FEC_Termination_Field_Total_Overdue_Amount_Label,
+            FEC_Termination_Field_Principal_Overdue_Label,
+            FEC_Termination_Field_Interest_Overdue_Label,
+            FEC_Termination_Field_Installments_Overdue_Label,
+            FEC_Termination_Field_Repayment_Fee_Overdue_Label,
+            FEC_Termination_Field_Penalty_Fee_Overdue_Label,
+            FEC_Termination_Field_Overdue_Penalty_Label,
         ];
     }
 
     /* ================= SECTION FIELDS (format common-record-detail-section, helpText theo fieldApiName như SecondaryInfo) ================= */
     get earlyTerminationLabelToApi() {
         return {
-            'Termination Amount': 'FEC_Termination_Amount__c',
-            'Excess Amount': 'FEC_Excess_Amount__c',
-            'Pre Payment Penalty': 'FEC_Pre_Payment_Penalty__c',
-            'Total Installment Paid': 'FEC_Total_Installment_Paid__c',
-            'Current Balance Principal': 'FEC_Current_Balance_Principal__c',
-            'Pending Penal Interest': 'FEC_Pending_Penal_Interest__c',
-            'Total Principal Paid': 'FEC_Total_Principal_Paid__c',
-            'Interest On Termination': 'FEC_Interest_On_Termination__c',
-            'LPI Paid': 'FEC_LPI_Paid__c',
-            'Total Interest Paid': 'FEC_Total_Interest_Paid__c',
+            [FEC_Termination_Field_Termination_Amount_Label]: 'FEC_Termination_Amount__c',
+            [FEC_Termination_Field_Excess_Amount_Label]: 'FEC_Excess_Amount__c',
+            [FEC_Termination_Field_Pre_Payment_Penalty_Label]: 'FEC_Pre_Payment_Penalty__c',
+            [FEC_Termination_Field_Total_Installment_Paid_Label]: 'FEC_Total_Installment_Paid__c',
+            [FEC_Termination_Field_Current_Balance_Principal_Label]: 'FEC_Current_Balance_Principal__c',
+            [FEC_Termination_Field_Pending_Penal_Interest_Label]: 'FEC_Pending_Penal_Interest__c',
+            [FEC_Termination_Field_Total_Principal_Paid_Label]: 'FEC_Total_Principal_Paid__c',
+            [FEC_Termination_Field_Interest_On_Termination_Label]: 'FEC_Interest_On_Termination__c',
+            [FEC_Termination_Field_LPI_Paid_Label]: 'FEC_LPI_Paid__c',
+            [FEC_Termination_Field_Total_Interest_Paid_Label]: 'FEC_Total_Interest_Paid__c',
         };
     }
 
     get overdueLabelToApi() {
         return {
-            'Total Overdue Amount': 'FEC_Total_Overdue_Amount__c',
-            'Principal Overdue': 'FEC_Principal_Overdue__c',
-            'Interest Overdue': 'FEC_Interest_Overdue__c',
-            'Installments Overdue': 'FEC_Installments_Overdue__c',
-            'Repayment Fee Overdue': 'FEC_Repayment_Fee_Overdue__c',
-            'Penalty Fee Overdue': 'FEC_Penalty_Fee_Overdue__c',
-            'Overdue Penalty': 'FEC_Overdue_Penalty__c',
+            [FEC_Termination_Field_Total_Overdue_Amount_Label]: 'FEC_Total_Overdue_Amount__c',
+            [FEC_Termination_Field_Principal_Overdue_Label]: 'FEC_Principal_Overdue__c',
+            [FEC_Termination_Field_Interest_Overdue_Label]: 'FEC_Interest_Overdue__c',
+            [FEC_Termination_Field_Installments_Overdue_Label]: 'FEC_Installments_Overdue__c',
+            [FEC_Termination_Field_Repayment_Fee_Overdue_Label]: 'FEC_Repayment_Fee_Overdue__c',
+            [FEC_Termination_Field_Penalty_Fee_Overdue_Label]: 'FEC_Penalty_Fee_Overdue__c',
+            [FEC_Termination_Field_Overdue_Penalty_Label]: 'FEC_Overdue_Penalty__c',
         };
     }
 
@@ -197,13 +210,9 @@ export default class Fec_Termination extends LightningElement {
         return {
             label,
             value: value || '-',
-            type: this.isNegative(value) ? 'negative' : 'regular',
+            type: isNegative(value) ? 'negative' : 'regular',
             helpText: helpText || undefined
         };
-    }
-
-    isNegative(value) {
-        return value && value.toString().startsWith('-');
     }
 
     get earlyTerminationFields() {
@@ -268,14 +277,13 @@ export default class Fec_Termination extends LightningElement {
     get feeChargePagingRecords() {
         if (!this.feeChargeList || this.feeChargeList.length === 0) return [];
         const NEGATIVE_CLASS = 'currency-negative';
-        const isNegative = (val) => val != null && Number(val) < 0;
         return this.feeChargeList.map((row, index) => ({
             Id: 'fc-' + index,
             type: row.type || '',
-            assessedAmountFormatted: this.formatNum(row.assessedAmount),
-            collectedAmountFormatted: this.formatNum(row.collectedAmount),
-            waivedAmountFormatted: this.formatNum(row.waivedAmount),
-            outstandingAmountFormatted: this.formatNum(row.outstandingAmount),
+            assessedAmountFormatted: formatNum(row.assessedAmount),
+            collectedAmountFormatted: formatNum(row.collectedAmount),
+            waivedAmountFormatted: formatNum(row.waivedAmount),
+            outstandingAmountFormatted: formatNum(row.outstandingAmount),
             assessedAmountCellClass: isNegative(row.assessedAmount) ? NEGATIVE_CLASS : '',
             collectedAmountCellClass: isNegative(row.collectedAmount) ? NEGATIVE_CLASS : '',
             waivedAmountCellClass: isNegative(row.waivedAmount) ? NEGATIVE_CLASS : '',
@@ -285,12 +293,5 @@ export default class Fec_Termination extends LightningElement {
 
     get hasFeeChargeData() {
         return this.feeChargeList && this.feeChargeList.length > 0;
-    }
-
-    formatNum(val) {
-        if (val == null) return '0.00';
-        const n = Number(val);
-        if (isNaN(n)) return '0.00';
-        return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 }

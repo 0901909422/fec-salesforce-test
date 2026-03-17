@@ -186,6 +186,10 @@ public with sharing class FEC_MainInfoLoanAccountController {
 
         if (loan != null) {
             rec.FEC_Contract_Number__c  = loan.ContractNumber;
+            // Chỉ ghi ContractNumber từ API khi có giá trị, tránh ghi đè làm mất số đang dùng làm param gọi API
+            if (String.isNotBlank(loan.ContractNumber)) {
+                rec.FEC_Contract_Number__c = loan.ContractNumber;
+            }
             rec.FEC_Contract_Type__c    = loan.ContractType;
             rec.FEC_Contract_Status__c  = loan.ContractStatus;
             rec.FEC_Agreement_Date__c   = loan.AgreementDate;
