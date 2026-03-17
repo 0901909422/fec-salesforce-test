@@ -31,6 +31,7 @@ import {
   getFocusedTabInfo,
   refreshTab,
 } from "lightning/platformWorkspaceApi";
+import { CurrentPageReference } from 'lightning/navigation';
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -70,6 +71,21 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   @wire(MessageContext)
   messageContext;
+
+  @wire(CurrentPageReference)
+  pageRef;
+
+  get tabName() {
+    return this.pageRef?.attributes?.apiName; // e.g. 'Customer_Search'
+  }
+
+  get tabLabel() {
+    return this.tabName == 'FEC_Account_Contract_Search' ? 'Account/Contract Search' : 'Customer Search';
+  }
+
+  get isAccountContractSearch() {
+    return this.tabName === 'FEC_Account_Contract_Search'; // your tab's API name
+  }
 
   @wire(IsConsoleNavigation) isConsoleNavigation;
   async refreshTab() {
@@ -357,7 +373,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Search_Account_Number__c : null;
       this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Search_Email_Address__c : null;
       this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
-      if (this.phoneNumber || this.nationalId || this.contractNumber) {
+      if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress || this.customerNumber) {
         await this.processSearch();
       }
     } catch (error) {
