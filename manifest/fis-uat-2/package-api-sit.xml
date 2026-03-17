@@ -92,7 +92,6 @@
 		<members>FEC_MSG_TransactionId_Null</members>
 		<members>FEC_MSG_UserType_Null</members>
 		<name>CustomLabel</name>
-		<name>CustomLabel</name>
 	</types>
     <version>65.0</version>
 </Package>
