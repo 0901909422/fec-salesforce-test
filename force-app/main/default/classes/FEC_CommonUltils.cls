@@ -519,6 +519,10 @@ public with sharing class FEC_CommonUltils {
     return d.format();
   }
 
+  public static String formatTimestamp(Datetime timestamp ,String format) {
+    return Datetime.valueOf(timestamp).format(format);
+  }
+
   public static String decimalToString(Decimal d) {
     return d == null ? '' : d.format();
   }
@@ -779,4 +783,15 @@ public with sharing class FEC_CommonUltils {
       System.debug('LOG INSERT ERROR: ' + e.getMessage());
     }
   }
+
+  public static String escapeXml(String s) {
+    if (s == null)
+      return '';
+    return s.replace('&', '&amp;')
+      .replace('<', '&lt;')
+      .replace('>', '&gt;')
+      .replace('"', '&quot;')
+      .replace('\'', '&apos;');
+  }
+
 }

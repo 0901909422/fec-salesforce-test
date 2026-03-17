@@ -97,7 +97,7 @@ public with sharing class FEC_UpdateCustomerAddress {
       Dom.XmlNode sysNode = requestNode.addChildElement('Sys', null, null);
       sysNode.addChildElement('TransID', null, null).addTextNode(transId);
       sysNode.addChildElement('RequestorID', null, null)
-        .addTextNode(UUID.randomUUID().toString());
+        .addTextNode(FEC_ConstantCommon.REQUESTOR_APS);
       sysNode.addChildElement('DateTime', null, null).addTextNode(timestamp);
 
       // --- CIFNumber ---
@@ -352,4 +352,5 @@ public with sharing class FEC_UpdateCustomerAddress {
 
     return result;
   }
+
 }
