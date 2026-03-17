@@ -85,12 +85,12 @@ public without sharing class FEC_CreateCaseHandler {
         }
         
         interactionCase.FEC_Other_Subchannel__c =
-            dto.subChannel == 'Other' ? dto.otherSubChannel : null;
+            dto.subChannel == FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME ? dto.otherSubChannel : null;
         interactionCase.FEC_External_Interaction_ID__c = dto.externalInteractionId;
-        if (dto.channel == 'Chat') {
-            interactionCase.Status = 'Pending';
+        if (dto.channel == FEC_ConstantCommon.CHANNEL_CHAT) {
+            interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
         } else {
-            interactionCase.Status = 'Open';
+            interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         }
         interactionCase.FEC_Genesys_campaign_Name__c = dto.campaignName;
         
@@ -145,10 +145,10 @@ public without sharing class FEC_CreateCaseHandler {
         interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
         
         
-        if (dto.channel == 'Chat') {
-            interactionCase.Status = 'Pending';
+        if (dto.channel == FEC_ConstantCommon.CHANNEL_CHAT) {
+            interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
         } else {
-            interactionCase.Status = 'Open';
+            interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         }
         interactionCase.FEC_Interaction_View_Mode__c  = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         
@@ -191,14 +191,14 @@ public without sharing class FEC_CreateCaseHandler {
             interactionCase.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_SUBCHANNEL_NAME;
         }
         interactionCase.FEC_External_Interaction_ID__c = dto.genesysInteractionID;
-        interactionCase.Status = 'Open';
+        interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         interactionCase.FEC_Genesys_campaign_Name__c = dto.campaignName;
         interactionCase.FEC_Phone_Number__c = dto.phoneNumber;
         interactionCase.FEC_Search_Phone_Number__c = dto.phoneNumber;
         interactionCase.FEC_National_ID_Passport_ID__c = dto.nationalId;
         interactionCase.FEC_Account_Number__c = dto.cardAccountNum;
         interactionCase.FEC_Contract_Number__c = dto.contractNum;
-        if(dto.method == 'Auto') {
+        if(dto.method ==  FEC_ConstantCommon.AUTO_METHOD) {
             interactionCase.FEC_Interaction_View_Mode__c  = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         }
         insert interactionCase;
