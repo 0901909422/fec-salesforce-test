@@ -21,13 +21,16 @@
 		<name>FlexiPage</name>
 	</types>
 	<types>
-		<members>*</members>
+		<members>FEC_Lookup_Error</members>
+		<members>FEC_Lookup_Search_Error</members>
+		<members>FEC_Notification_Information</members>
+		<members>FEC_Notification_Template</members>
+		<members>FEC_Successfully_Created</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
 		<members>fec_Lookup</members>
 		<members>fec_NotificationOverride</members>
-		<members>fec_Spinner</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
