@@ -715,28 +715,42 @@ public with sharing class FEC_CommonUltils {
    * Format address 
    */
   public static String formatAddress(
-    String numberStr,
     String building,
+    String numberStr,
     String street,
     String ward,
     String district,
     String city,
     String countryName,
     String zipCode
-  ) {
+){
     List<String> parts = new List<String>();
 
-    if (!String.isBlank(numberStr)) parts.add(numberStr);
-    if (!String.isBlank(building)) parts.add(building);
-    if (!String.isBlank(street)) parts.add(street);
-    if (!String.isBlank(ward)) parts.add(ward);
-    if (!String.isBlank(district)) parts.add(district);
-    if (!String.isBlank(city)) parts.add(city);
-    if (!String.isBlank(countryName)) parts.add(countryName);
-    if (!String.isBlank(zipCode)) parts.add(zipCode);
+    addPart(parts, building);
+    addPart(parts, numberStr);
+    addPart(parts, street);
+    addPart(parts, ward);
+    addPart(parts, district);
+    addPart(parts, city);
+    addPart(parts, countryName);
+    addPart(parts, zipCode);
 
     return String.join(parts, ', ');
   }
+
+  private static void addPart(List<String> parts, String value){
+    if(String.isBlank(value)) return;
+
+    String clean = value.trim();
+
+    while(clean.endsWith(',')){
+        clean = clean.substring(0, clean.length()-1).trim();
+    }
+
+    if(!String.isBlank(clean)){
+        parts.add(clean);
+    }
+}
 
   public static void logApi(
     String apiName,
