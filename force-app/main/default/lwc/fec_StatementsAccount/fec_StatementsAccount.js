@@ -13,6 +13,7 @@
 
 import { LightningElement, api } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
+import { getFocusedTabInfo, openSubtab } from 'lightning/platformWorkspaceApi';
 
 import getLatestStatementId from '@salesforce/apex/FEC_StatementsAccountController.getLatestStatementId';
 import syncStatementFromAPI from '@salesforce/apex/FEC_StatementsAccountController.syncStatementFromAPI';
@@ -192,14 +193,29 @@ export default class Fec_StatementsAccount extends NavigationMixin(LightningElem
     }
 
     /* ================= LINK CLICK ================= */
-    handleStatementSelect(event) {
+    async handleStatementSelect(event) {
         const statementId = event.detail.recordId;
         if (!statementId) return;
 
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: { apiName: 'FEC_Statements' },
-            state: { c__statementId: statementId }
+        const tabInfo = await getFocusedTabInfo();
+
+        const parentTabId = tabInfo.isSubtab
+            ? tabInfo.parentTabId
+            : tabInfo.tabId;
+
+        await openSubtab(parentTabId, {
+            pageReference: {
+                type: 'standard__navItemPage',
+                attributes: {
+                    apiName: 'FEC_Statements'
+                },
+                state: {
+                    c__statementId: statementId,
+                    uid: statementId + '_' + Date.now()
+                }
+            },
+            focus: true,
+            label: 'Statement ' + statementId
         });
     }
 

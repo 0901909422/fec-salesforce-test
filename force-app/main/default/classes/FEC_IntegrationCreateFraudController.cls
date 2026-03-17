@@ -43,6 +43,7 @@ public with sharing class FEC_IntegrationCreateFraudController{
         @AuraEnabled public Id id;                    // Record Id
         @AuraEnabled public String property;          // Integrating Property code
         @AuraEnabled public String displayName;       // Vietnamese/English display name
+        @AuraEnabled public String value;            // Value record
         @AuraEnabled public String type;              // Data type (string, list, file...)
         @AuraEnabled public Boolean mandatory;        // Mandatory flag       
         @AuraEnabled public List<AvailableValueDTO> availableValues;
@@ -56,6 +57,9 @@ public with sharing class FEC_IntegrationCreateFraudController{
         @AuraEnabled public String intCategory;
         @AuraEnabled public String intSubCategory;
         @AuraEnabled public String intSubCode;
+        @AuraEnabled public String csRemarks;
+        @AuraEnabled public String serviceCaseId;
+        @AuraEnabled public String fraudCaseId;
         @AuraEnabled public List<PropertyDTO> propertyValues;
     }
 
@@ -157,26 +161,26 @@ public with sharing class FEC_IntegrationCreateFraudController{
         //Detect user language       
         Boolean isVietnamese = userLang != null && userLang.startsWith(FEC_FraudConstantCommon.LANG_VI);
         // List to store queried records
-        List<FEC_Case_Channel__c> records;
+        List<FEC_Channel__c> records;
         records = [
             SELECT Id,
-            FEC_Code__c,
+            FEC_Channel_ID__c,
             Name,          
-            FEC_Name_VN__c
-            FROM FEC_Case_Channel__c
-            WHERE FEC_Status__c = True
+            FEC_Channel_Vietnamese_name__c
+            FROM FEC_Channel__c
+            WHERE FEC_Channel_Status__c = True
         ];
 
         // Convert queried records to NodeDTO list
         List<NodeDTO> result = new List<NodeDTO>();
-        for (FEC_Case_Channel__c r : records) {
+        for (FEC_Channel__c r : records) {
             String displayName = isVietnamese
-            ? r.FEC_Name_VN__c
+            ? r.FEC_Channel_Vietnamese_name__c
             : r.Name;
             result.add(
                 new NodeDTO(
                     displayName, // label
-                    r.FEC_Code__c      // value
+                    r.FEC_Channel_ID__c      // value
                 )
             );
         }
@@ -207,7 +211,63 @@ public with sharing class FEC_IntegrationCreateFraudController{
          return result;
      }
 
-     /**
+@AuraEnabled(cacheable=true)
+public static FraudPropertyDTO getFraudCaseById(String fraudCaseId) {
+    log('LOG-getFraudCaseById: ' + fraudCaseId);    
+	FraudPropertyDTO resultData = new FraudPropertyDTO();
+
+    List<FEC_Integration_Case__c> existing = [
+        SELECT 
+            Id,
+            FEC_CaseID__c,
+            FEC_Service_Case_ID__c,
+            FEC_Parent_CaseID__c,
+            FEC_Case_Status__c,
+            FEC_Sys_Transaction_Id__c,
+            FEC_Sys_Date_Time__c,
+            FEC_Sys_Channel__c,
+            FEC_Customer_User_Type__c,
+            FEC_Creator_Email__c,
+            FEC_Case_Type__c,
+            FEC_Product_Type__c,
+            FEC_Category__c,
+            FEC_Sub_Category__c,
+            FEC_Sub_Code__c,
+            FEC_CS_Remark__c
+        FROM FEC_Integration_Case__c
+        WHERE Id = :fraudCaseId
+        LIMIT 1
+    ];
+
+    if (!existing.isEmpty()) {
+
+        FEC_Integration_Case__c rec = existing[0];
+		resultData.intChannel      = rec.FEC_Sys_Channel__c;
+        resultData.intUserType     = rec.FEC_Customer_User_Type__c;
+        resultData.intProductLine  = rec.FEC_Product_Type__c;
+        resultData.intServiceType = rec.FEC_Case_Type__c;
+        resultData.serviceCaseId  = rec.FEC_Service_Case_ID__c;
+        resultData.fraudCaseId  = rec.FEC_CaseID__c;
+        resultData.intCategory     = rec.FEC_Category__c;
+        resultData.intSubCategory  = rec.FEC_Sub_Category__c;
+        resultData.intSubCode      = rec.FEC_Sub_Code__c;
+		resultData.csRemarks = rec.FEC_CS_Remark__c;
+		
+        // Load additional dynamic properties based on mapping configuration
+        resultData.propertyValues =  loadAdditionalPropertiesByParentId(rec.Id);
+        // resultData.propertyValues =  loadAdditionalProperties(
+        //         rec.FEC_Category__c,
+        //         rec.FEC_Sub_Category__c,
+        //         rec.FEC_Sub_Code__c,
+        //         rec.FEC_Sys_Channel__c,
+        //         rec.FEC_Customer_User_Type__c
+        //     );
+    }
+
+    return resultData;
+}
+
+/**
  * Retrieves Integration Mapping data by Id and converts it into FraudPropertyDTO.
  *
  * @param integrationMappingId  Id of FEC_Data_Integration_Mapping__c record
@@ -409,7 +469,107 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         return result;
     }
 
+    private static List<PropertyDTO> loadAdditionalPropertiesByParentId(String parentCaseId) {
 
+        Boolean isVietnamese = userLang != null && userLang.startsWith(FEC_FraudConstantCommon.LANG_VI);
+
+        List<FEC_Integration_Case_Info__c> infoList = queryIntegrationCaseInfo(parentCaseId);
+
+        log('[QUERY] AdditionalProperty count=' + infoList.size());
+
+        Set<String> propKeys = new Set<String>();
+        for (FEC_Integration_Case_Info__c rec : infoList) {
+            propKeys.add(rec.FEC_Info_ID__c);
+        }
+
+        Map<String, List<AvailableValueDTO>> availableValueMap =
+            queryAvailableValues(propKeys, isVietnamese);
+
+        List<PropertyDTO> result = new List<PropertyDTO>();
+
+        for (FEC_Integration_Case_Info__c rec : infoList) {
+            result.add(buildPropertyDTO(rec, availableValueMap));
+        }
+
+        log('[END] loadAdditionalProperties | result size=' + result.size());
+        return result;
+    }
+
+    private static List<FEC_Integration_Case_Info__c> queryIntegrationCaseInfo(String parentCaseId) {
+    return [
+        SELECT 
+            Id,
+            FEC_Parent_Case__c,
+            FEC_Info_ID__c,
+            FEC_Info_Value__c,
+            FEC_Property_Type__c,
+            FEC_Source_Is_Mandatory__c
+        FROM FEC_Integration_Case_Info__c
+        WHERE FEC_Parent_Case__c = :parentCaseId
+        ];
+    }
+
+    private static Map<String, List<AvailableValueDTO>> queryAvailableValues(
+    Set<String> propKeys,
+    Boolean isVietnamese
+    ) {
+
+        Map<String, List<AvailableValueDTO>> result = new Map<String, List<AvailableValueDTO>>();
+
+        List<FEC_Master_Data_Integration__c> valueRecords = [
+            SELECT
+                Id,
+                FEC_Source_Parent_Id__c,
+                FEC_Source_Id__c,
+                FEC_Source_Name__c,
+                FEC_Source_NameVN__c
+            FROM FEC_Master_Data_Integration__c
+            WHERE FEC_Source_Type__c = :FEC_FraudConstantCommon.KEY_AVAILABLE_VALUE
+            AND FEC_Source_Parent_Id__c IN :propKeys
+            ORDER BY FEC_Source_Id__c
+        ];
+
+        for (FEC_Master_Data_Integration__c val : valueRecords) {
+
+            String parentKey = val.FEC_Source_Parent_Id__c;
+
+            if (!result.containsKey(parentKey)) {
+                result.put(parentKey, new List<AvailableValueDTO>());
+            }
+
+            AvailableValueDTO v = new AvailableValueDTO();
+            v.id = val.Id;
+            v.property = val.FEC_Source_Id__c;
+            v.displayName = isVietnamese
+                ? val.FEC_Source_NameVN__c
+                : val.FEC_Source_Name__c;
+
+            result.get(parentKey).add(v);
+        }
+
+        return result;
+    }
+    
+    private static PropertyDTO buildPropertyDTO(
+        FEC_Integration_Case_Info__c rec,
+        Map<String, List<AvailableValueDTO>> availableValueMap
+    ) {
+
+        PropertyDTO dto = new PropertyDTO();
+
+        dto.id = rec.Id;
+        dto.property = rec.FEC_Info_ID__c;
+        dto.displayName = rec.FEC_Info_ID__c;
+        dto.value = rec.FEC_Info_Value__c;
+        dto.type = rec.FEC_Property_Type__c;
+        dto.mandatory = rec.FEC_Source_Is_Mandatory__c;
+
+        dto.availableValues = availableValueMap.containsKey(rec.FEC_Info_ID__c)
+            ? availableValueMap.get(rec.FEC_Info_ID__c)
+            : new List<AvailableValueDTO>();
+
+        return dto;
+    }
 
      /* =====================================================
      * LOAD HIERARCHY DATA
@@ -534,7 +694,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
             FEC_IntegrationSoapFraudcaseService.RequestInfo_element req =
             FEC_IntegrationFraudCaseUtil.buildRequest(reqWrapper);
-            FEC_IntegrationSoapFraudcaseService.RequestInfo_element reqOriginal =
+            FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element reqOriginal =
             FEC_IntegrationFraudCaseUtil.buildRequestOriginal(reqWrapper);
 
             FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator =
@@ -591,7 +751,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         FEC_IntegrationFraudCaseUtil.FraudCaseRequestWrapper w,
         FEC_IntegrationSoapFraudcaseService.SysType sys,
         FEC_IntegrationSoapFraudcaseService.CustomerInfo_element cust,
-        FEC_IntegrationSoapFraudcaseService.RequestInfo_element req,
+        FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element req,
         FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator
     ) {
 
@@ -679,7 +839,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         FEC_IntegrationFraudCaseUtil.FraudCaseRequestWrapper w,
         FEC_IntegrationSoapFraudcaseService.SysType sys,
         FEC_IntegrationSoapFraudcaseService.CustomerInfo_element cust,
-        FEC_IntegrationSoapFraudcaseService.RequestInfo_element req,
+        FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element req,
         FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator
     ) {
 
@@ -844,11 +1004,12 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
             FEC_IntegrationSoapFraudcaseService.RequestInfo_element req =
             FEC_IntegrationFraudCaseUtil.buildRequest(reqWrapper);
-            FEC_IntegrationSoapFraudcaseService.RequestInfo_element reqOr =
+            FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element reqOr =
             FEC_IntegrationFraudCaseUtil.buildRequestOriginal(reqWrapper);
 
             FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator =
             FEC_IntegrationFraudCaseUtil.buildCreator(reqWrapper);
+            log('submitUpdateFraudCase: '+ JSON.serialize(req));
 
             // 3. Call SOAP service
             FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType apiRes =
@@ -913,14 +1074,14 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
     String caseId,
     String caseStatus,
     FEC_IntegrationSoapFraudcaseService.SysType sys,
-    FEC_IntegrationSoapFraudcaseService.RequestInfo_element req,
+    FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element req,
     FEC_IntegrationSoapFraudcaseService.CustomerInfo_element cust,
     FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator
     ) {
 
         log('==================== UPSERT FRAUD CASE START ====================');
         log('LOG-upsertFraudCaseService CASEID: '+ caseId);
-
+        FEC_FraudConstantCommon.IntegrationFieldType caseFileType = new FEC_FraudConstantCommon.IntegrationFieldType();
         try {
 
             // =============================================================
@@ -1013,16 +1174,22 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                 List<FEC_Integration_Case_Info__c> newInfos =
                     new List<FEC_Integration_Case_Info__c>();
             
-                for (FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element ai : req.AdditionalInfo) {
+                for (FEC_IntegrationSoapFraudcaseService.AdditionalInfoCustom_element ai : req.AdditionalInfo) {
             
                     if (ai == null) continue;
             
                     String infoValue = ai.Value;   
                     String infoId    = ai.ID;    
+                    String fileType = ai.Type;
+               
+                    Boolean mandatory = false;
+                    if(ai.Mandatory != null){
+                        mandatory = Boolean.valueOf(String.valueOf(ai.Mandatory));
+                    }
                     // ===============================
                     // FILE HANDLING
                     // ===============================
-                    if (String.isNotBlank(infoValue) && infoValue.contains('|')) {
+                    if (String.isNotBlank(infoValue) && fileType == caseFileType.TYPE_FILE) {
                         Integer firstPipe = infoValue.indexOf('|');
                         Integer secondPipe = infoValue.indexOf('|', firstPipe + 1);
                         if (firstPipe > 0 && secondPipe > firstPipe) {
@@ -1042,34 +1209,14 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                         
                     }
 
-                    // if (String.isNotBlank(infoValue) && infoValue.contains('|')) {
-            
-                    //     List<String> parts = infoValue.split('\\|', 3);
-            
-                    //     if (parts.size() == 3) {
-            
-                    //         String fileName  = parts[0];
-                    //         String extension = parts[1];
-                    //         String base64Val = parts[2];
-            
-                    //         Id contentDocumentId =
-                    //             saveAttachedFile(fileName, base64Val, rec.Id);
-            
-                    //         if (contentDocumentId != null) {
-                    //             infoValue =
-                    //                 fileName + '|' +
-                    //                 extension + '|' +
-                    //                 contentDocumentId;
-                    //         }
-                    //     }
-                    // }
-            
                     FEC_Integration_Case_Info__c info =
                         new FEC_Integration_Case_Info__c();
             
                     info.FEC_Parent_Case__c = rec.Id;
                     info.FEC_Info_ID__c     = infoId;
                     info.FEC_Info_Value__c  = infoValue;
+                    info.FEC_Property_Type__c  = fileType;
+                    info.FEC_Source_Is_Mandatory__c = mandatory;
             
                     newInfos.add(info);
                 }
