@@ -18,6 +18,7 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_TranferInformationCallout</members>
 		<members>FEC_CommonUltils</members>
+		<members>FEC_GetCSMasterDataService</members>
         <name>ApexClass</name>
     </types>
     <types>
