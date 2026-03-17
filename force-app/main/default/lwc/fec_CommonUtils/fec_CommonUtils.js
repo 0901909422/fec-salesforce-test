@@ -119,14 +119,20 @@ const parseDateVNI = (s) => {
 };
 
 const maskWorkPhone = (phone) => {
-  if (phone.length < 7) {
-    return phone;
+  if (!phone) return STR_EMPTY;
+  const v = String(phone).trim();
+  if (v.length < 7) return v;
+
+  if (/^84\d{9}$/.test(v)) {
+    return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
+  }
+  if (/^0\d{9}$/.test(v)) {
+    return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
   }
 
-  let first = phone.substring(0, 4);
-  let last = phone.substring(phone.length - 3);
-
-  return first + "***" + last;
+  const first = v.substring(0, 4);
+  const last = v.substring(v.length - 3);
+  return first + "*".repeat(Math.max(0, v.length - 7)) + last;
 };
 
 const maskValue = (value, showFull) => {
