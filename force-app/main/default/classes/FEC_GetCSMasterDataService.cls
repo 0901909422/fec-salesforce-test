@@ -76,7 +76,7 @@ global with sharing class FEC_GetCSMasterDataService {
                 p.NameVN = n.FEC_Product_Type__r.FEC_Name_VN__c;
                 p.PosOrder = toInt(n.FEC_Product_Type__r.FEC_Order__c);
                 p.ApplyTo = n.FEC_Customer_Type__c;
-                p.Type = FEC_Constants.KEY_PRODUCT_TYPE_PRODUCT;
+                p.Type = 'Product';
                 p.Children = new List<ChildItemType>();
                 productMap.put(pCode, p);
             }
@@ -92,7 +92,7 @@ global with sharing class FEC_GetCSMasterDataService {
                     n.FEC_Business_Process__r.FEC_Name_VN__c,
                     n.FEC_Business_Process__r.FEC_Order__c,
                     n.FEC_Customer_Type__c,
-                    FEC_Constants.KEY_CASE_TYPE
+                    'CaseType'
                 );
 
             // CATEGORY
@@ -104,7 +104,7 @@ global with sharing class FEC_GetCSMasterDataService {
                     n.FEC_Category__r.FEC_Name_VN__c,
                     n.FEC_Category__r.FEC_Order__c,
                     n.FEC_Customer_Type__c,
-                    FEC_Constants.KEY_CATEGORY
+                    Category
                 );
 
             // SUB CATEGORY
@@ -116,7 +116,7 @@ global with sharing class FEC_GetCSMasterDataService {
                     n.FEC_Sub_Category__r.FEC_Name_VN__c,
                     n.FEC_Sub_Category__r.FEC_Order__c,
                     n.FEC_Customer_Type__c,
-                    FEC_Constants.KEY_SUB_CATEGORY
+                    'SubCategory'
                 );
 
             // SUB CODE
@@ -128,7 +128,7 @@ global with sharing class FEC_GetCSMasterDataService {
                     n.FEC_Sub_Code__r.FEC_Name_VN__c,
                     n.FEC_Sub_Code__r.FEC_Order__c,
                     n.FEC_Customer_Type__c,
-                    FEC_Constants.KEY_SUB_CODE
+                    'SubCode'
                 );
 
             if (subCode.AdditionalProperties == null) {
@@ -137,8 +137,8 @@ global with sharing class FEC_GetCSMasterDataService {
         }
 
         res.MasterDataItems = productMap.values();
-        res.Sys.Code = FEC_Constants.KEY_CODE_SUCCESS;
-        res.Sys.Description = FEC_Constants.KEY_GET_CS_DATA_SUCCESS;
+        res.Sys.Code = System.Label.FEC_Success_Title;
+        res.Sys.Description =  System.Label.FEC_MSG_Get_CS_Data_Success;
         return res;
     }
 
@@ -194,7 +194,7 @@ global with sharing class FEC_GetCSMasterDataService {
                 FEC_Field_Mandatory__c,
                 FEC_Nature_Of_Case__r.FEC_Customer_Type__c
             FROM FEC_Master_Data_Setting__c
-            WHERE FEC_Field_Object_Name__c =: FEC_Constants.OBJ_ADDITIONAL_FIELD
+            WHERE FEC_Field_Object_Name__c = 'FEC_Additional_Field__c'
         ];
 
         for (FEC_Master_Data_Setting__c m : settings) {
@@ -208,13 +208,13 @@ global with sharing class FEC_GetCSMasterDataService {
                 : null;
             p.Mandatory = m.FEC_Field_Mandatory__c;
 
-            p.Name = getFieldLabel(FEC_Constants.OBJ_ADDITIONAL_FIELD, p.ID);
+            p.Name = getFieldLabel('FEC_Additional_Field__c', p.ID);
             p.NameVN = p.Name;
-            p.Type = getFieldType(FEC_Constants.OBJ_ADDITIONAL_FIELD, p.ID);
+            p.Type = getFieldType('FEC_Additional_Field__c', p.ID);
 
-            if (p.Type == FEC_Constants.KEY_PICKLIST) {
+            if (p.Type == 'Picklist') {
                 p.AvailableValues =
-                    getPicklistValues(FEC_Constants.OBJ_ADDITIONAL_FIELD, p.ID);
+                    getPicklistValues('FEC_Additional_Field__c', p.ID);
             }
 
             cachedAdditionalProperties.add(p);
@@ -244,12 +244,12 @@ global with sharing class FEC_GetCSMasterDataService {
                 .get(obj).getDescribe()
                 .fields.getMap().get(field)
                 .getDescribe().getType();
-        if (t == Schema.DisplayType.Picklist) return FEC_Constants.KEY_PICKLIST;
-        if (t == Schema.DisplayType.Boolean) return FEC_Constants.KEY_CHECKBOX;
-        if (t == Schema.DisplayType.Date) return FEC_Constants.KEY_DATE;
-        if (t == Schema.DisplayType.DateTime) return FEC_Constants.KEY_DATETIME;
-        if (t == Schema.DisplayType.Integer || t == Schema.DisplayType.Double) return FEC_Constants.KEY_NUMBER;
-        return FEC_Constants.KEY_TEXT;
+        if (t == Schema.DisplayType.Picklist) return 'Picklist';
+        if (t == Schema.DisplayType.Boolean) return 'Checkbox';
+        if (t == Schema.DisplayType.Date) return 'Date';
+        if (t == Schema.DisplayType.DateTime) return 'DateTime';
+        if (t == Schema.DisplayType.Integer || t == Schema.DisplayType.Double) return 'Number';
+        return 'Text';
     }
 
     private static List<AvailableValueType> getPicklistValues(
