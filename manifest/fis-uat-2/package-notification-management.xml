@@ -1,5 +1,45 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
-    
-    <version>65.0</version>
+    <types>
+		<members>FEC_LookupController</members>
+		<members>FEC_Notification</members>
+		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>fec_Notification</members>
+		<name>AuraDefinitionBundle</name>
+	</types>
+	<types>
+		<members>FEC_Notification_Channel__c</members>
+		<members>FEC_Notification__c</members>
+		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>FEC_Notification_Channel_Record_Page</members>
+		<members>FEC_Notification_Record_Page_Auto</members>
+		<members>FEC_Notification_Record_Page_Manual</members>
+		<name>FlexiPage</name>
+	</types>
+	<types>
+		<members>FEC_Lookup_Error</members>
+		<members>FEC_Lookup_Search_Error</members>
+		<members>FEC_Notification_Information</members>
+		<members>FEC_Notification_Template</members>
+		<members>FEC_Successfully_Created</members>
+		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>fec_Lookup</members>
+		<members>fec_NotificationOverride</members>
+		<name>LightningComponentBundle</name>
+	</types>
+	<types>
+		<members>FEC_Notification_Channel__c.All</members>
+		<members>FEC_Notification__c.Auto_Notification_for_Customer</members>
+		<members>FEC_Notification__c.Auto_Notification_for_Internal_User</members>
+		<members>FEC_Notification__c.Manual_Notification_for_Customer</members>
+		<members>FEC_Notification__c.Manual_Notification_for_Internal_User</members>
+		<name>ListView</name>
+	</types>
+    <version>66.0</version>
 </Package>

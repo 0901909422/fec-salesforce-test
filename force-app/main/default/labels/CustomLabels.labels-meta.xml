@@ -7933,4 +7933,39 @@
         <shortDescription>FEC_MSG_Can_Not_Find_Next_Stage</shortDescription>
         <value>Can&apos;t find next stage</value>
     </labels>
+    <labels>
+        <fullName>FEC_Lookup_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lookup Error</shortDescription>
+        <value>Lookup Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lookup_Search_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lookup Search Error</shortDescription>
+        <value>An error occured while searching with the lookup field.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Notification Information</shortDescription>
+        <value>Notification Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Notification Template</shortDescription>
+        <value>Notification Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Successfully_Created</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Successfully Created</shortDescription>
+        <value>Successfully created</value>
+    </labels>
 </CustomLabels>
