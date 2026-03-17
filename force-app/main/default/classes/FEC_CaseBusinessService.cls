@@ -16,6 +16,7 @@ public with sharing class FEC_CaseBusinessService {
   public static final String GENDER_UPDATE = 'Gender Update';
   public static final String IDENTIFICATION_UPDATE = 'National ID Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
+  public static final String DESCRIPTION_CHANGE_OWNER = 'Change Owner';
 
   public static final String CATEGORY_UNDELIVERED_CARD = 'Undelivered Card';
 
@@ -1129,6 +1130,135 @@ public with sharing class FEC_CaseBusinessService {
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
+  }
+
+  // --- Routing Action History khi Change Owner ---
+
+  /**
+   * Tạo bản ghi Routing Action History khi Change Owner (OwnerId thay đổi).
+   * Gán: Routing Action = Route to, Description = Change Owner; Stage Name = FEC_Code của stage trước khi đổi.
+   * @param newCases Trigger.new (sau update)
+   * @param oldMap Trigger.oldMap
+   */
+  public static void createRoutingActionHistoryOnOwnerChange(List<Case> newCases, Map<Id, Case> oldMap) {
+    if (newCases == null || oldMap == null) {
+      return;
+    }
+    List<Case> ownerChangedCases = getOwnerChangedCases(newCases, oldMap);
+    if (ownerChangedCases.isEmpty()) {
+      return;
+    }
+
+    Map<Id, String> ownerIdToName = getOwnerIdToNameMap(ownerChangedCases, oldMap);
+    User currentUser = getCurrentUserForRoutingHistory();
+    Map<Id, String> stageIdToCode = getStageCodeMapByOldCases(ownerChangedCases, oldMap);
+
+    List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>();
+    for (Case c : ownerChangedCases) {
+      Case oldCase = oldMap.get(c.Id);
+      histories.add(buildRoutingActionHistoryRecord(c, oldCase, ownerIdToName, stageIdToCode, currentUser));
+    }
+
+    if (!histories.isEmpty()) {
+      try {
+        insert histories;
+      } catch (Exception e) {
+        System.debug('FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange failed: ' + e.getMessage());
+      }
+    }
+  }
+
+  private static List<Case> getOwnerChangedCases(List<Case> newCases, Map<Id, Case> oldMap) {
+    List<Case> result = new List<Case>();
+    for (Case c : newCases) {
+      Case oldCase = oldMap.get(c.Id);
+      if (oldCase != null && c.OwnerId != oldCase.OwnerId && c.OwnerId != null) {
+        result.add(c);
+      }
+    }
+    return result;
+  }
+
+  private static Map<Id, String> getOwnerIdToNameMap(List<Case> ownerChangedCases, Map<Id, Case> oldMap) {
+    Set<Id> allOwnerIds = new Set<Id>();
+    for (Case c : ownerChangedCases) {
+      allOwnerIds.add(c.OwnerId);
+      allOwnerIds.add(oldMap.get(c.Id).OwnerId);
+    }
+    List<Id> userIds = new List<Id>();
+    List<Id> queueIds = new List<Id>();
+    for (Id ownerId : allOwnerIds) {
+      if (ownerId.getSObjectType() == User.SObjectType) {
+        userIds.add(ownerId);
+      } else if (ownerId.getSObjectType() == Group.SObjectType) {
+        queueIds.add(ownerId);
+      }
+    }
+    Map<Id, String> ownerIdToName = new Map<Id, String>();
+    if (!userIds.isEmpty()) {
+      for (User u : [SELECT Id, Name FROM User WHERE Id IN :userIds]) {
+        ownerIdToName.put(u.Id, u.Name);
+      }
+    }
+    if (!queueIds.isEmpty()) {
+      for (Group g : [SELECT Id, Name FROM Group WHERE Id IN :queueIds AND Type = 'Queue']) {
+        ownerIdToName.put(g.Id, g.Name);
+      }
+    }
+    return ownerIdToName;
+  }
+
+  private static User getCurrentUserForRoutingHistory() {
+    List<User> users = [SELECT Email, UserRole.Name FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+    return users.isEmpty() ? null : users.get(0);
+  }
+
+  private static Map<Id, String> getStageCodeMapByOldCases(List<Case> ownerChangedCases, Map<Id, Case> oldMap) {
+    Set<Id> oldStageIds = new Set<Id>();
+    for (Case c : ownerChangedCases) {
+      Case oldCase = oldMap.get(c.Id);
+      if (oldCase != null && oldCase.FEC_Current_Case_Stage__c != null) {
+        oldStageIds.add(oldCase.FEC_Current_Case_Stage__c);
+      }
+    }
+    Map<Id, String> stageIdToCode = new Map<Id, String>();
+    if (!oldStageIds.isEmpty()) {
+      for (FEC_Case_Stage__c st : [SELECT Id, FEC_Code__c FROM FEC_Case_Stage__c WHERE Id IN :oldStageIds]) {
+        stageIdToCode.put(st.Id, st.FEC_Code__c);
+      }
+    }
+    return stageIdToCode;
+  }
+
+  private static FEC_Routing_Action_History__c buildRoutingActionHistoryRecord(
+    Case c,
+    Case oldCase,
+    Map<Id, String> ownerIdToName,
+    Map<Id, String> stageIdToCode,
+    User currentUser
+  ) {
+    String originalName = ownerIdToName.get(oldCase.OwnerId);
+    String updatedName = ownerIdToName.get(c.OwnerId);
+    String stageName = oldCase.FEC_Current_Case_Stage__c != null
+      ? stageIdToCode.get(oldCase.FEC_Current_Case_Stage__c)
+      : null;
+    String currentUserEmailId = currentUser != null && String.isNotBlank(currentUser.Email)
+      ? currentUser.Email.split('@')[0]
+      : null;
+    String currentUserRole = currentUser?.UserRole?.Name;
+
+    return new FEC_Routing_Action_History__c(
+      FEC_Case__c = c.Id,
+      FEC_Routing_Action__c = ROUTE_TO,
+      FEC_Decision__c = '',
+      FEC_Original_User_Queue__c = originalName,
+      FEC_Updated_User_Queue__c = updatedName,
+      FEC_Updated_User_Queue_ID__c = c.OwnerId != null ? String.valueOf(c.OwnerId) : null,
+      FEC_Stage_Name__c = stageName,
+      FEC_User__c = currentUserEmailId,
+      FEC_User_Role__c = currentUserRole,
+      FEC_Description__c = DESCRIPTION_CHANGE_OWNER
+    );
   }
 
   private static void cancel(String caseId) {
