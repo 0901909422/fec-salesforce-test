@@ -74,7 +74,7 @@ global with sharing class FEC_GetCSMasterDataService {
                 p.ID = pCode;
                 p.Name = n.FEC_Product_Type__r.Name;
                 p.NameVN = n.FEC_Product_Type__r.FEC_Name_VN__c;
-                p.PosOrder = toInt(n.FEC_Product_Type__r.FEC_Order__c);
+                p.PosOrder = FEC_CommonUltils.toInt(n.FEC_Product_Type__r.FEC_Order__c);
                 p.ApplyTo = n.FEC_Customer_Type__c;
                 p.Type = FEC_ConstantCommon.KEY_PRODUCT_TYPE_PRODUCT;
                 p.Children = new List<ChildItemType>();
@@ -194,7 +194,7 @@ global with sharing class FEC_GetCSMasterDataService {
                 FEC_Field_Mandatory__c,
                 FEC_Nature_Of_Case__r.FEC_Customer_Type__c
             FROM FEC_Master_Data_Setting__c
-            WHERE FEC_Field_Object_Name__c = 'FEC_Additional_Field__c'
+            WHERE FEC_Field_Object_Name__c = :FEC_ConstantCommon.OBJ_ADDITIONAL_INFO
         ];
 
         for (FEC_Master_Data_Setting__c m : settings) {
@@ -208,67 +208,23 @@ global with sharing class FEC_GetCSMasterDataService {
                 : null;
             p.Mandatory = m.FEC_Field_Mandatory__c;
 
-            p.Name = getFieldLabel('FEC_Additional_Field__c', p.ID);
+            p.Name = FEC_CommonUltils.getFieldLabel(FEC_ConstantCommon.OBJ_ADDITIONAL_INFO, p.ID);
             p.NameVN = p.Name;
-            p.Type = getFieldType('FEC_Additional_Field__c', p.ID);
+            p.Type = FEC_CommonUltils.getFieldType(FEC_ConstantCommon.OBJ_ADDITIONAL_INFO, p.ID);
 
             if (p.Type == FEC_ConstantCommon.KEY_PICKLIST) {
-                p.AvailableValues =
-                    getPicklistValues('FEC_Additional_Field__c', p.ID);
+                List<FEC_CommonUltils.PicklistOption> options =
+                    FEC_CommonUltils.getPicklistOptions(
+                        FEC_ConstantCommon.OBJ_ADDITIONAL_INFO, 
+                        p.ID
+                    );
+                p.AvailableValues = FEC_CommonUltils.mapToAvailableValues(options);
             }
 
             cachedAdditionalProperties.add(p);
         }
 
         return cachedAdditionalProperties;
-    }
-
-
-    // ==========================================================
-    // UTILS
-    // ==========================================================
-    private static Integer toInt(Decimal d) {
-        return d == null ? null : Integer.valueOf(d);
-    }
-
-    private static String getFieldLabel(String obj, String field) {
-        return Schema.getGlobalDescribe()
-            .get(obj).getDescribe()
-            .fields.getMap().get(field)
-            .getDescribe().getLabel();
-    }
-
-    private static String getFieldType(String obj, String field) {
-        Schema.DisplayType t =
-            Schema.getGlobalDescribe()
-                .get(obj).getDescribe()
-                .fields.getMap().get(field)
-                .getDescribe().getType();
-        if (t == Schema.DisplayType.Picklist) return FEC_ConstantCommon.KEY_PICKLIST;
-        if (t == Schema.DisplayType.Boolean) return FEC_ConstantCommon.KEY_CHECKBOX;
-        if (t == Schema.DisplayType.Date) return FEC_ConstantCommon.KEY_DATE;
-        if (t == Schema.DisplayType.DateTime) return FEC_ConstantCommon.KEY_DATETIME;
-        if (t == Schema.DisplayType.Integer || t == Schema.DisplayType.Double) return FEC_ConstantCommon.KEY_NUMBER;
-        return FEC_ConstantCommon.KEY_TEXT;
-    }
-
-    private static List<AvailableValueType> getPicklistValues(
-        String obj, String field
-    ) {
-        List<AvailableValueType> result = new List<AvailableValueType>();
-        for (Schema.PicklistEntry pe :
-            Schema.getGlobalDescribe()
-                .get(obj).getDescribe()
-                .fields.getMap().get(field)
-                .getDescribe().getPicklistValues()
-        ) {
-            AvailableValueType v = new AvailableValueType();
-            v.ID = pe.getValue();
-            v.Name = pe.getLabel();
-            v.NameVN = pe.getLabel();
-            result.add(v);
-        }
-        return result;
     }
 
     // ==========================================================

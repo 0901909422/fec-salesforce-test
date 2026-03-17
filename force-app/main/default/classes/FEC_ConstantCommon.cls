@@ -210,4 +210,5 @@ public with sharing class FEC_ConstantCommon {
     public static final String KEY_CATEGORY = 'Category';
     public static final String KEY_SUB_CATEGORY = 'SubCategory';
     public static final String KEY_SUB_CODE = 'SubCode';
+    public static final String OBJ_ADDITIONAL_INFO = 'FEC_Additional_Info__c';
 }
