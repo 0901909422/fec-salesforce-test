@@ -517,7 +517,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
 
         DataItemType product = new DataItemType(
             pCode,
-            pickNameByLanguage(noc.FEC_Product_Type__r.Name, noc.FEC_Product_Type__r.FEC_Name_VN__c, language),
+            FEC_CommonUltils.pickNameByLanguage(noc.FEC_Product_Type__r.Name, noc.FEC_Product_Type__r.FEC_Name_VN__c, language),
             FEC_CommonUltils.defaultToEmpty(noc.FEC_Product_Type__r.FEC_Name_VN__c),
             FEC_CommonUltils.toInt(noc.FEC_Product_Type__r.FEC_Order__c),
             noc.FEC_Customer_Type__c,
@@ -569,12 +569,12 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         }
 
         ChildItemType newChild = new ChildItemType();
-        newChild.ID = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(id);
-        newChild.Name = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(name);
-        newChild.NameVN = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(nameVN);
+        newChild.ID = FEC_CommonUltils.defaultToEmpty(id);
+        newChild.Name = FEC_CommonUltils.defaultToEmpty(name);
+        newChild.NameVN = FEC_CommonUltils.defaultToEmpty(nameVN);
         newChild.PosOrder = order;
-        newChild.ApplyTo = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(applyTo);
-        newChild.Type = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(type);
+        newChild.ApplyTo = FEC_CommonUltils.defaultToEmpty(applyTo);
+        newChild.Type = FEC_CommonUltils.defaultToEmpty(type);
         parent.Children.add(newChild);
         return newChild;
     }
@@ -586,7 +586,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         node.NameVN = FEC_ConstantCommon.STR_EMPTY;
         node.PosOrder = null;
         node.ApplyTo = FEC_ConstantCommon.STR_EMPTY;
-        node.Type = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(type);
+        node.Type = FEC_CommonUltils.defaultToEmpty(type);
         node.Children = new List<ChildItemType>();
         return node;
     }
@@ -626,34 +626,34 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         if (res == null) return;
 
         if (res.Sys == null) res.Sys = new SysResponseType();
-        res.Sys.TransactionID = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.Sys.TransactionID);
-        res.Sys.Code = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.Sys.Code);
-        res.Sys.Description = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.Sys.Description);
+        res.Sys.TransactionID =FEC_CommonUltils.defaultToEmpty(res.Sys.TransactionID);
+        res.Sys.Code = FEC_CommonUltils.defaultToEmpty(res.Sys.Code);
+        res.Sys.Description = FEC_CommonUltils.defaultToEmpty(res.Sys.Description);
         if (res.Sys.DateTime_x == null) res.Sys.DateTime_x = System.now();
 
         if (res.RequestInfo == null) res.RequestInfo = new RequestInfoType();
-        res.RequestInfo.Category = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.RequestInfo.Category);
-        res.RequestInfo.SubCategory = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.RequestInfo.SubCategory);
-        res.RequestInfo.SubCode = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.RequestInfo.SubCode);
-        res.RequestInfo.ProductLineId = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.RequestInfo.ProductLineId);
-        res.RequestInfo.CaseType = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.RequestInfo.CaseType);
-        res.RequestInfo.Remarks = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.RequestInfo.Remarks);
+        res.RequestInfo.Category = FEC_CommonUltils.defaultToEmpty(res.RequestInfo.Category);
+        res.RequestInfo.SubCategory = FEC_CommonUltils.defaultToEmpty(res.RequestInfo.SubCategory);
+        res.RequestInfo.SubCode = FEC_CommonUltils.defaultToEmpty(res.RequestInfo.SubCode);
+        res.RequestInfo.ProductLineId = FEC_CommonUltils.defaultToEmpty(res.RequestInfo.ProductLineId);
+        res.RequestInfo.CaseType = FEC_CommonUltils.defaultToEmpty(res.RequestInfo.CaseType);
+        res.RequestInfo.Remarks =FEC_CommonUltils.defaultToEmpty(res.RequestInfo.Remarks);
 
         if (res.CustomerInfo == null) res.CustomerInfo = new CustomerTypeRequest();
-        res.CustomerInfo.UserType = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.CustomerInfo.UserType);
-        res.CustomerInfo.Language = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.CustomerInfo.Language);
+        res.CustomerInfo.UserType = FEC_CommonUltils.defaultToEmpty(res.CustomerInfo.UserType);
+        res.CustomerInfo.Language = FEC_CommonUltils.defaultToEmpty(res.CustomerInfo.Language);
 
         if (res.AdditionalInfo == null) res.AdditionalInfo = new AdditionalInfoRequest();
-        res.AdditionalInfo.ID = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.AdditionalInfo.ID);
-        res.AdditionalInfo.Value = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(res.AdditionalInfo.Value);
+        res.AdditionalInfo.ID = FEC_CommonUltils.defaultToEmpty(res.AdditionalInfo.ID);
+        res.AdditionalInfo.Value = FEC_CommonUltils.defaultToEmpty(res.AdditionalInfo.Value);
 
         if (res.DataItems == null) res.DataItems = new List<DataItemType>();
         for (DataItemType di : res.DataItems) {
-            di.ID = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(di.ID);
-            di.Name = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(di.Name);
-            di.NameVN = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(di.NameVN);
-            di.ApplyTo = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(di.ApplyTo);
-            di.Type = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(di.Type);
+            di.ID = FEC_CommonUltils.defaultToEmpty(di.ID);
+            di.Name = FEC_CommonUltils.defaultToEmpty(di.Name);
+            di.NameVN = FEC_CommonUltils.defaultToEmpty(di.NameVN);
+            di.ApplyTo = FEC_CommonUltils.defaultToEmpty(di.ApplyTo);
+            di.Type = FEC_CommonUltils.defaultToEmpty(di.Type);
             if (di.Children == null) di.Children = new List<ChildItemType>();
             for (ChildItemType c1 : di.Children) {
                 normalizeChild(c1);
@@ -662,11 +662,11 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
     }
 
     private static void normalizeChild(ChildItemType node) {
-        node.ID = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(node.ID);
-        node.Name = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(node.Name);
-        node.NameVN = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(node.NameVN);
-        node.ApplyTo = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(node.ApplyTo);
-        node.Type = FEC_CommonUltils.FEC_CommonUltils.defaultToEmpty(node.Type);
+        node.ID = FEC_CommonUltils.defaultToEmpty(node.ID);
+        node.Name = FEC_CommonUltils.defaultToEmpty(node.Name);
+        node.NameVN = FEC_CommonUltils.defaultToEmpty(node.NameVN);
+        node.ApplyTo = FEC_CommonUltils.defaultToEmpty(node.ApplyTo);
+        node.Type = FEC_CommonUltils.defaultToEmpty(node.Type);
         if (node.Children == null) node.Children = new List<ChildItemType>();
         for (ChildItemType child : node.Children) {
             normalizeChild(child);

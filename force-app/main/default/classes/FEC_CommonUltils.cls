@@ -864,26 +864,6 @@ public with sharing class FEC_CommonUltils {
         return null;
     }
   }
-  public class AvailableValueType {
-    @AuraEnabled public String ID;
-    @AuraEnabled public String Name;
-    @AuraEnabled public String NameVN;
-  }
-
-  public static List<AvailableValueType> mapToAvailableValues(
-    List<PicklistOption> options
-  ) {
-      List<AvailableValueType> result = new List<AvailableValueType>();
-
-      for (PicklistOption opt : options) {
-          AvailableValueType v = new AvailableValueType();
-          v.ID = opt.value;
-          v.Name = opt.label;
-          v.NameVN = opt.label;
-          result.add(v);
-      }
-    return result;
-  }
   
   public static String escapeXml(String s) {
     if (s == null)

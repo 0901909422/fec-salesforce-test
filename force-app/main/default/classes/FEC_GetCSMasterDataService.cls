@@ -92,7 +92,7 @@ global with sharing class FEC_GetCSMasterDataService {
                     n.FEC_Business_Process__r.FEC_Name_VN__c,
                     n.FEC_Business_Process__r.FEC_Order__c,
                     n.FEC_Customer_Type__c,
-                    FEC_ConstantCommon.KEY_CASE_TYPE
+                    FEC_ConstantCommon.KEY_CASETYPE
                 );
 
             // CATEGORY
@@ -116,7 +116,7 @@ global with sharing class FEC_GetCSMasterDataService {
                     n.FEC_Sub_Category__r.FEC_Name_VN__c,
                     n.FEC_Sub_Category__r.FEC_Order__c,
                     n.FEC_Customer_Type__c,
-                    FEC_ConstantCommon.KEY_SUB_CATEGORY
+                    FEC_ConstantCommon.KEY_SUBCATEGORY
                 );
 
             // SUB CODE
@@ -128,7 +128,7 @@ global with sharing class FEC_GetCSMasterDataService {
                     n.FEC_Sub_Code__r.FEC_Name_VN__c,
                     n.FEC_Sub_Code__r.FEC_Order__c,
                     n.FEC_Customer_Type__c,
-                    FEC_ConstantCommon.KEY_SUB_CODE
+                    FEC_ConstantCommon.KEY_SUBCODE
                 );
 
             if (subCode.AdditionalProperties == null) {
@@ -213,12 +213,12 @@ global with sharing class FEC_GetCSMasterDataService {
             p.Type = FEC_CommonUltils.getFieldType(FEC_ConstantCommon.OBJ_ADDITIONAL_INFO, p.ID);
 
             if (p.Type == FEC_ConstantCommon.KEY_PICKLIST) {
-                List<FEC_CommonUltils.PicklistOption> options =
+                p.AvailableValues = mapAvailableValues(
                     FEC_CommonUltils.getPicklistOptions(
-                        FEC_ConstantCommon.OBJ_ADDITIONAL_INFO, 
+                        FEC_ConstantCommon.OBJ_ADDITIONAL_INFO,
                         p.ID
-                    );
-                p.AvailableValues = FEC_CommonUltils.mapToAvailableValues(options);
+                    )
+                );
             }
 
             cachedAdditionalProperties.add(p);
@@ -230,6 +230,25 @@ global with sharing class FEC_GetCSMasterDataService {
     // ==========================================================
     // RESPONSE INIT
     // ==========================================================
+
+    private static List<AvailableValueType> mapAvailableValues(
+        List<FEC_CommonUltils.PicklistOption> options
+    ) {
+        List<AvailableValueType> result = new List<AvailableValueType>();
+
+        if (options == null) return result;
+
+        for (FEC_CommonUltils.PicklistOption opt : options) {
+            AvailableValueType v = new AvailableValueType();
+            v.ID = opt.value;
+            v.Name = opt.label;
+            v.NameVN = opt.label;
+            result.add(v);
+        }
+
+        return result;
+    }
+    
     private static GetCSMasterDataResponse initResponse(SysRequestType Sys) { 
         GetCSMasterDataResponse r = new GetCSMasterDataResponse();
         r.Sys = new SysResponseType();
@@ -297,6 +316,12 @@ global with sharing class FEC_GetCSMasterDataService {
         webservice String ApplyTo;
         webservice Boolean Mandatory;
         webservice String Type;
-        webservice List<FEC_CommonUltils.AvailableValueType> AvailableValues;
+        webservice List<AvailableValueType> AvailableValues;
+    }
+
+    global class AvailableValueType {
+        webservice String ID;
+        webservice String Name;
+        webservice String NameVN;
     }
 }
