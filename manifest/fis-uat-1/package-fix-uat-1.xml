@@ -49,6 +49,10 @@
 		<members>FEC_FileActionOnReviewService</members>
 		<members>FEC_CaseOwnerChangeNotification</members>
 		<members>FEC_CaseTriggerHandler</members>
+		<members>FEC_KYCController</members>
+		<members>CaseSearchDeletionBatch</members>
+		<members>CaseSearchDeletionScheduler</members>
+		<members>FEC_GetIPPDetailsCallout</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -92,6 +96,10 @@
 		<members>fec_StatementsAccount</members>
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_MainInfoAccount</members>
+		<members>fec_KYC</members>
+		<members>maskedToggleCell</members>
+		<members>fec_PaymentHistoryAcount</members>
+		<members>fec_SecondaryInfo</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -203,6 +211,7 @@
 		<members>FEC_List_relevant_case_empty</members>
 		<members>FEC_Email_Subject_Case_Owner_Change</members>
 		<members>FEC_Email_Body_Case_Owner_Change</members>
+		<members>FEC_Wrap_Up_Modal_Btn_Cancel</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -458,6 +467,10 @@
 	<types>
 		<members>FEC_Watcher_Refresh</members>
 		<name>LightningMessageChannel</name>
+	</types>
+	<types>
+		<members>CaseStatus</members>
+		<name>StandardValueSet</name>
 	</types>
     <version>65.0</version>
 </Package>
