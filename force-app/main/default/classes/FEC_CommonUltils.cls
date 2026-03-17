@@ -838,23 +838,27 @@ public with sharing class FEC_CommonUltils {
         return null;
     }
   }
-  public static List<FEC_GetCSMasterDataService.AvailableValueType> mapToAvailableValues(
-      List<PicklistOption> options
+  public class AvailableValueType {
+    @AuraEnabled public String ID;
+    @AuraEnabled public String Name;
+    @AuraEnabled public String NameVN;
+  }
+
+  public static List<AvailableValueType> mapToAvailableValues(
+    List<PicklistOption> options
   ) {
-      List<FEC_GetCSMasterDataService.AvailableValueType> result =
-          new List<FEC_GetCSMasterDataService.AvailableValueType>();
+      List<AvailableValueType> result = new List<AvailableValueType>();
 
       for (PicklistOption opt : options) {
-          FEC_GetCSMasterDataService.AvailableValueType v =
-              new FEC_GetCSMasterDataService.AvailableValueType();
+          AvailableValueType v = new AvailableValueType();
           v.ID = opt.value;
           v.Name = opt.label;
           v.NameVN = opt.label;
           result.add(v);
       }
-
-      return result;
+    return result;
   }
+  
   public static String escapeXml(String s) {
     if (s == null)
       return '';

@@ -297,12 +297,6 @@ global with sharing class FEC_GetCSMasterDataService {
         webservice String ApplyTo;
         webservice Boolean Mandatory;
         webservice String Type;
-        webservice List<AvailableValueType> AvailableValues;
-    }
-    
-    global class AvailableValueType {
-        webservice String ID;
-        webservice String Name;
-        webservice String NameVN;
+        webservice List<FEC_CommonUltils.AvailableValueType> AvailableValues;
     }
 }
