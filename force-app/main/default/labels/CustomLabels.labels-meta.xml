@@ -1,19 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
-        <fullName>FEC_MSG_CaseType_Null</fullName>
-        <categories>API</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MSG CaseType Null</shortDescription>
-        <value>Casetype is invalid or no longer than 255 characters</value>
-        <fullName>Auto_Mapping</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Auto Mapping Property</shortDescription>
-        <value>Auto Mapping Property</value>
-    </labels>
-    <labels>
         <fullName>CSM_Property</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -2934,28 +2921,6 @@
         <value>Customer information updated successfully</value>
     </labels>
     <labels>
-        <fullName>FEC_MSG_Category_Null</fullName>
-        <categories>API</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MSG Category Null</shortDescription>
-        <value>Category is invalid or no longer than 255 characters</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MSG_Channel_Null</fullName>
-        <categories>API</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MSG Channel Null</shortDescription>
-        <value>Channel is null or invalid &quot;&quot;</value>
-        <fullName>FEC_MSG_AccountNumber_Invalid</fullName>
-        <categories>API</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MSG AccountNumber Invalid</shortDescription>
-        <value>AccountNumber must be 16 characters or 19 characters</value>
-    </labels>
-    <labels>
         <fullName>FEC_MSG_ApplicationID_Invalid</fullName>
         <categories>API</categories>
         <language>en_US</language>
@@ -3069,27 +3034,6 @@
         <protected>false</protected>
         <shortDescription>MSG Datetime Invalid</shortDescription>
         <value>DateTime invalid: {0} is not type of Datetime</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MSG_Datetime_Null</fullName>
-        <categories>API</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MSG Datetime Null</shortDescription>
-        <value>DateTime is null</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MSG_Get_CS_Data_Success</fullName>
-        <categories>API</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MSG Get CS Data Success</shortDescription>
-        <value>Get CS master data successfully</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MSG_No_Longer</fullName>
-        <shortDescription>MSG Email Invalid</shortDescription>
-        <value>Email must be one of (randomString1)@(randomString2).(2-5 chars) or (randomString1)@(randomString2).(2-5 chars).(2-5 chars)</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_EndDate_Must_StartDate</fullName>
@@ -3291,21 +3235,6 @@
         <value>&quot; or no longer than 255 characters</value>
     </labels>
     <labels>
-        <fullName>FEC_MSG_ProductType_Null</fullName>
-        <categories>API</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MSG ProductType Null</shortDescription>
-        <value>ProductType is invalid or no longer than 255 characters</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MSG_SubCategory_Null</fullName>
-        <categories>LWC</categories>
-        <protected>false</protected>
-        <shortDescription>MSG Input Required</shortDescription>
-        <value>Please fill the fields below.</value>
-    </labels>
-    <labels>
         <fullName>FEC_MSG_Interaction_Case_DTO_Null</fullName>
         <categories>Interaction</categories>
         <language>en_US</language>
@@ -3354,14 +3283,6 @@
         <language>en_US</language>
         <shortDescription>MSG SubCategory Null</shortDescription>
         <value>SubCategory is invalid or no longer than 255 characters</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MSG_SubCode_Null</fullName>
-        <fullName>FEC_MSG_Nature_Of_Case_Id_Invalid</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_MSG_Nature_Of_Case_Id_Invalid</shortDescription>
-        <value>Nature of Case Id is invalid.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_No_Data</fullName>
@@ -3416,14 +3337,6 @@
         <value>SubCode is invalid or no longer than 255 characters</value>
     </labels>
     <labels>
-        <fullName>FEC_MSG_Sys_Null</fullName>
-        <fullName>FEC_MSG_Not_Found</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MSG Not Found</shortDescription>
-        <value>{0} not found.</value>
-    </labels>
-    <labels>
         <fullName>FEC_MSG_Owner_Is_Queue_Escalation</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3438,22 +3351,6 @@
         <shortDescription>MSG_Sys_Null</shortDescription>
         <value>Sys is required</value>
     </labels>
-    <labels>
-        <fullName>FEC_MSG_TransactionId_Null</fullName>
-        <categories>API</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MSG TransactionId Null</shortDescription>
-        <value>TransactionID is null or invalid &quot;&quot;</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MSG_UserType_Null</fullName>
-        <categories>API</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MSG UserType Null</shortDescription>
-        <value>UserType is invalid or no longer than 15 characters</value>
-        <value>{0} must be in format yyyy-MM-ddTHH:mm:ss. Current value: {1}</value>
     <labels>
         <fullName>FEC_MSG_Param_Format_Invalid</fullName>
         <categories>API</categories>
