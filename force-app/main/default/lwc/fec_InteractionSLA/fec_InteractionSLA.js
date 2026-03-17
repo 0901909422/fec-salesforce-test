@@ -19,7 +19,7 @@ import FEC_Quick_Wrap_up_Label from '@salesforce/label/c.FEC_Quick_Wrap_up_Label
 import FEC_Wrap_up_Information_Label from '@salesforce/label/c.FEC_Wrap_up_Information_Label';
 import FEC_Select_Outcome_Code_Label from '@salesforce/label/c.FEC_Select_Outcome_Code_Label';
 import FEC_Interaction_Remark_Placeholder from '@salesforce/label/c.FEC_Interaction_Remark_Placeholder';
-import FEC_Btn_Cancel from '@salesforce/label/c.FEC_Btn_Cancel';
+import FEC_Wrap_Up_Modal_Btn_Cancel from '@salesforce/label/c.FEC_Wrap_Up_Modal_Btn_Cancel';
 import FEC_Button_Confirm from '@salesforce/label/c.FEC_Button_Confirm';
 import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
 import FEC_Error_Title from '@salesforce/label/c.FEC_Error_Title';
@@ -88,7 +88,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
     wrapUpInformation: FEC_Wrap_up_Information_Label,
     selectOutcomeCode: FEC_Select_Outcome_Code_Label,
     interactionRemarkPlaceholder: FEC_Interaction_Remark_Placeholder,
-    btnCancel: FEC_Btn_Cancel,
+    btnCancel: FEC_Wrap_Up_Modal_Btn_Cancel,
     btnConfirm: FEC_Button_Confirm,
     successTitle: FEC_Success_Title,
     errorTitle: FEC_Error_Title,
