@@ -1,8 +1,12 @@
 import { LightningElement, api } from 'lwc';
+import { mask } from 'c/fec_CommonUtils';
+import revealNationalId from '@salesforce/apex/FEC_SearchController.revealNationalId';
 
 export default class MaskedToggleCell extends LightningElement {
   @api value; // raw cell value passed by lightning-datatable
   @api rowKeyValue; // optional: unique key of the row for accessibility/testability
+
+  @api caseId;
 
   isMasked = true;
 
@@ -17,17 +21,7 @@ export default class MaskedToggleCell extends LightningElement {
   get displayValue() {
     const v = this.rawValue;
     if (this.isMasked) {
-      // Mask rules:
-      // - 9 characters: keep first 3 and last 3, mask middle 3 (e.g., ABC***XYZ)
-      // - 12 characters: keep first 6 and last 3, mask middle 3 (e.g., 062789***321)
-      if (v.length === 9) {
-        return v.slice(0, 3) + '***' + v.slice(6);
-      }
-      if (v.length === 12) {
-        return v.slice(0, 6) + '***' + v.slice(9);
-      }
-      // Other lengths: display as-is per current requirement
-      return v;
+      return mask(v, 3, 3);
     }
     return v;
   }
@@ -41,7 +35,15 @@ export default class MaskedToggleCell extends LightningElement {
     return this.isMasked ? 'Show' : 'Hide';
   }
 
-  handleToggle() {
+  async handleToggle() {
     this.isMasked = !this.isMasked;
+    if (this.caseId && !this.isMasked) {
+      try {
+        await revealNationalId({ recordId: this.caseId });
+      }
+      catch (error) {
+        console.error('Error revealing national ID:', error);
+      }
+    }
   }
 }

@@ -180,8 +180,8 @@ public without sharing class FEC_ApplicationsListController {
                             row.put(
                                 'currentAddress',
                                 FEC_CommonUltils.formatAddress(
+                                    ad.Building,    
                                     ad.HouseNumber,
-                                    ad.Building,
                                     ad.Street,
                                     ad.Ward,
                                     ad.District,
@@ -204,8 +204,8 @@ public without sharing class FEC_ApplicationsListController {
                             row.put(
                                 'permanentAddress',
                                 FEC_CommonUltils.formatAddress(
+                                    ad.Building,    
                                     ad.NumberStr,
-                                    ad.Building,
                                     ad.Street,
                                     ad.Ward,
                                     ad.District,
@@ -219,8 +219,8 @@ public without sharing class FEC_ApplicationsListController {
                             row.put(
                                 'officeAddress',
                                 FEC_CommonUltils.formatAddress(
+                                    ad.Building,    
                                     ad.NumberStr,
-                                    ad.Building,
                                     ad.Street,
                                     ad.Ward,
                                     ad.District,

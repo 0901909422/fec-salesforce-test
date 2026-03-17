@@ -104,12 +104,18 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         fieldName: "NationalID1",
         type: "maskedToggle",
         sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
       },
       {
         label: "National ID 2",
         fieldName: "NationalID2",
         type: "maskedToggle",
         sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
       },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
@@ -163,12 +169,18 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         fieldName: "NationalID1",
         type: "maskedToggle",
         sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
       },
       {
         label: "National ID 2",
         fieldName: "NationalID2",
         type: "maskedToggle",
         sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
       },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
@@ -193,6 +205,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         fieldName: "NationalID1",
         type: "maskedToggle",
         sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
       },
       { label: "Code", fieldName: "Code", sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
@@ -251,6 +266,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         fieldName: "BuyerNID",
         type: "maskedToggle",
         sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
       },
       { label: "Product Name", fieldName: "ProductName", sortable: true },
       {
