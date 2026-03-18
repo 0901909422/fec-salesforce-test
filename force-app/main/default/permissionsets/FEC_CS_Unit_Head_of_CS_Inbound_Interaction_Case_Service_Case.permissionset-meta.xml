@@ -1262,6 +1262,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Description__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Routing_Action_History__c.FEC_Next_Stage__c</field>
         <readable>true</readable>
     </fieldPermissions>
