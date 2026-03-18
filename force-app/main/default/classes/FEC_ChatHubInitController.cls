@@ -27,7 +27,7 @@ public with sharing class FEC_ChatHubInitController {
         }
 
         // 3. Chuẩn bị dữ liệu trả về
-        String strUsername = UserInfo.getUsername();
+        String strUsername = UserInfo.getUserEmail().split('@')[0];
         String strChatHubUrl = chatHubSettings.FEC_ChatHubURL__c; 
         String strEncryptKey = chatHubSettings.FEC_ChatHubEncryptKey__c;
         String strSalt = chatHubSettings.FEC_ChatHubStaticSalt__c; 

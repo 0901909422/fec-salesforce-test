@@ -22,6 +22,17 @@ public with sharing class FEC_Utils {
         return cases.isEmpty() ? null : cases[0].Id;
     }
 
+    @AuraEnabled
+    public static void updateExtInteractionIDForCase(String caseID, String strExtInteractionID) {
+        System.debug('Updating Case ID: ' + caseID + ' with new External Interaction ID: ' + strExtInteractionID);
+        Case caseToUpdate = new Case(
+            Id = caseID,
+            FEC_External_Interaction_ID__c = strExtInteractionID
+        );
+        System.debug('case before update: ' + caseToUpdate);
+        update caseToUpdate;
+    }
+
     /**
      * Retrieves Case ID by searching for Pega ID (internal case reference number).
      * Maps external Pega ID to internal Salesforce Case ID for cross-system integration.

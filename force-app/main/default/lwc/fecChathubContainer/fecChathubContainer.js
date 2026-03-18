@@ -10,6 +10,7 @@ import getChatHubInfo from '@salesforce/apex/FEC_ChatHubInitController.getChatHu
 import createCaseOnNewSession from '@salesforce/apex/FEC_ChatHubCaseController.createCaseOnNewSession';
 import saveChatHistoryAndAttachment from '@salesforce/apex/FEC_ChatHubCaseController.saveChatHistoryAndAttachment';
 import checkExistCaseByExtInteractionID from '@salesforce/apex/FEC_Utils.checkExistCaseByExtInteractionID';
+import updateOldCaseInteractionId from '@salesforce/apex/FEC_ChatHubCaseController.updateOldCaseInteractionId';
 import downloadAndSaveBase64 from '@salesforce/apex/FEC_AttachmentController.downloadAndSaveBase64';
 import { executeWithLock, fetchFileFromUrl, formatDatetime, showToast, decryptDataKYC } from 'c/fecUtils';
 import FEC_CHATHUB_STATUS from '@salesforce/messageChannel/FecChatHubStatus__c';
@@ -642,30 +643,85 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             const dataPhoneNumber = await decryptDataKYC(data.customerInfo.phoneNumber, this.#secretKey)
             data.customerInfo.phoneNumber = dataPhoneNumber;
         }
+        const oldAgentID = data.chatSession.oldAgentID;
+        if (this.chatHubUsername && this.chatHubUsername === oldAgentID) {
+            await this.updateOldCase(data.chatSession.sessionID, data.chatSession.agentID);
+        }
         const payload = JSON.stringify(data);
         if (!this.verifyUsernameAndAgent(data)) {
             return;
         }
         this.notifyIfPanelClosed();
+        this.attemptCreateCase(payload, data, 5);
+    }
 
-        createCaseOnNewSession({ strJsonData: payload })
-            .then(res => {
-                if (res) {
-                    const { caseNo, caseId } = res;
-                    // Send back the Case ID (PegaID) to ChatHub
-                    const response = {
-                        sessionID: data.chatSession.sessionID,
-                        pegaID: caseNo,
-                        chatChannel: data.chatSession.chatChannel
-                    };
-                    this.postMessageToChatHub('pegaCsmCaseInfo', response);
-                    showToast(this, 'Thành công', `Đã tạo Case tương tác: ${caseNo || ''}`, 'success');
-                    this.navigateToRecord(caseId);
-                }
-            })
-            .catch(error => {
-                console.warn('%c⚠ Apex returned null (Duplicate check or Error)', LOG_WARN, error);
+    /**
+     * Call Apex to create Case with Retry mechanism to handle Race Condition
+     * @param {string} payload - JSON data to send to Apex
+     * @param {Object} data - Original data to extract chatSession info
+     * @param {number} retriesLeft - Number of remaining retry attempts
+     */
+    attemptCreateCase(payload, data, retriesLeft) {
+        // If chat is re-assigned, first attempt should wait longer (1000ms) to allow Tab A enough time to commit DB.
+        // Subsequent retry attempts only need to wait 500ms.
+        const isReassigned = data.chatSession.oldAgentID && data.chatSession.oldAgentID !== this.chatHubUsername;
+        const delayTime = (isReassigned && retriesLeft === 5) ? 1000 : 500;
+
+        setTimeout(() => {
+            createCaseOnNewSession({ strJsonData: payload })
+                .then(res => {
+                    if (res) {
+                        const { caseNo, caseId } = res;
+                        // Send back the Case ID (PegaID) to ChatHub
+                        const response = {
+                            sessionID: data.chatSession.sessionID,
+                            pegaID: caseNo,
+                            chatChannel: data.chatSession.chatChannel
+                        };
+                        this.postMessageToChatHub('pegaCsmCaseInfo', response);
+                        showToast(this, 'Thành công', `Đã tạo Case tương tác: ${caseNo || ''}`, 'success');
+                        this.navigateToRecord(caseId);
+                        if (data.chatSession.oldAgentID && data.chatSession.oldAgentID !== this.chatHubUsername) {
+                            const historyRequest = {
+                                chatID: data.chatSession.chatID,
+                                sessionID: data.chatSession.sessionID,
+                                selectedFilter: "all",
+                                selectedChannel: "newest",
+                                page: 1,
+                                size: 1000
+                            };
+                            this.postMessageToChatHub('pegaGetSessionHistory', historyRequest);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.log('%c⚠ Error creating Case:', LOG_WARN, error);
+                    const errorMsg = error?.body?.message || error?.message || JSON.stringify(error);
+                    if (errorMsg.includes('DUPLICATE_VALUE') && retriesLeft > 0) {
+                        console.log(`[FEC-ChatHub] Encountered Duplicate key. Waiting for Tab A to complete update... Retrying. ${retriesLeft - 1} attempts remaining.`);
+                        this.attemptCreateCase(payload, data, retriesLeft - 1);
+                    } else {
+                        showToast(this, 'Lỗi', 'Không thể tạo Case tương tác sau nhiều lần thử, vui lòng kiểm tra lại.', 'error');
+                    }
+                });
+        }, delayTime);
+    }
+
+    async updateOldCase(extInteractionID, newUsername) {
+        try {
+            const isUpdated = await updateOldCaseInteractionId({
+                strExtInteractionID: extInteractionID,
+                newUsername: newUsername
             });
+
+            if (isUpdated) {
+                console.log('✅ Update successful with only 1 server trip!');
+            } else {
+                console.log('⚠ Old Case not found to update.');
+            }
+        } catch (error) {
+            console.error('❌ Error executing updateOldCaseInteractionId:', error);
+        }
     }
 
     /**
@@ -678,6 +734,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         if (!this.verifyUsernameAndAgent(data)) {
             return;
         }
+        localStorage.setItem('endChatActive', true);
         const historyRequest = {
             chatID: data.chatID,
             sessionID: data.sessionID,
@@ -697,6 +754,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {void}
      */
     handleSessionHistory(data) {
+        const isEndChat = !!localStorage.getItem('endChatActive');
         if (!data || data.length === 0) {
             console.warn('%c⚠ History Data is Empty', LOG_WARN);
             return;
@@ -706,10 +764,23 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         const lockName = 'LOCK_HISTORY_' + sessionId;
 
         const processHistoryAction = async () => {
-            const payload = JSON.stringify(data);
-            try {
-                const success = await saveChatHistoryAndAttachment({ strJsonData: payload });
+            let dataToProcess = data;
+            let isAttachmentOnly = false;
+            if (!isEndChat) {
+                dataToProcess = data.filter(msg => msg.messageType === 'attachment' || msg.messageType === 'image');
+                console.log('Data to process:', dataToProcess);
+                if (dataToProcess.length === 0) {
+                    return;
+                }
+                isAttachmentOnly = true;
+            }
+            const payload = JSON.stringify(dataToProcess);
 
+            try {
+                const success = await saveChatHistoryAndAttachment({
+                    strJsonData: payload,
+                    isAttachmentOnly: isAttachmentOnly
+                });
                 if (success) {
                     showToast(this, 'Success', 'Chat history saved successfully.', 'success');
 
@@ -744,13 +815,8 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                             if (targetTabId) {
                                 setTimeout(async () => {
                                     try {
-                                        // Step 1: Notify Salesforce that record has changed to clear cache
                                         await notifyRecordUpdateAvailable([{ recordId: caseId }]);
-
-                                        // Step 2: Refresh the tab
-                                        await refreshTab(targetTabId, {
-                                            includeAllSubtabs: true
-                                        });
+                                        await refreshTab(targetTabId, { includeAllSubtabs: true });
                                     } catch (err) {
                                         console.warn('[FEC-ChatHub] Error while refreshing tab:', err);
                                     }
@@ -763,7 +829,13 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                         console.warn('[FEC-ChatHub] Error calling Workspace API:', refreshErr);
                     }
                 }
+                if (isEndChat) {
+                    localStorage.removeItem('endChatActive');
+                }
             } catch (error) {
+                if (isEndChat) {
+                    localStorage.removeItem('endChatActive');
+                }
                 console.error('[FEC-ChatHub] Error calling saveChatHistoryAndAttachment:', error);
             }
         };
@@ -813,8 +885,6 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         if (attachments.length > 0) {
             try {
                 const caseId = await checkExistCaseByExtInteractionID({ strExtInteractionID: data.sessionID });
-
-                fetchFileFromUrl(data.fileUrl); // Test CORS
 
                 await downloadAndSaveBase64({
                     s3Url: data.fileUrl,
@@ -1016,10 +1086,6 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         }
         // Extract agent ID from available fields and add domain if needed
         let agentID = data.chatSession ? data.chatSession.agentID : data.agentName ? data.agentName : data.senderName;
-        if (!agentID.includes('@fecredit.com.vn')) {
-            // Alert: change this string before go to UAT
-            agentID += '@fecredit.com.vn.fecdevlong';
-        }
         if (this.chatHubUsername && this.chatHubUsername != agentID) {
             console.error('%cERRY EXIT: Username mismatch', LOG_WARN, `Expected: ${this.chatHubUsername}, Got: ${agentID}`);
             return false;
@@ -1073,7 +1139,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                 await updateUtility(this.utilityId, this.utilityAttrs);
             }
         } catch (err) {
-            console.warn('[FEC-ChatHub] Lỗi khi set Utility Highlight:', err);
+            console.warn('[FEC-ChatHub] Error while setting Utility Highlight:', err);
         }
     }
 
@@ -1089,7 +1155,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             await updateUtility(this.utilityId, this.utilityAttrs);
             await updateUtility(this.utilityId, { highlighted: false });
         } catch (err) {
-            console.warn('[FEC-ChatHub] Lỗi tắt highlight:', err);
+            console.warn('[FEC-ChatHub] Error disabling highlight:', err);
         }
     }
 
@@ -1100,6 +1166,6 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             if (eventInfo.panelVisible) {
                 this.clearUtilityHighlight();
             }
-        }).catch(err => console.error('[FEC-ChatHub] Lỗi đăng ký utility click:', err));
+        }).catch(err => console.error('[FEC-ChatHub] Error registering utility click:', err));
     }
 }

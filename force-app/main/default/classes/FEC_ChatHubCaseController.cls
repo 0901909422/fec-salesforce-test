@@ -87,11 +87,14 @@ public with sharing class FEC_ChatHubCaseController {
     * @modified: 
     */ 
     @AuraEnabled
-    public static Boolean saveChatHistoryAndAttachment(String strJsonData) {
+    public static Boolean saveChatHistoryAndAttachment(String strJsonData, Boolean isAttachmentOnly) {
         if (String.isBlank(strJsonData)) {
             throw new AuraHandledException('Chat history data is blank');
         }
         
+        if (isAttachmentOnly == null) {
+            isAttachmentOnly = false;
+        }
         List<FEC_ChatHistory__c> listHistoriesToInsert = new List<FEC_ChatHistory__c>();
         List<Object> listRawHistory = (List<Object>)JSON.deserializeUntyped(strJsonData);
         
@@ -100,15 +103,27 @@ public with sharing class FEC_ChatHubCaseController {
         }
         
         String strCaseId = '';
+        // Extract sessionID from first item to find the newest Case
+        Map<String, Object> firstItem = (Map<String, Object>)listRawHistory[0];
+        String currentSessionId = (String)firstItem.get('sessionID');
+        
+        if (String.isNotBlank(currentSessionId)) {
+            List<Case> lstCases = [SELECT Id FROM Case WHERE FEC_External_Interaction_ID__c = :currentSessionId LIMIT 1];
+            if (!lstCases.isEmpty()) {
+                strCaseId = lstCases[0].Id;
+            }
+        }
+        
+        // Fallback: Rarely occurs, but if not found by sessionID, use pegaID instead
+        if (String.isBlank(strCaseId) && firstItem.containsKey('pegaID')) {
+            strCaseId = FEC_Utils.getInteractionIdFromPegaId((String)firstItem.get('pegaID'));
+        }
         Set<String> setExistingFileNames = new Set<String>();
         
-         // Pre-process to collect all file names that need checking
+        // Pre-process to collect all file names that need checking
         for(Object obj : listRawHistory) {
             Map<String, Object> mapItem = (Map<String, Object>)obj;
-            if(String.isBlank(strCaseId)) {
-                strCaseId = FEC_Utils.getInteractionIdFromPegaId((String)mapItem.get('pegaID'));
-            }
-            
+
             String strMessageType = (String)mapItem.get('messageType');
             if (strMessageType == 'attachment' || strMessageType == 'image') {
                 Datetime dtCreatedAt = FEC_Utils.parseChatHubDatetime((String)mapItem.get('createdAt'));
@@ -150,7 +165,9 @@ public with sharing class FEC_ChatHubCaseController {
             if (objHistory.FEC_MessageType__c == 'attachment' || objHistory.FEC_MessageType__c == 'image') {
                 String fileNameConvert = (FEC_Utils.formatDateTimeToString(objHistory.FEC_CreatedAt__c) + '_' + (String)mapItem.get('fileName')).trim();
                 objHistory.FEC_Message__c = fileNameConvert;
-                listHistoriesToInsert.add(objHistory);
+                if (!isAttachmentOnly) {
+                    listHistoriesToInsert.add(objHistory);
+                }
                 
                 if (mapExistingFiles.containsKey(fileNameConvert)) {
                     System.debug('### File already exists, skipping attachment: ' + fileNameConvert);
@@ -171,13 +188,13 @@ public with sharing class FEC_ChatHubCaseController {
                         listCvToInsert.add(cv); 
                     } catch(Exception e) {
                         System.debug('### Error downloading file: ' + e.getMessage());
-                        // Todo: Return false to end when error, continue to run next record
-                        // return false; 
                         continue;
                     }
                 }
             } else {
-                listHistoriesToInsert.add(objHistory);
+                if (!isAttachmentOnly) {
+                    listHistoriesToInsert.add(objHistory);
+                }
             }
         }
 
@@ -191,6 +208,34 @@ public with sharing class FEC_ChatHubCaseController {
             return true;
         } catch (Exception e) {
             throw new AuraHandledException('Error saving chat history: ' + e.getMessage());
+        }
+    }
+    /**
+     * Combines verification and update of old Case into a single Transaction
+     * @param strExtInteractionID: Current Session ID
+     * @param newUsername: New Agent assigned
+     */
+    @AuraEnabled
+    public static Boolean updateOldCaseInteractionId(String strExtInteractionID, String newUsername) {
+        try {
+            List<Case> listCases = [
+                SELECT Id, FEC_External_Interaction_ID__c 
+                FROM Case 
+                WHERE FEC_External_Interaction_ID__c = :strExtInteractionID 
+                LIMIT 1
+            ];
+
+            if (!listCases.isEmpty()) {
+                Case oldCase = listCases[0];
+                String newExtID = strExtInteractionID + '-Reassign-' + newUsername + '-' + String.valueOf(Datetime.now().getTime());
+                oldCase.FEC_External_Interaction_ID__c = newExtID;
+                update oldCase;
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            System.debug('Error updating Old Case: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
 }

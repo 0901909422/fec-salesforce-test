@@ -101,6 +101,7 @@ public without sharing class FEC_CreateCaseHanlder {
             return res;
 
         } catch (Exception e) {
+            System.debug('Error creating Interaction Case: ' + e.getMessage());
             throw new AuraHandledException('Lỗi khi tạo Case tương tác: ' + e.getMessage());
         }
     }
