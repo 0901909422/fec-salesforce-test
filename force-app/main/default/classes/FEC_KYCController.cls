@@ -3,6 +3,8 @@ public without sharing class FEC_KYCController {
   public static final String PLASTIC_ID_DC2 = 'DC2';
   public static final String PLASTIC_ID_DP3 = 'DP3';
   public static final String CASE_INTERACTION = 'Interaction';
+  public static final String ADDRESS_TYPE_CURRENT = 'Current Address';
+  public static final String ADDRESS_TYPE_PERMANENT = 'Permanent Address';
 
   @AuraEnabled
   public static String getInterationId(String recordId) {
@@ -323,7 +325,7 @@ public without sharing class FEC_KYCController {
     public String resolve(Case c) {
       if (c.FEC_Account_or_Contract__r == null) return null;
 
-      if ('Current Address'.equals(c.FEC_Account_or_Contract__r.FEC_Address_Type__c)) {
+      if (ADDRESS_TYPE_CURRENT.equals(c.FEC_Account_or_Contract__r.FEC_Address_Type__c)) {
         return c.FEC_Account_or_Contract__r.FEC_Address__c ?? '';
       }
 
@@ -335,7 +337,7 @@ public without sharing class FEC_KYCController {
     public String resolve(Case c) {
       if (c.FEC_Account_or_Contract__r == null) return null;
 
-      if ('Permanent Address'.equals(c.FEC_Account_or_Contract__r.FEC_Address_Type__c)) {
+      if (ADDRESS_TYPE_PERMANENT.equals(c.FEC_Account_or_Contract__r.FEC_Address_Type__c)) {
         return c.FEC_Account_or_Contract__r.FEC_Address__c ?? '';
       }
 
