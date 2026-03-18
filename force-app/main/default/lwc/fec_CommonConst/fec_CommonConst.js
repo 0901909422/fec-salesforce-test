@@ -35,35 +35,17 @@ const MSG_INVALID_NATIONAL_ID = 'Invalid National ID number';
 const MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12 = 'National ID must contain digits only (9 or 12 digits)';
 const MSG_INVALID_EMAIL_FORMAT = 'Email must be one of (randomString1)@(randomString2).(2-5 chars) or (randomString1)@(randomString2).(2-5 chars).(2-5 chars)';
 const UBANK_PRODUCT_NAME = 'UBank';
+const RECORD_TYPE_INTERACTION = 'Interaction';
+const RECORD_TYPE_CUSTOMER_CASE = 'Customer_Case';
+const RECORD_TYPE_INTERNAL_CASE = 'Internal_Case';
 const MSG_NO_RESULTS = 'Không tìm thấy kết quả';
 const MSG_UNKNOWN_ERROR = 'Unknown error';
 const CASE_OBJECT_API_NAME = 'Case';
 const NAV_ACTION_VIEW = 'view';
 const NAV_ACTION_LIST = 'list';
-import FEC_Interaction_Email_Info_Label from "@salesforce/label/c.FEC_Interaction_Email_Info_Label";
-import FEC_Interaction_Email_Label from "@salesforce/label/c.FEC_Interaction_Email_Label";
-import FEC_Interaction_Created_On_Label from "@salesforce/label/c.FEC_Interaction_Created_On_Label";
-import FEC_Interaction_Created_By_Label from "@salesforce/label/c.FEC_Interaction_Created_By_Label";
-import FEC_Send_To_Label from "@salesforce/label/c.FEC_Send_To_Label";
-import FEC_Parent_ID_Label from "@salesforce/label/c.FEC_Parent_ID_Label";
-import FEC_Interaction_Email_Input_Placeholder from "@salesforce/label/c.FEC_Interaction_Email_Input_Placeholder";
-import FEC_Interaction_Email_Required_Msg from "@salesforce/label/c.FEC_Interaction_Email_Required_Msg";
-import FEC_Interaction_Email_Invalid_Msg from "@salesforce/label/c.FEC_Interaction_Email_Invalid_Msg";
-import FEC_Interaction_Email_Save_Error from "@salesforce/label/c.FEC_Interaction_Email_Save_Error";
-import FEC_Empty from "@salesforce/label/c.FEC_Empty";
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export { 
-    FEC_Interaction_Email_Info_Label,
-    FEC_Interaction_Email_Label,
-    FEC_Interaction_Created_On_Label,
-    FEC_Interaction_Created_By_Label,
-    FEC_Send_To_Label,
-    FEC_Parent_ID_Label,
-    FEC_Interaction_Email_Input_Placeholder,
-    FEC_Interaction_Email_Required_Msg,
-    FEC_Interaction_Email_Invalid_Msg,
-    FEC_Interaction_Email_Save_Error,
-    FEC_Empty,
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
     AUTO_NOTIFICATION_TYPE, 
@@ -101,9 +83,13 @@ export {
     MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12,
     MSG_INVALID_EMAIL_FORMAT,
     UBANK_PRODUCT_NAME,
+    RECORD_TYPE_INTERACTION,
+    RECORD_TYPE_CUSTOMER_CASE,
+    RECORD_TYPE_INTERNAL_CASE,
     MSG_NO_RESULTS,
     MSG_UNKNOWN_ERROR,
     CASE_OBJECT_API_NAME,
     NAV_ACTION_VIEW,
-    NAV_ACTION_LIST
+    NAV_ACTION_LIST,
+    EMAIL_REGEX,
 };

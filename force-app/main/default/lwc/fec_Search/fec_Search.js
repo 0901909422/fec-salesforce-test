@@ -31,6 +31,7 @@ import {
   getFocusedTabInfo,
   refreshTab,
 } from "lightning/platformWorkspaceApi";
+import { CurrentPageReference } from 'lightning/navigation';
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -70,6 +71,21 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   @wire(MessageContext)
   messageContext;
+
+  @wire(CurrentPageReference)
+  pageRef;
+
+  get tabName() {
+    return this.pageRef?.attributes?.apiName; // e.g. 'Customer_Search'
+  }
+
+  get tabLabel() {
+    return this.tabName == 'FEC_Account_Contract_Search' ? 'Account/Contract Search' : 'Customer Search';
+  }
+
+  get isAccountContractSearch() {
+    return this.tabName === 'FEC_Account_Contract_Search'; // your tab's API name
+  }
 
   @wire(IsConsoleNavigation) isConsoleNavigation;
   async refreshTab() {
@@ -207,8 +223,16 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   get loanCash24Columns() {
     return [
       { label: "Contract Number", fieldName: "ContractNumber", sortable: true },
-      { label: "Sold Date", fieldName: "SoldDate", sortable: true },
-      { label: "Balance Amount", fieldName: "BalanceAmount ", sortable: true },
+      { label: "Sold Date", fieldName: "SoldDate", sortable: true,
+        type: "date", 
+        typeAttributes:{
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            dateStyle: "short"
+        },
+       },
+      { label: "Balance Amount", fieldName: "BalanceAmount", sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
       { label: "Contract Status", fieldName: "ContractStatus", sortable: true },
       { label: "Note", fieldName: "Note", sortable: true },
@@ -349,7 +373,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Search_Account_Number__c : null;
       this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Search_Email_Address__c : null;
       this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
-      if (this.phoneNumber || this.nationalId || this.contractNumber) {
+      if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress || this.customerNumber) {
         await this.processSearch();
       }
     } catch (error) {
@@ -812,6 +836,7 @@ hasAnySearchCriteria(params) {
               ProductCode: app.Product,
               ContractStatus: app.Status,
               Phone: phone,
+              CIFNumber: cust.CIFNumber,
               _customer: cust,
               _application: app 
             }];
@@ -829,6 +854,7 @@ hasAnySearchCriteria(params) {
               Status: app.Status,
               EffectiveDate: 'N/A',
               Phone: phone,
+              CIFNumber: cust.CIFNumber,
               _customer: cust,
               _application: app // Cần map thêm field nếu có
             }];
@@ -972,7 +998,7 @@ hasAnySearchCriteria(params) {
           row = this.cardData.find(r => r.AccountNumber == row);
           break;
         case "ContractNumber":
-          row = this.loanData.find(r => r.ContractNumber == row);
+          row = this.loanContractData.find(r => r.ContractNumber == row);
           break;
         case "UserId":
           row = this.insuranceData.find(r => r.UserId == row);
@@ -1029,7 +1055,8 @@ hasAnySearchCriteria(params) {
           searchProducts: searchProducts,
           selectedType: action.type,
           cifNumber: cifNumber,
-          phone: row?.Phone
+          phone: row?.Phone,
+          customerName: row?.FullName
         })
           .then(async (res) => {
             // const payload = {

@@ -22,24 +22,21 @@ import CREATED_BY_FIELD from "@salesforce/schema/Case.FEC_Created_By__c";
 import SEND_TO_FIELD from "@salesforce/schema/Case.FEC_Send_To__c";
 import PARENT_ID_FIELD from "@salesforce/schema/Case.ParentId";
 
-import { 
-  STR_EMPTY,
-  FEC_Interaction_Email_Info_Label,
-  FEC_Interaction_Email_Label,
-  FEC_Interaction_Created_On_Label,
-  FEC_Interaction_Created_By_Label,
-  FEC_Send_To_Label,
-  FEC_Parent_ID_Label,
-  FEC_Interaction_Email_Input_Placeholder,
-  FEC_Interaction_Email_Required_Msg,
-  FEC_Interaction_Email_Invalid_Msg,
-  FEC_Interaction_Email_Save_Error,
-  FEC_Empty 
-} from "c/fec_CommonConst";
-import { formatDateTimeVN } from "c/fec_CommonUtils";
+// ================= LABELS =================
+import FEC_Interaction_Email_Info_Label from "@salesforce/label/c.FEC_Interaction_Email_Info_Label";
+import FEC_Interaction_Email_Label from "@salesforce/label/c.FEC_Interaction_Email_Label";
+import FEC_Interaction_Created_On_Label from "@salesforce/label/c.FEC_Interaction_Created_On_Label";
+import FEC_Interaction_Created_By_Label from "@salesforce/label/c.FEC_Interaction_Created_By_Label";
+import FEC_Send_To_Label from "@salesforce/label/c.FEC_Send_To_Label";
+import FEC_Parent_ID_Label from "@salesforce/label/c.FEC_Parent_ID_Label";
+import FEC_Interaction_Email_Input_Placeholder from "@salesforce/label/c.FEC_Interaction_Email_Input_Placeholder";
+import FEC_Interaction_Email_Required_Msg from "@salesforce/label/c.FEC_Interaction_Email_Required_Msg";
+import FEC_Interaction_Email_Invalid_Msg from "@salesforce/label/c.FEC_Interaction_Email_Invalid_Msg";
+import FEC_Interaction_Email_Save_Error from "@salesforce/label/c.FEC_Interaction_Email_Save_Error";
+import FEC_Empty from "@salesforce/label/c.FEC_Empty";
 
-// Regex validate email
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { STR_EMPTY, EMAIL_REGEX } from "c/fec_CommonConst";
+import { formatDateTimeVN } from "c/fec_CommonUtils";
 
 export default class FecInteractionEmailInfo extends NavigationMixin(LightningElement) {
   labels = {

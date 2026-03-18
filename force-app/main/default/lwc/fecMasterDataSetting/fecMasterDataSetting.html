@@ -1,374 +1,420 @@
 <template>
     <template if:true={item.name}>
-        <div class="config-main slds-m-bottom_medium">
-            <c-fec-flow-configuration onhandlestageclick={handleStageClick} node-data={item}></c-fec-flow-configuration>
-        </div>
-
-        <lightning-tabset variant="scoped">
-            <lightning-tab label="Property Configuration">
-                <lightning-card title={labelCardTitle} icon-name="standard:settings">
-                    <lightning-button label={labelNewSetting} icon-name="utility:add" slot="actions"
-                        onclick={openNewSettingModal} variant="brand">
-                    </lightning-button>
-                </lightning-card>
-
-                <div class="slds-p-around_small">
-                    <div class="custom-table-grid slds-theme_shade slds-text-title_caps slds-border_bottom">
-                        <div class="slds-col" style="text-align: center; grid-column: span 1;"></div>
-                        <div class="slds-col" onclick={handleSort} data-field="FEC_Channel__c" style="text-align: center; grid-column: span 2;">
-                            {labelColChannel}
-                            <span class="slds-m-left_xx-small">
-                                <lightning-icon if:true={isChannelSorted} icon-name={sortIconName} size="xx-small"></lightning-icon>
-                            </span>
-                        </div>
-                        <div class="slds-col" onclick={handleSort} data-field="FEC_Applicable_Role__c" style="text-align: center; grid-column: span 4;">
-                            {labelColApplicableRole}
-                            <span class="slds-m-left_xx-small">
-                                <lightning-icon if:true={isRoleSorted} icon-name={sortIconName} size="xx-small"></lightning-icon>
-                            </span>
-                        </div>
-                        <div class="slds-col" onclick={handleSort} data-field="FEC_Additional_Field_Name" style="grid-column: span 4;">
-                            {labelColPropertyName}
-                            <span class="slds-m-left_xx-small">
-                                <lightning-icon if:true={isPropertySorted} icon-name={sortIconName} size="xx-small"></lightning-icon>
-                            </span>
-                        </div>
-                        <div class="slds-col" onclick={handleSort} data-field="FEC_Section__c" style="grid-column: span 3;">
-                            {labelColSection}
-                            <span class="slds-m-left_xx-small">
-                                <lightning-icon if:true={isSectionSorted} icon-name={sortIconName} size="xx-small"></lightning-icon>
-                            </span>
-                        </div>
-                        <div class="slds-col" onclick={handleSort} data-field="FEC_Field_Order_Display__c" style="text-align: center; grid-column: span 2;">
-                            {labelColOrder}
-                            <span class="slds-m-left_xx-small">
-                                <lightning-icon if:true={isOrderSorted} icon-name={sortIconName} size="xx-small"></lightning-icon>
-                            </span>
-                        </div>
-                        <div class="slds-col" onclick={handleSort} data-field="FEC_Field_Status__c" style="text-align: center; grid-column: span 2;">{labelColStatus}</div>
-                        <div class="slds-col" onclick={handleSort} data-field="FEC_Field_ReadOnly__c" style="text-align: center; grid-column: span 2;">{labelReadOnly}</div>
-                        <div class="slds-col" onclick={handleSort} data-field="FEC_Field_Mandatory__c" style="text-align: center; grid-column: span 2;">{labelMandatory}</div>
-                        <div class="slds-col" style="text-align: center; grid-column: span 2;">{labelAction}</div>
-                    </div>
-
-                    <template if:true={processedData}>
-                        <template for:each={processedData} for:item="row">
-                            <div key={row.Id} class="slds-border_bottom">
-                                <div class="custom-table-grid">
-                                    <div class="slds-col" style="text-align: center; grid-column: span 1;">
-                                        <lightning-icon icon-name="utility:record" size="xx-small" class={row.dynamicIconClass}></lightning-icon>
-                                        <lightning-icon icon-name="utility:user" size="xx-small" class={row.customerIconClass}></lightning-icon>
-                                    </div>
-
-                                    <div class="slds-col slds-truncate" style="text-align: center; grid-column: span 2;">{row.FEC_Channel_Name_Name}</div>
-                                    <div class="slds-col slds-truncate" style="text-align: center; grid-column: span 4;" title={row.FEC_Applicable_Role__c}>{row.FEC_Applicable_Role__c}</div>
-                                    <div class="slds-col slds-truncate" style="grid-column: span 4;" title={row.FEC_Additional_Field_Name}>{row.FEC_Additional_Field_Name}</div>
-                                    <div class="slds-col slds-truncate" style="grid-column: span 3;" title={row.FEC_Section__c}>{row.FEC_Section__c}</div>
-                                    <div class="slds-col" style="text-align: center; grid-column: span 2;">{row.FEC_Field_Order_Display__c}</div>
-
-                                    <div class="slds-col" style="text-align: center; grid-column: span 2;">
-                                        <lightning-icon if:true={row.FEC_Field_Status__c} icon-name="utility:check" variant="success" size="xx-small"></lightning-icon>
-                                    </div>
-                                    <div class="slds-col" style="text-align: center; grid-column: span 2;">
-                                        <lightning-icon if:true={row.FEC_Field_ReadOnly__c} icon-name="utility:check" size="xx-small"></lightning-icon>
-                                    </div>
-                                    <div class="slds-col" style="text-align: center; grid-column: span 2;">
-                                        <lightning-icon if:true={row.FEC_Field_Mandatory__c} icon-name="utility:check" size="xx-small"></lightning-icon>
-                                    </div>
-
-                                    <div class="slds-col" style="text-align: center; grid-column: span 2;">
-                                        <lightning-button-menu alternative-text="Show menu" menu-alignment="right" onselect={handleRowAction} data-id={row.Id}>
-                                            <lightning-menu-item value="edit" label={labelActionEdit} icon-name="utility:edit"></lightning-menu-item>
-                                            <lightning-menu-item value="delete" label={labelActionDelete} icon-name="utility:delete" class="slds-text-color_error"></lightning-menu-item>
-                                        </lightning-button-menu>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </template>
+        
+        <lightning-layout class="main-container slds-grid_stretch">
+            
+            <lightning-layout-item size="12" large-device-size={mainPanelSize} class="main-panel slds-p-right_small">
+                
+                <div class="config-main slds-m-bottom_medium">
+                    <c-fec-flow-configuration onhandlestageclick={handleStageClick} node-data={item}></c-fec-flow-configuration>
                 </div>
-            </lightning-tab>
 
-            <lightning-tab label={labelTabFraudIntegration}>
-                <lightning-card title="Fraud Integration Mapping" icon-name="standard:hierarchy">
-                </lightning-card>
+                <div class="slds-grid slds-grid_align-end slds-m-bottom_small">
+                    <lightning-button 
+                        label={toggleHistoryLabel} 
+                        icon-name={toggleHistoryIcon} 
+                        variant={toggleButtonVariant}
+                        onclick={handleToggleHistory}>
+                    </lightning-button>
+                </div>
 
-                <div class="slds-is-relative slds-p-around_small">
-                    <lightning-spinner if:true={isLoading} variant="brand" size="medium"></lightning-spinner>
+                <lightning-tabset variant="scoped">
+                    <lightning-tab label="Property Configuration">
+                        <lightning-card title={labelCardTitle} icon-name="standard:settings">
+                            <lightning-button label={labelNewSetting} icon-name="utility:add" slot="actions"
+                                onclick={openNewSettingModal} variant="brand">
+                            </lightning-button>
+                        </lightning-card>
 
-                    <template if:true={isIntegrationAdd}>
-                        <div class="slds-box slds-theme_default">
-                            <!-- Header with Title and Buttons -->
-                            <div class="slds-grid slds-grid_align-spread slds-align-content-center slds-p-bottom_medium slds-border_bottom">
-                                <div class="slds-text-heading_small">
-                                    Add Integration Mapping & Settings
-                                </div>
-                                <div class="slds-grid slds-gap_small">
-                                    <lightning-button label="Cancel" onclick={handleCancelIntegration}></lightning-button>
-                                    <lightning-button label="Save Mapping" variant="brand" onclick={handleSaveIntegration}></lightning-button>
-                                </div>
-                            </div>
-
-                            <!-- Vertical Stack Layout: Mapping Settings above Integration Details -->
-                            <div class="slds-p-around_medium">
-                                <!-- Section 1: Mapping Settings -->
-                                <div class="slds-m-bottom_large">
-                                    <h3 class="slds-text-heading_small slds-m-bottom_medium">Mapping Settings</h3>
-
-                                    <!-- Applicable Roles (Multi-select) -->
-                                    <div class="slds-m-bottom_medium">
-                                        <label class="slds-form-element__label">
-                                            <span class="slds-required">*</span> Applicable Roles
-                                        </label>
-                                        <lightning-combobox options={roleOptions} 
-                                            placeholder="-- Select Roles --" 
-                                            onchange={handleSelectRole}>
-                                        </lightning-combobox>
-                                        <div class="slds-m-top_small">
-                                            <template for:each={integrationFormData.selectedRoles} for:item="role" for:index="roleIndex">
-                                                <lightning-pill 
-                                                    key={role} 
-                                                    label={role} 
-                                                    name={role}
-                                                    onremove={handleRemoveRole}
-                                                    data-role={role}
-                                                    data-index={roleIndex}>
-                                                </lightning-pill>
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    <!-- Section -->
-                                    <div class="slds-m-bottom_medium">
-                                        <label class="slds-form-element__label">Section</label>
-                                        <lightning-input type="text" 
-                                            value={integrationFormData.section}
-                                            onchange={handleInputChange}
-                                            data-field="section">
-                                        </lightning-input>
-                                    </div>
-
-                                    <!-- Checkboxes Row -->
-                                    <div class="slds-m-bottom_medium">
-                                        <label class="slds-form-element__label">Settings</label>
-                                        <div class="slds-grid slds-gap_medium">
-                                            <div class="slds-col slds-size_1-of-3">
-                                                <lightning-input type="checkbox" label="Status"
-                                                    checked={integrationFormData.fieldStatus}
-                                                    onchange={handleCheckboxChange}
-                                                    data-field="fieldStatus">
-                                                </lightning-input>
-                                            </div>
-                                            <div class="slds-col slds-size_1-of-3">
-                                                <lightning-input type="checkbox" label="Read Only"
-                                                    checked={integrationFormData.fieldReadOnly}
-                                                    onchange={handleCheckboxChange}
-                                                    data-field="fieldReadOnly">
-                                                </lightning-input>
-                                            </div>
-                                            <div class="slds-col slds-size_1-of-3">
-                                                <lightning-input type="checkbox" label="Mandatory"
-                                                    checked={integrationFormData.fieldMandatory}
-                                                    onchange={handleCheckboxChange}
-                                                    data-field="fieldMandatory">
-                                                </lightning-input>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Section 2: Integration Details -->
-                                <div class="slds-m-bottom_large">
-                                    <c-fec-integration-mapping onsuccessintegration={handleSuccessIntegration}
-                                        oncancelintegration={handleCancelIntegration} mapping-id={selectedMappingId}
-                                        user-type-name={userTypeName}
-                                        channel-filter="FIMA">
-                                    </c-fec-integration-mapping>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-
-                    <template if:false={isIntegrationAdd}>
-                        <template if:true={hasFraudData}>
+                        <div class="slds-p-around_small">
                             <div class="custom-table-grid slds-theme_shade slds-text-title_caps slds-border_bottom">
-                                <div class="slds-col" style="text-align: center; grid-column: span 2;"></div>
-                                <div class="slds-col" style="text-align: center; grid-column: span 2;">Channel</div>
-                                <div class="slds-col" style="text-align: center; grid-column: span 2;">Product Line</div>
-                                <div class="slds-col" style="grid-column: span 5;">Service Type</div>
-                                <div class="slds-col" style="grid-column: span 3;">Category</div>
-                                <div class="slds-col" style="text-align: center; grid-column: span 2;">Sub Category</div>
-                                <div class="slds-col" style="text-align: center; grid-column: span 2;">Sub Code</div>
-                                <div class="slds-col" style="text-align: center; grid-column: span 3;">Status</div>
-                                <div class="slds-col col-delete-header" style="text-align: center; grid-column: span 1;"></div>
+                                <div class="slds-col" style="text-align: center; grid-column: span 1;"></div>
+                                <div class="slds-col" onclick={handleSort} data-field="FEC_Channel__c"
+                                    style="text-align: center; grid-column: span 2;">
+                                    {labelColChannel}
+                                    <span class="slds-m-left_xx-small">
+                                        <lightning-icon if:true={isChannelSorted} icon-name={sortIconName}
+                                            size="xx-small"></lightning-icon>
+                                    </span>
+                                </div>
+                                <div class="slds-col" onclick={handleSort} data-field="FEC_Applicable_Role__c"
+                                    style="text-align: center; grid-column: span 4;">
+                                    {labelColApplicableRole}
+                                    <span class="slds-m-left_xx-small">
+                                        <lightning-icon if:true={isRoleSorted} icon-name={sortIconName}
+                                            size="xx-small"></lightning-icon>
+                                    </span>
+                                </div>
+                                <div class="slds-col" onclick={handleSort} data-field="FEC_Additional_Field_Name"
+                                    style="grid-column: span 4;">
+                                    {labelColPropertyName}
+                                    <span class="slds-m-left_xx-small">
+                                        <lightning-icon if:true={isPropertySorted} icon-name={sortIconName}
+                                            size="xx-small"></lightning-icon>
+                                    </span>
+                                </div>
+                                <div class="slds-col" onclick={handleSort} data-field="FEC_Section__c"
+                                    style="grid-column: span 3;">
+                                    {labelColSection}
+                                    <span class="slds-m-left_xx-small">
+                                        <lightning-icon if:true={isSectionSorted} icon-name={sortIconName}
+                                            size="xx-small"></lightning-icon>
+                                    </span>
+                                </div>
+                                <div class="slds-col" onclick={handleSort} data-field="FEC_Field_Order_Display__c"
+                                    style="text-align: center; grid-column: span 2;">
+                                    {labelColOrder}
+                                    <span class="slds-m-left_xx-small">
+                                        <lightning-icon if:true={isOrderSorted} icon-name={sortIconName}
+                                            size="xx-small"></lightning-icon>
+                                    </span>
+                                </div>
+                                <div class="slds-col" onclick={handleSort} data-field="FEC_Field_Status__c"
+                                    style="text-align: center; grid-column: span 2;">{labelColStatus}</div>
+                                <div class="slds-col" onclick={handleSort} data-field="FEC_Field_ReadOnly__c"
+                                    style="text-align: center; grid-column: span 2;">{labelReadOnly}</div>
+                                <div class="slds-col" onclick={handleSort} data-field="FEC_Field_Mandatory__c"
+                                    style="text-align: center; grid-column: span 2;">{labelMandatory}</div>
+                                <div class="slds-col" style="text-align: center; grid-column: span 2;">{labelAction}</div>
                             </div>
 
-                            <template for:each={processedDataFraud} for:item="row">
-                                <div key={row.Id} class="slds-border_bottom">
-                                    <div class="custom-table-grid">
-                                        <div class="slds-col" style="text-align: center; grid-column: span 2;">
-                                            <lightning-button-icon icon-name={row.expandIcon} variant="bare"
-                                                onclick={toggleExpand} data-id={row.Id} size="small">
-                                            </lightning-button-icon>
-                                            <lightning-icon icon-name="utility:record" size="xx-small"
-                                                class={row.dynamicIconClass}></lightning-icon>
-                                            <lightning-icon icon-name="utility:user" size="xx-small"
-                                                class={row.customerIconClass}>
-                                            </lightning-icon>
+                            <template if:true={processedData}>
+                                <template for:each={processedData} for:item="row">
+                                    <div key={row.Id} class="slds-border_bottom">
+                                        <div class="custom-table-grid">
+                                            <div class="slds-col" style="text-align: center; grid-column: span 1;">
+                                                <lightning-icon icon-name="utility:record" size="xx-small"
+                                                    class={row.dynamicIconClass}></lightning-icon>
+                                                <lightning-icon icon-name="utility:user" size="xx-small"
+                                                    class={row.customerIconClass}></lightning-icon>
+                                            </div>
+
+                                            <div class="slds-col slds-truncate"
+                                                style="text-align: center; grid-column: span 2;">{row.FEC_Channel_Name_Name}
+                                            </div>
+                                            <div class="slds-col slds-truncate" style="text-align: center; grid-column: span 4;"
+                                                title={row.FEC_Applicable_Role__c}>{row.FEC_Applicable_Role__c}</div>
+                                            <div class="slds-col slds-truncate" style="grid-column: span 4;"
+                                                title={row.FEC_Additional_Field_Name}>{row.FEC_Additional_Field_Name}</div>
+                                            <div class="slds-col slds-truncate" style="grid-column: span 3;"
+                                                title={row.FEC_Section__c}>{row.FEC_Section__c}</div>
+                                            <div class="slds-col" style="text-align: center; grid-column: span 2;">
+                                                {row.FEC_Field_Order_Display__c}</div>
+
+                                            <div class="slds-col" style="text-align: center; grid-column: span 2;">
+                                                <lightning-icon if:true={row.FEC_Field_Status__c} icon-name="utility:check"
+                                                    variant="success" size="xx-small"></lightning-icon>
+                                            </div>
+                                            <div class="slds-col" style="text-align: center; grid-column: span 2;">
+                                                <lightning-icon if:true={row.FEC_Field_ReadOnly__c} icon-name="utility:check"
+                                                    size="xx-small"></lightning-icon>
+                                            </div>
+                                            <div class="slds-col" style="text-align: center; grid-column: span 2;">
+                                                <lightning-icon if:true={row.FEC_Field_Mandatory__c} icon-name="utility:check"
+                                                    size="xx-small"></lightning-icon>
+                                            </div>
+
+                                            <div class="slds-col" style="text-align: center; grid-column: span 2;">
+                                                <lightning-button-menu alternative-text="Show menu" menu-alignment="right"
+                                                    onselect={handleRowAction} data-id={row.Id}>
+                                                    <lightning-menu-item value="edit" label={labelActionEdit}
+                                                        icon-name="utility:edit"></lightning-menu-item>
+                                                    <lightning-menu-item value="delete" label={labelActionDelete}
+                                                        icon-name="utility:delete"
+                                                        class="slds-text-color_error"></lightning-menu-item>
+                                                </lightning-button-menu>
+                                            </div>
                                         </div>
-                                        <div class="slds-col slds-truncate" style="text-align: center; grid-column: span 2;">{row.FEC_Channel_Name_Name}</div>
-                                        <div class="slds-col slds-truncate" style="text-align: center; grid-column: span 2;">{row.Product_Line__c}</div>
-                                        <div class="slds-col slds-truncate" style="grid-column: span 5;" title={row.Service_Type__c}>{row.Service_Type__c}</div>
-                                        <div class="slds-col slds-truncate" style="grid-column: span 3;" title={row.Category__c}>{row.Category__c}</div>
-                                        <div class="slds-col slds-truncate" style="text-align: center; grid-column: span 2;">{row.Sub_Category__c}</div>
-                                        <div class="slds-col slds-truncate" style="text-align: center; grid-column: span 2;">{row.Sub_Code__c}</div>
-                                        <div class="slds-col" style="text-align: center; grid-column: span 3;">
-                                            <template lwc:if={row.FEC_Field_Status__c}>
-                                                <span class="slds-badge slds-theme_success slds-cursor_pointer"
-                                                    onclick={handleToggleStatus} data-id={row.Id}
-                                                    data-status={row.FEC_Field_Status__c}
-                                                    title={labelTooltipDeactivate}>{labelActive}</span>
-                                            </template>
-                                            <template lwc:else>
-                                                <span class="slds-badge slds-theme_error slds-cursor_pointer"
-                                                    onclick={handleToggleStatus} data-id={row.Id}
-                                                    data-status={row.FEC_Field_Status__c}
-                                                    title={labelTooltipActivate}>{labelInactive}</span>
-                                            </template>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+                    </lightning-tab>
+
+                    <lightning-tab label={labelTabFraudIntegration}>
+                        <lightning-card title="Fraud Integration Mapping" icon-name="standard:hierarchy">
+                        </lightning-card>
+
+                        <div class="slds-is-relative slds-p-around_small">
+                            <lightning-spinner if:true={isLoading} variant="brand" size="medium"></lightning-spinner>
+
+                            <template if:true={isIntegrationAdd}>
+                                <div class="slds-box slds-theme_default">
+                                    <div class="slds-grid slds-grid_align-spread slds-align-content-center slds-p-bottom_medium slds-border_bottom">
+                                        <div class="slds-text-heading_small">
+                                            Add Integration Mapping & Settings
                                         </div>
-                                        <div class="slds-col col-delete" style="text-align: center; grid-column: span 1;">
-                                            <lightning-button-icon 
-                                                icon-name="utility:delete" 
-                                                alternative-text="Delete" 
-                                                variant="bare"
-                                                class="slds-text-color_error"
-                                                onclick={handleDeleteFraud} 
-                                                data-id={row.Id}
-                                                title="Delete this mapping"
-                                                size="small">
-                                            </lightning-button-icon>
+                                        <div class="slds-grid slds-gap_small">
+                                            <lightning-button label="Cancel"
+                                                onclick={handleCancelIntegration}></lightning-button>
+                                            <lightning-button label="Save Mapping" variant="brand"
+                                                onclick={handleSaveIntegration}></lightning-button>
                                         </div>
                                     </div>
 
-                                    <template if:true={row.isExpanded}>
-                                        <div class="slds-p-around_medium slds-theme_shade slds-m-around_small slds-box">
-                                            <!-- Header with Title and Buttons -->
-                                            <div class="slds-grid slds-grid_align-spread slds-align-content-center slds-p-bottom_medium slds-border_bottom">
-                                                <div class="slds-text-heading_small">
-                                                    Edit Integration Mapping & Settings
-                                                </div>
-                                                <div class="slds-grid slds-gap_small">
-                                                    <lightning-button label="Cancel" onclick={toggleExpand} data-id={row.Id}></lightning-button>
-                                                    <lightning-button label="Save Mapping" variant="brand" onclick={handleSaveIntegration} data-id={row.Id}></lightning-button>
+                                    <div class="slds-p-around_medium">
+                                        <div class="slds-m-bottom_large">
+                                            <h3 class="slds-text-heading_small slds-m-bottom_medium">Mapping Settings</h3>
+
+                                            <div class="slds-m-bottom_medium">
+                                                <label class="slds-form-element__label">
+                                                    <span class="slds-required">*</span> Applicable Roles
+                                                </label>
+                                                <lightning-combobox options={roleOptions} placeholder="-- Select Roles --"
+                                                    onchange={handleSelectRole}>
+                                                </lightning-combobox>
+                                                <div class="slds-m-top_small">
+                                                    <template for:each={integrationFormData.selectedRoles} for:item="role"
+                                                        for:index="roleIndex">
+                                                        <lightning-pill key={role} label={role} name={role}
+                                                            onremove={handleRemoveRole} data-role={role} data-index={roleIndex}>
+                                                        </lightning-pill>
+                                                    </template>
                                                 </div>
                                             </div>
 
-                                            <!-- Vertical Stack Layout: Mapping Settings above Integration Details -->
-                                            <div class="slds-p-around_medium">
-                                                <!-- Section 1: Mapping Settings -->
-                                                <div class="slds-m-bottom_large">
-                                                    <h3 class="slds-text-heading_small slds-m-bottom_medium">Mapping Settings</h3>
+                                            <div class="slds-m-bottom_medium">
+                                                <label class="slds-form-element__label">Section</label>
+                                                <lightning-input type="text" value={integrationFormData.section}
+                                                    onchange={handleInputChange} data-field="section">
+                                                </lightning-input>
+                                            </div>
 
-                                                    <!-- Applicable Roles (Multi-select) -->
-                                                    <div class="slds-m-bottom_medium">
-                                                        <label class="slds-form-element__label">
-                                                            <span class="slds-required">*</span> Applicable Roles
-                                                        </label>
-                                                        <lightning-combobox options={roleOptions} 
-                                                            placeholder="-- Select Roles --" 
-                                                            onchange={handleSelectRole}>
-                                                        </lightning-combobox>
-                                                        <div class="slds-m-top_small">
-                                                            <template for:each={integrationFormData.selectedRoles} for:item="role">
-                                                                <lightning-pill key={role} label={role} name={role}
-                                                                    onremove={handleRemoveRole}></lightning-pill>
-                                                            </template>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- Section -->
-                                                    <div class="slds-m-bottom_medium">
-                                                        <label class="slds-form-element__label">Section</label>
-                                                        <lightning-input type="text" 
-                                                            value={integrationFormData.section}
-                                                            onchange={handleInputChange}
-                                                            data-field="section">
+                                            <div class="slds-m-bottom_medium">
+                                                <label class="slds-form-element__label">Settings</label>
+                                                <div class="slds-grid slds-gap_medium">
+                                                    <div class="slds-col slds-size_1-of-3">
+                                                        <lightning-input type="checkbox" label="Status"
+                                                            checked={integrationFormData.fieldStatus}
+                                                            onchange={handleCheckboxChange} data-field="fieldStatus">
                                                         </lightning-input>
                                                     </div>
-
-                                                    <!-- Checkboxes Row -->
-                                                    <div class="slds-m-bottom_medium">
-                                                        <label class="slds-form-element__label">Settings</label>
-                                                        <div class="slds-grid slds-gap_medium">
-                                                            <div class="slds-col slds-size_1-of-3">
-                                                                <lightning-input type="checkbox" label="Status"
-                                                                    checked={integrationFormData.fieldStatus}
-                                                                    onchange={handleCheckboxChange}
-                                                                    data-field="fieldStatus">
-                                                                </lightning-input>
-                                                            </div>
-                                                            <div class="slds-col slds-size_1-of-3">
-                                                                <lightning-input type="checkbox" label="Read Only"
-                                                                    checked={integrationFormData.fieldReadOnly}
-                                                                    onchange={handleCheckboxChange}
-                                                                    data-field="fieldReadOnly">
-                                                                </lightning-input>
-                                                            </div>
-                                                            <div class="slds-col slds-size_1-of-3">
-                                                                <lightning-input type="checkbox" label="Mandatory"
-                                                                    checked={integrationFormData.fieldMandatory}
-                                                                    onchange={handleCheckboxChange}
-                                                                    data-field="fieldMandatory">
-                                                                </lightning-input>
-                                                            </div>
-                                                        </div>
+                                                    <div class="slds-col slds-size_1-of-3">
+                                                        <lightning-input type="checkbox" label="Read Only"
+                                                            checked={integrationFormData.fieldReadOnly}
+                                                            onchange={handleCheckboxChange} data-field="fieldReadOnly">
+                                                        </lightning-input>
                                                     </div>
-                                                </div>
-
-                                                <!-- Section 2: Integration Details -->
-                                                <div class="slds-m-bottom_large">
-                                                    <h3 class="slds-text-heading_small slds-m-bottom_medium">Integration</h3>
-                                                    <c-fec-integration-mapping mapping-id={row.FEC_Data_Integration_Mapping__c}
-                                                        onsuccessintegration={handleSuccessIntegration}
-                                                        oncancelintegration={toggleExpand} data-id={row.Id}
-                                                        user-type-name={userTypeName}
-                                                        channel-filter="FIMA">
-                                                    </c-fec-integration-mapping>
+                                                    <div class="slds-col slds-size_1-of-3">
+                                                        <lightning-input type="checkbox" label="Mandatory"
+                                                            checked={integrationFormData.fieldMandatory}
+                                                            onchange={handleCheckboxChange} data-field="fieldMandatory">
+                                                        </lightning-input>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </template>
+
+                                        <div class="slds-m-bottom_large">
+                                            <c-fec-integration-mapping onsuccessintegration={handleSuccessIntegration}
+                                                oncancelintegration={handleCancelIntegration} mapping-id={selectedMappingId}
+                                                user-type-name={userTypeName} channel-filter="FIMA">
+                                            </c-fec-integration-mapping>
+                                        </div>
+                                    </div>
                                 </div>
                             </template>
-                        </template>
 
-                        <template if:false={hasFraudData}>
-                            <div class="slds-align_absolute-center slds-p-around_large">
-                                <lightning-button label={labelAddIntegration} variant="brand" icon-name="utility:add"
-                                    onclick={handleAddIntegration}></lightning-button>
+                            <template if:false={isIntegrationAdd}>
+                                <template if:true={hasFraudData}>
+                                    <div class="custom-table-grid slds-theme_shade slds-text-title_caps slds-border_bottom">
+                                        <div class="slds-col" style="text-align: center; grid-column: span 2;"></div>
+                                        <div class="slds-col" style="text-align: center; grid-column: span 2;">Channel</div>
+                                        <div class="slds-col" style="text-align: center; grid-column: span 2;">Product Line
+                                        </div>
+                                        <div class="slds-col" style="grid-column: span 5;">Service Type</div>
+                                        <div class="slds-col" style="grid-column: span 3;">Category</div>
+                                        <div class="slds-col" style="text-align: center; grid-column: span 2;">Sub Category
+                                        </div>
+                                        <div class="slds-col" style="text-align: center; grid-column: span 2;">Sub Code</div>
+                                        <div class="slds-col" style="text-align: center; grid-column: span 3;">Status</div>
+                                        <div class="slds-col col-delete-header"
+                                            style="text-align: center; grid-column: span 1;"></div>
+                                    </div>
+
+                                    <template for:each={processedDataFraud} for:item="row">
+                                        <div key={row.Id} class="slds-border_bottom">
+                                            <div class="custom-table-grid">
+                                                <div class="slds-col" style="text-align: center; grid-column: span 2;">
+                                                    <lightning-button-icon icon-name={row.expandIcon} variant="bare"
+                                                        onclick={toggleExpand} data-id={row.Id} size="small">
+                                                    </lightning-button-icon>
+                                                    <lightning-icon icon-name="utility:record" size="xx-small"
+                                                        class={row.dynamicIconClass}></lightning-icon>
+                                                    <lightning-icon icon-name="utility:user" size="xx-small"
+                                                        class={row.customerIconClass}>
+                                                    </lightning-icon>
+                                                </div>
+                                                <div class="slds-col slds-truncate"
+                                                    style="text-align: center; grid-column: span 2;">{row.FEC_Channel_Name_Name}
+                                                </div>
+                                                <div class="slds-col slds-truncate"
+                                                    style="text-align: center; grid-column: span 2;">{row.Product_Line__c}</div>
+                                                <div class="slds-col slds-truncate" style="grid-column: span 5;"
+                                                    title={row.Service_Type__c}>{row.Service_Type__c}</div>
+                                                <div class="slds-col slds-truncate" style="grid-column: span 3;"
+                                                    title={row.Category__c}>{row.Category__c}</div>
+                                                <div class="slds-col slds-truncate"
+                                                    style="text-align: center; grid-column: span 2;">{row.Sub_Category__c}</div>
+                                                <div class="slds-col slds-truncate"
+                                                    style="text-align: center; grid-column: span 2;">{row.Sub_Code__c}</div>
+                                                <div class="slds-col" style="text-align: center; grid-column: span 3;">
+                                                    <template lwc:if={row.FEC_Field_Status__c}>
+                                                        <span class="slds-badge slds-theme_success slds-cursor_pointer"
+                                                            onclick={handleToggleStatus} data-id={row.Id}
+                                                            data-status={row.FEC_Field_Status__c}
+                                                            title={labelTooltipDeactivate}>{labelActive}</span>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <span class="slds-badge slds-theme_error slds-cursor_pointer"
+                                                            onclick={handleToggleStatus} data-id={row.Id}
+                                                            data-status={row.FEC_Field_Status__c}
+                                                            title={labelTooltipActivate}>{labelInactive}</span>
+                                                    </template>
+                                                </div>
+                                                <div class="slds-col col-delete"
+                                                    style="text-align: center; grid-column: span 1;">
+                                                    <lightning-button-icon icon-name="utility:delete" alternative-text="Delete"
+                                                        variant="bare" class="slds-text-color_error" onclick={handleDeleteFraud}
+                                                        data-id={row.Id} title="Delete this mapping" size="small">
+                                                    </lightning-button-icon>
+                                                </div>
+                                            </div>
+
+                                            <template if:true={row.isExpanded}>
+                                                <div class="slds-p-around_medium slds-theme_shade slds-m-around_small slds-box">
+                                                    <div class="slds-grid slds-grid_align-spread slds-align-content-center slds-p-bottom_medium slds-border_bottom">
+                                                        <div class="slds-text-heading_small">
+                                                            Edit Integration Mapping & Settings
+                                                        </div>
+                                                        <div class="slds-grid slds-gap_small">
+                                                            <lightning-button label="Cancel" onclick={toggleExpand}
+                                                                data-id={row.Id}></lightning-button>
+                                                            <lightning-button label="Save Mapping" variant="brand"
+                                                                onclick={handleSaveIntegration}
+                                                                data-id={row.Id}></lightning-button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="slds-p-around_medium">
+                                                        <div class="slds-m-bottom_large">
+                                                            <h3 class="slds-text-heading_small slds-m-bottom_medium">Mapping Settings</h3>
+
+                                                            <div class="slds-m-bottom_medium">
+                                                                <label class="slds-form-element__label">
+                                                                    <span class="slds-required">*</span> Applicable Roles
+                                                                </label>
+                                                                <lightning-combobox options={roleOptions}
+                                                                    placeholder="-- Select Roles --"
+                                                                    onchange={handleSelectRole}>
+                                                                </lightning-combobox>
+                                                                <div class="slds-m-top_small">
+                                                                    <template for:each={integrationFormData.selectedRoles}
+                                                                        for:item="role">
+                                                                        <lightning-pill key={role} label={role} name={role}
+                                                                            onremove={handleRemoveRole}></lightning-pill>
+                                                                    </template>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="slds-m-bottom_medium">
+                                                                <label class="slds-form-element__label">Section</label>
+                                                                <lightning-input type="text" value={integrationFormData.section}
+                                                                    onchange={handleInputChange} data-field="section">
+                                                                </lightning-input>
+                                                            </div>
+
+                                                            <div class="slds-m-bottom_medium">
+                                                                <label class="slds-form-element__label">Settings</label>
+                                                                <div class="slds-grid slds-gap_medium">
+                                                                    <div class="slds-col slds-size_1-of-3">
+                                                                        <lightning-input type="checkbox" label="Status"
+                                                                            checked={integrationFormData.fieldStatus}
+                                                                            onchange={handleCheckboxChange}
+                                                                            data-field="fieldStatus">
+                                                                        </lightning-input>
+                                                                    </div>
+                                                                    <div class="slds-col slds-size_1-of-3">
+                                                                        <lightning-input type="checkbox" label="Read Only"
+                                                                            checked={integrationFormData.fieldReadOnly}
+                                                                            onchange={handleCheckboxChange}
+                                                                            data-field="fieldReadOnly">
+                                                                        </lightning-input>
+                                                                    </div>
+                                                                    <div class="slds-col slds-size_1-of-3">
+                                                                        <lightning-input type="checkbox" label="Mandatory"
+                                                                            checked={integrationFormData.fieldMandatory}
+                                                                            onchange={handleCheckboxChange}
+                                                                            data-field="fieldMandatory">
+                                                                        </lightning-input>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="slds-m-bottom_large">
+                                                            <h3 class="slds-text-heading_small slds-m-bottom_medium">Integration</h3>
+                                                            <c-fec-integration-mapping
+                                                                mapping-id={row.FEC_Data_Integration_Mapping__c}
+                                                                onsuccessintegration={handleSuccessIntegration}
+                                                                oncancelintegration={toggleExpand} data-id={row.Id}
+                                                                user-type-name={userTypeName} channel-filter="FIMA">
+                                                            </c-fec-integration-mapping>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </template>
+
+                                <template if:false={hasFraudData}>
+                                    <div class="slds-align_absolute-center slds-p-around_large">
+                                        <lightning-button label={labelAddIntegration} variant="brand" icon-name="utility:add"
+                                            onclick={handleAddIntegration}></lightning-button>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+                    </lightning-tab>
+
+                    <lightning-tab label="Flow Control Data View">
+                        <c-fec-flow-control-data-view item={item}></c-fec-flow-control-data-view>
+                    </lightning-tab>
+                </lightning-tabset>
+
+                <template if:true={isModalOpen}>
+                    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+                        <div class="slds-modal__container">
+                            <header class="slds-modal__header">
+                                <h2 class="slds-modal__title">{modalTitle}</h2>
+                            </header>
+                            <div class="slds-modal__content slds-p-around_medium">
+                                <c-fec-master-data-setting-form record-id={recordIdForEdit} record-data={selectedRecord}
+                                    nature-of-case-id={currentNatureOfCaseId} stage-id={stageId} onsuccess={handleSuccess}
+                                    next-order={nextOrder} oncancel={closeModal}>
+                                </c-fec-master-data-setting-form>
                             </div>
-                        </template>
-                    </template>
-                </div>
-            </lightning-tab>
-        </lightning-tabset>
+                        </div>
+                    </section>
+                    <div class="slds-backdrop slds-backdrop_open"></div>
+                </template>
 
-        <template if:true={isModalOpen}>
-            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
-                <div class="slds-modal__container">
-                    <header class="slds-modal__header">
-                        <h2 class="slds-modal__title">{modalTitle}</h2>
-                    </header>
-                    <div class="slds-modal__content slds-p-around_medium">
-                        <c-fec-master-data-setting-form record-id={recordIdForEdit} record-data={selectedRecord}
-                            nature-of-case-id={currentNatureOfCaseId} stage-id={stageId} onsuccess={handleSuccess}
-                            next-order={nextOrder} oncancel={closeModal}>
-                        </c-fec-master-data-setting-form>
+            </lightning-layout-item>
+
+            <template if:true={isHistoryVisible}>
+                <lightning-layout-item size="12" large-device-size="3" class="history-panel">
+                    <div class="history-content slds-scrollable_y">
+                        <c-fec-config-history 
+                            data-id="historyComponent"
+                            object-api-name="FEC_MDM_Master_Data_Setting__c"
+                            record-id="">
+                        </c-fec-config-history>
                     </div>
-                </div>
-            </section>
-            <div class="slds-backdrop slds-backdrop_open"></div>
-        </template>
+                </lightning-layout-item>
+            </template>
+
+        </lightning-layout>
     </template>
 
     <template if:false={item.name}>

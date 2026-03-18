@@ -354,7 +354,7 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CommonUltils</members>
-		<members>FEC_AccountOrContractPicklistHanlder</members>
+		<members>FEC_AccountOrContractPicklistHandler</members>
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_GenesysCreateDummyInteraction</members>
@@ -1978,6 +1978,26 @@
 		<members>FEC_Stage_Screen__c.FEC_Restrict_Update_Code</members>
 		<members>FEC_Sub_Category__c.FEC_Restrict_Update_Code</members>
 		<members>FEC_Sub_Code__c.FEC_Restrict_Update_Code</members>
+		<name>ValidationRule</name>
+	</types>
+
+	<!-- additional -->
+	<types>
+		<members>ContentVersion.FEC_Stage_ID__c</members>
+        <name>CustomField</name>
+    </types>
+	<types>
+		<members>FEC_CaseOwnerChangeNotification</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+		<members>FEC_Email_Subject_Case_Owner_Change</members>
+		<members>FEC_Email_Body_Case_Owner_Change</members>
+		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>Case.FEC_Restrict_Change_Owner_Non_Owner</members>
+		<members>Case.FEC_Restrict_Change_Owner_When_Resolved</members>
 		<name>ValidationRule</name>
 	</types>
 
