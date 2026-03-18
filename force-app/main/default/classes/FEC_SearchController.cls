@@ -64,6 +64,12 @@ public with sharing class FEC_SearchController {
         objCase.FEC_Search_Products__c = searchProducts;
         objCase.FEC_Product_Type__c = productTypeId;
         objCase.FEC_Customer_Name__c = customerName;
+        if (fieldName == 'AccountNumber') {
+            objCase.FEC_Account_Number__c = value;
+        }
+        if (fieldName == 'ContractNumber') {
+            objCase.FEC_Contract_Number__c = value;
+        }
 
         // Thực hiện Upsert Case ngay để có Id
         upsert objCase;
