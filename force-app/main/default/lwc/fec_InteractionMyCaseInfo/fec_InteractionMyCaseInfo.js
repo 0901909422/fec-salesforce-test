@@ -25,7 +25,7 @@ import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interacti
 import FEC_Interaction_Email_Label from "@salesforce/label/c.FEC_Interaction_Email_Label";
 
 import { formatDateTime } from "c/fec_CommonUtils";
-import { RECORD_TYPES, VIEW_MODE_REVIEW } from "c/fec_CommonConst";
+import { RECORD_TYPES, VIEW_MODE_REVIEW, ICON_PREVIEW, ICON_HIDE } from "c/fec_CommonConst";
 
 export default class Fec_InteractionMyCaseInfo extends LightningElement {
 
@@ -187,7 +187,7 @@ export default class Fec_InteractionMyCaseInfo extends LightningElement {
   }
 
   get eyeIcon() {
-    return this.isMasked ? "utility:hide" : "utility:preview";
+    return this.isMasked ? ICON_HIDE : ICON_PREVIEW;
   }
 
   get createdOn() {
