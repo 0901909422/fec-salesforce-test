@@ -123,7 +123,7 @@ public without sharing class FEC_GetNextWorkController {
         );
 
         Case oldCase = [
-            SELECT Id, OwnerId, FEC_Current_Case_Stage__r.FEC_Code__c
+            SELECT Id, OwnerId, Owner.Name, FEC_Current_Case_Stage__r.FEC_Code__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -135,9 +135,9 @@ public without sharing class FEC_GetNextWorkController {
         FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c();
         history.FEC_Case__c = caseId;
         history.FEC_Routing_Action__c = FEC_ConstantCommon.CASE_ROUTING_ACTION;
-        history.FEC_Decision__c = 'User';
-        history.FEC_Original_User_Queue__c = String.valueOf(oldCase.OwnerId);
-        history.FEC_Updated_User_Queue__c = String.valueOf(currentUserId);
+        history.FEC_Decision__c = '';
+        history.FEC_Original_User_Queue__c = oldCase.Owner.Name;
+        history.FEC_Updated_User_Queue__c = FEC_CommonUltils.getEmailPrefix(u.Email);
         history.FEC_Stage_Name__c = oldCase.FEC_Current_Case_Stage__r != null 
              ? oldCase.FEC_Current_Case_Stage__r.FEC_Code__c 
             : null;
