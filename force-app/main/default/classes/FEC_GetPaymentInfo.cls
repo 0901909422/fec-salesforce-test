@@ -57,10 +57,10 @@ public with sharing class FEC_GetPaymentInfo {
             //     : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
             String endpoint = apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c;
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
 
             responseLog = new ResponseLog(
-                'FEC_GetPaymentInfo', endpoint, 'POST', soapBody, res, null
+                'FEC_GetPaymentInfo', endpoint, FEC_ConstantCommon.API_METHOD_POST, soapBody, res, null
             );
 
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
