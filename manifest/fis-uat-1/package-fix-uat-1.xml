@@ -118,6 +118,8 @@
 		<members>FEC_Contact_List__c.FEC_Contact_ID__c	</members>
 		<members>ContentVersion.FEC_Stage_ID__c</members>
 		<members>FEC_Additional_Info__c.FEC_Card_Retention_Decline_Reason__c</members>
+		<members>FEC_Team_Queue__c.FEC_Team__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Description__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -432,6 +434,7 @@
 		<members>FEC_CS_Unit_Head_of_Customer_Care_Customer_360</members>
 		<members>FEC_CS_Unit_Head_of_Office_Based_Customer_360</members>
 		<members>RD_IT_User_Customer_360</members>
+		<members>RD_IT_User_Master_Data_Management</members>
 		<name>PermissionSet</name>
 	</types>
 	<types>

@@ -5,7 +5,6 @@ import {
   getAllTabInfo,
   openSubtab,
   closeTab,
-  getFocusedTabInfo
 } from "lightning/platformWorkspaceApi";
 import { publish, MessageContext } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
@@ -128,23 +127,20 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
               if (tabInfo.recordId === this.recordId) {
                 primaryTabId = tabInfo.tabId;
               }
-              // if (tabInfo.url.includes("c__fec_InteractionCreateCase")) {
-              //   tabCloseId = tabInfo.tabId;
-              // }
+              if (tabInfo.url.includes("c__fec_InteractionCreateCase")) {
+                tabCloseId = tabInfo.tabId;
+              }
             });
-            const { tabId } = await getFocusedTabInfo();
-            tabCloseId = tabId;
             await openSubtab(primaryTabId, {
               recordId: newCaseId,
               focus: true,
             });
-            await this.handlePublishMessageChanel();
-            if (tabCloseId) {
-              await closeTab(tabCloseId);
-            }
-            // setTimeout(async () => {
-            //   await this.handlePublishMessageChanel();
-            // }, 2000);
+            setTimeout(async () => {
+              await this.handlePublishMessageChanel();
+              if (tabCloseId) {
+                closeTab(tabCloseId);
+              }
+            }, 2000);
           } else {
             this[NavigationMixin.Navigate]({
               type: "standard__recordPage",
