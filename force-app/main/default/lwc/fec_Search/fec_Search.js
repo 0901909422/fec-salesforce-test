@@ -32,6 +32,14 @@ import {
   refreshTab,
 } from "lightning/platformWorkspaceApi";
 import getCardInfoByAccountNumber from "@salesforce/apex/FEC_SearchController.getCardInfoByAccountNumber";
+import CASE_ID_FIELD from "@salesforce/schema/Case.Id";
+import SEARCH_NATIONAL_ID_FIELD from "@salesforce/schema/Case.FEC_Search_National_ID__c";
+import SEARCH_PHONE_FIELD from "@salesforce/schema/Case.FEC_Search_Phone_Number__c";
+import SEARCH_APP_ID_FIELD from "@salesforce/schema/Case.FEC_Search_Application_ID__c";
+import SEARCH_CONTRACT_FIELD from "@salesforce/schema/Case.FEC_Search_Contract_Number__c";
+import SEARCH_ACCOUNT_FIELD from "@salesforce/schema/Case.FEC_Search_Account_Number__c";
+import SEARCH_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Search_Email_Address__c";
+import SEARCH_CUSTOMER_NUM_FIELD from "@salesforce/schema/Case.FEC_Search_Customer_Number__c";
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -666,6 +674,30 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   async processSearch() {
     this.isLoaded = false;
     this.isNoCustomerFound = false;
+
+    if (this.recordId) {
+      try {
+        const fields = {};
+        fields[CASE_ID_FIELD.fieldApiName] = this.recordId;
+        fields[SEARCH_NATIONAL_ID_FIELD.fieldApiName] = this.nationalId;
+        fields[SEARCH_PHONE_FIELD.fieldApiName] = this.phoneNumber;
+        fields[SEARCH_APP_ID_FIELD.fieldApiName] = this.applicationId;
+        fields[SEARCH_CONTRACT_FIELD.fieldApiName] = this.contractNumber;
+        fields[SEARCH_ACCOUNT_FIELD.fieldApiName] = this.accountNumber;
+        fields[SEARCH_EMAIL_FIELD.fieldApiName] = this.emailAddress;
+        fields[SEARCH_CUSTOMER_NUM_FIELD.fieldApiName] = this.customerNumber;
+
+        const recordInput = { fields };
+        await updateRecord(recordInput);
+      } catch (error) {
+        console.error("Failed to sync search criteria to Case record:", error);
+        this.showToast(
+        FEC_Toast_Error,
+        FEC_Toast_Error_Generic + ' ' + (e?.body?.message || e?.message || ""),
+        "error"
+      );
+      }
+    }
 
     // Optional: clear old results before new search
     this.cardData = [];
