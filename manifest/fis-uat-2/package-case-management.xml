@@ -57,6 +57,10 @@
 		<members>UBankCustomberServiceEmail</members>
         <members>FEC_Ubank_Email_DevName</members>
         <members>FEC_Ubank_Skill_DevName</members>
+		<members>FEC_Create_Interaction_Failed_MSG</members>
+        <members>FEC_Create_Interaction_In_List_View_Label</members>
+        <members>FEC_Complete_field_msg</members>
+        <members>FEC_Create_Successfully_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
