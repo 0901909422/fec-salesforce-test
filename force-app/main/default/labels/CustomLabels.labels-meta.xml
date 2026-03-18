@@ -9702,4 +9702,11 @@
         <shortDescription>Subject field label</shortDescription>
         <value>Subject</value>
     </labels>
+    <labels>
+        <fullName>FEC_Folder_Duplicate_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when folder unique name exists</shortDescription>
+        <value>A folder with the API Name &quot;{0}&quot; already exists in Salesforce.</value>
+    </labels>
 </CustomLabels>

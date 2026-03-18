@@ -91,6 +91,7 @@
         <members>FEC_Template_Attachment</members>
         <members>FEC_Template_Subject</members>
         <members>FEC_Template_Email_Body</members>
+		<members>FEC_Folder_Duplicate_Error</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -120,6 +121,7 @@
         <members>fec_contentDiffViewer</members>
         <members>fec_TemplateConstants</members>
         <members>fec_TemplateUtils</members>
+		<members>fec_templateEditor</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
