@@ -1004,7 +1004,9 @@ public with sharing class FEC_CaseBusinessService {
         }
       }
 
+      String nextOwnerName;
       String currentOwnerName = updatedCase.Owner?.Name;
+      Id currentOwnerId = updatedCase.OwnerId;
 
       List<String> validActionlst = new List<String>{ REVERT };
 
@@ -1080,7 +1082,9 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (queuelst.isEmpty()) {
-        return;
+        nextOwnerName = currentOwnerName;
+      } else {
+        nextOwnerName = queuelst.get(0).Name;
       }
 
       FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
@@ -1091,7 +1095,7 @@ public with sharing class FEC_CaseBusinessService {
         FEC_Case__c = caseId,
         // FEC_Decision__c = '',
         FEC_Original_User_Queue__c = currentOwnerName,
-        FEC_Updated_User_Queue__c = queuelst.get(0).Name,
+        FEC_Updated_User_Queue__c = nextOwnerName,
         FEC_Updated_User_Queue_ID__c = queueId,
         FEC_Stage_Name__c = selectedChange.FEC_Previous_Stage__r?.FEC_Code__c,
         FEC_User__c = userlst.get(0).Email.split('@')[0],
