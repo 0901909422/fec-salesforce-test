@@ -8312,4 +8312,123 @@
         <shortDescription>Error when folder unique name exists</shortDescription>
         <value>A folder with the API Name &quot;{0}&quot; already exists in Salesforce.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Action_Preview</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Preview row action</shortDescription>
+        <value>Preview</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Folder_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Folder Label</shortDescription>
+        <value>Folder Label</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Parent_Folder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Parent Folder column</shortDescription>
+        <value>Parent Folder</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Button</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label for delete action button</shortDescription>
+        <value>Delete</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Email_Template_Confirmation</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirmation message for email template deletion</shortDescription>
+        <value>Are you sure you want to delete this email template?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Email_Template_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Title for the email template delete modal</shortDescription>
+        <value>Delete Email Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Folder_Confirmation</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirmation message for folder deletion</shortDescription>
+        <value>Are you sure you want to delete this folder?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Folder_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Title for the folder delete modal</shortDescription>
+        <value>Delete Folder</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Folder_Create_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>folder create success message</shortDescription>
+        <value>The folder named MERGE_FIELD_NAME was created.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Folder_Updated_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>folder updated success message</shortDescription>
+        <value>The folder named MERGE_FIELD_NAME was updated.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Success_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message after folder is deleted</shortDescription>
+        <value>Folder &quot;MERGE_FIELD_NAME&quot; was deleted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Success_Message_Email</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message after email template is deleted</shortDescription>
+        <value>Email template &quot;MERGE_FIELD_NAME&quot; was deleted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Edit_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Edit Template page heading</shortDescription>
+        <value>Edit Email Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Email_Body_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Body section info text</shortDescription>
+        <value>Compose the email body below. Use the merge field button to insert dynamic data at the cursor position.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Required_Fields_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Required fields validation message</shortDescription>
+        <value>These required fields must be completed: Template Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Save_And_New</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Save and New button label</shortDescription>
+        <value>Save &amp; New</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Saved_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template saved success message</shortDescription>
+        <value>Email template was saved successfully.</value>
+    </labels>
 </CustomLabels>
