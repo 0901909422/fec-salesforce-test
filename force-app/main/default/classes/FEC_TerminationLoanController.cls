@@ -250,7 +250,10 @@ public with sharing class FEC_TerminationLoanController {
         Map<String, Object> m = new Map<String, Object>();
         m.put('label', label);
         m.put('value', value);
-        m.put('valueFormatted', value != null ? FEC_CommonUltils.formatCurrency(value, 2) : null);
+        m.put(
+            'valueFormatted',
+            value != null ? FEC_CommonUltils.formatDecimalPlainScale(value, 2) : null
+        );
         m.put('isNegative', isNegative != null && isNegative);
         rows.add(m);
     }

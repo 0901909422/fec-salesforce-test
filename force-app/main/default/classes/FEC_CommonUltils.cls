@@ -513,6 +513,17 @@ public with sharing class FEC_CommonUltils {
     return amount.setScale(scale).format();
   }
 
+  /**
+   * Số hiển thị đủ phần thập phân (vd API = 0 → "0.00"), dùng dấu chấm — tránh locale .format() bỏ .00.
+   */
+  public static String formatDecimalPlainScale(Decimal amount, Integer scale) {
+    if (amount == null) {
+      return '';
+    }
+    Integer sc = (scale == null || scale < 0) ? 2 : scale;
+    return amount.setScale(sc, System.RoundingMode.HALF_UP).toPlainString();
+  }
+
   public static String formatDate(Date d) {
     if (d == null)
       return '';
