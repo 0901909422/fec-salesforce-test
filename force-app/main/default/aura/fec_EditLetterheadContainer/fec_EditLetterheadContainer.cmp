@@ -1,0 +1,27 @@
+<aura:component implements="lightning:actionOverride,force:hasRecordId,force:hasSObjectName">
+    <lightning:workspaceAPI aura:id="workspace" />
+    <lightning:overlayLibrary aura:id="overlayLib"/>
+    <lightning:navigation aura:id="navService" />
+    <aura:attribute name="letterheadFields" type="Object" />
+    <aura:attribute name="recordError" type="String" />
+    <aura:attribute name="headerEditLabel" type="String"/>
+    
+    <force:recordData aura:id="recordLoader"
+        recordId="{!v.recordId}"
+        fields="Name,FEC_Description__c,FEC_Header__c,FEC_Footer__c"
+        targetFields="{!v.letterheadFields}"
+        targetError="{!v.recordError}"
+        recordUpdated="{!c.handleRecordUpdated}" />
+
+      <aura:if isTrue="{!not(empty(v.letterheadFields))}">
+            <c:fec_CustomLetterheadEditor 
+                        recordId="{!v.recordId}"
+                        name="{!v.letterheadFields.Name}"
+                        description="{!v.letterheadFields.FEC_Description__c}"
+                        header="{!v.letterheadFields.FEC_Header__c}"
+                        footer="{!v.letterheadFields.FEC_Footer__c}"
+                        headerEditLabel="{!v.headerEditLabel}"
+                        onclose="{!c.handleClose}" />
+
+      </aura:if>
+</aura:component>

@@ -193,6 +193,7 @@
     <tabs>FEC_Hold_Case__c</tabs>
 
     <tabs>FEC_KYC__c</tabs>
+    <tabs>FEC_Enhanced_Letterhead__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
@@ -210,6 +211,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Customer_Search</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Enhanced_Letterhead__c</tab>
         </mappings>
         <mappings>
             <tab>FEC_Hold_Case__c</tab>
