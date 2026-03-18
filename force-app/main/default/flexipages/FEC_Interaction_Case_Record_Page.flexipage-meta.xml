@@ -688,7 +688,7 @@
                     <value>Main Info</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab20</identifier>
+                <identifier>flexipage_tab22</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -702,7 +702,7 @@
                     <value>Secondary Info</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab22</identifier>
+                <identifier>flexipage_tab24</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -716,7 +716,7 @@
                     <value>Termination</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab21</identifier>
+                <identifier>flexipage_tab23</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -730,7 +730,7 @@
                     <value>Repayment Schedule &amp; Payment History</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab23</identifier>
+                <identifier>flexipage_tab25</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-690c96c5-e309-412b-9b6c-d612d8c9fb79</name>
@@ -868,7 +868,7 @@
                     <value>Account - Loan</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab19</identifier>
+                <identifier>flexipage_tab26</identifier>
                 <visibilityRule>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
