@@ -65,6 +65,10 @@
         <name>ApexClass</name>
     </types>
     <types>
+        <members>FEC_Interaction_Case_Record_Page</members>
+        <name>FlexiPage</name>
+    </types>
+    <types>
         <members>FEC_Contract_Label</members>
         <members>FEC_Loan_Label</members>
         <members>FEC_Payment_Label</members>
