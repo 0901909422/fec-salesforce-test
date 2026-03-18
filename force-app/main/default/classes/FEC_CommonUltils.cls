@@ -781,4 +781,12 @@ public with sharing class FEC_CommonUltils {
       System.debug('LOG INSERT ERROR: ' + e.getMessage());
     }
   }
+  public static String getEmailPrefix(String email) {
+    if (String.isBlank(email)) {
+        return '';
+    }
+    return email.contains('@') 
+        ? email.substringBefore('@') 
+        : email;
+  }
 }
