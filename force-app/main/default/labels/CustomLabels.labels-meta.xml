@@ -8448,6 +8448,34 @@
         <value>Parent ID</value>
     </labels>
     <labels>
+        <fullName>FEC_Complete_field_msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Complete field msg</shortDescription>
+        <value>Complete this field.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Create_Interaction_Failed_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Interaction Failed MSG</shortDescription>
+        <value>Failed to create Interaction</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Create_Interaction_In_List_View_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Interaction In List View Label</shortDescription>
+        <value>Create Interaction</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Create_Successfully_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Successfully MSG</shortDescription>
+        <value>created successfully</value>
+    </labels>
+    <labels>
         <fullName>FEC_Lookup_Error</fullName>
         <language>en_US</language>
         <protected>false</protected>
