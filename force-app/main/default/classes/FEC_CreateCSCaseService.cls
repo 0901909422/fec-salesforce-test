@@ -340,7 +340,7 @@ public with sharing class FEC_CreateCSCaseService {
         }
         
         List<FEC_Category__c> categories = [
-        SELECT Id, Name, FEC_Active__c
+        SELECT Id, Name,FEC_Name_VN__c, FEC_Active__c
         FROM FEC_Category__c
         WHERE Name = :category
         LIMIT 1
