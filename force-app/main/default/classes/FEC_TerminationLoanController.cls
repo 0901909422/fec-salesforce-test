@@ -181,7 +181,11 @@ public with sharing class FEC_TerminationLoanController {
         }
         if (passDue != null) {
             rec.FEC_Total_Overdue_Amount__c = passDue.TotalOverdueAmount;
-            rec.FEC_Overdue_Penalty__c = passDue.OverduePenalty;
+            String overduePenalty;
+            if (passDue.OverduePenalty != null) {
+                overduePenalty = String.valueOf(passDue.OverduePenalty);
+            }
+            rec.FEC_Overdue_Penalty__c = overduePenalty;
         }
         if (product != null) {
             rec.FEC_Principal_Overdue__c = product.PrincipalDue;
