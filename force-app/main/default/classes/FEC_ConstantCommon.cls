@@ -112,8 +112,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUCCESS_MESSAGE = 'Success';
     public static final String SUCCESS_STATUS_CODE = '0';
     public static final String SUCCESS_CODE_1 = '1';
+    public static final String SUCCESS_CODE_4 = '4';
     public static final String SUCCESS_CODE_Y = 'Y';
     public static final String SUCCESS_CODE_E = 'E';
+    public static final String SUCCESS_CODE_200 = '200';
+    public static final String SUCCESS_CODE_203 = '203';
     public static final String KEY_ID = 'id';
     public static final String KEY_NAME = 'name';
     public static final String KEY_UPLOADED_BY = 'uploadedBy';
@@ -121,9 +124,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String KEY_STATUS = 'status';
     public static final String YES_VALUE = 'yes';
     
-    public static final String PRODUCT_TYPE_INSURANCE = 'Insurance';
-    public static final String PRODUCT_TYPE_LOAN = 'Loan';
-    public static final String PRODUCT_TYPE_CARD = 'Card';
+    public static final String PRODUCT_TYPE_INSURANCE = 'INSURANCE';
+    public static final String PRODUCT_TYPE_LOAN = 'LOAN';
+    public static final String PRODUCT_TYPE_CARD = 'CARD';
+    public static final String PRODUCT_TYPE_UBANK = 'Ubank';
+    public static final String PRODUCT_NON_EXISTING_CUSTOMER = 'Non-Existing Customer';
     
     public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
     public static final String CASE_STATUS_RESOLVED_REJECTED = 'Resolved-Rejected';
@@ -143,6 +148,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_WEB_ORIGIN = 'Web';
     
     public static final String GROUP_TYPE_QUEUE = 'Queue';
+    public static final String SOBJECT_USER = 'User';
+    public static final String SOBJECT_GROUP = 'Group';
+    public static final String DELIMITER_SEMICOLON = ';';
     
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
@@ -168,9 +176,20 @@ public with sharing class FEC_ConstantCommon {
     public static final String CUSTOMER_CATEGORY_NEUTRAL = 'Neutral';
     
     public static final String SECTION_INTERACTION_DETAILS = 'Interaction Details';
+    public static final String SECTION_SEARCH_INFORMARION = 'Search Information';
+    public static final String SECTION_NATIONAL_PASSPORT = 'National ID/ Passport ID';
     public static final String SECTION_INTERACTION_PHONE = 'Interaction Phone';
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
     
     public static final String EMAIL = 'Email';
+    public static final String PHONE = 'Phone';
+    public static final String PRIMARY_PHONE = 'Primary Phone';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
+    
+    public static final String API_BLANK_BODY = '{}';
+
+    //Get Next Work
+    public static final String CASE_TYPE_DESCRIPTION = 'Get Next Work';
+    public static final String CASE_ROUTING_ACTION = 'Route to';
+    public static final String CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER = 'Resolved-CannotContactCustomer';
 }
