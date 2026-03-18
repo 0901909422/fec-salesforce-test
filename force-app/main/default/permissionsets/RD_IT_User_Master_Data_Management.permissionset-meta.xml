@@ -1756,6 +1756,10 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
+        <tab>FEC_Enhanced_Letterhead__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Hold_Case__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
