@@ -9330,4 +9330,187 @@
         <shortDescription>Refresh button (Real-Time Payment)</shortDescription>
         <value>Refresh</value>
     </labels>
+    <labels>
+        <fullName>FEC_Complete_This_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Complete this field validation message</shortDescription>
+        <value>Complete this field.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Enhanced_Letterhead_Description</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Enhanced_Letterhead_Description</shortDescription>
+        <value>Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Enhanced_Letterhead_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Enhanced_Letterhead_Name</shortDescription>
+        <value>Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Enhanced_Letterhead_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Enhanced_Letterhead_Success</shortDescription>
+        <value>Enhanced Letterhead NAME_MERGE_FIELD was created.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Footer</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Footer</shortDescription>
+        <value>Footer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Header</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Header</shortDescription>
+        <value>Header</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Information section heading</shortDescription>
+        <value>Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Insert_Merge_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Insert_Merge_Field</shortDescription>
+        <value>Insert Merge Field</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Letterhead_Content</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Letterhead_Content</shortDescription>
+        <value>Letterhead Content</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Letterhead_Content_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Letterhead_Content_Info</shortDescription>
+        <value>Add content to the header, footer, or both. When an enhanced letterhead is associated with an email template, a read-only copy of the letterhead is included in the email along with the template.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Letterhead_Success_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Letterhead_Success_Message</shortDescription>
+        <value>Enhanced Letterhead NAME_MERGE_FIELD was saved.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Merge_Field_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Merge_Field_Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Merge_Field_Insert</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Merge_Field_Insert</shortDescription>
+        <value>Insert</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Merge_Field_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Merge_Field_Placeholder</shortDescription>
+        <value>Search merge fields...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Enhanced_Letterhead</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_New_Enhanced_Letterhead</shortDescription>
+        <value>New Enhanced Letterhead</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Object_Account</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Object_Account</shortDescription>
+        <value>Account</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Object_Additional_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Object_Additional_Info</shortDescription>
+        <value>Additional Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Object_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Object_Case</shortDescription>
+        <value>Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Object_Customer_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Object_Customer_History</shortDescription>
+        <value>Customer History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Object_User</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Object_User</shortDescription>
+        <value>User</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Require_Header_Or_Footer</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Require_Header_Or_Footer</shortDescription>
+        <value>The header and footer fields are empty. Add something to at least one field, then try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Required_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Required information notice</shortDescription>
+        <value>= Required Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Required_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Required_Name</shortDescription>
+        <value>These required fields must be completed: Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Review_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Review error banner heading</shortDescription>
+        <value>Review the errors on this page.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Select_Merge_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Select_Merge_Field</shortDescription>
+        <value>Select Merge Field</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sender</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Sender</shortDescription>
+        <value>Sender</value>
+    </labels>
 </CustomLabels>
