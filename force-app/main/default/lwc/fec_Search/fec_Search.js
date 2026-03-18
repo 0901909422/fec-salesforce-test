@@ -833,7 +833,7 @@ hasAnySearchCriteria(params) {
                     const accNum = app.AccountNumber;
                     if (cardMap.has(accNum)) {
                         let existingRec = cardMap.get(accNum);
-                        if (existingRec.NationalID1 !== currentNationalId) {
+                        if (existingRec.NationalID1) {
                             existingRec.NationalID2 = currentNationalId;
                         }
                     } else {
@@ -856,7 +856,7 @@ hasAnySearchCriteria(params) {
                     const contractNum = app.ContractNumber;
                     if (loanContractMap.has(contractNum)) {
                         let existingRec = loanContractMap.get(contractNum);
-                        if (existingRec.NationalID1 !== currentNationalId) {
+                        if (existingRec.NationalID1) {
                             existingRec.NationalID2 = currentNationalId;
                         }
                     } else {
