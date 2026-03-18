@@ -188,4 +188,36 @@ public with sharing class FEC_SearchController {
             throw new AuraHandledException(e.getMessage());
         }
     }
+
+    /**
+     * Executes the Card Basic Info integration call using a specific Account Number.
+     * @param accountNumber The account number to search for.
+     * @return FEC_GetCardBasicInfo.ResponseWrapper The API response containing card details.
+     */
+    @AuraEnabled
+    public static FEC_GetCardBasicInfo.ResponseWrapper getCardInfoByAccountNumber(String accountNumber) {
+        if (String.isBlank(accountNumber)) {
+            throw new AuraHandledException('Account Number is required.');
+        }
+
+        try {
+            // Generate integration metadata as per your requirement
+            String requestId = String.valueOf(UUID.randomUUID());
+            String requestor = FEC_ConstantCommon.REQUESTOR_CRM;
+            String timestamp = Datetime.now().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss');
+
+            // Call the integration service
+            FEC_GetCardBasicInfo.ResponseWrapper res = FEC_GetCardBasicInfo.callGetCardBasicInfo(
+                requestId,
+                requestor,
+                timestamp,
+                accountNumber
+            );
+
+            return res;
+        } catch (Exception e) {
+            // Log error and pass to the UI
+            throw new AuraHandledException('Failed to retrieve card info for Account Number [' + accountNumber + ']. ' + e.getMessage());
+        }
+    }
 }

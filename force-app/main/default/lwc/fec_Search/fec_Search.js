@@ -31,6 +31,7 @@ import {
   getFocusedTabInfo,
   refreshTab,
 } from "lightning/platformWorkspaceApi";
+import getCardInfoByAccountNumber from "@salesforce/apex/FEC_SearchController.getCardInfoByAccountNumber";
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -724,6 +725,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         this.isNoCustomerFound = false;
         if (customers.length > 0) {
           this.processCustomerResults(customers);
+          this.fetchPlasticIds();
         }
       } else {
         this.isNoCustomerFound = true;
@@ -739,6 +741,25 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.isLoaded = true;
     }
   }
+
+  async fetchPlasticIds() {
+    if (!this.cardData || this.cardData.length === 0) return;
+    let tempCardData = this.cardData;
+    for (let i = 0; i < tempCardData.length; i++) {
+        const card = tempCardData[i];
+        
+        try {
+            const response = await getCardInfoByAccountNumber({ 
+                accountNumber: card.AccountNumber 
+            });
+            card.PlasticID = response?.CardBasicInfo?.MainCard?.PlasticIndicator || "N/A";
+        } catch (error) {
+            console.error('Lỗi khi lấy Plastic cho thẻ: ' + card.AccountNumber, error);
+            card.PlasticID = "Error";
+        }
+        this.cardData = [...tempCardData];
+    }
+}
 
 /**
  * Build Apex params from UI inputs (NO hard-coding).
@@ -796,76 +817,83 @@ hasAnySearchCriteria(params) {
 }
 
   processCustomerResults(customers) {
-    //const top5 = customers.slice(0, 5);
-    this.cardData = [];
-    this.loanContractData = [];
-    this.insuranceData = [];
+    let cardMap = new Map();
+    let loanContractMap = new Map();
+    let insuranceList = [];
 
     customers.forEach(cust => {
-      if (cust.Applications && cust.Applications.length > 0) {
-        cust.Applications.forEach(app => {
-          // Định nghĩa logic phân loại dựa trên trường 'Product' trong JSON
-          const productCode = app.Product ? app.Product.toUpperCase() : '';
-          const phone = (cust?.Phones && cust.Phones.length > 0) ? cust.Phones[0].Phone : null;
-          // --- PHÂN LOẠI VÀO CARD ---
-          // Trong JSON, Card thường có Product để trống và có AccountNumber
-          if (productCode === '' && app.AccountNumber) {
-              this.cardData = [...this.cardData, {
-              id: app.ApplicationID,
-              FullName: cust.FullName,
-              NationalID1: cust.NationalID,
-              DateOfBirth: cust.DateOfBirth,
-              AccountNumber: app.AccountNumber,
-              AccountStatus: app.Status,
-              PlasticID: "N/A",
+        if (cust.Applications && cust.Applications.length > 0) {
+            cust.Applications.forEach(app => {
+                const productCode = app.Product ? app.Product.toUpperCase() : '';
+                const phone = (cust.Phones && cust.Phones.length > 0) ? cust.Phones[0].Phone : null;
+                const currentNationalId = cust.NationalID || "";
 
-              // ✅ add flat field
-              CIFNumber: cust.CIFNumber,
-              Phone: phone,
-            }];
-            
-          }
-
-          // --- PHÂN LOẠI VÀO LOAN (Vay) ---
-          // Các mã sản phẩm như CDL, PL, TW, FC_...
-          else if (['CDL', 'PL', 'TW', 'FC_CDL', 'FC_TW', 'FC_CDL_G'].includes(productCode)) {
-            this.loanContractData = [...this.loanContractData, {
-              id: app.ApplicationID,
-              FullName: cust.FullName,
-              NationalID1: cust.NationalID,
-              DateOfBirth: cust.DateOfBirth,
-              ContractNumber: app.ContractNumber,
-              ProductCode: app.Product,
-              ContractStatus: app.Status,
-              Phone: phone,
-              CIFNumber: cust.CIFNumber,
-              _customer: cust,
-              _application: app 
-            }];
-          }
-
-          // --- PHÂN LOẠI VÀO INSURANCE (Bảo hiểm) ---
-          // Giả sử mã bảo hiểm là INS hoặc dựa trên SchemeDesc (do JSON mẫu chưa có mã rõ ràng cho INS)
-          else if (productCode === 'INS' || (app.SchemeDesc && app.SchemeDesc.includes('INSURED'))) {
-            this.insuranceData = [...this.insuranceData, {
-              id: app.ApplicationID,
-              UserId: cust.CIFNumber,
-              FullName: cust.FullName,
-              BuyerNID: cust.NationalID,
-              ProductName: app.SchemeDesc || 'Insurance Product',
-              Status: app.Status,
-              EffectiveDate: 'N/A',
-              Phone: phone,
-              CIFNumber: cust.CIFNumber,
-              _customer: cust,
-              _application: app // Cần map thêm field nếu có
-            }];
-          }
-
-        });
-      }
+                // NHÓM THEO CARD (AccountNumber)
+                if (productCode === '' && app.AccountNumber) {
+                    const accNum = app.AccountNumber;
+                    if (cardMap.has(accNum)) {
+                        let existingRec = cardMap.get(accNum);
+                        if (existingRec.NationalID1 !== currentNationalId) {
+                            existingRec.NationalID2 = currentNationalId;
+                        }
+                    } else {
+                        cardMap.set(accNum, {
+                            id: app.ApplicationID,
+                            FullName: cust.FullName,
+                            NationalID1: currentNationalId,
+                            NationalID2: "",
+                            DateOfBirth: cust.DateOfBirth,
+                            AccountNumber: accNum,
+                            AccountStatus: app.Status,
+                            PlasticID: "Loading...", // Hiển thị trạng thái đang lấy data
+                            CIFNumber: cust.CIFNumber,
+                            Phone: phone
+                        });
+                    }
+                }
+                // NHÓM THEO LOAN (ContractNumber)
+                else if (['CDL', 'PL', 'TW', 'FC_CDL', 'FC_TW', 'FC_CDL_G'].includes(productCode)) {
+                    const contractNum = app.ContractNumber;
+                    if (loanContractMap.has(contractNum)) {
+                        let existingRec = loanContractMap.get(contractNum);
+                        if (existingRec.NationalID1 !== currentNationalId) {
+                            existingRec.NationalID2 = currentNationalId;
+                        }
+                    } else {
+                        loanContractMap.set(contractNum, {
+                            id: app.ApplicationID,
+                            FullName: cust.FullName,
+                            NationalID1: currentNationalId,
+                            NationalID2: "",
+                            DateOfBirth: cust.DateOfBirth,
+                            ContractNumber: contractNum,
+                            ProductCode: app.Product,
+                            ContractStatus: app.Status,
+                            Phone: phone,
+                            CIFNumber: cust.CIFNumber
+                        });
+                    }
+                }
+                // INSURANCE
+                else if (productCode === 'INS' || (app.SchemeDesc && app.SchemeDesc.includes('INSURED'))) {
+                    insuranceList.push({
+                        id: app.ApplicationID,
+                        FullName: cust.FullName,
+                        BuyerNID: cust.NationalID,
+                        ProductName: app.SchemeDesc || 'Insurance',
+                        Status: app.Status,
+                        Phone: phone,
+                        CIFNumber: cust.CIFNumber
+                    });
+                }
+            });
+        }
     });
-  }
+
+    this.cardData = Array.from(cardMap.values());
+    this.loanContractData = Array.from(loanContractMap.values());
+    this.insuranceData = insuranceList;
+}
 
 
   handleTabChange(event) {
