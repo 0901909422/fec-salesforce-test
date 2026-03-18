@@ -60,6 +60,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';
     public static final String CHANNEL_OUTBOUND_SUBCHANNEL_NAME = 'Outbound Call';
     public static final String CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME = 'Other';
+    public static final String CHANNEL_CHAT = 'Chat';
     
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
@@ -178,6 +179,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String CUSTOMER_CATEGORY_NEUTRAL = 'Neutral';
     
     public static final String SECTION_INTERACTION_DETAILS = 'Interaction Details';
+    public static final String SECTION_SEARCH_INFORMARION = 'Search Information';
+    public static final String SECTION_NATIONAL_PASSPORT = 'National ID/ Passport ID';
     public static final String SECTION_INTERACTION_PHONE = 'Interaction Phone';
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
     
@@ -186,17 +189,41 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_ORIGIN_EMAIL2CASE = 'Email2Case';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
     
+    public static final String KEY_VALID_CHANNELS_WED = 'WED';
+    public static final String KEY_VALID_CHANNELS_MOBILE = 'MOBILE';
+    public static final String KEY_VALID_CHANNELS_API = 'API';
+    public static final String KEY_VALID_CHANNELS_PORTAL = 'PORTAL';
+    public static final String KEY_PRODUCT_TYPE_PRODUCT = 'Product';
+    public static final String KEY_PROSPECT = 'Prospect';
+    public static final String KEY_CASETYPE = 'CaseType';
+    public static final String KEY_CATEGORY = 'Category';
+    public static final String KEY_SUBCATEGORY = 'SubCategory';
+    public static final String KEY_SUBCODE = 'SubCode';
+    public static final String KEY_ERROR = 'Error';
+
     public static final String API_BLANK_BODY = '{}';
     
     public static final String UPLOAD_DOCUMENT = 'UploadDocument';
     public static final String CASE_STATUS_ERROR = 'ERROR';
     
-    
     public static final String SYSTEM_SOURCE_VTIGER   = 'VTiger';
     public static final String SYSTEM_SOURCE_ISALE    = 'iSale';
     public static final String SYSTEM_SOURCE_ICOLLECT = 'iCollect';
-    
     public static final String SYSTEM_SOURCE_WEBSITE  = 'Website';
     public static final String SYSTEM_SOURCE_FEOL     = 'FEOL';
     public static final String SYSTEM_SOURCE_ZALO     = 'Zalo';
+
+    public static final String LANGUAGE_EN = 'EN';
+    public static final String LANGUAGE_VN = 'VN';
+
+    // Call api FEC_GetCSMasterDataService
+    public static final String KEY_PICKLIST = 'Picklist';
+    public static final String KEY_CHECKBOX = 'Checkbox';
+    public static final String KEY_DATE = 'Date';
+    public static final String KEY_DATETIME = 'DateTime';
+    public static final String KEY_NUMBER = 'Number';
+    public static final String KEY_TEXT = 'Text';
+    public static final String OBJ_ADDITIONAL_INFO = 'FEC_Additional_Info__c';
+
+    public static final String AUTO_METHOD = 'Auto';
 }

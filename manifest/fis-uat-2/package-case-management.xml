@@ -68,8 +68,12 @@
 		<members>fec_Asset</members>
 		<members>fec_MRC</members>
 		<members>fec_GenesysSoftphone</members>
+		<members>fec_CommonConst</members>
+		<members>fec_CreateInteractionCaseInListView</members>
+		<members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_Search</members>
 		<members>fecInteractionEmailInfo</members>
+		<members>fec_InteractionMyCaseInfo</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -83,6 +87,8 @@
 		<members>FEC_InteractionRoutingService</members>
 		<members>FEC_SearchController</members>
 		<members>FEC_ConstantCommon</members>
+		<members>FEC_CreateCaseHandler</members>
+		<members>FEC_CreateInteractionManualHandler</members>
         <name>ApexClass</name>
     </types>
 	<types>
