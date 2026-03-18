@@ -1,8 +1,7 @@
 public with sharing class FEC_SearchController {
     /**
      * Returns minimal Case context for fec_Search initialization.
-     * - Runs in USER MODE and WITH SECURITY ENFORCED to respect security.
-     * - Selects only fields needed by the component.
+     * Selects only fields needed by the component.
      */
     @AuraEnabled(cacheable=true)
     public static Case getCase(Id caseId) {
