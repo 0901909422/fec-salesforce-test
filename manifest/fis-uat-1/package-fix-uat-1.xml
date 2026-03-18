@@ -159,7 +159,7 @@
         <name>RecordType</name>
     </types>
     <types>
-
+        <members>Case</members>
         <members>FEC_Sensitive_Data__c</members>
 		<members>FEC_B2_Contract__c</members>
 		<members>FEC_Cash_24_Contract__c</members>
