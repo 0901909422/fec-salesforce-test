@@ -92,6 +92,23 @@
         <members>FEC_Template_Subject</members>
         <members>FEC_Template_Email_Body</members>
 		<members>FEC_Folder_Duplicate_Error</members>
+		<members>FEC_Template_Email_Body_Info</members>
+        <members>FEC_Template_Save_And_New</members>
+        <members>FEC_Template_Required_Fields_Msg</members>
+        <members>FEC_Template_Saved_Success</members>
+        <members>FEC_Action_Preview</members>
+        <members>FEC_Template_Edit_Title</members>
+		<members>FEC_Success_Message_Email</members>
+        <members>FEC_Delete_Email_Template_Title</members>
+        <members>FEC_Delete_Folder_Title</members>
+        <members>FEC_Delete_Folder_Confirmation</members>
+        <members>FEC_Success_Message</members>
+        <members>FEC_Delete_Email_Template_Confirmation</members>
+        <members>FEC_Delete_Button</members>
+		<members>FEC_Folder_Create_Success</members>
+        <members>FEC_Folder_Updated_Success</members>
+        <members>FEC_Col_Parent_Folder</members>
+        <members>FEC_Col_Folder_Label</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -122,6 +139,9 @@
         <members>fec_TemplateConstants</members>
         <members>fec_TemplateUtils</members>
 		<members>fec_templateEditor</members>
+		<members>fec_searchableCombobox</members>
+		<members>fec_folderEditor</members>
+        <members>fec_folderDeleteAction</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
