@@ -121,6 +121,37 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
         }
     }
     
+    
+    @AuraEnabled
+    public static void createHistoryNonExistingCustomer( Id caseId, String selectedType) {
+        
+        
+        FEC_Customer_History__c rec = new FEC_Customer_History__c();
+        
+        if(selectedType == FEC_ConstantCommon.PRODUCT_TYPE_UBANK)
+        {
+            rec.Name = FEC_ConstantCommon.PRODUCT_TYPE_UBANK;
+            rec.FEC_Account_Number__c = FEC_ConstantCommon.PRODUCT_TYPE_UBANK;
+        }
+        else if(selectedType == FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER)
+        {
+            rec.Name = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
+            rec.FEC_Account_Number__c = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
+        }
+        
+        rec.FEC_Case__c = caseId;
+        rec.FEC_Product_Code__c = selectedType;
+        
+        
+        try {
+            insert rec;
+            // Update interaction with new customer history
+            updateInteractionWithNewCustomerHistory(caseId, rec.Id);
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+    
     @AuraEnabled
     public static void updateInteractionWithNewCustomerHistory(Id caseId, Id customerHistoryId) {
         Case c = new Case(
