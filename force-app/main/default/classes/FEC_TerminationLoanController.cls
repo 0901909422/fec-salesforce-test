@@ -101,12 +101,7 @@ public with sharing class FEC_TerminationLoanController {
         FEC_GetLoanSecInfo.TerminationSimulation termSim = secRes?.LoanSecInfo?.TerminationSimulation;
         FEC_GetLoanSecInfo.LPI lpi = secRes?.LoanSecInfo?.LPI;
 
-        Decimal terminationAmount = termSim?.NetReceivable;
-        if (terminationAmount == null && secLoan != null && secLoan.PrincipalOutstanding != null) {
-            terminationAmount = secLoan.PrincipalOutstanding;
-        }
-
-        addField(rows, System.Label.FEC_Termination_Field_Termination_Amount_Label, terminationAmount, true);
+        addField(rows, System.Label.FEC_Termination_Field_Termination_Amount_Label, termSim?.NetReceivable, true);
         addField(rows, System.Label.FEC_Termination_Field_Excess_Amount_Label, termSim?.ExcessAmounts, false);
         addField(rows, System.Label.FEC_Termination_Field_Pre_Payment_Penalty_Label, termSim?.PrePaymentPenalty, false);
         addField(rows, System.Label.FEC_Termination_Field_Total_Installment_Paid_Label, secLoan?.TotalInstallmentPaid, false);
@@ -143,6 +138,10 @@ public with sharing class FEC_TerminationLoanController {
         rec.FEC_Interest_On_Termination__c = termSim?.InterestOnTermination;
         rec.FEC_LPI_Paid__c = lpi?.AppliedLPI;
         rec.FEC_Total_Interest_Paid__c = secLoan?.TotalInterestPaid;
+        rec.FEC_Total_Overdue_Amount__c = termSim?.TotalDues;
+        rec.FEC_Installments_Overdue__c = termSim?.InstallmentsOverdue;
+        rec.FEC_Penalty_Fee_Overdue__c = termSim?.PenaltyFeeOverdue;
+        rec.FEC_Repayment_Fee_Overdue__c = termSim?.RepaymentFeeOverdue;
 
         if (existing.isEmpty()) {
             insert rec;
@@ -174,13 +173,11 @@ public with sharing class FEC_TerminationLoanController {
             rec.FEC_Collected_Amount__c = rfo.CollectedAmount;
             rec.FEC_Waived_Amount__c = rfo.WaivedAmount;
             rec.FEC_Outstanding_Amount__c = rfo.OutstandingAmount;
-            rec.FEC_Repayment_Fee_Overdue__c = rfo.OutstandingAmount;
         }
         if (iooi != null) {
             rec.FEC_Interest_on_Overdue_Interest__c = iooi.OutstandingAmount;
         }
         if (passDue != null) {
-            rec.FEC_Total_Overdue_Amount__c = passDue.TotalOverdueAmount;
             String overduePenalty;
             if (passDue.OverduePenalty != null) {
                 overduePenalty = String.valueOf(passDue.OverduePenalty);
@@ -207,14 +204,14 @@ public with sharing class FEC_TerminationLoanController {
         List<Map<String, Object>> rows = new List<Map<String, Object>>();
         FEC_GetLoanBasicInfo.PassDue passDue = basicRes?.LoanBasicInfo?.PassDue;
         FEC_GetLoanBasicInfo.Product product = basicRes?.LoanBasicInfo?.Product;
-        FEC_GetLoanBasicInfo.RepaymentFeeOverdue rfo = basicRes?.LoanBasicInfo?.RepaymentFeeOverdue;
+        FEC_GetLoanSecInfo.TerminationSimulation termSim = secRes?.LoanSecInfo?.TerminationSimulation;
 
-        addField(rows, System.Label.FEC_Termination_Field_Total_Overdue_Amount_Label, passDue?.TotalOverdueAmount, false);
+        addField(rows, System.Label.FEC_Termination_Field_Total_Overdue_Amount_Label, termSim?.TotalDues, false);
         addField(rows, System.Label.FEC_Termination_Field_Principal_Overdue_Label, product?.PrincipalDue, false);
         addField(rows, System.Label.FEC_Termination_Field_Interest_Overdue_Label, product?.InterestDue, false);
-        addField(rows, System.Label.FEC_Termination_Field_Installments_Overdue_Label, null, false);
-        addField(rows, System.Label.FEC_Termination_Field_Repayment_Fee_Overdue_Label, rfo?.OutstandingAmount, false);
-        addField(rows, System.Label.FEC_Termination_Field_Penalty_Fee_Overdue_Label, null, false);
+        addField(rows, System.Label.FEC_Termination_Field_Installments_Overdue_Label, termSim?.InstallmentsOverdue, false);
+        addField(rows, System.Label.FEC_Termination_Field_Repayment_Fee_Overdue_Label, termSim?.RepaymentFeeOverdue, false);
+        addField(rows, System.Label.FEC_Termination_Field_Penalty_Fee_Overdue_Label, termSim?.PenaltyFeeOverdue, false);
         addField(rows, System.Label.FEC_Termination_Field_Overdue_Penalty_Label, passDue?.OverduePenalty, false);
 
         result.put('overdue', rows);

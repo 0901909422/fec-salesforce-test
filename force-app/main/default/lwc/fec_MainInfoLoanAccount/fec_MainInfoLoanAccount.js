@@ -139,9 +139,10 @@ export default class Fec_MainInfoLoanAccount extends LightningElement {
         const emptyCell = { label: '', value: '' };
         return [
             this.buildField(FEC_MainInfo_First_Payment_Date_Label, this.accountData?.firstPaymentDate, 'FEC_First_Payment_Date__c'),
-            this.buildField(FEC_MainInfo_Last_Payment_Date_Label, this.accountData?.lastPaymentDate, 'FEC_Last_Payment_Date__c'),
-            emptyCell,
             this.buildField(FEC_MainInfo_Next_Due_Date_Label, this.accountData?.nextDueDate, 'FEC_Next_Due_Date__c'),
+            
+            emptyCell,
+            this.buildField(FEC_MainInfo_Last_Payment_Date_Label, this.accountData?.lastPaymentDate, 'FEC_Last_Payment_Date__c'),
             this.buildField(FEC_MainInfo_Days_Past_Due_Label, this.accountData?.daysPastDue, 'FEC_Days_Past_Due__c'),
             emptyCell,
         ];
@@ -153,9 +154,9 @@ export default class Fec_MainInfoLoanAccount extends LightningElement {
         const emptyCell = { label: '', value: '' };
         return [
             this.buildField(FEC_MainInfo_Company_Name_Label, this.accountData?.companyName, 'FEC_Company_Name__c'),
-            this.buildMoneyField(FEC_MainInfo_Sold_Amount_Label, this.accountData?.soldAmount, 'FEC_Sold_Amount__c'),
-            emptyCell,
             this.buildField(FEC_MainInfo_Sold_Date_Label, this.accountData?.soldDate, 'FEC_Sold_Date__c'),
+            emptyCell,
+            this.buildMoneyField(FEC_MainInfo_Sold_Amount_Label, this.accountData?.soldAmount, 'FEC_Sold_Amount__c'),
             this.buildField(FEC_MainInfo_Sold_Note_Label, this.accountData?.soldNote, 'FEC_Sold_Note__c'),
             emptyCell,
         ];
