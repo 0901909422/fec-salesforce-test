@@ -66,7 +66,7 @@ export default class Fec_InteractionHighlight extends LightningElement {
   }
 
   loadStyles() {
-    loadStyle(this, COMMON_STYLES).catch(() => {});
+    loadStyle(this, COMMON_STYLES).catch(() => { });
   }
 
   loadData() {
@@ -145,6 +145,10 @@ export default class Fec_InteractionHighlight extends LightningElement {
 
     if (this.isPhoneMasked) {
       if (phone.length < 7) return phone;
+      // SĐT bàn/doanh nghiệp VN (đầu 02, đúng 10 số): 3 đầu + *** + 3 cuối (vd: 028***111)
+      if (phone.startsWith("02") && phone.length === 10) {
+        return phone.substring(0, 3) + "***" + phone.substring(phone.length - 3);
+      }
       const first4 = phone.substring(0, 4);
       const last3 = phone.substring(phone.length - 3);
       const middle = "*".repeat(Math.max(0, phone.length - 7));
