@@ -7,7 +7,7 @@ public with sharing class FEC_ChatHubInitController {
     // Custom Metadata Type Developer Name
     private static final String CHATHUB_METADATA_DEV_NAME = 'ChatHub_Settings';
     // Todo: remove this comment when merge to uat
-    // private static final String CHATHUB_ENCRYPT_KEY = 'FEC_CHAT_HUB_2024';
+    private static final String CHATHUB_ENCRYPT_KEY = 'FEC_CHAT_HUB_2024';
     
     /** Lấy thông tin cấu hình ChatHub, kiểm tra quyền và tạo encrypted token.
     * @return strResult: Chuỗi thông tin (Username|URL|Token) hoặc 'false'
@@ -34,14 +34,15 @@ public with sharing class FEC_ChatHubInitController {
 
         // 4. Thực hiện mã hóa Token
         String strUsernameEncrypted = buildEncryptedToken(strUsername, strEncryptKey, strSalt); 
-        // Todo: remove this comment when merge to uat
+        // String strUsernameEncrypted = '';
+        // // Todo: remove this comment when merge to uat
         // String payload = '{"text": "' + strUsername.split('@')[0] + '","secretKey": "' + CHATHUB_ENCRYPT_KEY + '"}';
         // Map<String, String> header = new Map<String, String>{'X-API-KEY' => 'RkVDX1NBTEVTRk9SQ0U='};
         // HttpResponse res = FEC_Utils.sendRequest('POST', 'callout:FECredit_Service/archival/chathub/api/v1/crypto/encrypt',payload , header);
         // if (res != null && res.getStatusCode() == 200) {
-        //    strUsernameEncrypted = res.getBody();
+        //    Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+        //     strUsernameEncrypted = (String) responseMap.get('data');
         // }
-
         // Định dạng trả về: username | urlChatHub | usernameEncrypted
         String strResult = strUsername + '|' + strChatHubUrl + '|' + strUsernameEncrypted;
 
