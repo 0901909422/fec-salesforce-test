@@ -112,6 +112,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUCCESS_MESSAGE = 'Success';
     public static final String SUCCESS_STATUS_CODE = '0';
     public static final String SUCCESS_CODE_1 = '1';
+    public static final String SUCCESS_CODE_4 = '4';
     public static final String SUCCESS_CODE_Y = 'Y';
     public static final String SUCCESS_CODE_E = 'E';
     public static final String SUCCESS_CODE_200 = '200';
@@ -181,6 +182,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
     
     public static final String EMAIL = 'Email';
+    public static final String PHONE = 'Phone';
+    public static final String PRIMARY_PHONE = 'Primary Phone';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
     
     public static final String API_BLANK_BODY = '{}';
