@@ -1,0 +1,115 @@
+/* ═══════════════════════════════════════════════════════════ */
+/* fec_templateManagementConsole                               */
+/* Matches Salesforce standard Email Templates page layout     */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* Full-height container */
+:host {
+    display: block;
+}
+
+/* Page-level wrapper with white background card */
+.tmc-page-container {
+    background-color: var(--slds-g-color-neutral-base-100, #ffffff);
+    border: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+    border-radius: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 70vh;
+}
+
+/* ── Page Header ── */
+.tmc-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+}
+
+.tmc-page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.tmc-page-header-icon {
+    width: 2rem;
+    height: 2rem;
+}
+
+.tmc-page-header-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--slds-g-color-neutral-base-10, #181818);
+}
+
+.tmc-page-header-count {
+    font-size: 0.75rem;
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
+    margin-left: 0.5rem;
+}
+
+.tmc-page-header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* ── Two-panel body ── */
+.tmc-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ── Left sidebar ── */
+.tmc-sidebar {
+    width: 240px;
+    min-width: 200px;
+    max-width: 300px;
+    border-right: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background-color: var(--slds-g-color-neutral-base-95, #f3f3f3);
+}
+
+.tmc-sidebar-search {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+}
+
+/* ── Right main content ── */
+.tmc-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* ── List toolbar (search + filters inside main area) ── */
+.tmc-toolbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+    flex-wrap: wrap;
+    background-color: var(--slds-g-color-neutral-base-100, #ffffff);
+}
+
+.tmc-toolbar-search {
+    flex: 1;
+    min-width: 200px;
+}
+
+.tmc-toolbar-filter {
+    min-width: 120px;
+}
+
+/* ── List area ── */
+.tmc-list-area {
+    flex: 1;
+    overflow-y: auto;
+}

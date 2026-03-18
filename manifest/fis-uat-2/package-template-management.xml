@@ -1,6 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
+        <members>FEC_TemplateSelector</members>
+        <members>FEC_FolderSelector</members>
+        <members>FEC_ContentHistorySelector</members>
+        <members>FEC_TemplateService</members>
+        <members>FEC_FolderService</members>
+        <members>FEC_ContentHistoryService</members>
+        <members>FEC_TemplateController</members>
+        <members>FEC_FolderController</members>
+        <members>FEC_TemplateTriggerHandler</members>
+        <members>FEC_FolderTriggerHandler</members>
+        <members>FEC_TemplateSelector_Test</members>
+        <members>FEC_FolderSelector_Test</members>
+        <members>FEC_TemplateService_Test</members>
+        <members>FEC_FolderService_Test</members>
+        <members>FEC_TemplateController_Test</members>
+        <members>FEC_FolderController_Test</members>
+        <members>FEC_TemplateTriggerHandler_Test</members>
+        <members>FEC_FolderTriggerHandler_Test</members>
+        <name>ApexClass</name>
+    </types>
+	<types>
+        <members>FEC_TemplateTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+	<types>
 		<members>fec_CloneLetterheadContainer</members>
 		<members>fec_EditLetterheadContainer</members>
 		<members>fec_NewLetterheadContainer</members>
@@ -39,10 +64,40 @@
 		<members>FEC_Review_Error</members>
 		<members>FEC_Select_Merge_Field</members>
 		<members>FEC_Sender</members>
+		<members>FEC_Template_Management_Title</members>
+        <members>FEC_Search_Templates</members>
+        <members>FEC_Filter_Active</members>
+        <members>FEC_New_Template</members>
+        <members>FEC_New_Folder</members>
+        <members>FEC_Items_Count</members>
+        <members>FEC_Item_Count</members>
+        <members>FEC_All_Templates_Tab</members>
+        <members>FEC_All_Folders_Tab</members>
+        <members>FEC_Folder_Tree_Title</members>
+        <members>FEC_Col_Template_Name</members>
+        <members>FEC_Col_Description</members>
+        <members>FEC_Col_Folder</members>
+        <members>FEC_Col_Last_Modified_By</members>
+        <members>FEC_Col_Last_Modified_Date</members>
+        <members>FEC_Col_Active</members>
+        <members>FEC_No_Templates_Found</members>
+        <members>FEC_Action_Clone</members>
+        <members>FEC_Col_Folder_Name</members>
+        <members>FEC_No_Folders_Found</members>
+        <members>FEC_Template_Back_To_List</members>
+        <members>FEC_Template_API_Name</members>
+        <members>FEC_Template_Enhanced_Letterhead</members>
+        <members>FEC_Template_Applicable_Mailbox</members>
+        <members>FEC_Template_Attachment</members>
+        <members>FEC_Template_Subject</members>
+        <members>FEC_Template_Email_Body</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
 		<members>FEC_Enhanced_Letterhead__c</members>
+		<members>FEC_Folder__c</members>
+        <members>FEC_Template__c</members>
+        <members>FEC_Content_History_Tracking__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -57,6 +112,14 @@
 		<members>fec_CustomLetterheadEditor</members>
 		<members>fec_LetterheadDetail</members>
 		<members>fec_MergeFieldPicker</members>
+		<members>fec_templateManagementConsole</members>
+        <members>fec_templateListView</members>
+        <members>fec_folderListView</members>
+        <members>fec_templateDetailPage</members>
+        <members>fec_folderTreePanel</members>
+        <members>fec_contentDiffViewer</members>
+        <members>fec_TemplateConstants</members>
+        <members>fec_TemplateUtils</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
