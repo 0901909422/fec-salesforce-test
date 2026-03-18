@@ -336,6 +336,10 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
+        <tab>FEC_GetNextWork</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Hold_Case__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
