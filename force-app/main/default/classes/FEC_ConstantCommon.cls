@@ -187,4 +187,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
     
     public static final String API_BLANK_BODY = '{}';
+
+    //Get Next Work
+    public static final String CASE_TYPE_DESCRIPTION = 'Get Next Work';
+    public static final String CASE_ROUTING_ACTION = 'Route to';
+    public static final String CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER = 'Resolved-CannotContactCustomer';
 }
