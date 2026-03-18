@@ -7,7 +7,7 @@ import getInteractionHighlightData from "@salesforce/apex/FEC_InteractionInforHa
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
-
+import { refreshApex } from "@salesforce/apex";
 import FEC_INTERACTION_ID_LABEL from "@salesforce/label/c.FEC_Interaction_ID";
 import FEC_INTERACTION_STATUS_LABEL from "@salesforce/label/c.FEC_Interaction_Status_Label";
 import FEC_INTERACTION_DURATION_LABEL from "@salesforce/label/c.FEC_Interaction_Duration_Label";
@@ -43,6 +43,7 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
 
   record;
   viewMode; // handling | review
+  wiredViewModeResult;
   _resetDone = false;
   isOpen = false;
 
@@ -58,17 +59,14 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   @wire(getRecord, {
     recordId: "$recordId",
     fields: [VIEW_MODE],
-    
   })
-  wiredViewMode({ data, error }) {
+  wiredViewMode(result) {
+    this.wiredViewModeResult = result;
+
+    const { data, error } = result;
+
     if (data) {
       this.viewMode = getFieldValue(data, VIEW_MODE);
-      let hasAccountOrContract = getFieldValue(data, HAS_ACCOUNT_OR_CONTRACT);
-      
-      // if (hasAccountOrContract == false) {
-
-      // }
-      
       this.tryResetViewMode();
     } else if (error) {
       console.error("ViewMode load error", error);
@@ -84,7 +82,7 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
       console.log(
         "Reset viewMode to review in FecInteractionCreationHighlight",
       );
-      
+
       resetViewMode({
         recordId: this.recordId,
         viewMode: "review",
@@ -162,8 +160,8 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
         recordId: this.recordId,
         viewMode: "handling",
       });
-
-      await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+      await refreshApex(this.wiredViewModeResult); // 🔥 KEY FIX
+      // await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
       this.viewMode = "handling";
       this._resetDone = false;
 

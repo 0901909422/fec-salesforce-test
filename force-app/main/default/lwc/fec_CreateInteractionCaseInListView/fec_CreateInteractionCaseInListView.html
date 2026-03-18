@@ -11,7 +11,7 @@
 
                 <!-- HEADER -->
                 <div class="slds-modal__header">
-                    <h2 class="slds-text-heading_medium">Create Interaction</h2>
+                    <h2 class="slds-text-heading_medium">{labels.createInteraction}</h2>
                 </div>
 
                 <!-- CONTENT -->
@@ -19,7 +19,7 @@
 
                     <div
                         class="slds-section__title slds-theme_shade slds-p-around_small slds-text-title_bold slds-m-bottom_medium">
-                        Interaction Information
+                        {labels.interactionInformation}
                     </div>
 
                     <div class="slds-m-top_large">
@@ -30,7 +30,7 @@
                             <div class="slds-col slds-size_1-of-2">
                                 <div class="slds-form-element slds-form-element_horizontal">
                                     <label class="slds-form-element__label">
-                                        Interaction Channel
+                                        {labels.channel}
                                     </label>
 
                                     <div class="slds-form-element__control">
@@ -45,7 +45,7 @@
                             <div class="slds-col slds-size_1-of-2">
                                 <div class="slds-form-element slds-form-element_horizontal">
                                     <label class="slds-form-element__label">
-                                        Interaction Sub Channel
+                                        {labels.subChannel}
                                     </label>
 
                                     <div class="slds-form-element__control">
@@ -55,18 +55,16 @@
                                     </div>
                                 </div>
                             </div>
-
                         </div>
-
                     </div>
 
                     <!-- Footer buttons -->
                     <div class="slds-m-top_large slds-grid slds-grid_align-center">
 
-                        <lightning-button label="Cancel" onclick={handleClose} class="slds-m-right_small">
+                        <lightning-button label={labels.cancel} onclick={handleClose} class="slds-m-right_small">
                         </lightning-button>
 
-                        <lightning-button variant="brand" onclick={handleNext} label="Next">
+                        <lightning-button variant="brand" onclick={handleNext} label={labels.next}>
                         </lightning-button>
 
                     </div>
