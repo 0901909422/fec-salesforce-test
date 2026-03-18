@@ -50,10 +50,10 @@
         <name>ListView</name>
     </types>
     <types>
-        <members>FEC_MainInfoLoanAccount</members>
-        <members>FEC_RepaymentSchedulePaymentHistory</members>
-        <members>FEC_SecondaryInfoLoanAccount</members>
-        <members>FEC_Termination</members>
+        <members>fec_MainInfoLoanAccount</members>
+        <members>fec_RepaymentSchedulePaymentHistory</members>
+        <members>fec_SecondaryInfoLoanAccount</members>
+        <members>fec_Termination</members>
         <members>fec_CommonUtils</members>
         <name>LightningComponentBundle</name>
     </types>
