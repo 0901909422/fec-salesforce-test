@@ -18,7 +18,6 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_TranferInformationCallout</members>
 		<members>FEC_CommonUltils</members>
-		<members>FEC_CreateCaseHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
