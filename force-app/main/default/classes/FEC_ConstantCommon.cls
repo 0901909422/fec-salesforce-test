@@ -127,6 +127,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_LOAN = 'LOAN';
     public static final String PRODUCT_TYPE_CARD = 'CARD';
     public static final String PRODUCT_TYPE_UBANK = 'Ubank';
+    public static final String PRODUCT_NON_EXISTING_CUSTOMER = 'Non-Existing Customer';
     
     public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
     public static final String CASE_STATUS_RESOLVED_REJECTED = 'Resolved-Rejected';
