@@ -9513,4 +9513,193 @@
         <shortDescription>FEC_Sender</shortDescription>
         <value>Sender</value>
     </labels>
+    <labels>
+        <fullName>FEC_Action_Clone</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clone row action</shortDescription>
+        <value>Clone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_All_Folders_Tab</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>All Folders tab label</shortDescription>
+        <value>All Folders</value>
+    </labels>
+    <labels>
+        <fullName>FEC_All_Templates_Tab</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>All Templates tab label</shortDescription>
+        <value>All Templates</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Active</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Active column</shortDescription>
+        <value>Active</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Description</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Description column</shortDescription>
+        <value>Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Folder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Folder column</shortDescription>
+        <value>Folder</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Folder_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Folder Name column</shortDescription>
+        <value>Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Last_Modified_By</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Modified By column</shortDescription>
+        <value>Last Modified By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Last_Modified_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Modified Date column</shortDescription>
+        <value>Last Modified Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Template_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template Name column</shortDescription>
+        <value>Template Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Filter_Active</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Filter by Active label</shortDescription>
+        <value>Active</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Folder_Tree_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Folder sidebar header</shortDescription>
+        <value>Folders</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Item_Count</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Item count suffix singular</shortDescription>
+        <value>item</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Items_Count</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Items count suffix</shortDescription>
+        <value>items</value>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Folder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Folder button</shortDescription>
+        <value>New Folder</value>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Template button</shortDescription>
+        <value>New Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Folders_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No folders found message</shortDescription>
+        <value>No folders found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Templates_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No templates found message</shortDescription>
+        <value>No templates found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Search_Templates</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search Templates placeholder</shortDescription>
+        <value>Search this list...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_API_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>API Name field label</shortDescription>
+        <value>API Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Applicable_Mailbox</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Applicable for Mailbox field label</shortDescription>
+        <value>Applicable for Mailbox</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Attachment</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Attachment section label</shortDescription>
+        <value>Attachment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Back_To_List</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Back to List button label</shortDescription>
+        <value>Back to List</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Email_Body</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Body section title</shortDescription>
+        <value>Email Body</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Enhanced_Letterhead</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Enhanced Letterhead field label</shortDescription>
+        <value>Enhanced Letterhead</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Management_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template Management page title</shortDescription>
+        <value>Email Templates</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Subject</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Subject field label</shortDescription>
+        <value>Subject</value>
+    </labels>
 </CustomLabels>
