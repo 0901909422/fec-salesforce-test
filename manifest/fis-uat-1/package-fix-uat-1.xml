@@ -218,6 +218,7 @@
 		<members>FEC_Email_Subject_Case_Owner_Change</members>
 		<members>FEC_Email_Body_Case_Owner_Change</members>
 		<members>FEC_Wrap_Up_Modal_Btn_Cancel</members>
+		<members>FEC_Account_Card_Fetch_Error</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
