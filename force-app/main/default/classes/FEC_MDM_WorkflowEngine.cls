@@ -22,19 +22,17 @@ public with sharing class FEC_MDM_WorkflowEngine {
                     FEC_Priority__c,
                     FEC_Active__c,
                     FEC_Condition_Logic__c,
+                    FEC_Condition_Requirement__c,
                     Process_Change_Status__c,
                     (
                         SELECT  Id,
                                 Name,
-                                FEC_Additional_Field__c,
-                                FEC_Additional_Field__r.Name,
-                                FEC_Additional_Field__r.FEC_Code__c,
-                                FEC_Additional_Field__r.FEC_Name_VN__c,
-                                FEC_Additional_Field__r.FEC_Type__c,
-                                FEC_Additional_Field__r.FEC_Unique_ID__c,
+                                FEC_Master_Data_Setting__c,
+                                FEC_Master_Data_Setting__r.FEC_Field_Label_Name__c,
+                                FEC_Master_Data_Setting__r.FEC_Field_API_Name__c,
+                                FEC_Master_Data_Setting__r.FEC_Additional_Field__r.FEC_Type__c,
                                 FEC_Operator__c,
                                 FEC_Value__c,
-                                FEC_Value_Type__c,
                                 FEC_Order__c
                         FROM    FEC_MDM_Stage_Change_Conditions__r
                         ORDER BY FEC_Order__c ASC NULLS LAST
@@ -55,15 +53,12 @@ public with sharing class FEC_MDM_WorkflowEngine {
                 condList.add(new Map<String, Object>{
                     'id'            => cond.Id,
                     'conditionName' => cond.Name,
-                    'fieldId'       => cond.FEC_Additional_Field__c,
-                    'fieldName'     => cond.FEC_Additional_Field__r?.Name,
-                    'fieldNameVN'   => cond.FEC_Additional_Field__r?.FEC_Name_VN__c,
-                    'fieldCode'     => cond.FEC_Additional_Field__r?.FEC_Code__c,
-                    'fieldApiName'  => cond.FEC_Additional_Field__r?.FEC_Unique_ID__c,
-                    'fieldType'     => cond.FEC_Additional_Field__r?.FEC_Type__c,
+                    'fieldId'       => cond.FEC_Master_Data_Setting__c, // ID bây giờ trỏ vào Master Data Setting
+                    'fieldName'     => cond.FEC_Master_Data_Setting__r?.FEC_Field_Label_Name__c,
+                    'fieldApiName'  => cond.FEC_Master_Data_Setting__r?.FEC_Field_API_Name__c,
+                    'fieldType'     => cond.FEC_Master_Data_Setting__r?.FEC_Additional_Field__r?.FEC_Type__c,
                     'operator'      => cond.FEC_Operator__c,
                     'value'         => cond.FEC_Value__c,
-                    'valueType'     => cond.FEC_Value_Type__c,
                     'order'         => cond.FEC_Order__c
                 });
             }
@@ -84,6 +79,7 @@ public with sharing class FEC_MDM_WorkflowEngine {
                 'priority'            => rule.FEC_Priority__c,
                 'active'              => rule.FEC_Active__c,
                 'conditionLogic'      => rule.FEC_Condition_Logic__c,
+                'conditionRequirement'=> rule.FEC_Condition_Requirement__c,
                 'processChangeStatus' => rule.Process_Change_Status__c,
                 'conditions'          => condList
             });
@@ -131,79 +127,136 @@ public with sharing class FEC_MDM_WorkflowEngine {
     // ════════════════════════════════════════════════════════
     @AuraEnabled
     public static String saveRuleWithConditions(String ruleData) {
-        Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(ruleData);
+        try {
+            Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(ruleData);
 
-        // ── Upsert Stage Change rule ──
-        FEC_MDM_Stage_Change__c rule = new FEC_MDM_Stage_Change__c();
-        if (payload.get('recordId') != null) {
-            rule.Id = (Id) payload.get('recordId');
-        }
-        rule.FEC_Previous_Stage__c  = (Id)      payload.get('previousStageId');
-        rule.FEC_Action_Button__c   = (Id)      payload.get('actionButtonId');
-        rule.FEC_Next_Stage__c      = (Id)      payload.get('nextStageId');
-        rule.FEC_Next_Queue__c      = (String)  payload.get('nextQueue');
-        rule.FEC_Team_User_Group__c = (String)  payload.get('teamUserGroup');
-        rule.FEC_Priority__c        = payload.get('priority') != null
-                                      ? Decimal.valueOf(String.valueOf(payload.get('priority'))) : 1;
-        rule.FEC_Condition_Logic__c = (String)  payload.get('conditionLogic');
-        rule.FEC_Active__c          = true;
-
-        upsert rule;
-
-        // ── Handle conditions ──
-        List<Object> conditionsRaw = (List<Object>) payload.get('conditions');
-        if (conditionsRaw == null) conditionsRaw = new List<Object>();
-
-        // Separate new vs existing conditions
-        Set<Id>     keepIds   = new Set<Id>();
-        List<FEC_MDM_Stage_Change_Condition__c> toInsert = new List<FEC_MDM_Stage_Change_Condition__c>();
-        List<FEC_MDM_Stage_Change_Condition__c> toUpdate = new List<FEC_MDM_Stage_Change_Condition__c>();
-
-        for (Object condObj : conditionsRaw) {
-            Map<String, Object> cond = (Map<String, Object>) condObj;
-            String condId = cond.get('id') != null ? String.valueOf(cond.get('id')) : null;
-            Boolean isExisting = String.isNotBlank(condId) && condId != 'null';
-
-            if (isExisting) {
-                // UPDATE: do NOT set FEC_Stage_Change__c (Lookup not reparentable)
-                FEC_MDM_Stage_Change_Condition__c rec = new FEC_MDM_Stage_Change_Condition__c(
-                    Id                     = (Id) condId,
-                    FEC_Additional_Field__c = cond.get('fieldId') != null && String.valueOf(cond.get('fieldId')) != 'null'
-                                             ? (Id) cond.get('fieldId') : null,
-                    FEC_Operator__c         = (String) cond.get('operator'),
-                    FEC_Value__c            = (String) cond.get('value'),
-                    FEC_Value_Type__c       = (String) cond.get('valueType'),
-                    FEC_Order__c            = cond.get('order') != null
-                                             ? Decimal.valueOf(String.valueOf(cond.get('order'))) : null
-                );
-                keepIds.add(rec.Id);
-                toUpdate.add(rec);
-            } else {
-                // INSERT: set FEC_Stage_Change__c only on new records
-                FEC_MDM_Stage_Change_Condition__c rec = new FEC_MDM_Stage_Change_Condition__c(
-                    FEC_Stage_Change__c     = rule.Id,
-                    FEC_Additional_Field__c = cond.get('fieldId') != null && String.valueOf(cond.get('fieldId')) != 'null'
-                                             ? (Id) cond.get('fieldId') : null,
-                    FEC_Operator__c         = (String) cond.get('operator'),
-                    FEC_Value__c            = (String) cond.get('value'),
-                    FEC_Value_Type__c       = (String) cond.get('valueType'),
-                    FEC_Order__c            = cond.get('order') != null
-                                             ? Decimal.valueOf(String.valueOf(cond.get('order'))) : null
-                );
-                toInsert.add(rec);
+            // ── Upsert Stage Change rule ──
+            FEC_MDM_Stage_Change__c rule = new FEC_MDM_Stage_Change__c();
+            if (payload.get('recordId') != null && String.valueOf(payload.get('recordId')) != 'null') {
+                rule.Id = (Id) payload.get('recordId');
             }
+            rule.FEC_Previous_Stage__c  = (Id)      payload.get('previousStageId');
+            rule.FEC_Action_Button__c   = (Id)      payload.get('actionButtonId');
+            rule.FEC_Next_Stage__c      = (Id)      payload.get('nextStageId');
+            rule.FEC_Next_Queue__c      = (String)  payload.get('nextQueue');
+            rule.FEC_Team_User_Group__c = (String)  payload.get('teamUserGroup');
+            rule.FEC_Priority__c        = payload.get('priority') != null
+                                          ? Decimal.valueOf(String.valueOf(payload.get('priority'))) : 1;
+            
+            rule.FEC_Condition_Requirement__c = (String) payload.get('conditionRequirement');
+            rule.FEC_Condition_Logic__c = (String)  payload.get('conditionLogic');
+            rule.FEC_Active__c          = true;
+
+            upsert rule;
+
+            // ── Handle conditions ──
+            List<Object> conditionsRaw = (List<Object>) payload.get('conditions');
+            if (conditionsRaw == null) conditionsRaw = new List<Object>();
+
+            Set<Id> keepIds = new Set<Id>();
+            List<FEC_MDM_Stage_Change_Condition__c> conditionsToUpsert = new List<FEC_MDM_Stage_Change_Condition__c>();
+
+            for (Object condObj : conditionsRaw) {
+                Map<String, Object> cond = (Map<String, Object>) condObj;
+                String condId = cond.get('id') != null ? String.valueOf(cond.get('id')) : null;
+                
+                String rawFieldId = cond.get('fieldId') != null ? String.valueOf(cond.get('fieldId')) : null;
+                Id parsedFieldId = String.isNotBlank(rawFieldId) && rawFieldId != 'null' ? (Id) rawFieldId : null;
+
+                FEC_MDM_Stage_Change_Condition__c rec = new FEC_MDM_Stage_Change_Condition__c();
+                if (String.isNotBlank(condId) && condId != 'null' && !condId.startsWith('new-')) {
+                    rec.Id = (Id) condId;
+                    keepIds.add(rec.Id);
+                } else {
+                    rec.FEC_Stage_Change__c = rule.Id;
+                }
+                
+                rec.FEC_Master_Data_Setting__c = parsedFieldId;
+                rec.FEC_Operator__c            = (String) cond.get('operator');
+                rec.FEC_Value__c               = (String) cond.get('value');
+                rec.FEC_Order__c               = cond.get('order') != null ? Decimal.valueOf(String.valueOf(cond.get('order'))) : null;
+                
+                conditionsToUpsert.add(rec);
+            }
+
+            // 1. Delete removed
+            List<FEC_MDM_Stage_Change_Condition__c> toDelete = [
+                SELECT Id FROM FEC_MDM_Stage_Change_Condition__c
+                WHERE  FEC_Stage_Change__c = :rule.Id
+                AND    Id NOT IN :keepIds
+            ];
+            if (!toDelete.isEmpty()) delete toDelete;
+
+            // 2. Upsert remaining/new
+            if (!conditionsToUpsert.isEmpty()) upsert conditionsToUpsert;
+
+            return rule.Id;
+        } catch (Exception e) {
+            System.debug('Error in saveRuleWithConditions: ' + e.getMessage());
+            System.debug('Stack trace: ' + e.getStackTraceString());
+            throw new AuraHandledException('Không thể lưu rule: ' + e.getMessage());
         }
+    }
 
-        // Delete conditions that were removed by the user
-        List<FEC_MDM_Stage_Change_Condition__c> toDelete = [
-            SELECT Id FROM FEC_MDM_Stage_Change_Condition__c
-            WHERE  FEC_Stage_Change__c = :rule.Id
-            AND    Id NOT IN :keepIds
-        ];
-        if (!toDelete.isEmpty()) delete toDelete;
-        if (!toUpdate.isEmpty()) update toUpdate;
-        if (!toInsert.isEmpty()) insert toInsert;
+    @AuraEnabled
+    public static List<Map<String, String>> getFieldsForStage(String stageId) {
+        List<Map<String, String>> options = new List<Map<String, String>>();
+        if (String.isBlank(stageId)) return options;
 
-        return rule.Id;
+        try {
+            // Lấy danh sách từ Master Data Setting của Stage hiện tại
+            List<FEC_MDM_Master_Data_Setting__c> mdsList = [
+                SELECT Id, 
+                       FEC_Field_Label_Name__c, 
+                       FEC_Field_API_Name__c,
+                       FEC_Additional_Field__r.FEC_Type__c,
+                       FEC_Additional_Field__r.Name,
+                       FEC_Additional_Field__r.FEC_Code__c,
+                       FEC_Additional_Field__r.FEC_Name_VN__c,
+                       FEC_Additional_Field__r.FEC_Unique_ID__c,
+                       Name
+                FROM FEC_MDM_Master_Data_Setting__c
+                WHERE FEC_Stage_Name__c = :stageId
+                  AND FEC_Field_Status__c = true
+                ORDER BY FEC_Field_Order_Display__c ASC
+            ];
+
+            System.debug('[DEBUG] getFieldsForStage - Total records found: ' + mdsList.size());
+
+            for (FEC_MDM_Master_Data_Setting__c mds : mdsList) {
+                Map<String, String> opt = new Map<String, String>();
+                
+                // Fallback logic to find the best possible label if the explicit fields are empty
+                String labelName = mds.FEC_Field_Label_Name__c;
+                if (String.isBlank(labelName) && mds.FEC_Additional_Field__r != null) {
+                    labelName = mds.FEC_Additional_Field__r.FEC_Name_VN__c != null ? mds.FEC_Additional_Field__r.FEC_Name_VN__c : mds.FEC_Additional_Field__r.Name;
+                }
+                
+                // Use setting Name as final fallback for label
+                if (String.isBlank(labelName)) {
+                    labelName = mds.Name;
+                }
+                
+                String apiName = mds.FEC_Field_API_Name__c;
+                if (String.isBlank(apiName) && mds.FEC_Additional_Field__r != null) {
+                    apiName = mds.FEC_Additional_Field__r.FEC_Unique_ID__c != null ? mds.FEC_Additional_Field__r.FEC_Unique_ID__c : mds.FEC_Additional_Field__r.FEC_Code__c;
+                }
+                
+                // Use setting Name as final fallback for API Name (to at least show something unique)
+                if (String.isBlank(apiName)) {
+                     apiName = mds.Name;
+                }
+
+                opt.put('label', labelName + ' (' + apiName + ')');
+                opt.put('value', (String)mds.Id); // ID của Master Data Setting
+                opt.put('fieldApiName', apiName);
+                opt.put('dataType', mds.FEC_Additional_Field__r != null && mds.FEC_Additional_Field__r.FEC_Type__c != null ? mds.FEC_Additional_Field__r.FEC_Type__c : 'Text');
+                options.add(opt);
+            }
+            return options;
+        } catch (Exception e) {
+            System.debug('[DEBUG] Error in getFieldsForStage: ' + e.getMessage() + ' LINE: ' + e.getLineNumber());
+            throw new AuraHandledException('Lỗi tải danh sách trường: ' + e.getMessage());
+        }
     }
 }
