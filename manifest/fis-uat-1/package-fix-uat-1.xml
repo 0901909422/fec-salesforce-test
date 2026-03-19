@@ -120,6 +120,22 @@
 		<members>FEC_Additional_Info__c.FEC_Card_Retention_Decline_Reason__c</members>
 		<members>FEC_Team_Queue__c.FEC_Team__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Description__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Case__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Closing_Principal__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Customer_History__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_EMI__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Installment_Amount__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Installment_Due_Date__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Installment_No__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Interest__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Opening_Principal__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Payment_Amount__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Payment_Date__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Principal__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Repayment_Fee__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Total_Installment_Amount__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Total_Interest__c</members>
+		<members>FEC_RePayment_Schedule__c.FEC_Total_Principal__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -163,6 +179,7 @@
         <members>FEC_Sensitive_Data__c</members>
 		<members>FEC_B2_Contract__c</members>
 		<members>FEC_Cash_24_Contract__c</members>
+		<members>FEC_RePayment_Schedule__c</members>
         <name>CustomObject</name>
     </types>
     <types>

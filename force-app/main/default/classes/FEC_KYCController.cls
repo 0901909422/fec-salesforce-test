@@ -326,7 +326,7 @@ public without sharing class FEC_KYCController {
       if (c.FEC_Account_or_Contract__r == null) return null;
 
       if (ADDRESS_TYPE_CURRENT.equals(c.FEC_Account_or_Contract__r.FEC_Address_Type__c)) {
-        return c.FEC_Account_or_Contract__r.FEC_Address__c ?? '';
+        return c.FEC_Account_or_Contract__r.FEC_Address__c ?? FEC_ConstantCommon.STR_EMPTY;
       }
 
       return null;
@@ -338,7 +338,7 @@ public without sharing class FEC_KYCController {
       if (c.FEC_Account_or_Contract__r == null) return null;
 
       if (ADDRESS_TYPE_PERMANENT.equals(c.FEC_Account_or_Contract__r.FEC_Address_Type__c)) {
-        return c.FEC_Account_or_Contract__r.FEC_Address__c ?? '';
+        return c.FEC_Account_or_Contract__r.FEC_Address__c ?? FEC_ConstantCommon.STR_EMPTY;
       }
 
       return null;
