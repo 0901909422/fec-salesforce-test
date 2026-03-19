@@ -12,7 +12,7 @@ import saveChatHistoryAndAttachment from '@salesforce/apex/FEC_ChatHubCaseContro
 import checkExistCaseByExtInteractionID from '@salesforce/apex/FEC_Utils.checkExistCaseByExtInteractionID';
 import updateOldCaseInteractionId from '@salesforce/apex/FEC_ChatHubCaseController.updateOldCaseInteractionId';
 import downloadAndSaveBase64 from '@salesforce/apex/FEC_AttachmentController.downloadAndSaveBase64';
-import { executeWithLock, fetchFileFromUrl, formatDatetime, showToast, decryptDataKYC } from 'c/fecUtils';
+import { executeWithLock, fetchFileFromUrl, formatDatetime, showToast, decryptDataKYC } from 'c/fecChathubUtils';
 import FEC_CHATHUB_STATUS from '@salesforce/messageChannel/FecChatHubStatus__c';
 import { subscribe, APPLICATION_SCOPE } from 'lightning/messageService';
 

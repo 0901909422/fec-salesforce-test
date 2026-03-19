@@ -1,7 +1,7 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import getAttachmentsFromInteraction from '@salesforce/apex/FEC_AttachmentController.getAttachmentsFromInteraction';
 import attachFilesToServiceCase from '@salesforce/apex/FEC_AttachmentController.attachFilesToServiceCase';
-import { showToast } from 'c/fecUtils';
+import { showToast } from 'c/fecChathubUtils';
 /**
  * fec_selectAttachment
  * Modal component to display and select attachments from a related Interaction Case.

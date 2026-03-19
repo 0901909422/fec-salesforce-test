@@ -1,6 +1,6 @@
 import { LightningElement, api, wire } from 'lwc';
 import getChatMessages from '@salesforce/apex/FEC_ChatHistoryController.getChatMessages';
-import { formatDatetimeLocal } from 'c/fecUtils';
+import { formatDatetimeLocal } from 'c/fecChathubUtils';
 import { refreshApex } from '@salesforce/apex';
 import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
 import FEC_CHAT_UPDATE from '@salesforce/messageChannel/FecChatUpdate__c';
