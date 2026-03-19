@@ -52,7 +52,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
         const nodeType = this.item?.type;
         if (nodeType === 'Product Type' || nodeType === 'Product_Line') return 'FEC_MDM_Product_Type__c';
         if (nodeType === 'Business Process' || nodeType === 'Service_Type') return 'FEC_MDM_Business_Process__c';
-        if (nodeType === 'Category' || nodeType === 'Sub Category') return 'FEC_MDM_Category__c';
+        if (nodeType === 'Category') return 'FEC_MDM_Category__c';
         if (nodeType === 'Sub Category' || nodeType === 'Sub_Category') return 'FEC_MDM_Sub_Category__c';
         if (nodeType === 'Sub Code' || nodeType === 'Action') return 'FEC_MDM_Sub_Code__c';
 
@@ -210,26 +210,19 @@ export default class FecMasterDataItemDetail extends LightningElement {
         return (friendlyLabel ? friendlyLabel + ' ID: ' : '') + code;
     }
 
-    @api
     validateForm() {
-        const inputs = [...this.template.querySelectorAll('lightning-input')];
-        let allValid = true;
-
-        inputs.forEach(inputCmp => {
-            inputCmp.reportValidity(); // Ép UI hiển thị màu đỏ nếu có lỗi
-            if (!inputCmp.checkValidity()) {
-                allValid = false;
-            }
-        });
-
-        console.log('[DEBUG][validateForm] Result:', allValid);
+        const allValid = [
+            ...this.template.querySelectorAll('lightning-input'),
+        ].reduce((validSoFar, inputCmp) => {
+            inputCmp.reportValidity();
+            return validSoFar && inputCmp.checkValidity();
+        }, true);
         return allValid;
     }
 
     handleSubmit(event) {
         if (!this.validateForm()) {
             this.showToast(LABEL_PLEASE_FILL_ALL, '', VARIANT_ERROR);
-            console.error('[DEBUG][handleSubmit] Validation failed.');
             return;
         }
 
@@ -249,6 +242,17 @@ export default class FecMasterDataItemDetail extends LightningElement {
                     composed: true
                 }));
                 this.refreshHistoryPanel();
+
+                // =========================================================================
+                // LÀM MỚI HISTORY PANEL SAU KHI LƯU THÀNH CÔNG
+                // CHÌA KHÓA FIX LỖI: Tăng delay lên 2000ms (2 giây) 
+                // Lý do: Salesforce cần 1-2 giây để ghi bất đồng bộ dữ liệu History xuống DB
+                // =========================================================================
+                // if (this.isHistoryVisible) {
+                //     setTimeout(() => {
+                //         this.refreshHistoryPanel();
+                //     }, 2000);
+                // }
             })
             .catch(error => {
                 this.showToast(LABEL_ERROR, error.body?.message || error.message, VARIANT_ERROR);
@@ -259,16 +263,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
     handleInputChange(event) {
         const field = event.target.name;
         const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-
-        // Validation for whitespace-only input
-        if (event.target.type !== 'checkbox' && typeof value === 'string') {
-            if (value.length > 0 && value.trim().length === 0) {
-                event.target.setCustomValidity('Vui lòng không chỉ nhập khoảng trắng');
-            } else {
-                event.target.setCustomValidity('');
-            }
-            event.target.reportValidity();
-        }
 
         this.editedItem = JSON.parse(JSON.stringify({ ...this.editedItem, [field]: value }));
 
