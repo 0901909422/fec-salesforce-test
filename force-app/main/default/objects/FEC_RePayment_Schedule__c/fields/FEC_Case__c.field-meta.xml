@@ -3,8 +3,8 @@
     <fullName>FEC_Case__c</fullName>
     <label>Case</label>
     <referenceTo>Case</referenceTo>
-    <relationshipLabel>Asset</relationshipLabel>
-    <relationshipName>Asset</relationshipName>
+    <relationshipLabel>RePayment Schedule</relationshipLabel>
+    <relationshipName>RePayment_Schedule</relationshipName>
     <relationshipOrder>0</relationshipOrder>
     <reparentableMasterDetail>false</reparentableMasterDetail>
     <trackHistory>false</trackHistory>

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_Case__c</fullName>
-    <label>Case</label>
-    <referenceTo>Case</referenceTo>
-    <relationshipLabel>MRC</relationshipLabel>
-    <relationshipName>MRC</relationshipName>
-    <relationshipOrder>0</relationshipOrder>
+    <fullName>FEC_Customer_History__c</fullName>
+    <label>Customer History</label>
+    <referenceTo>FEC_Customer_History__c</referenceTo>
+    <relationshipLabel>RePayment Schedule</relationshipLabel>
+    <relationshipName>RePayment_Schedule</relationshipName>
+    <relationshipOrder>1</relationshipOrder>
     <reparentableMasterDetail>false</reparentableMasterDetail>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>

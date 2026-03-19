@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_Provided_Number__c</fullName>
-    <description>Số lần cấp MRC công chứng/ BNTC</description>
-    <externalId>false</externalId>
-    <label>Provided Number</label>
+    <fullName>FEC_EMI__c</fullName>
+    <label>EMI</label>
     <precision>18</precision>
     <required>false</required>
     <scale>0</scale>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
-    <type>Number</type>
-    <unique>false</unique>
+    <type>Currency</type>
 </CustomField>
