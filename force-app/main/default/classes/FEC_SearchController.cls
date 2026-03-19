@@ -203,7 +203,7 @@ public with sharing class FEC_SearchController {
     @AuraEnabled
     public static FEC_GetCardBasicInfo.ResponseWrapper getCardInfoByAccountNumber(String accountNumber) {
         if (String.isBlank(accountNumber)) {
-            throw new AuraHandledException(System.Label.FEC_MSG_Param_Required);
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Account Number'}));
         }
 
         try {
