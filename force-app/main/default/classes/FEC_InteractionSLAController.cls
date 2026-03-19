@@ -143,27 +143,27 @@ public with sharing class FEC_InteractionSLAController {
       }
       Set<String> allowedValues = null;
       Boolean isCallCustomerTypeAllowed = (customerType != null && CUSTOMER_TYPES_FOR_CALL.contains(customerType));
-      if (channel == 'Inbound' && subChannel == 'Inbound Call' && isCallCustomerTypeAllowed) {
+      if (channel == FEC_ConstantCommon.CHANNEL_INBOUND_NAME && subChannel == FEC_ConstantCommon.CHANNEL_INBOUND_SUBCHANNEL_NAME && isCallCustomerTypeAllowed) {
         allowedValues = OUTCOME_CODES_INBOUND_CALL;
-      } else if (channel == 'Outbound' && subChannel == 'Outbound Call' && isCallCustomerTypeAllowed) {
+      } else if (channel == FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME && subChannel == FEC_ConstantCommon.CHANNEL_OUTBOUND_SUBCHANNEL_NAME && isCallCustomerTypeAllowed) {
         allowedValues = OUTCOME_CODES_OUTBOUND_CALL;
-      } else if (channel == 'Email' && subChannel == 'Incoming Email' && isCallCustomerTypeAllowed) {
+      } else if (channel == FEC_ConstantCommon.CHANNEL_EMAIL_NAME && subChannel == FEC_ConstantCommon.CHANNEL_EMAIL_INCOMING_SUBCHANNEL_NAME && isCallCustomerTypeAllowed) {
         allowedValues = OUTCOME_CODES_EMAIL_INCOMING;
-      } else if (channel == 'Email' && subChannel == 'Outgoing Email' && isCallCustomerTypeAllowed) {
+      } else if (channel == FEC_ConstantCommon.CHANNEL_EMAIL_NAME && subChannel == FEC_ConstantCommon.CHANNEL_EMAIL_OUTGOING_SUBCHANNEL_NAME && isCallCustomerTypeAllowed) {
         allowedValues = OUTCOME_CODES_EMAIL_OUTGOING;
-      } else if (channel == 'Chat' && subChannel != null && CHAT_SUBCHANNELS.contains(subChannel) && isCallCustomerTypeAllowed) {
+      } else if (channel == FEC_ConstantCommon.CHANNEL_CHAT_NAME && subChannel != null && CHAT_SUBCHANNELS.contains(subChannel) && isCallCustomerTypeAllowed) {
         allowedValues = OUTCOME_CODES_CHAT;
-      } else if (channel == 'F2F' && subChannel == 'F2F' && isCallCustomerTypeAllowed) {
+      } else if (channel == FEC_ConstantCommon.CHANNEL_F2F_NAME && subChannel == FEC_ConstantCommon.CHANNEL_F2F_SUBCHANNEL_NAME && isCallCustomerTypeAllowed) {
         allowedValues = OUTCOME_CODES_F2F;
-      } else if (channel == 'Letter' && subChannel == 'Letter' && isCallCustomerTypeAllowed) {
+      } else if (channel == FEC_ConstantCommon.CHANNEL_LETTER_NAME && subChannel == FEC_ConstantCommon.CHANNEL_LETTER_SUBCHANNEL_NAME && isCallCustomerTypeAllowed) {
         allowedValues = OUTCOME_CODES_LETTER;
-      } else if (channel == 'Internal' && subChannel == 'Internal Email') {
+      } else if (channel == FEC_ConstantCommon.CHANNEL_INTERNAL_NAME && subChannel == FEC_ConstantCommon.CHANNEL_INTERNAL_EMAIL_SUBCHANNEL_NAME) {
         allowedValues = OUTCOME_CODES_INTERNAL_EMAIL;
-      } else if (channel == 'Internal' && subChannel == 'Internal Task') {
+      } else if (channel == FEC_ConstantCommon.CHANNEL_INTERNAL_NAME && subChannel == FEC_ConstantCommon.CHANNEL_INTERNAL_TASK_SUBCHANNEL_NAME) {
         allowedValues = OUTCOME_CODES_INTERNAL_TASK;
-      } else if (channel == 'Internal' && subChannel != null && INTERNAL_OTHER_SUBCHANNELS.contains(subChannel)) {
+      } else if (channel == FEC_ConstantCommon.CHANNEL_INTERNAL_NAME && subChannel != null && INTERNAL_OTHER_SUBCHANNELS.contains(subChannel)) {
         allowedValues = OUTCOME_CODES_INTERNAL_OTHER;
-      } else if (channel == 'External' && subChannel != null && EXTERNAL_SUBCHANNELS.contains(subChannel)) {
+      } else if (channel == FEC_ConstantCommon.CHANNEL_EXTERNAL_NAME && subChannel != null && EXTERNAL_SUBCHANNELS.contains(subChannel)) {
         allowedValues = OUTCOME_CODES_EXTERNAL;
       }
       List<Map<String, String>> options = new List<Map<String, String>>();
