@@ -124,5 +124,9 @@
 		<members>RD_IT_User_Search_Functions</members>
 		<name>PermissionSet</name>
 	</types>
+	<types>
+		<members>Case.FEC_Create_Interaction_Manual</members>
+		<name>WebLink</name>
+	</types>
 	<version>65.0</version>
 </Package>
