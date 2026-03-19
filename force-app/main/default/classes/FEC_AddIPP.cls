@@ -70,9 +70,48 @@ public with sharing class FEC_AddIPP {
     public String ippKey { get; set; }
   }
 
-
-
   @AuraEnabled
+  public static AddIPPResult getIPPRequest(Id caseId, Id transactionId) {
+    if (caseId == null || transactionId == null) {
+      return null;
+    }
+
+    try {
+      Case c = [
+        SELECT FEC_Account_Contract_Number_Text__c
+        FROM Case
+        WHERE Id = :caseId
+        WITH SECURITY_ENFORCED
+        LIMIT 1
+      ];
+
+      FEC_Transaction__c t = [
+        SELECT
+          FEC_Effective_Date__c,
+          FEC_Transaction_Amount__c,
+          FEC_Transaction_Plan__c,
+          FEC_Transaction_Code__c,
+          FEC_Post_Date__c
+        FROM FEC_Transaction__c
+        WHERE Id = :transactionId
+        WITH SECURITY_ENFORCED
+        LIMIT 1
+      ];
+
+      IPPRequest request = new IPPRequest();
+      request.accountNumber = c.FEC_Account_Contract_Number_Text__c;
+      request.effectiveDate = t.FEC_Effective_Date__c;
+      request.amount = t.FEC_Transaction_Amount__c;
+      request.planNumber = t.FEC_Transaction_Plan__c;
+      request.referenceNumber = t.FEC_Transaction_Code__c;
+      request.postingDate = t.FEC_Post_Date__c;
+
+      return addIPP(request);
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
   public static AddIPPResult addIPP(IPPRequest request) {
     validate(request);
     AddIPPResult finalResult = new AddIPPResult();
@@ -85,6 +124,22 @@ public with sharing class FEC_AddIPP {
       HttpResponse res = sendRequest(doc);
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
+      
+      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+      String endpoint = apiSetting?.FEC_Call_Mock__c
+        ? FEC_MockupEndpoint.ADD_IPP_ENDPOINT_MOCKUP
+        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
+      FEC_CommonUltils.logApi(
+        'FEC_AddIPP',
+        endpoint,
+        FEC_ConstantCommon.API_METHOD_POST,
+        doc.toXmlString(),
+        res,
+        null
+      );
+
       finalResult = parseResponse(body, status);
 
       if (finalResult.transId == null) {

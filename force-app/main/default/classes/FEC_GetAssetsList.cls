@@ -311,6 +311,22 @@ public with sharing class FEC_GetAssetsList {
       HttpResponse res = sendRequest(envelope);
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
+
+      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+      String endpoint = apiSetting?.FEC_Call_Mock__c
+        ? FEC_MockupEndpoint.GET_ASSETS_LIST_ENDPOINT_MOCKUP
+        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
+      FEC_CommonUltils.logApi(
+        'FEC_GetAssetsList',
+        endpoint,
+        FEC_ConstantCommon.API_METHOD_POST,
+        envelope,
+        res,
+        null
+      );
+
       finalResult = parseResponse(body, status);
       if (finalResult.transId == null)
         finalResult.transId = transId;
