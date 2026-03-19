@@ -65,10 +65,14 @@ public with sharing class FEC_RepaySchedPayHistController {
 
     private static final String HYPHEN = '-';
 
-    private static String parsePaymentDate(String transactionDate) {
-        if (String.isBlank(transactionDate)) return HYPHEN;
+    /** Chuỗi ngày API (yyyy-MM-dd...) → dd/MM/yyyy. */
+    private static String formatTransactionDateDDMMYYYY(String transactionDate) {
+        if (String.isBlank(transactionDate)) {
+            return HYPHEN;
+        }
         try {
-            return transactionDate.length() >= 10 ? transactionDate.substring(0, 10) : transactionDate;
+            String d = transactionDate.length() >= 10 ? transactionDate.substring(0, 10) : transactionDate;
+            return FEC_CommonUltils.formatDateDDMMYYYY(Date.valueOf(d));
         } catch (Exception e) {
             return transactionDate;
         }
@@ -130,7 +134,8 @@ public with sharing class FEC_RepaySchedPayHistController {
                 RepaymentScheduleRowDTO row = new RepaymentScheduleRowDTO();
                 row.rowIndex = ++idx;
                 row.installmentNo = FEC_CommonUltils.defaultToEmpty(rs.InstallmentNo);
-                row.dueDate = FEC_CommonUltils.formatDate(rs.DueDate);
+                String dueStr = FEC_CommonUltils.formatDateDDMMYYYY(rs.DueDate);
+                row.dueDate = String.isNotBlank(dueStr) ? dueStr : HYPHEN;
                 row.openingPrincipal = FEC_CommonUltils.decimalToString(rs.OpeningPrincipal);
                 row.emi = FEC_CommonUltils.decimalToString(rs.EMI);
                 row.repaymentFee = FEC_CommonUltils.decimalToString(rs.RepaymentFee);
@@ -221,8 +226,18 @@ public with sharing class FEC_RepaySchedPayHistController {
         for (Integer i = 0; i < rowCount; i++) {
             PaymentHistoryRowDTO row = new PaymentHistoryRowDTO();
             row.paymentNo = i + 1;
-            row.paymentDate = i < basicPh.size() ? FEC_CommonUltils.formatDate(basicPh[i].ValueDate) : HYPHEN;
-            row.bookingDate = i < secPh.size() ? FEC_CommonUltils.formatDate(secPh[i].BookingDate) : HYPHEN;
+            if (i < basicPh.size() && basicPh[i].ValueDate != null) {
+                String pd = FEC_CommonUltils.formatDateDDMMYYYY(basicPh[i].ValueDate);
+                row.paymentDate = String.isNotBlank(pd) ? pd : HYPHEN;
+            } else {
+                row.paymentDate = HYPHEN;
+            }
+            if (i < secPh.size() && secPh[i].BookingDate != null) {
+                String bd = FEC_CommonUltils.formatDateDDMMYYYY(secPh[i].BookingDate);
+                row.bookingDate = String.isNotBlank(bd) ? bd : HYPHEN;
+            } else {
+                row.bookingDate = HYPHEN;
+            }
             row.paymentAmount = i < secPh.size() ? FEC_CommonUltils.decimalToString(secPh[i].AmountOfMoney) : HYPHEN;
             if (i < secPh.size() && secPh[i].AmountOfMoney != null) {
                 sumPaymentAmount += secPh[i].AmountOfMoney;
@@ -301,7 +316,7 @@ public with sharing class FEC_RepaySchedPayHistController {
         for (FEC_GetPaymentInfo.PaymentInfo p : paymentRes.Payments) {
             RealTimePaymentRowDTO row = new RealTimePaymentRowDTO();
             row.rowIndex = ++idx;
-            row.paymentDate = parsePaymentDate(p.TransactionDate);
+            row.paymentDate = formatTransactionDateDDMMYYYY(p.TransactionDate);
             row.paymentAmount = FEC_CommonUltils.decimalToString(p.AmountPaid);
             row.paymentChannel = p.Username != null ? p.Username : HYPHEN;
             result.realTimePaymentTable.add(row);

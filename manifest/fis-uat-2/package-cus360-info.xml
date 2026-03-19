@@ -62,6 +62,7 @@
         <members>FEC_RepaySchedPayHistController</members>
         <members>FEC_SecondaryInfoLoanAccountController</members>
         <members>FEC_TerminationLoanController</members>
+        <members>FEC_CommonUltils</members>
         <name>ApexClass</name>
     </types>
     <types>

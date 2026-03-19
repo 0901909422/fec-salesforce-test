@@ -221,10 +221,14 @@ export default class Fec_Termination extends LightningElement {
         const displayLabel = (fieldApiName, fallback) => labelByApi[fieldApiName] || fallback;
         if (this.earlyTermination && this.earlyTermination.length > 0) {
             return this.earlyTermination.map((item) => {
-                let value = item.valueFormatted != null && item.valueFormatted !== '' ? item.valueFormatted : '0.00';
-                if (item.isNegative && value !== '-' && !String(value).startsWith('-')) {
-                    value = '-' + value;
-                }
+                const hasValue =
+                    item.value != null ||
+                    (item.valueFormatted != null && item.valueFormatted !== '');
+                const value = hasValue
+                    ? item.valueFormatted != null && item.valueFormatted !== ''
+                        ? item.valueFormatted
+                        : '0.00'
+                    : '-';
                 const fieldApiName = labelToApi[item.label];
                 const label = displayLabel(fieldApiName, item.label);
                 return item.isNegative
