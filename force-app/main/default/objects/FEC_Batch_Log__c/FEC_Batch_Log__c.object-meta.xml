@@ -43,7 +43,8 @@
     <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
-    <enableActivities>false</enableActivities>
+    <description>Lưu trữ nhật ký vận hành của các Batch Job trong hệ thống MDM.</description>
+    <enableActivities>true</enableActivities>
     <enableBulkApi>true</enableBulkApi>
     <enableFeeds>false</enableFeeds>
     <enableHistory>true</enableHistory>
@@ -53,14 +54,15 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>MDM Additional Field</label>
+    <label>FEC Batch Log</label>
     <nameField>
-        <label>FEC Name EN</label>
+        <displayFormat>LOG-{000000}</displayFormat>
+        <label>Batch Log Name</label>
         <trackHistory>false</trackHistory>
-        <type>Text</type>
+        <type>AutoNumber</type>
     </nameField>
-    <pluralLabel>FEC_MDM_Additional_Fields__c</pluralLabel>
-    <searchLayouts></searchLayouts>
+    <pluralLabel>FEC Batch Logs</pluralLabel>
+    <searchLayouts/>
     <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>
 </CustomObject>

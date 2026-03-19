@@ -234,6 +234,8 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         FIELD_SECTION => FIELD_SECTION,
         FIELD_CHANNEL => FIELD_CHANNEL,
         FIELD_DATA_INTEGRATION_MAPPING => FIELD_DATA_INTEGRATION_MAPPING,
+        'FEC_Field_API_Name__c' => 'FEC_Field_API_Name__c',
+        'FEC_Field_Label_Name__c' => 'FEC_Field_Label_Name__c',
         //NOC Lookup Fields
         FIELD_ALIAS => FIELD_ALIAS,
         FIELD_NAME_VN => FIELD_NAME_VN,
@@ -286,7 +288,7 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
             if (mdmFieldsMap.containsKey(FIELD_CODE)) {
                 List<SObject> emptyMdmCodes = Database.query('SELECT Id, Name FROM ' + mdmObjName + ' WHERE ' + FIELD_CODE + ' = null');
                 if (!emptyMdmCodes.isEmpty()) {
-                    for(SObject m : emptyMdmCodes) m.put(FIELD_CODE, m.get('Name'));
+                    for(SObject m : emptyMdmCodes) m.put(FIELD_CODE, m.get('Id'));
                     update emptyMdmCodes;
                 }
             }
