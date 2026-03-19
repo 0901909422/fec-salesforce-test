@@ -33,7 +33,8 @@
                     <c-fec_-related-list-paging
                         records={billedTransactions}
                         columns={billedTransactionsColumns}
-                        sorted-by="transactionCode"
+                        default-sorted-by="transactionCode" 
+                        default-sort-direction="desc"
                         onrowselect={handleTransactionSelect}>
                     </c-fec_-related-list-paging>
 

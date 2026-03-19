@@ -41,7 +41,7 @@
         <fullName>Auto-Closed</fullName>
         <default>false</default>
         <label>Auto-Closed</label>
-        <closed>false</closed>
+        <closed>true</closed>
     </standardValue>
     <standardValue>
         <fullName>Resolved-Completed</fullName>

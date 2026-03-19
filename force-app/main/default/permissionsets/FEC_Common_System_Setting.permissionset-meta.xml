@@ -33,6 +33,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_CaseOwnerChangeNotification</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CaseRemarkController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -304,6 +308,10 @@
     <label>Common System Setting</label>
     <license>Salesforce</license>
     <tabSettings>
+        <tab>FEC_Account_Contract_Search</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Action_Button__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
@@ -325,6 +333,10 @@
     </tabSettings>
     <tabSettings>
         <tab>FEC_Customer_Search</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_GetNextWork</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>

@@ -163,6 +163,15 @@ public with sharing class FEC_GetIPPDetailsCallout {
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
         HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, doc, '');
 
+        FEC_CommonUltils.logApi(
+            'FEC_GetIPPDetailsCallout',
+            endpoint,
+            FEC_ConstantCommon.API_METHOD_POST,
+            doc.toXmlString(),
+            res,
+            null
+        );
+
         if (res.getStatusCode() != 200) {
             throw new CalloutException(
                 String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{ res.getStatus() + ' ' + res.getBody() })
@@ -210,10 +219,10 @@ public with sharing class FEC_GetIPPDetailsCallout {
         // Required
         requestNode.addChildElement('PostingDate', null, null).addTextNode(d.postingDate);
 
-        // Optional fields after PostingDate
-        addOptionalNode(requestNode, 'CardNumber', d.cardNumber);
-        addOptionalNode(requestNode, 'CardSeq', d.cardSeq);
-        addOptionalNode(requestNode, 'IPPKey', d.ippKey);
+        addOptionalNodeOrEmpty(requestNode, 'CardNumber', d.cardNumber);
+        requestNode.addChildElement('CardSeq', null, null)
+            .addTextNode(d.cardSeq != null ? String.valueOf(d.cardSeq) : '0');
+        addOptionalNodeOrEmpty(requestNode, 'IPPKey', d.ippKey);
 
         return doc;
     }

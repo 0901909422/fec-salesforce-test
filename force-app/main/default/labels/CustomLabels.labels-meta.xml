@@ -273,6 +273,13 @@
         <value>Cancel</value>
     </labels>
     <labels>
+        <fullName>FEC_Wrap_Up_Modal_Btn_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Wrap-up Information modal Cancel button</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
         <fullName>FEC_Btn_Clear_Filter</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -519,6 +526,286 @@
         <protected>false</protected>
         <shortDescription>CIF Number Label</shortDescription>
         <value>CIF Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_ADDITIONAL_INFO_ID_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_ADDITIONAL_INFO_ID_REQUIRED_MSG</shortDescription>
+        <value>AdditionalInfo.ID required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_ADDITIONAL_INFO_VALUE_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_ADDITIONAL_INFO_VALUE_REQUIRED_MSG</shortDescription>
+        <value>AdditionalInfo.Value required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CATEGORY_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CATEGORY_INVALID_MSG</shortDescription>
+        <value>Category is blank or invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CUSTOMER_INFO_MISSING_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CUSTOMER_INFO_MISSING_MSG</shortDescription>
+        <value>CustomerInfo is missing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_ERROR_CODE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CS CASE ERROR CODE</shortDescription>
+        <value>110</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_ADDITIONAL_INFO_VALUE_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_ADDITIONAL_INFO_VALUE_MSG</shortDescription>
+        <value>Invalid upload payload format</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG</shortDescription>
+        <value>Invalid ContractOrAccountNumber</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_CREATOR_EMAIL_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_CREATOR_EMAIL_MSG</shortDescription>
+        <value>Invalid CreatorEmail</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_CUSTOMER_NAME_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_CUSTOMER_NAME_MSG</shortDescription>
+        <value>Invalid customer name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_EMAIL_ADDRESS_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_EMAIL_ADDRESS_MSG</shortDescription>
+        <value>Invalid email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_NATIONAL_ID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_NATIONAL_ID_MSG</shortDescription>
+        <value>Invalid NationalID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG</shortDescription>
+        <value>Invalid phone number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_TRANSACTION_ID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CS CASE INVALID TRANSACTION ID MSG</shortDescription>
+        <value>Invalid TransactionID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_USER_TYPE_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_USER_TYPE_MSG</shortDescription>
+        <value>Invalid user type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_NOT_FOUND_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_NOT_FOUND_MSG</shortDescription>
+        <value>Case not found with ID:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_PRODUCT_TYPE_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_PRODUCT_TYPE_INVALID_MSG</shortDescription>
+        <value>ProductType is blank or invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_REMARKS_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_REMARKS_REQUIRED_MSG</shortDescription>
+        <value>Remarks required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_REMARKS_TOO_LONG_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_REMARKS_TOO_LONG_MSG</shortDescription>
+        <value>Remarks too long</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_REQUEST_INFO_MISSING_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_REQUEST_INFO_MISSING_MSG</shortDescription>
+        <value>RequestInfo is missing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_REQUEST_IS_NULL_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CS CASE REQUEST IS NULL MSG</shortDescription>
+        <value>Request is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_CASEID_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_CASEID_REQUIRED_MSG</shortDescription>
+        <value>Missing CaseID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_CASEREQUESTINFO_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_CASEREQUESTINFO_REQUIRED_MSG</shortDescription>
+        <value>CaseRequestInfo required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_CHANNEL_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_CHANNEL_REQUIRED_MSG</shortDescription>
+        <value>Channel required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_CONTRACT_OR_ACCOUNT_INFOS_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_CONTRACT_OR_ACCOUNT_INFOS_REQUIRED_MSG</shortDescription>
+        <value>ContractOrAccountInfos required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_MAX_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_MAX_MSG</shortDescription>
+        <value>ContractOrAccountNumber max 255</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_DATETIME_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_DATETIME_INVALID_MSG</shortDescription>
+        <value>Datetime must be ISO-8601</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_PHONE_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_PHONE_REQUIRED_MSG</shortDescription>
+        <value>PhoneNumber required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_PRODUCT_TYPE_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_PRODUCT_TYPE_REQUIRED_MSG</shortDescription>
+        <value>ProductType required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_REQUEST_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_REQUEST_INVALID_MSG</shortDescription>
+        <value>Request cannot be null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_SYS_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_SYS_REQUIRED_MSG</shortDescription>
+        <value>Sys required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_TRANSACTIONID_MAX_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_TRANSACTIONID_MAX_MSG</shortDescription>
+        <value>TransactionID max 36</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_TRANSACTIONID_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_TRANSACTIONID_REQUIRED_MSG</shortDescription>
+        <value>TransactionID required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_USERTYPE_MAX_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_USERTYPE_MAX_MSG</shortDescription>
+        <value>UserType max 15</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_USERTYPE_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_USERTYPE_REQUIRED_MSG</shortDescription>
+        <value>UserType required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_SUBCODE_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_SUBCODE_REQUIRED_MSG</shortDescription>
+        <value>SubCode required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_SUBCODE_TOO_LONG_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_SUBCODE_TOO_LONG_MSG</shortDescription>
+        <value>Subcode is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_SUB_CATEGORY_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_SUB_CATEGORY_INVALID_MSG</shortDescription>
+        <value>SubCategory is blank or invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_SYS_MISSING_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC  CS CASE SYS MISSING MSG</shortDescription>
+        <value>Sys is missing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_TYPE_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_TYPE_REQUIRED_MSG</shortDescription>
+        <value>Casetype is blank or invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_TYPE_TOO_LONG_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_TYPE_TOO_LONG_MSG</shortDescription>
+        <value>CaseType is invalid or no longer than 255 characters</value>
     </labels>
     <labels>
         <fullName>FEC_Cancel</fullName>
@@ -1510,7 +1797,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Follow Up Label</shortDescription>
-        <value>Follow Up</value>
+        <value>Follow-up</value>
     </labels>
     <labels>
         <fullName>FEC_Follow_Up_Until_Resolved</fullName>
@@ -1644,41 +1931,6 @@
         <protected>false</protected>
         <shortDescription>Interaction Duration</shortDescription>
         <value>Interaction Duration</value>
-    </labels>
-    <labels>
-        <fullName>FEC_FollowUp_Type_Until_Case_Resolved</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Follow-up type: Until Case is Resolved</shortDescription>
-        <value>Until Case is Resolved</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Follow_Up_Until_Unfollow</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Until Unfollow</shortDescription>
-        <value>Until Unfollow</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Follow_Up_Label</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Follow Up Label</shortDescription>
-        <value>Follow-up</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Follow_Up_Until_Resolved</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Until Resolved</shortDescription>
-        <value>Until Resolved</value>
-    </labels>
-    <labels>
-        <fullName>Interaction_Entitlement_Name</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Name of Entitlement record for Interaction Case</shortDescription>
-        <value>Interaction Entitlement</value>
     </labels>
     <labels>
         <fullName>FEC_Interaction_ID</fullName>
@@ -7755,5 +8007,19 @@
         <protected>false</protected>
         <shortDescription>Email body when Case owner changes. {0}=Case Number, {1}=Case link URL</shortDescription>
         <value>Case {0} đã được phân công cho bạn. Vui lòng xem và xử lý: {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Account_Card_Fetch_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Card Fetch Error</shortDescription>
+        <value>Failed to retrieve card info for Account Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CREATE CS CASE SUCCESSFULLY MSG</shortDescription>
+        <value>Case created successfully.</value>
     </labels>
 </CustomLabels>
