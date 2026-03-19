@@ -164,6 +164,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String SOBJECT_USER = 'User';
     public static final String SOBJECT_GROUP = 'Group';
     public static final String DELIMITER_SEMICOLON = ';';
+    public static final String DELIMITER_UNDERSCORE = '_';
     
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
