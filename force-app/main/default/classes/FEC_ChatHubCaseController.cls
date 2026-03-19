@@ -20,7 +20,65 @@ public with sharing class FEC_ChatHubCaseController {
             this.caseNo = caseNo;
         }
     }
+    public class FEC_InteractionCaseDTO {
+        // =========================
+        // BASIC INFO
+        // =========================
+        public String channel;
+        public String subChannel;
+        public String otherSubChannel;
+        public String externalInteractionId;
+        public String campaignName;
+        public String agentId;
+        
+        // =========================
+        // CUSTOMER INFO
+        // =========================
+        public String phoneNumber;
+        public String nationalId;
+        public String accountNumber;
+        public String contractNumber;
+        public String customerName;
+        
+        // =========================
+        // INTERACTION DATA
+        // =========================
+        public String transcription;
+        public String kycMethod;
+        public String kycResult;
+    }
     
+    
+    public class FEC_InteractionCaseGenesysDTO {
+        public String phoneNumber;
+        public String nationalID;
+        public String genesysInteractionID;
+        public String contractNum;
+        public String cardAccountNum;
+        public String agentID;
+        public String campaignName;
+        public String type;
+        public String method;
+    }
+    
+    public class FEC_InteractionCaseResponse {
+        public Id caseId;
+        public String linkId;
+        public String caseNo;
+    }
+    
+    public class FEC_CustomerCaseDTO {
+        public String customerName;
+        public String phoneNumber;
+        public String userType;
+        public String businessProcessId;
+        public String productTypeId;
+        public String categoryId;
+        public String subCategoryId;
+        public String subCodeId;
+        public String remarks;
+    }
+
     /** * createCaseOnNewSession
     * Handles the incoming 'createCaseRequestEvent' to create a new Case record.
     * @param strJsonData: JSON string containing chat session and customer info.
@@ -48,10 +106,10 @@ public with sharing class FEC_ChatHubCaseController {
             Object objCustomer = mapRaw.get('customerInfo');
             Map<String, Object> mapCustomer = (objCustomer != null) ? (Map<String, Object>)objCustomer : new Map<String, Object>();
     
-            // 3. Prepare DTO for FEC_CreateCaseHanlder
-            FEC_CreateCaseHanlder.FEC_InteractionCaseDTO dto = new FEC_CreateCaseHanlder.FEC_InteractionCaseDTO();
+            // 3. Prepare DTO
+            FEC_InteractionCaseDTO dto = new FEC_InteractionCaseDTO();
             
-            dto.channel = 'Chat'; 
+            dto.channel = 'Chat';
             
             String strRawChannel = (mapSession.containsKey('chatChannel')) ? (String)mapSession.get('chatChannel') : '';
 
@@ -71,7 +129,7 @@ public with sharing class FEC_ChatHubCaseController {
             String strDtoJson = JSON.serialize(dto);
     
             // 4. Call existing Handler to create Case
-            FEC_CreateCaseHanlder.FEC_InteractionCaseResponse response = FEC_CreateCaseHanlder.createInteractionCase(strDtoJson);
+            FEC_InteractionCaseResponse response = createInteractionCaseChat(strDtoJson);
             return new CaseCreationResponse(response.caseId, response.caseNo);
     
         } catch (Exception e) {
@@ -236,6 +294,90 @@ public with sharing class FEC_ChatHubCaseController {
         } catch (Exception e) {
             System.debug('Error updating Old Case: ' + e.getMessage());
             throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    public static FEC_InteractionCaseResponse createInteractionCaseChat(String jsonInput) {
+        FEC_InteractionCaseDTO dto = (FEC_InteractionCaseDTO)JSON.deserialize(jsonInput, FEC_InteractionCaseDTO.class);
+        
+        if (dto == null) {
+            throw new IllegalArgumentException(System.Label.FEC_MSG_Interaction_Case_DTO_Null);
+        }
+        try {
+            Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName().get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+            Case interactionCase = new Case();
+            interactionCase.RecordTypeId = interactionRecordTypeId;
+            
+            // ---------------------------
+            // CHANNEL / STATUS
+            // ---------------------------
+            
+            
+            if(dto.channel == FEC_ConstantCommon.CHANNEL_INBOUND_API) {
+                interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
+            } else if ( dto.channel == FEC_ConstantCommon.CHANNEL_OUTBOUND_API) {
+                interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
+            }
+            if(dto.subChannel != null) {
+                interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
+            }
+            
+            interactionCase.FEC_Other_Subchannel__c =dto.subChannel == 'Other' ? dto.otherSubChannel : null;
+            interactionCase.FEC_External_Interaction_ID__c = dto.externalInteractionId;
+            if (dto.channel == 'Chat') {
+                interactionCase.Status = 'Pending';
+            } else {
+                interactionCase.Status = 'Open';
+            }
+            if(dto.campaignName != null) {
+                interactionCase.FEC_Genesys_campaign_Name__c = dto.campaignName;
+            }
+            
+            // ---------------------------
+            // CUSTOMER INFO
+            // ---------------------------
+            interactionCase.FEC_Phone_Number__c = dto.phoneNumber;
+            interactionCase.FEC_National_ID_Passport_ID__c = dto.nationalId;
+            interactionCase.FEC_Account_Number__c = dto.accountNumber;
+            interactionCase.FEC_Contract_Number__c = dto.contractNumber;
+            
+            // ---------------------------
+            // INTERACTION DATA
+            // ---------------------------
+            interactionCase.FEC_Transcription__c = dto.transcription;
+            interactionCase.FEC_KYC_Method__c = dto.kycMethod;
+            // interactionCase.FEC_KYC_Result__c = dto.kycResult;
+    
+          
+            
+            insert interactionCase;
+            
+            interactionCase = [
+                SELECT Id, FEC_Link_ID__c, OwnerId
+                FROM Case
+                WHERE Id = :interactionCase.Id
+            ];
+            
+            // if(dto.agentId != null && dto.agentId != '') {
+                //     System.debug('Assigning Agent ID: ' + dto.agentId + ' to User Id    : ' + interactionCase.OwnerId);
+                //     User userInfo = [SELECT Id, FEC_Agent_ID__c FROM User WHERE Id = :interactionCase.OwnerId];
+                //     userInfo.FEC_Agent_ID__c = dto.agentId;
+                //     update userInfo;
+            // }
+            
+            
+            FEC_InteractionCaseResponse res = new FEC_InteractionCaseResponse();
+            res.caseId = interactionCase.Id;
+            res.linkId = interactionCase.FEC_Link_ID__c;
+            
+            if (res.linkId != null && res.linkId.contains('>')) {
+                res.caseNo = res.linkId.substringBetween('>', '</');
+            }
+            
+            return res;
+        } catch (Exception e) {
+            System.debug('Error creating Interaction Case: ' + e.getMessage());
+            throw new AuraHandledException('Lỗi khi tạo Case tương tác: ' + e.getMessage());
         }
     }
 }
