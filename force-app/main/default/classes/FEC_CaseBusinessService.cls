@@ -1132,15 +1132,15 @@ public with sharing class FEC_CaseBusinessService {
         FEC_User_Role__c = usr.UserRole?.Name
       );
     try {
-      new FEC_CaseBusinessWithoutSharing().doInsert(history);
+      new FEC_CaseBusinessWithoutSharing().doInsert(new List<FEC_Routing_Action_History__c>{history});
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
   }
 
   private without sharing class FEC_CaseBusinessWithoutSharing {
-    public void doInsert(FEC_Routing_Action_History__c history) {
-        insert history;
+    public void doInsert(FEC_Routing_Action_History__c[] histories) {
+        insert histories;
     }
   }
 
