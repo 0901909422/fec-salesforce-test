@@ -775,6 +775,18 @@ public with sharing class FEC_CommonUltils {
     }
 }
 
+  public static Boolean checkLength(String fieldName, String value, Integer length) {
+    if (String.isNotBlank(value) && value.length() > length) {
+      return false;
+    }
+    return true;
+  }
+
+  public static void addTextNodeSafe(Dom.XmlNode parent, String tagName, String value) {
+    parent.addChildElement(tagName, null, null)
+      .addTextNode(value == null ? '' : value);
+  }
+
   public static void logApi(
     String apiName,
     String endpoint,
