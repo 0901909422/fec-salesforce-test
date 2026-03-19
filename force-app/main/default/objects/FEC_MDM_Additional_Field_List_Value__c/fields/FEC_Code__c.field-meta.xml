@@ -4,10 +4,10 @@
     <caseSensitive>false</caseSensitive>
     <externalId>true</externalId>
     <label>FEC Code</label>
-    <length>255</length>
+    <length>18</length>
     <required>false</required>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Text</type>
-    <unique>false</unique>
+    <unique>true</unique>
 </CustomField>
