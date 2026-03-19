@@ -129,6 +129,19 @@ export const VARIANT_SUCCESS = 'success';
 export const VARIANT_ERROR = 'error';
 export const VARIANT_INFO = 'info';
 
+// Columns definition for Master Data Setting list (centralized)
+export const MASTER_DATA_SETTING_COLUMNS = [
+    { label: LABEL_COL_CHANNEL, fieldName: FIELD_CHANNEL, type: TYPE_TEXT, sortable: true },
+    { label: LABEL_COL_APPLICABLE_ROLE, fieldName: FIELD_APPLICABLE_ROLE, type: TYPE_TEXT, sortable: true },
+    { label: LABEL_COL_PROPERTY_NAME, fieldName: FIELD_ADDITIONAL_FIELD, type: TYPE_TEXT, sortable: true },
+    { label: LABEL_COL_SECTION, fieldName: FIELD_SECTION, type: TYPE_TEXT, sortable: true },
+    { label: LABEL_COL_ORDER, fieldName: FIELD_FIELD_ORDER_DISPLAY, sortable: true },
+    { label: LABEL_COL_STATUS, fieldName: FIELD_FIELD_STATUS, type: TYPE_BOOLEAN },
+    { label: LABEL_LABEL_READONLY, fieldName: FIELD_FIELD_READONLY, type: TYPE_BOOLEAN },
+    { label: LABEL_LABEL_MANDATORY, fieldName: FIELD_FIELD_MANDATORY, type: TYPE_BOOLEAN },
+    { type: 'action', typeAttributes: { rowActions: [ { label: LABEL_ACTION_EDIT, name: 'edit' }, { label: LABEL_ACTION_DELETE, name: 'delete' } ] } }
+];
+
 // Section keys used in review component
 export const SECTION_NEW = 'newList';
 export const SECTION_UPDATED = 'updateList';
@@ -229,20 +242,6 @@ export const FIELD_ORDER = 'FEC_Order__c';
 export const FIELD_PARENT_FIELD = 'FEC_Additional_Field__c';
 export const FIELD_PROCESS_CHANGE_STATUS = 'Process_Change_Status__c'; // Added
 export const FIELD_PROCESS_STATUS = 'Process_Change_Status__c';
-
-// Columns definition for Master Data Setting list (centralized)
-export const MASTER_DATA_SETTING_COLUMNS = [
-    { label: LABEL_COL_CHANNEL, fieldName: FIELD_CHANNEL, type: TYPE_TEXT, sortable: true },
-    { label: LABEL_COL_APPLICABLE_ROLE, fieldName: FIELD_APPLICABLE_ROLE, type: TYPE_TEXT, sortable: true },
-    { label: LABEL_COL_PROPERTY_NAME, fieldName: FIELD_ADDITIONAL_FIELD, type: TYPE_TEXT, sortable: true },
-    { label: LABEL_COL_SECTION, fieldName: FIELD_SECTION, type: TYPE_TEXT, sortable: true },
-    { label: LABEL_COL_ORDER, fieldName: FIELD_FIELD_ORDER_DISPLAY, sortable: true },
-    { label: LABEL_COL_STATUS, fieldName: FIELD_FIELD_STATUS, type: TYPE_BOOLEAN },
-    { label: LABEL_LABEL_READONLY, fieldName: FIELD_FIELD_READONLY, type: TYPE_BOOLEAN },
-    { label: LABEL_LABEL_MANDATORY, fieldName: FIELD_FIELD_MANDATORY, type: TYPE_BOOLEAN },
-    { label: 'Process Status', fieldName: FIELD_PROCESS_CHANGE_STATUS, type: TYPE_TEXT },
-    { type: 'action', typeAttributes: { rowActions: [ { label: LABEL_ACTION_EDIT, name: 'edit' }, { label: LABEL_ACTION_DELETE, name: 'delete' } ] } }
-];
 
 // Process and Object mapping for Detail component
 export const OBJECT_MAP = {
