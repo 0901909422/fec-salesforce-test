@@ -98,6 +98,10 @@
         <name>ApexClass</name>
     </types>
 	<types>
+		<members>FEC_CaseTrigger</members>
+		<name>ApexTrigger</name>
+	</types>
+	<types>
 		<members>FEC_Service</members>
 		<name>CustomApplication</name>
 	</types>

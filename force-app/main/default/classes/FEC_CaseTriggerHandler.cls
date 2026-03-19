@@ -307,7 +307,8 @@ public without sharing class FEC_CaseTriggerHandler {
         List<Id> caseIdsToUpdate = new List<Id>();
 
         for (Case c : newCases) {
-            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE && c.RecordTypeId == interactionRecordTypeId) {
+            if ((c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE || c.Origin == FEC_ConstantCommon.EMAIL) 
+                && c.RecordTypeId == interactionRecordTypeId) {
                 caseIdsToUpdate.add(c.Id);
             }
         }
@@ -329,7 +330,7 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         for (Case c : newCases) {
-            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE
+            if ((c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE || c.Origin == FEC_ConstantCommon.EMAIL)
                     && c.RecordTypeId == interactionRecordTypeId
                     && String.isBlank(c.FEC_Channel__c)) {
                 c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
