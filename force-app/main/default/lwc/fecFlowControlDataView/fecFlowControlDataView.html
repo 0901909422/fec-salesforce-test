@@ -67,17 +67,6 @@
             <!-- Spacer to push right side -->
             <div style="flex: 1;"></div>
 
-            <!-- Status Filter -->
-            <!-- <div style="min-width:180px;">
-              <lightning-combobox
-                name="statusFilter"
-                placeholder="-- Lọc theo Status --"
-                options={statusFilterOptions}
-                value={statusFilter}
-                onchange={handleStatusFilterChange}>
-              </lightning-combobox>
-            </div> -->
-
             <!-- Add Rule Button -->
             <template if:true={isBPSelected}>
               <button class="slds-button slds-button_brand"
@@ -377,24 +366,35 @@
               <div class="section-header">
                 <h3 class="modal-section-title">
                   <lightning-icon icon-name="utility:filterList" size="x-small" class="slds-m-right_x-small"></lightning-icon>
-                  Stage Change Conditions
+                  Set Entry Conditions
                 </h3>
-                <button class="slds-button slds-button_neutral"
-                        onclick={handleAddCondition}>
+                <button class="slds-button slds-button_neutral" onclick={handleAddCondition}>
                   <lightning-icon icon-name="utility:add" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
                   Thêm Điều kiện
                 </button>
               </div>
 
-              <!-- Condition Logic -->
-              <template if:true={hasFormConditions}>
+              <div class="modal-form-group slds-m-bottom_small">
+                <label class="modal-label">Condition Requirements</label>
+                <lightning-combobox
+                  name="conditionRequirement"
+                  options={conditionRequirementOptions}
+                  value={formData.conditionRequirement}
+                  onchange={handleRequirementChange}
+                  class="modal-combobox">
+                </lightning-combobox>
+              </div>
+
+              <template if:true={isCustomLogic}>
                 <div class="condition-logic-input slds-m-bottom_small">
-                  <label class="modal-label">Condition Logic (ví dụ: 1 AND (2 OR 3))</label>
+                  <label class="modal-label"><span class="required-mark">*</span> Condition Logic (ví dụ: 1 AND (2 OR 3))</label>
                   <input type="text" class="modal-input"
-                         placeholder="Mặc định: tất cả AND"
                          data-field-name="conditionLogic"
                          value={formData.conditionLogic}
                          onchange={handleModalInputChange} />
+                  <template if:true={formErrors.conditionLogic}>
+                    <div class="modal-error slds-m-top_xx-small">{formErrors.conditionLogic}</div>
+                  </template>
                 </div>
               </template>
 
@@ -403,60 +403,34 @@
                 <div class="condition-list" style="overflow: visible;">
                   <template for:each={formConditions} for:item="cond">
                     <div key={cond.id} class="condition-row">
-                      <span class="condition-order">#{cond.orderNum}</span>
+                      <span class="condition-order">{cond.orderNum}</span>
 
-                      <!-- Field — native select to avoid dropdown clipping -->
-                      <div class="condition-field-input">
-                        <select class="native-select"
-                                data-index={cond.index}
-                                data-field="fieldId"
-                                onchange={handleConditionFieldChange}>
+                      <div class="condition-field-input" style="flex: 2.5;">
+                        <select class="native-select" data-index={cond.index} data-field="fieldId" onchange={handleConditionFieldChange}>
                           <option value="">-- Chọn Field --</option>
-                          <template for:each={additionalFieldOptions} for:item="opt">
-                            <option key={opt.value}
-                                    value={opt.value}
-                                    data-selected={cond.fieldId}>
-                              {opt.label}
-                            </option>
+                          <template for:each={conditionFieldOptions} for:item="opt">
+                            <option key={opt.value} value={opt.value} data-selected={cond.fieldId}>{opt.label}</option>
                           </template>
                         </select>
                       </div>
 
-                      <!-- Operator — native select -->
-                      <div class="condition-operator-input">
-                        <select class="native-select"
-                                data-index={cond.index}
-                                data-field="operator"
-                                onchange={handleConditionFieldChange}>
+                      <div class="condition-operator-input" style="flex: 1.5;">
+                        <select class="native-select" data-index={cond.index} data-field="operator" onchange={handleConditionFieldChange}>
                           <template for:each={operatorOptions} for:item="op">
                             <option key={op.value} value={op.value}>{op.label}</option>
                           </template>
                         </select>
                       </div>
 
-                      <!-- Value -->
-                      <div class="condition-value-input">
+                      <div class="condition-value-input" style="flex: 3;">
                         <input type="text" class="modal-input"
                                value={cond.value}
                                data-index={cond.index}
                                data-field="value"
-                               placeholder="e.g. 10000"
+                               placeholder="e.g. Value"
                                onchange={handleConditionFieldChange} />
                       </div>
 
-                      <!-- Value Type — native select -->
-                      <div class="condition-type-input">
-                        <select class="native-select"
-                                data-index={cond.index}
-                                data-field="valueType"
-                                onchange={handleConditionFieldChange}>
-                          <template for:each={valueTypeOptions} for:item="vt">
-                            <option key={vt.value} value={vt.value}>{vt.label}</option>
-                          </template>
-                        </select>
-                      </div>
-
-                      <!-- Remove -->
                       <button class="slds-button slds-button_icon condition-remove-btn"
                               data-index={cond.index}
                               onclick={handleRemoveCondition}
