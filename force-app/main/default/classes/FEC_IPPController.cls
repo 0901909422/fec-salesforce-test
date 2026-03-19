@@ -33,77 +33,39 @@ public with sharing class FEC_IPPController {
         @AuraEnabled public String disbursementChannel { get; set; }
     }
 
-    // Ưu tiên query DB (FEC_IPP__c); không có thì gọi 3 API, lưu DB rồi trả về.
+    // Mỗi lần load trang đều gọi API, cập nhật DB rồi trả về.
     @AuraEnabled(cacheable=false)
     public static List<IPPRecordDTO> getIPPRecords(String caseId) {
         if (String.isBlank(caseId)) {
             return new List<IPPRecordDTO>();
         }
 
-        Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
-
-        // Ưu tiên query từ database
-        if (customerHistoryId != null) {
-            List<FEC_IPP__c> fromDb = [
-                SELECT Id, FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Open_Date__c, FEC_IPP_First_Due_Date__c,
-                       FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c, FEC_IPP_Current_Balance__c, FEC_IPP_Interest_Rate__c,
-                       FEC_IPP_Term__c, FEC_IPP_Current_Term__c, FEC_Total_IPP_Payment_Amount__c,
-                       FEC_Total_IPP_Monthly_Principal__c, FEC_Total_IPP_Monthly_Interest__c,
-                       FEC_CC_Code__c, FEC_CC_Name__c, FEC_DSA_Code__c, FEC_DSA_Name__c,
-                       FEC_TSA_Code__c, FEC_TSA_Name__c, FEC_Application_ID__c,
-                       FEC_Origination_Channel__c, FEC_Disbursement_Channel__c
-                FROM FEC_IPP__c
-                WHERE FEC_Customer_History__c = :customerHistoryId
-                ORDER BY FEC_IPP_Open_Date__c DESC NULLS LAST
-            ];
-            if (fromDb != null && !fromDb.isEmpty()) {
-                List<IPPRecordDTO> result = new List<IPPRecordDTO>();
-                Map<String, String> helpTextMap = getIPPHelpTextMap();
-                for (FEC_IPP__c rec : fromDb) {
-                    IPPRecordDTO dto = mapFECIPPToDTO(rec);
-                    dto.helpTexts = helpTextMap;
-                    result.add(dto);
-                }
-                return result;
-            }
-        }
-
-        // Database không có dữ liệu
         String accountNumber = getAccountNumberFromCase(caseId);
         if (String.isBlank(accountNumber)) {
             return new List<IPPRecordDTO>();
         }
 
-        // Mock bật: gọi API mock, có data thì save DB và return; không thì fallback.
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         if (apiSetting != null && apiSetting.FEC_Call_Mock__c == false) {
-            try {
-                List<IPPRecordDTO> result = fetchIPPRecordsFromAPI(caseId, accountNumber);
-                if (result != null && !result.isEmpty()) {
-                    sortByOpenDate(result);
-                    saveIPPRecordsToDatabase(caseId, result);
-                    Map<String, String> helpTextMap = getIPPHelpTextMap();
-                    for (IPPRecordDTO dto : result) {
-                        dto.helpTexts = helpTextMap;
-                    }
-                    return result;
-                }
-            } catch (Exception e) {
-                System.debug('FEC_IPPController Mock API error: ' + e.getMessage());
+            List<IPPRecordDTO> result = fetchIPPRecordsFromAPI(caseId, accountNumber);
+            sortByOpenDate(result);
+            saveIPPRecordsToDatabase(caseId, result);
+
+            Map<String, String> helpTextMap = getIPPHelpTextMap();
+            for (IPPRecordDTO dto : result) {
+                dto.helpTexts = helpTextMap;
             }
-            return new List<IPPRecordDTO>();
+
+            return result;
         }
 
-        // Không Mock: gọi API thực.
-        List<IPPRecordDTO> result = fetchIPPRecordsFromAPI(caseId, accountNumber);
+        // Mock mode hoặc apiSetting null: trả về dữ liệu IPP từ DB (nếu có)
+        List<IPPRecordDTO> result = loadIPPRecordsFromDatabase(caseId);
         sortByOpenDate(result);
-        saveIPPRecordsToDatabase(caseId, result);
-
         Map<String, String> helpTextMap = getIPPHelpTextMap();
         for (IPPRecordDTO dto : result) {
             dto.helpTexts = helpTextMap;
         }
-
         return result;
     }
 
@@ -143,22 +105,19 @@ public with sharing class FEC_IPPController {
         
         // GetCardPlanInfo
         List<FEC_GetCardPlanInfo.CardPlan> cardPlans = callGetCardPlanInfo(accountNumber);
-        if (cardPlans.isEmpty() || orderedIPPList.isEmpty()) {
+        Boolean hasPlans = cardPlans != null && !cardPlans.isEmpty();
+        Boolean hasIPPs = orderedIPPList != null && !orderedIPPList.isEmpty();
+        if (!hasPlans && !hasIPPs) {
             return new List<IPPRecordDTO>();
         }
-        
-        // Step 3: Build IPP records bằng cách ghép theo index (cùng thứ tự từ 2 API)
+
+        // Step 3: Build IPP records — đủ cả hai nguồn: theo index, thừa Plan thì chỉ Plan, thừa IPP thì chỉ IPP
         return buildIPPRecordsFromAPIs(accountNumber, cardPlans, orderedIPPList);
     }
     
     // Gọi GetCardSecInfo API
     private static FEC_GetCardSecInfo.ResponseWrapper callGetCardSecInfo(String accountNumber) {
-        try {
-            return FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
-        } catch (Exception e) {
-            System.debug('FEC_IPPController.callGetCardSecInfo error: ' + e.getMessage());
-            return null;
-        }
+        return FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
     }
     
     /**
@@ -182,20 +141,18 @@ public with sharing class FEC_IPPController {
     
     // Gọi GetCardPlanInfo API
     private static List<FEC_GetCardPlanInfo.CardPlan> callGetCardPlanInfo(String accountNumber) {
-        try {
-            FEC_GetCardPlanInfo.CardPlanResult planResult = FEC_GetCardPlanInfo.getCardPlanInfo(accountNumber);
-            if (planResult?.plans != null && !planResult.plans.isEmpty()) {
-                return planResult.plans;
-            }
-        } catch (Exception e) {
-            System.debug('FEC_IPPController.callGetCardPlanInfo error: ' + e.getMessage());
+        FEC_GetCardPlanInfo.CardPlanResult planResult = FEC_GetCardPlanInfo.getCardPlanInfo(accountNumber);
+        if (planResult?.plans != null && !planResult.plans.isEmpty()) {
+            return planResult.plans;
         }
         return new List<FEC_GetCardPlanInfo.CardPlan>();
     }
     
     /**
-     * Xây dựng IPP records bằng cách merge theo thứ tự: phần tử thứ i của cardPlans với phần tử thứ i của orderedIPPList.
-     * Số bản ghi = min(cardPlans.size(), orderedIPPList.size()).
+     * Xây dựng IPP records: số bản ghi = max(cardPlans.size(), orderedIPPList.size()).
+     * - Cùng index có cả Plan và IPP: merge cardPlans[i] với orderedIPPList[i].
+     * - Chỉ có Plan (nhiều Plan hơn IPP): dùng cardPlan, ipp = null.
+     * - Chỉ có IPP (nhiều IPP hơn Plan): dùng chỉ GetCardSecInfo IPP, không có CardPlan.
      */
     private static List<IPPRecordDTO> buildIPPRecordsFromAPIs(
         String accountNumber,
@@ -203,24 +160,30 @@ public with sharing class FEC_IPPController {
         List<FEC_GetCardSecInfo.IPP> orderedIPPList
     ) {
         List<IPPRecordDTO> result = new List<IPPRecordDTO>();
-        Integer listSize = Math.min(cardPlans.size(), orderedIPPList.size());
-        if (listSize == 0) return result;
+        Integer planCount = (cardPlans != null) ? cardPlans.size() : 0;
+        Integer ippCount = (orderedIPPList != null) ? orderedIPPList.size() : 0;
+        Integer maxSize = Math.max(planCount, ippCount);
+        if (maxSize == 0) return result;
 
         String todayStr = Datetime.now().formatGmt(FEC_ConstantCommon.DATE_FORMAT);
         Integer calloutCount = 0;
 
-        for (Integer i = 0; i < listSize; i++) {
+        for (Integer i = 0; i < maxSize; i++) {
             if (calloutCount >= 50) break;
 
-            FEC_GetCardPlanInfo.CardPlan cardPlan = cardPlans[i];
-            FEC_GetCardSecInfo.IPP ipp = orderedIPPList[i];
+            FEC_GetCardPlanInfo.CardPlan cardPlan = (i < planCount) ? cardPlans[i] : null;
+            FEC_GetCardSecInfo.IPP ipp = (i < ippCount) ? orderedIPPList[i] : null;
 
-            String planNumberKey = String.isNotBlank(cardPlan.planNumber)
-                ? cardPlan.planNumber.trim()
-                : (ipp != null && ipp.IPPPlan != null ? ipp.IPPPlan.trim() : '');
-            if (String.isBlank(planNumberKey)) continue;
-
-            IPPRecordDTO dto = buildIPPRecordFromCardPlanAndIPP(cardPlan, ipp, planNumberKey);
+            IPPRecordDTO dto;
+            if (cardPlan != null) {
+                String planNumberKey = String.isNotBlank(cardPlan.planNumber) ? cardPlan.planNumber.trim() : '';
+                if (String.isBlank(planNumberKey)) continue;
+                dto = buildIPPRecordFromCardPlanAndIPP(cardPlan, ipp, planNumberKey);
+            } else {
+                // Chỉ có IPP (GetCardSecInfo nhiều hơn GetCardPlanInfo)
+                if (ipp == null) continue;
+                dto = buildIPPRecordFromIPPOnly(ipp);
+            }
             enrichIPPRecordWithDetails(dto, accountNumber, todayStr);
             calloutCount++;
             result.add(dto);
@@ -228,6 +191,40 @@ public with sharing class FEC_IPPController {
         return result;
     }
     
+    // Build DTO chỉ từ GetCardSecInfo IPP (khi không có CardPlan tương ứng)
+    private static IPPRecordDTO buildIPPRecordFromIPPOnly(FEC_GetCardSecInfo.IPP ipp) {
+        if (ipp == null) return null;
+        String planNumberKey = String.isNotBlank(ipp.IPPPlan) ? ipp.IPPPlan.trim() : '';
+        String recordNo = (ipp.IPPRecordNo != null) ? ipp.IPPRecordNo.trim() : '';
+        if (String.isBlank(planNumberKey)) planNumberKey = HYPHEN;
+
+        IPPRecordDTO dto = new IPPRecordDTO();
+        dto.Id = API_PREFIX + planNumberKey + HYPHEN + recordNo;
+        dto.planNumber = planNumberKey;
+        dto.recordNo = recordNo;
+        dto.openDate = null;
+        dto.ippBalance = ipp.IPPBalance;
+        dto.firstDueDate = FEC_CommonUltils.parseDate(ipp.IPPStartDate);
+        dto.matureDate = FEC_CommonUltils.parseDate(ipp.IPPMatureDate);
+        dto.currentBalance = ipp.IPPCurrentBalance;
+        dto.currentTerm = ipp.currentTerm;
+        dto.interestRate = ipp.InterestRate;
+        dto.ippTerm = null;
+        dto.totalIPPPaymentAmount = null;
+        dto.totalIPPMonthlyPrincipal = null;
+        dto.totalIPPMonthlyInterest = null;
+        dto.ccCode = HYPHEN;
+        dto.ccName = HYPHEN;
+        dto.dsaCode = HYPHEN;
+        dto.dsaName = HYPHEN;
+        dto.tsaCode = HYPHEN;
+        dto.tsaName = HYPHEN;
+        dto.applicationId = HYPHEN;
+        dto.originationChannel = HYPHEN;
+        dto.disbursementChannel = HYPHEN;
+        return dto;
+    }
+
     // Build DTO từ CardPlan và IPP
     private static IPPRecordDTO buildIPPRecordFromCardPlanAndIPP(
         FEC_GetCardPlanInfo.CardPlan cardPlan,
@@ -242,7 +239,7 @@ public with sharing class FEC_IPPController {
         dto.openDate = FEC_CommonUltils.parseDate(cardPlan.openDate);
         dto.ippBalance = cardPlan.currentBalance;
         
-        // Dữ liệu từ GetCardSecInfo IPP (nếu match)
+        // Dữ liệu từ GetCardSecInfo IPP
         if (ipp != null) {
             dto.recordNo = (ipp.IPPRecordNo != null) ? ipp.IPPRecordNo.trim() : '';
             dto.firstDueDate = FEC_CommonUltils.parseDate(ipp.IPPStartDate);
@@ -250,7 +247,7 @@ public with sharing class FEC_IPPController {
             dto.currentBalance = ipp.IPPCurrentBalance;
             dto.currentTerm = ipp.CurrentTerm;
         } else {
-            dto.recordNo = (cardPlan.recordNumber != null) ? cardPlan.recordNumber.trim() : '';
+            dto.recordNo = '';
             dto.currentBalance = null;
         }
         
@@ -276,12 +273,13 @@ public with sharing class FEC_IPPController {
     }
     
     /**
-     * Bổ sung interestRate, ippTerm từ GetIPPDetails API (bước merge giống các trường khác).
-     * Mock bật: ưu tiên gọi API (Postman mock); chỉ khi không gọi được hoặc không có data mới dùng FEC_MockData.
+     * Bổ sung interestRate, ippTerm từ GetIPPDetails API.
+     * Bỏ qua khi planNumber rỗng hoặc placeholder (bản ghi chỉ từ GetCardSecInfo).
      */
     private static void enrichIPPRecordWithDetails(IPPRecordDTO dto, String accountNumber, String todayStr) {
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-
+        if (dto == null || String.isBlank(dto.planNumber) || HYPHEN.equals(dto.planNumber)) {
+            return;
+        }
         try {
             FEC_GetIPPDetailsCallout.IPPRequest req = new FEC_GetIPPDetailsCallout.IPPRequest();
             req.accountNumber = accountNumber;
@@ -315,7 +313,7 @@ public with sharing class FEC_IPPController {
         }
     }
 
-    // Lưu IPP từ API vào FEC_IPP__c (insert), cập nhật dto.Id cho LWC.
+    // Xóa IPP cũ của customer rồi insert mới từ API, cập nhật dto.Id cho LWC.
     private static void saveIPPRecordsToDatabase(String caseId, List<IPPRecordDTO> dtos) {
         if (dtos == null || dtos.isEmpty()) {
             return;
@@ -324,6 +322,18 @@ public with sharing class FEC_IPPController {
         if (customerHistoryId == null) {
             System.debug('FEC_IPPController.saveIPPRecordsToDatabase: no Customer History for Case ' + caseId);
             return;
+        }
+
+        try {
+            List<FEC_IPP__c> existing = [
+                SELECT Id FROM FEC_IPP__c
+                WHERE FEC_Customer_History__c = :customerHistoryId
+            ];
+            if (!existing.isEmpty()) {
+                delete existing;
+            }
+        } catch (Exception e) {
+            System.debug('FEC_IPPController.saveIPPRecordsToDatabase delete error: ' + e.getMessage());
         }
 
         List<FEC_IPP__c> toInsertList = new List<FEC_IPP__c>();
@@ -363,7 +373,7 @@ public with sharing class FEC_IPPController {
             return null;
         }
         List<Case> cases = [
-            SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c
+            SELECT Id, FEC_Account_or_Contract__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -371,27 +381,31 @@ public with sharing class FEC_IPPController {
         if (cases.isEmpty()) {
             return null;
         }
-        Case c = cases[0];
-        if (c.FEC_Account_or_Contract__c != null) {
-            return c.FEC_Account_or_Contract__c;
+        return cases[0].FEC_Account_or_Contract__c;
+    }
+
+    /** Khi FEC_Call_Mock__c = true hoặc apiSetting null: load IPP từ DB theo case (customer history). */
+    private static List<IPPRecordDTO> loadIPPRecordsFromDatabase(String caseId) {
+        Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
+        if (customerHistoryId == null) {
+            return new List<IPPRecordDTO>();
         }
-        if (String.isNotBlank(c.FEC_Account_Number__c)) {
-            List<FEC_Customer_History__c> histories = [
-                SELECT Id FROM FEC_Customer_History__c
-                WHERE FEC_Account_Number__c = :c.FEC_Account_Number__c
-                LIMIT 1
-            ];
-            if (!histories.isEmpty()) {
-                return histories[0].Id;
-            }
-        }
-        // Fallback: Customer History qua FEC_Case__c (Interaction)
-        List<FEC_Customer_History__c> historiesByCase = [
-            SELECT Id FROM FEC_Customer_History__c
-            WHERE FEC_Case__c = :caseId
-            LIMIT 1
+        List<FEC_IPP__c> ipps = [
+            SELECT Id, FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Open_Date__c, FEC_IPP_First_Due_Date__c,
+                   FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c, FEC_IPP_Current_Balance__c, FEC_IPP_Interest_Rate__c,
+                   FEC_IPP_Term__c, FEC_IPP_Current_Term__c, FEC_Total_IPP_Payment_Amount__c,
+                   FEC_Total_IPP_Monthly_Principal__c, FEC_Total_IPP_Monthly_Interest__c,
+                   FEC_CC_Code__c, FEC_CC_Name__c, FEC_DSA_Code__c, FEC_DSA_Name__c,
+                   FEC_TSA_Code__c, FEC_TSA_Name__c, FEC_Application_ID__c,
+                   FEC_Origination_Channel__c, FEC_Disbursement_Channel__c
+            FROM FEC_IPP__c
+            WHERE FEC_Customer_History__c = :customerHistoryId
         ];
-        return (historiesByCase.isEmpty()) ? null : historiesByCase[0].Id;
+        List<IPPRecordDTO> dtos = new List<IPPRecordDTO>();
+        for (FEC_IPP__c rec : ipps) {
+            dtos.add(mapFECIPPToDTO(rec));
+        }
+        return dtos;
     }
 
     private static void sortByOpenDate(List<IPPRecordDTO> listToSort) {
@@ -467,8 +481,7 @@ public with sharing class FEC_IPPController {
 
     private static String getAccountNumberFromCase(String caseId) {
         List<Case> cases = [
-            SELECT Id, FEC_Account_Number__c, FEC_Account_or_Contract__c,
-                   FEC_Account_or_Contract__r.FEC_Account_Number__c
+            SELECT Id, FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Account_Number__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -477,10 +490,9 @@ public with sharing class FEC_IPPController {
             return null;
         }
         Case c = cases[0];
-        if (c.FEC_Account_or_Contract__c != null && String.isNotBlank(c.FEC_Account_or_Contract__r?.FEC_Account_Number__c)) {
-            return c.FEC_Account_or_Contract__r.FEC_Account_Number__c;
-        }
-        return c.FEC_Account_Number__c;
+        return (c.FEC_Account_or_Contract__c != null && c.FEC_Account_or_Contract__r != null && String.isNotBlank(c.FEC_Account_or_Contract__r.FEC_Account_Number__c))
+            ? c.FEC_Account_or_Contract__r.FEC_Account_Number__c
+            : null;
     }
 
 

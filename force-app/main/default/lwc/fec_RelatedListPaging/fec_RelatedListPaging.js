@@ -488,6 +488,21 @@ export default class Fec_RelatedListPaging extends LightningElement {
             return isNaN(t) ? null : t;
         };
 
+        /** Chuỗi đã format (vd 735,287) hoặc số — dùng để sort đúng thứ tự số, không sort theo chữ cái */
+        const toNumeric = (v) => {
+            if (v == null || v === '') return null;
+            if (typeof v === 'number' && !Number.isNaN(v)) return v;
+            if (typeof v === 'string') {
+                const s = v.replace(/,/g, '').trim();
+                if (s === '' || s === '-') return null;
+                if (/^-?\d+(\.\d+)?$/.test(s)) {
+                    const n = Number(s);
+                    return Number.isNaN(n) ? null : n;
+                }
+            }
+            return null;
+        };
+
         this._records = [...records].sort((a, b) => {
             const rawA = a[fieldName];
             const rawB = b[fieldName];
@@ -497,6 +512,13 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
             if (timeA !== null && timeB !== null) {
                 return (timeA - timeB) * dir;
+            }
+
+            const numA = toNumeric(rawA);
+            const numB = toNumeric(rawB);
+            if (numA !== null && numB !== null) {
+                if (numA !== numB) return (numA - numB) * dir;
+                return 0;
             }
 
             if (rawA == null && rawB != null) return -dir;

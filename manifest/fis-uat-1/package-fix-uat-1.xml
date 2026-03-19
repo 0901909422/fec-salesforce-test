@@ -100,6 +100,7 @@
 		<members>maskedToggleCell</members>
 		<members>fec_PaymentHistoryAcount</members>
 		<members>fec_SecondaryInfo</members>
+		<members>fec_CardPayment</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -115,11 +116,16 @@
 		<members>Case.FEC_Case_Created_By__c</members>
 		<members>Case.FEC_Interaction_ID__c</members>
 		<members>Case.FEC_Interaction_Status__c</members>
+		<members>Case.FEC_Outcome_Code__c</members>
 		<members>FEC_Contact_List__c.FEC_Contact_ID__c	</members>
 		<members>ContentVersion.FEC_Stage_ID__c</members>
 		<members>FEC_Additional_Info__c.FEC_Card_Retention_Decline_Reason__c</members>
 		<members>FEC_Team_Queue__c.FEC_Team__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Description__c</members>
+		<members>FEC_Customer_History__c.FEC_Customer_Name__c</members>
+		<members>FEC_Customer_History__c.FEC_Date_of_Issue__c</members>
+		<members>FEC_Customer_History__c.FEC_First_Name__c</members>
+		<members>FEC_Customer_History__c.FEC_Marital_Status__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -214,6 +220,7 @@
 		<members>FEC_Email_Subject_Case_Owner_Change</members>
 		<members>FEC_Email_Body_Case_Owner_Change</members>
 		<members>FEC_Wrap_Up_Modal_Btn_Cancel</members>
+		<members>FEC_Account_Card_Fetch_Error</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
