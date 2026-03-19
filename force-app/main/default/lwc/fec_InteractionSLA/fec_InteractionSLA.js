@@ -7,6 +7,7 @@ import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import getCase from "@salesforce/apex/FEC_InteractionSLAController.getCase";
 import getOutcomeCodePicklistValues from "@salesforce/apex/FEC_InteractionSLAController.getOutcomeCodePicklistValues";
 import getQuickOutcomeCodePicklistValues from "@salesforce/apex/FEC_InteractionSLAController.getQuickOutcomeCodePicklistValues";
+import getOutcomeCodeOptionsByContext from "@salesforce/apex/FEC_InteractionSLAController.getOutcomeCodeOptionsByContext";
 import updateInteractionOutcome from "@salesforce/apex/FEC_InteractionSLAController.updateInteractionOutcome";
 import updateInteractionQuickWrapUp from "@salesforce/apex/FEC_InteractionSLAController.updateInteractionQuickWrapUp";
 import getRelatedCasesCount from "@salesforce/apex/FEC_InteractionSLAController.getRelatedCasesCount";
@@ -114,8 +115,9 @@ export default class Fec_InteractionSLA extends NavigationMixin(LightningElement
   }
 
   loadOutcomeCodeOptions() {
-    // Sử dụng cùng field FEC_Outcome_Code__c cho Wrap-up Information
-    getQuickOutcomeCodePicklistValues()
+    // Lọc Outcome Code theo Channel + Sub Channel (Inbound Call vs Outbound Call)
+    if (!this.recordId) return;
+    getOutcomeCodeOptionsByContext({ recordId: this.recordId })
       .then((result) => {
         this.outcomeCodeOptions = result;
       })
