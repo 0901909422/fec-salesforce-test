@@ -1,8 +1,8 @@
 <template>
     <div class="slds-m-around_small">
         <div class="button-group slds-m-bottom_small">
-            <lightning-button label={labelNewListValue} icon-name="utility:add" onclick={openAddEditModal}
-                variant="brand" class="slds-m-bottom_medium" title={labelNewListValue}>
+            <lightning-button label={labelNewListValue} icon-name="utility:add" onclick={openAddEditModal} variant="brand"
+                class="slds-m-bottom_medium" title={labelNewListValue}>
             </lightning-button>
         </div>
         <div class="datatable-container">
@@ -21,8 +21,7 @@
 
     <!-- Modal for Add/Edit List Value -->
     <template if:true={isAddEditModalOpen}>
-        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading"
-            class="slds-modal slds-fade-in-open">
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading" class="slds-modal slds-fade-in-open">
             <div class="slds-modal__container">
                 <header class="slds-modal__header">
                     <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
@@ -33,47 +32,57 @@
                 </header>
                 <div class="slds-modal__content slds-p-around_medium">
                     <lightning-record-edit-form object-api-name={OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE}
-                        record-id={listValueRecordIdForEdit} onsubmit={handleSubmit} onsuccess={handleFormSuccess}
-                        onerror={handleFormError}>
+                         record-id={listValueRecordIdForEdit} onsubmit={handleSubmit} onsuccess={handleFormSuccess} onerror={handleFormError} oncancel={closeAddEditModal}>
 
-                        <div class="slds-grid slds-wrap slds-gutters">
+                        <!-- Code Field - Readonly on Edit, Required -->
+                        <lightning-input-field
+                            field-name={FIELD_CODE}
+                            required
+                            read-only={listValueRecordIdForEdit}>
+                        </lightning-input-field>
 
-                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                                <lightning-input-field field-name={FIELD_CODE} required
-                                    read-only={listValueRecordIdForEdit}></lightning-input-field>
-                                <lightning-input-field field-name={FIELD_NAME} required></lightning-input-field>
-                            </div>
+                        <!-- Name EN - Required -->
+                        <lightning-input-field
+                            field-name={FIELD_NAME}
+                            required>
+                        </lightning-input-field>
 
-                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                                <lightning-input-field field-name={FIELD_NAME_VN} required></lightning-input-field>
-                                <template if:false={listValueRecordIdForEdit}>
-                                    <lightning-input-field field-name={FIELD_ORDER} value={nextOrder}
-                                        required></lightning-input-field>
-                                </template>
-                                <template if:true={listValueRecordIdForEdit}>
-                                    <lightning-input-field field-name={FIELD_ORDER} required></lightning-input-field>
-                                </template>
-                            </div>
+                        <!-- Name VN - Required -->
+                        <lightning-input-field
+                            field-name={FIELD_NAME_VN}
+                            required>
+                        </lightning-input-field>
 
+                        <!-- Order -->
+                        <template if:false={listValueRecordIdForEdit}>
+                            <lightning-input
+                                type="number"
+                                label="Order"
+                                value={nextOrder}
+                                required>
+                            </lightning-input>
+                        </template>
+                        <template if:true={listValueRecordIdForEdit}>
+                            <lightning-input-field
+                                field-name={FIELD_ORDER}
+                                required>
+                            </lightning-input-field>
+                        </template>
+
+                        <div class="slds-m-top_medium slds-align_absolute-center">
+                            <lightning-button label={labelCancel} onclick={closeAddEditModal} class="slds-m-right_x-small" title={labelCancel}></lightning-button>
+                            <lightning-button type="submit" label={labelSave} variant="brand" title={labelSave}></lightning-button>
                         </div>
-
-                        <div class="slds-m-top_medium slds-text-align_right">
-                            <lightning-button label={labelCancel} onclick={closeAddEditModal}
-                                class="slds-m-right_x-small" title={labelCancel}></lightning-button>
-                            <lightning-button type="submit" label={labelSave} variant="brand"
-                                title={labelSave}></lightning-button>
-                        </div>
-                    </lightning-record-edit-form>
-                </div>
-            </div>
-        </section>
+                     </lightning-record-edit-form>
+                 </div>
+             </div>
+         </section>
         <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
 
     <!-- Custom Delete Confirmation Modal -->
     <template if:true={isDeleteModalOpen}>
-        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="delete-modal-heading"
-            class="slds-modal slds-fade-in-open">
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="delete-modal-heading" class="slds-modal slds-fade-in-open">
             <div class="slds-modal__container">
                 <header class="slds-modal__header">
                     <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
@@ -86,13 +95,11 @@
                     <p>{labelConfirmDeleteMsg}</p>
                 </div>
                 <footer class="slds-modal__footer">
-                    <lightning-button label={labelCancel} onclick={closeDeleteModal} class="slds-m-right_x-small"
-                        title={labelCancel}></lightning-button>
-                    <lightning-button label={labelDelete} variant="destructive" onclick={confirmDelete}
-                        title={labelDelete}></lightning-button>
-                </footer>
-            </div>
-        </section>
-        <div class="slds-backdrop slds-backdrop_open"></div>
-    </template>
-</template>
+                    <lightning-button label={labelCancel} onclick={closeDeleteModal} class="slds-m-right_x-small" title={labelCancel}></lightning-button>
+                    <lightning-button label={labelDelete} variant="destructive" onclick={confirmDelete} title={labelDelete}></lightning-button>
+                 </footer>
+             </div>
+         </section>
+         <div class="slds-backdrop slds-backdrop_open"></div>
+     </template>
+ </template>

@@ -100,11 +100,6 @@ export default class FecAdditionalFiledListValue extends LightningElement {
             this.listValueRecordIdForEdit = row.Id;
             this.isAddEditModalOpen = true;
         } else if (actionName === 'delete') {
-            // KIỂM TRA ĐIỀU KIỆN XÓA TẠI ĐÂY
-            if (row[FIELD_PROCESS_CHANGE_STATUS] !== 'New') {
-                this.showToast('Cảnh báo', 'Chỉ được phép xóa bản ghi có Process Status là "New".', 'warning');
-                return; // Dừng lại, không mở modal xóa
-            }
             this.recordIdToDelete = row.Id;
             this.isDeleteModalOpen = true;
         }

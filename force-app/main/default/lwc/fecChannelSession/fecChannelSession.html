@@ -36,7 +36,7 @@
 
                     <template if:true={showForm}>
                         <lightning-record-edit-form object-api-name={objectApiName} record-id={selectedId}
-                            onsuccess={handleSuccess} onerror={handleError} onsubmit={handleSubmit}>
+                            onsuccess={handleSuccess} onerror={handleError}>
                             <div class="slds-grid slds-gutters">
                                 <div class="slds-col slds-size_1-of-2">
                                     <template if:true={selectedId}>

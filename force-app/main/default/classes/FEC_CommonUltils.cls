@@ -519,10 +519,6 @@ public with sharing class FEC_CommonUltils {
     return d.format();
   }
 
-  public static String formatTimestamp(Datetime timestamp ,String format) {
-    return Datetime.valueOf(timestamp).format(format);
-  }
-
   public static String decimalToString(Decimal d) {
     return d == null ? '' : d.format();
   }
@@ -756,18 +752,6 @@ public with sharing class FEC_CommonUltils {
     }
 }
 
-  public static Boolean checkLength(String fieldName, String value, Integer length) {
-    if (String.isNotBlank(value) && value.length() > length) {
-      return false;
-    }
-    return true;
-  }
-
-  public static void addTextNodeSafe(Dom.XmlNode parent, String tagName, String value) {
-    parent.addChildElement(tagName, null, null)
-      .addTextNode(value == null ? '' : value);
-  }
-
   public static void logApi(
     String apiName,
     String endpoint,
@@ -805,15 +789,4 @@ public with sharing class FEC_CommonUltils {
         ? email.substringBefore('@') 
         : email;
   }
-
-  public static String escapeXml(String s) {
-    if (s == null)
-      return '';
-    return s.replace('&', '&amp;')
-      .replace('<', '&lt;')
-      .replace('>', '&gt;')
-      .replace('"', '&quot;')
-      .replace('\'', '&apos;');
-  }
-
 }
