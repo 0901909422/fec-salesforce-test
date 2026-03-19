@@ -106,12 +106,12 @@ public without sharing class FEC_ReplacementCardCallout {
             HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_POST, request.headers, requestBodyJson);
 
             // Log response
-            String requestHeaderJson = JSON.serialize(request.headers);
+            String requestJson = JSON.serialize(request);
             responseLog = new ResponseLog(
                 'FEC_ReplacementCard',
                 endpoint,
                 FEC_ConstantCommon.API_METHOD_POST,
-                'headers: ' + requestHeaderJson + ', body: ' + requestBodyJson,
+                requestJson,
                 res,
                 null
             );

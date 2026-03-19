@@ -17,6 +17,66 @@
                 <default>false</default>
                 <label>Hoàn tất/ Đã phản hồi</label>
             </value>
+            <value>
+                <fullName>Liên hệ lại sau</fullName>
+                <default>false</default>
+                <label>Liên hệ lại sau</label>
+            </value>
+            <value>
+                <fullName>Rớt cuộc/ Cúp máy ngang</fullName>
+                <default>false</default>
+                <label>Rớt cuộc/ Cúp máy ngang</label>
+            </value>
+            <value>
+                <fullName>Không có/ Mất tín hiệu</fullName>
+                <default>false</default>
+                <label>Không có/ Mất tín hiệu</label>
+            </value>
+            <value>
+                <fullName>Nhầm line</fullName>
+                <default>false</default>
+                <label>Nhầm line</label>
+            </value>
+            <value>
+                <fullName>Chuyển line</fullName>
+                <default>false</default>
+                <label>Chuyển line</label>
+            </value>
+            <value>
+                <fullName>Gặp người thân</fullName>
+                <default>false</default>
+                <label>Gặp người thân</label>
+            </value>
+            <value>
+                <fullName>Lỗi hệ thống</fullName>
+                <default>false</default>
+                <label>Lỗi hệ thống</label>
+            </value>
+            <value>
+                <fullName>Test</fullName>
+                <default>false</default>
+                <label>Test</label>
+            </value>
+            <value>
+                <fullName>Hộp thư thoại</fullName>
+                <default>false</default>
+                <label>Hộp thư thoại</label>
+            </value>
+            <value>
+                <fullName>Nhầm số</fullName>
+                <default>false</default>
+                <label>Nhầm số</label>
+            </value>
+            <value>
+                <fullName>Thư rác</fullName>
+                <default>false</default>
+                <label>Thư rác</label>
+            </value>
+            <value>
+                <fullName>Mất kết nối</fullName>
+                <default>false</default>
+                <label>Mất kết nối</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

@@ -34,3 +34,11 @@ export const formatString = (str, ...args) => {
         return typeof args[number] !== 'undefined' ? args[number] : match;
     });
 }
+
+export const getTomorrowDate = () => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    // Cộng thêm 1 ngày
+    tomorrow.setDate(tomorrow.getDate() + 1); 
+    return tomorrow.toISOString().split('T')[0];
+}

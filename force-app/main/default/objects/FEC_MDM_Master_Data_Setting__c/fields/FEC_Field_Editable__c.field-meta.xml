@@ -5,7 +5,7 @@
     <description>Tùy chọn trường có thể chỉnh sửa trên màn hình Case</description>
     <externalId>false</externalId>
     <label>Field Editable</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

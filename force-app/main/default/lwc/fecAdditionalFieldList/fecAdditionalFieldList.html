@@ -1,27 +1,60 @@
 <template>
     <lightning-card title={labelListTitle} icon-name="standard:list_view">
+        
         <lightning-button label={labelNewField} icon-name="utility:add" slot="actions"
-            onclick={openNewFieldModal} variant="brand">
+            onclick={openNewFieldModal} variant="brand" class="slds-m-right_x-small">
+        </lightning-button>
+        <lightning-button 
+            slot="actions" 
+            label={toggleHistoryLabel} 
+            icon-name={toggleHistoryIcon} 
+            variant={toggleButtonVariant}
+            onclick={handleToggleHistory}>
         </lightning-button>
 
-        <div class="slds-m-around_medium">
-            <template if:true={fieldList}>
-                <lightning-datatable key-field="Id" data={fieldList} columns={columns} hide-checkbox-column
-                    show-row-number-column onsort={handleSort} onrowaction={handleRowAction}
-                    sorted-direction={sortDirection} sorted-by={sortedBy}>
-                </lightning-datatable>
-            </template>
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <lightning-layout class="main-container slds-grid_stretch">
+                
+                <lightning-layout-item size="12" large-device-size={mainPanelSize} class="main-panel slds-p-right_small">
+                    
+                    <template if:true={isLoading}>
+                        <lightning-layout class="slds-align_absolute-center slds-m-bottom_medium">
+                            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                        </lightning-layout>
+                    </template>
 
-            <template if:true={isLoading}>
-                <lightning-layout class="slds-align_absolute-center">
-                    <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
-                </lightning-layout>
-            </template>
+                    <template if:true={error}>
+                        <div class="slds-text-color_error slds-m-bottom_medium">Error loading data: {error}</div>
+                    </template>
 
-            <template if:true={error}>
-                <div class="slds-text-color_error">Error loading data: {error}</div>
-            </template>
-            <template if:true={showDeleteConfirm}>
+                    <template if:true={fieldList}>
+                        <div class="table-wrapper" style="height: 500px;">
+                            <lightning-datatable key-field="Id" data={fieldList} columns={columns} hide-checkbox-column
+                                show-row-number-column onsort={handleSort} onrowaction={handleRowAction}
+                                sorted-direction={sortDirection} sorted-by={sortedBy}>
+                            </lightning-datatable>
+                        </div>
+                    </template>
+
+                </lightning-layout-item>
+
+                <template if:true={isHistoryVisible}>
+                    <lightning-layout-item size="12" large-device-size="3" class="history-panel">
+                        <div class="history-content slds-scrollable_y">
+                            <c-fec-config-history 
+                                data-id="historyComponent"
+                                object-api-name="FEC_MDM_Additional_Field__c"
+                                record-id={historyRecordId}>
+                            </c-fec-config-history>
+                        </div>
+                    </lightning-layout-item>
+                </template>
+
+            </lightning-layout>
+        </div>
+    </lightning-card>
+
+    <template if:true={showDeleteConfirm}>
         <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-delete-confirm"
             class="slds-modal slds-fade-in-open">
             <div class="slds-modal__container">
@@ -39,8 +72,6 @@
         </section>
         <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
-        </div>
-    </lightning-card>
 
     <template if:true={isModalOpen}>
         <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-03" aria-describedby="modal-desc-03"
