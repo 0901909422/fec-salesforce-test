@@ -1,0 +1,66 @@
+<template>
+    <div class="container">
+        <div class="row">
+            <!-- Xác minh thông tin -->
+            <div class="field">
+                <label class="label">
+                    <span class="required">*</span> Xác minh thông tin
+                </label>
+                <lightning-combobox value={verificationValue} options={verificationOptions}
+                    onchange={handleVerificationChange}>
+                </lightning-combobox>
+            </div>
+
+            <!-- Gọi lại -->
+            <div class="field">
+                <label class="label">
+                    <span class="required">*</span> Gọi lại
+                </label>
+                <lightning-combobox value={callbackValue} options={callbackOptions} onchange={handleCallbackChange}>
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <!-- Button -->
+        <div class="button-container">
+            <lightning-button label="Reset PIN" variant="brand" onclick={openModal} disabled={isDisable}>
+            </lightning-button>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <template if:true={isOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+
+            <div class="slds-modal__container">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header custom-header">
+                    <h2 class="slds-text-heading_medium">Reset PIN</h2>
+                </header>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium custom-body">
+                    <p>
+                        Bạn sắp mở khóa PIN cho khách hàng này. Bạn có chắc muốn tiếp tục không?
+                    </p>
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer custom-footer">
+
+                    <lightning-button label="Không" variant="neutral" onclick={handleCloseModal}>
+                    </lightning-button>
+
+                    <lightning-button label="Có" variant="brand" class="slds-m-left_small" onclick={handleConfirmReset}>
+                    </lightning-button>
+
+                </footer>
+
+            </div>
+        </section>
+
+        <!-- BACKDROP -->
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>
