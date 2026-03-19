@@ -926,4 +926,12 @@ public with sharing class FEC_CommonUltils {
       .replace('\'', '&apos;');
   }
 
+  public static String getEmailPrefix(String email) {
+    if (String.isBlank(email)) {
+        return '';
+    }
+    return email.contains('@') 
+        ? email.substringBefore('@') 
+        : email;
+  }
 }
