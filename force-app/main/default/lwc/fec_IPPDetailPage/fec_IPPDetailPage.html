@@ -104,10 +104,10 @@
                                 <c-fec_-related-list-paging
                                     records={ippSchedules}
                                     columns={scheduleColumns}
-                                    page-size="10"
+                                    page-size={schedulePageSize}
                                     hide-row-number={hideRowNumber}
                                     default-sorted-by="paymentNo"
-                                    default-sort-direction="asc">
+                                    default-sort-direction="desc">
                                 </c-fec_-related-list-paging>
                             </template>
                             <template if:false={hasSchedules}>
