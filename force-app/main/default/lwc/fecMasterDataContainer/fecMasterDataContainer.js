@@ -77,14 +77,52 @@ export default class FecMasterDataContainer extends LightningElement {
 
     // Khi người dùng nhấn Save All
     async handleSaveAll() {
-        // Normalize each node's Status field to Boolean before sending to Apex
+        // ==========================================
+        // LỚP BẢO VỆ 1: Kiểm tra UI của Tab đang mở
+        // ==========================================
+        const detailCmp = this.template.querySelector('[data-id="detailComponent"]');
+        if (detailCmp && !detailCmp.validateForm()) {
+            this.showToast(LABEL_TOAST_ERROR, 'Vui lòng kiểm tra và sửa các trường bị báo lỗi trước khi lưu.', VARIANT_ERROR);
+            return; // Chặn đứng tại đây
+        }
+
         const listToUpdate = Array.from(this.pendingChanges.values()).map(node => ({
             ...node,
             Status: Boolean(node.Status)
         }));
 
-        console.log('[DEBUG][handleSaveAll] listToUpdate:', JSON.stringify(listToUpdate));
+        // ==========================================
+        // LỚP BẢO VỆ 2: Quét toàn bộ dữ liệu ẩn chờ lưu
+        // Đề phòng user làm sai Node A rồi nhảy sang xem Node B
+        // ==========================================
+        let hasHiddenError = false;
+        for (let node of listToUpdate) {
+            // Kiểm tra các trường bắt buộc không được null hoặc rỗng (chỉ chứa khoảng trắng)
+            if (
+                !node.Alias || String(node.Alias).trim() === '' ||
+                !node.NameEN || String(node.NameEN).trim() === '' ||
+                !node.nameVN || String(node.nameVN).trim() === '' ||
+                node.PosOrder === null || node.PosOrder === undefined || String(node.PosOrder).trim() === ''
+            ) {
+                hasHiddenError = true;
+                // Báo chính xác tên Node đang bị lỗi để user biết đường tìm lại
+                this.showToast(
+                    LABEL_TOAST_ERROR, 
+                    `Bản ghi "${node.NameEN || node.Code}" đang chứa dữ liệu rỗng. Vui lòng chọn lại Node đó để sửa.`, 
+                    VARIANT_ERROR
+                );
+                break; // Thoát vòng lặp
+            }
+        }
 
+        if (hasHiddenError) {
+            return; // Chặn đứng, không gọi Server
+        }
+
+        // ==========================================
+        // VƯỢT QUA 2 LỚP -> TIẾN HÀNH CALL APEX LƯU
+        // ==========================================
+        console.log('[DEBUG][handleSaveAll] All Valid! listToUpdate:', JSON.stringify(listToUpdate));
         this.loading = true;
         try {
             await updateMultipleNodes({ listData: listToUpdate });
@@ -95,9 +133,10 @@ export default class FecMasterDataContainer extends LightningElement {
 
             // Gửi event báo cho Tree biết để làm mới toàn bộ
             this.dispatchEvent(new CustomEvent(EVENT_REFRESH_ALL, { bubbles: true, composed: true }));
-            const detailCmp = this.template.querySelector('[data-id="detailComponent"]');
-            detailCmp.refreshHistory();
-            detailCmp.markAsSaved();
+            if (detailCmp) {
+                detailCmp.refreshHistory();
+                detailCmp.markAsSaved();
+            }
 
         } catch (error) {
             console.error('[DEBUG][handleSaveAll] ERROR:', error);
