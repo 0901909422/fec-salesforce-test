@@ -1,0 +1,556 @@
+<template>
+    <!-- ================= LOADING ================= -->
+    <template if:true={isLoading}>
+        <div class="slds-is-relative slds-p-vertical_x-large">
+            <lightning-spinner size="medium" alternative-text={labels.loading}></lightning-spinner>
+        </div>
+    </template>
+    <template if:false={isLoading}>
+         <!-- ===================================================== -->
+        <!-- MAIN CARD -->
+        <!-- ===================================================== -->
+        <lightning-card>
+
+            <!-- ===================================================== -->
+            <!-- HEADER : Fraud Task Title + Status + Action -->
+            <!-- ===================================================== -->
+            <div class="slds-grid slds-align_absolute-center slds-p-around_medium slds-border_bottom">
+				 <!-- Left: Title -->
+                <div class="slds-col slds-size_5-of-12">
+                    <h2 class="slds-text-heading_medium">
+                        {labels.fraudTask}
+                        <span class="slds-text-color_weak slds-m-left_small">
+                            {caseInfo.caseId}
+                        </span>
+                    </h2>
+                </div>
+                <!-- Status -->
+                <div class="status-wrapper">
+
+                    <span class="slds-text-title_bold">{labels.status}:</span>
+                
+                    <template if:true={isPending}>
+                        <span class="pending-flag-raw" title="Pending">🚩</span>
+                    </template> 
+                    <span class="slds-m-left_x-small status-text">
+                        {caseInfo.caseStatus}
+                    </span>
+                </div>
+            
+                <!-- Right: Assign Button -->
+                <div class="slds-col slds-size_3-of-12 slds-text-align_right">
+                    <lightning-button
+                        label={labels.assignToMe}
+                        variant="brand-outline"
+                        onclick={handleAssign}>
+                    </lightning-button>
+                </div>
+            
+            </div>
+            
+
+            <!-- ===================================================== -->
+            <!-- CONTENT -->
+            <!-- ===================================================== -->
+            <div class="slds-p-around_medium">
+
+                <!-- ===================================================== -->
+                <!-- CUSTOMER INFO -->
+                <!-- ===================================================== -->
+                <section class="slds-box slds-m-bottom_small">
+
+                    <!-- Section Header -->
+                    <div class="section-header" onclick={toggleCustomer}>
+                        <lightning-icon icon-name={customerIcon} size="x-small"></lightning-icon>
+                        <h3 class="section-title slds-m-left_x-small">
+                            {labels.customerInfo}
+                        </h3>
+                    </div>
+
+                    <template if:true={showCustomer}>
+
+                        <!-- ================= Line 1 ================= -->
+                        <div class="slds-grid slds-wrap slds-m-top_small">
+
+                            <!-- Column 1 -->
+                            <div class="slds-col slds-size_1-of-3">
+                                <p>{labels.customerName}: {customer.customerName}</p>
+                                <p>{labels.contractNumber}: {customer.contractNumber}</p>
+                                <p>
+                                    {labels.nationalId}:
+                                <span class="slds-m-left_x-small">{displayNationalId}</span>
+                                <lightning-button-icon
+                                    icon-name={nationalIdIcon}
+                                    alternative-text={labels.toggleNationalId}
+                                    size="small"
+                                    variant="bare"
+                                    onclick={toggleNationalId}
+                                    class="slds-m-left_x-small">
+                                </lightning-button-icon></p>
+                                
+                            </div>
+
+                            <!-- Column 2 -->
+                            <div class="slds-col slds-size_1-of-3">
+                                <p>{labels.primaryPhone}:
+                                <span class="slds-m-left_x-small">{displayPhone}</span>
+                                <lightning-button-icon
+                                    icon-name={phoneIcon}
+                                    alternative-text={labels.togglePhone}
+                                    size="small"
+                                    variant="bare"
+                                    onclick={togglePhone}
+                                    class="slds-m-left_x-small">
+                                </lightning-button-icon></p>
+                                <p>{labels.applicationId}: {customer.applicationId}</p>
+                            </div>
+
+                            <!-- Column 3 -->
+                            <div class="slds-col slds-size_1-of-3">
+                            <p>{labels.productType}: {customer.productType}</p>
+                            <p>{labels.accountNumber}: {customer.accountNumber}</p>
+                            </div>
+                        </div>
+                        
+                    </template>
+                </section>
+
+                <!-- ===================================================== -->
+                <!-- FRAUD INFO -->
+                <!-- ===================================================== -->
+                <section class="slds-box slds-m-bottom_small">
+                    <div class="section-header" onclick={toggleFraud}>
+                        <lightning-icon icon-name={fraudIcon} size="x-small"></lightning-icon>
+                        <h3 class="section-title slds-m-left_x-small">
+                            {labels.fraudCaseInfo}
+                        </h3>
+                    </div>
+                
+                    <template if:true={showFraud}>
+                        <div class="slds-grid slds-wrap slds-m-top_small">
+                
+                            <!-- Column Group 1 -->
+                            <div class="slds-col slds-size_1-of-3">
+                                <p>{labels.fraudCaseId}: {fraud.fraudCaseId}</p>
+                                <p>{labels.createdDate}: {fraud.createdDate}</p>
+                                <p>{labels.createdBy}: {fraud.owner}</p>
+                            </div>
+                
+                            <!-- Column Group 2 -->
+                            <div class="slds-col slds-size_1-of-3">
+                                <p>{labels.fraudCategory}: {fraud.fraudCategory}</p>
+                                <p>{labels.fraudSubCategory}: {fraud.fraudSubCategory}</p>
+                                <p>{labels.referenceId}: {fraud.referenceId}</p>
+                            </div>
+                
+                            <!-- Column Group 3 -->
+                            <div class="slds-col slds-size_1-of-3">
+                                <p>{labels.customerCare}: {fraud.csOwner}</p>
+                                <p>{labels.remarks}: {fraud.remarks}</p>
+                                <p>{labels.fraudSubCode}: {fraud.subCode}</p>
+                            </div>
+                
+                        </div>
+                    </template>
+                </section>
+                
+                <!-- TASK INFO -->
+                <section class="slds-box slds-m-bottom_small">
+                    <div class="section-header" onclick={toggleTask}>
+                        <lightning-icon icon-name={taskIcon} size="x-small"></lightning-icon>
+                        <h3 class="section-title slds-m-left_x-small">
+                            {labels.taskCaseInfo}
+                        </h3>
+                    </div>
+                
+                    <template if:true={showTask}>
+                
+                        <!-- Line 1 -->
+                        <div class="slds-grid slds-wrap slds-m-top_small">
+                
+                            <!-- Column 1 -->
+                            <div class="slds-col slds-size_1-of-3">
+                                <p>{labels.taskCaseId}: {task.taskId}</p>
+                                <p>{labels.createdDate}: {task.createdDate}</p>
+                                <p>{labels.applicationId}: {task.applicationId}</p>
+                            </div>
+                
+                            <!-- Column 2 -->
+                            <div class="slds-col slds-size_1-of-3">
+                                <p>{labels.taskStatus}: {task.taskStatus}</p>
+                                <p>{labels.uic}: {task.taskUIC}</p>
+                                <p>{labels.deadline}: {task.deadline}</p>
+                            </div>
+                
+                            <!-- Column 3 -->
+                            <div class="slds-col slds-size_1-of-3">
+                                <p>{labels.taskName}: {task.taskName}</p>
+                                <p>{labels.violationType}: {task.taskType}</p>
+                            </div>
+                
+                        </div>
+                
+                        <!-- Line 2 -->
+                        <div class="slds-grid slds-wrap slds-m-top_small">
+                            <p>{labels.fraudConclusion}</p>
+                            <p>{task.taskConclusion}</p>
+                        </div>
+                
+                    </template>
+                </section>
+                
+                <!-- NOTIFICATION HISTORY -->
+                <section class="slds-box">
+                    <div class="section-header" onclick={toggleNotificationHistory}>
+                        <lightning-icon icon-name={notificationHistoryIcon} size="x-small"></lightning-icon>
+                        <h3 class="section-title slds-m-left_x-small">
+                            {labels.notificationHistory}
+                        </h3>
+                    </div>
+                    
+                    <template if:true={showNotificationHistory}>
+                        <div class="slds-scrollable_x">
+                            <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        <th onclick={handleSortNotification} data-field="notificationType">
+                                            {labels.notificationType}
+                                        </th>
+                                        <th onclick={handleSortNotification} data-field="templateName">
+                                            {labels.templateName}
+                                        </th>
+                                        <th onclick={handleSortNotification} data-field="channel">
+                                            {labels.notificationChannel}
+                                        </th>
+                                        <th onclick={handleSortNotification} data-field="recipient">
+                                            {labels.recipient}
+                                        </th>
+                                        <th onclick={handleSortNotification} data-field="status">
+                                            {labels.deliveryStatus}
+                                        </th>
+                                        <th onclick={handleSortNotification} data-field="sentTime">
+                                            {labels.sentTime}
+                                        </th>
+                                        <th onclick={handleSortNotification} data-field="actualDeliveryTime">
+                                            {labels.actualDeliveryTime}
+                                        </th>
+                                    </tr>
+                                </thead>
+                
+                                <tbody>
+                                    <template for:each={notificationHistoryData} for:item="row">
+                                        <tr key={row.id}>
+                                            <td>{row.notificationType}</td>
+                                            <td class="wrap-text">{row.templateName}</td>
+                                            <td>{row.channel}</td>
+                                            <td>{row.recipient}</td>
+                                            <td>{row.status}</td>
+                                            <td>{row.sentTime}</td>
+                                            <td>{row.actualDeliveryTime}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>               
+                    </template>
+                </section>
+                
+                <!-- RELATED SERVICE CASES -->
+                <section class="slds-box">
+                    <div class="section-header" onclick={toggleRelatedServiceCases}>
+                        <lightning-icon icon-name={relatedServiceCasesIcon} size="x-small"></lightning-icon>
+                        <h3 class="section-title slds-m-left_x-small">
+                            {labels.relatedServiceCases}
+                        </h3>
+                    </div>
+                    
+                    <template if:true={showRelatedServiceCases}>
+                        <div class="slds-scrollable_x">
+                            <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        <th onclick={handleServiceCaseSort} data-field="serviceCaseId">
+                                            {labels.serviceCaseId}
+                                        </th>
+                                        <th onclick={handleServiceCaseSort} data-field="caseType">
+                                            {labels.caseType}
+                                        </th>
+                                        <th onclick={handleServiceCaseSort} data-field="caseStatus">
+                                            {labels.caseStatus}
+                                        </th>
+                                        <th onclick={handleServiceCaseSort} data-field="createdBy">
+                                            {labels.createdBy}
+                                        </th>
+                                        <th onclick={handleServiceCaseSort} data-field="resolvedBy">
+                                            {labels.resolvedBy}
+                                        </th>
+                                        <th onclick={handleServiceCaseSort} data-field="createdOn">
+                                            {labels.createdOn}
+                                        </th>
+                                        <th onclick={handleServiceCaseSort} data-field="resolvedOn">
+                                            {labels.resolvedOn}
+                                        </th>
+                                    </tr>
+                                </thead>
+                            
+                                <tbody>
+                                    <template for:each={sortedRelatedServiceCasesData} for:item="row">
+                                        <tr key={row.caseId}>
+                                            <td>{row.serviceCaseId}</td>
+                                            <td>{row.caseType}</td>
+                                            <td>{row.caseStatus}</td>
+                                            <td>{row.createdBy}</td>
+                                            <td>{row.resolvedBy}</td>
+                                            <td>{row.createdOn}</td>
+                                            <td>{row.resolvedOn}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>   
+                    </template>
+                </section>
+                
+                <!-- FRAUD CASES -->
+                <section class="slds-box">
+                    <div class="section-header" onclick={toggleFraudCasesHistory}>
+                        <lightning-icon icon-name={fraudCasesHistoryIcon} size="x-small"></lightning-icon>
+                        <h3 class="section-title slds-m-left_x-small">
+                            {labels.fraudCases}
+                        </h3>
+                    </div>
+                    
+                    <template if:true={showFraudCasesHistory}>
+                        <div class="slds-scrollable_x">
+                            <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        
+                                        <th class="slds-is-sortable" onclick={handleFraudSort} data-field="fraudCaseId">
+                                            <span class="slds-truncate">{labels.fraudCaseId}</span>
+                                            <lightning-icon if:true={isSortedByFraudId} icon-name={sortfraudtIcon} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                        </th>
+                
+                                        <th class="slds-is-sortable" onclick={handleFraudSort} data-field="caseStatus">
+                                            <span class="slds-truncate">{labels.caseStatus}</span>
+                                            <lightning-icon if:true={isSortedBycaseStatus} icon-name={sortfraudtIcon} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                        </th>
+                
+                                        <th class="slds-is-sortable" onclick={handleFraudSort} data-field="creator">
+                                            <span class="slds-truncate">{labels.creator}</span>
+                                            <lightning-icon if:true={isSortedBycreator} icon-name={sortfraudtIcon} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                        </th>
+                
+                                        <th class="slds-is-sortable" onclick={handleFraudSort} data-field="category">
+                                            <span class="slds-truncate">{labels.category}</span>
+                                            <lightning-icon if:true={isSortedBycategory} icon-name={sortfraudtIcon} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                        </th>
+                
+                                        <th class="slds-is-sortable" onclick={handleFraudSort} data-field="subCategory">
+                                            <span class="slds-truncate">{labels.subCategory}</span>
+                                            <lightning-icon if:true={isSortedBysubCategory} icon-name={sortfraudtIcon} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                        </th>
+                
+                                        <th class="slds-is-sortable" onclick={handleFraudSort} data-field="subCode">
+                                            <span class="slds-truncate">{labels.subCode}</span>
+                                            <lightning-icon if:true={isSortedBysubCode} icon-name={sortfraudtIcon} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                        </th>
+                
+                                        <th class="slds-is-sortable" onclick={handleFraudSort} data-field="createTime">
+                                            <span class="slds-truncate">{labels.createTime}</span>
+                                            <lightning-icon if:true={isSortedBycreateTime} icon-name={sortfraudtIcon} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                        </th>
+                
+                                        <th class="slds-is-sortable" onclick={handleFraudSort} data-field="updateTime">
+                                            <span class="slds-truncate">{labels.updateTime}</span>
+                                            <lightning-icon if:true={isSortedByupdateTime} icon-name={sortfraudtIcon} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                        </th>
+                
+                                    </tr>
+                                </thead>
+                            
+                                <tbody>
+                                    <template for:each={sortedFraudCasesData} for:item="row">
+                                        <tr key={row.fraudCaseId}>
+                                            <td>{row.fraudCaseId}</td>
+                                            <td>{row.caseStatus}</td>
+                                            <td>{row.owner}</td>
+                                            <td>{row.fraudCategory}</td>
+                                            <td>{row.fraudSubCategory}</td>
+                                            <td>{row.subCode}</td>
+                                            <td>{row.createdDate}</td>
+                                            <td>{row.updateTime}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>                            
+                        </div>   
+                    </template>
+                </section>
+                
+                <!-- REMARKS HISTORY -->
+                <section class="slds-box">
+                    <div class="section-header" onclick={toggleRemarksHistory}>
+                        <lightning-icon icon-name={remarksHistoryIcon} size="x-small"></lightning-icon>
+                        <h3 class="section-title slds-m-left_x-small">
+                            {labels.remarksHistory}
+                        </h3>
+                    </div>
+                    
+                    <template if:true={showRemarksHistory}>
+                        <div class="slds-scrollable_x">
+                            <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        <th onclick={handleRemarksSort} data-field="actor">{labels.submitByDepartment}</th>
+                                        <th onclick={handleRemarksSort} data-field="remarks">{labels.remarks}</th>
+                                        <th onclick={handleRemarksSort} data-field="processingStatus">{labels.processingStatus}</th>
+                                        <th onclick={handleRemarksSort} data-field="decision">{labels.decision}</th>
+                                        <th onclick={handleRemarksSort} data-field="createdBy">{labels.createdBy}</th>
+                                        <th onclick={handleRemarksSort} data-field="createdDate">{labels.createdDateTime}</th>
+                                    </tr>                                 
+                                </thead>
+                    
+                                <tbody>
+                                    <template for:each={sortedRemarksData} for:item="row">
+                                        <tr key={row.id}>
+                                            <td>{row.actor}</td>
+                                            <td class="wrap-text">{row.remarks}</td>
+                                            <td>{row.processingStatus}</td>
+                                            <td>{row.decision}</td>
+                                            <td>{row.createdBy}</td>
+                                            <td>{row.createdDate}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>   
+                
+                        <div class="slds-scrollable_x">
+                            {labels.assignedTo}: CS@WB
+                        </div>                     
+                    </template>
+                </section>
+                
+                <section class="slds-box">                    
+                    <div class="task-history-grid">
+                        <!-- Decision -->
+                        <div class="decision-block">
+                            <lightning-radio-group
+                                label={labels.decision}
+                                options={decisionOptions}
+                                value={decision}
+                                type="button"
+                                onchange={handleDecisionChange}
+                                required>
+                            </lightning-radio-group>
+                        </div>
+                    
+                        <!-- Cancel Reason -->
+                        <template if:true={isCancel}>
+                            <div class="cancel-block">
+                                <lightning-combobox
+                                    label={labels.cancelReasons}
+                                    value={cancelReason}
+                                    options={cancelOptions}
+                                    onchange={handleCancelReasonChange}
+                                    required>
+                                </lightning-combobox>
+                    
+                                <div class="slds-text-color_error" if:true={showCancelError}>
+                                    {labels.valueCannotBeBlank}
+                                </div>
+                            </div>
+                        </template>
+                    
+                        <!-- Remarks -->
+                        <div class="remarks-block">
+                            <lightning-textarea
+                                label={labels.remarks}
+                                value={remarks}
+                                onchange={handleRemarksChange}
+                                class="remarks-textarea"
+                                placeholder={labels.enterInvestigationNotes}
+                                required>
+                            </lightning-textarea>
+                        </div>
+                        
+                        
+                    </div>
+                    
+                    <div class="slds-m-top_medium">
+                        <lightning-button
+                            variant="brand"
+                            label={labels.submit}
+                            onclick={submit}>
+                        </lightning-button>
+                    </div>
+                </section>    
+
+            </div>
+            <!-- ================= FOOTER ================= -->
+            <div class="slds-p-around_medium slds-border_top">
+                <div class="slds-grid slds-wrap">
+            
+                    <!-- Column 1 -->
+                    <div class="slds-col slds-size_1-of-3">
+                        <p>{labels.caseId}: {caseInfo.caseId}</p>
+                        <p>{labels.status}: {caseInfo.caseStatus}</p>
+                        <p>{labels.accountOwner}: {caseInfo.accountOwner}</p>
+                    </div>
+            
+                    <!-- Column 2 -->
+                    <div class="slds-col slds-size_1-of-3">
+                        <p>{labels.urgency}: {task.urgency}</p>
+                        <p>{labels.goal}: {caseInfo.caseGoal}</p>
+                        <p>{labels.deadlineDate}: {task.deadline}</p>
+                        <p>{labels.lastUpdate}: {caseInfo.lastUpdateDate}</p>
+                        <p>{labels.created}: {caseInfo.createdDate}</p>
+                    </div>
+            
+                    <!-- Column 3 -->
+                    <div class="slds-col slds-size_1-of-3">
+                        <p>{labels.createdBy}: {caseInfo.createdBy}</p>
+                        <p>{labels.createdInChannel}: {caseInfo.caseChannel}</p>
+                        <p>{labels.lastUpdatedBy}: {caseInfo.lastUpdateBy}</p>
+                    </div>
+            
+                </div>
+            </div>
+            
+        </lightning-card>
+        <!-- Assign Confirmation Modal -->
+        <template if:true={showAssignModal}>
+            <section role="dialog" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-modal__close"
+                                onclick={closeAssignModal}> ✕
+                        </button>
+                        <h2 class="slds-text-heading_medium">{labels.assignToMe}</h2>
+                    </header>
+
+                    <div class="slds-modal__content slds-p-around_medium">
+                        {labels.caseWillBeTransferred}
+                    </div>
+
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="No"
+                            onclick={closeAssignModal}>
+                        </lightning-button>
+
+                        <lightning-button label="Yes"
+                            variant="brand"
+                            onclick={confirmAssign}>
+                        </lightning-button>
+                    </footer>
+
+                </div>
+            </section>
+
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+    </template>
+</template>

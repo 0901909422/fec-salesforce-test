@@ -1,0 +1,21 @@
+<template>
+    <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+
+        <!-- General Statement Info -->
+        <c-fec_-common-record-detail-section section-title="General Statement Info" fields={generalStatementInfoFields}
+            onbuttonclick={handleButtonClick} columns="3">
+        </c-fec_-common-record-detail-section>
+
+        <!-- Statement Details -->
+        <lightning-accordion-section name="Statement Details" label="Statement Details">
+
+            <div class="detail-wrapper">
+                <c-fec_-related-list-paging records={statementDetails} columns={statementDetailsColumns}
+                   default-sorted-by="statementDate" default-sort-direction="desc" onrowselect={handleStatementSelect}>
+                </c-fec_-related-list-paging>
+            </div>
+
+        </lightning-accordion-section>
+
+    </lightning-accordion>
+</template>

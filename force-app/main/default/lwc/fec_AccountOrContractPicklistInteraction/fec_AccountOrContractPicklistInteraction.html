@@ -1,0 +1,50 @@
+<template>
+    <template if:true={isInteractionCase}>
+        <template if:true={showPicklist}>
+            <div class="account-contract-wrapper">
+                <div class="slds-text-title_caps slds-m-bottom_x-small">
+                    {labels.accountContractNumber}
+                </div>
+                <!-- Trigger -->
+                <div class="account-contract-trigger" onclick={toggle}>
+                    {selectedValue}
+                    <lightning-icon icon-name="utility:chevrondown" size="x-small"
+                        class="slds-m-left_x-small"></lightning-icon>
+                </div>
+
+                <!-- Popover -->
+                <template if:true={isOpen}>
+                    <section class="popover">
+                        <c-fec_-custom-account-table key-field="id" data={data} columns={columns}
+                            onrowaction={handleRowAction} hide-checkbox-column>
+                        </c-fec_-custom-account-table>
+                    </section>
+                </template>
+            </div>
+        </template>
+    </template>
+    <template if:true={isCustomerCase}>
+        <template if:true={hasAccountOrContact}>
+            <div class="account-contract-wrapper">
+                <div class="slds-text-title_caps slds-m-bottom_x-small">
+                    {labels.accountContractNumber}
+                </div>
+                <!-- Trigger -->
+                <div class="account-contract-trigger" onclick={toggle}>
+                    {selectedValue}
+                    <lightning-icon icon-name="utility:chevrondown" size="x-small"
+                        class="slds-m-left_x-small"></lightning-icon>
+                </div>
+
+                <!-- Popover -->
+                <template if:true={isOpen}>
+                    <section class="popover">
+                        <c-fec_-custom-account-table key-field="id" data={data} columns={columns}
+                            onrowaction={handleRowAction} hide-checkbox-column>
+                        </c-fec_-custom-account-table>
+                    </section>
+                </template>
+            </div>
+        </template>
+    </template>
+</template>

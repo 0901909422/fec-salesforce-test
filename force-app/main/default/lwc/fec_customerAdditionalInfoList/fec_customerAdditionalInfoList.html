@@ -1,0 +1,66 @@
+<template>
+    <lightning-card title={label.customerDataManagement} icon-name="standard:customers" class="relative-container">
+        
+        <div slot="actions">
+            <lightning-button label={label.addNew} variant="success" class="slds-m-left_x-small" onclick={handleAddNew}></lightning-button>
+            <lightning-button label={label.reload} variant="success" class="slds-m-left_x-small" onclick={handleReload}></lightning-button>
+        </div>
+
+        <div class="slds-p-around_medium">
+            <div if:true={isLoading} class="slds-is-relative">
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
+            <div class="slds-m-bottom_large">
+                <div class="header-section slds-p-vertical_x-small slds-p-horizontal_small slds-theme_shade slds-border_top slds-border_bottom">
+                    <h3 class="slds-text-heading_small"><strong>{label.titlePendingProcess}</strong></h3>
+                </div>
+                <template if:true={uploadedData.length}>
+                    <c-fec-custom-datatable
+                        hide-checkbox-column="true"
+                        table-data={uploadedData}
+                        columns={columnsPending}
+                        onrowaction={handleUploadedRowAction}>
+                    </c-fec-custom-datatable>
+                </template>
+                
+                <template if:false={uploadedData.length}>
+                    <c-fec-no-record-display></c-fec-no-record-display>
+                </template>
+            </div>
+
+            <div class="slds-m-bottom_large">
+                <div class="header-section slds-p-vertical_x-small slds-p-horizontal_small slds-theme_shade slds-border_top slds-border_bottom">
+                    <h3 class="slds-text-heading_small"><strong>{label.titleExistingFields}</strong></h3>
+                </div>
+                <template if:true={processedData.length}>
+                    <c-fec-custom-datatable
+                        hide-checkbox-column="true"
+                        table-data={processedData}
+                        columns={columnsProcessed}
+                        onrowaction={handleProcessedRowAction}>
+                    </c-fec-custom-datatable>
+                </template>
+                
+                <template if:false={processedData.length}>
+                    <c-fec-no-record-display></c-fec-no-record-display>
+                </template>
+            </div>
+        </div>
+    </lightning-card>
+
+    <template if:true={isHistoryModalOpen}>
+        <c-fec-customer-history-modal
+            config-id={configId}
+            onclose={closeHistoryModal}> 
+        </c-fec-customer-history-modal>
+    </template>
+
+    <template if:true={isEditModalOpen}>
+        <c-fec-customer-upsert-modal
+            title={modalTitle}
+            initial-data={formData}
+            onclose={handleCloseModal}
+            onsave={handleSaveModal}>
+        </c-fec-customer-upsert-modal>
+    </template>
+</template>

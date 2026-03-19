@@ -1,0 +1,306 @@
+<template>
+    <template if:true={hasData}>
+        <div class="customer-info-container slds-card slds-p-around_small">
+
+            <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
+
+                <!-- ================= Demographic ================= -->
+                <lightning-accordion-section name="demographic" label="Demographic">
+
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+
+                        <div class="slds-col slds-size_1-of-3">
+
+                            <div class="detail-row">
+                                <span class="detail-label">
+                                    {customLabel.customerNameLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Customer_Name__c}>
+                                            <lightning-helptext
+                                                content={helpTextMap.FEC_Customer_Name__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+
+                                </span>
+                                <span class="detail-value">{fullName}</span>
+                            </div>
+
+                            <div class="detail-row">
+                                <span class="detail-label">
+                                    {customLabel.firstNameLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_First_Name__c}>
+                                            <lightning-helptext
+                                                content={helpTextMap.FEC_First_Name__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+
+                                </span>
+                                <span class="detail-value">{firstName}</span>
+                            </div>
+
+                             <div class="detail-row">
+                                <span class="detail-label">
+                                    {customLabel.middleNameLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Middle_Name__c}>
+                                            <lightning-helptext
+                                                content={helpTextMap.FEC_Middle_Name__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+
+                                </span>
+                                <span class="detail-value">{middleName}</span>
+                            </div>
+
+                            <div class="detail-row">
+                                <span class="detail-label">
+                                    {customLabel.lastNameLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Last_Name__c}>
+                                            <lightning-helptext
+                                                content={helpTextMap.FEC_Last_Name__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+
+                                </span>
+                                <span class="detail-value">{lastName}</span>
+                            </div>
+
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+
+                            <div class="detail-row">
+                                <span class="detail-label">
+                                    {customLabel.genderLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Gender__c}>
+                                            <lightning-helptext
+                                                content={helpTextMap.FEC_Gender__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+
+                                </span>
+                                <span class="detail-value">{gender}</span>
+                            </div>
+
+                            <div class="detail-row">
+                                <span class="detail-label">
+                                   {customLabel.maritalStatusLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Marital_Status__c}>
+                                            <lightning-helptext
+                                                content={helpTextMap.FEC_Marital_Status__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+
+                                </span>
+                                <span class="detail-value">{maritalStatus}</span>
+                            </div>
+
+                            <div class="detail-row">
+                                <span class="detail-label">
+                                   {customLabel.dateOfBirthLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Date_Of_Birth__c}>
+                                            <lightning-helptext
+                                                content={helpTextMap.FEC_Date_Of_Birth__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+
+                                </span>
+                                <span class="detail-value">{dateOfBirth}</span>
+                            </div>
+
+                            <div class="detail-row">
+                                <span class="detail-label">
+                                   {customLabel.primaryPhoneLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Primary_Phone__c}>
+                                            <lightning-helptext
+                                                content={helpTextMap.FEC_Primary_Phone__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+
+                                </span>
+                                <span class="detail-value with-icon">
+                                    {maskedPhone}
+                                    <lightning-button-icon icon-name={phoneEyeIcon} variant="bare"
+                                        onclick={handleTogglePhone} class="eye-icon">
+                                    </lightning-button-icon>
+                                </span>
+                            </div>                            
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+
+                            <div class="detail-row">
+                                <span class="detail-label">
+                                    {customLabel.nationalIDPassportIDLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_National_Id__Passport_Id__c}>
+                                            <lightning-helptext
+                                                content={helpTextMap.FEC_National_Id__Passport_Id__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </span>
+                                <span class="detail-value with-icon">
+                                    {maskedNationalIDPassportID}
+                                    <lightning-button-icon icon-name={nationalIDEyeIcon} variant="bare"
+                                        onclick={handleToggleNationalIDPassportID} class="eye-icon">
+                                    </lightning-button-icon>
+                                </span>
+                            </div>
+
+                            <div class="detail-row">
+                                <span class="detail-label">
+                                    {customLabel.dateOfIssueLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Date_of_Issue__c}>
+                                            <lightning-helptext
+                                                content={helpTextMap.FEC_Date_of_Issue__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+
+                                </span>
+                                <span class="detail-value">{dateOfIssue}</span>
+                            </div>
+
+                            <div class="detail-row">
+                                <span class="detail-label">
+                                    {customLabel.placeOfIssueLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_Place_of_Issue__c}>
+                                            <lightning-helptext
+                                                content={helpTextMap.FEC_Place_of_Issue__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+
+                                </span>
+                                <span class="detail-value">{placeOfIssue}</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </lightning-accordion-section>
+
+                <!-- ================= Customer Number ================= -->
+                <lightning-accordion-section name="customerNumber" label="Customer Number">
+
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+                        <div class="slds-col slds-size_1-of-3">
+                            <div class="detail-row">
+                                <span class="detail-label">
+                                    {customLabel.cifNumberLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_CIF_Number__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_CIF_Number__c}>
+                                            </lightning-helptext>
+                                        </template>
+                                    </span>
+
+                                </span>
+                                <span class="detail-value">{cifNumber}</span>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-3">
+                            <div class="detail-row">
+                                <span class="detail-label">
+                                    {customLabel.pidNumberLabel}
+                                    <span class="help-icon">
+                                        <template if:true={helpTextMap.FEC_PID_Number__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_PID_Number__c}>
+                                            </lightning-helptext>
+                                        </template>
+                                    </span>
+
+                                </span>
+                                <span class="detail-value">{pidNumber}</span>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3"></div>
+
+                    </div>
+                </lightning-accordion-section>
+
+                <!-- ================= Addresses ================= -->
+                <lightning-accordion-section name="addresses" label="Addresses List">
+
+                    <c-fec_-related-list-paging records={addresses} columns={addressColumns}
+                        default-sorted-by="addressType"
+                        default-sort-direction="desc">
+                    </c-fec_-related-list-paging>
+
+                </lightning-accordion-section>
+
+            </lightning-accordion>
+        </div>
+    </template>
+
+    <template if:false={hasData}>
+        <div class="slds-accordion">
+
+            <!-- SECTION Demographic-->
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                {customLabel.demographicLabel}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorApiLabel}
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+
+            <!-- SECTION  Customer Number -->
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                {customLabel.customerNumberLabel}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorApiLabel}
+                                </span>
+                            </span>
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+
+            <!-- SECTION Addresses List -->
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                 {customLabel.addressesListLabel}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorApiLabel}
+                                </span>
+                            </span>
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+
+        </div>
+    </template>
+</template>

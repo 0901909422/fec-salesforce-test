@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Action_Button__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Routing Action tương ứng để chuyển sang Stage tiếp theo</description>
+    <externalId>false</externalId>
+    <label>Action Button</label>
+    <referenceTo>FEC_Action_Button__c</referenceTo>
+    <relationshipLabel>Stage Change</relationshipLabel>
+    <relationshipName>Stage_Change</relationshipName>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

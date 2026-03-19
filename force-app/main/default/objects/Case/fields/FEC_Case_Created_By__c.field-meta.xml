@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Case_Created_By__c</fullName>
+    <description>Trường tạo mới để hiển thị trên Case details và interaction details do trường standard không hiển thị được đúng  yêu cầu. Hiển thị Email ID của người tạo Case</description>
+    <externalId>false</externalId>
+    <formula>IF(
+  RecordType.Name &lt;&gt; &apos;Interaction&apos;,
+  IF(
+    ISBLANK(Owner:Queue.Id),
+    LEFT(CreatedBy.Email, FIND(&quot;@&quot;, CreatedBy.Email) - 1),
+    CreatedBy.FirstName &amp; &quot; &quot; &amp; CreatedBy.LastName
+  ),
+  &apos;&apos;
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Case Created By</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

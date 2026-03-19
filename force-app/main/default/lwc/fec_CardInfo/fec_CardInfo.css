@@ -1,0 +1,25 @@
+/* Loading spinner container */
+.slds-is-relative {
+    min-height: 100px;
+}
+
+/* Custom Accordion Styling */
+.slds-accordion__summary {
+    cursor: pointer;
+    user-select: none;
+}
+
+.slds-accordion__summary:hover {
+    background-color: #f3f2f2;
+}
+
+/* Error text styling - highlight phần "Tải dữ liệu không thành công" màu đỏ */
+.error-text {
+    color: #c23934 !important;
+    font-weight: 600;
+}
+
+/* Đường ngăn cách cột - truyền biến CSS cho bảng Card Delivery và Other Cards */
+.card-info-table-wrapper {
+    --fec-table-border-right: 1px solid #d8dde6;
+}

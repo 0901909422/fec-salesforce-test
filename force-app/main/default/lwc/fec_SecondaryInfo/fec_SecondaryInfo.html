@@ -1,0 +1,175 @@
+<template>
+
+    <!-- ================= SUCCESS ================= -->
+    <template if:true={hasData}>
+        <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+
+            <!-- ================= Self-service Channels ================= -->
+            <lightning-accordion-section name="selfService" label={customLabel.selfServiceChannelLabel}>
+
+                <div class="slds-form slds-p-horizontal_small">
+
+                    <div class="slds-grid slds-wrap">
+
+                        <!-- Zalo Follower -->
+                        <div class="slds-col slds-size_1-of-3 slds-p-horizontal_x-small">
+                            <div class="slds-border_bottom slds-p-vertical_small">
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <div class="slds-col slds-text-title_bold">
+                                        <div class="label-with-help">
+                                            <span class="label-text">{customLabel.zaloFollowerLabel}</span>
+                                            <template if:true={helpTextMap.fec_zalo_follower__c}>
+                                                <lightning-helptext content={helpTextMap.fec_zalo_follower__c}>
+                                                </lightning-helptext>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Value -->
+                                    <div class="slds-col slds-grow slds-text-color_weak slds-p-left_medium">
+                                        {zaloFollower}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Website Account -->
+                        <div class="slds-col slds-size_1-of-3 slds-p-horizontal_x-small">
+                            <div class="slds-border_bottom slds-p-vertical_small">
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <div class="slds-col slds-text-title_bold">
+                                        <div class="label-with-help">
+                                            <span class="label-text">{customLabel.websiteAccountLabel}</span>
+                                            <template if:true={helpTextMap.fec_website_account__c}>
+                                                <lightning-helptext content={helpTextMap.fec_website_account__c}>
+                                                </lightning-helptext>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Value -->
+                                    <div class="slds-col slds-grow slds-text-color_weak slds-p-left_medium">
+                                        {websiteAccount}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mobile App Account -->
+                        <div class="slds-col slds-size_1-of-3 slds-p-horizontal_x-small">
+                            <div class="slds-border_bottom slds-p-vertical_small">
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <div class="slds-col slds-text-title_bold">
+                                        <div class="label-with-help">
+                                            <span class="label-text">{customLabel.mobileAppAccountLabel}</span>
+                                            <template if:true={helpTextMap.fec_mobile_app_account__c}>
+                                                <lightning-helptext content={helpTextMap.fec_mobile_app_account__c}>
+                                                </lightning-helptext>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Value -->
+                                    <div class="slds-col slds-grow slds-text-color_weak slds-p-left_medium">
+                                        {mobileAppAccount}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </lightning-accordion-section>
+
+            <!-- ================= Contact List ================= -->
+            <lightning-accordion-section name="contactList" label="Contact List">
+                <c-fec_-related-list-paging 
+                    records={contactList} 
+                    columns={contactListColumnsFiltered}
+                    default-sorted-by="channel"
+                    default-sort-direction="desc"
+                    onsensitivelog={handleContactStringView}>
+                </c-fec_-related-list-paging>
+            </lightning-accordion-section>
+
+            <!-- ================= Reference Info ================= -->
+            <lightning-accordion-section name="reference" label="Reference Info">
+
+                <c-fec_-related-list-paging 
+                    records={reference} 
+                    columns={ReferenceColumns}
+                    default-sorted-by="fullName"
+                    default-sort-direction="desc"
+                    onsensitivelog={handleReferencePhoneView}>
+                </c-fec_-related-list-paging>
+
+            </lightning-accordion-section>
+
+        </lightning-accordion>
+    </template>
+
+    <!-- ================= ERROR ================= -->
+    <template if:false={hasData}>
+
+        <div class="slds-accordion">
+
+            <!-- Self-service -->
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                {customLabel.selfServiceChannelLabel} –
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorApiLabel}
+                                </span>
+                            </span>
+                        </span>
+                    </h3>
+                </div>
+            </section>
+
+            <!-- Contact List -->
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                {customLabel.contactListLabel} – 
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorApiLabel}
+                                </span>
+                            </span>
+                        </span>
+                    </h3>
+                </div>
+            </section>
+
+            <!-- Reference -->
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                               {customLabel.referenceInfoLabel} – 
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorApiLabel}
+                                </span>
+                            </span>
+                        </span>
+                    </h3>
+                </div>
+            </section>
+
+        </div>
+
+    </template>
+
+</template>

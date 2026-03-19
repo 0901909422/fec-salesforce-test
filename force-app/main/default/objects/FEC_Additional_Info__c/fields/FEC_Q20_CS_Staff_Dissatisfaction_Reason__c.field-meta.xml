@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Q20_CS_Staff_Dissatisfaction_Reason__c</fullName>
+    <description>Q20: Lý do KH chưa hài lòng về NV DVKH</description>
+    <label>Q20 CS Staff Dissatisfaction Reason</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Staff Inappropriate Attitude</fullName>
+                <default>false</default>
+                <label>Staff Inappropriate Attitude</label>
+            </value>
+            <value>
+                <fullName>Staff Unable to Resolve Issue</fullName>
+                <default>false</default>
+                <label>Staff Unable to Resolve Issue</label>
+            </value>
+            <value>
+                <fullName>Staff Slow Response</fullName>
+                <default>false</default>
+                <label>Staff Slow Response</label>
+            </value>
+            <value>
+                <fullName>Staff Unclear Advice</fullName>
+                <default>false</default>
+                <label>Staff Unclear Advice</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
