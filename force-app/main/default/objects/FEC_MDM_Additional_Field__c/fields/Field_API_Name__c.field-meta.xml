@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_Code__c</fullName>
-    <caseSensitive>false</caseSensitive>
-    <externalId>true</externalId>
-    <label>FEC Code</label>
+    <fullName>Field_API_Name__c</fullName>
+    <externalId>false</externalId>
+    <label>Field API Name</label>
     <length>255</length>
     <required>false</required>
-    <trackHistory>true</trackHistory>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Text</type>
-    <unique>true</unique>
+    <unique>false</unique>
 </CustomField>
