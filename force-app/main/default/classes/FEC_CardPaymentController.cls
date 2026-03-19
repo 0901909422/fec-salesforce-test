@@ -1,8 +1,6 @@
 public with sharing class FEC_CardPaymentController {
     
-    /* =====================================================
-     * DTO
-     * ===================================================== */
+    /** DTO */
     public class CardPaymentTotalsDTO {
         @AuraEnabled public Map<String, String> helpTexts;
         @AuraEnabled public Decimal fullPaymentAmount;
@@ -18,36 +16,17 @@ public with sharing class FEC_CardPaymentController {
         @AuraEnabled public Decimal totalDeferredInterest;
     }
     
-    /**
-     * Tải thông tin Card Payment - Method chính
-     * Luồng: Query database trước, chỉ call API nếu không có dữ liệu (và chỉ 1 lần duy nhất)
-     * Sau khi có dữ liệu trong database, sẽ không gọi API nữa
-     * @param caseId - ID của Case record
-     * @return Danh sách Card Payment records
-     */
+    /** Tải Card Payment: query DB → gọi API mỗi lần load; save chỉ INSERT mới (key Rec+Plan). */
     @AuraEnabled(cacheable=false)
     public static List<Map<String, Object>> loadCardPaymentInfo(Id caseId) {
         if (caseId == null) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
-        /* ===== TẢI CASE ===== */
-        Case c = [
-            SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c,
-                   FEC_Account_or_Contract__r.FEC_Account_Number__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-
+        Case c = [SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Account_Number__c FROM Case WHERE Id = :caseId LIMIT 1];
         Id customerHistoryId = c.FEC_Account_or_Contract__c;
         String accountNumber = getAccountNumber(c);
-
-        /* =====================================================
-         * BƯỚC 1: QUERY DATABASE TRƯỚC
-         * ===================================================== */
         List<Map<String, Object>> records = new List<Map<String, Object>>();
-        
         try {
             List<FEC_Card_Payment__c> payments = [
                 SELECT FEC_Rec__c, FEC_Plan__c, FEC_REF_Number__c, FEC_Current_Balance__c, FEC_Open_Date__c,
@@ -61,22 +40,9 @@ public with sharing class FEC_CardPaymentController {
             for (FEC_Card_Payment__c p : payments) {
                 records.add(buildCardPaymentRecordMap(p));
             }
-        } catch (Exception e) {
-            // Ignore query exception
-        }
+        } catch (Exception e) { }
 
-        /* =====================================================
-         * BƯỚC 2: KIỂM TRA XEM CÓ DỮ LIỆU KHÔNG
-         * Nếu đã có dữ liệu trong database → return luôn (không gọi API)
-         * ===================================================== */
-        Boolean hasCardPaymentData = records != null && records.size() > 0;
-
-        // Nếu đã có dữ liệu → return luôn (không gọi API nữa)
-        if (hasCardPaymentData) {
-            return records;
-        }
-
-        /* ===== Khi bật Mock: gọi GetCardPlanInfo (Postman mock), có data thì save DB và return; không thì fallback hardcode ===== */
+        // Mock OFF: gọi GetCardPlanInfo, save DB; Mock ON: fallback hardcode
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         if (apiSetting != null && apiSetting.FEC_Call_Mock__c == false) {
             try {
@@ -114,14 +80,11 @@ public with sharing class FEC_CardPaymentController {
             return FEC_MockData.getHardcodedCardPaymentRecordsForUI();
         }
 
-        /* =====================================================
-         * BƯỚC 3: KHÔNG CÓ DỮ LIỆU → GỌI API (CHỈ 1 LẦN DUY NHẤT)
-         * ===================================================== */
+        // Gọi GetCardPlanInfo mỗi lần load
         if (String.isBlank(accountNumber)) {
             return records;
         }
 
-        /* ===== Gọi API GetCardPlanInfo ===== */
         try {
             FEC_GetCardPlanInfo.CardPlanResult apiResult = FEC_GetCardPlanInfo.getCardPlanInfo(accountNumber);
             if (apiResult != null && apiResult.responseCode == '1' && !apiResult.plans.isEmpty()) {
@@ -131,9 +94,6 @@ public with sharing class FEC_CardPaymentController {
             System.debug('### GetCardPlanInfo API FAILED: ' + e.getMessage());
         }
 
-        /* =====================================================
-         * BƯỚC 4: QUERY LẠI DATABASE SAU KHI CALL API
-         * ===================================================== */
         try {
             List<FEC_Card_Payment__c> payments = [
                 SELECT FEC_Rec__c, FEC_Plan__c, FEC_REF_Number__c, FEC_Current_Balance__c, FEC_Open_Date__c,
@@ -148,20 +108,11 @@ public with sharing class FEC_CardPaymentController {
             for (FEC_Card_Payment__c p : payments) {
                 records.add(buildCardPaymentRecordMap(p));
             }
-        } catch (Exception e) {
-            // Ignore query exception
-        }
-
+        } catch (Exception e) { }
         return records;
     }
 
-    /**
-     * Lấy Account Number từ Case
-     * Ưu tiên: FEC_Customer_History__c.FEC_Account_Number__c (qua lookup)
-     * Fallback: Case.FEC_Account_Number__c (trực tiếp trên Case)
-     * @param c - Case record
-     * @return Account Number hoặc null nếu không tìm thấy
-     */
+    /** Account Number: ưu tiên lookup FEC_Account_or_Contract__, fallback Case.FEC_Account_Number__c */
     private static String getAccountNumber(Case c) {
         if (c.FEC_Account_or_Contract__c != null) {
             FEC_Customer_History__c h = [
@@ -177,9 +128,7 @@ public with sharing class FEC_CardPaymentController {
         return c.FEC_Account_Number__c;
     }
 
-    /**
-     * Map 1 record FEC_Card_Payment__c sang Map cho LWC.
-     */
+    /** Map FEC_Card_Payment__c → Map cho LWC */
     private static Map<String, Object> buildCardPaymentRecordMap(FEC_Card_Payment__c p) {
         Map<String, Object> record = new Map<String, Object>();
         record.put('FEC_Rec__c', p.FEC_Rec__c);
@@ -200,25 +149,13 @@ public with sharing class FEC_CardPaymentController {
         return record;
     }
     
-    /**
-     * Get Card Payment records related to a Case
-     * Method này wrapper của loadCardPaymentInfo() để backward compatibility
-     * @param caseId - The Case record ID
-     * @return List of Card Payment data as generic objects
-     */
+    /** Wrapper loadCardPaymentInfo() cho backward compatibility */
     @AuraEnabled(cacheable=false)
     public static List<Map<String, Object>> getCardPaymentRecords(String caseId) {
-        // Sử dụng loadCardPaymentInfo() - method này tự động query database và gọi API nếu cần
         return loadCardPaymentInfo(caseId);
     }
     
-    /**
-     * Tải Card Payment Totals - Method chính
-     * Luồng: Query database trước, chỉ call API nếu không có dữ liệu (và chỉ 1 lần duy nhất)
-     * Sau khi có dữ liệu trong database, sẽ không gọi API nữa
-     * @param caseId - ID của Case record
-     * @return CardPaymentTotalsDTO chứa payment totals và help texts
-     */
+    /** Tải Card Payment Totals: query DB → gọi API mỗi lần load. */
     @AuraEnabled(cacheable=false)
     public static CardPaymentTotalsDTO loadCardPaymentTotals(Id caseId) {
         if (caseId == null) {
@@ -239,28 +176,13 @@ public with sharing class FEC_CardPaymentController {
         dto.totalDeferredInterest = 0;
         dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Card_Payment__c.SObjectType);
 
-        /* ===== TẢI CASE ===== */
-        Case c = [
-            SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c,
-                   FEC_Account_or_Contract__r.FEC_Account_Number__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-
+        Case c = [SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Account_Number__c FROM Case WHERE Id = :caseId LIMIT 1];
         Id customerHistoryId = c.FEC_Account_or_Contract__c;
         String accountNumber = getAccountNumber(c);
-
-        if (customerHistoryId == null) {
-            return dto;
-        }
+        if (customerHistoryId == null) return dto;
 
         Boolean needOnlyAggregateAndSaveSeven = false;
-        /* =====================================================
-         * BƯỚC 1: QUERY DATABASE TRƯỚC
-         * ===================================================== */
         try {
-            // Query từ FEC_Card_Payment__c để lấy totals
             List<FEC_Card_Payment__c> cardPayments = [
                 SELECT FEC_Full_Payment_Amount__c, FEC_Loan_Balance__c, FEC_Full_Payment_Without_IPP__c, FEC_Full_IPP_Payment_Amount__c,
                        FEC_Total_Current_Balance__c, FEC_Total_Close_Fee_Amount__c, FEC_Total_Plan_Payment_Amount__c,
@@ -287,19 +209,13 @@ public with sharing class FEC_CardPaymentController {
                 dto.totalIPPAccruedInterest = payment.FEC_Total_IPP_Accrued_Interest__c != null ? payment.FEC_Total_IPP_Accrued_Interest__c : 0;
                 dto.totalPerDiem = payment.FEC_Total_Per_Diem__c != null ? payment.FEC_Total_Per_Diem__c : 0;
                 dto.totalDeferredInterest = payment.FEC_Total_Deferred_Interest__c != null ? payment.FEC_Total_Deferred_Interest__c : 0;
-                // Chỉ return sớm khi đã có đủ cả 7 field tổng; nếu thiếu thì chạy tiếp để aggregate và lưu 7
                 Boolean hasAllSeven = payment.FEC_Total_Current_Balance__c != null && payment.FEC_Total_Close_Fee_Amount__c != null && payment.FEC_Total_Plan_Payment_Amount__c != null
                     && payment.FEC_Total_Accrued_Interest__c != null && payment.FEC_Total_IPP_Accrued_Interest__c != null && payment.FEC_Total_Per_Diem__c != null && payment.FEC_Total_Deferred_Interest__c != null;
-                if (hasAllSeven) {
-                    return dto;
+                if (!hasAllSeven) {
+                    needOnlyAggregateAndSaveSeven = true;
                 }
-                needOnlyAggregateAndSaveSeven = true;
             }
-        } catch (Exception e) {
-            // Ignore query exception
-        }
-
-        /* Chỉ cần aggregate 7 tổng và lưu (đã có 4 totals), không gọi API */
+        } catch (Exception e) { }
         if (needOnlyAggregateAndSaveSeven) {
             Decimal totalCurrentBalance = 0;
             Decimal totalCloseFeeAmount = 0;
@@ -353,15 +269,8 @@ public with sharing class FEC_CardPaymentController {
             return dto;
         }
 
-        /* =====================================================
-         * BƯỚC 2: KHÔNG CÓ DỮ LIỆU → GỌI API (CHỈ 1 LẦN DUY NHẤT)
-         * Lưu ý: Tất cả các API chỉ được gọi 1 lần duy nhất ở đây
-         * ===================================================== */
-        if (String.isBlank(accountNumber)) {
-            return dto;
-        }
-
-        /* ===== Khi bật Mock: vẫn gọi 4 API (Postman mock), có data thì return; lỗi thì fallback hardcode ===== */
+        // Gọi 4 API mỗi lần load: GetCardPaymentInfo, GetCardBasicInfo, EmeaAccountInq, GetCardPlanInfo
+        if (String.isBlank(accountNumber)) return dto;
         FEC_API_Setting__c apiSettingTotals = FEC_API_Setting__c.getOrgDefaults();
         Boolean isMockTotals = (apiSettingTotals != null && apiSettingTotals.FEC_Call_Mock__c == true);
 
@@ -370,7 +279,6 @@ public with sharing class FEC_CardPaymentController {
             Decimal loanBalance = 0;
             Decimal fullPaymentWithoutIPP = 0;
 
-        /* ===== 1. Gọi API GetCardPaymentInfo để lấy Full Payment Amount ===== */
         try {
             FEC_GetCardPaymentInfo.CardPaymentResult paymentResult = 
                 FEC_GetCardPaymentInfo.getCardPaymentInfo(accountNumber, Date.today());
@@ -382,7 +290,6 @@ public with sharing class FEC_CardPaymentController {
             System.debug('GetCardPaymentInfo API error: ' + e.getMessage());
         }
 
-        /* ===== 2. Gọi API GetCardBasicInfo để lấy Loan Balance ===== */
         try {
             String transId = UUID.randomUUID().toString();
             String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
@@ -401,9 +308,7 @@ public with sharing class FEC_CardPaymentController {
             System.debug('GetCardBasicInfo API error: ' + e.getMessage());
         }
 
-        /* ===== 3. Tính Full Payment Without IPP từ 3 API ===== */
         try {
-            // 3.1. Gọi API M_CMS_EMEA_ACCOUNT_INQ để lấy OnlineTotalBalance
             Decimal onlineTotalBalance = 0;
             try {
                 FEC_EmeaAccountInqService.EmeaInput emeaInput = new FEC_EmeaAccountInqService.EmeaInput();
@@ -416,7 +321,6 @@ public with sharing class FEC_CardPaymentController {
                     FEC_EmeaAccountInqService.callAccountInquiry(emeaInput);
                 
                 if (emeaResult != null && emeaResult.responseCode == '1') {
-                    // OnlineTotalBalance = CURR_BAL + AMT_MEMO_DB - AMT_MEMO_CR
                     Decimal currBal = emeaResult.currBal != null ? emeaResult.currBal : 0;
                     Decimal amtMemoDb = emeaResult.amtMemoDb != null ? emeaResult.amtMemoDb : 0;
                     Decimal amtMemoCr = emeaResult.amtMemoCr != null ? emeaResult.amtMemoCr : 0;
@@ -426,7 +330,6 @@ public with sharing class FEC_CardPaymentController {
                 System.debug('M_CMS_EMEA_ACCOUNT_INQ API error: ' + e.getMessage());
             }
 
-            // 3.2. Gọi API GetCardPlanInfo để lấy TotalDeferredInterestPlan, TotalAccuredInterestPlan, TotalPerDiemPlan
             Decimal totalDeferredInterestPlan = 0;
             Decimal totalAccuredInterestPlan = 0;
             Decimal totalPerDiemPlan = 0;
@@ -437,19 +340,13 @@ public with sharing class FEC_CardPaymentController {
                 
                 if (planResult != null && planResult.responseCode == '1' && planResult.plans != null) {
                     for (FEC_GetCardPlanInfo.CardPlan plan : planResult.plans) {
-                        // Chỉ lấy khi PlanNumber không bắt đầu bằng '9'
                         if (String.isNotBlank(plan.planNumber) && !plan.planNumber.startsWith('9')) {
-                            // TotalDeferredInterestPlan = Sum(DeferredInterest)
                             if (plan.deferredInterest != null) {
                                 totalDeferredInterestPlan += plan.deferredInterest;
                             }
-                            
-                            // TotalAccuredInterestPlan = Sum(AccruedInterest/100)
                             if (plan.accruedInterest != null) {
                                 totalAccuredInterestPlan += plan.accruedInterest / 100;
                             }
-                            
-                            // TotalPerDiemPlan = Sum(PerDiem/100)
                             if (plan.perDiem != null) {
                                 totalPerDiemPlan += plan.perDiem / 100;
                             }
@@ -460,8 +357,6 @@ public with sharing class FEC_CardPaymentController {
                 System.debug('GetCardPlanInfo API error: ' + e.getMessage());
             }
 
-            // 3.3. Tính Full Payment Without IPP
-            // = OnlineTotalBalance + TotalDeferredInterestPlan + TotalAccuredInterestPlan + TotalPerDiemPlan - LoanBalance
             fullPaymentWithoutIPP = onlineTotalBalance + totalDeferredInterestPlan + totalAccuredInterestPlan + totalPerDiemPlan - loanBalance;
         } catch (Exception e) {
             System.debug('Calculate Full Payment Without IPP error: ' + e.getMessage());
@@ -474,7 +369,6 @@ public with sharing class FEC_CardPaymentController {
             fullIPPPaymentAmount = fullPaymentAmount - fullPaymentWithoutIPP;
         }
 
-        /* ===== 5. Lấy 7 tổng từ aggregate (SUM các plan record) ===== */
         Decimal totalCurrentBalance = 0;
         Decimal totalCloseFeeAmount = 0;
         Decimal totalPlanPaymentAmount = 0;
@@ -502,10 +396,6 @@ public with sharing class FEC_CardPaymentController {
             System.debug('Aggregate 7 totals error: ' + e.getMessage());
         }
 
-        /* =====================================================
-         * BƯỚC 3: LƯU DỮ LIỆU VÀO DATABASE (CHỈ 1 LẦN DUY NHẤT)
-         * Lưu ý: Method này chỉ được gọi 1 lần sau khi gọi API
-         * ===================================================== */
         if (fullPaymentAmount != 0 || loanBalance != 0 || fullPaymentWithoutIPP != 0 || fullIPPPaymentAmount != 0
                 || totalCurrentBalance != 0 || totalCloseFeeAmount != 0 || totalPlanPaymentAmount != 0 || totalAccruedInterest != 0
                 || totalIPPAccruedInterest != 0 || totalPerDiem != 0 || totalDeferredInterest != 0) {
@@ -513,11 +403,6 @@ public with sharing class FEC_CardPaymentController {
                     totalCurrentBalance, totalCloseFeeAmount, totalPlanPaymentAmount, totalAccruedInterest, totalIPPAccruedInterest, totalPerDiem, totalDeferredInterest);
         }
 
-        /* =====================================================
-         * BƯỚC 4: QUERY LẠI DATABASE SAU KHI LƯU (KHÔNG GỌI API NỮA)
-         * Lưu ý: Chỉ query lại database, KHÔNG gọi API thêm lần nào nữa
-         * Nếu không có dữ liệu trong database (do lưu thất bại) → trả về lỗi
-         * ===================================================== */
         try {
             List<FEC_Card_Payment__c> cardPayments = [
                 SELECT FEC_Full_Payment_Amount__c, FEC_Loan_Balance__c, FEC_Full_Payment_Without_IPP__c, FEC_Full_IPP_Payment_Amount__c,
@@ -546,7 +431,6 @@ public with sharing class FEC_CardPaymentController {
                 dto.totalPerDiem = payment.FEC_Total_Per_Diem__c != null ? payment.FEC_Total_Per_Diem__c : 0;
                 dto.totalDeferredInterest = payment.FEC_Total_Deferred_Interest__c != null ? payment.FEC_Total_Deferred_Interest__c : 0;
             } else {
-                // Nếu không có trong database (do lưu thất bại) → trả về lỗi
                 throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
             }
         } catch (AuraHandledException e) {
@@ -583,9 +467,7 @@ public with sharing class FEC_CardPaymentController {
         );
     }
 
-    /**
-     * Build CardPaymentTotalsDTO từ các tham số (không chứa dữ liệu hardcode).
-     */
+    /** Build CardPaymentTotalsDTO từ các tham số. */
     public static CardPaymentTotalsDTO buildCardPaymentTotalsDTO(
             Map<String, String> helpTexts,
             Decimal fullPaymentAmount, Decimal loanBalance, Decimal fullPaymentWithoutIPP, Decimal fullIPPPaymentAmount,
@@ -619,22 +501,7 @@ public with sharing class FEC_CardPaymentController {
         return loadCardPaymentTotals(caseId);
     }
 
-    /**
-     * Lưu Card Payment Totals vào database (chỉ UPDATE khi field là null, không update nếu đã có dữ liệu)
-     * Method này chỉ được gọi 1 lần duy nhất khi chưa có dữ liệu trong database
-     * @param customerHistoryId - Customer History ID
-     * @param fullPaymentAmount - Full Payment Amount từ API
-     * @param loanBalance - Loan Balance từ API
-     * @param fullPaymentWithoutIPP - Full Payment Without IPP từ tính toán
-     * @param fullIPPPaymentAmount - Full IPP Payment Amount từ tính toán
-     * @param totalCurrentBalance - Tổng FEC_Current_Balance__c (aggregate)
-     * @param totalCloseFeeAmount - Tổng FEC_Close_Fee_Amount__c
-     * @param totalPlanPaymentAmount - Tổng FEC_Plan_Payment_Amount__c
-     * @param totalAccruedInterest - Tổng FEC_Accrued_Interest__c
-     * @param totalIPPAccruedInterest - Tổng FEC_IPP_Accrued_Interest__c
-     * @param totalPerDiem - Tổng FEC_Per_Diem__c
-     * @param totalDeferredInterest - Tổng FEC_Deferred_Interest__c
-     */
+    /** Lưu totals vào DB: chỉ set field khi null. */
     private static void saveCardPaymentTotalsToDatabase(Id customerHistoryId, Decimal fullPaymentAmount, Decimal loanBalance, Decimal fullPaymentWithoutIPP, Decimal fullIPPPaymentAmount,
             Decimal totalCurrentBalance, Decimal totalCloseFeeAmount, Decimal totalPlanPaymentAmount, Decimal totalAccruedInterest, Decimal totalIPPAccruedInterest, Decimal totalPerDiem, Decimal totalDeferredInterest) {
         if (customerHistoryId == null) {
@@ -727,16 +594,8 @@ public with sharing class FEC_CardPaymentController {
         }
     }
     
-    /**
-     * Lưu dữ liệu Card Plan từ API vào FEC_Card_Payment__c (chỉ INSERT, không UPDATE)
-     * Method này chỉ được gọi 1 lần duy nhất khi chưa có dữ liệu trong database
-     * @param planList - Danh sách CardPlan từ API
-     * @param accountNumber - Account Number
-     * @param customerHistoryId - Customer History ID từ Case (ưu tiên dùng ID này)
-     */
+    /** Lưu Card Plan từ API vào FEC_Card_Payment__c (chỉ INSERT, key Rec+Plan). */
     private static void saveCardPlanToDatabase(List<FEC_GetCardPlanInfo.CardPlan> planList, String accountNumber, Id customerHistoryId) {
-        // Ưu tiên dùng Customer History ID từ Case
-        // Nếu không có, mới tìm từ Account Number
         if (customerHistoryId == null) {
             List<FEC_Customer_History__c> histories = [
                 SELECT Id FROM FEC_Customer_History__c 
@@ -758,8 +617,6 @@ public with sharing class FEC_CardPaymentController {
             FROM FEC_Card_Payment__c 
             WHERE FEC_Customer_History__c = :customerHistoryId
         ];
-        
-        // Tạo Set để kiểm tra nhanh key (Rec__c + Plan__c) đã tồn tại chưa
         Set<String> existingKeys = new Set<String>();
         for (FEC_Card_Payment__c existing : existingRecords) {
             String key = (existing.FEC_Rec__c != null ? existing.FEC_Rec__c : '') + '_' + 
@@ -773,26 +630,16 @@ public with sharing class FEC_CardPaymentController {
             // Tạo key để kiểm tra: Rec__c + Plan__c
             String key = (p.recordNumber != null ? p.recordNumber : '') + '_' + 
                         (p.planNumber != null ? p.planNumber : '');
-            
-            // Nếu key đã tồn tại → bỏ qua (không insert, không update)
             if (existingKeys.contains(key)) {
                 continue;
             }
-            
-            // Chỉ INSERT record mới (key chưa tồn tại)
             FEC_Card_Payment__c record = new FEC_Card_Payment__c();
             record.FEC_Customer_History__c = customerHistoryId;
-            
-            // --- MAP FIELDS THEO YÊU CẦU ---
-            record.FEC_Rec__c = p.recordNumber;                   // RecordNumber
-            record.FEC_Plan__c = p.planNumber;                    // PlanNumber
-            record.FEC_REF_Number__c = p.refNumber;               // REFNumber
-            
-            // Map Date (Cần convert String -> Date)
-            record.FEC_Open_Date__c = FEC_CommonUltils.parseDate(p.openDate);    // PlanOpenDate
-            record.FEC_Begin_Date__c = FEC_CommonUltils.parseDate(p.beginDate);  // BeginDate
-            
-            // Map Decimal
+            record.FEC_Rec__c = p.recordNumber;
+            record.FEC_Plan__c = p.planNumber;
+            record.FEC_REF_Number__c = p.refNumber;
+            record.FEC_Open_Date__c = FEC_CommonUltils.parseDate(p.openDate);
+            record.FEC_Begin_Date__c = FEC_CommonUltils.parseDate(p.beginDate);
             Decimal currentBalance = p.currentBalance != null ? p.currentBalance : 0;
             Decimal accruedInterest = p.accruedInterest != null ? p.accruedInterest : 0;
             Decimal perDiem = p.perDiem != null ? p.perDiem : 0;
@@ -816,13 +663,8 @@ public with sharing class FEC_CardPaymentController {
                 closeFeePercent = closeFeePercent.setScale(2, RoundingMode.HALF_UP);
             }
             record.FEC_Close_Fee__c = closeFeePercent;
-            
-            // Close Fee Amount = Close Fee Indicator Amount từ API
             Decimal closeFeeAmount = p.closeFeeIndicatorAmt != null ? p.closeFeeIndicatorAmt : 0;
             record.FEC_Close_Fee_Amount__c = closeFeeAmount;
-            
-            // Plan Payment Amount = Lấy trực tiếp từ API (PlanPaymentAmount)
-            // KHÔNG tính toán lại để đảm bảo giá trị chính xác từ API
             Decimal planPaymentAmount = p.totalPaymentAmount != null ? p.totalPaymentAmount : 0;
             record.FEC_Plan_Payment_Amount__c = planPaymentAmount;
 

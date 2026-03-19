@@ -956,7 +956,7 @@ public with sharing class FEC_CaseBusinessService {
           Owner.Name,
           FEC_Current_Case_Stage__c,
           FEC_Current_Case_Stage__r.FEC_Default_Stage__c,
-          FEC_Actual_Nature_of_Case__c
+          FEC_Actual_Nature_of_Case__c, FEC_Team__c
         FROM Case
         WHERE Id = :caseId
       ];
@@ -1096,6 +1096,7 @@ public with sharing class FEC_CaseBusinessService {
         FEC_Case__c = caseId,
         // FEC_Decision__c = '',
         FEC_Original_User_Queue__c = currentOwnerName,
+        FEC_Original_User_Queue_ID__c = currentOwnerId,
         FEC_Updated_User_Queue__c = nextOwnerName,
         FEC_Updated_User_Queue_ID__c = queueId,
         FEC_Stage_Name__c = selectedChange.FEC_Previous_Stage__r?.FEC_Code__c,
@@ -1104,6 +1105,7 @@ public with sharing class FEC_CaseBusinessService {
       );
 
       Database.insert(history, AccessLevel.SYSTEM_MODE);
+
       Database.update(updatedCase, AccessLevel.SYSTEM_MODE);
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
@@ -1256,6 +1258,7 @@ public with sharing class FEC_CaseBusinessService {
       FEC_Routing_Action__c = ROUTE_TO,
       FEC_Decision__c = '',
       FEC_Original_User_Queue__c = originalName,
+      FEC_Original_User_Queue_ID__c = oldCase.OwnerId,
       FEC_Updated_User_Queue__c = updatedName,
       FEC_Updated_User_Queue_ID__c = c.OwnerId != null ? String.valueOf(c.OwnerId) : null,
       FEC_Stage_Name__c = stageName,
