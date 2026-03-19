@@ -291,7 +291,7 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
                             interestRate: interestRateNum,
                             interestRateFormatted: interestRateNum != null ? Number(interestRateNum).toFixed(2) + '%' : '-',
                             currentTerm: currentTerm,
-                            currentTermFormatted: currentTerm != null ? String(formatCurrency(currentTerm, 0)) : '-',
+                            currentTermFormatted: currentTerm != null ? `${Number(currentTerm)}` : '-',
                             ippTerm: ippTerm,
                             ippTermFormatted: ippTerm != null ? `${Number(ippTerm)} months` : '-',
                             totalIPPPaymentAmount: totalIPPPaymentAmount,

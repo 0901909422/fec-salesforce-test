@@ -56,7 +56,20 @@ public with sharing class FEC_ConstantCommon {
     
     public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';
     public static final String CHANNEL_OUTBOUND_SUBCHANNEL_NAME = 'Outbound Call';
-    
+    /** Channel/Subchannel dùng cho Interaction SLA (FEC_InteractionSLAController) */
+    public static final String CHANNEL_EMAIL_NAME = 'Email';
+    public static final String CHANNEL_EMAIL_INCOMING_SUBCHANNEL_NAME = 'Incoming Email';
+    public static final String CHANNEL_EMAIL_OUTGOING_SUBCHANNEL_NAME = 'Outgoing Email';
+    public static final String CHANNEL_CHAT_NAME = 'Chat';
+    public static final String CHANNEL_F2F_NAME = 'F2F';
+    public static final String CHANNEL_F2F_SUBCHANNEL_NAME = 'F2F';
+    public static final String CHANNEL_LETTER_NAME = 'Letter';
+    public static final String CHANNEL_LETTER_SUBCHANNEL_NAME = 'Letter';
+    public static final String CHANNEL_INTERNAL_NAME = 'Internal';
+    public static final String CHANNEL_INTERNAL_EMAIL_SUBCHANNEL_NAME = 'Email';
+    public static final String CHANNEL_INTERNAL_TASK_SUBCHANNEL_NAME = 'Task';
+    public static final String CHANNEL_EXTERNAL_NAME = 'External';
+
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
     public static final String PATTERN_APPLICATION_ID = '^(\\d{6}|\\d{8}|\\d{9})$';
@@ -151,6 +164,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String SOBJECT_USER = 'User';
     public static final String SOBJECT_GROUP = 'Group';
     public static final String DELIMITER_SEMICOLON = ';';
+    public static final String DELIMITER_UNDERSCORE = '_';
     
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';

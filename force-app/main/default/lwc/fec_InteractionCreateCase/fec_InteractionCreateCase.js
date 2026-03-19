@@ -5,6 +5,7 @@ import {
   getAllTabInfo,
   openSubtab,
   closeTab,
+  getFocusedTabInfo
 } from "lightning/platformWorkspaceApi";
 import { publish, MessageContext } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
@@ -75,26 +76,19 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
           this.isLoading = false;
           if (this.isConsoleNavigation) {
             let primaryTabId;
-            let tabCloseId;
             const tabInfos = await getAllTabInfo();
             tabInfos?.forEach(async (tabInfo) => {
               if (tabInfo.recordId === this.recordId) {
                 primaryTabId = tabInfo.tabId;
               }
-              if (tabInfo.url.includes("c__fec_InteractionCreateCase")) {
-                tabCloseId = tabInfo.tabId;
-              }
             });
+            let { tabId } = await getFocusedTabInfo();
             await openSubtab(primaryTabId, {
               recordId: newCaseId,
               focus: true,
             });
-            setTimeout(async () => {
-              await this.handlePublishMessageChanel();
-              if (tabCloseId) {
-                closeTab(tabCloseId);
-              }
-            }, 2000);
+            await closeTab(tabId);
+            await this.handlePublishMessageChanel();
           } else {
             this[NavigationMixin.Navigate]({
               type: "standard__recordPage",
@@ -121,26 +115,19 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
           this.isLoading = false;
           if (this.isConsoleNavigation) {
             let primaryTabId;
-            let tabCloseId;
             const tabInfos = await getAllTabInfo();
             tabInfos?.forEach(async (tabInfo) => {
               if (tabInfo.recordId === this.recordId) {
                 primaryTabId = tabInfo.tabId;
               }
-              if (tabInfo.url.includes("c__fec_InteractionCreateCase")) {
-                tabCloseId = tabInfo.tabId;
-              }
             });
+            const { tabId } = await getFocusedTabInfo();
             await openSubtab(primaryTabId, {
               recordId: newCaseId,
               focus: true,
             });
-            setTimeout(async () => {
-              await this.handlePublishMessageChanel();
-              if (tabCloseId) {
-                closeTab(tabCloseId);
-              }
-            }, 2000);
+            await closeTab(tabId);
+            await this.handlePublishMessageChanel();
           } else {
             this[NavigationMixin.Navigate]({
               type: "standard__recordPage",
