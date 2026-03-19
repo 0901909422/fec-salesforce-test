@@ -37,7 +37,7 @@ import LABEL_LABEL_ACTIVE from '@salesforce/label/c.FEC_Label_Active';
 import LABEL_LABEL_INACTIVE from '@salesforce/label/c.FEC_Label_Inactive';
 import LABEL_TOOLTIP_CLICK_TO_DEACTIVATE from '@salesforce/label/c.FEC_Tooltip_Click_To_Deactivate';
 import LABEL_TOOLTIP_CLICK_TO_ACTIVATE from '@salesforce/label/c.FEC_Tooltip_Click_To_Activate';
-import { FIELD_SECTION, FIELD_FIELD_ORDER_DISPLAY, TYPE_TEXT, TYPE_BOOLEAN, STATUS_NEW, STATUS_UPDATE, CUST_TYPE_NON_EXISTING, CUST_TYPE_EXISTING, ICON_CHEVRON_RIGHT, ICON_CHEVRON_DOWN, MASTER_DATA_SETTING_COLUMNS, STATUS_CLASS_BLUE, STATUS_CLASS_RED, STATUS_CLASS_YELLOW, CUST_CLASS_ALL, CUST_CLASS_NON_EXISTING, CUST_CLASS_EXISTING, DEFAULT_SORT_FIELD, DEFAULT_SORT_DIRECTION_ASC, DEFAULT_SORT_DIRECTION_DESC, FIELD_ADDITIONAL_FIELD_NAME, FIELD_OBJECT_FRAUD_INTEGRATION, ICON_ARROW_UP, ICON_ARROW_DOWN, CSS_BASE_SML_LEFT, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, VARIANT_SUCCESS, VARIANT_ERROR, FIELD_PROCESS_CHANGE_STATUS } from 'c/fecConstants';
+import { FIELD_SECTION, FIELD_FIELD_ORDER_DISPLAY, TYPE_TEXT, TYPE_BOOLEAN, STATUS_NEW, STATUS_UPDATE, CUST_TYPE_NON_EXISTING, CUST_TYPE_EXISTING, ICON_CHEVRON_RIGHT, ICON_CHEVRON_DOWN, MASTER_DATA_SETTING_COLUMNS, STATUS_CLASS_BLUE, STATUS_CLASS_RED, STATUS_CLASS_YELLOW, CUST_CLASS_ALL, CUST_CLASS_NON_EXISTING, CUST_CLASS_EXISTING, DEFAULT_SORT_FIELD, DEFAULT_SORT_DIRECTION_ASC, DEFAULT_SORT_DIRECTION_DESC, FIELD_ADDITIONAL_FIELD_NAME, FIELD_OBJECT_FRAUD_INTEGRATION, ICON_ARROW_UP, ICON_ARROW_DOWN, CSS_BASE_SML_LEFT, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, VARIANT_SUCCESS, VARIANT_ERROR } from 'c/fecConstants';
 
 // Default labels for missing integration data
 const LABEL_DEFAULT_PRODUCT_LINE = 'N/A';
@@ -618,12 +618,6 @@ export default class FecMasterDataSetting extends LightningElement {
                 this.handleEditRow(rowId);
                 break;
             case 'delete':
-                // Tìm record trong processedData để kiểm tra trạng thái
-                const row = this.processedData.find(item => item.Id === rowId);
-                if (row && row[FIELD_PROCESS_CHANGE_STATUS] !== STATUS_NEW) {
-                    this.showToast('Cảnh báo', 'Chỉ được phép xóa bản ghi có Process Status là "New".', 'warning');
-                    return;
-                }
                 this.handleDeleteRow(rowId);
                 break;
             default:
