@@ -57,6 +57,10 @@
 		<members>UBankCustomberServiceEmail</members>
         <members>FEC_Ubank_Email_DevName</members>
         <members>FEC_Ubank_Skill_DevName</members>
+		<members>FEC_Create_Interaction_Failed_MSG</members>
+        <members>FEC_Create_Interaction_In_List_View_Label</members>
+        <members>FEC_Complete_field_msg</members>
+        <members>FEC_Create_Successfully_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -74,6 +78,7 @@
 		<members>fec_Search</members>
 		<members>fecInteractionEmailInfo</members>
 		<members>fec_InteractionMyCaseInfo</members>
+		<members>fecInteractionCreationHighlight</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -81,7 +86,6 @@
 		<name>FlexiPage</name>
 	</types>
 	<types>
-        <members>FEC_CreateCaseHanlder</members>
 		<members>FEC_CaseTriggerHandler</members>
 		<members>FEC_InteractionRoutingController</members>
 		<members>FEC_InteractionRoutingService</members>
@@ -89,6 +93,8 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CreateCaseHandler</members>
 		<members>FEC_CreateInteractionManualHandler</members>
+		<members>FEC_CreateCSCaseService</members>
+		<members>FEC_CreateInteractionGenesys</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -122,8 +128,13 @@
 	<types>
 		<members>FEC_Common_System_Setting</members>
 		<members>RD_IT_User_Search_Functions</members>
+		<members>RD_IT_User_System_Management</members>
 		<name>PermissionSet</name>
 	</types>
+	<types>
+        <members>FEC_CommonCss</members>
+        <name>StaticResource</name>
+    </types>
 	<types>
 		<members>Case.FEC_Create_Interaction_Manual</members>
 		<name>WebLink</name>
