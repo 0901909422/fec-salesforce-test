@@ -3,7 +3,7 @@
     <fullName>FEC_First_Name__c</fullName>
     <description>Tên</description>
     <externalId>false</externalId>
-    <inlineHelpText>Họ khách hàng</inlineHelpText>
+    <inlineHelpText></inlineHelpText>
     <label>First Name</label>
     <length>255</length>
     <required>false</required>
