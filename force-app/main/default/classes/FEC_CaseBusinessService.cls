@@ -1112,6 +1112,7 @@ public with sharing class FEC_CaseBusinessService {
     }
   }
 
+  @future
   private static void createRoutingActionHis(String routingAction, String decision, String oldOwnerName, String caseId, String stageName) {
     Case c = [SELECT Id, Owner.Name, FEC_Stage_Name__c FROM Case WHERE Id = :caseId];
     
