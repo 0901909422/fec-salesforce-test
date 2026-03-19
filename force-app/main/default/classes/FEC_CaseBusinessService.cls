@@ -2901,14 +2901,14 @@ public with sharing class FEC_CaseBusinessService {
 
     // BƯỚC 3: Tìm Team Name chung dựa trên Queue Name
     List<FEC_Team_Queue__c> matchedTeamQueues = [
-        SELECT Name
+        SELECT FEC_Name__c 
         FROM FEC_Team_Queue__c
         WHERE FEC_Queue_Name__c IN :currentQueueNames
     ];
 
     Set<String> teamNames = new Set<String>();
     for (FEC_Team_Queue__c tq : matchedTeamQueues) {
-        teamNames.add(tq.Name);
+        teamNames.add(tq.FEC_Name__c);
     }
 
     if (teamNames.isEmpty()) {
@@ -2919,7 +2919,7 @@ public with sharing class FEC_CaseBusinessService {
     List<FEC_Team_Queue__c> allQueuesInTeam = [
         SELECT FEC_Queue_Name__c
         FROM FEC_Team_Queue__c
-        WHERE Name IN :teamNames
+        WHERE FEC_Name__c IN :teamNames
     ];
 
     Set<String> targetQueueNames = new Set<String>();
