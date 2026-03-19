@@ -8009,6 +8009,13 @@
         <value>Case {0} đã được phân công cho bạn. Vui lòng xem và xử lý: {1}</value>
     </labels>
     <labels>
+        <fullName>FEC_Account_Card_Fetch_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Card Fetch Error</shortDescription>
+        <value>Failed to retrieve card info for Account Number</value>
+    </labels>
+    <labels>
         <fullName>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</fullName>
         <language>en_US</language>
         <protected>false</protected>
