@@ -135,5 +135,13 @@
         <members>FEC_CommonCss</members>
         <name>StaticResource</name>
     </types>
+	<types>
+		<members>Case.FEC_Create_Interaction_Manual</members>
+		<name>WebLink</name>
+	</types>
+	<types>
+		<members>Case</members>
+		<name>CustomObject</name>
+	</types>
 	<version>65.0</version>
 </Package>
