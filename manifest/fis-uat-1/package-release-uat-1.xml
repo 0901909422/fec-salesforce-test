@@ -1162,6 +1162,10 @@
 		<name>CustomObject</name>
 	</types>
 	<types>
+		<members>FEC_RePayment_Schedule__c</members>
+		<name>CustomTab</name>
+	</types>
+	<types>
 		<members>FEC_Customer_Case_Record_Page</members>
         <members>Assignment_Record_Page</members>
 		<name>FlexiPage</name>
