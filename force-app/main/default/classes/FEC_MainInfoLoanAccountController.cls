@@ -12,6 +12,7 @@ public with sharing class FEC_MainInfoLoanAccountController {
 
         Case c = [
             SELECT Id, FEC_Account_or_Contract__c
+            
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -140,10 +141,10 @@ public with sharing class FEC_MainInfoLoanAccountController {
 
         result.put('contractNumber', ch.FEC_Contract_Number__c);
         result.put('contractStatus', ch.FEC_Contract_Status__c);
-        result.put('agreementDate', FEC_CommonUltils.formatDate(ch.FEC_Agreement_Date__c));
+        result.put('agreementDate', FEC_CommonUltils.formatDateDDMMYYYY(ch.FEC_Agreement_Date__c));
         result.put('contractType', ch.FEC_Contract_Type__c);
         result.put('applicationId', ch.FEC_Application_ID__c);
-        result.put('accountStatusChangeDate', FEC_CommonUltils.formatDate(ch.FEC_Account_Status_Change_Date__c));
+        result.put('accountStatusChangeDate', FEC_CommonUltils.formatDateDDMMYYYY(ch.FEC_Account_Status_Change_Date__c));
         result.put('productCode', ch.FEC_Product_Code__c);
         result.put('chargeOffDate', FEC_CommonUltils.formatDate(ch.FEC_Charge_Off_Date__c));
         result.put('rate', ch.FEC_Rate__c != null ? String.valueOf(ch.FEC_Rate__c) + '%' : null);
@@ -151,13 +152,13 @@ public with sharing class FEC_MainInfoLoanAccountController {
         result.put('tenure', ch.FEC_Tenure__c != null ? String.valueOf(ch.FEC_Tenure__c) : null);
         result.put('insuranceAmount', FEC_CommonUltils.formatCurrency(ch.FEC_Insurance_Amount__c, 0));
         result.put('emi', FEC_CommonUltils.formatCurrency(ch.FEC_EMI__c, 0));
-        result.put('firstPaymentDate', FEC_CommonUltils.formatDate(ch.FEC_First_Payment_Date__c));
-        result.put('lastPaymentDate', FEC_CommonUltils.formatDate(ch.FEC_Last_Payment_Date__c));
+        result.put('firstPaymentDate', FEC_CommonUltils.formatDateDDMMYYYY(ch.FEC_First_Payment_Date__c));
+        result.put('lastPaymentDate', FEC_CommonUltils.formatDateDDMMYYYY(ch.FEC_Last_Payment_Date__c));
         result.put('daysPastDue', ch.FEC_Days_Past_Due__c != null ? String.valueOf(ch.FEC_Days_Past_Due__c) : null);
         result.put('schemeID', ch.FEC_Scheme_ID__c);
         result.put('schemeDesc', ch.FEC_Scheme_Desc__c);
         result.put('installmentRemaining', ch.FEC_Installments_Remaining__c != null ? String.valueOf(ch.FEC_Installments_Remaining__c) : null);
-        result.put('nextDueDate', FEC_CommonUltils.formatDate(ch.FEC_Next_Due_Date__c));
+        result.put('nextDueDate', FEC_CommonUltils.formatDateDDMMYYYY(ch.FEC_Next_Due_Date__c));
         result.put('companyName', ch.FEC_Company_Name__c);
         result.put('helpTexts', FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType));
 

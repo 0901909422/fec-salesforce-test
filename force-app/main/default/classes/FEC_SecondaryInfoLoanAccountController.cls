@@ -203,7 +203,7 @@ public without sharing class FEC_SecondaryInfoLoanAccountController {
         result.put('branchName', a.FEC_Branch_Name__c);
         result.put('accountNumber', a.FEC_Account_Number__c);
         result.put('disbursementChannel', a.FEC_Disbursement_Channel__c);
-        result.put('disbursementDate', FEC_CommonUltils.formatDate(a.FEC_Disbursement_Date__c));
+        result.put('disbursementDate', FEC_CommonUltils.formatDateDDMMYYYY(a.FEC_Disbursement_Date__c));
         result.put('isTopUpAccount', a.FEC_Is_Top_Up_Account__c == null ? null : (a.FEC_Is_Top_Up_Account__c == 'Y' ? 'Yes' : 'No'));
         result.put('topUpLoanAmountRequested', FEC_CommonUltils.formatCurrency(a.FEC_Top_Up_Loan_Amount_Requested__c, 2));
         result.put('topUpOldAcOutstanding', FEC_CommonUltils.formatCurrency(a.FEC_Top_Up_Old_A_c_Outstanding__c, 2));
