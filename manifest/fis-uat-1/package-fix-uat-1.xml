@@ -143,6 +143,7 @@
 		<members>FEC_Customer_History__c.FEC_Date_of_Issue__c</members>
 		<members>FEC_Customer_History__c.FEC_First_Name__c</members>
 		<members>FEC_Customer_History__c.FEC_Marital_Status__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Original_User_Queue_ID__c</members>
         <name>CustomField</name>
     </types>
 	<types>
