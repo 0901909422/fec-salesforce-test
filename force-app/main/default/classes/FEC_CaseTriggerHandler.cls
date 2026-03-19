@@ -109,6 +109,7 @@ public without sharing class FEC_CaseTriggerHandler {
             handleFollowUpOnResolved(newCases, oldMap);
             handleAutoFollowUpOnUpdate(newCases, oldMap);
             FEC_CaseOwnerChangeNotification.sendNotificationToNewOwner(newCases, oldMap);
+            FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(newCases, oldMap);
         } finally {
             isExecuting = false;
         }
