@@ -35,7 +35,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             // ===== VALIDATION SYS =====
             ValidationResult sysValidation = validateSys(Sys);
             if (!sysValidation.isValid) {
-                res.Sys.Code = FEC_ConstantCommon.KEY_ERROR;
+                res.Sys.Code = FEC_ConstantCommon.CASE_STATUS_ERROR;
                 res.Sys.Description = sysValidation.errorMessage;
                 normalizeResponse(res);
                 return res;
@@ -44,7 +44,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             // ===== VALIDATION MASTER DATA CODE =====
             ValidationResult masterDataValidation = validateMasterDataCode(MasterDataCode);
             if (!masterDataValidation.isValid) {
-                res.Sys.Code = FEC_ConstantCommon.KEY_ERROR;
+                res.Sys.Code = FEC_ConstantCommon.CASE_STATUS_ERROR;
                 res.Sys.Description = masterDataValidation.errorMessage;
                 normalizeResponse(res);
                 return res;
@@ -53,7 +53,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             // ===== VALIDATION CUSTOMER TYPE =====
             ValidationResult customerValidation = validateCustomerType(CustomerType);
             if (!customerValidation.isValid) {
-                res.Sys.Code = FEC_ConstantCommon.KEY_ERROR;
+                res.Sys.Code = FEC_ConstantCommon.CASE_STATUS_ERROR;
                 res.Sys.Description = customerValidation.errorMessage;
                 normalizeResponse(res);
                 return res;
@@ -114,8 +114,8 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             res.Sys.Description = System.Label.FEC_MSG_Get_CS_Data_Success;
 
         } catch (Exception e) {
-            res.Sys.Code = FEC_ConstantCommon.KEY_ERROR;
-            res.Sys.Description = FEC_ConstantCommon.KEY_ERROR + e.getMessage();
+            res.Sys.Code = FEC_ConstantCommon.CASE_STATUS_ERROR;
+            res.Sys.Description = FEC_ConstantCommon.CASE_STATUS_ERROR + e.getMessage();
         }
 
         normalizeResponse(res);
@@ -284,7 +284,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             }
             
             // Optional: Check if UserType is valid
-            Set<String> validUserTypes = new Set<String>{ FEC_ConstantCommon.CASE_EXISTING_CUSTOMER, FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER, FEC_ConstantCommon.KEY_PROSPECT};
+            Set<String> validUserTypes = new Set<String>{ FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE, FEC_ConstantCommon.REQUEST_NON_EXISTING_USER_TYPE, FEC_ConstantCommon.REQUEST_PROSPECT_USER_TYPE};
             if (!validUserTypes.contains(CustomerType.UserType.toUpperCase())) {
                 result.isValid = false;
                 result.errorMessage = System.Label.FEC_MSG_UserType_Null;

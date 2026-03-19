@@ -219,4 +219,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String KEY_NUMBER = 'Number';
     public static final String KEY_TEXT = 'Text';
     public static final String OBJ_ADDITIONAL_INFO = 'FEC_Additional_Info__c';
+    public static final String REQUEST_EXISTING_USER_TYPE  = 'EXISTING';
+    public static final String REQUEST_NON_EXISTING_USER_TYPE  = 'NON-EXISTING';
+    public static final String REQUEST_PROSPECT_USER_TYPE  = 'PROSPECT';
 }
