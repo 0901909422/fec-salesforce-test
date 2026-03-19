@@ -1112,7 +1112,6 @@ public with sharing class FEC_CaseBusinessService {
     }
   }
 
-  @future
   private static void createRoutingActionHis(String routingAction, String decision, String oldOwnerName, String caseId, String stageName) {
     Case c = [SELECT Id, Owner.Name, FEC_Stage_Name__c FROM Case WHERE Id = :caseId];
     
@@ -1133,9 +1132,15 @@ public with sharing class FEC_CaseBusinessService {
         FEC_User_Role__c = usr.UserRole?.Name
       );
     try {
-      insert history;
+      new FEC_CaseBusinessWithoutSharing().doInsert(history);
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
+    }
+  }
+
+  private without sharing class FEC_CaseBusinessWithoutSharing {
+    public void doInsert(FEC_Routing_Action_History__c history) {
+        insert history;
     }
   }
 
