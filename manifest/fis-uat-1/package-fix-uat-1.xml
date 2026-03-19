@@ -487,6 +487,7 @@
 	</types>
 	<types>
 		<members>FEC_KYC__c</members>
+		<members>FEC_Routing_Action_History__c</members>
 		<name>CustomTab</name>
 	</types>
 	<types>
