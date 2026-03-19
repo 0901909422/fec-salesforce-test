@@ -146,7 +146,7 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
             .then((success) => {
                 if (success) {
                     this.showToast(FEC_Success_Title, FEC_Toast_Save_Success, 'success');
-                    //this.navigateToCase();
+                    this.navigateToCase();
                 } else {
                     this.showToast(FEC_Toast_Error, FEC_Toast_Save_Error, 'error');
                 }
@@ -159,21 +159,21 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
             });
     }
 
-    // handleBackToCase() {
-    //     this.navigateToCase();
-    // }
+    handleBackToCase() {
+        this.navigateToCase();
+    }
 
-    // navigateToCase() {
-    //     if (!this.recordId) return;
-    //     this[NavigationMixin.Navigate]({
-    //         type: 'standard__recordPage',
-    //         attributes: {
-    //             recordId: this.recordId,
-    //             objectApiName: 'Case',
-    //             actionName: 'view'
-    //         }
-    //     });
-    // }
+    navigateToCase() {
+        if (!this.recordId) return;
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId: this.recordId,
+                objectApiName: 'Case',
+                actionName: 'view'
+            }
+        });
+    }
 
     showToast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));

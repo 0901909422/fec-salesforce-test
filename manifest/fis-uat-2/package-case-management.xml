@@ -61,6 +61,22 @@
         <members>FEC_Create_Interaction_In_List_View_Label</members>
         <members>FEC_Complete_field_msg</members>
         <members>FEC_Create_Successfully_MSG</members>
+		<members>FEC_MSG_IPP_Closure_No_Eligible</members>
+		<members>FEC_MSG_IPP_Closure_Select_One</members>
+		<members>FEC_LBL_IPP_Closure_Back_To_Case</members>
+		<members>FEC_LBL_IPP_Closure_Complete</members>
+		<members>FEC_LBL_IPP_Closure_Heading</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppRecordNo</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppPlan</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppOpenDate</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppFirstDueDate</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppMatureDate</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppBalance</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppCurrentBalance</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppInterestRate</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppTerm</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppInsurance</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppCurrentTerm</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
