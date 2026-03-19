@@ -142,6 +142,11 @@ export default class FecAdditionalFieldList extends LightningElement {
                 this.handleEdit(row.Id);
                 break;
             case 'delete':
+                // KIỂM TRA ĐIỀU KIỆN XÓA TẠI ĐÂY
+                if (row[FIELD_PROCESS_CHANGE_STATUS] !== 'New') {
+                    this.showToast(LABEL_WARNING_TITLE, 'Chỉ được phép xóa bản ghi có Process Status là "New".', 'warning');
+                    return; // Dừng lại, không mở xác nhận xóa
+                }
                 this.recordIdToDelete = row.Id;
                 this.showDeleteConfirm = true;
                 break;

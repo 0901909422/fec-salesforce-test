@@ -1360,6 +1360,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Field_API_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Field_Label_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_MDM_Master_Data_Setting__c.FEC_Nature_Of_Case__c</field>
         <readable>true</readable>
     </fieldPermissions>
