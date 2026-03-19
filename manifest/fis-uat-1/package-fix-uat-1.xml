@@ -136,6 +136,10 @@
 		<members>FEC_RePayment_Schedule__c.FEC_Total_Installment_Amount__c</members>
 		<members>FEC_RePayment_Schedule__c.FEC_Total_Interest__c</members>
 		<members>FEC_RePayment_Schedule__c.FEC_Total_Principal__c</members>
+		<members>FEC_Customer_History__c.FEC_Customer_Name__c</members>
+		<members>FEC_Customer_History__c.FEC_Date_of_Issue__c</members>
+		<members>FEC_Customer_History__c.FEC_First_Name__c</members>
+		<members>FEC_Customer_History__c.FEC_Marital_Status__c</members>
         <name>CustomField</name>
     </types>
 	<types>
