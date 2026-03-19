@@ -3,7 +3,7 @@ import { NavigationMixin } from 'lightning/navigation';
 import getAllInteractions from '@salesforce/apex/FEC_GetInteractionCases.getAllInteractions';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetInteractionCases.getCaseFieldHelpTexts';
 import logSensitiveAccess from '@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess';
-import { formatDateTime, formatDuration } from 'c/fec_CommonUtils';
+import { formatDateTimeVN, formatDuration } from 'c/fec_CommonUtils';
 import { MSG_NO_RESULTS, STR_EMPTY, MSG_UNKNOWN_ERROR, CASE_OBJECT_API_NAME, NAV_ACTION_VIEW } from 'c/fec_CommonConst';
 import FEC_Button_Refresh from '@salesforce/label/c.FEC_Button_Refresh';
 import FEC_Interactions_Section_Title from '@salesforce/label/c.FEC_Interactions_Section_Title';
@@ -109,8 +109,8 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
         Id: row.interactionId,
         interactionIdText: row.interactionIdText || STR_EMPTY,
         interactionCreatedOn: row.interactionCreatedOn,
-        interactionCreatedOnFormatted: formatDateTime(row.interactionCreatedOn),
-        lastUpdatedOnFormatted: formatDateTime(row.lastUpdatedOn),
+        interactionCreatedOnFormatted: formatDateTimeVN(row.interactionCreatedOn),
+        lastUpdatedOnFormatted: formatDateTimeVN(row.lastUpdatedOn),
         interactionDurationFormatted: formatDuration(row.interactionDuration),
       }));
     } catch (e) {

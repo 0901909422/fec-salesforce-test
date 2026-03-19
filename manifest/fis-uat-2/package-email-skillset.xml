@@ -78,10 +78,6 @@
 		<name>CustomLabel</name>
 	</types>
     <types>
-		<members>FEC_Service</members>
-		<name>CustomApplication</name>
-	</types>
-    <types>
         <members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Ecom_Team_Leader_Interaction_Case_Service_Case</members>

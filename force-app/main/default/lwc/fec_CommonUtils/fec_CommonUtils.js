@@ -28,11 +28,25 @@ const formatDateTime = (curr) => {
   const day = String(curr.getDate()).padStart(2, "0");
   const h = String(curr.getHours()).padStart(2, "0");
   const m = String(curr.getMinutes()).padStart(2, "0");
-  const s = String(curr.getSeconds()).padStart(2, "0");
+
+  return `${day}/${month}/${year}, ${h}:${m}`;
+};
+
+/**
+ * Format date-time as DD/MM/YYYY HH:mm:ss (VN display)
+ */
+const formatDateTimeVN = (val) => {
+  if (!val) return '';
+  const d = new Date(val);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
 
   return `${day}/${month}/${year}, ${h}:${m}:${s}`;
 };
-
 /**
  * Format seconds as HH:mm:ss
  */
@@ -579,6 +593,7 @@ const formatNumber = (value) => {
 export {
   formatDate,
   formatDateTime,
+  formatDateTimeVN,
   mask,
   formatDateVNI,
   formatToDDMMYYYY,
