@@ -199,6 +199,25 @@ public with sharing class FEC_CommonUltils {
     return options;
   }
   
+  public static String resolveTemplate(
+    String template,
+    SObject c,
+    Map<String, String> adhocValues
+  ) {
+    if (String.isBlank(template)) return template;
+
+    String result = template;
+
+    if (adhocValues != null) {
+      for (String key : adhocValues.keySet()) {
+        String val = adhocValues.get(key);
+        result = result.replace('{{' + key + '}}', val != null ? val : '');
+      }
+    }
+
+    return resolveTemplate(result, c);
+  }
+
   public static String resolveTemplate(String template, SObject c) {
     if (String.isBlank(template) || c == null) {
       return template;
