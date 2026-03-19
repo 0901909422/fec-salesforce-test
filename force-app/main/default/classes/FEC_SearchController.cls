@@ -203,14 +203,14 @@ public with sharing class FEC_SearchController {
     @AuraEnabled
     public static FEC_GetCardBasicInfo.ResponseWrapper getCardInfoByAccountNumber(String accountNumber) {
         if (String.isBlank(accountNumber)) {
-            throw new AuraHandledException('Account Number is required.');
+            throw new AuraHandledException(System.Label.FEC_MSG_Param_Required);
         }
 
         try {
             // Generate integration metadata as per your requirement
             String requestId = String.valueOf(UUID.randomUUID());
             String requestor = FEC_ConstantCommon.REQUESTOR_CRM;
-            String timestamp = Datetime.now().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss');
+            String timestamp = Datetime.now().formatGmt(FEC_ConstantCommon.DATETIME_FORMAT);
 
             // Call the integration service
             FEC_GetCardBasicInfo.ResponseWrapper res = FEC_GetCardBasicInfo.callGetCardBasicInfo(
@@ -223,7 +223,7 @@ public with sharing class FEC_SearchController {
             return res;
         } catch (Exception e) {
             // Log error and pass to the UI
-            throw new AuraHandledException('Failed to retrieve card info for Account Number [' + accountNumber + ']. ' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Account_Card_Fetch_Error + ' [' + accountNumber + ']. ' + e.getMessage());
         }
     }
 }
