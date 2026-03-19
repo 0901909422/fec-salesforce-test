@@ -120,6 +120,10 @@
 		<members>FEC_Additional_Info__c.FEC_Card_Retention_Decline_Reason__c</members>
 		<members>FEC_Team_Queue__c.FEC_Team__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Description__c</members>
+		<members>FEC_Customer_History__c.FEC_Customer_Name__c</members>
+		<members>FEC_Customer_History__c.FEC_Date_of_Issue__c</members>
+		<members>FEC_Customer_History__c.FEC_First_Name__c</members>
+		<members>FEC_Customer_History__c.FEC_Marital_Status__c</members>
         <name>CustomField</name>
     </types>
 	<types>
