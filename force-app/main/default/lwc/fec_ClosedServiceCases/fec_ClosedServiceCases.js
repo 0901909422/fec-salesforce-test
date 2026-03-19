@@ -30,7 +30,7 @@ export default class Fec_ClosedServiceCases extends NavigationMixin(LightningEle
   @track isLoading = false;
   @track error;
 
-  sortedBy = 'caseCreatedOn';
+  sortedBy = 'caseCreatedOnFormatted';
 
   activeSections = ['closedServiceCases'];
 
