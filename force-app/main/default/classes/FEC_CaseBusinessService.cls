@@ -1208,8 +1208,8 @@ public with sharing class FEC_CaseBusinessService {
     }
     Map<Id, String> ownerIdToName = new Map<Id, String>();
     if (!userIds.isEmpty()) {
-      for (User u : [SELECT Id, Name FROM User WHERE Id IN :userIds]) {
-        ownerIdToName.put(u.Id, u.Name);
+      for (User u : [SELECT Id, Name, Email FROM User WHERE Id IN :userIds]) {
+        ownerIdToName.put(u.Id, u.Email.split('@')[0]);
       }
     }
     if (!queueIds.isEmpty()) {
