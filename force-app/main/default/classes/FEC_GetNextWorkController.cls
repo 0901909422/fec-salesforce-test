@@ -141,7 +141,7 @@ public without sharing class FEC_GetNextWorkController {
         history.FEC_Stage_Name__c = oldCase.FEC_Current_Case_Stage__r != null 
              ? oldCase.FEC_Current_Case_Stage__r.FEC_Code__c 
             : null;
-        history.FEC_User__c = u.Email;
+        history.FEC_User__c = FEC_CommonUltils.getEmailPrefix(u.Email);
         history.FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null;
         history.FEC_Updated_User_Queue_ID__c = currentUserId;
         history.FEC_Description__c = FEC_ConstantCommon.CASE_TYPE_DESCRIPTION;

@@ -1132,9 +1132,15 @@ public with sharing class FEC_CaseBusinessService {
         FEC_User_Role__c = usr.UserRole?.Name
       );
     try {
-      insert history;
+      new FEC_CaseBusinessWithoutSharing().doInsert(new List<FEC_Routing_Action_History__c>{history});
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
+    }
+  }
+
+  private without sharing class FEC_CaseBusinessWithoutSharing {
+    public void doInsert(FEC_Routing_Action_History__c[] histories) {
+        insert histories;
     }
   }
 
@@ -1202,8 +1208,8 @@ public with sharing class FEC_CaseBusinessService {
     }
     Map<Id, String> ownerIdToName = new Map<Id, String>();
     if (!userIds.isEmpty()) {
-      for (User u : [SELECT Id, Name FROM User WHERE Id IN :userIds]) {
-        ownerIdToName.put(u.Id, u.Name);
+      for (User u : [SELECT Id, Name, Email FROM User WHERE Id IN :userIds]) {
+        ownerIdToName.put(u.Id, u.Email.split('@')[0]);
       }
     }
     if (!queueIds.isEmpty()) {
@@ -2900,14 +2906,14 @@ public with sharing class FEC_CaseBusinessService {
 
     // BƯỚC 3: Tìm Team Name chung dựa trên Queue Name
     List<FEC_Team_Queue__c> matchedTeamQueues = [
-        SELECT Name
+        SELECT FEC_Name__c 
         FROM FEC_Team_Queue__c
         WHERE FEC_Queue_Name__c IN :currentQueueNames
     ];
 
     Set<String> teamNames = new Set<String>();
     for (FEC_Team_Queue__c tq : matchedTeamQueues) {
-        teamNames.add(tq.Name);
+        teamNames.add(tq.FEC_Name__c);
     }
 
     if (teamNames.isEmpty()) {
@@ -2918,7 +2924,7 @@ public with sharing class FEC_CaseBusinessService {
     List<FEC_Team_Queue__c> allQueuesInTeam = [
         SELECT FEC_Queue_Name__c
         FROM FEC_Team_Queue__c
-        WHERE Name IN :teamNames
+        WHERE FEC_Name__c IN :teamNames
     ];
 
     Set<String> targetQueueNames = new Set<String>();
