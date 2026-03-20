@@ -250,6 +250,9 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     if (this.isInternalCase) {
       return false;
     }
+    if (this.viewMode === 'review') {
+      return false;
+    }
     if (this.isInteractionCase || this.isCustomerCase) {
       return true;
     }

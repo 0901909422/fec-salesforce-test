@@ -55,8 +55,11 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     
     connectedCallback() {
         this.loadHelpText();
-        /* ================= SET TABNAME ================= */
-        setConsoleTab('IPP Detail', 'standard:record');
+    }
+
+    /** Nhãn tab Console — gọi sau khi navigate/state sẵn sàng, không gọi trong connectedCallback. */
+    updateServiceConsoleTab() {
+        setConsoleTab('IPP Plan', 'standard:record');
     }
     
     loadHelpText() {
@@ -108,12 +111,15 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
                         this.loadIPPSchedules();
                     } else {
                         this.isLoading = false;
+                        this.updateServiceConsoleTab();
                     }
                 } catch (e) {
                     this.isLoading = false;
+                    this.updateServiceConsoleTab();
                 }
             } else {
                 this.isLoading = false;
+                this.updateServiceConsoleTab();
             }
         }
     }
@@ -122,6 +128,7 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     loadIPPSchedules() {
         if (!this.recordId) {
             this.isLoading = false;
+            this.updateServiceConsoleTab();
             return;
         }
         refreshIPPScheduleData({ ippId: this.recordId })
@@ -196,11 +203,13 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
                         disbursementChannel: rec.FEC_Disbursement_Channel__c ?? this.ippRecord.disbursementChannel
                     };
                 }
+                this.updateServiceConsoleTab();
                 this.isLoading = false;
             })
             .catch(error => {
                 this.ippSchedules = [];
                 this.isLoading = false;
+                this.updateServiceConsoleTab();
                 const msg = (error && error.body && error.body.message) ? error.body.message : (error.message || String(error));
                 this.dispatchEvent(new ShowToastEvent({
                     title: 'Không tải được IPP Schedule',
