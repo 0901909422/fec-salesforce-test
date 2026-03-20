@@ -908,6 +908,24 @@ public with sharing class FEC_CommonUltils {
     }
   }
   
+  /**
+   * Log API response using FEC_ResponseLog object.
+   * Centralized method to handle deferred logging.
+   */
+  @AuraEnabled
+  public static void logApiResponse(FEC_ResponseLog log) {
+    if (log != null) {
+      logApi(
+        log.apiName,
+        log.endpoint,
+        log.method,
+        log.requestBody,
+        log.response,
+        log.errorMessage
+      );
+    }
+  }
+  
   public static String escapeXml(String s) {
     if (s == null)
       return '';

@@ -712,6 +712,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Transfer_Call_to_Collections_Remarks__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Updated_Info_Date_of_Birth__c</field>
         <readable>true</readable>
     </fieldPermissions>
