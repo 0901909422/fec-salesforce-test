@@ -2,7 +2,9 @@ public with sharing class FEC_CreateCaseInteractionController {
   @AuraEnabled
   public static Id createCustomerCaseFromCase(Id caseId) {
     Case interation = [
-      SELECT Id, FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Customer_Name__c, FEC_Product_Type__c, FEC_Phone_Number__c
+      SELECT Id, FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Customer_Name__c,
+             FEC_Product_Type__c, FEC_Phone_Number__c,
+             FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
@@ -23,7 +25,10 @@ public with sharing class FEC_CreateCaseInteractionController {
     newCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
     newCase.FEC_Customer_Name__c = interation.FEC_Account_or_Contract__r?.FEC_Customer_Name__c;
     newCase.FEC_Product_Type__c = interation.FEC_Product_Type__c;
-    newCase.FEC_Phone_Number__c  = interation.FEC_Phone_Number__c ;
+    newCase.FEC_Phone_Number__c = interation.FEC_Phone_Number__c;
+    newCase.FEC_Account_Number__c = interation.FEC_Account_Number__c;
+    newCase.FEC_Contract_Number__c = interation.FEC_Contract_Number__c;
+    newCase.FEC_CIF_Number__c = interation.FEC_CIF_Number__c;
     
     insert newCase;
     
@@ -57,7 +62,9 @@ public with sharing class FEC_CreateCaseInteractionController {
       
       // 2. Get interaction case
       Case interaction = [
-        SELECT Id, FEC_Account_or_Contract__r.FEC_Customer_Name__c, FEC_Product_Type__c, FEC_Phone_Number__c, FEC_Customer_Type__c, FEC_Account_or_Contract__c
+        SELECT Id, FEC_Account_or_Contract__r.FEC_Customer_Name__c, FEC_Product_Type__c, FEC_Phone_Number__c,
+               FEC_Customer_Type__c, FEC_Account_or_Contract__c,
+               FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c
         FROM Case
         WHERE Id = :caseId
         LIMIT 1
@@ -93,6 +100,9 @@ public with sharing class FEC_CreateCaseInteractionController {
       newCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
       newCase.FEC_Product_Type__c = interaction.FEC_Product_Type__c;
       newCase.FEC_Phone_Number__c = interaction.FEC_Phone_Number__c;
+      newCase.FEC_Account_Number__c = interaction.FEC_Account_Number__c;
+      newCase.FEC_Contract_Number__c = interaction.FEC_Contract_Number__c;
+      newCase.FEC_CIF_Number__c = interaction.FEC_CIF_Number__c;
       
       insert newCase;
       

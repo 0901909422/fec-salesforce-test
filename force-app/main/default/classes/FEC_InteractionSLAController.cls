@@ -37,8 +37,8 @@ public with sharing class FEC_InteractionSLAController {
   private static final Set<String> OUTCOME_CODES_INTERNAL_TASK = new Set<String>{ 'Hoàn tất/ Đã phản hồi', 'Lỗi hệ thống', 'Test' };
   private static final Set<String> OUTCOME_CODES_INTERNAL_OTHER = new Set<String>{ 'Hoàn tất/ Đã phản hồi', 'Lỗi hệ thống', 'Test' };
   private static final Set<String> INTERNAL_OTHER_SUBCHANNELS = new Set<String>{ 'iCollect', 'iSale', 'Vtiger' };
+  // External: chỉ theo FEC_Channel__c = External (không bắt Subchannel = SBV/EA/VPBank — field Subchannel Interaction thường là Inbound/Outbound/Other nên điều kiện cũ không khớp → trả về cả picklist)
   private static final Set<String> OUTCOME_CODES_EXTERNAL = new Set<String>{ 'Hoàn tất/ Đã phản hồi', 'Lỗi hệ thống', 'Test' };
-  private static final Set<String> EXTERNAL_SUBCHANNELS = new Set<String>{ 'SBV', 'EA', 'VPBank' };
   // Customer Type áp dụng cho Inbound/Outbound Call: Existing, Non-existing
   private static final Set<String> CUSTOMER_TYPES_FOR_CALL = new Set<String>{ 'Existing', 'Non-existing' };
 
@@ -163,7 +163,7 @@ public with sharing class FEC_InteractionSLAController {
         allowedValues = OUTCOME_CODES_INTERNAL_TASK;
       } else if (channel == FEC_ConstantCommon.CHANNEL_INTERNAL_NAME && subChannel != null && INTERNAL_OTHER_SUBCHANNELS.contains(subChannel)) {
         allowedValues = OUTCOME_CODES_INTERNAL_OTHER;
-      } else if (channel == FEC_ConstantCommon.CHANNEL_EXTERNAL_NAME && subChannel != null && EXTERNAL_SUBCHANNELS.contains(subChannel)) {
+      } else if (channel == FEC_ConstantCommon.CHANNEL_EXTERNAL_NAME) {
         allowedValues = OUTCOME_CODES_EXTERNAL;
       }
       List<Map<String, String>> options = new List<Map<String, String>>();
