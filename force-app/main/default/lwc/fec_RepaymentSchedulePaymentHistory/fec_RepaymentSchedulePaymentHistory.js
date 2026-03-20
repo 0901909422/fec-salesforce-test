@@ -1,6 +1,5 @@
 import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { toSortDateStr } from 'c/fec_CommonUtils';
 import getSectionData from '@salesforce/apex/FEC_RepaySchedPayHistController.getSectionData';
 import FEC_Repayment_Schedule_Label from '@salesforce/label/c.FEC_Repayment_Schedule_Label';
 import FEC_Payment_History_Label from '@salesforce/label/c.FEC_Payment_History_Label';
@@ -49,6 +48,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
     @track isLoading = false;
     @track isRefreshingRealTime = false;
     refreshStatusMap = { realTimePayment: 'NONE' };
+    pageSizeOptions = [12, 24, 26, 48];
 
     customLabel = {
         repaymentSchedule: FEC_Repayment_Schedule_Label,
@@ -160,10 +160,37 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     get paymentHistoryPagingRecords() {
         const data = Array.isArray(this.sectionData.paymentHistoryTable) ? this.sectionData.paymentHistoryTable : [];
-        return data.map((row, i) => ({
-            Id: 'ph-' + (row.paymentNo != null ? row.paymentNo : i + 1),
-            ...row,
-        }));
+        const toTime = (value) => {
+            if (!value || value === '-') return null;
+            const s = String(value).trim();
+            const parts = s.split('/');
+            if (parts.length === 3) {
+                const d = Number(parts[0]);
+                const m = Number(parts[1]);
+                const y = Number(parts[2]);
+                const t = new Date(y, m - 1, d).getTime();
+                return Number.isNaN(t) ? null : t;
+            }
+            const t = Date.parse(s);
+            return Number.isNaN(t) ? null : t;
+        };
+
+        const sorted = [...data].sort((a, b) => {
+            const ta = toTime(a?.paymentDate);
+            const tb = toTime(b?.paymentDate);
+            if (ta == null && tb != null) return 1;
+            if (ta != null && tb == null) return -1;
+            if (ta == null && tb == null) return 0;
+            return tb - ta;
+        });
+
+        return sorted.map((row, i) => {
+            return {
+                Id: 'ph-' + i,
+                ...row,
+                paymentNo: i + 1,
+            };
+        });
     }
 
     get hasPaymentHistoryTableData() {
@@ -358,4 +385,20 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
     showToast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
+}
+
+/** Chuẩn hóa chuỗi ngày sang YYYY-MM-DD để sort string đúng thứ tự. */
+function toSortDateStr(val) {
+    if (!val || val === SECTION4_EMPTY_CELL) return '9999-12-31';
+    const s = String(val).trim();
+    const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (iso) return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`.slice(0, 10);
+    const parts = s.split('/').filter(Boolean);
+    if (parts.length === 3) {
+        const y = parts[2].length === 4 ? parts[2] : parts[0];
+        const m = parts[0].length <= 2 ? parts[0].padStart(2, '0') : parts[1].padStart(2, '0');
+        const d = parts[1] && parts[1].length <= 2 ? parts[1].padStart(2, '0') : parts[0].padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+    return s;
 }
