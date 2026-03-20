@@ -165,7 +165,22 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
   12: 'slds-medium-size_12-of-12'
 };
 
+/**
+ * Registry of dynamically loadable components.
+ * ADD a new entry here for every LWC name stored in FEC_LWC_Name__c metadata.
+ * Each value must be a static `() => import('c/<name>')` arrow function —
+ * LWC strict mode (LWC1121) forbids template-literal or variable import() arguments.
+ *
+ * Example:
+ *   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
+ */
+const DYNAMIC_COMPONENT_REGISTRY = {
+  fec_CardInfo: () => import('c/fec_CardInfo'),
+  fec_IPPClosureHandling: () => import('c/fec_IPPClosureHandling')
+};
+
 export default class Fec_CaseBussiness extends LightningElement {
+
   @api recordId;
 
   _isEdit = true;
@@ -593,6 +608,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       .then((res) => {
         if (!res) return;
 
+        let sectionlst = [];
         const natureOfCase = res.natureOfCase || natureOfCaseIdFallback;
         this.business = { ...res, natureOfCase };
 
@@ -638,7 +654,8 @@ export default class Fec_CaseBussiness extends LightningElement {
           }
           section.id = crypto.randomUUID();
 
-          this.activeSectionlst.push(section.id);
+          sectionlst.push(section.id);
+          
           section.isLastSection = index === this.business.sectionlst.length - 1;
 
           section.subSectionlst?.forEach((sub, subIndex) => {
@@ -769,11 +786,17 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (foundActions.length > 0 && this.isEdit) {
           this.updateRoutingActionDisplay(foundActions.join(";"));
         }
+        
         this.businessLoaded = true;
+        this.activeSectionlst = [ ...this.activeSectionlst , ...sectionlst];
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
         this.applyDraft();
+        // Resolve LWC name strings from componentlst into constructors for lwc:is
+        this._resolveComponentlst();
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
+
+
       })
       .catch((err) => {
         console.error(
@@ -1519,6 +1542,59 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
+    });
+  }
+
+  /**
+   * Resolves LWC name strings from Apex (subSection.componentlst)
+   * into component constructors required by lwc:is.
+   *
+   * LWC strict mode (LWC1121) forbids variable/template-literal import() arguments.
+   * Each name is therefore looked up in DYNAMIC_COMPONENT_REGISTRY which holds
+   * pre-declared static `() => import('c/<name>')` thunks. Unknown names are
+   * skipped with a console warning — the rest of the UI is unaffected.
+   *
+   * Results are stored on each subSection as resolvedComponentlst [{key, ctor}].
+   */
+  _resolveComponentlst() {
+    if (!this.business?.sectionlst) return;
+
+    const resolvePromises = [];
+
+    this.business.sectionlst.forEach((section) => {
+      if (!section.componentlst?.length) return;
+
+      section.resolvedComponentlst = [];
+
+      section.componentlst.forEach((name, idx) => {
+        if (!name) return;
+
+        const loader = DYNAMIC_COMPONENT_REGISTRY[name];
+        if (!loader) {
+          console.warn(
+            `[fec_CaseBussiness] Component "${name}" is not registered in DYNAMIC_COMPONENT_REGISTRY. ` +
+            `Add an entry: ${name}: () => import('c/${name}')`
+          );
+          return;
+        }
+
+        const p = loader()
+          .then((mod) => {
+            section.resolvedComponentlst.push({
+              key: `${name}-${idx}`,
+              ctor: mod.default,
+            });
+          })
+          .catch((err) => {
+            console.error(`[fec_CaseBussiness] Failed to load component "${name}":`, err);
+          });
+
+        resolvePromises.push(p);
+      });
+    });
+
+    Promise.all(resolvePromises).then(() => {
+      this.business = { ...this.business };
     });
   }
 
