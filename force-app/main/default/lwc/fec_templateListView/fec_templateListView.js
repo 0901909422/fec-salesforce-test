@@ -70,14 +70,20 @@ export default class Fec_templateListView extends LightningElement {
     @track _isLoading = true;
     @track _error     = null;
 
+    /** Sort state */
+    @track sortedBy        = 'name';
+    @track sortedDirection = 'asc';
+
     /** Lifecycle flag – prevents setter-triggered fetch before connectedCallback */
     _connected = false;
 
     /** Debounce timer for search */
     _debounceTimer;
 
-    /** Row-level actions (Edit/Clone temporarily removed) */
+    /** Row-level actions: Edit, Clone, Delete */
     rowActions = [
+        { label: FEC_Action_Edit,    name: ACTION_EDIT },
+        { label: FEC_Action_Clone,   name: ACTION_CLONE },
         { label: FEC_Action_Delete,  name: ACTION_DELETE }
     ];
 
@@ -142,21 +148,20 @@ export default class Fec_templateListView extends LightningElement {
     /* ═══════════════════════════════════════════ */
 
     /**
-     * Column definitions – Template Name is a clickable button (url-like)
-     * that navigates to the detail page.
+     * Column definitions – Template Name is a clickable link (custom nameLink type)
+     * that navigates to the detail page.  Left-aligned by default.
      */
     get columns() {
         return [
             {
                 label: FEC_Col_Template_Name,
                 fieldName: 'name',
-                type: 'button',
+                type: 'nameLink',
                 sortable: true,
                 wrapText: true,
                 typeAttributes: {
                     label: { fieldName: 'name' },
-                    variant: 'base',
-                    name: 'view_detail'
+                    rowId: { fieldName: 'id' }
                 }
             },
             { label: FEC_Col_Description,        fieldName: 'description',       type: 'text',  sortable: false, wrapText: true },
@@ -195,6 +200,51 @@ export default class Fec_templateListView extends LightningElement {
     /* ═══════════════════════════════════════════ */
     /*  ROW ACTION HANDLER                         */
     /* ═══════════════════════════════════════════ */
+
+    /**
+     * Name-link click handler (custom nameLink column type).
+     * Dispatches viewtemplate event to navigate to detail page.
+     */
+    handleNameLinkClick(event) {
+        const rowId = event.detail.rowId;
+        this.dispatchEvent(new CustomEvent('viewtemplate', {
+            detail: { recordId: rowId }
+        }));
+    }
+
+    /**
+     * Sort handler – sorts data client-side for all sortable columns.
+     */
+    handleSort(event) {
+        const { fieldName, sortDirection } = event.detail;
+        this.sortedBy        = fieldName;
+        this.sortedDirection = sortDirection;
+        this._templates      = this._sortData(this._templates, fieldName, sortDirection);
+    }
+
+    /**
+     * Generic client-side sort utility.
+     * Handles string, date, and null/undefined values.
+     */
+    _sortData(data, fieldName, direction) {
+        const cloned = [...data];
+        const reverse = direction === 'desc' ? -1 : 1;
+        cloned.sort((a, b) => {
+            let valA = a[fieldName];
+            let valB = b[fieldName];
+            // Nulls / undefined always sort to bottom
+            if (valA == null && valB == null) return 0;
+            if (valA == null) return 1;
+            if (valB == null) return -1;
+            // String comparison (case-insensitive)
+            if (typeof valA === 'string') valA = valA.toLowerCase();
+            if (typeof valB === 'string') valB = valB.toLowerCase();
+            if (valA < valB) return -1 * reverse;
+            if (valA > valB) return  1 * reverse;
+            return 0;
+        });
+        return cloned;
+    }
 
     /**
      * Row action handler.

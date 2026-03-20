@@ -59,6 +59,10 @@ export default class Fec_folderListView extends LightningElement {
     @track _isLoading = true;
     @track _error     = null;
 
+    /** Sort state */
+    @track sortedBy        = 'displayName';
+    @track sortedDirection = 'asc';
+
     @track isDeleteModalOpen = false;
     @track currentSelectedId = '';
     @track currentSelectedName = '';
@@ -319,6 +323,44 @@ export default class Fec_folderListView extends LightningElement {
             }
         }
         this._loadData();
+    }
+
+    /**
+     * Sort handler – sorts data client-side for all sortable columns.
+     * For the "userUrl" column (Last Modified By rendered as url type),
+     * sort by the underlying "lastModifiedBy" text value.
+     */
+    handleSort(event) {
+        const { fieldName, sortDirection } = event.detail;
+        this.sortedBy        = fieldName;
+        this.sortedDirection = sortDirection;
+        // "userUrl" column displays lastModifiedBy text – sort by that instead
+        const sortField = fieldName === 'userUrl' ? 'lastModifiedBy' : fieldName;
+        this._rows = this._sortData(this._rows, sortField, sortDirection);
+    }
+
+    /**
+     * Generic client-side sort utility.
+     * Handles string, date, and null/undefined values.
+     */
+    _sortData(data, fieldName, direction) {
+        const cloned = [...data];
+        const reverse = direction === 'desc' ? -1 : 1;
+        cloned.sort((a, b) => {
+            let valA = a[fieldName];
+            let valB = b[fieldName];
+            // Nulls / undefined always sort to bottom
+            if (valA == null && valB == null) return 0;
+            if (valA == null) return 1;
+            if (valB == null) return -1;
+            // String comparison (case-insensitive)
+            if (typeof valA === 'string') valA = valA.toLowerCase();
+            if (typeof valB === 'string') valB = valB.toLowerCase();
+            if (valA < valB) return -1 * reverse;
+            if (valA > valB) return  1 * reverse;
+            return 0;
+        });
+        return cloned;
     }
 
     /* ═══════════════════════════════════════════ */

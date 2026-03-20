@@ -79,6 +79,9 @@ export default class Fec_templateEditor extends LightningElement {
     }
     _cloneData = null;
 
+    /** Default folder ID – pre-fill Folder field when creating a new template */
+    @api defaultFolderId = null;
+
     /* ═══════════════════════════════════════════ */
     /*  TRACKED STATE                              */
     /* ═══════════════════════════════════════════ */
@@ -163,6 +166,10 @@ export default class Fec_templateEditor extends LightningElement {
     /* ── Wire: load all folders for the dropdown ── */
     connectedCallback() {
         this._loadFolderOptions();
+        // Pre-fill folder for new templates (not edit, not clone)
+        if (!this._recordId && !this._cloneData && this.defaultFolderId) {
+            this.folderId = this.defaultFolderId;
+        }
     }
 
     async _loadFolderOptions() {

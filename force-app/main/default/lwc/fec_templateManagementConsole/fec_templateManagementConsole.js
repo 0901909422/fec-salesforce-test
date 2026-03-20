@@ -63,6 +63,9 @@ export default class Fec_templateManagementConsole extends LightningElement {
     @track editorRecordId   = null;  // null = New, string = Edit
     @track editorCloneData  = null;  // populated when cloning
 
+    /** Tracks where the edit was initiated from: 'list' | 'detail' */
+    _editOrigin = 'list';
+
     /** Detail page state – shows the template detail page */
     @track showDetail       = false;
     @track detailRecordId   = null;
@@ -144,6 +147,11 @@ export default class Fec_templateManagementConsole extends LightningElement {
     /** Show the main list view (hide when editor or detail is open) */
     get showListView() { return !this.showEditor && !this.showDetail; }
 
+    /** Current folder context – used to pre-fill Folder field in editor */
+    get currentFolderId() {
+        return this.selectedFolderId || this.filterFolderId || null;
+    }
+
     /* ═══════════════════════════════════════════ */
     /*  EVENT HANDLERS                             */
     /* ═══════════════════════════════════════════ */
@@ -173,6 +181,7 @@ export default class Fec_templateManagementConsole extends LightningElement {
     handleNewTemplate() {
         this.editorRecordId = null;
         this.editorCloneData = null;
+        this._editOrigin = 'list';
         this.showEditor = true;
     }
 
@@ -186,6 +195,7 @@ export default class Fec_templateManagementConsole extends LightningElement {
     handleEditTemplate(event) {
         this.editorRecordId = event.detail.recordId;
         this.editorCloneData = null;
+        this._editOrigin = 'list';
         this.showEditor = true;
     }
 
@@ -237,19 +247,51 @@ export default class Fec_templateManagementConsole extends LightningElement {
         this.showFolderEditor = true;
     }
 
-    /** Editor save → close editor, return to list, refresh data */
-    handleEditorSave() {
+    /**
+     * Editor save handler.
+     * - Create (new template) → always navigate to the detail page of the new record.
+     * - Edit from detail page → navigate back to detail page (refresh).
+     * - Edit from list view   → return to list view (refresh).
+     */
+    handleEditorSave(event) {
+        const savedId = event.detail ? event.detail.recordId : null;
+        const wasCreate = !this.editorRecordId; // editorRecordId was null → create mode
+
         this.showEditor = false;
         this.editorRecordId = null;
         this.editorCloneData = null;
-        this._refreshAllViews();
+
+        if (wasCreate && savedId) {
+            // Create → always go to detail page of the new record
+            this.detailRecordId = savedId;
+            this.showDetail = true;
+        } else if (this._editOrigin === 'detail' && savedId) {
+            // Edit from detail → go back to detail page (refresh)
+            this.detailRecordId = savedId;
+            this.showDetail = true;
+        } else {
+            // Edit from list → stay on list view
+            this._refreshAllViews();
+        }
+
+        this._editOrigin = 'list';
     }
 
-    /** Editor cancel / back → close editor, return to list */
+    /** Editor cancel / back → close editor, return to previous view */
     handleEditorCancel() {
+        const origin = this._editOrigin;
+        const returnToId = this.editorRecordId;
+
         this.showEditor = false;
         this.editorRecordId = null;
         this.editorCloneData = null;
+        this._editOrigin = 'list';
+
+        // If cancelled from detail edit, go back to detail page
+        if (origin === 'detail' && returnToId) {
+            this.detailRecordId = returnToId;
+            this.showDetail = true;
+        }
     }
 
     /** Detail page back → return to list */
@@ -264,6 +306,7 @@ export default class Fec_templateManagementConsole extends LightningElement {
         this.detailRecordId = null;
         this.editorRecordId = event.detail.recordId;
         this.editorCloneData = null;
+        this._editOrigin = 'detail';
         this.showEditor = true;
     }
 

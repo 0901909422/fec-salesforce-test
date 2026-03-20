@@ -6,14 +6,18 @@
 
     <template if:false={isLoading}>
         <template if:true={hasTemplates}>
-            <lightning-datatable
+            <c-fec_-custom-datatable
                 key-field="id"
                 data={filteredTemplates}
                 columns={columns}
                 hide-checkbox-column
                 show-row-number-column
+                sorted-by={sortedBy}
+                sorted-direction={sortedDirection}
+                onsort={handleSort}
                 onrowaction={handleRowAction}
-            ></lightning-datatable>
+                onnamelinkclick={handleNameLinkClick}
+            ></c-fec_-custom-datatable>
         </template>
         <template if:false={hasTemplates}>
             <div class="slds-illustration slds-illustration_small slds-p-around_large">
