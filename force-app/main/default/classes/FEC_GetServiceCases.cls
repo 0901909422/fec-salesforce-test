@@ -65,7 +65,7 @@ public with sharing class FEC_GetServiceCases {
             FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME,
             FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
         };
-        DateTime archiveThreshold = DateTime.now().addMonths(-3);
+        //DateTime archiveThreshold = DateTime.now().addMonths(-3);
         String soql =
             'SELECT Id, FEC_ID_Search__c, FEC_Case_Status__c, ' +
             'FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Product_Type__c, FEC_Product_Type__r.Name, ' +
@@ -76,7 +76,7 @@ public with sharing class FEC_GetServiceCases {
             'FEC_Last_Updated_On__c, FEC_Last_Updated_By__c ' +
             'FROM Case ' +
             'WHERE RecordType.DeveloperName IN :rtNames AND FEC_Case_Status__c LIKE \'Resolved%\' ' +
-            'AND (ClosedDate = null OR ClosedDate >= :archiveThreshold) ' +
+            //'AND (ClosedDate = null OR ClosedDate >= :archiveThreshold) ' +
             'ORDER BY FEC_Case_Created_On__c DESC NULLS LAST';
         List<Case> cases = new List<Case>();
         try {

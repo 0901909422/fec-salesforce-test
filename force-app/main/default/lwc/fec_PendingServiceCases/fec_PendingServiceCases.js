@@ -30,7 +30,7 @@ export default class Fec_PendingServiceCases extends NavigationMixin(LightningEl
   @track isLoading = false;
   @track error;
 
-  sortedBy = 'caseCreatedOn';
+  sortedBy = 'caseCreatedOnFormatted';
 
   activeSections = ['pendingServiceCases'];
 

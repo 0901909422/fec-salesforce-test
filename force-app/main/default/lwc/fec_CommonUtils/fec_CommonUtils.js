@@ -39,15 +39,15 @@ const formatDateTime = (curr) => {
 const formatDateTimeVN = (val) => {
   if (!val) return '';
   const d = new Date(val);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   const h = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
   const s = String(d.getSeconds()).padStart(2, "0");
-  return `${day}/${m}/${y} ${h}:${min}:${s}`;
-};
 
+  return `${day}/${month}/${year}, ${h}:${m}:${s}`;
+};
 /**
  * Format seconds as HH:mm:ss
  */
@@ -153,6 +153,10 @@ const maskWorkPhone = (phone) => {
   if (/^84\d{9}$/.test(v)) {
     return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
+
+  if (/^02\d{8}$/.test(v)) {
+    return v.substring(0, 3) + "***" + v.slice(-3);
+  }
   if (/^0\d{9}$/.test(v)) {
     return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
   }
@@ -178,16 +182,15 @@ const maskValue = (value, showFull) => {
   }
 
   /* =====================
-   * PHONE bắt đầu bằng 84 (11 số)
-   * Hiển thị: 5 số đầu + 3 số cuối
-   * Ví dụ: 84123***456
+   * SĐT bàn/doanh nghiệp VN (đầu 02, 10 số)
+   * Hiển thị: 3 số đầu + *** + 3 số cuối. VD: 028***111
    * ===================== */
-  if (/^84\d{9}$/.test(v)) {
-    return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
+  if (/^02\d{8}$/.test(v)) {
+    return v.substring(0, 3) + "***" + v.slice(-3);
   }
 
   /* =====================
-   * PHONE bắt đầu bằng 0 (10 số)
+   * PHONE NUMBER (10 số, di động)
    * Hiển thị: 4 số đầu + 3 số cuối
    * Ví dụ: 0123***456
    * ===================== */
@@ -566,7 +569,7 @@ const setConsoleTab = async (label, icon) => {
 const urlCmpWithRecordId = (cmp, recordId) => {
   return `/lightning/cmp/c__${cmp}?c__recordId=${recordId}`;
 }
-                                                                                                                                                                                                            
+
 /* ================= NEGATIVE HELPER ================= */
 const isNegative = (value) => {
   if (value === null || value === undefined || value === '') {
@@ -632,7 +635,6 @@ export {
   formatDate,
   formatDateTime,
   formatDateTimeVN,
-  formatDuration,
   mask,
   formatDateVNI,
   formatToDDMMYYYY,
@@ -652,5 +654,6 @@ export {
   isNegative,
   formatNumber,
   formatNum,
-  toSortDateStr
+  toSortDateStr,
+  formatDuration
 };
