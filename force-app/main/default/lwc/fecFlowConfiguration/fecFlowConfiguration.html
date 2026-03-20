@@ -1,79 +1,76 @@
 <template>
     <div class="flow-config-container">
-        <!-- Compact Flow Path Visualization -->
-        <lightning-card>
-            <div slot="title">
-                <div class="card-title">
-                    <lightning-icon icon-name="utility:flow" size="small" class="title-icon"></lightning-icon>
-                    <span class="title-text">{labelFlowTitle}</span>
+        
+        <template if:true={shouldShowFlow}>
+            <lightning-card>
+                <div slot="title">
+                    <div class="card-title">
+                        <lightning-icon icon-name="utility:flow" size="small" class="title-icon"></lightning-icon>
+                        <span class="title-text">{labelFlowTitle}</span>
+                    </div>
                 </div>
-            </div>
-            <div slot="actions">
-                <template lwc:if={isBusinessProcess}>
-                    <lightning-button label={labelAddStage} icon-name="utility:add" onclick={handleAddStage}
-                        variant="brand-outline" class="slds-m-left_small">
-                    </lightning-button>
-                </template>
-            </div>
-
-            <!-- Compact Horizontal Flow -->
-            <div class="compact-flow-wrapper">
-                <div class="flow-stages">
-                    <template for:each={stagesList} for:item="stage" for:index="index">
-                        <div key={stage.id} class="stage-wrapper">
-                            <!-- Stage Box -->
-                            <div class={stage.cssClass} data-stage-id={stage.id} onclick={handleStageClick}>
-                                <div class="stage-number">{stage.order}</div>
-                                <div class="stage-name">{stage.label}</div>
-                            </div>
-                            
-                            <!-- Action Buttons -->
-                            <div class="stage-hover-actions">
-                                <lightning-button-icon icon-name="utility:edit" variant="bare"
-                                    size="xx-small" alternative-text={labelAltEdit} data-stage-id={stage.id}
-                                    onclick={handleEditStageName} class="action-button-edit" title="Edit">
-                                </lightning-button-icon>
-                                <lightning-button-icon icon-name="utility:delete" variant="bare"
-                                    size="xx-small" alternative-text={labelAltRemove} data-stage-id={stage.id}
-                                    onclick={handleRemoveStage} class="action-button-delete" title="Delete">
-                                </lightning-button-icon>
-                            </div>
-
-                            <!-- Arrow Connector (not for last item) -->
-                            <template if:false={stage.isLast}>
-                                <div class="stage-connector">
-                                    <svg width="28" height="35" viewBox="0 0 28 35">
-                                        <path d="M 0 17.5 L 18 17.5 L 13 12.5 M 18 17.5 L 13 22.5" stroke="currentColor"
-                                            stroke-width="2" fill="none" />
-                                    </svg>
-                                </div>
-                            </template>
-                        </div>
+                <div slot="actions">
+                    <template lwc:if={isBusinessProcess}>
+                        <lightning-button label={labelAddStage} icon-name="utility:add" onclick={handleAddStage}
+                            variant="brand-outline" class="slds-m-left_small">
+                        </lightning-button>
                     </template>
                 </div>
-            </div>
-        </lightning-card>
 
-        <!-- Edit Stage Modal -->
-        <template lwc:if={showEditModal}>
-            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
-                <div class="slds-modal__container">
-                    <header class="slds-modal__header">
-                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleCancelEdit}>
-                            <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse" size="small"></lightning-icon>
-                        </button>
-                        <h2 class="slds-text-heading_medium">{labelAltEdit}</h2>
-                    </header>
-                    <div class="slds-modal__content slds-p-around_medium">
-                        <lightning-input label="Stage Name" value={editingStageName} onchange={handleStageNameChange}></lightning-input>
+                <div class="compact-flow-wrapper">
+                    <div class="flow-stages">
+                        <template for:each={stagesList} for:item="stage" for:index="index">
+                            <div key={stage.id} class="stage-wrapper">
+                                <div class={stage.cssClass} data-stage-id={stage.id} onclick={handleStageClick}>
+                                    <div class="stage-number">{stage.order}</div>
+                                    <div class="stage-name">{stage.label}</div>
+                                </div>
+                                
+                                <div class="stage-hover-actions">
+                                    <lightning-button-icon icon-name="utility:edit" variant="bare"
+                                        size="xx-small" alternative-text={labelAltEdit} data-stage-id={stage.id}
+                                        onclick={handleEditStageName} class="action-button-edit" title="Edit">
+                                    </lightning-button-icon>
+                                    <lightning-button-icon icon-name="utility:delete" variant="bare"
+                                        size="xx-small" alternative-text={labelAltRemove} data-stage-id={stage.id}
+                                        onclick={handleRemoveStage} class="action-button-delete" title="Delete">
+                                    </lightning-button-icon>
+                                </div>
+
+                                <template if:false={stage.isLast}>
+                                    <div class="stage-connector">
+                                        <svg width="28" height="35" viewBox="0 0 28 35">
+                                            <path d="M 0 17.5 L 18 17.5 L 13 12.5 M 18 17.5 L 13 22.5" stroke="currentColor"
+                                                stroke-width="2" fill="none" />
+                                        </svg>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
                     </div>
-                    <footer class="slds-modal__footer">
-                        <lightning-button label="Cancel" onclick={handleCancelEdit} class="slds-m-right_x-small"></lightning-button>
-                        <lightning-button label="Save" variant="brand" onclick={handleSaveStageName}></lightning-button>
-                    </footer>
                 </div>
-            </section>
-            <div class="slds-backdrop slds-backdrop_open"></div>
+            </lightning-card>
+
+            <template lwc:if={showEditModal}>
+                <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <header class="slds-modal__header">
+                            <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleCancelEdit}>
+                                <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse" size="small"></lightning-icon>
+                            </button>
+                            <h2 class="slds-text-heading_medium">{labelAltEdit}</h2>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium">
+                            <lightning-input label="Stage Name" value={editingStageName} onchange={handleStageNameChange}></lightning-input>
+                        </div>
+                        <footer class="slds-modal__footer">
+                            <lightning-button label="Cancel" onclick={handleCancelEdit} class="slds-m-right_x-small"></lightning-button>
+                            <lightning-button label="Save" variant="brand" onclick={handleSaveStageName}></lightning-button>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
         </template>
     </div>
 </template>

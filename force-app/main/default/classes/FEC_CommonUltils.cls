@@ -398,6 +398,10 @@ public with sharing class FEC_CommonUltils {
     if (String.isBlank(dateStr))
       return null;
 
+    if (dateStr == '00000000' || dateStr == '99999999') {
+      return null;
+    }
+    
     try {
       // Format API trả về: yyyyMMdd (VD: 20281031)
       if (dateStr.length() == 8 && dateStr.isNumeric()) {
@@ -513,6 +517,10 @@ public with sharing class FEC_CommonUltils {
     if (d == null)
       return '';
     return d.format();
+  }
+
+  public static String formatTimestamp(Datetime timestamp ,String format) {
+    return Datetime.valueOf(timestamp).format(format);
   }
 
   public static String decimalToString(Decimal d) {
@@ -653,9 +661,15 @@ public with sharing class FEC_CommonUltils {
     value = value.trim().toUpperCase();
 
     switch on value {
-        when 'Y' { return 'Yes'; }
-        when 'N' { return 'No'; }
-        when else { return null; }
+        when 'Y', 'YES' { 
+            return 'Yes'; 
+        }
+        when 'N', 'NO' { 
+            return 'No'; 
+        }
+        when else { 
+            return null; 
+        }
     }
   }
 
@@ -673,6 +687,60 @@ public with sharing class FEC_CommonUltils {
     return 'Inactive';
   }
 
+  public static Date toDateStr(String v) {
+    if (String.isBlank(v)) return null;
+
+    v = v.trim();
+
+    try {
+
+        // Format: yyyy-MM-dd
+        if (v.contains('-')) {
+            return Date.valueOf(v);
+        }
+
+        // Format: dd/MM/yyyy
+        if (v.contains('/')) {
+            List<String> parts = v.split('/');
+            Integer day = Integer.valueOf(parts[0]);
+            Integer month = Integer.valueOf(parts[1]);
+            Integer year = Integer.valueOf(parts[2]);
+            return Date.newInstance(year, month, day);
+        }
+
+    } catch (Exception e) {
+        System.debug('Invalid date: ' + v);
+    }
+
+    return null;
+  }
+
+  /**
+   * Format address 
+   */
+  public static String formatAddress(
+    String numberStr,
+    String building,
+    String street,
+    String ward,
+    String district,
+    String city,
+    String countryName,
+    String zipCode
+  ) {
+    List<String> parts = new List<String>();
+
+    if (!String.isBlank(numberStr)) parts.add(numberStr);
+    if (!String.isBlank(building)) parts.add(building);
+    if (!String.isBlank(street)) parts.add(street);
+    if (!String.isBlank(ward)) parts.add(ward);
+    if (!String.isBlank(district)) parts.add(district);
+    if (!String.isBlank(city)) parts.add(city);
+    if (!String.isBlank(countryName)) parts.add(countryName);
+    if (!String.isBlank(zipCode)) parts.add(zipCode);
+
+    return String.join(parts, ', ');
+  }
 
   public static Boolean checkLength(String fieldName, String value, Integer length) {
     if (String.isNotBlank(value) && value.length() > length) {
@@ -697,16 +765,118 @@ public with sharing class FEC_CommonUltils {
     Boolean isSuccess = (response.getStatusCode() == 200);
     String statusCode =  String.valueOf(response.getStatusCode());
     String responseBody = response.getBody();
-    FEC_LogApiQueueable logApiQueueable = new FEC_LogApiQueueable(
-      apiName,
-      endpoint,
-      method,
-      requestBody,
-      isSuccess,
-      statusCode,
-      errorMessage,
-      responseBody
-    );
-    System.enqueueJob(logApiQueueable);
+    try {
+      FEC_API_Log__c log = new FEC_API_Log__c();
+
+      log.Name = apiName;
+      log.FEC_Endpoint__c = endpoint;
+      log.FEC_Method__c = method;
+      log.FEC_Request_String__c = requestBody;
+      log.FEC_Status_Code__c =  statusCode;
+      log.FEC_Response_String__c = responseBody;
+      log.FEC_Is_Success__c = isSuccess;
+      log.FEC_Error_Message__c = errorMessage;
+
+      insert log;
+
+    } catch(Exception e) {
+      System.debug('LOG INSERT ERROR: ' + e.getMessage());
+    }
   }
+
+  public static String pickNameByLanguage(String nameEN, String nameVN, String language) {
+      String lang = String.valueOf(language);
+      if (lang != null && lang.toUpperCase() == FEC_ConstantCommon.LANGUAGE_VN) {
+          return String.isNotBlank(nameVN)
+              ? nameVN
+              : (String.isNotBlank(nameEN) ? nameEN : '');
+      }
+      return String.isNotBlank(nameEN)
+          ? nameEN
+          : (String.isNotBlank(nameVN) ? nameVN : '');
+  }
+
+  public static String getFieldType(String objectName, String fieldName) {
+    try {
+
+        Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+        if (sObjectType == null) return null;
+        Schema.DescribeSObjectResult objDescribe = sObjectType.getDescribe();
+        Schema.SObjectField fieldToken = objDescribe.fields.getMap().get(fieldName);
+        if (fieldToken == null) return null;
+        Schema.DisplayType t = fieldToken.getDescribe().getType();
+        switch on t {
+            when Picklist {
+                return FEC_ConstantCommon.KEY_PICKLIST;
+            }
+            when Boolean {
+                return FEC_ConstantCommon.KEY_CHECKBOX;
+            }
+            when Date {
+                return FEC_ConstantCommon.KEY_DATE;
+            }
+            when DateTime {
+                return FEC_ConstantCommon.KEY_DATETIME;
+            }
+            when Integer, Double {
+                return FEC_ConstantCommon.KEY_NUMBER;
+            }
+            when else {
+                return FEC_ConstantCommon.KEY_TEXT;
+            }
+        }
+    } catch (Exception e) {
+        System.debug('getFieldType error: ' + e.getMessage());
+        return null;
+    }
+  }
+
+  public static Integer toInt(Decimal d) {
+    return d == null ? null : Integer.valueOf(d);
+  }
+
+  public static String getFieldLabel(String objectName, String fieldName) {
+    try {
+        Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+        if (sObjectType == null) return null;
+
+        Schema.DescribeSObjectResult objDescribe = sObjectType.getDescribe();
+        Schema.SObjectField fieldToken = objDescribe.fields.getMap().get(fieldName);
+        if (fieldToken == null) return null;
+
+        return fieldToken.getDescribe().getLabel();
+    } catch (Exception e) {
+        System.debug('getFieldLabel error: ' + e.getMessage());
+        return null;
+    }
+  }
+  
+  /**
+   * Log API response using FEC_ResponseLog object.
+   * Centralized method to handle deferred logging.
+   */
+  @AuraEnabled
+  public static void logApiResponse(FEC_ResponseLog log) {
+    if (log != null) {
+      logApi(
+        log.apiName,
+        log.endpoint,
+        log.method,
+        log.requestBody,
+        log.response,
+        log.errorMessage
+      );
+    }
+  }
+  
+  public static String escapeXml(String s) {
+    if (s == null)
+      return '';
+    return s.replace('&', '&amp;')
+      .replace('<', '&lt;')
+      .replace('>', '&gt;')
+      .replace('"', '&quot;')
+      .replace('\'', '&apos;');
+  }
+
 }

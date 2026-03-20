@@ -62,31 +62,35 @@ public without sharing class FEC_MainInfoController {
             LIMIT 1
         ];
 
-        if (c.FEC_Account_or_Contract__c == null) {
-            throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
-        }
-
+        String accountNumber;
+        String cifNumber;
+        FEC_Customer_History__c hist;
         /* ===== LOAD CUSTOMER HISTORY ===== */
-        FEC_Customer_History__c hist = [
-            SELECT Id,
-                   FEC_First_Name__c,
-                   FEC_Middle_Name__c,
-                   FEC_Last_Name__c,
-                   FEC_Customer_Name__c,
-                   FEC_Date_of_Birth__c,
-                   FEC_Gender__c,
-                   FEC_Marital_Status__c,
-                   FEC_CIF_Number__c,
-                   FEC_National_ID_Passport_ID__c,
-                   FEC_Date_of_Issue__c,
-                   FEC_Place_of_Issue__c,
-                   FEC_Primary_Phone__c,
-                   FEC_API_Cache__c
-            FROM FEC_Customer_History__c
-            WHERE Id = :c.FEC_Account_or_Contract__c
-            LIMIT 1
-        ];
+        if (c.FEC_Account_or_Contract__c != null) {
+            hist = [
+                SELECT Id,
+                    FEC_Account_Number__c,
+                    FEC_First_Name__c,
+                    FEC_Middle_Name__c,
+                    FEC_Last_Name__c,
+                    FEC_Customer_Name__c,
+                    FEC_Date_of_Birth__c,
+                    FEC_Gender__c,
+                    FEC_Marital_Status__c,
+                    FEC_CIF_Number__c,
+                    FEC_National_ID_Passport_ID__c,
+                    FEC_Date_of_Issue__c,
+                    FEC_Place_of_Issue__c,
+                    FEC_Primary_Phone__c,
+                    FEC_API_Cache__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :c.FEC_Account_or_Contract__c
+                LIMIT 1
+            ];
 
+            accountNumber = hist.FEC_Account_Number__c;
+            cifNumber = hist.FEC_CIF_Number__c;
+        }
         /* ===== CACHE HIT ===== */
         if (String.isNotBlank(hist.FEC_API_Cache__c)) {
             return (MainInfoDTO) JSON.deserialize(
@@ -103,10 +107,10 @@ public without sharing class FEC_MainInfoController {
         try {
             FEC_GetCustomerInfoBasic.ResponseWrapper basicRes =
                 FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
-                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                    hist.FEC_CIF_Number__c
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z),
+                    cifNumber
                 );
 
             if (basicRes != null && basicRes.CustomerBasicInfo != null) {
@@ -127,10 +131,10 @@ public without sharing class FEC_MainInfoController {
         try {
             FEC_GetDocumentsList.ResponseWrapper docRes =
                 FEC_GetDocumentsList.callGetDocumentsList(
-                    FEC_ConstantCommon.REQUESTOR_APS,
-                    FEC_ConstantCommon.REQUESTOR_PORTAL,
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                    hist.FEC_CIF_Number__c
+                    cifNumber
                 );
 
             if (docRes != null && docRes.Documents != null && !docRes.Documents.isEmpty()) {
@@ -144,7 +148,7 @@ public without sharing class FEC_MainInfoController {
 
         /* ===== 3. GetCustomerList ===== */
         try {
-            hist.FEC_Primary_Phone__c = getPrimaryPhoneOnly();
+            hist.FEC_Primary_Phone__c = getPrimaryPhoneOnly(accountNumber);
         } catch (Exception e) {
             System.debug('### GetCustomerList FAILED: ' + e.getMessage());
         }
@@ -152,7 +156,7 @@ public without sharing class FEC_MainInfoController {
         /* ===== 4. GetAddressesList ===== */
         AddressUpdateResult addrResult = new AddressUpdateResult();
         try {
-            addrResult = updateAddressesFromApi(hist);
+            addrResult = updateAddressesFromApi(hist,cifNumber);
         } catch (Exception e) {
             System.debug('### GetAddressesList FAILED: ' + e.getMessage());
         }
@@ -206,11 +210,11 @@ public without sharing class FEC_MainInfoController {
 
     /* ================= HELPER METHODS ================= */
 
-    private static String getPrimaryPhoneOnly() {
+    private static String getPrimaryPhoneOnly(String accountNumber) {
         FEC_GetCustomerList.ResponseWrapper res =
             FEC_GetCustomerList.getCustomerList(
                 FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false,
-                null, null, null, null, null, null, null, null
+                null, null, null, null, accountNumber, null, null, null
             );
 
         if (res == null) return null;
@@ -223,14 +227,16 @@ public without sharing class FEC_MainInfoController {
     }
 
     private static AddressUpdateResult updateAddressesFromApi(
-        FEC_Customer_History__c hist
+        FEC_Customer_History__c hist,
+        String cifNumber
     ) {
         AddressUpdateResult result = new AddressUpdateResult();
         FEC_GetAddressesList.ResponseWrapper res =
             FEC_GetAddressesList.callGetAddressesList(
-                FEC_ConstantCommon.REQUESTOR_APS,FEC_ConstantCommon.REQUESTOR_PORTAL,
+                FEC_CommonUltils.generateTransactionId(),
+                FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                hist.FEC_CIF_Number__c
+                cifNumber
             );
 
         if (res == null || res.Addresses == null) return result;
@@ -284,7 +290,7 @@ public without sharing class FEC_MainInfoController {
     private static String mapApiAddressTypeToSF(String apiType) {
         if (apiType == 'CURRES') return 'Current Address';
         if (apiType == 'OFFICE') return 'Office Address';
-        if (apiType == 'PERMENT') return 'Permanent Address';
+        if (apiType == 'PERMNENT') return 'Permanent Address';
         return null;
     }
 

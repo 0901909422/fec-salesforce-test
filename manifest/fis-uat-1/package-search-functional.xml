@@ -8,6 +8,7 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_SearchController</members>
 		<members>FEC_GetCustomerList</members>
+		<members>FEC_CreateCaseInteractionController</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -18,6 +19,8 @@
 		<members>fec_RecallAction</members>
 		<members>fec_ReopenAction</members>
 		<members>fec_Search</members>
+		<members>customDblclickCell</members>
+		<members>maskedToggleDatatable</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -30,7 +33,22 @@
 		<members>FEC_Toast_Recall_Success</members>
 		<members>FEC_Toast_Reopen_Success</members>
 		<members>FEC_Toast_Save_Success_Title</members>
+		<members>FEC_Error_Title</members>
+		<members>FEC_Toast_Error_Generic</members>
+		<members>FEC_Toast_Validation_Message</members>
+		<members>FEC_Toast_Validation_Title</members>
+		<members>FEC_Toast_Search_Validation</members>
 		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>FEC_B2_Contract__c</members>
+		<members>FEC_Cash_24_Contract__c</members>
+		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>Case.FEC_Interaction_ID__c</members>
+		<members>Case.FEC_Interaction_Status__c</members>
+		<name>CustomField</name>
 	</types>
     <version>65.0</version>
 </Package>

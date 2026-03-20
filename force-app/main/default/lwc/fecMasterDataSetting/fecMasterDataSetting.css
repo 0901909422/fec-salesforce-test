@@ -158,3 +158,53 @@
     align-items: center !important;
     justify-content: center !important;
 }
+
+
+/* ========================================================== */
+/* BỔ SUNG CSS CHO TÍNH NĂNG HISTORY PANEL VÀ NGĂN CHẶN LỖI   */
+/* Đưa ra ngoài @media để áp dụng cho cả Desktop            */
+/* ========================================================== */
+
+/* Container tổng - Chặn rớt dòng và chặn thanh cuộn ngang tuyệt đối */
+.main-container {
+    align-items: stretch;
+    flex-wrap: nowrap !important;
+    overflow-x: hidden !important;
+    width: 100%;
+}
+
+/* Vùng làm việc chính - Hiệu ứng co giãn khi trượt */
+.main-panel {
+    transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    overflow-x: hidden !important;
+}
+
+/* Vùng History (Drawer) */
+.history-panel {
+    border-left: 4px solid #e5e5e5;
+    background-color: #fbfcfa;
+    padding-left: 16px;
+    animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    height: 100%;
+    /* THÊM MỚI: Ép Panel kéo dài 100% bằng với thẻ cha */
+}
+
+/* Khu vực cuộn của lịch sử */
+.history-content {
+    height: 100%;
+    max-height: none;
+    /* SỬA LỖI: Gỡ bỏ giới hạn 600px để nó tràn hết khoảng trắng phía dưới */
+}
+
+/* Hiệu ứng trượt cho Panel History từ bên phải */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

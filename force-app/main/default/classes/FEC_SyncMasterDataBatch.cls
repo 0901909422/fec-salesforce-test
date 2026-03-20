@@ -40,6 +40,11 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
     private static final String FIELD_USER_GROUP               = FEC_Constants.FIELD_USER_GROUP;
     private static final String FIELD_ROLE_NAMES               = FEC_Constants.FIELD_ROLE_NAMES;
     private static final String FIELD_ADDITIONAL_FIELD         = FEC_Constants.FIELD_ADDITIONAL_FIELD;
+    private static final String FIELD_PREVIOUS_STAGE           = 'FEC_Previous_Stage__c';
+    private static final String FIELD_ACTION_BUTTON            = 'FEC_Action_Button__c';
+    private static final String FIELD_NEXT_STAGE               = 'FEC_Next_Stage__c';
+    private static final String FIELD_NEXT_QUEUE               = 'FEC_Next_Queue__c';
+    private static final String FIELD_TEAM_USER_GROUP          = 'FEC_Team_User_Group__c';
     private static final String PROCESS_STATUS_SYNCED          = FEC_Constants.PROCESS_STATUS_SYNCED;
     private static final String OBJ_MDM_PRODUCT_TYPE = FEC_Constants.OBJ_MDM_PRODUCT_TYPE;
     private static final String OBJ_MDM_BUSINESS_PROCESS = FEC_Constants.OBJ_MDM_BUSINESS_PROCESS;
@@ -63,6 +68,10 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
     private static final String OBJ_ADDITIONAL_FIELD_LIST_VALUE = FEC_Constants.OBJ_ADDITIONAL_FIELD_LIST_VALUE;
     private static final String OBJ_CASE_STAGE = FEC_Constants.OBJ_CASE_STAGE;
     private static final String OBJ_MASTER_DATA_SETTING = FEC_Constants.OBJ_MASTER_DATA_SETTING;
+    private static final String OBJ_MDM_STAGE_CHANGE = 'FEC_MDM_Stage_Change__c';
+    private static final String OBJ_STAGE_CHANGE = 'FEC_Stage_Change__c';
+    private static final String OBJ_MDM_ACTION_BUTTON = 'FEC_MDM_Action_Button__c';
+    private static final String OBJ_ACTION_BUTTON = 'FEC_Action_Button__c';
     
     // Map key constants
     private static final String MDM_FIELD_KEY = 'mdmField';
@@ -109,6 +118,19 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         FIELD_CHANNEL => new Map<String, String>{
             MDM_FIELD_KEY => FIELD_CHANNEL,
             MDM_OBJ_KEY   => OBJ_MDM_CHANNEL
+        },
+        // Stage Change lookups
+        FIELD_PREVIOUS_STAGE => new Map<String, String>{
+            MDM_FIELD_KEY => FIELD_PREVIOUS_STAGE,
+            MDM_OBJ_KEY   => OBJ_MDM_CASE_STAGE
+        },
+        FIELD_NEXT_STAGE => new Map<String, String>{
+            MDM_FIELD_KEY => FIELD_NEXT_STAGE,
+            MDM_OBJ_KEY   => OBJ_MDM_CASE_STAGE
+        },
+        FIELD_ACTION_BUTTON => new Map<String, String>{
+            MDM_FIELD_KEY => FIELD_ACTION_BUTTON,
+            MDM_OBJ_KEY   => OBJ_MDM_ACTION_BUTTON
         }
     };
     
@@ -129,6 +151,12 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
             FIELD_STAGE_NAME,
             FIELD_NATURE_OF_CASE,
             FIELD_ADDITIONAL_FIELD
+        },
+        // Stage Change lookups: Previous Stage, Action Button, Next Stage
+        OBJ_MDM_STAGE_CHANGE => new List<String>{
+            FIELD_PREVIOUS_STAGE,
+            FIELD_ACTION_BUTTON,
+            FIELD_NEXT_STAGE
         }
     };
     
@@ -143,7 +171,9 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         OBJ_MDM_CASE_STAGE,
         OBJ_MDM_NATURE_OF_CASE,
         OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE,
-        OBJ_MDM_MASTER_DATA_SETTING
+        OBJ_MDM_MASTER_DATA_SETTING,
+        OBJ_MDM_ACTION_BUTTON,      // Must be before Stage Change
+        OBJ_MDM_STAGE_CHANGE
     };
     
     // Map object types that have special handling (lookups that need remapping)
@@ -151,12 +181,15 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         OBJ_MDM_NATURE_OF_CASE,
         OBJ_MDM_CASE_STAGE,
         OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE,
-        OBJ_MDM_MASTER_DATA_SETTING
+        OBJ_MDM_MASTER_DATA_SETTING,
+        OBJ_MDM_STAGE_CHANGE
     };
     
     // Objects whose Name field is auto-number (not editable) - skip Name when copying
     private static final Set<String> OBJECTS_WITH_AUTONUMBER_NAME = new Set<String>{
-        OBJ_MDM_MASTER_DATA_SETTING
+        OBJ_MDM_MASTER_DATA_SETTING,
+        OBJ_MDM_NATURE_OF_CASE,
+        OBJ_MDM_STAGE_CHANGE
     };
     
     private Map<String, String> mdmToOriginalMap = new Map<String, String>{
@@ -170,7 +203,9 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         OBJ_MDM_ADDITIONAL_FIELD  => OBJ_ADDITIONAL_FIELD,
         OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE => OBJ_ADDITIONAL_FIELD_LIST_VALUE,
         OBJ_MDM_CASE_STAGE          => OBJ_CASE_STAGE,
-        OBJ_MDM_MASTER_DATA_SETTING => OBJ_MASTER_DATA_SETTING
+        OBJ_MDM_MASTER_DATA_SETTING => OBJ_MASTER_DATA_SETTING,
+        OBJ_MDM_ACTION_BUTTON       => OBJ_ACTION_BUTTON,
+        OBJ_MDM_STAGE_CHANGE        => OBJ_STAGE_CHANGE
     };
     
     private Map<String, String> commonFieldMap = new Map<String, String>{
@@ -218,7 +253,14 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         FIELD_SUB_CODE_STATUS => FIELD_SUB_CODE_STATUS,
         FIELD_USER_GROUP => FIELD_USER_GROUP,
         FIELD_ROLE_NAMES => FIELD_ROLE_NAMES,
-        FIELD_STAGE_NAME => FIELD_STAGE_NAME
+        FIELD_STAGE_NAME => FIELD_STAGE_NAME,
+        // Stage Change Fields (FEC_Stage_Change__c)
+        FIELD_PREVIOUS_STAGE  => FIELD_PREVIOUS_STAGE,
+        FIELD_ACTION_BUTTON   => FIELD_ACTION_BUTTON,
+        FIELD_NEXT_STAGE      => FIELD_NEXT_STAGE,
+        FIELD_NEXT_QUEUE      => FIELD_NEXT_QUEUE,
+        FIELD_TEAM_USER_GROUP => FIELD_TEAM_USER_GROUP,
+        FIELD_ACTIVE          => FIELD_ACTIVE
     };
     
     public Iterable<String> start(Database.BatchableContext bc) {
@@ -233,13 +275,27 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         if (!gd.containsKey(mdmObjName) || !gd.containsKey(targetObjName)) return;
         
         try {
-            // STEP 0: Populate FEC_Code__c from Name if it's null
+            // STEP 0: Populate FEC_Code__c from Name/Id if it's null on Source object
             populateMissingCodes(targetObjName);
-            // STEP 1: Build query fields - only fields that exist on both source and MDM
+            
+            // Build filtered field map - only fields that exist on both objects
             Map<String, Schema.SObjectField> targetFields = gd.get(targetObjName).getDescribe().fields.getMap();
             Map<String, Schema.SObjectField> mdmFieldsMap = gd.get(mdmObjName).getDescribe().fields.getMap();
+
+            // Ensure FEC_Code__c is populated on existing MDM records if they came from Name
+            if (mdmFieldsMap.containsKey(FIELD_CODE)) {
+                List<SObject> emptyMdmCodes = Database.query('SELECT Id, Name FROM ' + mdmObjName + ' WHERE ' + FIELD_CODE + ' = null');
+                if (!emptyMdmCodes.isEmpty()) {
+                    for(SObject m : emptyMdmCodes) m.put(FIELD_CODE, m.get('Name'));
+                    update emptyMdmCodes;
+                }
+            }
+            
             Set<String> validQueryFields = new Set<String>();
             validQueryFields.add('Id');
+            if (targetFields.containsKey(FIELD_CODE)) {
+                validQueryFields.add(FIELD_CODE);
+            }
             
             // Build filtered field map - only fields that exist on both objects
             Map<String, String> filteredFieldMap = new Map<String, String>();
@@ -374,15 +430,18 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
     
     private void populateMissingCodes(String objectName) {
         try {
+            // Check if FEC_Code__c field exists on this object before querying
+            Map<String, Schema.SObjectField> fieldsMap = Schema.getGlobalDescribe().get(objectName).getDescribe().fields.getMap();
+            if (!fieldsMap.containsKey(FIELD_CODE)) return;
+
             List<SObject> recordsToUpdate = Database.query(
-                'SELECT Id, Name, ' + FIELD_CODE + ' FROM ' + objectName + ' WHERE ' + FIELD_CODE + ' = null'
+                'SELECT Id, ' + FIELD_CODE + ' FROM ' + objectName + ' WHERE ' + FIELD_CODE + ' = null'
                 );
             if (recordsToUpdate.isEmpty()) return;
             for (SObject record : recordsToUpdate) {
-                String name = (String) record.get('Name');
-                if (String.isNotBlank(name)) {
-                    record.put(FIELD_CODE, name);
-                }
+                String Id = (String) record.get('Id');
+                String code = Id;
+                record.put(FIELD_CODE, code);
             }
             update recordsToUpdate;
         } catch (Exception e) {
