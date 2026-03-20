@@ -2,7 +2,7 @@ import { LightningElement, track, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import getPendingServiceCases from '@salesforce/apex/FEC_GetServiceCases.getPendingServiceCases';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetServiceCases.getCaseFieldHelpTexts';
-import { formatDateTimeVN} from 'c/fec_CommonUtils';
+import { formatDateTimeVN } from 'c/fec_CommonUtils';
 import { STR_NA, STR_EMPTY, MSG_UNKNOWN_ERROR, CASE_OBJECT_API_NAME, NAV_ACTION_VIEW } from 'c/fec_CommonConst';
 import FEC_Button_Refresh from '@salesforce/label/c.FEC_Button_Refresh';
 import FEC_Pending_Service_Cases_Section_Title from '@salesforce/label/c.FEC_Pending_Service_Cases_Section_Title';
@@ -149,7 +149,7 @@ export default class Fec_PendingServiceCases extends NavigationMixin(LightningEl
         caseCreatedOnFormatted: formatDateTimeVN(row.caseCreatedOn),
         lastUpdatedOnFormatted: formatDateTimeVN(row.lastUpdatedOn),
       }));
-      console.log('Transformed data:', JSON.stringify(this.data));
+      //console.log('Transformed data:', JSON.stringify(this.data));
     } catch (e) {
       this.error = e.body?.message || e.message || MSG_UNKNOWN_ERROR;
       this.data = [];
