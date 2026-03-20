@@ -36,7 +36,7 @@
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>High</casePriority>
             <createTask>true</createTask>
-            <emailAddress>phuongnt204@fpt.com</emailAddress>
+            <emailAddress>phuongnt.fit@gmail.com</emailAddress>
             <isPermsetControlled>false</isPermsetControlled>
             <isVerified>true</isVerified>
             <newEntityRecordType>Case.Interaction</newEntityRecordType>
