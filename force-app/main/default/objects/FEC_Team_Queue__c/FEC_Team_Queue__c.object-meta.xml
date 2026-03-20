@@ -155,8 +155,9 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Team Queue</label>
     <nameField>
+        <displayFormat>T-{0000}</displayFormat>
         <label>Team Queue</label>
-        <type>Text</type>
+        <type>AutoNumber</type>
     </nameField>
     <pluralLabel>Team Queue</pluralLabel>
     <searchLayouts></searchLayouts>
