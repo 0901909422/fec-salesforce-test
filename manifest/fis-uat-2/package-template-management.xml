@@ -19,10 +19,14 @@
         <members>FEC_FolderController_Test</members>
         <members>FEC_TemplateTriggerHandler_Test</members>
         <members>FEC_FolderTriggerHandler_Test</members>
+        <members>FEC_TemplateHistorySelector</members>
+        <members>FEC_TemplateHistorySelector_Test</members>
+        <members>FEC_TemplateHistoryService</members>
         <name>ApexClass</name>
     </types>
 	<types>
         <members>FEC_TemplateTrigger</members>
+        <members>FEC_FolderTrigger</members>
         <name>ApexTrigger</name>
     </types>
 	<types>
@@ -120,6 +124,7 @@
 	</types>
 	<types>
 		<members>FEC_Enhanced_Letterhead__c</members>
+		<members>Templates</members>
 		<name>CustomTab</name>
 	</types>
 	<types>
@@ -142,10 +147,13 @@
 		<members>fec_searchableCombobox</members>
 		<members>fec_folderEditor</members>
         <members>fec_folderDeleteAction</members>
+        <members>fec_CustomDatatable</members>
+        <members>fec_TemplateMockData</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
 		<members>Enhanced_Letterhead_Record_Page</members>
+		<members>Templates</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>

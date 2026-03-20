@@ -100,4 +100,19 @@ public with sharing class FEC_TemplateController {
             throw new AuraHandledException(e.getMessage());
         }
     }
+
+    /**
+     * Get template field-level change history for a template.
+     * Used by fec_templateDetailPage → Template History tab.
+     * @param templateId  Record Id
+     * @return List of FEC_Template__History
+     */
+    @AuraEnabled
+    public static List<FEC_Template__History> getTemplateHistory(Id templateId) {
+        try {
+            return FEC_TemplateHistoryService.getHistoryByTemplate(templateId);
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
 }

@@ -1,6 +1,6 @@
 /**
  * fec_templateDetailPage
- * Read-only detail view for a single email template.
+ * Read-only detail view for a single template.
  * Three tabs: Details · Template History · Content History.
  * Uses imperative Apex so parent can trigger refresh via @api refreshData().
  * Body field is rendered as HTML via lwc:dom="manual".
@@ -10,9 +10,10 @@
 import { LightningElement, api, track } from 'lwc';
 
 /* ── Apex ── */
-import getTemplate       from '@salesforce/apex/FEC_TemplateController.getTemplate';
-import getAttachments    from '@salesforce/apex/FEC_TemplateController.getAttachments';
-import getContentHistory from '@salesforce/apex/FEC_TemplateController.getContentHistory';
+import getTemplate        from '@salesforce/apex/FEC_TemplateController.getTemplate';
+import getAttachments     from '@salesforce/apex/FEC_TemplateController.getAttachments';
+import getContentHistory  from '@salesforce/apex/FEC_TemplateController.getContentHistory';
+import getTemplateHistory from '@salesforce/apex/FEC_TemplateController.getTemplateHistory';
 
 // Custom Labels
 import detailPageTitle   from '@salesforce/label/c.FEC_Template_Management_Title';
@@ -73,9 +74,10 @@ export default class Fec_templateDetailPage extends LightningElement {
     @track _isLoading = true;
 
     /* ── Internal data ── */
-    @track _record         = null;
-    @track _attachments    = [];
-    @track _contentHistory = [];
+    @track _record          = null;
+    @track _attachments     = [];
+    @track _contentHistory  = [];
+    @track _templateHistory = [];
 
     /* ── Body render flag ── */
     _bodyRendered = false;
@@ -124,10 +126,11 @@ export default class Fec_templateDetailPage extends LightningElement {
         this._isLoading = true;
 
         // Use Promise.allSettled so one failing call doesn't block the others.
-        const [recResult, attsResult, historyResult] = await Promise.allSettled([
+        const [recResult, attsResult, contentHistResult, tmplHistResult] = await Promise.allSettled([
             getTemplate({ templateId }),
             getAttachments({ templateId }),
-            getContentHistory({ templateId })
+            getContentHistory({ templateId }),
+            getTemplateHistory({ templateId })
         ]);
 
         // ── Template record ──
@@ -154,9 +157,9 @@ export default class Fec_templateDetailPage extends LightningElement {
             console.error('[templateDetailPage] Error loading attachments:', attsResult.reason);
         }
 
-        // ── Content History ──
-        if (historyResult.status === 'fulfilled') {
-            this._contentHistory = (historyResult.value || []).map(h => ({
+        // ── Content History (FEC_Content_History_Tracking__c) ──
+        if (contentHistResult.status === 'fulfilled') {
+            this._contentHistory = (contentHistResult.value || []).map(h => ({
                 id:           h.Id,
                 date:         h.FEC_Date__c,
                 user:         h.FEC_User__r ? h.FEC_User__r.Name : '',
@@ -168,7 +171,23 @@ export default class Fec_templateDetailPage extends LightningElement {
         } else {
             this._contentHistory = [];
             // eslint-disable-next-line no-console
-            console.error('[templateDetailPage] Error loading content history:', historyResult.reason);
+            console.error('[templateDetailPage] Error loading content history:', contentHistResult.reason);
+        }
+
+        // ── Template History (FEC_Template__History) ──
+        if (tmplHistResult.status === 'fulfilled') {
+            this._templateHistory = (tmplHistResult.value || []).map(h => ({
+                id:            h.Id,
+                date:          h.CreatedDate,
+                field:         h.Field || '',
+                user:          h.CreatedBy ? h.CreatedBy.Name : '',
+                originalValue: h.OldValue != null ? String(h.OldValue) : '',
+                newValue:      h.NewValue != null ? String(h.NewValue) : ''
+            }));
+        } else {
+            this._templateHistory = [];
+            // eslint-disable-next-line no-console
+            console.error('[templateDetailPage] Error loading template history:', tmplHistResult.reason);
         }
 
         this._bodyRendered = false;
@@ -281,17 +300,10 @@ export default class Fec_templateDetailPage extends LightningElement {
         return this._contentHistory && this._contentHistory.length > 0;
     }
 
-    // ─── Template History (Field History Tracking) ───────
+    // ─── Template History (FEC_Template__History) ────────
 
     get templateHistoryData() {
-        return this._contentHistory.map(h => ({
-            id:            h.id,
-            date:          h.date,
-            field:         'Body',
-            user:          h.user,
-            originalValue: h.oldValue ? '(Changed)' : '(Created)',
-            newValue:      h.newValue ? '(Changed)' : '—'
-        }));
+        return this._templateHistory;
     }
 
     get templateHistoryColumns() {
@@ -305,7 +317,7 @@ export default class Fec_templateDetailPage extends LightningElement {
     }
 
     get hasTemplateHistory() {
-        return this.templateHistoryData && this.templateHistoryData.length > 0;
+        return this._templateHistory && this._templateHistory.length > 0;
     }
 
     /* ═══════════════════════════════════════════ */

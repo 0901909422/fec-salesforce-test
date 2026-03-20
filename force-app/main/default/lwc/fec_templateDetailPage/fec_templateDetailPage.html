@@ -9,7 +9,7 @@
                         <div class="slds-grid slds-grid_vertical-align-center">
                             <lightning-icon icon-name="standard:email" size="medium" class="slds-m-right_small"></lightning-icon>
                             <div>
-                                <p class="slds-text-title_caps slds-text-color_weak">Email Template</p>
+                                <p class="slds-text-title_caps slds-text-color_weak">Template</p>
                                 <h1 class="slds-text-heading_medium">{pageTitle}</h1>
                             </div>
                         </div>
@@ -19,6 +19,12 @@
                                 onclick={handleBack}
                                 icon-name="utility:back"
                                 class="slds-m-right_x-small"
+                            ></lightning-button>
+                            <lightning-button
+                                label={label.editLabel}
+                                variant="brand"
+                                onclick={handleEdit}
+                                icon-name="utility:edit"
                             ></lightning-button>
                         </div>
                     </div>
