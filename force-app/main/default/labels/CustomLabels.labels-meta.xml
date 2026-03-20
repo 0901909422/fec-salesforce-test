@@ -9870,4 +9870,132 @@
         <shortDescription>Template saved success message</shortDescription>
         <value>Email template was saved successfully.</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_Closure_No_Eligible</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Closure_No_Eligible</shortDescription>
+        <value>Không có khoản IPP phù hợp để tất toán.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_Closure_Select_One</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Closure_Select_One</shortDescription>
+        <value>Vui lòng chọn 01 khoản IPP</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Back_To_Case</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Back_To_Case</shortDescription>
+        <value>Back to Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Complete</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Complete</shortDescription>
+        <value>Hoàn tất</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Heading</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Heading</shortDescription>
+        <value>Danh sách khoản vay IPP</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppRecordNo</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppRecordNo</shortDescription>
+        <value>IPP Record No.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppPlan</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppPlan</shortDescription>
+        <value>IPP Plan</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppOpenDate</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppOpenDate</shortDescription>
+        <value>IPP Open Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppFirstDueDate</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppFirstDueDate</shortDescription>
+        <value>IPP First Due Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppMatureDate</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppMatureDate</shortDescription>
+        <value>IPP Mature Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppBalance</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppBalance</shortDescription>
+        <value>IPP Balance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppCurrentBalance</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppCurrentBalance</shortDescription>
+        <value>IPP Current Balance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppInterestRate</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppInterestRate</shortDescription>
+        <value>IPP Interest Rate</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppTerm</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppTerm</shortDescription>
+        <value>IPP Term</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppInsurance</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppInsurance</shortDescription>
+        <value>IPP Insurance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppCurrentTerm</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppCurrentTerm</shortDescription>
+        <value>IPP Current Term</value>
+    </labels>
 </CustomLabels>
