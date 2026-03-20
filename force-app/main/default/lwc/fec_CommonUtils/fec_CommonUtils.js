@@ -28,7 +28,6 @@ const formatDateTime = (curr) => {
   const day = String(curr.getDate()).padStart(2, "0");
   const h = String(curr.getHours()).padStart(2, "0");
   const m = String(curr.getMinutes()).padStart(2, "0");
-  
 
   return `${day}/${month}/${year}, ${h}:${m}`;
 };
@@ -39,15 +38,15 @@ const formatDateTime = (curr) => {
 const formatDateTimeVN = (val) => {
   if (!val) return '';
   const d = new Date(val);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   const h = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
   const s = String(d.getSeconds()).padStart(2, "0");
-  return `${day}/${m}/${y} ${h}:${min}:${s}`;
-};
 
+  return `${day}/${month}/${year}, ${h}:${m}:${s}`;
+};
 /**
  * Format seconds as HH:mm:ss
  */
@@ -146,14 +145,24 @@ const parseDateVNI = (s) => {
 };
 
 const maskWorkPhone = (phone) => {
-  if (phone.length < 7) {
-    return phone;
+  if (!phone) return STR_EMPTY;
+  const v = String(phone).trim();
+  if (v.length < 7) return v;
+
+  if (/^84\d{9}$/.test(v)) {
+    return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
 
-  let first = phone.substring(0, 4);
-  let last = phone.substring(phone.length - 3);
+  if (/^02\d{8}$/.test(v)) {
+    return v.substring(0, 3) + "***" + v.slice(-3);
+  }
+  if (/^0\d{9}$/.test(v)) {
+    return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
+  }
 
-  return first + "***" + last;
+  const first = v.substring(0, 4);
+  const last = v.substring(v.length - 3);
+  return first + "*".repeat(Math.max(0, v.length - 7)) + last;
 };
 
 const maskValue = (value, showFull) => {
@@ -172,7 +181,15 @@ const maskValue = (value, showFull) => {
   }
 
   /* =====================
-   * PHONE NUMBER (10 số)
+   * SĐT bàn/doanh nghiệp VN (đầu 02, 10 số)
+   * Hiển thị: 3 số đầu + *** + 3 số cuối. VD: 028***111
+   * ===================== */
+  if (/^02\d{8}$/.test(v)) {
+    return v.substring(0, 3) + "***" + v.slice(-3);
+  }
+
+  /* =====================
+   * PHONE NUMBER (10 số, di động)
    * Hiển thị: 4 số đầu + 3 số cuối
    * Ví dụ: 0906***678
    * ===================== */
@@ -543,7 +560,7 @@ const setConsoleTab = async (label, icon) => {
 const urlCmpWithRecordId = (cmp, recordId) => {
   return `/lightning/cmp/c__${cmp}?c__recordId=${recordId}`;
 }
-                                                                                                                                                                                                            
+
 /* ================= NEGATIVE HELPER ================= */
 const isNegative = (value) => {
   if (value === null || value === undefined || value === '') {
@@ -577,7 +594,6 @@ export {
   formatDate,
   formatDateTime,
   formatDateTimeVN,
-  formatDuration,
   mask,
   formatDateVNI,
   formatToDDMMYYYY,
@@ -595,5 +611,6 @@ export {
   setConsoleTab,
   urlCmpWithRecordId,
   isNegative,
-  formatNumber
+  formatNumber,
+  formatDuration
 };
