@@ -498,6 +498,8 @@
     <tabs>FEC_Master_Data_Setting__c</tabs>
     <tabs>FEC_Hold_Case__c</tabs>
     <tabs>FEC_KYC__c</tabs>
+    <tabs>FEC_Channel__c</tabs>
+    <tabs>FEC_Notification_Channel__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
@@ -514,6 +516,9 @@
             <tab>FEC_Category__c</tab>
         </mappings>
         <mappings>
+            <tab>FEC_Channel__c</tab>
+        </mappings>
+        <mappings>
             <tab>FEC_Customer_Search</tab>
         </mappings>
         <mappings>
@@ -527,6 +532,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Nature_of_Case__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Notification_Channel__c</tab>
         </mappings>
         <mappings>
             <tab>FEC_Product_Type__c</tab>
