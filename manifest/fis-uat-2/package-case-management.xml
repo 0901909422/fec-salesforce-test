@@ -99,6 +99,9 @@
 		<members>fecInteractionEmailInfo</members>
 		<members>fec_InteractionMyCaseInfo</members>
 		<members>fecInteractionCreationHighlight</members>
+		<members>fec_CaseBussiness</members>
+		<members>fec_IPPClosureForm</members>
+		<members>fec_IPPClosureHandling</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -115,6 +118,7 @@
 		<members>FEC_CreateInteractionManualHandler</members>
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_CreateInteractionGenesys</members>
+		<members>FEC_IPPClosureController</members>
         <name>ApexClass</name>
     </types>
 	<types>
