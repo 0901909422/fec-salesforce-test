@@ -18,6 +18,7 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_TranferInformationCallout</members>
 		<members>FEC_CommonUltils</members>
+		<members>FEC_CancelCSCaseService</members>
         <name>ApexClass</name>
     </types>
     <types>
