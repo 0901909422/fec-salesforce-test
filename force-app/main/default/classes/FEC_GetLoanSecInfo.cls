@@ -43,6 +43,10 @@ public with sharing class FEC_GetLoanSecInfo {
         public Decimal PrePaymentPenalty;
         public Decimal CurrentBalancePrincipal;
         public Decimal InterestOnTermination;
+        public Decimal TotalDues;
+        public Integer InstallmentsOverdue;
+        public Decimal PenaltyFeeOverdue;
+        public Decimal RepaymentFeeOverdue;
     }
 
     // ===================== LPI =====================
@@ -309,6 +313,10 @@ public with sharing class FEC_GetLoanSecInfo {
         ts.PrePaymentPenalty = FEC_CommonUltils.xmlValToDecimal(n, 'PrePaymentPenalty');
         ts.CurrentBalancePrincipal = FEC_CommonUltils.xmlValToDecimal(n, 'CurrentBalancePrincipal');
         ts.InterestOnTermination = FEC_CommonUltils.xmlValToDecimal(n, 'InterestOnTermination');
+        ts.TotalDues = FEC_CommonUltils.xmlValToDecimal(n, 'TotalDues');
+        ts.InstallmentsOverdue = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(n, 'InstallmentsOverdue'));
+        ts.PenaltyFeeOverdue = FEC_CommonUltils.xmlValToDecimal(n, 'PenaltyFeeOverdue');
+        ts.RepaymentFeeOverdue = FEC_CommonUltils.xmlValToDecimal(n, 'RepaymentFeeOverdue');
         return ts;
     }
 
