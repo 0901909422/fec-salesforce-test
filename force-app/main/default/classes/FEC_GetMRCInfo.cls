@@ -1,5 +1,6 @@
 public with sharing class FEC_GetMRCInfo {
   public static final String API_CONFIG_NAME = 'FEC_Get_MRC_Info';
+  private static FEC_ResponseLog responseLog;
 
   public class MRCInfoRequest {
     public String ContractNumber;
@@ -275,7 +276,7 @@ public with sharing class FEC_GetMRCInfo {
         ? FEC_MockupEndpoint.GET_MRC_INFO_ENDPOINT_MOCKUP
         : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
-      FEC_CommonUltils.logApi(
+      responseLog = new FEC_ResponseLog(
         'FEC_GetMRCInfo',
         endpoint,
         FEC_ConstantCommon.API_METHOD_POST,

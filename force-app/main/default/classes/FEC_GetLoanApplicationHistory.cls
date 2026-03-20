@@ -1,5 +1,6 @@
 public with sharing class FEC_GetLoanApplicationHistory {
   public static final String API_CONFIG_NAME = 'FEC_Get_Loan_Application_History';
+  private static FEC_ResponseLog responseLog;
 
   public class LoanApplicationHistoryRequest {
     public String applicationId;
@@ -62,7 +63,6 @@ public with sharing class FEC_GetLoanApplicationHistory {
     @AuraEnabled
     public String createdDate;
   }
-
 
   public static HttpResponse sendRequest(String endpoint, Map<String, String> headers) {
     return FEC_CommonUltils.calloutApiWithHeaders(
@@ -160,7 +160,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
 
       HttpResponse res = sendRequest(endpoint, headers);
 
-      FEC_CommonUltils.logApi(
+      responseLog = new FEC_ResponseLog(
         'FEC_GetLoanApplicationHistory',
         endpoint,
         FEC_ConstantCommon.API_METHOD_POST,

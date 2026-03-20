@@ -1,5 +1,6 @@
 public with sharing class FEC_GetAssetsList {
   public static final String API_CONFIG_NAME = 'FEC_Get_Assets_List';
+  private static FEC_ResponseLog responseLog;
 
   public class AssetsListRequest {
     public String ContractNumber;
@@ -106,7 +107,6 @@ public with sharing class FEC_GetAssetsList {
     @AuraEnabled
     public String currencyCode;
   }
-
 
   private static String escapeXml(String s) {
     if (s == null)
@@ -318,7 +318,7 @@ public with sharing class FEC_GetAssetsList {
         ? FEC_MockupEndpoint.GET_ASSETS_LIST_ENDPOINT_MOCKUP
         : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
-      FEC_CommonUltils.logApi(
+      responseLog = new FEC_ResponseLog(
         'FEC_GetAssetsList',
         endpoint,
         FEC_ConstantCommon.API_METHOD_POST,

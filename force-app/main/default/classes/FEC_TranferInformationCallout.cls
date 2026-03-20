@@ -1,5 +1,6 @@
 public without sharing class FEC_TranferInformationCallout {
   public static final String API_CONFIG_NAME = 'FEC_Transfer_Call';
+  private static FEC_ResponseLog responseLog;
 
   // ============================================================
   // 1. Cấu trúc JSON Request Body
@@ -266,7 +267,7 @@ public without sharing class FEC_TranferInformationCallout {
         ? FEC_MockupEndpoint.UPDATE_CUSTOMER_CONTACT_ENDPOINT_MOCKUP
         : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
-      FEC_CommonUltils.logApi(
+      responseLog = new FEC_ResponseLog(
         'FEC_TranferInformationCallout',
         endpoint,
         FEC_ConstantCommon.API_METHOD_POST,
