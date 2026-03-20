@@ -1544,9 +1544,8 @@ public with sharing class FEC_CaseBusinessService {
 
           updatedCase.FEC_Current_Case_Stage__c = history.FEC_Previous_Stage__c;
           updatedCase.OwnerId = queueId;
-          update updatedCase;
-
           insert newHistory;
+          update updatedCase;
         }
       }
     } catch (Exception e) {
