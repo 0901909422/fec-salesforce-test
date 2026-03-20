@@ -1,6 +1,6 @@
 public with sharing class FEC_AddIPP {
   public static final String API_CONFIG_NAME = 'FEC_Add_IPP';
-  private static FEC_ResponseLog responseLog;
+  public static FEC_ResponseLog responseLog;
 
   private static final String SOAP_NS = 'http://schemas.xmlsoap.org/soap/envelope/';
   private static final String SERVICE_NS = 'http://esbservice.fecredit.org/EStatementService/';

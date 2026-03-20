@@ -1,6 +1,6 @@
 public without sharing class FEC_TranferInformationCallout {
   public static final String API_CONFIG_NAME = 'FEC_Transfer_Call';
-  private static FEC_ResponseLog responseLog;
+  public static FEC_ResponseLog responseLog;
 
   // ============================================================
   // 1. Cấu trúc JSON Request Body

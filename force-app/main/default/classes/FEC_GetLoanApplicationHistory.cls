@@ -1,6 +1,6 @@
 public with sharing class FEC_GetLoanApplicationHistory {
   public static final String API_CONFIG_NAME = 'FEC_Get_Loan_Application_History';
-  private static FEC_ResponseLog responseLog;
+  public static FEC_ResponseLog responseLog;
 
   public class LoanApplicationHistoryRequest {
     public String applicationId;

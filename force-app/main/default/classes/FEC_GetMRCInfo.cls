@@ -1,6 +1,6 @@
 public with sharing class FEC_GetMRCInfo {
   public static final String API_CONFIG_NAME = 'FEC_Get_MRC_Info';
-  private static FEC_ResponseLog responseLog;
+  public static FEC_ResponseLog responseLog;
 
   public class MRCInfoRequest {
     public String ContractNumber;
