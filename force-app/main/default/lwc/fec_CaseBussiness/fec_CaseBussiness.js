@@ -658,11 +658,6 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.className += ' slds-hide';
                 }
 
-                if (!this.isEdit) {
-                  field.readonly = true;
-                  field.editable = false;
-                }
-
                 let currentField = `${obj.name}.${field.apiName}`;
 
                 if (
@@ -687,6 +682,11 @@ export default class Fec_CaseBussiness extends LightningElement {
                 } else {
                   field.isHidden = false;
                 }
+              }
+
+              if (!this.isEdit) {
+                field.readonly = true;
+                field.editable = false;
               }
 
                 field.original = field.value;
