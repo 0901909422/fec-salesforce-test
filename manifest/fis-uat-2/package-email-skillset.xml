@@ -64,6 +64,7 @@
         <members>fec_PendingServiceCases</members>
         <members>fec_ClosedServiceCases</members>
         <members>fec_InteractionCases</members>
+        <members>fec_InteractionHighlight</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
