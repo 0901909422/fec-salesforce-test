@@ -145,6 +145,7 @@
 		<members>FEC_Customer_History__c.FEC_First_Name__c</members>
 		<members>FEC_Customer_History__c.FEC_Marital_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Original_User_Queue_ID__c</members>
+		<members>FEC_Team_Queue__c.FEC_Name__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -189,6 +190,7 @@
 		<members>FEC_B2_Contract__c</members>
 		<members>FEC_Cash_24_Contract__c</members>
 		<members>FEC_RePayment_Schedule__c</members>
+		<members>FEC_Team_Queue__c</members>
         <name>CustomObject</name>
     </types>
     <types>
