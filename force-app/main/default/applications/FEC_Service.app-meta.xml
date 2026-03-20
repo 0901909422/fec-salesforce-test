@@ -500,6 +500,7 @@
     <tabs>FEC_Hold_Case__c</tabs>
     <tabs>FEC_KYC__c</tabs>
     <tabs>FEC_Enhanced_Letterhead__c</tabs>
+    <tabs>Templates</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
@@ -550,6 +551,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Sub_Code__c</tab>
+        </mappings>
+        <mappings>
+            <tab>Templates</tab>
         </mappings>
         <mappings>
             <tab>standard-Case</tab>
