@@ -499,6 +499,7 @@
     <tabs>FEC_Master_Data_Setting__c</tabs>
     <tabs>FEC_Hold_Case__c</tabs>
     <tabs>FEC_KYC__c</tabs>
+    <tabs>standard-ServiceResource</tabs>
     <tabs>FEC_Enhanced_Letterhead__c</tabs>
     <tabs>Templates</tabs>
     <uiType>Lightning</uiType>
@@ -557,6 +558,9 @@
         </mappings>
         <mappings>
             <tab>standard-Case</tab>
+        </mappings>
+        <mappings>
+            <tab>standard-ServiceResource</tab>
         </mappings>
     </workspaceConfig>
 </CustomApplication>
