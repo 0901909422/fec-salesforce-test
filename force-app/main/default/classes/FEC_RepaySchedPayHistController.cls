@@ -227,8 +227,8 @@ public with sharing class FEC_RepaySchedPayHistController {
         for (Integer i = 0; i < rowCount; i++) {
             PaymentHistoryRowDTO row = new PaymentHistoryRowDTO();
             row.paymentNo = i + 1;
-            if (i < basicPh.size() && basicPh[i].ValueDate != null) {
-                String pd = FEC_CommonUltils.formatDateDDMMYYYY(basicPh[i].ValueDate);
+            if (i < secPh.size() && secPh[i].ValueDate != null) {
+                String pd = FEC_CommonUltils.formatDateDDMMYYYY(secPh[i].ValueDate);
                 row.paymentDate = String.isNotBlank(pd) ? pd : HYPHEN;
             } else {
                 row.paymentDate = HYPHEN;
