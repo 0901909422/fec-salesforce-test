@@ -1,0 +1,32 @@
+<aura:component access="global">
+    <aura:attribute name="attachments"  type="List"    default="[]" />
+    <aura:attribute name="isSending"    type="Boolean" default="false" />
+    <aura:attribute name="showReply"    type="Boolean" default="false" />
+    <aura:attribute name="onreply"      type="Aura.Action" />
+    <aura:attribute name="onreplyall"   type="Aura.Action" />
+    <aura:attribute name="onforward"    type="Aura.Action" />
+    <aura:attribute name="onattach"     type="Aura.Action" />
+    <aura:attribute name="onpreview"    type="Aura.Action" />
+    <aura:attribute name="ondiscard"    type="Aura.Action" />
+    <aura:attribute name="onsend"       type="Aura.Action" />
+
+    <div class="fec-compose-footer">
+        <aura:if isTrue="{!v.showReply}">
+            <button class="fec-foot-btn" onclick="{!v.onreply}"    title="Reply">&#8617; Reply</button>
+            <button class="fec-foot-btn" onclick="{!v.onreplyall}" title="Reply All">&#8617;&#8617; Reply All</button>
+            <button class="fec-foot-btn" onclick="{!v.onforward}"  title="Forward">&#8618; Forward</button>
+        </aura:if>
+        <label class="fec-foot-icon" title="Attach file">
+            <input type="file" multiple="true" onchange="{!v.onattach}" style="display:none" />
+            <lightning:icon iconName="utility:attach" size="xx-small" />
+        </label>
+        <span class="fec-foot-icon" title="Preview" onclick="{!v.onpreview}">
+            <lightning:icon iconName="utility:preview" size="xx-small" />
+        </span>
+        <span class="fec-foot-icon fec-foot-danger" title="Discard" onclick="{!v.ondiscard}">
+            <lightning:icon iconName="utility:delete" size="xx-small" />
+        </span>
+        <span class="fec-foot-spacer"></span>
+        <lightning:button class="fec-send-btn" variant="brand" label="Send" onclick="{!v.onsend}" disabled="{!v.isSending}" />
+    </div>
+</aura:component>

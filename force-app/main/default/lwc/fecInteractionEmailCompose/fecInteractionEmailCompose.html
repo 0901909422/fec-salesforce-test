@@ -1,0 +1,87 @@
+<template>
+    <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+        <lightning-accordion-section name="emailCompose" label="Email">
+
+            <!-- Row 1: Danh xưng + Email Template -->
+            <div class="field-row">
+                <div class="field-left">
+                    <span class="field-label"><abbr class="required" title="required">*</abbr> Danh xưng</span>
+                    <lightning-combobox
+                        variant="label-hidden"
+                        value={titleReply}
+                        placeholder="Anh/Chị"
+                        options={titleOptions}
+                        onchange={handleTitleChange}>
+                    </lightning-combobox>
+                </div>
+                <div class="field-right">
+                    <span class="field-label">Email Template</span>
+                    <lightning-combobox
+                        variant="label-hidden"
+                        value={replyTemplate}
+                        placeholder="--None--"
+                        options={templateOptions}
+                        onchange={handleTemplateChange}>
+                    </lightning-combobox>
+                </div>
+            </div>
+
+            <!-- Row 2: Write an email + Compose -->
+            <div class="compose-bar">
+                <input type="text" class="write-email-input" placeholder="Write an email..."
+                    readonly onclick={handleOpenCompose} />
+                <lightning-button variant="brand" label="Compose" onclick={handleOpenCompose}></lightning-button>
+            </div>
+
+            <!-- Chatter Feed dùng component có sẵn trên page -->
+
+        </lightning-accordion-section>
+    </lightning-accordion>
+
+    <!-- Compose Modal -->
+    <template if:true={showModal}>
+        <section role="dialog" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="modal-close-btn" onclick={handleDiscard} title="Close">&#x2715;</button>
+                    <h2 class="slds-modal__title">Compose Email</h2>
+                </header>
+                <div class="slds-modal__content slds-var-p-around_medium">
+                    <lightning-input label="From" value={fromEmail} onchange={handleFromChange}
+                        type="email" placeholder="From email" read-only={isFromReadonly}>
+                    </lightning-input>
+                    <lightning-input label="To" value={toEmail} onchange={handleToChange}
+                        type="email" placeholder="Recipient email"
+                        class="slds-var-m-top_small" required>
+                    </lightning-input>
+                    <lightning-input label="CC" value={ccEmail} onchange={handleCcChange}
+                        type="email" placeholder="CC email (optional)"
+                        class="slds-var-m-top_small">
+                    </lightning-input>
+                    <lightning-input label="Subject" value={subject} onchange={handleSubjectChange}
+                        class="slds-var-m-top_small" placeholder="Subject">
+                    </lightning-input>
+                    <div class="slds-var-m-top_small">
+                        <label class="slds-form-element__label">Reply Content</label>
+                        <lightning-textarea value={body} onchange={handleBodyChange}
+                            placeholder="Write your email..." rows="8">
+                        </lightning-textarea>
+                    </div>
+                    <template if:true={errorMsg}>
+                        <p class="error-text slds-var-m-top_small">{errorMsg}</p>
+                    </template>
+                </div>
+                <footer class="slds-modal__footer">
+                    <div class="footer-left">
+                        <lightning-button label="Discard" onclick={handleDiscard} class="slds-var-m-right_x-small"></lightning-button>
+                        <lightning-button label="Preview" variant="neutral" onclick={handlePreview} class="slds-var-m-right_x-small"></lightning-button>
+                    </div>
+                    <div class="footer-right">
+                        <lightning-button variant="brand" label="Send" onclick={handleSend} disabled={isSending}></lightning-button>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

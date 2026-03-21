@@ -1,0 +1,112 @@
+.field-row {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 10px;
+}
+
+.field-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.field-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.field-left lightning-combobox,
+.field-right lightning-combobox {
+    flex: 1;
+}
+
+/* Ẩn label bên trong combobox vì dùng label ngoài - sử dụng custom class */
+.field-left lightning-combobox .fec-hide-label,
+.field-right lightning-combobox .fec-hide-label {
+    display: none;
+}
+
+.field-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #3e3e3c;
+    white-space: nowrap;
+}
+
+.field-label .required {
+    color: #c23934;
+    margin-right: 2px;
+    text-decoration: none;
+}
+
+.field-left lightning-combobox,
+.field-right lightning-combobox {
+    flex: 1;
+}
+
+.compose-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.write-email-input {
+    flex: 1;
+    height: 36px;
+    border: 1px solid #dddbda;
+    border-radius: 4px; /* SLDS ~4px */
+    padding: 0 16px;
+    font-size: 14px;
+    color: #706e6b;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+    text-align: center;
+}
+
+.write-email-input:hover {
+    border-color: #1b96ff;
+}
+
+.error-text {
+    color: #c23934;
+    font-size: 14px;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 4px; /* SLDS ~4px */
+    border: 1px solid #dddbda;
+    background: #fff;
+    color: #0070d2;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+    z-index: 1;
+}
+
+.modal-close-btn:hover { background: #f3f3f3; }
+
+.fec-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-left, .footer-right {
+    display: flex;
+    gap: 4px;
+}

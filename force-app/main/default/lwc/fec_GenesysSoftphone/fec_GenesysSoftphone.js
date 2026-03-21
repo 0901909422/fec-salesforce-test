@@ -4,6 +4,7 @@
 import { LightningElement, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import createInteraction from "@salesforce/apex/FEC_CreateInteractionGenesys.createInteraction";
+import createEmailInteraction from "@salesforce/apex/FEC_CreateInteractionGenesys.createEmailInteraction";
 import executeRoutingAssignments from "@salesforce/apex/FEC_InteractionRoutingController.executeRoutingAssignments";
 
 import { subscribe, MessageContext } from "lightning/messageService";
@@ -73,6 +74,9 @@ export default class fec_genesysSoftphone extends NavigationMixin(
       case FEC_GENESYS_CONST.EVENT_OUTBOUND:
         this.handleNewInteraction(eventType, data);
         break;
+      case FEC_GENESYS_CONST.EVENT_EMAIL:
+        this.handleEmailInteraction(data);
+        break;
       case FEC_GENESYS_CONST.EVENT_WRAPUP:
         this.handleWrapup(data);
         break;
@@ -114,6 +118,34 @@ export default class fec_genesysSoftphone extends NavigationMixin(
 
   handleWrapup(wrapupData) {
     this.currentInteractionCaseId = null;
+  }
+
+  handleEmailInteraction(emailData) {
+    const request = {
+      fromEmail: emailData.From,
+      sendTo: emailData.sendTo || 'dichvukhachhang@fecredit.com.vn',
+      genesysInteractionID: emailData.GenesysInteractionID,
+      phoneNum: emailData.PhoneNum,
+      nationalID: emailData.NationalID,
+      contractNum: emailData.ContractNum,
+      cardAccountNum: emailData.CardAccountNum,
+      agentID: emailData.AgentID,
+      subject: emailData.Subject || emailData.subject || ''
+    };
+
+    createEmailInteraction({ request })
+      .then((result) => {
+        if (result.isSuccess) {
+          this.currentInteractionCaseId = result.recordId;
+          this.navigateToRecord(result.recordId);
+        } else {
+          console.warn(`[Email] warning: ${result.message}`);
+        }
+      })
+      .catch((error) => {
+        const msg = error.body ? error.body.message : error.message;
+        console.warn(`[Email] error: ${msg}`);
+      });
   }
 
   navigateToRecord(recordId) {

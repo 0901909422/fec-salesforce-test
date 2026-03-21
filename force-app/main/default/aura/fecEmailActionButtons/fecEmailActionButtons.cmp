@@ -1,0 +1,11 @@
+<aura:component access="global">
+    <aura:attribute name="onreply"    type="Aura.Action" />
+    <aura:attribute name="onreplyall" type="Aura.Action" />
+    <aura:attribute name="onforward"  type="Aura.Action" />
+
+    <div class="fec-action-btns">
+        <button class="fec-act-btn" onclick="{!v.onreply}">&#8617; Reply</button>
+        <button class="fec-act-btn" onclick="{!v.onreplyall}">&#8617;&#8617; Reply All</button>
+        <button class="fec-act-btn" onclick="{!v.onforward}">&#8618; Forward</button>
+    </div>
+</aura:component>

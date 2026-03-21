@@ -5,75 +5,6 @@
     <businessProcess>Interaction Process</businessProcess>
     <label>Interaction</label>
     <picklistValues>
-        <picklist>FEC_KYC_Method__c</picklist>
-        <values>
-            <fullName>One-Time Password %28OTP%29</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Other</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Question and Answer Q%26A</fullName>
-            <default>true</default>
-        </values>
-        <values>
-            <fullName>Voice Biometrics</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
-        <picklist>FEC_Channel__c</picklist>
-        <values>
-            <fullName>Chat</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Email</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>External</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>F2F</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Inbound</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Internal</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Letter</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Outbound</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
-        <picklist>FEC_Interaction_Subchannel__c</picklist>
-        <values>
-            <fullName>Inbound Call</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Other</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Outbound Call</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
         <picklist>Origin</picklist>
         <values>
             <fullName>Email</fullName>
@@ -135,6 +66,29 @@
         </values>
         <values>
             <fullName>User didn%27t attend training</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>FEC_Interaction_Subchannel__c</picklist>
+        <values>
+            <fullName>Inbound Call</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Incoming Email</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Other</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Outbound Call</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Outgoing Email</fullName>
             <default>false</default>
         </values>
     </picklistValues>
