@@ -259,43 +259,74 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         }));
     }
 
-    /* Section 4: gộp theo chỉ số – mỗi dòng = Repayment Schedule[i] + Payment History[i]; sort mặc định: Payment Date + Due Date (cũ→mới), khi bằng nhau Payment lên trên. */
+    /* Section 4: nối 2 danh sách – mỗi bản ghi của Repayment Schedule/Payment History là 1 dòng riêng. */
     get section4CombinedRecords() {
         const scheduleList = Array.isArray(this.section4Data.repaymentScheduleTable) ? this.section4Data.repaymentScheduleTable : [];
         const paymentList = Array.isArray(this.section4Data.paymentHistoryTable) ? this.section4Data.paymentHistoryTable : [];
         const e = SECTION4_EMPTY_CELL;
-        const maxLen = Math.max(scheduleList.length, paymentList.length);
-        if (maxLen === 0) return [];
+        if (scheduleList.length === 0 && paymentList.length === 0) return [];
 
         const rows = [];
-        for (let i = 0; i < maxLen; i++) {
-            const s = scheduleList[i] || null;
-            const p = paymentList[i] || null;
-            const rowType = s && p ? 'Both' : (s ? SECTION4_TYPE_SCHEDULE : SECTION4_TYPE_PAYMENT);
-            const dueDateVal = (s && (s.dueDate != null && s.dueDate !== '')) ? s.dueDate : e;
-            const paymentDateVal = (p && (p.paymentDate != null && p.paymentDate !== '')) ? p.paymentDate : e;
-            const sortKey = 'S4_' + toSortDateStr(paymentDateVal) + '|' + toSortDateStr(dueDateVal) + '|' + (rowType === SECTION4_TYPE_PAYMENT ? '0' : '1');
+
+        // Add all Repayment Schedule rows first.
+        for (let i = 0; i < scheduleList.length; i++) {
+            const s = scheduleList[i] || {};
+            const dueDateVal = (s.dueDate != null && s.dueDate !== '') ? s.dueDate : e;
             rows.push({
-                Id: 's4-' + (i + 1),
-                rowType,
-                sortKey,
-                installmentNo: (s && (s.installmentNo != null && s.installmentNo !== '')) ? s.installmentNo : e,
+                Id: 's4-s-' + (i + 1),
+                rowType: SECTION4_TYPE_SCHEDULE,
+                sortKey: 'S4_' + toSortDateStr(e) + '|' + toSortDateStr(dueDateVal) + '|1',
+                installmentNo: (s.installmentNo != null && s.installmentNo !== '') ? s.installmentNo : e,
                 dueDate: dueDateVal,
-                openingPrincipal: (s && (s.openingPrincipal != null && s.openingPrincipal !== '')) ? s.openingPrincipal : e,
-                emi: (s && (s.emi != null && s.emi !== '')) ? s.emi : e,
-                repaymentFee: (s && (s.repaymentFee != null && s.repaymentFee !== '')) ? s.repaymentFee : e,
-                installmentAmount: (s && (s.installmentAmount != null && s.installmentAmount !== '')) ? s.installmentAmount : e,
-                principal: (s && (s.principal != null && s.principal !== '')) ? s.principal : e,
-                interest: (s && (s.interest != null && s.interest !== '')) ? s.interest : e,
-                closingPrincipal: (s && (s.closingPrincipal != null && s.closingPrincipal !== '')) ? s.closingPrincipal : e,
-                paymentNo: (p && (p.paymentNo != null && p.paymentNo !== '')) ? String(p.paymentNo) : e,
-                paymentDate: paymentDateVal,
-                bookingDate: (p && (p.bookingDate != null && p.bookingDate !== '')) ? p.bookingDate : e,
-                paymentAmount: (p && (p.paymentAmount != null && p.paymentAmount !== '')) ? p.paymentAmount : e,
-                particulars: (p && (p.particulars != null && p.particulars !== '')) ? p.particulars : e,
-                paymentChannel: (p && (p.paymentChannel != null && p.paymentChannel !== '')) ? p.paymentChannel : e,
+                openingPrincipal: (s.openingPrincipal != null && s.openingPrincipal !== '') ? s.openingPrincipal : e,
+                emi: (s.emi != null && s.emi !== '') ? s.emi : e,
+                repaymentFee: (s.repaymentFee != null && s.repaymentFee !== '') ? s.repaymentFee : e,
+                installmentAmount: (s.installmentAmount != null && s.installmentAmount !== '') ? s.installmentAmount : e,
+                principal: (s.principal != null && s.principal !== '') ? s.principal : e,
+                interest: (s.interest != null && s.interest !== '') ? s.interest : e,
+                closingPrincipal: (s.closingPrincipal != null && s.closingPrincipal !== '') ? s.closingPrincipal : e,
+                paymentNo: e,
+                paymentDate: e,
+                bookingDate: e,
+                paymentAmount: e,
+                particulars: e,
+                paymentChannel: e,
             });
         }
+
+        // Then add all Payment History rows.
+        for (let i = 0; i < paymentList.length; i++) {
+            const p = paymentList[i] || {};
+            const paymentDateVal = (p.paymentDate != null && p.paymentDate !== '') ? p.paymentDate : e;
+            rows.push({
+                Id: 's4-p-' + (i + 1),
+                rowType: SECTION4_TYPE_PAYMENT,
+                sortKey: 'S4_' + toSortDateStr(paymentDateVal) + '|' + toSortDateStr(e) + '|0',
+                installmentNo: e,
+                dueDate: e,
+                openingPrincipal: e,
+                emi: e,
+                repaymentFee: e,
+                installmentAmount: e,
+                principal: e,
+                interest: e,
+                closingPrincipal: e,
+                paymentNo: (p.paymentNo != null && p.paymentNo !== '') ? String(p.paymentNo) : e,
+                paymentDate: paymentDateVal,
+                bookingDate: (p.bookingDate != null && p.bookingDate !== '') ? p.bookingDate : e,
+                paymentAmount: (p.paymentAmount != null && p.paymentAmount !== '') ? p.paymentAmount : e,
+                particulars: (p.particulars != null && p.particulars !== '') ? p.particulars : e,
+                paymentChannel: (p.paymentChannel != null && p.paymentChannel !== '') ? p.paymentChannel : e,
+            });
+        }
+
+        // Sort asc by Payment Date then Due Date; when equal, Payment rows (|0) come first.
+        rows.sort((a, b) => {
+            const ak = a.sortKey || '';
+            const bk = b.sortKey || '';
+            if (ak === bk) return 0;
+            return ak < bk ? -1 : 1;
+        });
         return rows;
     }
 
