@@ -97,6 +97,10 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>anhdt36@fpt.com</emailAddress>
+            <casePriority>High</casePriority>
+            <createTask>true</createTask>
+            <emailAddress>phuongnt.fit@gmail.com</emailAddress>
+            <isPermsetControlled>false</isPermsetControlled>
             <isVerified>true</isVerified>
             <routingName>FEC_EmailToCase</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
