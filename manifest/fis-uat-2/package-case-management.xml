@@ -139,5 +139,9 @@
 		<members>Case.FEC_Create_Interaction_Manual</members>
 		<name>WebLink</name>
 	</types>
+	<types>
+		<members>Case.FEC_Interaction_Subchannel__c</members>
+		<name>CustomField</name>
+	</types>
 	<version>65.0</version>
 </Package>
