@@ -182,12 +182,10 @@
                     <div class="table-pagination">
                         <div class="page-size">
                             <span>Page size</span>
-                            <select class="page-size-select" onchange={handlePageSizeChange}>
-                                <option value="10">10</option>
-                                <option value="20">20</option>
-                                <option value="30">30</option>
-                                <option value="40">40</option>
-                                <option value="50">50</option>
+                            <select class="page-size-select" value={pageSize} onchange={handlePageSizeChange}>
+                                <template for:each={pageSizeOptions} for:item="opt">
+                                    <option key={opt} value={opt}>{opt}</option>
+                                </template>
                             </select>
                         </div>
 

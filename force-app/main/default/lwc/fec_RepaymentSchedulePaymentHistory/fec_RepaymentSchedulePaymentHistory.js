@@ -48,7 +48,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
     @track isLoading = false;
     @track isRefreshingRealTime = false;
     refreshStatusMap = { realTimePayment: 'NONE' };
-    pageSizeOptions = [12, 24, 26, 48];
+    pageSizeOptions = [12, 24, 36, 48];
 
     customLabel = {
         repaymentSchedule: FEC_Repayment_Schedule_Label,

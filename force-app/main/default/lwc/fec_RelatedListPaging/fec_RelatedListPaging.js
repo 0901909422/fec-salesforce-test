@@ -26,6 +26,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api hideUpdatedTime = false; // Hide updated time display
     @api defaultSortedBy; // Default field to sort by (field name)
     @api defaultSortDirection = 'desc'; // Default sort direction
+    @api pageSizeOptions = [10, 20, 30, 40, 50];
     @api columnCount = 2;
     @api compactColumns = false;
     
