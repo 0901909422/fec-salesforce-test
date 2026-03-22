@@ -28,8 +28,12 @@ global with sharing class FEC_CancelCSCaseService {
 
         try {
             // A. Validate Input
-            if (Sys == null) throw new ServiceException('Sys element is mandatory');
-            if (CaseInfo == null) throw new ServiceException('CaseInfo element is mandatory');
+            if (Sys == null) {
+                throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Sys'}));
+            }
+            if (CaseInfo == null) {
+                throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CaseInfo'}));
+            }
             
             validateInputDetail(Sys, CaseInfo);
             
@@ -41,11 +45,11 @@ global with sharing class FEC_CancelCSCaseService {
             
             // D. Check Permissions
             if (!Schema.sObjectType.Case.fields.Status.isUpdateable()) {
-                throw new ServiceException('Insufficient permissions to update Case Status');
+                throw new ServiceException(System.Label.FEC_MSG_CancelCS_Insufficient_Permissions);
             }
             
             // E. Update Case
-            c.Status = STATUS_CANCELLED;
+            c.Status = FEC_ConstantCommon.STATUS_CANCELLED;
             update c;
             
             // F. XỬ LÝ RESPONSE THÀNH CÔNG (FULL DATA)
@@ -92,45 +96,89 @@ global with sharing class FEC_CancelCSCaseService {
 
     private static void validateInputDetail(SysType Sys, CaseInfoType CaseInfo) {
         // 1. Channel
-        if (String.isBlank(Sys.Channel)) throw new ServiceException('Channel is mandatory');
-        Set<String> validChannels = new Set<String>{'Inbound', 'Outbound', 'Chat', 'Email', 'F2F', 'Letter', 'External', 'Internal'};
-        if (!validChannels.contains(Sys.Channel)) throw new ServiceException('Invalid Channel. Allowed: Inbound, Outbound, Chat, Email, F2F, Letter, External, Internal');
+        if (String.isBlank(Sys.Channel)) {
+            throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Channel'}));
+        }
+        if (!FEC_ConstantCommon.CANCEL_CS_VALID_CHANNELS.contains(Sys.Channel)) {
+            throw new ServiceException(String.format(
+                System.Label.FEC_MSG_CancelCS_Channel_Invalid,
+                new List<String>{String.join(FEC_ConstantCommon.CANCEL_CS_VALID_CHANNELS_ORDERED, ', ')}
+            ));
+        }
 
         // 2. TransactionID
-        // Check không được để trống TransactionID
-        if (String.isBlank(Sys.TransactionID)) throw new ServiceException('TransactionID is mandatory');
-        if (Sys.TransactionID.length() > 36) throw new ServiceException('TransactionID length cannot exceed 36 characters');
+        if (String.isBlank(Sys.TransactionID)) {
+            throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'TransactionID'}));
+        }
+        if (Sys.TransactionID.length() > FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN) {
+            throw new ServiceException(String.format(
+                System.Label.FEC_MSG_Param_Maxlength,
+                new List<String>{'TransactionID', String.valueOf(FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN)}
+            ));
+        }
 
         // 3. CaseID
-        if (String.isBlank(CaseInfo.CaseID)) throw new ServiceException('CaseInfo.CaseID is mandatory');
-        if (CaseInfo.CaseID.length() > 15) throw new ServiceException('CaseID length cannot exceed 15 characters'); 
+        if (String.isBlank(CaseInfo.CaseID)) {
+            throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CaseInfo.CaseID'}));
+        }
+        if (CaseInfo.CaseID.length() > FEC_ConstantCommon.CANCEL_CS_CASE_ID_MAX_LEN) {
+            throw new ServiceException(String.format(
+                System.Label.FEC_MSG_Param_Maxlength,
+                new List<String>{'CaseID', String.valueOf(FEC_ConstantCommon.CANCEL_CS_CASE_ID_MAX_LEN)}
+            ));
+        }
 
         // 4. Contract
-        if (String.isBlank(CaseInfo.ContractOrAccountNumber)) throw new ServiceException('CaseInfo.ContractOrAccountNumber is mandatory');
-        if (CaseInfo.ContractOrAccountNumber.length() > 255) throw new ServiceException('ContractOrAccountNumber length cannot exceed 255 characters');
+        if (String.isBlank(CaseInfo.ContractOrAccountNumber)) {
+            throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CaseInfo.ContractOrAccountNumber'}));
+        }
+        if (CaseInfo.ContractOrAccountNumber.length() > FEC_ConstantCommon.CANCEL_CS_CONTRACT_OR_ACCOUNT_MAX_LEN) {
+            throw new ServiceException(String.format(
+                System.Label.FEC_MSG_Param_Maxlength,
+                new List<String>{'ContractOrAccountNumber', String.valueOf(FEC_ConstantCommon.CANCEL_CS_CONTRACT_OR_ACCOUNT_MAX_LEN)}
+            ));
+        }
 
         // 5. Phone Number Validation
-        if (String.isBlank(CaseInfo.PhoneNumber)) throw new ServiceException('CaseInfo.PhoneNumber is mandatory');
+        if (String.isBlank(CaseInfo.PhoneNumber)) {
+            throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CaseInfo.PhoneNumber'}));
+        }
         {
             String phone = CaseInfo.PhoneNumber.trim();
-            // Validate format
             Boolean isValidVN = Pattern.matches(FEC_ConstantCommon.PHONE_REGEX_VN, phone);
             Boolean isValidIntl = Pattern.matches(FEC_ConstantCommon.PHONE_REGEX_INTL, phone);
             if (!isValidVN && !isValidIntl) {
-                throw new ServiceException('PhoneNumber format is invalid. Expected format: Vietnamese (0xxxxxxxxx - 10 digits) or International (+xxxxxxxx - 8 to 15 digits with country code)');
+                throw new ServiceException(System.Label.FEC_MSG_CancelCS_Phone_Format_Invalid);
             }
-            if (phone.length() > 16) {
-                throw new ServiceException('PhoneNumber length cannot exceed 16 characters');
+            if (phone.length() > FEC_ConstantCommon.CANCEL_CS_PHONE_MAX_LEN) {
+                throw new ServiceException(String.format(
+                    System.Label.FEC_MSG_Param_Maxlength,
+                    new List<String>{'PhoneNumber', String.valueOf(FEC_ConstantCommon.CANCEL_CS_PHONE_MAX_LEN)}
+                ));
             }
         }
 
         // 6. UserType
-        if (String.isBlank(CaseInfo.UserType)) throw new ServiceException('CaseInfo.UserType is mandatory');
-        Set<String> validUserTypes = new Set<String>{'EXISTING', 'NON-EXISTING'};
-        if (!validUserTypes.contains(CaseInfo.UserType)) throw new ServiceException('Invalid UserType. Allowed: EXISTING, NON-EXISTING');
+        if (String.isBlank(CaseInfo.UserType)) {
+            throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CaseInfo.UserType'}));
+        }
+        Set<String> validUserTypes = new Set<String>{
+            FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE,
+            FEC_ConstantCommon.REQUEST_NON_EXISTING_USER_TYPE
+        };
+        if (!validUserTypes.contains(CaseInfo.UserType)) {
+            throw new ServiceException(String.format(
+                System.Label.FEC_MSG_CancelCS_UserType_Invalid,
+                new List<String>{
+                    FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE + ', ' + FEC_ConstantCommon.REQUEST_NON_EXISTING_USER_TYPE
+                }
+            ));
+        }
         
         // 7. Date
-        if (Sys.DateTime_x == null) throw new ServiceException('Sys.DateTime is mandatory');
+        if (Sys.DateTime_x == null) {
+            throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Sys.DateTime'}));
+        }
     }
     
     private static Case getCaseById(String caseIdInput) {
@@ -140,21 +188,24 @@ global with sharing class FEC_CancelCSCaseService {
                             LIMIT 1];
         
         if (cases.isEmpty()) {
-            throw new ServiceException('Case not found with ID: ' + caseIdInput);
+            throw new ServiceException(String.format(System.Label.FEC_MSG_CancelCS_Case_Not_Found, new List<String>{caseIdInput}));
         }
         return cases[0];
     }
     
     private static void validateCaseStatus(Case c) {
-        if (c.Status == FEC_ConstantCommon.STATUS_CLOSED || c.Status == FEC_ConstantCommon.STATUS_COMPLETED) throw new ServiceException('Case is already Closed or Completed');
+        if (c.Status == FEC_ConstantCommon.STATUS_CLOSED || c.Status == FEC_ConstantCommon.STATUS_COMPLETED) {
+            throw new ServiceException(System.Label.FEC_MSG_CancelCS_Case_Already_Closed_Or_Completed);
+        }
         
-        // Đổi thông báo lỗi khi case đã cancel
         if (c.Status == FEC_ConstantCommon.STATUS_CANCELLED) {
-            throw new ServiceException('Case is already resolved.');
+            throw new ServiceException(System.Label.FEC_MSG_CancelCS_Case_Already_Resolved);
         }
     }
     
-    private static String safeString(String input) { return input == null ? '' : input; }
+    private static String safeString(String input) {
+        return input == null ? FEC_ConstantCommon.STR_EMPTY : input;
+    }
     private class ServiceException extends Exception {}
     
     // -------------------------------------------------
