@@ -102,6 +102,7 @@
 		<members>fec_PaymentHistoryAcount</members>
 		<members>fec_SecondaryInfo</members>
 		<members>fec_CardPayment</members>
+		<members>fec_AccountOrContractPicklistCustomerCase</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
