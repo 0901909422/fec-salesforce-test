@@ -55,7 +55,6 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   private void handleUpdateCaseTeamsOnInsert(
     List<FEC_Routing_Action_History__c> newRecords
   ) {
-    // STEP 1: Collect all Case IDs from history records (null-safe)
     Set<Id> caseIds = new Set<Id>();
     for (FEC_Routing_Action_History__c history : newRecords) {
       if (history.FEC_Case__c != null) {
@@ -67,12 +66,14 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       return;
     }
 
-    // STEP 2: Bulk query Cases with FEC_Team__c (no SOQL in loop)
     Map<Id, Case> caseMap = new Map<Id, Case>(
-      [SELECT Id, FEC_Team__c FROM Case WHERE Id IN :caseIds]
+      [
+        SELECT Id, FEC_Team__c
+        FROM Case
+        WHERE Id IN :caseIds
+      ]
     );
 
-    // STEP 3: Apply updateCaseTeams logic for each history record
     for (FEC_Routing_Action_History__c history : newRecords) {
       if (history.FEC_Case__c == null) {
         continue;
@@ -84,13 +85,12 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       }
 
       updateCaseTeams(
-        (Id) history.FEC_Original_User_Queue_ID__c,
-        (Id) history.FEC_Updated_User_Queue_ID__c,
+        parseOwnerIdField(history.FEC_Original_User_Queue_ID__c),
+        parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c),
         caseRecord
       );
     }
 
-    // STEP 4: Bulk update all modified Cases
     if (!caseMap.isEmpty()) {
       Database.update(caseMap.values(), AccessLevel.SYSTEM_MODE);
     }
@@ -111,6 +111,66 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       // TODO: Add after update logic here
     } finally {
       isExecuting = false;
+    }
+  }
+
+  /**
+   * Pending-{Team} hoặc Pending-{Team1}_{Team2} từ bản ghi Route to (map Team qua ID Owner;
+   * FEC_Original_User_Queue__c / FEC_Updated_User_Queue__c là nhãn, không dùng để map).
+   */
+  public static String buildPendingStatusFromRouteHistoryRow(
+    FEC_Routing_Action_History__c history
+  ) {
+    if (history == null) {
+      return FEC_ConstantCommon.CASE_STATUS_PENDING;
+    }
+    Id origId = parseOwnerIdField(history.FEC_Original_User_Queue_ID__c);
+    Id updId = parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c);
+    return buildPendingStatusFromOwnerIds(origId, updId);
+  }
+
+  /** Hai Id Owner (User hoặc Queue) — Team từ User qua FEC_Main_Queue__c + FEC_Team_Queue__c; Queue trực tiếp. */
+  public static String buildPendingStatusFromOwnerIds(Id originalOwnerId, Id updatedOwnerId) {
+    Set<Id> idSet = new Set<Id>();
+    if (originalOwnerId != null) {
+      idSet.add(originalOwnerId);
+    }
+    if (updatedOwnerId != null) {
+      idSet.add(updatedOwnerId);
+    }
+    if (idSet.isEmpty()) {
+      return FEC_ConstantCommon.CASE_STATUS_PENDING;
+    }
+    Map<Id, String> teamMap = getTeamsFromIds(idSet);
+    String tOrig = originalOwnerId != null ? teamMap.get(originalOwnerId) : null;
+    String tUpd = updatedOwnerId != null ? teamMap.get(updatedOwnerId) : null;
+
+    if (String.isBlank(tOrig) && String.isBlank(tUpd)) {
+      return FEC_ConstantCommon.CASE_STATUS_PENDING;
+    }
+    if (String.isBlank(tOrig)) {
+      return FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX + tUpd;
+    }
+    if (String.isBlank(tUpd)) {
+      return FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX + tOrig;
+    }
+    if (tOrig.equals(tUpd)) {
+      return FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX + tOrig;
+    }
+    return FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX +
+      tOrig +
+      FEC_ConstantCommon.DELIMITER_UNDERSCORE +
+      tUpd;
+  }
+
+  private static Id parseOwnerIdField(String idText) {
+    if (String.isBlank(idText)) {
+      return null;
+    }
+    try {
+      return Id.valueOf(idText.trim());
+    } catch (Exception e) {
+      return null;
     }
   }
 

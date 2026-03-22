@@ -89,6 +89,13 @@ public without sharing class FEC_GetNextWorkController {
             FROM Case
             WHERE OwnerId = :queueId
             AND RecordType.DeveloperName IN (:FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME, :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)
+            AND Status NOT IN (
+                :FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED,
+                :FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED,
+                :FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED,
+                :FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER,
+                :FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED
+            )
             ORDER BY CreatedDate ASC
             LIMIT 1
         ];
