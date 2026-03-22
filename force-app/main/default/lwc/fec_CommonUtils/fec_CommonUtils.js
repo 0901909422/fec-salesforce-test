@@ -155,8 +155,9 @@ const maskWorkPhone = (phone) => {
   }
 
   if (/^02\d{8}$/.test(v)) {
-    return v.substring(0, 3) + "***" + v.slice(-3);
+    return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
   }
+
   if (/^0\d{9}$/.test(v)) {
     return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
   }
@@ -182,15 +183,16 @@ const maskValue = (value, showFull) => {
   }
 
   /* =====================
-   * SĐT bàn/doanh nghiệp VN (đầu 02, 10 số)
-   * Hiển thị: 3 số đầu + *** + 3 số cuối. VD: 028***111
+   * PHONE bắt đầu bằng 84 (11 số)
+   * Hiển thị: 5 số đầu + 3 số cuối
+   * Ví dụ: 84123***456
    * ===================== */
-  if (/^02\d{8}$/.test(v)) {
-    return v.substring(0, 3) + "***" + v.slice(-3);
+  if (/^84\d{9}$/.test(v)) {
+    return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
 
   /* =====================
-   * PHONE NUMBER (10 số, di động)
+   * PHONE bắt đầu bằng 0 (10 số)
    * Hiển thị: 4 số đầu + 3 số cuối
    * Ví dụ: 0123***456
    * ===================== */
@@ -598,6 +600,11 @@ const formatNumber = (value) => {
   }
 };
 
+const getCaseIdNumber = (idText) => {
+    const match = idText?.match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
+};
+
 /**
  * Format số với 2 chữ số thập phân, dùng cho tiền/amount. null/NaN → '0.00'.
  * @param {*} val - Giá trị số (number hoặc string)
@@ -655,5 +662,6 @@ export {
   formatNumber,
   formatNum,
   toSortDateStr,
-  formatDuration
+  formatDuration,
+  getCaseIdNumber,
 };

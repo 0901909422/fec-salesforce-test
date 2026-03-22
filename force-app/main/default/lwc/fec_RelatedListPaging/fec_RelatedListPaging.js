@@ -12,7 +12,7 @@
 ****************************************************************************************/
 
 import { LightningElement, api, track } from 'lwc';
-import { isNegative } from 'c/fec_CommonUtils';
+import { isNegative, maskValue } from 'c/fec_CommonUtils';
 
 export default class Fec_RelatedListPaging extends LightningElement {
 
@@ -358,6 +358,33 @@ export default class Fec_RelatedListPaging extends LightningElement {
         }
 
         /* =====================
+        * LANDLINE bắt đầu bằng 02
+        * Hiển thị: 3 số đầu + 3 số cuối
+        * Ví dụ: 028*****456
+        * ===================== */
+        if (/^02\d{8,9}$/.test(v)) {
+        return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
+        }
+
+        /* =====================
+        * PHONE bắt đầu bằng 0 (10 số)
+        * Hiển thị: 4 số đầu + 3 số cuối
+        * Ví dụ: 0123***456
+        * ===================== */
+        if (/^0\d{9}$/.test(v)) {
+            return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
+        }
+
+        /* =====================
+        * CCCD (toàn số, > 6)
+        * Hiển thị: 3 số đầu + 3 số cuối
+        * ===================== */
+        if (/^\d+$/.test(v)) {
+            if (v.length <= 6) return v;
+            return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
+        }
+
+        /* =====================
         * DEFAULT MASK
         * Hiển thị: 4 ký tự đầu + 3 ký tự cuối
         * ===================== */
@@ -503,9 +530,24 @@ export default class Fec_RelatedListPaging extends LightningElement {
             return null;
         };
 
+        const parseCaseNumber = (s) => {
+            if (!s) return NaN;
+            const match = s.match(/\d+$/);
+            return match ? Number(match[0]) : NaN;
+        };
+        
         this._records = [...records].sort((a, b) => {
             const rawA = a[fieldName];
             const rawB = b[fieldName];
+
+            if (fieldName === 'caseIdText') {
+                const numA = parseCaseNumber(rawA);
+                const numB = parseCaseNumber(rawB);
+
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return (numA - numB) * dir;
+                }
+            }
 
             const timeA = toTime(rawA);
             const timeB = toTime(rawB);
