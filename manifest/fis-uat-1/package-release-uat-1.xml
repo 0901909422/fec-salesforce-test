@@ -1132,6 +1132,7 @@
 		<members>FEC_UpdateCustomerContact</members>
 		<members>FEC_CaseEditNOCController</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
+		<members>FEC_CasePendingStatusService</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
