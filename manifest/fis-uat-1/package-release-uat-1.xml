@@ -404,6 +404,7 @@
 		<members>fec_SensitiveDataViewAll</members>
 		<members>fec_CustomAccountTable</members>
 		<members>fec_CustomDblClickRadio</members>
+		<members>fec_AccountOrContractPicklistCustomerCase</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -1131,6 +1132,7 @@
 		<members>FEC_UpdateCustomerContact</members>
 		<members>FEC_CaseEditNOCController</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
+		<members>FEC_CasePendingStatusService</members>
 		<name>ApexClass</name>
 	</types>
 	<types>

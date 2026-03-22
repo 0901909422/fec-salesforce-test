@@ -54,6 +54,7 @@
 		<members>CaseSearchDeletionScheduler</members>
 		<members>FEC_GetIPPDetailsCallout</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
+		<members>FEC_CasePendingStatusService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -102,6 +103,7 @@
 		<members>fec_PaymentHistoryAcount</members>
 		<members>fec_SecondaryInfo</members>
 		<members>fec_CardPayment</members>
+		<members>fec_AccountOrContractPicklistCustomerCase</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
