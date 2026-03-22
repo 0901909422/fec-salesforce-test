@@ -116,7 +116,13 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     get repaymentSchedulePagingRecords() {
         const data = Array.isArray(this.sectionData.repaymentScheduleTable) ? this.sectionData.repaymentScheduleTable : [];
-        return data.map((row, i) => ({
+        const sorted = [...data].sort((a, b) => {
+            const sa = toSortDateStr(a?.dueDate);
+            const sb = toSortDateStr(b?.dueDate);
+            if (sa === sb) return 0;
+            return sa < sb ? -1 : 1;
+        });
+        return sorted.map((row, i) => ({
             Id: 'rs-' + (row.rowIndex != null ? row.rowIndex : i + 1),
             ...row,
         }));
@@ -181,7 +187,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
             if (ta == null && tb != null) return 1;
             if (ta != null && tb == null) return -1;
             if (ta == null && tb == null) return 0;
-            return tb - ta;
+            return ta - tb;
         });
 
         return sorted.map((row, i) => {
@@ -275,7 +281,6 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
             rows.push({
                 Id: 's4-s-' + (i + 1),
                 rowType: SECTION4_TYPE_SCHEDULE,
-                sortKey: 'S4_' + toSortDateStr(e) + '|' + toSortDateStr(dueDateVal) + '|1',
                 installmentNo: (s.installmentNo != null && s.installmentNo !== '') ? s.installmentNo : e,
                 dueDate: dueDateVal,
                 openingPrincipal: (s.openingPrincipal != null && s.openingPrincipal !== '') ? s.openingPrincipal : e,
@@ -301,7 +306,6 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
             rows.push({
                 Id: 's4-p-' + (i + 1),
                 rowType: SECTION4_TYPE_PAYMENT,
-                sortKey: 'S4_' + toSortDateStr(paymentDateVal) + '|' + toSortDateStr(e) + '|0',
                 installmentNo: e,
                 dueDate: e,
                 openingPrincipal: e,
@@ -320,18 +324,28 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
             });
         }
 
-        // Sort asc by Payment Date then Due Date; when equal, Payment rows (|0) come first.
+        // Ưu tiên Payment Date, sau đó Installment Due Date (cũ → mới). Dòng schedule không có Payment Date → sort key phụ từ Due Date.
+        // Khóa (paymentDate, dueDate) trùng: Payment History lên trên Repayment Schedule.
         rows.sort((a, b) => {
-            const ak = a.sortKey || '';
-            const bk = b.sortKey || '';
-            if (ak === bk) return 0;
-            return ak < bk ? -1 : 1;
+            const pA = toSortDateStr(a.paymentDate);
+            const pB = toSortDateStr(b.paymentDate);
+            const dA = toSortDateStr(a.dueDate);
+            const dB = toSortDateStr(b.dueDate);
+            if (pA !== pB) return pA < pB ? -1 : 1;
+            if (dA !== dB) return dA < dB ? -1 : 1;
+            if (a.rowType !== b.rowType) return a.rowType === SECTION4_TYPE_PAYMENT ? -1 : 1;
+            return 0;
         });
         return rows;
     }
 
     get hasSection4CombinedData() {
         return this.section4CombinedRecords.length > 0;
+    }
+
+    /** Gợi ý sort: ưu tiên Payment Date, sau đó Installment Due Date (cũ → mới). */
+    get section4SortedByDescription() {
+        return `${FEC_Repay_Payment_Date_Label} & ${FEC_Repay_Installment_Due_Date_Label}`;
     }
 
     buildFieldsFromSection(sectionKey) {

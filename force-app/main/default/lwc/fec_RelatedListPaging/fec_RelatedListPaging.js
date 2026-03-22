@@ -26,6 +26,8 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api hideUpdatedTime = false; // Hide updated time display
     @api defaultSortedBy; // Default field to sort by (field name)
     @api defaultSortDirection = 'desc'; // Default sort direction
+    /** Khi set: hiển thị cạnh số item (ví dụ gộp nhiều tiêu chí), thay cho label cột đơn. */
+    @api sortedByDescription = '';
     @api pageSizeOptions = [10, 20, 30, 40, 50];
     @api columnCount = 2;
     @api compactColumns = false;
@@ -110,6 +112,13 @@ export default class Fec_RelatedListPaging extends LightningElement {
         return sortedCol ? sortedCol.label : '';
     }
 
+    /** Text hiển thị dòng "Sorted by …" (ưu tiên mô tả tùy chỉnh nếu có). */
+    get displaySortedByLabel() {
+        const hint = this.sortedByDescription != null ? String(this.sortedByDescription).trim() : '';
+        if (hint) return hint;
+        return this.currentSortedByLabel;
+    }
+
     /* ================= UPDATED TIME ================= */
     /**
      * Format updated time for display.
@@ -148,8 +157,9 @@ export default class Fec_RelatedListPaging extends LightningElement {
                 headerClass,
                 fullHeaderClass: 'sortable-header ' + headerClass,
                 headerStyle: widthStyle,
+                // asc = cũ→mới / A→Z → mũi tên lên; desc = mới→cũ → mũi tên xuống
                 iconName: isSorted
-                    ? (this.sortedDirection === 'desc'
+                    ? (this.sortedDirection === 'asc'
                         ? 'utility:arrowup'
                         : 'utility:arrowdown')
                     : 'utility:arrowdown',

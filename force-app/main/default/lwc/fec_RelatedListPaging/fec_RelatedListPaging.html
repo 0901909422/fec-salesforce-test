@@ -10,8 +10,8 @@
                     <div class="table-info">
                         <div class="table-info-left">
                             <span class="item-count">{recordCount} item{recordCountPlural}</span>
-                            <template if:true={currentSortedByLabel}>
-                                <span class="sorted-by">• Sorted by {currentSortedByLabel}</span>
+                            <template if:true={displaySortedByLabel}>
+                                <span class="sorted-by">• Sorted by {displaySortedByLabel}</span>
                             </template>
                             <template if:false={hideUpdatedTime}>
                                 <template if:true={updatedTimeLabel}>
