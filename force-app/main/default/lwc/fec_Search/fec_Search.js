@@ -375,7 +375,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Search_Account_Number__c : null;
       this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Search_Email_Address__c : null;
       this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
-      if (this.phoneNumber || this.nationalId || this.contractNumber) {
+     if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress || this.customerNumber) {
         await this.processSearch();
       }
     } catch (error) {
