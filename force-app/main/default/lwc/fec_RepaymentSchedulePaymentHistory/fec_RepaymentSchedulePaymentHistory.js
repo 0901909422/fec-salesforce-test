@@ -28,10 +28,10 @@ import FEC_Repay_Particulars_Label from '@salesforce/label/c.FEC_Repay_Particula
 import FEC_Repay_Payment_Channel_Label from '@salesforce/label/c.FEC_Repay_Payment_Channel_Label';
 import FEC_Repay_No_Data_Label from '@salesforce/label/c.FEC_Repay_No_Data_Label';
 import FEC_Repay_Refresh_Button_Label from '@salesforce/label/c.FEC_Repay_Refresh_Button_Label';
-
 const SECTION4_EMPTY_CELL = '-';
 const SECTION4_TYPE_SCHEDULE = 'Repayment Schedule';
 const SECTION4_TYPE_PAYMENT = 'Payment History';
+import { toSortDateStr } from 'c/fec_CommonUtils';
 
 /**
  * LWC Repayment Schedule & Payment History - 4 sections:
@@ -418,18 +418,3 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
     }
 }
 
-/** Chuẩn hóa chuỗi ngày sang YYYY-MM-DD để sort string đúng thứ tự. */
-function toSortDateStr(val) {
-    if (!val || val === SECTION4_EMPTY_CELL) return '9999-12-31';
-    const s = String(val).trim();
-    const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-    if (iso) return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`.slice(0, 10);
-    const parts = s.split('/').filter(Boolean);
-    if (parts.length === 3) {
-        const y = parts[2].length === 4 ? parts[2] : parts[0];
-        const m = parts[0].length <= 2 ? parts[0].padStart(2, '0') : parts[1].padStart(2, '0');
-        const d = parts[1] && parts[1].length <= 2 ? parts[1].padStart(2, '0') : parts[0].padStart(2, '0');
-        return `${y}-${m}-${d}`;
-    }
-    return s;
-}
