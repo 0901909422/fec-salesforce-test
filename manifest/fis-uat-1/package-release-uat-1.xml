@@ -404,6 +404,7 @@
 		<members>fec_SensitiveDataViewAll</members>
 		<members>fec_CustomAccountTable</members>
 		<members>fec_CustomDblClickRadio</members>
+		<members>fec_AccountOrContractPicklistCustomerCase</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
