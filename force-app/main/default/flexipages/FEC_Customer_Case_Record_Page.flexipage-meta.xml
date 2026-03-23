@@ -89,6 +89,38 @@
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
+                        <valueListItems>
+                            <value>Case.Reopen</value>
+                            <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Is_Routing_Action_Display__c}</leftValue>
+                                    <operator>CONTAINS</operator>
+                                    <rightValue>Reopen</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Final_Status__c}</leftValue>
+                                    <operator>CONTAINS</operator>
+                                    <rightValue>Resolved</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Case.Recall</value>
+                            <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Is_Routing_Action_Display__c}</leftValue>
+                                    <operator>CONTAINS</operator>
+                                    <rightValue>Recall</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>Pending</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
                     </valueList>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
@@ -149,6 +181,22 @@
             <fieldInstance>
                 <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_On__c</fieldItem>
                 <identifier>RecordFEC_Interaction_rFEC_Last_Updated_On_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Card_Block_Reason__c</fieldItem>
+                <identifier>RecordFEC_Card_Block_Reason__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.FEC_Manager_ID_List__c</fieldItem>
+                <identifier>RecordFEC_Manager_ID_List__cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-b98e8ce4-83d4-4be1-b3a1-1f08c8409b27</name>
@@ -585,6 +633,11 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>actionNames</name>
+                    <valueList>
+                        <valueListItems>
+                            <value>New</value>
+                        </valueListItems>
+                    </valueList>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>adminFilters</name>
@@ -609,10 +662,28 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>NAME</value>
+                            <value>FEC_ID__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Status__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Account_or_Contract_Revelant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Categor_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Code_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>CREATED_DATE</value>
@@ -679,10 +750,28 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>NAME</value>
+                            <value>FEC_ID__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Status__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Account_or_Contract_Revelant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Categor_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Code_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>CREATED_DATE</value>
@@ -706,7 +795,7 @@
                     <value>Default</value>
                 </componentInstanceProperties>
                 <componentName>lst:dynamicRelatedList</componentName>
-                <identifier>lst_dynamicRelatedList5</identifier>
+                <identifier>lst_dynamicRelatedList4</identifier>
                 <visibilityRule>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>

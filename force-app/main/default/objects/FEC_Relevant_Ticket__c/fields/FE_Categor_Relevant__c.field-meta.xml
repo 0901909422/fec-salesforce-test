@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FE_Categor_Relevant__c</fullName>
+    <externalId>false</externalId>
+    <formula>FEC_Related_To__r.FEC_Category__r.FEC_Name_VN__c</formula>
+    <label>Category</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
