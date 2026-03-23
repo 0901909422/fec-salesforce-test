@@ -234,6 +234,7 @@
         <excludedStandardButtons>OmniChannelMassRouteWork</excludedStandardButtons>
         <listViewButtons>FEC_Create_Interaction_Manual</listViewButtons>
         <listViewButtons>Get_next_work</listViewButtons>
+        <listViewButtons>Create_Case</listViewButtons>
         <lookupDialogsAdditionalFields>CASES.CASE_NUMBER</lookupDialogsAdditionalFields>
         <lookupDialogsAdditionalFields>FEC_Interaction_ID__c</lookupDialogsAdditionalFields>
         <lookupDialogsAdditionalFields>FEC_Interaction_Status__c</lookupDialogsAdditionalFields>
