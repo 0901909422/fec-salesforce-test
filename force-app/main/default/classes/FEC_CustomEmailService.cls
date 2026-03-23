@@ -33,15 +33,18 @@ public without sharing class FEC_CustomEmailService {
     }
 
     /**
-     * Lấy danh sách From: Email-to-Case routing addresses + OrgWideEmailAddress + current user
-     * Ưu tiên Email-to-Case lên đầu (giống Chatter)
+     * Lấy From picklist: full list EmailRoutingAddress + OrgWide.
+     * Nếu Case owner là Queue và email match → lên đầu + selected.
      */
-    @AuraEnabled(cacheable=true)
-    public static List<Map<String, String>> getFromAddresses() {
-        List<Map<String, String>> result = new List<Map<String, String>>();
+    @AuraEnabled
+    public static Map<String, Object> getFromAddresses(String caseId) {
+        List<Map<String, String>> options = new List<Map<String, String>>();
+        String defaultFrom = null;
 
-        // 1. Email-to-Case routing addresses (EmailRoutingAddress)
-        // Fields: address (EMAIL), personalname (STRING)
+        // Lấy toàn bộ EmailRoutingAddress
+        Map<String, String> routingLabelMap = new Map<String, String>();
+        Map<String, String> routingAddrMap  = new Map<String, String>();
+        List<String> routingOrder = new List<String>();
         try {
             List<SObject> routingAddrs = Database.query(
                 'SELECT Id, Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
@@ -50,46 +53,69 @@ public without sharing class FEC_CustomEmailService {
                 String addr = (String) r.get('Address');
                 String name = (String) r.get('PersonalName');
                 if (String.isNotBlank(addr)) {
-                    result.add(new Map<String, String>{
-                        'label' => (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr),
-                        'value' => addr
-                    });
+                    String lower = addr.toLowerCase();
+                    String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
+                    routingLabelMap.put(lower, lbl);
+                    routingAddrMap.put(lower, addr);
+                    routingOrder.add(lower);
                 }
             }
         } catch (Exception e) {
-            // EmailRoutingAddress không available → bỏ qua
             System.debug('EmailRoutingAddress query failed: ' + e.getMessage());
         }
 
-        // 2. OrgWideEmailAddress
+        // Xác định Queue email của Case
+        String queueEmail = null;
+        if (String.isNotBlank(caseId)) {
+            try {
+                Case c = [SELECT OwnerId, Owner.Type FROM Case WHERE Id = :caseId LIMIT 1];
+                if (c.Owner.Type == 'Queue') {
+                    Group q = [SELECT Id, Name, Email FROM Group WHERE Id = :c.OwnerId LIMIT 1];
+                    if (String.isNotBlank(q.Email)) queueEmail = q.Email;
+                }
+            } catch (Exception e) {
+                System.debug('Queue lookup failed: ' + e.getMessage());
+            }
+        }
+
+        // Queue match → lên đầu + selected
+        String qLower = queueEmail != null ? queueEmail.toLowerCase() : null;
+        if (qLower != null && routingAddrMap.containsKey(qLower)) {
+            String addr = routingAddrMap.get(qLower);
+            options.add(new Map<String, String>{ 'label' => routingLabelMap.get(qLower), 'value' => addr });
+            defaultFrom = addr;
+            routingOrder.remove(routingOrder.indexOf(qLower));
+        }
+
+        // Thêm phần còn lại routing
+        for (String lower : routingOrder) {
+            options.add(new Map<String, String>{
+                'label' => routingLabelMap.get(lower),
+                'value' => routingAddrMap.get(lower)
+            });
+        }
+
+        // Thêm OrgWide (tránh trùng)
         for (OrgWideEmailAddress owa : [
             SELECT Id, Address, DisplayName FROM OrgWideEmailAddress ORDER BY DisplayName ASC
         ]) {
-            // Tránh trùng với routing address đã thêm
-            Boolean alreadyAdded = false;
-            for (Map<String, String> existing : result) {
-                if (existing.get('value') == owa.Address) { alreadyAdded = true; break; }
-            }
-            if (!alreadyAdded) {
-                result.add(new Map<String, String>{
+            String owaLower = owa.Address.toLowerCase();
+            if (!routingAddrMap.containsKey(owaLower)) {
+                options.add(new Map<String, String>{
                     'label' => owa.DisplayName + ' <' + owa.Address + '>',
                     'value' => owa.Address
                 });
             }
         }
 
-        // 3. Current user (fallback nếu chưa có gì)
-        if (result.isEmpty()) {
-            User me = [SELECT Id, Name, Email FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
-            if (String.isNotBlank(me.Email)) {
-                result.add(new Map<String, String>{
-                    'label' => me.Name + ' <' + me.Email + '>',
-                    'value' => me.Email
-                });
-            }
+        if (defaultFrom == null && !options.isEmpty()) {
+            defaultFrom = options[0].get('value');
         }
 
-        return result;
+        return new Map<String, Object>{
+            'options'     => options,
+            'defaultFrom' => defaultFrom
+        };
     }
 
 

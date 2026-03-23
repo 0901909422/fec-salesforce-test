@@ -13,19 +13,23 @@ public without sharing class FEC_InteractionEmailController {
     @AuraEnabled
     public static Map<String, String> getInteractionEmail(String caseId) {
         Map<String, String> result = new Map<String, String>();
-        Case c = [SELECT FEC_Interaction_Email__c FROM Case WHERE Id = :caseId LIMIT 1];
-        result.put('toEmail', c.FEC_Interaction_Email__c);
 
-        // From = mailbox nhận email (ToAddress của EmailMessage gửi vào)
+        // Lấy incoming EmailMessage đầu tiên của Case
         List<EmailMessage> msgs = [
-            SELECT ToAddress FROM EmailMessage
+            SELECT FromAddress, ToAddress FROM EmailMessage
             WHERE ParentId = :caseId AND Incoming = true
             ORDER BY MessageDate ASC LIMIT 1
         ];
-        if (!msgs.isEmpty() && String.isNotBlank(msgs[0].ToAddress)) {
+
+        if (!msgs.isEmpty()) {
+            // To = email khách hàng gửi đến (FromAddress của incoming message)
+            result.put('toEmail', msgs[0].FromAddress);
+            // From = mailbox nhận email (ToAddress của incoming message)
             result.put('fromEmail', msgs[0].ToAddress);
         } else {
-            result.put('fromEmail', c.FEC_Interaction_Email__c);
+            // Không có incoming email → để trống
+            result.put('toEmail', '');
+            result.put('fromEmail', '');
         }
         return result;
     }

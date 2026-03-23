@@ -533,25 +533,39 @@
         $A.enqueueAction(a2);
     },
 
-    loadFromAddresses: function(component, selectedEmail) {
+    loadFromAddresses: function(component, incomingToAddress) {
         var a = component.get('c.getFromAddresses');
+        a.setParams({ caseId: component.get('v.recordId') });
         a.setCallback(this, function(r) {
             if (r.getState() === 'SUCCESS') {
-                var opts = r.getReturnValue() || [];
+                var res = r.getReturnValue() || {};
+                var opts = res.options || [];
+                var queueDefault = res.defaultFrom || (opts.length > 0 ? opts[0].value : '');
                 component.set('v.fromOptions', opts);
-                // Xác định giá trị selected
-                var toSelect = selectedEmail;
-                if (!toSelect && opts.length > 0) {
-                    toSelect = opts[0].value;
-                }
+                component.set('v.hasFromOptions', opts.length > 0);
+                if (opts.length === 0) return;
+
+                // Ưu tiên: incoming ToAddress (mailbox nhận email khách) → Queue default → option đầu
+                var incomingLower = (incomingToAddress || '').toLowerCase();
+                var matchIncoming = opts.filter(function(o) {
+                    return o.value && o.value.toLowerCase() === incomingLower;
+                });
+                var toSelect = matchIncoming.length > 0 ? matchIncoming[0].value : queueDefault;
                 component.set('v.fromEmail', toSelect);
-                // Sync native <select> element sau khi Aura render
-                window.setTimeout($A.getCallback(function() {
+
+                // Sync native <select>
+                function syncSelect() {
                     var el = component.getElement();
                     if (!el) return;
                     var sel = el.querySelector('.fec-from-select');
-                    if (sel && toSelect) sel.value = toSelect;
-                }), 100);
+                    if (sel) {
+                        sel.value = toSelect;
+                        if (sel.value !== toSelect) {
+                            window.setTimeout($A.getCallback(syncSelect), 150);
+                        }
+                    }
+                }
+                window.setTimeout($A.getCallback(syncSelect), 100);
             }
         });
         $A.enqueueAction(a);

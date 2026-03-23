@@ -24,6 +24,7 @@
     <aura:attribute name="showSortDD" type="Boolean" default="false" />
     <aura:attribute name="sortOrder" type="String" default="recent" />
     <aura:attribute name="fromOptions" type="List" default="[]" />
+    <aura:attribute name="hasFromOptions" type="Boolean" default="false" />
     <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
 
     <div class="email-section-card">
@@ -64,7 +65,7 @@
             <!-- Inline Compose Section -->
             <aura:if isTrue="{!v.showCompose}">
                 <div class="compose-section">
-                    <!-- From: dropdown chọn địa chỉ gửi -->
+                    <!-- From: luôn hiện, Queue match lên đầu + selected -->
                     <div class="compose-row">
                         <label class="compose-label">From</label>
                         <div class="compose-field-wrap">

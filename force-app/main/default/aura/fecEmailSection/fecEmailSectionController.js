@@ -79,15 +79,27 @@
         }
         component.set('v.showCompose', true);
         var body = component.get('v.body') || '';
+        // Nếu fromOptions chưa load thì load lại
+        var fromOptions = component.get('v.fromOptions') || [];
+        if (fromOptions.length === 0) {
+            helper.loadFromAddresses(component, component.get('v.fromEmail') || '');
+        }
         window.setTimeout($A.getCallback(function() {
             helper.initQuill(component, body);
-            // Sync native <select> value sau khi render
+            // Sync native <select> value sau khi render — thử lại nếu chưa match
             var fromEmail = component.get('v.fromEmail');
-            var el = component.getElement();
-            if (el && fromEmail) {
+            function syncFromSelect() {
+                var el = component.getElement();
+                if (!el || !fromEmail) return;
                 var sel = el.querySelector('.fec-from-select');
-                if (sel) sel.value = fromEmail;
+                if (sel) {
+                    sel.value = fromEmail;
+                    if (sel.value !== fromEmail) {
+                        window.setTimeout($A.getCallback(syncFromSelect), 150);
+                    }
+                }
             }
+            syncFromSelect();
         }), 150);
     },
 
@@ -162,6 +174,10 @@
     },
 
     onFromChange: function(component, event, helper) {
+        component.set('v.fromEmail', event.target.value);
+    },
+
+    onFromInputChange: function(component, event, helper) {
         component.set('v.fromEmail', event.target.value);
     },
 

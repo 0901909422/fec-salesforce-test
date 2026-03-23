@@ -97,13 +97,20 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>anhdt36@fpt.com</emailAddress>
+            <isVerified>false</isVerified>
+            <routingName>Email-to-case Anhdt36</routingName>
+            <saveEmailHeaders>false</saveEmailHeaders>
+        </routingAddresses>
+        <routingAddresses>
+            <addressType>EmailToCase</addressType>
+            <caseOrigin>Email</caseOrigin>
             <casePriority>High</casePriority>
             <createTask>true</createTask>
             <emailAddress>phuongnt.fit@gmail.com</emailAddress>
-            <isPermsetControlled>false</isPermsetControlled>
             <isVerified>true</isVerified>
             <routingName>FEC_EmailToCase</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
+            <taskStatus>Open</taskStatus>
         </routingAddresses>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
