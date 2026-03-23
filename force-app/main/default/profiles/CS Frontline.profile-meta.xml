@@ -5,6 +5,18 @@
     <layoutAssignments>
         <layout>Case-Custom Case Layout</layout>
     </layoutAssignments>
+    <layoutAssignments>
+        <layout>Case-Custom Case Layout</layout>
+        <recordType>Case.Customer_Case</recordType>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>Case-Custom Case Layout</layout>
+        <recordType>Case.Interaction</recordType>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>Case-Custom Case Layout</layout>
+        <recordType>Case.Internal_Case</recordType>
+    </layoutAssignments>
     <userLicense>Salesforce</userLicense>
     <userPermissions>
         <enabled>true</enabled>
