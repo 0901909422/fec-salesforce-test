@@ -28,9 +28,9 @@ const formatDateTime = (curr) => {
   const day = String(curr.getDate()).padStart(2, "0");
   const h = String(curr.getHours()).padStart(2, "0");
   const m = String(curr.getMinutes()).padStart(2, "0");
-  
+  const s = String(curr.getSeconds()).padStart(2, "0");
 
-  return `${day}/${month}/${year}, ${h}:${m}`;
+  return `${day}/${month}/${year}, ${h}:${m}:${s}`;
 };
 
 const mask = (s, keepStart = 4, keepEnd = 4) => {
@@ -119,14 +119,20 @@ const parseDateVNI = (s) => {
 };
 
 const maskWorkPhone = (phone) => {
-  if (phone.length < 7) {
-    return phone;
+  if (!phone) return STR_EMPTY;
+  const v = String(phone).trim();
+  if (v.length < 7) return v;
+
+  if (/^84\d{9}$/.test(v)) {
+    return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
+  }
+  if (/^0\d{9}$/.test(v)) {
+    return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
   }
 
-  let first = phone.substring(0, 4);
-  let last = phone.substring(phone.length - 3);
-
-  return first + "***" + last;
+  const first = v.substring(0, 4);
+  const last = v.substring(v.length - 3);
+  return first + "*".repeat(Math.max(0, v.length - 7)) + last;
 };
 
 const maskValue = (value, showFull) => {
@@ -145,12 +151,29 @@ const maskValue = (value, showFull) => {
   }
 
   /* =====================
-   * PHONE NUMBER (10 số)
-   * Hiển thị: 4 số đầu + 3 số cuối
-   * Ví dụ: 0906***678
+   * PHONE bắt đầu bằng 84 (11 số)
+   * Hiển thị: 5 số đầu + 3 số cuối
+   * Ví dụ: 84123***456
    * ===================== */
-  if (/^\d{10}$/.test(v)) {
+  if (/^84\d{9}$/.test(v)) {
+    return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
+  }
+
+  /* =====================
+   * PHONE bắt đầu bằng 0 (10 số)
+   * Hiển thị: 4 số đầu + 3 số cuối
+   * Ví dụ: 0123***456
+   * ===================== */
+  if (/^0\d{9}$/.test(v)) {
     return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
+  }
+  /* =====================
+   * LANDLINE bắt đầu bằng 02
+   * Hiển thị: 3 số đầu + 3 số cuối
+   * Ví dụ: 028*****456
+  * ===================== */
+  if (/^02\d{8,9}$/.test(v)) {
+  return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
   }
 
   /* =====================

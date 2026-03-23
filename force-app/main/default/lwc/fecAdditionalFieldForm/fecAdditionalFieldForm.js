@@ -61,15 +61,69 @@ export default class FecAdditionalFieldForm extends LightningElement {
     }
 
     /**
+     * Utility method for logging
+     */
+    showLog(methodName, message) {
+        console.log(`[${methodName}] ${message}`);
+    }
+
+    /**
+     * Handle form submission to validate inputs before saving to server
+     * @param {Event} event 
+     */
+    handleSubmit(event) {
+        event.preventDefault(); // Chặn hành vi submit mặc định
+        this.showLog('handleSubmit', 'START');
+
+        const fields = event.detail.fields;
+        let isValid = true;
+
+        // Xác định các trường bắt buộc cần kiểm tra (Dùng constant đã import)
+        const requiredFields = [this.FIELD_NAME, this.FIELD_NAME_VN, this.FIELD_FEC_TYPE];
+
+        // FEC_Unique_ID chỉ là input bắt buộc ở mode tạo mới
+        if (this.isNewMode) {
+            requiredFields.push(this.FIELD_FEC_UNIQUE_ID);
+        }
+
+        // Kiểm tra khoảng trắng và làm sạch dữ liệu
+        for (let fieldName of requiredFields) {
+            let fieldValue = fields[fieldName];
+            
+            if (fieldValue && fieldValue.trim() === '') {
+                isValid = false;
+                break;
+            }
+            
+            // Xóa khoảng trắng thừa 2 đầu để data lưu vào Database được sạch
+            if (fieldValue) {
+                fields[fieldName] = fieldValue.trim();
+            }
+        }
+
+        // Xử lý kết quả validation
+        if (!isValid) {
+            this.showLog('handleSubmit', 'RETURN: Validation Failed (Only spaces entered)');
+            this.dispatchEvent(new ShowToastEvent({
+                title: LABEL_ERROR_TITLE,
+                message: 'Các trường bắt buộc không được để trống hoặc chỉ chứa khoảng trắng.',
+                variant: 'error',
+                mode: 'dismissable'
+            }));
+            return;
+        }
+
+        this.showLog('handleSubmit', 'RETURN: Validation Passed. Submitting to Salesforce.');
+        
+        // Submit thủ công sau khi đã kiểm tra xong
+        this.template.querySelector('lightning-record-edit-form').submit(fields);
+    }
+
+    /**
      * Handle successful save
      * @param {Event} event
      */
     handleSuccess(event) {
-        const evt = new ShowToastEvent({
-            title: LABEL_SUCCESS_TITLE,
-            message: LABEL_SAVE_SUCCESS_MSG,
-            variant: 'success'
-        });
         this.dispatchEvent(new CustomEvent('success', { detail: event.detail }));
     }
 
@@ -78,13 +132,28 @@ export default class FecAdditionalFieldForm extends LightningElement {
      * @param {Event} event
      */
     handleError(event) {
-        const errMsg = (event.detail && event.detail.detail) ? event.detail.detail : JSON.stringify(event.detail);
-        const evt = new ShowToastEvent({
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // Extract the most concise error message
+        let errMsg = 'An error occurred. Please try again.';
+        if (event.detail && event.detail.detail) {
+            errMsg = event.detail.detail;
+            
+            // Xử lý lỗi trùng lặp FEC Unique ID cho thân thiện với người dùng
+            if (errMsg.includes('FEC_Unique_ID__c') && errMsg.includes('duplicate')) {
+                errMsg = 'Mã FEC Unique ID này đã tồn tại trong hệ thống. Vui lòng kiểm tra lại.';
+            }
+        } else if (event.detail && event.detail.message) {
+            errMsg = event.detail.message;
+        }
+
+        this.dispatchEvent(new ShowToastEvent({
             title: LABEL_ERROR_TITLE,
             message: errMsg,
-            variant: 'error'
-        });
-        this.dispatchEvent(evt);
+            variant: 'error',
+            mode: 'dismissable'
+        }));
     }
 
     /**

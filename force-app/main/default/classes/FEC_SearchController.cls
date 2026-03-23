@@ -1,8 +1,7 @@
 public with sharing class FEC_SearchController {
     /**
      * Returns minimal Case context for fec_Search initialization.
-     * - Runs in USER MODE and WITH SECURITY ENFORCED to respect security.
-     * - Selects only fields needed by the component.
+     * Selects only fields needed by the component.
      */
     @AuraEnabled(cacheable=true)
     public static Case getCase(Id caseId) {
@@ -34,7 +33,7 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
-    public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber) {
+    public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone, String customerName) {
     // 1. Validation
     if (String.isBlank(value) || String.isBlank(fieldName)) {
         throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
@@ -63,21 +62,23 @@ public with sharing class FEC_SearchController {
         objCase.FEC_First_Access__c = true;
         objCase.FEC_Search_Products__c = searchProducts;
         objCase.FEC_Product_Type__c = productTypeId;
+        objCase.FEC_Customer_Name__c = customerName;
+        if (fieldName == 'AccountNumber') {
+            objCase.FEC_Account_Number__c = value;
+        }
+        if (fieldName == 'ContractNumber') {
+            objCase.FEC_Contract_Number__c = value;
+        }
 
         // Thực hiện Upsert Case ngay để có Id
         upsert objCase;
 
         // 4. Khởi tạo và Insert History (Trường FEC_Case__c bây giờ chắc chắn có giá trị)
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
-        if (fieldName == 'AccountNumber') {
-            rec.FEC_Account_Number__c = value;
-        } else if (fieldName == 'ContractNumber') {
-            rec.FEC_Contract_Number__c = value;
-        } else if (fieldName == 'UserId') {
-            rec.FEC_User_ID__c = value;
-        }
+        rec.FEC_Account_Number__c = value;
         rec.Name = value;
         rec.FEC_CIF_Number__c = cifNumber;
+        rec.FEC_Work_Phone__c = phone;
         rec.FEC_Case__c = objCase.Id; // Gán ID vừa tạo/update vào trường bắt buộc
 
         insert rec;
@@ -161,5 +162,67 @@ public with sharing class FEC_SearchController {
         }
         
         return fieldPermissions;
+    }
+
+    @AuraEnabled
+    public static void revealNationalId(Id recordId) {
+        
+        try {
+            Case c = [
+            SELECT Id
+            FROM Case
+            WHERE Id = :recordId
+            LIMIT 1
+            ];
+            
+            User u = [
+            SELECT Username, UserRole.Name
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            ];
+            
+            
+            // 🔐 Audit sensitive access
+            FEC_CommonUltils.logSensitiveAccess(
+                FEC_ConstantCommon.SECTION_SEARCH_INFORMARION,
+                FEC_ConstantCommon.SECTION_NATIONAL_PASSPORT,
+                u.Username.split('@')[0],
+                u.UserRole != null ? u.UserRole.Name : null,
+                c.Id);
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    /**
+     * Executes the Card Basic Info integration call using a specific Account Number.
+     * @param accountNumber The account number to search for.
+     * @return FEC_GetCardBasicInfo.ResponseWrapper The API response containing card details.
+     */
+    @AuraEnabled
+    public static FEC_GetCardBasicInfo.ResponseWrapper getCardInfoByAccountNumber(String accountNumber) {
+        if (String.isBlank(accountNumber)) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Account Number'}));
+        }
+
+        try {
+            // Generate integration metadata as per your requirement
+            String requestId = String.valueOf(UUID.randomUUID());
+            String requestor = FEC_ConstantCommon.REQUESTOR_CRM;
+            String timestamp = Datetime.now().formatGmt(FEC_ConstantCommon.DATETIME_FORMAT);
+
+            // Call the integration service
+            FEC_GetCardBasicInfo.ResponseWrapper res = FEC_GetCardBasicInfo.callGetCardBasicInfo(
+                requestId,
+                requestor,
+                timestamp,
+                accountNumber
+            );
+
+            return res;
+        } catch (Exception e) {
+            // Log error and pass to the UI
+            throw new AuraHandledException(System.Label.FEC_Account_Card_Fetch_Error + ' [' + accountNumber + ']. ' + e.getMessage());
+        }
     }
 }

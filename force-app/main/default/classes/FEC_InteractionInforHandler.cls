@@ -15,7 +15,8 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Interaction_Email__c,
                FEC_Send_To__c,
                ParentId,
-               IsClosed
+               IsClosed,
+               FEC_Interaction_Status__c
         FROM Case
         WHERE Id = :recordId
     ];
