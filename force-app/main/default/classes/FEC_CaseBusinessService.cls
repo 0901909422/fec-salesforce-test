@@ -16,7 +16,7 @@ public with sharing class FEC_CaseBusinessService {
   public static final String GENDER_UPDATE = 'Gender Update';
   public static final String IDENTIFICATION_UPDATE = 'National ID Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
-  public static final String SUBMIT_WITHOUT_ROUTE_TO = 'Submit Without Route To';
+  public static final String DESCRIPTION_CHANGE_OWNER = 'Change Owner';
 
   public static final String CATEGORY_UNDELIVERED_CARD = 'Undelivered Card';
 
@@ -39,8 +39,7 @@ public with sharing class FEC_CaseBusinessService {
     DOB_UPDATE,
     GENDER_UPDATE,
     IDENTIFICATION_UPDATE,
-    OC_001,
-    SUBMIT_WITHOUT_ROUTE_TO
+    OC_001
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -60,8 +59,7 @@ public with sharing class FEC_CaseBusinessService {
     DOB_UPDATE => Method.DOB_UPDATE,
     GENDER_UPDATE => Method.GENDER_UPDATE,
     IDENTIFICATION_UPDATE => Method.IDENTIFICATION_UPDATE,
-    OC_001 => Method.OC_001,
-    SUBMIT_WITHOUT_ROUTE_TO => Method.SUBMIT_WITHOUT_ROUTE_TO
+    OC_001 => Method.OC_001
   };
 
   @AuraEnabled
@@ -343,46 +341,49 @@ public with sharing class FEC_CaseBusinessService {
 
       Error err = new Error();
 
-      switch on METHOD_MAP.get(businessProcessCode) {
-        when PHONE_UPDATE {
-          err = phoneUpdateValidate(selectedCase.FEC_Account_or_Contract__c);
-          if (err.errorlst.isEmpty()) {
-            if (historylst.isEmpty())
-              // &&
-              // (String.isBlank(selectedCase.FEC_Current_Case_Stage__c) ||
-              // selectedCase.FEC_Current_Case_Stage__r?.FEC_Default_Stage__c)
-              phoneUpdate(selectedCase);
-          } else {
-            result.sectionlst.add(new Section('Case Information', err));
+      try {
+        switch on METHOD_MAP.get(businessProcessCode) {
+          when PHONE_UPDATE {
+            err = phoneUpdateValidate(selectedCase.FEC_Account_or_Contract__c);
+            if (err.errorlst.isEmpty()) {
+              if (historylst.isEmpty())
+                // &&
+                // (String.isBlank(selectedCase.FEC_Current_Case_Stage__c) ||
+                // selectedCase.FEC_Current_Case_Stage__r?.FEC_Default_Stage__c)
+                phoneUpdate(selectedCase);
+            } else {
+              result.sectionlst.add(new Section('Case Information', err));
+            }
+          }
+          when FULLNAME_UPDATE {
+            if (selectedCase.FEC_Account_or_Contract__c != null) {
+              fullNameUpdate(selectedCase);
+            }
+          }
+          when EMAIL_UPDATE {
+            if (selectedCase.FEC_Account_or_Contract__c != null) {
+              emailUpdate(selectedCase);
+            }
+          }
+          when DOB_UPDATE {
+            if (selectedCase.FEC_Account_or_Contract__c != null) {
+              dobUpdate(selectedCase);
+            }
+          }
+          when GENDER_UPDATE {
+            if (selectedCase.FEC_Account_or_Contract__c != null) {
+              genderUpdate(selectedCase);
+            }
+          }
+          when IDENTIFICATION_UPDATE {
+            if (selectedCase.FEC_Account_or_Contract__c != null) {
+              identificationUpdate(selectedCase);
+            }
+          }
+          when else {
           }
         }
-        when FULLNAME_UPDATE {
-          if (selectedCase.FEC_Account_or_Contract__c != null) {
-            fullNameUpdate(selectedCase);
-          }
-        }
-        when EMAIL_UPDATE {
-          if (selectedCase.FEC_Account_or_Contract__c != null) {
-            emailUpdate(selectedCase);
-          }
-        }
-        when DOB_UPDATE {
-          if (selectedCase.FEC_Account_or_Contract__c != null) {
-            dobUpdate(selectedCase);
-          }
-        }
-        when GENDER_UPDATE {
-          if (selectedCase.FEC_Account_or_Contract__c != null) {
-            genderUpdate(selectedCase);
-          }
-        }
-        when IDENTIFICATION_UPDATE {
-          if (selectedCase.FEC_Account_or_Contract__c != null) {
-            identificationUpdate(selectedCase);
-          }
-        }
-        when else {
-        }
+      } catch (DmlException e) {
       }
 
       // ================================= GET CASE STAGE ===========================
@@ -396,7 +397,7 @@ public with sharing class FEC_CaseBusinessService {
 
       if (String.isNotBlank(selectedCaseStageId)) {
         caseStageQuery =
-          'SELECT Id ' +
+          'SELECT Id, Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE Id = :id ' +
           'AND FEC_Active__c = TRUE ' +
@@ -407,7 +408,7 @@ public with sharing class FEC_CaseBusinessService {
         bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
       } else {
         caseStageQuery =
-          'SELECT Id ' +
+          'SELECT Id, Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
           'AND FEC_Active__c = TRUE ' +
@@ -437,6 +438,7 @@ public with sharing class FEC_CaseBusinessService {
       // }
 
       result.stage = selectedStage.Id;
+      result.stageName = selectedStage.Name;
 
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
@@ -541,6 +543,8 @@ public with sharing class FEC_CaseBusinessService {
         Map<String, Map<String, String>> objToFieldToHelpTextMap = getHelpTextMap(
           objToFieldlstMap
         );
+
+        result.picklistOptionsMap = getPicklistOptionsMap(objToFieldlstMap);
 
         // ================================== CONVERT MASTER DATA SETTING FIELD TO FIELD ================================
         for (Section sectionItem : result.sectionlst) {
@@ -677,7 +681,13 @@ public with sharing class FEC_CaseBusinessService {
         ? null
         : selectedCase.FEC_Draft_Routing_Action_Code__c;
 
-      update selectedCase;
+      if (Schema.sObjectType.Case.isUpdateable()) {
+        try {
+          update selectedCase;
+        } catch (DmlException e) {
+          // User có thể không có quyền sửa Case (vd: Case đã assign Queue). Vẫn trả result để hiển thị section.
+        }
+      }
 
       return result;
     } catch (CaseBusinessServiceException e) {
@@ -808,7 +818,10 @@ public with sharing class FEC_CaseBusinessService {
       
       if (params != null) {
         caseId = (String) params.get('caseId');
-        Case c = [SELECT Id, Owner.Name, FEC_Stage_Name__c FROM Case WHERE Id = :caseId];
+        Case c = [SELECT Id, Owner.Name, FEC_Stage_Name__c, FEC_Customer_Type__c, FEC_Account_Contract_Number_PL__c FROM Case WHERE Id = :caseId];
+        // if (FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER.equals(c.FEC_Customer_Type__c) && String.isBlank(c.FEC_Account_Contract_Number_PL__c)) {
+        //   throw new AuraHandledException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Account/ Contract Number' }));
+        // }
         oldOwnerName = c.Owner.Name;
         stageName = c.FEC_Stage_Name__c;
       }
@@ -878,10 +891,6 @@ public with sharing class FEC_CaseBusinessService {
           updateCaseTeamAndOwner(caseId, decision);
           createRoutingActionHis('Update', decision, oldOwnerName, caseId, stageName);
         }
-        when SUBMIT_WITHOUT_ROUTE_TO {
-          markCaseSubmittedAndClearDrafts(caseId);
-          return null;
-        }
         when PHONE_UPDATE {
           return FEC_UpdateCustomerContact.updateValue(caseId, PHONE_UPDATE);
         }
@@ -947,7 +956,7 @@ public with sharing class FEC_CaseBusinessService {
           Owner.Name,
           FEC_Current_Case_Stage__c,
           FEC_Current_Case_Stage__r.FEC_Default_Stage__c,
-          FEC_Actual_Nature_of_Case__c
+          FEC_Actual_Nature_of_Case__c, FEC_Team__c
         FROM Case
         WHERE Id = :caseId
       ];
@@ -996,7 +1005,9 @@ public with sharing class FEC_CaseBusinessService {
         }
       }
 
+      String nextOwnerName;
       String currentOwnerName = updatedCase.Owner?.Name;
+      Id currentOwnerId = updatedCase.OwnerId;
 
       List<String> validActionlst = new List<String>{ REVERT };
 
@@ -1072,7 +1083,9 @@ public with sharing class FEC_CaseBusinessService {
       ];
 
       if (queuelst.isEmpty()) {
-        return;
+        nextOwnerName = currentOwnerName;
+      } else {
+        nextOwnerName = queuelst.get(0).Name;
       }
 
       FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
@@ -1083,7 +1096,8 @@ public with sharing class FEC_CaseBusinessService {
         FEC_Case__c = caseId,
         // FEC_Decision__c = '',
         FEC_Original_User_Queue__c = currentOwnerName,
-        FEC_Updated_User_Queue__c = queuelst.get(0).Name,
+        FEC_Original_User_Queue_ID__c = currentOwnerId,
+        FEC_Updated_User_Queue__c = nextOwnerName,
         FEC_Updated_User_Queue_ID__c = queueId,
         FEC_Stage_Name__c = selectedChange.FEC_Previous_Stage__r?.FEC_Code__c,
         FEC_User__c = userlst.get(0).Email.split('@')[0],
@@ -1091,6 +1105,7 @@ public with sharing class FEC_CaseBusinessService {
       );
 
       Database.insert(history, AccessLevel.SYSTEM_MODE);
+
       Database.update(updatedCase, AccessLevel.SYSTEM_MODE);
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
@@ -1121,6 +1136,136 @@ public with sharing class FEC_CaseBusinessService {
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
+  }
+
+  // --- Routing Action History khi Change Owner ---
+
+  /**
+   * Tạo bản ghi Routing Action History khi Change Owner (OwnerId thay đổi).
+   * Gán: Routing Action = Route to, Description = Change Owner; Stage Name = FEC_Code của stage trước khi đổi.
+   * @param newCases Trigger.new (sau update)
+   * @param oldMap Trigger.oldMap
+   */
+  public static void createRoutingActionHistoryOnOwnerChange(List<Case> newCases, Map<Id, Case> oldMap) {
+    if (newCases == null || oldMap == null) {
+      return;
+    }
+    List<Case> ownerChangedCases = getOwnerChangedCases(newCases, oldMap);
+    if (ownerChangedCases.isEmpty()) {
+      return;
+    }
+
+    Map<Id, String> ownerIdToName = getOwnerIdToNameMap(ownerChangedCases, oldMap);
+    User currentUser = getCurrentUserForRoutingHistory();
+    Map<Id, String> stageIdToCode = getStageCodeMapByOldCases(ownerChangedCases, oldMap);
+
+    List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>();
+    for (Case c : ownerChangedCases) {
+      Case oldCase = oldMap.get(c.Id);
+      histories.add(buildRoutingActionHistoryRecord(c, oldCase, ownerIdToName, stageIdToCode, currentUser));
+    }
+
+    if (!histories.isEmpty()) {
+      try {
+        insert histories;
+      } catch (Exception e) {
+        System.debug('FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange failed: ' + e.getMessage());
+      }
+    }
+  }
+
+  private static List<Case> getOwnerChangedCases(List<Case> newCases, Map<Id, Case> oldMap) {
+    List<Case> result = new List<Case>();
+    for (Case c : newCases) {
+      Case oldCase = oldMap.get(c.Id);
+      if (oldCase != null && c.OwnerId != oldCase.OwnerId && c.OwnerId != null) {
+        result.add(c);
+      }
+    }
+    return result;
+  }
+
+  private static Map<Id, String> getOwnerIdToNameMap(List<Case> ownerChangedCases, Map<Id, Case> oldMap) {
+    Set<Id> allOwnerIds = new Set<Id>();
+    for (Case c : ownerChangedCases) {
+      allOwnerIds.add(c.OwnerId);
+      allOwnerIds.add(oldMap.get(c.Id).OwnerId);
+    }
+    List<Id> userIds = new List<Id>();
+    List<Id> queueIds = new List<Id>();
+    for (Id ownerId : allOwnerIds) {
+      if (ownerId.getSObjectType() == User.SObjectType) {
+        userIds.add(ownerId);
+      } else if (ownerId.getSObjectType() == Group.SObjectType) {
+        queueIds.add(ownerId);
+      }
+    }
+    Map<Id, String> ownerIdToName = new Map<Id, String>();
+    if (!userIds.isEmpty()) {
+      for (User u : [SELECT Id, Name FROM User WHERE Id IN :userIds]) {
+        ownerIdToName.put(u.Id, u.Name);
+      }
+    }
+    if (!queueIds.isEmpty()) {
+      for (Group g : [SELECT Id, Name FROM Group WHERE Id IN :queueIds AND Type = 'Queue']) {
+        ownerIdToName.put(g.Id, g.Name);
+      }
+    }
+    return ownerIdToName;
+  }
+
+  private static User getCurrentUserForRoutingHistory() {
+    List<User> users = [SELECT Email, UserRole.Name FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+    return users.isEmpty() ? null : users.get(0);
+  }
+
+  private static Map<Id, String> getStageCodeMapByOldCases(List<Case> ownerChangedCases, Map<Id, Case> oldMap) {
+    Set<Id> oldStageIds = new Set<Id>();
+    for (Case c : ownerChangedCases) {
+      Case oldCase = oldMap.get(c.Id);
+      if (oldCase != null && oldCase.FEC_Current_Case_Stage__c != null) {
+        oldStageIds.add(oldCase.FEC_Current_Case_Stage__c);
+      }
+    }
+    Map<Id, String> stageIdToCode = new Map<Id, String>();
+    if (!oldStageIds.isEmpty()) {
+      for (FEC_Case_Stage__c st : [SELECT Id, FEC_Code__c FROM FEC_Case_Stage__c WHERE Id IN :oldStageIds]) {
+        stageIdToCode.put(st.Id, st.FEC_Code__c);
+      }
+    }
+    return stageIdToCode;
+  }
+
+  private static FEC_Routing_Action_History__c buildRoutingActionHistoryRecord(
+    Case c,
+    Case oldCase,
+    Map<Id, String> ownerIdToName,
+    Map<Id, String> stageIdToCode,
+    User currentUser
+  ) {
+    String originalName = ownerIdToName.get(oldCase.OwnerId);
+    String updatedName = ownerIdToName.get(c.OwnerId);
+    String stageName = oldCase.FEC_Current_Case_Stage__c != null
+      ? stageIdToCode.get(oldCase.FEC_Current_Case_Stage__c)
+      : null;
+    String currentUserEmailId = currentUser != null && String.isNotBlank(currentUser.Email)
+      ? currentUser.Email.split('@')[0]
+      : null;
+    String currentUserRole = currentUser?.UserRole?.Name;
+
+    return new FEC_Routing_Action_History__c(
+      FEC_Case__c = c.Id,
+      FEC_Routing_Action__c = ROUTE_TO,
+      FEC_Decision__c = '',
+      FEC_Original_User_Queue__c = originalName,
+      FEC_Original_User_Queue_ID__c = oldCase.OwnerId,
+      FEC_Updated_User_Queue__c = updatedName,
+      FEC_Updated_User_Queue_ID__c = c.OwnerId != null ? String.valueOf(c.OwnerId) : null,
+      FEC_Stage_Name__c = stageName,
+      FEC_User__c = currentUserEmailId,
+      FEC_User_Role__c = currentUserRole,
+      FEC_Description__c = DESCRIPTION_CHANGE_OWNER
+    );
   }
 
   private static void cancel(String caseId) {
@@ -1592,6 +1737,50 @@ public with sharing class FEC_CaseBusinessService {
     return soqlMap;
   }
 
+  /**
+   * Build map of picklist options (value + label) per object/field for fields that use toLabel in getData.
+   * LWC uses this to convert label back to API value before submit.
+   */
+  private static Map<String, Map<String, List<PicklistOptionDto>>> getPicklistOptionsMap(
+    Map<String, Set<String>> objToFieldlstMap
+  ) {
+    Map<String, Map<String, List<PicklistOptionDto>>> result = new Map<String, Map<String, List<PicklistOptionDto>>>();
+
+    for (String objName : objToFieldlstMap.keySet()) {
+      Schema.SObjectType objType = Schema.getGlobalDescribe().get(objName);
+      if (objType == null)
+        continue;
+
+      Map<String, Schema.SObjectField> fieldsMap = objType.getDescribe().fields.getMap();
+      Map<String, List<PicklistOptionDto>> fieldToOptions = new Map<String, List<PicklistOptionDto>>();
+
+      for (String fieldName : objToFieldlstMap.get(objName)) {
+        if (!fieldsMap.containsKey(fieldName))
+          continue;
+
+        Schema.DescribeFieldResult fieldDescribe = fieldsMap.get(fieldName).getDescribe();
+        if (fieldDescribe.getType() != Schema.DisplayType.Picklist &&
+          fieldDescribe.getType() != Schema.DisplayType.MultiPicklist) {
+          continue;
+        }
+
+        List<PicklistOptionDto> options = new List<PicklistOptionDto>();
+        for (Schema.PicklistEntry entry : fieldDescribe.getPicklistValues()) {
+          if (entry.isActive()) {
+            options.add(new PicklistOptionDto(entry.getValue(), entry.getLabel()));
+          }
+        }
+        fieldToOptions.put(fieldName, options);
+      }
+
+      if (!fieldToOptions.isEmpty()) {
+        result.put(objName, fieldToOptions);
+      }
+    }
+
+    return result;
+  }
+
   private static Field transform(
     Sobject masterDataItem,
     SObject objTemp,
@@ -1741,6 +1930,9 @@ public with sharing class FEC_CaseBusinessService {
     public String stage;
 
     @AuraEnabled
+    public String stageName;
+
+    @AuraEnabled
     public FEC_CommonUltils.PicklistOption nextQueue;
 
     @AuraEnabled
@@ -1751,6 +1943,9 @@ public with sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public String code;
+
+    @AuraEnabled
+    public Map<String, Map<String, List<PicklistOptionDto>>> picklistOptionsMap;
 
     // @AuraEnabled
     // public FEC_CommonUltils.PicklistOption lastQueue;
@@ -1981,6 +2176,9 @@ public with sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public String maskingType;
 
+    @AuraEnabled
+    public Boolean hidden;
+
     public Field() {
     }
 
@@ -2024,6 +2222,21 @@ public with sharing class FEC_CaseBusinessService {
         return -1;
 
       return Integer.valueOf(this.order - o.order); // ascending
+    }
+  }
+
+  public class PicklistOptionDto {
+    @AuraEnabled
+    public String value;
+    @AuraEnabled
+    public String label;
+
+    public PicklistOptionDto() {
+    }
+
+    public PicklistOptionDto(String value, String label) {
+      this.value = value;
+      this.label = label;
     }
   }
 
@@ -2763,8 +2976,8 @@ public with sharing class FEC_CaseBusinessService {
         'FEC_Customer_Name__c',
         'Customer Name',
         c.FEC_Customer_Name__c,
-        isExisting,
-        !isExisting,
+        isExisting || String.isNotBlank(c.FEC_Customer_Name__c),
+        !isExisting && String.isBlank(c.FEC_Customer_Name__c),
         !isExisting,
         1,
         false,
@@ -2796,8 +3009,8 @@ public with sharing class FEC_CaseBusinessService {
           'FEC_National_ID_Passport_ID__c',
           'National ID/Passport ID',
           c.FEC_National_ID_Passport_ID__c,
-          false,
-          true,
+          String.isNotBlank(c.FEC_National_ID_Passport_ID__c),
+          String.isBlank(c.FEC_National_ID_Passport_ID__c),
           false,
           1,
           true,
@@ -2837,6 +3050,26 @@ public with sharing class FEC_CaseBusinessService {
           3, 
           null
         )
+      );
+
+      Field customerTypeField = new Field(
+        'FEC_Customer_Type__c',
+        'Customer Type',
+        c.FEC_Customer_Type__c,
+        false,
+        true,
+        false,
+        1,
+        true,
+        null,
+        3,
+        FEC_ConstantCommon.MASKING_TYPE_PASSPORT
+      );
+
+      customerTypeField.hidden  = true;
+
+      caseObj.fieldlst.add(
+        customerTypeField
       );
     }
 

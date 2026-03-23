@@ -199,6 +199,25 @@ public with sharing class FEC_CommonUltils {
     return options;
   }
   
+  public static String resolveTemplate(
+    String template,
+    SObject c,
+    Map<String, String> adhocValues
+  ) {
+    if (String.isBlank(template)) return template;
+
+    String result = template;
+
+    if (adhocValues != null) {
+      for (String key : adhocValues.keySet()) {
+        String val = adhocValues.get(key);
+        result = result.replace('{{' + key + '}}', val != null ? val : '');
+      }
+    }
+
+    return resolveTemplate(result, c);
+  }
+
   public static String resolveTemplate(String template, SObject c) {
     if (String.isBlank(template) || c == null) {
       return template;
@@ -530,6 +549,10 @@ public with sharing class FEC_CommonUltils {
     return d.format();
   }
 
+  public static String formatTimestamp(Datetime timestamp ,String format) {
+    return Datetime.valueOf(timestamp).format(format);
+  }
+
   /** Ngày hiển thị cố định dd/MM/yyyy (không phụ thuộc locale). */
   public static String formatDateDDMMYYYY(Date d) {
     if (d == null) {
@@ -681,9 +704,15 @@ public with sharing class FEC_CommonUltils {
     value = value.trim().toUpperCase();
 
     switch on value {
-        when 'Y' { return 'Yes'; }
-        when 'N' { return 'No'; }
-        when else { return null; }
+        when 'Y', 'YES' { 
+            return 'Yes'; 
+        }
+        when 'N', 'NO' { 
+            return 'No'; 
+        }
+        when else { 
+            return null; 
+        }
     }
   }
 
@@ -729,6 +758,59 @@ public with sharing class FEC_CommonUltils {
     return null;
   }
 
+  /**
+   * Format address 
+   */
+  public static String formatAddress(
+    String building,
+    String numberStr,
+    String street,
+    String ward,
+    String district,
+    String city,
+    String countryName,
+    String zipCode
+){
+    List<String> parts = new List<String>();
+
+    addPart(parts, building);
+    addPart(parts, numberStr);
+    addPart(parts, street);
+    addPart(parts, ward);
+    addPart(parts, district);
+    addPart(parts, city);
+    addPart(parts, countryName);
+    addPart(parts, zipCode);
+
+    return String.join(parts, ', ');
+  }
+
+  private static void addPart(List<String> parts, String value){
+    if(String.isBlank(value)) return;
+
+    String clean = value.trim();
+
+    while(clean.endsWith(',')){
+        clean = clean.substring(0, clean.length()-1).trim();
+    }
+
+    if(!String.isBlank(clean)){
+        parts.add(clean);
+    }
+}
+
+  public static Boolean checkLength(String fieldName, String value, Integer length) {
+    if (String.isNotBlank(value) && value.length() > length) {
+      return false;
+    }
+    return true;
+  }
+
+  public static void addTextNodeSafe(Dom.XmlNode parent, String tagName, String value) {
+    parent.addChildElement(tagName, null, null)
+      .addTextNode(value == null ? '' : value);
+  }
+
   public static void logApi(
     String apiName,
     String endpoint,
@@ -757,5 +839,24 @@ public with sharing class FEC_CommonUltils {
     } catch(Exception e) {
       System.debug('LOG INSERT ERROR: ' + e.getMessage());
     }
+  }
+  
+  public static String escapeXml(String s) {
+    if (s == null)
+      return '';
+    return s.replace('&', '&amp;')
+      .replace('<', '&lt;')
+      .replace('>', '&gt;')
+      .replace('"', '&quot;')
+      .replace('\'', '&apos;');
+  }
+
+  public static String getEmailPrefix(String email) {
+    if (String.isBlank(email)) {
+        return '';
+    }
+    return email.contains('@') 
+        ? email.substringBefore('@') 
+        : email;
   }
 }

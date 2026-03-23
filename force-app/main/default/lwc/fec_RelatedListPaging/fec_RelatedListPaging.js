@@ -159,7 +159,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
                 headerStyle: widthStyle,
                 // asc = cũ→mới / A→Z → mũi tên lên; desc = mới→cũ → mũi tên xuống
                 iconName: isSorted
-                    ? (this.sortedDirection === 'asc'
+                    ? (this.sortedDirection === 'desc'
                         ? 'utility:arrowup'
                         : 'utility:arrowdown')
                     : 'utility:arrowdown',

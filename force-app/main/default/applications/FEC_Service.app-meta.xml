@@ -249,7 +249,62 @@
         <type>Flexipage</type>
         <profile>CS Frontline</profile>
     </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Interaction_Case_Record_Page</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.Interaction</recordType>
+        <type>Flexipage</type>
+        <profile>RD - IT User</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Interaction_Case_Record_Page</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.Interaction</recordType>
+        <type>Flexipage</type>
+        <profile>RD - IT User</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Customer_Case_Record_Page</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.Customer_Case</recordType>
+        <type>Flexipage</type>
+        <profile>RD - IT User</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Customer_Case_Record_Page</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.Customer_Case</recordType>
+        <type>Flexipage</type>
+        <profile>RD - IT User</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Search_Case_Record_Page</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.Search_Interaction</recordType>
+        <type>Flexipage</type>
+        <profile>RD - IT User</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_Search_Case_Record_Page</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.Search_Interaction</recordType>
+        <type>Flexipage</type>
+        <profile>RD - IT User</profile>
+    </profileActionOverrides>
     <tabs>FEC_Customer_Search</tabs>
+    <tabs>FEC_Account_Contract_Search</tabs>
     <tabs>standard-Case</tabs>
     <tabs>FEC_Product_Type__c</tabs>
     <tabs>FEC_Category__c</tabs>
@@ -267,6 +322,9 @@
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
+        <mappings>
+            <tab>FEC_Account_Contract_Search</tab>
+        </mappings>
         <mappings>
             <tab>FEC_Action_Button__c</tab>
         </mappings>
