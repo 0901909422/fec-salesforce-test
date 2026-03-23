@@ -21,6 +21,7 @@ import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
 import FEC_MSG_Submit from "@salesforce/label/c.FEC_MSG_Submit";
 import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
+import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 
 import { RefreshEvent } from "lightning/refresh";
 
@@ -124,8 +125,28 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     this.loadRemarkHistory();
 
     this.subscribeToMessageChannel();
-
+    this.loadRemarkHistory();
+    this.checkInternalCaseEditMode();
     this.isLoaded = true;
+  }
+
+  checkInternalCaseEditMode() {
+    if (!this.recordId) return;
+
+    getCase({ recordId: this.recordId })
+      .then((res) => {
+        const isInternal = res.RecordType?.DeveloperName === FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME;
+        const isHandling = res.FEC_Interaction_View_Mode__c === FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+        const isSubmited = res.FEC_Is_Submited__c;
+
+        if (isInternal && isHandling && !isSubmited) {
+
+          this.handleMessage({ isModeEdit: true });
+        }
+      })
+      .catch((err) => {
+        console.error("checkInternalCaseEditMode err:", err);
+      });
   }
 
   subscribeToMessageChannel() {

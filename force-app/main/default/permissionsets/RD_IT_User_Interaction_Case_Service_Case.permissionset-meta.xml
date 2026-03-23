@@ -1335,6 +1335,10 @@
         <visible>true</visible>
     </recordTypeVisibilities>
     <tabSettings>
+        <tab>Create_Case</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_GetNextWork</tab>
         <visibility>Visible</visibility>
     </tabSettings>

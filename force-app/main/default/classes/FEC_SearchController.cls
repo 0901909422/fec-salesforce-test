@@ -52,8 +52,20 @@ public with sharing class FEC_SearchController {
         if (caseId != null) {
             objCase.Id = caseId;
         } else {
-            objCase.RecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
-                .get(FEC_ConstantCommon.CASE_SEARCH_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+            Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+            Schema.RecordTypeInfo rtInfo = rtMap.get(FEC_ConstantCommon.CASE_SEARCH_RECORD_TYPE_DEV_NAME);
+
+            if (rtInfo == null) {
+                rtInfo = rtMap.get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME);
+            }
+
+            if (rtInfo == null) {
+                throw new CalloutException( 
+                    String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'RecordType'}));
+            }
+
+            objCase.RecordTypeId = rtInfo.getRecordTypeId();
+            objCase.FEC_ID_Search__c = value != null ? value.trim() : null;
         }
 
         // Gán các field cơ bản cho Case
@@ -63,9 +75,13 @@ public with sharing class FEC_SearchController {
         objCase.FEC_Search_Products__c = searchProducts;
         objCase.FEC_Product_Type__c = productTypeId;
         objCase.FEC_Customer_Name__c = customerName;
+        objCase.FEC_ID_Search__c = value;
 
-        // Thực hiện Upsert Case ngay để có Id
-        upsert objCase;
+       if (caseId != null) {
+                update objCase;
+            } else {
+                upsert objCase FEC_ID_Search__c;
+            }
 
         // 4. Khởi tạo và Insert History (Trường FEC_Case__c bây giờ chắc chắn có giá trị)
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
