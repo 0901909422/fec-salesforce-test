@@ -126,10 +126,11 @@ export default class Fec_MainInfoLoanAccount extends LightningElement {
 
         return [
             this.buildMoneyField(FEC_MainInfo_Loan_Amount_Label, this.accountData?.loanAmount, 'FEC_Loan_Amount__c'),
-            this.buildField(FEC_MainInfo_Tenure_Label, this.accountData?.tenure, 'FEC_Tenure__c'),
             this.buildField(FEC_MainInfo_Installment_Remaining_Label, this.accountData?.installmentRemaining, 'FEC_Installments_Remaining__c'),
-            this.buildMoneyField(FEC_MainInfo_Insurance_Amount_Label, this.accountData?.insuranceAmount, 'FEC_Insurance_Amount__c'),
             this.buildMoneyField(FEC_MainInfo_EMI_Label, this.accountData?.emi, 'FEC_EMI__c'),
+            this.buildField(FEC_MainInfo_Tenure_Label, this.accountData?.tenure, 'FEC_Tenure__c'),
+            this.buildMoneyField(FEC_MainInfo_Insurance_Amount_Label, this.accountData?.insuranceAmount, 'FEC_Insurance_Amount__c'),
+            
         ];
     }
 
