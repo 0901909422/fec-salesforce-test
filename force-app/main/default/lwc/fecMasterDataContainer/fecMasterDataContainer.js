@@ -59,127 +59,109 @@ export default class FecMasterDataContainer extends LightningElement {
         const nodeKey = updatedNode.idType;
 
         if (nodeKey) {
-            // Normalize Status to Boolean to avoid type mismatch when sending to Apex
             const normalizedNode = {
                 ...updatedNode,
                 Status: Boolean(updatedNode.Status)
             };
 
-            // Cập nhật Map
+            // Chỉ cập nhật Map để báo nút "Save All"
             this.pendingChanges.set(nodeKey, normalizedNode);
-
-            // Ép LWC nhận diện sự thay đổi bằng cách gán lại chính nó (nếu cần render count lên UI)
             this.pendingChanges = new Map(this.pendingChanges);
-            this.displayItem = { ...normalizedNode };
-            console.log('[DEBUG][handleNodeBufferChange] nodeKey:', nodeKey, '| Status:', normalizedNode.Status, '| Pending count:', this.pendingChanges.size);
+            
+            // QUAN TRỌNG: Xóa dòng this.displayItem = ... ở đây
+            // Không dội data ngược lại Component Con khi đang gõ
+        }
+    }
+
+    handleNodeBufferReset(event) {
+        const { idType } = event.detail;
+        const nodeKey = idType;
+
+        if (this.pendingChanges.has(nodeKey)) {
+            // 1. Chỉ xóa khỏi Map tạm
+            this.pendingChanges.delete(nodeKey);
+            this.pendingChanges = new Map(this.pendingChanges);
+
+            // QUAN TRỌNG: Không cần set lại displayItem. Con đã tự khôi phục form của nó.
+            this.showToast(LABEL_TOAST_INFO, LABEL_NOTIFY_CANCEL_NODE_CHANGES, VARIANT_INFO);
         }
     }
 
     // Khi người dùng nhấn Save All
     async handleSaveAll() {
-        // ==========================================
-        // LỚP BẢO VỆ 1: Kiểm tra UI của Tab đang mở
-        // ==========================================
-        const detailCmp = this.template.querySelector('[data-id="detailComponent"]');
-        if (detailCmp && !detailCmp.validateForm()) {
-            this.showToast(LABEL_TOAST_ERROR, 'Vui lòng kiểm tra và sửa các trường bị báo lỗi trước khi lưu.', VARIANT_ERROR);
-            return; // Chặn đứng tại đây
-        }
-
         const listToUpdate = Array.from(this.pendingChanges.values()).map(node => ({
             ...node,
             Status: Boolean(node.Status)
         }));
 
-        // ==========================================
-        // LỚP BẢO VỆ 2: Quét toàn bộ dữ liệu ẩn chờ lưu
-        // Đề phòng user làm sai Node A rồi nhảy sang xem Node B
-        // ==========================================
-        let hasHiddenError = false;
-        for (let node of listToUpdate) {
-            // Kiểm tra các trường bắt buộc không được null hoặc rỗng (chỉ chứa khoảng trắng)
+        console.log('[DEBUG][handleSaveAll] listToUpdate:', JSON.stringify(listToUpdate));
+
+        if (listToUpdate.length === 0) {
+            this.showToast(LABEL_TOAST_WARNING, LABEL_NOTIFY_NO_CHANGES_TO_SAVE, VARIANT_WARNING);
+            return;
+        }
+
+        // --- LAYER 1: VALIDATE REQUIRED FIELDS BEFORE CALLING APEX ---
+        let hasError = false;
+
+        // Iterate through all nodes to check requirements based on Node Type (Product vs Nature Case)
+        for (const node of listToUpdate) {
+            // Check for required fields
             if (
                 !node.Alias || String(node.Alias).trim() === '' ||
                 !node.NameEN || String(node.NameEN).trim() === '' ||
                 !node.nameVN || String(node.nameVN).trim() === '' ||
                 node.PosOrder === null || node.PosOrder === undefined || String(node.PosOrder).trim() === ''
             ) {
-                hasHiddenError = true;
-                // Báo chính xác tên Node đang bị lỗi để user biết đường tìm lại
+                hasError = true;
                 this.showToast(
                     LABEL_TOAST_ERROR, 
                     `Bản ghi "${node.NameEN || node.Code}" đang chứa dữ liệu rỗng. Vui lòng chọn lại Node đó để sửa.`, 
                     VARIANT_ERROR
                 );
-                break; // Thoát vòng lặp
+                break;
             }
         }
 
-        if (hasHiddenError) {
-            return; // Chặn đứng, không gọi Server
+        if (hasError) {
+            return;
         }
 
-        // ==========================================
-        // VƯỢT QUA 2 LỚP -> TIẾN HÀNH CALL APEX LƯU
-        // ==========================================
-        console.log('[DEBUG][handleSaveAll] All Valid! listToUpdate:', JSON.stringify(listToUpdate));
+        // --- LAYER 2: CALL APEX TO SAVE DATA ---
         this.loading = true;
         try {
             await updateMultipleNodes({ listData: listToUpdate });
             this.showToast(LABEL_TOAST_SUCCESS, LABEL_NOTIFY_SAVE_ALL.replace('{0}', listToUpdate.length), VARIANT_SUCCESS);
 
+            // TỰ ĐỒNG BỘ DỮ LIỆU Ở CHA
+            const currentNodeKey = this.displayItem?.idType;
+            if (currentNodeKey && this.pendingChanges.has(currentNodeKey)) {
+                this._item = { ...this._item, ...this.pendingChanges.get(currentNodeKey) };
+                this.displayItem = { ...this._item }; // Cập nhật displayItem sau khi ĐÃ SAVE
+            }
+
             this.pendingChanges.clear();
             this.pendingChanges = new Map(); // Reset map
 
-            // Gửi event báo cho Tree biết để làm mới toàn bộ
             this.dispatchEvent(new CustomEvent(EVENT_REFRESH_ALL, { bubbles: true, composed: true }));
+            const detailCmp = this.template.querySelector('[data-id="detailComponent"]');
             if (detailCmp) {
-                detailCmp.refreshHistory();
-                detailCmp.markAsSaved();
+                detailCmp.refreshData(); // Gọi refreshData để làm mới dữ liệu chi tiết nếu cần
             }
-
         } catch (error) {
-            console.error('[DEBUG][handleSaveAll] ERROR:', error);
-            this.showToast(LABEL_TOAST_ERROR, error.body?.message || 'Lỗi lưu', VARIANT_ERROR);
+            this.showToast(LABEL_TOAST_ERROR, error.body.message, VARIANT_ERROR);
+            console.error('[ERROR][handleSaveAll]', error);
         } finally {
             this.loading = false;
         }
     }
 
-    get currentItemIsDirty() {
-        if (!this.displayItem) return false;
-        const nodeKey = this.displayItem.idType || this.displayItem.id;
-        return this.pendingChanges.has(nodeKey);
-    }
-
-    // Hàm xử lý việc xóa dữ liệu tạm khi người dùng nhấn Refresh
-    handleNodeBufferReset(event) {
-        const { idType } = event.detail;
-        const nodeKey = idType;
-
-        if (this.pendingChanges.has(nodeKey)) {
-            // 1. Xóa khỏi kho lưu trữ tạm
-            this.pendingChanges.delete(nodeKey);
-
-            // 2. Cập nhật lại Map để LWC nhận diện (update số lượng trên nút Save All)
-            this.pendingChanges = new Map(this.pendingChanges);
-
-            // 3. Ép displayItem hiển thị lại dữ liệu gốc (từ biến _item đã lưu trong setter)
-            this.displayItem = { ...this._item };
-
-            this.showToast(LABEL_TOAST_INFO, LABEL_NOTIFY_CANCEL_NODE_CHANGES, VARIANT_INFO);
-        }
-    }
-
-    handleItemSave() {
-        const nodeKey = this.item.idType;
-        if (this.pendingChanges.has(nodeKey)) {
-            this.pendingChanges.delete(nodeKey);
-            this.pendingChanges = new Map(this.pendingChanges);
-        }
-    }
-
     showToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+        const event = new ShowToastEvent({
+            title,
+            message,
+            variant
+        });
+        this.dispatchEvent(event);
     }
 }

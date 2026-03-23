@@ -172,12 +172,61 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
         console.log('[DEBUG][item setter] incomingId:', incomingId, '| currentId:', currentId, '| isDirty:', this.isDirty);
 
-        if (incomingId && incomingId === currentId && this.isDirty) {
-            this._item = value;
-            console.log('[DEBUG][item setter] Same node + isDirty → skip reset, keep editedItem and isDirty');
+        // Lấy các trường có thể chỉnh sửa để so sánh
+        const getEditableFields = (obj) => {
+            if (!obj) return {};
+            return {
+                Alias: obj.Alias,
+                NameEN: obj.NameEN,
+                nameVN: obj.nameVN,
+                PosOrder: obj.PosOrder,
+                Status: obj.Status
+            };
+        };
+
+        const incomingEditableFieldsStr = JSON.stringify(getEditableFields(value));
+
+        if (incomingId && incomingId === currentId) {
+            // Nếu parent đẩy xuống data cũ (giống hệt data parent đã đẩy lần trước) thì bỏ qua
+            // để bảo vệ data đã được save ở detail panel không bị reset về quá khứ do parent không refresh.
+            if (this._lastParentEditableFieldsStr === incomingEditableFieldsStr) {
+                console.log('[DEBUG][item setter] Parent passed identical editable fields, ignoring stale data.');
+                return;
+            }
+            this._lastParentEditableFieldsStr = incomingEditableFieldsStr;
+
+            // Check if actual server data changed (e.g., after Save All)
+            const isValueChanged = incomingEditableFieldsStr !== JSON.stringify(getEditableFields(this._item));
+
+            if (isValueChanged) {
+                console.log('[DEBUG][item setter] Server data updated, updating _originalItem to serve as new baseline for Undo');
+                this._item = value;
+                
+                // Cập nhật lại bản gốc từ server để Undo
+                this._originalItem = value ? JSON.parse(JSON.stringify(value)) : {};
+
+                if (!this.isDirty) {
+                    this.editedItem = value ? JSON.parse(JSON.stringify(value)) : {};
+                } else {
+                    // Nếu đang gõ mà server lưu xong trả về, thì mình kiểm tra lại isDirty
+                    const orig = this._originalItem || {};
+                    const curr = this.editedItem || {};
+                    let dirty = false;
+                    for (let key in curr) {
+                        if (curr[key] != orig[key]) {
+                            dirty = true;
+                            break;
+                        }
+                    }
+                    this.isDirty = dirty;
+                }
+            } else {
+                console.log('[DEBUG][item setter] No value change from server, preserving current state.');
+            }
             return;
         }
 
+        this._lastParentEditableFieldsStr = incomingEditableFieldsStr;
         this._item = value;
         this.editedItem = value ? JSON.parse(JSON.stringify(value)) : {};
         this._originalItem = value ? JSON.parse(JSON.stringify(value)) : {};
@@ -240,9 +289,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
                 this.showToast(LABEL_UPDATED_SUCCESS, '', VARIANT_SUCCESS);
                 showLog('handleSubmit SUCCESS', 'Bản ghi đã được lưu thành công');
 
-                // Cập nhật lại bản gốc để xóa trạng thái dirty
-                this._originalItem = JSON.parse(JSON.stringify(this.editedItem));
-                this.isDirty = false;
+                this.markAsSaved();
 
                 this.dispatchEvent(new CustomEvent('save', {
                     bubbles: true,
@@ -272,16 +319,20 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
         this.editedItem = JSON.parse(JSON.stringify({ ...this.editedItem, [field]: value }));
 
-        const orig = this._originalItem;
-        const curr = this.editedItem;
+        const orig = this._originalItem || {};
+        const curr = this.editedItem || {};
 
-        this.isDirty = (
-            curr.Alias !== orig.Alias ||
-            curr.NameEN !== orig.NameEN ||
-            curr.nameVN !== orig.nameVN ||
-            curr.PosOrder != orig.PosOrder ||
-            curr.Status !== orig.Status
-        );
+        // Check if ANY of the fields have changed
+        let dirty = false;
+        for (let key in curr) {
+            if (curr[key] != orig[key]) {
+                dirty = true;
+                break;
+            }
+        }
+        this.isDirty = dirty;
+        
+        console.log('[DEBUG][handleInputChange] isDirty evaluated to:', this.isDirty, 'Field changed:', field);
 
         this.dispatchEvent(new CustomEvent('nodebufferchange', {
             detail: this.editedItem,
@@ -373,10 +424,13 @@ export default class FecMasterDataItemDetail extends LightningElement {
     }
 
     handleRefresh() {
+        // 1. Tự Component Con khôi phục về bản gốc (A1)
         this.editedItem = JSON.parse(JSON.stringify(this._originalItem));
         this.isDirty = false;
+        
+        // 2. Chỉ báo cho Cha biết idType để Cha xóa dòng đó khỏi pendingChanges
         this.dispatchEvent(new CustomEvent('nodebufferreset', {
-            detail: { idType: this.item?.idType, id: this.item?.id },
+            detail: { idType: this.item?.idType },
             bubbles: true,
             composed: true
         }));
@@ -394,7 +448,11 @@ export default class FecMasterDataItemDetail extends LightningElement {
     @api
     markAsSaved() {
         // Lấy dữ liệu vừa edit đè lên dữ liệu gốc để xác nhận đã lưu
-        this._originalItem = JSON.parse(JSON.stringify(this.editedItem));
+        const updatedItem = { ...this._item, ...this.editedItem };
+        this._originalItem = JSON.parse(JSON.stringify(updatedItem));
+        this._item = JSON.parse(JSON.stringify(updatedItem)); // Sync _item too
+        this.editedItem = JSON.parse(JSON.stringify(updatedItem));
+        
         // Tắt trạng thái thay đổi -> Nút Undo sẽ lập tức bị Disable
         this.isDirty = false; 
         showLog('markAsSaved', 'Đã cập nhật bản gốc và disable nút Undo');

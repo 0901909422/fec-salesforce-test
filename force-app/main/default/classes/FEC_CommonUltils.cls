@@ -532,6 +532,17 @@ public with sharing class FEC_CommonUltils {
     return amount.setScale(scale).format();
   }
 
+  /**
+   * Số hiển thị đủ phần thập phân (vd API = 0 → "0.00"), dùng dấu chấm — tránh locale .format() bỏ .00.
+   */
+  public static String formatDecimalPlainScale(Decimal amount, Integer scale) {
+    if (amount == null) {
+      return '';
+    }
+    Integer sc = (scale == null || scale < 0) ? 2 : scale;
+    return amount.setScale(sc, System.RoundingMode.HALF_UP).toPlainString();
+  }
+
   public static String formatDate(Date d) {
     if (d == null)
       return '';
@@ -540,6 +551,19 @@ public with sharing class FEC_CommonUltils {
 
   public static String formatTimestamp(Datetime timestamp ,String format) {
     return Datetime.valueOf(timestamp).format(format);
+  }
+
+  /** Ngày hiển thị cố định dd/MM/yyyy (không phụ thuộc locale). */
+  public static String formatDateDDMMYYYY(Date d) {
+    if (d == null) {
+      return '';
+    }
+    Integer dd = d.day();
+    Integer mm = d.month();
+    Integer yyyy = d.year();
+    String dStr = dd < 10 ? '0' + dd : String.valueOf(dd);
+    String mStr = mm < 10 ? '0' + mm : String.valueOf(mm);
+    return dStr + '/' + mStr + '/' + yyyy;
   }
 
   public static String decimalToString(Decimal d) {
