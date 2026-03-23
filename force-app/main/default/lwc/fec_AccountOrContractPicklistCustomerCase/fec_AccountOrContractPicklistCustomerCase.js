@@ -22,7 +22,7 @@ import {
 import { RefreshEvent } from "lightning/refresh";
 import createHistory from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.createHistory";
 import createHistoryNonExistingCustomer from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.createHistoryNonExistingCustomer";
-
+import getInteractionCustomerType from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionCustomerType";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import FEC_ACCOUNT_CONTRACT_NUMBER_LABEL from "@salesforce/label/c.FEC_Account_Contract_Number_Label";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
@@ -42,9 +42,10 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   recordTypeId;
   recordTypeDevName;
   subscription = null;
-  customerType;
+  interactionCustomerType;
   @wire(MessageContext)
   messageContext;
+  interactionId; // 🔥 ID dùng thực sự để load Interaction
 
   columns = [
     {
@@ -65,41 +66,41 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   ];
   data = [];
 
-  /* =======================
-   * LMS SUBSCRIPTION
-   * ======================= */
+  // /* =======================
+  //  * LMS SUBSCRIPTION
+  //  * ======================= */
 
-  connectedCallback() {
-    this.subscribeToModeChannel();
-  }
+  // connectedCallback() {
+  //   this.subscribeToModeChannel();
+  // }
 
-  subscribeToModeChannel() {
-    if (this.subscription) return;
+  // subscribeToModeChannel() {
+  //   if (this.subscription) return;
 
-    this.subscription = subscribe(
-      this.messageContext,
-      IS_MODE_EDIT,
-      (message) => this.handleModeMessage(message),
-      { scope: APPLICATION_SCOPE },
-    );
-  }
+  //   this.subscription = subscribe(
+  //     this.messageContext,
+  //     IS_MODE_EDIT,
+  //     (message) => this.handleModeMessage(message),
+  //     { scope: APPLICATION_SCOPE },
+  //   );
+  // }
 
-  handleModeMessage(message) {
-    console.log("[LMS] Mode received:", message);
+  // handleModeMessage(message) {
+  //   console.log("[LMS] Mode received:", message);
 
-    if (message?.isModeEdit !== undefined) {
-      this.isEditMode = message.isModeEdit;
+  //   if (message?.isModeEdit !== undefined) {
+  //     this.isEditMode = message.isModeEdit;
 
-      console.log("[LMS] isEditMode:", this.isEditMode);
-    }
-  }
+  //     console.log("[LMS] isEditMode:", this.isEditMode);
+  //   }
+  // }
 
-  disconnectedCallback() {
-    if (this.subscription) {
-      unsubscribe(this.subscription);
-      this.subscription = null;
-    }
-  }
+  // disconnectedCallback() {
+  //   if (this.subscription) {
+  //     unsubscribe(this.subscription);
+  //     this.subscription = null;
+  //   }
+  // }
 
   /* =======================
    * WIRE
@@ -107,21 +108,12 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
 
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [HAS_ACCOUNT_OR_CONTACT, CUSTOMER_TYPE, RECORDTYPE_ID],
+    fields: [RECORDTYPE_ID, CUSTOMER_TYPE],
   })
   wiredCase({ data, error }) {
     if (data) {
-      this.hasAccountOrContact = getFieldValue(data, HAS_ACCOUNT_OR_CONTACT);
-      this.customerType = getFieldValue(data, CUSTOMER_TYPE);
-      this.recordTypeId = getFieldValue(data, RECORDTYPE_ID);
-      if (this.recordTypeId) {
-        this.getRecordTypeName();
-      }
-
-      console.log("Test");
-      console.log("hasAccountOrContact:", this.hasAccountOrContact);
-      console.log("customerType:", this.customerType);
-      console.log("recordTypeDevName:", this.recordTypeDevName);
+      this.resolveInteractionId();
+      this.resolveInteractionCustomerType();
       if (!this.isNonExistingCustomer) {
         this.getInteractionAccountNumber();
       } else {
@@ -134,25 +126,36 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     }
   }
 
-  async getRecordTypeName() {
+  async resolveInteractionId() {
     try {
-      this.recordTypeDevName = await getRecordTypeName({
-        recordId: this.recordId,
+      this.interactionId = await getInteractionIdFromCustomerCase({
+        caseId: this.recordId,
       });
     } catch (e) {
-      console.error("getRecordTypeName error:", e);
+      console.error("getInteractionIdFromCustomerCase error", e);
+    }
+  }
+
+  async resolveInteractionCustomerType() {
+    try {
+      this.interactionCustomerType = await getInteractionCustomerType({
+        caseId: this.recordId,
+      });
+    } catch (e) {
+      console.error("getInteractionCustomerType error", e);
     }
   }
 
   async getInteractionAccountNumber() {
     try {
       const result = await getInteractionAccountNumber({
-        caseId: this.recordId,
+        caseId: this.interactionId,
       });
       const data = result ? JSON.parse(result) : {};
       console.log(JSON.stringify(data));
       this.selectedValue = data.accountNumber || "";
       this.cifNumber = data.cifNumber;
+      this.hasAccountOrContact = data.hasContractAccount;
 
       await this.getProductsList();
     } catch (error) {
@@ -163,13 +166,14 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   async getInteractionAccountNumberNonExistingCustomer() {
     try {
       const result = await getInteractionAccountNumber({
-        caseId: this.recordId,
+        caseId: this.interactionId,
       });
       const data = result ? JSON.parse(result) : {};
       console.log("### Test ###");
       console.log(JSON.stringify(data));
       this.selectedValue = data.accountNumber || "";
       this.cifNumber = data.cifNumber;
+      this.hasAccountOrContact = data.hasContractAccount;
       this.initAccountDataNonExisting();
     } catch (error) {
       console.error(
@@ -219,7 +223,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
       {
         id: "1",
         product: NON_EXISTING_CUSTOMER_PRODUCT_NAME,
-        accountContractNumber: "Non-Existing Customer",
+        accountContractNumber: NON_EXISTING_CUSTOMER_PRODUCT_NAME,
         displayValue: "",
         productName: null,
         isSelected: NON_EXISTING_CUSTOMER_PRODUCT_NAME == this.selectedValue,
@@ -236,17 +240,12 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     console.log(UBANK_PRODUCT_NAME, NON_EXISTING_CUSTOMER_PRODUCT_NAME);
   }
 
-  get showPicklist() {
-    return this.hasAccountOrContact && this.isEditMode && this.isInteraction;
-  }
-
   get isNonExistingCustomer() {
-    return this.customerType === NON_EXISTING_CUSTOMER_TYPE;
+    return this.interactionCustomerType === NON_EXISTING_CUSTOMER_TYPE;
   }
 
-  get isInteraction() {
-    return this.recordTypeDevName === RECORD_TYPE_INTERACTION;
-  }
+ 
+ 
   /* =======================
    * UI ACTIONS
    * ======================= */
@@ -289,12 +288,12 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     try {
       if (this.isNonExistingCustomer) {
         await createHistoryNonExistingCustomer({
-          caseId: this.recordId,
+          caseId: this.interactionId,
           selectedType: selectedRow.product,
         });
       } else {
         await createHistory({
-          caseId: this.recordId,
+          caseId: this.interactionId,
           selectedAccountContractNumber: this.selectedValue,
           selectedType: selectedRow.product,
           cifNumber: this.cifNumber,

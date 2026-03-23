@@ -228,7 +228,7 @@ export default class Fec_KYC extends LightningElement {
               }
 
               item.maskedAnswer = item.isMasked
-                ? mask(item.suggestedAnswer)
+                ? (item.suggestedAnswer ? item.suggestedAnswer.split('\n').map(s => mask(s)).join('\n') : '')
                 : item.suggestedAnswer;
             });
           });
@@ -262,7 +262,7 @@ export default class Fec_KYC extends LightningElement {
       typeItem.questions?.forEach((item) => {
         if (item.id === id) {
           if (isPreview) {
-            item.maskedAnswer = mask(item.suggestedAnswer);
+            item.maskedAnswer = item.suggestedAnswer ? item.suggestedAnswer.split('\n').map(s => mask(s)).join('\n') : '';
             item.iconName = ICON_HIDE;
           } else {
             item.maskedAnswer = item.suggestedAnswer;
