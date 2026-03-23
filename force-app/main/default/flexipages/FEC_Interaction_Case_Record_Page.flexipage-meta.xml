@@ -36,7 +36,7 @@
                 <componentName>forceChatter:recordFeedContainer</componentName>
                 <identifier>forceChatter_recordFeedContainer</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
+                <booleanFilter>( 1 AND 2 ) OR ( 1 AND 3 AND 4)</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -47,6 +47,16 @@
                         <operator>EQUAL</operator>
                         <rightValue>Email</rightValue>
                     </criteria>
+                <criteria>
+                    <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                    <operator>EQUAL</operator>
+                    <rightValue>Internal</rightValue>
+                </criteria>
+                <criteria>
+                    <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                    <operator>EQUAL</operator>
+                    <rightValue>Internal Email</rightValue>
+                </criteria>
                 </visibilityRule>
             </componentInstance>
         </itemInstances>
@@ -79,7 +89,7 @@
                 <componentName>fecInteractionEmailInfo</componentName>
                 <identifier>c_fecInteractionEmailInfo</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
+                <booleanFilter>( 1 AND 2 ) OR (1 AND 3 AND 4)</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -90,6 +100,16 @@
                         <operator>EQUAL</operator>
                         <rightValue>Email</rightValue>
                     </criteria>
+                <criteria>
+                    <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                    <operator>EQUAL</operator>
+                    <rightValue>Internal</rightValue>
+                </criteria>
+                <criteria>
+                    <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                    <operator>EQUAL</operator>
+                    <rightValue>Internal Email</rightValue>
+                </criteria>
                 </visibilityRule>
             </componentInstance>
         </itemInstances>
@@ -122,7 +142,7 @@
                 <componentName>fec_InteractionMyCaseInfo</componentName>
                 <identifier>c_fec_InteractionMyCaseInfo</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND (2 OR 3)</booleanFilter>
+                <booleanFilter>1 AND (2 OR 3) AND 4</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -138,6 +158,11 @@
                         <operator>EQUAL</operator>
                         <rightValue>External</rightValue>
                     </criteria>
+                <criteria>
+                    <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                    <operator>NE</operator>
+                    <rightValue>Internal Email</rightValue>
+                </criteria>
                 </visibilityRule>
             </componentInstance>
         </itemInstances>
@@ -787,20 +812,35 @@
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>label</name>
-                    <value>Tabs</value>
-                </componentInstanceProperties>
+        <componentInstances>
+            <componentName>fecEmailSection</componentName>
+            <visibilityRule>
+                <booleanFilter>1 OR ( 2 AND 3 )</booleanFilter>
+                <criteria>
+                    <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                    <operator>EQUAL</operator>
+                    <rightValue>Email</rightValue>
+                </criteria>
+                <criteria>
+                    <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                    <operator>EQUAL</operator>
+                    <rightValue>Internal</rightValue>
+                </criteria>
+                <criteria>
+                    <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                    <operator>EQUAL</operator>
+                    <rightValue>Internal Email</rightValue>
+                </criteria>
+            </visibilityRule>
+        </componentInstances>
+        <componentInstances>
                 <componentInstanceProperties>
                     <name>tabs</name>
                     <value>Facet-51e81dc4-03cd-49ef-9915-964748bf0442</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tabset</componentName>
                 <identifier>flexipage_tabset</identifier>
-            </componentInstance>
-        </itemInstances>
+        </componentInstances>
         <name>main</name>
         <type>Region</type>
     </flexiPageRegions>
