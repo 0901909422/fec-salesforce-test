@@ -24,7 +24,7 @@ import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCode
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
-import { ACTION_REOPEN, ACTION_RECALL } from "c/fec_CommonConst";
+import { ACTION_REOPEN, ACTION_RECALL,VIEW_MODE_HANDLING,RECORD_TYPE_INTERNAL_CASE} from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
 
@@ -35,8 +35,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
   isSubmited = true;
 
   get isEdit() {
-    const isInternal = this.recordTypeDevName === FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME;
-    const isHandling = this.interactionViewMode === FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+    const isInternal = this.recordTypeDevName === RECORD_TYPE_INTERNAL_CASE;
+    const isHandling = this.interactionViewMode === VIEW_MODE_HANDLING;
 
     const defaultEdit =
       this.modeEditCase &&
