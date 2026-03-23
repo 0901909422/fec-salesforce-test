@@ -1,5 +1,7 @@
 <template>
-    <lightning-record-edit-form object-api-name={OBJECT_API_NAME} record-id={recordId} onsuccess={handleSuccess}
+    <lightning-record-edit-form object-api-name={OBJECT_API_NAME} record-id={recordId} 
+        onsubmit={handleSubmit} 
+        onsuccess={handleSuccess}
         onerror={handleError}>
 
         <div class="slds-grid slds-wrap slds-gutters">
@@ -18,7 +20,7 @@
                 <lightning-input-field field-name={FIELD_NAME_VN} required></lightning-input-field>
             </div>
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                <lightning-input-field field-name={FIELD_FEC_TYPE}></lightning-input-field>
+                <lightning-input-field field-name={FIELD_FEC_TYPE} required></lightning-input-field>
             </div>
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
                 <lightning-input-field field-name={FIELD_FIELD_STATUS} value={fieldStatusValue}></lightning-input-field>

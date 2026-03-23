@@ -87,7 +87,8 @@
                 <c-fec_-related-list-paging 
                     records={contactList} 
                     columns={contactListColumnsFiltered}
-                    sorted-by="channel"
+                    default-sorted-by="channel"
+                    default-sort-direction="desc"
                     onsensitivelog={handleContactStringView}>
                 </c-fec_-related-list-paging>
             </lightning-accordion-section>
@@ -98,7 +99,8 @@
                 <c-fec_-related-list-paging 
                     records={reference} 
                     columns={ReferenceColumns}
-                    sorted-by="fullName"
+                    default-sorted-by="fullName"
+                    default-sort-direction="desc"
                     onsensitivelog={handleReferencePhoneView}>
                 </c-fec_-related-list-paging>
 

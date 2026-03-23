@@ -9,6 +9,8 @@
 		<members>FEC_SearchController</members>
 		<members>FEC_GetCustomerList</members>
 		<members>FEC_CreateCaseInteractionController</members>
+		<members>CaseSearchDeletionBatch</members>
+		<members>CaseSearchDeletionScheduler</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -20,6 +22,7 @@
 		<members>fec_ReopenAction</members>
 		<members>fec_Search</members>
 		<members>customDblclickCell</members>
+		<members>maskedToggleCell</members>
 		<members>maskedToggleDatatable</members>
 		<name>LightningComponentBundle</name>
 	</types>

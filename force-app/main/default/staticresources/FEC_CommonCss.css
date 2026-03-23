@@ -25,6 +25,10 @@ c-fec_-i-p-p-detail-page .slds-accordion__summary,
 c-fec_-pending-service-cases .slds-accordion__summary,
 c-fec_-closed-service-cases .slds-accordion__summary,
 c-fec_-interaction-cases .slds-accordion__summary,
+c-fec_-main-info-loan-account .slds-accordion__summary,
+c-fec_-secondary-info-loan-account .slds-accordion__summary,
+c-fec_-termination .slds-accordion__summary,
+c-fec_-repayment-schedule-payment-history .slds-accordion__summary,
 c-fec_-k-y-c .slds-accordion__summary {
   background-color: #f3f3f3;
   border-radius: 4px;

@@ -4,33 +4,34 @@
  * Date         : 2026-03-11
  * Description  : SOAP API callout to insert/update customer address (UpdateCustomerAddress)
  * ===============================================================
- * Ver      Date           Author              Modification
+ * Ver    Date         Author            Modification
  * ===============================================================
-   1.0      2026-03-11     Toannd61             Create
-
+   1.0    2026-03-11   Toannd61          Create
+   1.1    [Today]      [You]             Fix NPE in endpoint concatenation & XML nodes
 ****************************************************************************************/
 
 public with sharing class FEC_UpdateCustomerAddress {
 
   private static ResponseLog responseLog;
   private static final String CIF_NS = 'http://fecredit.com.vn/CIF_CustomerInfoUpdate';
+  private static final String DEFAULT_PATH = '/CIF_CustomerInfoUpdate';
 
   public class CustomerAddressInfo {
-    @AuraEnabled public String cifNumber { get; set; }
-    @AuraEnabled public String addressId { get; set; }
-    @AuraEnabled public String addressType { get; set; }
-    @AuraEnabled public String number_x { get; set; }
-    @AuraEnabled public String building { get; set; }
-    @AuraEnabled public String street { get; set; }
-    @AuraEnabled public String ward { get; set; }
-    @AuraEnabled public String city { get; set; }
-    @AuraEnabled public String propertyStatus { get; set; }
-    @AuraEnabled public String years { get; set; }
-    @AuraEnabled public String months { get; set; }
-    @AuraEnabled public String isMailingAddress { get; set; }
-    @AuraEnabled public String isPrimary { get; set; }
-    @AuraEnabled public String receiveStatement { get; set; }
-    @AuraEnabled public String cardDelivery { get; set; }
+    @AuraEnabled public String cifNumber;
+    @AuraEnabled public String addressId;
+    @AuraEnabled public String addressType;
+    @AuraEnabled public String number_x;
+    @AuraEnabled public String building;
+    @AuraEnabled public String street;
+    @AuraEnabled public String ward;
+    @AuraEnabled public String city;
+    @AuraEnabled public String propertyStatus;
+    @AuraEnabled public String years;
+    @AuraEnabled public String months;
+    @AuraEnabled public String isMailingAddress;
+    @AuraEnabled public String isPrimary;
+    @AuraEnabled public String receiveStatement;
+    @AuraEnabled public String cardDelivery;
   }
 
   public class UpdateResult {
@@ -75,7 +76,7 @@ public with sharing class FEC_UpdateCustomerAddress {
       validateInput(info);
 
       String transId = UUID.randomUUID().toString();
-      String timestamp = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
+      String timestampStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
 
       Dom.Document doc = new Dom.Document();
       Dom.XmlNode envelope = doc.createRootElement(
@@ -94,11 +95,14 @@ public with sharing class FEC_UpdateCustomerAddress {
       envelope.setNamespace('cif', CIF_NS);
 
       // --- SYS ---
+      // Fix: addTextNode throws NPE if passed null. Safeguarded against null variables/constants.
       Dom.XmlNode sysNode = requestNode.addChildElement('Sys', null, null);
-      sysNode.addChildElement('TransID', null, null).addTextNode(transId);
+      sysNode.addChildElement('TransID', null, null)
+             .addTextNode(transId != null ? transId : '');
       sysNode.addChildElement('RequestorID', null, null)
-        .addTextNode(FEC_ConstantCommon.REQUESTOR_APS);
-      sysNode.addChildElement('DateTime', null, null).addTextNode(timestamp);
+             .addTextNode(FEC_ConstantCommon.REQUESTOR_APS != null ? FEC_ConstantCommon.REQUESTOR_APS : '');
+      sysNode.addChildElement('DateTime', null, null)
+             .addTextNode(timestampStr != null ? timestampStr : '');
 
       // --- CIFNumber ---
       FEC_CommonUltils.addTextNodeSafe(requestNode, 'CIFNumber', info.cifNumber);
@@ -134,34 +138,50 @@ public with sharing class FEC_UpdateCustomerAddress {
         FEC_CommonUltils.addTextNodeSafe(addrNode, 'Months', info.months);
 
       if (String.isNotBlank(info.isMailingAddress))
-        FEC_CommonUltils.addTextNodeSafe(addrNode, 'IsMailingAddress', info.isMailingAddress);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'IsMailingAddress', toSingleChar(info.isMailingAddress));
 
       if (String.isNotBlank(info.isPrimary))
-        FEC_CommonUltils.addTextNodeSafe(addrNode, 'IsPrimary', info.isPrimary);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'IsPrimary', toSingleChar(info.isPrimary));
 
       if (String.isNotBlank(info.receiveStatement))
-        FEC_CommonUltils.addTextNodeSafe(addrNode, 'ReceiveStatement', info.receiveStatement);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'ReceiveStatement', toSingleChar(info.receiveStatement));
 
       if (String.isNotBlank(info.cardDelivery))
-        FEC_CommonUltils.addTextNodeSafe(addrNode, 'CardDelivery', info.cardDelivery);
+        FEC_CommonUltils.addTextNodeSafe(addrNode, 'CardDelivery', toSingleChar(info.cardDelivery));
 
       UpdateResult finalResult = new UpdateResult();
       String endpoint = '';
+      
       try {
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Update_Customer_Address');
 
-        endpoint = (apiSetting != null && apiSetting.FEC_Call_Mock__c == true)
-            ? FEC_MockupEndpoint.UPDATE_CUSTOMER_ADDRESS_ENDPOINT_MOCKUP
-            : ((apiSetting != null ? apiSetting.FEC_Endpoint__c : '') + (apiConfig != null ? apiConfig.FEC_Endpoint__c : ''));
+        // Nếu path trống sẽ gọi nhầm "/" → 404 "No listener for endpoint: /" → dùng path mặc định.
+        String baseEndpoint = (apiSetting != null && String.isNotBlank(apiSetting.FEC_Endpoint__c)) ? apiSetting.FEC_Endpoint__c : '';
+        String pathEndpoint = (apiConfig != null && String.isNotBlank(apiConfig.FEC_Endpoint__c)) ? apiConfig.FEC_Endpoint__c : '';
+        if (String.isBlank(pathEndpoint)) {
+          pathEndpoint = DEFAULT_PATH;
+        }
+        endpoint = baseEndpoint + pathEndpoint;
+
+        String soapAction = (apiConfig != null && String.isNotBlank(apiConfig.FEC_SOAP_Action__c)) ? apiConfig.FEC_SOAP_Action__c : '';
 
         HttpResponse res = FEC_CommonUltils.calloutApi(
           endpoint,
           FEC_ConstantCommon.API_METHOD_POST,
           FEC_ConstantCommon.API_CONTENT_TYPE,
-          apiConfig?.FEC_SOAP_Action__c,
+          soapAction,
           doc,
           ''
+        );
+
+        FEC_CommonUltils.logApi(
+          'FEC_UpdateCustomerAddress',
+          endpoint,
+          FEC_ConstantCommon.API_METHOD_POST,
+          doc.toXmlString(),
+          res,
+          null
         );
 
         responseLog = new ResponseLog(
@@ -188,12 +208,23 @@ public with sharing class FEC_UpdateCustomerAddress {
           finalResult.rawResponse = resBody;
 
       } catch (Exception ex) {
+        // Fix: Make sure endpoint fallback is string to prevent logApi breaking again
+        String safeEndpoint = String.isNotBlank(endpoint) ? endpoint : 'Unknown_Endpoint';
+        
+        FEC_CommonUltils.logApi(
+          'FEC_UpdateCustomerAddress',
+          safeEndpoint,
+          FEC_ConstantCommon.API_METHOD_POST,
+          doc.toXmlString(),
+          null,
+          ex.getMessage()
+        );
         if (responseLog != null) {
           responseLog.errorMessage = ex.getMessage();
         } else {
           responseLog = new ResponseLog(
             'FEC_UpdateCustomerAddress',
-            endpoint,
+            safeEndpoint,
             FEC_ConstantCommon.API_METHOD_POST,
             doc.toXmlString(),
             null,
@@ -205,12 +236,13 @@ public with sharing class FEC_UpdateCustomerAddress {
       }
 
       return finalResult;
+      
     } catch (Exception e) {
-      System.debug('Error: ' + e.getMessage());
-      throw new AuraHandledException(e.getMessage());
+      String errMsg = (e != null && String.isNotBlank(e.getMessage())) ? e.getMessage() : 'Unknown error';
+      System.debug('Error: ' + errMsg);
+      throw new AuraHandledException(errMsg);
     }
   }
-
 
   public static void logApiResponse() {
     if (responseLog != null) {
@@ -353,4 +385,13 @@ public with sharing class FEC_UpdateCustomerAddress {
     return result;
   }
 
+  private static String toSingleChar(String value) {
+    if (String.isBlank(value)) return '';
+    String v = value.trim();
+    if (v.length() == 1) return v;
+    String upper = v.toUpperCase();
+    if (upper == 'TRUE' || upper == 'YES' || upper == '1' || upper == 'Y') return 'Y';
+    if (upper == 'FALSE' || upper == 'NO' || upper == '0' || upper == 'N') return 'N';
+    return v.substring(0, 1);
+  }
 }
