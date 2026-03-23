@@ -189,6 +189,7 @@ public without sharing class FEC_KYCController {
           c,
           adhocValues
         );
+        temp.fieldType = item.FEC_Field_Type__c;
         temp.isMasked = item.FEC_Masking__c;
         temp.fieldName = getToken(item.FEC_KYC_Suggested_Answer__c);
 
@@ -598,6 +599,8 @@ public without sharing class FEC_KYCController {
     public Boolean isMasked;
     @AuraEnabled
     public String suggestedAnswer;
+    @AuraEnabled
+    public String fieldType;
     @AuraEnabled
     public String fieldName;
 
