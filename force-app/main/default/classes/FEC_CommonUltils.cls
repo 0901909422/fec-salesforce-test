@@ -879,4 +879,7 @@ public with sharing class FEC_CommonUltils {
       .replace('\'', '&apos;');
   }
 
+  private static Integer toIntDec(Decimal d) {
+      return d == null ? null : Integer.valueOf(d);
+  }
 }
