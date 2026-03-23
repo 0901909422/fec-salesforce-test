@@ -1,0 +1,210 @@
+import { LightningElement, api, track } from 'lwc';
+import loadSecondaryLoanInfo from '@salesforce/apex/FEC_SecondaryInfoLoanAccountController.loadSecondaryLoanInfo';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { isNegative } from 'c/fec_CommonUtils';
+import FEC_Disbursement_Label from '@salesforce/label/c.FEC_Disbursement_Label';
+import FEC_Collections_Info_Label from '@salesforce/label/c.FEC_Collections_Info_Label';
+import FEC_Sales_Info_Label from '@salesforce/label/c.FEC_Sales_Info_Label';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_Termination_Loading_Alt from '@salesforce/label/c.FEC_Termination_Loading_Alt';
+import FEC_Disbursement_Channel_Label from '@salesforce/label/c.FEC_Disbursement_Channel_Label';
+import FEC_CC_Code_Label from '@salesforce/label/c.FEC_CC_Code_Label';
+import FEC_CC_Name_Label from '@salesforce/label/c.FEC_CC_Name_Label';
+import FEC_DSA_Code_Label from '@salesforce/label/c.FEC_DSA_Code_Label';
+import FEC_DSA_Name_Label from '@salesforce/label/c.FEC_DSA_Name_Label';
+import FEC_SecondaryInfo_Bank_Name_Label from '@salesforce/label/c.FEC_SecondaryInfo_Bank_Name_Label';
+import FEC_SecondaryInfo_Top_Up_Loan_Amount_Requested_Label from '@salesforce/label/c.FEC_SecondaryInfo_Top_Up_Loan_Amount_Requested_Label';
+import FEC_SecondaryInfo_Branch_Name_Label from '@salesforce/label/c.FEC_SecondaryInfo_Branch_Name_Label';
+import FEC_SecondaryInfo_Disbursement_Date_Label from '@salesforce/label/c.FEC_SecondaryInfo_Disbursement_Date_Label';
+import FEC_SecondaryInfo_Top_Up_Old_Ac_Outstanding_Label from '@salesforce/label/c.FEC_SecondaryInfo_Top_Up_Old_Ac_Outstanding_Label';
+import FEC_SecondaryInfo_Account_Number_Label from '@salesforce/label/c.FEC_SecondaryInfo_Account_Number_Label';
+import FEC_SecondaryInfo_Is_Top_Up_Account_Label from '@salesforce/label/c.FEC_SecondaryInfo_Is_Top_Up_Account_Label';
+import FEC_SecondaryInfo_Top_Up_Old_Ac_App_ID_Label from '@salesforce/label/c.FEC_SecondaryInfo_Top_Up_Old_Ac_App_ID_Label';
+import FEC_SecondaryInfo_Responsible_Unit_Label from '@salesforce/label/c.FEC_SecondaryInfo_Responsible_Unit_Label';
+import FEC_SecondaryInfo_Date_Assigned_Label from '@salesforce/label/c.FEC_SecondaryInfo_Date_Assigned_Label';
+import FEC_SecondaryInfo_Responsible_Person_Label from '@salesforce/label/c.FEC_SecondaryInfo_Responsible_Person_Label';
+import FEC_SecondaryInfo_TSA_Code_Label from '@salesforce/label/c.FEC_SecondaryInfo_TSA_Code_Label';
+import FEC_SecondaryInfo_TSA_Name_Label from '@salesforce/label/c.FEC_SecondaryInfo_TSA_Name_Label';
+
+export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
+    @api recordId;
+
+    @track accountData;
+    @track error;
+    @track isLoading = false;
+
+    get activeSections() {
+        return [FEC_Disbursement_Label, FEC_Collections_Info_Label, FEC_Sales_Info_Label];
+    }
+
+    customLabel = {
+        disbursementLabel: FEC_Disbursement_Label,
+        collectionInfoLabel: FEC_Collections_Info_Label,
+        salesInfoLabel: FEC_Sales_Info_Label,
+        msgErrorAPI: FEC_MSG_Error_API_Label,
+        loadingAlt: FEC_Termination_Loading_Alt,
+    };
+
+    connectedCallback() {
+        console.log('[SecondaryInfo] connectedCallback, recordId=', this.recordId);
+        this.loadData();
+    }
+
+    loadData() {
+        if (!this.recordId) {
+            console.warn('[SecondaryInfo] loadData skipped: recordId empty');
+            return;
+        }
+        console.log('[SecondaryInfo] loadData start, caseId=', this.recordId);
+
+        this.isLoading = true;
+
+        loadSecondaryLoanInfo({ caseId: this.recordId })
+            .then(result => {
+                const hasValue = (v) => v != null && String(v).trim() !== '';
+                const d = result || {};
+                const hasData = !!(
+                    hasValue(d.bankName) || hasValue(d.branchName) || hasValue(d.accountNumber) ||
+                    hasValue(d.disbursementChannel) || hasValue(d.responsibleUnit) || hasValue(d.responsiblePerson) ||
+                    hasValue(d.dateAssigned) || hasValue(d.ccCode) || hasValue(d.ccName) ||
+                    hasValue(d.dsaCode) || hasValue(d.dsaName) || hasValue(d.tsaCode) || hasValue(d.tsaName) ||
+                    hasValue(d.topUpLoanAmountRequested)
+                );
+                console.log('[SecondaryInfo] loadSecondaryLoanInfo OK', {
+                    hasData,
+                    disbursementDate: d.disbursementDate,
+                    dateAssigned: d.dateAssigned,
+                    ccCode: d.ccCode,
+                    ccName: d.ccName,
+                    responsibleUnit: d.responsibleUnit,
+                    responsiblePerson: d.responsiblePerson,
+                });
+                console.log('[SecondaryInfo] full result (no helpTexts):', JSON.stringify({
+                    ...d,
+                    helpTexts: d.helpTexts ? '(object)' : undefined,
+                }));
+                this.accountData = result;
+                this.error = undefined;
+            })
+            .catch(err => {
+                console.error('[SecondaryInfo] loadSecondaryLoanInfo FAILED', {
+                    message: err?.body?.message || err?.message,
+                    stack: err?.stack,
+                    body: err?.body,
+                });
+                this.accountData = null;
+                this.handleError(err);
+            })
+            .finally(() => {
+                this.isLoading = false;
+                console.log('[SecondaryInfo] loadData end');
+            });
+    }
+
+    /* ================= UI HELPERS ================= */
+
+    /** Chỉ coi có data khi có ít nhất một trường có giá trị. Khi false → hiển thị "Tên section - Tải dữ liệu không thành công". */
+    get hasData() {
+        if (!this.accountData || typeof this.accountData !== 'object') return false;
+        const d = this.accountData;
+        const hasValue = (v) => v != null && String(v).trim() !== '';
+        return (
+            hasValue(d.bankName) ||
+            hasValue(d.branchName) ||
+            hasValue(d.accountNumber) ||
+            hasValue(d.disbursementChannel) ||
+            hasValue(d.responsibleUnit) ||
+            hasValue(d.responsiblePerson) ||
+            hasValue(d.dateAssigned) ||
+            hasValue(d.ccCode) ||
+            hasValue(d.ccName) ||
+            hasValue(d.dsaCode) ||
+            hasValue(d.dsaName) ||
+            hasValue(d.tsaCode) ||
+            hasValue(d.tsaName) ||
+            hasValue(d.topUpLoanAmountRequested)
+        );
+    }
+
+    get disbursementFields() {
+        if (!this.accountData) return [];
+
+        return [
+            this.buildField(FEC_SecondaryInfo_Bank_Name_Label, this.accountData?.bankName, 'FEC_Bank_Name__c'),
+            this.buildField(FEC_Disbursement_Channel_Label, this.accountData?.disbursementChannel, 'FEC_Disbursement_Channel__c'),
+            this.buildMoneyField(FEC_SecondaryInfo_Top_Up_Loan_Amount_Requested_Label, this.accountData?.topUpLoanAmountRequested, 'FEC_Top_Up_Loan_Amount_Requested__c'),
+            this.buildField(FEC_SecondaryInfo_Branch_Name_Label, this.accountData?.branchName, 'FEC_Branch_Name__c'),
+            this.buildField(FEC_SecondaryInfo_Disbursement_Date_Label, this.accountData?.disbursementDate, 'FEC_Disbursement_Date__c'),
+            this.buildMoneyField(FEC_SecondaryInfo_Top_Up_Old_Ac_Outstanding_Label, this.accountData?.topUpOldAcOutstanding, 'FEC_Top_Up_Old_A_c_Outstanding__c'),
+            this.buildField(FEC_SecondaryInfo_Account_Number_Label, this.accountData?.accountNumber, 'FEC_Account_Number__c'),
+            this.buildField(FEC_SecondaryInfo_Is_Top_Up_Account_Label, this.accountData?.isTopUpAccount, 'FEC_Is_Top_Up_Account__c'),
+            this.buildField(FEC_SecondaryInfo_Top_Up_Old_Ac_App_ID_Label, this.accountData?.topUpOldAcAppId, 'FEC_Top_Up_Old_Account_App_ID__c'),
+        ];
+    }
+
+    get collectionInfoFields() {
+        if (!this.accountData) return [];
+
+        return [
+            this.buildField(FEC_SecondaryInfo_Responsible_Unit_Label, this.accountData?.responsibleUnit, 'FEC_Responsible_Unit__c'),
+            this.buildField(FEC_SecondaryInfo_Date_Assigned_Label, this.accountData?.dateAssigned, 'FEC_Date_Assigned__c'),
+            { label: '', value: '' }, // Ô trống cột 3 hàng 1
+            this.buildField(FEC_SecondaryInfo_Responsible_Person_Label, this.accountData?.responsiblePerson, 'FEC_Responsible_Person__c'),
+        ];
+    }
+
+    get salesInfoFields() {
+        if (!this.accountData) return [];
+
+        return [
+            this.buildField(FEC_CC_Code_Label, this.accountData?.ccCode, 'FEC_CC_Code__c'),
+            this.buildField(FEC_DSA_Code_Label, this.accountData?.dsaCode, 'FEC_DSA_Code__c'),
+            this.buildField(FEC_SecondaryInfo_TSA_Code_Label, this.accountData?.tsaCode, 'FEC_TSA_Code__c'),
+            this.buildField(FEC_CC_Name_Label, this.accountData?.ccName, 'FEC_CC_Name__c'),
+            this.buildField(FEC_DSA_Name_Label, this.accountData?.dsaName, 'FEC_DSA_Name__c'),
+            this.buildField(FEC_SecondaryInfo_TSA_Name_Label, this.accountData?.tsaName, 'FEC_TSA_Name__c'),
+        ];
+    }
+
+    getHelpText(fieldApiName) {
+        if (!fieldApiName || !this.accountData?.helpTexts) return null;
+        const helpTexts = this.accountData.helpTexts;
+        return helpTexts[fieldApiName] || helpTexts[fieldApiName.toLowerCase()] || null;
+    }
+
+    buildField(label, value, fieldApiName) {
+        const helpText = this.getHelpText(fieldApiName);
+        return {
+            label,
+            value: value || '-',
+            helpText: helpText || undefined
+        };
+    }
+
+    buildMoneyField(label, value, fieldApiName) {
+        const helpText = this.getHelpText(fieldApiName);
+        return {
+            label,
+            value: value || '-',
+            type: isNegative(value) ? 'negative' : 'regular',
+            helpText: helpText || undefined
+        };
+    }
+
+    /* ================= ERROR + TOAST ================= */
+
+    handleError(err) {
+        this.error = err?.body?.message || err?.message || 'Unknown error';
+        this.showToast('Error', this.error, 'error');
+    }
+
+    showToast(title, message, variant) {
+        this.dispatchEvent(
+            new ShowToastEvent({
+                title,
+                message,
+                variant
+            })
+        );
+    }
+}

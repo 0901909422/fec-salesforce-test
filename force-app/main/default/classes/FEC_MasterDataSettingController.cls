@@ -67,12 +67,6 @@ public with sharing class FEC_MasterDataSettingController {
             System.debug('First record (WITHOUT FLS stripping): ' + JSON.serialize(settings[0]));
         }
         
-        // NOTE: FLS enforcement removed - returning full record data to LWC
-        // This bypasses Field Level Security checks - use with caution!
-        // If FLS is needed for security, re-enable: 
-        // List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, settings).getRecords();
-        // return (List<FEC_MDM_Master_Data_Setting__c>) safe;
-        
         return settings;
     }
     
