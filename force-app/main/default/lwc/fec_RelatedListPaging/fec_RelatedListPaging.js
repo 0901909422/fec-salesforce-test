@@ -159,7 +159,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
                 headerStyle: widthStyle,
                 // asc = cũ→mới / A→Z → mũi tên lên; desc = mới→cũ → mũi tên xuống
                 iconName: isSorted
-                    ? (this.sortedDirection === 'asc'
+                    ? (this.sortedDirection === 'desc'
                         ? 'utility:arrowup'
                         : 'utility:arrowdown')
                     : 'utility:arrowdown',
@@ -312,6 +312,20 @@ export default class Fec_RelatedListPaging extends LightningElement {
                         || (col.cellAttributes && col.cellAttributes.alignment)
                         || 'left';
                     const fullCellClass = [cellClass || '', 'cell-' + align].filter(Boolean).join(' ').trim();
+
+                    // isMaskable column + masked row → render as eye-type cell with toggle icon
+                    if (col.isMaskable === true && row.masked === true) {
+                        const eyeKey = `${rowIndex}-${col.fieldName}`;
+                        const isMasked = this.eyeStates[eyeKey] !== false;
+                        return {
+                            key: col.fieldName,
+                            isEye: true,
+                            fieldName: col.fieldName,
+                            rowIndex,
+                            value: this.getEyeDisplayValue(row[col.fieldName], isMasked),
+                            iconName: isMasked ? 'utility:hide' : 'utility:preview'
+                        };
+                    }
                     return {
                         key: col.fieldName,
                         isLink: false,
