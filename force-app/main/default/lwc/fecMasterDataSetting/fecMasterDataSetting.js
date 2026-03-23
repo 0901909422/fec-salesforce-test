@@ -568,7 +568,6 @@ export default class FecMasterDataSetting extends LightningElement {
 
         saveMasterDataSetting({ mappingReq: newMapping })
             .then(() => {
-                // this.showToast(LABEL_TOAST_SAVE_SUCCESS, '', VARIANT_SUCCESS);
                 this.isIntegrationAdd = false;
                 this.recordIdForIntegration = undefined; // Reset
                 // Reset form data
@@ -661,6 +660,11 @@ export default class FecMasterDataSetting extends LightningElement {
     openNewSettingModal() {
         this.modalTitle = this.labelModalNewProperty || LABEL_MODAL_NEW_PROPERTY_TITLE;
         this.recordIdForEdit = null;
+        
+        // Pass existing fields to the form to prevent duplicates
+        const existingFields = this.masterDataList ? this.masterDataList.map(item => item.FEC_Additional_Field__c).filter(Boolean) : [];
+        this.selectedRecord = { existingFields };
+
         // Tìm giá trị lớn nhất của FEC_Field_Order_Display__c trong danh sách hiện tại
         if (this.masterDataList && this.masterDataList.length > 0) {
             const maxOrder = Math.max(...this.masterDataList.map(item => item.FEC_Field_Order_Display__c || 0));
@@ -678,7 +682,7 @@ export default class FecMasterDataSetting extends LightningElement {
     handleSuccess() {
         try {
             this.closeModal();
-            this.showToast(LABEL_TOAST_SAVE_SUCCESS, '', VARIANT_SUCCESS);
+            // this.showToast(LABEL_TOAST_SAVE_SUCCESS, '', VARIANT_SUCCESS);
             
             showLog('[handleSuccess] START - refreshing data');
             this.isLoading = true;
