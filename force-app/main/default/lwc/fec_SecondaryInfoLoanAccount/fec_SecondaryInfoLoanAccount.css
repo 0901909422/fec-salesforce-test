@@ -1,0 +1,39 @@
+.sync-fail-text {
+    color: #c23934;
+    font-weight: 400;
+}
+
+/* Loading: tên section rõ, mỗi section có spinner riêng bên dưới */
+.secondary-info-loading .slds-accordion__section {
+    border: 1px solid #dddbda;
+    border-bottom: none;
+}
+.secondary-info-loading .slds-accordion__section:last-child {
+    border-bottom: 1px solid #dddbda;
+}
+.secondary-info-loading .slds-accordion__summary {
+    background: #f3f3f3;
+    padding: 0.75rem 1rem;
+}
+.secondary-info-loading .slds-accordion__summary-heading,
+.secondary-info-loading .slds-accordion__summary .slds-accordion__summary-content span {
+    color: #3e3e3c;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+.secondary-info-loading .slds-accordion__content {
+    display: block !important;
+    padding: 0;
+    visibility: visible;
+}
+/* Đồng bộ với fec_Termination, fec_RepaymentSchedulePaymentHistory */
+.fec-section-spinner-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 120px;
+    padding: 1rem;
+}
+.secondary-info-loading .fec-section-spinner-wrapper {
+    background: #fff;
+}

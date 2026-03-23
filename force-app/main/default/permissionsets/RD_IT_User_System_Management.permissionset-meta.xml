@@ -5,6 +5,14 @@
         <visible>true</visible>
     </applicationVisibilities>
     <classAccesses>
+        <apexClass>CaseSearchDeletionBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CaseSearchDeletionScheduler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_APIServiceException</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -30,6 +38,14 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_CaseEditNOCController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseOwnerChangeNotification</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CasePendingStatusService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -258,6 +274,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_PaymentHistoryController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_RoutingActionHistoryTriggerHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>

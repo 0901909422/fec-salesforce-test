@@ -448,7 +448,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                     noc.FEC_Business_Process__r.FEC_Code__c,
                     FEC_CommonUltils.pickNameByLanguage(noc.FEC_Business_Process__r.Name, noc.FEC_Business_Process__r.FEC_Name_VN__c, language),
                     FEC_CommonUltils.defaultToEmpty(noc.FEC_Business_Process__r.FEC_Name_VN__c),
-                    FEC_CommonUltils.toInt(noc.FEC_Business_Process__r.FEC_Order__c),
+                    FEC_CommonUltils.toIntDec(noc.FEC_Business_Process__r.FEC_Order__c),
                     noc.FEC_Customer_Type__c,
                     FEC_ConstantCommon.KEY_CASETYPE
                 );
@@ -461,7 +461,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                         noc.FEC_Category__r.FEC_Code__c,
                         FEC_CommonUltils.pickNameByLanguage(noc.FEC_Category__r.Name, noc.FEC_Category__r.FEC_Name_VN__c, language),
                         FEC_CommonUltils.defaultToEmpty(noc.FEC_Category__r.FEC_Name_VN__c),
-                        FEC_CommonUltils.toInt(noc.FEC_Category__r.FEC_Order__c),
+                        FEC_CommonUltils.toIntDec(noc.FEC_Category__r.FEC_Order__c),
                         noc.FEC_Customer_Type__c,
                         FEC_ConstantCommon.KEY_CATEGORY
                     );
@@ -474,7 +474,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                             noc.FEC_Sub_Category__r.FEC_Code__c,
                             FEC_CommonUltils.pickNameByLanguage(noc.FEC_Sub_Category__r.Name, noc.FEC_Sub_Category__r.FEC_Name_VN__c, language),
                             FEC_CommonUltils.defaultToEmpty(noc.FEC_Sub_Category__r.FEC_Name_VN__c),
-                            FEC_CommonUltils.toInt(noc.FEC_Sub_Category__r.FEC_Order__c),
+                            FEC_CommonUltils.toIntDec(noc.FEC_Sub_Category__r.FEC_Order__c),
                             noc.FEC_Customer_Type__c,
                             FEC_ConstantCommon.KEY_SUBCATEGORY
                         );
@@ -487,7 +487,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                                 noc.FEC_Sub_Code__r.FEC_Code__c,
                                 FEC_CommonUltils.pickNameByLanguage(noc.FEC_Sub_Code__r.Name, noc.FEC_Sub_Code__r.FEC_Name_VN__c, language),
                                 FEC_CommonUltils.defaultToEmpty(noc.FEC_Sub_Code__r.FEC_Name_VN__c),
-                                FEC_CommonUltils.toInt(noc.FEC_Sub_Code__r.FEC_Order__c),
+                                FEC_CommonUltils.toIntDec(noc.FEC_Sub_Code__r.FEC_Order__c),
                                 noc.FEC_Customer_Type__c,
                                 FEC_ConstantCommon.KEY_SUBCODE
                             );
@@ -519,7 +519,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             pCode,
             FEC_CommonUltils.pickNameByLanguage(noc.FEC_Product_Type__r.Name, noc.FEC_Product_Type__r.FEC_Name_VN__c, language),
             FEC_CommonUltils.defaultToEmpty(noc.FEC_Product_Type__r.FEC_Name_VN__c),
-            FEC_CommonUltils.toInt(noc.FEC_Product_Type__r.FEC_Order__c),
+            FEC_CommonUltils.toIntDec(noc.FEC_Product_Type__r.FEC_Order__c),
             noc.FEC_Customer_Type__c,
             FEC_ConstantCommon.KEY_PRODUCT_TYPE_PRODUCT
         );
