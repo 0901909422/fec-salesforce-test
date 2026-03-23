@@ -4,6 +4,7 @@
     <types>
 		<members>Case.FEC_Archive_Sent_At__c</members>
 		<members>Case.FEC_Archive_Status__c</members>
+		<members>Case.FEC_Attachment_Status__c</members>
 		<name>CustomField</name>
 	</types>
 
@@ -12,9 +13,12 @@
         <members>FEC_CaseExportHttpService</members>
 		<members>FEC_CasePayloadBuilder</members>
 		<members>FEC_CaseExportBatch_Test</members>
+		<members>FEC_ArchiveVerifyBatch</members>
+		<members>FEC_ArchiveVerifyHttpService</members>
+		<members>FEC_AttachmentExportBatch</members>
+		<members>FEC_AttachmentExportHttpService</members>
 		<name>ApexClass</name>
 	</types>
 
     <version>65.0</version>
 </Package>
- 

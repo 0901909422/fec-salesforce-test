@@ -16,10 +16,9 @@ public class FEC_CaseExportBatch
     private static final String CASE_QUERY =
         'SELECT  ' +
         'Id, CaseNumber, Status,  ' +
-        'CreatedById, CreatedBy.Name, CreatedBy.Username, CreatedBy.Email, CreatedBy.Phone, CreatedBy.FEC_Agent_ID__c, CreatedBy.FEC_Default_Queue__c, ' +
-        'LastModifiedById, LastModifiedBy.Name, LastModifiedBy.Username, LastModifiedBy.Email, LastModifiedBy.Phone, LastModifiedBy.FEC_Agent_ID__c, LastModifiedBy.FEC_Default_Queue__c, ' +
-        'OwnerId, Owner.Name, Owner.Username, Owner.Email, Owner.Phone, ' +
-        'ParentId, ' +
+        'CreatedById, ' +
+        'LastModifiedById, ' +
+        'OwnerId, ParentId, ' +
         'FEC_External_Interaction_ID__c, FEC_Channel__c, FEC_Case_Channel__c, ' +
         'FEC_Created_By__c, FEC_Created_On__c, ' +
         'FEC_Interaction_Start_On__c, FEC_Interaction_End_On__c, FEC_Interaction_Duration__c, ' +
@@ -282,11 +281,7 @@ public class FEC_CaseExportBatch
         'RecordTypeId, RecordType.Name, ' +
         'FEC_Archive_Status__c ' +
         'FROM Case ' +
-        'WHERE ClosedDate != NULL ' +
-        '    AND (Status LIKE \'Resolved-%\' OR Status = \'Closed\') ' +
-        '    AND (FEC_Archive_Status__c = \'' + STATUS_PENDING + '\' ' +
-        '         OR FEC_Archive_Status__c = NULL) ' +
-        'ORDER BY ClosedDate ASC';
+        'ORDER BY ClosedDate ASC LIMIT 20';
 
     // ── start() ──────────────────────────────────────────────────────────────
     public Database.QueryLocator start(Database.BatchableContext bc) {
@@ -299,18 +294,26 @@ public class FEC_CaseExportBatch
         List<Case> cases = (List<Case>) scope;
         totalCases += cases.size();
 
-        Set<Id> caseIds = new Set<Id>();
+        Set<Id> caseIds  = new Set<Id>();
+        Set<Id> userIds  = new Set<Id>();
         for (Case c : cases) {
             caseIds.add(c.Id);
+            if (c.CreatedById      != null) userIds.add(c.CreatedById);
+            if (c.LastModifiedById != null) userIds.add(c.LastModifiedById);
+            if (c.OwnerId          != null) userIds.add(c.OwnerId);
         }
 
+        // ── [1] Query User với custom fields (không bị giới hạn bởi Name entity) ──
+        Map<Id, User> usersById = queryUsersById(userIds);
+
+        // ── [2] Query remarks ─────────────────────────────────────────────────
         Map<Id, List<FEC_Case_Remarks__c>> remarksByCaseId =
             queryRemarksByCaseIds(caseIds);
 
-        // ── [2] Build JSON array toàn bộ batch ───────────────────────────────
-        String jsonPayload = FEC_CasePayloadBuilder.buildBatch(cases, remarksByCaseId);
+        // ── [3] Build JSON array toàn bộ batch ───────────────────────────────
+        String jsonPayload = FEC_CasePayloadBuilder.buildBatch(cases, remarksByCaseId, usersById);
 
-        // ── [3] 1 callout cho cả batch ────────────────────────────────────────
+        // ── [4] 1 callout cho cả batch ────────────────────────────────────────
         Boolean calloutSuccess = false;
         try {
             FEC_CaseExportHttpService.postCases(jsonPayload);
@@ -327,7 +330,7 @@ public class FEC_CaseExportBatch
                 '[CaseExportBatch] Batch FAILED — ' + batchInfo);
         }
 
-        // ── [4] Update flag chỉ khi callout thành công ────────────────────────
+        // ── [5] Update flag chỉ khi callout thành công ────────────────────────
         if (calloutSuccess) {
             markCasesAsProcessing(caseIds);
         }
@@ -345,6 +348,22 @@ public class FEC_CaseExportBatch
             }
         }
     }
+
+        // ── Query User với đầy đủ custom fields (tránh giới hạn của Name entity) ──
+        @TestVisible
+        private static Map<Id, User> queryUsersById(Set<Id> userIds) {
+            Map<Id, User> result = new Map<Id, User>();
+            if (userIds.isEmpty()) return result;
+            for (User u : [
+                SELECT Id, Name, Username, Email, Phone,
+                       FEC_Agent_ID__c, FEC_Default_Queue__c
+                FROM User
+                WHERE Id IN :userIds
+            ]) {
+                result.put(u.Id, u);
+            }
+            return result;
+        }
 
     // ── Query remarks gom theo CaseId — 1 SOQL cho cả batch ──────────────────
     @TestVisible
@@ -374,7 +393,8 @@ public class FEC_CaseExportBatch
             toUpdate.add(new Case(
                 Id                     = cId,
                 FEC_Archive_Status__c  = STATUS_PROCESSING,
-                FEC_Archive_Sent_At__c = now
+                FEC_Archive_Sent_At__c = now,
+                FEC_Attachment_Status__c = null
             ));
         }
         // allOrNone=false: 1 record lỗi không làm hỏng cả batch
