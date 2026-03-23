@@ -103,11 +103,13 @@
 		<members>fec_IPPClosureForm</members>
 		<members>fec_IPPClosureHandling</members>
 		<members>fec_CreateCaseInListView</members>
+		<members>fec_CaseDetail_Customer</members>
+		<members>fec_CaseEditNOC</members>
+		<members>fec_ComboBox</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
 		<members>FEC_Interaction_Case_Record_Page</members>
-		<members>FEC_Internal_Case_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -121,6 +123,7 @@
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_CreateInteractionGenesys</members>
 		<members>FEC_IPPClosureController</members>
+		<members>FEC_CaseEditNOCController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -133,6 +136,7 @@
 	</types>
 	<types>
 		<members>FEC_Account_Contract_Search</members>
+		<members>Create_Case</members>
 		<name>CustomTab</name>
 	</types>
 	<types>
@@ -222,7 +226,7 @@
         <name>PermissionSet</name>
     </types>
 	<types>
-        <members>Case.FEC_Interaction_Creation_Highlight</members>
+        <members>Case.Internal_Case_Compact_Layout</members>
         <name>CompactLayout</name>
     </types>
 	<version>65.0</version>
