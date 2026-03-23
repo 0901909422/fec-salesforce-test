@@ -11,6 +11,10 @@
 	<types>
         <members>Case.FEC_IPP_To_Close__c</members>
 		<members>Case.FEC_Interaction_Subchannel__c</members>
+		<members>Case.FEC_Interaction_Email__c</members>
+		<members>Case.FEC_Send_To__c</members>
+		<members>Case.FEC_Search_Email_Address__c</members>
+		<members>Case.FEC_Genesys_Campaign_Name__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -89,6 +93,13 @@
 		<name>Flow</name>
 	</types>
 	<types>
+		<members>fecEmailActionButtons</members>
+		<members>fecEmailComposeFooter</members>
+		<members>fecEmailFeedWrapper</members>
+		<members>fecEmailSection</members>
+		<name>AuraDefinitionBundle</name>
+	</types>
+	<types>
 		<members>fec_AppInfo</members>
 		<members>fec_Asset</members>
 		<members>fec_MRC</members>
@@ -107,6 +118,7 @@
 		<members>fec_CaseDetail_Customer</members>
 		<members>fec_CaseEditNOC</members>
 		<members>fec_ComboBox</members>
+		<members>fecInteractionEmailCompose</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -127,6 +139,8 @@
 		<members>FEC_CaseEditNOCController</members>
 		<members>FEC_PINReissueServiceCallout</members>
 		<members>FEC_PinResetHandler</members>
+		<members>FEC_CustomEmailService</members>
+		<members>FEC_InteractionEmailController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -160,6 +174,9 @@
 	</types>
 	<types>
         <members>Case.Interaction</members>
+		<members>Case.Customer_Case</members>
+		<members>Case.Internal_Case</members>
+		<members>Case.Search_Interaction</members>
         <name>RecordType</name>
     </types>
 	<types>
@@ -170,6 +187,8 @@
 	</types>
 	<types>
         <members>FEC_CommonCss</members>
+		<members>IWSConnectorBundle</members>
+		<members>QuillEditor</members>
         <name>StaticResource</name>
     </types>
 	<types>
