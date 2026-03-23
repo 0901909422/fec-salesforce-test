@@ -324,6 +324,10 @@
     <label>Common System Setting</label>
     <license>Salesforce</license>
     <tabSettings>
+        <tab>Create_Case</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Account_Contract_Search</tab>
         <visibility>Visible</visibility>
     </tabSettings>

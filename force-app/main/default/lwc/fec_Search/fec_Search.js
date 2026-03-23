@@ -55,6 +55,7 @@ const FIELDS_TO_CHECK = [
 export default class Fec_Search extends NavigationMixin(LightningElement) {
   @api recordId;
   @api isLoaded = false;
+  @api showSkipButton = false;
   activeSections = ["searchCriteria", "results"];
   nationalId;
   phoneNumber;
@@ -369,7 +370,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     const { data, error } = result;
     if (data) {
       // Logic xử lý dữ liệu khi thành công (tương đương phần .then cũ)
-      this.isSkip = data?.RecordType?.Name == "Internal Case";
+      this.isSkip = this.showSkipButton || (data && data.RecordType?.Name === 'Internal Case');
       this.isDisplay =
         data.Customer_Histories__r === undefined &&
         data.FEC_Skip_Search_Internal_Case__c === false;
@@ -382,6 +383,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   async connectedCallback() {
     this.isLoaded = false;
+    this.isSkip = this.showSkipButton;
     // Load styles
     loadStyle(this, COMMON_STYLES)
       .then(() => console.log("Common styles loaded"))
@@ -400,7 +402,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Search_Account_Number__c : null;
       this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Search_Email_Address__c : null;
       this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
-      if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress || this.customerNumber) {
+     if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress || this.customerNumber) {
         await this.processSearch();
       }
     } catch (error) {
@@ -995,6 +997,11 @@ hasAnySearchCriteria(params) {
 
     // Nếu result có giá trị 'confirmed' (do mình định nghĩa ở handleConfirm)
     if (result === "confirm") {
+       if (!this.recordId || this.recordId === '') {
+            this.showToast("Thông báo", "Skip thành công.", "success");
+            this.dispatchEvent(new CustomEvent('skippedwithoutrecord', { bubbles: true, composed: true }));
+            return;
+        }
       this.isLoaded = false;
       const fields = {};
       fields["Id"] = this.recordId;
@@ -1151,6 +1158,12 @@ hasAnySearchCriteria(params) {
                 // await refreshApex(this.wiredCaseResult);
                 this.dispatchEvent(new RefreshEvent());
             } else {
+                this.dispatchEvent(
+                  new CustomEvent('closerequest', {
+                    bubbles: true,
+                    composed: true
+                  })
+                );
               this[NavigationMixin.Navigate]({
                 type: "standard__recordPage",
                 attributes: {

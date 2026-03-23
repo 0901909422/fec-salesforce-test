@@ -35,7 +35,17 @@ export default class Fec_CaseEditNOC extends LightningElement {
   isSubmited = true;
 
   get isEdit() {
-    return this.modeEditCase && !this.isSubmited;
+    const isInternal = this.recordTypeDevName === FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME;
+    const isHandling = this.interactionViewMode === FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+
+    const defaultEdit =
+      this.modeEditCase &&
+      !this.isSubmited &&
+      !isInternal;
+
+    const isSpecialCase = isInternal && isHandling;
+
+    return defaultEdit || isSpecialCase;
   }
 
   get natureOfCaseLabel() {
@@ -68,6 +78,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
   natureOfCase;
 
   disableProdType;
+  interactionViewMode;
+  recordTypeDevName;
 
   get disableCategory() {
     return !this.productTypeSelectedId;
@@ -102,7 +114,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   connectedCallback() {
     this.subscribeToMessageChannel();
-
+    
     getCase({
       recordId: this.recordId
     })
@@ -122,7 +134,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.subCodeSelectedId = res.FEC_SubCode__c;
 
         this.isSubmited = res.FEC_Is_Submited__c;
-
+        this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
+        this.recordTypeDevName = res.RecordType?.DeveloperName;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
