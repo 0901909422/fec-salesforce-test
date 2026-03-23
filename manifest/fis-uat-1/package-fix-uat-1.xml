@@ -148,6 +148,7 @@
 		<members>FEC_Customer_History__c.FEC_Marital_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Original_User_Queue_ID__c</members>
 		<members>FEC_Team_Queue__c.FEC_Name__c</members>
+		<members>Case.FEC_Global_Search__c</members>
         <name>CustomField</name>
     </types>
 	<types>
