@@ -52,7 +52,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
         const nodeType = this.item?.type;
         if (nodeType === 'Product Type' || nodeType === 'Product_Line') return 'FEC_MDM_Product_Type__c';
         if (nodeType === 'Business Process' || nodeType === 'Service_Type') return 'FEC_MDM_Business_Process__c';
-        if (nodeType === 'Category') return 'FEC_MDM_Category__c';
+        if (nodeType === 'Category' || nodeType === 'Sub Category') return 'FEC_MDM_Category__c';
         if (nodeType === 'Sub Category' || nodeType === 'Sub_Category') return 'FEC_MDM_Sub_Category__c';
         if (nodeType === 'Sub Code' || nodeType === 'Action') return 'FEC_MDM_Sub_Code__c';
 
@@ -172,12 +172,61 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
         console.log('[DEBUG][item setter] incomingId:', incomingId, '| currentId:', currentId, '| isDirty:', this.isDirty);
 
-        if (incomingId && incomingId === currentId && this.isDirty) {
-            this._item = value;
-            console.log('[DEBUG][item setter] Same node + isDirty → skip reset, keep editedItem and isDirty');
+        // Lấy các trường có thể chỉnh sửa để so sánh
+        const getEditableFields = (obj) => {
+            if (!obj) return {};
+            return {
+                Alias: obj.Alias,
+                NameEN: obj.NameEN,
+                nameVN: obj.nameVN,
+                PosOrder: obj.PosOrder,
+                Status: obj.Status
+            };
+        };
+
+        const incomingEditableFieldsStr = JSON.stringify(getEditableFields(value));
+
+        if (incomingId && incomingId === currentId) {
+            // Nếu parent đẩy xuống data cũ (giống hệt data parent đã đẩy lần trước) thì bỏ qua
+            // để bảo vệ data đã được save ở detail panel không bị reset về quá khứ do parent không refresh.
+            if (this._lastParentEditableFieldsStr === incomingEditableFieldsStr) {
+                console.log('[DEBUG][item setter] Parent passed identical editable fields, ignoring stale data.');
+                return;
+            }
+            this._lastParentEditableFieldsStr = incomingEditableFieldsStr;
+
+            // Check if actual server data changed (e.g., after Save All)
+            const isValueChanged = incomingEditableFieldsStr !== JSON.stringify(getEditableFields(this._item));
+
+            if (isValueChanged) {
+                console.log('[DEBUG][item setter] Server data updated, updating _originalItem to serve as new baseline for Undo');
+                this._item = value;
+                
+                // Cập nhật lại bản gốc từ server để Undo
+                this._originalItem = value ? JSON.parse(JSON.stringify(value)) : {};
+
+                if (!this.isDirty) {
+                    this.editedItem = value ? JSON.parse(JSON.stringify(value)) : {};
+                } else {
+                    // Nếu đang gõ mà server lưu xong trả về, thì mình kiểm tra lại isDirty
+                    const orig = this._originalItem || {};
+                    const curr = this.editedItem || {};
+                    let dirty = false;
+                    for (let key in curr) {
+                        if (curr[key] != orig[key]) {
+                            dirty = true;
+                            break;
+                        }
+                    }
+                    this.isDirty = dirty;
+                }
+            } else {
+                console.log('[DEBUG][item setter] No value change from server, preserving current state.');
+            }
             return;
         }
 
+        this._lastParentEditableFieldsStr = incomingEditableFieldsStr;
         this._item = value;
         this.editedItem = value ? JSON.parse(JSON.stringify(value)) : {};
         this._originalItem = value ? JSON.parse(JSON.stringify(value)) : {};
@@ -210,19 +259,26 @@ export default class FecMasterDataItemDetail extends LightningElement {
         return (friendlyLabel ? friendlyLabel + ' ID: ' : '') + code;
     }
 
+    @api
     validateForm() {
-        const allValid = [
-            ...this.template.querySelectorAll('lightning-input'),
-        ].reduce((validSoFar, inputCmp) => {
-            inputCmp.reportValidity();
-            return validSoFar && inputCmp.checkValidity();
-        }, true);
+        const inputs = [...this.template.querySelectorAll('lightning-input')];
+        let allValid = true;
+
+        inputs.forEach(inputCmp => {
+            inputCmp.reportValidity(); // Ép UI hiển thị màu đỏ nếu có lỗi
+            if (!inputCmp.checkValidity()) {
+                allValid = false;
+            }
+        });
+
+        console.log('[DEBUG][validateForm] Result:', allValid);
         return allValid;
     }
 
     handleSubmit(event) {
         if (!this.validateForm()) {
             this.showToast(LABEL_PLEASE_FILL_ALL, '', VARIANT_ERROR);
+            console.error('[DEBUG][handleSubmit] Validation failed.');
             return;
         }
 
@@ -233,26 +289,13 @@ export default class FecMasterDataItemDetail extends LightningElement {
                 this.showToast(LABEL_UPDATED_SUCCESS, '', VARIANT_SUCCESS);
                 showLog('handleSubmit SUCCESS', 'Bản ghi đã được lưu thành công');
 
-                // Cập nhật lại bản gốc để xóa trạng thái dirty
-                this._originalItem = JSON.parse(JSON.stringify(this.editedItem));
-                this.isDirty = false;
+                this.markAsSaved();
 
                 this.dispatchEvent(new CustomEvent('save', {
                     bubbles: true,
                     composed: true
                 }));
                 this.refreshHistoryPanel();
-
-                // =========================================================================
-                // LÀM MỚI HISTORY PANEL SAU KHI LƯU THÀNH CÔNG
-                // CHÌA KHÓA FIX LỖI: Tăng delay lên 2000ms (2 giây) 
-                // Lý do: Salesforce cần 1-2 giây để ghi bất đồng bộ dữ liệu History xuống DB
-                // =========================================================================
-                // if (this.isHistoryVisible) {
-                //     setTimeout(() => {
-                //         this.refreshHistoryPanel();
-                //     }, 2000);
-                // }
             })
             .catch(error => {
                 this.showToast(LABEL_ERROR, error.body?.message || error.message, VARIANT_ERROR);
@@ -264,18 +307,32 @@ export default class FecMasterDataItemDetail extends LightningElement {
         const field = event.target.name;
         const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
 
+        // Validation for whitespace-only input
+        if (event.target.type !== 'checkbox' && typeof value === 'string') {
+            if (value.length > 0 && value.trim().length === 0) {
+                event.target.setCustomValidity('Vui lòng không chỉ nhập khoảng trắng');
+            } else {
+                event.target.setCustomValidity('');
+            }
+            event.target.reportValidity();
+        }
+
         this.editedItem = JSON.parse(JSON.stringify({ ...this.editedItem, [field]: value }));
 
-        const orig = this._originalItem;
-        const curr = this.editedItem;
+        const orig = this._originalItem || {};
+        const curr = this.editedItem || {};
 
-        this.isDirty = (
-            curr.Alias !== orig.Alias ||
-            curr.NameEN !== orig.NameEN ||
-            curr.nameVN !== orig.nameVN ||
-            curr.PosOrder != orig.PosOrder ||
-            curr.Status !== orig.Status
-        );
+        // Check if ANY of the fields have changed
+        let dirty = false;
+        for (let key in curr) {
+            if (curr[key] != orig[key]) {
+                dirty = true;
+                break;
+            }
+        }
+        this.isDirty = dirty;
+        
+        console.log('[DEBUG][handleInputChange] isDirty evaluated to:', this.isDirty, 'Field changed:', field);
 
         this.dispatchEvent(new CustomEvent('nodebufferchange', {
             detail: this.editedItem,
@@ -367,10 +424,13 @@ export default class FecMasterDataItemDetail extends LightningElement {
     }
 
     handleRefresh() {
+        // 1. Tự Component Con khôi phục về bản gốc (A1)
         this.editedItem = JSON.parse(JSON.stringify(this._originalItem));
         this.isDirty = false;
+        
+        // 2. Chỉ báo cho Cha biết idType để Cha xóa dòng đó khỏi pendingChanges
         this.dispatchEvent(new CustomEvent('nodebufferreset', {
-            detail: { idType: this.item?.idType, id: this.item?.id },
+            detail: { idType: this.item?.idType },
             bubbles: true,
             composed: true
         }));
@@ -388,7 +448,11 @@ export default class FecMasterDataItemDetail extends LightningElement {
     @api
     markAsSaved() {
         // Lấy dữ liệu vừa edit đè lên dữ liệu gốc để xác nhận đã lưu
-        this._originalItem = JSON.parse(JSON.stringify(this.editedItem));
+        const updatedItem = { ...this._item, ...this.editedItem };
+        this._originalItem = JSON.parse(JSON.stringify(updatedItem));
+        this._item = JSON.parse(JSON.stringify(updatedItem)); // Sync _item too
+        this.editedItem = JSON.parse(JSON.stringify(updatedItem));
+        
         // Tắt trạng thái thay đổi -> Nút Undo sẽ lập tức bị Disable
         this.isDirty = false; 
         showLog('markAsSaved', 'Đã cập nhật bản gốc và disable nút Undo');

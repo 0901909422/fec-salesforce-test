@@ -295,11 +295,16 @@ public without sharing class FEC_MainInfoController {
     }
 
     private static String buildFullAddress(FEC_GetAddressesList.AddressInfo a) {
-        return String.join(new List<String>{
-            a.NumberStr, a.Building, a.Street,
-            a.Ward, a.District, a.City,
-            a.CountryName, a.ZipCode
-        }, ', ');
+        return FEC_CommonUltils.formatAddress(
+            a.Building,
+            a.NumberStr,
+            a.Street,
+            a.Ward,
+            a.District,
+            a.City,
+            a.CountryName,
+            a.ZipCode
+        );
     }
 
     private static MainInfoDTO mapToDTO(FEC_Customer_History__c h) {
