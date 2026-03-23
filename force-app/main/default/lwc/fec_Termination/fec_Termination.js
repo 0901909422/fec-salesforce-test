@@ -215,6 +215,14 @@ export default class Fec_Termination extends LightningElement {
         };
     }
 
+    normalizeApiDisplayValue(value) {
+        return value == null || value === '' ? '-' : value;
+    }
+
+    formatNumberOrDash(value) {
+        return value == null ? '-' : formatNum(value);
+    }
+
     get earlyTerminationFields() {
         const labelToApi = this.earlyTerminationLabelToApi;
         const labelByApi = this.earlyTerminationFieldLabelByApi;
@@ -248,7 +256,7 @@ export default class Fec_Termination extends LightningElement {
         const displayLabel = (fieldApiName, fallback) => labelByApi[fieldApiName] || fallback;
         if (this.overdue && this.overdue.length > 0) {
             return this.overdue.map((item) => {
-                const value = item.valueFormatted != null && item.valueFormatted !== '' ? item.valueFormatted : '0.00';
+                const value = this.normalizeApiDisplayValue(item.valueFormatted);
                 const fieldApiName = labelToApi[item.label];
                 const label = displayLabel(fieldApiName, item.label);
                 return this.buildField(label, value, fieldApiName);
@@ -284,10 +292,10 @@ export default class Fec_Termination extends LightningElement {
         return this.feeChargeList.map((row, index) => ({
             Id: 'fc-' + index,
             type: row.type || '',
-            assessedAmountFormatted: formatNum(row.assessedAmount),
-            collectedAmountFormatted: formatNum(row.collectedAmount),
-            waivedAmountFormatted: formatNum(row.waivedAmount),
-            outstandingAmountFormatted: formatNum(row.outstandingAmount),
+            assessedAmountFormatted: this.formatNumberOrDash(row.assessedAmount),
+            collectedAmountFormatted: this.formatNumberOrDash(row.collectedAmount),
+            waivedAmountFormatted: this.formatNumberOrDash(row.waivedAmount),
+            outstandingAmountFormatted: this.formatNumberOrDash(row.outstandingAmount),
             assessedAmountCellClass: isNegative(row.assessedAmount) ? NEGATIVE_CLASS : '',
             collectedAmountCellClass: isNegative(row.collectedAmount) ? NEGATIVE_CLASS : '',
             waivedAmountCellClass: isNegative(row.waivedAmount) ? NEGATIVE_CLASS : '',
