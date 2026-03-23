@@ -593,10 +593,17 @@ const toSortDateStr = (val) => {
   if (iso) return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`.slice(0, 10);
   const parts = s.split('/').filter(Boolean);
   if (parts.length === 3) {
-    const y = parts[2].length === 4 ? parts[2] : parts[0];
-    const m = parts[0].length <= 2 ? parts[0].padStart(2, '0') : parts[1].padStart(2, '0');
-    const d = parts[1] && parts[1].length <= 2 ? parts[1].padStart(2, '0') : parts[0].padStart(2, '0');
-    return `${y}-${m}-${d}`;
+    // DD/MM/YYYY (chuẩn hiển thị FEC) — năm 4 chữ số ở cuối
+    if (/^\d{4}$/.test(parts[2])) {
+      const d = parts[0].padStart(2, '0');
+      const m = parts[1].padStart(2, '0');
+      const y = parts[2];
+      return `${y}-${m}-${d}`;
+    }
+    // YYYY/MM/DD hoặc YYYY/M/D
+    if (/^\d{4}$/.test(parts[0])) {
+      return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+    }
   }
   return s;
 };

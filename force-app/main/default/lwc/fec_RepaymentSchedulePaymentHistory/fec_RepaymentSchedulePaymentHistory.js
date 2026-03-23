@@ -31,6 +31,25 @@ import FEC_Repay_Refresh_Button_Label from '@salesforce/label/c.FEC_Repay_Refres
 const SECTION4_EMPTY_CELL = '-';
 const SECTION4_TYPE_SCHEDULE = 'Repayment Schedule';
 const SECTION4_TYPE_PAYMENT = 'Payment History';
+
+/** Ô trống / placeholder từ API (giống HYPHEN Apex). */
+const isRepayEmptyCell = (value) =>
+    value == null || String(value).trim() === '' || String(value).trim() === SECTION4_EMPTY_CELL;
+
+/**
+ * Bỏ dòng Payment History do max(basicPh, secPh, payments) tạo thêm: chỉ còn paymentNo.
+ */
+const isPaymentHistoryMeaningfulRow = (row) => {
+    if (!row) return false;
+    return !(
+        isRepayEmptyCell(row.paymentDate) &&
+        isRepayEmptyCell(row.bookingDate) &&
+        isRepayEmptyCell(row.paymentAmount) &&
+        isRepayEmptyCell(row.particulars) &&
+        isRepayEmptyCell(row.paymentChannel)
+    );
+};
+
 import { toSortDateStr } from 'c/fec_CommonUtils';
 
 /**
@@ -181,7 +200,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
             return Number.isNaN(t) ? null : t;
         };
 
-        const sorted = [...data].sort((a, b) => {
+        const sorted = data.filter(isPaymentHistoryMeaningfulRow).sort((a, b) => {
             const ta = toTime(a?.paymentDate);
             const tb = toTime(b?.paymentDate);
             if (ta == null && tb != null) return 1;
@@ -299,9 +318,11 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
             });
         }
 
-        // Then add all Payment History rows.
         for (let i = 0; i < paymentList.length; i++) {
             const p = paymentList[i] || {};
+            if (!isPaymentHistoryMeaningfulRow(p)) {
+                continue;
+            }
             const paymentDateVal = (p.paymentDate != null && p.paymentDate !== '') ? p.paymentDate : e;
             rows.push({
                 Id: 's4-p-' + (i + 1),
