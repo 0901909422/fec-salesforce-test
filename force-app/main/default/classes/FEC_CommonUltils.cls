@@ -840,6 +840,91 @@ public with sharing class FEC_CommonUltils {
       System.debug('LOG INSERT ERROR: ' + e.getMessage());
     }
   }
+
+  public static String pickNameByLanguage(String nameEN, String nameVN, String language) {
+      String lang = String.valueOf(language);
+      if (lang != null && lang.toUpperCase() == FEC_ConstantCommon.LANGUAGE_VN) {
+          return String.isNotBlank(nameVN)
+              ? nameVN
+              : (String.isNotBlank(nameEN) ? nameEN : '');
+      }
+      return String.isNotBlank(nameEN)
+          ? nameEN
+          : (String.isNotBlank(nameVN) ? nameVN : '');
+  }
+
+  public static String getFieldType(String objectName, String fieldName) {
+    try {
+
+        Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+        if (sObjectType == null) return null;
+        Schema.DescribeSObjectResult objDescribe = sObjectType.getDescribe();
+        Schema.SObjectField fieldToken = objDescribe.fields.getMap().get(fieldName);
+        if (fieldToken == null) return null;
+        Schema.DisplayType t = fieldToken.getDescribe().getType();
+        switch on t {
+            when Picklist {
+                return FEC_ConstantCommon.KEY_PICKLIST;
+            }
+            when Boolean {
+                return FEC_ConstantCommon.KEY_CHECKBOX;
+            }
+            when Date {
+                return FEC_ConstantCommon.KEY_DATE;
+            }
+            when DateTime {
+                return FEC_ConstantCommon.KEY_DATETIME;
+            }
+            when Integer, Double {
+                return FEC_ConstantCommon.KEY_NUMBER;
+            }
+            when else {
+                return FEC_ConstantCommon.KEY_TEXT;
+            }
+        }
+    } catch (Exception e) {
+        System.debug('getFieldType error: ' + e.getMessage());
+        return null;
+    }
+  }
+
+  public static Integer toInt(Decimal d) {
+    return d == null ? null : Integer.valueOf(d);
+  }
+
+  public static String getFieldLabel(String objectName, String fieldName) {
+    try {
+        Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+        if (sObjectType == null) return null;
+
+        Schema.DescribeSObjectResult objDescribe = sObjectType.getDescribe();
+        Schema.SObjectField fieldToken = objDescribe.fields.getMap().get(fieldName);
+        if (fieldToken == null) return null;
+
+        return fieldToken.getDescribe().getLabel();
+    } catch (Exception e) {
+        System.debug('getFieldLabel error: ' + e.getMessage());
+        return null;
+    }
+  }
+  
+  /**
+   * Log API response using FEC_ResponseLog object.
+   * Centralized method to handle deferred logging.
+   */
+  @AuraEnabled
+  public static void logApiResponse(FEC_ResponseLog log) {
+    if (log != null) {
+      logApi(
+        log.apiName,
+        log.endpoint,
+        log.method,
+        log.requestBody,
+        log.response,
+        log.errorMessage
+      );
+    }
+  }
   
   public static String escapeXml(String s) {
     if (s == null)
