@@ -142,7 +142,8 @@ public without sharing class FEC_CreateCaseHandler {
         // CHANNEL / STATUS
         // ---------------------------
         interactionCase.FEC_Channel__c = dto.channel;
-        interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
+        String subChannel = dto.subChannel != null ? dto.subChannel.trim() : null;
+        interactionCase.FEC_Interaction_Subchannel__c = subChannel;
         
         
         if (dto.channel == FEC_ConstantCommon.CHANNEL_CHAT) {

@@ -10,6 +10,7 @@
 	</types>
 	<types>
         <members>Case.FEC_IPP_To_Close__c</members>
+		<members>Case.FEC_Interaction_Subchannel__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -124,6 +125,8 @@
 		<members>FEC_CreateInteractionGenesys</members>
 		<members>FEC_IPPClosureController</members>
 		<members>FEC_CaseEditNOCController</members>
+		<members>FEC_PINReissueServiceCallout</members>
+		<members>FEC_PinResetHandler</members>
         <name>ApexClass</name>
     </types>
 	<types>
