@@ -48,6 +48,7 @@
 		<members>FEC_Application_History__c</members>
 		<members>FEC_Asset__c</members>
 		<members>FEC_MRC__c</members>
+		<members>FEC_Hold_Case_Config__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
