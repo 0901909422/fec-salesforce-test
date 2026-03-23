@@ -1786,9 +1786,8 @@ public with sharing class FEC_CaseBusinessService {
           updatedCase.FEC_Current_Case_Stage__c = history.FEC_Previous_Stage__c;
           updatedCase.OwnerId = queueId;
           registerSkipOwnerChangeRoutingHistory(updatedCase.Id);
+          insert newHistory; 
           update updatedCase;
-
-          insert newHistory;
         }
       }
     } catch (Exception e) {
