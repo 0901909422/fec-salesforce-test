@@ -18,6 +18,8 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_TranferInformationCallout</members>
 		<members>FEC_CommonUltils</members>
+		<members>FEC_PINReissueServiceCallout</members>
+		<members>FEC_PinResetHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -79,6 +81,12 @@
 		<members>FEC_CS_CASE_TYPE_TOO_LONG_MSG</members>
 		<members>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</members>
 		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>fec_CaseBussiness</members>
+		<members>fec_PinResetHandling</members>
+		<members>fec_PinResetView</members>
+		<name>LightningComponentBundle</name>
 	</types>
     <version>65.0</version>
 </Package>

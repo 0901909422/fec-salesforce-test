@@ -19,7 +19,7 @@ public without sharing class FEC_PinResetHandler {
                 
             ;
             if(cases.isEmpty()){
-                throw new AuraHandledException('Invalid Case Id');
+                throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Case Id'}));
             }
             
             CardInfoResponse response = new CardInfoResponse();
