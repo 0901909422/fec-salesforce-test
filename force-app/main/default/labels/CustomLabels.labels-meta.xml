@@ -8139,4 +8139,68 @@
         <shortDescription>MSG UserType Null</shortDescription>
         <value>UserType is invalid or no longer than 15 characters</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Success</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case API success description</shortDescription>
+        <value>Case cancelled successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Channel_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case invalid Channel</shortDescription>
+        <value>Invalid Channel. Allowed: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_UserType_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case invalid UserType</shortDescription>
+        <value>Invalid UserType. Allowed: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Phone_Format_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case PhoneNumber format</shortDescription>
+        <value>PhoneNumber format is invalid. Expected format: Vietnamese (0xxxxxxxxx - 10 digits) or International (+xxxxxxxx - 8 to 15 digits with country code)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Case_Not_Found</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case not found by FEC_ID_Search</shortDescription>
+        <value>Case not found with ID: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Case_Already_Closed_Or_Completed</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case already closed or completed</shortDescription>
+        <value>Case is already Closed or Completed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Case_Already_Resolved</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case already cancelled</shortDescription>
+        <value>Case is already resolved.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Insufficient_Permissions</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case FLS on Case.Status</shortDescription>
+        <value>Insufficient permissions to update Case Status</value>
+    </labels>
 </CustomLabels>
