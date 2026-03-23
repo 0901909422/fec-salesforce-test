@@ -3,7 +3,17 @@
         <div class="slds-p-around_medium slds-grid slds-grid_vertical-align-center slds-border_bottom">
             <div class="slds-col slds-size_1-of-2 slds-grid slds-grid_vertical-align-center">
                 <lightning-icon icon-name="standard:campaign" size="small" class="custom-icon-purple slds-m-right_small"></lightning-icon>
-                <h2 class="slds-text-heading_small custom-header-title">Campaign Configuration</h2>
+                <h2 class="slds-text-heading_small custom-header-title">{label.lblCampaignConfiguration}</h2>
+            </div>
+            <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                <lightning-button 
+                    label={label.btnSave} 
+                    variant="brand" 
+                    icon-name="utility:save"
+                    onclick={handleSaveSchedule} 
+                    disabled={isSaveDisabled}
+                    class="slds-m-left_small">
+                </lightning-button>
             </div>
         </div>
 
@@ -13,7 +23,7 @@
                 <div class="slds-col slds-size_3-of-12">
                     <lightning-combobox
                         data-id="mappingDropdown"
-                        label="CS Campaign Mapping"
+                        label={label.lblCsCampaignMapping}
                         value={selectedMappingId}
                         placeholder="Select Campaign..."
                         options={mappingOptions}
@@ -25,14 +35,14 @@
                     <div class="slds-box slds-theme_shade slds-m-top_medium">
                         <div class="slds-grid slds-grid_vertical-align-center">
                             <div class="slds-col">
-                                <span class="slds-text-title_bold">No. of Inprogress records: </span>
+                                <span class="slds-text-title_bold">{label.lblNoOfInprogressRecords}</span>
                                 <span class="slds-badge slds-m-left_x-small">{inProgressCount}</span>
                             </div>
                             
                             <div class="slds-col slds-no-flex">
                                 <template if:true={inProgressCount}>
                                     <lightning-button 
-                                        label="Download Excel" 
+                                        label={label.btnDownloadExcel}
                                         icon-name="utility:download" 
                                         variant="neutral" 
                                         onclick={handleDownloadExcel}
@@ -47,13 +57,13 @@
                 <div class="slds-col slds-size_3-of-12">
                     <div class="db-job-announcement slds-m-bottom_small">
                         <lightning-icon icon-name="utility:info" size="x-small" class="slds-m-right_xx-small info-icon-bold"></lightning-icon>
-                        <strong>DB job will be run between 6 AM - 6 PM only</strong>
+                        <strong>{label.lblDbJobAnnouncement}</strong>
                     </div>
 
                     <div class="slds-p-top_small">
                         <lightning-input 
                             type="checkbox" 
-                            label="Enable Schedule" 
+                            label={label.lblEnableSchedule} 
                             checked={blnIsScheduleEnabled}
                             onchange={handleToggleSchedule}>
                         </lightning-input>
@@ -63,19 +73,22 @@
                 <div class="slds-col slds-size_6-of-12">
                     <template if:true={blnIsScheduleEnabled}>
                         <div class="schedule-section-gray">
-                            <p class="slds-text-title_bold slds-m-bottom_small">Do you want to run the campaign on weekends?</p>
+                            <p class="slds-text-title_bold slds-m-bottom_small">{label.lblRunWeekendQuestion}</p>
                             
                             <div class="slds-grid slds-m-bottom_small">
                                 <div class="slds-m-right_xx-large">
-                                    <lightning-input type="checkbox" label="Saturday" name="saturday" onchange={handleDayChange}></lightning-input>
+                                    <lightning-input type="checkbox" label={label.lblSaturday} name="saturday" checked={blnRunSaturday} onchange={handleDayChange}></lightning-input>
                                 </div>
                                 <div>
-                                    <lightning-input type="checkbox" label="Sunday" name="sunday" onchange={handleDayChange}></lightning-input>
+                                    <lightning-input type="checkbox" label={label.lblSunday} name="sunday" checked={blnRunSunday} onchange={handleDayChange}></lightning-input>
                                 </div>
                             </div>
 
                             <button class="custom-push-btn" disabled={isPushDisabled} onclick={handlePushRecord}>
-                                Push Record
+                                <template if:true={isLoading}>
+                                    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                                </template>
+                                {label.btnPushRecord}
                             </button>
                         </div>
                     </template>
@@ -84,7 +97,7 @@
 
             <div class="slds-m-top_xx-large" if:true={selectedMappingId}>
                 <button class="custom-upload-btn" onclick={handleUploadData}>
-                    Upload Campaign Data
+                    {label.lblUploadCampaignData}
                 </button>
             </div>
 

@@ -10,7 +10,9 @@ public class FEC_Constants {
     public static final String OPERATION_SUCCESS = System.Label.FEC_Operation_Success;
     public static final String ERROR_DELETE_RECORD_PREFIX = System.Label.FEC_Error_Delete_Record_Prefix;
     public static final String ERROR_DELETE_FIELDLIST_PREFIX = System.Label.FEC_Error_Delete_FieldList_Prefix;
-    
+    public static final String MSG_FILE_ERR = System.Label.FEC_Uploaded_File_Contains_Error_Message;
+    public static final String MSG_DUP_ERR  = System.Label.FEC_Duplicate_Records_Message;
+
     // Additional message labels (use generic error title label as fallback)
     public static final String ERROR_GENERIC_PREFIX = System.Label.FEC_Error_Title;
     public static final String ERROR_CANNOT_START_SYNC = System.Label.FEC_Error_Title;
@@ -239,4 +241,10 @@ public class FEC_Constants {
     public static final String FIELD_NEXT_STAGE              = 'FEC_Next_Stage__c';
     public static final String FIELD_NEXT_QUEUE              = 'FEC_Next_Queue__c';
     public static final String FIELD_TEAM_USER_GROUP         = 'FEC_Team_User_Group__c';
+
+    // Campaign
+    public static final Integer CAMPAIGN_LIFETIME = 2;
+    public static final Integer MAX_CALL_ATTEMPTS = 3;
+    public static final Integer CURRENT_CALL_ATTEMPT = 0;
+    public static final Integer RECORD_CURRENT_LIFETIME = 0;
 }

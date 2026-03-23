@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>fecUploadCampaignData</members>
+        <members>fecUploadCampaignModal</members>
+        <members>fecCampaignSetting</members>
+        <members>fecUtils</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>FEC_ScheduledPushCampaignDataBatch</members>
+        <members>FEC_DataCampaign</members>
+        <members>FEC_Constants</members>
+        <members>FEC_GetCallingListResultBatch</members>
+        <members>FEC_CheckCampaignStatusBatch</members>
+        <members>FEC_CampaignController</members>
+        <members>FEC_Util</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>FEC_DataCampaignTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>FEC_CS_Campaign__c</members>
+        <members>FEC_DataCampaign__c</members>
+        <members>FEC_Campaign__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>CustomLabel</name>
+    </types>
+    <version>65.0</version>
+</Package>

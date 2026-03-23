@@ -1,16 +1,56 @@
 import { LightningElement, track, wire } from 'lwc';
 import { loadScript } from 'lightning/platformResourceLoader';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE } from 'c/fecUtils';
 import FEC_SHEETJS from '@salesforce/resourceUrl/FEC_SheetJS';
-import getCampaignMappings from '@salesforce/apex/FecCampaignController.getCampaignMappings';
-import getInProgressSummary from '@salesforce/apex/FecCampaignController.getInProgressSummary';
+import getCampaignMappings from '@salesforce/apex/FEC_CampaignController.getCampaignMappings';
+import getInProgressSummary from '@salesforce/apex/FEC_CampaignController.getInProgressSummary';
+import pushRecords from '@salesforce/apex/FEC_CampaignController.pushRecords';
+import saveConfigurationDetails from '@salesforce/apex/FEC_CampaignController.saveConfigurationDetails';
+import unableToLoadRecordsMsg from '@salesforce/label/c.FEC_Unable_To_Load_Records_Message';
+import savedDataMsg from '@salesforce/label/c.FEC_Saved_Data';
+import savingConfigErrMsg from '@salesforce/label/c.FEC_Saving_Configuration_Error_Message';
+import selectACampaignMsg from '@salesforce/label/c.FEC_Please_Select_A_Campaign_Message';
+import errorLoadExcelLib from '@salesforce/label/c.FEC_Load_Excel_Lib';
+import inactiveItemMsg from '@salesforce/label/c.FEC_Label_Status_INACTIVE';
+import noContentMsg from '@salesforce/label/c.FEC_Msg_No_Content';
+import notifyPushStartedMsg from '@salesforce/label/c.FEC_Notify_Push_Started';
+import lblCampaignConfiguration from '@salesforce/label/c.FEC_Lbl_Campaign_Configuration';
+import btnSave from '@salesforce/label/c.FEC_Save';
+import lblCsCampaignMapping from '@salesforce/label/c.FEC_Lbl_CS_Campaign_Mapping';
+import placeholderSelectCampaign from '@salesforce/label/c.FEC_Placeholder_Select_Campaign';
+import lblNoOfInprogressRecords from '@salesforce/label/c.FEC_Lbl_No_Of_Inprogress_Records';
+import btnDownloadExcel from '@salesforce/label/c.FEC_Btn_Download_Excel';
+import lblDbJobAnnouncement from '@salesforce/label/c.FEC_Lbl_DB_Job_Announcement';
+import lblEnableSchedule from '@salesforce/label/c.FEC_Lbl_Enable_Schedule';
+import lblRunWeekendQuestion from '@salesforce/label/c.FEC_Lbl_Run_Weekend_Question';
+import lblSaturday from '@salesforce/label/c.FEC_Lbl_Saturday';
+import lblSunday from '@salesforce/label/c.FEC_Lbl_Sunday';
+import btnPushRecord from '@salesforce/label/c.FEC_Btn_Push_Record';
+import lblUploadCampaignData from '@salesforce/label/c.FEC_Lbl_Upload_Campaign_Data';
 
 export default class FecUploadCampaignData extends LightningElement {
+    label = {
+        lblCampaignConfiguration,
+        btnSave,
+        lblCsCampaignMapping,
+        placeholderSelectCampaign,
+        lblNoOfInprogressRecords,
+        btnDownloadExcel,
+        lblDbJobAnnouncement,
+        lblEnableSchedule,
+        lblRunWeekendQuestion,
+        lblSaturday,
+        lblSunday,
+        btnPushRecord,
+        lblUploadCampaignData
+    };
+
     @track blnIsScheduleEnabled = false;
     @track blnRunSaturday = false;
     @track blnRunSunday = false;
+    @track isSaving = false;
     @track blnIsModalOpen = false;
-    @track fileNameDisplay = 'No file chosen';
     @track inProgressCount = 0;
     @track inProgressData = [];
     @track mappingOptions = [];
@@ -67,7 +107,7 @@ export default class FecUploadCampaignData extends LightningElement {
             this.mappingOptions = options;
 
         } else if (error) {
-            this.showToast('Error', 'Lỗi tải danh sách Mapping: ' + error.body.message, 'error');
+            this.showToast(FAIL_TITLE, unableToLoadRecordsMsg + error.body.message, 'error');
         }
     }
 
@@ -88,7 +128,7 @@ export default class FecUploadCampaignData extends LightningElement {
         const selectedRecord = this.rawMappingData.find(item => item.Id === selectedId);
 
         if (selectedRecord && !selectedRecord.FEC_IsActive__c) {
-            this.showToast('Cảnh báo', `Campaign "${selectedRecord.Name}" đang ngưng hoạt động.`, 'warning');
+            this.showToast(WARNING_TITLE, `Campaign "${selectedRecord.Name + inactiveItemMsg}"`, 'warning');
             
             setTimeout(() => {
                 this.inProgressCount = 0;
@@ -102,6 +142,18 @@ export default class FecUploadCampaignData extends LightningElement {
         }
 
         this.selectedMappingId = selectedId;
+
+        if (selectedRecord && selectedRecord.FEC_Campaign__r) {
+            // Gán giá trị từ Object cha vào biến UI, mặc định false nếu null
+            this.blnIsScheduleEnabled = selectedRecord.FEC_ScheduleCampaign__c || false;
+            this.blnRunSaturday = selectedRecord.FEC_SaturdaySchedule__c || false;
+            this.blnRunSunday = selectedRecord.FEC_SundaySchedule__c || false;
+        } else {
+            // Reset về false nếu không tìm thấy dữ liệu liên quan
+            this.blnIsScheduleEnabled = false;
+            this.blnRunSaturday = false;
+            this.blnRunSunday = false;
+        }
         await this.refreshInProgressDetails();
     }
 
@@ -114,12 +166,12 @@ export default class FecUploadCampaignData extends LightningElement {
     handleDownloadExcel() {
         // 1. Kiểm tra thư viện và dữ liệu
         if (!this.librariesLoaded || !window.XLSX) {
-            this.showToast('Error', 'Thư viện Excel chưa được tải xong.', 'error');
+            this.showToast(FAIL_TITLE, errorLoadExcelLib, 'error');
             return;
         }
         
         if (!this.inProgressData || this.inProgressData.length === 0) {
-            this.showToast('Info', 'Không có dữ liệu In-progress để tải.', 'info');
+            this.showToast(WARNING_TITLE, noContentMsg, 'info');
             return;
         }
     
@@ -175,11 +227,53 @@ export default class FecUploadCampaignData extends LightningElement {
     }
 
     get isPushDisabled() {
-        return !this.selectedMappingId;
+        return !this.selectedMappingId || this.isLoading;
     }
 
-    handlePushRecord() {
-        console.log('Action: Push Record');
+    /**
+     * Xử lý sự kiện lưu cấu hình Schedule
+     */
+    async handleSaveSchedule() {
+        if (!this.selectedMappingId) {
+            this.showToast(FAIL_TITLE, selectACampaignMsg, 'error');
+            return;
+        }
+
+        this.isSaving = true;
+        try {
+            // Truyền các giá trị cờ hiện tại trên UI xuống Apex
+            await saveConfigurationDetails({
+                mappingId: this.selectedMappingId,
+                isSchedule: this.blnIsScheduleEnabled,
+                isSaturday: this.blnRunSaturday,
+                isSunday: this.blnRunSunday
+            });
+            
+            this.showToast(SUCCESS_TITLE, savedDataMsg, 'success');
+        } catch (error) {
+            this.showToast(FAIL_TITLE, savingConfigErrMsg + (error.body ? error.body.message : error.message), 'error');
+        } finally {
+            this.isSaving = false;
+        }
+    }
+
+    async handlePushRecord() {
+        if (!this.selectedMappingId) {
+            this.showToast(FAIL_TITLE, selectACampaignMsg, 'error');
+            return;
+        }
+    
+        this.isLoading = true;
+        try {
+            await pushRecords({ mappingId: this.selectedMappingId });
+            
+            this.showToast(SUCCESS_TITLE, notifyPushStartedMsg, 'success');
+            await this.refreshInProgressDetails();
+        } catch (error) {
+            this.showToast(FAIL_TITLE, error.body ? error.body.message : error.message, 'error');
+        } finally {
+            this.isLoading = false;
+        }
     }
 
     async handleUploadFile() {

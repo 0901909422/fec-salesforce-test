@@ -1,31 +1,55 @@
 import { LightningElement, wire, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
-import getCampaignMappings from '@salesforce/apex/FecCampaignController.getCampaignMappings';
-import getCampaignConfigs from '@salesforce/apex/FecCampaignController.getCampaignConfigs';
-import saveMapping from '@salesforce/apex/FecCampaignController.saveMapping';
-import deleteMapping from '@salesforce/apex/FecCampaignController.deleteMapping';
+import { SUCCESS_TITLE, FAIL_TITLE, EDIT_ACTION, DELETE_ACTION } from 'c/fecUtils';
+import getCampaignMappings from '@salesforce/apex/FEC_CampaignController.getCampaignMappings';
+import getCampaignConfigs from '@salesforce/apex/FEC_CampaignController.getCampaignConfigs';
+import saveMapping from '@salesforce/apex/FEC_CampaignController.saveMapping';
+import deleteMapping from '@salesforce/apex/FEC_CampaignController.deleteMapping';
+import savedDataMsg from '@salesforce/label/c.FEC_Saved_Data';
+import deletedMsg from '@salesforce/label/c.FEC_Delete_Success_Message';
+import unableToLoadRecordsMsg from '@salesforce/label/c.FEC_Unable_To_Load_Records_Message';
+import requiredFieldsMsg from '@salesforce/label/c.FEC_Error_Required_Fields';
+import LBL_IS_ACTIVE from '@salesforce/label/c.FEC_Lbl_Is_Active';
+import LBL_CS_CAMPAIGN_NAME from '@salesforce/label/c.FEC_Lbl_CS_Campaign_Name';
+import LBL_GENESYS_CAMPAIGN from '@salesforce/label/c.FEC_Lbl_Genesys_Campaign';
+import LBL_CARD_TITLE from '@salesforce/label/c.FEC_Lbl_Mapping_Configuration_Title';
+import LBL_NEW_BTN from '@salesforce/label/c.FEC_Btn_Add_New';
+import LBL_CANCEL from '@salesforce/label/c.Cancel';
+import LBL_SAVE from '@salesforce/label/c.FEC_Button_Save';
+import addModalTitle from '@salesforce/label/c.FEC_Lbl_Add_New_Modal_Title';
+import editModalTitle from '@salesforce/label/c.FEC_Lbl_Edit_Title';
 
 // Cấu hình cột cho Datatable
 const COLUMNS = [
-    { label: 'CS Campaign Name', fieldName: 'Name' },
-    { label: 'Genesys Campaign', fieldName: 'GenesysName' },
-    { label: 'Active', fieldName: 'FEC_IsActive__c', type: 'boolean' },
+    { label: LBL_CS_CAMPAIGN_NAME, fieldName: 'Name' },
+    { label: LBL_GENESYS_CAMPAIGN, fieldName: 'GenesysName' },
+    { label: LBL_IS_ACTIVE, fieldName: 'FEC_IsActive__c', type: 'boolean' },
     {
         type: 'action',
         typeAttributes: { rowActions: [
-            { label: 'Edit', name: 'edit' },
-            { label: 'Delete', name: 'delete' }
+            { iconName: 'utility:edit', name: EDIT_ACTION },
+            { iconName: 'utility:delete', name: DELETE_ACTION }
         ] }
     }
 ];
 
 export default class FecCampaignSettings extends LightningElement {
+    label = {
+        cardTitle: LBL_CARD_TITLE,
+        newBtn: LBL_NEW_BTN,
+        csCampaignName: LBL_CS_CAMPAIGN_NAME,
+        genesysCampaign: LBL_GENESYS_CAMPAIGN,
+        isActive: LBL_IS_ACTIVE,
+        cancel: LBL_CANCEL,
+        save: LBL_SAVE
+    };
+
     columns = COLUMNS;
     @track mappingList = [];
     @track genesysOptions = [];
     isModalOpen = false;
-    modalTitle = 'New Campaign Mapping';
+    modalTitle = addModalTitle;
     isLoading = false;
     wiredMappingResult;
 
@@ -45,7 +69,7 @@ export default class FecCampaignSettings extends LightningElement {
                 GenesysName: row.FEC_Campaign__r ? row.FEC_Campaign__r.Name : ''
             }));
         } else if (result.error) {
-            this.showToast('Error', 'Không tải được danh sách Mapping', 'error');
+            this.showToast(FAIL_TITLE, unableToLoadRecordsMsg, 'error');
         }
     }
 
@@ -61,7 +85,7 @@ export default class FecCampaignSettings extends LightningElement {
 
     handleOpenModal() {
         this.resetForm();
-        this.modalTitle = 'New Campaign Mapping';
+        this.modalTitle = addModalTitle;
         this.isModalOpen = true;
     }
 
@@ -73,11 +97,11 @@ export default class FecCampaignSettings extends LightningElement {
         const actionName = event.detail.action.name;
         const row = event.detail.row;
 
-        if (actionName === 'edit') {
+        if (actionName === EDIT_ACTION) {
             this.currentRecord = { ...row };
-            this.modalTitle = 'Edit Mapping: ' + row.Name;
+            this.modalTitle = `${editModalTitle} ${row.Name}`;
             this.isModalOpen = true;
-        } else if (actionName === 'delete') {
+        } else if (actionName === DELETE_ACTION) {
             this.handleDelete(row.Id);
         }
     }
@@ -93,18 +117,18 @@ export default class FecCampaignSettings extends LightningElement {
 
     async handleSave() {
         if (!this.currentRecord.Name || !this.currentRecord.FEC_Campaign__c) {
-            this.showToast('Lỗi', 'Vui lòng nhập CS Name và chọn Genesys Campaign', 'warning');
+            this.showToast(FAIL_TITLE, requiredFieldsMsg, 'error');
             return;
         }
 
         this.isLoading = true;
         try {
             await saveMapping({ mappingData: this.currentRecord });
-            this.showToast('Thành công', 'Đã lưu Mapping', 'success');
+            this.showToast(SUCCESS_TITLE, savedDataMsg, 'success');
             this.handleCloseModal();
             refreshApex(this.wiredMappingResult);
         } catch (error) {
-            this.showToast('Lỗi', error.body.message, 'error');
+            this.showToast(FAIL_TITLE, error.body.message, 'error');
         } finally {
             this.isLoading = false;
         }
@@ -114,10 +138,10 @@ export default class FecCampaignSettings extends LightningElement {
         this.isLoading = true;
         try {
             await deleteMapping({ recordId: recordId });
-            this.showToast('Thành công', 'Đã xóa Mapping', 'success');
+            this.showToast(SUCCESS_TITLE, deletedMsg, 'success');
             refreshApex(this.wiredMappingResult);
         } catch (error) {
-            this.showToast('Lỗi xóa', error.body.message, 'error');
+            this.showToast(FAIL_TITLE, error.body.message, 'error');
         } finally {
             this.isLoading = false;
         }

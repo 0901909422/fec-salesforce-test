@@ -3,15 +3,36 @@ import { loadScript } from 'lightning/platformResourceLoader';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import FEC_SHEETJS from '@salesforce/resourceUrl/FEC_SheetJS';
 import { convertExcelToTimestamp } from 'c/fecUtils';
-import uploadCampaignData from '@salesforce/apex/FecCampaignController.uploadCampaignData';
-
+import { SUCCESS_TITLE, FAIL_TITLE } from 'c/fecUtils';
+import uploadCampaignData from '@salesforce/apex/FEC_CampaignController.uploadCampaignData';
+import lblNoFileChosen from '@salesforce/label/c.FEC_Lbl_No_File_Chosen';
+import savedDataMsg from '@salesforce/label/c.FEC_Saved_Data';
+import errorUploadAtLeastExcelFile from '@salesforce/label/c.FEC_Error_Upload_At_Least_Excel_File';
+import errorCannotReadFile from '@salesforce/label/c.FEC_Cannot_Read_File_Message';
+import lblUploadCampaignData from '@salesforce/label/c.FEC_Lbl_Upload_Campaign_Data';
+import lblUploadInstruction from '@salesforce/label/c.FEC_Lbl_Upload_Instruction';
+import lblChooseFile from '@salesforce/label/c.FEC_Lbl_Choose_File';
+import lblNoTemplateQuestion from '@salesforce/label/c.FEC_Lbl_No_Template_Question';
+import btnDownloadTemplate from '@salesforce/label/c.FEC_Btn_Download_Template';
+import btnCancel from '@salesforce/label/c.Cancel';
+import btnSave from '@salesforce/label/c.Save';
 
 export default class FecUploadCampaignModal extends LightningElement {
+    label = {
+        lblNoFileChosen,
+        lblUploadCampaignData,
+        lblUploadInstruction,
+        lblChooseFile,
+        lblNoTemplateQuestion,
+        btnDownloadTemplate,
+        btnCancel,
+        btnSave
+    };
     @api isShow = false;
     @api selectedCampaignId;
 
     @track isLoading = false;
-    @track fileNameDisplay = 'No file chosen';
+    @track fileNameDisplay = this.label.lblNoFileChosen;
     
     selectedFile;
     librariesLoaded = false;
@@ -37,7 +58,7 @@ export default class FecUploadCampaignModal extends LightningElement {
             this.selectedFile = file;
             this.fileNameDisplay = file.name;
         } else {
-            this.fileNameDisplay = 'No file chosen';
+            this.fileNameDisplay = this.label.lblNoFileChosen;
         }
     }
 
@@ -57,7 +78,7 @@ export default class FecUploadCampaignModal extends LightningElement {
 
     handleConfirm() {
         if (!this.selectedFile) {
-            this.showToast('Lỗi', 'Vui lòng chọn file Excel', 'error');
+            this.showToast(FAIL_TITLE, errorUploadAtLeastExcelFile, 'error');
             return;
         }
 
@@ -78,7 +99,7 @@ export default class FecUploadCampaignModal extends LightningElement {
         };
         reader.onerror = (error) => {
             this.isUploading = false;
-            this.showToast('Lỗi', 'Không thể đọc file', 'error');
+            this.showToast(FAIL_TITLE, errorCannotReadFile, 'error');
         };
         reader.readAsBinaryString(this.selectedFile);
     }
@@ -99,15 +120,15 @@ export default class FecUploadCampaignModal extends LightningElement {
     
             const result = await uploadCampaignData({ 
                 jsonString: JSON.stringify(processedData), 
-                campaignId: this.selectedCampaignId 
+                csCampaignId: this.selectedCampaignId 
             })
 
             if (result === 'Success') {
-                this.showToast('Thành công', 'Đã lưu dữ liệu!', 'success');
+                this.showToast(SUCCESS_TITLE, savedDataMsg, 'success');
                 this.dispatchEvent(new CustomEvent('save'));
             }
         } catch (error) {
-            this.showToast('Lỗi', error.body?.message || error.message, 'error');
+            this.showToast(FAIL_TITLE, error.body?.message || error.message, 'error');
         } finally {
             this.resetForm();
             this.isLoading = false;
@@ -122,7 +143,7 @@ export default class FecUploadCampaignModal extends LightningElement {
             fileInput.value = null; 
         }
 
-        this.fileNameDisplay = 'No file chosen';
+        this.fileNameDisplay = this.label.lblNoFileChosen;
     }
 
     showToast(title, message, variant) {

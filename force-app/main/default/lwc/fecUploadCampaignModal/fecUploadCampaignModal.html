@@ -1,6 +1,6 @@
 <template>
     <c-fec-generic-modal 
-        title="Upload Campaign Data"
+        title={label.lblUploadCampaignData}
         onclose={handleClose}>
 
         <div if:true={isLoading} class="slds-is-relative">
@@ -9,12 +9,12 @@
 
         <div>
             <div class="upload-container">
-                <p class="instruction-text">Choose an excel file with the template to upload details</p>
+                <p class="instruction-text">{label.lblUploadInstruction}</p>
                 
                 <div class="file-input-wrapper slds-m-top_small">
                     <label class="custom-file-upload">
                         <input type="file" accept=".xlsx, .xls" onchange={handleFileChange}/>
-                        Choose File
+                        {label.lblChooseFile}
                     </label>
                     <span class="file-name-display">{fileNameDisplay}</span>
                 </div>
@@ -23,12 +23,12 @@
             <div class="template-section">
                 <div class="slds-grid slds-grid_vertical-align-center">
                     <div class="slds-col">
-                        <p class="template-question">Don't have the template?</p>
+                        <p class="template-question">{label.lblNoTemplateQuestion}</p>
                     </div>
                     <div class="slds-col slds-grow-none">
                         <button class="btn-download" onclick={downloadTemplate}>
                             <lightning-icon icon-name="utility:download" size="xx-small" variant="info" class="slds-m-right_xx-small blue-icon"></lightning-icon>
-                            Download template
+                            {label.btnDownloadTemplate}
                         </button>
                     </div>
                 </div>
@@ -36,8 +36,8 @@
         </div>
 
         <div slot="footer">
-            <button class="slds-button slds-button_neutral btn-round" onclick={handleClose}>Cancel</button>
-            <button class="slds-button slds-button_brand btn-round btn-brand-blue" onclick={handleConfirm}>Save</button>
+            <button class="slds-button slds-button_neutral btn-round" onclick={handleClose}>{label.btnCancel}</button>
+            <button class="slds-button slds-button_brand btn-round btn-brand-blue" onclick={handleConfirm}>{label.btnSave}</button>
         </div>
 
     </c-fec-generic-modal>
