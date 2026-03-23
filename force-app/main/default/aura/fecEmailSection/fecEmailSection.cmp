@@ -44,7 +44,7 @@
                     </lightning:select>
                 </div>
                 <div class="field-col">
-                    <label class="field-label">Email Template</label>
+                    <label class="field-label">Reply Template</label>
                     <lightning:select name="replyTemplate" label="" value="{!v.replyTemplate}" onchange="{!c.onTemplateChange}" class="field-select">
                         <option value="">--None--</option>
                         <aura:iteration items="{!v.templateOptions}" var="t">
