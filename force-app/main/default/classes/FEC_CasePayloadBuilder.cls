@@ -9,14 +9,15 @@ public class FEC_CasePayloadBuilder {
      */
     public static String buildBatch(
         List<Case> cases,
-        Map<Id, List<FEC_Case_Remarks__c>> remarksByCaseId
+        Map<Id, List<FEC_Case_Remarks__c>> remarksByCaseId,
+        Map<Id, User> usersById
     ) {
         List<Map<String, Object>> batchList = new List<Map<String, Object>>();
         for (Case c : cases) {
             List<FEC_Case_Remarks__c> remarks = remarksByCaseId.containsKey(c.Id)
                 ? remarksByCaseId.get(c.Id)
                 : new List<FEC_Case_Remarks__c>();
-            batchList.add(buildOne(c, remarks));
+            batchList.add(buildOne(c, remarks, usersById));
         }
         return JSON.serialize(batchList);
     }
@@ -24,7 +25,8 @@ public class FEC_CasePayloadBuilder {
     @TestVisible
     public static Map<String, Object> buildOne(
         Case c,
-        List<FEC_Case_Remarks__c> remarks
+        List<FEC_Case_Remarks__c> remarks,
+        Map<Id, User> usersById
     ) {
         Map<String, Object> p = new Map<String, Object>();
 
@@ -37,13 +39,13 @@ public class FEC_CasePayloadBuilder {
         p.put('LastModifiedDate', formatDt(c.LastModifiedDate));
         p.put('ClosedDate',       formatDt(c.ClosedDate));
 
-        // ── Users ─────────────────────────────────────────────────────────────
+        // ── Users — lookup từ usersById vì CreatedBy/Owner là polymorphic Name ──
         p.put('CreatedById',      c.CreatedById);
-        p.put('CreatedBy',        userMap(c.CreatedBy));
+        p.put('CreatedBy',        userMap(usersById.get(c.CreatedById)));
         p.put('LastModifiedById', c.LastModifiedById);
-        p.put('LastModifiedBy',   userMap(c.LastModifiedBy));
+        p.put('LastModifiedBy',   userMap(usersById.get(c.LastModifiedById)));
         p.put('OwnerId',          c.OwnerId);
-        p.put('Owner',            userMap(c.Owner));
+        p.put('Owner',            userMap(usersById.get(c.OwnerId)));
 
         // ── Interaction ───────────────────────────────────────────────────────
         p.put('FEC_External_Interaction_ID__c',   c.FEC_External_Interaction_ID__c);
@@ -167,7 +169,23 @@ public class FEC_CasePayloadBuilder {
         return p;
     }
 
-    // ── User map ──────────────────────────────────────────────────────────────
+    // ── User map (overload 1) — nhận User trực tiếp từ usersById lookup ────────
+    private static Map<String, Object> userMap(User u) {
+        if (u == null) return null;
+        return new Map<String, Object>{
+            'Id'                   => u.Id,
+            'Name'                 => u.Name,
+            'Username'             => u.Username,
+            'Email'                => u.Email,
+            'Phone'                => u.Phone,
+            'FEC_Agent_ID__c'      => u.FEC_Agent_ID__c,
+            'FEC_Default_Queue__c' => u.FEC_Default_Queue__c
+        };
+    }
+
+    // ── User map (overload 2) — nhận SObject cho FEC_Interaction_Resolved_By__r ─
+    // Relationship này là typed User (không phải polymorphic Name)
+    // nên custom fields có thể truy cập qua .get()
     private static Map<String, Object> userMap(SObject u) {
         if (u == null) return null;
         return new Map<String, Object>{
