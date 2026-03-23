@@ -140,7 +140,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_INSURANCE = 'INSURANCE';
     public static final String PRODUCT_TYPE_LOAN = 'LOAN';
     public static final String PRODUCT_TYPE_CARD = 'CARD';
-    public static final String PRODUCT_TYPE_UBANK = 'Ubank';
+      public static final String PRODUCT_TYPE_UBANK = 'UBank';
     public static final String PRODUCT_NON_EXISTING_CUSTOMER = 'Non-Existing Customer';
     
     public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
@@ -157,6 +157,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_STATUS_NEW = 'New';
     public static final String CASE_STATUS_OPEN = 'Open';
     public static final String CASE_STATUS_PENDING = 'Pending';
+    /** Prefix cho Status dạng Pending-{Team} / Pending-{Team1}_{Team2} */
+    public static final String CASE_STATUS_PENDING_PREFIX = 'Pending-';
     
     public static final String CASE_WEB_ORIGIN = 'Web';
     
@@ -205,5 +207,7 @@ public with sharing class FEC_ConstantCommon {
     //Get Next Work
     public static final String CASE_TYPE_DESCRIPTION = 'Get Next Work';
     public static final String CASE_ROUTING_ACTION = 'Route to';
+    /** Routing Action History: đổi Owner Case (khớp FEC_CaseBusinessService.buildRoutingActionHistoryRecord). */
+    public static final String FEC_RAH_DESCRIPTION_CHANGE_OWNER = 'Change Owner';
     public static final String CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER = 'Resolved-CannotContactCustomer';
 }
