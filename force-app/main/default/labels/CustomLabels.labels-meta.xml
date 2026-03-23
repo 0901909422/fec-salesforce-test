@@ -6487,6 +6487,41 @@
         <value>Get next work</value>
     </labels>
     <labels>
+        <fullName>title_Select_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>You&apos;ve selected 1 record.</value>
+    </labels>
+    <labels>
+        <fullName>title_Toast_Event</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>No Case Found</value>
+    </labels>
+    <labels>
+        <fullName>UBankCustomberServiceEmail</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UBankCustomberServiceEmail</shortDescription>
+        <value>tsalesforce63@gmail.com</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Ubank_Email_DevName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Ubank_Email_DevName</shortDescription>
+        <value>FEC_Ubank_Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Ubank_Skill_DevName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Ubank_Skill_DevName</shortDescription>
+        <value>Ubank_Email</value>
+    </labels>
+    <labels>
         <fullName>User_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -8016,10 +8051,1290 @@
         <value>Failed to retrieve card info for Account Number</value>
     </labels>
     <labels>
+        <fullName>FEC_Case_Created_By_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Case_Created_By_Label</shortDescription>
+        <value>Case Created By</value>
+    </labels>
+    <labels>
         <fullName>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC CREATE CS CASE SUCCESSFULLY MSG</shortDescription>
         <value>Case created successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Case_Created_On_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Case_Created_On_Label</shortDescription>
+        <value>Case Created On</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Closed_Service_Cases_Section_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Closed_Service_Cases_Section_Title</shortDescription>
+        <value>Closed Service Cases</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Title_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Interaction_Title_Label</shortDescription>
+        <value>Interaction</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interactions_Section_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Interactions_Section_Title</shortDescription>
+        <value>Interactions</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Sub_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Label_Sub_Channel</shortDescription>
+        <value>Sub Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Pending_Service_Cases_Section_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Pending_Service_Cases_Section_Title</shortDescription>
+        <value>Pending Service Cases</value>
+    </labels>
+        <labels>
+        <fullName>FEC_Activity_ID_Label</fullName>
+        <categories>fec_AppInfo</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Activity_ID_Label</shortDescription>
+        <value>Activity ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Additional_Info_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Additional_Info_Label</shortDescription>
+        <value>Additional Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Amount_Pledged_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Amount_Pledged_Label</shortDescription>
+        <value>Amount Pledged</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Application_History_Label</fullName>
+        <categories>fec_AppInfo</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Application_History_Label</shortDescription>
+        <value>Application History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Area</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Area</shortDescription>
+        <value>Area</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Asset_Color_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Asset_Color_Label</shortDescription>
+        <value>Asset Color</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Asset_Cost_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Asset_Cost_Label</shortDescription>
+        <value>Asset Cost</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Asset_Description_Label</fullName>
+        <categories>fec_Asset</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Asset_Description_Label</shortDescription>
+        <value>Asset Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Asset_Label</fullName>
+        <categories>fec_Asset</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Asset_Label</shortDescription>
+        <value>Asset</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Asset_Model_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Asset_Model_Label</shortDescription>
+        <value>Asset Model</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Asset_Type_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Asset_Type_Label</shortDescription>
+        <value>Asset Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Bought_Date_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Bought_Date_Label</shortDescription>
+        <value>Bought Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Category_Code_Label</fullName>
+        <categories>fec_Asset</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Category_Code_Label</shortDescription>
+        <value>Category Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chasis_No_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Chasis_No_Label</shortDescription>
+        <value>Chasis No.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delivery_Date</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Delivery_Date</shortDescription>
+        <value>Delivery Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Edit_Date_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Edit_Date_Label</shortDescription>
+        <value>Edit Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Engine_No_Label</fullName>
+        <categories>fec_Asset</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Engine_No_Label</shortDescription>
+        <value>Engine No.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ID</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_ID</shortDescription>
+        <value>ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_Zone</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MRC_Zone</shortDescription>
+        <value>MRC Zone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Error_API_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Error API Label</shortDescription>
+        <value>Tải Dữ liệu Không Thành Công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Make_Date_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Make_Date_Label</shortDescription>
+        <value>Make Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Modified_Date</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Modified_Date</shortDescription>
+        <value>Modified Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notarized_MRC</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Notarized_MRC</shortDescription>
+        <value>Notarized MRC</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Original_MRC</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Original_MRC</shortDescription>
+        <value>Original MRC</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Plate_Number</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Plate_Number</shortDescription>
+        <value>Plate Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Postal_Code</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Postal_Code</shortDescription>
+        <value>Postal Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Posted_Date</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Posted_Date</shortDescription>
+        <value>Posted Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Provided_Number</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Provided_Number</shortDescription>
+        <value>Provided Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Received_Date</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Received_Date</shortDescription>
+        <value>Received Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Receiver</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Receiver</shortDescription>
+        <value>Receiver</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reg_No_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Reg_No_Label</shortDescription>
+        <value>Reg No.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Remark</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Remark</shortDescription>
+        <value>Remark</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status</shortDescription>
+        <value>Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_ID</fullName>
+        <categories>fec_MRC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_ID</shortDescription>
+        <value>Status ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Label</fullName>
+        <categories>fec_AppInfo</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Label</shortDescription>
+        <value>Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Supplier_Name_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Supplier_Name_Label</shortDescription>
+        <value>Supplier Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_User_Label</fullName>
+        <categories>fec_AppInfo</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_User_Label</shortDescription>
+        <value>User</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Info_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Information (Email)</shortDescription>
+        <value>Interaction Information (Email)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Email</shortDescription>
+        <value>Interaction Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Input_Placeholder</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Nhập email</shortDescription>
+        <value>Nhập email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Required_Msg</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Vui lòng nhập email.</shortDescription>
+        <value>Vui lòng nhập email.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Invalid_Msg</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Định dạng email không hợp lệ.</shortDescription>
+        <value>Định dạng email không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Save_Error</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lưu email thất bại.</shortDescription>
+        <value>Lưu email thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Send_To_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Send To</shortDescription>
+        <value>Send To</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Parent_ID_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Parent ID</shortDescription>
+        <value>Parent ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lookup_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lookup Error</shortDescription>
+        <value>Lookup Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lookup_Search_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lookup Search Error</shortDescription>
+        <value>An error occured while searching with the lookup field.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Notification Information</shortDescription>
+        <value>Notification Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Notification Template</shortDescription>
+        <value>Notification Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Successfully_Created</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Successfully Created</shortDescription>
+        <value>Successfully created</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CaseType_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG CaseType Null</shortDescription>
+        <value>Casetype is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Category_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Category Null</shortDescription>
+        <value>Category is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Channel_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Channel Null</shortDescription>
+        <value>Channel is null or invalid &quot;&quot;</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Datetime_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Datetime Null</shortDescription>
+        <value>DateTime is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Get_CS_Data_Success</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Get CS Data Success</shortDescription>
+        <value>Get CS master data successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_No_Longer</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG No Longer</shortDescription>
+        <value>&quot; or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ProductType_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG ProductType Null</shortDescription>
+        <value>ProductType is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SubCategory_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG SubCategory Null</shortDescription>
+        <value>SubCategory is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SubCode_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG SubCode Null</shortDescription>
+        <value>SubCode is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Sys_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG_Sys_Null</shortDescription>
+        <value>Sys is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_TransactionId_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG TransactionId Null</shortDescription>
+        <value>TransactionID is null or invalid &quot;&quot;</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_UserType_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG UserType Null</shortDescription>
+        <value>UserType is invalid or no longer than 15 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Contract_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract section label</shortDescription>
+        <value>Contract</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Loan_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loan section label</shortDescription>
+        <value>Loan</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Payment_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment section label</shortDescription>
+        <value>Payment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Loading_Alt</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loading spinner alternative text</shortDescription>
+        <value>Loading...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Disbursement_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Disbursement section label</shortDescription>
+        <value>Disbursement</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Termination card title</shortDescription>
+        <value>Termination</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Early_Termination_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Early Termination section label</shortDescription>
+        <value>Early Termination</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Overdue_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Overdue section label</shortDescription>
+        <value>Overdue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Fee_Charge_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fee Charge section label</shortDescription>
+        <value>Fee &amp; Charge</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_No_Fee_Charge_Data</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No fee charge data message</shortDescription>
+        <value>No fee charge data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_No_Data</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No data message</shortDescription>
+        <value>No data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Type_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Termination type column label</shortDescription>
+        <value>Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Assessed_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assessed amount column label</shortDescription>
+        <value>Assessed Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Collected_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Collected amount column label</shortDescription>
+        <value>Collected Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Waived_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Waived amount column label</shortDescription>
+        <value>Waived Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Outstanding_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Outstanding amount column label</shortDescription>
+        <value>Outstanding Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repayment_Schedule_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Repayment Schedule section label</shortDescription>
+        <value>Repayment Schedule</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Payment_History_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment History section label</shortDescription>
+        <value>Payment History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Real_Time_Payment_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Real-Time Payment section label</shortDescription>
+        <value>Real-Time Payment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repayment_Schedule_Payment_History_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Repayment Schedule &amp; Payment History section label</shortDescription>
+        <value>Repayment Schedule &amp; Payment History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Contract_Number_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract Number (Main Info Loan Account)</shortDescription>
+        <value>Contract Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Contract_Type_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract Type (Main Info Loan Account)</shortDescription>
+        <value>Contract Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Charge_Off_Date_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Charge Off Date (Main Info Loan Account)</shortDescription>
+        <value>Charge Off Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Contract_Status_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract Status (Main Info Loan Account)</shortDescription>
+        <value>Contract Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Product_Code_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Product Code (Main Info Loan Account)</shortDescription>
+        <value>Product Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Rate_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Rate (Main Info Loan Account)</shortDescription>
+        <value>Rate</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Agreement_Date_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Agreement Date (Main Info Loan Account)</shortDescription>
+        <value>Agreement Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Scheme_ID_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Scheme ID (Main Info Loan Account)</shortDescription>
+        <value>Scheme ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Account_Status_Change_Date_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Status Change Date (Main Info Loan Account)</shortDescription>
+        <value>Account Status Change Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Scheme_Desc_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Scheme Desc (Main Info Loan Account)</shortDescription>
+        <value>Scheme Desc</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Loan_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loan Amount (Main Info Loan Account)</shortDescription>
+        <value>Loan Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Tenure_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Tenure (Main Info Loan Account)</shortDescription>
+        <value>Tenure</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Installment_Remaining_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Installment Remaining (Main Info Loan Account)</shortDescription>
+        <value>Installment Remaining</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Insurance_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Insurance Amount (Main Info Loan Account)</shortDescription>
+        <value>Insurance Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_EMI_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>EMI (Main Info Loan Account)</shortDescription>
+        <value>EMI</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_First_Payment_Date_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>First Payment Date (Main Info Loan Account)</shortDescription>
+        <value>First Payment Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Last_Payment_Date_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Payment Date (Main Info Loan Account)</shortDescription>
+        <value>Last Payment Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Next_Due_Date_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Next Due Date (Main Info Loan Account)</shortDescription>
+        <value>Next Due Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Days_Past_Due_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Days Past Due (Main Info Loan Account)</shortDescription>
+        <value>Days Past Due</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Company_Name_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Company Name (Main Info Loan Account)</shortDescription>
+        <value>Company Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Sold_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sold Amount (Main Info Loan Account)</shortDescription>
+        <value>Sold Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Sold_Date_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sold Date (Main Info Loan Account)</shortDescription>
+        <value>Sold Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MainInfo_Sold_Note_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sold Note (Main Info Loan Account)</shortDescription>
+        <value>Sold Note</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_Bank_Name_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Bank Name (Secondary Info Loan Account)</shortDescription>
+        <value>Bank Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_Top_Up_Loan_Amount_Requested_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top Up Loan Amount Requested (Secondary Info)</shortDescription>
+        <value>Top Up Loan Amount Requested</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_Branch_Name_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Branch Name (Secondary Info Loan Account)</shortDescription>
+        <value>Branch Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_Disbursement_Date_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Disbursement Date (Secondary Info Loan Account)</shortDescription>
+        <value>Disbursement Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_Top_Up_Old_Ac_Outstanding_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top Up Old A/c Outstanding (Secondary Info)</shortDescription>
+        <value>Top Up Old A/c Outstanding</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_Account_Number_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Number (Secondary Info Loan Account)</shortDescription>
+        <value>Account Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_Is_Top_Up_Account_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Is Top Up Account (Secondary Info)</shortDescription>
+        <value>Is Top Up Account</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_Top_Up_Old_Ac_App_ID_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top Up Old A/c App ID (Secondary Info)</shortDescription>
+        <value>Top Up Old A/c App ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_Responsible_Unit_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Responsible Unit (Secondary Info Loan Account)</shortDescription>
+        <value>Responsible Unit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_Date_Assigned_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Date Assigned (Secondary Info Loan Account)</shortDescription>
+        <value>Date Assigned</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_Responsible_Person_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Responsible Person (Secondary Info Loan Account)</shortDescription>
+        <value>Responsible Person</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_TSA_Code_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TSA Code (Secondary Info Loan Account)</shortDescription>
+        <value>TSA Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SecondaryInfo_TSA_Name_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TSA Name (Secondary Info Loan Account)</shortDescription>
+        <value>TSA Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Termination_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Termination Amount (Early Termination)</shortDescription>
+        <value>Termination Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Excess_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Excess Amount (Early Termination)</shortDescription>
+        <value>Excess Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Pre_Payment_Penalty_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Pre Payment Penalty (Early Termination)</shortDescription>
+        <value>Pre Payment Penalty</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Total_Installment_Paid_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Installment Paid (Early Termination)</shortDescription>
+        <value>Total Installment Paid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Current_Balance_Principal_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Balance Principal (Early Termination)</shortDescription>
+        <value>Current Balance Principal</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Pending_Penal_Interest_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Pending Penal Interest (Early Termination)</shortDescription>
+        <value>Pending Penal Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Total_Principal_Paid_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Principal Paid (Early Termination)</shortDescription>
+        <value>Total Principal Paid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Interest_On_Termination_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interest On Termination (Early Termination)</shortDescription>
+        <value>Interest On Termination</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_LPI_Paid_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>LPI Paid (Early Termination)</shortDescription>
+        <value>LPI Paid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Total_Interest_Paid_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Interest Paid (Early Termination)</shortDescription>
+        <value>Total Interest Paid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Total_Overdue_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Overdue Amount (Overdue)</shortDescription>
+        <value>Total Overdue Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Principal_Overdue_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Principal Overdue (Overdue)</shortDescription>
+        <value>Principal Overdue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Interest_Overdue_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interest Overdue (Overdue)</shortDescription>
+        <value>Interest Overdue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Installments_Overdue_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Installments Overdue (Overdue)</shortDescription>
+        <value>Installments Overdue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Repayment_Fee_Overdue_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Repayment Fee Overdue (Overdue)</shortDescription>
+        <value>Repayment Fee Overdue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Penalty_Fee_Overdue_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Penalty Fee Overdue (Overdue)</shortDescription>
+        <value>Penalty Fee Overdue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Overdue_Penalty_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Overdue Penalty (Overdue)</shortDescription>
+        <value>Overdue Penalty</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Total_Installment_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Installment Amount (Repayment Schedule)</shortDescription>
+        <value>Total Installment Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Total_Principal_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Principal (Repayment Schedule)</shortDescription>
+        <value>Total Principal</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Total_Interest_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Interest (Repayment Schedule)</shortDescription>
+        <value>Total Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Total_Payment_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Total Payment Amount (Payment History)</shortDescription>
+        <value>Total Payment Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Installment_No_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Installment No (Repay Schedule / Payment History)</shortDescription>
+        <value>Installment No.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Installment_Due_Date_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Installment Due Date</shortDescription>
+        <value>Installment Due Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_EMI_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>EMI (Repayment Schedule)</shortDescription>
+        <value>EMI</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Repayment_Fee_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Repayment Fee</shortDescription>
+        <value>Repayment Fee</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Installment_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Installment Amount</shortDescription>
+        <value>Installment Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Principal_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Principal</shortDescription>
+        <value>Principal</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Interest_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interest</shortDescription>
+        <value>Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Opening_Principal_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Opening Principal</shortDescription>
+        <value>Opening Principal</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Closing_Principal_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Closing Principal</shortDescription>
+        <value>Closing Principal</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Payment_No_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment No.</shortDescription>
+        <value>Payment No.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Payment_Date_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment Date</shortDescription>
+        <value>Payment Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Booking_Date_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Booking Date</shortDescription>
+        <value>Booking Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Payment_Amount_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment Amount</shortDescription>
+        <value>Payment Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Particulars_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Particulars</shortDescription>
+        <value>Particulars</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Payment_Channel_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment Channel</shortDescription>
+        <value>Payment Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_No_Data_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No data (Repayment Schedule / Payment History)</shortDescription>
+        <value>No data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_Refresh_Button_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Refresh button (Real-Time Payment)</shortDescription>
+        <value>Refresh</value>
     </labels>
 </CustomLabels>
