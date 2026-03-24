@@ -646,7 +646,7 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>FEC_ID__c</value>
+                            <value>FEC_Relevant_Ticket_ID_c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Status__c</value>
@@ -730,7 +730,7 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>FEC_ID__c</value>
+                            <value>FEC_Relevant_Ticket_ID_c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Status__c</value>
