@@ -300,6 +300,7 @@
 		<members>FEC_Notification_Channel__c</members>
 		<members>FEC_Notification__c</members>
 		<members>FEC_Process_Action__c</members>
+		<members>FEC_Routing_Action_History__c</members>
 		<name>CustomTab</name>
 	</types>
 	<types>
@@ -354,7 +355,7 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CommonUltils</members>
-		<members>FEC_AccountOrContractPicklistHanlder</members>
+		<members>FEC_AccountOrContractPicklistHandler</members>
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_GenesysCreateDummyInteraction</members>
@@ -403,6 +404,7 @@
 		<members>fec_SensitiveDataViewAll</members>
 		<members>fec_CustomAccountTable</members>
 		<members>fec_CustomDblClickRadio</members>
+		<members>fec_AccountOrContractPicklistCustomerCase</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -927,6 +929,7 @@
         <members>LBL_ApplicationID</members>
         <members>LBL_AccountNumber</members>
         <members>LBL_ContractNumber</members>
+		<members>FEC_Wrap_Up_Modal_Btn_Cancel</members>
         <name>CustomLabel</name>
     </types>
     <types>
@@ -1128,8 +1131,14 @@
 		<members>FEC_UpdateCustomerBasicInfo</members>
 		<members>FEC_UpdateCustomerContact</members>
 		<members>FEC_CaseEditNOCController</members>
+		<members>FEC_RoutingActionHistoryTriggerHandler</members>
+		<members>FEC_CasePendingStatusService</members>
 		<name>ApexClass</name>
 	</types>
+	<types>
+		<members>FEC_RoutingActionHistoryTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
     <types>
 		<members>Case.Customer Case Process</members>
 		<members>Case.Internal Case Process</members>
@@ -1151,7 +1160,12 @@
 		<members>FEC_Watcher__c</members>
 		<members>FEC_Notification_History__c</members>
 		<members>FEC_Team_Queue__c</members>
+		<members>FEC_RePayment_Schedule__c</members>
 		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>FEC_RePayment_Schedule__c</members>
+		<name>CustomTab</name>
 	</types>
 	<types>
 		<members>FEC_Customer_Case_Record_Page</members>
@@ -1178,6 +1192,7 @@
         <members>fec_ErrorPanel</members>
 		<members>fec_CaseFollowHeadlessAction</members>
 		<members>fec_CaseUnfollowHeadlessAction</members>
+		<members>fec_WatchersInformation</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -1198,6 +1213,7 @@
 	</types>
 	<types>
 		<members>GenesysCall</members>
+		<members>FEC_Watcher_Refresh</members>
 		<name>LightningMessageChannel</name>
 	</types>
     <types>
@@ -1868,9 +1884,11 @@
 		<name>PermissionSetGroup</name>
 	</types>
 	<types>
+		<members>Admin</members>
 		<members>CS Back Office</members>
 		<members>CS Frontline</members>
 		<members>Relevant Depts</members>
+		<members>RD - IT User</members>
 		<name>Profile</name>
 	</types>
     <types>
@@ -1905,6 +1923,8 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_SearchController</members>
 		<members>FEC_GetCustomerList</members>
+		<members>CaseSearchDeletionBatch</members>
+		<members>CaseSearchDeletionScheduler</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -1931,6 +1951,7 @@
 		<members>FEC_Toast_Validation_Message</members>
 		<members>FEC_Toast_Validation_Title</members>
 		<members>FEC_Toast_Search_Validation</members>
+		<members>FEC_Account_Card_Fetch_Error</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -1976,6 +1997,30 @@
 		<members>FEC_Sub_Category__c.FEC_Restrict_Update_Code</members>
 		<members>FEC_Sub_Code__c.FEC_Restrict_Update_Code</members>
 		<name>ValidationRule</name>
+	</types>
+
+	<!-- additional -->
+	<types>
+		<members>ContentVersion.FEC_Stage_ID__c</members>
+        <name>CustomField</name>
+    </types>
+	<types>
+		<members>FEC_CaseOwnerChangeNotification</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+		<members>FEC_Email_Subject_Case_Owner_Change</members>
+		<members>FEC_Email_Body_Case_Owner_Change</members>
+		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>Case.FEC_Restrict_Change_Owner_Non_Owner</members>
+		<members>Case.FEC_Restrict_Change_Owner_When_Resolved</members>
+		<name>ValidationRule</name>
+	</types>
+	<types>
+		<members>FEC_Search_Configuration</members>
+		<name>SearchCustomization</name>
 	</types>
 
     <version>65.0</version>

@@ -1,5 +1,5 @@
 import { LightningElement, api, track, wire } from "lwc";
-import { IsConsoleNavigation, openTab } from "lightning/platformWorkspaceApi";
+import { IsConsoleNavigation, openTab, EnclosingTabId, setTabLabel } from "lightning/platformWorkspaceApi";
 import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
@@ -14,6 +14,7 @@ import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 import OWNERID from "@salesforce/schema/Case.OwnerId";
 import INTERACTION_RECORD_ID from "@salesforce/schema/Case.FEC_Interaction__c";
+import FEC_ID_SEARCH from "@salesforce/schema/Case.FEC_ID_Search__c";
 import {
   publish,
   subscribe,
@@ -32,10 +33,15 @@ import FEC_CREATE_CASE_BTN_LABEL from "@salesforce/label/c.FEC_Create_Case_Btn_L
 import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
 
 import { urlCmpWithRecordId } from "c/fec_CommonUtils";
-import { DIV_ELEMENT } from "c/fec_CommonConst";
 
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import CUSTOMER_TYPE from "@salesforce/schema/Case.FEC_Customer_Type__c";
+import {
+  DIV_ELEMENT,
+  RECORD_TYPE_INTERACTION,
+  RECORD_TYPE_CUSTOMER_CASE,
+  RECORD_TYPE_INTERNAL_CASE,
+} from "c/fec_CommonConst";
 
 export default class Fec_InteractionHighlightMain extends NavigationMixin(
   LightningElement,
@@ -83,6 +89,9 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   // ===============================
   // LOAD CASE DATA
   // ===============================
+  @wire(EnclosingTabId)
+  enclosingTabId;
+
   @wire(getRecord, {
     recordId: "$recordId",
     fields: [
@@ -93,7 +102,8 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       ISOWNER,
       INTERACTION_RECORD_ID,
       CUSTOMER_TYPE,
-      OWNERID
+      OWNERID,
+      FEC_ID_SEARCH
     ],
   })
   wiredCase({ data, error }) {
@@ -107,6 +117,12 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       this.isOwner = getFieldValue(data, ISOWNER);
       this.customerType = getFieldValue(data, CUSTOMER_TYPE);
       this.ownerId = getFieldValue(data, OWNERID);
+
+      const fecIdSearch = getFieldValue(data, FEC_ID_SEARCH);
+      if (fecIdSearch && this.enclosingTabId) {
+        setTabLabel(this.enclosingTabId, fecIdSearch);
+      }
+
       if (this.recordTypeId) {
         this.loadRecordType();
       }
@@ -209,12 +225,17 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   }
 
   get isInteractionCase() {
-    return this.recordTypeDevName === "Interaction";
+    return this.recordTypeDevName === RECORD_TYPE_INTERACTION;
   }
 
   get isCustomerCase() {
-    return this.recordTypeDevName === "Customer_Case";
+    return this.recordTypeDevName === RECORD_TYPE_CUSTOMER_CASE;
   }
+
+  get isInternalCase() {
+    return this.recordTypeDevName === RECORD_TYPE_INTERNAL_CASE;
+  }
+
   get createCaseSourceId() {
     // Nếu là Interaction → dùng record hiện tại
     if (this.isInteractionCase) {
@@ -226,21 +247,16 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   }
 
   get showHighlight() {
-    if (this.isInteractionCase) {
-      if (this.hasAccountOrContract) {
-        return true;
-      } else {
-        // Nếu là Interaction nhưng không có Account hoặc Contract liên kết
-        return false;
-      }
-    } else if (this.isCustomerCase) {
-      // Nếu là Customer Case thì hiển thị highlight khi có tài khoản liên kết và customer type = existing
-      if (this.isHandling && this.hasAccountOrContract && this.customerType != "Non-existing") {
-        return true;
-      } else {
-        return false;
-      }
+    if (this.isInternalCase) {
+      return false;
     }
+    if (this.isCustomerCase && this.viewMode === "review") {
+      return false;
+    }
+    if (this.isInteractionCase || this.isCustomerCase) {
+      return true;
+    }
+    return false;
   }
   // ===============================
   // RESET VIEW MODE (ONE TIME ONLY)
@@ -341,13 +357,42 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
 
-  // subscription = null;
+  subscription = null;
 
   // ===============================
   // LIFECYCLE HOOKS (SUBSCRIBE)
   // ===============================
   connectedCallback() {
     console.log("connectedCallback");
+    this.subscribeToMessageChannel();
   }
 
+  disconnectedCallback() {
+    this.unsubscribeToMessageChannel();
+  }
+
+  // ===============================
+  // LMS HANDLERS
+  // ===============================
+  subscribeToMessageChannel() {
+    if (!this.subscription) {
+      this.subscription = subscribe(
+        this.messageContext,
+        IS_MODE_EDIT,
+        (message) => this.handleMessage(message),
+        { scope: APPLICATION_SCOPE }
+      );
+    }
+  }
+
+  unsubscribeToMessageChannel() {
+    unsubscribe(this.subscription);
+    this.subscription = null;
+  }
+
+  handleMessage(message) {
+    if (!this.isInteractionCase && message && typeof message.isModeEdit !== 'undefined') {
+      this.viewMode = message.isModeEdit ? 'handling' : 'review';
+    }
+  }
 }

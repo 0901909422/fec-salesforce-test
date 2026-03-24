@@ -5,11 +5,19 @@
         <visible>true</visible>
     </applicationVisibilities>
     <classAccesses>
+        <apexClass>CaseSearchDeletionBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CaseSearchDeletionScheduler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_APIServiceException</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_AccountOrContractPicklistHanlder</apexClass>
+        <apexClass>FEC_AccountOrContractPicklistHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -30,6 +38,14 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_CaseEditNOCController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseOwnerChangeNotification</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CasePendingStatusService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -261,6 +277,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_RoutingActionHistoryTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_SalesInfoController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -304,7 +324,15 @@
     <label>Common System Setting</label>
     <license>Salesforce</license>
     <tabSettings>
+        <tab>FEC_Account_Contract_Search</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Action_Button__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_ApplicationList</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
@@ -325,6 +353,10 @@
     </tabSettings>
     <tabSettings>
         <tab>FEC_Customer_Search</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_GetNextWork</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
@@ -352,11 +384,19 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
+        <tab>FEC_Statements</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Sub_Category__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
         <tab>FEC_Sub_Code__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_Transactions</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>

@@ -1,56 +1,99 @@
 <template>
     <lightning-card title="Quản Lý FEC Channel" icon-name="standard:channel">
-        <div class="slds-p-around_medium">
-            <template if:true={showSpinner}>
-                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
-            </template>
-            <template if:true={showForm}>
-                <lightning-record-edit-form object-api-name={objectApiName} record-id={selectedId}
-                    onsuccess={handleSuccess} onerror={handleError}>
-                    <lightning-messages></lightning-messages>
-                    <div class="slds-grid slds-gutters">
-                        <div class="slds-col slds-size_1-of-2">
-                            <template if:true={selectedId}>
-                                <lightning-input-field field-name={fieldChannelId} disabled></lightning-input-field>
-                            </template>
-                            <template if:false={selectedId}>
-                                <lightning-input-field field-name={fieldChannelId}></lightning-input-field>
-                            </template>
+        <lightning-button 
+            slot="actions" 
+            label={toggleHistoryLabel} 
+            icon-name={toggleHistoryIcon} 
+            variant={toggleButtonVariant}
+            class="slds-m-left_x-small"
+            onclick={handleToggleHistory}>
+        </lightning-button>
+
+        <div class="slds-p-horizontal_medium">
+            <lightning-layout class="main-container slds-grid_stretch">
+                <!-- Sidebar / Main Content -->
+                <lightning-layout-item size="12" large-device-size={mainPanelSize} class="main-panel slds-p-right_medium" style="min-width:0;">
+                    <template if:true={showSpinner}>
+                        <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                    </template>
+
+                    <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_medium">
+                        <div class="slds-col slds-grow-none slds-m-right_medium">
+                            <lightning-button label={labelAddChannel} variant="brand" onclick={handleShowForm}></lightning-button>
                         </div>
-                        <div class="slds-col slds-size_1-of-2">
-                            <lightning-input-field field-name={fieldName} required></lightning-input-field>
+                        <div class="slds-col">
+                            <lightning-input
+                                type="search"
+                                placeholder="Search by Name or Channel ID..."
+                                value={searchTerm}
+                                onchange={handleSearch}
+                                icon-name="utility:search"
+                                variant="label-hidden"
+                                class="search-input">
+                            </lightning-input>
                         </div>
                     </div>
-                    <div class="slds-grid slds-gutters">
-                        <div class="slds-col slds-size_1-of-2">
-                            <lightning-input-field field-name={fieldChannelVnName} required></lightning-input-field>
-                        </div>
-                        <div class="slds-col slds-size_1-of-2 slds-p-top_large">
-                            <lightning-input-field field-name={fieldChannelStatus} value={defaultChannelStatus}></lightning-input-field>
-                        </div>
+
+                    <template if:true={showForm}>
+                        <lightning-record-edit-form object-api-name={objectApiName} record-id={selectedId}
+                            onsuccess={handleSuccess} onerror={handleError} onsubmit={handleSubmit}>
+                            <div class="slds-grid slds-gutters">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <template if:true={selectedId}>
+                                        <lightning-input-field field-name={fieldChannelId} disabled></lightning-input-field>
+                                    </template>
+                                    <template if:false={selectedId}>
+                                        <lightning-input-field field-name={fieldChannelId}></lightning-input-field>
+                                    </template>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning-input-field field-name={fieldName} required></lightning-input-field>
+                                </div>
+                            </div>
+                            <div class="slds-grid slds-gutters">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning-input-field field-name={fieldChannelVnName} required></lightning-input-field>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-p-top_large">
+                                    <lightning-input-field field-name={fieldChannelStatus} value={defaultChannelStatus}></lightning-input-field>
+                                </div>
+                            </div>
+                            <div class="slds-m-top_small slds-text-align_right">
+                                <template if:true={selectedId}>
+                                    <lightning-button label={labelCancelEdit} onclick={handleCancel}
+                                        class="slds-m-right_small"></lightning-button>
+                                </template>
+                                <template if:false={selectedId}>
+                                    <lightning-button label={labelCancel} onclick={handleCancel}
+                                        class="slds-m-right_small"></lightning-button>
+                                </template>
+                                <lightning-button type="submit" variant="brand" label={buttonLabel}></lightning-button>
+                            </div>
+                        </lightning-record-edit-form>
+                    </template>
+
+                    <!-- Display filtered datatable -->
+                    <div class="table-wrapper slds-m-top_medium" style="height: 400px; max-width: 100%; overflow: hidden;">
+                        <lightning-datatable key-field="Id" data={filteredChannels} columns={columns} hide-checkbox-column
+                            onrowaction={handleRowAction} onsort={handleSort} sorted-by={sortBy}
+                            sorted-direction={sortDirection}>
+                        </lightning-datatable>
                     </div>
-                    <div class="slds-m-top_small slds-text-align_right">
-                        <template if:true={selectedId}>
-                            <lightning-button label={labelCancelEdit} onclick={handleCancel}
-                                class="slds-m-right_small"></lightning-button>
-                        </template>
-                        <template if:false={selectedId}>
-                            <lightning-button label={labelCancel} onclick={handleCancel}
-                                class="slds-m-right_small"></lightning-button>
-                        </template>
-                        <lightning-button type="submit" variant="brand" label={buttonLabel}></lightning-button>
-                    </div>
-                </lightning-record-edit-form>
-            </template>
-            <template if:false={showForm}>
-                <lightning-button label={labelAddChannel} variant="brand" onclick={handleShowForm}></lightning-button>
-            </template>
-            <div class="slds-m-top_large" style="height: 400px;">
-                <lightning-datatable key-field="Id" data={channels} columns={columns} hide-checkbox-column
-                    onrowaction={handleRowAction} onsort={handleSort} sorted-by={sortBy}
-                    sorted-direction={sortDirection}>
-                </lightning-datatable>
-            </div>
+                </lightning-layout-item>
+
+                <!-- History Panel -->
+                <template if:true={isHistoryVisible}>
+                    <lightning-layout-item size="12" large-device-size="3" class="history-panel">
+                        <div class="history-content slds-scrollable_y">
+                            <c-fec-config-history 
+                                data-id="historyComponent"
+                                object-api-name={objectApiName}
+                                record-id={selectedId}>
+                            </c-fec-config-history>
+                        </div>
+                    </lightning-layout-item>
+                </template>
+            </lightning-layout>
         </div>
     </lightning-card>
 </template>

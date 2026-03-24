@@ -1,8 +1,9 @@
 import { LightningElement, api, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { CurrentPageReference } from 'lightning/navigation';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { formatCurrency, isNegative, autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
-import getIPPScheduleData from '@salesforce/apex/FEC_IPPScheduleController.getIPPScheduleData';
+import refreshIPPScheduleData from '@salesforce/apex/FEC_IPPScheduleController.refreshIPPScheduleData';
 import getIPPHelpTextMap from '@salesforce/apex/FEC_IPPController.getIPPHelpTextMap';
 import { setConsoleTab } from 'c/fec_CommonUtils';
 import IPP_DETAILS_LABEL from '@salesforce/label/c.FEC_IPP_Details_Label';
@@ -23,6 +24,7 @@ import DISBURSEMENT_CHANNEL_LABEL from '@salesforce/label/c.FEC_Disbursement_Cha
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 import NO_IPP_SCHEDULE_DATA_LABEL from '@salesforce/label/c.FEC_MSG_No_IPP_Schedule_Data';
 import NO_DATA_TO_DISPLAY_LABEL from '@salesforce/label/c.FEC_MSG_No_Data_To_Display';
+
 import FEC_IPP_Label from '@salesforce/label/c.FEC_IPP_Label';
 import FEC_Details_Label from '@salesforce/label/c.FEC_Details_Label';
 
@@ -51,17 +53,13 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     // Custom labels từ CustomLabels.labels-meta.xml (Account Info)
     ERROR_MESSAGE = FEC_MSG_Error_API_Label;
     
-    // Flag để đảm bảo chỉ load schedule 1 lần
-    _scheduleLoaded = false;
-    
-    // Retry counter cho việc load schedules
-    _scheduleRetryCount = 0;
-    _maxRetries = 1; // Retry tối đa 1 lần
-
     connectedCallback() {
         this.loadHelpText();
-        /* ================= SET TABNAME ================= */
-        setConsoleTab('IPP Detail', 'standard:record');
+    }
+
+    /** Nhãn tab Console — gọi sau khi navigate/state sẵn sàng, không gọi trong connectedCallback. */
+    updateServiceConsoleTab() {
+        setConsoleTab('IPP Plan', 'standard:record');
     }
     
     loadHelpText() {
@@ -74,10 +72,6 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
             });
     }
     
-    get isMockRecord() {
-        return this.recordId && String(this.recordId).startsWith('mock-');
-    }
-
     get customLabel() {
         return {
             ippLabel: FEC_IPP_Label,
@@ -112,56 +106,46 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
             if (recordDataStr) {
                 try {
                     this.ippRecord = JSON.parse(recordDataStr);
-                    // Load IPP Schedule ngay khi có đủ recordId và chưa load
-                    // Sales Info hiển thị ngay vì lấy từ recordData (state), Schedule cần gọi getIPPScheduleData
-                    if (this.recordId && !this._scheduleLoaded) {
-                        this._scheduleLoaded = true;
-                        if (this.recordId && String(this.recordId).startsWith('mock-')) {
-                            this.loadMockIPPData();
-                        } else {
-                            this.loadIPPSchedules();
-                        }
-                    } else if (!this.recordId) {
+                    // Mỗi lần load trang đều gọi API IPP Schedule (refreshIPPScheduleData)
+                    if (this.recordId) {
+                        this.loadIPPSchedules();
+                    } else {
                         this.isLoading = false;
+                        this.updateServiceConsoleTab();
                     }
                 } catch (e) {
                     this.isLoading = false;
+                    this.updateServiceConsoleTab();
                 }
             } else {
                 this.isLoading = false;
+                this.updateServiceConsoleTab();
             }
         }
     }
 
-    /** Mock record: lấy IPP Schedule từ Apex (FEC_MockData.getHardcodedIPPScheduleDataForUI). */
-    loadMockIPPData() {
-        this.loadIPPSchedules();
-    }
-    
-    // Load IPP Schedule data (gọi getIPPScheduleData để trigger API GetCardSecInfo khi DB chưa có schedule)
+    // Sync từ API rồi load: gọi refreshIPPScheduleData để IPP Schedule có dữ liệu
     loadIPPSchedules() {
         if (!this.recordId) {
             this.isLoading = false;
+            this.updateServiceConsoleTab();
             return;
         }
-        
-
-        getIPPScheduleData({ ippId: this.recordId })
+        refreshIPPScheduleData({ ippId: this.recordId })
             .then(data => {
+                console.log('[IPPDetailPage] refreshIPPScheduleData response:', {
+                    hasData: !!data,
+                    schedulesLength: data?.schedules?.length ?? 0,
+                    totalPaymentAmount: data?.totalPaymentAmount,
+                    totalMonthlyPrincipal: data?.totalMonthlyPrincipal,
+                    totalMonthlyInterest: data?.totalMonthlyInterest,
+                    hasIppRecord: !!data?.ippRecord,
+                    rawDataKeys: data ? Object.keys(data) : []
+                });
+                if ((data?.schedules?.length ?? 0) === 0 && data?.emptyScheduleReason) {
+                    console.warn('[IPPDetailPage] Lý do schedule rỗng (từ Apex):', data.emptyScheduleReason);
+                }
                 const schedules = (data && data.schedules) ? data.schedules : [];
-                
-                // Nếu không có schedules và chưa retry, đợi 1s rồi retry (API đã insert nhưng query chưa kịp thấy)
-                if (schedules.length === 0 && this._scheduleRetryCount < this._maxRetries) {
-                    this._scheduleRetryCount++;
-                    setTimeout(() => {
-                        this.retryLoadSchedules();
-                    }, 1000);
-                    return; // Không set isLoading = false, giữ spinner
-                }
-                
-                if (schedules.length === 0) {
-                }
-                
                 if (schedules.length > 0) {
                     this.ippSchedules = schedules.map(schedule => {
                         const formattedSchedule = {
@@ -194,9 +178,13 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
                         return formattedSchedule;
                     });
                 } else {
+                    console.log('[IPPDetailPage] schedules rỗng, data.schedules=', data?.schedules);
+                    if (data?.emptyScheduleReason) {
+                        console.warn('[IPPDetailPage] emptyScheduleReason=', data.emptyScheduleReason, '— NO_ACCOUNT_NUMBER: Customer History thiếu số TK; API_RETURNED_NO_IPPS: API không trả IPP; FILTER_EMPTY: không khớp Plan/RecordNo; API_ERROR: lỗi gọi API.');
+                    }
                     this.ippSchedules = [];
                 }
-                // Cập nhật totals + Sales Info từ API/DB (getIPPScheduleData đã query DB và gọi API Sales Info nếu thiếu)
+                // Totals + Sales Info sau khi Apex đồng bộ API → DB (refreshIPPScheduleData = getIPPScheduleData + skip Sales populate)
                 if (this.ippRecord && data) {
                     const rec = data.ippRecord || {};
                     this.ippRecord = {
@@ -215,84 +203,19 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
                         disbursementChannel: rec.FEC_Disbursement_Channel__c ?? this.ippRecord.disbursementChannel
                     };
                 }
+                this.updateServiceConsoleTab();
                 this.isLoading = false;
             })
             .catch(error => {
                 this.ippSchedules = [];
                 this.isLoading = false;
-            });
-    }
-    
-    // Retry loading schedules - gọi lại API để query DB sau khi API đã insert xong
-    retryLoadSchedules() {
-        if (!this.recordId) {
-            this.isLoading = false;
-            return;
-        }
-        
-        getIPPScheduleData({ ippId: this.recordId })
-            .then(data => {
-                const schedules = (data && data.schedules) ? data.schedules : [];
-                
-                if (schedules.length > 0) {
-                    this.ippSchedules = schedules.map(schedule => {
-                        const formattedSchedule = {
-                            Id: schedule.Id,
-                            paymentNo: schedule.FEC_IPP_Payment_No__c,
-                            openingBalance: formatCurrency(schedule.FEC_IPP_Opening_Balance__c || 0, 0),
-                            paymentAmount: formatCurrency(schedule.FEC_IPP_Payment_Amount__c || 0, 0),
-                            monthlyPrincipal: formatCurrency(schedule.FEC_IPP_Monthly_Principal__c || 0, 0),
-                            monthlyInterest: formatCurrency(schedule.FEC_IPP_Monthly_Interest__c || 0, 0),
-                            openingBalanceRaw: schedule.FEC_IPP_Opening_Balance__c || 0,
-                            paymentAmountRaw: schedule.FEC_IPP_Payment_Amount__c || 0,
-                            monthlyPrincipalRaw: schedule.FEC_IPP_Monthly_Principal__c || 0,
-                            monthlyInterestRaw: schedule.FEC_IPP_Monthly_Interest__c || 0
-                        };
-                        const processedSchedule = autoHighlightNegativeCurrency(formattedSchedule);
-                        const fieldClassMapping = {
-                            'openingBalanceRawClass': 'openingBalanceClass',
-                            'paymentAmountRawClass': 'paymentAmountClass',
-                            'monthlyPrincipalRawClass': 'monthlyPrincipalClass',
-                            'monthlyInterestRawClass': 'monthlyInterestClass'
-                        };
-                        Object.keys(fieldClassMapping).forEach(fullFieldName => {
-                            if (processedSchedule[fullFieldName]) {
-                                const className = processedSchedule[fullFieldName];
-                                formattedSchedule[fieldClassMapping[fullFieldName]] = className === 'currency-negative'
-                                    ? 'slds-text-color_error'
-                                    : className;
-                            }
-                        });
-                        return formattedSchedule;
-                    });
-                } else {
-                    this.ippSchedules = [];
-                }
-                
-                // Cập nhật totals + Sales Info
-                if (this.ippRecord && data) {
-                    const rec = data.ippRecord || {};
-                    this.ippRecord = {
-                        ...this.ippRecord,
-                        totalIPPPaymentAmount: data.totalPaymentAmount,
-                        totalIPPMonthlyPrincipal: data.totalMonthlyPrincipal,
-                        totalIPPMonthlyInterest: data.totalMonthlyInterest,
-                        applicationId: rec.FEC_Application_ID__c ?? this.ippRecord.applicationId,
-                        ccCode: rec.FEC_CC_Code__c ?? this.ippRecord.ccCode,
-                        ccName: rec.FEC_CC_Name__c ?? this.ippRecord.ccName,
-                        dsaCode: rec.FEC_DSA_Code__c ?? this.ippRecord.dsaCode,
-                        dsaName: rec.FEC_DSA_Name__c ?? this.ippRecord.dsaName,
-                        tsaCode: rec.FEC_TSA_Code__c ?? this.ippRecord.tsaCode,
-                        tsaName: rec.FEC_TSA_Name__c ?? this.ippRecord.tsaName,
-                        originationChannel: rec.FEC_Origination_Channel__c ?? this.ippRecord.originationChannel,
-                        disbursementChannel: rec.FEC_Disbursement_Channel__c ?? this.ippRecord.disbursementChannel
-                    };
-                }
-                this.isLoading = false;
-            })
-            .catch(error => {
-                this.ippSchedules = [];
-                this.isLoading = false;
+                this.updateServiceConsoleTab();
+                const msg = (error && error.body && error.body.message) ? error.body.message : (error.message || String(error));
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Không tải được IPP Schedule',
+                    message: msg,
+                    variant: 'error'
+                }));
             });
     }
     
@@ -370,6 +293,10 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     
     get hasSchedules() {
         return this.ippSchedules && this.ippSchedules.length > 0;
+    }
+
+    get schedulePageSize() {
+        return 10;
     }
     
     get hideRowNumber() {

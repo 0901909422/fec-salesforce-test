@@ -14,6 +14,7 @@ import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
 import getB2Contracts from "@salesforce/apex/FEC_SearchController.getB2Contracts";
 import getCash24Contracts from "@salesforce/apex/FEC_SearchController.getCash24Contracts";
 import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
+import FEC_National_ID_Passport_ID_Label  from '@salesforce/label/c.FEC_National_ID_Passport_ID_Label';
 import FEC_Toast_Search_Validation from '@salesforce/label/c.FEC_Toast_Search_Validation';
 import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
@@ -30,6 +31,16 @@ import {
   getFocusedTabInfo,
   refreshTab,
 } from "lightning/platformWorkspaceApi";
+import getCardInfoByAccountNumber from "@salesforce/apex/FEC_SearchController.getCardInfoByAccountNumber";
+import CASE_ID_FIELD from "@salesforce/schema/Case.Id";
+import SEARCH_NATIONAL_ID_FIELD from "@salesforce/schema/Case.FEC_Search_National_ID__c";
+import SEARCH_PHONE_FIELD from "@salesforce/schema/Case.FEC_Search_Phone_Number__c";
+import SEARCH_APP_ID_FIELD from "@salesforce/schema/Case.FEC_Search_Application_ID__c";
+import SEARCH_CONTRACT_FIELD from "@salesforce/schema/Case.FEC_Search_Contract_Number__c";
+import SEARCH_ACCOUNT_FIELD from "@salesforce/schema/Case.FEC_Search_Account_Number__c";
+import SEARCH_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Search_Email_Address__c";
+import SEARCH_CUSTOMER_NUM_FIELD from "@salesforce/schema/Case.FEC_Search_Customer_Number__c";
+import { CurrentPageReference } from 'lightning/navigation';
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -65,9 +76,25 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   FEC_Toast_Validation_Title = FEC_Toast_Validation_Title;
   FEC_Toast_Error = FEC_Toast_Error;
   FEC_Toast_Error_Generic = FEC_Toast_Error_Generic;
+  FEC_National_ID_Passport_ID_Label = FEC_National_ID_Passport_ID_Label;
 
   @wire(MessageContext)
   messageContext;
+
+  @wire(CurrentPageReference)
+  pageRef;
+
+  get tabName() {
+    return this.pageRef?.attributes?.apiName; // e.g. 'Customer_Search'
+  }
+
+  get tabLabel() {
+    return this.tabName == 'FEC_Account_Contract_Search' ? 'Account/Contract Search' : 'Customer Search';
+  }
+
+  get isAccountContractSearch() {
+    return this.tabName === 'FEC_Account_Contract_Search'; // your tab's API name
+  }
 
   @wire(IsConsoleNavigation) isConsoleNavigation;
   async refreshTab() {
@@ -102,12 +129,18 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         fieldName: "NationalID1",
         type: "maskedToggle",
         sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
       },
       {
         label: "National ID 2",
         fieldName: "NationalID2",
         type: "maskedToggle",
         sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
       },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
@@ -138,6 +171,10 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return this.recordId ? true : false;
   }
 
+  get nationalId_PassPortId_PlaceHolder() {
+    return 'Nhập ' + this.FEC_National_ID_Passport_ID_Label;
+  }
+
   get loanContractColumns() {
     return [
       {
@@ -157,12 +194,18 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         fieldName: "NationalID1",
         type: "maskedToggle",
         sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
       },
       {
         label: "National ID 2",
         fieldName: "NationalID2",
         type: "maskedToggle",
         sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
       },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
@@ -187,6 +230,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         fieldName: "NationalID1",
         type: "maskedToggle",
         sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
       },
       { label: "Code", fieldName: "Code", sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
@@ -201,8 +247,16 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   get loanCash24Columns() {
     return [
       { label: "Contract Number", fieldName: "ContractNumber", sortable: true },
-      { label: "Sold Date", fieldName: "SoldDate", sortable: true },
-      { label: "Balance Amount", fieldName: "BalanceAmount ", sortable: true },
+      { label: "Sold Date", fieldName: "SoldDate", sortable: true,
+        type: "date", 
+        typeAttributes:{
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            dateStyle: "short"
+        },
+       },
+      { label: "Balance Amount", fieldName: "BalanceAmount", sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
       { label: "Contract Status", fieldName: "ContractStatus", sortable: true },
       { label: "Note", fieldName: "Note", sortable: true },
@@ -237,6 +291,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         fieldName: "BuyerNID",
         type: "maskedToggle",
         sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
       },
       { label: "Product Name", fieldName: "ProductName", sortable: true },
       {
@@ -343,7 +400,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Search_Account_Number__c : null;
       this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Search_Email_Address__c : null;
       this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
-      if (this.phoneNumber || this.nationalId || this.contractNumber) {
+      if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress || this.customerNumber) {
         await this.processSearch();
       }
     } catch (error) {
@@ -634,6 +691,30 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     this.isLoaded = false;
     this.isNoCustomerFound = false;
 
+    if (this.recordId) {
+      try {
+        const fields = {};
+        fields[CASE_ID_FIELD.fieldApiName] = this.recordId;
+        fields[SEARCH_NATIONAL_ID_FIELD.fieldApiName] = this.nationalId;
+        fields[SEARCH_PHONE_FIELD.fieldApiName] = this.phoneNumber;
+        fields[SEARCH_APP_ID_FIELD.fieldApiName] = this.applicationId;
+        fields[SEARCH_CONTRACT_FIELD.fieldApiName] = this.contractNumber;
+        fields[SEARCH_ACCOUNT_FIELD.fieldApiName] = this.accountNumber;
+        fields[SEARCH_EMAIL_FIELD.fieldApiName] = this.emailAddress;
+        fields[SEARCH_CUSTOMER_NUM_FIELD.fieldApiName] = this.customerNumber;
+
+        const recordInput = { fields };
+        await updateRecord(recordInput);
+      } catch (error) {
+        console.error("Failed to sync search criteria to Case record:", error);
+        this.showToast(
+        FEC_Toast_Error,
+        FEC_Toast_Error_Generic + ' ' + (e?.body?.message || e?.message || ""),
+        "error"
+      );
+      }
+    }
+
     // Optional: clear old results before new search
     this.cardData = [];
     this.loanData = [];
@@ -692,6 +773,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         this.isNoCustomerFound = false;
         if (customers.length > 0) {
           this.processCustomerResults(customers);
+          this.fetchPlasticIds();
         }
       } else {
         this.isNoCustomerFound = true;
@@ -707,6 +789,25 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.isLoaded = true;
     }
   }
+
+  async fetchPlasticIds() {
+    if (!this.cardData || this.cardData.length === 0) return;
+    let tempCardData = this.cardData;
+    for (let i = 0; i < tempCardData.length; i++) {
+        const card = tempCardData[i];
+        
+        try {
+            const response = await getCardInfoByAccountNumber({ 
+                accountNumber: card.AccountNumber 
+            });
+            card.PlasticID = response?.CardBasicInfo?.MainCard?.PlasticIndicator || "N/A";
+        } catch (error) {
+            console.error('Lỗi khi lấy Plastic cho thẻ: ' + card.AccountNumber, error);
+            card.PlasticID = "Error";
+        }
+        this.cardData = [...tempCardData];
+    }
+}
 
 /**
  * Build Apex params from UI inputs (NO hard-coding).
@@ -764,74 +865,83 @@ hasAnySearchCriteria(params) {
 }
 
   processCustomerResults(customers) {
-    //const top5 = customers.slice(0, 5);
-    this.cardData = [];
-    this.loanContractData = [];
-    this.insuranceData = [];
+    let cardMap = new Map();
+    let loanContractMap = new Map();
+    let insuranceList = [];
 
     customers.forEach(cust => {
-      if (cust.Applications && cust.Applications.length > 0) {
-        cust.Applications.forEach(app => {
-          // Định nghĩa logic phân loại dựa trên trường 'Product' trong JSON
-          const productCode = app.Product ? app.Product.toUpperCase() : '';
-          const phone = (cust?.Phones && cust.Phones.length > 0) ? cust.Phones[0].Phone : null;
-          // --- PHÂN LOẠI VÀO CARD ---
-          // Trong JSON, Card thường có Product để trống và có AccountNumber
-          if (productCode === '' && app.AccountNumber) {
-              this.cardData = [...this.cardData, {
-              id: app.ApplicationID,
-              FullName: cust.FullName,
-              NationalID1: cust.NationalID,
-              DateOfBirth: cust.DateOfBirth,
-              AccountNumber: app.AccountNumber,
-              AccountStatus: app.Status,
-              PlasticID: "N/A",
+        if (cust.Applications && cust.Applications.length > 0) {
+            cust.Applications.forEach(app => {
+                const productCode = app.Product ? app.Product.toUpperCase() : '';
+                const phone = (cust.Phones && cust.Phones.length > 0) ? cust.Phones[0].Phone : null;
+                const currentNationalId = cust.NationalID || "";
 
-              // ✅ add flat field
-              CIFNumber: cust.CIFNumber,
-              Phone: phone,
-            }];
-            
-          }
-
-          // --- PHÂN LOẠI VÀO LOAN (Vay) ---
-          // Các mã sản phẩm như CDL, PL, TW, FC_...
-          else if (['CDL', 'PL', 'TW', 'FC_CDL', 'FC_TW', 'FC_CDL_G'].includes(productCode)) {
-            this.loanContractData = [...this.loanContractData, {
-              id: app.ApplicationID,
-              FullName: cust.FullName,
-              NationalID1: cust.NationalID,
-              DateOfBirth: cust.DateOfBirth,
-              ContractNumber: app.ContractNumber,
-              ProductCode: app.Product,
-              ContractStatus: app.Status,
-              Phone: phone,
-              _customer: cust,
-              _application: app 
-            }];
-          }
-
-          // --- PHÂN LOẠI VÀO INSURANCE (Bảo hiểm) ---
-          // Giả sử mã bảo hiểm là INS hoặc dựa trên SchemeDesc (do JSON mẫu chưa có mã rõ ràng cho INS)
-          else if (productCode === 'INS' || (app.SchemeDesc && app.SchemeDesc.includes('INSURED'))) {
-            this.insuranceData = [...this.insuranceData, {
-              id: app.ApplicationID,
-              UserId: cust.CIFNumber,
-              FullName: cust.FullName,
-              BuyerNID: cust.NationalID,
-              ProductName: app.SchemeDesc || 'Insurance Product',
-              Status: app.Status,
-              EffectiveDate: 'N/A',
-              Phone: phone,
-              _customer: cust,
-              _application: app // Cần map thêm field nếu có
-            }];
-          }
-
-        });
-      }
+                // NHÓM THEO CARD (AccountNumber)
+                if (productCode === '' && app.AccountNumber) {
+                    const accNum = app.AccountNumber;
+                    if (cardMap.has(accNum)) {
+                        let existingRec = cardMap.get(accNum);
+                        if (existingRec.NationalID1) {
+                            existingRec.NationalID2 = currentNationalId;
+                        }
+                    } else {
+                        cardMap.set(accNum, {
+                            id: app.ApplicationID,
+                            FullName: cust.FullName,
+                            NationalID1: currentNationalId,
+                            NationalID2: "",
+                            DateOfBirth: cust.DateOfBirth,
+                            AccountNumber: accNum,
+                            AccountStatus: app.Status,
+                            PlasticID: "Loading...", // Hiển thị trạng thái đang lấy data
+                            CIFNumber: cust.CIFNumber,
+                            Phone: phone
+                        });
+                    }
+                }
+                // NHÓM THEO LOAN (ContractNumber)
+                else if (['CDL', 'PL', 'TW', 'FC_CDL', 'FC_TW', 'FC_CDL_G'].includes(productCode)) {
+                    const contractNum = app.ContractNumber;
+                    if (loanContractMap.has(contractNum)) {
+                        let existingRec = loanContractMap.get(contractNum);
+                        if (existingRec.NationalID1) {
+                            existingRec.NationalID2 = currentNationalId;
+                        }
+                    } else {
+                        loanContractMap.set(contractNum, {
+                            id: app.ApplicationID,
+                            FullName: cust.FullName,
+                            NationalID1: currentNationalId,
+                            NationalID2: "",
+                            DateOfBirth: cust.DateOfBirth,
+                            ContractNumber: contractNum,
+                            ProductCode: app.Product,
+                            ContractStatus: app.Status,
+                            Phone: phone,
+                            CIFNumber: cust.CIFNumber
+                        });
+                    }
+                }
+                // INSURANCE
+                else if (productCode === 'INS' || (app.SchemeDesc && app.SchemeDesc.includes('INSURED'))) {
+                    insuranceList.push({
+                        id: app.ApplicationID,
+                        FullName: cust.FullName,
+                        BuyerNID: cust.NationalID,
+                        ProductName: app.SchemeDesc || 'Insurance',
+                        Status: app.Status,
+                        Phone: phone,
+                        CIFNumber: cust.CIFNumber
+                    });
+                }
+            });
+        }
     });
-  }
+
+    this.cardData = Array.from(cardMap.values());
+    this.loanContractData = Array.from(loanContractMap.values());
+    this.insuranceData = insuranceList;
+}
 
 
   handleTabChange(event) {
@@ -966,7 +1076,7 @@ hasAnySearchCriteria(params) {
           row = this.cardData.find(r => r.AccountNumber == row);
           break;
         case "ContractNumber":
-          row = this.loanData.find(r => r.ContractNumber == row);
+          row = this.loanContractData.find(r => r.ContractNumber == row);
           break;
         case "UserId":
           row = this.insuranceData.find(r => r.UserId == row);
@@ -1023,7 +1133,8 @@ hasAnySearchCriteria(params) {
           searchProducts: searchProducts,
           selectedType: action.type,
           cifNumber: cifNumber,
-          phone: row?.Phone
+          phone: row?.Phone,
+          customerName: row?.FullName
         })
           .then(async (res) => {
             // const payload = {
@@ -1063,6 +1174,11 @@ hasAnySearchCriteria(params) {
         break;
     }
   }
+
+  get isDisplayCreateCase() {
+    return this.recordId && this.isNoCustomerFound;
+  }
+
 
   // Sorting helpers if you want per-table sorting in future (optional)
   onSorting(event) {

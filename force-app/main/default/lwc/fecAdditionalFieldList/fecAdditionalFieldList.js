@@ -1,10 +1,9 @@
 import { LightningElement, track, wire } from 'lwc';
 import getAdditionalFields from '@salesforce/apex/FEC_AdditionalFieldController.getAdditionalFields';
-import deleteAdditionalField from '@salesforce/apex/FEC_AdditionalFieldController.deleteRecord'; // IMPORT MỚI
+import deleteAdditionalField from '@salesforce/apex/FEC_AdditionalFieldController.deleteRecord'; 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 
-// Shared constants and labels
 import { FIELD_FEC_UNIQUE_ID, FIELD_NAME, FIELD_NAME_VN, FIELD_FEC_TYPE, FIELD_FIELD_STATUS, FIELD_FIELD_MANDATORY, FIELD_PROCESS_CHANGE_STATUS, FIELD_EXTERNAL_ID } from 'c/fecConstants';
 import LABEL_EDIT from '@salesforce/label/c.FEC_Edit';
 import LABEL_DELETE from '@salesforce/label/c.FEC_Delete';
@@ -18,9 +17,9 @@ import LABEL_MANDATORY from '@salesforce/label/c.FEC_Label_Mandatory';
 import LABEL_PROCESS_STATUS from '@salesforce/label/c.FEC_Label_Process_Status';
 import LABEL_DELETE_SUCCESS from '@salesforce/label/c.FEC_Delete_Success_Message';
 import LABEL_ERROR_RETRIEVE from '@salesforce/label/c.FEC_Error_Retrieve_Additional_Fields';
-import LABEL_SUCCESS_TITLE from '@salesforce/label/c.FEC_Success_Title'; // Added
-import LABEL_ERROR_TITLE from '@salesforce/label/c.FEC_Error_Title'; // Added
-import LABEL_SAVE_SUCCESS_MSG from '@salesforce/label/c.FEC_Save_Success_Message'; // Added
+import LABEL_SUCCESS_TITLE from '@salesforce/label/c.FEC_Success_Title'; 
+import LABEL_ERROR_TITLE from '@salesforce/label/c.FEC_Error_Title'; 
+import LABEL_SAVE_SUCCESS_MSG from '@salesforce/label/c.FEC_Save_Success_Message'; 
 import LABEL_WARNING_TYPE_NOT_LIST from '@salesforce/label/c.FEC_Warning_Type_Not_List';
 import LABEL_WARNING_TITLE from '@salesforce/label/c.FEC_Warning_Title';
 import LABEL_LIST_TITLE from '@salesforce/label/c.FEC_Additional_Fields_List_Title';
@@ -56,19 +55,40 @@ export default class FecAdditionalFieldList extends LightningElement {
     @track isModalOpen = false;
     @track actionClick = false;
     @track modalTitle = "";
-    @track recordIdForEdit; // Lưu ID của bản ghi đang chỉnh sửa
-    @track isEditModalOpen = false; // Trạng thái Modal Edit
-    /** Custom Delete Confirmation Modal */
-    @track showDeleteConfirm = false; // for delete confirmation modal
-    @track recordIdToDelete = null; // store record id to delete
-    @track isListValueModalOpen = false; // Biến kiểm soát Modal mới
-    @track selectedFieldRecord = {};    // Lưu record đang được chọn để quản lý List
+    @track recordIdForEdit; 
+    @track isEditModalOpen = false; 
+    @track showDeleteConfirm = false; 
+    @track recordIdToDelete = null; 
+    @track isListValueModalOpen = false; 
+    @track selectedFieldRecord = {};    
     wiredFieldsResult;
 
     sortedBy;
     sortDirection = 'asc';
 
-    // expose labels to template
+    // ==========================================================
+    // KHỐI CODE BỔ SUNG CHỈ DÀNH CHO HISTORY (GIAO DIỆN)
+    // ==========================================================
+    @track isHistoryVisible = false;
+    @track historyRecordId = ''; 
+
+    get mainPanelSize() { return this.isHistoryVisible ? 9 : 12; }
+    get toggleHistoryIcon() { return this.isHistoryVisible ? 'utility:close' : 'utility:history'; }
+    get toggleHistoryLabel() { return this.isHistoryVisible ? 'Đóng Lịch sử' : 'Xem Lịch sử'; }
+    get toggleButtonVariant() { return this.isHistoryVisible ? 'neutral' : 'brand-outline'; }
+
+    handleToggleHistory() {
+        this.isHistoryVisible = !this.isHistoryVisible;
+    }
+
+    refreshHistoryPanel() {
+        const historyComp = this.template.querySelector('[data-id="historyComponent"]');
+        if (historyComp) {
+            historyComp.refreshData();
+        }
+    }
+    // ==========================================================
+
     labelListTitle = LABEL_LIST_TITLE;
     labelNewField = LABEL_NEW_ADDITIONAL_FIELD;
     labelConfirmDeleteTitle = LABEL_CONFIRM_DELETE_TITLE;
@@ -100,6 +120,10 @@ export default class FecAdditionalFieldList extends LightningElement {
             if (this.wiredFieldsResult) {
                 await refreshApex(this.wiredFieldsResult);
             }
+            // Gọi refresh lịch sử nếu đang mở
+            if (this.isHistoryVisible) {
+                this.refreshHistoryPanel();
+            }
         } catch (error) {
             this.showToast(LABEL_ERROR_TITLE, error?.body?.message || error?.message || 'Failed to delete record.', 'error');
         } finally {
@@ -107,55 +131,47 @@ export default class FecAdditionalFieldList extends LightningElement {
         }
     }
 
-    /**
-     * @description Xử lý khi người dùng chọn Edit hoặc Delete từ Row Actions.
-     */
     handleRowAction(event) {
         this.modalTitle = LABEL_EDIT + ' ' + LABEL_NAME;
         this.actionClick = true;
         const actionName = event.detail.action.name;
-        const row = event.detail.row; // Dữ liệu của bản ghi được chọn
+        const row = event.detail.row; 
 
         switch (actionName) {
             case 'edit':
                 this.handleEdit(row.Id);
                 break;
             case 'delete':
+                // KIỂM TRA ĐIỀU KIỆN XÓA TẠI ĐÂY
+                if (row[FIELD_PROCESS_CHANGE_STATUS] !== 'New') {
+                    this.showToast(LABEL_WARNING_TITLE, 'Chỉ được phép xóa bản ghi có Process Status là "New".', 'warning');
+                    return; // Dừng lại, không mở xác nhận xóa
+                }
                 this.recordIdToDelete = row.Id;
                 this.showDeleteConfirm = true;
                 break;
             case 'manage_list_values':
                 this.handleManageListValues(row);
-                break; // HÀNH ĐỘNG MỚI
+                break; 
             default:
         }
     }
 
-    /**
-     * @description Xử lý hành động Manage List Values: kiểm tra FEC Type và mở Modal.
-     */
     handleManageListValues(record) {
         if (record.FEC_Type__c === 'List') {
-            this.selectedFieldRecord = { ...record }; // Ensure it is an object
+            this.selectedFieldRecord = { ...record }; 
             this.modalTitle = LABEL_MANAGE_LIST_VALUES + ': ' + record.Name;
             this.isListValueModalOpen = true;
         } else {
-            // Use label with placeholder
             this.showToast(LABEL_WARNING_TITLE, LABEL_WARNING_TYPE_NOT_LIST.replace('{0}', record.Name), 'warning');
         }
     }
 
-    /**
-     * @description Đóng Modal quản lý List Values.
-     */
     closeListValueModal() {
         this.isListValueModalOpen = false;
-        this.selectedFieldRecord = {}; // Reset bản ghi đã chọn
+        this.selectedFieldRecord = {}; 
     }
 
-    /**
-    * @description Đóng Modal chỉnh sửa.
-    */
     closeSettingModal() {
         this.isModalOpen = false;
         this.isEditModalOpen = false;
@@ -163,30 +179,20 @@ export default class FecAdditionalFieldList extends LightningElement {
         this.actionClick = false;
     }
 
-    /**
-     * @description Đóng Modal (alias cho closeSettingModal).
-     */
     closeModal() {
         this.closeSettingModal();
     }
 
-    /**
-     * @description Xử lý sự kiện cancel từ child component (fecAdditionalFieldForm).
-     */
     handleCancelEvent() {
         this.closeSettingModal();
     }
 
-    /**
-     * @description Mở Modal chỉnh sửa cho bản ghi được chọn.
-     */
     handleEdit(recordId) {
         this.recordIdForEdit = recordId;
         this.isEditModalOpen = true;
         this.isModalOpen = true;
     }
 
-    // Delete confirmation modal logic
     cancelDelete() {
         this.showDeleteConfirm = false;
         this.recordIdToDelete = null;
@@ -211,46 +217,29 @@ export default class FecAdditionalFieldList extends LightningElement {
         if (this.wiredFieldsResult) {
             refreshApex(this.wiredFieldsResult);
         }
+        // Gọi refresh lịch sử nếu đang mở
+        if (this.isHistoryVisible) {
+            this.refreshHistoryPanel();
+        }
     }
 
-    /**
-     * @description Xử lý sự kiện sắp xếp cột (datatable).
-     * @param event Dữ liệu sự kiện chứa cột được sắp xếp và hướng sắp xếp.
-     * @return void
-     * @date 2025-12-03
-     * @author DAT NGO
-     */
     handleSort(event) {
         this.sortedBy = event.detail.fieldName;
         this.sortDirection = event.detail.sortDirection;
         this.sortData(this.sortedBy, this.sortDirection);
     }
 
-    /**
-     * @description Hàm sắp xếp dữ liệu (Client-side sorting).
-     * @param fieldName Tên trường để sắp xếp.
-     * @param direction Hướng sắp xếp ('asc' hoặc 'desc').
-     * @return void
-     * @date 2025-12-03
-     * @author DAT NGO
-     */
     sortData(fieldName, direction) {
         let parseData = JSON.parse(JSON.stringify(this.fieldList));
-
-        // Comment Giải thích Source Code: Sắp xếp dữ liệu theo trường và hướng đã chọn.
         let isReverse = direction === 'asc' ? 1 : -1;
         parseData.sort((x, y) => {
             x = (x[fieldName] === undefined || x[fieldName] === null) ? '' : x[fieldName];
             y = (y[fieldName] === undefined || y[fieldName] === null) ? '' : y[fieldName];
-
             return isReverse * ((x > y) - (y > x));
         });
         this.fieldList = parseData;
     }
 
-    /**
-     * @description Hiển thị thông báo Toast.
-     */
     showToast(title, message, variant) {
         const event = new ShowToastEvent({
             title: title,

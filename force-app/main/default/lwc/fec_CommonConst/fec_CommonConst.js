@@ -35,6 +35,12 @@ const MSG_INVALID_NATIONAL_ID = 'Invalid National ID number';
 const MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12 = 'National ID must contain digits only (9 or 12 digits)';
 const MSG_INVALID_EMAIL_FORMAT = 'Email must be one of (randomString1)@(randomString2).(2-5 chars) or (randomString1)@(randomString2).(2-5 chars).(2-5 chars)';
 const UBANK_PRODUCT_NAME = 'UBank';
+const RECORD_TYPE_INTERACTION = 'Interaction';
+const RECORD_TYPE_CUSTOMER_CASE = 'Customer_Case';
+const RECORD_TYPE_INTERNAL_CASE = 'Internal_Case';
+const NON_EXISTING_CUSTOMER_PRODUCT_NAME = "Non-Existing Customer";
+const NON_EXISTING_CUSTOMER_TYPE = "Non-existing";
+
 const MSG_NO_RESULTS = 'Không tìm thấy kết quả';
 const MSG_UNKNOWN_ERROR = 'Unknown error';
 const CASE_OBJECT_API_NAME = 'Case';
@@ -78,6 +84,11 @@ export {
     MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12,
     MSG_INVALID_EMAIL_FORMAT,
     UBANK_PRODUCT_NAME,
+    RECORD_TYPE_INTERACTION,
+    RECORD_TYPE_CUSTOMER_CASE,
+    RECORD_TYPE_INTERNAL_CASE,
+    NON_EXISTING_CUSTOMER_PRODUCT_NAME,
+    NON_EXISTING_CUSTOMER_TYPE,
     MSG_NO_RESULTS,
     MSG_UNKNOWN_ERROR,
     CASE_OBJECT_API_NAME,
