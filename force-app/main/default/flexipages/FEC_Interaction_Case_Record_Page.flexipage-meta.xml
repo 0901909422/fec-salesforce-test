@@ -823,12 +823,8 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>modeEditCase</name>
-                    <value>false</value>
-                </componentInstanceProperties>
-                <componentName>fec_CaseEditNOC</componentName>
-                <identifier>c_fec_CaseEditNOC</identifier>
+               <componentName>fecRelevantInteractionCase</componentName>
+               <identifier>c_fecRelevantInteractionCase</identifier>
             </componentInstance>
         </itemInstances>
         <name>sidebar</name>
