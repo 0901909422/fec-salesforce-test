@@ -33,7 +33,7 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
-    public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone, String customerName) {
+    public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone, String customerName, Boolean isListView ) {
     // 1. Validation
     if (String.isBlank(value) || String.isBlank(fieldName)) {
         throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
@@ -53,20 +53,18 @@ public with sharing class FEC_SearchController {
             objCase.Id = caseId;
         } else {
             Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
-            Schema.RecordTypeInfo rtInfo = rtMap.get(FEC_ConstantCommon.CASE_SEARCH_RECORD_TYPE_DEV_NAME);
+
+            String recordTypeName = (isListView == true) 
+            ? FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
+            : FEC_ConstantCommon.CASE_SEARCH_RECORD_TYPE_DEV_NAME  ;
+            Schema.RecordTypeInfo rtInfo = rtMap.get(recordTypeName);
 
             if (rtInfo == null) {
-                rtInfo = rtMap.get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME);
+                    throw new CalloutException(
+                        String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'RecordType'}));
+                }
+                objCase.RecordTypeId = rtInfo.getRecordTypeId();
             }
-
-            if (rtInfo == null) {
-                throw new CalloutException( 
-                    String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'RecordType'}));
-            }
-
-            objCase.RecordTypeId = rtInfo.getRecordTypeId();
-            objCase.FEC_ID_Search__c = value != null ? value.trim() : null;
-        }
 
         // Gán các field cơ bản cho Case
         objCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
@@ -81,13 +79,9 @@ public with sharing class FEC_SearchController {
         if (fieldName == 'ContractNumber') {
             objCase.FEC_Contract_Number__c = value;
         }
-        objCase.FEC_ID_Search__c = value;
 
-       if (caseId != null) {
-            update objCase;
-        } else {
-            upsert objCase FEC_ID_Search__c;
-        }
+        // Thực hiện Upsert Case ngay để có Id
+        upsert objCase;
 
         // 4. Khởi tạo và Insert History (Trường FEC_Case__c bây giờ chắc chắn có giá trị)
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
