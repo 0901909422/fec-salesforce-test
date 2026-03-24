@@ -137,9 +137,10 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
                 actionName: "view",
               },
             });
-            resetViewMode({ recordId: this.recordId, viewMode: "handling" });
           }
+          await resetViewMode({ recordId: this.recordId, viewMode: "handling" });
         })
+        
         .catch((error) => {
           this.isLoading = false;
           console.error(error);
