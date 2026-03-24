@@ -69,7 +69,7 @@ public without sharing class FEC_CustomEmailService {
         if (String.isNotBlank(caseId)) {
             try {
                 Case c = [SELECT OwnerId, Owner.Type FROM Case WHERE Id = :caseId LIMIT 1];
-                if (c.Owner.Type == 'Queue') {
+                if (c.Owner.Type == FEC_ConstantCommon.GROUP_TYPE_QUEUE) {
                     Group q = [SELECT Id, Name, Email FROM Group WHERE Id = :c.OwnerId LIMIT 1];
                     if (String.isNotBlank(q.Email)) queueEmail = q.Email;
                 }
@@ -118,15 +118,16 @@ public without sharing class FEC_CustomEmailService {
         };
     }
 
-
     private static final List<String> READONLY_FROM_LIST = new List<String>{
-        'dichvukhachhang@fecredit.com.vn',
-        'dichvukhachhang@ubank.com.vn'
+        FEC_ConstantCommon.EMAIL_READONLY_FROM_FECREDIT,
+        FEC_ConstantCommon.EMAIL_READONLY_FROM_UBANK
     };
 
     // Các status không cho phép gửi email
     private static final Set<String> BLOCKED_STATUSES = new Set<String>{
-        'Closed', 'Resolved', 'Cancelled'
+        FEC_ConstantCommon.CASE_STATUS_CLOSED,
+        FEC_ConstantCommon.CASE_STATUS_RESOLVED,
+        FEC_ConstantCommon.CASE_STATUS_CANCELLED
     };
 
     // Wrapper cho attachment từ client
@@ -159,7 +160,7 @@ public without sharing class FEC_CustomEmailService {
 
             if (BLOCKED_STATUSES.contains(c.Status)) {
                 throw new AuraHandledException(
-                    'Không thể gửi email: Case đang ở trạng thái "' + c.Status + '".'
+                    Label.FEC_Email_Error_Blocked_Status + c.Status + '".'
                 );
             }
 
@@ -218,7 +219,7 @@ public without sharing class FEC_CustomEmailService {
         } catch (AuraHandledException e) {
             throw e;
         } catch (Exception e) {
-            throw new AuraHandledException('Lỗi gửi email: ' + e.getMessage());
+            throw new AuraHandledException(Label.FEC_Email_Error_Send + e.getMessage());
         }
     }
 
@@ -226,17 +227,16 @@ public without sharing class FEC_CustomEmailService {
 
     private static void validateEmail(String email, String fieldLabel) {
         if (String.isBlank(email)) {
-            throw new AuraHandledException(fieldLabel + ' email không được để trống.');
+            throw new AuraHandledException(fieldLabel + Label.FEC_Email_Error_Empty);
         }
         // Basic email format check
-        String emailRegex = '^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$';
-        Pattern p = Pattern.compile(emailRegex);
+        Pattern p = Pattern.compile(FEC_ConstantCommon.PATTERN_EMAIL);
         for (String addr : email.split(',')) {
             addr = addr.trim();
             if (String.isBlank(addr)) continue;
             if (!p.matcher(addr).matches()) {
                 throw new AuraHandledException(
-                    fieldLabel + ' email không hợp lệ: "' + addr + '"'
+                    fieldLabel + Label.FEC_Email_Error_Invalid + addr + '"'
                 );
             }
         }
@@ -270,7 +270,7 @@ public without sharing class FEC_CustomEmailService {
 
         // Không tìm thấy OrgWide phù hợp → throw lỗi rõ ràng
         throw new AuraHandledException(
-            'Không thể gửi email: địa chỉ "' + fromEmail + '" chưa được cấu hình làm Organization-Wide Email Address. Vui lòng liên hệ Admin để verify địa chỉ này trong Setup.'
+            Label.FEC_Email_Error_OrgWide_Not_Configured + fromEmail + Label.FEC_Email_Error_OrgWide_Not_Configured_Suffix
         );
     }
 
@@ -287,12 +287,12 @@ public without sharing class FEC_CustomEmailService {
 
         // Create Task as audit log
         Task t = new Task();
-        t.WhatId      = caseId;
-        t.Subject     = 'Email Sent: ' + subject;
-        t.Description = 'From: ' + fromEmail + '\nTo: ' + toEmail
-                      + (String.isNotBlank(ccEmail) ? '\nCC: ' + ccEmail : '');
-        t.Status      = 'Completed';
-        t.Priority    = 'Normal';
+        t.WhatId       = caseId;
+        t.Subject      = 'Email Sent: ' + subject;
+        t.Description  = 'From: ' + fromEmail + '\nTo: ' + toEmail
+                       + (String.isNotBlank(ccEmail) ? '\nCC: ' + ccEmail : '');
+        t.Status       = 'Completed';
+        t.Priority     = 'Normal';
         t.ActivityDate = Date.today();
         insert t;
     }

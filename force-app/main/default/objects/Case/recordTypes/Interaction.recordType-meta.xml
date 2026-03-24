@@ -187,29 +187,6 @@
         </values>
     </picklistValues>
     <picklistValues>
-        <picklist>FEC_Interaction_Subchannel__c</picklist>
-        <values>
-            <fullName>Inbound Call</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Incoming Email</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Other</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Outbound Call</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Outgoing Email</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
         <picklist>Type</picklist>
         <values>
             <fullName>Feature Request</fullName>

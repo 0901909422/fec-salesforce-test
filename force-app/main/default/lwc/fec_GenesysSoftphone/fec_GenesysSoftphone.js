@@ -10,6 +10,7 @@ import executeRoutingAssignments from "@salesforce/apex/FEC_InteractionRoutingCo
 import { subscribe, MessageContext } from "lightning/messageService";
 import GENESYS_CHANNEL from "@salesforce/messageChannel/GenesysCall__c";
 import { FEC_GENESYS_CONST } from './fec_genesysUtils';
+import EMAIL_READONLY_FROM_FECREDIT from '@salesforce/label/c.FEC_Email_Readonly_From_Fecredit';
 
 export default class fec_genesysSoftphone extends NavigationMixin(
   LightningElement,
@@ -123,7 +124,7 @@ export default class fec_genesysSoftphone extends NavigationMixin(
   handleEmailInteraction(emailData) {
     const request = {
       fromEmail: emailData.From,
-      sendTo: emailData.sendTo || 'dichvukhachhang@fecredit.com.vn',
+      sendTo: emailData.sendTo || EMAIL_READONLY_FROM_FECREDIT,
       genesysInteractionID: emailData.GenesysInteractionID,
       phoneNum: emailData.PhoneNum,
       nationalID: emailData.NationalID,

@@ -226,4 +226,13 @@ public with sharing class FEC_ConstantCommon {
     public static final String OBJ_ADDITIONAL_INFO = 'FEC_Additional_Info__c';
 
     public static final String AUTO_METHOD = 'Auto';
+
+    // Email readonly from addresses
+    public static final String EMAIL_READONLY_FROM_FECREDIT = 'dichvukhachhang@fecredit.com.vn';
+    public static final String EMAIL_READONLY_FROM_UBANK    = 'dichvukhachhang@ubank.com.vn';
+
+    // Case statuses blocked from sending email
+    public static final String CASE_STATUS_CLOSED    = 'Closed';
+    public static final String CASE_STATUS_RESOLVED  = 'Resolved';
+    public static final String CASE_STATUS_CANCELLED = 'Cancelled';
 }

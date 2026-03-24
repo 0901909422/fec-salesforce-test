@@ -6,8 +6,8 @@
 public without sharing class FEC_InteractionEmailController {
 
     private static final List<String> READONLY_FROM_LIST = new List<String>{
-        'dichvukhachhang@fecredit.com.vn',
-        'dichvukhachhang@ubank.com.vn'
+        FEC_ConstantCommon.EMAIL_READONLY_FROM_FECREDIT,
+        FEC_ConstantCommon.EMAIL_READONLY_FROM_UBANK
     };
 
     @AuraEnabled

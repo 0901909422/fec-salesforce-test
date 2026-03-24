@@ -7,10 +7,12 @@ import getEmailTemplates from '@salesforce/apex/FEC_InteractionEmailController.g
 import INTERACTION_EMAIL from '@salesforce/schema/Case.FEC_Interaction_Email__c';
 import SEND_TO from '@salesforce/schema/Case.FEC_Send_To__c';
 import SUBJECT_FIELD from '@salesforce/schema/Case.Subject';
+import EMAIL_READONLY_FROM_FECREDIT from '@salesforce/label/c.FEC_Email_Readonly_From_Fecredit';
+import EMAIL_READONLY_FROM_UBANK from '@salesforce/label/c.FEC_Email_Readonly_From_Ubank';
 
 const READONLY_FROM = [
-    'dichvukhachhang@fecredit.com.vn',
-    'dichvukhachhang@ubank.com.vn'
+    EMAIL_READONLY_FROM_FECREDIT,
+    EMAIL_READONLY_FROM_UBANK
 ];
 
 export default class FecInteractionEmailCompose extends LightningElement {
