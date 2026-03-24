@@ -58,6 +58,7 @@
                             default-sorted-by="dueDate"
                             default-sort-direction="asc"
                             page-size={repaymentSchedulePageSize}
+                            page-size-options={pageSizeOptions}
                             hide-row-number
                             hide-updated-time>
                         </c-fec_-related-list-paging>
@@ -99,7 +100,7 @@
                             columns={paymentHistoryPagingColumns}
                             records={paymentHistoryPagingRecords}
                             default-sorted-by="paymentDate"
-                            default-sort-direction="desc"
+                            default-sort-direction="asc"
                             page-size={paymentHistoryPageSize}
                             hide-row-number
                             hide-updated-time>
@@ -160,8 +161,7 @@
                             <c-fec_-related-list-paging
                                 columns={section4CombinedColumns}
                                 records={section4CombinedRecords}
-                                default-sorted-by="sortKey"
-                                default-sort-direction="asc"
+                                sorted-by-description={section4SortedByDescription}
                                 page-size={section4PageSize}
                                 hide-row-number
                                 hide-updated-time>
