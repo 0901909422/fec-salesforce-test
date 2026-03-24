@@ -1884,6 +1884,7 @@
 		<name>PermissionSetGroup</name>
 	</types>
 	<types>
+		<members>Admin</members>
 		<members>CS Back Office</members>
 		<members>CS Frontline</members>
 		<members>Relevant Depts</members>
@@ -2016,6 +2017,10 @@
 		<members>Case.FEC_Restrict_Change_Owner_Non_Owner</members>
 		<members>Case.FEC_Restrict_Change_Owner_When_Resolved</members>
 		<name>ValidationRule</name>
+	</types>
+	<types>
+		<members>FEC_Search_Configuration</members>
+		<name>SearchCustomization</name>
 	</types>
 
     <version>65.0</version>
