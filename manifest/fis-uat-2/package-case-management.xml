@@ -11,6 +11,18 @@
 	<types>
         <members>Case.FEC_IPP_To_Close__c</members>
 		<members>Case.FEC_Interaction_Subchannel__c</members>
+		<members>Case.FEC_Card_Block_Service_Attempts__c</members>
+		<members>FEC_Customer_History__c.FEC_Bank_Branch__c</members>
+		<members>FEC_Customer_History__c.FEC_Beneficiary_Account__c</members>
+		<members>FEC_Customer_History__c.FEC_Beneficiary_Name__c</members>
+		<members>FEC_Customer_History__c.FEC_Province_City__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_Case__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Application_ID__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Application_Status__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_CS_Decision__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Disbursed_Amount__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Disbursement_Approval_Date__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Disbursement_Status__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -115,6 +127,8 @@
 		<members>fec_ComboBox</members>
 		<members>fec_PinResetHandling</members>
 		<members>fec_PinResetView</members>
+		<members>fec_CardLockUnlockForm</members>
+		<members>fec_CardLockUnlockHandling</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -136,6 +150,8 @@
 		<members>FEC_PINReissueServiceCallout</members>
 		<members>FEC_PinResetHandler</members>
 		<members>FEC_GetNextWorkController</members>
+		<members>FEC_CardLockUnlockController</members>
+		<members>FEC_CaseBusinessService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -188,6 +204,7 @@
 	</types>
 	<types>
 		<members>Case</members>
+		<members>FEC_Pending_Disbursement__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -241,5 +258,9 @@
         <members>Case.Internal_Case_Compact_Layout</members>
         <name>CompactLayout</name>
     </types>
+	<types>
+		<members>FEC_Pending_Disbursement__c-Pending Disbursement Layout</members>
+		<name>Layout</name>
+	</types>
 	<version>65.0</version>
 </Package>

@@ -46,6 +46,8 @@ const CASE_OBJECT_API_NAME = 'Case';
 const NAV_ACTION_VIEW = 'view';
 const NAV_ACTION_LIST = 'list';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const RESULT_ERROR = "result-error";
+const RESULT_SUCCESS = "result-success";
 const CHANNEL_OPTIONS = [
   { label: "Inbound", value: "Inbound" },
   { label: "Outbound", value: "Outbound" },
@@ -152,4 +154,6 @@ export {
     SUCCESS_MODAL_TITLE,
     SUCCESS_TOAST_TYPE,
     ERROR_TOAST_TYPE,
+    RESULT_ERROR,
+    RESULT_SUCCESS
 };
