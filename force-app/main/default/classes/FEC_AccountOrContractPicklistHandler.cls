@@ -63,19 +63,6 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
     }
     
     @AuraEnabled
-    public static Id getInteractionIdFromCustomerCase(Id caseId) {
-        Case c = [
-        SELECT FEC_Interaction__c
-        FROM Case
-        WHERE Id = :caseId
-        LIMIT 1
-    ];
-        return c.FEC_Interaction__c;
-    }
-    
-    
-    
-    @AuraEnabled
     public static List<GetProductsListResponse> getProductsListByCif(String cifNumber){
         
         
