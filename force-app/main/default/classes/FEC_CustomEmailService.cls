@@ -147,7 +147,8 @@ public without sharing class FEC_CustomEmailService {
         String ccEmail,
         String subject,
         String body,
-        List<AttachmentWrapper> attachments
+        List<AttachmentWrapper> attachments,
+        String titleReply
     ) {
         try {
             // 1. Validate case status
@@ -212,7 +213,7 @@ public without sharing class FEC_CustomEmailService {
             Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
 
             // 7. Post-send: update case fields + create Task log
-            updateCaseAfterSend(caseId, fromEmail, toEmail, ccEmail, subject);
+            updateCaseAfterSend(caseId, fromEmail, toEmail, ccEmail, subject, titleReply);
 
         } catch (AuraHandledException e) {
             throw e;
@@ -274,13 +275,14 @@ public without sharing class FEC_CustomEmailService {
     }
 
     private static void updateCaseAfterSend(
-        String caseId, String fromEmail, String toEmail, String ccEmail, String subject
+        String caseId, String fromEmail, String toEmail, String ccEmail, String subject, String titleReply
     ) {
         // Update case fields
         Case cUpdate = new Case(Id = caseId);
-        if (String.isNotBlank(fromEmail)) cUpdate.FEC_Email_From__c = fromEmail;
-        if (String.isNotBlank(toEmail))   cUpdate.FEC_Send_To__c    = toEmail;
-        if (String.isNotBlank(ccEmail))   cUpdate.FEC_Email_CC__c   = ccEmail;
+        if (String.isNotBlank(fromEmail))   cUpdate.FEC_Email_From__c  = fromEmail;
+        if (String.isNotBlank(toEmail))     cUpdate.FEC_Send_To__c     = toEmail;
+        if (String.isNotBlank(ccEmail))     cUpdate.FEC_Email_C__c     = ccEmail;
+        if (String.isNotBlank(titleReply))  cUpdate.FEC_Title_Reply__c = titleReply;
         update cUpdate;
 
         // Create Task as audit log

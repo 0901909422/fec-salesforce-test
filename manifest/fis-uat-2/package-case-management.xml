@@ -15,6 +15,10 @@
 		<members>Case.FEC_Send_To__c</members>
 		<members>Case.FEC_Search_Email_Address__c</members>
 		<members>Case.FEC_Genesys_Campaign_Name__c</members>
+		<members>Case.FEC_Email_From__c</members>
+		<members>Case.FEC_Email_C__c</members>
+		<members>Case.FEC_Title_Reply__c</members>
+		<members>Case.FEC_Reply_Template__c</members>
         <name>CustomField</name>
     </types>
 	<types>

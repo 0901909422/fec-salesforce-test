@@ -29,6 +29,16 @@
     <aura:attribute name="isHandling" type="Boolean" default="false" />
     <aura:attribute name="caseRecord" type="Object" />
 
+    <!-- Custom Labels -->
+    <aura:attribute name="lblDanhXung" type="String" default="{!$Label.c.FEC_Email_Label_Danh_Xung}" />
+    <aura:attribute name="lblAnhChi" type="String" default="{!$Label.c.FEC_Email_Option_Anh_Chi}" />
+    <aura:attribute name="lblAnh" type="String" default="{!$Label.c.FEC_Email_Option_Anh}" />
+    <aura:attribute name="lblChi" type="String" default="{!$Label.c.FEC_Email_Option_Chi}" />
+    <aura:attribute name="lblReplyTemplate" type="String" default="{!$Label.c.FEC_Email_Label_Reply_Template}" />
+    <aura:attribute name="lblNone" type="String" default="{!$Label.c.FEC_Email_Option_None}" />
+    <aura:attribute name="lblWriteEmail" type="String" default="{!$Label.c.FEC_Email_Placeholder_Write}" />
+    <aura:attribute name="lblCompose" type="String" default="{!$Label.c.FEC_Email_Btn_Compose}" />
+
     <!-- Load viewMode từ Case record -->
     <force:recordData aura:id="caseData"
         recordId="{!v.recordId}"
@@ -52,18 +62,18 @@
             <div class="field-row">
                 <div class="field-col">
                     <label class="field-label">
-                        <abbr title="required" class="required">*</abbr> Danh x&#432;ng
+                        <abbr title="required" class="required">*</abbr> {!$Label.c.FEC_Email_Label_Danh_Xung}
                     </label>
                     <lightning:select name="titleReply" label="" value="{!v.titleReply}" onchange="{!c.onTitleChange}" class="field-select">
-                        <option value="Anh/ Chi">Anh/ Ch&#7883;</option>
-                        <option value="Anh">Anh</option>
-                        <option value="Chi">Ch&#7883;</option>
+                        <option value="Anh/ Chi">{!$Label.c.FEC_Email_Option_Anh_Chi}</option>
+                        <option value="Anh">{!$Label.c.FEC_Email_Option_Anh}</option>
+                        <option value="Chi">{!$Label.c.FEC_Email_Option_Chi}</option>
                     </lightning:select>
                 </div>
                 <div class="field-col">
-                    <label class="field-label">Reply Template</label>
+                    <label class="field-label">{!$Label.c.FEC_Email_Label_Reply_Template}</label>
                     <lightning:select name="replyTemplate" label="" value="{!v.replyTemplate}" onchange="{!c.onTemplateChange}" class="field-select">
-                        <option value="">--None--</option>
+                        <option value="">{!$Label.c.FEC_Email_Option_None}</option>
                         <aura:iteration items="{!v.templateOptions}" var="t">
                             <option value="{!t.value}">{!t.label}</option>
                         </aura:iteration>
@@ -74,8 +84,8 @@
             <!-- Write an email + Compose bar -->
             <aura:if isTrue="{!not(v.showCompose)}">
                 <div class="compose-bar">
-                    <div class="write-email-input" onclick="{!c.openCompose}">Write an email...</div>
-                    <lightning:button variant="brand" label="Compose" onclick="{!c.openCompose}" />
+                    <div class="write-email-input" onclick="{!c.openCompose}">{!$Label.c.FEC_Email_Placeholder_Write}</div>
+                    <lightning:button variant="brand" label="{!$Label.c.FEC_Email_Btn_Compose}" onclick="{!c.openCompose}" />
                 </div>
             </aura:if>
 

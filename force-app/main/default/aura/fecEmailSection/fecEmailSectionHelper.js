@@ -627,7 +627,8 @@
             ccEmail: component.get('v.ccEmail') || null,
             subject: subject,
             body: body,
-            attachments: attachments
+            attachments: attachments,
+            titleReply: component.get('v.titleReply') || null
         });
         action.setCallback(this, function(response) {
             component.set('v.isSending', false);
