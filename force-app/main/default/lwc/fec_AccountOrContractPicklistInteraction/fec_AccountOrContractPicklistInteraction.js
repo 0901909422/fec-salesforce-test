@@ -31,7 +31,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     accountContractNumber: FEC_ACCOUNT_CONTRACT_NUMBER_LABEL,
   };
 
-  @api recordId;
+  @api interactionId;
 
   selectedValue = "";
   cifNumber = "";
@@ -106,7 +106,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
    * ======================= */
 
   @wire(getRecord, {
-    recordId: "$recordId",
+    recordId: "$interactionId",
     fields: [HAS_ACCOUNT_OR_CONTACT, CUSTOMER_TYPE, RECORDTYPE_ID],
   })
   wiredCase({ data, error }) {
@@ -137,7 +137,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   async getRecordTypeName() {
     try {
       this.recordTypeDevName = await getRecordTypeName({
-        recordId: this.recordId,
+        recordId: this.interactionId,
       });
     } catch (e) {
       console.error("getRecordTypeName error:", e);
@@ -147,7 +147,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   async getInteractionAccountNumber() {
     try {
       const result = await getInteractionAccountNumber({
-        caseId: this.recordId,
+        caseId: this.interactionId,
       });
       const data = result ? JSON.parse(result) : {};
       console.log(JSON.stringify(data));
@@ -163,7 +163,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   async getInteractionAccountNumberNonExistingCustomer() {
     try {
       const result = await getInteractionAccountNumber({
-        caseId: this.recordId,
+        caseId: this.interactionId,
       });
       const data = result ? JSON.parse(result) : {};
       console.log("### Test ###");
@@ -237,7 +237,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   }
 
   get showPicklist() {
-    return this.hasAccountOrContact && this.isEditMode && this.isInteraction;
+    return this.hasAccountOrContact && this.isEditMode;
   }
 
   get isNonExistingCustomer() {
@@ -289,12 +289,12 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     try {
       if (this.isNonExistingCustomer) {
         await createHistoryNonExistingCustomer({
-          caseId: this.recordId,
+          caseId: this.interactionId,
           selectedType: selectedRow.product,
         });
       } else {
         await createHistory({
-          caseId: this.recordId,
+          caseId: this.interactionId,
           selectedAccountContractNumber: this.selectedValue,
           selectedType: selectedRow.product,
           cifNumber: this.cifNumber,

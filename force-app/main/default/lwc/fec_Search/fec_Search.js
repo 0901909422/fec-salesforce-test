@@ -1175,6 +1175,11 @@ hasAnySearchCriteria(params) {
     }
   }
 
+  get isDisplayCreateCase() {
+    return this.recordId && this.isNoCustomerFound;
+  }
+
+
   // Sorting helpers if you want per-table sorting in future (optional)
   onSorting(event) {
     const { fieldName, sortDirection } = event.detail;
