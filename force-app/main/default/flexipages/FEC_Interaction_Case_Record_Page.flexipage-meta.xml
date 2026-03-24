@@ -171,11 +171,17 @@
                 <componentName>fec_KYC</componentName>
                 <identifier>c_fec_KYC</identifier>
                 <visibilityRule>
+                <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>true</rightValue>
                     </criteria>
+                <criteria>
+                    <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                    <operator>NE</operator>
+                    <rightValue>Internal Email</rightValue>
+                </criteria>
                 </visibilityRule>
             </componentInstance>
         </itemInstances>
