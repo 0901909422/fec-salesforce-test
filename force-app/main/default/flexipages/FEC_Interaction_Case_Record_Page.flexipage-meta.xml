@@ -89,7 +89,7 @@
                 <componentName>fecInteractionEmailInfo</componentName>
                 <identifier>c_fecInteractionEmailInfo</identifier>
                 <visibilityRule>
-                <booleanFilter>( 1 AND 2 ) OR (1 AND 3 AND 4)</booleanFilter>
+                <booleanFilter>(1 AND 2) OR (1 AND 3 AND 4)</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
                         <operator>EQUAL</operator>
