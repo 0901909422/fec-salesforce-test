@@ -10,15 +10,30 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
   // ================= BATCH =================
   public Database.QueryLocator start(Database.BatchableContext bc) {
     Set<String> statuslst = new Set<String>{ 'Open' };
+    Set<String> interationStatuslst = new Set<String>{ 'Open' };
 
     return Database.getQueryLocator(
-      'SELECT Id, RecordTypeId, Status ' +
+      'SELECT Id, RecordTypeId, Status, OwnerId  ' +
         'FROM Case ' +
-        'WHERE RecordType.DeveloperName = \'Interaction\' AND Status IN :statuslst'
+        'WHERE RecordType.DeveloperName = \'Interaction\' AND Status IN :statuslst AND FEC_Interaction_Status__c  IN :interationStatuslst'
     );
   }
 
   public void execute(Database.BatchableContext bc, List<Case> scope) {
+    List<Case> interationlst = new List<Case>();
+
+    for (Case item : scope) {
+      if (
+        String.isNotBlank(item.OwnerId) &&
+        item.OwnerId.getSObjectType() == User.SObjectType
+      ) {
+        interationlst.add(item);
+      }
+    }
+
+    if (interationlst.isEmpty())
+      return;
+
     List<User> userlst = [
       SELECT Id, Email, UserRole.Name
       FROM User
@@ -34,7 +49,7 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
       roleName = currUser.UserRole?.Name;
     }
 
-    Map<Id, Case> interationMap = new Map<Id, Case>(scope);
+    Map<Id, Case> interationMap = new Map<Id, Case>(interationlst);
     Map<Id, List<Case>> interationToServiceCaseMap = new Map<Id, List<Case>>();
 
     List<Case> updatedlst = new List<Case>();
@@ -66,7 +81,7 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
 
     List<FEC_Case_Remarks__c> remarklst = new List<FEC_Case_Remarks__c>();
 
-    for (Case item : scope) {
+    for (Case item : interationlst) {
       if (interationToServiceCaseMap.containsKey(item.Id)) {
         for (Case child : interationToServiceCaseMap.get(item.Id)) {
           child.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED;
@@ -85,11 +100,17 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
       }
 
       item.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CLOSED;
+      item.FEC_Outcome_Code__c = FEC_ConstantCommon.OUTCOME_CODE_COMPLETED;
+      item.FEC_Interaction_Remarks__c = null;
+
       updatedlst.add(item);
     }
 
-    if (!updatedlst.isEmpty())
+    if (!updatedlst.isEmpty()) {
+      FEC_CaseTriggerHandler.isExecuting = true;
       update updatedlst;
+      FEC_CaseTriggerHandler.isExecuting = false;
+    }
 
     if (!remarklst.isEmpty())
       insert remarklst;
