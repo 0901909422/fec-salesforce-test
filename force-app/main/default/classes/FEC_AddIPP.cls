@@ -277,12 +277,31 @@ public with sharing class FEC_AddIPP {
         return result;
       }
 
-      Dom.XmlNode sysResponseNode = root.getChildElement(
+      // Navigate proper SOAP structure: Envelope -> Body -> AddIPPResponse
+      Dom.XmlNode bodyNode = root.getChildElement('Body', SOAP_NS);
+      if (bodyNode == null) {
+        bodyNode = FEC_CommonUltils.findChildByName(root, 'Body');
+      }
+
+      Dom.XmlNode responseNode = null;
+      if (bodyNode != null) {
+        responseNode = bodyNode.getChildElement('AddIPPResponse', SERVICE_NS);
+        if (responseNode == null) {
+          responseNode = FEC_CommonUltils.findChildByName(bodyNode, 'AddIPPResponse');
+        }
+      }
+
+      // Fallback if not wrapped in SOAP envelope properly
+      if (responseNode == null) {
+        responseNode = root;
+      }
+
+      Dom.XmlNode sysResponseNode = responseNode.getChildElement(
         'SysResponse',
         SERVICE_NS
       );
       if (sysResponseNode == null) {
-        sysResponseNode = root.getChildElement('SysResponse', null);
+        sysResponseNode = FEC_CommonUltils.findChildByName(responseNode, 'SysResponse');
       }
 
       if (sysResponseNode != null) {
@@ -317,17 +336,17 @@ public with sharing class FEC_AddIPP {
       }
 
       result.accountNumber = FEC_CommonUltils.getXmlValue(
-        root,
+        responseNode,
         'AccountNumber'
       );
 
-      String ippTermStr = FEC_CommonUltils.getXmlValue(root, 'IPPTerm');
+      String ippTermStr = FEC_CommonUltils.getXmlValue(responseNode, 'IPPTerm');
       result.ippTerm = String.isNotBlank(ippTermStr)
         ? Integer.valueOf(ippTermStr)
         : null;
 
       String principalStr = FEC_CommonUltils.getXmlValue(
-        root,
+        responseNode,
         'PrincipalAmount'
       );
       result.principalAmount = String.isNotBlank(principalStr)
@@ -335,7 +354,7 @@ public with sharing class FEC_AddIPP {
         : null;
 
       String installmentStr = FEC_CommonUltils.getXmlValue(
-        root,
+        responseNode,
         'InstallmentAmount'
       );
       result.installmentAmount = String.isNotBlank(installmentStr)
@@ -343,25 +362,25 @@ public with sharing class FEC_AddIPP {
         : null;
 
       String conversionStr = FEC_CommonUltils.getXmlValue(
-        root,
+        responseNode,
         'ConversionFee'
       );
       result.conversionFee = String.isNotBlank(conversionStr)
         ? Decimal.valueOf(conversionStr)
         : null;
 
-      String emiStr = FEC_CommonUltils.getXmlValue(root, 'EMI');
+      String emiStr = FEC_CommonUltils.getXmlValue(responseNode, 'EMI');
       result.emi = String.isNotBlank(emiStr) ? Decimal.valueOf(emiStr) : null;
 
       result.responseDescription = FEC_CommonUltils.getXmlValue(
-        root,
+        responseNode,
         'Description'
       );
 
-      String planStr = FEC_CommonUltils.getXmlValue(root, 'PlanNumber');
+      String planStr = FEC_CommonUltils.getXmlValue(responseNode, 'PlanNumber');
       result.planNumber = planStr;
 
-      String interestStr = FEC_CommonUltils.getXmlValue(root, 'InterestRate');
+      String interestStr = FEC_CommonUltils.getXmlValue(responseNode, 'InterestRate');
       result.interestRate = String.isNotBlank(interestStr)
         ? Decimal.valueOf(interestStr)
         : null;
