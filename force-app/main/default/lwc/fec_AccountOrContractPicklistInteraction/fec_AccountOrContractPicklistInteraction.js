@@ -237,32 +237,6 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   }
 
   get showPicklist() {
-    return this.hasAccountOrContact && this.isEditMode && this.isInteraction;
-  }
-
-  initAccountDataNonExisting() {
-    this.data = [
-      {
-        id: "1",
-        product: NON_EXISTING_CUSTOMER_PRODUCT_NAME,
-        accountContractNumber: "Non-Existing Customer",
-        displayValue: "",
-        productName: null,
-        isSelected: NON_EXISTING_CUSTOMER_PRODUCT_NAME == this.selectedValue,
-      },
-      {
-        id: "2",
-        product: UBANK_PRODUCT_NAME,
-        accountContractNumber: UBANK_PRODUCT_NAME,
-        displayValue: "",
-        productName: null,
-        isSelected: UBANK_PRODUCT_NAME == this.selectedValue,
-      },
-    ];
-    console.log(UBANK_PRODUCT_NAME, NON_EXISTING_CUSTOMER_PRODUCT_NAME);
-  }
-
-  get showPicklist() {
     return this.hasAccountOrContact && this.isEditMode;
   }
 
