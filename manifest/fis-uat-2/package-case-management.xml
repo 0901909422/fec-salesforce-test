@@ -107,6 +107,8 @@
 		<members>fec_CaseDetail_Customer</members>
 		<members>fec_CaseEditNOC</members>
 		<members>fec_ComboBox</members>
+		<members>fec_PinResetHandling</members>
+		<members>fec_PinResetView</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
