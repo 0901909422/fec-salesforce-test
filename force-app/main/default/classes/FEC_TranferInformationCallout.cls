@@ -1,5 +1,6 @@
 public without sharing class FEC_TranferInformationCallout {
   public static final String API_CONFIG_NAME = 'FEC_Transfer_Call';
+  public static FEC_ResponseLog responseLog;
 
   // ============================================================
   // 1. Cấu trúc JSON Request Body
@@ -41,6 +42,89 @@ public without sharing class FEC_TranferInformationCallout {
     public RequestBody Body;
   }
 
+  // Wrapper for case data mapped to call request fields
+  public class CaseCallData {
+    @AuraEnabled public String productType { get; set; }
+    @AuraEnabled public String extAppId { get; set; }
+    @AuraEnabled public String phoneNumber { get; set; }
+    @AuraEnabled public String category { get; set; }
+    @AuraEnabled public String subCategory { get; set; }
+    @AuraEnabled public String subCode { get; set; }
+    @AuraEnabled public String remark { get; set; }
+    @AuraEnabled public String csCaseID { get; set; }
+  }
+
+  public static CaseCallData getCaseCallData(Id caseId) {
+    if (caseId == null) {
+      return null;
+    }
+    Case c = [
+      SELECT
+        FEC_Product_Type__r.Name,
+        FEC_Account_Contract_Number_Text__c,
+        FEC_Interaction__r.FEC_Phone_Number__c,
+        FEC_Category__r.Name,
+        FEC_SubCategory__r.Name,
+        FEC_SubCode__r.Name,
+        FEC_Transfer_Call_to_Collections_Remarks__c,
+        FEC_Case_ID__c
+      FROM Case
+      WHERE Id = :caseId
+      WITH SECURITY_ENFORCED
+      LIMIT 1
+    ];
+
+    CaseCallData data = new CaseCallData();
+    data.productType = c.FEC_Product_Type__r?.Name;
+    data.extAppId = c.FEC_Account_Contract_Number_Text__c;
+    data.phoneNumber = c.FEC_Interaction__r?.FEC_Phone_Number__c;
+    data.category = c.FEC_Category__r?.Name;
+    data.subCategory = c.FEC_SubCategory__r?.Name;
+    data.subCode = c.FEC_SubCode__r?.Name;
+    data.remark = c.FEC_Transfer_Call_to_Collections_Remarks__c;
+    data.csCaseID = c.FEC_Case_ID__c;
+    return data;
+  }
+
+  @AuraEnabled
+  public static TransferCallResponse transferCallByCase(
+    Id caseId,
+    String genesysId,
+    String requestorId
+  ) {
+    try {
+      CaseCallData data = getCaseCallData(caseId);
+      if (data == null) {
+        TransferCallResponse res = new TransferCallResponse();
+        res.success = false;
+        res.errorMessage = String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Case ID' }
+        );
+        res.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
+        return res;
+      }
+
+      TransferCallInput reqObj = new TransferCallInput();
+      reqObj.genesysId = genesysId;
+      reqObj.requestorId = requestorId;
+      reqObj.callData = new Map<String, String>{
+        'productType' => data.productType,
+        'extAppId' => data.extAppId,
+        'phoneNumber' => data.phoneNumber,
+        'category' => data.category,
+        'subCategory' => data.subCategory,
+        'subCode' => data.subCode,
+        'remark' => data.remark,
+        'csCaseID' => data.csCaseID
+      };
+
+      return transferCall(reqObj);
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
   // ============================================================
   // 2. Cấu trúc JSON Response Body
   // ============================================================
@@ -74,10 +158,7 @@ public without sharing class FEC_TranferInformationCallout {
   // ============================================================
   // 4. Các Phương thức Gọi API (Refactored like FEC_GetLoanApplicationHistory)
   // ============================================================
-  public static HttpResponse sendRequest(TransferCallInput reqObj) {
-    String transId = FEC_CommonUltils.generateTransactionId();
-    String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
-
+  public static String buildRequestPayload(TransferCallInput reqObj, String transId, String timestamp) {
     RequestBody reqBody = new RequestBody();
     reqBody.genesysId = reqObj.genesysId;
     reqBody.data = new List<DataEntry>();
@@ -102,8 +183,10 @@ public without sharing class FEC_TranferInformationCallout {
     fullRequest.RequestorID = reqObj.requestorId;
     fullRequest.Body = reqBody;
 
-    String jsonPayload = JSON.serialize(fullRequest);
+    return JSON.serialize(fullRequest);
+  }
 
+  public static HttpResponse sendRequest(String jsonPayload) {
     FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
     FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(
       API_CONFIG_NAME
@@ -170,13 +253,33 @@ public without sharing class FEC_TranferInformationCallout {
     validate(reqObj);
     TransferCallResponse finalResult = new TransferCallResponse();
     try {
-      HttpResponse res = sendRequest(reqObj);
+      String transId = FEC_CommonUltils.generateTransactionId();
+      String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
+      String jsonPayload = buildRequestPayload(reqObj, transId, timestamp);
+
+      HttpResponse res = sendRequest(jsonPayload);
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
+
+      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+      String endpoint = apiSetting?.FEC_Call_Mock__c
+        ? FEC_MockupEndpoint.UPDATE_CUSTOMER_CONTACT_ENDPOINT_MOCKUP
+        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
+      responseLog = new FEC_ResponseLog(
+        'FEC_TranferInformationCallout',
+        endpoint,
+        FEC_ConstantCommon.API_METHOD_POST,
+        jsonPayload,
+        res,
+        null
+      );
+
       finalResult = parseResponse(body, status);
 
       if (finalResult.TransID == null)
-        finalResult.TransID = FEC_CommonUltils.generateTransactionId();
+        finalResult.TransID = transId;
       if (finalResult.httpStatus == null)
         finalResult.httpStatus = status;
       if (finalResult.rawResponse == null)
