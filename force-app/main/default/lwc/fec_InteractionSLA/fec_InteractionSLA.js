@@ -39,7 +39,8 @@ import FEC_MSG_Close_Interaction_Complete_Case_Warning from "@salesforce/label/c
 import FEC_MSG_Select_outcome_code from "@salesforce/label/c.FEC_MSG_Select_outcome_code";
 import FEC_MSG_check_related_case_error from "@salesforce/label/c.FEC_MSG_check_related_case_error";
 import FEC_MSG_check_case_type_error from "@salesforce/label/c.FEC_MSG_check_case_type_error";
-
+import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionIdFromCustomerCase";
+import getInteractionViewMode from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionViewMode";
 import { urlCmpWithRecordId } from "c/fec_CommonUtils";
 import {
   OUTCOME_CODE,
@@ -67,13 +68,13 @@ export default class Fec_InteractionSLA extends NavigationMixin(
   interactionViewMode;
   recordTypeId;
   recordTypeDevName;
+  interactionId;
   @wire(getRecord, {
     recordId: "$recordId",
     fields: [VIEW_MODE, RECORDTYPE_ID],
   })
   wiredCaseRecord({ data, error }) {
     if (data) {
-      this.interactionViewMode = getFieldValue(data, VIEW_MODE);
       this.recordTypeId = getFieldValue(data, RECORDTYPE_ID);
       console.log("recordTypeId", this.recordTypeId);
       if (this.recordTypeId) {
@@ -83,6 +84,15 @@ export default class Fec_InteractionSLA extends NavigationMixin(
     }
   }
 
+  async getInteractionViewMode() {
+    try {
+      this.interactionViewMode = await getInteractionViewMode({
+        interactionId: this.interactionId,
+      });
+    } catch (error) {
+      console.error("Error getting interaction view mode", error);
+    }
+  }
   get isReviewMode() {
     return this.interactionViewMode === "review";
   }
@@ -92,6 +102,23 @@ export default class Fec_InteractionSLA extends NavigationMixin(
       this.recordTypeDevName = await getRecordTypeName({
         recordId: this.recordId,
       });
+      if (this.recordTypeDevName === RECORD_TYPE_INTERACTION) {
+        this.interactionId = this.recordId;
+      } else if (this.recordTypeDevName === RECORD_TYPE_CUSTOMER_CASE) {
+        try {
+          this.interactionId = await getInteractionIdFromCustomerCase({
+            caseId: this.recordId,
+          });
+        } catch (e) {
+          console.error("getInteractionIdFromCustomerCase error", e);
+        }
+      }
+      if (!this.interactionId) {
+        console.warn("interactionId is missing, skip getInteractionViewMode");
+        return;
+      }
+
+      await this.getInteractionViewMode();
     } catch (e) {
       console.error("getRecordTypeName error:", e);
     }
