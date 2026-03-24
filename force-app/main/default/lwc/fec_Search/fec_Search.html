@@ -4,43 +4,70 @@
             <!-- Search criteria form wrapped in an always-open accordion -->
             <lightning-accordion class="customer-search" allow-multiple-sections-open
                 active-section-name={activeSections}>
-                <lightning-accordion-section name="searchCriteria" label="Customer Search">
-                    <lightning-layout class="responsive-layout" multiple-rows pull-to-boundary="small">
-                        <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
-                            medium-device-size="4" large-device-size="3">
-                            <lightning-input type="text" data-id="nationalId" label="National ID" value={nationalId}
-                                onchange={handleInputChange} disabled={isDisabledNationalId}></lightning-input>
-                        </lightning-layout-item>
-                        <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
-                            medium-device-size="4" large-device-size="3">
-                            <lightning-input type="tel" data-id="phoneNumber" label="Phone Number" value={phoneNumber}
-                                onchange={handleInputChange} disabled={isDisabledPhoneNumber}></lightning-input>
-                        </lightning-layout-item>
-                        <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
-                            medium-device-size="4" large-device-size="3">
-                            <lightning-input data-id="applicationId" label="Application ID"
-                                value={applicationId} onchange={handleInputChange} disabled={isDisabledApplicationId}></lightning-input>
-                        </lightning-layout-item>
-                        <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
-                            medium-device-size="4" large-device-size="3">
-                            <lightning-input data-id="contractNumber" label="Contract Number" value={contractNumber}
-                                onchange={handleInputChange} disabled={isDisabledContractNumber}></lightning-input>
-                        </lightning-layout-item>
-                    </lightning-layout>
+                <lightning-accordion-section name="searchCriteria" label={tabLabel}>
+                    <template if:false={isAccountContractSearch}>
+                        <lightning-layout class="responsive-layout" multiple-rows pull-to-boundary="small">
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
+                                medium-device-size="4" large-device-size="3">
+                                <lightning-input type="text" data-id="nationalId" label="National ID" value={nationalId}
+                                    onchange={handleInputChange} disabled={isDisabledNationalId}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
+                                medium-device-size="4" large-device-size="3">
+                                <lightning-input type="tel" data-id="phoneNumber" label="Phone Number" value={phoneNumber}
+                                    onchange={handleInputChange} disabled={isDisabledPhoneNumber}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
+                                medium-device-size="4" large-device-size="3">
+                                <lightning-input data-id="applicationId" label="Application ID" value={applicationId}
+                                    onchange={handleInputChange} disabled={isDisabledApplicationId}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
+                                medium-device-size="4" large-device-size="3">
+                                <lightning-input data-id="contractNumber" label="Contract Number" value={contractNumber}
+                                    onchange={handleInputChange} disabled={isDisabledContractNumber}></lightning-input>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    
+                        <lightning-layout class="responsive-layout" multiple-rows pull-to-boundary="small">
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
+                                medium-device-size="4" large-device-size="3">
+                                <lightning-input data-id="accountNumber" label="Account Number" value={accountNumber}
+                                    onchange={handleInputChange} disabled={isDisabledAccountNumber}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
+                                medium-device-size="4" large-device-size="3">
+                                <lightning-input type="email" data-id="emailAddress" label="Email Address" value={emailAddress}
+                                    onchange={handleInputChange} disabled={isDisabledEmailAddress}></lightning-input>
+                            </lightning-layout-item>
+                    
+                        </lightning-layout>
+                    </template>
 
-                    <lightning-layout class="responsive-layout" multiple-rows pull-to-boundary="small">
-                        <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
-                            medium-device-size="4" large-device-size="3">
-                            <lightning-input data-id="accountNumber" label="Account Number" value={accountNumber}
-                                onchange={handleInputChange} disabled={isDisabledAccountNumber}></lightning-input>
-                        </lightning-layout-item>
-                        <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
-                            medium-device-size="4" large-device-size="3">
-                            <lightning-input type="email" data-id="emailAddress" label="Email Address"
-                                value={emailAddress} onchange={handleInputChange} disabled={isDisabledEmailAddress}></lightning-input>
-                        </lightning-layout-item>
-                        
-                    </lightning-layout>
+                    <template if:true={isAccountContractSearch}>
+                        <lightning-layout class="responsive-layout" multiple-rows pull-to-boundary="small">
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
+                                medium-device-size="4" large-device-size="3">
+                                <lightning-input type="text" data-id="nationalId" label="National ID" value={nationalId}
+                                    onchange={handleInputChange} disabled={isDisabledNationalId}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
+                                medium-device-size="4" large-device-size="3">
+                                <lightning-input data-id="applicationId" label="Application ID" value={applicationId}
+                                    onchange={handleInputChange} disabled={isDisabledApplicationId}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
+                                medium-device-size="4" large-device-size="3">
+                                <lightning-input data-id="contractNumber" label="Contract Number" value={contractNumber}
+                                    onchange={handleInputChange} disabled={isDisabledContractNumber}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6"
+                                medium-device-size="4" large-device-size="3">
+                                <lightning-input data-id="accountNumber" label="Account Number" value={accountNumber}
+                                    onchange={handleInputChange} disabled={isDisabledAccountNumber}></lightning-input>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </template>
 
                     <!-- Buttons centered -->
                     <div class="slds-p-top_medium slds-align_absolute-center slds-grid slds-gutters_x-small">
@@ -65,27 +92,26 @@
                                 class="slds-text-align_center slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
                                 Không tìm thấy khách hàng
                             </div>
-
-                            <div class="slds-grid slds-gutters slds-m-bottom_medium">
-                                <div class="slds-col slds-size_1-of-2">
-                                    <lightning-input label="Customer Name" placeholder="Nhập Customer Name"
-                                        value={custNameForCreate} required onchange={handleCustNameChange}>
-                                    </lightning-input>
+                            <template if:true={isDisplayCreateCase}>
+                                <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input label="Customer Name" placeholder="Nhập Customer Name" value={custNameForCreate} required
+                                            onchange={handleCustNameChange}>
+                                        </lightning-input>
+                                    </div>
+                            
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input label={FEC_National_ID_Passport_ID_Label} placeholder={nationalId_PassPortId_PlaceHolder}
+                                            value={nationalIdForCreate} data-id="national-id" onchange={handleNationalIdChange}>
+                                        </lightning-input>
+                                    </div>
                                 </div>
-
-                                <div class="slds-col slds-size_1-of-2">
-                                    <lightning-input label={FEC_National_ID_Passport_ID_Label} placeholder={nationalId_PassPortId_PlaceHolder}
-                                        value={nationalIdForCreate} data-id="national-id" onchange={handleNationalIdChange}>
-                                    </lightning-input>
+                            
+                                <div class="slds-grid slds-grid_align-center">
+                                    <lightning-button label="Create Case" variant="brand" onclick={handleNewCase} disabled={isNewCaseDisabled}>
+                                    </lightning-button>
                                 </div>
-                            </div>
-
-                            <div class="slds-grid slds-grid_align-center">
-                                <lightning-button label="Create Case" variant="brand" onclick={handleNewCase}
-                                    disabled={isNewCaseDisabled}>
-                                </lightning-button>
-                            </div>
-
+                            </template>
                         </div>
                     </template>
 
@@ -105,27 +131,29 @@
                                         onrowaction={handleRowAction}>
                                     </c-masked-toggle-datatable>
                                 </div>
-
-                                <div class="slds-m-top_medium">
-                                    <h3 class="slds-text-heading_small slds-m-bottom_x-small">B2 Contracts</h3>
-                                    <c-masked-toggle-datatable key-field="id" data={loanB2Data} columns={loanB2Columns}
-                                        hide-checkbox-column onrowaction={handleRowAction}>
-                                    </c-masked-toggle-datatable>
-                                </div>
-
-                                <div class="slds-m-top_medium">
-                                    <h3 class="slds-text-heading_small slds-m-bottom_x-small">Cash24 Contracts</h3>
-                                    <c-masked-toggle-datatable key-field="id" data={loanCash24Data}
-                                        columns={loanCash24Columns} hide-checkbox-column onrowaction={handleRowAction}>
-                                    </c-masked-toggle-datatable>
-                                </div>
+                                <template if:false={isAccountContractSearch}>
+                                    <div class="slds-m-top_medium">
+                                        <h3 class="slds-text-heading_small slds-m-bottom_x-small">B2 Contracts</h3>
+                                        <c-masked-toggle-datatable key-field="id" data={loanB2Data} columns={loanB2Columns} hide-checkbox-column
+                                            onrowaction={handleRowAction}>
+                                        </c-masked-toggle-datatable>
+                                    </div>
+                                
+                                    <div class="slds-m-top_medium">
+                                        <h3 class="slds-text-heading_small slds-m-bottom_x-small">Cash24 Contracts</h3>
+                                        <c-masked-toggle-datatable key-field="id" data={loanCash24Data} columns={loanCash24Columns} hide-checkbox-column
+                                            onrowaction={handleRowAction}>
+                                        </c-masked-toggle-datatable>
+                                    </div>
+                                </template>
                             </lightning-tab>
-                            <lightning-tab label="Insurance" value="Insurance">
-                                <c-masked-toggle-datatable key-field="id" data={insuranceData}
-                                    columns={insuranceColumns} hide-checkbox-column onrowaction={handleRowAction}>
-                                </c-masked-toggle-datatable>
-                            </lightning-tab>
-                            
+                            <template if:false={isAccountContractSearch}>
+                                <lightning-tab label="Insurance" value="Insurance">
+                                    <c-masked-toggle-datatable key-field="id" data={insuranceData} columns={insuranceColumns} hide-checkbox-column
+                                        onrowaction={handleRowAction}>
+                                    </c-masked-toggle-datatable>
+                                </lightning-tab>
+                            </template>
                         </lightning-tabset>
                     </template>
                 </lightning-accordion-section>

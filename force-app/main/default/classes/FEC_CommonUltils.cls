@@ -199,6 +199,25 @@ public with sharing class FEC_CommonUltils {
     return options;
   }
   
+  public static String resolveTemplate(
+    String template,
+    SObject c,
+    Map<String, String> adhocValues
+  ) {
+    if (String.isBlank(template)) return template;
+
+    String result = template;
+
+    if (adhocValues != null) {
+      for (String key : adhocValues.keySet()) {
+        String val = adhocValues.get(key);
+        result = result.replace('{{' + key + '}}', val != null ? val : '');
+      }
+    }
+
+    return resolveTemplate(result, c);
+  }
+
   public static String resolveTemplate(String template, SObject c) {
     if (String.isBlank(template) || c == null) {
       return template;
@@ -513,6 +532,17 @@ public with sharing class FEC_CommonUltils {
     return amount.setScale(scale).format();
   }
 
+  /**
+   * Số hiển thị đủ phần thập phân (vd API = 0 → "0.00"), dùng dấu chấm — tránh locale .format() bỏ .00.
+   */
+  public static String formatDecimalPlainScale(Decimal amount, Integer scale) {
+    if (amount == null) {
+      return '';
+    }
+    Integer sc = (scale == null || scale < 0) ? 2 : scale;
+    return amount.setScale(sc, System.RoundingMode.HALF_UP).toPlainString();
+  }
+
   public static String formatDate(Date d) {
     if (d == null)
       return '';
@@ -521,6 +551,19 @@ public with sharing class FEC_CommonUltils {
 
   public static String formatTimestamp(Datetime timestamp ,String format) {
     return Datetime.valueOf(timestamp).format(format);
+  }
+
+  /** Ngày hiển thị cố định dd/MM/yyyy (không phụ thuộc locale). */
+  public static String formatDateDDMMYYYY(Date d) {
+    if (d == null) {
+      return '';
+    }
+    Integer dd = d.day();
+    Integer mm = d.month();
+    Integer yyyy = d.year();
+    String dStr = dd < 10 ? '0' + dd : String.valueOf(dd);
+    String mStr = mm < 10 ? '0' + mm : String.valueOf(mm);
+    return dStr + '/' + mStr + '/' + yyyy;
   }
 
   public static String decimalToString(Decimal d) {
@@ -798,6 +841,91 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  public static String pickNameByLanguage(String nameEN, String nameVN, String language) {
+      String lang = String.valueOf(language);
+      if (lang != null && lang.toUpperCase() == FEC_ConstantCommon.LANGUAGE_VN) {
+          return String.isNotBlank(nameVN)
+              ? nameVN
+              : (String.isNotBlank(nameEN) ? nameEN : '');
+      }
+      return String.isNotBlank(nameEN)
+          ? nameEN
+          : (String.isNotBlank(nameVN) ? nameVN : '');
+  }
+
+  public static String getFieldType(String objectName, String fieldName) {
+    try {
+
+        Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+        if (sObjectType == null) return null;
+        Schema.DescribeSObjectResult objDescribe = sObjectType.getDescribe();
+        Schema.SObjectField fieldToken = objDescribe.fields.getMap().get(fieldName);
+        if (fieldToken == null) return null;
+        Schema.DisplayType t = fieldToken.getDescribe().getType();
+        switch on t {
+            when Picklist {
+                return FEC_ConstantCommon.KEY_PICKLIST;
+            }
+            when Boolean {
+                return FEC_ConstantCommon.KEY_CHECKBOX;
+            }
+            when Date {
+                return FEC_ConstantCommon.KEY_DATE;
+            }
+            when DateTime {
+                return FEC_ConstantCommon.KEY_DATETIME;
+            }
+            when Integer, Double {
+                return FEC_ConstantCommon.KEY_NUMBER;
+            }
+            when else {
+                return FEC_ConstantCommon.KEY_TEXT;
+            }
+        }
+    } catch (Exception e) {
+        System.debug('getFieldType error: ' + e.getMessage());
+        return null;
+    }
+  }
+
+  public static Integer toInt(Decimal d) {
+    return d == null ? null : Integer.valueOf(d);
+  }
+
+  public static String getFieldLabel(String objectName, String fieldName) {
+    try {
+        Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+        if (sObjectType == null) return null;
+
+        Schema.DescribeSObjectResult objDescribe = sObjectType.getDescribe();
+        Schema.SObjectField fieldToken = objDescribe.fields.getMap().get(fieldName);
+        if (fieldToken == null) return null;
+
+        return fieldToken.getDescribe().getLabel();
+    } catch (Exception e) {
+        System.debug('getFieldLabel error: ' + e.getMessage());
+        return null;
+    }
+  }
+  
+  /**
+   * Log API response using FEC_ResponseLog object.
+   * Centralized method to handle deferred logging.
+   */
+  @AuraEnabled
+  public static void logApiResponse(FEC_ResponseLog log) {
+    if (log != null) {
+      logApi(
+        log.apiName,
+        log.endpoint,
+        log.method,
+        log.requestBody,
+        log.response,
+        log.errorMessage
+      );
+    }
+  }
+  
   public static String escapeXml(String s) {
     if (s == null)
       return '';
@@ -808,4 +936,16 @@ public with sharing class FEC_CommonUltils {
       .replace('\'', '&apos;');
   }
 
+  public static Integer toIntDec(Decimal d) {
+    return d == null ? null : Integer.valueOf(d);
+  }
+
+  public static String getEmailPrefix(String email) {
+    if (String.isBlank(email)) {
+        return '';
+    }
+    return email.contains('@') 
+        ? email.substringBefore('@') 
+        : email;
+  }
 }
