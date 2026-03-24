@@ -1,22 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CaseSettings xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseAutoProcUser>false</caseAutoProcUser>
     <caseFeedItemSettings>
         <characterLimit>400</characterLimit>
-        <collapseThread>true</collapseThread>
         <displayFormat>Default</displayFormat>
         <feedItemType>EmailMessageEvent</feedItemType>
     </caseFeedItemSettings>
+    <caseFeedReadUnreadLtng>false</caseFeedReadUnreadLtng>
+    <caseMergeInLightning>false</caseMergeInLightning>
     <closeCaseThroughStatusChange>true</closeCaseThroughStatusChange>
-    <defaultCaseOwner>phuongnt204.fe@fpt.com</defaultCaseOwner>
+    <defaultCaseFeedLayoutOn>false</defaultCaseFeedLayoutOn>
     <defaultCaseOwnerType>User</defaultCaseOwnerType>
     <emailToCase>
+        <enableE2CAttachmentAsFile>false</enableE2CAttachmentAsFile>
+        <enableE2CDeduplicateAttachments>false</enableE2CDeduplicateAttachments>
+        <enableE2CExternalServer>true</enableE2CExternalServer>
         <enableE2CSourceTracking>true</enableE2CSourceTracking>
         <enableEmailToCase>true</enableEmailToCase>
         <enableHtmlEmail>true</enableHtmlEmail>
+        <enableNewToReadTriggers>false</enableNewToReadTriggers>
         <enableOnDemandEmailToCase>true</enableOnDemandEmailToCase>
+        <enableThreadTokenInBody>true</enableThreadTokenInBody>
+        <enableThreadTokenInSubject>true</enableThreadTokenInSubject>
+        <movingEmailEnabled>false</movingEmailEnabled>
         <notifyOwnerOnNewCaseEmail>true</notifyOwnerOnNewCaseEmail>
+        <notifySenderE2CError>false</notifySenderE2CError>
         <overEmailLimitAction>Bounce</overEmailLimitAction>
         <preQuoteSignature>false</preQuoteSignature>
+        <replyWithNewContentOnly>false</replyWithNewContentOnly>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
             <caseOrigin>Email</caseOrigin>
@@ -25,7 +36,6 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>supportcsm@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>supportcsm@q-4ksznnsmu0itwj2fu9lywnf8e8yda8v5izmo727b4qnmihjic.az-8vj8fmaa.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>CSM Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
@@ -38,7 +48,6 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>customercare@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>customercare@1uq4tnyawwdw6msuuulc55lc4aantd23us9ckr9zewm4luuwo0.az-8vj8fmaa.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>Care Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
@@ -51,7 +60,6 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>cs_d2c@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>cs_d2c@7-2skbujf1kqyj1h83guzuusy68rd5v3gg50ny21cakylibtbhha.az-8vj8fmaa.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>Day 2 Check</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
@@ -64,65 +72,8 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>e_com@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>e_com@1v4g0umax525jjotykw0jrr372c6gufe9g9o0r6sknx19je0e9.az-8vj8fmaa.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>Ecom Mailbox</routingName>
-            <saveEmailHeaders>false</saveEmailHeaders>
-        </routingAddresses>
-        <routingAddresses>
-            <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
-            <casePriority>Medium</casePriority>
-            <createTask>false</createTask>
-            <emailAddress>tsalesforce63@gmail.com</emailAddress>
-            <emailServicesAddress>tsalesforce63@jejiqec9lpoyhxeo2css8uvp8mv4lty784m6q91oy3lzxvf2t.az-8vj8fmaa.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
-            <isVerified>true</isVerified>
-            <routingName>Email-to-case Longnh76</routingName>
-            <saveEmailHeaders>false</saveEmailHeaders>
-        </routingAddresses>
-        <routingAddresses>
-            <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
-            <casePriority>Medium</casePriority>
-            <createTask>false</createTask>
-            <emailAddress>phongbt11@fpt.com</emailAddress>
-            <emailServicesAddress>phongbt11@e-1ffm4yuup7eerfxjzh9glqvvk342ueaujacmf3cvh7vw9emtme.az-8vj8fmaa.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
-            <isVerified>true</isVerified>
-            <routingName>Email-to-case Phongbt11</routingName>
-            <saveEmailHeaders>false</saveEmailHeaders>
-        </routingAddresses>
-        <routingAddresses>
-            <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
-            <casePriority>Medium</casePriority>
-            <createTask>false</createTask>
-            <emailAddress>anhdt36@fpt.com</emailAddress>
-            <isVerified>false</isVerified>
-            <routingName>Email-to-case Anhdt36</routingName>
-            <saveEmailHeaders>false</saveEmailHeaders>
-        </routingAddresses>
-        <routingAddresses>
-            <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
-            <casePriority>High</casePriority>
-            <createTask>true</createTask>
-            <emailAddress>phuongnt.fit@gmail.com</emailAddress>
-            <isVerified>true</isVerified>
-            <routingName>FEC_EmailToCase</routingName>
-            <saveEmailHeaders>false</saveEmailHeaders>
-            <taskStatus>Open</taskStatus>
-        </routingAddresses>
-        <routingAddresses>
-            <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
-            <caseOwner>tungnm37.fe@fpt.com</caseOwner>
-            <caseOwnerType>User</caseOwnerType>
-            <casePriority>High</casePriority>
-            <createTask>false</createTask>
-            <emailAddress>tungnm37@fpt.com</emailAddress>
-            <emailServicesAddress>tungnm37@1222clf5k3vd3ccqv156shidk45vif7snqjwtlzo3r44vzz7xf.az-8vj8fmaa.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
-            <isVerified>true</isVerified>
-            <routingName>FEC_EmailToCase_Tung</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <routingAddresses>
@@ -133,7 +84,6 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>cs_om@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>cs_om@j-17pi73bkkd674ds06pktcrl8z2d4dcvx90lt49kjhl6vvr52dn.az-8vj8fmaa.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>OM Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
@@ -146,7 +96,6 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>f2f@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>f2f@1oi1kg1kzhzt6lx0natwzvl7txsaze6j87w0slkw5u7683mdl9.az-8vj8fmaa.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>Office Based Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
@@ -159,7 +108,6 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>cs_qc_team@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>cs_qc_team@l-11xn1022dry3k938uqd3t16uk119zaqarf5okqo59herqf92fr.az-8vj8fmaa.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>Quality Control Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
@@ -172,31 +120,44 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>cssupport@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>cssupport@369f7ea1jy4hfstpcjngansl3wib8r7tmlcycvwhnomu0mro4l.az-8vj8fmaa.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>Support Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <unauthorizedSenderAction>Discard</unauthorizedSenderAction>
+        <useEmailHeadersForThreading>true</useEmailHeadersForThreading>
     </emailToCase>
     <enableCaseFeed>true</enableCaseFeed>
+    <enableCaseSwarming>false</enableCaseSwarming>
+    <enableCollapseEmailThread>true</enableCollapseEmailThread>
     <enableDraftEmails>true</enableDraftEmails>
     <enableEarlyEscalationRuleTriggers>false</enableEarlyEscalationRuleTriggers>
     <enableEmailActionDefaultsHandler>false</enableEmailActionDefaultsHandler>
+    <enableEscalateQfiToCaseInternal>false</enableEscalateQfiToCaseInternal>
+    <enableMultiLangSolnSrchCSS>false</enableMultiLangSolnSrchCSS>
+    <enableMultiLangSolnSrchPKB>false</enableMultiLangSolnSrchPKB>
+    <enableMultiLangSolution>false</enableMultiLangSolution>
+    <enableSolutionCategory>false</enableSolutionCategory>
+    <enableSolutionInlineCategory>true</enableSolutionInlineCategory>
+    <enableSolutionShortSummary>true</enableSolutionShortSummary>
     <enableSuggestedArticlesApplication>false</enableSuggestedArticlesApplication>
     <enableSuggestedArticlesCustomerPortal>false</enableSuggestedArticlesCustomerPortal>
     <enableSuggestedArticlesPartnerPortal>false</enableSuggestedArticlesPartnerPortal>
     <enableSuggestedSolutions>true</enableSuggestedSolutions>
+    <escalateCaseBefore>false</escalateCaseBefore>
+    <hidePublicInCaseComment>false</hidePublicInCaseComment>
     <keepRecordTypeOnAssignmentRule>true</keepRecordTypeOnAssignmentRule>
     <notifyContactOnCaseComment>false</notifyContactOnCaseComment>
     <notifyDefaultCaseOwner>false</notifyDefaultCaseOwner>
     <notifyOwnerOnCaseComment>false</notifyOwnerOnCaseComment>
     <notifyOwnerOnCaseOwnerChange>false</notifyOwnerOnCaseOwnerChange>
+    <rtaCaseComment>false</rtaCaseComment>
+    <rtaCaseDescription>false</rtaCaseDescription>
     <showEmailAttachmentsInCaseAttachmentsRL>true</showEmailAttachmentsInCaseAttachmentsRL>
     <showFewerCloseActions>false</showFewerCloseActions>
-    <systemUserEmail>phuongnt204@fpt.com</systemUserEmail>
     <useSystemEmailAddress>true</useSystemEmailAddress>
     <useSystemUserAsDefaultCaseUser>true</useSystemUserAsDefaultCaseUser>
+    <visibleInCssCheckbox>false</visibleInCssCheckbox>
     <webToCase>
         <enableWebToCase>false</enableWebToCase>
     </webToCase>
