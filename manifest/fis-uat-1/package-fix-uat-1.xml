@@ -55,6 +55,7 @@
 		<members>FEC_GetIPPDetailsCallout</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
 		<members>FEC_CasePendingStatusService</members>
+		<members>FEC_KYCService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -149,6 +150,7 @@
 		<members>FEC_Routing_Action_History__c.FEC_Original_User_Queue_ID__c</members>
 		<members>FEC_Team_Queue__c.FEC_Name__c</members>
 		<members>Case.FEC_Global_Search__c</members>
+		<members>FEC_KYC__c.FEC_Field_Type__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -329,6 +331,7 @@
 	</types>
     <types>
 		<members>KYC_Method</members>
+		<members>FEC_Masking_Type</members>
 		<name>GlobalValueSet</name>
 	</types>
     <types>

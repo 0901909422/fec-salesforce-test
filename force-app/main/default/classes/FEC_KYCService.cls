@@ -10,7 +10,7 @@ public with sharing class FEC_KYCService {
         FEC_Product_Type__c,
         FEC_Product_Type__r.Name,
         FEC_KYC_Suggested_Answer__c,
-        Name
+        Name, FEC_Field_Type__c
       FROM FEC_KYC__c
       WHERE
         FEC_KYC_Method__c IN :methodlst
@@ -35,7 +35,7 @@ public with sharing class FEC_KYCService {
     String soql =
       'SELECT ' +
       'Id, ' +
-      'FEC_KYC_Method__c, ' +
+      'FEC_KYC_Method__c, FEC_Field_Type__c, ' +
       'FEC_Masking__c, ' +
       'FEC_Product_Type__c, ' +
       'FEC_Product_Type__r.Name, ' +

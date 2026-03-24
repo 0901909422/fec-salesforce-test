@@ -88,18 +88,19 @@
 
                         <div class="option__answer__action">
                           <lightning-button
-                            label={customLabel.buttonFail}
-                            data-id={item.id}
-                            data-answer={item.suggestedAnswer}
-                            data-check="false"
-                            onclick={handleKYC}
-                          ></lightning-button>
-                          <lightning-button
                             variant="brand"
                             label={customLabel.buttonPass}
                             data-id={item.id}
                             data-answer={item.suggestedAnswer}
                             data-check="true"
+                            onclick={handleKYC}
+                          ></lightning-button>
+                          
+                          <lightning-button
+                            label={customLabel.buttonFail}
+                            data-id={item.id}
+                            data-answer={item.suggestedAnswer}
+                            data-check="false"
                             onclick={handleKYC}
                           ></lightning-button>
                         </div>
