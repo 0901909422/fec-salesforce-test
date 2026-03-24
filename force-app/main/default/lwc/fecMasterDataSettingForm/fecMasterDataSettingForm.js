@@ -194,14 +194,14 @@ export default class FecMasterDataSettingForm extends LightningElement {
     handleSubmit(event) {
         event.preventDefault();
 
-        // Validate multi-select fields
+        // Validate multi-select fields - Set title to empty string
         if (this.selectedChannels.length === 0) {
-            this.showToast('Validation Error', 'Please select at least one Channel', 'error');
+            this.showToast('', 'Please select at least one Channel', 'error');
             return;
         }
 
         if (this.selectedRoles.length === 0) {
-            this.showToast('Validation Error', 'Please select at least one Applicable Role', 'error');
+            this.showToast('', 'Please select at least one Applicable Role', 'error');
             return;
         }
 
@@ -222,24 +222,34 @@ export default class FecMasterDataSettingForm extends LightningElement {
     handleCreateSubmit() {
         showLog('[handleSuccess] START - refreshing data');
 
-        // Validation
+        // Validation - Trimming whitespace and making sure content exists
+        const trimmedSection = this.formData.section ? this.formData.section.trim() : '';
+
         if (!this.formData.additionalField) {
-            this.showToast('Validation Error', 'Please enter Additional Field', 'error');
+            this.showToast('', 'Please select Additional Field', 'error');
             return;
         }
+
+        // Additional Validation: Check for duplicate Additional Field in create mode
+        if (this.recordData && this.recordData.existingFields && this.recordData.existingFields.includes(this.formData.additionalField)) {
+            this.showToast('', 'This Additional Field already exists. Please select a different one.', 'error');
+            return;
+        }
+
         if (this.selectedChannels.length === 0) {
-            this.showToast('Validation Error', 'Please select at least one Channel', 'error');
+            this.showToast('', 'Please select at least one Channel', 'error');
             return;
         }
         if (this.selectedRoles.length === 0) {
-            this.showToast('Validation Error', 'Please select at least one Applicable Role', 'error');
+            this.showToast('', 'Please select at least one Applicable Role', 'error');
             return;
         }
 
         try {
             const mappingReq = {
                 [FIELD_ADDITIONAL_FIELD]: this.formData.additionalField,
-                [FIELD_SECTION]: this.formData.section || null,
+                // Ensure we don't save whitespace-only strings
+                [FIELD_SECTION]: trimmedSection || null,
                 [FIELD_CHANNEL]: this.selectedChannels.join(', '),
                 [FIELD_APPLICABLE_ROLE]: this.selectedRoles.join(', '),
                 [FIELD_FIELD_ORDER_DISPLAY]: this.displayOrder || 0,
@@ -298,17 +308,19 @@ export default class FecMasterDataSettingForm extends LightningElement {
         showLog('[handleSubmitEdit] Selected Roles:', this.selectedRoles);
         showLog('[handleSubmitEdit] Display Order:', this.displayOrder);
 
-        // Validation - tất cả validation phải kiểm tra
+        // Validation - Trimming whitespace and making sure content exists
+        const trimmedSection = this.formData.section ? this.formData.section.trim() : '';
+
         if (!this.formData.additionalField) {
-            this.showToast('Validation Error', 'Please select Additional Field', 'error');
+            this.showToast('', 'Please select Additional Field', 'error');
             return;
         }
         if (this.selectedChannels.length === 0) {
-            this.showToast('Validation Error', 'Please select at least one Channel', 'error');
+            this.showToast('', 'Please select at least one Channel', 'error');
             return;
         }
         if (this.selectedRoles.length === 0) {
-            this.showToast('Validation Error', 'Please select at least one Applicable Role', 'error');
+            this.showToast('', 'Please select at least one Applicable Role', 'error');
             return;
         }
 
@@ -316,7 +328,8 @@ export default class FecMasterDataSettingForm extends LightningElement {
             const mappingReq = {
                 Id: this.recordId,
                 FEC_Additional_Field__c: this.formData.additionalField,
-                FEC_Section__c: this.formData.section || null,
+                // Ensure we don't save whitespace-only strings
+                FEC_Section__c: trimmedSection || null,
                 FEC_Channel__c: this.selectedChannels.join(', '),
                 FEC_Applicable_Role__c: this.selectedRoles.join(', '),
                 FEC_Field_Order_Display__c: this.displayOrder || 0,

@@ -5,7 +5,7 @@
     <description>Trạng thái quy trình</description>
     <externalId>false</externalId>
     <label>Business Process Status</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

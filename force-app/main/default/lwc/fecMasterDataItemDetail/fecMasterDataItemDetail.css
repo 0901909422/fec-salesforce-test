@@ -3,7 +3,8 @@
 /* Tùy chỉnh Nhãn (Label) của lightning-input */
 :host {
     /* Đảm bảo CSS có thể xuyên qua Shadow DOM */
-    --sds-c-input-label-font-weight: 700; /* In đậm nhãn */
+    --sds-c-input-label-font-weight: 700;
+    /* In đậm nhãn */
 }
 
 /* Thêm dấu hai chấm (:) sau nhãn */
@@ -11,13 +12,14 @@
 .slds-form-element__label::after {
     content: ":";
     /* Đảm bảo dấu hai chấm cũng in đậm nếu không dùng custom property */
-    font-weight: 700; 
+    font-weight: 700;
 }
 
 /* Điều chỉnh lại khoảng cách giữa label và input value */
 /* Tùy chỉnh này có thể cần thiết nếu dấu hai chấm quá gần giá trị */
 .slds-form-element_horizontal .slds-form-element__control {
-    padding-left: 0.5rem; /* Tăng khoảng cách giữa nhãn và giá trị */
+    padding-left: 0.5rem;
+    /* Tăng khoảng cách giữa nhãn và giá trị */
 }
 
 /* Container Styles */
@@ -479,5 +481,51 @@
 
     .config-side {
         position: static;
+    }
+
+
+    /* ========================================================== */
+    /* BỔ SUNG CSS CHO TÍNH NĂNG HISTORY PANEL VÀ NGĂN CHẶN LỖI   */
+    /* ========================================================== */
+
+    /* Container tổng - Chặn rớt dòng và chặn thanh cuộn ngang tuyệt đối */
+    .main-container {
+        align-items: stretch;
+        flex-wrap: nowrap !important;
+        overflow-x: hidden !important;
+        width: 100%;
+    }
+
+    /* Vùng làm việc chính - Hiệu ứng co giãn khi trượt */
+    .main-panel {
+        transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        overflow-x: hidden !important;
+    }
+
+    /* Vùng History (Drawer) */
+    .history-panel {
+        border-left: 4px solid #e5e5e5;
+        background-color: #fbfcfa;
+        padding-left: 16px;
+        animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    /* Giới hạn chiều cao cho thanh cuộn lịch sử */
+    .history-content {
+        height: 100%;
+        max-height: 500px;
+    }
+
+    /* Hiệu ứng trượt cho Panel History từ bên phải */
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30%);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 }

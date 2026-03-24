@@ -4,9 +4,9 @@
     <caseSensitive>false</caseSensitive>
     <externalId>true</externalId>
     <label>FEC Code </label>
-    <length>18</length>
+    <length>255</length>
     <required>false</required>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Text</type>
     <unique>true</unique>

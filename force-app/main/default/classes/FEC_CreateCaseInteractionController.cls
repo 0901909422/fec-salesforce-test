@@ -2,7 +2,9 @@ public with sharing class FEC_CreateCaseInteractionController {
   @AuraEnabled
   public static Id createCustomerCaseFromCase(Id caseId) {
     Case interation = [
-      SELECT Id, FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Customer_Name__c, FEC_Product_Type__c
+      SELECT Id, FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Customer_Name__c,
+             FEC_Product_Type__c, FEC_Phone_Number__c,
+             FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
@@ -14,6 +16,7 @@ public with sharing class FEC_CreateCaseInteractionController {
     
     Case newCase = new Case();
     newCase.RecordTypeId = customerCaseRtId;
+    newCase.OwnerId = UserInfo.getUserId(); 
     newCase.FEC_Account_or_Contract__c = interation.FEC_Account_or_Contract__c;
     newCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
     newCase.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
@@ -22,6 +25,10 @@ public with sharing class FEC_CreateCaseInteractionController {
     newCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
     newCase.FEC_Customer_Name__c = interation.FEC_Account_or_Contract__r?.FEC_Customer_Name__c;
     newCase.FEC_Product_Type__c = interation.FEC_Product_Type__c;
+    newCase.FEC_Phone_Number__c = interation.FEC_Phone_Number__c;
+    newCase.FEC_Account_Number__c = interation.FEC_Account_Number__c;
+    newCase.FEC_Contract_Number__c = interation.FEC_Contract_Number__c;
+    newCase.FEC_CIF_Number__c = interation.FEC_CIF_Number__c;
     
     insert newCase;
     
@@ -55,7 +62,9 @@ public with sharing class FEC_CreateCaseInteractionController {
       
       // 2. Get interaction case
       Case interaction = [
-        SELECT Id, FEC_Account_or_Contract__r.FEC_Customer_Name__c, FEC_Product_Type__c
+        SELECT Id, FEC_Account_or_Contract__r.FEC_Customer_Name__c, FEC_Product_Type__c, FEC_Phone_Number__c,
+               FEC_Customer_Type__c, FEC_Account_or_Contract__c,
+               FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c
         FROM Case
         WHERE Id = :caseId
         LIMIT 1
@@ -81,16 +90,20 @@ public with sharing class FEC_CreateCaseInteractionController {
       
       Case newCase = new Case();
       newCase.RecordTypeId = customerCaseRtId;
+      newCase.OwnerId = UserInfo.getUserId();
       newCase.FEC_Customer_Name__c = customerName;
       newCase.FEC_National_ID_Passport_ID__c = nationalPassportId;
       newCase.Status = FEC_ConstantCommon.CASE_STATUS_NEW;
       newCase.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
-      newCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
+      newCase.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
       newCase.FEC_Interaction__c = interaction.Id;
       newCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
-      newCase.FEC_Customer_Name__c = interaction.FEC_Account_or_Contract__r?.FEC_Customer_Name__c;
       newCase.FEC_Product_Type__c = interaction.FEC_Product_Type__c;
-
+      newCase.FEC_Phone_Number__c = interaction.FEC_Phone_Number__c;
+      newCase.FEC_Account_Number__c = interaction.FEC_Account_Number__c;
+      newCase.FEC_Contract_Number__c = interaction.FEC_Contract_Number__c;
+      newCase.FEC_CIF_Number__c = interaction.FEC_CIF_Number__c;
+      
       insert newCase;
       
       FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
@@ -98,11 +111,33 @@ public with sharing class FEC_CreateCaseInteractionController {
         );
       insert newInfo;
       
+      FEC_Customer_History__c newHistory = createHistoryNonExistingCustomer(interaction.Id);
+
+      interaction.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
+      interaction.FEC_Account_or_Contract__c = newHistory.Id;
+      update interaction;
+      
       return newCase.Id;
     } catch (Exception e) {
       throw new AuraHandledException(
         e.getMessage()
         );
     }
+  }
+  
+  @AuraEnabled
+  public static FEC_Customer_History__c  createHistoryNonExistingCustomer(Id caseId) {
+    
+    FEC_Customer_History__c rec = new FEC_Customer_History__c();
+    rec.Name = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
+    rec.FEC_Account_Number__c = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
+    rec.FEC_Case__c = caseId;
+    rec.FEC_Product_Code__c = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
+    try {
+      insert rec;
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+    return rec;
   }
 }

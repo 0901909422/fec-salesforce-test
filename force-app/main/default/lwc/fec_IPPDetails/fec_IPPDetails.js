@@ -289,11 +289,11 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
                             currentBalanceFormatted: currentBalance != null ? formatCurrency(currentBalance, 0) : '-',
                             currentBalanceClass: currentBalance != null && isNegative(currentBalance) ? 'slds-text-color_error' : '',
                             interestRate: interestRateNum,
-                            interestRateFormatted: interestRateNum != null ? interestRateNum + '%' : '-',
+                            interestRateFormatted: interestRateNum != null ? Number(interestRateNum).toFixed(2) + '%' : '-',
                             currentTerm: currentTerm,
-                            currentTermFormatted: currentTerm != null ? String(formatCurrency(currentTerm, 0)) : '-',
+                            currentTermFormatted: currentTerm != null ? `${Number(currentTerm)}` : '-',
                             ippTerm: ippTerm,
-                            ippTermFormatted: ippTerm != null ? formatCurrency(ippTerm, 0) : '-',
+                            ippTermFormatted: ippTerm != null ? `${Number(ippTerm)} months` : '-',
                             totalIPPPaymentAmount: totalIPPPaymentAmount,
                             totalIPPPaymentAmountFormatted: totalIPPPaymentAmount != null ? formatCurrency(totalIPPPaymentAmount, 0) : '-',
                             totalIPPMonthlyPrincipal: totalIPPMonthlyPrincipal,
@@ -310,6 +310,12 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
                             originationChannel: (getValue(record, 'originationChannel', 'FEC_Origination_Channel__c') ?? '-').toString(),
                             disbursementChannel: (getValue(record, 'disbursementChannel', 'FEC_Disbursement_Channel__c') ?? '-').toString()
                         };
+                    });
+
+                    this.ippData.sort((a, b) => {
+                        const timeA = a.openDate ? new Date(a.openDate).getTime() : 0;
+                        const timeB = b.openDate ? new Date(b.openDate).getTime() : 0;
+                        return timeB - timeA;
                     });
                     this.totalIPPBalance = this.ippData.reduce((sum, plan) => sum + (plan.ippBalance || 0), 0);
                     this.totalIPPCurrentBalance = this.ippData.reduce((sum, plan) => sum + (plan.currentBalance || 0), 0);

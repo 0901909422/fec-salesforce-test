@@ -177,6 +177,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Additional_Field_List_Value__c.FEC_Order__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Field_List_Value__c.FEC_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Callback_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -572,6 +582,46 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Channel__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Current_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Last_Modified_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_NFU_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_User__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Hold_Case_Config__c.Hold_Case_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_MDM_Additional_Field_List_Value__c.ExternalID__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -822,6 +872,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Master_Data_Setting__c.FEC_Additional_Field__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Active__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1047,6 +1102,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Description__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Routing_Action_History__c.FEC_Next_Stage__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1255,13 +1315,63 @@
         <field>FEC_Template__c.FEC_Template_Name__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
-    <!-- FEC_MDM_Additional_Field__c Permissions -->
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_MDM_Additional_Field__c.ExternalID__c</field>
+        <field>FEC_Additional_Field__c.FEC_Data_Type__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Field__c.Field_Label_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Field__c.Field_Object_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Cell__c.FEC_Value__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Column__c.FEC_Field_API_Mapping__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Column__c.FEC_MDM_Field__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Column__c.FEC_Order__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Row__c.FEC_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Row__c.FEC_Priority__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Table__c.FEC_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Decision_Table__c.FEC_Description__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
+    <!-- FEC_MDM_Additional_Field__c Permissions -->
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_MDM_Additional_Field__c.FEC_Field_Mandatory__c</field>
@@ -1291,11 +1401,6 @@
     <!-- FEC_MDM_Additional_Field_List_Value__c Field Permissions -->
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_MDM_Additional_Field_List_Value__c.ExternalID__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>FEC_MDM_Additional_Field_List_Value__c.FEC_Additional_Field__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1307,6 +1412,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_MDM_Additional_Field_List_Value__c.Process_Change_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Additional_Field_List_Value__c.FEC_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
 
@@ -1353,6 +1463,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Field_API_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_MDM_Master_Data_Setting__c.FEC_Field_Label_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_MDM_Master_Data_Setting__c.FEC_Nature_Of_Case__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1368,11 +1488,6 @@
     </fieldPermissions>
 
     <!-- FEC_MDM_Channel__c Permissions -->
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_MDM_Channel__c.ExternalID__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_MDM_Channel__c.FEC_Channel_Status__c</field>
@@ -1510,6 +1625,15 @@
         <modifyAllRecords>true</modifyAllRecords>
         <object>FEC_Hold_Case__c</object>
         <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>FEC_Hold_Case_Config__c</object>
+        <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
@@ -1840,6 +1964,42 @@
         <modifyAllRecords>false</modifyAllRecords>
         <object>FEC_MDM_Master_Data_Setting__c</object>
         <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>FEC_Decision_Cell__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>FEC_Decision_Column__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>FEC_Decision_Row__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>FEC_Decision_Table__c</object>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
 
     <recordTypeVisibilities>

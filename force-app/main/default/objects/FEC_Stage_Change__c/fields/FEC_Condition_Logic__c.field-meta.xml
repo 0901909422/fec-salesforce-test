@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Condition_Logic__c</fullName>
+    <description>Optional logic string to combine conditions with AND/OR/NOT and parentheses. Example: "1 AND (2 OR 3)". If blank, all conditions are evaluated with AND.</description>
+    <externalId>false</externalId>
+    <label>Condition Logic</label>
+    <length>255</length>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

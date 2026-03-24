@@ -3,7 +3,7 @@ import LightningConfirm from 'lightning/confirm';
 import USER_ID from '@salesforce/user/Id';
 import { getRecord } from 'lightning/uiRecordApi';
 import USER_NAME_FIELD from '@salesforce/schema/User.Name'
-import { ACCOUNT_LINKAGE_OPTIONS, formatDateDDMMYYYY, DELETE_CONFIRMATION_TITLE, DELETE_CONFIRMATION_MSG, SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE } from 'c/fecUtils';
+import { formatDateDDMMYYYY, getTomorrowDate, ACCOUNT_LINKAGE_OPTIONS, DELETE_CONFIRMATION_TITLE, DELETE_CONFIRMATION_MSG, SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE } from 'c/fecUtils';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import saveCustomerData from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.saveCustomerData';
 import getRelatedFiles from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getRelatedFiles';
@@ -45,6 +45,8 @@ import deletedFileMsg from '@salesforce/label/c.FEC_Deleted_File';
 import savedDataMsg from '@salesforce/label/c.FEC_Saved_Data';
 import errorCreateTemplate from '@salesforce/label/c.FEC_Error_Create_Template';
 import cannotDeleteFileMsg from '@salesforce/label/c.FEC_Cannot_Delete_File';
+import endDateLessThanTodayMsg from '@salesforce/label/c.End_Date_Less_Than_Today_Validation_Msg';
+import endDateAfterOrEquealStartDateMsg from '@salesforce/label/c.End_Date_After_Or_Equal_Start_Date_Validation_Msg';
 
 export default class FecCustomerUpsertModal extends LightningElement {
     label = {
@@ -76,6 +78,10 @@ export default class FecCustomerUpsertModal extends LightningElement {
     currentUserName;
     currentSelectedFile;
 
+    get tomorrowDate() {
+        return getTomorrowDate();
+    }
+
     @wire(getRecord, { recordId: USER_ID, fields: [USER_NAME_FIELD] })
     wiredUser({ error, data }) {
         if (data) {
@@ -92,7 +98,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
             FEC_FieldID__c: this.initialData.FEC_FieldID__c || '',
             FEC_FieldName__c: this.initialData.FEC_FieldName__c || '',
             FEC_IsActive__c: this.initialData.FEC_IsActive__c !== undefined ? this.initialData.FEC_IsActive__c : false,
-            FEC_StartDate__c: this.initialData.FEC_StartDate__c || new Date(),
+            FEC_StartDate__c: this.initialData.FEC_StartDate__c || this.tomorrowDate,
             FEC_EndDate__c: this.initialData.FEC_EndDate__c || null,
         };
 
@@ -250,6 +256,17 @@ export default class FecCustomerUpsertModal extends LightningElement {
 
         if (!allValid) {
             this.showToast(FAIL_TITLE, errorRequiredFields, 'error');
+            return;
+        }
+
+        const endDate = this.localData.FEC_EndDate__c;
+        if (endDate && endDate < this.tomorrowDate) {
+            this.showToast(FAIL_TITLE, endDateLessThanTodayMsg, 'error');
+            return;
+        }
+    
+        if (endDate && this.localData.FEC_StartDate__c > endDate) {
+            this.showToast(FAIL_TITLE, endDateAfterOrEquealStartDateMsg, 'error');
             return;
         }
 

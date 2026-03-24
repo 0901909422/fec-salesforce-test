@@ -8,4 +8,5 @@
     <trackTrending>false</trackTrending>
     <type>Text</type>
     <unique>false</unique>
+    <trackHistory>true</trackHistory>
 </CustomField>
