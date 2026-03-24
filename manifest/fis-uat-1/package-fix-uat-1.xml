@@ -148,6 +148,14 @@
 		<members>FEC_Customer_History__c.FEC_Marital_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Original_User_Queue_ID__c</members>
 		<members>FEC_Team_Queue__c.FEC_Name__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Account_or_Contract_Revelant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_ID__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Status__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_User_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_User_Role_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FE_Categor_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FE_Sub_Category_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FE_Sub_Code_Relevant__c</members>
         <name>CustomField</name>
     </types>
 	<types>

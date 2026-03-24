@@ -183,22 +183,6 @@
                 <identifier>RecordFEC_Interaction_rFEC_Last_Updated_On_cField</identifier>
             </fieldInstance>
         </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Card_Block_Reason__c</fieldItem>
-                <identifier>RecordFEC_Card_Block_Reason__cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldItem>Record.FEC_Manager_ID_List__c</fieldItem>
-                <identifier>RecordFEC_Manager_ID_List__cField</identifier>
-            </fieldInstance>
-        </itemInstances>
         <name>Facet-b98e8ce4-83d4-4be1-b3a1-1f08c8409b27</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -721,11 +705,7 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>actionNames</name>
-                    <valueList>
-                        <valueListItems>
-                            <value>New</value>
-                        </valueListItems>
-                    </valueList>
+                    <value>[&quot;New&quot;]</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>adminFilters</name>
