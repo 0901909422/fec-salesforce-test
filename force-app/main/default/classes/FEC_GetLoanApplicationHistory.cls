@@ -67,7 +67,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
   public static HttpResponse sendRequest(String endpoint, Map<String, String> headers) {
     return FEC_CommonUltils.calloutApiWithHeaders(
       endpoint,
-      FEC_ConstantCommon.API_METHOD_POST,
+      FEC_ConstantCommon.API_METHOD_GET,
       headers,
       FEC_ConstantCommon.API_BLANK_BODY
     );
@@ -148,7 +148,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
         ? FEC_MockupEndpoint.GET_APP_INFOS_ENDPOINT_MOCKUP
         : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
-      String endpoint = baseEndpoint + '/' + req.applicationId;
+      String endpoint = baseEndpoint + '?APPLICATION_ID=' + req.applicationId;
       String transId = FEC_CommonUltils.generateTransactionId();
 
       Map<String, String> headers = new Map<String, String>{
@@ -163,7 +163,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
       responseLog = new FEC_ResponseLog(
         'FEC_GetLoanApplicationHistory',
         endpoint,
-        FEC_ConstantCommon.API_METHOD_POST,
+        FEC_ConstantCommon.API_METHOD_GET,
         FEC_ConstantCommon.API_BLANK_BODY,
         res,
         null
