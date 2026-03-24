@@ -323,8 +323,11 @@ public with sharing class FEC_CaseBusinessService {
         AccessLevel.USER_MODE
       );
 
-      if (natureOfCaselst.isEmpty())
+      if (natureOfCaselst.isEmpty()) {
+        selectedCase.FEC_Current_Case_Stage__c = null;
+        update selectedCase;
         return result;
+      }
 
       // ========================== VALIDATE =================================
       SObject selectedNatureOfCase = natureOfCaselst.get(0);
@@ -446,10 +449,14 @@ public with sharing class FEC_CaseBusinessService {
         AccessLevel.USER_MODE
       );
 
-      if (stagelst.isEmpty())
+      if (stagelst.isEmpty()) {
+        selectedCase.FEC_Current_Case_Stage__c = null;
+        update selectedCase;
         return result;
+      }
 
       FEC_Case_Stage__c selectedStage = stagelst.get(0);
+      selectedCase.FEC_Current_Case_Stage__c = selectedStage.Id;
 
       // if (String.isBlank(selectedCaseStageId)) {
       //   selectedCase.FEC_Current_Case_Stage__c = selectedStage.Id;

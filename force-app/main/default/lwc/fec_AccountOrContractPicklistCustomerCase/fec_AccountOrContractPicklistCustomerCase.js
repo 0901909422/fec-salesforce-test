@@ -32,6 +32,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   };
 
   @api recordId;
+  @api interactionId;
 
   selectedValue = "";
   cifNumber = "";
@@ -45,7 +46,6 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   interactionCustomerType;
   @wire(MessageContext)
   messageContext;
-  interactionId; // 🔥 ID dùng thực sự để load Interaction
 
   columns = [
     {
@@ -66,41 +66,41 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   ];
   data = [];
 
-  // /* =======================
-  //  * LMS SUBSCRIPTION
-  //  * ======================= */
+  /* =======================
+   * LMS SUBSCRIPTION
+   * ======================= */
 
-  // connectedCallback() {
-  //   this.subscribeToModeChannel();
-  // }
+  connectedCallback() {
+    this.subscribeToModeChannel();
+  }
 
-  // subscribeToModeChannel() {
-  //   if (this.subscription) return;
+  subscribeToModeChannel() {
+    if (this.subscription) return;
 
-  //   this.subscription = subscribe(
-  //     this.messageContext,
-  //     IS_MODE_EDIT,
-  //     (message) => this.handleModeMessage(message),
-  //     { scope: APPLICATION_SCOPE },
-  //   );
-  // }
+    this.subscription = subscribe(
+      this.messageContext,
+      IS_MODE_EDIT,
+      (message) => this.handleModeMessage(message),
+      { scope: APPLICATION_SCOPE },
+    );
+  }
 
-  // handleModeMessage(message) {
-  //   console.log("[LMS] Mode received:", message);
+  handleModeMessage(message) {
+    console.log("[LMS] Mode received:", message);
 
-  //   if (message?.isModeEdit !== undefined) {
-  //     this.isEditMode = message.isModeEdit;
+    if (message?.isModeEdit !== undefined) {
+      this.isEditMode = message.isModeEdit;
 
-  //     console.log("[LMS] isEditMode:", this.isEditMode);
-  //   }
-  // }
+      console.log("[LMS] isEditMode:", this.isEditMode);
+    }
+  }
 
-  // disconnectedCallback() {
-  //   if (this.subscription) {
-  //     unsubscribe(this.subscription);
-  //     this.subscription = null;
-  //   }
-  // }
+  disconnectedCallback() {
+    if (this.subscription) {
+      unsubscribe(this.subscription);
+      this.subscription = null;
+    }
+  }
 
   /* =======================
    * WIRE
@@ -112,7 +112,6 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   })
   wiredCase({ data, error }) {
     if (data) {
-      this.resolveInteractionId();
       this.resolveInteractionCustomerType();
       if (!this.isNonExistingCustomer) {
         this.getInteractionAccountNumber();
@@ -126,20 +125,10 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     }
   }
 
-  async resolveInteractionId() {
-    try {
-      this.interactionId = await getInteractionIdFromCustomerCase({
-        caseId: this.recordId,
-      });
-    } catch (e) {
-      console.error("getInteractionIdFromCustomerCase error", e);
-    }
-  }
-
   async resolveInteractionCustomerType() {
     try {
       this.interactionCustomerType = await getInteractionCustomerType({
-        caseId: this.recordId,
+        caseId: this.interactionId,
       });
     } catch (e) {
       console.error("getInteractionCustomerType error", e);

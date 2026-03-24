@@ -165,6 +165,8 @@ public without sharing class FEC_KYCController {
         validFieldlst.add('FEC_Account_or_Contract__c');
       }
 
+      validFieldlst.add('FEC_Product_Type__c');
+
       List<Case> caselst2 = FEC_CaseService.getById(
         new Set<Id>{ c.Id },
         validFieldlst
@@ -189,8 +191,10 @@ public without sharing class FEC_KYCController {
           c,
           adhocValues
         );
+        temp.fieldType = item.FEC_Field_Type__c;
         temp.isMasked = item.FEC_Masking__c;
         temp.fieldName = getToken(item.FEC_KYC_Suggested_Answer__c);
+        temp.isEditable = (c.FEC_Product_Type__c == item.FEC_Product_Type__c);
 
         isConfirmed = kycResultMap.containsKey(item.Id);
 
@@ -598,6 +602,8 @@ public without sharing class FEC_KYCController {
     public Boolean isMasked;
     @AuraEnabled
     public String suggestedAnswer;
+    @AuraEnabled
+    public String fieldType;
     @AuraEnabled
     public String fieldName;
 
