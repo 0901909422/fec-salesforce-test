@@ -176,7 +176,8 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
  */
 const DYNAMIC_COMPONENT_REGISTRY = {
   fec_CardInfo: () => import('c/fec_CardInfo'),
-  fec_IPPClosureHandling: () => import('c/fec_IPPClosureHandling')
+  fec_IPPClosureHandling: () => import('c/fec_IPPClosureHandling'),
+  fec_PinResetHandling: () => import('c/fec_PinResetHandling')
 };
 
 export default class Fec_CaseBussiness extends LightningElement {
@@ -673,11 +674,6 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.className += ' slds-hide';
                 }
 
-                if (!this.isEdit) {
-                  field.readonly = true;
-                  field.editable = false;
-                }
-
                 let currentField = `${obj.name}.${field.apiName}`;
 
                 if (
@@ -702,6 +698,11 @@ export default class Fec_CaseBussiness extends LightningElement {
                 } else {
                   field.isHidden = false;
                 }
+              }
+
+              if (!this.isEdit) {
+                field.readonly = true;
+                field.editable = false;
               }
 
                 field.original = field.value;
@@ -795,7 +796,6 @@ export default class Fec_CaseBussiness extends LightningElement {
         // Resolve LWC name strings from componentlst into constructors for lwc:is
         this._resolveComponentlst();
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
-
 
       })
       .catch((err) => {

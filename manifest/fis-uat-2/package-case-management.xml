@@ -82,6 +82,12 @@
 		<members>FEC_LBL_IPP_Closure_Col_IppTerm</members>
 		<members>FEC_LBL_IPP_Closure_Col_IppInsurance</members>
 		<members>FEC_LBL_IPP_Closure_Col_IppCurrentTerm</members>
+		<members>FEC_Card_Number_Required_MSG</members>
+		<members>FEC_No_Btn</members>
+		<members>FEC_Reset_PIN_Title</members>
+		<members>FEC_Reset_Pin_Confirm_Msg</members>
+		<members>FEC_Yes_Btn</members>
+		<members>FEC_CIF_Number_Required_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -107,6 +113,8 @@
 		<members>fec_CaseDetail_Customer</members>
 		<members>fec_CaseEditNOC</members>
 		<members>fec_ComboBox</members>
+		<members>fec_PinResetHandling</members>
+		<members>fec_PinResetView</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>

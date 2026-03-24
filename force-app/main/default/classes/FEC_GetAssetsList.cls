@@ -1,5 +1,6 @@
 public with sharing class FEC_GetAssetsList {
   public static final String API_CONFIG_NAME = 'FEC_Get_Assets_List';
+  public static FEC_ResponseLog responseLog;
 
   public class AssetsListRequest {
     public String ContractNumber;
@@ -106,7 +107,6 @@ public with sharing class FEC_GetAssetsList {
     @AuraEnabled
     public String currencyCode;
   }
-
 
   private static String escapeXml(String s) {
     if (s == null)
@@ -311,6 +311,22 @@ public with sharing class FEC_GetAssetsList {
       HttpResponse res = sendRequest(envelope);
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
+
+      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+      String endpoint = apiSetting?.FEC_Call_Mock__c
+        ? FEC_MockupEndpoint.GET_ASSETS_LIST_ENDPOINT_MOCKUP
+        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
+      responseLog = new FEC_ResponseLog(
+        'FEC_GetAssetsList',
+        endpoint,
+        FEC_ConstantCommon.API_METHOD_POST,
+        envelope,
+        res,
+        null
+      );
+
       finalResult = parseResponse(body, status);
       if (finalResult.transId == null)
         finalResult.transId = transId;

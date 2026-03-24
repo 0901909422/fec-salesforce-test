@@ -1,5 +1,6 @@
 public with sharing class FEC_GetLoanApplicationHistory {
   public static final String API_CONFIG_NAME = 'FEC_Get_Loan_Application_History';
+  public static FEC_ResponseLog responseLog;
 
   public class LoanApplicationHistoryRequest {
     public String applicationId;
@@ -63,26 +64,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
     public String createdDate;
   }
 
-
-  public static HttpResponse sendRequest(String applicationId) {
-    FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-    FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(
-      API_CONFIG_NAME
-    );
-
-    String baseEndpoint = apiSetting?.FEC_Call_Mock__c
-      ? FEC_MockupEndpoint.GET_APP_INFOS_ENDPOINT_MOCKUP
-      : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-
-    String endpoint = baseEndpoint + '/' + applicationId;
-
-    Map<String, String> headers = new Map<String, String>{
-      'TransID'      => FEC_CommonUltils.generateTransactionId(),
-      'DateTime'     => FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT),
-      'RequestorID'  => FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
-      'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
-    };
-
+  public static HttpResponse sendRequest(String endpoint, Map<String, String> headers) {
     return FEC_CommonUltils.calloutApiWithHeaders(
       endpoint,
       FEC_ConstantCommon.API_METHOD_POST,
@@ -159,12 +141,40 @@ public with sharing class FEC_GetLoanApplicationHistory {
     validate(req);
     LoanApplicationHistoryResult finalResult = new LoanApplicationHistoryResult();
     try {
-      HttpResponse res = sendRequest(req.applicationId);
+      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+
+      String baseEndpoint = apiSetting?.FEC_Call_Mock__c
+        ? FEC_MockupEndpoint.GET_APP_INFOS_ENDPOINT_MOCKUP
+        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
+      String endpoint = baseEndpoint + '/' + req.applicationId;
+      String transId = FEC_CommonUltils.generateTransactionId();
+
+      Map<String, String> headers = new Map<String, String>{
+        'TransID'      => transId,
+        'DateTime'     => FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT),
+        'RequestorID'  => FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+        'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+      };
+
+      HttpResponse res = sendRequest(endpoint, headers);
+
+      responseLog = new FEC_ResponseLog(
+        'FEC_GetLoanApplicationHistory',
+        endpoint,
+        FEC_ConstantCommon.API_METHOD_POST,
+        FEC_ConstantCommon.API_BLANK_BODY,
+        res,
+        null
+      );
+
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
       finalResult = parseResponse(body, status);
+
       if (finalResult.transId == null)
-        finalResult.transId = FEC_CommonUltils.generateTransactionId();
+        finalResult.transId = transId;
       if (finalResult.httpStatus == null)
         finalResult.httpStatus = status;
       if (finalResult.rawResponse == null)

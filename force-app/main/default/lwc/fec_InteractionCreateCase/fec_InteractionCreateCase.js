@@ -76,26 +76,19 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
           this.isLoading = false;
           if (this.isConsoleNavigation) {
             let primaryTabId;
-            let tabCloseId;
             const tabInfos = await getAllTabInfo();
             tabInfos?.forEach(async (tabInfo) => {
               if (tabInfo.recordId === this.recordId) {
                 primaryTabId = tabInfo.tabId;
               }
-              if (tabInfo.url.includes("c__fec_InteractionCreateCase")) {
-                tabCloseId = tabInfo.tabId;
-              }
             });
+            let { tabId } = await getFocusedTabInfo();
             await openSubtab(primaryTabId, {
               recordId: newCaseId,
               focus: true,
             });
-            setTimeout(async () => {
-              await this.handlePublishMessageChanel();
-              if (tabCloseId) {
-                closeTab(tabCloseId);
-              }
-            }, 2000);
+            await closeTab(tabId);
+            await this.handlePublishMessageChanel();
           } else {
             this[NavigationMixin.Navigate]({
               type: "standard__recordPage",
@@ -122,29 +115,19 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
           this.isLoading = false;
           if (this.isConsoleNavigation) {
             let primaryTabId;
-            let tabCloseId;
             const tabInfos = await getAllTabInfo();
             tabInfos?.forEach(async (tabInfo) => {
               if (tabInfo.recordId === this.recordId) {
                 primaryTabId = tabInfo.tabId;
               }
-              // if (tabInfo.url.includes("c__fec_InteractionCreateCase")) {
-              //   tabCloseId = tabInfo.tabId;
-              // }
             });
             const { tabId } = await getFocusedTabInfo();
-            tabCloseId = tabId;
             await openSubtab(primaryTabId, {
               recordId: newCaseId,
               focus: true,
             });
+            await closeTab(tabId);
             await this.handlePublishMessageChanel();
-            if (tabCloseId) {
-              await closeTab(tabCloseId);
-            }
-            // setTimeout(async () => {
-            //   await this.handlePublishMessageChanel();
-            // }, 2000);
           } else {
             this[NavigationMixin.Navigate]({
               type: "standard__recordPage",
@@ -154,9 +137,10 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
                 actionName: "view",
               },
             });
-            resetViewMode({ recordId: this.recordId, viewMode: "handling" });
           }
+          await resetViewMode({ recordId: this.recordId, viewMode: "handling" });
         })
+        
         .catch((error) => {
           this.isLoading = false;
           console.error(error);

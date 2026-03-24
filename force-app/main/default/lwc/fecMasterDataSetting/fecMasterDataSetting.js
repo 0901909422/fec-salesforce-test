@@ -37,7 +37,7 @@ import LABEL_LABEL_ACTIVE from '@salesforce/label/c.FEC_Label_Active';
 import LABEL_LABEL_INACTIVE from '@salesforce/label/c.FEC_Label_Inactive';
 import LABEL_TOOLTIP_CLICK_TO_DEACTIVATE from '@salesforce/label/c.FEC_Tooltip_Click_To_Deactivate';
 import LABEL_TOOLTIP_CLICK_TO_ACTIVATE from '@salesforce/label/c.FEC_Tooltip_Click_To_Activate';
-import { FIELD_SECTION, FIELD_FIELD_ORDER_DISPLAY, TYPE_TEXT, TYPE_BOOLEAN, STATUS_NEW, STATUS_UPDATE, CUST_TYPE_NON_EXISTING, CUST_TYPE_EXISTING, ICON_CHEVRON_RIGHT, ICON_CHEVRON_DOWN, MASTER_DATA_SETTING_COLUMNS, STATUS_CLASS_BLUE, STATUS_CLASS_RED, STATUS_CLASS_YELLOW, CUST_CLASS_ALL, CUST_CLASS_NON_EXISTING, CUST_CLASS_EXISTING, DEFAULT_SORT_FIELD, DEFAULT_SORT_DIRECTION_ASC, DEFAULT_SORT_DIRECTION_DESC, FIELD_ADDITIONAL_FIELD_NAME, FIELD_OBJECT_FRAUD_INTEGRATION, ICON_ARROW_UP, ICON_ARROW_DOWN, CSS_BASE_SML_LEFT, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, VARIANT_SUCCESS, VARIANT_ERROR } from 'c/fecConstants';
+import { FIELD_SECTION, FIELD_FIELD_ORDER_DISPLAY, TYPE_TEXT, TYPE_BOOLEAN, STATUS_NEW, STATUS_UPDATE, CUST_TYPE_NON_EXISTING, CUST_TYPE_EXISTING, ICON_CHEVRON_RIGHT, ICON_CHEVRON_DOWN, MASTER_DATA_SETTING_COLUMNS, STATUS_CLASS_BLUE, STATUS_CLASS_RED, STATUS_CLASS_YELLOW, CUST_CLASS_ALL, CUST_CLASS_NON_EXISTING, CUST_CLASS_EXISTING, DEFAULT_SORT_FIELD, DEFAULT_SORT_DIRECTION_ASC, DEFAULT_SORT_DIRECTION_DESC, FIELD_ADDITIONAL_FIELD_NAME, FIELD_OBJECT_FRAUD_INTEGRATION, ICON_ARROW_UP, ICON_ARROW_DOWN, CSS_BASE_SML_LEFT, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, VARIANT_SUCCESS, VARIANT_ERROR, FIELD_PROCESS_CHANGE_STATUS } from 'c/fecConstants';
 
 // Default labels for missing integration data
 const LABEL_DEFAULT_PRODUCT_LINE = 'N/A';
@@ -568,7 +568,6 @@ export default class FecMasterDataSetting extends LightningElement {
 
         saveMasterDataSetting({ mappingReq: newMapping })
             .then(() => {
-                // this.showToast(LABEL_TOAST_SAVE_SUCCESS, '', VARIANT_SUCCESS);
                 this.isIntegrationAdd = false;
                 this.recordIdForIntegration = undefined; // Reset
                 // Reset form data
@@ -618,6 +617,12 @@ export default class FecMasterDataSetting extends LightningElement {
                 this.handleEditRow(rowId);
                 break;
             case 'delete':
+                // Tìm record trong processedData để kiểm tra trạng thái
+                const row = this.processedData.find(item => item.Id === rowId);
+                if (row && row[FIELD_PROCESS_CHANGE_STATUS] !== STATUS_NEW) {
+                    this.showToast('Cảnh báo', 'Chỉ được phép xóa bản ghi có Process Status là "New".', 'warning');
+                    return;
+                }
                 this.handleDeleteRow(rowId);
                 break;
             default:
@@ -655,6 +660,11 @@ export default class FecMasterDataSetting extends LightningElement {
     openNewSettingModal() {
         this.modalTitle = this.labelModalNewProperty || LABEL_MODAL_NEW_PROPERTY_TITLE;
         this.recordIdForEdit = null;
+        
+        // Pass existing fields to the form to prevent duplicates
+        const existingFields = this.masterDataList ? this.masterDataList.map(item => item.FEC_Additional_Field__c).filter(Boolean) : [];
+        this.selectedRecord = { existingFields };
+
         // Tìm giá trị lớn nhất của FEC_Field_Order_Display__c trong danh sách hiện tại
         if (this.masterDataList && this.masterDataList.length > 0) {
             const maxOrder = Math.max(...this.masterDataList.map(item => item.FEC_Field_Order_Display__c || 0));
@@ -672,7 +682,7 @@ export default class FecMasterDataSetting extends LightningElement {
     handleSuccess() {
         try {
             this.closeModal();
-            this.showToast(LABEL_TOAST_SAVE_SUCCESS, '', VARIANT_SUCCESS);
+            // this.showToast(LABEL_TOAST_SAVE_SUCCESS, '', VARIANT_SUCCESS);
             
             showLog('[handleSuccess] START - refreshing data');
             this.isLoading = true;

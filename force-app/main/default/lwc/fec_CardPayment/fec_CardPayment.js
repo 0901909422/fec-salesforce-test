@@ -67,6 +67,11 @@ export default class Fec_CardPayment extends LightningElement {
         return records.map(record => {
             const formattedRecord = { ...record };
 
+            // REF Number: null/trống từ API → hiển thị __
+            const refRaw = formattedRecord.FEC_REF_Number__c;
+            formattedRecord.FEC_REF_Number_Display__c =
+                refRaw != null && String(refRaw).trim() !== '' ? String(refRaw) : '__';
+
             // Base Rate - format với 2 chữ số thập phân + %
             if (formattedRecord.FEC_Base_Rate__c != null && formattedRecord.FEC_Base_Rate__c !== undefined) {
                 const value = Number(formattedRecord.FEC_Base_Rate__c);
@@ -244,7 +249,7 @@ export default class Fec_CardPayment extends LightningElement {
     
     columns = [
         { label: 'Rec', fieldName: 'FEC_Rec__c', type: 'text', width: '44px', minWidth: '44px', cellAlign: 'center' },
-        { label: 'REF Number', fieldName: 'FEC_REF_Number__c', type: 'text', width: '130px', minWidth: '120px' },
+        { label: 'REF Number', fieldName: 'FEC_REF_Number_Display__c', type: 'text', width: '130px', minWidth: '120px' },
         { label: 'Current Balance', fieldName: 'FEC_Current_Balance_Formatted__c', type: 'text', cellAlign: 'right', width: '130px', minWidth: '120px', cellAttributes: { class: { fieldName: 'currentBalanceClass' } } },
         { label: 'Open Date', fieldName: 'FEC_Open_Date_Formatted__c', type: 'text', width: '100px', minWidth: '90px', cellAlign: 'center' },
         { label: 'Plan', fieldName: 'FEC_Plan__c', type: 'text', width: '70px', minWidth: '60px', cellAlign: 'center' },
