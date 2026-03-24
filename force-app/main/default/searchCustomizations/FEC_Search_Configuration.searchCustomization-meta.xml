@@ -15,10 +15,6 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>FEC_Termination__c</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
         <objectApiName>FlowOrchestration</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
@@ -52,10 +48,6 @@
     </objectOverride>
     <objectOverride>
         <objectApiName>IdentityDocument</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
-        <objectApiName>FEC_Application_History__c</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
@@ -252,10 +244,6 @@
     </objectOverride>
     <objectOverride>
         <objectApiName>Campaign</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
-        <objectApiName>FEC_Service_Resource_Absence__c</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
@@ -531,10 +519,6 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>FEC_MRC__c</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
         <objectApiName>PartyConsent</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
@@ -735,10 +719,6 @@
     </objectOverride>
     <objectOverride>
         <objectApiName>CommSubscriptionChannelType</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
-        <objectApiName>FEC_Asset__c</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
