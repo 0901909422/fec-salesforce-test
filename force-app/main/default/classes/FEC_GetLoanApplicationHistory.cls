@@ -69,7 +69,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
       endpoint,
       FEC_ConstantCommon.API_METHOD_GET,
       headers,
-      FEC_ConstantCommon.API_BLANK_BODY
+      null
     );
   }
 
@@ -153,7 +153,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
 
       Map<String, String> headers = new Map<String, String>{
         'TransID'      => transId,
-        'DateTime'     => FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT),
+        'DateTime'     => FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.STR_DATETIME_FORMAT_Z),
         'RequestorID'  => FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
         'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
       };
