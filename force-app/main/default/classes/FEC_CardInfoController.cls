@@ -1,8 +1,6 @@
 public with sharing class FEC_CardInfoController {
 
-    /* =====================================================
-     * DTO
-     * ===================================================== */
+    /** DTO */
     public class CardInfoDTO {
         @AuraEnabled public List<CardDeliveryDTO> cardDeliveries;
         @AuraEnabled public List<OtherCardDTO> otherCards;
@@ -37,8 +35,8 @@ public with sharing class FEC_CardInfoController {
     
     /**
      * Tải thông tin Card (Card Delivery + Other Cards) - Method chính
-     * Luồng: Query database trước, chỉ call API nếu không có dữ liệu (và chỉ 1 lần duy nhất)
-     * Sau khi có dữ liệu trong database, sẽ không gọi API nữa
+     * Luồng: Query database trước, sau đó gọi API mỗi khi load trang để đồng bộ dữ liệu mới.
+     * Chỉ INSERT khi chưa có dữ liệu (không UPSERT).
      * @param caseId - ID của Case record
      * @return CardInfoDTO chứa card deliveries và other cards
      */
@@ -48,7 +46,6 @@ public with sharing class FEC_CardInfoController {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
-        /* ===== TẢI CASE (cần cho cả luồng Mock và luồng thật) ===== */
         Case c = [
             SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c,
                    FEC_Account_or_Contract__r.FEC_Account_Number__c
@@ -60,7 +57,6 @@ public with sharing class FEC_CardInfoController {
         Id customerHistoryId = c.FEC_Account_or_Contract__c;
         String accountNumber = getAccountNumber(c);
         
-        // Tìm Customer History từ Account Number nếu customerHistoryId null (chỉ tìm 1 lần ở đầu)
         if (customerHistoryId == null && String.isNotBlank(accountNumber)) {
             List<FEC_Customer_History__c> histories = [
                 SELECT Id FROM FEC_Customer_History__c 
@@ -113,16 +109,9 @@ public with sharing class FEC_CardInfoController {
         Boolean hasCardDeliveryData = dto.cardDeliveries != null && dto.cardDeliveries.size() > 0;
         Boolean hasOtherCardData = dto.otherCards != null && dto.otherCards.size() > 0;
 
-        /* =====================================================
-         * KHI BẬT MOCK: đã có data trong DB → return; chưa có thì gọi API, lưu DB rồi return
-         * ===================================================== */
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         if (apiSetting != null && apiSetting.FEC_Call_Mock__c == false) {
-            if (hasCardDeliveryData && hasOtherCardData) {
-                return dto;
-            }
             if (String.isNotBlank(accountNumber) && customerHistoryId != null) {
-                // Gọi GetCardSecInfo trước (độc lập với GetStatus)
                 FEC_GetCardSecInfo.ResponseWrapper cardSecResponse = null;
                 try {
                     cardSecResponse = FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
@@ -138,10 +127,8 @@ public with sharing class FEC_CardInfoController {
                     System.debug('Mock GetStatus error: ' + e.getMessage());
                 }
 
-                // Xử lý Card Delivery từ GetStatus hoặc fallback sang GetCardSecInfo
                 if (!hasCardDeliveryData) {
                     try {
-                        // Ưu tiên GetStatus nếu thành công
                         if (getStatusInfo != null && getStatusInfo.responseCode == '1') {
                             FEC_Card_Delivery__c insertedCard = insertCardDeliveryFromGetStatus(getStatusInfo, caseId, customerHistoryId);
                             if (insertedCard != null && cardSecResponse != null && cardSecResponse.CardSecInfo != null
@@ -176,7 +163,6 @@ public with sharing class FEC_CardInfoController {
                     }
                 }
 
-                // Xử lý Other Card từ GetCardSecInfo (độc lập với GetStatus)
                 if (!hasOtherCardData && cardSecResponse != null && cardSecResponse.CardSecInfo != null
                     && cardSecResponse.CardSecInfo.SupplementaryCards != null
                     && !cardSecResponse.CardSecInfo.SupplementaryCards.isEmpty()) {
@@ -187,7 +173,6 @@ public with sharing class FEC_CardInfoController {
                     }
                 }
 
-                // Build DTO để trả về từ dữ liệu API (không cần query lại DB ở đây)
                 CardInfoDTO mockDto = buildCardInfoFromResponses(getStatusInfo, cardSecResponse);
                 if (mockDto != null) {
                     Boolean hasData = (mockDto.cardDeliveries != null && !mockDto.cardDeliveries.isEmpty())
@@ -206,16 +191,15 @@ public with sharing class FEC_CardInfoController {
          * ===================================================== */
 
         /* =====================================================
-         * BƯỚC 3: GỌI API CHO TỪNG LOẠI DỮ LIỆU CÒN THIẾU (CHỈ 1 LẦN DUY NHẤT)
-         * Chỉ gọi API nếu chưa có dữ liệu, sau đó chỉ INSERT (không UPSERT)
+         * BƯỚC 3: GỌI API MỖI KHI LOAD TRANG
+         * Gọi API mỗi lần load; nếu chưa có dữ liệu thì INSERT (không UPSERT)
          * ===================================================== */
         if (String.isBlank(accountNumber) || customerHistoryId == null) {
             return dto;
         }
 
-        // Chỉ gọi API khi CHƯA CÓ dữ liệu (cả Card Delivery hoặc Other Cards)
-        if (!hasCardDeliveryData || !hasOtherCardData) {
-            try {
+        // Gọi API mỗi khi load trang (đồng bộ dữ liệu mới từ API)
+        try {
                 FEC_GetCardSecInfo.ResponseWrapper response = 
                     FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
                     
@@ -307,7 +291,6 @@ public with sharing class FEC_CardInfoController {
             } catch (Exception e) {
                 System.debug('CardSecInfo API error: ' + e.getMessage());
             }
-        }
 
         /* =====================================================
          * BƯỚC 4: QUERY LẠI DATABASE SAU KHI CALL API ĐỂ LẤY DỮ LIỆU MỚI NHẤT

@@ -1,0 +1,38 @@
+.sync-fail-text {
+    color: #c23934;
+    font-weight: 400;
+}
+
+/* Loading: đồng bộ fec_SecondaryInfoLoanAccount, fec_Termination */
+.main-info-loading .slds-accordion__section {
+    border: 1px solid #dddbda;
+    border-bottom: none;
+}
+.main-info-loading .slds-accordion__section:last-child {
+    border-bottom: 1px solid #dddbda;
+}
+.main-info-loading .slds-accordion__summary {
+    background: #f3f3f3;
+    padding: 0.75rem 1rem;
+}
+.main-info-loading .slds-accordion__summary-heading,
+.main-info-loading .slds-accordion__summary .slds-accordion__summary-content span {
+    color: #3e3e3c;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+.main-info-loading .slds-accordion__content {
+    display: block !important;
+    padding: 0;
+    visibility: visible;
+}
+.fec-section-spinner-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 120px;
+    padding: 1rem;
+}
+.main-info-loading .fec-section-spinner-wrapper {
+    background: #fff;
+}

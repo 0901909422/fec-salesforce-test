@@ -24,9 +24,10 @@ import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCode
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
-import { ACTION_REOPEN, ACTION_RECALL,VIEW_MODE_HANDLING,RECORD_TYPE_INTERNAL_CASE} from "c/fec_CommonConst";
+import { ACTION_REOPEN, ACTION_RECALL,RECORD_TYPE_INTERNAL_CASE, VIEW_MODE_HANDLING, VIEW_MODE_REVIEW, STR_UNDEFINED} from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
+import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 
 export default class Fec_CaseEditNOC extends LightningElement {
   @api recordId;
@@ -233,7 +234,42 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   handleMessage(message) {
-    this.modeEditCase = message.isModeEdit;
+    if (!message || message.isModeEdit === STR_UNDEFINED) return;
+
+    this.modeEditCase = message.isModeEdit === true;
+
+    resetViewMode({
+      recordId: this.recordId,
+      viewMode: this.modeEditCase ? VIEW_MODE_HANDLING : VIEW_MODE_REVIEW
+    })
+      .then(() => {
+        this.reloadData();
+      })
+      .catch((err) => {
+        console.log("resetViewMode err:", err);
+      });
+  }
+
+  reloadData() {
+    getCase({ recordId: this.recordId })
+      .then((res) => {
+        this.productTypeSelectedId = res.FEC_Product_Type__c;
+        this.categorySelectedId = res.FEC_Category__c;
+        this.subCategorySelectedId = res.FEC_SubCategory__c;
+        this.subCodeSelectedId = res.FEC_SubCode__c;
+
+        this.isSubmited = res.FEC_Is_Submited__c;
+        this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
+        this.recordTypeDevName = res.RecordType?.DeveloperName;
+
+        this.getProdType();
+        this.getCategory();
+        this.getSubCategory();
+        this.getSubCode();
+      })
+      .catch((err) => {
+        console.log("reloadData err:", err);
+      });
   }
 
   // handleProductTypeSelect(event) {

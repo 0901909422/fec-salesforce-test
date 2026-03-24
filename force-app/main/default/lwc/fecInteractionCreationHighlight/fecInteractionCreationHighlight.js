@@ -67,7 +67,7 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
 
     if (data) {
       this.viewMode = getFieldValue(data, VIEW_MODE);
-      this.tryResetViewMode();
+      //await this.tryResetViewMode();
     } else if (error) {
       console.error("ViewMode load error", error);
     }
@@ -76,18 +76,35 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   // ===============================
   // RESET VIEW MODE (SAFE – ONE TIME)
   // ===============================
-  tryResetViewMode() {
-    if (this.viewMode === "handling" && !this._resetDone) {
-      this._resetDone = true;
-      console.log(
-        "Reset viewMode to review in FecInteractionCreationHighlight",
-      );
+  // async tryResetViewMode() {
+  //   if (this.viewMode === "handling" && !this._resetDone) {
+  //     console.log(
+  //       "Reset viewMode to review in FecInteractionCreationHighlight",
+  //     );
+  //     try {
+  //       await resetViewMode({
+  //         recordId: this.recordId,
+  //         viewMode: "review",
+  //       });
+  //       await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+  //     } catch (error) {
+  //       console.error("Error in resetViewMode:", error);
+  //     }
+  //   }
+  //   if (this._resetDone) return;
+  //   this._resetDone = true;
+  // }
 
-      resetViewMode({
-        recordId: this.recordId,
-        viewMode: "review",
-      });
-    }
+  async connectedCallback() {
+    try {
+        await resetViewMode({
+          recordId: this.recordId,
+          viewMode: "review",
+        });
+        await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+      } catch (error) {
+        console.error("Error in resetViewMode:", error);
+      }
   }
 
   // ===============================
@@ -163,8 +180,6 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
       await refreshApex(this.wiredViewModeResult); // 🔥 KEY FIX
       // await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
       this.viewMode = "handling";
-      this._resetDone = false;
-
       console.log("Update viewMode to handling successfully");
     } catch (error) {
       console.error("Error in handleExecute:", error);
