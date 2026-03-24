@@ -2018,6 +2018,10 @@
 		<members>Case.FEC_Restrict_Change_Owner_When_Resolved</members>
 		<name>ValidationRule</name>
 	</types>
+	<types>
+		<members>FEC_Search_Configuration</members>
+		<name>SearchCustomization</name>
+	</types>
 
     <version>65.0</version>
 </Package>
