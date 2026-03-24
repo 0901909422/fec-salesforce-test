@@ -1063,7 +1063,8 @@ hasAnySearchCriteria(params) {
           selectedType: action.type,
           cifNumber: cifNumber,
           phone: row?.Phone,
-          customerName: row?.FullName
+          customerName: row?.FullName,
+          isListView: !this.recordId
         })
           .then(async (res) => {
             // const payload = {
