@@ -33,20 +33,6 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>modeEditCase</name>
-                    <value>false</value>
-                </componentInstanceProperties>
-                <componentName>fec_CaseDetail_Customer</componentName>
-                <identifier>c_fec_CaseDetail_Customer</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-c2c11ce2-4c5e-4226-a69a-2d073ebb8f00</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
                 <componentName>forceChatter:recordFeedContainer</componentName>
                 <identifier>forceChatter_recordFeedContainer</identifier>
                 <visibilityRule>
