@@ -66,3 +66,7 @@ README.md
 
 # Temp manifests
 manifest/aaaaa.xml
+manifest/package.xml
+
+# Scripts folder
+scripts/
