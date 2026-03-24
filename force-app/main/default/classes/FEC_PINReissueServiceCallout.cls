@@ -1,7 +1,7 @@
 public without sharing class FEC_PINReissueServiceCallout {
-
+    
     private static ResponseLog responseLog;
-
+    
     // ============================================================
     // REQUEST CLASSES
     // ============================================================
@@ -10,7 +10,7 @@ public without sharing class FEC_PINReissueServiceCallout {
         public List<String> parameters;
         public Map<String, String> body;
     }
-
+    
     // ============================================================
     // RESPONSE CLASSES
     // ============================================================
@@ -20,25 +20,26 @@ public without sharing class FEC_PINReissueServiceCallout {
         public String RespDesc;
         public String TransDTTM;
         public String TransID;
-
+        
         public String errorCode;
         public String errorMessage;
+        public Boolean isSuccess;
     }
-
+    
     // ============================================================
     // VALIDATION CLASS
     // ============================================================
     public class ValidationResult {
-
+        
         public Boolean isValid;
         public String errorMessage;
-
+        
         public ValidationResult(Boolean isValid,String errorMessage){
             this.isValid = isValid;
             this.errorMessage = errorMessage;
         }
     }
-
+    
     // ============================================================
     // RESPONSE LOG CLASS
     // ============================================================
@@ -49,7 +50,7 @@ public without sharing class FEC_PINReissueServiceCallout {
         public String requestBody;
         public HttpResponse response;
         public String errorMessage;
-
+        
         public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
             this.apiName = apiName;
             this.endpoint = endpoint;
@@ -59,14 +60,14 @@ public without sharing class FEC_PINReissueServiceCallout {
             this.errorMessage = errorMessage;
         }
     }
-
+    
     // ============================================================
     // MAIN CALLOUT
     // ============================================================
     public static PINResponse callPINReissue(
         String cardNumber,
-        String transId,
-        String customerId
+    String transId,
+    String customerId
     ){
         PINResponse response = new PINResponse();
         try{
@@ -78,85 +79,85 @@ public without sharing class FEC_PINReissueServiceCallout {
                 transId,
                 customerId
             };
-
+            
             String requestBodyJson = JSON.serialize(request);
-
+            System.debug('FEC_PINReissue requestBodyJson: ' + requestBodyJson);
+            
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_PINReissueService');
-
+            
             String endpoint = apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c;
             
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE_JSON, null, null, requestBodyJson);
-
+            
             // Log response
             responseLog = new ResponseLog(
                 'FEC_PINReissue',
-                endpoint,
-                FEC_ConstantCommon.API_METHOD_POST,
-                requestBodyJson,
-                res,
-                null
-            );
-
+            endpoint,
+            FEC_ConstantCommon.API_METHOD_POST,
+            requestBodyJson,
+            res,
+            null
+                );
+            
             if (res.getStatusCode() == 200) {
                 response = (PINResponse)JSON.deserialize(res.getBody(), PINResponse.class);
+                
+                // ✅ SET SUCCESS FLAG
+                response.isSuccess = (response != null && response.RespCode == '0');
+                
             } else {
                 response.errorCode = String.valueOf(res.getStatusCode());
                 response.errorMessage = res.getBody();
+                response.isSuccess = false; // ✅ FAIL CASE
             }
         } catch(Exception e){
             response.errorCode = 'CALLOUT_ERROR';
             response.errorMessage = e.getMessage();
+            response.isSuccess = false;
         }
+        System.debug('### PIN RESPONSE: ' + response);
         return response;
     }
-
-    // ============================================================
-    // SUCCESS CHECK
-    // ============================================================
-
-    public static Boolean isSuccess(PINResponse response){
-        return response != null
-            && response.RespCode == '0';
-    }
-
+    
+    
     // ============================================================
     // VALIDATE REQUEST
     // ============================================================
     public static ValidationResult validateRequest(
         String cardNumber,
-        String transId,
-        String customerId
+    String transId,
+    String customerId
     ){
-
+        
         if(String.isBlank(transId)) {
             return new ValidationResult(false,System.Label.FEC_MSG_TransID_Null);
         }
-
+        
         if(String.isBlank(cardNumber)) {
             return new ValidationResult(false,
-                String.format(System.Label.FEC_MSG_Param_Required,
-                new List<String>{'CardNumber'}));
+            String.format(System.Label.FEC_MSG_Param_Required,
+            new List<String>{'CardNumber'}));
         }
-
+        
         if(String.isBlank(customerId)) {
             return new ValidationResult(false,
-                String.format(System.Label.FEC_MSG_Param_Required,
-                new List<String>{'CustomerId'}));
+            String.format(System.Label.FEC_MSG_Param_Required,
+            new List<String>{'CustomerId'}));
         }
-
+        
         return new ValidationResult(true, null);
     }
-
+    
     public static void logApiResponse() {
         if (responseLog != null) {
             FEC_CommonUltils.logApi(
-                responseLog.apiName, 
-                responseLog.endpoint, 
-                responseLog.method, 
-                responseLog.requestBody, 
-                responseLog.response, 
-                responseLog.errorMessage);
+                responseLog.apiName,
+            responseLog.endpoint,
+            responseLog.method,
+            responseLog.requestBody,
+            responseLog.response,
+            responseLog.errorMessage);
         }
     }
 }

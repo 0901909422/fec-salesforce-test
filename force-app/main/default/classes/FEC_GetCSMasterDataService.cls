@@ -74,7 +74,7 @@ global with sharing class FEC_GetCSMasterDataService {
                 p.ID = pCode;
                 p.Name = n.FEC_Product_Type__r.Name;
                 p.NameVN = n.FEC_Product_Type__r.FEC_Name_VN__c;
-                p.PosOrder = FEC_CommonUltils.toInt(n.FEC_Product_Type__r.FEC_Order__c);
+                p.PosOrder = FEC_CommonUltils.toIntDec(n.FEC_Product_Type__r.FEC_Order__c);
                 p.ApplyTo = n.FEC_Customer_Type__c;
                 p.Type = FEC_ConstantCommon.KEY_PRODUCT_TYPE_PRODUCT;
                 p.Children = new List<ChildItemType>();
