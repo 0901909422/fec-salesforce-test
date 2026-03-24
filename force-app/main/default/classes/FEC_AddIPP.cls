@@ -193,7 +193,7 @@ public with sharing class FEC_AddIPP {
     requestNode.addChildElement('AccountNumber', null, null)
       .addTextNode(request.accountNumber);
     requestNode.addChildElement('EffectiveDate', null, null)
-      .addTextNode(FEC_CommonUltils.formatDate(request.effectiveDate));
+      .addTextNode(FEC_CommonUltils.formatDateYYYYMMDD(request.effectiveDate));
     requestNode.addChildElement('Amount', null, null)
       .addTextNode(String.valueOf(request.amount));
 
@@ -215,7 +215,7 @@ public with sharing class FEC_AddIPP {
     }
     if (request.postingDate != null) {
       requestNode.addChildElement('PostingDate', null, null)
-        .addTextNode(FEC_CommonUltils.formatDate(request.postingDate));
+        .addTextNode(FEC_CommonUltils.formatDateYYYYMMDD(request.postingDate));
     }
     if (String.isNotBlank(request.cardNumber)) {
       requestNode.addChildElement('CardNumber', null, null)
@@ -389,6 +389,14 @@ public with sharing class FEC_AddIPP {
         )
       );
     }
+    if (request.accountNumber.length() > 255) {
+      throw new CalloutException(
+        String.format(
+          System.Label.FEC_MSG_Param_Maxlength,
+          new List<String>{ 'Account Number', '255' }
+        )
+      );
+    }
     if (request.effectiveDate == null) {
       throw new FEC_APIServiceException(
         String.format(
@@ -397,11 +405,99 @@ public with sharing class FEC_AddIPP {
         )
       );
     }
-    if (request.amount == null || request.amount <= 0) {
+    if (request.amount == null) {
       throw new AuraHandledException(
         String.format(
-          System.Label.FEC_MSG_From_To_Invalid,
-          new List<String>{ 'Amount', '0' }
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Amount' }
+        )
+      );
+    }
+    if (String.valueOf(request.amount).length() > 18) {
+      throw new CalloutException(
+        String.format(
+          System.Label.FEC_MSG_Param_Maxlength,
+          new List<String>{ 'Amount', '18' }
+        )
+      );
+    }
+    if (String.isBlank(request.planNumber)) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Plan Number' }
+        )
+      );
+    }
+    if (request.ippTerm == null) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'IPP Term' }
+        )
+      );
+    }
+    if (String.valueOf(request.ippTerm).length() > 18) {
+      throw new CalloutException(
+        String.format(
+          System.Label.FEC_MSG_Param_Maxlength,
+          new List<String>{ 'IPP Term', '18' }
+        )
+      );
+    }
+    if (String.isBlank(request.referenceNumber)) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Reference Number' }
+        )
+      );
+    }
+    if (String.isBlank(request.transactionPlan)) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Transaction Plan' }
+        )
+      );
+    }
+    if (request.postingDate == null) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Posting Date' }
+        )
+      );
+    }
+    if (String.isBlank(request.cardNumber)) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Card Number' }
+        )
+      );
+    }
+    if (request.cardNumber.length() > 80) {
+      throw new CalloutException(
+        String.format(
+          System.Label.FEC_MSG_Param_Maxlength,
+          new List<String>{ 'Card Number', '80' }
+        )
+      );
+    }
+    if (request.cardSeq == null) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Card Seq' }
+        )
+      );
+    }
+    if (String.isBlank(request.ippKey)) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'IPP Key' }
         )
       );
     }
