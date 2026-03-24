@@ -689,24 +689,6 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>body</name>
-                    <value>Facet-c2c11ce2-4c5e-4226-a69a-2d073ebb8f00</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>title</name>
-                    <value>Detail New Case</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab27</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>active</name>
-                    <value>false</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>body</name>
                     <value>Facet-e1be460e-3f2e-4dc3-ab68-a4a3bf042bbb</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
