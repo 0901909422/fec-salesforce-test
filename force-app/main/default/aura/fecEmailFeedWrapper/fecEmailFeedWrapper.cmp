@@ -1,4 +1,0 @@
-<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" access="global">
-    <aura:attribute name="recordId" type="String" />
-    <forceChatter:feed type="Record" subjectId="{!v.recordId}" />
-</aura:component>

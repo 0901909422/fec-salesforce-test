@@ -5,31 +5,72 @@
  */
 public without sharing class FEC_CustomEmailService {
 
-    // ─── Proxy methods từ FEC_InteractionEmailController (giữ nguyên để helper JS dùng) ───
-
     @AuraEnabled
     public static Map<String, String> getInteractionEmail(String caseId) {
-        return FEC_InteractionEmailController.getInteractionEmail(caseId);
+        Map<String, String> result = new Map<String, String>();
+        List<EmailMessage> msgs = [
+            SELECT FromAddress, ToAddress FROM EmailMessage
+            WHERE ParentId = :caseId AND Incoming = true
+            ORDER BY MessageDate ASC LIMIT 1
+        ];
+        if (!msgs.isEmpty()) {
+            result.put('toEmail', msgs[0].FromAddress);
+            result.put('fromEmail', msgs[0].ToAddress);
+        } else {
+            result.put('toEmail', '');
+            result.put('fromEmail', '');
+        }
+        return result;
     }
 
     @AuraEnabled
     public static String getCaseSubject(String caseId) {
-        return FEC_InteractionEmailController.getCaseSubject(caseId);
+        Case c = [SELECT Subject FROM Case WHERE Id = :caseId LIMIT 1];
+        return c.Subject;
     }
 
     @AuraEnabled
     public static List<EmailMessage> getEmailMessages(String caseId) {
-        return FEC_InteractionEmailController.getEmailMessages(caseId);
+        return [
+            SELECT Id, FromName, FromAddress, ToAddress, CcAddress,
+                   Subject, TextBody, MessageDate, Incoming
+            FROM EmailMessage
+            WHERE ParentId = :caseId
+            ORDER BY MessageDate DESC
+            LIMIT 50
+        ];
     }
 
     @AuraEnabled(cacheable=true)
     public static List<EmailTemplate> getEmailTemplates() {
-        return FEC_InteractionEmailController.getEmailTemplates();
+        return [
+            SELECT Id, Name, HtmlValue, Body
+            FROM EmailTemplate
+            WHERE IsActive = true
+            ORDER BY Name ASC
+            LIMIT 100
+        ];
     }
 
     @AuraEnabled
     public static String fetchImageAsBase64(String imageUrl) {
-        return FEC_InteractionEmailController.fetchImageAsBase64(imageUrl);
+        try {
+            Http http = new Http();
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint(imageUrl);
+            req.setMethod('GET');
+            req.setTimeout(10000);
+            HttpResponse res = http.send(req);
+            if (res.getStatusCode() == 200) {
+                String contentType = res.getHeader('Content-Type');
+                if (String.isBlank(contentType)) contentType = 'image/jpeg';
+                if (contentType.contains(';')) contentType = contentType.substringBefore(';').trim();
+                return 'data:' + contentType + ';base64,' + EncodingUtil.base64Encode(res.getBodyAsBlob());
+            }
+            return null;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
     }
 
     /**

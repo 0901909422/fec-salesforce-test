@@ -1,8 +1,0 @@
-.THIS .fec-compose-footer { display:flex; align-items:center; gap:6px; padding:8px 12px; border-top:1px solid #e8e8e8; width:100%; box-sizing:border-box; flex-wrap:nowrap; }
-.THIS .fec-foot-spacer { flex:1 1 0%; min-width:0; display:block; }
-.THIS .fec-foot-btn { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border:1px solid #c8c8c8; border-radius:16px; background:#fff; color:#111; font-size:12px; cursor:pointer; font-weight:500; white-space:nowrap; flex-shrink:0; }
-.THIS .fec-foot-btn:hover { background:#f3f3f3; border-color:#999; }
-.THIS .fec-foot-icon { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; cursor:pointer; border:1px solid transparent; flex-shrink:0; }
-.THIS .fec-foot-icon:hover { background:#e8f0fe; border-color:#c5d0e6; }
-.THIS .fec-foot-icon .slds-icon { fill:#0070d2; }
-.THIS .fec-foot-danger:hover { background:#fdf0f0; border-color:#e8a0a0; }
