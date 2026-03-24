@@ -59,23 +59,6 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
         return c.FEC_Interaction__c;
     }
     
-    
-    
-    @AuraEnabled
-    public static string getInteractionViewMode(Id caseId){
-        try {
-            Case c = [
-            SELECT FEC_Interaction_View_Mode__c    
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-            return c.FEC_Interaction_View_Mode__c    ;
-        } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
-        }
-    }
-    
     @AuraEnabled
     public static List<GetProductsListResponse> getProductsListByCif(String cifNumber){
         
