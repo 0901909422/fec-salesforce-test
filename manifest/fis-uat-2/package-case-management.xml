@@ -100,6 +100,24 @@
 		<members>FEC_Reset_Pin_Confirm_Msg</members>
 		<members>FEC_Yes_Btn</members>
 		<members>FEC_CIF_Number_Required_MSG</members>
+		<members>FEC_MSG_Card_Block_Confirm_Title</members>
+		<members>FEC_MSG_Card_Block_Confirm_Body</members>
+		<members>FEC_LBL_Pending_Disbursement_Section</members>
+		<members>FEC_Application_ID_Label</members>
+		<members>FEC_LBL_Pending_Disbursement_Application_Status</members>
+		<members>FEC_LBL_Pending_Disbursement_Disbursed_Amount</members>
+		<members>FEC_LBL_Pending_Disbursement_Approval_Date</members>
+		<members>FEC_LBL_Pending_Disbursement_Disbursement_Status</members>
+		<members>FEC_LBL_Pending_Disbursement_CS_Decision</members>
+		<members>FEC_MSG_Card_Block_Beneficiary_Required</members>
+		<members>FEC_MSG_Card_Block_Success</members>
+		<members>FEC_MSG_Card_Block_Fail_Disable</members>
+		<members>FEC_MSG_Card_Block_Fail_Retry</members>
+		<members>FEC_MSG_Card_Block_Failed</members>
+		<members>FEC_MSG_Card_Unlock_Failed</members>
+		<members>FEC_MSG_Card_LockUnlock_Case_Access_Denied</members>
+		<members>FEC_MSG_Card_LockUnlock_Customer_History_Access_Denied</members>
+		<members>FEC_MSG_Card_LockUnlock_Validation_Failed</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
