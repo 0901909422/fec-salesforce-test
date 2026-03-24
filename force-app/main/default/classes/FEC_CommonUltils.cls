@@ -936,6 +936,10 @@ public with sharing class FEC_CommonUltils {
       .replace('\'', '&apos;');
   }
 
+  public static Integer toIntDec(Decimal d) {
+    return d == null ? null : Integer.valueOf(d);
+  }
+
   public static String getEmailPrefix(String email) {
     if (String.isBlank(email)) {
         return '';

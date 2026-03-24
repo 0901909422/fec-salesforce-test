@@ -251,4 +251,40 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUEST_EXISTING_USER_TYPE  = 'EXISTING';
     public static final String REQUEST_NON_EXISTING_USER_TYPE  = 'NON-EXISTING';
     public static final String REQUEST_PROSPECT_USER_TYPE  = 'PROSPECT';
+
+
+    // Call api FEC_CancelCSCaseService
+    public static final String STATUS_CLOSED = 'Closed';
+    public static final String STATUS_COMPLETED = 'Completed';
+    public static final String STATUS_CANCELLED  = 'Cancelled';
+    public static final String CODE_SUCCESS      = '1';
+    public static final String CODE_FAILURE      = '3';
+    public static final String ERROR_PREFIX      = 'Error: ';
+    public static final String SUCCESS_MESSAGE_CANCEL_CASE = System.Label.FEC_MSG_CancelCS_Success;
+    public static final String PHONE_REGEX_VN    = '^0[0-9]{9}$';       
+    public static final String PHONE_REGEX_INTL  = '^\\+[0-9]{8,15}$';
+    
+    /** Kênh hợp lệ cho API FEC_CancelCSCaseService (SOAP). */
+    public static final String CANCEL_CS_CHANNEL_CHAT = 'Chat';
+    public static final String CANCEL_CS_CHANNEL_F2F = 'F2F';
+    public static final String CANCEL_CS_CHANNEL_LETTER = 'Letter';
+    
+    public static final List<String> CANCEL_CS_VALID_CHANNELS_ORDERED = new List<String>{
+        CHANNEL_INBOUND_NAME,
+        CHANNEL_OUTBOUND_NAME,
+        CANCEL_CS_CHANNEL_CHAT,
+        EMAIL,
+        CANCEL_CS_CHANNEL_F2F,
+        CANCEL_CS_CHANNEL_LETTER,
+        CHANNEL_EXTERNAL,
+        CHANNEL_INTERNAL
+    };
+    
+    public static final Set<String> CANCEL_CS_VALID_CHANNELS = new Set<String>(CANCEL_CS_VALID_CHANNELS_ORDERED);
+    
+    /** Độ dài tối đa field request Cancel CS Case. */
+    public static final Integer CANCEL_CS_TRANSACTION_ID_MAX_LEN = 36;
+    public static final Integer CANCEL_CS_CASE_ID_MAX_LEN = 15;
+    public static final Integer CANCEL_CS_CONTRACT_OR_ACCOUNT_MAX_LEN = 255;
+    public static final Integer CANCEL_CS_PHONE_MAX_LEN = 16;
 }

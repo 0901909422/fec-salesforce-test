@@ -182,6 +182,7 @@ public with sharing class FEC_RepaySchedPayHistController {
         for (FEC_GetLoanBasicInfo.RepaymentSchedule rs : basicRes.LoanBasicInfo.RepaymentSchedules) {
             FEC_RePayment_Schedule__c rec = new FEC_RePayment_Schedule__c();
             rec.FEC_Case__c = caseId;
+            rec.FEC_Customer_History__c = getCustomerHistoryId(caseId);
             rec.FEC_Installment_No__c = rs.InstallmentNo;
             rec.FEC_Installment_Due_Date__c = rs.DueDate;
             rec.FEC_EMI__c = rs.EMI;
@@ -226,8 +227,8 @@ public with sharing class FEC_RepaySchedPayHistController {
         for (Integer i = 0; i < rowCount; i++) {
             PaymentHistoryRowDTO row = new PaymentHistoryRowDTO();
             row.paymentNo = i + 1;
-            if (i < basicPh.size() && basicPh[i].ValueDate != null) {
-                String pd = FEC_CommonUltils.formatDateDDMMYYYY(basicPh[i].ValueDate);
+            if (i < secPh.size() && secPh[i].ValueDate != null) {
+                String pd = FEC_CommonUltils.formatDateDDMMYYYY(secPh[i].ValueDate);
                 row.paymentDate = String.isNotBlank(pd) ? pd : HYPHEN;
             } else {
                 row.paymentDate = HYPHEN;
@@ -412,9 +413,17 @@ public with sharing class FEC_RepaySchedPayHistController {
         }
 
         fillRepaymentScheduleFromBasic(result, basicRes);
-        saveRepaymentScheduleToObject(caseId, basicRes);
+        try {
+            saveRepaymentScheduleToObject(caseId, basicRes);
+        } catch (Exception e) {
+            System.debug('### saveRepaymentScheduleToObject failed, case=' + caseId + ': ' + e.getMessage());
+        }
         fillPaymentHistoryFromApis(result, basicRes, secRes, paymentRes);
-        savePaymentHistoryToObject(getCustomerHistoryId(caseId), basicRes, secRes, paymentRes);
+        try {
+            savePaymentHistoryToObject(getCustomerHistoryId(caseId), basicRes, secRes, paymentRes);
+        } catch (Exception e) {
+            System.debug('### savePaymentHistoryToObject failed, case=' + caseId + ': ' + e.getMessage());
+        }
         fillRealTimePaymentFromApi(result, paymentRes);
         fillRepaymentSchedulePaymentHistory(result);
 
