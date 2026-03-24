@@ -823,8 +823,8 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
-               <componentName>fecRelevantInteractionCase</componentName>
-               <identifier>c_fecRelevantInteractionCase</identifier>
+                <componentName>fecRelevantInteractionCase</componentName>
+                <identifier>c_fecRelevantInteractionCase</identifier>
             </componentInstance>
         </itemInstances>
         <name>sidebar</name>
