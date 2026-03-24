@@ -2290,7 +2290,7 @@
         <shortDescription>Label for Field ID</shortDescription>
         <value>Field ID</value>
     </labels>
-        <labels>
+    <labels>
         <fullName>FEC_Label_Code_ID</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -6634,7 +6634,7 @@
         <value>Start Date Time</value>
     </labels>
     <labels>
-                
+
         <fullName>FEC_Tab_Action_Button</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -7203,7 +7203,7 @@
         <shortDescription>Error Deleting Data</shortDescription>
         <value>Error Deleting Data</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>LBL_Missing_Required_Fields</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -7618,7 +7618,7 @@
         <shortDescription>FEC_MSG_UPDATED_INFO_NOT_UPDATED</shortDescription>
         <value>The information has not been updated.</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>FEC_ACTION_PHONE_UPDATE_HEADER</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -7626,7 +7626,7 @@
         <shortDescription>FEC_ACTION_PHONE_UPDATE_HEADER</shortDescription>
         <value>Update Customer Info</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>FEC_MSG_ACTION_PHONE_UPDATE</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -7634,7 +7634,7 @@
         <shortDescription>FEC_MSG_ACTION_PHONE_UPDATE</shortDescription>
         <value>You are about to update this customer&apos;s information. Are you sure you want to proceed?</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -7642,7 +7642,7 @@
         <shortDescription>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</shortDescription>
         <value>Customer information updated successfully</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -8092,7 +8092,7 @@
         <shortDescription>FEC_Pending_Service_Cases_Section_Title</shortDescription>
         <value>Pending Service Cases</value>
     </labels>
-        <labels>
+    <labels>
         <fullName>FEC_Activity_ID_Label</fullName>
         <categories>fec_AppInfo</categories>
         <language>en_US</language>
@@ -8595,5 +8595,40 @@
         <protected>false</protected>
         <shortDescription>FEC_LBL_IPP_Closure_Col_IppCurrentTerm</shortDescription>
         <value>IPP Current Term</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Card_Number_Required_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Card Number Required MSG</shortDescription>
+        <value>Card number is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Btn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Btn</shortDescription>
+        <value>Không</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reset_PIN_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reset PIN Title</shortDescription>
+        <value>Reset PIN</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reset_Pin_Confirm_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reset Pin Confirm Msg</shortDescription>
+        <value>Bạn sắp mở khóa PIN cho khách hàng này. Bạn có chắc muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Yes_Btn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Yes Btn</shortDescription>
+        <value>Có</value>
     </labels>
 </CustomLabels>
