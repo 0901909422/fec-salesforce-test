@@ -25,6 +25,24 @@
         }), 300);
     },
 
+    onRecordUpdated: function(component, event, helper) {
+        var rec = component.get('v.caseRecord');
+        if (rec) {
+            var mode = rec.FEC_Interaction_View_Mode__c;
+            component.set('v.isHandling', mode === 'handling');
+        }
+    },
+
+    onModeMessage: function(component, event, helper) {
+        var params = event.getParam('payload') || event.getParam('message') || event;
+        var isModeEdit = params && params.isModeEdit;
+        component.set('v.isHandling', isModeEdit === true);
+        if (!isModeEdit) {
+            // Reset compose khi về review
+            component.set('v.showCompose', false);
+        }
+    },
+
     loadEmails: function(component, event, helper) {
         helper.loadEmails(component);
     },

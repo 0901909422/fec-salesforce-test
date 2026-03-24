@@ -25,12 +25,29 @@
     <aura:attribute name="sortOrder" type="String" default="recent" />
     <aura:attribute name="fromOptions" type="List" default="[]" />
     <aura:attribute name="hasFromOptions" type="Boolean" default="false" />
+    <!-- viewMode: handling = hiện đầy đủ compose, review = chỉ hiện feed -->
+    <aura:attribute name="isHandling" type="Boolean" default="false" />
+    <aura:attribute name="caseRecord" type="Object" />
+
+    <!-- Load viewMode từ Case record -->
+    <force:recordData aura:id="caseData"
+        recordId="{!v.recordId}"
+        fields="FEC_Interaction_View_Mode__c"
+        targetFields="{!v.caseRecord}"
+        recordUpdated="{!c.onRecordUpdated}" />
+
+    <!-- Subscribe LMS FEC_Case_Mode__c để nhận Execute event realtime -->
+    <lightning:messageChannel type="FEC_Case_Mode__c" aura:id="modeChannel"
+        onMessage="{!c.onModeMessage}" />
+
     <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
 
     <div class="email-section-card">
     <lightning:accordion allowMultipleSectionsOpen="true" activeSectionName="emailSection" class="fec-accordion-custom">
         <lightning:accordionSection name="emailSection" label="Email" class="fec-accordion-section-custom">
 
+            <!-- Compose UI: chỉ hiện khi viewMode = handling -->
+            <aura:if isTrue="{!v.isHandling}">
             <!-- Row 1: Danh xuong + Email Template -->
             <div class="field-row">
                 <div class="field-col">
@@ -148,6 +165,7 @@
                     </div>
                 </div>
             </aura:if>
+            </aura:if><!-- end isHandling -->
 
             <!-- Feed header row 1 -->
             <div class="feed-header">
