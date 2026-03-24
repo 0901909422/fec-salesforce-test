@@ -6,7 +6,7 @@
 public without sharing class FEC_CaseTriggerHandler {
     
     // Trigger guard để tránh recursive
-    private static Boolean isExecuting = false;
+    public static Boolean isExecuting = false;
     
     /**
      * Method Description: Main entry point được gọi từ trigger
