@@ -902,10 +902,6 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>OnbrdDataObjGrpRecVld</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
         <objectApiName>LoanApplicationProperty</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
