@@ -25,6 +25,7 @@
     <aura:attribute name="sortOrder" type="String" default="recent" />
     <aura:attribute name="fromOptions" type="List" default="[]" />
     <aura:attribute name="hasFromOptions" type="Boolean" default="false" />
+    <aura:attribute name="incomingToAddress" type="String" default="" />
     <!-- viewMode: handling = hiện đầy đủ compose, review = chỉ hiện feed -->
     <aura:attribute name="isHandling" type="Boolean" default="false" />
     <aura:attribute name="caseRecord" type="Object" />

@@ -520,8 +520,8 @@
                 var d=r.getReturnValue()||{};
                 component.set('v.fromEmail',d.fromEmail||'');
                 component.set('v.toEmail',d.toEmail||'');
-                // Sau khi có fromEmail, load options rồi set selected
-                this.loadFromAddresses(component, d.fromEmail||'');
+                // Lưu incomingToAddress để dùng khi lazy load fromAddresses
+                component.set('v.incomingToAddress', d.fromEmail||'');
             }
         });
         $A.enqueueAction(a1);
@@ -573,6 +573,7 @@
 
     loadTemplates: function(component) {
         var a = component.get('c.getEmailTemplates');
+        a.setStorable(); // Cache kết quả để tránh gọi lại Apex mỗi lần load
         a.setCallback(this, function(r) {
             if (r.getState()==='SUCCESS') {
                 var data=r.getReturnValue()||[], opts=[], bodies={};

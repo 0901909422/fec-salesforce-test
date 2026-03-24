@@ -3,26 +3,6 @@
         helper.loadCaseData(component);
         helper.loadTemplates(component);
         helper.loadEmails(component);
-        window.setTimeout($A.getCallback(function() {
-            var el = component.getElement();
-            if (!el) return;
-            var section = el.querySelector('.slds-accordion__section');
-            if (section) {
-                section.style.background = '#fff';
-                section.style.borderRadius = '8px';
-                section.style.overflow = 'hidden';
-                section.style.border = '1px solid #d0d0d0';
-            }
-            var summary = el.querySelector('.slds-accordion__summary');
-            if (summary) {
-                summary.style.background = '#f3f3f3';
-                summary.style.borderBottom = '1px solid #d0d0d0';
-            }
-            var content = el.querySelector('.slds-accordion__content');
-            if (content) {
-                content.style.background = '#fff';
-            }
-        }), 300);
     },
 
     onRecordUpdated: function(component, event, helper) {
@@ -97,10 +77,11 @@
         }
         component.set('v.showCompose', true);
         var body = component.get('v.body') || '';
-        // Nếu fromOptions chưa load thì load lại
+        // Lazy load fromAddresses chỉ khi user mở compose lần đầu
         var fromOptions = component.get('v.fromOptions') || [];
         if (fromOptions.length === 0) {
-            helper.loadFromAddresses(component, component.get('v.fromEmail') || '');
+            var incomingTo = component.get('v.incomingToAddress') || component.get('v.fromEmail') || '';
+            helper.loadFromAddresses(component, incomingTo);
         }
         window.setTimeout($A.getCallback(function() {
             helper.initQuill(component, body);
