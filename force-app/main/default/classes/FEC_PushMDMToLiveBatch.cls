@@ -42,6 +42,12 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
     private static final String FIELD_STAGE_NAME               = FEC_Constants.FIELD_STAGE_NAME;
     private static final String FIELD_ADDITIONAL_FIELD         = FEC_Constants.FIELD_ADDITIONAL_FIELD;
     
+    // Khai báo bổ sung trường bị thiếu gây lỗi Upsert
+    private static final String FIELD_FIELD_API_NAME           = 'Field_API_Name__c';
+
+    // Đang sử dụng gán cứng chuỗi email để TEST (Sau này nên chuyển lại System.Label.FEC_MDM_Sync_Admin_Emails)
+    private static final String SYNC_ADMIN_EMAILS = 'dat.ngo.1@fecredit.com.vn,long.nguyen.50@fecredit.com.vn';
+
     private static final String PROCESS_STATUS_NEW             = FEC_Constants.PROCESS_STATUS_NEW;
     private static final String PROCESS_STATUS_UPDATE          = FEC_Constants.PROCESS_STATUS_UPDATE;
     private static final String PROCESS_STATUS_SYNCED          = FEC_Constants.PROCESS_STATUS_SYNCED;
@@ -198,6 +204,7 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
         FIELD_FEC_TYPE              => FIELD_FEC_TYPE,
         FIELD_FIELD_MANDATORY       => FIELD_FIELD_MANDATORY,
         FIELD_FIELD_STATUS          => FIELD_FIELD_STATUS,
+        FIELD_FIELD_API_NAME        => FIELD_FIELD_API_NAME, // Đã bổ sung mapping Field_API_Name__c
         //Additional Field Fields List Value
         FIELD_FEC_ORDER             => FIELD_FEC_ORDER,
         //Channel Fields
@@ -484,51 +491,109 @@ public class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Datab
         }
     }
     
+    /**
+     * @description Hàm xử lý hậu kỳ của Batch, tổng hợp lỗi, lưu Log vào hệ thống
+     * và gửi email thông báo qua Email Template.
+     * @author      DAT NGO
+     * @param       bc Database.BatchableContext
+     * @return      void
+     */
     public void finish(Database.BatchableContext bc) {
-        AsyncApexJob job = [SELECT Id, Status, NumberOfErrors, JobItemsProcessed,
-                        TotalJobItems, CreatedBy.Email, CreatedById
-                        FROM AsyncApexJob WHERE Id = :bc.getJobId()];
+        System.debug('[finish] START');
         
-        // Create email using email template
-        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-        mail.setToAddresses(new String[] {job.CreatedBy.Email});
+        // 1. Lấy thông tin Batch Job từ hệ thống
+        AsyncApexJob job = [
+            SELECT Id, Status, NumberOfErrors, JobItemsProcessed, TotalJobItems, CreatedById, CreatedBy.Email
+            FROM AsyncApexJob 
+            WHERE Id = :bc.getJobId()
+        ];
         
-        // Get the email template - you can customize the developer name
-        List<EmailTemplate> templates = [SELECT Id FROM EmailTemplate 
-                                  WHERE DeveloperName = 'FEC_PushMDM_Batch_Completion' 
-                                  LIMIT 1];
+        // 2. Tổng hợp dữ liệu lỗi
+        String errorDetails = '';
+        Integer totalErrors = job.NumberOfErrors;
+        String batchStatus = 'Success';
         
-        if (!templates.isEmpty()) {
-            // Use email template
-            mail.setTemplateId(templates[0].Id);
-            mail.setTargetObjectId(job.CreatedById);
-            mail.setWhatId(null);
-        } else {
-            // Fallback: Create plain text email if template doesn't exist
-            mail.setSubject('FEC PushMDM Batch Job Completion Report');
-            
-            String emailBody = 'Batch Job Status Report\n\n';
-            emailBody += 'Job Status: ' + job.Status + '\n';
-            emailBody += 'Job Items Processed: ' + job.JobItemsProcessed + '\n';
-            emailBody += 'Total Job Items: ' + job.TotalJobItems + '\n';
-            emailBody += 'Number of Errors: ' + job.NumberOfErrors + '\n';
-            
-            if (!uniqueErrors.isEmpty()) {
-                emailBody += '\nErrors Encountered:\n';
-                emailBody += String.join(new List<String>(uniqueErrors), '\n');
-            }
-            
-            mail.setPlainTextBody(emailBody);
+        if (!uniqueErrors.isEmpty()) {
+            errorDetails = String.join(new List<String>(uniqueErrors), '\n\n');
+            totalErrors += uniqueErrors.size(); // Cộng dồn lỗi logic và lỗi Job
+            batchStatus = 'Completed with Errors';
+        } else if (job.NumberOfErrors > 0 || job.Status == 'Failed') {
+            batchStatus = 'Failed';
         }
         
-        // Send email
+        // 3. Tạo bản ghi FEC_Batch_Log__c
+        FEC_Batch_Log__c batchLog = new FEC_Batch_Log__c(
+            FEC_Batch_Name__c      = 'FEC_PushMDMToLiveBatch',
+            FEC_Job_ID__c          = job.Id,
+            FEC_Status__c          = batchStatus,
+            FEC_Total_Job_Items__c = job.TotalJobItems,
+            FEC_Processed_Items__c = job.JobItemsProcessed,
+            FEC_Error_Count__c     = totalErrors,
+            FEC_Error_Details__c   = String.isNotBlank(errorDetails) ? errorDetails.abbreviate(131000) : null
+        );
+        
+        try {
+            insert batchLog;
+            System.debug('[finish] Inserted Batch Log successfully. ID: ' + batchLog.Id);
+        } catch (Exception ex) {
+            System.debug('[finish] ERROR Insert Batch Log: ' + ex.getMessage());
+        }
+        
+        // 4. Thiết lập danh sách người nhận từ Custom Label
+        List<String> toAddresses = new List<String>();
+        if (String.isNotBlank(SYNC_ADMIN_EMAILS)) {
+            for (String email : SYNC_ADMIN_EMAILS.split(',')) {
+                if (String.isNotBlank(email)) {
+                    toAddresses.add(email.trim());
+                }
+            }
+        }
+        
+        // Fallback to CreatedBy Email if label is empty
+        if (toAddresses.isEmpty()) {
+            toAddresses.add(job.CreatedBy.Email);
+        }
+
+        // 5. Thiết lập và gửi Email Template
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        
+        List<EmailTemplate> templates = [
+            SELECT Id FROM EmailTemplate 
+            WHERE DeveloperName = 'FEC_PushMDM_Batch_Completion' 
+            LIMIT 1
+        ];
+        
+        if (!templates.isEmpty() && batchLog.Id != null) {
+            // Bypass giới hạn WhatId đối với UserId bằng tính năng render template
+            Messaging.SingleEmailMessage renderedEmail = Messaging.renderStoredEmailTemplate(
+                templates[0].Id, 
+                null,           // whoId (Bỏ qua vì không gửi cho Contact/Lead)
+                batchLog.Id     // whatId (Truyền ID Log để merge data)
+            );
+            
+            mail.setToAddresses(toAddresses);
+            mail.setSubject(renderedEmail.getSubject());
+            mail.setHtmlBody(renderedEmail.getHtmlBody());
+            mail.setSaveAsActivity(false); 
+        } else {
+            mail.setToAddresses(toAddresses);
+            mail.setSubject('[FEC MDM Sync] Fallback: Đồng bộ MDM hoàn tất - ' + batchStatus);
+            mail.setPlainTextBody('Batch Job: FEC_PushMDMToLiveBatch\nStatus: ' + batchStatus + '\nErrors: ' + totalErrors + '\nLog ID: ' + batchLog.Id);
+        }
+        
         if (!Test.isRunningTest()) {
-            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+            try {
+                Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+                System.debug('[finish] Email sent successfully to: ' + toAddresses);
+            } catch (Exception ex) {
+                System.debug('[finish] Lỗi khi gửi mail: ' + ex.getMessage());
+            }
         }
         
         if (!uniqueErrors.isEmpty()) {
-            String allErrors = String.join(new List<String>(uniqueErrors), '\n');
-            throw new FEC_BatchException(FEC_Constants.ERROR_SYNC_FAILED_PREFIX + allErrors);
+            throw new FEC_BatchException(FEC_Constants.ERROR_SYNC_FAILED_PREFIX + errorDetails.abbreviate(2000));
         }
+        
+        System.debug('[finish] RETURN: ' + batchStatus);
     }
 }

@@ -10,14 +10,16 @@
                     <div class="table-info">
                         <div class="table-info-left">
                             <span class="item-count">{recordCount} item{recordCountPlural}</span>
-                            <template if:true={currentSortedByLabel}>
-                                <span class="sorted-by">• Sorted by {currentSortedByLabel}</span>
+                            <template if:true={displaySortedByLabel}>
+                                <span class="sorted-by">• Sorted by {displaySortedByLabel}</span>
                             </template>
+                            <!-- • Updated X ago (hidden)
                             <template if:false={hideUpdatedTime}>
                                 <template if:true={updatedTimeLabel}>
                                     <span class="sorted-by">• {updatedTimeLabel}</span>
                                 </template>
                             </template>
+                            -->
                         </div>
 
                         <template if:true={showRefresh}>
@@ -182,12 +184,10 @@
                     <div class="table-pagination">
                         <div class="page-size">
                             <span>Page size</span>
-                            <select class="page-size-select" onchange={handlePageSizeChange}>
-                                <option value="10">10</option>
-                                <option value="20">20</option>
-                                <option value="30">30</option>
-                                <option value="40">40</option>
-                                <option value="50">50</option>
+                            <select class="page-size-select" value={pageSize} onchange={handlePageSizeChange}>
+                                <template for:each={pageSizeOptions} for:item="opt">
+                                    <option key={opt} value={opt}>{opt}</option>
+                                </template>
                             </select>
                         </div>
 
