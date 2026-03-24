@@ -9688,4 +9688,11 @@
         <shortDescription>Yes Btn</shortDescription>
         <value>Có</value>
     </labels>
+    <labels>
+        <fullName>FEC_CIF_Number_Required_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CIF Number Required MSG</shortDescription>
+        <value>CIF number is required</value>
+    </labels>
 </CustomLabels>

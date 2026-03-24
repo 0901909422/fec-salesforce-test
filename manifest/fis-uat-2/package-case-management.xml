@@ -87,6 +87,7 @@
 		<members>FEC_Reset_PIN_Title</members>
 		<members>FEC_Reset_Pin_Confirm_Msg</members>
 		<members>FEC_Yes_Btn</members>
+		<members>FEC_CIF_Number_Required_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
