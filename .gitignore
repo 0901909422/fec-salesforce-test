@@ -59,3 +59,10 @@ README.md
 
 # Ignore MainPrompt.prompt.md
 .github/prompts/MainPrompt.prompt.md
+
+# IDE and editor folders
+.idea/
+.kiro/
+
+# Temp manifests
+manifest/aaaaa.xml
