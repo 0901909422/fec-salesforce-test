@@ -257,8 +257,6 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUEST_NON_EXISTING_USER_TYPE  = 'NON-EXISTING';
     public static final String REQUEST_PROSPECT_USER_TYPE  = 'PROSPECT';
 
-    public static final String AUTO_METHOD = 'Auto';
-
     // Call api FEC_CancelCSCaseService
     public static final String STATUS_CLOSED = 'Closed';
     public static final String STATUS_COMPLETED = 'Completed';
