@@ -516,5 +516,9 @@
 		<members>FEC_RoutingActionHistoryTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
+	<types>
+		<members>FEC_Search_Configuration</members>
+		<name>SearchCustomization</name>
+	</types>
     <version>65.0</version>
 </Package>
