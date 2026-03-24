@@ -176,7 +176,8 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
  */
 const DYNAMIC_COMPONENT_REGISTRY = {
   fec_CardInfo: () => import('c/fec_CardInfo'),
-  fec_IPPClosureHandling: () => import('c/fec_IPPClosureHandling')
+  fec_IPPClosureHandling: () => import('c/fec_IPPClosureHandling'),
+  fec_PinResetHandling: () => import('c/fec_PinResetHandling')
 };
 
 export default class Fec_CaseBussiness extends LightningElement {

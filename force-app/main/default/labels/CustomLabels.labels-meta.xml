@@ -9765,4 +9765,46 @@
         <shortDescription>Readonly from email - Ubank</shortDescription>
         <value>dichvukhachhang@ubank.com.vn</value>
     </labels>
+    <labels>
+        <fullName>FEC_Card_Number_Required_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Card Number Required MSG</shortDescription>
+        <value>Card number is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Btn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Btn</shortDescription>
+        <value>Không</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reset_PIN_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reset PIN Title</shortDescription>
+        <value>Reset PIN</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reset_Pin_Confirm_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reset Pin Confirm Msg</shortDescription>
+        <value>Bạn sắp mở khóa PIN cho khách hàng này. Bạn có chắc muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Yes_Btn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Yes Btn</shortDescription>
+        <value>Có</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CIF_Number_Required_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CIF Number Required MSG</shortDescription>
+        <value>CIF number is required</value>
+    </labels>
 </CustomLabels>

@@ -40,7 +40,6 @@ const RECORD_TYPE_CUSTOMER_CASE = 'Customer_Case';
 const RECORD_TYPE_INTERNAL_CASE = 'Internal_Case';
 const NON_EXISTING_CUSTOMER_PRODUCT_NAME = "Non-Existing Customer";
 const NON_EXISTING_CUSTOMER_TYPE = "Non-existing";
-
 const MSG_NO_RESULTS = 'Không tìm thấy kết quả';
 const MSG_UNKNOWN_ERROR = 'Unknown error';
 const CASE_OBJECT_API_NAME = 'Case';
@@ -92,6 +91,11 @@ const RECORD_TYPES = {
   INTERACTION: "Interaction",
   CUSTOMER_CASE: "Customer_Case",
 };
+const ERROR_MODAL_TITLE = "Error";
+const SUCCESS_MODAL_TITLE = "Success";
+const SUCCESS_TOAST_TYPE = "success";
+const ERROR_TOAST_TYPE = "error";
+
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -144,4 +148,8 @@ export {
     CHANNEL_OPTIONS,
     SUB_CHANNEL_MAP,
     RECORD_TYPES,
+    ERROR_MODAL_TITLE,
+    SUCCESS_MODAL_TITLE,
+    SUCCESS_TOAST_TYPE,
+    ERROR_TOAST_TYPE,
 };
