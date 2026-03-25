@@ -11,6 +11,8 @@
     <columns>FEC_Notification_Status__c</columns>
     <columns>FEC_Notification_Channel__c</columns>
     <columns>FEC_Notification_Template__c</columns>
+    <columns>FEC_Channel__c</columns>
+    <columns>FEC_Applicable_User_Groups__c</columns>
     <filterScope>Everything</filterScope>
     <filters>
         <field>RECORDTYPE</field>
