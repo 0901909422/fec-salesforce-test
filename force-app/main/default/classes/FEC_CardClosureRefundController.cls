@@ -1,4 +1,4 @@
-public with sharing class FEC_CardLockUnlockController {
+public with sharing class FEC_CardClosureRefundController {
 
     private static final String BLOCK_CODE_CARD = 'C';
     private static final String FUNC_BLOCK = 'B';

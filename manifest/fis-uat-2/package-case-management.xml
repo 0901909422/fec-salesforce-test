@@ -145,8 +145,8 @@
 		<members>fec_ComboBox</members>
 		<members>fec_PinResetHandling</members>
 		<members>fec_PinResetView</members>
-		<members>fec_CardLockUnlockForm</members>
-		<members>fec_CardLockUnlockHandling</members>
+		<members>fec_CardClosureRefundForm</members>
+		<members>fec_CardClosureRefundHandling</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -168,7 +168,7 @@
 		<members>FEC_PINReissueServiceCallout</members>
 		<members>FEC_PinResetHandler</members>
 		<members>FEC_GetNextWorkController</members>
-		<members>FEC_CardLockUnlockController</members>
+		<members>FEC_CardClosureRefundController</members>
 		<members>FEC_CaseBusinessService</members>
         <name>ApexClass</name>
     </types>

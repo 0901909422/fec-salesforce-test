@@ -178,7 +178,7 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
 const DYNAMIC_COMPONENT_REGISTRY = {
   fec_CardInfo: () => import('c/fec_CardInfo'),
   fec_IPPClosureHandling: () => import('c/fec_IPPClosureHandling'),
-  fec_CardLockUnlockHandling: () => import('c/fec_CardLockUnlockHandling'),
+  fec_CardClosureRefundHandling: () => import('c/fec_CardClosureRefundHandling'),
   fec_PinResetHandling: () => import('c/fec_PinResetHandling')
 };
 

@@ -1,7 +1,7 @@
 import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
-import getCardLockUnlockUiContext from '@salesforce/apex/FEC_CardLockUnlockController.getCardLockUnlockUiContext';
-import blockCard from '@salesforce/apex/FEC_CardLockUnlockController.blockCard';
+import getCardLockUnlockUiContext from '@salesforce/apex/FEC_CardClosureRefundController.getCardLockUnlockUiContext';
+import blockCard from '@salesforce/apex/FEC_CardClosureRefundController.blockCard';
 import FEC_MSG_Card_Block_Success from '@salesforce/label/c.FEC_MSG_Card_Block_Success';
 import FEC_MSG_Card_Block_Fail_Disable from '@salesforce/label/c.FEC_MSG_Card_Block_Fail_Disable';
 import FEC_MSG_Card_Block_Fail_Retry from '@salesforce/label/c.FEC_MSG_Card_Block_Fail_Retry';
@@ -18,7 +18,7 @@ import FEC_MSG_Card_Block_Beneficiary_Required from '@salesforce/label/c.FEC_MSG
 import FEC_MSG_Param_Required from '@salesforce/label/c.FEC_MSG_Param_Required';
 import { STR_EMPTY, RESULT_ERROR, RESULT_SUCCESS } from 'c/fec_CommonConst';
 
-export default class Fec_CardLockUnlockForm extends NavigationMixin(LightningElement) {
+export default class Fec_CardClosureRefundForm extends NavigationMixin(LightningElement) {
 
     _recordId;
 

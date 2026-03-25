@@ -1,12 +1,12 @@
 import { LightningElement, api } from 'lwc';
 
 const ALLOWED_LWC_IMPORTS = {
-    'fec_CardLockUnlockForm': () => import('c/fec_CardLockUnlockForm')
+    'fec_CardClosureRefundForm': () => import('c/fec_CardClosureRefundForm')
 };
 
-const DEFAULT_CARD_LOCK_UNLOCK_LWC = 'fec_CardLockUnlockForm';
+const DEFAULT_CARD_CLOSURE_REFUND_LWC = 'fec_CardClosureRefundForm';
 
-export default class Fec_CardLockUnlockHandling extends LightningElement {
+export default class Fec_CardClosureRefundHandling extends LightningElement {
 
     @api recordId;
 
@@ -14,7 +14,7 @@ export default class Fec_CardLockUnlockHandling extends LightningElement {
 
     async connectedCallback() {
         try {
-            const lwcName = DEFAULT_CARD_LOCK_UNLOCK_LWC;
+            const lwcName = DEFAULT_CARD_CLOSURE_REFUND_LWC;
             if (lwcName && ALLOWED_LWC_IMPORTS[lwcName]) {
                 const module = await ALLOWED_LWC_IMPORTS[lwcName]();
                 this.dynamicComponent = module.default;
