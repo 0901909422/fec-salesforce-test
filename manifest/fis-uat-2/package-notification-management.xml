@@ -46,5 +46,14 @@
         <members>FEC_Service</members>
         <name>CustomApplication</name>
     </types>
+	<types>
+		<members>FEC_Notification__c.FEC_SubCategory__c</members>
+		<members>FEC_Notification__c.FEC_SubCode__c</members>
+		<name>CustomField</name>
+	</types>
+	<types>
+		<members>RD_IT_User_Master_Data_Management</members>
+		<name>PermissionSet</name>
+	</types>
     <version>66.0</version>
 </Package>
