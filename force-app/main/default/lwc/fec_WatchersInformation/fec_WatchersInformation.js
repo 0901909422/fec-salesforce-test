@@ -11,7 +11,7 @@ const COLUMNS = [
     { label: 'User', fieldName: 'odtUser', type: 'text', sortable: true },
     { label: 'User Role', fieldName: 'odtUserRole', type: 'text', sortable: true },
     { label: 'Follow-up Type', fieldName: 'odtFollowUpType', type: 'text', sortable: true },
-    { label: 'Datetime', fieldName: 'formattedDatetime', type: 'text', sortable: true }
+    { label: 'Date Time', fieldName: 'formattedDatetime', type: 'text', sortable: true }
 ];
 
 export default class Fec_WatchersInformation extends NavigationMixin(LightningElement) {
@@ -162,7 +162,7 @@ export default class Fec_WatchersInformation extends NavigationMixin(LightningEl
     get recordInfo() {
         const count = this.watchersCount;
         const sortCol = COLUMNS.find(c => c.fieldName === this.sortedBy);
-        const sortLabel = sortCol ? sortCol.label : 'Datetime';
+        const sortLabel = sortCol ? sortCol.label : 'Date Time';
         return `${count} Item${count !== 1 ? 's' : ''} • Sorted by ${sortLabel}`;
     }
 
