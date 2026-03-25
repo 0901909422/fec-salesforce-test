@@ -375,6 +375,7 @@
 		<members>FEC_ContentVersionTriggerHandler</members>
 		<members>FEC_ContentDistributionTriggerHandler</members>
 		<members>FEC_FollowUpController</members>
+		<members>FEC_CaseManagerListService</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
