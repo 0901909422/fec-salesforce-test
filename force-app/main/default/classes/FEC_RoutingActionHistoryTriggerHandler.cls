@@ -47,6 +47,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
     try {
       handleUpdateCaseTeamsOnInsert(newRecords);
+      FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
     } finally {
       isExecuting = false;
     }
