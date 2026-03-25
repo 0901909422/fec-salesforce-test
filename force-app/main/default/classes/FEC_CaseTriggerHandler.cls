@@ -72,8 +72,6 @@ public without sharing class FEC_CaseTriggerHandler {
         updateCaseParticipantsOnUpdate(newCases, oldMap);
         syncChannelFromInteractionForCustomerCase(newCases);
         syncGlobalSearchFromParent(newCases, oldMap);
-        FEC_InteractionRoutingService.assignInteractionReply(newCases);
-        FEC_InteractionRoutingService.assignNewInteractionEmail(newCases);
     }
 
     /**
@@ -455,6 +453,7 @@ public without sharing class FEC_CaseTriggerHandler {
                     && String.isBlank(c.FEC_Channel__c)) {
                 c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
                 c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+                c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
             }
         }
     }
@@ -489,11 +488,14 @@ public without sharing class FEC_CaseTriggerHandler {
                 Id = caseId,
                 FEC_Interaction_Email__c = fromAddr,
                 FEC_Send_To__c = sendToValue,
-                FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL
+                FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL,
+                FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE
             ));
         }
 
         // assignCases(casesToDml);
+        FEC_InteractionRoutingService.assignInteractionReply(casesToDml);
+        FEC_InteractionRoutingService.assignNewInteractionEmail(casesToDml);
 
         if (!casesToDml.isEmpty()) {
             isExecuting = true;
