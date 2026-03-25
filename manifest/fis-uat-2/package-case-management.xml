@@ -11,8 +11,6 @@
 	<types>
         <members>Case.FEC_IPP_To_Close__c</members>
 		<members>Case.FEC_Interaction_Subchannel__c</members>
-		<members>Case.FEC_Email_CC__c</members>
-		<members>Case.FEC_Gender__c</members>
 		<members>Case.FEC_Title_Reply__c</members>
         <name>CustomField</name>
     </types>
