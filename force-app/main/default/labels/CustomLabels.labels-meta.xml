@@ -10330,6 +10330,118 @@
         <value>IPP Current Term</value>
     </labels>
     <labels>
+        <fullName>FEC_Email_Label_Danh_Xung</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Email Section - Danh xung label</shortDescription>
+        <value>Danh xưng</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Option_Anh_Chi</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Email Section - Option Anh Chi</shortDescription>
+        <value>Anh/ Chị</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Option_Anh</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Email Section - Option Anh</shortDescription>
+        <value>Anh</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Option_Chi</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Email Section - Option Chi</shortDescription>
+        <value>Chị</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Label_Reply_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Section - Reply Template label</shortDescription>
+        <value>Reply Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Option_None</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Section - None option</shortDescription>
+        <value>--None--</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Placeholder_Write</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Section - Write an email placeholder</shortDescription>
+        <value>Write an email...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Btn_Compose</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Section - Compose button</shortDescription>
+        <value>Compose</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Send</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error sending email</shortDescription>
+        <value>Lỗi gửi email: </value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Blocked_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cannot send email - case blocked status</shortDescription>
+        <value>Không thể gửi email: Case đang ở trạng thái &quot;</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Empty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email field cannot be empty</shortDescription>
+        <value> email không được để trống.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Invalid email address</shortDescription>
+        <value> email không hợp lệ: &quot;</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_OrgWide_Not_Configured</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>From address not configured as OrgWide email</shortDescription>
+        <value>Không thể gửi email: địa chỉ &quot;</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_OrgWide_Not_Configured_Suffix</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>OrgWide not configured suffix message</shortDescription>
+        <value>&quot; chưa được cấu hình làm Organization-Wide Email Address. Vui lòng liên hệ Admin để verify địa chỉ này trong Setup.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Readonly_From_Fecredit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Readonly from email - FECredit</shortDescription>
+        <value>dichvukhachhang@fecredit.com.vn</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Readonly_From_Ubank</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Readonly from email - Ubank</shortDescription>
+        <value>dichvukhachhang@ubank.com.vn</value>
+    </labels>
+    <labels>
         <fullName>FEC_Card_Number_Required_MSG</fullName>
         <language>en_US</language>
         <protected>false</protected>
