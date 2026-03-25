@@ -138,7 +138,6 @@
 		<members>fec_ComboBox</members>
 		<members>fec_PinResetHandling</members>
 		<members>fec_PinResetView</members>
-		<members>fec_genesysUtils</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
