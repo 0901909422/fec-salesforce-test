@@ -127,6 +127,7 @@
 		<members>fec_CreateInteractionCaseInListView</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_Search</members>
+		<members>fecInteractionEmailInfo</members>
 		<members>fec_InteractionMyCaseInfo</members>
 		<members>fecInteractionCreationHighlight</members>
 		<members>fec_CaseBussiness</members>
