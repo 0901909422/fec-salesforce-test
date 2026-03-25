@@ -740,14 +740,14 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>sortFieldAlias</name>
-                    <value>CREATED_DATE</value>
+                    <value>__DEFAULT__</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>sortFieldOrder</name>
-                    <value>Ascending</value>
+                    <value>Default</value>
                 </componentInstanceProperties>
                 <componentName>lst:dynamicRelatedList</componentName>
-                <identifier>lst_dynamicRelatedList4</identifier>
+                <identifier>lst_dynamicRelatedList5</identifier>
                 <visibilityRule>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
