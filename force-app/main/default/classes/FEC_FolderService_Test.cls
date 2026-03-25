@@ -20,7 +20,7 @@ private class FEC_FolderService_Test {
 
         // Template inside root folder
         FEC_Template__c tmpl = new FEC_Template__c(
-            FEC_Template_Name__c = 'Root Template',
+            Name = 'Root Template',
             FEC_Folder__c = root.Id,
             FEC_Active__c = true
         );

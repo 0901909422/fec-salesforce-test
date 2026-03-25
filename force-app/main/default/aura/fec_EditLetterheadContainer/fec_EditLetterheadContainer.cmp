@@ -8,7 +8,7 @@
     
     <force:recordData aura:id="recordLoader"
         recordId="{!v.recordId}"
-        fields="Name,FEC_Description__c,FEC_Header__c,FEC_Footer__c"
+        fields="Name,FEC_Description__c,FEC_Header__c,FEC_Footer__c, CreatedById, CreatedBy.Name, CreatedDate, LastModifiedById, LastModifiedBy.Name, LastModifiedDate"
         targetFields="{!v.letterheadFields}"
         targetError="{!v.recordError}"
         recordUpdated="{!c.handleRecordUpdated}" />
@@ -20,6 +20,12 @@
                         description="{!v.letterheadFields.FEC_Description__c}"
                         header="{!v.letterheadFields.FEC_Header__c}"
                         footer="{!v.letterheadFields.FEC_Footer__c}"
+                        createdBy="{!v.letterheadFields.CreatedBy.Name}"
+                        createdById="{!v.letterheadFields.CreatedById}"
+                        createdDate="{!v.letterheadFields.CreatedDate}"
+                        lastModifyBy="{!v.letterheadFields.LastModifiedBy.Name}"
+                        lastModifyById="{!v.letterheadFields.LastModifiedById}"
+                        LastModifiedDate="{!v.letterheadFields.LastModifiedDate}"
                         headerEditLabel="{!v.headerEditLabel}"
                         onclose="{!c.handleClose}" />
 

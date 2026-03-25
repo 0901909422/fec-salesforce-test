@@ -470,8 +470,8 @@ export default class Fec_folderListView extends LightningElement {
         return (templates || []).map(t => ({
             id:               t.Id,
             rowType:          ROW_TYPE_TEMPLATE,
-            displayName:      t.FEC_Template_Name__c || '',
-            label:            t.FEC_Template_Name__c || '',
+            displayName:      t.Name || '',
+            label:            t.Name || '',
             description:      t.FEC_Description__c || '',
             folderName:       t.FEC_Folder__r ? t.FEC_Folder__r.FEC_Folder_Label__c : '',
             lastModifiedBy:   t.LastModifiedBy ? t.LastModifiedBy.Name : '',

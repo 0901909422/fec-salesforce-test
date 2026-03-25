@@ -80,7 +80,26 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="slds-section slds-is-open slds-m-top_medium">
+                                <h3 class="slds-section__title slds-theme_shade">
+                                    <span class="slds-truncate slds-p-horizontal_small">{labels.systemInfo}</span>
+                                </h3>
+                                <div class="slds-grid slds-wrap slds-p-around_small">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <label class="slds-form-element__label">{labels.createdBy}</label>
+                                        <div class="slds-form-element__static">
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <label class="slds-form-element__label">{labels.lastModifiedBy}</label>
+                                        <div class="slds-form-element__static">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
+
                     </div>
 
                     <div class="slds-p-around_medium slds-border_top slds-align_absolute-center">
@@ -184,6 +203,48 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <div class="slds-section slds-is-open slds-m-top_medium">
+                                <h3 class="slds-section__title slds-theme_shade">
+                                    <span class="slds-truncate slds-p-horizontal_small">{labels.systemInfo}</span>
+                                </h3>
+                                <div class="slds-grid slds-wrap slds-p-around_small">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <label class="slds-form-element__label">{labels.createdBy}</label>
+                                        <label>
+                                             <a href={createdByUrl} title={createdBy} target="_blank">
+                                                {createdBy}
+                                            </a>,
+                                            <lightning-formatted-date-time class="slds-m-left_x-small"
+                                                value={createdDate}
+                                                year="numeric" 
+                                                month="numeric" 
+                                                day="numeric" 
+                                                hour="numeric" 
+                                                minute="2-digit" 
+                                                hour12="true">
+                                            </lightning-formatted-date-time>
+                                        </label>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <label class="slds-form-element__label">{labels.lastModifiedBy}</label>
+                                        <label>
+                                            <a href={lastModifyByUrl} title={lastModifyBy} target="_blank">
+                                                {lastModifyBy}
+                                            </a>,
+                                            <lightning-formatted-date-time class="slds-m-left_x-small"
+                                                value={LastModifiedDate} 
+                                                year="numeric" 
+                                                month="numeric" 
+                                                day="numeric" 
+                                                hour="numeric" 
+                                                minute="2-digit" 
+                                                hour12="true">
+                                            </lightning-formatted-date-time>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                             </div>
                     </div>
                 </div>
