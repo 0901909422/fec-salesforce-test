@@ -582,9 +582,10 @@
             </componentInstance>
         </itemInstances>
         <itemInstances>
-            <componentInstance>
+            <componentInstances>
                 <componentInstanceProperties>
                     <name>actionNames</name>
+                    <value>[&quot;New&quot;]</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>adminFilters</name>
@@ -607,17 +608,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListFieldAliases</name>
-                    <valueList>
-                        <valueListItems>
-                            <value>NAME</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>FEC_Status__c</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>CREATED_DATE</value>
-                        </valueListItems>
-                    </valueList>
+                    <value>[&quot;FEC_ID__c&quot;,&quot;FEC_Status__c&quot;,&quot;FEC_Account_or_Contract_Revelant__c&quot;,&quot;FE_Categor_Relevant__c&quot;,&quot;FE_Sub_Category_Relevant__c&quot;,&quot;FE_Sub_Code_Relevant__c&quot;,&quot;FEC_User_Relevant__c&quot;,&quot;FEC_User_Role_Relevant__c&quot;,&quot;CREATED_DATE&quot;]</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListLabel</name>
@@ -636,7 +627,6 @@
                     <value>Default</value>
                 </componentInstanceProperties>
                 <componentName>lst:dynamicRelatedList</componentName>
-                <identifier>lst_dynamicRelatedList7</identifier>
                 <visibilityRule>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
@@ -644,17 +634,13 @@
                         <rightValue>review</rightValue>
                     </criteria>
                 </visibilityRule>
-            </componentInstance>
+            </componentInstances>
         </itemInstances>
         <itemInstances>
-            <componentInstance>
+            <componentInstances>
                 <componentInstanceProperties>
                     <name>actionNames</name>
-                    <valueList>
-                        <valueListItems>
-                            <value>New</value>
-                        </valueListItems>
-                    </valueList>
+                    <value>[&quot;New&quot;]</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>adminFilters</name>
@@ -677,17 +663,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListFieldAliases</name>
-                    <valueList>
-                        <valueListItems>
-                            <value>NAME</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>FEC_Status__c</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>CREATED_DATE</value>
-                        </valueListItems>
-                    </valueList>
+                    <value>[&quot;FEC_ID__c&quot;,&quot;FEC_Status__c&quot;,&quot;FEC_Account_or_Contract_Revelant__c&quot;,&quot;FE_Categor_Relevant__c&quot;,&quot;FE_Sub_Category_Relevant__c&quot;,&quot;FE_Sub_Code_Relevant__c&quot;,&quot;FEC_User_Relevant__c&quot;,&quot;FEC_User_Role_Relevant__c&quot;,&quot;CREATED_DATE&quot;]</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListLabel</name>
@@ -699,14 +675,13 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>sortFieldAlias</name>
-                    <value>__DEFAULT__</value>
+                    <value>CREATED_DATE</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>sortFieldOrder</name>
-                    <value>Default</value>
+                    <value>Ascending</value>
                 </componentInstanceProperties>
                 <componentName>lst:dynamicRelatedList</componentName>
-                <identifier>lst_dynamicRelatedList5</identifier>
                 <visibilityRule>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
@@ -714,7 +689,7 @@
                         <rightValue>handling</rightValue>
                     </criteria>
                 </visibilityRule>
-            </componentInstance>
+            </componentInstances>
         </itemInstances>
         <itemInstances>
             <componentInstance>
