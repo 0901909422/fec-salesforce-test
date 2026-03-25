@@ -222,7 +222,7 @@ export default class Fec_templateManagementConsole extends LightningElement {
             if (!rec) return;
 
             this.editorCloneData = {
-                name:                 'Copy of ' + (rec.FEC_Template_Name__c || ''),
+                name:                 'Copy of ' + (rec.Name || ''),
                 description:          rec.FEC_Description__c || '',
                 subject:              rec.FEC_Subject_Line__c || '',
                 folderId:             rec.FEC_Folder__c || '',

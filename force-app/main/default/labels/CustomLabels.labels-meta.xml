@@ -9886,6 +9886,27 @@
         <value>Cancel</value>
     </labels>
     <labels>
+        <fullName>FEC_Created_By</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Created_By</shortDescription>
+        <value>Created By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Last_Modified_By</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Last_Modified_By</shortDescription>
+        <value>Last Modified By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_System_Infomation</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_System_Infomation</shortDescription>
+        <value>System Information</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_IPP_Closure_No_Eligible</fullName>
         <categories>IPP Closure LWC</categories>
         <language>en_US</language>

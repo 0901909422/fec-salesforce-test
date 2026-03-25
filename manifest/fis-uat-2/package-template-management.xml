@@ -114,6 +114,9 @@
         <members>FEC_Col_Parent_Folder</members>
         <members>FEC_Col_Folder_Label</members>
 		<members>FEC_Enhanced_Letterhead_Cancel</members>
+		<members>FEC_System_Infomation</members>
+		<members>FEC_Created_By</members>
+		<members>FEC_Last_Modified_By</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

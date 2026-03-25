@@ -18,7 +18,7 @@ private class FEC_FolderController_Test {
         insert child;
 
         FEC_Template__c tmpl = new FEC_Template__c(
-            FEC_Template_Name__c = 'Inside Root',
+            Name = 'Inside Root',
             FEC_Folder__c = root.Id,
             FEC_Active__c = true
         );

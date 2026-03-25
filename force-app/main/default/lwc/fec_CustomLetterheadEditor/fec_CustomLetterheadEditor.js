@@ -25,7 +25,11 @@ import completeThisFieldLabel from '@salesforce/label/c.FEC_Complete_This_Field'
 import requireHeaderOrFooterLabel from '@salesforce/label/c.FEC_Require_Header_Or_Footer';
 import successMessage from '@salesforce/label/c.FEC_Enhanced_Letterhead_Success';
 import updateSuccessMessage from '@salesforce/label/c.FEC_Letterhead_Success_Message';
- 
+import systemInfo from '@salesforce/label/c.FEC_System_Infomation';
+import createdBy from '@salesforce/label/c.FEC_Created_By';
+import lastModifiedBy from '@salesforce/label/c.FEC_Last_Modified_By';
+
+
 export default class Fec_CustomLetterheadEditor extends NavigationMixin(LightningElement) {
     @track hasErrors = false;
     @track errorMessage = '';
@@ -42,6 +46,12 @@ export default class Fec_CustomLetterheadEditor extends NavigationMixin(Lightnin
     @api description = '';
     @api header = '';
     @api footer = '';
+    @api createdBy = '';
+    @api createdById = '';
+    @api lastModifyBy = '';
+    @api lastModifyById = '';
+    @api createdDate = '';
+    @api LastModifiedDate = '';
     @api headerEditLabel = '';
     
     labels = {
@@ -61,14 +71,25 @@ export default class Fec_CustomLetterheadEditor extends NavigationMixin(Lightnin
         completeThisFieldLabel,
         requireHeaderOrFooterLabel,
         successMessage, 
-        updateSuccessMessage
+        updateSuccessMessage,
+        systemInfo,
+        createdBy,
+        lastModifiedBy
     }
     connectedCallback(){
          console.log('this.recordId:', this.recordId);
          console.log('this.name:', this.name);
          console.log('this.description:', this.description);
          console.log('this.header:', this.header);
-         console.log('this.footer:', this.footer);
+         console.log('this.createdBy:', this.createdBy);
+    }
+
+    get createdByUrl () {
+        return `/lightning/r/User/${this.createdById}/view`;
+    }
+
+    get lastModifyByUrl() {
+        return `/lightning/r/User/${this.lastModifyById}/view`;
     }
 
     get headerTitle() {
