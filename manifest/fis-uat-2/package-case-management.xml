@@ -11,11 +11,6 @@
 	<types>
         <members>Case.FEC_IPP_To_Close__c</members>
 		<members>Case.FEC_Interaction_Subchannel__c</members>
-		<members>Case.FEC_Interaction_Email__c</members>
-		<members>Case.FEC_Send_To__c</members>
-		<members>Case.FEC_Search_Email_Address__c</members>
-		<members>Case.FEC_Genesys_Campaign_Name__c</members>
-		<members>Case.FEC_Email_From__c</members>
 		<members>Case.FEC_Email_C__c</members>
 		<members>Case.FEC_Title_Reply__c</members>
 		<members>Case.FEC_Reply_Template__c</members>
@@ -96,6 +91,23 @@
 		<members>FEC_Reset_Pin_Confirm_Msg</members>
 		<members>FEC_Yes_Btn</members>
 		<members>FEC_CIF_Number_Required_MSG</members>
+		<members>FEC_Email_Label_Danh_Xung</members>
+		<members>FEC_Email_Option_Anh_Chi</members>
+		<members>FEC_Email_Option_Anh_Chi</members>
+		<members>FEC_Email_Option_Anh</members>
+		<members>FEC_Email_Option_Chi</members>
+		<members>FEC_Email_Label_Reply_Template</members>
+		<members>FEC_Email_Option_None</members>
+		<members>FEC_Email_Placeholder_Write</members>
+		<members>FEC_Email_Btn_Compose</members>
+		<members>FEC_Email_Error_Send</members>
+		<members>FEC_Email_Error_Blocked_Status</members>
+		<members>FEC_Email_Error_Empty</members>
+		<members>FEC_Email_Error_Invalid</members>
+		<members>FEC_Email_Error_OrgWide_Not_Configured</members>
+		<members>FEC_Email_Error_OrgWide_Not_Configured_Suffix</members>
+		<members>FEC_Email_Readonly_From_Fecredit</members>
+		<members>FEC_Email_Readonly_From_Ubank</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -103,9 +115,6 @@
 		<name>Flow</name>
 	</types>
 	<types>
-		<members>fecEmailActionButtons</members>
-		<members>fecEmailComposeFooter</members>
-		<members>fecEmailFeedWrapper</members>
 		<members>fecEmailSection</members>
 		<name>AuraDefinitionBundle</name>
 	</types>
@@ -118,7 +127,6 @@
 		<members>fec_CreateInteractionCaseInListView</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_Search</members>
-		<members>fecInteractionEmailInfo</members>
 		<members>fec_InteractionMyCaseInfo</members>
 		<members>fecInteractionCreationHighlight</members>
 		<members>fec_CaseBussiness</members>
@@ -130,6 +138,7 @@
 		<members>fec_ComboBox</members>
 		<members>fec_PinResetHandling</members>
 		<members>fec_PinResetView</members>
+		<members>fec_genesysUtils</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -150,6 +159,7 @@
 		<members>FEC_CaseEditNOCController</members>
 		<members>FEC_PINReissueServiceCallout</members>
 		<members>FEC_PinResetHandler</members>
+		<members>FEC_CustomEmailService</members>
         <name>ApexClass</name>
     </types>
 	<types>
