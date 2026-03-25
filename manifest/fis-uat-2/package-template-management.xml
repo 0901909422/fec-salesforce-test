@@ -113,6 +113,7 @@
         <members>FEC_Folder_Updated_Success</members>
         <members>FEC_Col_Parent_Folder</members>
         <members>FEC_Col_Folder_Label</members>
+		<members>FEC_Enhanced_Letterhead_Cancel</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

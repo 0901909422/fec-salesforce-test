@@ -167,7 +167,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Enhanced Letterhead</label>
     <nameField>
-        <label>Enhanced Letterhead Name</label>
+        <label>Name</label>
         <trackHistory>false</trackHistory>
         <type>Text</type>
     </nameField>
