@@ -566,6 +566,19 @@ public with sharing class FEC_CommonUltils {
     return dStr + '/' + mStr + '/' + yyyy;
   }
 
+  /** Ngày hiển thị cố định yyyy-MM-dd (không phụ thuộc locale). */
+  public static String formatDateYYYYMMDD(Date d) {
+    if (d == null) {
+      return '';
+    }
+    Integer dd = d.day();
+    Integer mm = d.month();
+    Integer yyyy = d.year();
+    String dStr = dd < 10 ? '0' + dd : String.valueOf(dd);
+    String mStr = mm < 10 ? '0' + mm : String.valueOf(mm);
+    return yyyy + '-' + mStr + '-' + dStr;
+  }
+
   public static String decimalToString(Decimal d) {
     return d == null ? '' : d.format();
   }
