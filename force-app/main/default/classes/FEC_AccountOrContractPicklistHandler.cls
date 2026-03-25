@@ -42,7 +42,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             WHERE Id = :caseId
             LIMIT 1
         ];
-            return c.FEC_Interaction_View_Mode__c    ;
+            return c.FEC_Interaction_View_Mode__c;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }

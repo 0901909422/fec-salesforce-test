@@ -57,6 +57,7 @@
 		<members>FEC_CasePendingStatusService</members>
 		<members>FEC_KYCService</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
+		<members>FEC_CaseManagerListService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -248,6 +249,7 @@
 		<members>FEC_Email_Body_Case_Owner_Change</members>
 		<members>FEC_Wrap_Up_Modal_Btn_Cancel</members>
 		<members>FEC_Account_Card_Fetch_Error</members>
+		<members>FEC_MSG_FollowUp_Not02_User_Already_Watcher</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -520,5 +522,9 @@
 		<members>FEC_Search_Configuration</members>
 		<name>SearchCustomization</name>
 	</types>
+	<types>
+        <members>FEC_IPPDetailPageWrapper</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
     <version>65.0</version>
 </Package>
