@@ -888,6 +888,11 @@ public with sharing class FEC_CaseBusinessService {
   }
 
   @AuraEnabled
+  public static void markCaseSubmittedWithoutRouting(String caseId) {
+    markCaseSubmittedAndClearDrafts(caseId);
+  }
+
+  @AuraEnabled
   public static Object run(String method, Map<String, String> params) {
     try {
       Method selectedMethod = METHOD_MAP.get(method);
