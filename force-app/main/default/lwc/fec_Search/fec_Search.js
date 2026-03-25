@@ -21,6 +21,7 @@ import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
+import createInteractionCase from "@salesforce/apex/FEC_CreateCaseInteractionController.createInteractionCase";
 import {
   publish,
   MessageContext,
@@ -961,14 +962,28 @@ hasAnySearchCriteria(params) {
         this.showToast(
           "Validation",
           "Please correct the highlighted errors before creating.",
-          "error",
+          "error"
         );
         return;
       }
-      console.log(
-        "Creating case with:",
-        this.custNameForCreate,
-        this.nationalIdForCreate,
+
+      let caseIdToUse = this.recordId;
+
+      if (!caseIdToUse) {
+        caseIdToUse = await createInteractionCase({
+          customerName: this.custNameForCreate,
+          nationalId: this.nationalIdForCreate
+        });
+      }
+
+      this.dispatchEvent(
+        new CustomEvent("createsuccess", {
+          detail: {
+            recordId: caseIdToUse
+          },
+          bubbles: true,
+          composed: true
+        })
       );
 
       this[NavigationMixin.Navigate]({
@@ -977,7 +992,7 @@ hasAnySearchCriteria(params) {
           componentName: "c__fec_InteractionCreateCase",
         },
         state: {
-          c__recordId: this.recordId,
+          c__recordId: caseIdToUse,
           c__customerName: this.custNameForCreate,
           c__identityNo: this.nationalIdForCreate,
         },
