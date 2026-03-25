@@ -100,6 +100,8 @@
 		<members>maskedToggleCell</members>
 		<members>fec_PaymentHistoryAcount</members>
 		<members>fec_SecondaryInfo</members>
+		<members>fec_AccountOrContractPicklistContainer</members>
+		<members>fec_AccountOrContractPicklistCustomerCase</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -466,6 +468,7 @@
     </types>
 	<types>
 		<members>FEC_Watcher_Refresh</members>
+		<members>FEC_Interaction_Case_Mode</members>
 		<name>LightningMessageChannel</name>
 	</types>
 	<types>
