@@ -206,6 +206,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   @track activeSectionlst = ["routing-action"];
 
+  routingAccordionSectionKey = "routing-action";
+
   // get eyeIcon() {
   //   return this.isMasked ? "utility:preview" : "utility:hide";
   // }
