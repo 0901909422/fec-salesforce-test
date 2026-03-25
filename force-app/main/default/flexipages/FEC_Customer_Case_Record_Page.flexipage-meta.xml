@@ -582,10 +582,14 @@
             </componentInstance>
         </itemInstances>
         <itemInstances>
-            <componentInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>actionNames</name>
-                    <value>[&quot;New&quot;]</value>
+                    <valueList>
+                        <valueListItems>
+                            <value>New</value>
+                        </valueListItems>
+                    </valueList>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>adminFilters</name>
@@ -608,7 +612,35 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListFieldAliases</name>
-                    <value>[&quot;FEC_ID__c&quot;,&quot;FEC_Status__c&quot;,&quot;FEC_Account_or_Contract_Revelant__c&quot;,&quot;FE_Categor_Relevant__c&quot;,&quot;FE_Sub_Category_Relevant__c&quot;,&quot;FE_Sub_Code_Relevant__c&quot;,&quot;FEC_User_Relevant__c&quot;,&quot;FEC_User_Role_Relevant__c&quot;,&quot;CREATED_DATE&quot;]</value>
+                    <valueList>
+                        <valueListItems>
+                            <value>FEC_Relevant_Ticket_ID__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Status__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Account_or_Contract_Revelant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Categor_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Code_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>CREATED_DATE</value>
+                        </valueListItems>
+                    </valueList>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListLabel</name>
@@ -627,6 +659,7 @@
                     <value>Default</value>
                 </componentInstanceProperties>
                 <componentName>lst:dynamicRelatedList</componentName>
+                <identifier>lst_dynamicRelatedList7</identifier>
                 <visibilityRule>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
@@ -634,13 +667,17 @@
                         <rightValue>review</rightValue>
                     </criteria>
                 </visibilityRule>
-            </componentInstances>
+            </componentInstance>
         </itemInstances>
         <itemInstances>
-            <componentInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>actionNames</name>
-                    <value>[&quot;New&quot;]</value>
+                    <valueList>
+                        <valueListItems>
+                            <value>New</value>
+                        </valueListItems>
+                    </valueList>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>adminFilters</name>
@@ -663,7 +700,35 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListFieldAliases</name>
-                    <value>[&quot;FEC_ID__c&quot;,&quot;FEC_Status__c&quot;,&quot;FEC_Account_or_Contract_Revelant__c&quot;,&quot;FE_Categor_Relevant__c&quot;,&quot;FE_Sub_Category_Relevant__c&quot;,&quot;FE_Sub_Code_Relevant__c&quot;,&quot;FEC_User_Relevant__c&quot;,&quot;FEC_User_Role_Relevant__c&quot;,&quot;CREATED_DATE&quot;]</value>
+                    <valueList>
+                        <valueListItems>
+                            <value>FEC_Relevant_Ticket_ID__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Status__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Account_or_Contract_Revelant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Categor_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Code_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>CREATED_DATE</value>
+                        </valueListItems>
+                    </valueList>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListLabel</name>
@@ -682,6 +747,7 @@
                     <value>Ascending</value>
                 </componentInstanceProperties>
                 <componentName>lst:dynamicRelatedList</componentName>
+                <identifier>lst_dynamicRelatedList4</identifier>
                 <visibilityRule>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
@@ -689,7 +755,7 @@
                         <rightValue>handling</rightValue>
                     </criteria>
                 </visibilityRule>
-            </componentInstances>
+            </componentInstance>
         </itemInstances>
         <itemInstances>
             <componentInstance>
