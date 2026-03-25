@@ -98,6 +98,17 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return this.tabName === 'FEC_Account_Contract_Search'; // your tab's API name
   }
 
+  get isListView() {
+    return this.pageRef?.type === 'standard__objectPage' &&
+      this.pageRef?.attributes?.objectApiName === 'Case' &&
+      !this.recordId;
+  }
+
+  get isCreateCaseTab() {
+    return this.pageRef?.type === 'standard__navItemPage' &&
+      this.pageRef?.attributes?.apiName === 'Create_Case';
+  }
+
   @wire(IsConsoleNavigation) isConsoleNavigation;
   async refreshTab() {
     if (!this.isConsoleNavigation) {
@@ -1205,9 +1216,8 @@ hasAnySearchCriteria(params) {
   }
 
   get isDisplayCreateCase() {
-    return this.recordId && this.isNoCustomerFound;
+    return this.isNoCustomerFound && (this.recordId || this.isListView || this.isCreateCaseTab);
   }
-
 
   // Sorting helpers if you want per-table sorting in future (optional)
   onSorting(event) {
