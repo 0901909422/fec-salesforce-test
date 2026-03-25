@@ -47,6 +47,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
     try {
       handleUpdateCaseTeamsOnInsert(newRecords);
+      FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
     } finally {
       isExecuting = false;
     }
@@ -55,28 +56,15 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   private void handleUpdateCaseTeamsOnInsert(
     List<FEC_Routing_Action_History__c> newRecords
   ) {
-    List<FEC_Routing_Action_History__c> eligible = new List<FEC_Routing_Action_History__c>();
-    for (FEC_Routing_Action_History__c history : newRecords) {
-      if (history.FEC_Case__c == null || String.isBlank(history.FEC_Routing_Action__c)) {
-        continue;
-      }
-      if (
-        !FEC_ConstantCommon.ROUTING_ACTIONS_SYNC_CASE_TEAMS.contains(
-          history.FEC_Routing_Action__c
-        )
-      ) {
-        continue;
-      }
-      eligible.add(history);
-    }
-
-    if (eligible.isEmpty()) {
-      return;
-    }
-
     Set<Id> caseIds = new Set<Id>();
-    for (FEC_Routing_Action_History__c history : eligible) {
-      caseIds.add(history.FEC_Case__c);
+    for (FEC_Routing_Action_History__c history : newRecords) {
+      if (history.FEC_Case__c != null) {
+        caseIds.add(history.FEC_Case__c);
+      }
+    }
+
+    if (caseIds.isEmpty()) {
+      return;
     }
 
     Map<Id, Case> caseMap = new Map<Id, Case>(
@@ -87,51 +75,25 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       ]
     );
 
-    Map<Id, List<FEC_Routing_Action_History__c>> byCase = new Map<Id, List<FEC_Routing_Action_History__c>>();
-    for (FEC_Routing_Action_History__c history : eligible) {
-      Id cid = history.FEC_Case__c;
-      if (!byCase.containsKey(cid)) {
-        byCase.put(cid, new List<FEC_Routing_Action_History__c>());
+    for (FEC_Routing_Action_History__c history : newRecords) {
+      if (history.FEC_Case__c == null) {
+        continue;
       }
-      byCase.get(cid).add(history);
-    }
 
-    for (Id cid : byCase.keySet()) {
-      List<FEC_Routing_Action_History__c> rows = byCase.get(cid);
-      sortRoutingHistoriesByCreatedDateAsc(rows);
-      Case caseRecord = caseMap.get(cid);
+      Case caseRecord = caseMap.get(history.FEC_Case__c);
       if (caseRecord == null) {
         continue;
       }
-      for (FEC_Routing_Action_History__c history : rows) {
-        updateCaseTeams(
-          parseOwnerIdField(history.FEC_Original_User_Queue_ID__c),
-          parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c),
-          caseRecord
-        );
-      }
+
+      updateCaseTeams(
+        parseOwnerIdField(history.FEC_Original_User_Queue_ID__c),
+        parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c),
+        caseRecord
+      );
     }
 
     if (!caseMap.isEmpty()) {
       Database.update(caseMap.values(), AccessLevel.SYSTEM_MODE);
-    }
-  }
-
-  /** Cùng transaction, nhiều history / Case: áp dụng theo thứ tự CreatedDate tăng dần. */
-  private static void sortRoutingHistoriesByCreatedDateAsc(
-    List<FEC_Routing_Action_History__c> lst
-  ) {
-    if (lst == null || lst.size() < 2) {
-      return;
-    }
-    for (Integer i = 1; i < lst.size(); i++) {
-      FEC_Routing_Action_History__c key = lst[i];
-      Integer j = i - 1;
-      while (j >= 0 && lst[j].CreatedDate > key.CreatedDate) {
-        lst[j + 1] = lst[j];
-        j--;
-      }
-      lst[j + 1] = key;
     }
   }
 
@@ -213,10 +175,6 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     }
   }
 
-  /**
-   * B1: Gỡ Team map từ Owner cũ khỏi FEC_Team__c nếu giá trị đó đang có (Set.remove tương đương).
-   * B2: Thêm Team map từ Owner mới nếu chưa có (Set.add không trùng).
-   */
   public static void updateCaseTeams(
     Id originalUserQueueId,
     Id updatedUserQueueId,
@@ -268,16 +226,13 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     }
   }
 
-  /**
-   * Map Team: User qua FEC_Main_Queue__c; Queue qua DeveloperName hoặc Name (nhãn UI)
-   * vì FEC_Team_Queue__c.FEC_Queue_Name__c thường trùng một trong hai tuỳ cấu hình data.
-   */
   private static Map<Id, String> getTeamsFromIds(Set<Id> targetIds) {
     Map<Id, String> resultMap = new Map<Id, String>();
     if (targetIds == null || targetIds.isEmpty()) {
       return resultMap;
     }
 
+    Map<Id, String> idToQueueNameMap = new Map<Id, String>();
     Set<Id> userIds = new Set<Id>();
     Set<Id> groupIds = new Set<Id>();
 
@@ -292,7 +247,6 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       }
     }
 
-    Map<Id, String> userIdToMainQueue = new Map<Id, String>();
     if (!userIds.isEmpty()) {
       for (User u : [
         SELECT Id, FEC_Main_Queue__c
@@ -300,72 +254,40 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
         WHERE Id IN :userIds
       ]) {
         if (String.isNotBlank(u.FEC_Main_Queue__c)) {
-          userIdToMainQueue.put(u.Id, u.FEC_Main_Queue__c);
+          idToQueueNameMap.put(u.Id, u.FEC_Main_Queue__c);
         }
       }
     }
 
-    Map<Id, String> groupIdToDeveloperName = new Map<Id, String>();
-    Map<Id, String> groupIdToLabelName = new Map<Id, String>();
     if (!groupIds.isEmpty()) {
       for (Group g : [
-        SELECT Id, DeveloperName, Name
+        SELECT Id, DeveloperName
         FROM Group
         WHERE Id IN :groupIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
       ]) {
-        if (String.isNotBlank(g.DeveloperName)) {
-          groupIdToDeveloperName.put(g.Id, g.DeveloperName);
-        }
-        if (String.isNotBlank(g.Name)) {
-          groupIdToLabelName.put(g.Id, g.Name);
-        }
+        idToQueueNameMap.put(g.Id, g.DeveloperName);
       }
     }
 
-    Set<String> queueNameKeys = new Set<String>();
-    queueNameKeys.addAll(userIdToMainQueue.values());
-    queueNameKeys.addAll(groupIdToDeveloperName.values());
-    queueNameKeys.addAll(groupIdToLabelName.values());
-
-    if (queueNameKeys.isEmpty()) {
+    if (idToQueueNameMap.isEmpty()) {
       return resultMap;
     }
 
+    Set<String> queueNames = new Set<String>(idToQueueNameMap.values());
     Map<String, String> queueToTeamMap = new Map<String, String>();
     for (FEC_Team_Queue__c tq : [
       SELECT FEC_Queue_Name__c, FEC_Team__c
       FROM FEC_Team_Queue__c
-      WHERE FEC_Queue_Name__c IN :queueNameKeys
+      WHERE FEC_Queue_Name__c IN :queueNames
     ]) {
-      if (String.isNotBlank(tq.FEC_Queue_Name__c)) {
-        queueToTeamMap.put(tq.FEC_Queue_Name__c, tq.FEC_Team__c);
-      }
+      queueToTeamMap.put(tq.FEC_Queue_Name__c, tq.FEC_Team__c);
     }
 
     for (Id tid : targetIds) {
-      if (tid == null)
-        continue;
-      String sObjName = tid.getSObjectType().getDescribe().getName();
-      if (sObjName == FEC_ConstantCommon.SOBJECT_USER) {
-        String mainQ = userIdToMainQueue.get(tid);
-        if (
-          String.isNotBlank(mainQ) && queueToTeamMap.containsKey(mainQ)
-        ) {
-          resultMap.put(tid, queueToTeamMap.get(mainQ));
-        }
-      } else if (sObjName == FEC_ConstantCommon.SOBJECT_GROUP) {
-        String dev = groupIdToDeveloperName.get(tid);
-        String label = groupIdToLabelName.get(tid);
-        String team = null;
-        if (String.isNotBlank(dev) && queueToTeamMap.containsKey(dev)) {
-          team = queueToTeamMap.get(dev);
-        } else if (
-          String.isNotBlank(label) && queueToTeamMap.containsKey(label)
-        ) {
-          team = queueToTeamMap.get(label);
-        }
-        if (String.isNotBlank(team)) {
-          resultMap.put(tid, team);
+      if (idToQueueNameMap.containsKey(tid)) {
+        String qName = idToQueueNameMap.get(tid);
+        if (queueToTeamMap.containsKey(qName)) {
+          resultMap.put(tid, queueToTeamMap.get(qName));
         }
       }
     }

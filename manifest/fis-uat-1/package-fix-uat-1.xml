@@ -57,6 +57,7 @@
 		<members>FEC_CasePendingStatusService</members>
 		<members>FEC_KYCService</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
+		<members>FEC_CaseManagerListService</members>
         <name>ApexClass</name>
     </types>
     <types>
