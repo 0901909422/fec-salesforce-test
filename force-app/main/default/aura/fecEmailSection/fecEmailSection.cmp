@@ -1,0 +1,340 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" access="global" controller="FEC_CustomEmailService">
+    <aura:attribute name="recordId" type="String" />
+    <aura:attribute name="showCompose" type="Boolean" default="false" />
+    <aura:attribute name="fromEmail" type="String" default="" />
+    <aura:attribute name="toEmail" type="String" default="" />
+    <aura:attribute name="toTags" type="List" default="[]" />
+    <aura:attribute name="toInput" type="String" default="" />
+    <aura:attribute name="ccEmail" type="String" default="" />
+    <aura:attribute name="subject" type="String" default="" />
+    <aura:attribute name="body" type="String" default="" />
+    <aura:attribute name="errorMsg" type="String" default="" />
+    <aura:attribute name="isSending" type="Boolean" default="false" />
+    <aura:attribute name="titleReply" type="String" default="Anh/ Chi" />
+    <aura:attribute name="replyTemplate" type="String" default="" />
+    <aura:attribute name="templateOptions" type="List" default="[]" />
+    <aura:attribute name="templateBodies" type="Object" default="{}" />
+    <aura:attribute name="templateSubjects" type="Object" default="{}" />
+    <aura:attribute name="originalSubject" type="String" default="" />
+    <aura:attribute name="emailList" type="List" default="[]" />
+    <aura:attribute name="isLoading" type="Boolean" default="false" />
+    <aura:attribute name="searchKeyword" type="String" default="" />
+    <aura:attribute name="allExpanded" type="Boolean" default="false" />
+    <aura:attribute name="attachments" type="List" default="[]" />
+    <aura:attribute name="activeItemId" type="String" default="" />
+    <aura:attribute name="showSortDD" type="Boolean" default="false" />
+    <aura:attribute name="sortOrder" type="String" default="recent" />
+    <aura:attribute name="fromOptions" type="List" default="[]" />
+    <aura:attribute name="hasFromOptions" type="Boolean" default="false" />
+    <aura:attribute name="incomingToAddress" type="String" default="" />
+    <!-- viewMode: handling = hiện đầy đủ compose, review = chỉ hiện feed -->
+    <aura:attribute name="isHandling" type="Boolean" default="false" />
+    <aura:attribute name="caseRecord" type="Object" />
+
+    <!-- Custom Labels -->
+    <aura:attribute name="lblDanhXung" type="String" default="{!$Label.c.FEC_Email_Label_Danh_Xung}" />
+    <aura:attribute name="lblAnhChi" type="String" default="{!$Label.c.FEC_Email_Option_Anh_Chi}" />
+    <aura:attribute name="lblAnh" type="String" default="{!$Label.c.FEC_Email_Option_Anh}" />
+    <aura:attribute name="lblChi" type="String" default="{!$Label.c.FEC_Email_Option_Chi}" />
+    <aura:attribute name="lblReplyTemplate" type="String" default="{!$Label.c.FEC_Email_Label_Reply_Template}" />
+    <aura:attribute name="lblNone" type="String" default="{!$Label.c.FEC_Email_Option_None}" />
+    <aura:attribute name="lblWriteEmail" type="String" default="{!$Label.c.FEC_Email_Placeholder_Write}" />
+    <aura:attribute name="lblCompose" type="String" default="{!$Label.c.FEC_Email_Btn_Compose}" />
+
+    <!-- Load viewMode từ Case record -->
+    <force:recordData aura:id="caseData"
+        recordId="{!v.recordId}"
+        fields="FEC_Interaction_View_Mode__c"
+        targetFields="{!v.caseRecord}"
+        recordUpdated="{!c.onRecordUpdated}" />
+
+    <!-- Subscribe LMS FEC_Case_Mode__c để nhận Execute event realtime -->
+    <lightning:messageChannel type="FEC_Case_Mode__c" aura:id="modeChannel"
+        onMessage="{!c.onModeMessage}" />
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+
+    <div class="email-section-card">
+    <lightning:accordion allowMultipleSectionsOpen="true" activeSectionName="emailSection" class="fec-accordion-custom">
+        <lightning:accordionSection name="emailSection" label="Email" class="fec-accordion-section-custom">
+
+            <!-- Compose UI: chỉ hiện khi viewMode = handling -->
+            <aura:if isTrue="{!v.isHandling}">
+            <!-- Row 1: Danh xuong + Email Template -->
+            <div class="field-row">
+                <div class="field-col">
+                    <label class="field-label">
+                        <abbr title="required" class="required">*</abbr> {!$Label.c.FEC_Email_Label_Danh_Xung}
+                    </label>
+                    <lightning:select name="titleReply" label="" value="{!v.titleReply}" onchange="{!c.onTitleChange}" class="field-select">
+                        <option value="Anh/ Chi">{!$Label.c.FEC_Email_Option_Anh_Chi}</option>
+                        <option value="Anh">{!$Label.c.FEC_Email_Option_Anh}</option>
+                        <option value="Chi">{!$Label.c.FEC_Email_Option_Chi}</option>
+                    </lightning:select>
+                </div>
+                <div class="field-col">
+                    <label class="field-label">{!$Label.c.FEC_Email_Label_Reply_Template}</label>
+                    <lightning:select name="replyTemplate" label="" value="{!v.replyTemplate}" onchange="{!c.onTemplateChange}" class="field-select">
+                        <option value="">{!$Label.c.FEC_Email_Option_None}</option>
+                        <aura:iteration items="{!v.templateOptions}" var="t">
+                            <option value="{!t.value}">{!t.label}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                </div>
+            </div>
+
+            <!-- Write an email + Compose bar -->
+            <aura:if isTrue="{!not(v.showCompose)}">
+                <div class="compose-bar">
+                    <div class="write-email-input" onclick="{!c.openCompose}">{!$Label.c.FEC_Email_Placeholder_Write}</div>
+                    <lightning:button variant="brand" label="{!$Label.c.FEC_Email_Btn_Compose}" onclick="{!c.openCompose}" />
+                </div>
+            </aura:if>
+
+            <!-- Inline Compose Section -->
+            <aura:if isTrue="{!v.showCompose}">
+                <div class="compose-section">
+                    <!-- From: luôn hiện, Queue match lên đầu + selected -->
+                    <div class="compose-row">
+                        <label class="compose-label">From</label>
+                        <div class="compose-field-wrap">
+                            <select class="compose-input fec-from-select" onchange="{!c.onFromChange}">
+                                <aura:iteration items="{!v.fromOptions}" var="opt">
+                                    <option value="{!opt.value}" selected="{!opt.value == v.fromEmail}">{!opt.label}</option>
+                                </aura:iteration>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- To: tag input -->
+                    <div class="compose-row compose-row-tags">
+                        <label class="compose-label">To <abbr title="required" style="color:#c23934">*</abbr></label>
+                        <div class="compose-field-wrap compose-tags-wrap">
+                            <aura:iteration items="{!v.toTags}" var="tag">
+                                <span class="email-tag">
+                                    {!tag}
+                                    <span class="email-tag-remove" data-tag="{!tag}" onclick="{!c.removeToTag}">&#x2715;</span>
+                                </span>
+                            </aura:iteration>
+                            <input type="text" class="compose-tag-input" aura:id="toTagInput"
+                                   value="{!v.toInput}"
+                                   placeholder="{!empty(v.toTags) ? 'Enter email...' : ''}"
+                                   onkeydown="{!c.onToKeydown}"
+                                   onchange="{!c.onToInputChange}"
+                                   onblur="{!c.onToBlur}" />
+                        </div>
+                    </div>
+                    <!-- CC -->
+                    <div class="compose-row">
+                        <label class="compose-label">CC</label>
+                        <div class="compose-field-wrap">
+                            <input type="text" class="compose-input" value="{!v.ccEmail}"
+                                   onchange="{!c.onCcChange}" placeholder="" />
+                        </div>
+                    </div>
+                    <!-- Subject -->
+                    <div class="compose-row">
+                        <label class="compose-label">Subject</label>
+                        <div class="compose-field-wrap">
+                            <input type="text" class="compose-input" value="{!v.subject}"
+                                   onchange="{!c.onSubjectChange}" placeholder="" />
+                        </div>
+                    </div>
+                    <!-- Body: Quill editor with custom toolbar -->
+                    <div class="compose-body-wrap">
+                        <div aura:id="quillWrapper" class="fec-quill-wrapper"></div>
+                    </div>
+                    <!-- Attachment list -->
+                    <aura:if isTrue="{!not(empty(v.attachments))}">
+                        <div class="attach-list">
+                            <aura:iteration items="{!v.attachments}" var="att" indexVar="idx">
+                                <div class="attach-pill">
+                                    <span class="attach-pill-icon">
+                                        <lightning:icon iconName="doctype:attachment" size="xx-small" class="fec-icon" />
+                                    </span>
+                                    <span class="attach-pill-name">{!att.name}</span>
+                                    <span class="attach-pill-remove" data-idx="{!idx}" onclick="{!c.removeAttachment}">&#x2715;</span>
+                                </div>
+                            </aura:iteration>
+                        </div>
+                    </aura:if>
+                    <aura:if isTrue="{!v.errorMsg}">
+                        <p class="error-text">{!v.errorMsg}</p>
+                    </aura:if>
+                    <!-- Inline footer: icons left, Send right -->
+                    <div class="compose-footer">
+                        <label class="foot-icon" title="Attach file">
+                            <input type="file" multiple="true" aura:id="attachInput" onchange="{!c.onAttachChange}" style="display:none" />
+                            <lightning:icon iconName="utility:attach" size="xx-small" class="fec-icon" />
+                        </label>
+                        <span class="foot-icon" title="Preview" onclick="{!c.previewEmail}">
+                            <lightning:icon iconName="utility:preview" size="xx-small" class="fec-icon" />
+                        </span>
+                        <span class="foot-icon foot-danger" title="Discard" onclick="{!c.discardEmail}">
+                            <lightning:icon iconName="utility:delete" size="xx-small" class="fec-icon" />
+                        </span>
+                        <span class="foot-spacer"></span>
+                        <lightning:button variant="brand" label="Send" onclick="{!c.sendEmail}" disabled="{!v.isSending}" />
+                    </div>
+                </div>
+            </aura:if>
+            </aura:if><!-- end isHandling -->
+
+            <!-- Feed header row 1 -->
+            <div class="feed-header">
+                <div class="feed-header-left" style="position:relative">
+                    <span class="feed-title fec-sort-trigger" onclick="{!c.toggleSortDD}">
+                        <aura:if isTrue="{!v.sortOrder == 'latest'}">Latest Posts
+                            <aura:set attribute="else">
+                                <aura:if isTrue="{!v.sortOrder == 'oldest'}">Oldest Posts
+                                    <aura:set attribute="else">Most Recent Activity</aura:set>
+                                </aura:if>
+                            </aura:set>
+                        </aura:if>
+                        &#9660;
+                    </span>
+                    <!-- Sort dropdown -->
+                    <aura:if isTrue="{!v.showSortDD}">
+                        <div class="fec-sort-dd">
+                            <div class="fec-sort-dd-label">SORT BY</div>
+                            <div class="fec-sort-dd-item" onclick="{!c.setSortLatest}">
+                                <span><aura:if isTrue="{!v.sortOrder == 'latest'}">&#10003;</aura:if></span>
+                                <span>Latest Posts</span>
+                            </div>
+                            <div class="fec-sort-dd-item" onclick="{!c.setSortRecent}">
+                                <span><aura:if isTrue="{!v.sortOrder == 'recent'}">&#10003;</aura:if></span>
+                                <span>Most Recent Activity</span>
+                            </div>
+                            <div class="fec-sort-dd-item" onclick="{!c.setSortOldest}">
+                                <span><aura:if isTrue="{!v.sortOrder == 'oldest'}">&#10003;</aura:if></span>
+                                <span>Oldest Posts</span>
+                            </div>
+                        </div>
+                    </aura:if>
+                </div>
+                <div class="feed-header-right">
+                    <div class="feed-search-wrap">
+                        <lightning:icon iconName="utility:search" size="xx-small" class="fec-icon" />
+                        <input type="text" class="feed-search-input" placeholder="Search this feed..."
+                               value="{!v.searchKeyword}" onchange="{!c.onSearchChange}" />
+                    </div>
+                    <!-- Expand/Collapse all -->
+                    <div class="feed-icon-btn" title="{!v.allExpanded ? 'Collapse all' : 'Expand all'}" onclick="{!c.toggleAll}">
+                        <aura:if isTrue="{!v.allExpanded}">
+                            <lightning:icon iconName="utility:contract_alt" size="xx-small" class="fec-icon" />
+                            <aura:set attribute="else">
+                                <lightning:icon iconName="utility:expand_alt" size="xx-small" class="fec-icon" />
+                            </aura:set>
+                        </aura:if>
+                    </div>
+                    <!-- Refresh page (reset compose + reload feed) -->
+                    <div class="feed-icon-btn" title="Refresh page" onclick="{!c.refreshPage}">
+                        <lightning:icon iconName="utility:refresh" size="xx-small" class="fec-icon" />
+                    </div>
+                </div>
+            </div>
+            <!-- Refresh feed only - nằm dưới, căn phải -->
+            <div class="feed-subheader">
+                <div class="feed-icon-btn" title="Refresh feed" onclick="{!c.loadEmails}">
+                    <lightning:icon iconName="utility:refresh" size="xx-small" class="fec-icon" />
+                </div>
+            </div>
+
+            <aura:if isTrue="{!v.isLoading}">
+                <lightning:spinner alternativeText="Loading" size="small" />
+            </aura:if>
+
+            <aura:if isTrue="{!not(v.isLoading)}">
+                <aura:iteration items="{!v.emailList}" var="email">
+                    <div class="feed-item">
+                        <div class="feed-item-expand" data-id="{!email.Id}" onclick="{!c.toggleExpand}">
+                            <aura:if isTrue="{!email.expanded}">
+                                <lightning:icon iconName="utility:chevrondown" size="xx-small" class="fec-icon" />
+                                <aura:set attribute="else">
+                                    <lightning:icon iconName="utility:chevronright" size="xx-small" class="fec-icon" />
+                                </aura:set>
+                            </aura:if>
+                        </div>
+                        <div class="feed-avatar">
+                            <lightning:icon iconName="standard:email" size="small" class="fec-icon" />
+                        </div>
+                        <div class="feed-item-body">
+                            <div class="feed-item-top">
+                                <span class="feed-from-name">{!email.fromName}</span>
+                            </div>
+                            <div class="feed-date-wrap">
+                                <span class="feed-date">{!email.messageDate}</span>
+                                <span class="feed-date-dd-btn" data-id="{!email.Id}" onclick="{!c.toggleItemDD}">&#9660;</span>
+                                <aura:if isTrue="{!v.activeItemId == email.Id}">
+                                    <div class="feed-item-dd">
+                                        <div class="feed-item-dd-item">Unlike on Chatter</div>
+                                        <div class="feed-item-dd-item">Bookmark</div>
+                                    </div>
+                                </aura:if>
+                            </div>
+                            <aura:if isTrue="{!not(email.expanded)}">
+                                <div class="feed-item-sub">
+                                    <lightning:icon iconName="utility:email" size="xx-small" class="fec-icon" />
+                                    <span class="feed-preview-line">{!email.subjectPreview}</span>
+                                </div>
+                            </aura:if>
+                            <aura:if isTrue="{!email.expanded}">
+                                <div class="feed-item-sub">
+                                    <lightning:icon iconName="utility:email" size="xx-small" class="fec-icon" />
+                                    <span class="feed-to-text">To: {!email.toAddress}</span>
+                                    <aura:if isTrue="{!email.ccAddress}">
+                                        <span class="feed-to-text">, Cc: {!email.ccAddress}</span>
+                                    </aura:if>
+                                    <!-- Info tooltip -->
+                                    <span class="fec-info-btn" tabindex="0">
+                                        <lightning:icon iconName="utility:info" size="xx-small" class="fec-icon" />
+                                        <div class="fec-info-tooltip">
+                                            <div class="fec-info-arrow"></div>
+                                            <div class="fec-info-row">
+                                                <span class="fec-info-label">Subject</span>
+                                                <span class="fec-info-val">{!email.subject}</span>
+                                            </div>
+                                            <div class="fec-info-row">
+                                                <span class="fec-info-label">To</span>
+                                                <span class="fec-info-val">{!email.toAddress}</span>
+                                            </div>
+                                            <div class="fec-info-row">
+                                                <span class="fec-info-label">From</span>
+                                                <span class="fec-info-val">{!email.fromName}</span>
+                                            </div>
+                                            <div class="fec-info-divider"></div>
+                                            <a class="fec-info-link" onclick="{!c.previewEmail}">View Email</a>
+                                        </div>
+                                    </span>
+                                </div>
+                                <div class="feed-body-full">{!email.bodyFull}</div>
+                                <a class="feed-expand-link" onclick="{!c.openCompose}">Expand Email</a>
+                                <div class="feed-actions">
+                                    <div class="compose-footer-reply">
+                                        <button class="foot-reply-btn" onclick="{!c.handleReply}" title="Reply">
+                                            <lightning:icon iconName="utility:reply" size="xx-small" class="reply-icon fec-icon" />
+                                            Reply
+                                        </button>
+                                        <button class="foot-reply-btn" onclick="{!c.handleReplyAll}" title="Reply All">
+                                            <lightning:icon iconName="utility:reply_all" size="xx-small" class="reply-icon fec-icon" />
+                                            Reply All
+                                        </button>
+                                        <button class="foot-reply-btn" onclick="{!c.handleForward}" title="Forward">
+                                            <lightning:icon iconName="utility:forward" size="xx-small" class="reply-icon fec-icon" />
+                                            Forward
+                                        </button>
+                                    </div>
+                                </div>
+                            </aura:if>
+                        </div>
+                    </div>
+                </aura:iteration>
+                <aura:if isTrue="{!empty(v.emailList)}">
+                    <p class="no-email-text">No emails yet.</p>
+                </aura:if>
+            </aura:if>
+
+        </lightning:accordionSection>
+    </lightning:accordion>
+    </div>
+
+</aura:component>

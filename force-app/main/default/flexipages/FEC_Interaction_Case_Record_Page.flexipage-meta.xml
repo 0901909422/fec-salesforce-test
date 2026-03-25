@@ -932,6 +932,12 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fecEmailSection</componentName>
+                <identifier>c_fecEmailSection</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>label</name>
                     <value>Tabs</value>
