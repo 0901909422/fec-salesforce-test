@@ -160,6 +160,7 @@
 		<members>FEC_PINReissueServiceCallout</members>
 		<members>FEC_PinResetHandler</members>
 		<members>FEC_CustomEmailService</members>
+		<members>FEC_GetNextWorkController</members>
         <name>ApexClass</name>
     </types>
 	<types>
