@@ -168,6 +168,7 @@
 		<members>fec_ComboBox</members>
 		<members>fec_PinResetHandling</members>
 		<members>fec_PinResetView</members>
+		<members>fec_InteractionSLA</members>
 		<members>fec_CardClosureRefundForm</members>
 		<members>fec_CardClosureRefundHandling</members>
 		<name>LightningComponentBundle</name>
