@@ -91,6 +91,7 @@ public without sharing class FEC_CaseTriggerHandler {
         // Sau finally: tránh isExecuting chặn trigger lồng; đồng bộ Status từ Route to mới nhất
         FEC_CasePendingStatusService.syncPendingStatusFromLatestRouteTo(newCases, null);
         syncGlobalSearch(newCases, null);
+        FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
     }
 
     /**
@@ -120,6 +121,7 @@ public without sharing class FEC_CaseTriggerHandler {
         }
         // Sau owner/history: re-query DB trong service để Status khớp Route to mới nhất
         FEC_CasePendingStatusService.syncPendingStatusFromLatestRouteTo(newCases, oldMap);
+        FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
         syncGlobalSearch(newCases, oldMap);
     }
 
