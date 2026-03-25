@@ -5,13 +5,7 @@
     <externalId>false</externalId>
     <formula>IF(
   RecordType.Name &lt;&gt; &apos;Interaction&apos;,
-  IF(
-    ISBLANK(Owner:Queue.Id),
-    LEFT(CreatedBy.Email, FIND(&quot;@&quot;, CreatedBy.Email) - 1),
-    CreatedBy.FirstName &amp; &quot; &quot; &amp; CreatedBy.LastName
-  ),
-  &apos;&apos;
-)</formula>
+    LEFT(CreatedBy.Email, FIND(&quot;@&quot;, CreatedBy.Email) - 1),&apos;&apos;)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Case Created By</label>
     <required>false</required>

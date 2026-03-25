@@ -199,6 +199,25 @@ public with sharing class FEC_CommonUltils {
     return options;
   }
   
+  public static String resolveTemplate(
+    String template,
+    SObject c,
+    Map<String, String> adhocValues
+  ) {
+    if (String.isBlank(template)) return template;
+
+    String result = template;
+
+    if (adhocValues != null) {
+      for (String key : adhocValues.keySet()) {
+        String val = adhocValues.get(key);
+        result = result.replace('{{' + key + '}}', val != null ? val : '');
+      }
+    }
+
+    return resolveTemplate(result, c);
+  }
+
   public static String resolveTemplate(String template, SObject c) {
     if (String.isBlank(template) || c == null) {
       return template;
@@ -519,6 +538,10 @@ public with sharing class FEC_CommonUltils {
     return d.format();
   }
 
+  public static String formatTimestamp(Datetime timestamp ,String format) {
+    return Datetime.valueOf(timestamp).format(format);
+  }
+
   public static String decimalToString(Decimal d) {
     return d == null ? '' : d.format();
   }
@@ -780,5 +803,24 @@ public with sharing class FEC_CommonUltils {
     } catch(Exception e) {
       System.debug('LOG INSERT ERROR: ' + e.getMessage());
     }
+  }
+  
+  public static String escapeXml(String s) {
+    if (s == null)
+      return '';
+    return s.replace('&', '&amp;')
+      .replace('<', '&lt;')
+      .replace('>', '&gt;')
+      .replace('"', '&quot;')
+      .replace('\'', '&apos;');
+  }
+
+  public static String getEmailPrefix(String email) {
+    if (String.isBlank(email)) {
+        return '';
+    }
+    return email.contains('@') 
+        ? email.substringBefore('@') 
+        : email;
   }
 }

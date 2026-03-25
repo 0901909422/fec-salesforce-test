@@ -92,7 +92,7 @@
                                 class="slds-text-align_center slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
                                 Không tìm thấy khách hàng
                             </div>
-                            <!-- <template if:true={isDisplayCreateCase}> -->
+                            <template if:true={isDisplayCreateCase}>
                                 <div class="slds-grid slds-gutters slds-m-bottom_medium">
                                     <div class="slds-col slds-size_1-of-2">
                                         <lightning-input label="Customer Name" placeholder="Nhập Customer Name" value={custNameForCreate} required
@@ -111,7 +111,7 @@
                                     <lightning-button label="Create Case" variant="brand" onclick={handleNewCase} disabled={isNewCaseDisabled}>
                                     </lightning-button>
                                 </div>
-                            <!-- </template> -->
+                            </template>
                         </div>
                     </template>
 

@@ -42,7 +42,6 @@ import SEARCH_CONTRACT_FIELD from "@salesforce/schema/Case.FEC_Search_Contract_N
 import SEARCH_ACCOUNT_FIELD from "@salesforce/schema/Case.FEC_Search_Account_Number__c";
 import SEARCH_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Search_Email_Address__c";
 import SEARCH_CUSTOMER_NUM_FIELD from "@salesforce/schema/Case.FEC_Search_Customer_Number__c";
-import { CurrentPageReference } from 'lightning/navigation';
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
