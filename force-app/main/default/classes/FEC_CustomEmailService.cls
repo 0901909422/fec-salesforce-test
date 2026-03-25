@@ -323,7 +323,7 @@ public without sharing class FEC_CustomEmailService {
         if (String.isNotBlank(fromEmail))   cUpdate.FEC_Email_From__c  = fromEmail;
         if (String.isNotBlank(toEmail))     cUpdate.FEC_Send_To__c     = toEmail;
         if (String.isNotBlank(ccEmail))     cUpdate.FEC_Email_CC__c    = ccEmail;
-        if (String.isNotBlank(titleReply))  cUpdate.FEC_Gender__c = titleReply;
+        if (String.isNotBlank(titleReply))  cUpdate.FEC_Title_Reply__c = titleReply;
         update cUpdate;
 
         // Create Task as audit log
