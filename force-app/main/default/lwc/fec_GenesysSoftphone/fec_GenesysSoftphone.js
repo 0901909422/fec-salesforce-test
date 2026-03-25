@@ -4,11 +4,13 @@
 import { LightningElement, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import createInteraction from "@salesforce/apex/FEC_CreateInteractionGenesys.createInteraction";
+import createEmailInteraction from "@salesforce/apex/FEC_CreateInteractionGenesys.createEmailInteraction";
 import executeRoutingAssignments from "@salesforce/apex/FEC_InteractionRoutingController.executeRoutingAssignments";
 
 import { subscribe, MessageContext } from "lightning/messageService";
 import GENESYS_CHANNEL from "@salesforce/messageChannel/GenesysCall__c";
 import { FEC_GENESYS_CONST } from './fec_genesysUtils';
+import EMAIL_READONLY_FROM_FECREDIT from '@salesforce/label/c.FEC_Email_Readonly_From_Fecredit';
 
 export default class fec_genesysSoftphone extends NavigationMixin(
   LightningElement,
@@ -73,6 +75,9 @@ export default class fec_genesysSoftphone extends NavigationMixin(
       case FEC_GENESYS_CONST.EVENT_OUTBOUND:
         this.handleNewInteraction(eventType, data);
         break;
+      case FEC_GENESYS_CONST.EVENT_EMAIL:
+        this.handleEmailInteraction(data);
+        break;
       case FEC_GENESYS_CONST.EVENT_WRAPUP:
         this.handleWrapup(data);
         break;
@@ -114,6 +119,34 @@ export default class fec_genesysSoftphone extends NavigationMixin(
 
   handleWrapup(wrapupData) {
     this.currentInteractionCaseId = null;
+  }
+
+  handleEmailInteraction(emailData) {
+    const request = {
+      fromEmail: emailData.From,
+      sendTo: emailData.sendTo || EMAIL_READONLY_FROM_FECREDIT,
+      genesysInteractionID: emailData.GenesysInteractionID,
+      phoneNum: emailData.PhoneNum,
+      nationalID: emailData.NationalID,
+      contractNum: emailData.ContractNum,
+      cardAccountNum: emailData.CardAccountNum,
+      agentID: emailData.AgentID,
+      subject: emailData.Subject || emailData.subject || ''
+    };
+
+    createEmailInteraction({ request })
+      .then((result) => {
+        if (result.isSuccess) {
+          this.currentInteractionCaseId = result.recordId;
+          this.navigateToRecord(result.recordId);
+        } else {
+          console.warn(`[Email] warning: ${result.message}`);
+        }
+      })
+      .catch((error) => {
+        const msg = error.body ? error.body.message : error.message;
+        console.warn(`[Email] error: ${msg}`);
+      });
   }
 
   navigateToRecord(recordId) {
