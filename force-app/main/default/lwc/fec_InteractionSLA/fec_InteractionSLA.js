@@ -289,6 +289,10 @@ export default class Fec_InteractionSLA extends NavigationMixin(
       return "duration__donut"; // fallback
     }
 
+    if (this.record?.IsClosed) {
+      return "duration__donut duration__donut--grey";
+    }
+
     if (minutes < rule.green) {
       return "duration__donut";
     }
@@ -298,10 +302,6 @@ export default class Fec_InteractionSLA extends NavigationMixin(
     }
 
     clearInterval(this.timer);
-
-    if (this.record?.IsClosed) {
-      return "duration__donut duration__donut--grey";
-    }
 
     return "duration__donut duration__donut--red";
   }
