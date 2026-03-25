@@ -10,7 +10,7 @@ import FOOTER_FIELD from "@salesforce/schema/FEC_Enhanced_Letterhead__c.FEC_Foot
 import RECORD_ID_FIELD from "@salesforce/schema/FEC_Enhanced_Letterhead__c.Id";
 import newEnhancedLetterhead from '@salesforce/label/c.FEC_New_Enhanced_Letterhead';
 import buttonSave from '@salesforce/label/c.FEC_Button_Save';
-import buttonCancel from '@salesforce/label/c.FEC_Button_Cancel';
+import buttonCancel from '@salesforce/label/c.FEC_Enhanced_Letterhead_Cancel';
 import requireInfoLabel from '@salesforce/label/c.FEC_Required_Information';
 import reviewErrorLabel from '@salesforce/label/c.FEC_Review_Error';
 import informationLabel from '@salesforce/label/c.FEC_Information';

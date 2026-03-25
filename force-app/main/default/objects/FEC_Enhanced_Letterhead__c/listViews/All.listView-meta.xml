@@ -6,5 +6,5 @@
     <columns>UPDATEDBY_USER</columns>
     <columns>LAST_UPDATE</columns>
     <filterScope>Everything</filterScope>
-    <label>All</label>
+    <label>All Enhanced Letterheads</label>
 </ListView>

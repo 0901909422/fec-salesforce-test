@@ -9871,6 +9871,13 @@
         <value>Email template was saved successfully.</value>
     </labels>
     <labels>
+        <fullName>FEC_Enhanced_Letterhead_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Enhanced_Letterhead_Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_IPP_Closure_No_Eligible</fullName>
         <categories>IPP Closure LWC</categories>
         <language>en_US</language>
