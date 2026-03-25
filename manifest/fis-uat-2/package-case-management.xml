@@ -11,6 +11,18 @@
 	<types>
         <members>Case.FEC_IPP_To_Close__c</members>
 		<members>Case.FEC_Interaction_Subchannel__c</members>
+		<members>Case.FEC_Card_Block_Service_Attempts__c</members>
+		<members>FEC_Customer_History__c.FEC_Bank_Branch__c</members>
+		<members>FEC_Customer_History__c.FEC_Beneficiary_Account__c</members>
+		<members>FEC_Customer_History__c.FEC_Beneficiary_Name__c</members>
+		<members>FEC_Customer_History__c.FEC_Province_City__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_Case__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Application_ID__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Application_Status__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_CS_Decision__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Disbursed_Amount__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Disbursement_Approval_Date__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Disbursement_Status__c</members>
 		<members>Case.FEC_Title_Reply__c</members>
         <name>CustomField</name>
     </types>
@@ -89,6 +101,24 @@
 		<members>FEC_Reset_Pin_Confirm_Msg</members>
 		<members>FEC_Yes_Btn</members>
 		<members>FEC_CIF_Number_Required_MSG</members>
+		<members>FEC_MSG_Card_Block_Confirm_Title</members>
+		<members>FEC_MSG_Card_Block_Confirm_Body</members>
+		<members>FEC_LBL_Pending_Disbursement_Section</members>
+		<members>FEC_Application_ID_Label</members>
+		<members>FEC_LBL_Pending_Disbursement_Application_Status</members>
+		<members>FEC_LBL_Pending_Disbursement_Disbursed_Amount</members>
+		<members>FEC_LBL_Pending_Disbursement_Approval_Date</members>
+		<members>FEC_LBL_Pending_Disbursement_Disbursement_Status</members>
+		<members>FEC_LBL_Pending_Disbursement_CS_Decision</members>
+		<members>FEC_MSG_Card_Block_Beneficiary_Required</members>
+		<members>FEC_MSG_Card_Block_Success</members>
+		<members>FEC_MSG_Card_Block_Fail_Disable</members>
+		<members>FEC_MSG_Card_Block_Fail_Retry</members>
+		<members>FEC_MSG_Card_Block_Failed</members>
+		<members>FEC_MSG_Card_Unlock_Failed</members>
+		<members>FEC_MSG_Card_LockUnlock_Case_Access_Denied</members>
+		<members>FEC_MSG_Card_LockUnlock_Customer_History_Access_Denied</members>
+		<members>FEC_MSG_Card_LockUnlock_Validation_Failed</members>
 		<members>FEC_Email_Label_Danh_Xung</members>
 		<members>FEC_Email_Option_Anh_Chi</members>
 		<members>FEC_Email_Option_Anh_Chi</members>
@@ -138,6 +168,9 @@
 		<members>fec_ComboBox</members>
 		<members>fec_PinResetHandling</members>
 		<members>fec_PinResetView</members>
+		<members>fec_InteractionSLA</members>
+		<members>fec_CardClosureRefundForm</members>
+		<members>fec_CardClosureRefundHandling</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -160,6 +193,8 @@
 		<members>FEC_PinResetHandler</members>
 		<members>FEC_CustomEmailService</members>
 		<members>FEC_GetNextWorkController</members>
+		<members>FEC_CardClosureRefundController</members>
+		<members>FEC_CaseBusinessService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -214,6 +249,7 @@
 	</types>
 	<types>
 		<members>Case</members>
+		<members>FEC_Pending_Disbursement__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -267,5 +303,9 @@
         <members>Case.Internal_Case_Compact_Layout</members>
         <name>CompactLayout</name>
     </types>
+	<types>
+		<members>FEC_Pending_Disbursement__c-Pending Disbursement Layout</members>
+		<name>Layout</name>
+	</types>
 	<version>65.0</version>
 </Package>
