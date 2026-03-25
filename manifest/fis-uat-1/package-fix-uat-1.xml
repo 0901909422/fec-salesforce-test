@@ -152,6 +152,9 @@
 		<members>FEC_Team_Queue__c.FEC_Name__c</members>
 		<members>Case.FEC_Global_Search__c</members>
 		<members>FEC_KYC__c.FEC_Field_Type__c</members>
+		<members>Case.FEC_Manager_ID_List__c</members>
+		<members>Case.FEC_Owner_Is_User__c</members>
+		<members>Case.FEC_Is_Manager_For_Cur_User__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -249,6 +252,7 @@
 		<members>FEC_Email_Body_Case_Owner_Change</members>
 		<members>FEC_Wrap_Up_Modal_Btn_Cancel</members>
 		<members>FEC_Account_Card_Fetch_Error</members>
+		<members>FEC_MSG_FollowUp_Not02_User_Already_Watcher</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -521,5 +525,9 @@
 		<members>FEC_Search_Configuration</members>
 		<name>SearchCustomization</name>
 	</types>
+	<types>
+        <members>FEC_IPPDetailPageWrapper</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
     <version>65.0</version>
 </Package>
