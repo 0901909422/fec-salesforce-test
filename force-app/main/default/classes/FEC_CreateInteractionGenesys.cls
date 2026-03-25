@@ -140,8 +140,11 @@ public without sharing class FEC_CreateInteractionGenesys {
                 FEC_Phone_Number__c            = request.phoneNum,
                 FEC_Search_Phone_Number__c     = request.phoneNum,
                 FEC_National_ID_Passport_ID__c = request.nationalID,
+                FEC_Search_National_ID__c      = request.nationalID,
                 FEC_Contract_Number__c         = request.contractNum,
+                FEC_Search_Contract_Number__c  = request.contractNum,
                 FEC_Account_Number__c          = request.cardAccountNum,
+                FEC_Search_Account_Number__c   = request.cardAccountNum,
                 Status                         = 'Open'
             );
             insert c;
