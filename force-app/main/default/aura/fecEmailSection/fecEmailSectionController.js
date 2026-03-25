@@ -53,13 +53,18 @@
         component.set('v.replyTemplate', templateId);
         if (templateId) {
             var bodies = component.get('v.templateBodies');
+            var subjects = component.get('v.templateSubjects');
             var rawBody = bodies[templateId] || '';
             var title = component.get('v.titleReply') || '';
-            // Replace danh xung — dùng split/join thay vì regex Unicode
             var body = helper.replaceDanhXung(rawBody, title);
             component.set('v.body', body);
             if (window._fecQuill) {
                 window._fecQuill.root.innerHTML = helper.cleanBody(body);
+            }
+            // Apply subject từ template nếu có
+            var templateSubject = subjects && subjects[templateId] ? subjects[templateId] : '';
+            if (templateSubject) {
+                component.set('v.subject', templateSubject);
             }
         } else {
             component.set('v.body', '');

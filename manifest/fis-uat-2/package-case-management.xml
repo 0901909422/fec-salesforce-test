@@ -13,7 +13,6 @@
 		<members>Case.FEC_Interaction_Subchannel__c</members>
 		<members>Case.FEC_Email_CC__c</members>
 		<members>Case.FEC_Gender__c</members>
-		<members>Case.FEC_Reply_Template__c</members>
         <name>CustomField</name>
     </types>
 	<types>

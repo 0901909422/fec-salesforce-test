@@ -42,12 +42,12 @@ public without sharing class FEC_CustomEmailService {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<EmailTemplate> getEmailTemplates() {
+    public static List<SObject> getEmailTemplates() {
         return [
-            SELECT Id, Name, HtmlValue, Body
-            FROM EmailTemplate
-            WHERE IsActive = true
-            ORDER BY Name ASC
+            SELECT Id, Name, FEC_Template_Name__c, FEC_Subject_Line__c, FEC_Body__c
+            FROM FEC_Template__c
+            WHERE FEC_Active__c = true
+            ORDER BY FEC_Template_Name__c ASC
             LIMIT 100
         ];
     }

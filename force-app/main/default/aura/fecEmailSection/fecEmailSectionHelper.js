@@ -576,10 +576,15 @@
         a.setStorable(); // Cache kết quả để tránh gọi lại Apex mỗi lần load
         a.setCallback(this, function(r) {
             if (r.getState()==='SUCCESS') {
-                var data=r.getReturnValue()||[], opts=[], bodies={};
-                data.forEach(function(t){ opts.push({label:t.Name,value:t.Id}); bodies[t.Id]=t.HtmlValue||t.Body||''; });
+                var data=r.getReturnValue()||[], opts=[], bodies={}, subjects={};
+                data.forEach(function(t){
+                    opts.push({label:t.FEC_Template_Name__c||t.Name, value:t.Id});
+                    bodies[t.Id] = t.FEC_Body__c || '';
+                    subjects[t.Id] = t.FEC_Subject_Line__c || '';
+                });
                 component.set('v.templateOptions',opts);
                 component.set('v.templateBodies',bodies);
+                component.set('v.templateSubjects',subjects);
             }
         });
         $A.enqueueAction(a);
