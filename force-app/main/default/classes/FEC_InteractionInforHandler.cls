@@ -661,7 +661,8 @@ public without sharing class FEC_InteractionInforHandler {
                 RecordType.DeveloperName,
                 FEC_First_Access__c,
                 FEC_Interaction_View_Mode__c,
-                FEC_Get_Next_Work__c
+                FEC_Get_Next_Work__c,
+                FEC_Is_Created_From_Search__c
             FROM Case
             WHERE Id = :recordId
         ];
@@ -681,7 +682,8 @@ public without sharing class FEC_InteractionInforHandler {
             Id = recordId,
             FEC_Interaction_View_Mode__c = viewMode,
             FEC_First_Access__c = false,
-            FEC_Get_Next_Work__c = false
+            FEC_Get_Next_Work__c = false,
+            FEC_Is_Created_From_Search__c = false
         );
         return viewMode;
     }

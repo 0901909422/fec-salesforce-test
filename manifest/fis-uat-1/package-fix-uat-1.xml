@@ -153,6 +153,7 @@
 		<members>Case.FEC_Global_Search__c</members>
 		<members>FEC_KYC__c.FEC_Field_Type__c</members>
 		<members>Case.FEC_Manager_ID_List__c</members>
+		<members>Case.FEC_Is_Created_From_Search__c</members>
         <name>CustomField</name>
     </types>
 	<types>
