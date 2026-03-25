@@ -10,7 +10,6 @@
     <caseMergeInLightning>false</caseMergeInLightning>
     <closeCaseThroughStatusChange>true</closeCaseThroughStatusChange>
     <defaultCaseFeedLayoutOn>false</defaultCaseFeedLayoutOn>
-    <defaultCaseOwner>fecredit@fec.com</defaultCaseOwner>
     <defaultCaseOwnerType>User</defaultCaseOwnerType>
     <emailToCase>
         <enableE2CAttachmentAsFile>false</enableE2CAttachmentAsFile>
@@ -31,18 +30,99 @@
         <replyWithNewContentOnly>false</replyWithNewContentOnly>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
-            <caseOrigin>Email2Case</caseOrigin>
-            <caseOwner>FEC_Ubank_Email</caseOwner>
+            <caseOrigin>Email</caseOrigin>
+            <caseOwner>FEC_CSM_Mailbox</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
-            <casePriority>High</casePriority>
-            <createTask>true</createTask>
-            <emailAddress>phuongnt.fit@gmail.com</emailAddress>
-            <isPermsetControlled>false</isPermsetControlled>
-            <isVerified>true</isVerified>
-            <newEntityRecordType>Case.Interaction</newEntityRecordType>
-            <routingName>FEC_EmailToCase</routingName>
+            <casePriority>Medium</casePriority>
+            <createTask>false</createTask>
+            <emailAddress>supportcsm@fecredit.com.vn</emailAddress>
+            <isVerified>false</isVerified>
+            <routingName>CSM Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
-            <taskStatus>Open</taskStatus>
+        </routingAddresses>
+        <routingAddresses>
+            <addressType>EmailToCase</addressType>
+            <caseOrigin>Email</caseOrigin>
+            <caseOwner>FEC_Care_Mailbox</caseOwner>
+            <caseOwnerType>Queue</caseOwnerType>
+            <casePriority>Medium</casePriority>
+            <createTask>false</createTask>
+            <emailAddress>customercare@fecredit.com.vn</emailAddress>
+            <isVerified>false</isVerified>
+            <routingName>Care Mailbox</routingName>
+            <saveEmailHeaders>false</saveEmailHeaders>
+        </routingAddresses>
+        <routingAddresses>
+            <addressType>EmailToCase</addressType>
+            <caseOrigin>Email</caseOrigin>
+            <caseOwner>FEC_Day_2_Check</caseOwner>
+            <caseOwnerType>Queue</caseOwnerType>
+            <casePriority>Medium</casePriority>
+            <createTask>false</createTask>
+            <emailAddress>cs_d2c@fecredit.com.vn</emailAddress>
+            <isVerified>false</isVerified>
+            <routingName>Day 2 Check</routingName>
+            <saveEmailHeaders>false</saveEmailHeaders>
+        </routingAddresses>
+        <routingAddresses>
+            <addressType>EmailToCase</addressType>
+            <caseOrigin>Email</caseOrigin>
+            <caseOwner>FEC_Ecom_Mailbox</caseOwner>
+            <caseOwnerType>Queue</caseOwnerType>
+            <casePriority>Medium</casePriority>
+            <createTask>false</createTask>
+            <emailAddress>e_com@fecredit.com.vn</emailAddress>
+            <isVerified>false</isVerified>
+            <routingName>Ecom Mailbox</routingName>
+            <saveEmailHeaders>false</saveEmailHeaders>
+        </routingAddresses>
+        <routingAddresses>
+            <addressType>EmailToCase</addressType>
+            <caseOrigin>Email</caseOrigin>
+            <caseOwner>FEC_OM_Mailbox</caseOwner>
+            <caseOwnerType>Queue</caseOwnerType>
+            <casePriority>Medium</casePriority>
+            <createTask>false</createTask>
+            <emailAddress>cs_om@fecredit.com.vn</emailAddress>
+            <isVerified>false</isVerified>
+            <routingName>OM Mailbox</routingName>
+            <saveEmailHeaders>false</saveEmailHeaders>
+        </routingAddresses>
+        <routingAddresses>
+            <addressType>EmailToCase</addressType>
+            <caseOrigin>Email</caseOrigin>
+            <caseOwner>FEC_Office_Based_Mailbox</caseOwner>
+            <caseOwnerType>Queue</caseOwnerType>
+            <casePriority>Medium</casePriority>
+            <createTask>false</createTask>
+            <emailAddress>f2f@fecredit.com.vn</emailAddress>
+            <isVerified>false</isVerified>
+            <routingName>Office Based Mailbox</routingName>
+            <saveEmailHeaders>false</saveEmailHeaders>
+        </routingAddresses>
+        <routingAddresses>
+            <addressType>EmailToCase</addressType>
+            <caseOrigin>Email</caseOrigin>
+            <caseOwner>FEC_Quality_Control_Mailbox</caseOwner>
+            <caseOwnerType>Queue</caseOwnerType>
+            <casePriority>Medium</casePriority>
+            <createTask>false</createTask>
+            <emailAddress>cs_qc_team@fecredit.com.vn</emailAddress>
+            <isVerified>false</isVerified>
+            <routingName>Quality Control Mailbox</routingName>
+            <saveEmailHeaders>false</saveEmailHeaders>
+        </routingAddresses>
+        <routingAddresses>
+            <addressType>EmailToCase</addressType>
+            <caseOrigin>Email</caseOrigin>
+            <caseOwner>FEC_Support_Mailbox</caseOwner>
+            <caseOwnerType>Queue</caseOwnerType>
+            <casePriority>Medium</casePriority>
+            <createTask>false</createTask>
+            <emailAddress>cssupport@fecredit.com.vn</emailAddress>
+            <isVerified>false</isVerified>
+            <routingName>Support Mailbox</routingName>
+            <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <unauthorizedSenderAction>Discard</unauthorizedSenderAction>
         <useEmailHeadersForThreading>true</useEmailHeadersForThreading>
