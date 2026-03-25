@@ -110,6 +110,7 @@
 	</types>
 	<types>
 		<members>FEC_New_Interaction_Record_For_E2C</members>
+		<members>FEC_Mark_Complete_for_Milestone</members>
 		<name>Flow</name>
 	</types>
 	<types>
