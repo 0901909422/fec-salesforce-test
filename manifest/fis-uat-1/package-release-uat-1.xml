@@ -1282,6 +1282,7 @@
 		<members>FEC_MSG_FollowUp_Unfollow_Error</members>
 		<members>FEC_MSG_FollowUp_Case_Follow_Success</members>
 		<members>FEC_MSG_Can_Not_Find_Next_Stage</members>
+		<members>FEC_MSG_FollowUp_Not02_User_Already_Watcher</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
