@@ -2838,6 +2838,14 @@
         <value>Follow-Up User đã được thêm vào danh sách follow-up và Watcher Information.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_FollowUp_Not02_User_Already_Watcher</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Noti-02: User already in Case Watcher Information list</shortDescription>
+        <value>Người dùng này đã có trong danh sách theo dõi Case</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_FollowUp_Already_Unfollowed</fullName>
         <categories>Follow-Up</categories>
         <language>en_US</language>
