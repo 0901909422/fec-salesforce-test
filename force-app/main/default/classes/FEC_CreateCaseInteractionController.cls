@@ -52,7 +52,8 @@ public with sharing class FEC_CreateCaseInteractionController {
   public static Id createCustomerCaseFromCaseNonExistingCustomer(
     Id caseId,
   String customerName,
-  String nationalPassportId
+  String nationalPassportId,
+  String isCreatedFromSearch
   ) {
     try {
       // 1. Validate input
@@ -103,6 +104,10 @@ public with sharing class FEC_CreateCaseInteractionController {
       newCase.FEC_Account_Number__c = interaction.FEC_Account_Number__c;
       newCase.FEC_Contract_Number__c = interaction.FEC_Contract_Number__c;
       newCase.FEC_CIF_Number__c = interaction.FEC_CIF_Number__c;
+
+      if (isCreatedFromSearch == 'true') {
+        newCase.FEC_Is_Created_From_Search__c = true;
+      }
       
       insert newCase;
       
