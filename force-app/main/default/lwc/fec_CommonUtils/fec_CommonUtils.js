@@ -670,5 +670,5 @@ export {
   formatNum,
   toSortDateStr,
   formatDuration,
-  getCaseIdNumber
+  getCaseIdNumber,
 };

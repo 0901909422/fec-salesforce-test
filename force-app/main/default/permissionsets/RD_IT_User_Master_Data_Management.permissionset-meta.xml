@@ -1320,6 +1320,7 @@
         <field>FEC_Template__c.FEC_Template_Name__c</field>
         <readable>true</readable>
     </fieldPermissions>
+
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Additional_Field__c.FEC_Data_Type__c</field>

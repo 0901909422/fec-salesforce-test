@@ -1662,6 +1662,66 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_RePayment_Schedule__c.FEC_Closing_Principal__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_RePayment_Schedule__c.FEC_EMI__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_RePayment_Schedule__c.FEC_Installment_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_RePayment_Schedule__c.FEC_Installment_Due_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_RePayment_Schedule__c.FEC_Installment_No__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_RePayment_Schedule__c.FEC_Interest__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_RePayment_Schedule__c.FEC_Opening_Principal__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_RePayment_Schedule__c.FEC_Principal__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_RePayment_Schedule__c.FEC_Repayment_Fee__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_RePayment_Schedule__c.FEC_Total_Installment_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_RePayment_Schedule__c.FEC_Total_Interest__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_RePayment_Schedule__c.FEC_Total_Principal__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Statement__c.FEC_Beginning_Balance__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1858,66 +1918,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Transaction__c.FEC_Transaction_Plan__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_Closing_Principal__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_EMI__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_Installment_Amount__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_Installment_Due_Date__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_Installment_No__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_Interest__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_Opening_Principal__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_Principal__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_Repayment_Fee__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_Total_Installment_Amount__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_Total_Interest__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_RePayment_Schedule__c.FEC_Total_Principal__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
