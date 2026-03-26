@@ -59,8 +59,7 @@ export default class Fec_CardPayment extends LightningElement {
         }
     }
     
-    // Format dữ liệu percent: chia cho 100 và thêm ký hiệu %
-    // Và thêm CSS class để highlight số âm màu đỏ
+    // Format percent + currency/date cho bảng; highlight số âm (currency)
     formatPercentData(records) {
         if (!records || records.length === 0) return records;
 
@@ -72,10 +71,10 @@ export default class Fec_CardPayment extends LightningElement {
             formattedRecord.FEC_REF_Number_Display__c =
                 refRaw != null && String(refRaw).trim() !== '' ? String(refRaw) : '__';
 
-            // Base Rate - format với 2 chữ số thập phân + %
+            // Base Rate: Apex lưu baseRate API / 100; hiển thị đúng giá trị thô API (vd 5500000 → 5500000.00 %)
             if (formattedRecord.FEC_Base_Rate__c != null && formattedRecord.FEC_Base_Rate__c !== undefined) {
-                const value = Number(formattedRecord.FEC_Base_Rate__c);
-                formattedRecord.FEC_Base_Rate_Formatted__c = value.toFixed(2) + '%';
+                const value = Number(formattedRecord.FEC_Base_Rate__c) * 100;
+                formattedRecord.FEC_Base_Rate_Formatted__c = value.toFixed(2) + ' %';
             }
 
             // IPP Interest - format với 2 chữ số thập phân + %
