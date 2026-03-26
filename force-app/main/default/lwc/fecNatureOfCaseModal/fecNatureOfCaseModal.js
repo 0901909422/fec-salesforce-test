@@ -202,11 +202,25 @@ export default class FecNatureOfCaseModal extends LightningModal {
         const inputFields = this.template.querySelectorAll('lightning-input');
         let isValid = true;
         inputFields.forEach(inputField => {
+            // Trim whitespace for string inputs and update the track variables
+            const fieldName = inputField.dataset.field;
+            if (inputField.type === 'text' && typeof inputField.value === 'string') {
+                const trimmedValue = inputField.value.trim();
+                inputField.value = trimmedValue; // Update UI
+                
+                // Sync back to tracked variables
+                if (fieldName === 'inputName') this.strName = trimmedValue;
+                if (fieldName === 'inputAlias') this.strAlias = trimmedValue;
+                if (fieldName === 'inputCode') this.strCode = trimmedValue;
+                if (fieldName === 'inputNameVN') this.strNameVN = trimmedValue;
+            }
+
             if (!inputField.checkValidity()) {
                 inputField.reportValidity();
                 isValid = false;
             }
         });
+
         if (!isValid) {
             return;
         }

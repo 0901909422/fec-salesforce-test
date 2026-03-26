@@ -2,6 +2,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String API_CONTENT_TYPE = 'text/xml; charset=utf-8';
     public static final String API_CONTENT_TYPE_JSON = 'application/json';
     public static final String API_METHOD_POST = 'POST';
+    public static final String API_METHOD_GET = 'GET';
     public static final String API_REQUESTOR_ID = 'SALESFORE-CSM';
     public static final String SOAP_ENV = 'http://schemas.xmlsoap.org/soap/envelope/';
     
@@ -52,6 +53,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_ZALO = 'ZALO';
     public static final String CHANNEL_WEBSITE = 'WEBSITE';
     public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
+    public static final String CHANNEL_EXTERNAL = 'External';
+    public static final String CHANNEL_INTERNAL = 'Internal';
     public static final String STR_NA = 'N/A';
     
     public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';
@@ -69,6 +72,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_INTERNAL_EMAIL_SUBCHANNEL_NAME = 'Email';
     public static final String CHANNEL_INTERNAL_TASK_SUBCHANNEL_NAME = 'Task';
     public static final String CHANNEL_EXTERNAL_NAME = 'External';
+    public static final String CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME = 'Other';
+    public static final String CHANNEL_CHAT = 'Chat';
 
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
@@ -159,7 +164,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_STATUS_PENDING = 'Pending';
     /** Prefix cho Status dạng Pending-{Team} / Pending-{Team1}_{Team2} */
     public static final String CASE_STATUS_PENDING_PREFIX = 'Pending-';
-    
+
     public static final String CASE_WEB_ORIGIN = 'Web';
     
     public static final String GROUP_TYPE_QUEUE = 'Queue';
@@ -167,7 +172,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String SOBJECT_GROUP = 'Group';
     public static final String DELIMITER_SEMICOLON = ';';
     public static final String DELIMITER_UNDERSCORE = '_';
-    
+
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
     
@@ -200,8 +205,22 @@ public with sharing class FEC_ConstantCommon {
     public static final String EMAIL = 'Email';
     public static final String PHONE = 'Phone';
     public static final String PRIMARY_PHONE = 'Primary Phone';
+    public static final String SUBCHANNEL_INCOMING_EMAIL = 'Incoming Email';
+    public static final String CASE_ORIGIN_EMAIL2CASE = 'Email2Case';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
     
+    public static final String KEY_VALID_CHANNELS_WED = 'WED';
+    public static final String KEY_VALID_CHANNELS_MOBILE = 'MOBILE';
+    public static final String KEY_VALID_CHANNELS_API = 'API';
+    public static final String KEY_VALID_CHANNELS_PORTAL = 'PORTAL';
+    public static final String KEY_PRODUCT_TYPE_PRODUCT = 'Product';
+    public static final String KEY_PROSPECT = 'Prospect';
+    public static final String KEY_CASETYPE = 'CaseType';
+    public static final String KEY_CATEGORY = 'Category';
+    public static final String KEY_SUBCATEGORY = 'SubCategory';
+    public static final String KEY_SUBCODE = 'SubCode';
+    public static final String KEY_ERROR = 'Error';
+
     public static final String API_BLANK_BODY = '{}';
 
     //Get Next Work
@@ -218,4 +237,75 @@ public with sharing class FEC_ConstantCommon {
     /** Routing Action History: đổi Owner Case (khớp FEC_CaseBusinessService.buildRoutingActionHistoryRecord). */
     public static final String FEC_RAH_DESCRIPTION_CHANGE_OWNER = 'Change Owner';
     public static final String CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER = 'Resolved-CannotContactCustomer';
+
+    public static final String UPLOAD_DOCUMENT = 'UploadDocument';
+    public static final String CASE_STATUS_ERROR = 'ERROR';
+    
+    public static final String SYSTEM_SOURCE_VTIGER   = 'VTiger';
+    public static final String SYSTEM_SOURCE_ISALE    = 'iSale';
+    public static final String SYSTEM_SOURCE_ICOLLECT = 'iCollect';
+    public static final String SYSTEM_SOURCE_WEBSITE  = 'Website';
+    public static final String SYSTEM_SOURCE_FEOL     = 'FEOL';
+    public static final String SYSTEM_SOURCE_ZALO     = 'Zalo';
+
+    public static final String LANGUAGE_EN = 'EN';
+    public static final String LANGUAGE_VN = 'VN';
+
+    // Call api FEC_GetCSMasterDataService
+    public static final String KEY_PICKLIST = 'Picklist';
+    public static final String KEY_CHECKBOX = 'Checkbox';
+    public static final String KEY_DATE = 'Date';
+    public static final String KEY_DATETIME = 'DateTime';
+    public static final String KEY_NUMBER = 'Number';
+    public static final String KEY_TEXT = 'Text';
+    public static final String OBJ_ADDITIONAL_INFO = 'FEC_Additional_Info__c';
+
+    public static final String AUTO_METHOD = 'Auto';
+    public static final String REQUEST_EXISTING_USER_TYPE  = 'EXISTING';
+    public static final String REQUEST_NON_EXISTING_USER_TYPE  = 'NON-EXISTING';
+    public static final String REQUEST_PROSPECT_USER_TYPE  = 'PROSPECT';
+
+    // Call api FEC_CancelCSCaseService
+    public static final String STATUS_CLOSED = 'Closed';
+    public static final String STATUS_COMPLETED = 'Completed';
+    public static final String STATUS_CANCELLED  = 'Cancelled';
+    public static final String CODE_SUCCESS      = '1';
+    public static final String CODE_FAILURE      = '3';
+    public static final String ERROR_PREFIX      = 'Error: ';
+    public static final String SUCCESS_MESSAGE_CANCEL_CASE = System.Label.FEC_MSG_CancelCS_Success;
+    public static final String PHONE_REGEX_VN    = '^0[0-9]{9}$';
+    public static final String PHONE_REGEX_INTL  = '^\\+[0-9]{8,15}$';
+
+    /** Kênh hợp lệ cho API FEC_CancelCSCaseService (SOAP). */
+    public static final String CANCEL_CS_CHANNEL_CHAT = 'Chat';
+    public static final String CANCEL_CS_CHANNEL_F2F = 'F2F';
+    public static final String CANCEL_CS_CHANNEL_LETTER = 'Letter';
+
+    public static final List<String> CANCEL_CS_VALID_CHANNELS_ORDERED = new List<String>{
+        CHANNEL_INBOUND_NAME,
+        CHANNEL_OUTBOUND_NAME,
+        CANCEL_CS_CHANNEL_CHAT,
+        EMAIL,
+        CANCEL_CS_CHANNEL_F2F,
+        CANCEL_CS_CHANNEL_LETTER,
+        CHANNEL_EXTERNAL,
+        CHANNEL_INTERNAL
+    };
+
+    public static final Set<String> CANCEL_CS_VALID_CHANNELS = new Set<String>(CANCEL_CS_VALID_CHANNELS_ORDERED);
+
+    /** Độ dài tối đa field request Cancel CS Case. */
+    public static final Integer CANCEL_CS_TRANSACTION_ID_MAX_LEN = 36;
+    public static final Integer CANCEL_CS_CASE_ID_MAX_LEN = 15;
+    public static final Integer CANCEL_CS_CONTRACT_OR_ACCOUNT_MAX_LEN = 255;
+    public static final Integer CANCEL_CS_PHONE_MAX_LEN = 16;
+
+    // Email readonly from addresses
+    public static final String EMAIL_READONLY_FROM_FECREDIT = 'dichvukhachhang@fecredit.com.vn';
+    public static final String EMAIL_READONLY_FROM_UBANK    = 'dichvukhachhang@ubank.com.vn';
+
+    // Case statuses blocked from sending email
+    public static final String CASE_STATUS_CLOSED    = 'Closed';
+    public static final String CASE_STATUS_RESOLVED  = 'Resolved';
+    public static final String CASE_STATUS_CANCELLED = 'Cancelled';
 }

@@ -224,6 +224,7 @@ function createNewWorkFromIVREmail(message){
     var CardOpenDate = message.attachdata.CardOpenDate || "";
     var CardPlasticID = message.attachdata.CardPlasticID || "";
     var LandingEmailDatetime = message.attachdata.LandingEmailDatetime || ""; // CSM-3771
+    var AgentID = message.AgentID || "";
   
     var emailData = {
         "Subject": Subject,
@@ -241,7 +242,8 @@ function createNewWorkFromIVREmail(message){
         "DisbursalDate": DisbursalDate,
         "CardOpenDate": CardOpenDate,
         "CardPlasticID": CardPlasticID,
-        "LandingEmailDatetime": LandingEmailDatetime
+        "LandingEmailDatetime": LandingEmailDatetime,
+        "AgentID": AgentID
     };
     
     // Gửi sự kiện để LWC Component xử lý việc tạo Email Case

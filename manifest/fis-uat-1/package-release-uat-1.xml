@@ -350,7 +350,7 @@
     <types>
 		<members>FEC_GetCustomerList</members>
 		<members>FEC_SearchController</members>
-        <members>FEC_CreateCaseHanlder</members>
+        <members>FEC_CreateCaseHandler</members>
 		<members>FEC_CreateInteractionGenesys</members>
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_ConstantCommon</members>

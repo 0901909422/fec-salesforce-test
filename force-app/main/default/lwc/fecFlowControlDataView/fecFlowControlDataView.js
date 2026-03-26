@@ -4,8 +4,9 @@ import getMDMStageOptions from '@salesforce/apex/FEC_BusinessProcessService.getM
 import getMDMActionButtonOptions from '@salesforce/apex/FEC_BusinessProcessService.getMDMActionButtonOptions';
 import deleteMDMStageChangeRule from '@salesforce/apex/FEC_BusinessProcessService.deleteMDMStageChangeRule';
 import getRulesWithConditions from '@salesforce/apex/FEC_MDM_WorkflowEngine.getRulesWithConditions';
-import getAdditionalFieldOptions from '@salesforce/apex/FEC_MDM_WorkflowEngine.getAdditionalFieldOptions';
+import getFieldsForStage from '@salesforce/apex/FEC_MDM_WorkflowEngine.getFieldsForStage';
 import saveRuleWithConditions from '@salesforce/apex/FEC_MDM_WorkflowEngine.saveRuleWithConditions';
+import { showLog } from 'c/fecMDMUtils';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class FecFlowControlDataView extends LightningElement {
@@ -24,28 +25,28 @@ export default class FecFlowControlDataView extends LightningElement {
         console.log('[FlowControlDataView] item set:', JSON.stringify(value));
 
         if (!value) {
-            this._selectedBPId     = null;
-            this._selectedBPLabel  = null;
+            this._selectedBPId = null;
+            this._selectedBPLabel = null;
             this._selectedNodeType = null;
             this.decisionRows = [];
-            this.groupedRows  = [];
+            this.groupedRows = [];
             return;
         }
 
-        this._selectedBPLabel  = value.label || '';
+        this._selectedBPLabel = value.label || '';
         this.searchFilter = '';
         this.statusFilter = '';
 
         // idType là ID của node được click
         // Normalize type bằng cách bỏ khoảng trắng: 'Business Process' → 'BusinessProcess'
-        const rawType  = (value.type || '').replace(/\s+/g, '');
+        const rawType = (value.type || '').replace(/\s+/g, '');
         const nodeType = rawType || 'BusinessProcess';
         this._selectedNodeType = nodeType;
 
         console.log('[FlowControlDataView] rawType:', value.type, '| normalized:', nodeType, '| idType:', value.idType);
 
         // Các type là node lá (không phải BP)
-        const leafTypes = new Set(['Stage','Category','SubCategory','SubCode']);
+        const leafTypes = new Set(['Stage', 'Category', 'SubCategory', 'SubCode']);
         // Normalize value.type cũng để so sánh
         const isLeaf = leafTypes.has(nodeType);
 
@@ -53,7 +54,7 @@ export default class FecFlowControlDataView extends LightningElement {
             // Node lá: không load table vì không có BP ID trực tiếp
             // parentId không tồn tại trong data → không xử lý
             this.decisionRows = [];
-            this.groupedRows  = [];
+            this.groupedRows = [];
         } else {
             // BusinessProcess → dùng idType của node này = MDM BP ID
             // Lưu ý: idType từ live tree là Live BP ID,
@@ -63,7 +64,7 @@ export default class FecFlowControlDataView extends LightningElement {
                 this.loadDecisionTable(this._selectedBPId);
             } else {
                 this.decisionRows = [];
-                this.groupedRows  = [];
+                this.groupedRows = [];
             }
         }
     }
@@ -71,7 +72,7 @@ export default class FecFlowControlDataView extends LightningElement {
 
     // ── Table state ─────────────────────────────────────────
     @track decisionRows = [];
-    @track groupedRows  = [];
+    @track groupedRows = [];
     @track error;
     @track isLoading = false;
 
@@ -80,61 +81,66 @@ export default class FecFlowControlDataView extends LightningElement {
     @track statusFilter = '';
 
     // ── Column labels ───────────────────────────────────────
-    colCurrentStage  = 'Nếu Current Stage là...';
-    colConditions    = 'Điều kiện';
-    colAction        = 'Nếu chọn Action...';
-    colNextStage     = 'Thì Next Stage sẽ là...';
-    colNextQueue     = 'Next Queue';
+    colCurrentStage = 'Nếu Current Stage là...';
+    colConditions = 'Điều kiện';
+    colAction = 'Nếu chọn Action...';
+    colNextStage = 'Thì Next Stage sẽ là...';
+    colNextQueue = 'Next Queue';
     colTeamUserGroup = 'Team/User Group';
-    colStatus        = 'Process Status';
+    colStatus = 'Process Status';
 
     // ── Status filter options ───────────────────────────────
     statusFilterOptions = [
-        { label: 'Tất cả',    value: '' },
-        { label: 'New',       value: 'New' },
-        { label: 'Update',    value: 'Update' },
-        { label: 'Synced',    value: 'Synced' }
+        { label: 'Tất cả', value: '' },
+        { label: 'New', value: 'New' },
+        { label: 'Update', value: 'Update' },
+        { label: 'Synced', value: 'Synced' }
     ];
 
     // ── Condition Operator options ──────────────────────────
     operatorOptions = [
-        { label: '= (Bằng)',                value: '='           },
-        { label: '!= (Khác)',               value: '!='          },
-        { label: '> (Lớn hơn)',             value: '>'           },
-        { label: '>= (Lớn hơn hoặc bằng)', value: '>='          },
-        { label: '< (Nhỏ hơn)',             value: '<'           },
-        { label: '<= (Nhỏ hơn hoặc bằng)', value: '<='          },
-        { label: 'IN (Nằm trong)',          value: 'IN'          },
-        { label: 'NOT IN',                  value: 'NOT IN'      },
-        { label: 'CONTAINS',               value: 'CONTAINS'    },
-        { label: 'STARTS WITH',            value: 'STARTS WITH' },
-        { label: 'ENDS WITH',              value: 'ENDS WITH'   }
+        { label: '=', value: 'EQUALS' },
+        { label: '!=', value: 'NOT_EQUALS' },
+        { label: 'Contains', value: 'CONTAINS' },
+        { label: 'Not Contains', value: 'NOT_CONTAINS' },
+        { label: '>', value: 'GREATER_THAN' },
+        { label: '<', value: 'LESS_THAN' }
     ];
+
+    conditionRequirementOptions = [
+        { label: 'All Conditions Are Met (AND)', value: 'AND' },
+        { label: 'Any Condition Is Met (OR)', value: 'OR' },
+        { label: 'Custom Condition Logic Is Met', value: 'CUSTOM' }
+    ];
+
+    get isCustomLogic() {
+        return this.formData && this.formData.conditionRequirement === 'CUSTOM';
+    }
 
     // ── Value Type options ──────────────────────────────────
     valueTypeOptions = [
-        { label: 'Text',    value: 'String'  },
-        { label: 'Number',  value: 'Number'  },
+        { label: 'Text', value: 'String' },
+        { label: 'Number', value: 'Number' },
         { label: 'Boolean', value: 'Boolean' },
-        { label: 'List',    value: 'List'    }
+        { label: 'List', value: 'List' }
     ];
 
     // ── Modal state ─────────────────────────────────────────
     @track showAddRuleModal = false;
-    @track isEditMode       = false;
+    @track isEditMode = false;
     @track editingRowId;
-    @track stageOptions          = [];
-    @track actionOptions         = [];
-    @track additionalFieldOptions = [];   // ← FEC_MDM_Additional_Field__c options
-    @track formData         = {};
-    @track formErrors       = {};
+    @track stageOptions = [];
+    @track actionOptions = [];
+    @track conditionFieldOptions = [];   // ← FEC_MDM_Master_Data_Setting__c options based on current stage
+    @track formData = {};
+    @track formErrors = {};
 
     // ── Condition expand/collapse per row ────────────────────
     @track expandedConditionRows = {};
 
     // ── Condition Side Panel ─────────────────────────────────
     @track showConditionPanel = false;
-    @track activePanelRow     = {};
+    @track activePanelRow = {};
 
     // ════════════════════════════════════════════════════════
     // LIFECYCLE
@@ -152,14 +158,14 @@ export default class FecFlowControlDataView extends LightningElement {
     loadDecisionTable(bpId) {
         if (!bpId) return;
         this.isLoading = true;
-        this.error     = null;
+        this.error = null;
 
         getRulesWithConditions({ businessProcessId: bpId })
             .then(data => {
                 const arr = Array.isArray(data) ? data : [];
                 console.log('[FlowControl] getRulesWithConditions loaded:', arr.length, 'rows');
                 this.decisionRows = arr;
-                this.groupedRows  = arr.length > 0 ? this._buildGroupedRows(arr) : [];
+                this.groupedRows = arr.length > 0 ? this._buildGroupedRows(arr) : [];
             })
             .catch(err => {
                 console.warn('[FlowControl] getRulesWithConditions failed, fallback:', err);
@@ -169,34 +175,53 @@ export default class FecFlowControlDataView extends LightningElement {
                         const arr = Array.isArray(data) ? data : [];
                         console.log('[FlowControl] Legacy fallback loaded:', arr.length, 'rows');
                         this.decisionRows = arr;
-                        this.groupedRows  = arr.length > 0 ? this._buildGroupedRows(arr) : [];
+                        this.groupedRows = arr.length > 0 ? this._buildGroupedRows(arr) : [];
                     })
                     .catch(err2 => {
                         console.error('[FlowControl] Load error:', err2);
-                        this.error        = err2?.body?.message || 'Có lỗi khi tải MDM Decision Table';
+                        this.error = err2?.body?.message || 'Có lỗi khi tải MDM Decision Table';
                         this.decisionRows = [];
-                        this.groupedRows  = [];
+                        this.groupedRows = [];
                     });
             })
             .finally(() => { this.isLoading = false; });
     }
 
     // ════════════════════════════════════════════════════════
+    // LOAD FIELDS FOR STAGE
+    // ════════════════════════════════════════════════════════
+    loadConditionFields(stageId) {
+        if (!stageId) {
+            this.conditionFieldOptions = [];
+            return Promise.resolve();
+        }
+
+        return getFieldsForStage({ stageId: stageId })
+            .then(data => {
+                this.conditionFieldOptions = data || [];
+            })
+            .catch(error => {
+                console.error('Lỗi lấy danh sách Master Data Setting:', error);
+                this.conditionFieldOptions = [];
+            });
+    }
+
+    // ════════════════════════════════════════════════════════
     // BUILD GROUPED ROWS
     // ════════════════════════════════════════════════════════
     _buildGroupedRows(data) {
-        const groups   = [];
+        const groups = [];
         const stageMap = new Map();
 
         data.forEach((row, index) => {
             const key = row.currentStageId || row.currentStage || `stage-${index}`;
             if (!stageMap.has(key)) {
                 const group = {
-                    stageKey:  key,
+                    stageKey: key,
                     stageName: row.currentStage || '--',
                     stageCode: row.currentStageCode || '',
-                    stageId:   row.currentStageId,
-                    rules:     []
+                    stageId: row.currentStageId,
+                    rules: []
                 };
                 stageMap.set(key, group);
                 groups.push(group);
@@ -207,25 +232,25 @@ export default class FecFlowControlDataView extends LightningElement {
             const conditionSummary = this._buildConditionSummary(conditions);
 
             stageMap.get(key).rules.push({
-                rowId:               row.rowId || `row-${index}`,
-                action:              row.action    || '--',
-                actionCode:          row.actionCode || '',
-                actionId:            row.actionId,
-                nextStage:           row.nextStage  || '--',
-                nextStageCode:       row.nextStageCode || '',
-                nextStageId:         row.nextStageId,
-                nextQueue:           row.nextQueue     || '',
-                teamUserGroup:       row.teamUserGroup || '',
-                priority:            row.priority,
-                active:              row.active,
-                conditionLogic:      row.conditionLogic || '',
-                conditions:          conditions,
-                conditionSummary:    conditionSummary,
-                hasConditions:       conditions.length > 0,
-                conditionCount:      conditions.length,
+                rowId: row.rowId || `row-${index}`,
+                action: row.action || '--',
+                actionCode: row.actionCode || '',
+                actionId: row.actionId,
+                nextStage: row.nextStage || '--',
+                nextStageCode: row.nextStageCode || '',
+                nextStageId: row.nextStageId,
+                nextQueue: row.nextQueue || '',
+                teamUserGroup: row.teamUserGroup || '',
+                priority: row.priority,
+                active: row.active,
+                conditionLogic: row.conditionLogic || '',
+                conditions: conditions,
+                conditionSummary: conditionSummary,
+                hasConditions: conditions.length > 0,
+                conditionCount: conditions.length,
                 processChangeStatus: row.processChangeStatus || '--',
-                statusClass:         this._getStatusClass(row.processChangeStatus),
-                currentStageId:      row.currentStageId
+                statusClass: this._getStatusClass(row.processChangeStatus),
+                currentStageId: row.currentStageId
             });
         });
         return groups;
@@ -249,9 +274,9 @@ export default class FecFlowControlDataView extends LightningElement {
     }
 
     _getStatusClass(status) {
-        if (status === 'Synced')   return 'slds-badge status-synced'; // Green
-        if (status === 'Update')   return 'slds-badge status-updated'; // Yellow
-        if (status === 'New')      return 'slds-badge status-new'; // Red
+        if (status === 'Synced') return 'slds-badge status-synced'; // Green
+        if (status === 'Update') return 'slds-badge status-updated'; // Yellow
+        if (status === 'New') return 'slds-badge status-new'; // Red
         return 'slds-badge';
     }
 
@@ -260,7 +285,7 @@ export default class FecFlowControlDataView extends LightningElement {
     // ════════════════════════════════════════════════════════
     get flatRows() {
         const search = (this.searchFilter || '').toLowerCase();
-        const status = this.statusFilter  || '';
+        const status = this.statusFilter || '';
         const result = [];
 
         if (!this.groupedRows || this.groupedRows.length === 0) {
@@ -274,9 +299,9 @@ export default class FecFlowControlDataView extends LightningElement {
 
             const filtered = group.rules.filter(rule => {
                 const matchSearch = !search ||
-                    (group.stageName       || '').toLowerCase().includes(search) ||
-                    (rule.action           || '').toLowerCase().includes(search) ||
-                    (rule.nextStage        || '').toLowerCase().includes(search) ||
+                    (group.stageName || '').toLowerCase().includes(search) ||
+                    (rule.action || '').toLowerCase().includes(search) ||
+                    (rule.nextStage || '').toLowerCase().includes(search) ||
                     (rule.conditionSummary || '').toLowerCase().includes(search);
                 const matchStatus = !status || rule.processChangeStatus === status;
                 return matchSearch && matchStatus;
@@ -286,18 +311,18 @@ export default class FecFlowControlDataView extends LightningElement {
                 const isExpanded = !!this.expandedConditionRows[rule.rowId];
                 result.push({
                     ...rule,
-                    stageName:      group.stageName,
-                    stageCode:      group.stageCode,
+                    stageName: group.stageName,
+                    stageCode: group.stageCode,
                     stageCellClass: 'col-current-stage stage-cell',
-                    isExpanded:     isExpanded,
-                    expandIcon:     isExpanded ? 'utility:chevrondown' : 'utility:chevronright',
+                    isExpanded: isExpanded,
+                    expandIcon: isExpanded ? 'utility:chevrondown' : 'utility:chevronright',
                     formattedConditions: (rule.conditions || []).map((c, ci) => ({
                         ...c,
-                        key:          `${rule.rowId}-cond-${ci}`,
-                        label:        `${c.fieldName || c.fieldApiName || ''} ${c.operator} ${c.value}`,
-                        typeLabel:    c.valueType || 'String',
-                        order:        c.order || (ci + 1),
-                        fieldName:    c.fieldName    || c.fieldApiName || '',
+                        key: `${rule.rowId}-cond-${ci}`,
+                        label: `${c.fieldName || c.fieldApiName || ''} ${c.operator} ${c.value}`,
+                        typeLabel: c.fieldType || 'Text',
+                        order: c.order || (ci + 1),
+                        fieldName: c.fieldName || c.fieldApiName || '',
                         fieldApiName: c.fieldApiName || '',
                         fieldDisplay: c.fieldName || c.fieldApiName || ''
                     }))
@@ -327,73 +352,135 @@ export default class FecFlowControlDataView extends LightningElement {
 
     handleClearSearch() {
         this.searchFilter = '';
-        this.statusFilter = '';
     }
 
     handleStatusFilterChange(event) {
         this.statusFilter = event.detail.value;
     }
 
+    // ── Auto-generate condition logic string (Bỏ dấu #) ──
+    _autoConditionLogic() {
+        const count = (this.formData.conditions || []).length;
+        if (count === 0) return '';
+        if (this.formData.conditionRequirement === 'CUSTOM') return this.formData.conditionLogic;
+
+        const nums = Array.from({ length: count }, (_, i) => i + 1);
+        return nums.join(` ${this.formData.conditionRequirement} `); // Nối bằng AND hoặc OR
+    }
+
+    // Bắt sự kiện khi Dropdown Requirement thay đổi
+    handleRequirementChange(event) {
+        this.formData.conditionRequirement = event.detail.value;
+        this.formData.conditionLogic = this._autoConditionLogic();
+    }
+
     // ════════════════════════════════════════════════════════
     // MODAL – ADD / EDIT / DELETE
     // ════════════════════════════════════════════════════════
     handleAddRule() {
-        this.isEditMode   = false;
-        this.editingRowId = null;
-        // Auto-priority = số rule hiện có + 1
-        const nextPriority = this.decisionRows.length + 1;
-        this.formData     = {
-            previousStageId: '',
-            actionButtonId:  '',
-            nextStageId:     '',
-            nextQueue:       '',
-            teamUserGroup:   '',
-            priority:        nextPriority,
-            conditionLogic:  '',
-            conditions:      []
-        };
-        this.formErrors = {};
-        this._loadModalOptions();
-        this.showAddRuleModal = true;
+        // 1. Check if node is BP
+        if (!this._selectedBPId || this._selectedNodeType !== 'BusinessProcess') {
+            this.showToast('Lỗi', 'Vui lòng chọn một Business Process hợp lệ.', 'error');
+            return;
+        }
+
+        this.isLoading = true; // Bật cờ loading xoay vòng vòng
+
+        // 2. GỌI API LẤY DANH SÁCH STAGE VÀ ACTION TRƯỚC KHI MỞ MODAL
+        this._loadModalOptions().then(() => {
+            // 3. Reset form data
+            this.isEditMode = false;
+            this.editingRowId = null;
+
+            // Auto-priority = số rule hiện có + 1
+            const nextPriority = this.decisionRows ? this.decisionRows.length + 1 : 1;
+
+            this.formData = {
+                previousStageId: '',
+                actionButtonId: '',
+                nextStageId: '',
+                nextQueue: '',
+                teamUserGroup: '',
+                priority: nextPriority,
+                conditionRequirement: 'AND',
+                conditionLogic: '',
+                conditions: []
+            };
+
+            this.formErrors = {};
+            this.conditionFieldOptions = []; // Reset Field Options vì chưa chọn Stage
+
+            // 4. Mở Modal sau khi đã có data
+            this.showAddRuleModal = true;
+        }).catch(error => {
+            this.showToast('Lỗi', 'Không thể tải danh sách Stage và Action', 'error');
+            console.error(error);
+        }).finally(() => {
+            this.isLoading = false; // Tắt loading
+        });
     }
 
     handleEditRule(event) {
         const rowId = event.currentTarget.dataset.rowId;
-        const row   = this.decisionRows.find(r => r.rowId === rowId);
-        if (!row) return;
+        console.log('[handleEditRule] Editing rowId: ' + rowId);
+
+        const row = this.decisionRows.find(r => r.rowId === rowId);
+        if (!row) {
+            this.showToast('Lỗi', 'Không tìm thấy dữ liệu dòng để chỉnh sửa.', 'error');
+            return;
+        }
 
         const conditions = this._parseConditions(row.conditions);
 
-        this.isEditMode      = true;
-        this.editingRowId    = rowId;
-        this.formErrors      = {};
-        this.showAddRuleModal = true;
+        this.isEditMode = true;
+        this.editingRowId = rowId;
+        this.isLoading = true;
 
-        // Load options first, then populate conditions so combobox has options ready
+        // BỘ DỊCH NGƯỢC: Map giá trị DB thành giá trị UI của thẻ Select
+        const reverseOperatorMap = {
+            '=': 'EQUALS',
+            '!=': 'NOT_EQUALS',
+            'Contains': 'CONTAINS',
+            'Not Contains': 'NOT_CONTAINS',
+            '>': 'GREATER_THAN',
+            '<': 'LESS_THAN'
+        };
+
         this._loadModalOptions().then(() => {
-            const mappedConditions = conditions.map((c, i) => ({
-                id:           c.id || `existing-${i}`,
-                fieldId:      c.fieldId      || '',
-                fieldName:    c.fieldName    || '',
-                fieldNameVN:  c.fieldNameVN  || '',
+            return this.loadConditionFields(row.currentStageId || row.previousStageId);
+        }).then(() => {
+            // Map existing conditions into formData format
+            const mappedConditions = (conditions || []).map((c, idx) => ({
+                id: c.id || `existing-${idx}`,
+                index: idx,
+                displayIndex: c.order || (idx + 1),
+                order: c.order || (idx + 1),
+                fieldId: c.fieldId || '',
                 fieldApiName: c.fieldApiName || '',
-                operator:     c.operator     || '=',
-                value:        c.value        || '',
-                valueType:    c.valueType    || 'String',
-                order:        c.order        || (i + 1)
+                // SỬA TẠI ĐÂY: Dùng reverse map để khôi phục value cho UI
+                operator: reverseOperatorMap[c.operator] || c.operator || 'EQUALS',
+                value: c.value || ''
             }));
-            const condLogic = row.conditionLogic
-                || this._autoConditionLogic(mappedConditions.length);
+
             this.formData = {
-                previousStageId: row.currentStageId || '',
-                actionButtonId:  row.actionId       || '',
-                nextStageId:     row.nextStageId    || '',
-                nextQueue:       row.nextQueue      || '',
-                teamUserGroup:   row.teamUserGroup  || '',
-                priority:        row.priority       || 1,
-                conditionLogic:  condLogic,
-                conditions:      mappedConditions
+                previousStageId: row.currentStageId || row.previousStageId || '',
+                actionButtonId: row.actionId || row.actionButtonId || '',
+                nextStageId: row.nextStageId || '',
+                nextQueue: row.nextQueue || '',
+                teamUserGroup: row.teamUserGroup || '',
+                priority: row.priority || 1,
+                conditionRequirement: row.conditionRequirement || 'AND',
+                conditionLogic: row.conditionLogic || '',
+                conditions: mappedConditions
             };
+            this.formErrors = {};
+
+            this.showAddRuleModal = true;
+        }).catch(error => {
+            this.showToast('Lỗi', 'Không thể tải dữ liệu rule', 'error');
+            console.error(error);
+        }).finally(() => {
+            this.isLoading = false;
         });
     }
 
@@ -414,26 +501,15 @@ export default class FecFlowControlDataView extends LightningElement {
 
     _loadModalOptions() {
         const p1 = getMDMStageOptions({ businessProcessId: this._selectedBPId })
-            .then(data => { this.stageOptions  = data || []; })
-            .catch(()  => { this.stageOptions  = []; });
+            .then(data => { this.stageOptions = data || []; })
+            .catch(() => { this.stageOptions = []; });
 
         const p2 = getMDMActionButtonOptions()
             .then(data => { this.actionOptions = data || []; })
-            .catch(()  => { this.actionOptions = []; });
-
-        const p3 = getAdditionalFieldOptions()
-            .then(data => {
-                this.additionalFieldOptions = (data || []).map(f => ({
-                    label:        f.label,
-                    value:        f.value,        // ID của FEC_MDM_Additional_Field__c
-                    fieldApiName: f.fieldApiName,
-                    dataType:     f.dataType
-                }));
-            })
-            .catch(() => { this.additionalFieldOptions = []; });
+            .catch(() => { this.actionOptions = []; });
 
         // Return promise so callers can wait for all options to be ready
-        return Promise.all([p1, p2, p3]);
+        return Promise.all([p1, p2]);
     }
 
     handleModalInputChange(event) {
@@ -443,85 +519,92 @@ export default class FecFlowControlDataView extends LightningElement {
         if (this.formErrors[field]) {
             this.formErrors = { ...this.formErrors, [field]: null };
         }
-    }
 
-    // ── Auto-generate condition logic string: #1 AND #2 AND #3 ... ──
-    _autoConditionLogic(count) {
-        if (count === 0) return '';
-        return Array.from({ length: count }, (_, i) => `#${i + 1}`).join(' AND ');
+        // --- BỔ SUNG LOGIC LINK MASTER DATA SETTING ---
+        if (field === 'previousStageId') {
+            // Tải lại danh sách Field của Stage mới
+            this.loadConditionFields(value);
+
+            // Xóa rỗng các điều kiện cũ vì Field của Stage cũ không còn hợp lệ ở Stage mới
+            this.formData.conditions = [];
+            if (this.formData.conditionRequirement !== 'CUSTOM') {
+                this.formData.conditionLogic = '';
+            }
+        }
     }
 
     // ════════════════════════════════════════════════════════
     // MODAL – CONDITION MANAGEMENT
     // ════════════════════════════════════════════════════════
     handleAddCondition() {
-        const newConditions = [
-            ...(this.formData.conditions || []),
-            {
-                id:           `new-${Date.now()}`,
-                fieldId:      '',
-                fieldName:    '',
-                fieldApiName: '',
-                operator:     '=',
-                value:        '',
-                valueType:    'String',
-                order:        (this.formData.conditions || []).length + 1
-            }
-        ];
-        this.formData = {
-            ...this.formData,
-            conditions:     newConditions,
-            conditionLogic: this._autoConditionLogic(newConditions.length)
-        };
+        if (!this.formData.conditions) this.formData.conditions = [];
+        const index = this.formData.conditions.length;
+
+        this.formData.conditions.push({
+            key: `new_${Date.now()}_${index}`,
+            index: index,         // <--- THÊM DÒNG NÀY ĐỂ HTML BẮT ĐƯỢC
+            displayIndex: index + 1,
+            order: index + 1,
+            fieldId: '',
+            fieldApiName: '',
+            operator: 'EQUALS',
+            value: ''
+        });
+
+        if (this.formData.conditionRequirement !== 'CUSTOM') {
+            this.formData.conditionLogic = this._autoConditionLogic();
+        }
+        // LWC doesn't always track deep changes, so we shallow clone
+        this.formData = { ...this.formData };
     }
 
     handleRemoveCondition(event) {
         const idx = parseInt(event.currentTarget.dataset.index, 10);
-        const updated = (this.formData.conditions || [])
-            .filter((_, i) => i !== idx)
-            .map((c, i) => ({ ...c, order: i + 1 }));
-        this.formData = {
-            ...this.formData,
-            conditions:     updated,
-            conditionLogic: this._autoConditionLogic(updated.length)
-        };
+        const conditions = this.formData.conditions || [];
+        conditions.splice(idx, 1);
+        // Re-order
+        conditions.forEach((c, i) => { c.order = i + 1; });
+
+        if (this.formData.conditionRequirement !== 'CUSTOM') {
+            this.formData.conditionLogic = this._autoConditionLogic();
+        }
+        this.formData = { ...this.formData, conditions };
     }
 
     handleConditionFieldChange(event) {
-        const idx   = parseInt(event.currentTarget.dataset.index, 10);
-        const field = event.currentTarget.dataset.field;
-        // native <select> uses event.target.value; lightning-combobox uses event.detail.value
-        const value = event.detail?.value ?? event.target.value;
+        const idx = parseInt(event.target.dataset.index || event.currentTarget.dataset.index, 10);
 
-        const updated = (this.formData.conditions || []).map((c, i) => {
-            if (i !== idx) return c;
-            const updatedCond = { ...c, [field]: value };
-            // When fieldId changes, auto-resolve fieldApiName & fieldName from additionalFieldOptions
-            if (field === 'fieldId') {
-                const found = this.additionalFieldOptions.find(opt => opt.value === value);
-                if (found) {
-                    updatedCond.fieldApiName = found.fieldApiName;
-                    updatedCond.fieldName    = found.label;
-                    // Auto-set valueType based on dataType
-                    const dtMap = {
-                        'Currency': 'Number', 'Number': 'Number', 'Double': 'Number',
-                        'Integer': 'Number',  'Boolean': 'Boolean',
-                        'Picklist': 'String', 'Text': 'String', 'Date': 'String',
-                        'DateTime': 'String', 'Email': 'String', 'Phone': 'String'
-                    };
-                    updatedCond.valueType = dtMap[found.dataType] || 'String';
-                }
-            }
-            return updatedCond;
-        });
-        this.formData = { ...this.formData, conditions: updated };
-
-        // Re-sync native select selected value after re-render
-        // (LWC does not auto-bind "selected" attr on <option>)
-        if (field === 'fieldId' || field === 'operator' || field === 'valueType') {
-            // eslint-disable-next-line @lwc/lwc/no-async-operation
-            setTimeout(() => this._syncNativeSelects(), 0);
+        // --- THÊM CHỐT CHẶN BẢO VỆ NÀY ---
+        if (isNaN(idx)) {
+            console.error('Lỗi: Không tìm thấy data-index của dòng điều kiện này!');
+            return;
         }
+        // ---------------------------------
+
+        const field = event.target.dataset.field || event.currentTarget.dataset.field; // "fieldId", "operator", "value"
+        const val = event.target.value;
+
+        const conditions = this.formData.conditions || [];
+        if (!conditions[idx]) return;
+
+        conditions[idx][field] = val;
+
+        if (field === 'fieldId') {
+            conditions[idx].fieldApiName = this._getAdditionalFieldApiName(val);
+        }
+
+        this.formData.conditions = [...conditions];
+
+        if (this.formData.conditionRequirement !== 'CUSTOM') {
+            this.formData.conditionLogic = this._autoConditionLogic();
+        }
+    }
+
+    // Hàm tìm fieldApiName dựa trên ID của Master Data Setting
+    _getAdditionalFieldApiName(mdmSettingId) {
+        if (!mdmSettingId) return '';
+        const found = this.conditionFieldOptions.find(opt => opt.value === mdmSettingId);
+        return found ? found.fieldApiName : '';
     }
 
     // Sync native <select> elements' selected value to match formData
@@ -530,11 +613,11 @@ export default class FecFlowControlDataView extends LightningElement {
         rows.forEach((row, idx) => {
             const cond = (this.formData.conditions || [])[idx];
             if (!cond) return;
-            const fieldSel    = row.querySelector('[data-field="fieldId"]');
-            const opSel       = row.querySelector('[data-field="operator"]');
-            const valTypeSel  = row.querySelector('[data-field="valueType"]');
-            if (fieldSel   && cond.fieldId)   fieldSel.value   = cond.fieldId;
-            if (opSel      && cond.operator)  opSel.value      = cond.operator;
+            const fieldSel = row.querySelector('[data-field="fieldId"]');
+            const opSel = row.querySelector('[data-field="operator"]');
+            const valTypeSel = row.querySelector('[data-field="valueType"]');
+            if (fieldSel && cond.fieldId) fieldSel.value = cond.fieldId;
+            if (opSel && cond.operator) opSel.value = cond.operator;
             if (valTypeSel && cond.valueType) valTypeSel.value = cond.valueType;
         });
     }
@@ -542,7 +625,7 @@ export default class FecFlowControlDataView extends LightningElement {
     get formConditions() {
         return (this.formData.conditions || []).map((c, i) => ({
             ...c,
-            index:    i,
+            index: i,
             orderNum: i + 1
         }));
     }
@@ -558,27 +641,41 @@ export default class FecFlowControlDataView extends LightningElement {
         if (!this._validateForm()) return;
         this.isLoading = true;
 
+        // Map UI values (EQUALS, etc.) back to Salesforce restricted picklist values
+        const operatorMap = {
+            'EQUALS': '=',
+            'NOT_EQUALS': '!=',
+            'CONTAINS': 'Contains',
+            'NOT_CONTAINS': 'Not Contains',
+            'GREATER_THAN': '>',
+            'LESS_THAN': '<'
+        };
+
         const payload = {
-            recordId:        this.isEditMode ? this.editingRowId : null,
+            recordId: this.isEditMode ? this.editingRowId : null,
             previousStageId: this.formData.previousStageId,
-            actionButtonId:  this.formData.actionButtonId,
-            nextStageId:     this.formData.nextStageId,
-            nextQueue:       this.formData.nextQueue      || null,
-            teamUserGroup:   this.formData.teamUserGroup  || null,
-            priority:        this.formData.priority       || 1,
-            conditionLogic:  this.formData.conditionLogic || null,
-            conditions:      (this.formData.conditions || []).map(c => ({
-                id:        c.id && !c.id.startsWith('new-') ? c.id : null,
-                fieldId:   c.fieldId   || null,
-                operator:  c.operator,
-                value:     c.value,
-                valueType: c.valueType,
-                order:     c.order
+            actionButtonId: this.formData.actionButtonId,
+            nextStageId: this.formData.nextStageId,
+            nextQueue: this.formData.nextQueue || null,
+            teamUserGroup: this.formData.teamUserGroup || null,
+            priority: this.formData.priority || 1,
+            conditionRequirement: this.formData.conditionRequirement, // <- Thêm trường này
+            conditionLogic: this.formData.conditionRequirement === 'CUSTOM'
+                ? this.formData.conditionLogic
+                : this._autoConditionLogic(), // <- Luôn tính lại cho chuẩn trước khi save
+            conditions: (this.formData.conditions || []).map(c => ({
+                id: c.id && !c.id.startsWith('new-') ? c.id : null,
+                fieldId: c.fieldId || null,
+                operator: operatorMap[c.operator] || c.operator, // Chuyển đổi sang value Picklist chuẩn
+                value: c.value,
+                order: c.order
             }))
         };
 
+        console.log('[DEBUG] Calling API saveRuleWithConditions with payload:', JSON.stringify(payload));
+
         saveRuleWithConditions({ ruleData: JSON.stringify(payload) })
-            .then(() => {
+            .then(result => {
                 this.showToast('Thành công', this.isEditMode ? 'Đã cập nhật rule.' : 'Đã thêm rule mới.', 'success');
                 this.showAddRuleModal = false;
                 this.loadDecisionTable(this._selectedBPId);
@@ -589,36 +686,63 @@ export default class FecFlowControlDataView extends LightningElement {
             .finally(() => { this.isLoading = false; });
     }
 
+    _validateConditionLogicString(logicStr, conditionCount) {
+        if (!logicStr || logicStr.trim() === '') return 'Logic không được để trống.';
+        let str = logicStr.toUpperCase().trim();
+
+        const validFormatRegex = /^[0-9A-Z\s()]+$/;
+        if (!validFormatRegex.test(str)) return 'Chỉ dùng số, AND, OR và ().';
+
+        const openCount = (str.match(/\(/g) || []).length;
+        const closeCount = (str.match(/\)/g) || []).length;
+        if (openCount !== closeCount) return 'Thiếu hoặc thừa dấu ngoặc đơn ().';
+
+        const numberMatches = str.match(/\d+/g) || [];
+        const uniqueNumbers = [...new Set(numberMatches.map(n => parseInt(n, 10)))];
+
+        if (uniqueNumbers.length !== conditionCount) return `Logic phải chứa đủ ${conditionCount} số điều kiện.`;
+
+        for (let num of uniqueNumbers) {
+            if (num < 1 || num > conditionCount) return `Điều kiện số ${num} không tồn tại.`;
+        }
+        return null;
+    }
+
     _validateForm() {
         const errors = {};
         if (!this.formData.previousStageId) errors.previousStageId = 'Vui lòng chọn Current Stage';
-        if (!this.formData.actionButtonId)  errors.actionButtonId  = 'Vui lòng chọn Action Button';
-        if (!this.formData.nextStageId)     errors.nextStageId     = 'Vui lòng chọn Next Stage';
+        if (!this.formData.actionButtonId) errors.actionButtonId = 'Vui lòng chọn Action Button';
+        if (!this.formData.nextStageId) errors.nextStageId = 'Vui lòng chọn Next Stage';
 
-        // Validate conditions: fieldId (lookup) is required
-        (this.formData.conditions || []).forEach((c, i) => {
-            if (!c.fieldId) {
-                errors[`condition_${i}_field`] = `Điều kiện ${i + 1}: Vui lòng chọn Field`;
-            }
-            if (!c.operator) {
-                errors[`condition_${i}_operator`] = `Điều kiện ${i + 1}: Vui lòng chọn Operator`;
-            }
+        const conditions = this.formData.conditions || [];
+        conditions.forEach((c, i) => {
+            if (!c.fieldId) errors[`condition_${i}_field`] = `Điều kiện ${i + 1}: Vui lòng chọn Field`;
+            if (!c.operator) errors[`condition_${i}_operator`] = `Điều kiện ${i + 1}: Vui lòng chọn Operator`;
         });
+
+        // Chỉ Validate bằng Regex khi chọn CUSTOM
+        if (conditions.length > 0 && this.formData.conditionRequirement === 'CUSTOM') {
+            let logicError = this._validateConditionLogicString(this.formData.conditionLogic, conditions.length);
+            if (logicError) {
+                errors['conditionLogic'] = logicError;
+                this.showToast('Lỗi Logic Điều Kiện', logicError, 'error');
+            }
+        }
 
         this.formErrors = errors;
         return Object.keys(errors).length === 0;
     }
 
-    handleCloseModal()        { this.showAddRuleModal = false; }
-    handleOverlayClick()      { this.showAddRuleModal = false; }
-    handleDialogClick(event)  { event.stopPropagation(); }
+    handleCloseModal() { this.showAddRuleModal = false; }
+    handleOverlayClick() { this.showAddRuleModal = false; }
+    handleDialogClick(event) { event.stopPropagation(); }
 
     // ════════════════════════════════════════════════════════
     // COMPUTED GETTERS
     // ════════════════════════════════════════════════════════
-    get hasSelection()    { return !!this._selectedBPId || !!this._selectedNodeType; }
+    get hasSelection() { return !!this._selectedBPId || !!this._selectedNodeType; }
     // isBPSelected = true khi đã có BP ID (dù type là gì), Stage chỉ khi type='Stage' VÀ không có bpId
-    get isBPSelected()    { return !!this._selectedBPId; }
+    get isBPSelected() { return !!this._selectedBPId; }
     get isStageSelected() { return this._selectedNodeType === 'Stage' && !this._selectedBPId; }
     get hasDecisionData() { return this.groupedRows && this.groupedRows.length > 0; }
     get hasSearchFilter() { return !!(this.searchFilter || this.statusFilter); }
@@ -640,7 +764,7 @@ export default class FecFlowControlDataView extends LightningElement {
         return this.groupedRows.length;
     }
 
-    get modalTitle()     { return this.isEditMode ? 'Chỉnh sửa MDM Rule' : 'Thêm MDM Rule mới'; }
+    get modalTitle() { return this.isEditMode ? 'Chỉnh sửa MDM Rule' : 'Thêm MDM Rule mới'; }
     get modalSaveLabel() { return this.isEditMode ? 'Cập nhật' : 'Lưu'; }
 
     // ── Toast ────────────────────────────────────────────────

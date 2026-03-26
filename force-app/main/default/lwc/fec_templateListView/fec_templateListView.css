@@ -1,0 +1,14 @@
+/* ═══════════════════════════════════════════════════════════ */
+/* fec_templateListView                                       */
+/* Table scales to fill container; long text wraps             */
+/* ═══════════════════════════════════════════════════════════ */
+
+:host {
+    display: block;
+    width: 100%;
+}
+
+/* Force the datatable to fill the entire available width */
+lightning-datatable {
+    width: 100%;
+}

@@ -1,0 +1,43 @@
+.none {
+    display: none;
+}
+
+.cancel-button {
+    margin-right: 16px;
+}
+
+.submit {
+    display: flex;
+    justify-content: end;
+    padding-bottom: 22px;
+    padding-right: 22px;
+}
+
+.header {
+    
+}
+
+.step {
+    margin-bottom: 8px;
+    padding: 12px;
+    font-size: 14px;
+}
+
+.edit-form {
+    padding: 22px;
+}
+
+.column {
+    padding: 10px;
+}
+
+@media (max-width: 768px) {
+    .slds-grid {
+        display: block !important; /* overrides slds-grid flex layout */
+    }
+ 
+    .slds-col {
+        width: 100% !important; /* make each input full width */
+        /* display: block; */
+    }
+}

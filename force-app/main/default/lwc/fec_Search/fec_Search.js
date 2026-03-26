@@ -21,6 +21,7 @@ import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
+import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
 import {
   publish,
   MessageContext,
@@ -41,6 +42,7 @@ import SEARCH_CONTRACT_FIELD from "@salesforce/schema/Case.FEC_Search_Contract_N
 import SEARCH_ACCOUNT_FIELD from "@salesforce/schema/Case.FEC_Search_Account_Number__c";
 import SEARCH_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Search_Email_Address__c";
 import SEARCH_CUSTOMER_NUM_FIELD from "@salesforce/schema/Case.FEC_Search_Customer_Number__c";
+import { CurrentPageReference } from 'lightning/navigation';
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -55,6 +57,7 @@ const FIELDS_TO_CHECK = [
 export default class Fec_Search extends NavigationMixin(LightningElement) {
   @api recordId;
   @api isLoaded = false;
+  @api showSkipButton = false;
   activeSections = ["searchCriteria", "results"];
   nationalId;
   phoneNumber;
@@ -80,6 +83,32 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   @wire(MessageContext)
   messageContext;
+
+  @wire(CurrentPageReference)
+  pageRef;
+
+  get tabName() {
+    return this.pageRef?.attributes?.apiName; // e.g. 'Customer_Search'
+  }
+
+  get tabLabel() {
+    return this.tabName == 'FEC_Account_Contract_Search' ? 'Account/Contract Search' : 'Customer Search';
+  }
+
+  get isAccountContractSearch() {
+    return this.tabName === 'FEC_Account_Contract_Search'; // your tab's API name
+  }
+
+  get isListView() {
+    return this.pageRef?.type === 'standard__objectPage' &&
+      this.pageRef?.attributes?.objectApiName === 'Case' &&
+      !this.recordId;
+  }
+
+  get isCreateCaseTab() {
+    return this.pageRef?.type === 'standard__navItemPage' &&
+      this.pageRef?.attributes?.apiName === 'Create_Case';
+  }
 
   @wire(IsConsoleNavigation) isConsoleNavigation;
   async refreshTab() {
@@ -354,7 +383,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     const { data, error } = result;
     if (data) {
       // Logic xử lý dữ liệu khi thành công (tương đương phần .then cũ)
-      this.isSkip = data?.RecordType?.Name == "Internal Case";
+      this.isSkip = this.showSkipButton || (data && data.RecordType?.Name === 'Internal Case');
       this.isDisplay =
         data.Customer_Histories__r === undefined &&
         data.FEC_Skip_Search_Internal_Case__c === false;
@@ -367,6 +396,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   async connectedCallback() {
     this.isLoaded = false;
+    this.isSkip = this.showSkipButton;
     // Load styles
     loadStyle(this, COMMON_STYLES)
       .then(() => console.log("Common styles loaded"))
@@ -385,7 +415,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Search_Account_Number__c : null;
       this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Search_Email_Address__c : null;
       this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
-      if (this.phoneNumber || this.nationalId || this.contractNumber) {
+     if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress || this.customerNumber) {
         await this.processSearch();
       }
     } catch (error) {
@@ -944,14 +974,28 @@ hasAnySearchCriteria(params) {
         this.showToast(
           "Validation",
           "Please correct the highlighted errors before creating.",
-          "error",
+          "error"
         );
         return;
       }
-      console.log(
-        "Creating case with:",
-        this.custNameForCreate,
-        this.nationalIdForCreate,
+
+      let caseIdToUse = this.recordId;
+
+      if (!caseIdToUse) {
+        caseIdToUse = await createInternalCase({
+          customerName: this.custNameForCreate,
+          nationalId: this.nationalIdForCreate
+        });
+      }
+
+      this.dispatchEvent(
+        new CustomEvent("createsuccess", {
+          detail: {
+            recordId: caseIdToUse
+          },
+          bubbles: true,
+          composed: true
+        })
       );
 
       this[NavigationMixin.Navigate]({
@@ -960,7 +1004,7 @@ hasAnySearchCriteria(params) {
           componentName: "c__fec_InteractionCreateCase",
         },
         state: {
-          c__recordId: this.recordId,
+          c__recordId: caseIdToUse,
           c__customerName: this.custNameForCreate,
           c__identityNo: this.nationalIdForCreate,
           c__isCreatedFromSearch: 'true'
@@ -981,6 +1025,11 @@ hasAnySearchCriteria(params) {
 
     // Nếu result có giá trị 'confirmed' (do mình định nghĩa ở handleConfirm)
     if (result === "confirm") {
+       if (!this.recordId || this.recordId === '') {
+            this.showToast("Thông báo", "Skip thành công.", "success");
+            this.dispatchEvent(new CustomEvent('skippedwithoutrecord', { bubbles: true, composed: true }));
+            return;
+        }
       this.isLoaded = false;
       const fields = {};
       fields["Id"] = this.recordId;
@@ -1120,7 +1169,8 @@ hasAnySearchCriteria(params) {
           selectedType: action.type,
           cifNumber: cifNumber,
           phone: row?.Phone,
-          customerName: row?.FullName
+          customerName: row?.FullName,
+          isListView: !this.recordId
         })
           .then(async (res) => {
             // const payload = {
@@ -1138,6 +1188,12 @@ hasAnySearchCriteria(params) {
                 // await refreshApex(this.wiredCaseResult);
                 this.dispatchEvent(new RefreshEvent());
             } else {
+                this.dispatchEvent(
+                  new CustomEvent('closerequest', {
+                    bubbles: true,
+                    composed: true
+                  })
+                );
               this[NavigationMixin.Navigate]({
                 type: "standard__recordPage",
                 attributes: {
@@ -1163,9 +1219,8 @@ hasAnySearchCriteria(params) {
   }
 
   get isDisplayCreateCase() {
-    return this.recordId && this.isNoCustomerFound;
+    return this.isNoCustomerFound && (this.recordId || this.isListView || this.isCreateCaseTab);
   }
-
 
   // Sorting helpers if you want per-table sorting in future (optional)
   onSorting(event) {
