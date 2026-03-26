@@ -40,6 +40,11 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(LightningE
         await this.handleClose();
     }
 
+    async handleCreateSuccess(){
+        this.isShowModal = false;
+        await this.handleClose();
+    }
+    
     async handleClose() {
         this.isShowModal = false;
 

@@ -21,6 +21,7 @@ import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
+import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
 import {
   publish,
   MessageContext,
@@ -95,6 +96,17 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   get isAccountContractSearch() {
     return this.tabName === 'FEC_Account_Contract_Search'; // your tab's API name
+  }
+
+  get isListView() {
+    return this.pageRef?.type === 'standard__objectPage' &&
+      this.pageRef?.attributes?.objectApiName === 'Case' &&
+      !this.recordId;
+  }
+
+  get isCreateCaseTab() {
+    return this.pageRef?.type === 'standard__navItemPage' &&
+      this.pageRef?.attributes?.apiName === 'Create_Case';
   }
 
   @wire(IsConsoleNavigation) isConsoleNavigation;
@@ -961,14 +973,28 @@ hasAnySearchCriteria(params) {
         this.showToast(
           "Validation",
           "Please correct the highlighted errors before creating.",
-          "error",
+          "error"
         );
         return;
       }
-      console.log(
-        "Creating case with:",
-        this.custNameForCreate,
-        this.nationalIdForCreate,
+
+      let caseIdToUse = this.recordId;
+
+      if (!caseIdToUse) {
+        caseIdToUse = await createInternalCase({
+          customerName: this.custNameForCreate,
+          nationalId: this.nationalIdForCreate
+        });
+      }
+
+      this.dispatchEvent(
+        new CustomEvent("createsuccess", {
+          detail: {
+            recordId: caseIdToUse
+          },
+          bubbles: true,
+          composed: true
+        })
       );
 
       this[NavigationMixin.Navigate]({
@@ -977,7 +1003,7 @@ hasAnySearchCriteria(params) {
           componentName: "c__fec_InteractionCreateCase",
         },
         state: {
-          c__recordId: this.recordId,
+          c__recordId: caseIdToUse,
           c__customerName: this.custNameForCreate,
           c__identityNo: this.nationalIdForCreate,
         },
@@ -1190,9 +1216,8 @@ hasAnySearchCriteria(params) {
   }
 
   get isDisplayCreateCase() {
-    return this.recordId && this.isNoCustomerFound;
+    return this.isNoCustomerFound && (this.recordId || this.isListView || this.isCreateCaseTab);
   }
-
 
   // Sorting helpers if you want per-table sorting in future (optional)
   onSorting(event) {
