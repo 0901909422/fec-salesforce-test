@@ -32,351 +32,6 @@
     </flexiPageRegions>
     <flexiPageRegions>
         <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Link_ID__c</fieldItem>
-                <identifier>RecordFEC_Link_ID_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Channel__c</fieldItem>
-                <identifier>RecordFEC_Channel_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Interaction_Subchannel__c</fieldItem>
-                <identifier>RecordFEC_Interaction_Subchannel_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Created_by__c</fieldItem>
-                <identifier>RecordFEC_Created_by_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Created_On__c</fieldItem>
-                <identifier>RecordFEC_Created_On_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Case_Created_By__c</fieldItem>
-                <identifier>RecordFEC_Case_Created_By_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Case_Created_By__c</fieldItem>
-                <identifier>RecordFEC_Case_Created_By_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Last_Updated_By__c</fieldItem>
-                <identifier>RecordFEC_Last_Updated_By_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Last_Updated_On__c</fieldItem>
-                <identifier>RecordFEC_Last_Updated_On_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_On_Hold__c</fieldItem>
-                <identifier>RecordFEC_On_Hold__cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <name>Facet-t4k6amojdo</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Phone_Number__c</fieldItem>
-                <identifier>RecordFEC_Phone_Number_cField2</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Interaction_Masked_Phone__c}</leftValue>
-                        <operator>EQUAL</operator>
-                    </criteria>
-                </visibilityRule>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Interaction_Masked_Phone__c</fieldItem>
-                <identifier>RecordFEC_Interaction_Masked_Phone_cField</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Interaction_Masked_Phone__c}</leftValue>
-                        <operator>NE</operator>
-                    </criteria>
-                </visibilityRule>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Interaction_Email__c</fieldItem>
-                <identifier>RecordFEC_Interaction_Email_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Final_Status__c</fieldItem>
-                <identifier>RecordFEC_Final_Status_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <name>Facet-hr8avb0ith6</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
-                    <value>Facet-t4k6amojdo</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:column</componentName>
-                <identifier>flexipage_column8</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
-                    <value>Facet-hr8avb0ith6</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:column</componentName>
-                <identifier>flexipage_column9</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-wdnm0u4ic4p</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Link_ID__c</fieldItem>
-                <identifier>RecordFEC_Link_ID_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Customer_Name__c</fieldItem>
-                <identifier>RecordFEC_Customer_Name_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Transcription__c</fieldItem>
-                <identifier>RecordFEC_Transcription_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Channel__c</fieldItem>
-                <identifier>RecordFEC_Channel_cField3</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Interaction_Subchannel__c</fieldItem>
-                <identifier>RecordFEC_Interaction_Subchannel_cField3</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.LastModifiedById</fieldItem>
-                <identifier>RecordLastModifiedByIdField4</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <name>Facet-958fddtsygf</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_External_Interaction_ID__c</fieldItem>
-                <identifier>RecordFEC_External_Interaction_ID_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Account_Number__c</fieldItem>
-                <identifier>RecordFEC_Account_Number_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Final_Status__c</fieldItem>
-                <identifier>RecordFEC_Final_Status_cField4</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_KYC_Method__c</fieldItem>
-                <identifier>RecordFEC_KYC_Method_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Created_by__c</fieldItem>
-                <identifier>RecordFEC_Created_by_cField3</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <name>Facet-43elms78uj</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
-                    <value>Facet-958fddtsygf</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:column</componentName>
-                <identifier>flexipage_column10</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
-                    <value>Facet-43elms78uj</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:column</componentName>
-                <identifier>flexipage_column11</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-7y391c837te</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>forceChatter:recordFeedContainer</componentName>
-                <identifier>forceChatter_recordFeedContainer</identifier>
-                <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>false</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Email</rightValue>
-                    </criteria>
-                </visibilityRule>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
             <componentInstance>
                 <componentName>fecInteractionInfo</componentName>
                 <identifier>c_fecInteractionInfo</identifier>
@@ -402,58 +57,10 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>columns</name>
-                    <value>Facet-wdnm0u4ic4p</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>horizontalAlignment</name>
-                    <value>false</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>label</name>
-                    <value>Interaction Information</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:fieldSection</componentName>
-                <identifier>flexipage_fieldSection5</identifier>
+                <componentName>fecInteractionEmailInfo</componentName>
+                <identifier>c_fecInteractionEmailInfo</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 OR ( 2 AND 3 )</booleanFilter>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>true</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>F2F</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>true</rightValue>
-                    </criteria>
-                </visibilityRule>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>columns</name>
-                    <value>Facet-7y391c837te</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>horizontalAlignment</name>
-                    <value>false</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>label</name>
-                    <value>Interaction Information</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:fieldSection</componentName>
-                <identifier>flexipage_fieldSection6</identifier>
-                <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
+                    <booleanFilter>(1 AND 2) OR (1 AND 3 AND 4)</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -462,7 +69,70 @@
                     <criteria>
                         <leftValue>{!Record.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
+                        <rightValue>Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal Email</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_InteractionInfoF2F_Letter</componentName>
+                <identifier>c_fec_InteractionInfoF2F_Letter</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND (2 OR 3)</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>false</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>F2F</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Letter</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_InteractionMyCaseInfo</componentName>
+                <identifier>c_fec_InteractionMyCaseInfo</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND (2 OR 3) AND 4</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>false</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
                         <rightValue>External</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Internal Email</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -472,10 +142,16 @@
                 <componentName>fec_KYC</componentName>
                 <identifier>c_fec_KYC</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>true</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Internal Email</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -611,6 +287,36 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_MRC</componentName>
+                <identifier>c_fec_MRC</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-b39ae01f-1cc7-46da-932e-25da76ddc7a9</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_Asset</componentName>
+                <identifier>c_fec_Asset</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-4e12d1b9-12bd-413a-8c21-9b75a9b8fb1c</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_AppInfo</componentName>
+                <identifier>c_fec_AppInfo</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-fad4e003-d16c-4ce9-929c-e342eac2bfa8</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>active</name>
                     <value>true</value>
@@ -723,6 +429,48 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab14</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-b39ae01f-1cc7-46da-932e-25da76ddc7a9</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>MRC</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab16</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-4e12d1b9-12bd-413a-8c21-9b75a9b8fb1c</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Asset</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab17</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-fad4e003-d16c-4ce9-929c-e342eac2bfa8</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Application History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab18</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-7ff9e3fd-0caa-4867-8d23-4e594181ec78</name>
@@ -842,6 +590,86 @@
             </componentInstance>
         </itemInstances>
         <name>Facet-ki83wgad5t</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_PendingServiceCases</componentName>
+                <identifier>c_fec_PendingServiceCases</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_ClosedServiceCases</componentName>
+                <identifier>c_fec_ClosedServiceCases</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-55b87786-9603-4a09-a5ad-0ae86b7a620a</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_InteractionCases</componentName>
+                <identifier>c_fec_InteractionCases</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-0fe07583-2246-4568-9138-d8c30ea9b8f1</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>active</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-55b87786-9603-4a09-a5ad-0ae86b7a620a</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>All Service Cases</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab19</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-0fe07583-2246-4568-9138-d8c30ea9b8f1</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>All Interactions</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab20</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-31112629-518f-4685-a368-cb6f9202d0bf</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>label</name>
+                    <value>Tabs</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>tabs</name>
+                    <value>Facet-31112629-518f-4685-a368-cb6f9202d0bf</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tabset</componentName>
+                <identifier>flexipage_tabset4</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-fc5d9e9a-8c21-44d1-a5e8-9b070a02bcb2</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -1041,6 +869,27 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
+                    <value>Facet-fc5d9e9a-8c21-44d1-a5e8-9b070a02bcb2</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Interaction History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab21</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>review</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
                     <value>Facet-c2792dca-a561-477a-801c-cb47564b39bb</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
@@ -1083,6 +932,12 @@
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecEmailSection</componentName>
+                <identifier>c_fecEmailSection</identifier>
+            </componentInstance>
+        </itemInstances>
         <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>
