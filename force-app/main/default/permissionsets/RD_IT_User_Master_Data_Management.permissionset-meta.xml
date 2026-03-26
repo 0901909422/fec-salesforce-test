@@ -857,6 +857,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Notification__c.FEC_Applicable_User_Groups__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Notification__c.FEC_Assigned_to_Queue__c</field>
         <readable>true</readable>
     </fieldPermissions>
