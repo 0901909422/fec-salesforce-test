@@ -44,6 +44,7 @@ public without sharing class FEC_KYCController {
 
       Case c = caselst.get(0);
       result.kycType = c.FEC_KYC_Method__c;
+      result.plasticId = c.FEC_Account_or_Contract__r.FEC_Plastic_ID__c;
 
       if (
         PLASTIC_ID_DC2.equals(c.FEC_Account_or_Contract__r.FEC_Plastic_ID__c)
@@ -107,6 +108,9 @@ public without sharing class FEC_KYCController {
       List<FEC_KYC__c> selectedKYClst = new List<FEC_KYC__c>();
 
       for (FEC_KYC__c item : kyclst) {
+        if ('Card'.equalsIgnoreCase(item.FEC_Product_Type__r.Name) && String.isBlank(plasticId)) {
+          continue;
+        }
         selectedKYClst.add(item);
       }
 
@@ -567,6 +571,9 @@ public without sharing class FEC_KYCController {
   public class KYCDTO {
     @AuraEnabled
     public String kycType;
+
+    @AuraEnabled
+    public String plasticId;
 
     @AuraEnabled
     public List<TypeDTO> typelst;

@@ -568,6 +568,18 @@ const formatNumber = (value) => {
   }
 }
 
+const sortByStringField = (list = [], field, direction = 'asc') => {
+  if (!Array.isArray(list) || !field) return [];
+
+  const dir = direction === 'desc' ? -1 : 1;
+
+  return [...list].sort((a, b) => {
+    const x = (a[field] || '').toString().trim().toLowerCase();
+    const y = (b[field] || '').toString().trim().toLowerCase();
+
+    return x.localeCompare(y) * dir;
+  });
+};
 
 export {
   formatDate,
@@ -589,5 +601,6 @@ export {
   setConsoleTab,
   urlCmpWithRecordId,
   isNegative,
-  formatNumber
+  formatNumber,
+  sortByStringField
 };
