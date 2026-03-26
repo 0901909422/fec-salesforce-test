@@ -77,12 +77,24 @@ export default class Fec_SecondaryInfo extends LightningElement {
     loadData() {
         loadSecondaryInfo({ caseId: this.recordId })
             .then(res => {
-                this.zaloFollower     = res.zaloFollower || STR_NA;
-                this.websiteAccount   = res.websiteAccount || STR_NA;
+
+                this.zaloFollower = res.zaloFollower || STR_NA;
+                this.websiteAccount = res.websiteAccount || STR_NA;
                 this.mobileAppAccount = res.mobileAppAccount || STR_NA;
-                this.reference        = res.references || [];
-                this.contactList = res.contactList || [];
-                this.helpTexts        = res.helpTexts || {};
+                const contactList = res.contactList || [];
+                this.contactList = [...contactList].sort((a, b) => {
+                    const x = (a.channel || '').trim().toLowerCase();
+                    const y = (b.channel || '').trim().toLowerCase();
+                    return x.localeCompare(y);
+                });
+
+                const references = res.references || [];
+                this.reference = [...references].sort((a, b) => {
+                    const x = (a.fullName || '').trim().toLowerCase();
+                    const y = (b.fullName || '').trim().toLowerCase();
+                    return y.localeCompare(x);
+                });
+                this.helpTexts = res.helpTexts || {};
                 this.hasData = true;
             })
             .catch(err => {
