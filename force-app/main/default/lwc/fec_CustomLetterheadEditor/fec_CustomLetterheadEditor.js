@@ -76,13 +76,7 @@ export default class Fec_CustomLetterheadEditor extends NavigationMixin(Lightnin
         createdBy,
         lastModifiedBy
     }
-    connectedCallback(){
-         console.log('this.recordId:', this.recordId);
-         console.log('this.name:', this.name);
-         console.log('this.description:', this.description);
-         console.log('this.header:', this.header);
-         console.log('this.createdBy:', this.createdBy);
-    }
+ 
 
     get createdByUrl () {
         return `/lightning/r/User/${this.createdById}/view`;

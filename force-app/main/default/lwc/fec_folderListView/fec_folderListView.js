@@ -196,7 +196,7 @@ export default class Fec_folderListView extends LightningElement {
                 this._rows = this._mapFolderRows(folders);
                 /* Cache folder names */
                 folders.forEach(f => {
-                    this._folderNameCache[f.Id] = f.FEC_Folder_Label__c;
+                    this._folderNameCache[f.Id] = f.Name;
                 });
 
                 // Dispatch event to parent
@@ -211,7 +211,7 @@ export default class Fec_folderListView extends LightningElement {
 
                 /* Cache folder names */
                 childFolders.forEach(f => {
-                    this._folderNameCache[f.Id] = f.FEC_Folder_Label__c;
+                    this._folderNameCache[f.Id] = f.Name;
                 });
 
                 const folderRows   = this._mapFolderRows(childFolders);
@@ -452,10 +452,10 @@ export default class Fec_folderListView extends LightningElement {
         return (folders || []).map(f => ({
             id:               f.Id,
             rowType:          ROW_TYPE_FOLDER,
-            displayName:      `📁  ${f.FEC_Folder_Label__c || ''}`,
-            label:      `${f.FEC_Folder_Label__c || ''}`,
+            displayName:      `📁  ${f.Name || ''}`,
+            label:      `${f.Name || ''}`,
             description:      '',
-            folderName:       f.FEC_Parent_Folder__r ? f.FEC_Parent_Folder__r.FEC_Folder_Label__c : '',
+            folderName:       f.FEC_Parent_Folder__r ? f.FEC_Parent_Folder__r.Name : '',
             userUrl:          f.LastModifiedBy ? `/lightning/r/User/${f.LastModifiedBy.Id}/view` : '',
             lastModifiedBy:   f.LastModifiedBy ? f.LastModifiedBy.Name : '',
             lastModifiedDate: f.LastModifiedDate,
@@ -473,7 +473,7 @@ export default class Fec_folderListView extends LightningElement {
             displayName:      t.Name || '',
             label:            t.Name || '',
             description:      t.FEC_Description__c || '',
-            folderName:       t.FEC_Folder__r ? t.FEC_Folder__r.FEC_Folder_Label__c : '',
+            folderName:       t.FEC_Folder__r ? t.FEC_Folder__r.Name : '',
             lastModifiedBy:   t.LastModifiedBy ? t.LastModifiedBy.Name : '',
             userUrl:          t.LastModifiedBy ? `/lightning/r/User/${t.LastModifiedBy.Id}/view` : '',
             lastModifiedDate: t.LastModifiedDate,

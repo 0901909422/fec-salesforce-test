@@ -95,7 +95,7 @@ export default class Fec_templateManagementConsole extends LightningElement {
         try {
             const data = await getAllFolders();
             this._folderOptions = (data || []).map(f => ({
-                label: f.FEC_Folder_Label__c,
+                label: f.Name,
                 value: f.Id
             }));
         } catch (error) {

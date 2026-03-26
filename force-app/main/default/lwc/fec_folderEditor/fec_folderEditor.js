@@ -81,7 +81,7 @@ export default class Fec_folderEditor extends LightningElement {
     //     (this._allFolders || []).forEach(f => {
     //         // Exclude self when editing
     //         if (f.Id !== this.recordId) {
-    //             opts.push({ label: f.FEC_Folder_Label__c, value: f.Id });
+    //             opts.push({ label: f.Name, value: f.Id });
     //         }
     //     });
     //     return opts;
@@ -116,7 +116,7 @@ export default class Fec_folderEditor extends LightningElement {
         this.isDuplicated = false;
         try {
             const sObj = {
-                FEC_Folder_Label__c:       this.folderName,
+                Name:       this.folderName,
                 FEC_Folder_Unique_Name__c: this.uniqueName,
                 FEC_Parent_Folder__c:      this.parentFolderId || null
             };
@@ -174,8 +174,8 @@ export default class Fec_folderEditor extends LightningElement {
         try {
             const rec = await getFolder({ folderId: this.recordId });
             if (rec) {
-                this.folderName  = rec.FEC_Folder_Label__c || '';
-                this.uniqueName  = rec.FEC_Folder_Unique_Name__c || generateApiName(rec.FEC_Folder_Label__c);
+                this.folderName  = rec.Name || '';
+                this.uniqueName  = rec.FEC_Folder_Unique_Name__c || generateApiName(rec.Name);
                 this.parentId    = rec.FEC_Parent_Folder__c || '';
                 this.description = '';
                 this._uniqueNameManuallySet = true;
