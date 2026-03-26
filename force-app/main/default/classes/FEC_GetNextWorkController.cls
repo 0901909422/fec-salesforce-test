@@ -89,6 +89,13 @@ public without sharing class FEC_GetNextWorkController {
             FROM Case
             WHERE OwnerId = :queueId
             AND RecordType.DeveloperName IN (:FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME, :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)
+            AND Status NOT IN (
+                :FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED,
+                :FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED,
+                :FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED,
+                :FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER,
+                :FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED
+            )
             ORDER BY CreatedDate ASC
             LIMIT 1
         ];
@@ -141,7 +148,7 @@ public without sharing class FEC_GetNextWorkController {
         history.FEC_Stage_Name__c = oldCase.FEC_Current_Case_Stage__r != null 
              ? oldCase.FEC_Current_Case_Stage__r.FEC_Code__c 
             : null;
-        history.FEC_User__c = u.Email;
+        history.FEC_User__c = FEC_CommonUltils.getEmailPrefix(u.Email);
         history.FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null;
         history.FEC_Updated_User_Queue_ID__c = currentUserId;
         history.FEC_Description__c = FEC_ConstantCommon.CASE_TYPE_DESCRIPTION;

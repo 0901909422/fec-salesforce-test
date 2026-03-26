@@ -1,4 +1,4 @@
-<aura:component implements="lightning:isUrlAddressable" access="global">
+<aura:component implements="lightning:isUrlAddressable,force:appHostable" access="global">
     <aura:attribute name="recordId" type="String" />
     <aura:attribute name="planNumber" type="String" />
     <aura:attribute name="recordData" type="String" />

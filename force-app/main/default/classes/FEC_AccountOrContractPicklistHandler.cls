@@ -6,23 +6,24 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
         @AuraEnabled public String productName;
     }
     
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static String getInteractionAccountNumber(String caseId){
         try {
             
             Case interactionCase = [
             SELECT Id, FEC_Account_or_Contract__r.FEC_Account_Number__c,
-                   FEC_Account_or_Contract__r.FEC_CIF_Number__c
+                   FEC_Account_or_Contract__r.FEC_CIF_Number__c, FEC_Has_Account_or_Contract__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
         ];
             
-            Map<String, String> result = new Map<String, String>();
+            Map<String, Object> result = new Map<String, Object>();
             
             if (interactionCase.FEC_Account_or_Contract__r != null) {
                 result.put('accountNumber', interactionCase.FEC_Account_or_Contract__r.FEC_Account_Number__c);
                 result.put('cifNumber', interactionCase.FEC_Account_or_Contract__r.FEC_CIF_Number__c);
+                result.put('hasContractAccount', interactionCase.FEC_Has_Account_or_Contract__c);
             }
             
             return JSON.serialize(result);
@@ -31,6 +32,34 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             return JSON.serialize(new Map<String, String>());
         }
     }
+    
+    @AuraEnabled
+    public static string getInteractionViewMode(Id caseId){
+        try {
+            Case c = [
+            SELECT FEC_Interaction_View_Mode__c    
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+            return c.FEC_Interaction_View_Mode__c;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+    
+    @AuraEnabled
+    public static Id getInteractionIdFromCustomerCase(Id caseId) {
+        Case c = [
+        SELECT FEC_Interaction__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+    ];
+        return c.FEC_Interaction__c;
+    }
+    
+    
     
     @AuraEnabled
     public static List<GetProductsListResponse> getProductsListByCif(String cifNumber){
@@ -162,6 +191,21 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             update c;
         } catch (DmlException e) {
             throw new AuraHandledException(e.getDmlMessage(0));
+        }
+    }
+    
+    @AuraEnabled
+    public static String getInteractionCustomerType(Id caseId){
+        try {
+            Case c = [
+            SELECT FEC_Customer_Type__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+         ];
+            return c.FEC_Customer_Type__c;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
         }
     }
 }

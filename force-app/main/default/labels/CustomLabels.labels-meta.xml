@@ -2838,6 +2838,14 @@
         <value>Follow-Up User đã được thêm vào danh sách follow-up và Watcher Information.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_FollowUp_Not02_User_Already_Watcher</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Noti-02: User already in Case Watcher Information list</shortDescription>
+        <value>Người dùng này đã có trong danh sách theo dõi Case</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_FollowUp_Already_Unfollowed</fullName>
         <categories>Follow-Up</categories>
         <language>en_US</language>
@@ -7727,5 +7735,12 @@
         <protected>false</protected>
         <shortDescription>Email body when Case owner changes. {0}=Case Number, {1}=Case link URL</shortDescription>
         <value>Case {0} đã được phân công cho bạn. Vui lòng xem và xử lý: {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Account_Card_Fetch_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Card Fetch Error</shortDescription>
+        <value>Failed to retrieve card info for Account Number</value>
     </labels>
 </CustomLabels>
