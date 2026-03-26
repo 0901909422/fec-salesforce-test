@@ -2,14 +2,13 @@ public with sharing class FEC_GetInteractionCases {
 
     /**
      * Returns all non-archived Interaction records (Case with RecordType = Interaction).
-     * Archived = closed and closed more than 3 months ago. Sorted by FEC_Created_On__c DESC.
      */
     @AuraEnabled
     public static List<InteractionRow> getAllInteractions() {
         if (!Schema.sObjectType.Case.isAccessible()) {
             return new List<InteractionRow>();
         }
-        DateTime archiveThreshold = DateTime.now().addMonths(-3);
+        //DateTime archiveThreshold = DateTime.now().addMonths(-3);
         List<String> rtNames = new List<String>{
             FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME
         };
@@ -20,7 +19,7 @@ public with sharing class FEC_GetInteractionCases {
             'FEC_Interaction_Email__c, FEC_Last_Updated_On__c, FEC_Last_Updated_By__c ' +
             'FROM Case ' +
             'WHERE RecordType.DeveloperName IN :rtNames ' +
-            'AND (IsClosed = false OR ClosedDate >= :archiveThreshold) ' +
+            //'AND (IsClosed = false OR ClosedDate >= :archiveThreshold) ' +
             'ORDER BY FEC_Created_On__c DESC NULLS LAST';
         List<Case> cases = new List<Case>();
         try {
