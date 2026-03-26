@@ -9,10 +9,9 @@ public with sharing class FEC_FolderSelector {
     private static final List<String> BASE_FIELDS = new List<String>{
         'Id',
         'Name',
-        'FEC_Folder_Label__c',
         'FEC_Folder_Unique_Name__c',
         'FEC_Parent_Folder__c',
-        'FEC_Parent_Folder__r.FEC_Folder_Label__c',
+        'FEC_Parent_Folder__r.Name',
         'LastModifiedBy.Name',
         'LastModifiedDate',
         'CreatedDate'
@@ -39,7 +38,7 @@ public with sharing class FEC_FolderSelector {
     public static List<FEC_Folder__c> selectAll() {
         return Database.query(
             buildBaseQuery() +
-            ' ORDER BY FEC_Folder_Label__c ASC' +
+            ' ORDER BY Name ASC' +
             ' LIMIT 2000'
         );
     }
@@ -52,7 +51,7 @@ public with sharing class FEC_FolderSelector {
         return Database.query(
             buildBaseQuery() +
             ' WHERE FEC_Parent_Folder__c = NULL' +
-            ' ORDER BY FEC_Folder_Label__c ASC'
+            ' ORDER BY Name ASC'
         );
     }
 
@@ -65,7 +64,7 @@ public with sharing class FEC_FolderSelector {
         return Database.query(
             buildBaseQuery() +
             ' WHERE FEC_Parent_Folder__c = :parentFolderId' +
-            ' ORDER BY FEC_Folder_Label__c ASC'
+            ' ORDER BY Name ASC'
         );
     }
 
@@ -81,8 +80,8 @@ public with sharing class FEC_FolderSelector {
         searchText = '%' + String.escapeSingleQuotes(searchText.trim()) + '%';
         return Database.query(
             buildBaseQuery() +
-            ' WHERE FEC_Folder_Label__c LIKE :searchText' +
-            ' ORDER BY FEC_Folder_Label__c ASC' +
+            ' WHERE Name LIKE :searchText' +
+            ' ORDER BY Name ASC' +
             ' LIMIT 2000'
         );
     }

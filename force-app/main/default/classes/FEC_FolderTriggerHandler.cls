@@ -1,59 +1,82 @@
 public without sharing class FEC_FolderTriggerHandler {
+    
+    // Assumed field name for Parent lookup: FEC_Parent_Folder__c
+    // Replace with your actual API name if different.
+    
     public static void run() {
         FEC_FolderTriggerHandler handler = new FEC_FolderTriggerHandler();
         
-        if (Trigger.isBefore && Trigger.isInsert) {
-            List<FEC_Folder__c> folders = (List<FEC_Folder__c>) Trigger.new;
-            handler.onBeforeInsert(folders);
+        if (Trigger.isBefore) {
+            if (Trigger.isInsert) {
+                handler.validateFolderUniqueName((List<FEC_Folder__c>) Trigger.new, null);
+            } else if (Trigger.isUpdate) {
+                handler.validateFolderUniqueName((List<FEC_Folder__c>) Trigger.new, (Map<Id, FEC_Folder__c>) Trigger.oldMap);
+            }
         }
-        
-        if (Trigger.isBefore && Trigger.isUpdate) {
-            List<FEC_Folder__c> folders = (List<FEC_Folder__c>) Trigger.new;
-            Map<Id, FEC_Folder__c> oldMap = (Map<Id, FEC_Folder__c>) Trigger.oldMap;
-            handler.onBeforeUpdate(folders, oldMap);
-        }
-        
     }
 
-    private void onBeforeInsert(List<FEC_Folder__c> folders) {
-        validateFolderUniqueName(folders);
-    }
+    private void validateFolderUniqueName(List<FEC_Folder__c> folders, Map<Id, FEC_Folder__c> oldMap) {
+        Set<String> names = new Set<String>();
+        Set<Id> parentIds = new Set<Id>();
+        List<FEC_Folder__c> recordsToValidate = new List<FEC_Folder__c>();
 
-    private void onBeforeUpdate(List<FEC_Folder__c> folders, Map<Id, FEC_Folder__c> oldMap) {
-       validateFolderUniqueName(folders);
-    }
-
-    private void validateFolderUniqueName(List<FEC_Folder__c> folders) {
-        Set<String> newNames = new Set<String>();
-
-        // 1. Collect names from incoming records
+        // 1. Collect names and parent IDs, filtering for records where name or parent changed
         for (FEC_Folder__c folder : folders) {
-            if (folder.FEC_Folder_Unique_Name__c != null) {
-                newNames.add(folder.FEC_Folder_Unique_Name__c);
+            Boolean isChanged = (oldMap == null || 
+                                folder.FEC_Folder_Unique_Name__c != oldMap.get(folder.Id).FEC_Folder_Unique_Name__c ||
+                                folder.FEC_Parent_Folder__c != oldMap.get(folder.Id).FEC_Parent_Folder__c);
+
+            if (folder.FEC_Folder_Unique_Name__c != null && isChanged) {
+                names.add(folder.FEC_Folder_Unique_Name__c);
+                parentIds.add(folder.FEC_Parent_Folder__c); // Can be null for root folders
+                recordsToValidate.add(folder);
             }
         }
 
-        if (!newNames.isEmpty()) {
-            // 2. Query existing records with the same names
-            Map<String, FEC_Folder__c> existingFoldersMap = new Map<String, FEC_Folder__c>();
-            for (FEC_Folder__c existing : [SELECT Id, FEC_Folder_Unique_Name__c 
-                                        FROM FEC_Folder__c 
-                                        WHERE FEC_Folder_Unique_Name__c IN :newNames]) {
-                existingFoldersMap.put(existing.FEC_Folder_Unique_Name__c.toLowerCase(), existing);
-            }
+        if (recordsToValidate.isEmpty()) return;
 
-            // 3. Compare and add error
-            String errorMsgLabel = System.Label.FEC_Folder_Duplicate_Error;
-            for (FEC_Folder__c folder : folders) {
-                if (existingFoldersMap.containsKey(folder.FEC_Folder_Unique_Name__c.toLowerCase())) {
-                    // Ensure we aren't flagging the record against itself during an update
-                    if (Trigger.isInsert || (Trigger.isUpdate && folder.Id != existingFoldersMap.get(folder.FEC_Folder_Unique_Name__c.toLowerCase()).Id)) {
-                        // Format the message with the dynamic name
-                        String dynamicError = String.format(errorMsgLabel, new List<Object>{folder.FEC_Folder_Unique_Name__c});
-                        folder.FEC_Folder_Unique_Name__c.addError(dynamicError);
-                    }
-                }
+        // 2. Query existing records that share those names AND those parents
+        // Using a Map with a composite key: "ParentId-Name"
+        Map<String, Id> existingKeysMap = new Map<String, Id>();
+        for (FEC_Folder__c existing : [SELECT Id, FEC_Folder_Unique_Name__c, FEC_Parent_Folder__c 
+                                       FROM FEC_Folder__c 
+                                       WHERE FEC_Folder_Unique_Name__c IN :names 
+                                       AND FEC_Parent_Folder__c IN :parentIds]) {
+            String key = generateKey(existing.FEC_Parent_Folder__c, existing.FEC_Folder_Unique_Name__c);
+            existingKeysMap.put(key, existing.Id);
+        }
+
+        // 3. Validate against DB and handle intra-batch duplicates
+        Set<String> keysInBatch = new Set<String>();
+        String errorMsgLabel = System.Label.FEC_Folder_Duplicate_Error;
+           System.debug('>>existingKeysMap: ' +Json.serializePretty(existingKeysMap));
+
+        for (FEC_Folder__c folder : recordsToValidate) {
+            String currentKey = generateKey(folder.FEC_Parent_Folder__c, folder.FEC_Folder_Unique_Name__c);
+            System.debug('>>currentKey: ' +currentKey);
+
+            // Check against Database
+            Boolean existsInDb = existingKeysMap.containsKey(currentKey) && existingKeysMap.get(currentKey) != folder.Id;
+             System.debug('>>existsInDb: ' +existsInDb);
+            
+            // Check against other records in the same transaction (Batch)
+            Boolean existsInBatch = keysInBatch.contains(currentKey);
+              System.debug('>>existsInBatch: ' +existsInBatch);
+
+            if (existsInDb || existsInBatch) {
+                String dynamicError = String.format(errorMsgLabel, new List<Object>{folder.FEC_Folder_Unique_Name__c});
+                folder.FEC_Folder_Unique_Name__c.addError(dynamicError);
+            } else {
+                keysInBatch.add(currentKey);
             }
         }
+    }
+
+    /**
+     * Creates a unique identifier for a folder name within a specific parent scope.
+     * Handles null parentIds for root-level folders.
+     */
+    private String generateKey(Id parentId, String name) {
+        return (parentId == null ? 'ROOT' : (String)parentId) + '-' + name.toLowerCase().trim();
     }
 }
