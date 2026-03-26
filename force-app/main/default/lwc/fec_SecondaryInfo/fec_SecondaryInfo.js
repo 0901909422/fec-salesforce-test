@@ -22,6 +22,7 @@ import FEC_Website_Account_Label from '@salesforce/label/c.FEC_Website_Account_L
 import FEC_Email_Label from '@salesforce/label/c.FEC_Email_Label';
 import FEC_Work_Phone_Label from '@salesforce/label/c.FEC_Work_Phone_Label';
 import { STR_NA } from 'c/fec_CommonConst';
+import { sortByStringField } from 'c/fec_CommonUtils';
 
 import loadSecondaryInfo from '@salesforce/apex/FEC_SecondaryController.loadSecondaryInfo';
 import logSensitiveFromSecondaryInfo from '@salesforce/apex/FEC_SecondaryController.logSensitiveFromSecondaryInfo';
@@ -82,18 +83,9 @@ export default class Fec_SecondaryInfo extends LightningElement {
                 this.websiteAccount = res.websiteAccount || STR_NA;
                 this.mobileAppAccount = res.mobileAppAccount || STR_NA;
                 const contactList = res.contactList || [];
-                this.contactList = [...contactList].sort((a, b) => {
-                    const x = (a.channel || '').trim().toLowerCase();
-                    const y = (b.channel || '').trim().toLowerCase();
-                    return x.localeCompare(y);
-                });
-
                 const references = res.references || [];
-                this.reference = [...references].sort((a, b) => {
-                    const x = (a.fullName || '').trim().toLowerCase();
-                    const y = (b.fullName || '').trim().toLowerCase();
-                    return y.localeCompare(x);
-                });
+                this.contactList = sortByStringField(contactList, 'channel', 'asc');
+                this.reference = sortByStringField(references, 'fullName', 'asc');
                 this.helpTexts = res.helpTexts || {};
                 this.hasData = true;
             })
