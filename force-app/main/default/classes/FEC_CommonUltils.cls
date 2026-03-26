@@ -961,4 +961,13 @@ public with sharing class FEC_CommonUltils {
         ? email.substringBefore('@') 
         : email;
   }
+
+  public static Id getRecordTypeIdByDev(String devName) {
+    Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+    if (!rtMap.containsKey(devName)) {
+      return null;
+    }
+    Id recordTypeId = rtMap.get(devName).getRecordTypeId();
+    return recordTypeId;
+  }
 }

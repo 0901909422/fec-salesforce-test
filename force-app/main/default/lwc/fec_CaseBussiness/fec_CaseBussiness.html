@@ -20,6 +20,16 @@
             <p key={item.id}>{item.value}</p>
           </template>
         </div>
+
+        <!-- Dynamic LWC components from section.componentlst (FEC_LWC_Name__c, FEC_Type__c = LWC) -->
+        <template if:true={section.resolvedComponentlst}>
+          <template for:each={section.resolvedComponentlst} for:item="dynCmp">
+            <div key={dynCmp.key} class="slds-m-top_medium">
+              <lwc:component lwc:is={dynCmp.ctor} record-id={recordId}></lwc:component>
+            </div>
+          </template>
+        </template>
+
         <div class="slds-grid slds-wrap slds-m-top--small">
           <!-- subsection -->
           <template for:each={section.subSectionlst} for:item="subSection">
@@ -217,6 +227,7 @@
 
     <!-- routing action -->
     <lightning-accordion-section
+      key={routingAccordionSectionKey}
       if:true={business.hasRoutingAction}
       name="routing-action"
       label={customLabel.routingActionLabel}
