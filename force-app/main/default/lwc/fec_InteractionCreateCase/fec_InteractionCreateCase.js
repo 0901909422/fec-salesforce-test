@@ -55,6 +55,11 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
     return this.pageRef ? this.pageRef.state.c__identityNo : null;
   }
 
+  get isCreatedFromSearch() {
+    // Access parameters via the 'state' object
+    return this.pageRef ? this.pageRef.state.c__isCreatedFromSearch : null;
+  }
+
   get isNonExistingCustomer() {
     if (this.customerName != null) {
       return true;
@@ -110,6 +115,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
         caseId: this.recordId,
         customerName: this.customerName,
         nationalPassportId: this.identityNo,
+        isCreatedFromSearch: this.isCreatedFromSearch
       })
         .then(async (newCaseId) => {
           this.isLoading = false;
