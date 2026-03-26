@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_Is_Manager_For_Cur_User__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_Owner_Is_User__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-
-    <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Address_Info__c.FEC_Address_Type__c</field>
         <readable>true</readable>
