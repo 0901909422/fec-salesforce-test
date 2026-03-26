@@ -1,16 +1,10 @@
 import { LightningElement, api, wire, track } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
-import HAS_ACCOUNT_OR_CONTACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
-import CUSTOMER_TYPE from "@salesforce/schema/Case.FEC_Customer_Type__c";
 import getInteractionAccountNumber from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionAccountNumber";
-import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionIdFromCustomerCase";
 import getProductsListByCif from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getProductsListByCif";
-import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import {
   UBANK_PRODUCT_NAME,
   NON_EXISTING_CUSTOMER_PRODUCT_NAME,
-  RECORD_TYPE_INTERACTION,
-  RECORD_TYPE_CUSTOMER_CASE,
   NON_EXISTING_CUSTOMER_TYPE,
 } from "c/fec_CommonConst";
 import {
@@ -19,21 +13,20 @@ import {
   APPLICATION_SCOPE,
   MessageContext,
 } from "lightning/messageService";
-import { RefreshEvent } from "lightning/refresh";
 import createHistory from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.createHistory";
 import createHistoryNonExistingCustomer from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.createHistoryNonExistingCustomer";
 import getInteractionCustomerType from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionCustomerType";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import FEC_ACCOUNT_CONTRACT_NUMBER_LABEL from "@salesforce/label/c.FEC_Account_Contract_Number_Label";
-import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
-export default class Fec_AccountOrContractPicklistInteraction extends LightningElement {
+import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
+import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionIdFromCustomerCase";
+import CASE_ID from "@salesforce/schema/Case.Id";
+export default class AccountOrContractPicklistCustomerCase extends LightningElement {
   labels = {
     accountContractNumber: FEC_ACCOUNT_CONTRACT_NUMBER_LABEL,
   };
 
   @api recordId;
-  @api interactionId;
-
   selectedValue = "";
   cifNumber = "";
   hasAccountOrContact = false;
@@ -44,6 +37,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   recordTypeDevName;
   subscription = null;
   interactionCustomerType;
+  interactionId;
   @wire(MessageContext)
   messageContext;
 
@@ -105,19 +99,15 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   /* =======================
    * WIRE
    * ======================= */
-
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [RECORDTYPE_ID, CUSTOMER_TYPE],
+    fields: [CASE_ID],
   })
   wiredCase({ data, error }) {
+     console.log('có data không');
+    console.log(data ? true : false);
     if (data) {
-      this.resolveInteractionCustomerType();
-      if (!this.isNonExistingCustomer) {
-        this.getInteractionAccountNumber();
-      } else {
-        this.getInteractionAccountNumberNonExistingCustomer();
-      }
+      this.initData(); // chỉ gọi 1 entry point
     }
 
     if (error) {
@@ -125,50 +115,47 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     }
   }
 
-  async resolveInteractionCustomerType() {
+  async initData() {
     try {
+      console.log("Test");
+      console.log(this.recordId);
+      this.interactionId = await getInteractionIdFromCustomerCase({
+        caseId: this.recordId,
+      });
+
+      // 1. lấy customer type
       this.interactionCustomerType = await getInteractionCustomerType({
         caseId: this.interactionId,
       });
+
+      // 2. load account data
+      await this.loadAccountData();
     } catch (e) {
-      console.error("getInteractionCustomerType error", e);
+      console.error("initData error:", e);
     }
   }
 
-  async getInteractionAccountNumber() {
+  async loadAccountData() {
     try {
       const result = await getInteractionAccountNumber({
         caseId: this.interactionId,
       });
+
       const data = result ? JSON.parse(result) : {};
-      console.log(JSON.stringify(data));
+
+      console.log("DATA:", data);
+
       this.selectedValue = data.accountNumber || "";
       this.cifNumber = data.cifNumber;
       this.hasAccountOrContact = data.hasContractAccount;
 
-      await this.getProductsList();
+      if (this.isNonExistingCustomer) {
+        this.initAccountDataNonExisting();
+      } else {
+        await this.getProductsList();
+      }
     } catch (error) {
-      console.error("[APEX] GetInteractionAccountNumber error:", error);
-    }
-  }
-
-  async getInteractionAccountNumberNonExistingCustomer() {
-    try {
-      const result = await getInteractionAccountNumber({
-        caseId: this.interactionId,
-      });
-      const data = result ? JSON.parse(result) : {};
-      console.log("### Test ###");
-      console.log(JSON.stringify(data));
-      this.selectedValue = data.accountNumber || "";
-      this.cifNumber = data.cifNumber;
-      this.hasAccountOrContact = data.hasContractAccount;
-      this.initAccountDataNonExisting();
-    } catch (error) {
-      console.error(
-        "[APEX] getInteractionAccountNumberNonExistingCustomer error:",
-        error,
-      );
+      console.error("loadAccountData error:", error);
     }
   }
 
@@ -233,8 +220,10 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     return this.interactionCustomerType === NON_EXISTING_CUSTOMER_TYPE;
   }
 
- 
- 
+  get showPicklist() {
+    return true;
+  }
+
   /* =======================
    * UI ACTIONS
    * ======================= */
