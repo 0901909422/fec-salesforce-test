@@ -962,6 +962,7 @@ hasAnySearchCriteria(params) {
           c__recordId: this.recordId,
           c__customerName: this.custNameForCreate,
           c__identityNo: this.nationalIdForCreate,
+          c__isCreatedFromSearch: 'true'
         },
       });
     } catch (e) {
