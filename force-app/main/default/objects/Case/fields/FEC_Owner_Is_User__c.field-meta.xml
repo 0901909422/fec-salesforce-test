@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Owner_Is_User__c</fullName>
+    <description>True khi Case Owner là User (không phải Queue). Dùng lọc list view My Team.</description>
+    <externalId>false</externalId>
+    <formula>AND(ISBLANK(Owner:Queue.Id), OwnerId &lt;&gt; $User.Id)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Owner Is User</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>
