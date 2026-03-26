@@ -4,12 +4,9 @@ import HAS_ACCOUNT_OR_CONTACT from "@salesforce/schema/Case.FEC_Has_Account_or_C
 import CUSTOMER_TYPE from "@salesforce/schema/Case.FEC_Customer_Type__c";
 import getInteractionAccountNumber from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionAccountNumber";
 import getProductsListByCif from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getProductsListByCif";
-import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import {
   UBANK_PRODUCT_NAME,
   NON_EXISTING_CUSTOMER_PRODUCT_NAME,
-  RECORD_TYPE_INTERACTION,
-  RECORD_TYPE_CUSTOMER_CASE,
   NON_EXISTING_CUSTOMER_TYPE,
 } from "c/fec_CommonConst";
 import {
@@ -18,11 +15,10 @@ import {
   APPLICATION_SCOPE,
   MessageContext,
 } from "lightning/messageService";
-import { RefreshEvent } from "lightning/refresh";
 import createHistory from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.createHistory";
 import createHistoryNonExistingCustomer from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.createHistoryNonExistingCustomer";
-
-import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
+import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Interaction_Case_Mode__c";
 import FEC_ACCOUNT_CONTRACT_NUMBER_LABEL from "@salesforce/label/c.FEC_Account_Contract_Number_Label";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 export default class Fec_AccountOrContractPicklistInteraction extends LightningElement {
@@ -42,6 +38,8 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   recordTypeDevName;
   subscription = null;
   customerType;
+  isLoading = false;
+  isInitialized = false;
   @wire(MessageContext)
   messageContext;
 
@@ -106,44 +104,19 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
 
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [HAS_ACCOUNT_OR_CONTACT, RECORDTYPE_ID, CUSTOMER_TYPE],
+    fields: [HAS_ACCOUNT_OR_CONTACT, CUSTOMER_TYPE, RECORDTYPE_ID],
   })
   wiredCase({ data, error }) {
     if (data) {
+      console.log("🔥 WIRED TRIGGERED");
+      // reset state để force UI rebuild
+      this.isOpen = false;
       this.hasAccountOrContact = getFieldValue(data, HAS_ACCOUNT_OR_CONTACT);
-      this.recordTypeId = getFieldValue(data, RECORDTYPE_ID);
       this.customerType = getFieldValue(data, CUSTOMER_TYPE);
-      console.log("[WIRE] Case loaded");
-      console.log("[WIRE] recordId:", this.recordId);
-      console.log("[WIRE] hasAccountOrContact:", this.hasAccountOrContact);
-      console.log("[WIRE] customerType:", this.customerType);
-      if (this.recordTypeId) {
-        this.loadRecordType();
-      }
-      if (this.hasAccountOrContact) {
-        this.getInteractionAccountNumber();
-      } else {
-        if (this.isNonExistingCustomer) {
-          this.data = [
-            {
-              id: "1",
-              product: NON_EXISTING_CUSTOMER_PRODUCT_NAME,
-              accountContractNumber: NON_EXISTING_CUSTOMER_PRODUCT_NAME,
-              displayValue: "",
-              productName: null,
-              isSelected:
-                NON_EXISTING_CUSTOMER_PRODUCT_NAME === this.selectedValue,
-            },
-            {
-              id: "2",
-              product: UBANK_PRODUCT_NAME,
-              accountContractNumber: UBANK_PRODUCT_NAME,
-              displayValue: "",
-              productName: null,
-              isSelected: UBANK_PRODUCT_NAME === this.selectedValue,
-            },
-          ];
-        }
+
+      //  FIX: chỉ load khi có recordId và chưa init
+      if (this.recordId) {
+        this.loadAccountData();
       }
     }
 
@@ -152,35 +125,52 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     }
   }
 
-  async loadRecordType() {
-    try {
-      this.recordTypeDevName = await getRecordTypeName({
-        recordId: this.recordId,
-      });
-    } catch (e) {
-      console.error("getRecordTypeName error:", e);
-    }
-  }
+  // ===== CORE LOGIC =====
+  async loadAccountData(retry = 0) {
+    if (this.isLoading || !this.recordId) return;
 
-  async getInteractionAccountNumber() {
+    this.isLoading = true;
+
     try {
       const result = await getInteractionAccountNumber({
         caseId: this.recordId,
       });
-      const data = result ? JSON.parse(result) : {};
 
-      this.selectedValue = data.accountNumber || "";
-      this.cifNumber = data.cifNumber;
+      const parsed = result ? JSON.parse(result) : {};
 
-      await this.getProductsList();
-    } catch (error) {
-      console.error("[APEX] GetInteractionAccountNumber error:", error);
+      console.log("DATA:", parsed);
+
+      // ❗ nếu chưa có data → retry
+      if (!parsed.accountNumber && retry < 3) {
+        console.warn(`Retry lần ${retry + 1}`);
+
+        setTimeout(() => {
+          this.isLoading = false; // unlock
+          this.loadAccountData(retry + 1);
+        }, 300);
+
+        return;
+      }
+
+      // ✅ data OK → set state
+      this.selectedValue = parsed.accountNumber || "";
+      this.cifNumber = parsed.cifNumber;
+
+      if (this.isNonExistingCustomer) {
+        this.initAccountDataNonExisting();
+      } else {
+        await this.getProductsList();
+      }
+    } catch (e) {
+      console.error("loadAccountData error:", e);
+    } finally {
+      this.isLoading = false;
     }
   }
 
   async getProductsList() {
     if (!this.cifNumber) {
-      console.warn("Missing CIF → skip getProductsList");
+      this.data = [];
       return;
     }
 
@@ -189,7 +179,12 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
         cifNumber: this.cifNumber,
       });
 
-      const mappedData = result.map((item, index) => ({
+      if (!result || !Array.isArray(result)) {
+        this.data = [];
+        return;
+      }
+
+      const mapped = result.map((item, index) => ({
         id: String(index + 1),
         product: item.productType,
         accountContractNumber: item.accountContractNumber,
@@ -198,8 +193,8 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
         isSelected: item.accountContractNumber === this.selectedValue,
       }));
 
-      mappedData.push({
-        id: String(mappedData.length + 1),
+      mapped.push({
+        id: String(mapped.length + 1),
         product: UBANK_PRODUCT_NAME,
         accountContractNumber: UBANK_PRODUCT_NAME,
         displayValue: "",
@@ -207,27 +202,42 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
         isSelected: UBANK_PRODUCT_NAME === this.selectedValue,
       });
 
-      this.data = mappedData;
-    } catch (error) {
-      console.error("[APEX] getProductsListByCif error:", error);
+      this.data = mapped;
+    } catch (e) {
+      console.error("loadProducts error:", e);
     }
   }
 
-  get isNonExistingCustomer() {
-    return this.customerType === NON_EXISTING_CUSTOMER_TYPE;
+  initAccountDataNonExisting() {
+    this.data = [
+      {
+        id: "1",
+        product: NON_EXISTING_CUSTOMER_PRODUCT_NAME,
+        accountContractNumber: "Non-Existing Customer",
+        displayValue: "",
+        productName: null,
+        isSelected: NON_EXISTING_CUSTOMER_PRODUCT_NAME == this.selectedValue,
+      },
+      {
+        id: "2",
+        product: UBANK_PRODUCT_NAME,
+        accountContractNumber: UBANK_PRODUCT_NAME,
+        displayValue: "",
+        productName: null,
+        isSelected: UBANK_PRODUCT_NAME == this.selectedValue,
+      },
+    ];
+    console.log(UBANK_PRODUCT_NAME, NON_EXISTING_CUSTOMER_PRODUCT_NAME);
   }
 
   get showPicklist() {
     return this.hasAccountOrContact && this.isEditMode;
   }
 
-  get isInteractionCase() {
-    return this.recordTypeDevName === RECORD_TYPE_INTERACTION;
+  get isNonExistingCustomer() {
+    return this.customerType === NON_EXISTING_CUSTOMER_TYPE;
   }
 
-  get isCustomerCase() {
-    return this.recordTypeDevName === RECORD_TYPE_CUSTOMER_CASE;
-  }
   /* =======================
    * UI ACTIONS
    * ======================= */
@@ -253,7 +263,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     const success = await this.createHistory();
     this.isOpen = false;
     if (success) {
-      this.dispatchEvent(new RefreshEvent());
+      await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
     }
   }
 

@@ -89,6 +89,13 @@ public without sharing class FEC_GetNextWorkController {
             FROM Case
             WHERE OwnerId = :queueId
             AND RecordType.DeveloperName IN (:FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME, :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)
+            AND Status NOT IN (
+                :FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED,
+                :FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED,
+                :FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED,
+                :FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER,
+                :FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED
+            )
             ORDER BY CreatedDate ASC
             LIMIT 1
         ];
@@ -123,7 +130,8 @@ public without sharing class FEC_GetNextWorkController {
         );
 
         Case oldCase = [
-            SELECT Id, OwnerId, Owner.Name, FEC_Current_Case_Stage__r.FEC_Code__c
+            SELECT Id, OwnerId, Owner.Name, FEC_Team__c,
+                    FEC_Current_Case_Stage__r.FEC_Code__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -141,13 +149,51 @@ public without sharing class FEC_GetNextWorkController {
         history.FEC_Stage_Name__c = oldCase.FEC_Current_Case_Stage__r != null 
              ? oldCase.FEC_Current_Case_Stage__r.FEC_Code__c 
             : null;
-        history.FEC_User__c = u.Email;
+        history.FEC_User__c = FEC_CommonUltils.getEmailPrefix(u.Email);
         history.FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null;
+        history.FEC_Original_User_Queue_ID__c = oldCase.OwnerId;
         history.FEC_Updated_User_Queue_ID__c = currentUserId;
         history.FEC_Description__c = FEC_ConstantCommon.CASE_TYPE_DESCRIPTION;
         insert history;
+
+        updateCaseTeamFromLatestHistory(caseId);
         
         return c.Id;
+    }
+
+    private static void updateCaseTeamFromLatestHistory(Id caseId) {
+        if (caseId == null) return;
+
+        List<FEC_Routing_Action_History__c> histories = [
+            SELECT Id,
+                FEC_Original_User_Queue_ID__c,
+                FEC_Updated_User_Queue_ID__c,
+                CreatedDate
+            FROM FEC_Routing_Action_History__c
+            WHERE FEC_Case__c = :caseId
+            AND FEC_Routing_Action__c = :FEC_ConstantCommon.CASE_ROUTING_ACTION
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+
+        if (histories.isEmpty()) return;
+
+        FEC_Routing_Action_History__c latest = histories[0];
+
+        Case caseRecord = [
+            SELECT Id, FEC_Team__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+
+        FEC_RoutingActionHistoryTriggerHandler.updateCaseTeams(
+            latest.FEC_Original_User_Queue_ID__c,
+            latest.FEC_Updated_User_Queue_ID__c,
+            caseRecord
+        );
+
+        update caseRecord;
     }
 
     public class Option {

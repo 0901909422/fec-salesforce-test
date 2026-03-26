@@ -1,0 +1,240 @@
+<template>
+    <div class="slds-brand-band slds-brand-band_cover slds-brand-band_medium td-page-container">
+        <div class="slds-grid slds-grid_align-center">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_10-of-12 slds-large-size_8-of-12 td-main-card">
+
+                <!-- HEADER -->
+                <div class="slds-p-around_medium slds-border_bottom">
+                    <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <lightning-icon icon-name="standard:email" size="medium" class="slds-m-right_small"></lightning-icon>
+                            <div>
+                                <p class="slds-text-title_caps slds-text-color_weak">Template</p>
+                                <h1 class="slds-text-heading_medium">{pageTitle}</h1>
+                            </div>
+                        </div>
+                        <div>
+                            <lightning-button
+                                label={label.backToListLabel}
+                                onclick={handleBack}
+                                icon-name="utility:back"
+                                class="slds-m-right_x-small"
+                            ></lightning-button>
+                            <lightning-button
+                                label={label.editLabel}
+                                variant="brand"
+                                onclick={handleEdit}
+                                icon-name="utility:edit"
+                            ></lightning-button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <template if:true={isLoading}>
+                    <div class="slds-p-around_large slds-align_absolute-center">
+                        <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                    </div>
+                </template>
+
+                <!-- TABS -->
+                <template if:false={isLoading}>
+                <lightning-tabset active-tab-value={activeTab} onactive={handleTabActive}>
+
+                    <!-- ─── TAB 1: Details ─── -->
+                    <lightning-tab label="Details" value="details">
+                        <template if:true={record}>
+                            <div class="slds-p-around_medium">
+
+                                <!-- Section: Information -->
+                                <div class="slds-section slds-is-open">
+                                    <h3 class="slds-section__title slds-theme_shade">
+                                        <span class="slds-truncate slds-p-horizontal_small">Information</span>
+                                    </h3>
+                                    <div class="td-section-content">
+                                        <!-- Row 1: Template Name + API Name -->
+                                        <div class="slds-grid slds-wrap slds-p-top_small">
+                                            <div class="slds-col slds-size_1-of-2 slds-p-right_medium">
+                                                <div class="slds-form-element">
+                                                    <span class="slds-form-element__label td-field-label">{label.templateNameLabel}</span>
+                                                    <div class="slds-form-element__static">{record.name}</div>
+                                                </div>
+                                            </div>
+                                            <div class="slds-col slds-size_1-of-2">
+                                                <div class="slds-form-element">
+                                                    <span class="slds-form-element__label td-field-label">{label.apiNameLabel}</span>
+                                                    <div class="slds-form-element__static">{apiNameDisplay}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Row 2: Folder + Enhanced Letterhead -->
+                                        <div class="slds-grid slds-wrap slds-p-top_small">
+                                            <div class="slds-col slds-size_1-of-2 slds-p-right_medium">
+                                                <div class="slds-form-element">
+                                                    <span class="slds-form-element__label td-field-label">{label.folderLabel}</span>
+                                                    <div class="slds-form-element__static">{folderName}</div>
+                                                </div>
+                                            </div>
+                                            <div class="slds-col slds-size_1-of-2">
+                                                <div class="slds-form-element">
+                                                    <span class="slds-form-element__label td-field-label">{label.letterheadLabel}</span>
+                                                    <div class="slds-form-element__static">{letterheadDisplay}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Row 3: Description (full width) -->
+                                        <div class="slds-grid slds-wrap slds-p-top_small">
+                                            <div class="slds-col slds-size_1-of-1">
+                                                <div class="slds-form-element">
+                                                    <span class="slds-form-element__label td-field-label">{label.descriptionLabel}</span>
+                                                    <div class="slds-form-element__static">{descriptionDisplay}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Row 4: Active + Last Modified By -->
+                                        <div class="slds-grid slds-wrap slds-p-top_small">
+                                            <div class="slds-col slds-size_1-of-2 slds-p-right_medium">
+                                                <div class="slds-form-element">
+                                                    <span class="slds-form-element__label td-field-label">{label.activeLabel}</span>
+                                                    <div class="slds-form-element__static">{activeDisplay}</div>
+                                                </div>
+                                            </div>
+                                            <div class="slds-col slds-size_1-of-2">
+                                                <div class="slds-form-element">
+                                                    <span class="slds-form-element__label td-field-label">{label.lastModByLabel}</span>
+                                                    <div class="slds-form-element__static">{lastModifiedByDisplay}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Row 5: Last Modified Date -->
+                                        <div class="slds-grid slds-wrap slds-p-top_small">
+                                            <div class="slds-col slds-size_1-of-2 slds-p-right_medium">
+                                                <div class="slds-form-element">
+                                                    <span class="slds-form-element__label td-field-label">{label.lastModLabel}</span>
+                                                    <div class="slds-form-element__static">{lastModifiedDateDisplay}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Section: Applicable Mailbox -->
+                                <div class="slds-section slds-is-open slds-m-top_medium">
+                                    <h3 class="slds-section__title slds-theme_shade">
+                                        <span class="slds-truncate slds-p-horizontal_small">{label.mailboxLabel}</span>
+                                    </h3>
+                                    <div class="td-section-content">
+                                        <p class="slds-p-top_small">{mailboxDisplay}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Section: Subject & Body -->
+                                <div class="slds-section slds-is-open slds-m-top_medium">
+                                    <h3 class="slds-section__title slds-theme_shade">
+                                        <span class="slds-truncate slds-p-horizontal_small">{label.emailBodyLabel}</span>
+                                    </h3>
+                                    <div class="td-section-content">
+                                        <div class="slds-form-element slds-p-top_small">
+                                            <span class="slds-form-element__label td-field-label">{label.subjectLabel}</span>
+                                            <div class="slds-form-element__static">{record.subject}</div>
+                                        </div>
+
+                                        <div class="slds-form-element slds-p-top_small">
+                                            <span class="slds-form-element__label td-field-label">Body</span>
+                                            <div class="td-body-preview" lwc:dom="manual"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Section: Attachments -->
+                                <div class="slds-section slds-is-open slds-m-top_medium">
+                                    <h3 class="slds-section__title slds-theme_shade">
+                                        <span class="slds-truncate slds-p-horizontal_small">{label.attachmentLabel}</span>
+                                    </h3>
+                                    <div class="td-section-content">
+                                        <template if:true={hasAttachments}>
+                                            <ul class="slds-has-dividers_bottom-space slds-p-top_small">
+                                                <template for:each={attachmentList} for:item="att">
+                                                    <li class="slds-item slds-grid slds-grid_vertical-align-center" key={att.id}>
+                                                        <lightning-icon icon-name="doctype:attachment" size="small" class="slds-m-right_small"></lightning-icon>
+                                                        <span class="slds-grow">{att.name}</span>
+                                                        <span class="slds-text-body_small slds-text-color_weak">{att.sizeDisplay}</span>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </template>
+                                        <template if:false={hasAttachments}>
+                                            <p class="slds-p-top_small slds-text-color_weak">No attachments.</p>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template if:false={record}>
+                            <div class="slds-p-around_medium slds-text-color_weak">
+                                Template not found.
+                            </div>
+                        </template>
+                    </lightning-tab>
+
+                    <!-- ─── TAB 2: Template History ─── -->
+                    <lightning-tab label="Template History" value="templateHistory">
+                        <div class="slds-p-around_medium">
+                            <template if:true={hasTemplateHistory}>
+                                <lightning-datatable
+                                    key-field="id"
+                                    data={templateHistoryData}
+                                    columns={templateHistoryColumns}
+                                    hide-checkbox-column
+                                ></lightning-datatable>
+                            </template>
+                            <template if:false={hasTemplateHistory}>
+                                <p class="slds-text-color_weak slds-text-align_center slds-p-vertical_large">
+                                    No template history records found.
+                                </p>
+                            </template>
+                        </div>
+                    </lightning-tab>
+
+                    <!-- ─── TAB 3: Content History ─── -->
+                    <lightning-tab label="Content History" value="contentHistory">
+                        <div class="slds-p-around_medium">
+                            <template if:true={hasContentHistory}>
+                                <lightning-datatable
+                                    key-field="id"
+                                    data={contentHistoryData}
+                                    columns={contentHistoryColumns}
+                                    hide-checkbox-column
+                                    onrowaction={handleViewDiff}
+                                ></lightning-datatable>
+                            </template>
+                            <template if:false={hasContentHistory}>
+                                <p class="slds-text-color_weak slds-text-align_center slds-p-vertical_large">
+                                    No content history records found.
+                                </p>
+                            </template>
+                        </div>
+                    </lightning-tab>
+                </lightning-tabset>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- CONTENT DIFF VIEWER MODAL                              -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <template if:true={_showDiffViewer}>
+        <c-fec_content-diff-viewer
+            old-value={_diffOldValue}
+            new-value={_diffNewValue}
+            changed-by={_diffChangedBy}
+            changed-date={_diffChangedDate}
+            onclose={handleCloseDiffViewer}
+        ></c-fec_content-diff-viewer>
+    </template>
+</template>

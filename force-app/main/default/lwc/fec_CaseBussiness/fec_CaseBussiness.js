@@ -5,6 +5,7 @@ import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransf
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
+import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
 import { getRecord, getFieldValue, updateRecord } from "lightning/uiRecordApi";
 import USER_ID from "@salesforce/user/Id";
@@ -165,7 +166,24 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
   12: 'slds-medium-size_12-of-12'
 };
 
+/**
+ * Registry of dynamically loadable components.
+ * ADD a new entry here for every LWC name stored in FEC_LWC_Name__c metadata.
+ * Each value must be a static `() => import('c/<name>')` arrow function —
+ * LWC strict mode (LWC1121) forbids template-literal or variable import() arguments.
+ *
+ * Example:
+ *   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
+ */
+const DYNAMIC_COMPONENT_REGISTRY = {
+  fec_CardInfo: () => import('c/fec_CardInfo'),
+  fec_IPPClosureHandling: () => import('c/fec_IPPClosureHandling'),
+  fec_CardClosureRefundHandling: () => import('c/fec_CardClosureRefundHandling'),
+  fec_PinResetHandling: () => import('c/fec_PinResetHandling')
+};
+
 export default class Fec_CaseBussiness extends LightningElement {
+
   @api recordId;
 
   _isEdit = true;
@@ -187,6 +205,8 @@ export default class Fec_CaseBussiness extends LightningElement {
   businessLoaded = false;
 
   @track activeSectionlst = ["routing-action"];
+
+  routingAccordionSectionKey = "routing-action";
 
   // get eyeIcon() {
   //   return this.isMasked ? "utility:preview" : "utility:hide";
@@ -658,11 +678,6 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.className += ' slds-hide';
                 }
 
-                if (!this.isEdit) {
-                  field.readonly = true;
-                  field.editable = false;
-                }
-
                 let currentField = `${obj.name}.${field.apiName}`;
 
                 if (
@@ -687,6 +702,11 @@ export default class Fec_CaseBussiness extends LightningElement {
                 } else {
                   field.isHidden = false;
                 }
+              }
+
+              if (!this.isEdit) {
+                field.readonly = true;
+                field.editable = false;
               }
 
                 field.original = field.value;
@@ -777,6 +797,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
         this.applyDraft();
+        // Resolve LWC name strings from componentlst into constructors for lwc:is
+        this._resolveComponentlst();
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
 
       })
@@ -1290,6 +1312,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           caseId: this.recordId,
           natureOfCaseId: this.business.natureOfCase,
         });
+        await markCaseSubmittedWithoutRouting({ caseId: this.recordId });
       }
     }
     return true;
@@ -1524,6 +1547,59 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
+    });
+  }
+
+  /**
+   * Resolves LWC name strings from Apex (subSection.componentlst)
+   * into component constructors required by lwc:is.
+   *
+   * LWC strict mode (LWC1121) forbids variable/template-literal import() arguments.
+   * Each name is therefore looked up in DYNAMIC_COMPONENT_REGISTRY which holds
+   * pre-declared static `() => import('c/<name>')` thunks. Unknown names are
+   * skipped with a console warning — the rest of the UI is unaffected.
+   *
+   * Results are stored on each subSection as resolvedComponentlst [{key, ctor}].
+   */
+  _resolveComponentlst() {
+    if (!this.business?.sectionlst) return;
+
+    const resolvePromises = [];
+
+    this.business.sectionlst.forEach((section) => {
+      if (!section.componentlst?.length) return;
+
+      section.resolvedComponentlst = [];
+
+      section.componentlst.forEach((name, idx) => {
+        if (!name) return;
+
+        const loader = DYNAMIC_COMPONENT_REGISTRY[name];
+        if (!loader) {
+          console.warn(
+            `[fec_CaseBussiness] Component "${name}" is not registered in DYNAMIC_COMPONENT_REGISTRY. ` +
+            `Add an entry: ${name}: () => import('c/${name}')`
+          );
+          return;
+        }
+
+        const p = loader()
+          .then((mod) => {
+            section.resolvedComponentlst.push({
+              key: `${name}-${idx}`,
+              ctor: mod.default,
+            });
+          })
+          .catch((err) => {
+            console.error(`[fec_CaseBussiness] Failed to load component "${name}":`, err);
+          });
+
+        resolvePromises.push(p);
+      });
+    });
+
+    Promise.all(resolvePromises).then(() => {
+      this.business = { ...this.business };
     });
   }
 

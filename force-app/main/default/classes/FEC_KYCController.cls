@@ -140,7 +140,8 @@ public without sharing class FEC_KYCController {
         'Tenure',
         'IPPTerm',
         'LoanPaymentDate',
-        'EmbossingName'
+        'EmbossingName',
+        'BillingCycle'
       };
 
       // Separate real SObject fields from adhoc (computed) tokens
@@ -160,9 +161,11 @@ public without sharing class FEC_KYCController {
         validFieldlst.add('FEC_Account_or_Contract__r.FEC_Address_Type__c');
         validFieldlst.add('FEC_Account_or_Contract__r.FEC_Address__c');
       }
-      if (adhocFieldSet.contains('Cardholder') || adhocFieldSet.contains('CardPaymentDate') || adhocFieldSet.contains('IPPBalance') || adhocFieldSet.contains('Tenure') || adhocFieldSet.contains('IPPTerm') || adhocFieldSet.contains('PaymentChannel') || adhocFieldSet.contains('InstallmentDueDate') || adhocFieldSet.contains('LoanPaymentAmount') || adhocFieldSet.contains('LoanPaymentDate') || adhocFieldSet.contains('EmbossingName')) {
+      if (adhocFieldSet.contains('Cardholder') || adhocFieldSet.contains('CardPaymentDate') || adhocFieldSet.contains('IPPBalance') || adhocFieldSet.contains('Tenure') || adhocFieldSet.contains('IPPTerm') || adhocFieldSet.contains('PaymentChannel') || adhocFieldSet.contains('InstallmentDueDate') || adhocFieldSet.contains('LoanPaymentAmount') || adhocFieldSet.contains('LoanPaymentDate') || adhocFieldSet.contains('EmbossingName') || adhocFieldSet.contains('BillingCycle')) {
         validFieldlst.add('FEC_Account_or_Contract__c');
       }
+
+      validFieldlst.add('FEC_Product_Type__c');
 
       List<Case> caselst2 = FEC_CaseService.getById(
         new Set<Id>{ c.Id },
@@ -188,8 +191,10 @@ public without sharing class FEC_KYCController {
           c,
           adhocValues
         );
+        temp.fieldType = item.FEC_Field_Type__c;
         temp.isMasked = item.FEC_Masking__c;
         temp.fieldName = getToken(item.FEC_KYC_Suggested_Answer__c);
+        temp.isEditable = (c.FEC_Product_Type__c == item.FEC_Product_Type__c);
 
         isConfirmed = kycResultMap.containsKey(item.Id);
 
@@ -502,6 +507,22 @@ public without sharing class FEC_KYCController {
     }
   }
 
+  private class BillingCycleResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__c == null) {
+        return null;
+      }
+      List<FEC_Statement__c> stmts = [
+        SELECT FEC_Billing_Cycle__c
+        FROM FEC_Statement__c
+        WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+        ORDER BY FEC_Statement_Date__c DESC, CreatedDate DESC
+        LIMIT 1
+      ];
+      return stmts.isEmpty() ? null : FEC_CommonUltils.decimalToString(stmts.get(0).FEC_Billing_Cycle__c);
+    }
+  }
+
   /**
    * Dispatcher map — add new adhoc token types here.
    */
@@ -518,7 +539,8 @@ public without sharing class FEC_KYCController {
       'Tenure'             => new TenureResolver(),
       'IPPTerm'            => new IPPTermResolver(),
       'LoanPaymentDate'    => new LoanPaymentDateResolver(),
-      'EmbossingName'      => new EmbossingNameResolver()
+      'EmbossingName'      => new EmbossingNameResolver(),
+      'BillingCycle'       => new BillingCycleResolver()
     };
   }
 
@@ -580,6 +602,8 @@ public without sharing class FEC_KYCController {
     public Boolean isMasked;
     @AuraEnabled
     public String suggestedAnswer;
+    @AuraEnabled
+    public String fieldType;
     @AuraEnabled
     public String fieldName;
 

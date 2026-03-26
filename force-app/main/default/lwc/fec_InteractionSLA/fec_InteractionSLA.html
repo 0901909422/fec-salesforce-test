@@ -4,7 +4,7 @@
 
       <!-- LEFT: Icons (50%) -->
       <div class="slds-col slds-size_6-of-12 slds-p-bottom_none">
-        
+
         <div class="duration">
           <div class="duration__donut"></div>
           <div>
@@ -13,13 +13,11 @@
         </div>
       </div>
 
-      <!-- RIGHT: Picklist component (50%) - hidden when viewMode is 'review' -->
-      <!-- <template if:false={isReviewMode}> -->
-        <div class="slds-col slds-size_6-of-12">
-          <c-fec_-account-or-contract-picklist-interaction
-            record-id={recordId}></c-fec_-account-or-contract-picklist-interaction>
-        </div>
-      <!-- </template> -->
+      <!-- RIGHT: Picklist component (50%) -->
+      <div class="slds-col slds-size_6-of-12">
+        <c-fec_-account-or-contract-picklist-container
+          record-id={recordId}></c-fec_-account-or-contract-picklist-container>
+      </div>
     </div>
   </div>
 
@@ -34,14 +32,17 @@
 
         <!-- Modal Body -->
         <div class="slds-modal__content slds-p-around_medium">
-          <lightning-combobox name="quickOutcomeCode" label={customLabel.selectOutcomeCode} value={quickWrapUpOutcomeCode}
-            placeholder="--None--" options={quickOutcomeCodeOptions} disabled></lightning-combobox>
+          <lightning-combobox name="quickOutcomeCode" label={customLabel.selectOutcomeCode}
+            value={quickWrapUpOutcomeCode} placeholder="--None--" options={quickOutcomeCodeOptions}
+            disabled></lightning-combobox>
         </div>
 
         <!-- Modal Footer -->
         <footer class="slds-modal__footer">
-          <lightning-button variant="neutral" label={customLabel.btnCancel} onclick={handleQuickWrapUpCancelClick}></lightning-button>
-          <lightning-button variant="brand" label={customLabel.btnConfirm} onclick={handleQuickWrapUpConfirmClick}></lightning-button>
+          <lightning-button variant="neutral" label={customLabel.btnCancel}
+            onclick={handleQuickWrapUpCancelClick}></lightning-button>
+          <lightning-button variant="brand" label={customLabel.btnConfirm}
+            onclick={handleQuickWrapUpConfirmClick}></lightning-button>
         </footer>
       </div>
     </section>
@@ -76,8 +77,10 @@
 
         <!-- Modal Footer -->
         <footer class="slds-modal__footer">
-          <lightning-button variant="neutral" label={customLabel.btnCancel} onclick={handleCancelClick}></lightning-button>
-          <lightning-button variant="brand" label={customLabel.btnConfirm} onclick={handleConfirmClick}></lightning-button>
+          <lightning-button variant="neutral" label={customLabel.btnCancel}
+            onclick={handleCancelClick}></lightning-button>
+          <lightning-button variant="brand" label={customLabel.btnConfirm}
+            onclick={handleConfirmClick}></lightning-button>
         </footer>
       </div>
     </section>

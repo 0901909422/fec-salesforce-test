@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Validation_Capacity</fullName>
+    <active>true</active>
+    <errorConditionFormula>FEC_Capacity__c &lt; 1</errorConditionFormula>
+    <errorDisplayField>FEC_Capacity__c</errorDisplayField>
+    <errorMessage>Capacity must be greater than or equal to 1.</errorMessage>
+</ValidationRule>

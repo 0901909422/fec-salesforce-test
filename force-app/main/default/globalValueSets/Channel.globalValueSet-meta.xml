@@ -36,9 +36,9 @@
         <label>External</label>
     </customValue>
     <customValue>
-        <fullName>Internal&quot;</fullName>
+        <fullName>Internal</fullName>
         <default>false</default>
-        <label>Internal&quot;</label>
+        <label>Internal</label>
     </customValue>
     <masterLabel>Channel</masterLabel>
     <sorted>false</sorted>
