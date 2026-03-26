@@ -6,7 +6,7 @@
 public without sharing class FEC_CaseTriggerHandler {
     
     // Trigger guard để tránh recursive
-    private static Boolean isExecuting = false;
+    public static Boolean isExecuting = false;
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -16,8 +16,12 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/16 - Added onAfterInsert handler for auto follow-up
      */
     public static void run() {
+        if (isExecuting) {
+            return;
+        }
+
         FEC_CaseTriggerHandler handler = new FEC_CaseTriggerHandler();
-        
+
         if (Trigger.isBefore && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
             handler.onBeforeInsert(newCases);
@@ -53,6 +57,8 @@ public without sharing class FEC_CaseTriggerHandler {
         updateCaseParticipantsOnInsert(newCases);
         syncChannelFromInteractionForCustomerCase(newCases);
         assignEntitlement(newCases);
+        syncGlobalSearchFromParent(newCases, null);
+        setEmail2CaseChannelBeforeInsert(newCases);
     }
 
     /**
@@ -65,6 +71,7 @@ public without sharing class FEC_CaseTriggerHandler {
     private void onBeforeUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         updateCaseParticipantsOnUpdate(newCases, oldMap);
         syncChannelFromInteractionForCustomerCase(newCases);
+        syncGlobalSearchFromParent(newCases, oldMap);
     }
 
     /**
@@ -74,18 +81,19 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/01/16 Toannd61
      */
     private void onAfterInsert(List<Case> newCases) {
-        // Tránh recursive trigger
-        if (isExecuting) {
-            return;
-        }
         
         isExecuting = true;
         
         try {
             handleAutoFollowUpOnInsert(newCases);
+            updateEmail2CaseFieldsOnInsert(newCases);
         } finally {
             isExecuting = false;
         }
+        // Sau finally: tránh isExecuting chặn trigger lồng; đồng bộ Status từ Route to mới nhất
+        FEC_CasePendingStatusService.syncPendingStatusFromLatestRouteTo(newCases, null);
+        syncGlobalSearch(newCases, null);
+        FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
     }
 
     /**
@@ -98,10 +106,6 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/02/02
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
-        // Tránh recursive trigger
-        if (isExecuting) {
-            return;
-        }
         
         isExecuting = true;
         
@@ -109,10 +113,127 @@ public without sharing class FEC_CaseTriggerHandler {
             handleFollowUpOnResolved(newCases, oldMap);
             handleAutoFollowUpOnUpdate(newCases, oldMap);
             FEC_CaseOwnerChangeNotification.sendNotificationToNewOwner(newCases, oldMap);
+            FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(newCases, oldMap);
         } finally {
             isExecuting = false;
         }
+        // Sau owner/history: re-query DB trong service để Status khớp Route to mới nhất
+        FEC_CasePendingStatusService.syncPendingStatusFromLatestRouteTo(newCases, oldMap);
+        FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
+        syncGlobalSearch(newCases, oldMap);
     }
+
+    private void syncGlobalSearch(List<Case> newCases, Map<Id, Case> oldMap) {
+        // 1. Dynamically get the 'Interaction' Record Type ID
+        Id interactionRtId = Schema.SObjectType.Case.getRecordTypeInfosByName().get('Interaction').getRecordTypeId();
+        
+        // Map to hold the Interaction Case Id -> the new FEC_ID_Search__c value
+        Map<Id, String> interactionIdToSearchKey = new Map<Id, String>();
+
+        // 2. Identify which 'Interaction' Cases meet the criteria
+        for (Case c : newCases) {
+            if (c.RecordTypeId == interactionRtId) {
+                // Check Insert Condition: oldMap is null AND FEC_ID_Search__c has a value
+                Boolean isInsertCriteriaMet = (oldMap == null && c.FEC_ID_Search__c != null);
+                
+                // Check Update Condition: oldMap exists AND FEC_ID_Search__c has changed
+                Boolean isUpdateCriteriaMet = (oldMap != null && c.FEC_ID_Search__c != oldMap.get(c.Id).FEC_ID_Search__c);
+
+                if (isInsertCriteriaMet || isUpdateCriteriaMet) {
+                    interactionIdToSearchKey.put(c.Id, c.FEC_ID_Search__c);
+                }
+            }
+        }
+
+        // 3. Exit early if no cases meet the criteria to save SOQL/DML limits
+        if (interactionIdToSearchKey.isEmpty()) {
+            return;
+        }
+
+        // 4. Query related Cases (where Record Type is NOT Interaction)
+        List<Case> relatedCases = [
+            SELECT Id, FEC_Interaction__c, FEC_Global_Search__c 
+            FROM Case 
+            WHERE FEC_Interaction__c IN :interactionIdToSearchKey.keySet()
+            AND RecordTypeId != :interactionRtId
+        ];
+
+        List<Case> casesToUpdate = new List<Case>();
+
+        // 5. Apply the updated search string to the related cases
+        for (Case childCase : relatedCases) {
+            String newSearchValue = interactionIdToSearchKey.get(childCase.FEC_Interaction__c);
+            
+            // Only update if the value is actually different (saves unnecessary DML)
+            if (childCase.FEC_Global_Search__c != newSearchValue) {
+                childCase.FEC_Global_Search__c = newSearchValue;
+                casesToUpdate.add(childCase);
+            }
+        }
+
+        // 6. Update the child records safely
+        if (!casesToUpdate.isEmpty()) {
+            update casesToUpdate;
+        }
+    }
+
+    private void syncGlobalSearchFromParent(List<Case> newCases, Map<Id, Case> oldMap) {
+        Id interactionRtId = Schema.SObjectType.Case.getRecordTypeInfosByName().get('Interaction').getRecordTypeId();
+        
+        // Set to hold the IDs of the parent Interaction cases we need to query
+        Set<Id> parentInteractionIds = new Set<Id>();
+        
+        // List to keep track of which specific child cases need updating
+        List<Case> casesToProcess = new List<Case>();
+
+        // 1. Identify non-Interaction cases where the lookup has been set or changed
+        for (Case c : newCases) {
+            if (c.RecordTypeId != interactionRtId) {
+                // Check Insert: Lookup is populated right on creation
+                Boolean isInsertCriteriaMet = (oldMap == null && c.FEC_Interaction__c != null);
+                
+                // Check Update: Lookup has changed (e.g., reparented to a new Interaction)
+                Boolean isUpdateCriteriaMet = (oldMap != null && c.FEC_Interaction__c != oldMap.get(c.Id).FEC_Interaction__c);
+
+                // Also check if they just cleared the lookup entirely so we can clear the search field
+                Boolean isLookupCleared = (oldMap != null && c.FEC_Interaction__c == null && oldMap.get(c.Id).FEC_Interaction__c != null);
+
+                if (isInsertCriteriaMet || isUpdateCriteriaMet || isLookupCleared) {
+                    if (c.FEC_Interaction__c != null) {
+                        parentInteractionIds.add(c.FEC_Interaction__c);
+                    }
+                    casesToProcess.add(c);
+                }
+            }
+        }
+
+        // Exit early if nothing changed to save SOQL limits
+        if (casesToProcess.isEmpty()) {
+            return;
+        }
+
+        // 2. Query the parent Interaction cases to get their FEC_ID_Search__c values
+        Map<Id, Case> parentCases = new Map<Id, Case>();
+        if (!parentInteractionIds.isEmpty()) {
+            parentCases = new Map<Id, Case>([
+                SELECT Id, FEC_ID_Search__c 
+                FROM Case 
+                WHERE Id IN :parentInteractionIds
+            ]);
+        }
+
+        // 3. Apply the parent's search value directly to the child case records
+        for (Case c : casesToProcess) {
+            if (c.FEC_Interaction__c == null) {
+                // If the user removed the lookup, clear the search field too
+                c.FEC_Global_Search__c = null;
+            } else if (parentCases.containsKey(c.FEC_Interaction__c)) {
+                // Pull the search field down from the parent map
+                c.FEC_Global_Search__c = parentCases.get(c.FEC_Interaction__c).FEC_ID_Search__c;
+            }
+        }
+    }
+
 
     /**
      * @description Xử lý logic Follow-up khi Case được resolved
@@ -288,8 +409,111 @@ public without sharing class FEC_CaseTriggerHandler {
     }
     
     /**
-     * Lấy RecordType Id của Case có DeveloperName = CASE_INTERACTION_RECORD_TYPE_DEV_NAME (Interaction).
-     * Dùng Schema describe, không query.
+     * Method Description: Cập nhật Case (Email2Case) sau insert khi thỏa điều kiện:
+     * Origin = Email2Case, RecordType DeveloperName = Interaction, FEC_Channel__c rỗng.
+     * Gán FEC_Interaction_Email__c từ EmailMessage.FromAddress, FEC_Send_To__c, FEC_Channel__c = Email.
+     * Gọi @future để tránh thời điểm After Insert chưa có EmailMessage / FromAddress (Email-to-Case tạo EmailMessage sau Case).
+     * @param newCases Danh sách Case mới vừa được insert
+     * @return void
+     * @created: 2026/02/10 LongNH76
+     */
+      private void updateEmail2CaseFieldsOnInsert(List<Case> newCases) {
+        
+        Id interactionRecordTypeId = getInteractionRecordTypeId();
+        if (interactionRecordTypeId == null) {
+            return;
+        }
+
+        List<Id> caseIdsToUpdate = new List<Id>();
+
+        for (Case c : newCases) {
+            if ((c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE || c.Origin == FEC_ConstantCommon.EMAIL) 
+                && c.RecordTypeId == interactionRecordTypeId) {
+                caseIdsToUpdate.add(c.Id);
+            }
+        }
+
+        if (caseIdsToUpdate.isEmpty()) {
+            return;
+        }
+
+        // Chạy bất đồng bộ: sau khi transaction insert commit, EmailMessage đã có và FromAddress đã fill
+        updateEmail2CaseFieldsAsync(caseIdsToUpdate);
+    }
+
+    /**
+     * Before Insert: Gán FEC_Channel__c = 'Email', FEC_Interaction_Subchannel__c = 'Incoming Email' cho Case Email2Case.
+     */
+    private void setEmail2CaseChannelBeforeInsert(List<Case> newCases) {
+        Id interactionRecordTypeId = getInteractionRecordTypeId();
+        if (interactionRecordTypeId == null) {
+            return;
+        }
+        for (Case c : newCases) {
+            if ((c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE || c.Origin == FEC_ConstantCommon.EMAIL)
+                    && c.RecordTypeId == interactionRecordTypeId
+                    && String.isBlank(c.FEC_Channel__c)) {
+                c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
+                c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+                c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+            }
+        }
+    }
+
+    /**
+     * Cập nhật Case (FEC_Interaction_Email__c, FEC_Send_To__c) chạy sau transaction insert.
+     * FEC_Channel__c đã được set trong Before Insert.
+     */
+    @future
+    public static void updateEmail2CaseFieldsAsync(List<Id> caseIds) {
+        if (caseIds == null || caseIds.isEmpty()) {
+            return;
+        }
+
+        String sendToValue = System.Label.UBankCustomberServiceEmail;
+
+        Map<Id, String> caseIdToFromAddress = new Map<Id, String>();
+        for (EmailMessage em : [SELECT Id, ParentId, FromAddress, CreatedDate
+                                FROM EmailMessage
+                                WHERE ParentId IN :caseIds
+                                AND FromAddress != NULL AND ToAddress  = :sendToValue
+                                ORDER BY CreatedDate ASC]) {
+            if (!caseIdToFromAddress.containsKey(em.ParentId)) {
+                caseIdToFromAddress.put(em.ParentId, em.FromAddress);
+            }
+        }
+
+        List<Case> casesToDml = [
+            SELECT Id, RecordTypeId, OwnerId, FEC_Is_Reply_Interaction_email__c, 
+                   ParentId, FEC_Channel__c, FEC_Send_To__c 
+            FROM Case 
+            WHERE Id IN :caseIds
+        ];
+
+        for (Case c : casesToDml) {
+            String fromAddr = caseIdToFromAddress.get(c.Id);
+            c.FEC_Interaction_Email__c = fromAddr;
+            c.FEC_Send_To__c = sendToValue;
+            c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+            c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+        }
+
+        // assignCases(casesToDml);
+        FEC_InteractionRoutingService.assignInteractionReply(casesToDml);
+        FEC_InteractionRoutingService.assignNewInteractionEmail(casesToDml);
+
+        if (!casesToDml.isEmpty()) {
+            isExecuting = true;
+            try {
+                update casesToDml;
+            } finally {
+                isExecuting = false;
+            }
+        }
+    }
+
+    /**
+     * Lấy RecordType Id của Case có DeveloperName = "Interaction".
      * @return Id hoặc null nếu không tìm thấy
      */
     private static Id getInteractionRecordTypeId() {

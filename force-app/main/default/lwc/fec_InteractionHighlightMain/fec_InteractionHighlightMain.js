@@ -34,7 +34,7 @@ import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
 
 import { urlCmpWithRecordId } from "c/fec_CommonUtils";
 
-import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Interaction_Case_Mode__c";
 import CUSTOMER_TYPE from "@salesforce/schema/Case.FEC_Customer_Type__c";
 import {
   DIV_ELEMENT,
@@ -248,6 +248,9 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
 
   get showHighlight() {
     if (this.isInternalCase) {
+      return false;
+    }
+    if (this.isCustomerCase && this.viewMode === "review") {
       return false;
     }
     if (this.isInteractionCase || this.isCustomerCase) {

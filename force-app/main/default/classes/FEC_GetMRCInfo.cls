@@ -1,5 +1,6 @@
 public with sharing class FEC_GetMRCInfo {
   public static final String API_CONFIG_NAME = 'FEC_Get_MRC_Info';
+  public static FEC_ResponseLog responseLog;
 
   public class MRCInfoRequest {
     public String ContractNumber;
@@ -268,6 +269,22 @@ public with sharing class FEC_GetMRCInfo {
       HttpResponse res = sendRequest(envelope);
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
+
+      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+      String endpoint = apiSetting?.FEC_Call_Mock__c
+        ? FEC_MockupEndpoint.GET_MRC_INFO_ENDPOINT_MOCKUP
+        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
+      responseLog = new FEC_ResponseLog(
+        'FEC_GetMRCInfo',
+        endpoint,
+        FEC_ConstantCommon.API_METHOD_POST,
+        envelope,
+        res,
+        null
+      );
+
       finalResult = parseResponse(body, status);
       if (finalResult.transId == null)
         finalResult.transId = transId;
