@@ -345,15 +345,14 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
             });
         }
 
-        // Ưu tiên Payment Date, sau đó Installment Due Date (cũ → mới). Dòng schedule không có Payment Date → sort key phụ từ Due Date.
-        // Khóa (paymentDate, dueDate) trùng: Payment History lên trên Repayment Schedule.
+        // Mỗi dòng dùng ngày của chính nó làm sort key:
+        //   - Payment History row → paymentDate
+        //   - Repayment Schedule row → dueDate
+        // Sort ascending (cũ → mới). Nếu effective date bằng nhau → Payment lên trên Schedule.
         rows.sort((a, b) => {
-            const pA = toSortDateStr(a.paymentDate);
-            const pB = toSortDateStr(b.paymentDate);
-            const dA = toSortDateStr(a.dueDate);
-            const dB = toSortDateStr(b.dueDate);
-            if (pA !== pB) return pA < pB ? -1 : 1;
-            if (dA !== dB) return dA < dB ? -1 : 1;
+            const eA = toSortDateStr(a.rowType === SECTION4_TYPE_PAYMENT ? a.paymentDate : a.dueDate);
+            const eB = toSortDateStr(b.rowType === SECTION4_TYPE_PAYMENT ? b.paymentDate : b.dueDate);
+            if (eA !== eB) return eA < eB ? -1 : 1;
             if (a.rowType !== b.rowType) return a.rowType === SECTION4_TYPE_PAYMENT ? -1 : 1;
             return 0;
         });
