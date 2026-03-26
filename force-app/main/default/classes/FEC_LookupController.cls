@@ -9,29 +9,27 @@ public with sharing class FEC_LookupController {
         strQuery += ' Id NOT IN :selectedIds';
 
         if (sObjectName == 'FEC_Product_Type__c') {
-        strQuery +=
+            strQuery +=
             ' AND Id IN (' +
             '   SELECT FEC_Product_Type__c' +
             '   FROM FEC_Nature_of_Case__c' +
             '   WHERE FEC_Product_Type__c != NULL' +
             ')';
-        if (sObjectName == 'FEC_Category__c') {
+        } else if (sObjectName == 'FEC_Category__c') {
             strQuery +=
             ' AND Id IN (' +
             '   SELECT FEC_Category__c' +
             '   FROM FEC_Nature_of_Case__c' +
             '   WHERE FEC_Category__c != NULL' + ' AND FEC_Product_Type__c = :selectedProductTypeId' +
             ')';
-        }
-        if (sObjectName == 'FEC_Sub_Category__c') {
+        } else if (sObjectName == 'FEC_Sub_Category__c') {
             strQuery +=
             ' AND Id IN (' +
             '   SELECT FEC_Sub_Category__c' +
             '   FROM FEC_Nature_of_Case__c' +
             '   WHERE FEC_Sub_Category__c != NULL' + ' AND FEC_Product_Type__c = :selectedProductTypeId' + ' AND FEC_Category__c = :selectedCategoryId' +
             ')';
-        }
-        if (sObjectName == 'FEC_Sub_Code__c') {
+        } else if (sObjectName == 'FEC_Sub_Code__c') {
             strQuery +=
             ' AND Id IN (' +
             '   SELECT FEC_Sub_Code__c' +
@@ -39,7 +37,6 @@ public with sharing class FEC_LookupController {
             '   WHERE FEC_Sub_Code__c != NULL' + ' AND FEC_Product_Type__c = :selectedProductTypeId' + ' AND FEC_Category__c = :selectedCategoryId' + ' AND FEC_Sub_Category__c = :selectedSubCategoryId' +
             ')';
         }
-    }   
 
         strQuery += ' ORDER BY ' + field + ' LIMIT :maxResults';
         
