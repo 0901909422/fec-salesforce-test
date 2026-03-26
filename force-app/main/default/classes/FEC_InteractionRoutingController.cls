@@ -7,9 +7,10 @@ public without sharing class FEC_InteractionRoutingController {
     @AuraEnabled
     public static void executeRoutingAssignments() {
         try {
-            Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
-            if (!rtMap.containsKey(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME)) return;
-            Id interactionRtId = rtMap.get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+            Id interactionRtId = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
+            if (interactionRtId == null) {
+                return;
+            }
 
             // Validate the current user has the proper Email routing skill
             Datetime rightnow = system.now();

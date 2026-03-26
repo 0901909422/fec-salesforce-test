@@ -107,6 +107,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Card_Block_Service_Attempts__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Case_Channel__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -718,6 +723,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Team__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Title_Reply__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

@@ -6,7 +6,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
         @AuraEnabled public String productName;
     }
     
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static String getInteractionAccountNumber(String caseId){
         try {
             

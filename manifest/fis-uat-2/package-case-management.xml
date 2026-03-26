@@ -9,6 +9,24 @@
 		<name>MilestoneType</name>
 	</types>
 	<types>
+        <members>Case.FEC_IPP_To_Close__c</members>
+		<members>Case.FEC_Interaction_Subchannel__c</members>
+		<members>Case.FEC_Card_Block_Service_Attempts__c</members>
+		<members>FEC_Customer_History__c.FEC_Bank_Branch__c</members>
+		<members>FEC_Customer_History__c.FEC_Beneficiary_Account__c</members>
+		<members>FEC_Customer_History__c.FEC_Beneficiary_Name__c</members>
+		<members>FEC_Customer_History__c.FEC_Province_City__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_Case__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Application_ID__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Application_Status__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_CS_Decision__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Disbursed_Amount__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Disbursement_Approval_Date__c</members>
+		<members>FEC_Pending_Disbursement__c.FEC_PD_Disbursement_Status__c</members>
+		<members>Case.FEC_Title_Reply__c</members>
+        <name>CustomField</name>
+    </types>
+	<types>
 		<members>FEC_Application_History_Label</members>
 		<members>FEC_User_Label</members>
 		<members>FEC_Activity_ID_Label</members>
@@ -57,18 +75,103 @@
 		<members>UBankCustomberServiceEmail</members>
         <members>FEC_Ubank_Email_DevName</members>
         <members>FEC_Ubank_Skill_DevName</members>
+		<members>FEC_Create_Interaction_Failed_MSG</members>
+        <members>FEC_Create_Interaction_In_List_View_Label</members>
+        <members>FEC_Complete_field_msg</members>
+        <members>FEC_Create_Successfully_MSG</members>
+		<members>FEC_MSG_IPP_Closure_No_Eligible</members>
+		<members>FEC_MSG_IPP_Closure_Select_One</members>
+		<members>FEC_LBL_IPP_Closure_Back_To_Case</members>
+		<members>FEC_LBL_IPP_Closure_Complete</members>
+		<members>FEC_LBL_IPP_Closure_Heading</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppRecordNo</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppPlan</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppOpenDate</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppFirstDueDate</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppMatureDate</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppBalance</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppCurrentBalance</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppInterestRate</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppTerm</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppInsurance</members>
+		<members>FEC_LBL_IPP_Closure_Col_IppCurrentTerm</members>
+		<members>FEC_Card_Number_Required_MSG</members>
+		<members>FEC_No_Btn</members>
+		<members>FEC_Reset_PIN_Title</members>
+		<members>FEC_Reset_Pin_Confirm_Msg</members>
+		<members>FEC_Yes_Btn</members>
+		<members>FEC_CIF_Number_Required_MSG</members>
+		<members>FEC_MSG_Card_Block_Confirm_Title</members>
+		<members>FEC_MSG_Card_Block_Confirm_Body</members>
+		<members>FEC_LBL_Pending_Disbursement_Section</members>
+		<members>FEC_Application_ID_Label</members>
+		<members>FEC_LBL_Pending_Disbursement_Application_Status</members>
+		<members>FEC_LBL_Pending_Disbursement_Disbursed_Amount</members>
+		<members>FEC_LBL_Pending_Disbursement_Approval_Date</members>
+		<members>FEC_LBL_Pending_Disbursement_Disbursement_Status</members>
+		<members>FEC_LBL_Pending_Disbursement_CS_Decision</members>
+		<members>FEC_MSG_Card_Block_Beneficiary_Required</members>
+		<members>FEC_MSG_Card_Block_Success</members>
+		<members>FEC_MSG_Card_Block_Fail_Disable</members>
+		<members>FEC_MSG_Card_Block_Fail_Retry</members>
+		<members>FEC_MSG_Card_Block_Failed</members>
+		<members>FEC_MSG_Card_Unlock_Failed</members>
+		<members>FEC_MSG_Card_LockUnlock_Case_Access_Denied</members>
+		<members>FEC_MSG_Card_LockUnlock_Customer_History_Access_Denied</members>
+		<members>FEC_MSG_Card_LockUnlock_Validation_Failed</members>
+		<members>FEC_Email_Label_Danh_Xung</members>
+		<members>FEC_Email_Option_Anh_Chi</members>
+		<members>FEC_Email_Option_Anh_Chi</members>
+		<members>FEC_Email_Option_Anh</members>
+		<members>FEC_Email_Option_Chi</members>
+		<members>FEC_Email_Label_Reply_Template</members>
+		<members>FEC_Email_Option_None</members>
+		<members>FEC_Email_Placeholder_Write</members>
+		<members>FEC_Email_Btn_Compose</members>
+		<members>FEC_Email_Error_Send</members>
+		<members>FEC_Email_Error_Blocked_Status</members>
+		<members>FEC_Email_Error_Empty</members>
+		<members>FEC_Email_Error_Invalid</members>
+		<members>FEC_Email_Error_OrgWide_Not_Configured</members>
+		<members>FEC_Email_Error_OrgWide_Not_Configured_Suffix</members>
+		<members>FEC_Email_Readonly_From_Fecredit</members>
+		<members>FEC_Email_Readonly_From_Ubank</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
 		<members>FEC_New_Interaction_Record_For_E2C</members>
+		<members>FEC_Mark_Complete_for_Milestone</members>
 		<name>Flow</name>
+	</types>
+	<types>
+		<members>fecEmailSection</members>
+		<name>AuraDefinitionBundle</name>
 	</types>
 	<types>
 		<members>fec_AppInfo</members>
 		<members>fec_Asset</members>
 		<members>fec_MRC</members>
 		<members>fec_GenesysSoftphone</members>
+		<members>fec_CommonConst</members>
+		<members>fec_CreateInteractionCaseInListView</members>
+		<members>fec_InteractionInfoF2F_Letter</members>
+		<members>fec_Search</members>
 		<members>fecInteractionEmailInfo</members>
+		<members>fec_InteractionMyCaseInfo</members>
+		<members>fecInteractionCreationHighlight</members>
+		<members>fec_CaseBussiness</members>
+		<members>fec_IPPClosureForm</members>
+		<members>fec_IPPClosureHandling</members>
+		<members>fec_CreateCaseInListView</members>
+		<members>fec_CaseDetail_Customer</members>
+		<members>fec_CaseEditNOC</members>
+		<members>fec_ComboBox</members>
+		<members>fec_PinResetHandling</members>
+		<members>fec_PinResetView</members>
+		<members>fec_InteractionSLA</members>
+		<members>fec_CardClosureRefundForm</members>
+		<members>fec_CardClosureRefundHandling</members>
+		<members>fec_InteractionCreateCase</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -76,13 +179,39 @@
 		<name>FlexiPage</name>
 	</types>
 	<types>
-        <members>FEC_CreateCaseHanlder</members>
 		<members>FEC_CaseTriggerHandler</members>
 		<members>FEC_InteractionRoutingController</members>
 		<members>FEC_InteractionRoutingService</members>
+		<members>FEC_SearchController</members>
 		<members>FEC_ConstantCommon</members>
+		<members>FEC_CreateCaseHandler</members>
+		<members>FEC_CreateInteractionManualHandler</members>
+		<members>FEC_CreateCSCaseService</members>
+		<members>FEC_CreateInteractionGenesys</members>
+		<members>FEC_IPPClosureController</members>
+		<members>FEC_CaseEditNOCController</members>
+		<members>FEC_PINReissueServiceCallout</members>
+		<members>FEC_PinResetHandler</members>
+		<members>FEC_CustomEmailService</members>
+		<members>FEC_GetNextWorkController</members>
+		<members>FEC_CardClosureRefundController</members>
+		<members>FEC_CaseBusinessService</members>
+		<members>FEC_CreateCaseInteractionController</members>
         <name>ApexClass</name>
     </types>
+	<types>
+		<members>FEC_CaseTrigger</members>
+		<name>ApexTrigger</name>
+	</types>
+	<types>
+		<members>FEC_Service</members>
+		<name>CustomApplication</name>
+	</types>
+	<types>
+		<members>FEC_Account_Contract_Search</members>
+		<members>Create_Case</members>
+		<name>CustomTab</name>
+	</types>
 	<types>
 		<members>Case</members>
 		<name>Settings</name>
@@ -103,5 +232,82 @@
         <members>Case.Interaction</members>
         <name>RecordType</name>
     </types>
+	<types>
+		<members>FEC_Common_System_Setting</members>
+		<members>RD_IT_User_Search_Functions</members>
+		<members>RD_IT_User_System_Management</members>
+		<name>PermissionSet</name>
+	</types>
+	<types>
+        <members>FEC_CommonCss</members>
+		<members>IWSConnectorBundle</members>
+		<members>QuillEditor</members>
+        <name>StaticResource</name>
+    </types>
+	<types>
+		<members>Case.FEC_Create_Interaction_Manual</members>
+		 <members>Case.Create_Case</members>
+		<name>WebLink</name>
+	</types>
+	<types>
+		<members>Case</members>
+		<members>FEC_Pending_Disbursement__c</members>
+		<name>CustomObject</name>
+	</types>
+	<types>
+        <members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Ecom_Team_Leader_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Inbound_Officer_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Inbound_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Inbound_Team_Leader_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Operations_Management_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Operations_Manager_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Outbound_Officer_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Outbound_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Outbound_Team_Leader_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Quality_Control_Manager_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Quality_Control_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Support_Manager_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Support_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Card_Risk_Monitoring_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Center_Director_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Customer_Care_Manager_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Customer_Care_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Customer_Experience_Manager_1_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Customer_Experience_Manager_2_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Customer_Experience_Manager_3_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Head_of_CS_Contact_Center_Dept_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Head_of_CS_QC_OM_Dept_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Head_of_Customer_Care_Dept_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Office_Based_Team_Leader_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_CS_Inbound_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_CS_Operations_Management_Specialist_Interaction_Case_Service_Cas</members>
+        <members>FEC_CS_Senior_CS_Outbound_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_CS_Quality_Control_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_CS_Support_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_Card_Risk_Monitoring_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_Customer_Care_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_Office_Based_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Ecom_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Inbound_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Operations_Management_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Outbound_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Quality_Control_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Support_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_Customer_Care_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_Office_Based_Interaction_Case_Service_Case</members>
+        <members>RD_IT_User_Interaction_Case_Service_Case</members>
+        <name>PermissionSet</name>
+    </types>
+	<types>
+        <members>Case.Internal_Case_Compact_Layout</members>
+        <name>CompactLayout</name>
+    </types>
+	<types>
+		<members>FEC_Pending_Disbursement__c-Pending Disbursement Layout</members>
+		<name>Layout</name>
+	</types>
 	<version>65.0</version>
 </Package>

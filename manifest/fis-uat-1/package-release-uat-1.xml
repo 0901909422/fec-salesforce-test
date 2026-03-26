@@ -350,7 +350,7 @@
     <types>
 		<members>FEC_GetCustomerList</members>
 		<members>FEC_SearchController</members>
-        <members>FEC_CreateCaseHanlder</members>
+        <members>FEC_CreateCaseHandler</members>
 		<members>FEC_CreateInteractionGenesys</members>
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_ConstantCommon</members>
@@ -2023,6 +2023,14 @@
 	<types>
 		<members>FEC_Search_Configuration</members>
 		<name>SearchCustomization</name>
+	</types>
+	<types>
+		<members>fec_AccountOrContractPicklistContainer</members>
+        <name>LightningComponentBundle</name>
+	</types>
+	<types>
+		<members>FEC_Interaction_Case_Mode</members>
+		<name>LightningMessageChannel</name>
 	</types>
 
     <version>65.0</version>

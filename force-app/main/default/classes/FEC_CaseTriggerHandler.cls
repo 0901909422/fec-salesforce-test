@@ -72,8 +72,6 @@ public without sharing class FEC_CaseTriggerHandler {
         updateCaseParticipantsOnUpdate(newCases, oldMap);
         syncChannelFromInteractionForCustomerCase(newCases);
         syncGlobalSearchFromParent(newCases, oldMap);
-        FEC_InteractionRoutingService.assignInteractionReply(newCases);
-        FEC_InteractionRoutingService.assignNewInteractionEmail(newCases);
     }
 
     /**
@@ -429,7 +427,8 @@ public without sharing class FEC_CaseTriggerHandler {
         List<Id> caseIdsToUpdate = new List<Id>();
 
         for (Case c : newCases) {
-            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE && c.RecordTypeId == interactionRecordTypeId) {
+            if ((c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE || c.Origin == FEC_ConstantCommon.EMAIL) 
+                && c.RecordTypeId == interactionRecordTypeId) {
                 caseIdsToUpdate.add(c.Id);
             }
         }
@@ -451,11 +450,12 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         for (Case c : newCases) {
-            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE
+            if ((c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE || c.Origin == FEC_ConstantCommon.EMAIL)
                     && c.RecordTypeId == interactionRecordTypeId
                     && String.isBlank(c.FEC_Channel__c)) {
                 c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
                 c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+                c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
             }
         }
     }
@@ -483,18 +483,24 @@ public without sharing class FEC_CaseTriggerHandler {
             }
         }
 
-        List<Case> casesToDml = new List<Case>();
-        for (Id caseId : caseIds) {
-            String fromAddr = caseIdToFromAddress.get(caseId);
-            casesToDml.add(new Case(
-                Id = caseId,
-                FEC_Interaction_Email__c = fromAddr,
-                FEC_Send_To__c = sendToValue,
-                FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL
-            ));
+        List<Case> casesToDml = [
+            SELECT Id, RecordTypeId, OwnerId, FEC_Is_Reply_Interaction_email__c, 
+                   ParentId, FEC_Channel__c, FEC_Send_To__c 
+            FROM Case 
+            WHERE Id IN :caseIds
+        ];
+
+        for (Case c : casesToDml) {
+            String fromAddr = caseIdToFromAddress.get(c.Id);
+            c.FEC_Interaction_Email__c = fromAddr;
+            c.FEC_Send_To__c = sendToValue;
+            c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+            c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         }
 
         // assignCases(casesToDml);
+        FEC_InteractionRoutingService.assignInteractionReply(casesToDml);
+        FEC_InteractionRoutingService.assignNewInteractionEmail(casesToDml);
 
         if (!casesToDml.isEmpty()) {
             isExecuting = true;

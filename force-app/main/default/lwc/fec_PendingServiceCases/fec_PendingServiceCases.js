@@ -30,7 +30,7 @@ export default class Fec_PendingServiceCases extends NavigationMixin(LightningEl
   @track isLoading = false;
   @track error;
 
-  sortedBy = 'caseCreatedOn';
+  sortedBy = 'caseCreatedOnFormatted';
 
   activeSections = ['pendingServiceCases'];
 
@@ -149,6 +149,7 @@ export default class Fec_PendingServiceCases extends NavigationMixin(LightningEl
         caseCreatedOnFormatted: formatDateTimeVN(row.caseCreatedOn),
         lastUpdatedOnFormatted: formatDateTimeVN(row.lastUpdatedOn),
       }));
+      //console.log('Transformed data:', JSON.stringify(this.data));
     } catch (e) {
       this.error = e.body?.message || e.message || MSG_UNKNOWN_ERROR;
       this.data = [];
