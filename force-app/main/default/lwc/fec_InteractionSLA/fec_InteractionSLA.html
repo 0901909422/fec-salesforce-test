@@ -13,21 +13,11 @@
         </div>
       </div>
 
-      <!-- RIGHT: Picklist component (50%) - hidden when viewMode is 'review' -->
-      <!-- <template if:false={isReviewMode}> -->
-      <template if:true={isInteractionCase}>
-        <div class="slds-col slds-size_6-of-12">
-          <c-fec_-account-or-contract-picklist-interaction
-            record-id={recordId}></c-fec_-account-or-contract-picklist-interaction>
-        </div>
-      </template>
-      <template if:true={isCustomerCase}>
-        <div class="slds-col slds-size_6-of-12">
-          <c-fec_-account-or-contract-picklist-customer-case
-            record-id={recordId}></c-fec_-account-or-contract-picklist-customer-case>
-        </div>
-      </template>
-      <!-- </template> -->
+      <!-- RIGHT: Picklist component (50%) -->
+      <div class="slds-col slds-size_6-of-12">
+        <c-fec_-account-or-contract-picklist-container
+          record-id={recordId}></c-fec_-account-or-contract-picklist-container>
+      </div>
     </div>
   </div>
 

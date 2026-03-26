@@ -375,6 +375,7 @@
 		<members>FEC_ContentVersionTriggerHandler</members>
 		<members>FEC_ContentDistributionTriggerHandler</members>
 		<members>FEC_FollowUpController</members>
+		<members>FEC_CaseManagerListService</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -1132,6 +1133,7 @@
 		<members>FEC_UpdateCustomerContact</members>
 		<members>FEC_CaseEditNOCController</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
+		<members>FEC_CasePendingStatusService</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -1281,6 +1283,7 @@
 		<members>FEC_MSG_FollowUp_Unfollow_Error</members>
 		<members>FEC_MSG_FollowUp_Case_Follow_Success</members>
 		<members>FEC_MSG_Can_Not_Find_Next_Stage</members>
+		<members>FEC_MSG_FollowUp_Not02_User_Already_Watcher</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -1883,6 +1886,7 @@
 		<name>PermissionSetGroup</name>
 	</types>
 	<types>
+		<members>Admin</members>
 		<members>CS Back Office</members>
 		<members>CS Frontline</members>
 		<members>Relevant Depts</members>
@@ -2015,6 +2019,18 @@
 		<members>Case.FEC_Restrict_Change_Owner_Non_Owner</members>
 		<members>Case.FEC_Restrict_Change_Owner_When_Resolved</members>
 		<name>ValidationRule</name>
+	</types>
+	<types>
+		<members>FEC_Search_Configuration</members>
+		<name>SearchCustomization</name>
+	</types>
+	<types>
+		<members>fec_AccountOrContractPicklistContainer</members>
+        <name>LightningComponentBundle</name>
+	</types>
+	<types>
+		<members>FEC_Interaction_Case_Mode</members>
+		<name>LightningMessageChannel</name>
 	</types>
 
     <version>65.0</version>

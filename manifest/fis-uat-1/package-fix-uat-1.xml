@@ -54,6 +54,10 @@
 		<members>CaseSearchDeletionScheduler</members>
 		<members>FEC_GetIPPDetailsCallout</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
+		<members>FEC_CasePendingStatusService</members>
+		<members>FEC_KYCService</members>
+		<members>FEC_CloseInterationSchedulerBatch</members>
+		<members>FEC_CaseManagerListService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -101,6 +105,7 @@
 		<members>maskedToggleCell</members>
 		<members>fec_PaymentHistoryAcount</members>
 		<members>fec_SecondaryInfo</members>
+		<members>fec_AccountOrContractPicklistContainer</members>
 		<members>fec_CardPayment</members>
 		<members>fec_AccountOrContractPicklistCustomerCase</members>
         <name>LightningComponentBundle</name>
@@ -116,7 +121,6 @@
         <members>Case.FEC_Get_Next_Work__c</members>
 		<members>Case.FEC_Interaction_View_Mode__c</members>
 		<members>Case.FEC_Account_Contract_Number_PL__c</members>
-		<members>Case.FEC_Case_Created_By__c</members>
 		<members>Case.FEC_Interaction_ID__c</members>
 		<members>Case.FEC_Interaction_Status__c</members>
 		<members>Case.FEC_Outcome_Code__c</members>
@@ -147,6 +151,18 @@
 		<members>FEC_Customer_History__c.FEC_Marital_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Original_User_Queue_ID__c</members>
 		<members>FEC_Team_Queue__c.FEC_Name__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Account_or_Contract_Revelant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_User_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_User_Role_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FE_Category_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FE_Sub_Category_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FE_Sub_Code_Relevant__c</members>
+		<members>Case.FEC_Global_Search__c</members>
+		<members>FEC_KYC__c.FEC_Field_Type__c</members>
+		<members>Case.FEC_Manager_ID_List__c</members>
+		<members>Case.FEC_Owner_Is_User__c</members>
+		<members>Case.FEC_Is_Manager_For_Cur_User__c</members>
+		<members>Case.FEC_Is_Created_From_Search__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -244,6 +260,7 @@
 		<members>FEC_Email_Body_Case_Owner_Change</members>
 		<members>FEC_Wrap_Up_Modal_Btn_Cancel</members>
 		<members>FEC_Account_Card_Fetch_Error</members>
+		<members>FEC_MSG_FollowUp_Not02_User_Already_Watcher</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -327,6 +344,7 @@
 	</types>
     <types>
 		<members>KYC_Method</members>
+		<members>FEC_Masking_Type</members>
 		<name>GlobalValueSet</name>
 	</types>
     <types>
@@ -501,6 +519,7 @@
     </types>
 	<types>
 		<members>FEC_Watcher_Refresh</members>
+		<members>FEC_Interaction_Case_Mode</members>
 		<name>LightningMessageChannel</name>
 	</types>
 	<types>
@@ -511,5 +530,13 @@
 		<members>FEC_RoutingActionHistoryTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
+	<types>
+		<members>FEC_Search_Configuration</members>
+		<name>SearchCustomization</name>
+	</types>
+	<types>
+        <members>FEC_IPPDetailPageWrapper</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
     <version>65.0</version>
 </Package>

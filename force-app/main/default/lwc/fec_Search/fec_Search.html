@@ -65,27 +65,26 @@
                                 class="slds-text-align_center slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
                                 Không tìm thấy khách hàng
                             </div>
-
-                            <div class="slds-grid slds-gutters slds-m-bottom_medium">
-                                <div class="slds-col slds-size_1-of-2">
-                                    <lightning-input label="Customer Name" placeholder="Nhập Customer Name"
-                                        value={custNameForCreate} required onchange={handleCustNameChange}>
-                                    </lightning-input>
+                            <template if:true={isDisplayCreateCase}>
+                                <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input label="Customer Name" placeholder="Nhập Customer Name" value={custNameForCreate} required
+                                            onchange={handleCustNameChange}>
+                                        </lightning-input>
+                                    </div>
+                            
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input label={FEC_National_ID_Passport_ID_Label} placeholder={nationalId_PassPortId_PlaceHolder}
+                                            value={nationalIdForCreate} data-id="national-id" onchange={handleNationalIdChange}>
+                                        </lightning-input>
+                                    </div>
                                 </div>
-
-                                <div class="slds-col slds-size_1-of-2">
-                                    <lightning-input label={FEC_National_ID_Passport_ID_Label} placeholder={nationalId_PassPortId_PlaceHolder}
-                                        value={nationalIdForCreate} data-id="national-id" onchange={handleNationalIdChange}>
-                                    </lightning-input>
+                            
+                                <div class="slds-grid slds-grid_align-center">
+                                    <lightning-button label="Create Case" variant="brand" onclick={handleNewCase} disabled={isNewCaseDisabled}>
+                                    </lightning-button>
                                 </div>
-                            </div>
-
-                            <div class="slds-grid slds-grid_align-center">
-                                <lightning-button label="Create Case" variant="brand" onclick={handleNewCase}
-                                    disabled={isNewCaseDisabled}>
-                                </lightning-button>
-                            </div>
-
+                            </template>
                         </div>
                     </template>
 

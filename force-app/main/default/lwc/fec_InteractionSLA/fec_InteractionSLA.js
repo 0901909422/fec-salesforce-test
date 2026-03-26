@@ -1,14 +1,10 @@
 import { LightningElement, api, track, wire } from "lwc";
 import {
-  getRecord,
-  getFieldValue,
   notifyRecordUpdateAvailable,
 } from "lightning/uiRecordApi";
 import { NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { IsConsoleNavigation, openTab } from "lightning/platformWorkspaceApi";
-import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
-import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 import getCase from "@salesforce/apex/FEC_InteractionSLAController.getCase";
 import getOutcomeCodePicklistValues from "@salesforce/apex/FEC_InteractionSLAController.getOutcomeCodePicklistValues";
 import getQuickOutcomeCodePicklistValues from "@salesforce/apex/FEC_InteractionSLAController.getQuickOutcomeCodePicklistValues";
@@ -19,7 +15,6 @@ import getRelatedCasesCount from "@salesforce/apex/FEC_InteractionSLAController.
 import hasUnsubmittedCases from "@salesforce/apex/FEC_InteractionSLAController.hasUnsubmittedCases";
 import hasSubmittedCases from "@salesforce/apex/FEC_InteractionSLAController.hasSubmittedCases";
 import ICONS from "@salesforce/resourceUrl/FEC_SLA_Icon";
-import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import FEC_Interaction_Remarks_Label from "@salesforce/label/c.FEC_Interaction_Remarks_Label";
 import FEC_Quick_Wrap_up_Label from "@salesforce/label/c.FEC_Quick_Wrap_up_Label";
 import FEC_Wrap_up_Information_Label from "@salesforce/label/c.FEC_Wrap_up_Information_Label";
@@ -39,12 +34,9 @@ import FEC_MSG_Close_Interaction_Complete_Case_Warning from "@salesforce/label/c
 import FEC_MSG_Select_outcome_code from "@salesforce/label/c.FEC_MSG_Select_outcome_code";
 import FEC_MSG_check_related_case_error from "@salesforce/label/c.FEC_MSG_check_related_case_error";
 import FEC_MSG_check_case_type_error from "@salesforce/label/c.FEC_MSG_check_case_type_error";
-
 import { urlCmpWithRecordId } from "c/fec_CommonUtils";
 import {
   OUTCOME_CODE,
-  RECORD_TYPE_INTERACTION,
-  RECORD_TYPE_CUSTOMER_CASE,
 } from "c/fec_CommonConst";
 
 const SLA_RULES = {
@@ -62,48 +54,6 @@ export default class Fec_InteractionSLA extends NavigationMixin(
   LightningElement,
 ) {
   @api recordId;
-  @api isModeEdit = false;
-
-  interactionViewMode;
-  recordTypeId;
-  recordTypeDevName;
-  @wire(getRecord, {
-    recordId: "$recordId",
-    fields: [VIEW_MODE, RECORDTYPE_ID],
-  })
-  wiredCaseRecord({ data, error }) {
-    if (data) {
-      this.interactionViewMode = getFieldValue(data, VIEW_MODE);
-      this.recordTypeId = getFieldValue(data, RECORDTYPE_ID);
-      console.log("recordTypeId", this.recordTypeId);
-      if (this.recordTypeId) {
-        this.loadRecordType();
-      }
-      console.log("Interaction View Mode:", this.interactionViewMode);
-    }
-  }
-
-  get isReviewMode() {
-    return this.interactionViewMode === "review";
-  }
-
-  async loadRecordType() {
-    try {
-      this.recordTypeDevName = await getRecordTypeName({
-        recordId: this.recordId,
-      });
-    } catch (e) {
-      console.error("getRecordTypeName error:", e);
-    }
-  }
-
-  get isInteractionCase() {
-    return this.recordTypeDevName === RECORD_TYPE_INTERACTION;
-  }
-
-  get isCustomerCase() {
-    return this.recordTypeDevName === RECORD_TYPE_CUSTOMER_CASE;
-  }
 
   greenTimer;
   yellowTimer;
@@ -255,11 +205,21 @@ export default class Fec_InteractionSLA extends NavigationMixin(
   }
 
   getHighlight(channel, createdDate) {
+    console.log(
+      "🚀 ~ Fec_InteractionSLA ~ getHighlight ~ createdDate:",
+      createdDate,
+    );
+    console.log("🚀 ~ Fec_InteractionSLA ~ getHighlight ~ channel:", channel);
+
     const minutes = this.getMinutesDiff(createdDate);
     const rule = SLA_RULES[channel];
 
     if (!rule) {
       return "duration__donut"; // fallback
+    }
+
+    if (this.record?.IsClosed) {
+      return "duration__donut duration__donut--grey";
     }
 
     if (minutes < rule.green) {
@@ -272,10 +232,6 @@ export default class Fec_InteractionSLA extends NavigationMixin(
 
     clearInterval(this.timer);
 
-    if (this.record?.IsClosed) {
-      return "duration__donut duration__donut--grey";
-    }
-
     return "duration__donut duration__donut--red";
   }
 
@@ -286,6 +242,10 @@ export default class Fec_InteractionSLA extends NavigationMixin(
       donut.classList = this.getHighlight(
         this.record.FEC_Channel__c,
         this.record.CreatedDate,
+      );
+      console.log(
+        "🚀 ~ Fec_InteractionSLA ~ refreshUI ~ donut.classList:",
+        JSON.stringify(donut.classList),
       );
     }
   }
