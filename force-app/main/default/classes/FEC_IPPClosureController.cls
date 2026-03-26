@@ -98,9 +98,6 @@ public with sharing class FEC_IPPClosureController {
     }
 
     private static Id getCustomerHistoryIdFromCase(Id caseId) {
-        if (caseId == null) {
-            return null;
-        }
         List<Case> cases = [
             SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c
             FROM Case
@@ -132,9 +129,6 @@ public with sharing class FEC_IPPClosureController {
 
     private static Set<Id> getIppIdsWithPendingClosureCase(Id customerHistoryId, Id excludeCaseId) {
         Set<Id> ippIds = new Set<Id>();
-        if (customerHistoryId == null) {
-            return ippIds;
-        }
         if (!Schema.sObjectType.Case.isAccessible()) {
             return ippIds;
         }
