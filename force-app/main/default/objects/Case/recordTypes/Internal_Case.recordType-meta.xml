@@ -3,6 +3,7 @@
     <fullName>Internal_Case</fullName>
     <active>true</active>
     <businessProcess>Internal Case Process</businessProcess>
+    <compactLayoutAssignment>Internal_Case_Compact_Layout</compactLayoutAssignment>
     <label>Internal Case</label>
     <picklistValues>
         <picklist>Origin</picklist>

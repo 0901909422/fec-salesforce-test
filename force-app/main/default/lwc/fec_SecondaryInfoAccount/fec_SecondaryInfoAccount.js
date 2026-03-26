@@ -15,6 +15,7 @@ import { LightningElement, api, track } from 'lwc';
 import loadSecondaryAccount from '@salesforce/apex/FEC_SecondaryInfoAccountController.loadSecondaryAccount';
 import refreshSecondaryAccount from '@salesforce/apex/FEC_SecondaryInfoAccountController.refreshSecondaryAccount';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { MSG_UNKNOWN_ERROR } from 'c/fec_CommonConst';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 import FEC_Limit_Label from '@salesforce/label/c.FEC_Limit_Label';
 import FEC_Main_Card_Label from '@salesforce/label/c.FEC_Main_Card_Label';
@@ -245,7 +246,7 @@ export default class Fec_SecondaryInfoAccount extends LightningElement {
     /* ================= ERROR + TOAST ================= */
 
     handleError(err) {
-        this.error = err?.body?.message || err?.message || 'Unknown error';
+        this.error = err?.body?.message || err?.message || MSG_UNKNOWN_ERROR;
         this.showToast('Error', this.error, 'error');
     }
 

@@ -1,0 +1,56 @@
+.interaction-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 48px;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 220px 1fr 20px;
+  justify-content: center;
+  min-height: 36px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.col .row:last-child {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.label {
+  font-size: 13px;
+  color: #6b6d70;
+  font-weight: 500;
+}
+
+.value {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.eye-icon {
+  cursor: pointer;
+  color: #747474;
+}
+.eye-icon:hover {
+  color: #000;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .interaction-grid {
+    grid-template-columns: 1fr;
+    row-gap: 12px;
+  }
+}
+
+.save-icon {
+  color: #2e844a; /* Salesforce green */
+}

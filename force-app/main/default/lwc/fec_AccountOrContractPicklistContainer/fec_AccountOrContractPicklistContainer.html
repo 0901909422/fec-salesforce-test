@@ -1,0 +1,11 @@
+<template>
+    <template if:true={isInteraction}>
+        <c-fec_-account-or-contract-picklist-interaction record-id={recordId}>
+        </c-fec_-account-or-contract-picklist-interaction>
+    </template>
+
+    <template if:true={isCustomerCase}>
+        <c-fec_-account-or-contract-picklist-customer-case record-id={recordId}>
+        </c-fec_-account-or-contract-picklist-customer-case>
+    </template>
+</template>

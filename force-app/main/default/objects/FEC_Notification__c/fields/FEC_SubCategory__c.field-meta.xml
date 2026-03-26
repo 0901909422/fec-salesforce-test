@@ -3,8 +3,9 @@
     <fullName>FEC_SubCategory__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Thông tin danh mục phụ</description>
-    <label>SubCategory</label>
+    <label>Sub Category</label>
     <referenceTo>FEC_Sub_Category__c</referenceTo>
+    <relationshipLabel>Notifications</relationshipLabel>
     <relationshipName>FEC_Notification_Settings</relationshipName>
     <required>false</required>
     <trackHistory>true</trackHistory>
