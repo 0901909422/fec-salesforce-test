@@ -35,6 +35,7 @@ import {
   STR_UNDEFINED,
   VIEW_MODE_HANDLING,
   VIEW_MODE_REVIEW,
+  RECORD_TYPE_INTERNAL_CASE
 } from "c/fec_CommonConst";
 
 export default class Fec_CaseDetail_Customer extends LightningElement {
@@ -135,8 +136,8 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     getCase({ recordId: this.recordId })
       .then((res) => {
-        const isInternal = res.RecordType?.DeveloperName === FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME;
-        const isHandling = res.FEC_Interaction_View_Mode__c === FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+        const isInternal = res.RecordType?.DeveloperName === RECORD_TYPE_INTERNAL_CASE;
+        const isHandling = res.FEC_Interaction_View_Mode__c === VIEW_MODE_HANDLING;
         const isSubmited = res.FEC_Is_Submited__c;
 
         if (isInternal && isHandling && !isSubmited) {

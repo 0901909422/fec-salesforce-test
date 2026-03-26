@@ -10,6 +10,16 @@
         <default>false</default>
         <label>National ID/ Passport</label>
     </customValue>
+    <customValue>
+        <fullName>Currency</fullName>
+        <default>false</default>
+        <label>Currency</label>
+    </customValue>
+    <customValue>
+        <fullName>Date</fullName>
+        <default>false</default>
+        <label>Date</label>
+    </customValue>
     <masterLabel>Masking Type</masterLabel>
     <sorted>false</sorted>
 </GlobalValueSet>

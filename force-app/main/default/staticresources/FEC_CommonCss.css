@@ -25,11 +25,41 @@ c-fec_-i-p-p-detail-page .slds-accordion__summary,
 c-fec_-pending-service-cases .slds-accordion__summary,
 c-fec_-closed-service-cases .slds-accordion__summary,
 c-fec_-interaction-cases .slds-accordion__summary,
+c-fec_-main-info-loan-account .slds-accordion__summary,
+c-fec_-secondary-info-loan-account .slds-accordion__summary,
+c-fec_-termination .slds-accordion__summary,
+c-fec_-repayment-schedule-payment-history .slds-accordion__summary,
 c-fec_-interaction-info-f2-f_-letter .slds-accordion__summary,
 c-fec_-interaction-my-case-info .slds-accordion__summary,
 c-fec_-k-y-c .slds-accordion__summary {
   background-color: #f3f3f3;
   border-radius: 4px;
+}
+
+/* fecEmailSection: bỏ viền xám slds-tabs_card, header #f3f3f3 */
+c-fec-email-section .slds-accordion__summary {
+  background-color: #f3f3f3;
+  border-radius: 4px 4px 0 0;
+  min-height: 2.75rem;
+}
+c-fec-email-section .slds-accordion__summary-action {
+  padding: 0.75rem 1rem;
+  min-height: 2.75rem;
+}
+c-fec-email-section .slds-accordion__section {
+  border-bottom: none !important;
+}
+c-fec-email-section .slds-tabs_card {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+c-fec-email-section .email-section-card {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #dddbda;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 c-lwc-multi-lookup input.channel {
   padding-left: 8px;

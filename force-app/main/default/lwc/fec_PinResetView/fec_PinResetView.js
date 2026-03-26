@@ -2,6 +2,17 @@ import { LightningElement, track, api } from "lwc";
 import getCardInfo from "@salesforce/apex/FEC_PinResetHandler.getCardInfo";
 import resetPin from "@salesforce/apex/FEC_PinResetHandler.resetPin";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import FEC_Reset_Pin_Confirm_Msg from "@salesforce/label/c.FEC_Reset_Pin_Confirm_Msg";
+import FEC_Reset_PIN_Title from "@salesforce/label/c.FEC_Reset_PIN_Title";
+import FEC_Yes_Btn from "@salesforce/label/c.FEC_Yes_Btn";
+import FEC_No_Btn from "@salesforce/label/c.FEC_No_Btn";
+import FEC_Card_Number_Required_MSG from "@salesforce/label/c.FEC_Card_Number_Required_MSG";
+import FEC_CIF_Number_Required_MSG from "@salesforce/label/c.FEC_CIF_Number_Required_MSG";
+
+import { ERROR_MODAL_TITLE,
+  SUCCESS_MODAL_TITLE,
+  SUCCESS_TOAST_TYPE,
+  ERROR_TOAST_TYPE} from "c/fec_CommonConst";
 
 export default class Fec_PinResetView extends LightningElement {
   @api recordId;
@@ -12,6 +23,14 @@ export default class Fec_PinResetView extends LightningElement {
 
   isOpen = false;
 
+  label = {
+    FEC_Reset_Pin_Confirm_Msg,
+    FEC_Reset_PIN_Title,
+    FEC_Yes_Btn,
+    FEC_No_Btn,
+    FEC_Card_Number_Required_MSG,
+    FEC_CIF_Number_Required_MSG
+  };
   // ================= INIT =================
   connectedCallback() {
     this.loadCardInfo();
@@ -67,7 +86,7 @@ export default class Fec_PinResetView extends LightningElement {
       this.cardNumber === undefined ||
       this.cardNumber === ""
     ) {
-      this.showToast("Error", "Card number is required", "error");
+      this.showToast(ERROR_MODAL_TITLE, this.label.FEC_Card_Number_Required_MSG, ERROR_TOAST_TYPE);
       this.close();
       return;
     }
@@ -77,7 +96,7 @@ export default class Fec_PinResetView extends LightningElement {
       this.cifNumber === undefined ||
       this.cardNumber === ""
     ) {
-      this.showToast("Error", "CIF number is required", "error");
+      this.showToast(ERROR_MODAL_TITLE, this.label.FEC_CIF_Number_Required_MSG, ERROR_MODAL_TITLE);
       this.close();
       return;
     }
@@ -89,13 +108,13 @@ export default class Fec_PinResetView extends LightningElement {
     })
       .then((res) => {
         if (res.isSuccess) {
-          this.showToast("Success", res.RespDesc, "success");
+          this.showToast(SUCCESS_MODAL_TITLE, res.RespDesc, SUCCESS_TOAST_TYPE);
         } else {
-          this.showToast("Error", res.RespDesc || res.errorMessage, "error");
+          this.showToast(ERROR_MODAL_TITLE, res.RespDesc || res.errorMessage, ERROR_MODAL_TITLE);
         }
       })
       .catch((err) => {
-        this.showToast("Error", err.body?.message, "error");
+        this.showToast(ERROR_MODAL_TITLE, err.body?.message, ERROR_MODAL_TITLE);
       })
       .finally(() => {
         this.close();

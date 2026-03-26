@@ -12,7 +12,7 @@
 ****************************************************************************************/
 
 import { LightningElement, api, track } from 'lwc';
-import { isNegative } from 'c/fec_CommonUtils';
+import { isNegative, maskValue } from 'c/fec_CommonUtils';
 
 export default class Fec_RelatedListPaging extends LightningElement {
 
@@ -26,6 +26,9 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api hideUpdatedTime = false; // Hide updated time display
     @api defaultSortedBy; // Default field to sort by (field name)
     @api defaultSortDirection = 'desc'; // Default sort direction
+    /** Khi set: hiển thị cạnh số item (ví dụ gộp nhiều tiêu chí), thay cho label cột đơn. */
+    @api sortedByDescription = '';
+    @api pageSizeOptions = [10, 20, 30, 40, 50];
     @api columnCount = 2;
     @api compactColumns = false;
     
@@ -109,6 +112,13 @@ export default class Fec_RelatedListPaging extends LightningElement {
         return sortedCol ? sortedCol.label : '';
     }
 
+    /** Text hiển thị dòng "Sorted by …" (ưu tiên mô tả tùy chỉnh nếu có). */
+    get displaySortedByLabel() {
+        const hint = this.sortedByDescription != null ? String(this.sortedByDescription).trim() : '';
+        if (hint) return hint;
+        return this.currentSortedByLabel;
+    }
+
     /* ================= UPDATED TIME ================= */
     /**
      * Format updated time for display.
@@ -147,6 +157,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
                 headerClass,
                 fullHeaderClass: 'sortable-header ' + headerClass,
                 headerStyle: widthStyle,
+                // asc = cũ→mới / A→Z → mũi tên lên; desc = mới→cũ → mũi tên xuống
                 iconName: isSorted
                     ? (this.sortedDirection === 'desc'
                         ? 'utility:arrowup'
@@ -301,6 +312,20 @@ export default class Fec_RelatedListPaging extends LightningElement {
                         || (col.cellAttributes && col.cellAttributes.alignment)
                         || 'left';
                     const fullCellClass = [cellClass || '', 'cell-' + align].filter(Boolean).join(' ').trim();
+
+                    // isMaskable column + masked row → render as eye-type cell with toggle icon
+                    if (col.isMaskable === true && row.masked === true) {
+                        const eyeKey = `${rowIndex}-${col.fieldName}`;
+                        const isMasked = this.eyeStates[eyeKey] !== false;
+                        return {
+                            key: col.fieldName,
+                            isEye: true,
+                            fieldName: col.fieldName,
+                            rowIndex,
+                            value: this.getEyeDisplayValue(row[col.fieldName], isMasked),
+                            iconName: isMasked ? 'utility:hide' : 'utility:preview'
+                        };
+                    }
                     return {
                         key: col.fieldName,
                         isLink: false,
@@ -335,6 +360,33 @@ export default class Fec_RelatedListPaging extends LightningElement {
                 '*'.repeat(v.length - 8) +
                 v.slice(-3)
             );
+        }
+
+        /* =====================
+        * LANDLINE bắt đầu bằng 02
+        * Hiển thị: 3 số đầu + 3 số cuối
+        * Ví dụ: 028*****456
+        * ===================== */
+        if (/^02\d{8,9}$/.test(v)) {
+        return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
+        }
+
+        /* =====================
+        * PHONE bắt đầu bằng 0 (10 số)
+        * Hiển thị: 4 số đầu + 3 số cuối
+        * Ví dụ: 0123***456
+        * ===================== */
+        if (/^0\d{9}$/.test(v)) {
+            return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
+        }
+
+        /* =====================
+        * CCCD (toàn số, > 6)
+        * Hiển thị: 3 số đầu + 3 số cuối
+        * ===================== */
+        if (/^\d+$/.test(v)) {
+            if (v.length <= 6) return v;
+            return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
         }
 
         /* =====================
@@ -454,15 +506,53 @@ export default class Fec_RelatedListPaging extends LightningElement {
             return isNaN(t) ? null : t;
         };
 
+        /** Chuỗi đã format (vd 735,287) hoặc số — dùng để sort đúng thứ tự số, không sort theo chữ cái */
+        const toNumeric = (v) => {
+            if (v == null || v === '') return null;
+            if (typeof v === 'number' && !Number.isNaN(v)) return v;
+            if (typeof v === 'string') {
+                const s = v.replace(/,/g, '').trim();
+                if (s === '' || s === '-') return null;
+                if (/^-?\d+(\.\d+)?$/.test(s)) {
+                    const n = Number(s);
+                    return Number.isNaN(n) ? null : n;
+                }
+            }
+            return null;
+        };
+
+        const parseCaseNumber = (s) => {
+            if (!s) return NaN;
+            const match = s.match(/\d+$/);
+            return match ? Number(match[0]) : NaN;
+        };
+        
+
         this._records = records.sort((a, b) => {
             const rawA = a[fieldName];
             const rawB = b[fieldName];
+
+            if (fieldName === 'caseIdText') {
+                const numA = parseCaseNumber(rawA);
+                const numB = parseCaseNumber(rawB);
+
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return (numA - numB) * dir;
+                }
+            }
 
             const timeA = toTime(rawA);
             const timeB = toTime(rawB);
 
             if (timeA !== null && timeB !== null) {
                 return (timeA - timeB) * dir;
+            }
+
+            const numA = toNumeric(rawA);
+            const numB = toNumeric(rawB);
+            if (numA !== null && numB !== null) {
+                if (numA !== numB) return (numA - numB) * dir;
+                return 0;
             }
 
             if (rawA == null && rawB != null) return -dir;

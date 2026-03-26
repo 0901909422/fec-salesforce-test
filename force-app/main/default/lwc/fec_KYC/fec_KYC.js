@@ -21,8 +21,8 @@ import {
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 
-import { mask } from "c/fec_CommonUtils";
-import { ICON_PREVIEW, ICON_HIDE } from "c/fec_CommonConst";
+import { mask, isOnlyNumber, formatNumber, formatDate } from "c/fec_CommonUtils";
+import { ICON_PREVIEW, ICON_HIDE, MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, COMPANY_PHONE } from "c/fec_CommonConst";
 
 import FEC_KYC_Answer_Label from "@salesforce/label/c.FEC_KYC_Answer_Label";
 import FEC_KYC_Product_Label from "@salesforce/label/c.FEC_KYC_Product_Label";
@@ -88,7 +88,7 @@ export default class Fec_KYC extends LightningElement {
   @track kycResultColumn = [
     { label: this.customLabel.kycProductLabel, fieldName: "productType" },
     { label: this.customLabel.kycQuestionLabel, fieldName: "question" },
-    { label: this.customLabel.kycAnswerLabel, fieldName: "answer" },
+    { label: this.customLabel.kycAnswerLabel, fieldName: "answer", isMaskable: true },
     { label: this.customLabel.kycResultLabel, fieldName: "result" },
     { label: this.customLabel.performedOnLabel, fieldName: "performedOn" }
   ];
@@ -115,7 +115,7 @@ export default class Fec_KYC extends LightningElement {
         .catch((err) => {
           console.log("🚀 ~ Fec_KYC ~ connectedCallback ~ err:", err);
         })
-        .finally(() => {});
+        .finally(() => { });
     } else if (error) {
       console.error("getRecord error:", error);
     }
@@ -164,16 +164,16 @@ export default class Fec_KYC extends LightningElement {
 
   async handleKYC(e) {
     let id = e.target.dataset.id;
-    let resultId = e.target.dataset.result;
+    let answer = e.target.dataset.answer;
     let checked = e.target.dataset.check === "true";
 
     if (id) {
       this.isLoaded = false;
       submitKYC({
         recordId: this.recordId,
-        resultId,
         kycId: id,
-        checked
+        checked,
+        answer
       })
         .then((res) => {
           this.kycData.typelst?.forEach((type) => {
@@ -227,15 +227,20 @@ export default class Fec_KYC extends LightningElement {
                 item.iconName = ICON_HIDE;
               }
 
+              if (item.fieldType === 'Currency' && item.suggestedAnswer) {
+                item.suggestedAnswer = item.suggestedAnswer.split('\n').map(s => formatNumber(s)).join('\n');
+              }
+
+              if (item.fieldType === 'Date' && item.suggestedAnswer) {
+                item.suggestedAnswer = item.suggestedAnswer.split('\n').map(s => formatDate(s)).join('\n');
+              }
               item.maskedAnswer = item.isMasked
-                ? mask(item.suggestedAnswer)
+                ? (item.suggestedAnswer ? item.suggestedAnswer.split('\n').map(s => this.applyMasking(s, item.fieldType)).join('\n') : '')
                 : item.suggestedAnswer;
             });
           });
 
           this.kycData = { ...res };
-
-          console.error("this.kycData", JSON.stringify(this.kycData));
         }
 
         if (resultRes) {
@@ -264,7 +269,7 @@ export default class Fec_KYC extends LightningElement {
       typeItem.questions?.forEach((item) => {
         if (item.id === id) {
           if (isPreview) {
-            item.maskedAnswer = mask(item.suggestedAnswer);
+            item.maskedAnswer = item.suggestedAnswer ? item.suggestedAnswer.split('\n').map(s => this.applyMasking(s, item.fieldType)).join('\n') : '';
             item.iconName = ICON_HIDE;
           } else {
             item.maskedAnswer = item.suggestedAnswer;
@@ -277,5 +282,28 @@ export default class Fec_KYC extends LightningElement {
         }
       });
     });
+  }
+
+  applyMasking(value, fieldType) {
+    if (!value) return '';
+    switch (fieldType) {
+      case MASKING_TYPE_PHONE:
+        if (value.startsWith(PHONE_VN_REGION)) {
+          return mask(value, 5, 3);
+        }
+
+        if(COMPANY_PHONE.includes(value.substring(0, 3))) {
+          return mask(value, 3, 3);
+        }
+
+        return mask(value, 4, 3);
+      case MASKING_TYPE_PASSPORT:
+        if (isOnlyNumber(value)) {
+          return mask(value, 3, 3);
+        }
+        return mask(value, 2, 3);
+      default:
+        return mask(value, 4, 4);
+    }
   }
 }

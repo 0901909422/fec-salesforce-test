@@ -38,12 +38,16 @@ const UBANK_PRODUCT_NAME = 'UBank';
 const RECORD_TYPE_INTERACTION = 'Interaction';
 const RECORD_TYPE_CUSTOMER_CASE = 'Customer_Case';
 const RECORD_TYPE_INTERNAL_CASE = 'Internal_Case';
+const NON_EXISTING_CUSTOMER_PRODUCT_NAME = "Non-Existing Customer";
+const NON_EXISTING_CUSTOMER_TYPE = "Non-existing";
 const MSG_NO_RESULTS = 'Không tìm thấy kết quả';
 const MSG_UNKNOWN_ERROR = 'Unknown error';
 const CASE_OBJECT_API_NAME = 'Case';
 const NAV_ACTION_VIEW = 'view';
 const NAV_ACTION_LIST = 'list';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const RESULT_ERROR = "result-error";
+const RESULT_SUCCESS = "result-success";
 const CHANNEL_OPTIONS = [
   { label: "Inbound", value: "Inbound" },
   { label: "Outbound", value: "Outbound" },
@@ -89,6 +93,11 @@ const RECORD_TYPES = {
   INTERACTION: "Interaction",
   CUSTOMER_CASE: "Customer_Case",
 };
+const ERROR_MODAL_TITLE = "Error";
+const SUCCESS_MODAL_TITLE = "Success";
+const SUCCESS_TOAST_TYPE = "success";
+const ERROR_TOAST_TYPE = "error";
+
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -130,6 +139,8 @@ export {
     RECORD_TYPE_INTERACTION,
     RECORD_TYPE_CUSTOMER_CASE,
     RECORD_TYPE_INTERNAL_CASE,
+    NON_EXISTING_CUSTOMER_PRODUCT_NAME,
+    NON_EXISTING_CUSTOMER_TYPE,
     MSG_NO_RESULTS,
     MSG_UNKNOWN_ERROR,
     CASE_OBJECT_API_NAME,
@@ -139,4 +150,10 @@ export {
     CHANNEL_OPTIONS,
     SUB_CHANNEL_MAP,
     RECORD_TYPES,
+    ERROR_MODAL_TITLE,
+    SUCCESS_MODAL_TITLE,
+    SUCCESS_TOAST_TYPE,
+    ERROR_TOAST_TYPE,
+    RESULT_ERROR,
+    RESULT_SUCCESS
 };

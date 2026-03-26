@@ -18,7 +18,7 @@ import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 import CASE_OBJECT from "@salesforce/schema/Case";
 import INTERACTION_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Interaction_Email__c";
 import CREATED_ON_FIELD from "@salesforce/schema/Case.FEC_Created_On__c";
-import CREATED_BY_FIELD from "@salesforce/schema/Case.FEC_Created_By__c";
+import CREATED_BY_FIELD from "@salesforce/schema/Case.FEC_Created_by__c";
 import SEND_TO_FIELD from "@salesforce/schema/Case.FEC_Send_To__c";
 import PARENT_ID_FIELD from "@salesforce/schema/Case.ParentId";
 

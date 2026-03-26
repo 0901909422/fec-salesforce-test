@@ -100,6 +100,101 @@ public without sharing class FEC_CreateInteractionGenesys {
         return null; // no error
     }
     
+    public class EmailGenesysRequest {
+        @AuraEnabled public String fromEmail        {get; set;}
+        @AuraEnabled public String sendTo           {get; set;}
+        @AuraEnabled public String genesysInteractionID {get; set;}
+        @AuraEnabled public String phoneNum         {get; set;}
+        @AuraEnabled public String nationalID       {get; set;}
+        @AuraEnabled public String contractNum      {get; set;}
+        @AuraEnabled public String cardAccountNum   {get; set;}
+        @AuraEnabled public String agentID          {get; set;}
+        @AuraEnabled public String subject          {get; set;}
+    }
+
+    @AuraEnabled
+    public static InteractionResult createEmailInteraction(EmailGenesysRequest request) {
+        try {
+            if (request == null || String.isBlank(request.genesysInteractionID)) {
+                return new InteractionResult(false, 'GenesysInteractionID is required', null, null);
+            }
+
+            Id rtId = Schema.SObjectType.Case
+                .getRecordTypeInfosByDeveloperName()
+                .get('Interaction').getRecordTypeId();
+
+            Case c = new Case(
+                RecordTypeId                   = rtId,
+                FEC_Channel__c                 = 'Email',
+                FEC_Interaction_Subchannel__c  = 'Incoming Email',
+                FEC_Interaction_View_Mode__c   = 'handling',
+                Subject                        = String.isNotBlank(request.subject) ? request.subject : ('Email from ' + request.fromEmail),
+                // Interaction Email: từ Genesys, ghi vào cả 2 field (search + display)
+                FEC_Interaction_Email__c       = request.fromEmail,
+                FEC_Search_Email_Address__c    = request.fromEmail,
+                // Send To: mailbox FEC nhận email
+                FEC_Send_To__c                 = request.sendTo,
+                // External Interaction ID: ID từ Genesys
+                FEC_External_Interaction_ID__c = request.genesysInteractionID,
+                // Thông tin KH từ Genesys
+                FEC_Phone_Number__c            = request.phoneNum,
+                FEC_Search_Phone_Number__c     = request.phoneNum,
+                FEC_National_ID_Passport_ID__c = request.nationalID,
+                FEC_Search_National_ID__c      = request.nationalID,
+                FEC_Contract_Number__c         = request.contractNum,
+                FEC_Search_Contract_Number__c  = request.contractNum,
+                FEC_Account_Number__c          = request.cardAccountNum,
+                FEC_Search_Account_Number__c   = request.cardAccountNum,
+                Status                         = 'Open'
+            );
+            insert c;
+
+            Case created = [
+                SELECT Id, FEC_Channel__c, FEC_Interaction_Email__c,
+                       FEC_External_Interaction_ID__c, FEC_Phone_Number__c,
+                       FEC_National_ID_Passport_ID__c, FEC_Contract_Number__c,
+                       FEC_Account_Number__c, FEC_Send_To__c, OwnerId
+                FROM Case WHERE Id = :c.Id
+            ];
+
+            if (String.isNotBlank(request.agentID)) {
+                List<User> agents = [SELECT Id FROM User WHERE FEC_Agent_ID__c = :request.agentID AND IsActive = true LIMIT 1];
+                if (!agents.isEmpty()) {
+                    Case caseToUpdate = new Case(Id = created.Id, OwnerId = agents[0].Id);
+                    update caseToUpdate;
+                }
+            }
+
+            // Tạo EmailMessage để hiển thị email thread trong Chatter Feed
+            if (String.isNotBlank(request.fromEmail)) {
+                String emailSubject = String.isNotBlank(request.subject) ? request.subject : ('Email from ' + request.fromEmail);
+                EmailMessage em = new EmailMessage(
+                    ParentId     = created.Id,
+                    FromAddress  = request.fromEmail,
+                    ToAddress    = request.sendTo,
+                    Subject      = emailSubject,
+                    TextBody     = String.isNotBlank(request.subject) ? request.subject : ('Email from ' + request.fromEmail),
+                    Incoming     = true,
+                    Status       = '0' // New
+                );
+                insert em;
+            }
+
+            GenesysResposnse response = new GenesysResposnse();
+            response.genesysInteractionID = created.FEC_External_Interaction_ID__c;
+            response.type                 = created.FEC_Channel__c;
+            response.phoneNumber          = request.phoneNum;
+            response.nationalID           = request.nationalID;
+            response.contractNum          = request.contractNum;
+            response.cardAccountNum       = request.cardAccountNum;
+            response.agentID              = request.agentID;
+
+            return new InteractionResult(true, System.Label.FEC_MSG_Create_Interaction_Success, created.Id, response);
+        } catch (Exception e) {
+            return new InteractionResult(false, e.getMessage(), null, null);
+        }
+    }
+
     @AuraEnabled
     public static InteractionResult createDummyInteraction() {
         try {

@@ -81,6 +81,10 @@
   --donut-color: #ff1e00;
 }
 
+.duration__donut--grey {
+  --donut-color: #c9c9c9;
+}
+
 /* ================= ICONS ================= */
 .recording-icon {
   width: 40px;

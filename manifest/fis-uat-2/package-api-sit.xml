@@ -18,6 +18,11 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_TranferInformationCallout</members>
 		<members>FEC_CommonUltils</members>
+		<members>FEC_CancelCSCaseService</members>
+		<members>FEC_GetCSMasterDataByCodeService</members>
+		<members>FEC_GetCSMasterDataService</members>
+		<members>FEC_GetPaymentInfo</members>
+		<members>FEC_ResponseLog</members>
 		<members>FEC_PINReissueServiceCallout</members>
 		<members>FEC_PinResetHandler</members>
         <name>ApexClass</name>
@@ -37,7 +42,19 @@
 		<members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<name>CustomMetadata</name>
 	</types>
-
+	<types>
+		<members>FEC_Application_History__c</members>
+		<members>FEC_Asset__c</members>
+		<members>FEC_MRC__c</members>
+		<members>FEC_Hold_Case_Config__c</members>
+		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>FEC_Application_History__c</members>
+		<members>FEC_Asset__c</members>
+		<members>FEC_MRC__c</members>
+		<name>CustomTab</name>
+	</types>
     <types>
 		<members>FEC_CS_CASE_ADDITIONAL_INFO_ID_REQUIRED_MSG</members>
 		<members>FEC_CS_CASE_ADDITIONAL_INFO_VALUE_REQUIRED_MSG</members>
@@ -80,7 +97,162 @@
 		<members>FEC_CS_CASE_TYPE_REQUIRED_MSG</members>
 		<members>FEC_CS_CASE_TYPE_TOO_LONG_MSG</members>
 		<members>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</members>
+		<members>FEC_MSG_CaseType_Null</members>
+		<members>FEC_MSG_Category_Null</members>
+		<members>FEC_MSG_Channel_Null</members>
+		<members>FEC_MSG_Datetime_Null</members>
+		<members>FEC_MSG_Get_CS_Data_Success</members>
+		<members>FEC_MSG_No_Longer</members>
+		<members>FEC_MSG_ProductType_Null</members>
+		<members>FEC_MSG_SubCategory_Null</members>
+		<members>FEC_MSG_SubCode_Null</members>
+		<members>FEC_MSG_Sys_Null</members>
+		<members>FEC_MSG_TransactionId_Null</members>
+		<members>FEC_MSG_UserType_Null</members>
+		<members>FEC_MSG_CancelCS_Success</members>
+		<members>FEC_MSG_CancelCS_Channel_Invalid</members>
+		<members>FEC_MSG_CancelCS_UserType_Invalid</members>
+		<members>FEC_MSG_CancelCS_Phone_Format_Invalid</members>
+		<members>FEC_MSG_CancelCS_Case_Not_Found</members>
+		<members>FEC_MSG_CancelCS_Case_Already_Closed_Or_Completed</members>
+		<members>FEC_MSG_CancelCS_Case_Already_Resolved</members>
+		<members>FEC_MSG_CancelCS_Insufficient_Permissions</members>
 		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>FEC_CS_CS_Ecom_Officer_Customer_360</members>
+		<members>FEC_CS_CS_Ecom_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Ecom_Team_Leader_Customer_360</members>
+		<members>FEC_CS_CS_Inbound_Officer_Customer_360</members>
+		<members>FEC_CS_CS_Inbound_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Inbound_Team_Leader_Customer_360</members>
+		<members>FEC_CS_CS_Operations_Management_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Operations_Manager_Customer_360</members>
+		<members>FEC_CS_CS_Outbound_Officer_Customer_360</members>
+		<members>FEC_CS_CS_Outbound_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Outbound_Team_Leader_Customer_360</members>
+		<members>FEC_CS_CS_Quality_Control_Manager_Customer_360</members>
+		<members>FEC_CS_CS_Quality_Control_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Support_Manager_Customer_360</members>
+		<members>FEC_CS_CS_Support_Specialist_Customer_360</members>
+		<members>FEC_CS_Card_Risk_Monitoring_Specialist_Customer_360</members>
+		<members>FEC_CS_Center_Director_Customer_360</members>
+		<members>FEC_CS_Customer_Care_Manager_Customer_360</members>
+		<members>FEC_CS_Customer_Care_Specialist_Customer_360</members>
+		<members>FEC_CS_Customer_Experience_Manager_1_Customer_360</members>
+		<members>FEC_CS_Customer_Experience_Manager_2_Customer_360</members>
+		<members>FEC_CS_Customer_Experience_Manager_3_Customer_360</members>
+		<members>FEC_CS_Head_of_CS_Contact_Center_Dept_Customer_360</members>
+		<members>FEC_CS_Head_of_CS_QC_OM_Dept_Customer_360</members>
+		<members>FEC_CS_Head_of_Customer_Care_Dept_Customer_360</members>
+		<members>FEC_CS_Office_Based_Team_Leader_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Ecom_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Inbound_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Operations_Management_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Outbound_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Quality_Control_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Support_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_Card_Risk_Monitoring_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_Customer_Care_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_Office_Based_Specialist_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Ecom_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Inbound_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Operations_Management_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Outbound_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Quality_Control_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Support_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_Customer_Care_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_Office_Based_Customer_360</members>
+		<members>RD_IT_User_Customer_360</members>
+		<members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Ecom_Team_Leader_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Inbound_Officer_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Inbound_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Inbound_Team_Leader_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Operations_Management_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Operations_Manager_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Outbound_Officer_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Outbound_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Outbound_Team_Leader_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Quality_Control_Manager_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Quality_Control_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Support_Manager_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Support_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Card_Risk_Monitoring_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Center_Director_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Customer_Care_Manager_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Customer_Care_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Customer_Experience_Manager_1_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Customer_Experience_Manager_2_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Customer_Experience_Manager_3_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Head_of_CS_Contact_Center_Dept_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Head_of_CS_QC_OM_Dept_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Head_of_Customer_Care_Dept_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Office_Based_Team_Leader_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Senior_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Senior_CS_Inbound_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Senior_CS_Operations_Management_Specialist_Interaction_Case_Service_Cas</members>
+		<members>FEC_CS_Senior_CS_Outbound_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Senior_CS_Quality_Control_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Senior_CS_Support_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Senior_Card_Risk_Monitoring_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Senior_Customer_Care_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Senior_Office_Based_Specialist_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Unit_Head_of_CS_Ecom_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Unit_Head_of_CS_Inbound_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Unit_Head_of_CS_Operations_Management_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Unit_Head_of_CS_Outbound_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Unit_Head_of_CS_Quality_Control_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Unit_Head_of_CS_Support_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Unit_Head_of_Customer_Care_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_Unit_Head_of_Office_Based_Interaction_Case_Service_Case</members>
+		<members>RD_IT_User_Interaction_Case_Service_Case</members>
+		<members>FEC_CS_CS_Ecom_Officer_Master_Data_Management</members>
+		<members>FEC_CS_CS_Ecom_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Ecom_Team_Leader_Master_Data_Management</members>
+		<members>FEC_CS_CS_Inbound_Officer_Master_Data_Management</members>
+		<members>FEC_CS_CS_Inbound_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Inbound_Team_Leader_Master_Data_Management</members>
+		<members>FEC_CS_CS_Operations_Management_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Operations_Manager_Master_Data_Management</members>
+		<members>FEC_CS_CS_Outbound_Officer_Master_Data_Management</members>
+		<members>FEC_CS_CS_Outbound_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Outbound_Team_Leader_Master_Data_Management</members>
+		<members>FEC_CS_CS_Quality_Control_Manager_Master_Data_Management</members>
+		<members>FEC_CS_CS_Quality_Control_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Support_Manager_Master_Data_Management</members>
+		<members>FEC_CS_CS_Support_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Card_Risk_Monitoring_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Center_Director_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Care_Manager_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Care_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Experience_Manager_1_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Experience_Manager_2_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Experience_Manager_3_Master_Data_Management</members>
+		<members>FEC_CS_Head_of_CS_Contact_Center_Dept_Master_Data_Management</members>
+		<members>FEC_CS_Head_of_CS_QC_OM_Dept_Master_Data_Management</members>
+		<members>FEC_CS_Head_of_Customer_Care_Dept_Master_Data_Management</members>
+		<members>FEC_CS_Office_Based_Team_Leader_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Ecom_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Inbound_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Operations_Management_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Outbound_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Quality_Control_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Support_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_Card_Risk_Monitoring_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_Customer_Care_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_Office_Based_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Ecom_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Inbound_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Operations_Management_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Outbound_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Quality_Control_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Support_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_Customer_Care_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_Office_Based_Master_Data_Management</members>
+		<members>RD_IT_User_Master_Data_Management</members>
+		<name>PermissionSet</name>
 	</types>
 	<types>
 		<members>fec_CaseBussiness</members>

@@ -5,6 +5,7 @@ import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransf
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
+import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
 import { getRecord, getFieldValue, updateRecord } from "lightning/uiRecordApi";
 import USER_ID from "@salesforce/user/Id";
@@ -177,6 +178,7 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
 const DYNAMIC_COMPONENT_REGISTRY = {
   fec_CardInfo: () => import('c/fec_CardInfo'),
   fec_IPPClosureHandling: () => import('c/fec_IPPClosureHandling'),
+  fec_CardClosureRefundHandling: () => import('c/fec_CardClosureRefundHandling'),
   fec_PinResetHandling: () => import('c/fec_PinResetHandling')
 };
 
@@ -203,6 +205,8 @@ export default class Fec_CaseBussiness extends LightningElement {
   businessLoaded = false;
 
   @track activeSectionlst = ["routing-action"];
+
+  routingAccordionSectionKey = "routing-action";
 
   // get eyeIcon() {
   //   return this.isMasked ? "utility:preview" : "utility:hide";
@@ -1308,6 +1312,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           caseId: this.recordId,
           natureOfCaseId: this.business.natureOfCase,
         });
+        await markCaseSubmittedWithoutRouting({ caseId: this.recordId });
       }
     }
     return true;
