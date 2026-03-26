@@ -145,22 +145,4 @@ public with sharing class FEC_CreateCaseInteractionController {
     }
     return rec;
   }
-
-  // Create case with no recordId in Lisview
-  @AuraEnabled
-  public static Id createInteractionCase(String customerName, String nationalId) {
-      Case c = new Case();
-      c.RecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
-          .get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME)
-          .getRecordTypeId();
-      c.OwnerId = UserInfo.getUserId();
-      c.Status = FEC_ConstantCommon.CASE_STATUS_NEW;
-      c.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
-      c.FEC_Customer_Name__c = customerName;
-      c.FEC_National_ID_Passport_ID__c = nationalId;
-      c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
-
-      insert c;
-      return c.Id;
-  }
 }

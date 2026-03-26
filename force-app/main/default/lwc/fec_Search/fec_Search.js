@@ -21,7 +21,7 @@ import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
-import createInteractionCase from "@salesforce/apex/FEC_CreateCaseInteractionController.createInteractionCase";
+import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
 import {
   publish,
   MessageContext,
@@ -981,7 +981,7 @@ hasAnySearchCriteria(params) {
       let caseIdToUse = this.recordId;
 
       if (!caseIdToUse) {
-        caseIdToUse = await createInteractionCase({
+        caseIdToUse = await createInternalCase({
           customerName: this.custNameForCreate,
           nationalId: this.nationalIdForCreate
         });
