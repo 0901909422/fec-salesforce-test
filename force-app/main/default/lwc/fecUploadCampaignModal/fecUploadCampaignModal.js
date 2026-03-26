@@ -2,8 +2,7 @@ import { LightningElement, api, track } from 'lwc';
 import { loadScript } from 'lightning/platformResourceLoader';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import FEC_SHEETJS from '@salesforce/resourceUrl/FEC_SheetJS';
-import { convertExcelToTimestamp } from 'c/fecUtils';
-import { SUCCESS_TITLE, FAIL_TITLE } from 'c/fecUtils';
+import { convertExcelToTimestamp, SUCCESS_TITLE, FAIL_TITLE, CAMPAIGN_EXCEL_HEADERS } from 'c/fecUtils';
 import uploadCampaignData from '@salesforce/apex/FEC_CampaignController.uploadCampaignData';
 import lblNoFileChosen from '@salesforce/label/c.FEC_Lbl_No_File_Chosen';
 import savedDataMsg from '@salesforce/label/c.FEC_Saved_Data';
@@ -37,14 +36,6 @@ export default class FecUploadCampaignModal extends LightningElement {
     selectedFile;
     librariesLoaded = false;
 
-    // Cấu hình Header Excel
-    EXCEL_HEADERS = [
-        "ProductLine", "Campaign ID", "App ID", "Account or Contract number",
-        "DateTime 1", "DateTime 2", "DateTime 3", "Number 1", "Number 2",
-        "Number 3", "Number 4", "Number 5", "string 1", "string 2",
-        "string 3", "string 4", "string 5"
-    ];
-
     renderedCallback() {
         if (this.librariesLoaded) return;
         loadScript(this, FEC_SHEETJS)
@@ -65,7 +56,7 @@ export default class FecUploadCampaignModal extends LightningElement {
     downloadTemplate() {
         if (!this.librariesLoaded) return;
         const XLSX = window.XLSX;
-        const ws_data = [this.EXCEL_HEADERS];
+        const ws_data = [CAMPAIGN_EXCEL_HEADERS];
         const worksheet = XLSX.utils.aoa_to_sheet(ws_data);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
@@ -82,7 +73,7 @@ export default class FecUploadCampaignModal extends LightningElement {
             return;
         }
 
-        this.isUploading = true;
+        this.isLoading = true;
         
         // 1. Đọc file Excel bằng JS
         const reader = new FileReader();
@@ -98,7 +89,7 @@ export default class FecUploadCampaignModal extends LightningElement {
             this.sendDataToApex(jsonData);
         };
         reader.onerror = (error) => {
-            this.isUploading = false;
+            this.isLoading = false;
             this.showToast(FAIL_TITLE, errorCannotReadFile, 'error');
         };
         reader.readAsBinaryString(this.selectedFile);
@@ -128,7 +119,8 @@ export default class FecUploadCampaignModal extends LightningElement {
                 this.dispatchEvent(new CustomEvent('save'));
             }
         } catch (error) {
-            this.showToast(FAIL_TITLE, error.body?.message || error.message, 'error');
+            const errorMsg = error.body?.message || error.message;
+            this.showToast(FAIL_TITLE, errorMsg, 'error', 'sticky');
         } finally {
             this.resetForm();
             this.isLoading = false;
@@ -146,7 +138,7 @@ export default class FecUploadCampaignModal extends LightningElement {
         this.fileNameDisplay = this.label.lblNoFileChosen;
     }
 
-    showToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    showToast(title, message, variant, mode = 'dismissible') {
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant, mode }));
     }
 }

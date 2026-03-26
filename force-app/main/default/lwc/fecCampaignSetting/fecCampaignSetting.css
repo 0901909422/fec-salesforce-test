@@ -11,10 +11,10 @@
 }
 
 .custom-icon-setting {
-    --slds-c-icon-color-background: #0070d2; /* Màu xanh khác để phân biệt tab */
+    --slds-c-icon-color-background: #0070d2;
 }
 
-.slds-modal__content {
+.campaign-modal-content {
     overflow-y: visible !important;
     overflow-x: visible !important;
 }
@@ -22,6 +22,3 @@
 :host {
     --slds-c-combobox-listbox-max-height: 250px;
 }
-/* Các class nút bấm (Copy từ file css cũ để đồng bộ) */
-.btn-round { border-radius: 20px !important; padding: 0 20px !important; font-weight: 600 !important; }
-.btn-brand-blue { background-color: #0070d2 !important; border-color: #0070d2 !important; }

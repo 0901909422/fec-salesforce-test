@@ -4,7 +4,7 @@
             <lightning-button label={label.newBtn} onclick={handleOpenModal} variant="brand"></lightning-button>
         </div>
 
-        <div class="slds-p-around_medium">
+        <div class="slds-var-p-around_medium">
             <template if:true={mappingList}>
                 <lightning-datatable
                     key-field="Id"
@@ -28,13 +28,13 @@
                     <h2 class="slds-text-heading_medium slds-hyphenate">{modalTitle}</h2>
                 </header>
 
-                <div class="slds-modal__content slds-p-around_medium">
+                <div class="slds-modal__content campaign-modal-content slds-var-p-around_medium">
                     <div if:true={isLoading} class="slds-is-relative">
                         <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
                     </div>
 
                     <div class="slds-grid slds-wrap slds-gutters">
-                        <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                        <div class="slds-col slds-size_1-of-1 slds-var-m-bottom_small">
                             <lightning-input 
                                 label={label.csCampaignName}
                                 data-id="Name" 
@@ -44,7 +44,7 @@
                             </lightning-input>
                         </div>
 
-                        <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                        <div class="slds-col slds-size_1-of-1 slds-var-m-bottom_small">
                             <lightning-combobox
                                 label={label.genesysCampaign}
                                 value={currentRecord.FEC_Campaign__c}
@@ -68,7 +68,7 @@
                 </div>
 
                 <footer class="slds-modal__footer">
-                    <lightning-button label={label.cancel} variant="neutral" onclick={handleCloseModal} class="slds-m-right_small"></lightning-button>
+                    <lightning-button label={label.cancel} variant="neutral" onclick={handleCloseModal} class="slds-var-m-right_small"></lightning-button>
                     <lightning-button label={label.save} variant="brand" onclick={handleSave}></lightning-button>
                 </footer>
             </div>

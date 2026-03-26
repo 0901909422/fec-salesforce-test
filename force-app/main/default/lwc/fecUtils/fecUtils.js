@@ -16,6 +16,7 @@ export const DELETED_DATA_SUCCESSFULLY_MSG = Constants.DELETED_DATA_SUCCESSFULLY
 export const SUCCESS_TITLE = Constants.SUCCESS_TITLE;
 export const FAIL_TITLE = Constants.FAIL_TITLE;
 export const WARNING_TITLE = Constants.WARNING_TITLE;
+export const CAMPAIGN_EXCEL_HEADERS = Constants.CAMPAIGN_EXCEL_HEADERS;
 
 // Export Status Constants
 export const STATUS_UPLOADED = Constants.STATUS_UPLOADED;

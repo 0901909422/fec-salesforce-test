@@ -1,7 +1,8 @@
 import { LightningElement, track, wire } from 'lwc';
 import { loadScript } from 'lightning/platformResourceLoader';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE } from 'c/fecUtils';
+import { refreshApex } from '@salesforce/apex';
+import { SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE, CAMPAIGN_EXCEL_HEADERS } from 'c/fecUtils';
 import FEC_SHEETJS from '@salesforce/resourceUrl/FEC_SheetJS';
 import getCampaignMappings from '@salesforce/apex/FEC_CampaignController.getCampaignMappings';
 import getInProgressSummary from '@salesforce/apex/FEC_CampaignController.getInProgressSummary';
@@ -58,25 +59,8 @@ export default class FecUploadCampaignData extends LightningElement {
     selectedMappingId = '';
     rawMappingData = [];
     librariesLoaded = false;
-    EXCEL_HEADERS = [
-        "ProductLine",
-        "Campaign ID",
-        "App ID",
-        "Account or Contract number",
-        "DateTime 1",
-        "DateTime 2",
-        "DateTime 3",
-        "Number 1",
-        "Number 2",
-        "Number 3",
-        "Number 4",
-        "Number 5",
-        "String 1",
-        "String 2",
-        "String 3",
-        "String 4",
-        "String 5"
-    ];
+    isLoading = false;
+    wiredMappingResult;
 
     renderedCallback() {
         if (this.librariesLoaded) return;
@@ -86,7 +70,9 @@ export default class FecUploadCampaignData extends LightningElement {
     }
 
     @wire(getCampaignMappings)
-    wiredMappings({ error, data }) {
+    wiredMappings(result) {
+        this.wiredMappingResult = result;
+        const { error, data } = result;
         if (data) {
             this.rawMappingData = data;
             let options = data.map(record => {
@@ -130,14 +116,9 @@ export default class FecUploadCampaignData extends LightningElement {
         if (selectedRecord && !selectedRecord.FEC_IsActive__c) {
             this.showToast(WARNING_TITLE, `Campaign "${selectedRecord.Name + inactiveItemMsg}"`, 'warning');
             
-            setTimeout(() => {
-                this.inProgressCount = 0;
-                this.inProgressData = null;
-                this.selectedMappingId = null;
-                const combobox = this.template.querySelector('lightning-combobox[data-id="mappingDropdown"]');
-                if(combobox) combobox.value = null;
-            }, 0);
-            
+            this.inProgressCount = 0;
+            this.inProgressData = null;
+            this.selectedMappingId = '';
             return; 
         }
 
@@ -178,7 +159,7 @@ export default class FecUploadCampaignData extends LightningElement {
         const XLSX = window.XLSX;
     
         // 2. Khởi tạo mảng dữ liệu với dòng đầu tiên là Header
-        const ws_data = [this.EXCEL_HEADERS];
+        const ws_data = [CAMPAIGN_EXCEL_HEADERS];
     
         // 3. Map dữ liệu từ Object sang mảng theo đúng thứ tự cột của Header
         this.inProgressData.forEach(item => {
@@ -249,6 +230,7 @@ export default class FecUploadCampaignData extends LightningElement {
                 isSunday: this.blnRunSunday
             });
             
+            await refreshApex(this.wiredMappingResult);
             this.showToast(SUCCESS_TITLE, savedDataMsg, 'success');
         } catch (error) {
             this.showToast(FAIL_TITLE, savingConfigErrMsg + (error.body ? error.body.message : error.message), 'error');

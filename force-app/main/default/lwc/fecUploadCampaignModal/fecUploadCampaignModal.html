@@ -11,7 +11,7 @@
             <div class="upload-container">
                 <p class="instruction-text">{label.lblUploadInstruction}</p>
                 
-                <div class="file-input-wrapper slds-m-top_small">
+                <div class="file-input-wrapper slds-var-m-top_small">
                     <label class="custom-file-upload">
                         <input type="file" accept=".xlsx, .xls" onchange={handleFileChange}/>
                         {label.lblChooseFile}
@@ -26,18 +26,21 @@
                         <p class="template-question">{label.lblNoTemplateQuestion}</p>
                     </div>
                     <div class="slds-col slds-grow-none">
-                        <button class="btn-download" onclick={downloadTemplate}>
-                            <lightning-icon icon-name="utility:download" size="xx-small" variant="info" class="slds-m-right_xx-small blue-icon"></lightning-icon>
-                            {label.btnDownloadTemplate}
-                        </button>
+                        <lightning-button
+                            label={label.btnDownloadTemplate}
+                            icon-name="utility:download"
+                            variant="neutral"
+                            onclick={downloadTemplate}
+                            class="slds-var-m-right_xx-small">
+                        </lightning-button>
                     </div>
                 </div>
             </div>
         </div>
 
         <div slot="footer">
-            <button class="slds-button slds-button_neutral btn-round" onclick={handleClose}>{label.btnCancel}</button>
-            <button class="slds-button slds-button_brand btn-round btn-brand-blue" onclick={handleConfirm}>{label.btnSave}</button>
+            <lightning-button label={label.btnCancel} variant="neutral" onclick={handleClose} class="slds-var-m-right_xx-small"></lightning-button>
+            <lightning-button label={label.btnSave} variant="brand" onclick={handleConfirm}></lightning-button>
         </div>
 
     </c-fec-generic-modal>

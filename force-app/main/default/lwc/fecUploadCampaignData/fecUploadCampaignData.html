@@ -1,8 +1,8 @@
 <template>
     <div class="slds-card slds-card_boundary custom-card">
-        <div class="slds-p-around_medium slds-grid slds-grid_vertical-align-center slds-border_bottom">
+        <div class="slds-var-p-around_medium slds-grid slds-grid_vertical-align-center slds-border_bottom">
             <div class="slds-col slds-size_1-of-2 slds-grid slds-grid_vertical-align-center">
-                <lightning-icon icon-name="standard:campaign" size="small" class="custom-icon-purple slds-m-right_small"></lightning-icon>
+                <lightning-icon icon-name="standard:campaign" size="small" class="custom-icon-purple slds-var-m-right_small"></lightning-icon>
                 <h2 class="slds-text-heading_small custom-header-title">{label.lblCampaignConfiguration}</h2>
             </div>
             <div class="slds-col slds-size_1-of-2 slds-text-align_right">
@@ -12,12 +12,12 @@
                     icon-name="utility:save"
                     onclick={handleSaveSchedule} 
                     disabled={isSaveDisabled}
-                    class="slds-m-left_small">
+                    class="slds-var-m-left_small">
                 </lightning-button>
             </div>
         </div>
 
-        <div class="slds-p-around_medium">
+        <div class="slds-var-p-around_medium">
             <div class="slds-grid slds-gutters slds-grid_vertical-align-start">
                 
                 <div class="slds-col slds-size_3-of-12">
@@ -25,18 +25,18 @@
                         data-id="mappingDropdown"
                         label={label.lblCsCampaignMapping}
                         value={selectedMappingId}
-                        placeholder="Select Campaign..."
+                        placeholder={label.placeholderSelectCampaign}
                         options={mappingOptions}
                         onchange={handleMappingChange}
                         required
-                        class="slds-m-bottom_medium">
+                        class="slds-var-m-bottom_medium">
                     </lightning-combobox>
                     
-                    <div class="slds-box slds-theme_shade slds-m-top_medium">
+                    <div class="slds-box slds-theme_shade slds-var-m-top_medium">
                         <div class="slds-grid slds-grid_vertical-align-center">
                             <div class="slds-col">
                                 <span class="slds-text-title_bold">{label.lblNoOfInprogressRecords}</span>
-                                <span class="slds-badge slds-m-left_x-small">{inProgressCount}</span>
+                                <span class="slds-badge slds-var-m-left_x-small">{inProgressCount}</span>
                             </div>
                             
                             <div class="slds-col slds-no-flex">
@@ -46,7 +46,7 @@
                                         icon-name="utility:download" 
                                         variant="neutral" 
                                         onclick={handleDownloadExcel}
-                                        class="slds-m-left_small">
+                                        class="slds-var-m-left_small">
                                     </lightning-button>
                                 </template>
                             </div>
@@ -55,12 +55,12 @@
                 </div>
 
                 <div class="slds-col slds-size_3-of-12">
-                    <div class="db-job-announcement slds-m-bottom_small">
-                        <lightning-icon icon-name="utility:info" size="x-small" class="slds-m-right_xx-small info-icon-bold"></lightning-icon>
+                    <div class="db-job-announcement slds-var-m-bottom_small">
+                        <lightning-icon icon-name="utility:info" size="x-small" class="slds-var-m-right_xx-small info-icon-bold"></lightning-icon>
                         <strong>{label.lblDbJobAnnouncement}</strong>
                     </div>
 
-                    <div class="slds-p-top_small">
+                    <div class="slds-var-p-top_small">
                         <lightning-input 
                             type="checkbox" 
                             label={label.lblEnableSchedule} 
@@ -73,10 +73,10 @@
                 <div class="slds-col slds-size_6-of-12">
                     <template if:true={blnIsScheduleEnabled}>
                         <div class="schedule-section-gray">
-                            <p class="slds-text-title_bold slds-m-bottom_small">{label.lblRunWeekendQuestion}</p>
+                            <p class="slds-text-title_bold slds-var-m-bottom_small">{label.lblRunWeekendQuestion}</p>
                             
-                            <div class="slds-grid slds-m-bottom_small">
-                                <div class="slds-m-right_xx-large">
+                            <div class="slds-grid slds-var-m-bottom_small">
+                                <div class="slds-var-m-right_xx-large">
                                     <lightning-input type="checkbox" label={label.lblSaturday} name="saturday" checked={blnRunSaturday} onchange={handleDayChange}></lightning-input>
                                 </div>
                                 <div>
@@ -84,21 +84,25 @@
                                 </div>
                             </div>
 
-                            <button class="custom-push-btn" disabled={isPushDisabled} onclick={handlePushRecord}>
-                                <template if:true={isLoading}>
-                                    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
-                                </template>
-                                {label.btnPushRecord}
-                            </button>
+                            <lightning-button
+                                label={label.btnPushRecord}
+                                variant="brand"
+                                onclick={handlePushRecord}
+                                disabled={isPushDisabled}
+                                class="custom-push-btn-wrapper">
+                            </lightning-button>
                         </div>
                     </template>
                 </div>
             </div>
 
-            <div class="slds-m-top_xx-large" if:true={selectedMappingId}>
-                <button class="custom-upload-btn" onclick={handleUploadData}>
-                    {label.lblUploadCampaignData}
-                </button>
+            <div class="slds-var-m-top_xx-large" if:true={selectedMappingId}>
+                <lightning-button
+                    label={label.lblUploadCampaignData}
+                    variant="neutral"
+                    icon-name="utility:upload"
+                    onclick={handleUploadData}>
+                </lightning-button>
             </div>
 
             <c-fec-upload-campaign-modal

@@ -54,3 +54,22 @@ export const DELETABLE_STATUSES = new Set([
 export const EDITABLE_STATUSES = new Set([
     STATUS_UPLOADED, STATUS_REUPLOADED, STATUS_FAILURE, STATUS_PROCESSED
 ]);
+export const CAMPAIGN_EXCEL_HEADERS = [
+    "ProductLine",
+    "Campaign ID",
+    "App ID",
+    "Account or Contract number",
+    "DateTime 1",
+    "DateTime 2",
+    "DateTime 3",
+    "Number 1",
+    "Number 2",
+    "Number 3",
+    "Number 4",
+    "Number 5",
+    "String 1",
+    "String 2",
+    "String 3",
+    "String 4",
+    "String 5"
+];

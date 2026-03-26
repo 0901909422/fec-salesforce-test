@@ -1,3 +1,8 @@
+/**
+ * FEC_CampaignController
+ * Apex controller for fecCampaign LWC component.
+ * Refactored to delegate validation to FEC_CampaignValidator.
+ */
 public with sharing class FEC_CampaignController {
 
     @AuraEnabled(cacheable=true)
@@ -32,15 +37,14 @@ public with sharing class FEC_CampaignController {
                 AND (NOT FEC_RecordStatus__c LIKE 'Resolved-%')
                 LIMIT 40000
             ];
-
             result.put('count', records.size());
             result.put('data', records);
-            
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
         return result;
     }
+
 
     @AuraEnabled
     public static String saveMapping(Map<String, Object> mappingData) {
@@ -58,7 +62,6 @@ public with sharing class FEC_CampaignController {
                     AND FEC_IsActive__c = true
                     AND Id != :recordId
                 ];
-
                 if (!existingActiveMappings.isEmpty()) {
                     for (FEC_CS_Campaign__c m : existingActiveMappings) {
                         m.FEC_IsActive__c = false;
@@ -69,11 +72,9 @@ public with sharing class FEC_CampaignController {
 
             FEC_CS_Campaign__c currentRecord = new FEC_CS_Campaign__c();
             if (recordId != null) currentRecord.Id = recordId;
-            
             currentRecord.Name = name;
             currentRecord.FEC_Campaign__c = genesysCampaignId;
             currentRecord.FEC_IsActive__c = isActive;
-
             upsert currentRecord;
             return FEC_ConstantCommon.SUCCESS_MESSAGE;
         } catch (Exception e) {
@@ -90,38 +91,61 @@ public with sharing class FEC_CampaignController {
         }
     }
 
+
     /**
-     * @param jsonString: Chuỗi JSON được parse từ Excel ở phía LWC (Client-side)
-     * @param csCampaignId: ID của CS Campaign user đang chọn
+     * @param jsonString: JSON string parsed from Excel on the LWC (Client-side)
+     * @param csCampaignId: ID of the CS Campaign the user selected
      */
     @AuraEnabled
     public static String uploadCampaignData(String jsonString, String csCampaignId) {
-        if (String.isBlank(csCampaignId)) FEC_Util.throwCreateException(FEC_Constants.MSG_FILE_ERR);
+        if (String.isBlank(csCampaignId)) {
+            FEC_Util.throwCreateException(FEC_Constants.MSG_FILE_ERR);
+        }
 
         Savepoint sp = Database.setSavepoint();
         try {
-            List<Object> dataList = (List<Object>) JSON.deserializeUntyped(jsonString);
-            if (dataList.isEmpty()) FEC_Util.throwCreateException(FEC_Constants.MSG_FILE_ERR);
-
-            FEC_CS_Campaign__c cmp = [SELECT Id, Name, FEC_Campaign__c, FEC_Campaign__r.Id, FEC_Campaign__r.Name, FEC_Campaign__r.FEC_CampaignId__c, FEC_Campaign__r.FEC_CampaignCallingList__c, FEC_Campaign__r.FEC_MaxCallingAttempt__c, FEC_Campaign__r.FEC_RecordLifeTime__c FROM FEC_CS_Campaign__c WHERE Id = :csCampaignId LIMIT 1];
-            String actualCode = cmp.Name;
-
-            List<FEC_DataCampaign__c> recordsToInsert = new List<FEC_DataCampaign__c>();
-            Set<String> compositeKeys = new Set<String>();
-
-            for (Object obj : dataList) {
-                Map<String, Object> row = (Map<String, Object>) obj;
-                
-                validateRow(row, actualCode);
-
-                String key = generateKey(row);
-                if (compositeKeys.contains(key)) FEC_Util.throwCreateException(FEC_Constants.MSG_DUP_ERR);
-                compositeKeys.add(key);
-
-                recordsToInsert.add(mapToSObject(row, cmp, csCampaignId));
+            List<Object> rawList = (List<Object>) JSON.deserializeUntyped(jsonString);
+            if (rawList.isEmpty()) {
+                FEC_Util.throwCreateException(FEC_Constants.MSG_FILE_ERR);
             }
 
-            if (!recordsToInsert.isEmpty()) insert recordsToInsert;
+            FEC_CS_Campaign__c cmp = [
+                SELECT Id, Name, FEC_Campaign__c, FEC_Campaign__r.Id,
+                    FEC_Campaign__r.Name, FEC_Campaign__r.FEC_CampaignId__c,
+                    FEC_Campaign__r.FEC_CampaignCallingList__c,
+                    FEC_Campaign__r.FEC_MaxCallingAttempt__c,
+                    FEC_Campaign__r.FEC_RecordLifeTime__c
+                FROM FEC_CS_Campaign__c
+                WHERE Id = :csCampaignId LIMIT 1
+            ];
+            String actualCode = cmp.Name;
+
+            List<Map<String, Object>> rows = new List<Map<String, Object>>();
+            for (Object obj : rawList) {
+                rows.add((Map<String, Object>) obj);
+            }
+
+            List<FEC_CampaignValidator.ValidationResult> validationErrors =
+                FEC_CampaignValidator.validateUploadData(rows, actualCode);
+            List<String> duplicateErrors = FEC_CampaignValidator.checkDuplicateKeys(rows);
+
+            List<String> allErrors = new List<String>();
+            for (FEC_CampaignValidator.ValidationResult vr : validationErrors) {
+                allErrors.addAll(vr.errors);
+            }
+            allErrors.addAll(duplicateErrors);
+
+            if (!allErrors.isEmpty()) {
+                FEC_Util.throwCreateException(String.join(allErrors, '; '));
+            }
+
+            List<FEC_DataCampaign__c> recordsToInsert = new List<FEC_DataCampaign__c>();
+            for (Map<String, Object> row : rows) {
+                recordsToInsert.add(mapToSObject(row, cmp, csCampaignId));
+            }
+            if (!recordsToInsert.isEmpty()) {
+                insert recordsToInsert;
+            }
             return FEC_ConstantCommon.SUCCESS_MESSAGE;
 
         } catch (Exception e) {
@@ -131,12 +155,11 @@ public with sharing class FEC_CampaignController {
         }
     }
 
+
     @AuraEnabled
     public static void saveConfigurationDetails(Id mappingId, Boolean isSchedule, Boolean isSaturday, Boolean isSunday) {
         try {
-            // Truy vấn Mapping để lấy ID của Master Campaign
             FEC_CS_Campaign__c mapping = [SELECT Id, FEC_Campaign__c FROM FEC_CS_Campaign__c WHERE Id = :mappingId LIMIT 1];
-            
             if (mapping != null) {
                 FEC_CS_Campaign__c campaignToUpdate = new FEC_CS_Campaign__c(
                     Id = mapping.Id,
@@ -158,37 +181,17 @@ public with sharing class FEC_CampaignController {
         if (mappingId == null) {
             throw new AuraHandledException(System.Label.FEC_Please_Select_A_Campaign_Message);
         }
-
         FEC_CS_Campaign__c mappingRecord = new FEC_CS_Campaign__c(
             Id = mappingId,
             FEC_PushInstant__c = true
         );
         update mappingRecord;
-        
-        // Khởi tạo Batch với ID cụ thể
         FEC_PushCampaignDataBatch batch = new FEC_PushCampaignDataBatch(mappingId);
         Id jobId = Database.executeBatch(batch, 2000);
         return jobId;
     }
 
-    private static void validateRow(Map<String, Object> row, String actualCode) {
-        String excelCmpId = FEC_Util.toString(row.get('Campaign ID'));
-        String productLine = FEC_Util.toString(row.get('ProductLine'));
-        String appId = FEC_Util.toString(row.get('App ID'));
-        String accNum = FEC_Util.toString(row.get('Account or Contract number'));
-
-        Boolean isInvalid = 
-            (excelCmpId == null || !excelCmpId.equals(actualCode)) ||
-            (String.isBlank(productLine) || productLine.length() > 12) ||
-            (!productLine.equalsIgnoreCase('Loan') && !productLine.equalsIgnoreCase('Card')) ||
-            (String.isBlank(appId) || appId.length() > 32) ||
-            (String.isBlank(accNum) || accNum.length() > 32) ||
-            (!FEC_Util.checkIsNumber(row.get('Number 1'))) ||
-            (!FEC_Util.checkIsNumber(row.get('Number 2'))) ||
-            (!FEC_Util.checkIsNumber(row.get('Number 3')));
-
-        if (isInvalid) FEC_Util.throwCreateException(FEC_Constants.MSG_FILE_ERR);
-    }
+    // ─── Private Helpers ───────────────────────────────────────────
 
     private static String generateKey(Map<String, Object> row) {
         return FEC_Util.toString(row.get('ProductLine')) + '_' + 
@@ -196,8 +199,7 @@ public with sharing class FEC_CampaignController {
                FEC_Util.toString(row.get('Account or Contract number'));
     }
 
-    private static FEC_DataCampaign__c mapToSObject(Map<String, Object> row, FEC_CS_Campaign__c cmp,String csCampaignId) {
-        System.debug(System.LoggingLevel.INFO, cmp.FEC_Campaign__r);
+    private static FEC_DataCampaign__c mapToSObject(Map<String, Object> row, FEC_CS_Campaign__c cmp, String csCampaignId) {
         return new FEC_DataCampaign__c(
             FEC_CS_Campaign__c = csCampaignId,
             FEC_ProductLine__c = FEC_Util.toString(row.get('ProductLine')),
@@ -216,7 +218,7 @@ public with sharing class FEC_CampaignController {
             FEC_DateTime1__c = FEC_Util.toDateTime(row.get('DateTime 1')),
             FEC_DateTime2__c = FEC_Util.toDateTime(row.get('DateTime 2')),
             FEC_DateTime3__c = FEC_Util.toDateTime(row.get('DateTime 3')),
-            FEC_RecordStatus__c = FEC_Constants.PROCESS_STATUS_NEW,
+            FEC_RecordStatus__c = FEC_Constants.CAMPAIGN_STATUS_NEW,
             FEC_CampaignCallingList__c = cmp.FEC_Campaign__r.FEC_CampaignCallingList__c,
             FEC_MaxCallAttempt__c = cmp.FEC_Campaign__r.FEC_MaxCallingAttempt__c != null ? cmp.FEC_Campaign__r.FEC_MaxCallingAttempt__c : FEC_Constants.MAX_CALL_ATTEMPTS,
             FEC_RecordLifetime__c = cmp.FEC_Campaign__r.FEC_RecordLifeTime__c != null ? cmp.FEC_Campaign__r.FEC_RecordLifeTime__c : FEC_Constants.CAMPAIGN_LIFETIME,
@@ -227,11 +229,10 @@ public with sharing class FEC_CampaignController {
 
     private static void handleUploadException(Exception e) {
         String msg = e.getMessage();
-        if (msg.contains(FEC_Constants.MSG_DUP_ERR)) {
+        if (msg != null && msg.contains(FEC_Constants.MSG_DUP_ERR)) {
             FEC_Util.throwCreateException(FEC_Constants.MSG_DUP_ERR);
         } else {
-            System.debug('ERROR: ' + e.getStackTraceString());
-            FEC_Util.throwCreateException(FEC_Constants.MSG_FILE_ERR);
+            FEC_Util.throwCreateException(msg != null ? msg : FEC_Constants.MSG_FILE_ERR);
         }
     }
 }

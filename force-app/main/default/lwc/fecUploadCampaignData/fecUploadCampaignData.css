@@ -14,7 +14,7 @@
 /* DB JOB INFO: Chữ to, đậm, màu nổi bật nhẹ */
 .db-job-announcement {
     color: #2e2e2e;
-    font-size: 1rem; /* Chữ to hơn */
+    font-size: 1rem;
     line-height: 1.4;
     display: flex;
     align-items: center;
@@ -32,34 +32,9 @@
     padding: 16px 24px;
 }
 
-/* Nút Push Record */
-.custom-push-btn {
-    background-color: #0070d2;
-    color: white;
-    border: none;
-    padding: 8px 28px;
-    border-radius: 20px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.custom-push-btn[disabled] {
-    background-color: #cccccc;
-    color: #666666;
-    cursor: not-allowed;
-}
-
-/* Nút Upload */
-.custom-upload-btn {
-    background: white;
-    border: 1px solid #0070d2;
-    color: #0070d2;
-    padding: 8px 24px;
-    border-radius: 20px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
+/* Border-radius override cho Push Record button wrapper */
+.custom-push-btn-wrapper {
+    --slds-c-button-radius-border: 20px;
 }
 
 .upload-icon-blue {
