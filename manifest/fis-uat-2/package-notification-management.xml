@@ -55,5 +55,9 @@
 		<members>RD_IT_User_Master_Data_Management</members>
 		<name>PermissionSet</name>
 	</types>
+	<types>
+		<members>FEC_Notification_Channel__c-Notification Channels Layout</members>
+		<name>Layout</name>
+	</types>
     <version>66.0</version>
 </Package>
