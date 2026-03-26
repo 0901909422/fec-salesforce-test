@@ -27,6 +27,7 @@ import {
   MessageContext,
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import IS_MODE_EDIT_INTERACTION from "@salesforce/messageChannel/FEC_Interaction_Case_Mode__c";
 import {
   IsConsoleNavigation,
   getFocusedTabInfo,
@@ -1182,6 +1183,7 @@ hasAnySearchCriteria(params) {
             );
             if (this.recordId) {
                 //publish(this.messageContext, IS_MODE_EDIT, payload);
+                this.handlePublishMessageChanel();
                 await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
                 // await refreshApex(this.wiredCaseResult);
                 this.dispatchEvent(new RefreshEvent());
@@ -1415,6 +1417,6 @@ hasAnySearchCriteria(params) {
     const payload = {
       isModeEdit: true,
     };
-    publish(this.messageContext, IS_MODE_EDIT, payload);
+    publish(this.messageContext, IS_MODE_EDIT_INTERACTION, payload);
   }
 }
