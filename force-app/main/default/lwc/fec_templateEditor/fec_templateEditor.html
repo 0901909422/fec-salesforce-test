@@ -1,0 +1,269 @@
+<template>
+    <div class="slds-brand-band slds-brand-band_cover slds-brand-band_medium te-page-container">
+        <div class="slds-grid slds-grid_align-center">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_10-of-12 slds-large-size_8-of-12 te-main-card">
+
+                <!-- HEADER: Title + top action buttons -->
+                <div class="slds-p-around_medium slds-border_bottom te-header">
+                    <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                        <h1 class="slds-text-heading_medium">{pageHeading}</h1>
+                        <div class="te-header-actions">
+                            <lightning-button
+                                label={label.backToListLabel}
+                                onclick={handleBack}
+                                class="slds-m-right_x-small"
+                                icon-name="utility:back"
+                            ></lightning-button>
+                            <lightning-button
+                                label={label.previewLabel}
+                                onclick={handlePreview}
+                                class="slds-m-right_x-small"
+                                icon-name="utility:preview"
+                            ></lightning-button>
+                            <lightning-button
+                                label={label.buttonSave}
+                                variant="brand"
+                                onclick={handleSave}
+                                class="slds-m-right_x-small"
+                            ></lightning-button>
+                            <lightning-button
+                                label={label.saveAndNewLabel}
+                                variant="brand"
+                                onclick={handleSaveAndNew}
+                            ></lightning-button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Required info notice -->
+                <div class="slds-text-align_right slds-p-right_xx-large slds-p-top_x-small">
+                    <abbr class="slds-required slds-text-color_error" title="required">*</abbr>
+                    {label.requireInfoLabel}
+                </div>
+
+                <!-- ERROR BANNER -->
+                <template if:true={hasErrors}>
+                    <div class="slds-box slds-box_small slds-theme_error slds-m-around_medium te-error-banner">
+                        <div class="slds-p-around_x-small">
+                            <h2 class="slds-text-heading_small">{label.reviewErrorLabel}</h2>
+                        </div>
+                    </div>
+                    <p class="slds-text-color_error slds-m-left_medium">{errorMessage}</p>
+                </template>
+
+                <div class="slds-p-around_medium">
+
+                    <!-- SECTION: Information -->
+                    <div class="slds-section slds-is-open">
+                        <h3 class="slds-section__title slds-theme_shade">
+                            <span class="slds-truncate slds-p-horizontal_small">{label.informationLabel}</span>
+                        </h3>
+
+                        <!-- Row 1: Template Name + API Name -->
+                        <div class="slds-grid slds-wrap slds-p-top_small">
+                            <div class="slds-col slds-size_1-of-2 slds-p-right_medium">
+                                <lightning-input
+                                    max-length="255"
+                                    class="name-input"
+                                    label={label.FEC_Col_Template_Name}
+                                    value={name}
+                                    required
+                                    onchange={handleNameChange}
+                                ></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input
+                                    max-length="255"
+                                    label={label.apiNameLabel}
+                                    value={apiName}
+                                    onchange={handleApiNameChange}
+                                ></lightning-input>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Folder + Enhanced Letterhead -->
+                        <div class="slds-grid slds-wrap slds-p-top_small">
+                            <div class="slds-col slds-size_1-of-2 slds-p-right_medium">
+                                <c-fec_searchable-combobox
+                                    label={label.FEC_Col_Folder}
+                                    value={folderId}
+                                    options={folderOptions}
+                                    placeholder="Search folders..."
+                                    onchange={handleFolderChange}
+                                ></c-fec_searchable-combobox>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <c-fec_searchable-combobox
+                                    label={label.letterheadLabel}
+                                    value={enhancedLetterheadId}
+                                    options={letterheadOptions}
+                                    placeholder="Search letterheads..."
+                                    onchange={handleLetterheadChange}
+                                ></c-fec_searchable-combobox>
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Description (full width) -->
+                        <div class="slds-grid slds-wrap slds-p-top_small">
+                            <div class="slds-col slds-size_1-of-1">
+                                <lightning-textarea
+                                    label={label.FEC_Col_Description}
+                                    value={description}
+                                    onchange={handleDescriptionChange}
+                                    max-length="1000"
+                                ></lightning-textarea>
+                            </div>
+                        </div>
+
+                        <!-- Row 4: Applicable for Mailbox (dual listbox) -->
+                        <div class="slds-grid slds-wrap slds-p-top_small">
+                            <div class="slds-col slds-size_1-of-1">
+                                <lightning-dual-listbox
+                                    label={label.mailboxLabel}
+                                    source-label="Available"
+                                    selected-label="Selected"
+                                    options={mailboxOptions}
+                                    value={applicableMailbox}
+                                    onchange={handleMailboxChange}
+                                ></lightning-dual-listbox>
+                            </div>
+                        </div>
+
+                        <!-- Row 5: Active checkbox -->
+                        <div class="slds-grid slds-wrap slds-p-top_small">
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input
+                                    type="checkbox"
+                                    label={label.FEC_Col_Active}
+                                    checked={isActive}
+                                    onchange={handleActiveChange}
+                                ></lightning-input>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION: Subject + Email Body -->
+                    <div class="slds-section slds-is-open slds-m-top_medium">
+                        <h3 class="slds-section__title slds-theme_shade">
+                            <span class="slds-truncate slds-p-horizontal_small">{label.emailBodyLabel}</span>
+                        </h3>
+
+                        <!-- Subject -->
+                        <div class="slds-grid slds-wrap slds-p-top_small">
+                            <div class="slds-col slds-size_1-of-1">
+                                <lightning-input
+                                    max-length="255"
+                                    label={label.subjectLabel}
+                                    value={subject}
+                                    onchange={handleSubjectChange}
+                                ></lightning-input>
+                            </div>
+                        </div>
+
+                        <p class="slds-p-vertical_small slds-text-body_small slds-text-color_weak te-content-info">
+                            {label.emailBodyInfoLabel}
+                        </p>
+
+                        <div class="slds-m-top_small slds-m-bottom_large">
+                            <lightning-input-rich-text
+                                max-length="131072"
+                                class="body-editor"
+                                value={emailBody}
+                                onchange={handleBodyChange}
+                            ></lightning-input-rich-text>
+
+                            <!-- Merge-field toolbar below the editor -->
+                            <div class="te-merge-toolbar">
+                                <button class="te-merge-btn" onclick={openMergePicker}>
+                                    <span class="slds-m-bottom_xx-small">{mergeFieldLabel}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION: Attachments -->
+                    <div class="slds-section slds-is-open slds-m-top_medium">
+                        <h3 class="slds-section__title slds-theme_shade">
+                            <span class="slds-truncate slds-p-horizontal_small">{label.attachmentLabel}</span>
+                        </h3>
+
+                        <div class="slds-p-top_small">
+                            <!-- Upload button – uses lightning-file-upload (only in edit mode with recordId) -->
+                            <template if:true={isEditMode}>
+                                <lightning-file-upload
+                                    label="Upload Files"
+                                    name="fileUploader"
+                                    record-id={_recordId}
+                                    onuploadfinished={handleUploadFinished}
+                                    multiple
+                                ></lightning-file-upload>
+                            </template>
+                            <template if:false={isEditMode}>
+                                <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
+                                    Save the template first to upload attachments.
+                                </p>
+                            </template>
+
+                            <!-- Attachment list -->
+                            <template if:true={hasAttachments}>
+                                <ul class="slds-has-dividers_bottom-space slds-m-top_small">
+                                    <template for:each={attachmentList} for:item="att">
+                                        <li class="slds-item slds-grid slds-grid_vertical-align-center" key={att.id}>
+                                            <lightning-icon
+                                                icon-name={att.iconName}
+                                                size="small"
+                                                class="slds-m-right_small"
+                                            ></lightning-icon>
+                                            <span class="slds-grow">{att.name}</span>
+                                            <span class="slds-text-body_small slds-text-color_weak slds-m-right_medium">{att.sizeDisplay}</span>
+                                            <lightning-button-icon
+                                                icon-name="utility:delete"
+                                                alternative-text="Remove"
+                                                variant="bare"
+                                                data-id={att.id}
+                                                onclick={handleRemoveAttachment}
+                                            ></lightning-button-icon>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FOOTER: Bottom action buttons -->
+                <div class="slds-p-around_medium slds-border_top slds-align_absolute-center">
+                    <lightning-button
+                        label={label.backToListLabel}
+                        onclick={handleBack}
+                        class="slds-m-right_x-small"
+                    ></lightning-button>
+                    <lightning-button
+                        label={label.previewLabel}
+                        onclick={handlePreview}
+                        class="slds-m-right_x-small"
+                    ></lightning-button>
+                    <lightning-button
+                        label={label.buttonSave}
+                        variant="brand"
+                        onclick={handleSave}
+                        class="slds-m-right_x-small"
+                    ></lightning-button>
+                    <lightning-button
+                        label={label.saveAndNewLabel}
+                        variant="brand"
+                        onclick={handleSaveAndNew}
+                    ></lightning-button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MERGE FIELD PICKER MODAL -->
+    <template if:true={isPickerOpen}>
+        <c-fec_-merge-field-picker
+            onclose={handleClosePicker}
+            oninsert={handleMergeFieldInsert}
+        ></c-fec_-merge-field-picker>
+    </template>
+</template>

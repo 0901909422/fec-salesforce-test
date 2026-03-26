@@ -1,0 +1,27 @@
+<template>
+    <div class="ftp-container">
+
+        <lightning-vertical-navigation
+            selected-item={selectedNavItem}
+            onselect={handleNavSelect}
+            compact
+        >
+            <!-- EMAIL TEMPLATES section -->
+            <lightning-vertical-navigation-section label={label.FEC_Template_Management_Title}>
+                <lightning-vertical-navigation-item
+                    label={label.FEC_All_Templates_Tab}
+                    name="all_templates"
+                ></lightning-vertical-navigation-item>
+            </lightning-vertical-navigation-section>
+
+            <!-- FOLDERS section -->
+            <lightning-vertical-navigation-section label={label.FEC_Folder_Tree_Title}>
+                <lightning-vertical-navigation-item
+                    label={label.FEC_All_Folders_Tab}
+                    name="all_folders"
+                ></lightning-vertical-navigation-item>
+            </lightning-vertical-navigation-section>
+        </lightning-vertical-navigation>
+
+    </div>
+</template>
