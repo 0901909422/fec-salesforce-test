@@ -15,7 +15,7 @@ import { LightningElement, api, track } from 'lwc';
 import loadMainInfo from '@salesforce/apex/FEC_MainInfoController.loadMainInfo';
 import logSensitiveFromMainInfo from '@salesforce/apex/FEC_MainInfoController.logSensitiveFromMainInfo';
 import { loadStyle } from 'lightning/platformResourceLoader';
-import { formatDateVNI, maskValue } from 'c/fec_CommonUtils';
+import { formatDateVNI, maskValue, sortByStringField } from 'c/fec_CommonUtils';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 import FEC_Demographic_Label from '@salesforce/label/c.FEC_Demographic_Label';
 import FEC_Customer_Number_Label from '@salesforce/label/c.FEC_Customer_Number_Label';
@@ -98,6 +98,8 @@ export default class Fec_MainInfo extends LightningElement {
         loadMainInfo({ caseId: this.recordId })
             .then(res => {
                 this.data = res;
+                const addressesList = res.addresses || [];
+                this.addressesList = sortByStringField(addressesList, 'addressType', 'asc');
                 this.error = undefined;
             })
             .catch(err => {
