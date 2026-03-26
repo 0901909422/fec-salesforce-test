@@ -24,5 +24,15 @@
         <operation>equals</operation>
         <value>Case.Customer_Case,Case.Internal_Case</value>
     </filters>
+    <filters>
+        <field>FEC_Is_Manager_For_Cur_User__c</field>
+        <operation>equals</operation>
+        <value>1</value>
+    </filters>
+    <filters>
+        <field>FEC_Owner_Is_User__c</field>
+        <operation>equals</operation>
+        <value>1</value>
+    </filters>
     <label>My Team</label>
 </ListView>
