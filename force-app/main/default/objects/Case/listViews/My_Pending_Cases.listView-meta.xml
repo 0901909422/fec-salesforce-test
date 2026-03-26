@@ -16,12 +16,12 @@
     <filters>
         <field>CASES.STATUS</field>
         <operation>equals</operation>
-        <value>Open,Pending</value>
+        <value>Pending,Open</value>
     </filters>
     <filters>
         <field>CASES.RECORDTYPE</field>
         <operation>equals</operation>
-        <value>Case.Customer_Case,Case.Interaction,Case.Internal_Case</value>
+        <value>Case.Customer_Case,Case.Internal_Case,Case.Interaction</value>
     </filters>
     <label>1. My Pending Cases</label>
 </ListView>
