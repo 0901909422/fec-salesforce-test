@@ -1006,6 +1006,7 @@ hasAnySearchCriteria(params) {
           c__recordId: caseIdToUse,
           c__customerName: this.custNameForCreate,
           c__identityNo: this.nationalIdForCreate,
+          c__isCreatedFromSearch: 'true'
         },
       });
     } catch (e) {

@@ -87,7 +87,7 @@ export default class Fec_InteractionSLA extends NavigationMixin(
   async getInteractionViewMode() {
     try {
       this.interactionViewMode = await getInteractionViewMode({
-        interactionId: this.interactionId,
+        caseId: this.interactionId,
       });
     } catch (error) {
       console.error("Error getting interaction view mode", error);

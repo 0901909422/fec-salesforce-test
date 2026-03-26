@@ -4,10 +4,10 @@
     <protected>false</protected>
     <values>
         <field>FEC_Endpoint__c</field>
-        <value xsi:type="xsd:string">/AddIPP</value>
+        <value xsi:type="xsd:string">/EStatementService</value>
     </values>
     <values>
         <field>FEC_SOAP_Action__c</field>
-        <value xsi:type="xsd:string">AddIPP</value>
+        <value xsi:nil="true"/>
     </values>
 </CustomMetadata>
