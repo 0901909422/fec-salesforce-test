@@ -28,6 +28,8 @@ import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interacti
 
 import { formatDateTime } from "c/fec_CommonUtils";
 
+import { RECORD_TYPES, VIEW_MODE_REVIEW } from "c/fec_CommonConst";
+
 export default class FecInteractionInfo extends LightningElement {
   labels = {
     interactionPhone: FEC_INTERACTION_PHONE_LABEL,
@@ -135,21 +137,23 @@ export default class FecInteractionInfo extends LightningElement {
   }
 
   // ================= GETTERS =================
-  get isInteractionCase() {
-    return this.recordTypeDevName === "Interaction";
+   get isInteractionCase() {
+    return this.recordTypeDevName === RECORD_TYPES.INTERACTION;
   }
+
+  get isCustomerCase() {
+    return this.recordTypeDevName === RECORD_TYPES.CUSTOMER_CASE;
+  }
+
 
   get isInteractionClosed() {
     if (this.record?.FEC_Interaction_Status__c === "Closed") return true;
     return false;
   }
 
-  get isCustomerCase() {
-    return this.recordTypeDevName === "Customer_Case";
-  }
-
+  
   get isReview() {
-    return this.viewMode === "review";
+    return this.viewMode === VIEW_MODE_REVIEW;
   }
 
   get showField() {
@@ -233,38 +237,86 @@ export default class FecInteractionInfo extends LightningElement {
 
   handlePhoneChange(event) {
     this.phoneDraft = event.target.value;
+
+    const input = event.target;
+    const value = this.phoneDraft;
+
+    // reset lỗi
+    input.setCustomValidity("");
+
+    if (!value) {
+      input.setCustomValidity("Phone number is required.");
+    } else if (value.startsWith("0")) {
+      if (!/^\d{10}$/.test(value)) {
+        input.setCustomValidity(
+          "Phone number starting with 0 must be exactly 10 digits.",
+        );
+      }
+    } else if (value.startsWith("84")) {
+      if (!/^\d{11}$/.test(value)) {
+        input.setCustomValidity(
+          "Phone number starting with 84 must be exactly 11 digits.",
+        );
+      }
+    } else {
+      input.setCustomValidity(
+        "Phone number must start with 0 (10 digits) or 84 (11 digits).",
+      );
+    }
+
+    input.reportValidity();
   }
 
-  handleSavePhone() {
+  async handleSavePhone() {
+    const input = this.template.querySelector("lightning-input");
+
+    if (!input || !input.checkValidity()) {
+      input.reportValidity();
+      return;
+    }
+
     if (!this.phoneDraft || !this.interactionId) return;
 
-    updateInteractionPhone({
-      recordId: this.interactionId,
-      phone: this.phoneDraft,
-    })
-      .then((maskedPhone) => {
-        this.record = {
-          ...this.record,
-          FEC_Interaction_Masked_Phone__c: maskedPhone,
-        };
-
-        this.isEditingPhone = false;
-        this.isMasked = true;
-        this.phoneDraft = null;
-      })
-      .catch((error) => {
-        console.error("updateInteractionPhone error", error);
+    try {
+      const maskedPhone = await updateInteractionPhone({
+        recordId: this.interactionId,
+        phone: this.phoneDraft,
       });
+
+      this.record = {
+        ...this.record,
+        FEC_Interaction_Masked_Phone__c: maskedPhone,
+      };
+
+      this.isEditingPhone = false;
+      this.isMasked = true;
+      this.phoneDraft = null;
+
+      // 🔥 refresh LDS
+      await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+    } catch (error) {
+      console.error("updateInteractionPhone error", error);
+    }
   }
 
-  revealPhone() {
+  async revealPhone() {
     if (!this.interactionId) return;
 
-    getInteractionPhoneReveal({ recordId: this.interactionId })
-      .then((result) => {
-        this.revealedPhone = result;
-        this.isMasked = false;
-      })
-      .catch((e) => console.error("revealPhone error", e));
+    try {
+      const result = await getInteractionPhoneReveal({
+        recordId: this.interactionId,
+      });
+
+      this.revealedPhone = result;
+      this.isMasked = false;
+
+      // 🔥 refresh LDS nếu cần
+      await notifyRecordUpdateAvailable([
+        { recordId: this.recordId },
+        { recordId: this.interactionId },
+      ]);
+    } catch (e) {
+      console.error("revealPhone error", e);
+    }
   }
 }
