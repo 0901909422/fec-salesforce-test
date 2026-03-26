@@ -55,16 +55,6 @@
                 <identifier>RecordNameField</identifier>
             </fieldInstance>
         </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Noti_Channel_Status__c</fieldItem>
-                <identifier>RecordFEC_Noti_Channel_Status_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
         <name>Facet-5b2b4a2e-8487-4bb7-8477-619406ad91a2</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -75,15 +65,8 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.OwnerId</fieldItem>
-                <identifier>RecordOwnerIdField</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Create__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>false</rightValue>
-                    </criteria>
-                </visibilityRule>
+                <fieldItem>Record.FEC_Noti_Channel_Status__c</fieldItem>
+                <identifier>RecordFEC_Noti_Channel_Status_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-b8c73c9d-a7d8-473a-8c47-782e1ab61bb0</name>
