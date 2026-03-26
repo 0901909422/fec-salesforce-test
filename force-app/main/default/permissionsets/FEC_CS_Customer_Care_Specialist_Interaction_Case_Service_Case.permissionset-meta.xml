@@ -2072,17 +2072,7 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Relevant_Ticket__c.FEC_Account_Contract_Number__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>FEC_Relevant_Ticket__c.FEC_Account_or_Contract_Revelant__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Relevant_Ticket__c.FEC_Category__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -2097,23 +2087,8 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Relevant_Ticket__c.FEC_Status_Relevant__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Relevant_Ticket__c.FEC_Status__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Relevant_Ticket__c.FEC_Sub_Category__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Relevant_Ticket__c.FEC_Sub_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -2127,18 +2102,8 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Relevant_Ticket__c.FEC_User_Role__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Relevant_Ticket__c.FEC_User__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Relevant_Ticket__c.FE_Categor_Relevant__c</field>
+        <field>FEC_Relevant_Ticket__c.FE_Category_Relevant__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

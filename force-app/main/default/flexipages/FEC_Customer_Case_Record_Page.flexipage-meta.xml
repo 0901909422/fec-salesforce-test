@@ -623,7 +623,7 @@
                             <value>FEC_Account_or_Contract_Revelant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Categor_Relevant__c</value>
+                            <value>FE_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FE_Sub_Category_Relevant__c</value>
@@ -711,7 +711,7 @@
                             <value>FEC_Account_or_Contract_Revelant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Categor_Relevant__c</value>
+                            <value>FE_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FE_Sub_Category_Relevant__c</value>
