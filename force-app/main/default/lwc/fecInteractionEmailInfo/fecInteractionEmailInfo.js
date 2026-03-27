@@ -48,7 +48,15 @@ import FEC_On_Hold_Label from "@salesforce/label/c.FEC_On_Hold_Label";
 import FEC_On_Hold_Help_Text from "@salesforce/label/c.FEC_On_Hold_Help_Text";
 import UBankCustomberServiceEmail from "@salesforce/label/c.UBankCustomberServiceEmail";
 
-import { STR_EMPTY, EMAIL_REGEX } from "c/fec_CommonConst";
+import {
+  STR_EMPTY,
+  EMAIL_REGEX,
+  VIEW_MODE_HANDLING,
+  VIEW_MODE_REVIEW,
+  RECORD_TYPE_INTERACTION,
+  RECORD_TYPE_CUSTOMER_CASE,
+  NAV_ACTION_VIEW,
+} from "c/fec_CommonConst";
 import { formatDateTimeVN } from "c/fec_CommonUtils";
 
 export default class FecInteractionEmailInfo extends NavigationMixin(LightningElement) {
@@ -134,7 +142,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
 
   handleMessage(message) {
     if (message && typeof message.isModeEdit !== "undefined") {
-      this.viewMode = message.isModeEdit ? "handling" : "review";
+      this.viewMode = message.isModeEdit ? VIEW_MODE_HANDLING : VIEW_MODE_REVIEW;
       // Close editing mode if switched to review
       if (!message.isModeEdit) {
         this.isEditingEmail = false;
@@ -187,22 +195,17 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
       });
   }
 
-  // ================= CONSTANTS =================
-  TARGET_ACTION_VIEW = "view";
-  RECORD_TYPE_INTERACTION = "Interaction";
-  RECORD_TYPE_CUSTOMER_CASE = "Customer_Case";
-
   // ================= GETTERS =================
   get isReview() {
-    return this.viewMode === "review";
+    return this.viewMode === VIEW_MODE_REVIEW;
   }
 
   get isInteractionCase() {
-    return this.recordTypeDevName === this.RECORD_TYPE_INTERACTION;
+    return this.recordTypeDevName === RECORD_TYPE_INTERACTION;
   }
 
   get isCustomerCase() {
-    return this.recordTypeDevName === this.RECORD_TYPE_CUSTOMER_CASE;
+    return this.recordTypeDevName === RECORD_TYPE_CUSTOMER_CASE;
   }
 
   get hasInteractionEmail() {
@@ -304,7 +307,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   }
 
   handleSaveEmail() {
-    const trimmed = this.emailDraft?.trim() || "";
+    const trimmed = this.emailDraft?.trim() || STR_EMPTY;
     this.emailError = this.validateEmail(trimmed);
     if (this.emailError) return;
     if (!this.interactionId) return;
@@ -341,7 +344,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
       attributes: {
         recordId: this.parentId,
         objectApiName: CASE_OBJECT.objectApiName,
-        actionName: this.TARGET_ACTION_VIEW,
+        actionName: NAV_ACTION_VIEW,
       },
     });
   }
