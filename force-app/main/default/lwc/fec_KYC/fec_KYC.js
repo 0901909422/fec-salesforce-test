@@ -21,8 +21,8 @@ import {
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 
-import { mask } from "c/fec_CommonUtils";
-import { ICON_PREVIEW, ICON_HIDE } from "c/fec_CommonConst";
+import { mask, isOnlyNumber, formatNumber, formatDate } from "c/fec_CommonUtils";
+import { ICON_PREVIEW, ICON_HIDE, MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, COMPANY_PHONE } from "c/fec_CommonConst";
 
 import FEC_KYC_Answer_Label from "@salesforce/label/c.FEC_KYC_Answer_Label";
 import FEC_KYC_Product_Label from "@salesforce/label/c.FEC_KYC_Product_Label";
@@ -58,11 +58,16 @@ export default class Fec_KYC extends LightningElement {
   @track prodTypeSectionlst = [];
   @track kycSectionlst = ["KYC", "KYCResult"];
   @track kycResultlst = [];
+  @track isShowKYC = false;
 
   sectionLoaded = false;
 
   get hasProd() {
     return this.kycData.typelst?.length > 0;
+  }
+
+  get isShowKYCResult() {
+    return this.kycResultlst?.length
   }
 
   isEdit = false;
@@ -215,6 +220,10 @@ export default class Fec_KYC extends LightningElement {
     ])
       .then(([res, resultRes]) => {
         if (res) {
+          if (res.typelst) {
+            res.typelst = res.typelst.filter(typeItem => !(typeItem.type === 'Card' && !res.plasticId));
+          }
+
           res.typelst?.forEach((typeItem) => {
             this.prodTypeSectionlst.push(typeItem.type);
 
@@ -227,8 +236,15 @@ export default class Fec_KYC extends LightningElement {
                 item.iconName = ICON_HIDE;
               }
 
+              if (item.fieldType === 'Currency' && item.suggestedAnswer) {
+                item.suggestedAnswer = item.suggestedAnswer.split('\n').map(s => formatNumber(s)).join('\n');
+              }
+
+              if (item.fieldType === 'Date' && item.suggestedAnswer) {
+                item.suggestedAnswer = item.suggestedAnswer.split('\n').map(s => formatDate(s)).join('\n');
+              }
               item.maskedAnswer = item.isMasked
-                ? (item.suggestedAnswer ? item.suggestedAnswer.split('\n').map(s => mask(s)).join('\n') : '')
+                ? (item.suggestedAnswer ? item.suggestedAnswer.split('\n').map(s => this.applyMasking(s, item.fieldType)).join('\n') : '')
                 : item.suggestedAnswer;
             });
           });
@@ -262,7 +278,7 @@ export default class Fec_KYC extends LightningElement {
       typeItem.questions?.forEach((item) => {
         if (item.id === id) {
           if (isPreview) {
-            item.maskedAnswer = item.suggestedAnswer ? item.suggestedAnswer.split('\n').map(s => mask(s)).join('\n') : '';
+            item.maskedAnswer = item.suggestedAnswer ? item.suggestedAnswer.split('\n').map(s => this.applyMasking(s, item.fieldType)).join('\n') : '';
             item.iconName = ICON_HIDE;
           } else {
             item.maskedAnswer = item.suggestedAnswer;
@@ -275,5 +291,28 @@ export default class Fec_KYC extends LightningElement {
         }
       });
     });
+  }
+
+  applyMasking(value, fieldType) {
+    if (!value) return '';
+    switch (fieldType) {
+      case MASKING_TYPE_PHONE:
+        if (value.startsWith(PHONE_VN_REGION)) {
+          return mask(value, 5, 3);
+        }
+
+        if (COMPANY_PHONE.includes(value.substring(0, 3))) {
+          return mask(value, 3, 3);
+        }
+
+        return mask(value, 4, 3);
+      case MASKING_TYPE_PASSPORT:
+        if (isOnlyNumber(value)) {
+          return mask(value, 3, 3);
+        }
+        return mask(value, 2, 3);
+      default:
+        return mask(value, 4, 4);
+    }
   }
 }

@@ -44,6 +44,7 @@ public without sharing class FEC_KYCController {
 
       Case c = caselst.get(0);
       result.kycType = c.FEC_KYC_Method__c;
+      result.plasticId = c.FEC_Account_or_Contract__r.FEC_Plastic_ID__c;
 
       if (
         PLASTIC_ID_DC2.equals(c.FEC_Account_or_Contract__r.FEC_Plastic_ID__c)
@@ -107,6 +108,9 @@ public without sharing class FEC_KYCController {
       List<FEC_KYC__c> selectedKYClst = new List<FEC_KYC__c>();
 
       for (FEC_KYC__c item : kyclst) {
+        if ('Card'.equalsIgnoreCase(item.FEC_Product_Type__r.Name) && String.isBlank(plasticId)) {
+          continue;
+        }
         selectedKYClst.add(item);
       }
 
@@ -165,6 +169,8 @@ public without sharing class FEC_KYCController {
         validFieldlst.add('FEC_Account_or_Contract__c');
       }
 
+      validFieldlst.add('FEC_Product_Type__c');
+
       List<Case> caselst2 = FEC_CaseService.getById(
         new Set<Id>{ c.Id },
         validFieldlst
@@ -189,8 +195,10 @@ public without sharing class FEC_KYCController {
           c,
           adhocValues
         );
+        temp.fieldType = item.FEC_Field_Type__c;
         temp.isMasked = item.FEC_Masking__c;
         temp.fieldName = getToken(item.FEC_KYC_Suggested_Answer__c);
+        temp.isEditable = (c.FEC_Product_Type__c == item.FEC_Product_Type__c);
 
         isConfirmed = kycResultMap.containsKey(item.Id);
 
@@ -565,6 +573,9 @@ public without sharing class FEC_KYCController {
     public String kycType;
 
     @AuraEnabled
+    public String plasticId;
+
+    @AuraEnabled
     public List<TypeDTO> typelst;
 
     public KYCDTO() {
@@ -598,6 +609,8 @@ public without sharing class FEC_KYCController {
     public Boolean isMasked;
     @AuraEnabled
     public String suggestedAnswer;
+    @AuraEnabled
+    public String fieldType;
     @AuraEnabled
     public String fieldName;
 

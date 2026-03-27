@@ -33,6 +33,33 @@ const formatDateTime = (curr) => {
   return `${day}/${month}/${year}, ${h}:${m}:${s}`;
 };
 
+/**
+ * Format date-time as DD/MM/YYYY HH:mm:ss (VN display)
+ */
+const formatDateTimeVN = (val) => {
+  if (!val) return '';
+  const d = new Date(val);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+
+  return `${day}/${month}/${year}, ${h}:${m}:${s}`;
+};
+/**
+ * Format seconds as HH:mm:ss
+ */
+const formatDuration = (seconds) => {
+  if (seconds == null || isNaN(Number(seconds))) return '';
+  const n = Math.floor(Number(seconds));
+  const h = Math.floor(n / 3600);
+  const m = Math.floor((n % 3600) / 60);
+  const s = n % 60;
+  return [h, m, s].map((x) => String(x).padStart(2, "0")).join(':');
+};
+
 const mask = (s, keepStart = 4, keepEnd = 4) => {
   if (!s) return STR_EMPTY;
   s = String(s);
@@ -126,6 +153,11 @@ const maskWorkPhone = (phone) => {
   if (/^84\d{9}$/.test(v)) {
     return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
+
+  if (/^02\d{8}$/.test(v)) {
+    return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
+  }
+
   if (/^0\d{9}$/.test(v)) {
     return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
   }
@@ -568,6 +600,11 @@ const formatNumber = (value) => {
   }
 };
 
+const getCaseIdNumber = (idText) => {
+    const match = idText?.match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
+};
+
 /**
  * Format số với 2 chữ số thập phân, dùng cho tiền/amount. null/NaN → '0.00'.
  * @param {*} val - Giá trị số (number hoặc string)
@@ -593,17 +630,37 @@ const toSortDateStr = (val) => {
   if (iso) return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`.slice(0, 10);
   const parts = s.split('/').filter(Boolean);
   if (parts.length === 3) {
-    const y = parts[2].length === 4 ? parts[2] : parts[0];
-    const m = parts[0].length <= 2 ? parts[0].padStart(2, '0') : parts[1].padStart(2, '0');
-    const d = parts[1] && parts[1].length <= 2 ? parts[1].padStart(2, '0') : parts[0].padStart(2, '0');
-    return `${y}-${m}-${d}`;
+    // DD/MM/YYYY (chuẩn hiển thị FEC) — năm 4 chữ số ở cuối
+    if (/^\d{4}$/.test(parts[2])) {
+      const d = parts[0].padStart(2, '0');
+      const m = parts[1].padStart(2, '0');
+      const y = parts[2];
+      return `${y}-${m}-${d}`;
+    }
+    // YYYY/MM/DD hoặc YYYY/M/D
+    if (/^\d{4}$/.test(parts[0])) {
+      return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+    }
   }
   return s;
+};
+const sortByStringField = (list = [], field, direction = 'asc') => {
+  if (!Array.isArray(list) || !field) return [];
+
+  const dir = direction === 'desc' ? -1 : 1;
+
+  return [...list].sort((a, b) => {
+    const x = (a[field] || '').toString().trim().toLowerCase();
+    const y = (b[field] || '').toString().trim().toLowerCase();
+
+    return x.localeCompare(y) * dir;
+  });
 };
 
 export {
   formatDate,
   formatDateTime,
+  formatDateTimeVN,
   mask,
   formatDateVNI,
   formatToDDMMYYYY,
@@ -623,5 +680,8 @@ export {
   isNegative,
   formatNumber,
   formatNum,
-  toSortDateStr
+  toSortDateStr,
+  formatDuration,
+  getCaseIdNumber,
+  sortByStringField
 };

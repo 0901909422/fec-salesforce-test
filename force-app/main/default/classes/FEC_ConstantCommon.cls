@@ -74,7 +74,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_EXTERNAL_NAME = 'External';
     public static final String CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME = 'Other';
     public static final String CHANNEL_CHAT = 'Chat';
-    
+
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
     public static final String PATTERN_APPLICATION_ID = '^(\\d{6}|\\d{8}|\\d{9})$';
@@ -145,7 +145,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_INSURANCE = 'INSURANCE';
     public static final String PRODUCT_TYPE_LOAN = 'LOAN';
     public static final String PRODUCT_TYPE_CARD = 'CARD';
-      public static final String PRODUCT_TYPE_UBANK = 'UBank';
+    public static final String PRODUCT_TYPE_UBANK = 'UBank';
     public static final String PRODUCT_NON_EXISTING_CUSTOMER = 'Non-Existing Customer';
     
     public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
@@ -226,6 +226,14 @@ public with sharing class FEC_ConstantCommon {
     //Get Next Work
     public static final String CASE_TYPE_DESCRIPTION = 'Get Next Work';
     public static final String CASE_ROUTING_ACTION = 'Route to';
+    /** Routing Action History: cộng dồn FEC_Team__c / Pending-{Team1}_{Team2} (cùng luồng Route to). */
+    public static final Set<String> ROUTING_ACTIONS_SYNC_CASE_TEAMS = new Set<String>{
+        CASE_ROUTING_ACTION,
+        'Revert',
+        'Escalate',
+        'Transfer',
+        'Recall'
+    };
     /** Routing Action History: đổi Owner Case (khớp FEC_CaseBusinessService.buildRoutingActionHistoryRecord). */
     public static final String FEC_RAH_DESCRIPTION_CHANGE_OWNER = 'Change Owner';
     public static final String CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER = 'Resolved-CannotContactCustomer';
@@ -251,11 +259,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String KEY_NUMBER = 'Number';
     public static final String KEY_TEXT = 'Text';
     public static final String OBJ_ADDITIONAL_INFO = 'FEC_Additional_Info__c';
+
+    public static final String AUTO_METHOD = 'Auto';
     public static final String REQUEST_EXISTING_USER_TYPE  = 'EXISTING';
     public static final String REQUEST_NON_EXISTING_USER_TYPE  = 'NON-EXISTING';
     public static final String REQUEST_PROSPECT_USER_TYPE  = 'PROSPECT';
-
-    public static final String AUTO_METHOD = 'Auto';
 
     // Call api FEC_CancelCSCaseService
     public static final String STATUS_CLOSED = 'Closed';

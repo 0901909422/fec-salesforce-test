@@ -93,7 +93,7 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CreateCaseHanlder</apexClass>
+        <apexClass>FEC_CreateCaseHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -324,11 +324,19 @@
     <label>Common System Setting</label>
     <license>Salesforce</license>
     <tabSettings>
+        <tab>Create_Case</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Account_Contract_Search</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
         <tab>FEC_Action_Button__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_ApplicationList</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
@@ -380,11 +388,19 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
+        <tab>FEC_Statements</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Sub_Category__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
         <tab>FEC_Sub_Code__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_Transactions</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>

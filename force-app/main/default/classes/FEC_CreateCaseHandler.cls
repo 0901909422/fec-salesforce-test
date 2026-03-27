@@ -73,8 +73,12 @@ public without sharing class FEC_CreateCaseHandler {
         // ---------------------------
         // CHANNEL / STATUS
         // ---------------------------
-        if(dto.channel != null){
-            interactionCase.FEC_Channel__c = dto.channel;
+        
+        
+        if( dto.channel == FEC_ConstantCommon.CHANNEL_INBOUND_API ) {
+            interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
+        }else if ( dto.channel == FEC_ConstantCommon.CHANNEL_OUTBOUND_API ) {
+            interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
         }
         if( dto.subChannel != null ) {
             interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
@@ -83,7 +87,6 @@ public without sharing class FEC_CreateCaseHandler {
         interactionCase.FEC_Other_Subchannel__c =
             dto.subChannel == FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME ? dto.otherSubChannel : null;
         interactionCase.FEC_External_Interaction_ID__c = dto.externalInteractionId;
-
         if (dto.channel == FEC_ConstantCommon.CHANNEL_CHAT) {
             interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
         } else {
@@ -123,40 +126,6 @@ public without sharing class FEC_CreateCaseHandler {
         
         return res;
     }
-    
-    
-    @AuraEnabled
-    public static void updateInteractionCaseWithCustomerHistory(
-        Id interactionId,
-    Id customerHistoryId
-    ) {
-        try {
-            // Validate input
-            if (interactionId == null || customerHistoryId == null) {
-                throw new AuraHandledException('interactionId or customerHistoryId is null');
-            }
-            
-            // Query record
-            Case interaction = [
-            SELECT Id, FEC_Account_or_Contract__c
-            FROM Case
-            WHERE Id = :interactionId
-            LIMIT 1
-        ];
-            
-            // Update field
-            interaction.FEC_Account_or_Contract__c = customerHistoryId;
-            
-            update interaction;
-            
-        } catch (Exception e) {
-            // Log properly
-            System.debug('ERROR updateInteractionCaseWithCustomerHistory: ' + e.getMessage());
-            // Surface error to LWC / caller
-            throw new AuraHandledException(e.getMessage());
-        }
-    }
-    
     
     @AuraEnabled
     public static FEC_InteractionCaseResponse createInteractionCaseManual(FEC_InteractionCaseDTO dto) {
@@ -282,7 +251,7 @@ public without sharing class FEC_CreateCaseHandler {
         insert c;
         return c;
     }
-    
+
     // Create case with no recordId in Lisview
     @AuraEnabled
     public static Id createInternalCase(String customerName, String nationalId) {
@@ -296,7 +265,7 @@ public without sharing class FEC_CreateCaseHandler {
         c.FEC_Customer_Name__c = customerName;
         c.FEC_National_ID_Passport_ID__c = nationalId;
         c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
-        
+
         insert c;
         return c.Id;
     }

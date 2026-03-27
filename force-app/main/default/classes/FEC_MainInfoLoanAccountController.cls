@@ -186,8 +186,7 @@ public with sharing class FEC_MainInfoLoanAccountController {
         FEC_Customer_History__c rec = new FEC_Customer_History__c(Id = customerHistoryId);
 
         if (loan != null) {
-            rec.FEC_Contract_Number__c  = loan.ContractNumber;
-            // Chỉ ghi ContractNumber từ API khi có giá trị, tránh ghi đè làm mất số đang dùng làm param gọi API
+            // Chỉ ghi ContractNumber từ API khi có giá trị (không gán loan.ContractNumber trước — null sẽ bị update vào DB và xóa số đã lưu).
             if (String.isNotBlank(loan.ContractNumber)) {
                 rec.FEC_Contract_Number__c = loan.ContractNumber;
             }

@@ -1,0 +1,27 @@
+/* fec_contentDiffViewer – modal diff viewer */
+
+.dv-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9000;
+}
+
+.slds-modal {
+    z-index: 9001;
+}
+
+.dv-panel-title {
+    font-weight: 700;
+    color: #3e3e3c;
+}
+
+.dv-panel {
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    padding: 1rem;
+    min-height: 200px;
+    max-height: 60vh;
+    overflow-y: auto;
+    background: #fafaf9;
+}
