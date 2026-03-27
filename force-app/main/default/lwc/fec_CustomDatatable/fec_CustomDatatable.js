@@ -15,23 +15,4 @@ export default class Fec_CustomDatatable extends LightningDatatable {
       typeAttributes: ["label", "rowId"],
     },
   };
-
-  connectedCallback() {
-    super.connectedCallback();
-    // Event-delegation: catch clicks on nameLink <a> elements
-    this.template.addEventListener("click", (event) => {
-      const anchor = event.target.closest("a[data-row-id]");
-      if (anchor) {
-        event.preventDefault();
-        event.stopPropagation();
-        this.dispatchEvent(
-          new CustomEvent("namelinkclick", {
-            detail: { rowId: anchor.dataset.rowId },
-            bubbles: true,
-            composed: true,
-          })
-        );
-      }
-    });
-  }
 }

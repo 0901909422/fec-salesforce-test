@@ -655,6 +655,7 @@
 	</types>
 	<types>
 		<members>FEC_Interaction_Case_Record_Page</members>
+		<members>FEC_Internal_Case_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -1044,6 +1045,10 @@
 		<name>CustomObject</name>
 	</types>
 	<types>
+		<members>FEC_Enhanced_Letterhead__c.FEC_Required_Header_Or_Footer</members>
+		<name>ValidationRule</name>
+	</types>
+	<types>
 		<members>FEC_Enhanced_Letterhead__c</members>
 		<members>Templates</members>
 		<name>CustomTab</name>
@@ -1070,6 +1075,7 @@
         <members>fec_folderDeleteAction</members>
         <members>fec_CustomDatatable</members>
         <members>fec_TemplateMockData</members>
+        <members>fec_NameLink</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -1188,6 +1194,10 @@
 	<types>
 		<members>RD_IT_User_Master_Data_Management</members>
 		<name>PermissionSet</name>
+	</types>
+	<types>
+		<members>FEC_Notification_Channel__c-Notification Channels Layout</members>
+		<name>Layout</name>
 	</types>
 
 	<!-- search functional -->

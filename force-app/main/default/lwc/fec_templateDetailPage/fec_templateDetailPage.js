@@ -260,6 +260,12 @@ export default class Fec_templateDetailPage extends LightningElement {
         return this._record ? (this._record.lastModifiedBy || '—') : '—';
     }
 
+    get lastModifiedByUrl() {
+        return this._record && this._record.lastModifiedById
+            ? `/lightning/r/User/${this._record.lastModifiedById}/view`
+            : null;
+    }
+
     get lastModifiedDateDisplay() {
         if (!this._record || !this._record.lastModifiedDate) return '—';
         try {
@@ -364,10 +370,10 @@ export default class Fec_templateDetailPage extends LightningElement {
     _mapTemplate(rec) {
         return {
             id:                     rec.Id,
-            name:                   rec.FEC_Template_Name__c || '',
+            name:                   rec.Name || '',
             apiName:                rec.FEC_API_Name__c || '',
             description:            rec.FEC_Description__c || '',
-            folderName:             rec.FEC_Folder__r ? rec.FEC_Folder__r.FEC_Folder_Label__c : '',
+            folderName:             rec.FEC_Folder__r ? rec.FEC_Folder__r.Name : '',
             isActive:               rec.FEC_Active__c,
             enhancedLetterheadName: rec.FEC_Enhanced_Letterhead__r ? rec.FEC_Enhanced_Letterhead__r.Name : '',
             applicableMailbox:      rec.FEC_Applicable_for_Mailbox__c
@@ -376,6 +382,7 @@ export default class Fec_templateDetailPage extends LightningElement {
             subject:                rec.FEC_Subject_Line__c || '',
             emailBody:              rec.FEC_Body__c || '',
             lastModifiedBy:         rec.LastModifiedBy ? rec.LastModifiedBy.Name : '',
+            lastModifiedById:       rec.LastModifiedById || '',
             lastModifiedDate:       rec.LastModifiedDate
         };
     }
