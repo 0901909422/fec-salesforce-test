@@ -5,6 +5,32 @@ public without sharing class FEC_KYCController {
   public static final String CASE_INTERACTION = 'Interaction';
   public static final String ADDRESS_TYPE_CURRENT = 'Current Address';
   public static final String ADDRESS_TYPE_PERMANENT = 'Permanent Address';
+  public static final String PLASTIC_ID_OTHERS = 'Others';
+  public static final String PLASTIC_ID_ALL = 'All';
+
+  public static final List<String> PLASTIC_ID_LST = new List<String> {
+    'RS1',
+    'RS2',
+    'RS3',
+    'RS4',
+    'RS5',
+    'RS6',
+    'RS7',
+    'RS8',
+    'RS9',
+    'KM1',
+    'DC2',
+    'DC3',
+    'DC5',
+    'DC6',
+    'DC7',
+    'DC8',
+    'DP3',
+    'VT1',
+    'SP1',
+    'LZ1',
+    'VL1'
+  };
 
   @AuraEnabled
   public static String getInterationId(String recordId) {
@@ -44,7 +70,6 @@ public without sharing class FEC_KYCController {
 
       Case c = caselst.get(0);
       result.kycType = c.FEC_KYC_Method__c;
-      result.plasticId = c.FEC_Account_or_Contract__r.FEC_Plastic_ID__c;
 
       if (
         PLASTIC_ID_DC2.equals(c.FEC_Account_or_Contract__r.FEC_Plastic_ID__c)
@@ -99,7 +124,9 @@ public without sharing class FEC_KYCController {
       List<FEC_KYC__c> kyclst = FEC_KYCService.getByMethodAndProdTypeAndPlastic(
         new Set<String>{ c.FEC_KYC_Method__c },
         productTypelst,
-        new Set<String>{ plasticId }
+        String.isNotBlank(plasticId)
+          ? new Set<String>{ PLASTIC_ID_LST.contains(plasticId) ? plasticId : PLASTIC_ID_OTHERS }
+          : new Set<String>{ PLASTIC_ID_ALL }
       );
 
       if (kyclst.isEmpty())
@@ -108,9 +135,6 @@ public without sharing class FEC_KYCController {
       List<FEC_KYC__c> selectedKYClst = new List<FEC_KYC__c>();
 
       for (FEC_KYC__c item : kyclst) {
-        if ('Card'.equalsIgnoreCase(item.FEC_Product_Type__r.Name) && String.isBlank(plasticId)) {
-          continue;
-        }
         selectedKYClst.add(item);
       }
 
@@ -571,9 +595,6 @@ public without sharing class FEC_KYCController {
   public class KYCDTO {
     @AuraEnabled
     public String kycType;
-
-    @AuraEnabled
-    public String plasticId;
 
     @AuraEnabled
     public List<TypeDTO> typelst;
