@@ -103,6 +103,7 @@ public with sharing class FEC_CreateCaseInteractionController {
       newCase.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
       newCase.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
       newCase.FEC_Interaction__c = interaction.Id;
+      newCase.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
       newCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
       newCase.FEC_Product_Type__c = interaction.FEC_Product_Type__c;
       newCase.FEC_Phone_Number__c = interaction.FEC_Phone_Number__c;
@@ -121,11 +122,14 @@ public with sharing class FEC_CreateCaseInteractionController {
         );
       insert newInfo;
       
-      FEC_Customer_History__c newHistory = createHistoryNonExistingCustomer(interaction.Id);
+      FEC_Customer_History__c newHistory = createHistoryNonExistingCustomer(interaction.Id, customerName);
 
       interaction.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
       interaction.FEC_Account_or_Contract__c = newHistory.Id;
       update interaction;
+
+      newCase.FEC_Account_or_Contract__c = newHistory.Id;
+      update newCase;
       
       return newCase.Id;
     } catch (Exception e) {
@@ -136,10 +140,12 @@ public with sharing class FEC_CreateCaseInteractionController {
   }
   
   @AuraEnabled
-  public static FEC_Customer_History__c  createHistoryNonExistingCustomer(Id caseId) {
+  public static FEC_Customer_History__c  createHistoryNonExistingCustomer(Id caseId, String customerName) {
     
     FEC_Customer_History__c rec = new FEC_Customer_History__c();
     rec.Name = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
+    rec.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
+    rec.FEC_Customer_Name__c = customerName;
     rec.FEC_Account_Number__c = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
     rec.FEC_Case__c = caseId;
     rec.FEC_Product_Code__c = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;

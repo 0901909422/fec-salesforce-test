@@ -10800,4 +10800,25 @@
         <shortDescription>FEC_System_Infomation</shortDescription>
         <value>System Information</value>
     </labels>
+    <labels>
+        <fullName>FEC_Message_Content</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Message Content</shortDescription>
+        <value>Message Content</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Subject_Line</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Subject Line</shortDescription>
+        <value>Subject Line</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Settings</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template Settings</shortDescription>
+        <value>Template Settings</value>
+    </labels>
 </CustomLabels>

@@ -482,7 +482,7 @@ public with sharing class FEC_CommonUltils {
     }
     if (docBody != null) {
       req.setBodyDocument(docBody);
-    } else {
+    } else if (body != null) {
       req.setBody(body);
     }
     req.setTimeout(120000); // 120 seconds timeout
@@ -969,5 +969,11 @@ public with sharing class FEC_CommonUltils {
     }
     Id recordTypeId = rtMap.get(devName).getRecordTypeId();
     return recordTypeId;
+  }
+
+  public static String mergeApplyTo(String oldVal, String newVal) {
+    if (oldVal == null) return newVal;
+    if (oldVal == newVal) return oldVal;
+    return 'ALL';
   }
 }

@@ -166,7 +166,12 @@ export default class Fec_templateListView extends LightningElement {
             },
             { label: FEC_Col_Description,        fieldName: 'description',       type: 'text',  sortable: false, wrapText: true },
             { label: FEC_Col_Folder,             fieldName: 'folderName',        type: 'text',  sortable: true, wrapText: true },
-            { label: FEC_Col_Last_Modified_By,   fieldName: 'lastModifiedBy',    type: 'text',  sortable: true, wrapText: true },
+            { label: FEC_Col_Last_Modified_By,   fieldName: 'lastModifiedByUrl', type: 'url',   sortable: true, wrapText: true,
+                typeAttributes: {
+                    label: { fieldName: 'lastModifiedBy' },
+                    target: '_blank'
+                }
+            },
             { label: FEC_Col_Last_Modified_Date,  fieldName: 'lastModifiedDate', type: 'date',  sortable: true,
                 typeAttributes: {
                     year: 'numeric', month: '2-digit', day: '2-digit',
@@ -219,7 +224,9 @@ export default class Fec_templateListView extends LightningElement {
         const { fieldName, sortDirection } = event.detail;
         this.sortedBy        = fieldName;
         this.sortedDirection = sortDirection;
-        this._templates      = this._sortData(this._templates, fieldName, sortDirection);
+        // URL column sorts by the display label, not the URL itself
+        const sortField = fieldName === 'lastModifiedByUrl' ? 'lastModifiedBy' : fieldName;
+        this._templates      = this._sortData(this._templates, sortField, sortDirection);
     }
 
     /**
@@ -325,10 +332,11 @@ export default class Fec_templateListView extends LightningElement {
     _mapSObjectToRow(rec) {
         return {
             id:               rec.Id,
-            name:             rec.FEC_Template_Name__c || '',
+            name:             rec.Name || '',
             description:      rec.FEC_Description__c || '',
-            folderName:       rec.FEC_Folder__r ? rec.FEC_Folder__r.FEC_Folder_Label__c : '',
+            folderName:       rec.FEC_Folder__r ? rec.FEC_Folder__r.Name : '',
             lastModifiedBy:   rec.LastModifiedBy ? rec.LastModifiedBy.Name : '',
+            lastModifiedByUrl: rec.LastModifiedById ? `/lightning/r/User/${rec.LastModifiedById}/view` : '',
             lastModifiedDate: rec.LastModifiedDate
         };
     }

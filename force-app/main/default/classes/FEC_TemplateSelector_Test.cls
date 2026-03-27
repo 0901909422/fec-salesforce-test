@@ -16,20 +16,20 @@ private class FEC_TemplateSelector_Test {
         // Create templates
         List<FEC_Template__c> templates = new List<FEC_Template__c>();
         templates.add(new FEC_Template__c(
-            FEC_Template_Name__c = 'Welcome Email',
+            Name = 'Welcome Email',
             FEC_Description__c = 'Welcome new customers',
             FEC_Folder__c = folder1.Id,
             FEC_Active__c = true,
             FEC_Subject_Line__c = 'Welcome!'
         ));
         templates.add(new FEC_Template__c(
-            FEC_Template_Name__c = 'Password Reset',
+            Name = 'Password Reset',
             FEC_Description__c = 'Reset password link',
             FEC_Folder__c = folder2.Id,
             FEC_Active__c = true
         ));
         templates.add(new FEC_Template__c(
-            FEC_Template_Name__c = 'Inactive Template',
+            Name = 'Inactive Template',
             FEC_Description__c = 'Old archived template',
             FEC_Folder__c = folder1.Id,
             FEC_Active__c = false
@@ -39,14 +39,14 @@ private class FEC_TemplateSelector_Test {
 
     @IsTest
     static void testSelectById() {
-        FEC_Template__c tmpl = [SELECT Id FROM FEC_Template__c WHERE FEC_Template_Name__c = 'Welcome Email' LIMIT 1];
+        FEC_Template__c tmpl = [SELECT Id FROM FEC_Template__c WHERE Name = 'Welcome Email' LIMIT 1];
 
         Test.startTest();
         FEC_Template__c result = FEC_TemplateSelector.selectById(tmpl.Id);
         Test.stopTest();
 
         Assert.isNotNull(result, 'Should return the template record');
-        Assert.areEqual('Welcome Email', result.FEC_Template_Name__c);
+        Assert.areEqual('Welcome Email', result.Name);
     }
 
     @IsTest
@@ -101,7 +101,7 @@ private class FEC_TemplateSelector_Test {
         Test.stopTest();
 
         Assert.areEqual(1, results.size(), 'Search "Welcome" should return 1 template');
-        Assert.areEqual('Welcome Email', results[0].FEC_Template_Name__c);
+        Assert.areEqual('Welcome Email', results[0].Name);
     }
 
     @IsTest
