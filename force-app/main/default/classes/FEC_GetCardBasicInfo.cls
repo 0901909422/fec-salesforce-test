@@ -16,97 +16,115 @@ public with sharing class FEC_GetCardBasicInfo {
     // RESPONSE MODELS
     // =========================================================================
     public class ResponseWrapper {
-        public SysResponse Sys;
-        public CardBasicInfo CardBasicInfo;
+        @AuraEnabled public SysResponse Sys;
+        @AuraEnabled public CardBasicInfo CardBasicInfo;
     }
- 
+
     public class SysResponse {
-        public String TransID;
-        public String DateTimeStr;
-        public Integer Code;
-        public String Description;
+        @AuraEnabled public String TransID;
+        @AuraEnabled public String DateTimeStr;
+        @AuraEnabled public Integer Code;
+        @AuraEnabled public String Description;
     }
- 
+
     public class CardBasicInfo {
-        public MainCard MainCard;
-        public StatementInfo Statement;
-        public PassDue PassDUE;
-        public List<StatementPeriod> Statements;
-        public List<TransactionInfo> Transactions;
+        @AuraEnabled public MainCard MainCard;
+        @AuraEnabled public StatementInfo Statement;
+        @AuraEnabled public PassDue PassDUE;
+        @AuraEnabled public List<StatementPeriod> Statements;
+        @AuraEnabled public List<TransactionInfo> Transactions;
+        @AuraEnabled public CardHistories CardHistories;
     }
- 
+
+    public class CardHistories {
+        @AuraEnabled public List<CardHistory> CardHistory;
+    }
+
     public class MainCard {
-        public String Product;
-        public String CustomerSegment;
-        public String PlasticIndicator;
-        public String ProductAssociation;
-        public String Status;
-        public String IPPFlag;
-        public String InsuranceFlag;
-        public String ContractNumber;
-        public String AccountNumber;
-        public String SecurityAnswer;
-        public Date ExpiryDate;
-        public Integer BillingCycle;
-        public String ActivatedFlag;
-        public String BlockCode1;
-        public String BlockCode2;
-        public String WarningCode;
-        public Decimal OTB;
-        public Decimal HoldAmount;
-        public Decimal CreditLimit;
-        public Date PaymentDate;
-        public Decimal LastPaymentAmount;
-        public String MaskedCardNumber;
-        public String PaymentHoliday;
-        public String DigitalCardIndicator;
-        public String RsnBlockCode1;
-        public String RsnBlockCode2;
-        public Date AccountBlockCode1Date;
-        public Date AccountBlockCode2Date;
-        public String WarningCode360;
-        public String MailingInd;
-        public Decimal LoanBalance;
+        @AuraEnabled public String Product;
+        @AuraEnabled public String CustomerSegment;
+        @AuraEnabled public String PlasticIndicator;
+        @AuraEnabled public String ProductAssociation;
+        @AuraEnabled public String Status;
+        @AuraEnabled public String IPPFlag;
+        @AuraEnabled public String InsuranceFlag;
+        @AuraEnabled public String ContractNumber;
+        @AuraEnabled public String AccountNumber;
+        @AuraEnabled public String SecurityAnswer;
+        @AuraEnabled public Date ExpiryDate;
+        @AuraEnabled public Integer BillingCycle;
+        @AuraEnabled public String ActivatedFlag;
+        @AuraEnabled public String BlockCode1;
+        @AuraEnabled public String BlockCode2;
+        @AuraEnabled public String WarningCode;
+        @AuraEnabled public Decimal OTB;
+        @AuraEnabled public Decimal HoldAmount;
+        @AuraEnabled public Decimal CreditLimit;
+        @AuraEnabled public Date PaymentDate;
+        @AuraEnabled public Decimal LastPaymentAmount;
+        @AuraEnabled public String MaskedCardNumber;
+        @AuraEnabled public String PaymentHoliday;
+        @AuraEnabled public String DigitalCardIndicator;
+        @AuraEnabled public String RsnBlockCode1;
+        @AuraEnabled public String RsnBlockCode2;
+        @AuraEnabled public Date AccountBlockCode1Date;
+        @AuraEnabled public Date AccountBlockCode2Date;
+        @AuraEnabled public String WarningCode360;
+        @AuraEnabled public String MailingInd;
+        @AuraEnabled public Decimal LoanBalance;
+        @AuraEnabled public String CardNumber;
+        @AuraEnabled public String CardActivationDate;
+        @AuraEnabled public String BlockCode;
+        @AuraEnabled public Date BlckDate;
     }
- 
+
     public class StatementInfo {
-        public Decimal StatementBalance;
-        public Date LastStatementDate;
-        public Date NextStatementDate;
-        public Date LastStatementDueDate;
-        public Decimal LastStatementMPA;
+        @AuraEnabled public Decimal StatementBalance;
+        @AuraEnabled public Date LastStatementDate;
+        @AuraEnabled public Date NextStatementDate;
+        @AuraEnabled public Date LastStatementDueDate;
+        @AuraEnabled public Decimal LastStatementMPA;
     }
- 
+
     public class PassDue {
-        public Integer DPD;
+        @AuraEnabled public Integer DPD;
     }
- 
+
     public class StatementPeriod {
-        public Decimal BalanceBegin;
-        public Decimal BalanceEnd;
-        public Decimal MPA;
-        public Date StatementDate;
+        @AuraEnabled public Decimal BalanceBegin;
+        @AuraEnabled public Decimal BalanceEnd;
+        @AuraEnabled public Decimal MPA;
+        @AuraEnabled public Date StatementDate;
     }
- 
+
     public class TransactionInfo {
-        public Datetime TRNXDateTime;
-        public String Description;
-        public String CreditDebitFlag;
-        public String TransactionType;
-        public String Status;
-        public Decimal Amount;
-        public String TransactionCode;
-        public Decimal Fee;
-        public Date PostingDate;
-        public Date SettlementDate;
-        public String Plan;
-        public String RRN;
-        public String MerchantName;
-        public String PaymentFlag;
-        public String IsCashTRNX;
-        public String PlanType;
-        public String LogicMod;
-        public Integer OTPSent;
+        @AuraEnabled public Datetime TRNXDateTime;
+        @AuraEnabled public String Description;
+        @AuraEnabled public String CreditDebitFlag;
+        @AuraEnabled public String TransactionType;
+        @AuraEnabled public String Status;
+        @AuraEnabled public Decimal Amount;
+        @AuraEnabled public String TransactionCode;
+        @AuraEnabled public Decimal Fee;
+        @AuraEnabled public Date PostingDate;
+        @AuraEnabled public Date SettlementDate;
+        @AuraEnabled public String Plan;
+        @AuraEnabled public String RRN;
+        @AuraEnabled public String MerchantName;
+        @AuraEnabled public String PaymentFlag;
+        @AuraEnabled public String IsCashTRNX;
+        @AuraEnabled public String PlanType;
+        @AuraEnabled public String LogicMod;
+        @AuraEnabled public Integer OTPSent;
+    }
+
+    public class CardHistory {
+        @AuraEnabled public String CardNumber;
+        @AuraEnabled public String EmbossingName;
+        @AuraEnabled public String ActivationDate;
+        @AuraEnabled public String CardIssueDate;
+        @AuraEnabled public String CardExpDate;
+        @AuraEnabled public Date CardActivationDate;
     }
  
     // =========================================================================
@@ -332,7 +350,11 @@ public with sharing class FEC_GetCardBasicInfo {
         result.CardBasicInfo.MainCard.MaskedCardNumber      = FEC_CommonUltils.getXmlValue(main, 'MaskedCardNumber');
         result.CardBasicInfo.MainCard.PaymentHoliday        = FEC_CommonUltils.getXmlValue(main, 'PaymentHoliday');
         result.CardBasicInfo.MainCard.DigitalCardIndicator  = FEC_CommonUltils.getXmlValue(main, 'DigitalCardIndicator');
-        result.CardBasicInfo.MainCard.MailingInd             = FEC_CommonUltils.getXmlValue(main, 'MailingInd');
+        result.CardBasicInfo.MainCard.MailingInd            = FEC_CommonUltils.getXmlValue(main, 'MailingInd');
+        result.CardBasicInfo.MainCard.CardNumber            = FEC_CommonUltils.getXmlValue(main, 'CardNumber');
+        result.CardBasicInfo.MainCard.CardActivationDate    = FEC_CommonUltils.getXmlValue(main, 'CardActivationDate');
+        result.CardBasicInfo.MainCard.BlockCode             = FEC_CommonUltils.getXmlValue(main, 'BlockCode');
+        result.CardBasicInfo.MainCard.BlckDate              = FEC_CommonUltils.xmlValToDate(main, 'BlckDate');
  
         /// STATEMENT
         Dom.XmlNode stmt = infoNode.getChildElement('Statement', null);
@@ -418,6 +440,23 @@ public with sharing class FEC_GetCardBasicInfo {
                 ti.OTPSent           = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(t, 'OTPSent'));
  
                 result.CardBasicInfo.Transactions.add(ti);
+            }
+        }
+
+        // CARD HISTORIES
+        Dom.XmlNode historiesNode = infoNode.getChildElement('CardHistories', null);
+        if (historiesNode != null) {
+            result.CardBasicInfo.CardHistories = new CardHistories();
+            result.CardBasicInfo.CardHistories.CardHistory = new List<CardHistory>();
+            for (Dom.XmlNode h : historiesNode.getChildElements()) {
+                CardHistory ch = new CardHistory();
+                ch.CardNumber = FEC_CommonUltils.getXmlValue(h, 'CardNumber');
+                ch.EmbossingName = FEC_CommonUltils.getXmlValue(h, 'EmbossingName');
+                ch.ActivationDate = FEC_CommonUltils.getXmlValue(h, 'ActivationDate');
+                ch.CardIssueDate = FEC_CommonUltils.getXmlValue(h, 'CardIssueDate');
+                ch.CardExpDate = FEC_CommonUltils.getXmlValue(h, 'CardExpDate');
+                ch.CardActivationDate = FEC_CommonUltils.xmlValToDate(h, 'CardActivationDate'); 
+                result.CardBasicInfo.CardHistories.CardHistory.add(ch);
             }
         }
  

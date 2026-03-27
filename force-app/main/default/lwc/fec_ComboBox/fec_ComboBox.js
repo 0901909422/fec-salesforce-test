@@ -40,7 +40,15 @@ export default class Fec_ComboBox extends LightningElement {
     return [...this.optionlst];
   }
 
+  get isNotDisabled() {
+    return !this.disabled;
+  }
+
   firstTimeLoaded = true;
+
+  get showClose() {
+    return !this.disabled
+  }
 
   connectedCallback() {
     // this.filteredOptionlst = [...this.optionlst];

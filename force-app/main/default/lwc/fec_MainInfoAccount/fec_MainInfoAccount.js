@@ -16,6 +16,7 @@ import loadAccountInfo from '@salesforce/apex/FEC_MainInfoAccountController.load
 import refreshAccountInfo from '@salesforce/apex/FEC_MainInfoAccountController.refreshAccountInfo';
 import checkRewardEligibility from '@salesforce/apex/FEC_MainInfoAccountController.checkRewardEligibility';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { MSG_UNKNOWN_ERROR } from 'c/fec_CommonConst';
 import FEC_Account_Label from '@salesforce/label/c.FEC_Account_Label';
 import FEC_Account_Status_Label from '@salesforce/label/c.FEC_Account_Status_Label';
 import FEC_Card_Label from '@salesforce/label/c.FEC_Card_Label';
@@ -208,10 +209,10 @@ export default class FEC_MainInfoAccount extends LightningElement {
         }
 
         return [
-            this.buildField('Block Code',this.accountData?.blockCode,status,'FEC_Block_Code__c'),
+            this.buildField('Block Code',this.accountData?.cardBlockCode,status,'FEC_Block_Code__c'),
             this.buildField('Card Activation Status',this.accountData?.cardActivationStatus,status,'FEC_Card_Activation_Status__c'),
             this.buildField('Local Use',this.formatLocalUse(this.accountData?.localUse),status,'FEC_Local_Use__c'),
-            this.buildField('Block Date',this.accountData?.blockDate,status,'FEC_Block_Date__c'),
+            this.buildField('Block Date',this.accountData?.cardBlockDate,status,'FEC_Block_Date__c'),
             this.buildField('Card Activation Date',this.accountData?.cardActivationDate,status,'FEC_Card_Activation_Date__c'),
             this.buildMoneyField('Available Points',this.accountData?.availablePoints,status,'FEC_Available_Points__c'),
             this.buildField('Blocked By',this.accountData?.blockedBy,status,'FEC_Blocked_By__c'),
@@ -295,7 +296,7 @@ export default class FEC_MainInfoAccount extends LightningElement {
     /* ================= ERROR + TOAST ================= */
 
     handleError(err) {
-        this.error = err?.body?.message || err?.message || 'Unknown error';
+        this.error = err?.body?.message || err?.message || MSG_UNKNOWN_ERROR;
         this.showToast('Error', this.error, 'error');
     }
 

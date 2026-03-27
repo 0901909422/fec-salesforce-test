@@ -1,5 +1,5 @@
 import { getFocusedTabInfo, setTabLabel, setTabIcon } from 'lightning/platformWorkspaceApi';
-import { STR_EMPTY, MSG_PHONE_ONLY_NUMBERS, MSG_PHONE_FORMAT_0_OR_84, MSG_INVALID_NATIONAL_ID_OR_PASSPORT, MSG_NATIONAL_ID_9_OR_12_CHARS, MSG_PASSPORT_1_LETTER_7_DIGITS, MSG_PASSPORT_START_UPPERCASE_THEN_7, MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7, MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY, MSG_NATIONAL_ID_9_OR_12_DIGITS, MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY, MSG_NATIONAL_ID_PASSPORT_RULES, MSG_INVALID_NATIONAL_ID, MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12 } from 'c/fec_CommonConst';
+import { STR_EMPTY, MSG_PHONE_ONLY_NUMBERS, MSG_PHONE_FORMAT_0_OR_84, MSG_INVALID_NATIONAL_ID_OR_PASSPORT, MSG_NATIONAL_ID_9_OR_12_CHARS, MSG_PASSPORT_1_LETTER_7_DIGITS, MSG_PASSPORT_START_UPPERCASE_THEN_7, MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7, MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY, MSG_NATIONAL_ID_9_OR_12_DIGITS, MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY, MSG_NATIONAL_ID_PASSPORT_RULES, MSG_INVALID_NATIONAL_ID, MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12, MSG_INVALID_EMAIL_FORMAT } from 'c/fec_CommonConst';
 
 const formatDate = (curr) => {
   if (!curr) {
@@ -28,9 +28,36 @@ const formatDateTime = (curr) => {
   const day = String(curr.getDate()).padStart(2, "0");
   const h = String(curr.getHours()).padStart(2, "0");
   const m = String(curr.getMinutes()).padStart(2, "0");
-  
+  const s = String(curr.getSeconds()).padStart(2, "0");
 
-  return `${day}/${month}/${year}, ${h}:${m}`;
+  return `${day}/${month}/${year}, ${h}:${m}:${s}`;
+};
+
+/**
+ * Format date-time as DD/MM/YYYY HH:mm:ss (VN display)
+ */
+const formatDateTimeVN = (val) => {
+  if (!val) return '';
+  const d = new Date(val);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+
+  return `${day}/${month}/${year}, ${h}:${m}:${s}`;
+};
+/**
+ * Format seconds as HH:mm:ss
+ */
+const formatDuration = (seconds) => {
+  if (seconds == null || isNaN(Number(seconds))) return '';
+  const n = Math.floor(Number(seconds));
+  const h = Math.floor(n / 3600);
+  const m = Math.floor((n % 3600) / 60);
+  const s = n % 60;
+  return [h, m, s].map((x) => String(x).padStart(2, "0")).join(':');
 };
 
 const mask = (s, keepStart = 4, keepEnd = 4) => {
@@ -119,14 +146,25 @@ const parseDateVNI = (s) => {
 };
 
 const maskWorkPhone = (phone) => {
-  if (phone.length < 7) {
-    return phone;
+  if (!phone) return STR_EMPTY;
+  const v = String(phone).trim();
+  if (v.length < 7) return v;
+
+  if (/^84\d{9}$/.test(v)) {
+    return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
 
-  let first = phone.substring(0, 4);
-  let last = phone.substring(phone.length - 3);
+  if (/^02\d{8}$/.test(v)) {
+    return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
+  }
 
-  return first + "***" + last;
+  if (/^0\d{9}$/.test(v)) {
+    return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
+  }
+
+  const first = v.substring(0, 4);
+  const last = v.substring(v.length - 3);
+  return first + "*".repeat(Math.max(0, v.length - 7)) + last;
 };
 
 const maskValue = (value, showFull) => {
@@ -145,12 +183,29 @@ const maskValue = (value, showFull) => {
   }
 
   /* =====================
-   * PHONE NUMBER (10 số)
-   * Hiển thị: 4 số đầu + 3 số cuối
-   * Ví dụ: 0906***678
+   * PHONE bắt đầu bằng 84 (11 số)
+   * Hiển thị: 5 số đầu + 3 số cuối
+   * Ví dụ: 84123***456
    * ===================== */
-  if (/^\d{10}$/.test(v)) {
+  if (/^84\d{9}$/.test(v)) {
+    return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
+  }
+
+  /* =====================
+   * PHONE bắt đầu bằng 0 (10 số)
+   * Hiển thị: 4 số đầu + 3 số cuối
+   * Ví dụ: 0123***456
+   * ===================== */
+  if (/^0\d{9}$/.test(v)) {
     return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
+  }
+  /* =====================
+   * LANDLINE bắt đầu bằng 02
+   * Hiển thị: 3 số đầu + 3 số cuối
+   * Ví dụ: 028*****456
+  * ===================== */
+  if (/^02\d{8,9}$/.test(v)) {
+  return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
   }
 
   /* =====================
@@ -202,6 +257,9 @@ const applyPhoneInputMaxLength = (value) => {
 
 /* =========================
  * EMAIL VALIDATION
+ * - Phải có đúng một @
+ * - Sau @ bắt buộc có ít nhất một dấu chấm (domain.tld)
+ * - TLD (phần sau dấu chấm cuối) chỉ 2-5 chữ cái (a-zA-Z), ví dụ .com, .vn
  * ========================= */
 const EMAIL_TLD_2_5 = "[a-zA-Z]{2,5}";
 const EMAIL_LOCAL = "[a-zA-Z0-9._%+-]+";
@@ -210,8 +268,10 @@ const EMAIL_PART_1 = `${EMAIL_LOCAL}@${EMAIL_DOMAIN}\\.${EMAIL_TLD_2_5}`;
 const EMAIL_PART_2 = `${EMAIL_LOCAL}@${EMAIL_DOMAIN}\\.${EMAIL_TLD_2_5}\\.${EMAIL_TLD_2_5}`;
 
 const UPDATED_INFO_EMAIL_REGEX = new RegExp(
-  `^\\s*(${EMAIL_PART_1}|${EMAIL_PART_2})\\s*$`,
+  "^\\s*(" + EMAIL_PART_1 + "|" + EMAIL_PART_2 + ")\\s*$",
 );
+
+const TLD_ONLY_LETTERS_REGEX = /^[a-zA-Z]{2,5}$/;
 
 const validateUpdatedInfoEmail = (value) => {
   if (value == null || typeof value !== "string") {
@@ -223,10 +283,21 @@ const validateUpdatedInfoEmail = (value) => {
     return { valid: true };
   }
 
+  const atIdx = trimmed.indexOf("@");
+  if (atIdx === -1) {
+    return { valid: false, message: MSG_INVALID_EMAIL_FORMAT };
+  }
+  const afterAt = trimmed.slice(atIdx + 1);
+  const lastDotIdx = afterAt.lastIndexOf(".");
+  if (lastDotIdx === -1) {
+    return { valid: false, message: MSG_INVALID_EMAIL_FORMAT };
+  }
+  const tld = afterAt.slice(lastDotIdx + 1);
+  if (!TLD_ONLY_LETTERS_REGEX.test(tld)) {
+    return { valid: false, message: MSG_INVALID_EMAIL_FORMAT };
+  }
   if (!UPDATED_INFO_EMAIL_REGEX.test(trimmed)) {
-    return {
-      valid: false,
-    };
+    return { valid: false, message: MSG_INVALID_EMAIL_FORMAT };
   }
 
   return { valid: true };
@@ -448,12 +519,12 @@ const checkNoUpdateInSubmit = (getOriginalValue, getUpdatedValue, options) => {
   const presentSet = options?.presentUpdatedApiNames;
   const pairsToCheck =
     presentSet != null &&
-      (Set.prototype.isPrototypeOf(presentSet) || Array.isArray(presentSet))
+    (Set.prototype.isPrototypeOf(presentSet) || Array.isArray(presentSet))
       ? ORIGINAL_UPDATED_FIELD_PAIRS.filter((p) =>
-        Set.prototype.isPrototypeOf(presentSet)
-          ? presentSet.has(p.updated)
-          : presentSet.includes(p.updated),
-      )
+          Set.prototype.isPrototypeOf(presentSet)
+            ? presentSet.has(p.updated)
+            : presentSet.includes(p.updated),
+        )
       : ORIGINAL_UPDATED_FIELD_PAIRS;
 
   if (pairsToCheck.length === 0) return false;
@@ -493,7 +564,7 @@ const setConsoleTab = async (label, icon) => {
       });
     }
   } catch (e) {
-    console.error(e);
+   console.error(e);
   }
 };
 
@@ -527,12 +598,69 @@ const formatNumber = (value) => {
   } catch {
     return value;
   }
-}
+};
 
+const getCaseIdNumber = (idText) => {
+    const match = idText?.match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
+};
+
+/**
+ * Format số với 2 chữ số thập phân, dùng cho tiền/amount. null/NaN → '0.00'.
+ * @param {*} val - Giá trị số (number hoặc string)
+ * @returns {string} Chuỗi đã format (vd: '1,234.00') hoặc '0.00'
+ */
+const formatNum = (val) => {
+  if (val == null) return '0.00';
+  const n = Number(val);
+  if (Number.isNaN(n)) return '0.00';
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+/**
+ * Chuẩn hóa chuỗi ngày sang YYYY-MM-DD để sort string đúng thứ tự.
+ * Trả về '9999-12-31' khi val rỗng/blank hoặc '-' (ô trống).
+ * @param {*} val - Giá trị ngày (string dạng YYYY-MM-DD hoặc DD/MM/YYYY, hoặc '-')
+ * @returns {string} Chuỗi YYYY-MM-DD hoặc '9999-12-31' cho ô trống
+ */
+const toSortDateStr = (val) => {
+  if (val == null || val === '' || String(val).trim() === '' || val === '-') return '9999-12-31';
+  const s = String(val).trim();
+  const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (iso) return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`.slice(0, 10);
+  const parts = s.split('/').filter(Boolean);
+  if (parts.length === 3) {
+    // DD/MM/YYYY (chuẩn hiển thị FEC) — năm 4 chữ số ở cuối
+    if (/^\d{4}$/.test(parts[2])) {
+      const d = parts[0].padStart(2, '0');
+      const m = parts[1].padStart(2, '0');
+      const y = parts[2];
+      return `${y}-${m}-${d}`;
+    }
+    // YYYY/MM/DD hoặc YYYY/M/D
+    if (/^\d{4}$/.test(parts[0])) {
+      return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+    }
+  }
+  return s;
+};
+const sortByStringField = (list = [], field, direction = 'asc') => {
+  if (!Array.isArray(list) || !field) return [];
+
+  const dir = direction === 'desc' ? -1 : 1;
+
+  return [...list].sort((a, b) => {
+    const x = (a[field] || '').toString().trim().toLowerCase();
+    const y = (b[field] || '').toString().trim().toLowerCase();
+
+    return x.localeCompare(y) * dir;
+  });
+};
 
 export {
   formatDate,
   formatDateTime,
+  formatDateTimeVN,
   mask,
   formatDateVNI,
   formatToDDMMYYYY,
@@ -550,5 +678,10 @@ export {
   setConsoleTab,
   urlCmpWithRecordId,
   isNegative,
-  formatNumber
+  formatNumber,
+  formatNum,
+  toSortDateStr,
+  formatDuration,
+  getCaseIdNumber,
+  sortByStringField
 };

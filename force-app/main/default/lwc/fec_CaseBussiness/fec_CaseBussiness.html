@@ -20,6 +20,16 @@
             <p key={item.id}>{item.value}</p>
           </template>
         </div>
+
+        <!-- Dynamic LWC components from section.componentlst (FEC_LWC_Name__c, FEC_Type__c = LWC) -->
+        <template if:true={section.resolvedComponentlst}>
+          <template for:each={section.resolvedComponentlst} for:item="dynCmp">
+            <div key={dynCmp.key} class="slds-m-top_medium">
+              <lwc:component lwc:is={dynCmp.ctor} record-id={recordId}></lwc:component>
+            </div>
+          </template>
+        </template>
+
         <div class="slds-grid slds-wrap slds-m-top--small">
           <!-- subsection -->
           <template for:each={section.subSectionlst} for:item="subSection">
@@ -72,6 +82,7 @@
                               variant="label-hidden"
                               required={field.mandatory}
                               onchange={handleChangeInput}
+                              onpaste={handlePaste}
                             >
                             </lightning-input>
                             <lightning-input-field
@@ -79,7 +90,9 @@
                               value={field.value}
                               class="slds-hide"
                               variant="label-hidden"
-                              data-is-date-field
+                              data-is-date-field 
+                              onchange={handleDateChange}
+                              data-obj={obj.id}
                             >
                             </lightning-input-field>
                           </template>
@@ -107,6 +120,8 @@
                               class="slds-hide"
                               variant="label-hidden"
                               data-is-phone-field
+                              onchange={handlePhoneChange}
+                              data-obj={obj.id}
                             >
                             </lightning-input-field>
                           </template>
@@ -124,6 +139,7 @@
                                 onchange={handleChangeInput}
                                 onkeydown={handleInputKeydown}
                                 onpaste={handlePaste}
+                                value={field.value}
                                 >
                               </lightning-input-field>
                               <!-- value={field.value} -->
@@ -158,7 +174,7 @@
                               data-sub={subSection.name}
                               data-obj={obj.id}
                               data-field={field.apiName}
-                              icon-name="utility:hide"
+                              icon-name={iconHideConst}
                               size="x-small"
                               class="slds-m-left--small"
                               onclick={handleToggleMask}
@@ -211,6 +227,7 @@
 
     <!-- routing action -->
     <lightning-accordion-section
+      key={routingAccordionSectionKey}
       if:true={business.hasRoutingAction}
       name="routing-action"
       label={customLabel.routingActionLabel}

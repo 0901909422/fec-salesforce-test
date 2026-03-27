@@ -1,0 +1,83 @@
+<template>
+    <div class="slds-form-element" onkeydown={handleKeyDown}>
+        <template if:true={label}>
+            <label class="slds-form-element__label">
+                <template if:true={required}>
+                    <abbr class="slds-required" title="required">*</abbr>
+                </template>
+                {label}
+            </label>
+        </template>
+        <div class="slds-form-element__control">
+            <div class={containerClass}>
+                <div class={dropdownClass} aria-expanded={_isOpen} aria-haspopup="listbox" role="combobox">
+                    <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right" role="none">
+                        <input
+                            type="text"
+                            class="slds-input slds-combobox__input"
+                            role="textbox"
+                            autocomplete="off"
+                            value={inputValue}
+                            placeholder={placeholder}
+                            disabled={disabled}
+                            onfocus={handleInputFocus}
+                            onblur={handleInputBlur}
+                            oninput={handleInputChange}
+                        />
+                        <template if:true={selectedLabel}>
+                            <button
+                                class="slds-button slds-button_icon slds-input__icon slds-input__icon_right"
+                                title="Clear selection"
+                                onclick={handleClear}
+                            >
+                                <lightning-icon icon-name="utility:close" size="xx-small" alternative-text="Clear"></lightning-icon>
+                            </button>
+                        </template>
+                        <template if:false={selectedLabel}>
+                            <span class="slds-icon_container slds-icon-utility-search slds-input__icon slds-input__icon_right">
+                                <lightning-icon icon-name="utility:search" size="xx-small" alternative-text="Search"></lightning-icon>
+                            </span>
+                        </template>
+                    </div>
+
+                    <!-- Dropdown list -->
+                    <template if:true={_isOpen}>
+                        <div class="slds-dropdown slds-dropdown_length-7 slds-dropdown_fluid" role="listbox">
+                            <ul class="slds-listbox slds-listbox_vertical" role="presentation">
+                                <template if:true={hasFilteredOptions}>
+                                    <template for:each={filteredOptions} for:item="opt">
+                                        <li
+                                            key={opt.value}
+                                            role="presentation"
+                                            class="slds-listbox__item"
+                                        >
+                                            <div
+                                                class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small"
+                                                role="option"
+                                                data-value={opt.value}
+                                                onclick={handleOptionClick}
+                                            >
+                                                <span class="slds-media__body">
+                                                    <span class="slds-truncate" title={opt.label}>{opt.label}</span>
+                                                </span>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </template>
+                                <template if:false={hasFilteredOptions}>
+                                    <li role="presentation" class="slds-listbox__item">
+                                        <div class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small">
+                                            <span class="slds-media__body">
+                                                <span class="slds-truncate slds-text-color_weak">No results found</span>
+                                            </span>
+                                        </div>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

@@ -84,16 +84,37 @@ public without sharing class FEC_StatementsAccountController {
             LIMIT 1
         ];
 
-        /* ================= CALL API ================= */
-        FEC_GetCardBasicInfo.ResponseWrapper res =
-            FEC_GetCardBasicInfo.callGetCardBasicInfo(
+        /* ================= 1.CALL API GetCardBasicInfo ================= */
+        FEC_GetCardBasicInfo.ResponseWrapper resCard;
+
+        try {   
+            resCard = FEC_GetCardBasicInfo.callGetCardBasicInfo(
                 FEC_CommonUltils.generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                 ch.FEC_Account_Number__c
             );
 
-        FEC_GetCardBasicInfo.CardBasicInfo info = res.CardBasicInfo;
+        } catch (Exception e) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+        }
+        
+        /* ================= 2.CALL API GetCardBasicInfo ================= */
+        FEC_GetCardSecInfo.ResponseWrapper cardSecRes;
+
+        try {
+           cardSecRes =  FEC_GetCardSecInfo.callGetCardSecInfo(
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                    ch.FEC_Account_Number__c
+                );
+        } catch (Exception e) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+        }
+
+        FEC_GetCardBasicInfo.CardBasicInfo info = resCard.CardBasicInfo;
+        List<FEC_GetCardSecInfo.CardStatement> cardStatements = cardSecRes?.CardSecInfo?.CardStatements;
 
         /* =====================================================
            HEADER STATEMENT
@@ -133,55 +154,56 @@ public without sharing class FEC_StatementsAccountController {
            STATEMENT PERIODS
            ===================================================== */
 
-        if (info.Statements != null && !info.Statements.isEmpty()) {
+        Map<Date, FEC_Statement__c> existingByDate = new Map<Date, FEC_Statement__c>();
 
-            Map<Date, FEC_Statement__c> existingByDate = new Map<Date, FEC_Statement__c>();
+        for (FEC_Statement__c stmt : [
+            SELECT Id, FEC_Statement_Date__c
+            FROM FEC_Statement__c
+            WHERE FEC_Customer_History__c = :ch.Id
+            AND FEC_Statement_Date__c != NULL
+        ]) {
+            existingByDate.put(stmt.FEC_Statement_Date__c, stmt);
+        }
 
-            for (FEC_Statement__c s : [
-                SELECT Id, FEC_Statement_Date__c
-                FROM FEC_Statement__c
-                WHERE FEC_Customer_History__c = :ch.Id
-                  AND FEC_Statement_Date__c != NULL
-            ]) {
-                existingByDate.put(s.FEC_Statement_Date__c, s);
+        List<FEC_Statement__c> toUpsert = new List<FEC_Statement__c>();
+
+        for(FEC_GetCardSecInfo.CardStatement cs : cardStatements){
+
+            if(cs.StatementDate == null) continue;
+
+            Date stmtDate = cs.StatementDate;
+
+            FEC_Statement__c s;
+
+            if(existingByDate.containsKey(stmtDate)){
+                s = existingByDate.get(stmtDate);
+            } else {
+                s = new FEC_Statement__c(
+                    FEC_Customer_History__c = ch.Id,
+                    FEC_Statement_Date__c = stmtDate
+                );
             }
 
-            List<FEC_Statement__c> toUpsert = new List<FEC_Statement__c>();
+            s.FEC_Total_Payment_Due__c   = cs.QualGraceBal ;
+            s.FEC_Minimum_Payment_Due__c = cs.TotalPaymentDue ;
+            s.FEC_Current_Payment_Due__c = cs.MPAStructure;
 
-            for (FEC_GetCardBasicInfo.StatementPeriod p : info.Statements) {
+            s.FEC_Payment_Due_Date__c = cs.DueDate;
 
-                if (p.StatementDate == null) continue;
+            s.FEC_Beginning_Balance__c = cs.BalanceForBeginningOfPeriod;
+            s.FEC_End_Balance__c       = cs.BalanceForEndOfPeriod;
 
-                FEC_Statement__c s;
+            s.FEC_Total_Interest__c = cs.TotalInterest;
+            s.FEC_IPP_Principal__c  = cs.IPPPrincipal;
+            s.FEC_IPP_Interest__c   = cs.IPPInterest;
 
-                if (existingByDate.containsKey(p.StatementDate)) {
-                    s = existingByDate.get(p.StatementDate);
-                } else {
-                    s = new FEC_Statement__c(
-                        FEC_Customer_History__c = ch.Id,
-                        FEC_Statement_Date__c   = p.StatementDate
-                    );
-                }
+            s.FEC_Total_Past_Due__c = cs.TotalPastDue;
 
-                s.FEC_Total_Payment_Due__c   = info?.Statement?.StatementBalance;
-                s.FEC_Minimum_Payment_Due__c = info?.Statement?.LastStatementMPA;
-                s.FEC_Payment_Due_Date__c    = info?.Statement?.LastStatementDueDate;
+            toUpsert.add(s);
+        }
 
-                s.FEC_Current_Payment_Due__c = p.MPA;
-                s.FEC_Beginning_Balance__c   = p.BalanceBegin;
-                s.FEC_End_Balance__c         = p.BalanceEnd;
-
-                // s.FEC_Total_Past_Due__c    = p.TotalPastDue;
-                // s.FEC_Total_Interest__c    = p.TotalInterest;
-                // s.FEC_IPP_Principal__c     = p.IPPPrincipal;
-                // s.FEC_IPP_Interest__c      = p.IPPInterest;
-
-                toUpsert.add(s);
-            }
-
-            if (!toUpsert.isEmpty()) {
-                upsert toUpsert;
-            }
+        if (!toUpsert.isEmpty()) {
+            upsert toUpsert;
         }
     }
 
@@ -269,7 +291,11 @@ public without sharing class FEC_StatementsAccountController {
                    FEC_Payment_Due_Date__c,
                    FEC_Current_Payment_Due__c,
                    FEC_Beginning_Balance__c,
-                   FEC_End_Balance__c
+                   FEC_End_Balance__c,
+                   FEC_Total_Past_Due__c,
+                   FEC_Total_Interest__c,
+                   FEC_IPP_Principal__c,
+                   FEC_IPP_Interest__c
             FROM FEC_Statement__c
             WHERE FEC_Customer_History__c = :header.FEC_Customer_History__c
               AND FEC_Statement_Date__c != NULL
@@ -286,6 +312,10 @@ public without sharing class FEC_StatementsAccountController {
             dto.currentPaymentDue = s.FEC_Current_Payment_Due__c;
             dto.beginningBalance  = s.FEC_Beginning_Balance__c;
             dto.endBalance        = s.FEC_End_Balance__c;
+            dto.totalPastDue      = s.FEC_Total_Past_Due__c;
+            dto.totalInterest     = s.FEC_Total_Interest__c;
+            dto.iPPPrincipal      = s.FEC_IPP_Principal__c;
+            dto.iPPInterest       = s.FEC_IPP_Interest__c;
 
             result.add(dto);
         }
@@ -341,5 +371,4 @@ public without sharing class FEC_StatementsAccountController {
 
         return result;
     }
-
 }

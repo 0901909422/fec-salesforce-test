@@ -453,7 +453,10 @@ public with sharing class FEC_ServiceFraudTaskCaseController {
         String caseId,
         String serviceCaseId,
         String requestBody,
-        String responseXml
+        String responseXml,
+        String messageStatus,
+        String requestor,
+        String description
     ) {
         try {
             // Call centralized logging utility
@@ -463,7 +466,10 @@ public with sharing class FEC_ServiceFraudTaskCaseController {
                 caseId,
                 serviceCaseId,
                 requestBody,
-                responseXml
+                responseXml,
+                messageStatus,
+                requestor,
+                description
             );
  
             // Log success for debugging & monitoring

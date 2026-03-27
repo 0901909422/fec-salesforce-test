@@ -5,6 +5,25 @@
     <businessProcess>Interaction Process</businessProcess>
     <label>Interaction</label>
     <picklistValues>
+        <picklist>FEC_KYC_Method__c</picklist>
+        <values>
+            <fullName>One-Time Password %28OTP%29</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Other</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Question and Answer Q%26A</fullName>
+            <default>true</default>
+        </values>
+        <values>
+            <fullName>Voice Biometrics</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
         <picklist>FEC_Channel__c</picklist>
         <values>
             <fullName>Chat</fullName>
@@ -27,7 +46,7 @@
             <default>false</default>
         </values>
         <values>
-            <fullName>Internal%22</fullName>
+            <fullName>Internal</fullName>
             <default>false</default>
         </values>
         <values>
@@ -42,7 +61,31 @@
     <picklistValues>
         <picklist>FEC_Interaction_Subchannel__c</picklist>
         <values>
+            <fullName>F2F</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Facebook</fullName>
+            <default>false</default>
+        </values>
+        <values>
             <fullName>Inbound Call</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Incoming Email</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Internal Email</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Letter</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Mobile App</fullName>
             <default>false</default>
         </values>
         <values>
@@ -51,6 +94,45 @@
         </values>
         <values>
             <fullName>Outbound Call</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Outgoing Email</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>VTiger</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Website</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Zalo</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>iCollect</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>iSale</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>FEC_Title_Reply__c</picklist>
+        <values>
+            <fullName>Anh</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Anh%2F Chị</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Chị</fullName>
             <default>false</default>
         </values>
     </picklistValues>

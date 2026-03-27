@@ -1,8 +1,7 @@
 public with sharing class FEC_SearchController {
     /**
      * Returns minimal Case context for fec_Search initialization.
-     * - Runs in USER MODE and WITH SECURITY ENFORCED to respect security.
-     * - Selects only fields needed by the component.
+     * Selects only fields needed by the component.
      */
     @AuraEnabled(cacheable=true)
     public static Case getCase(Id caseId) {
@@ -17,6 +16,10 @@ public with sharing class FEC_SearchController {
                 SELECT Id, FEC_Channel__c, FEC_National_ID_Passport_ID__c,
                  FEC_Phone_Number__c, FEC_Contract_Number__c, RecordType.Name,
                  FEC_Skip_Search_Internal_Case__c, FEC_Has_Account_or_Contract__c,
+                 FEC_Search_Account_Number__c, FEC_Search_Application_ID__c,
+                 FEC_Search_Contract_Number__c, FEC_Search_Customer_Number__c,
+                 FEC_Search_Email_Address__c, FEC_Search_National_ID__c,
+                 FEC_Search_Phone_Number__c,
                  (SELECT Id FROM Customer_Histories__r)
                 FROM Case
                 WHERE Id = :caseId
@@ -30,38 +33,98 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
-    public static void createHistory(String value, String fieldName, Id caseId) {
-        // Return early if no value or field name
-        if (value == null || value.trim() == '' || fieldName == null || fieldName.trim() == '') {
-            throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
+    public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone, String customerName, Boolean isListView ) {
+    // 1. Validation
+    if (String.isBlank(value) || String.isBlank(fieldName)) {
+        throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
+    }
+
+    try {
+        // 2. Xử lý Product Type
+        Id productTypeId = null;
+        if (String.isNotBlank(selectedType)) {
+            List<FEC_Product_Type__c> types = [SELECT Id FROM FEC_Product_Type__c WHERE Name = :selectedType LIMIT 1];
+            if (!types.isEmpty()) { productTypeId = types[0].Id; }
         }
-        // Build record
-        FEC_Customer_History__c rec = new FEC_Customer_History__c();
-        
-        // Set field based on fieldName parameter
+
+        // 3. Khởi tạo và xử lý Case TRƯỚC (để lấy ID cho trường bắt buộc của History)
+        Case objCase = new Case();
+        if (caseId != null) {
+            objCase.Id = caseId;
+        } else {
+            Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+
+            String recordTypeName = (isListView == true) 
+            ? FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
+            : FEC_ConstantCommon.CASE_SEARCH_RECORD_TYPE_DEV_NAME  ;
+            Schema.RecordTypeInfo rtInfo = rtMap.get(recordTypeName);
+
+            if (rtInfo == null) {
+                    throw new CalloutException(
+                        String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'RecordType'}));
+                }
+                objCase.RecordTypeId = rtInfo.getRecordTypeId();
+            }
+
+        // Gán các field cơ bản cho Case
+        objCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+        objCase.FEC_CIF_Number__c = cifNumber;
+        objCase.FEC_First_Access__c = true;
+        objCase.FEC_Search_Products__c = searchProducts;
+        objCase.FEC_Product_Type__c = productTypeId;
+        objCase.FEC_Customer_Name__c = customerName;
         if (fieldName == 'AccountNumber') {
-            rec.FEC_Account_Number__c = value;
+            objCase.FEC_Account_Number__c = value;
         }
         if (fieldName == 'ContractNumber') {
-            rec.FEC_Contract_Number__c = value;
+            objCase.FEC_Contract_Number__c = value;
         }
-        if (fieldName == 'UserId') {
-            rec.FEC_User_ID__c = value;
-        }
-        rec.Name = value;
-        rec.FEC_Case__c = caseId;
 
-        // Insert in USER_MODE as per security best practice
-        Database.SaveResult sr = Database.insert(rec);
-        if (!sr.isSuccess()) {
-            Database.Error err = (sr.getErrors() != null && !sr.getErrors().isEmpty()) ? sr.getErrors()[0] : null;
-            throw new AuraHandledException(err != null ? err.getMessage() : System.Label.FEC_MSG_Create_Customer_History_Error);
-        } else {
-            Case objCase = new Case(
-                Id = caseId,
-                FEC_Account_or_Contract__c = rec.Id
-            );
-            update objCase;
+        // Thực hiện Upsert Case ngay để có Id
+        upsert objCase;
+
+        // 4. Khởi tạo và Insert History (Trường FEC_Case__c bây giờ chắc chắn có giá trị)
+        FEC_Customer_History__c rec = new FEC_Customer_History__c();
+        rec.FEC_Account_Number__c = value;
+        rec.Name = value;
+        rec.FEC_CIF_Number__c = cifNumber;
+        rec.FEC_Work_Phone__c = phone;
+        rec.FEC_Case__c = objCase.Id; // Gán ID vừa tạo/update vào trường bắt buộc
+
+        insert rec;
+
+        // 5. Cập nhật lại Case để liên kết ngược với History record vừa tạo
+        objCase.FEC_Account_or_Contract__c = rec.Id;
+        update objCase;
+
+        return objCase.Id;
+
+    } catch (Exception e) {
+        throw new AuraHandledException(e.getMessage());
+    }
+}
+
+    @AuraEnabled
+    public static List<FEC_B2_Contract__c> getB2Contracts(String contractNumber) {
+        try {
+            return [
+                SELECT Name, FEC_ID_Card__c, FEC_Code__c, FEC_Full_Name__c, FEC_Product_Code__c, FEC_Installment__c, FEC_Principal__c, FEC_Monthly_Fee__c, FEC_Term__c, FEC_City__c
+                FROM FEC_B2_Contract__c WHERE Name =: contractNumber
+                ];
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static List<FEC_Cash_24_Contract__c> getCash24Contracts(String contractNumber) {
+        try {
+            return [
+                SELECT Name, FEC_Sold_Date__c, FEC_Balance_Amount__c, FEC_Note__c, FEC_Contract_Status__c, FEC_Product__c
+                FROM FEC_Cash_24_Contract__c WHERE Name =: contractNumber
+                ];
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
         }
     }
 
@@ -109,5 +172,67 @@ public with sharing class FEC_SearchController {
         }
         
         return fieldPermissions;
+    }
+
+    @AuraEnabled
+    public static void revealNationalId(Id recordId) {
+        
+        try {
+            Case c = [
+            SELECT Id
+            FROM Case
+            WHERE Id = :recordId
+            LIMIT 1
+            ];
+            
+            User u = [
+            SELECT Username, UserRole.Name
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            ];
+            
+            
+            // 🔐 Audit sensitive access
+            FEC_CommonUltils.logSensitiveAccess(
+                FEC_ConstantCommon.SECTION_SEARCH_INFORMARION,
+                FEC_ConstantCommon.SECTION_NATIONAL_PASSPORT,
+                u.Username.split('@')[0],
+                u.UserRole != null ? u.UserRole.Name : null,
+                c.Id);
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    /**
+     * Executes the Card Basic Info integration call using a specific Account Number.
+     * @param accountNumber The account number to search for.
+     * @return FEC_GetCardBasicInfo.ResponseWrapper The API response containing card details.
+     */
+    @AuraEnabled
+    public static FEC_GetCardBasicInfo.ResponseWrapper getCardInfoByAccountNumber(String accountNumber) {
+        if (String.isBlank(accountNumber)) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Account Number'}));
+        }
+
+        try {
+            // Generate integration metadata as per your requirement
+            String requestId = String.valueOf(UUID.randomUUID());
+            String requestor = FEC_ConstantCommon.REQUESTOR_CRM;
+            String timestamp = Datetime.now().formatGmt(FEC_ConstantCommon.DATETIME_FORMAT);
+
+            // Call the integration service
+            FEC_GetCardBasicInfo.ResponseWrapper res = FEC_GetCardBasicInfo.callGetCardBasicInfo(
+                requestId,
+                requestor,
+                timestamp,
+                accountNumber
+            );
+
+            return res;
+        } catch (Exception e) {
+            // Log error and pass to the UI
+            throw new AuraHandledException(System.Label.FEC_Account_Card_Fetch_Error + ' [' + accountNumber + ']. ' + e.getMessage());
+        }
     }
 }

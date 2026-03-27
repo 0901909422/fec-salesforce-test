@@ -3,68 +3,69 @@ public with sharing class FEC_GetCustomerList {
      * RESPONSE MODELS
      * ================================ */
     public class ResponseWrapper {
-        public SysResponse Sys;
-        public Integer Count;
-        public List<Customer> Customers;
+        @AuraEnabled public SysResponse Sys;
+        @AuraEnabled public Integer Count;
+        @AuraEnabled public List<Customer> Customers;
     }
 
     public class SysResponse {
-        public String TransID;
-        public Datetime DateTime_x;
-        public String Code;
-        public String Description;
+        @AuraEnabled public String TransID;
+        @AuraEnabled public Datetime DateTime_x;
+        @AuraEnabled public String Code;
+        @AuraEnabled public String Description;
     }
 
     public class Customer {
-        public String CIFNumber;
-        public String FullName;
-        public String LastName;
-        public String FirstName;
-        public String NationalID;
-        public Date DateOfBirth;
-        public List<Phone> Phones;
-        public List<EmailInfo> Emails;
-        public List<Application> Applications;
-        public List<Address> Addresses;
+        @AuraEnabled public String CIFNumber;
+        @AuraEnabled public String FullName;
+        @AuraEnabled public String LastName;
+        @AuraEnabled public String FirstName;
+        @AuraEnabled public String NationalID;
+        @AuraEnabled public Date DateOfBirth;
+        @AuraEnabled public List<Phone> Phones;
+        @AuraEnabled public List<EmailInfo> Emails;
+        @AuraEnabled public List<Application> Applications;
+        @AuraEnabled public List<Address> Addresses;
     }
 
     public class Phone {
-        public String Type;
-        public String Phone;
+        @AuraEnabled public String Type;
+        @AuraEnabled public String Phone;
     }
 
     public class EmailInfo {
-        public String Email;
+        @AuraEnabled public String Email;
     }
 
     public class Application {
-        public String ApplicationID;
-        public String AccountNumber;
-        public String ContractNumber;
-        public String Status;
-        public String Product;
-        public String Email;
-        public String SchemeID;
-        public String SchemeDesc;
+        @AuraEnabled public String ApplicationID;
+        @AuraEnabled public String AccountNumber;
+        @AuraEnabled public String ContractNumber;
+        @AuraEnabled public String Status;
+        @AuraEnabled public String Product;
+        @AuraEnabled public String Email;
+        @AuraEnabled public String SchemeID;
+        @AuraEnabled public String SchemeDesc;
     }
 
     public class Address {
-        public String AddressType;
-        public String HouseNumber;
-        public String Building;
-        public String Street;
-        public String Ward;
-        public String District;
-        public String City;
-        public String CountryCode;
-        public String CountryName;
-        public String ZipCode;
-        public String PropertyStatus;
+        @AuraEnabled public String AddressType;
+        @AuraEnabled public String HouseNumber;
+        @AuraEnabled public String Building;
+        @AuraEnabled public String Street;
+        @AuraEnabled public String Ward;
+        @AuraEnabled public String District;
+        @AuraEnabled public String City;
+        @AuraEnabled public String CountryCode;
+        @AuraEnabled public String CountryName;
+        @AuraEnabled public String ZipCode;
+        @AuraEnabled public String PropertyStatus;
     }
 
     /* ================================
      * PUBLIC CALL METHOD
      * ================================ */
+    @AuraEnabled
     public static ResponseWrapper getCustomerList(
         String requestorId,
         String phoneNumber,
@@ -78,7 +79,17 @@ public with sharing class FEC_GetCustomerList {
         String email,
         String personId
     ) {
-        
+        System.debug('requestorId: ' + requestorId);
+        System.debug('phoneNumber: ' + phoneNumber);
+        System.debug('isReferenceSearch: ' + isReferenceSearch);
+        System.debug('fullName: ' + fullName);
+        System.debug('nationalId: ' + nationalId);
+        System.debug('applicationId: ' + applicationId);
+        System.debug('creditCardNumber: ' + creditCardNumber);
+        System.debug('accountNumber: ' + accountNumber);
+        System.debug('contractNumber: ' + contractNumber);
+        System.debug('email: ' + email);
+        System.debug('personId: ' + personId);
         String transId = String.valueOf(UUID.randomUUID());
         String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT);
 
@@ -119,25 +130,14 @@ public with sharing class FEC_GetCustomerList {
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
                     
         HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
-               
-        // ===== LOG REQUEST + RESPONSE =====
-            // FEC_CommonUltils.logApi(
-            //     'FEC_GetCustomerList',
-            //     endpoint,
-            //     'POST',
-            //     String.valueOf(res.getStatusCode()),
-            //     soapBody,
-            //     res.getBody(),
-            //     res.getStatusCode() == 200,
-            //     null
-            // );
-
+        
         if (res.getStatusCode() == 200 && String.isNotBlank(res.getBody())) {
+
             return parseResponse(res.getBody());
         }
         return null;
     }
-
+    
     /* ================================
      * SOAP BODY BUILDER
      * ================================ */
@@ -199,10 +199,14 @@ public with sharing class FEC_GetCustomerList {
 
         if (String.isNotBlank(phoneNumber)) {
             Dom.XmlNode phone = params.addChildElement('PhoneNumber', null, null);
-            phone.setAttribute(
-                'IsReferencesSearch',
-                String.valueOf(isReferenceSearch)
-            );
+
+            if (isReferenceSearch != null) {
+                phone.setAttribute(
+                    'IsReferencesSearch',
+                    String.valueOf(isReferenceSearch)
+                );
+            }
+            
             phone.addTextNode(phoneNumber);
         }
 
@@ -369,7 +373,14 @@ public with sharing class FEC_GetCustomerList {
         String email,
         String personId
     ) {
-        Set<String> validRequestors = new Set<String>{'CRM', 'CORE', 'MOBILE', 'PORTAL','PEGA'};
+        Set<String> validRequestors = new Set<String>{
+            FEC_ConstantCommon.REQUESTOR_CRM, 
+            FEC_ConstantCommon.REQUESTOR_CORE, 
+            FEC_ConstantCommon.REQUESTOR_MOBILE, 
+            FEC_ConstantCommon.REQUESTOR_PORTAL,
+            FEC_ConstantCommon.REQUESTOR_PEGA,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN
+        };
         /* ================= TransID ================= */
         if (String.isBlank(transId) || transId.length() > 36) {
             throw new CalloutException(

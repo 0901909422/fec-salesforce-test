@@ -248,118 +248,173 @@ public with sharing class FEC_GetCustomerInfoBasic {
        ===================================================== */
  
     private static ResponseWrapper parseResponse(String xml) {
- 
-        Dom.Document doc = new Dom.Document();
-        doc.load(xml);
- 
-        Dom.XmlNode bodyNode =
-            doc.getRootElement().getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
- 
-        // ===== FIX: ignore namespace for response =====
-        Dom.XmlNode responseNode =
-            bodyNode.getChildElement('GetCustomerInfoBasicResponse', null);
- 
-        if (responseNode == null)
-            throw new CalloutException(System.Label.FEC_MSG_Response_Null);
- 
-        ResponseWrapper r = new ResponseWrapper();
- 
-        /* ===== SYS ===== */
-        Dom.XmlNode sysNode =
-            responseNode.getChildElement('Sys', null);
- 
-        if (sysNode == null)
-            throw new CalloutException(System.Label.FEC_MSG_Response_Sys_Null);
- 
-        r.Sys = new SysResponse();
-        r.Sys.TransID = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
-        r.Sys.DateTime_x = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
-        r.Sys.Code = FEC_CommonUltils.getXmlValue(sysNode, 'Code');
-        r.Sys.Description = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
- 
-        if (r.Sys.Code != '1')
-            throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{r.Sys.Description}));
- 
-        /* ===== CUSTOMER ===== */
-        Dom.XmlNode c =
-            responseNode.getChildElement('CustomerBasicInfo', null);
- 
-        r.CustomerBasicInfo = new CustomerBasicInfo();
-        r.CustomerBasicInfo.CIFNumber = FEC_CommonUltils.getXmlValue(c, 'CIFNumber');
-        r.CustomerBasicInfo.CIFDWH = FEC_CommonUltils.getXmlValue(c, 'CIFDWH');
-        r.CustomerBasicInfo.FirstName = FEC_CommonUltils.getXmlValue(c, 'FirstName');
-        r.CustomerBasicInfo.MiddleName = FEC_CommonUltils.getXmlValue(c, 'MiddleName');
-        r.CustomerBasicInfo.LastName = FEC_CommonUltils.getXmlValue(c, 'LastName');
-        r.CustomerBasicInfo.FullName = FEC_CommonUltils.getXmlValue(c, 'FullName');
-        r.CustomerBasicInfo.ShortName = FEC_CommonUltils.getXmlValue(c, 'ShortName');
-        r.CustomerBasicInfo.Title = FEC_CommonUltils.getXmlValue(c, 'Title');
-        r.CustomerBasicInfo.Birthday = FEC_CommonUltils.xmlValToDate(c, 'Birthday');
-        r.CustomerBasicInfo.Gender = FEC_CommonUltils.getXmlValue(c, 'Gender');
-        r.CustomerBasicInfo.Citizenship = FEC_CommonUltils.getXmlValue(c, 'Citizenship');
-        r.CustomerBasicInfo.SocialStatus = FEC_CommonUltils.getXmlValue(c, 'SocialStatus');
-        r.CustomerBasicInfo.MaritalStatus = FEC_CommonUltils.getXmlValue(c, 'MaritalStatus');
-        r.CustomerBasicInfo.CustomerStatus = FEC_CommonUltils.getXmlValue(c, 'CustomerStatus');
-        r.CustomerBasicInfo.CustomerValue = FEC_CommonUltils.getXmlValue(c, 'CustomerValue');
- 
-        r.CustomerBasicInfo.CurrentAddresses = new List<CurrentAddress>();
-        Dom.XmlNode currAddrsNode = c.getChildElement('CurrentAddresses', null);
-        if (currAddrsNode != null) {
-            for (Dom.XmlNode addrNode : currAddrsNode.getChildElements()) {
-                if (addrNode.getName() != 'Address') continue;
-                CurrentAddress ca = new CurrentAddress();
-                ca.Address = new Address();
-                ca.Address.AddressId = FEC_CommonUltils.getXmlValue(addrNode, 'AddressId');
-                ca.Address.AddressType = FEC_CommonUltils.getXmlValue(addrNode, 'AddressType');
-                ca.Address.HouseNumber = FEC_CommonUltils.getXmlValue(addrNode, 'Number');
-                ca.Address.Street = FEC_CommonUltils.getXmlValue(addrNode, 'Street');
-                ca.Address.Ward = FEC_CommonUltils.getXmlValue(addrNode, 'Ward');
-                ca.Address.District = FEC_CommonUltils.getXmlValue(addrNode, 'District');
-                ca.Address.City = FEC_CommonUltils.getXmlValue(addrNode, 'City');
-                ca.Address.CountryCode = FEC_CommonUltils.getXmlValue(addrNode, 'CountryCode');
-                ca.Address.CountryName = FEC_CommonUltils.getXmlValue(addrNode, 'CountryName');
-                ca.Address.ZipCode = FEC_CommonUltils.getXmlValue(addrNode, 'ZipCode');
-                ca.Address.PropertyStatus = FEC_CommonUltils.getXmlValue(addrNode, 'PropertyStatus');
-                ca.Address.Years = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(addrNode, 'Years'));
-                ca.Address.Months = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(addrNode, 'Months'));
-                r.CustomerBasicInfo.CurrentAddresses.add(ca);
-            }
-        }
- 
-        r.CustomerBasicInfo.PreferredContacts = new List<PreferredContact>();
-        Dom.XmlNode contactsNode = c.getChildElement('PreferredContacts', null);
-        if (contactsNode != null) {
-            for (Dom.XmlNode ctNode : contactsNode.getChildElements()) {
-                if (ctNode.getName() != 'Contact') continue;
-                PreferredContact pc = new PreferredContact();
-                pc.Contact = new Contact();
-                pc.Contact.ContactId = FEC_CommonUltils.getXmlValue(ctNode, 'ContactId');
-                pc.Contact.Channel = FEC_CommonUltils.getXmlValue(ctNode, 'Channel');
-                pc.Contact.CommunicationType = FEC_CommonUltils.getXmlValue(ctNode, 'CommunicationType');
-                pc.Contact.ContactString = FEC_CommonUltils.getXmlValue(ctNode, 'ContactString');
-                pc.Contact.OfficeExtension = FEC_CommonUltils.getXmlValue(ctNode, 'OfficeExtension');
-                r.CustomerBasicInfo.PreferredContacts.add(pc);
-            }
-        }
- 
-        r.CustomerBasicInfo.Relatives = new List<Relative>();
-        Dom.XmlNode relativesNode = c.getChildElement('Relatives', null);
-        if (relativesNode != null) {
-            for (Dom.XmlNode rNode : relativesNode.getChildElements()) {
-                if (rNode.getName() != 'Relative') continue;
-                Relative rel = new Relative();
-                rel.RelationType = FEC_CommonUltils.getXmlValue(rNode, 'RelationType');
-                rel.FullName = FEC_CommonUltils.getXmlValue(rNode, 'FullName');
-                rel.PhoneNumber = FEC_CommonUltils.getXmlValue(rNode, 'PhoneNumber');
-                rel.HouseNumber = FEC_CommonUltils.getXmlValue(rNode, 'Number');
-                rel.Street = FEC_CommonUltils.getXmlValue(rNode, 'Street');
-                rel.Ward = FEC_CommonUltils.getXmlValue(rNode, 'Ward');
-                rel.City = FEC_CommonUltils.getXmlValue(rNode, 'City');
-                r.CustomerBasicInfo.Relatives.add(rel);
-            }
-        }
- 
-        r.CustomerBasicInfo.Employers = new List<Employer>();
+
+    Dom.Document doc = new Dom.Document();
+    doc.load(xml);
+
+    Dom.XmlNode bodyNode =
+        doc.getRootElement().getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
+
+    Dom.XmlNode responseNode =
+        FEC_CommonUltils.findChildByName(bodyNode,'GetCustomerInfoBasicResponse');
+
+    if (responseNode == null) {
+        throw new CalloutException(System.Label.FEC_MSG_Response_Null);
+    }
+
+    ResponseWrapper r = new ResponseWrapper();
+
+    /* ===== SYS ===== */
+
+    Dom.XmlNode sysNode =
+        FEC_CommonUltils.findChildByName(responseNode,'Sys');
+
+    if (sysNode == null) {
+        throw new CalloutException(System.Label.FEC_MSG_Response_Sys_Null);
+    }
+
+    r.Sys = new SysResponse();
+    r.Sys.TransID       = FEC_CommonUltils.getXmlValue(sysNode,'TransID');
+    r.Sys.DateTime_x    = FEC_CommonUltils.getXmlValue(sysNode,'DateTime');
+    r.Sys.Code          = FEC_CommonUltils.getXmlValue(sysNode,'Code');
+    r.Sys.Description   = FEC_CommonUltils.getXmlValue(sysNode,'Description');
+
+    if (r.Sys.Code != '1') {
+        throw new CalloutException(
+            String.format(
+                System.Label.FEC_MSG_API_Error,
+                new List<String>{r.Sys.Description}
+            )
+        );
+    }
+
+    /* ===== CUSTOMER BASIC INFO ===== */
+
+    Dom.XmlNode c =
+        FEC_CommonUltils.findChildByName(responseNode,'CustomerBasicInfo');
+
+    if (c == null) {
         return r;
+    }
+
+    r.CustomerBasicInfo = new CustomerBasicInfo();
+
+    r.CustomerBasicInfo.CIFNumber      = FEC_CommonUltils.getXmlValue(c,'CIFNumber');
+    r.CustomerBasicInfo.CIFDWH         = FEC_CommonUltils.getXmlValue(c,'CIFDWH');
+    r.CustomerBasicInfo.FirstName      = FEC_CommonUltils.getXmlValue(c,'FirstName');
+    r.CustomerBasicInfo.MiddleName     = FEC_CommonUltils.getXmlValue(c,'MiddleName');
+    r.CustomerBasicInfo.LastName       = FEC_CommonUltils.getXmlValue(c,'LastName');
+    r.CustomerBasicInfo.FullName       = FEC_CommonUltils.getXmlValue(c,'FullName');
+    r.CustomerBasicInfo.ShortName      = FEC_CommonUltils.getXmlValue(c,'ShortName');
+    r.CustomerBasicInfo.Title          = FEC_CommonUltils.getXmlValue(c,'Title');
+    r.CustomerBasicInfo.Birthday       = FEC_CommonUltils.xmlValToDate(c,'Birthday');
+    r.CustomerBasicInfo.Gender         = FEC_CommonUltils.getXmlValue(c,'Gender');
+    r.CustomerBasicInfo.Citizenship    = FEC_CommonUltils.getXmlValue(c,'Citizenship');
+    r.CustomerBasicInfo.SocialStatus   = FEC_CommonUltils.getXmlValue(c,'SocialStatus');
+    r.CustomerBasicInfo.MaritalStatus  = FEC_CommonUltils.getXmlValue(c,'MaritalStatus');
+    r.CustomerBasicInfo.CustomerStatus = FEC_CommonUltils.getXmlValue(c,'CustomerStatus');
+    r.CustomerBasicInfo.CustomerValue  = FEC_CommonUltils.getXmlValue(c,'CustomerValue');
+
+    /* ===== CURRENT ADDRESS ===== */
+
+    r.CustomerBasicInfo.CurrentAddresses = new List<CurrentAddress>();
+
+    Dom.XmlNode currAddrsNode =
+        FEC_CommonUltils.findChildByName(c,'CurrentAddresses');
+
+    if (currAddrsNode != null) {
+
+        for (Dom.XmlNode addrNode : currAddrsNode.getChildElements()) {
+
+            if (!addrNode.getName().contains('Address')) continue;
+
+            CurrentAddress ca = new CurrentAddress();
+            ca.Address = new Address();
+
+            ca.Address.AddressId       = FEC_CommonUltils.getXmlValue(addrNode,'AddressId');
+            ca.Address.AddressType     = FEC_CommonUltils.getXmlValue(addrNode,'AddressType');
+            ca.Address.HouseNumber     = FEC_CommonUltils.getXmlValue(addrNode,'Number');
+            ca.Address.Building        = FEC_CommonUltils.getXmlValue(addrNode,'Building');
+            ca.Address.Street          = FEC_CommonUltils.getXmlValue(addrNode,'Street');
+            ca.Address.Ward            = FEC_CommonUltils.getXmlValue(addrNode,'Ward');
+            ca.Address.District        = FEC_CommonUltils.getXmlValue(addrNode,'District');
+            ca.Address.City            = FEC_CommonUltils.getXmlValue(addrNode,'City');
+            ca.Address.CountryCode     = FEC_CommonUltils.getXmlValue(addrNode,'CountryCode');
+            ca.Address.CountryName     = FEC_CommonUltils.getXmlValue(addrNode,'CountryName');
+            ca.Address.ZipCode         = FEC_CommonUltils.getXmlValue(addrNode,'ZipCode');
+            ca.Address.PropertyStatus  = FEC_CommonUltils.getXmlValue(addrNode,'PropertyStatus');
+
+            ca.Address.Years =
+                FEC_CommonUltils.toInt(
+                    FEC_CommonUltils.getXmlValue(addrNode,'Years')
+                );
+
+            ca.Address.Months =
+                FEC_CommonUltils.toInt(
+                    FEC_CommonUltils.getXmlValue(addrNode,'Months')
+                );
+
+            r.CustomerBasicInfo.CurrentAddresses.add(ca);
+        }
+    }
+
+    /* ===== CONTACT ===== */
+
+    r.CustomerBasicInfo.PreferredContacts =
+        new List<PreferredContact>();
+
+    Dom.XmlNode contactsNode =
+        FEC_CommonUltils.findChildByName(c,'PreferredContacts');
+
+    if (contactsNode != null) {
+
+        for (Dom.XmlNode ctNode : contactsNode.getChildElements()) {
+
+            if (!ctNode.getName().contains('Contact')) continue;
+
+            PreferredContact pc = new PreferredContact();
+            pc.Contact = new Contact();
+
+            pc.Contact.ContactId         = FEC_CommonUltils.getXmlValue(ctNode,'ContactId');
+            pc.Contact.Channel           = FEC_CommonUltils.getXmlValue(ctNode,'Channel');
+            pc.Contact.CommunicationType = FEC_CommonUltils.getXmlValue(ctNode,'CommunicationType');
+            pc.Contact.ContactString     = FEC_CommonUltils.getXmlValue(ctNode,'ContactString');
+            pc.Contact.OfficeExtension   = FEC_CommonUltils.getXmlValue(ctNode,'OfficeExtension');
+
+            r.CustomerBasicInfo.PreferredContacts.add(pc);
+        }
+    }
+
+    /* ===== RELATIVE ===== */
+
+    r.CustomerBasicInfo.Relatives = new List<Relative>();
+
+    Dom.XmlNode relativesNode =
+        FEC_CommonUltils.findChildByName(c,'Relatives');
+
+    if (relativesNode != null) {
+
+        for (Dom.XmlNode rNode : relativesNode.getChildElements()) {
+
+            if (!rNode.getName().contains('Relative')) continue;
+
+            Relative rel = new Relative();
+
+            rel.RelationType = FEC_CommonUltils.getXmlValue(rNode,'RelationType');
+            rel.FullName     = FEC_CommonUltils.getXmlValue(rNode,'FullName');
+            rel.PhoneNumber  = FEC_CommonUltils.getXmlValue(rNode,'PhoneNumber');
+            rel.HouseNumber  = FEC_CommonUltils.getXmlValue(rNode,'Number');
+            rel.Street       = FEC_CommonUltils.getXmlValue(rNode,'Street');
+            rel.Ward         = FEC_CommonUltils.getXmlValue(rNode,'Ward');
+            rel.City         = FEC_CommonUltils.getXmlValue(rNode,'City');
+
+            r.CustomerBasicInfo.Relatives.add(rel);
+        }
+    }
+
+    r.CustomerBasicInfo.Employers = new List<Employer>();
+
+    return r;
     }
  
 }

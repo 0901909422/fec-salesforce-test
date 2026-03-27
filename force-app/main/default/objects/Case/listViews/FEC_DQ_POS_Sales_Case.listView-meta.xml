@@ -2,7 +2,7 @@
 <ListView xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_DQ_POS_Sales_Case</fullName>
     <columns>FEC_Link_ID__c</columns>
-    <columns>CASES.STATUS</columns>
+    <columns>FEC_Final_Status__c</columns>
     <columns>FEC_Channel__c</columns>
     <columns>FEC_Customer_Name__c</columns>
     <columns>FEC_Account_Contract_Number_Text__c</columns>
@@ -26,7 +26,7 @@
     <label>DQ - POS Sales</label>
     <queue>FEC_DQ_POS_Sales</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Direct_Sales_Analysis_Process_Management_Team_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_POS_Sales_Process_Management_Specialist</roleAndSubordinatesInternal>
+        <role>FEC_Direct_Sales_Analysis_Process_Management_Team_Leader</role>
+        <role>FEC_POS_Sales_Process_Management_Specialist</role>
     </sharedTo>
 </ListView>

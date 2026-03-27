@@ -227,7 +227,8 @@
                 <lightning-accordion-section name="addresses" label="Addresses List">
 
                     <c-fec_-related-list-paging records={addresses} columns={addressColumns}
-                        sorted-by="addressType">
+                        default-sorted-by="addressType"
+                        default-sort-direction="asc">
                     </c-fec_-related-list-paging>
 
                 </lightning-accordion-section>

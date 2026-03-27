@@ -6,4 +6,5 @@
     <label>FEC_Self-Service Flag</label>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
+    <trackHistory>true</trackHistory>
 </CustomField>

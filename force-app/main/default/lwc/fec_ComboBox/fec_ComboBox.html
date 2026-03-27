@@ -57,8 +57,8 @@
             >
               <span class="slds-truncate">{optionLabel}</span>
             </div>
-
-            <button
+            <template lwc:if={isNotDisabled}>
+                <button
               class="slds-button slds-button_icon slds-input__icon slds-input__icon_right"
               onclick={handleRemoveSelected}
             >
@@ -69,6 +69,7 @@
               ></lightning-icon>
               <span class="slds-assistive-text">Remove selected option</span>
             </button>
+            </template>            
           </div>
           <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid">
             <ul class="slds-listbox slds-listbox_vertical">

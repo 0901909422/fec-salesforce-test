@@ -27,33 +27,71 @@ import LABEL_UPDATED_SUCCESS from '@salesforce/label/c.FEC_Updated_Success';
 import LABEL_PLEASE_FILL_ALL from '@salesforce/label/c.FEC_Please_Fill_All';
 import { VARIANT_SUCCESS, VARIANT_ERROR, ICON_MAP, ICON_FALLBACK, TYPE_TEXT, OBJ_PRODUCT_TYPE, OBJ_BUSINESS_PROCESS, OBJ_CATEGORY, OBJ_SUB_CATEGORY, OBJ_SUB_CODE, PREFIX_PT, PREFIX_BP, PREFIX_CAT, PREFIX_SCAT, PREFIX_SC, OBJECT_MAP } from 'c/fecConstants';
 
-// Node type keys used in data/model
 const NODE_PRODUCT_LINE = 'Product_Line';
 const NODE_SERVICE_TYPE = 'Service_Type';
 const NODE_CATEGORY = 'Category';
 const NODE_SUB_CATEGORY = 'Sub_Category';
 const NODE_ACTION = 'Action';
 
-/**
- * @description LWC Component chi tiết Node (Tab 1)
- * @date 2025-12-03
- * @author DAT NGO
- */
 export default class FecMasterDataItemDetail extends LightningElement {
-    // Use accessor for @api item (defined below). Initialize reactive state and helper properties.
     @track editedItem = {};
     @track loading = false;
-    @track isDirty = false;          // Reactive: true khi có thay đổi
+    @track isDirty = false;
 
-    // Getter ensures LWC recomputes on every render when isDirty changes
+    // ==========================================================
+    // KHỐI CODE BỔ SUNG CHO HISTORY
+    // ==========================================================
+    @track isHistoryVisible = false;
+
+    get mainPanelSize() { return this.isHistoryVisible ? 9 : 12; }
+    get toggleHistoryIcon() { return this.isHistoryVisible ? 'utility:close' : 'utility:history'; }
+    get toggleHistoryLabel() { return this.isHistoryVisible ? 'Đóng Lịch sử' : 'Xem Lịch sử'; }
+
+    // Tính toán động Object API Name để truyền xuống History Component
+    get historyObjectApiName() {
+        const nodeType = this.item?.type;
+        if (nodeType === 'Product Type' || nodeType === 'Product_Line') return 'FEC_MDM_Product_Type__c';
+        if (nodeType === 'Business Process' || nodeType === 'Service_Type') return 'FEC_MDM_Business_Process__c';
+        if (nodeType === 'Category' || nodeType === 'Sub Category') return 'FEC_MDM_Category__c';
+        if (nodeType === 'Sub Category' || nodeType === 'Sub_Category') return 'FEC_MDM_Sub_Category__c';
+        if (nodeType === 'Sub Code' || nodeType === 'Action') return 'FEC_MDM_Sub_Code__c';
+
+        const prefix = this.selectedNodePrefix;
+        if (prefix === 'SC' || prefix === PREFIX_SC) return 'FEC_MDM_Sub_Code__c';
+        if (prefix === 'SCAT' || prefix === PREFIX_SCAT) return 'FEC_MDM_Sub_Category__c';
+        if (prefix === 'CAT' || prefix === PREFIX_CAT) return 'FEC_MDM_Category__c';
+        if (prefix === 'BP' || prefix === PREFIX_BP) return 'FEC_MDM_Business_Process__c';
+        if (prefix === 'PT' || prefix === PREFIX_PT) return 'FEC_MDM_Product_Type__c';
+
+        return '';
+    }
+
+    handleToggleHistory() {
+        this.isHistoryVisible = !this.isHistoryVisible;
+    }
+
+    refreshHistoryPanel() {
+        const historyComp = this.template.querySelector('[data-id="historyComponent"]');
+        if (historyComp) {
+            historyComp.refreshData();
+        }
+    }
+
+    // THÊM MỚI: Expose hàm này ra để Component Cha (Container) có thể gọi được
+    @api
+    refreshHistory() {
+        if (this.isHistoryVisible) {
+            this.refreshHistoryPanel();
+        }
+    }
+    // ==========================================================
+
     get isUndoDisabled() {
         console.log('[DEBUG][isUndoDisabled getter] called, isDirty:', this.isDirty, '-> returns:', !this.isDirty);
         return !this.isDirty;
     }
-    // Error object (server responses) -- getters at bottom will surface message
     error = null;
 
-    // runtime caches / helpers
     mappingRecords = [];
     wiredMappingsResult = null;
     objectMap = OBJECT_MAP;
@@ -61,7 +99,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
     _item = null;
     _originalItem = null;
 
-    // expose labels
     labelAlias = LABEL_ALIAS;
     labelNameEN = LABEL_NAME_EN;
     labelNameVN = LABEL_NAME_VN;
@@ -73,7 +110,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
     labelPromptSelectNode = LABEL_PROMPT_SELECT_NODE_DETAIL;
 
     get nodeId() {
-        return this.item?.id;
+        return this.item?.idType;
     }
 
     get nodeType() {
@@ -86,7 +123,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
         if (result.data) {
             this.processMappingData(result.data);
         } else if (result.error) {
-            // Keep error object for UI getters
             this.error = result.error;
             console.error('Error loading mappings:', result.error);
         }
@@ -98,7 +134,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
             return;
         }
 
-        // Filter mappings related to this node
         const relatedMappings = mappings.filter(mapping => {
             switch (this.nodeType) {
                 case NODE_PRODUCT_LINE:
@@ -119,7 +154,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
         this.mappingRecords = relatedMappings;
     }
 
-    // Computed properties
     get hasNodeDetails() {
         return this.nodeDetails && this.nodeDetails.record;
     }
@@ -138,27 +172,72 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
         console.log('[DEBUG][item setter] incomingId:', incomingId, '| currentId:', currentId, '| isDirty:', this.isDirty);
 
-        // Only reset state when a DIFFERENT node is selected
-        // If parent reflects back the same node (after nodebufferchange), skip reset
-        if (incomingId && incomingId === currentId && this.isDirty) {
-            // Same node, user is editing → only update _item reference, do NOT touch editedItem/_originalItem/isDirty
-            this._item = value;
-            console.log('[DEBUG][item setter] Same node + isDirty → skip reset, keep editedItem and isDirty');
+        // Lấy các trường có thể chỉnh sửa để so sánh
+        const getEditableFields = (obj) => {
+            if (!obj) return {};
+            return {
+                Alias: obj.Alias,
+                NameEN: obj.NameEN,
+                nameVN: obj.nameVN,
+                PosOrder: obj.PosOrder,
+                Status: obj.Status
+            };
+        };
+
+        const incomingEditableFieldsStr = JSON.stringify(getEditableFields(value));
+
+        if (incomingId && incomingId === currentId) {
+            // Nếu parent đẩy xuống data cũ (giống hệt data parent đã đẩy lần trước) thì bỏ qua
+            // để bảo vệ data đã được save ở detail panel không bị reset về quá khứ do parent không refresh.
+            if (this._lastParentEditableFieldsStr === incomingEditableFieldsStr) {
+                console.log('[DEBUG][item setter] Parent passed identical editable fields, ignoring stale data.');
+                return;
+            }
+            this._lastParentEditableFieldsStr = incomingEditableFieldsStr;
+
+            // Check if actual server data changed (e.g., after Save All)
+            const isValueChanged = incomingEditableFieldsStr !== JSON.stringify(getEditableFields(this._item));
+
+            if (isValueChanged) {
+                console.log('[DEBUG][item setter] Server data updated, updating _originalItem to serve as new baseline for Undo');
+                this._item = value;
+                
+                // Cập nhật lại bản gốc từ server để Undo
+                this._originalItem = value ? JSON.parse(JSON.stringify(value)) : {};
+
+                if (!this.isDirty) {
+                    this.editedItem = value ? JSON.parse(JSON.stringify(value)) : {};
+                } else {
+                    // Nếu đang gõ mà server lưu xong trả về, thì mình kiểm tra lại isDirty
+                    const orig = this._originalItem || {};
+                    const curr = this.editedItem || {};
+                    let dirty = false;
+                    for (let key in curr) {
+                        if (curr[key] != orig[key]) {
+                            dirty = true;
+                            break;
+                        }
+                    }
+                    this.isDirty = dirty;
+                }
+            } else {
+                console.log('[DEBUG][item setter] No value change from server, preserving current state.');
+            }
             return;
         }
 
-        // Different node selected → full reset
+        this._lastParentEditableFieldsStr = incomingEditableFieldsStr;
         this._item = value;
         this.editedItem = value ? JSON.parse(JSON.stringify(value)) : {};
         this._originalItem = value ? JSON.parse(JSON.stringify(value)) : {};
         this.isDirty = false;
         console.log('[DEBUG][item setter] New node → reset. _originalItem:', JSON.stringify(this._originalItem));
 
-        // Precompute selectedNodePrefix from name (pure side-effect in setter)
         const name = this.editedItem?.name || '';
         const parts = name ? name.split('_') : [];
         this.selectedNodePrefix = parts.length > 1 ? parts[0] : null;
     }
+
     get item() {
         return this._item;
     }
@@ -169,8 +248,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
             return this.editedItem?.Code || '';
         }
         const label = this.objectMap[prefix] || '';
-        // If the object name is "FEC_MDM_Sub_Code__c", we want to display "Sub Code"
-        // Let's create a more readable display name for the header
         let friendlyLabel = label;
         if (prefix === PREFIX_SC) friendlyLabel = OBJ_SUB_CODE;
         else if (prefix === PREFIX_SCAT) friendlyLabel = OBJ_SUB_CATEGORY;
@@ -182,33 +259,43 @@ export default class FecMasterDataItemDetail extends LightningElement {
         return (friendlyLabel ? friendlyLabel + ' ID: ' : '') + code;
     }
 
+    @api
     validateForm() {
-        const allValid = [
-            ...this.template.querySelectorAll('lightning-input'),
-        ].reduce((validSoFar, inputCmp) => {
-            inputCmp.reportValidity(); // Hiển thị lỗi đỏ nếu input không hợp lệ
-            return validSoFar && inputCmp.checkValidity();
-        }, true);
+        const inputs = [...this.template.querySelectorAll('lightning-input')];
+        let allValid = true;
+
+        inputs.forEach(inputCmp => {
+            inputCmp.reportValidity(); // Ép UI hiển thị màu đỏ nếu có lỗi
+            if (!inputCmp.checkValidity()) {
+                allValid = false;
+            }
+        });
+
+        console.log('[DEBUG][validateForm] Result:', allValid);
         return allValid;
     }
 
-    // Change data
     handleSubmit(event) {
         if (!this.validateForm()) {
             this.showToast(LABEL_PLEASE_FILL_ALL, '', VARIANT_ERROR);
+            console.error('[DEBUG][handleSubmit] Validation failed.');
             return;
         }
 
-        const updateData = { ... this.editedItem };
+        const updateData = { ...this.editedItem };
         showLog('handleSubmit updateData', updateData);
         updateNode({ updateData })
             .then(() => {
                 this.showToast(LABEL_UPDATED_SUCCESS, '', VARIANT_SUCCESS);
                 showLog('handleSubmit SUCCESS', 'Bản ghi đã được lưu thành công');
+
+                this.markAsSaved();
+
                 this.dispatchEvent(new CustomEvent('save', {
                     bubbles: true,
                     composed: true
                 }));
+                this.refreshHistoryPanel();
             })
             .catch(error => {
                 this.showToast(LABEL_ERROR, error.body?.message || error.message, VARIANT_ERROR);
@@ -220,39 +307,32 @@ export default class FecMasterDataItemDetail extends LightningElement {
         const field = event.target.name;
         const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
 
-        console.log('[DEBUG][handleInputChange] START ------');
-        console.log('[DEBUG][handleInputChange] field:', field, '| value:', value, '| type:', typeof value);
-        console.log('[DEBUG][handleInputChange] _originalItem:', JSON.stringify(this._originalItem));
-        console.log('[DEBUG][handleInputChange] editedItem BEFORE:', JSON.stringify(this.editedItem));
-        console.log('[DEBUG][handleInputChange] isDirty BEFORE:', this.isDirty);
-        console.log('[DEBUG][handleInputChange] isUndoDisabled BEFORE (getter):', this.isUndoDisabled);
+        // Validation for whitespace-only input
+        if (event.target.type !== 'checkbox' && typeof value === 'string') {
+            if (value.length > 0 && value.trim().length === 0) {
+                event.target.setCustomValidity('Vui lòng không chỉ nhập khoảng trắng');
+            } else {
+                event.target.setCustomValidity('');
+            }
+            event.target.reportValidity();
+        }
 
-        // Update only the changed field (shallow merge, then deep clone to sever reference)
         this.editedItem = JSON.parse(JSON.stringify({ ...this.editedItem, [field]: value }));
 
-        console.log('[DEBUG][handleInputChange] editedItem AFTER:', JSON.stringify(this.editedItem));
+        const orig = this._originalItem || {};
+        const curr = this.editedItem || {};
 
-        // Compare each tracked field against the original snapshot
-        const orig = this._originalItem;
-        const curr = this.editedItem;
-
-        console.log('[DEBUG][handleInputChange] COMPARE Alias    :', curr.Alias,    '!==', orig.Alias,    '->', curr.Alias !== orig.Alias);
-        console.log('[DEBUG][handleInputChange] COMPARE NameEN   :', curr.NameEN,   '!==', orig.NameEN,   '->', curr.NameEN !== orig.NameEN);
-        console.log('[DEBUG][handleInputChange] COMPARE nameVN   :', curr.nameVN,   '!==', orig.nameVN,   '->', curr.nameVN !== orig.nameVN);
-        console.log('[DEBUG][handleInputChange] COMPARE PosOrder :', curr.PosOrder, '!= ', orig.PosOrder, '->', curr.PosOrder != orig.PosOrder);
-        console.log('[DEBUG][handleInputChange] COMPARE Status   :', curr.Status,   '!==', orig.Status,   '->', curr.Status !== orig.Status);
-
-        this.isDirty = (
-            curr.Alias     !== orig.Alias     ||
-            curr.NameEN    !== orig.NameEN    ||
-            curr.nameVN    !== orig.nameVN    ||
-            curr.PosOrder  != orig.PosOrder   ||
-            curr.Status    !== orig.Status
-        );
-
-        console.log('[DEBUG][handleInputChange] isDirty AFTER:', this.isDirty);
-        console.log('[DEBUG][handleInputChange] isUndoDisabled AFTER (getter):', this.isUndoDisabled);
-        console.log('[DEBUG][handleInputChange] END ------');
+        // Check if ANY of the fields have changed
+        let dirty = false;
+        for (let key in curr) {
+            if (curr[key] != orig[key]) {
+                dirty = true;
+                break;
+            }
+        }
+        this.isDirty = dirty;
+        
+        console.log('[DEBUG][handleInputChange] isDirty evaluated to:', this.isDirty, 'Field changed:', field);
 
         this.dispatchEvent(new CustomEvent('nodebufferchange', {
             detail: this.editedItem,
@@ -260,7 +340,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
             composed: true
         }));
     }
-
 
     get nodeIcon() {
         const nodeType = this.item?.type;
@@ -272,48 +351,12 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
     get displayFields() {
         if (!this.hasNodeDetails) return [];
-
         const record = this.nodeDetails.record;
         const fields = [];
-
-        // ID field
-        if (record?.Id) {
-            fields.push({
-                label: LABEL_RECORD_ID,
-                value: record.Id,
-                type: TYPE_TEXT,
-                isStatus: false
-            });
-        }
-
-        // Name field
-        if (record?.Name) {
-            fields.push({
-                label: LABEL_NAME_EN,
-                value: record.Name,
-                type: TYPE_TEXT,
-                isStatus: false
-            });
-        }
-
-        // Vietnamese name field
-        if (record?.NameVN__c) {
-            fields.push({
-                label: LABEL_NAME_VN_DISPLAY,
-                value: record.NameVN__c,
-                type: TYPE_TEXT,
-                isStatus: false
-            });
-        }
-
-        // Type field
-        fields.push({
-            label: LABEL_TYPE_DISPLAY,
-            value: this.nodeTypeLabel,
-            type: TYPE_TEXT,
-            isStatus: false
-        });
-
+        if (record?.Id) fields.push({ label: LABEL_RECORD_ID, value: record.Id, type: TYPE_TEXT, isStatus: false });
+        if (record?.Name) fields.push({ label: LABEL_NAME_EN, value: record.Name, type: TYPE_TEXT, isStatus: false });
+        if (record?.NameVN__c) fields.push({ label: LABEL_NAME_VN_DISPLAY, value: record.NameVN__c, type: TYPE_TEXT, isStatus: false });
+        fields.push({ label: LABEL_TYPE_DISPLAY, value: this.nodeTypeLabel, type: TYPE_TEXT, isStatus: false });
         return fields;
     }
 
@@ -323,84 +366,21 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
     get hierarchyPath() {
         if (!this.item || !this.mappingRecords.length) return [];
-
-        // Get the first mapping that contains this node to build path
         const mapping = this.mappingRecords[0];
         if (!mapping) return [];
-
         const path = [];
-
-        // Build path from mapping
-        if (mapping.CS_Product_Line__r) {
-            path.push({
-                type: NODE_PRODUCT_LINE,
-                name: mapping.CS_Product_Line__r.Name,
-                label: LABEL_NODE_PRODUCT_LINE,
-                icon: ICON_MAP[NODE_PRODUCT_LINE] || ICON_FALLBACK,
-                isLast: false
-            });
-        }
-
-        if (mapping.CS_Service_Type__r) {
-            path.push({
-                type: NODE_SERVICE_TYPE,
-                name: mapping.CS_Service_Type__r.Name,
-                label: LABEL_NODE_SERVICE_TYPE,
-                icon: ICON_MAP[NODE_SERVICE_TYPE] || ICON_FALLBACK,
-                isLast: false
-            });
-        }
-
-        if (mapping.CS_Category__r) {
-            path.push({
-                type: NODE_CATEGORY,
-                name: mapping.CS_Category__r.Name,
-                label: LABEL_NODE_CATEGORY,
-                icon: ICON_MAP[NODE_CATEGORY] || ICON_FALLBACK,
-                isLast: false
-            });
-        }
-
-        if (mapping.CS_Sub_Category__r) {
-            path.push({
-                type: NODE_SUB_CATEGORY,
-                name: mapping.CS_Sub_Category__r.Name,
-                label: LABEL_NODE_SUB_CATEGORY,
-                icon: ICON_MAP[NODE_SUB_CATEGORY] || ICON_FALLBACK,
-                isLast: false
-            });
-        }
-
-        if (mapping.CS_Action__r) {
-            path.push({
-                type: NODE_ACTION,
-                name: mapping.CS_Action__r.Name,
-                label: LABEL_NODE_ACTION,
-                icon: ICON_MAP[NODE_ACTION] || ICON_FALLBACK,
-                isLast: false
-            });
-        }
-
-        // Mark last item
-        if (path.length > 0) {
-            path[path.length - 1].isLast = true;
-        }
-
+        if (mapping.CS_Product_Line__r) path.push({ type: NODE_PRODUCT_LINE, name: mapping.CS_Product_Line__r.Name, label: LABEL_NODE_PRODUCT_LINE, icon: ICON_MAP[NODE_PRODUCT_LINE] || ICON_FALLBACK, isLast: false });
+        if (mapping.CS_Service_Type__r) path.push({ type: NODE_SERVICE_TYPE, name: mapping.CS_Service_Type__r.Name, label: LABEL_NODE_SERVICE_TYPE, icon: ICON_MAP[NODE_SERVICE_TYPE] || ICON_FALLBACK, isLast: false });
+        if (mapping.CS_Category__r) path.push({ type: NODE_CATEGORY, name: mapping.CS_Category__r.Name, label: LABEL_NODE_CATEGORY, icon: ICON_MAP[NODE_CATEGORY] || ICON_FALLBACK, isLast: false });
+        if (mapping.CS_Sub_Category__r) path.push({ type: NODE_SUB_CATEGORY, name: mapping.CS_Sub_Category__r.Name, label: LABEL_NODE_SUB_CATEGORY, icon: ICON_MAP[NODE_SUB_CATEGORY] || ICON_FALLBACK, isLast: false });
+        if (mapping.CS_Action__r) path.push({ type: NODE_ACTION, name: mapping.CS_Action__r.Name, label: LABEL_NODE_ACTION, icon: ICON_MAP[NODE_ACTION] || ICON_FALLBACK, isLast: false });
+        if (path.length > 0) path[path.length - 1].isLast = true;
         return path;
     }
 
-    get hasMappings() {
-        return this.mappingRecords && this.mappingRecords.length > 0;
-    }
-
-    get hasChildNodes() {
-        return this.childNodes && this.childNodes.length > 0;
-    }
-
-    get childNodes() {
-        // This will be populated from tree data passed from parent
-        return this.item?.items || [];
-    }
+    get hasMappings() { return this.mappingRecords && this.mappingRecords.length > 0; }
+    get hasChildNodes() { return this.childNodes && this.childNodes.length > 0; }
+    get childNodes() { return this.item?.items || []; }
 
     get childNodesTitle() {
         const childTypeMap = {
@@ -412,30 +392,19 @@ export default class FecMasterDataItemDetail extends LightningElement {
         return childTypeMap[this.item?.type] || 'Child Nodes';
     }
 
-    get totalMappings() {
-        return this.mappingRecords?.length || 0;
-    }
-
-    get directChildren() {
-        return this.childNodes?.length || 0;
-    }
-
+    get totalMappings() { return this.mappingRecords?.length || 0; }
+    get directChildren() { return this.childNodes?.length || 0; }
     get totalDescendants() {
-        // Calculate total descendants recursively
         const countDescendants = (nodes) => {
             if (!nodes || !nodes.length) return 0;
             let count = nodes.length;
-            nodes.forEach(node => {
-                count += countDescendants(node.items);
-            });
+            nodes.forEach(node => { count += countDescendants(node.items); });
             return count;
         };
         return countDescendants(this.childNodes);
     }
 
-    // Methods
     getNodeTypeLabel(nodeType) {
-        // Map the NODE_* constants to the descriptive Labels
         const labels = {
             [NODE_PRODUCT_LINE]: LABEL_NODE_PRODUCT_LINE,
             [NODE_SERVICE_TYPE]: LABEL_NODE_SERVICE_TYPE,
@@ -443,7 +412,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
             [NODE_SUB_CATEGORY]: LABEL_NODE_SUB_CATEGORY,
             [NODE_ACTION]: LABEL_NODE_ACTION
         };
-        // Safety check: if nodeType is not in our internal NODE_* map, check if it matches the object labels
         let label = labels[nodeType];
         if (!label) {
             if (nodeType === OBJ_PRODUCT_TYPE) label = LABEL_NODE_PRODUCT_LINE;
@@ -452,49 +420,67 @@ export default class FecMasterDataItemDetail extends LightningElement {
             else if (nodeType === OBJ_SUB_CATEGORY) label = LABEL_NODE_SUB_CATEGORY;
             else if (nodeType === OBJ_SUB_CODE) label = LABEL_NODE_ACTION;
         }
-
         return label || nodeType;
     }
 
     handleRefresh() {
-        // 1. Restore editedItem from the original snapshot taken when the node was first loaded
+        // 1. Tự Component Con khôi phục về bản gốc (A1)
         this.editedItem = JSON.parse(JSON.stringify(this._originalItem));
-
-        // 2. Reset dirty/undo state so Undo button becomes disabled again
         this.isDirty = false;
-
-        // 3. Notify parent that local buffer has been reset
+        
+        // 2. Chỉ báo cho Cha biết idType để Cha xóa dòng đó khỏi pendingChanges
         this.dispatchEvent(new CustomEvent('nodebufferreset', {
-            detail: { idType: this.item?.idType, id: this.item?.id },
+            detail: { idType: this.item?.idType },
             bubbles: true,
             composed: true
         }));
-
         showLog('handleRefresh - Restored to original data', this.editedItem);
     }
 
-    // Watch for item changes to reprocess mapping data
     @api
     refreshData() {
         this.handleRefresh();
     }
 
-    // Handle when item changes
+    // ==========================================================
+    // THÊM MỚI: Hàm để Component Cha gọi khi đã Save thành công
+    // ==========================================================
+    @api
+    markAsSaved() {
+        // Lấy dữ liệu vừa edit đè lên dữ liệu gốc để xác nhận đã lưu
+        const updatedItem = { ...this._item, ...this.editedItem };
+        this._originalItem = JSON.parse(JSON.stringify(updatedItem));
+        this._item = JSON.parse(JSON.stringify(updatedItem)); // Sync _item too
+        this.editedItem = JSON.parse(JSON.stringify(updatedItem));
+        
+        // Tắt trạng thái thay đổi -> Nút Undo sẽ lập tức bị Disable
+        this.isDirty = false; 
+        showLog('markAsSaved', 'Đã cập nhật bản gốc và disable nút Undo');
+    }
+
     connectedCallback() {
-        // Watch for item changes
         if (this.item?.id) {
-            // If mappings already loaded, reprocess using cached data
             const mappings = this.wiredMappingsResult?.data || [];
             this.processMappingData(mappings);
         }
     }
 
-    // Error display helpers
     get hasError() {
         return !!(this.error && (this.error.body?.message || this.error.message));
     }
 
     get errorMessage() {
         return this.error?.body?.message || this.error?.message || 'An error occurred while loading node details.';
+    }
+
+    showToast(title, message, variant) {
+        // Tái sử dụng CustomEvent nếu bạn dùng showToast ở các component cha, 
+        // hoặc import ShowToastEvent nếu muốn dùng Toast gốc.
+        const event = new CustomEvent('showtoast', {
+            detail: { title, message, variant },
+            bubbles: true,
+            composed: true
+        });
+        this.dispatchEvent(event);
     }
 }

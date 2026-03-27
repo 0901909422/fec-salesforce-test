@@ -9,6 +9,7 @@
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
+        <controllingField>FEC_Customer_Type__c</controllingField>
         <restricted>true</restricted>
         <valueSetDefinition>
             <sorted>false</sorted>
@@ -28,5 +29,19 @@
                 <label>Internal</label>
             </value>
         </valueSetDefinition>
+        <valueSettings>
+            <controllingFieldValue>Non-existing</controllingFieldValue>
+            <controllingFieldValue>All</controllingFieldValue>
+            <valueName>Non-Existing Customer</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Non-existing</controllingFieldValue>
+            <controllingFieldValue>All</controllingFieldValue>
+            <valueName>Ubank</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>All</controllingFieldValue>
+            <valueName>Internal</valueName>
+        </valueSettings>
     </valueSet>
 </CustomField>

@@ -2,7 +2,7 @@
 <ListView xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_OB03_Case</fullName>
     <columns>FEC_Link_ID__c</columns>
-    <columns>CASES.STATUS</columns>
+    <columns>FEC_Final_Status__c</columns>
     <columns>FEC_Channel__c</columns>
     <columns>FEC_Customer_Name__c</columns>
     <columns>FEC_Account_Number__c</columns>
@@ -25,11 +25,11 @@
     <label>OB03</label>
     <queue>FEC_OB03</queue>
     <sharedTo>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Outbound_Officer_3</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Outbound_Specialist_3</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Customer_Service_Outbound_Team_3_Leader</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Head_of_Customer_Service_Contact_Center_Department</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Senior_Customer_Service_Outbound_Specialist_3</roleAndSubordinatesInternal>
-        <roleAndSubordinatesInternal>FEC_Unit_Head_of_Customer_Service_Outbound</roleAndSubordinatesInternal>
+        <role>FEC_Customer_Service_Outbound_Officer_3</role>
+        <role>FEC_Customer_Service_Outbound_Specialist_3</role>
+        <role>FEC_Customer_Service_Outbound_Team_3_Leader</role>
+        <role>FEC_Head_of_Customer_Service_Contact_Center_Department</role>
+        <role>FEC_Senior_Customer_Service_Outbound_Specialist_3</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Outbound</role>
     </sharedTo>
 </ListView>

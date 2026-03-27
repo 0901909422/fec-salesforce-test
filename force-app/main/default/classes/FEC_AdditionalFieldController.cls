@@ -43,7 +43,7 @@ public with sharing class FEC_AdditionalFieldController {
         if (selectedFieldId == null) return new List<FEC_MDM_Additional_Field_List_Value__c>();
         
         List<FEC_MDM_Additional_Field_List_Value__c> values = [
-            SELECT Id, Name, FEC_Name_VN__c, FEC_Order__c, FEC_Additional_Field__c, Process_Change_Status__c
+            SELECT Id, Name, FEC_Code__c, FEC_Name_VN__c, FEC_Order__c, FEC_Additional_Field__c, Process_Change_Status__c
             FROM FEC_MDM_Additional_Field_List_Value__c
             WHERE FEC_Additional_Field__c = :selectedFieldId
             ORDER BY FEC_Order__c ASC NULLS LAST

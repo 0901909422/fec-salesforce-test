@@ -5,6 +5,7 @@ import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransf
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
+import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
 import { getRecord, getFieldValue, updateRecord } from "lightning/uiRecordApi";
 import USER_ID from "@salesforce/user/Id";
@@ -24,8 +25,11 @@ import {
   isOnlyNumber
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY, ICON_HIDE, ICON_PREVIEW } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
+import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
+import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
+import FEC_Warning_Title from "@salesforce/label/c.FEC_Warning_Title";
 import FEC_ACTION_PHONE_UPDATE_HEADER from "@salesforce/label/c.FEC_ACTION_PHONE_UPDATE_HEADER";
 import FEC_MSG_ACTION_PHONE_UPDATE from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE";
 import FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS";
@@ -72,10 +76,13 @@ const FIELD_UPDATED_INFO_PHONE_NUMBER = "FEC_Updated_Info_Phone_Number__c";
 const FIELD_ORIGINAL_INFO_PHONE_NUMBER = "FEC_Original_Info_Phone_Number__c";
 const CASE_REGISTERED_PHONE_NUMBER = "Case.FEC_Registered_Phone_Number__c";
 const FIELD_REGISTERED_PHONE_NUMBER = "FEC_Registered_Phone_Number__c";
+const FIELD_CASE_PHONE_NUMBER = "FEC_Case_Phone_Number__c";
 const CASE_UPDATED_INFO_FIRST_NAME = "Case.FEC_Updated_Info_First_Name__c";
 const CASE_UPDATED_INFO_MIDDLE_NAME = "Case.FEC_Updated_Info_Middle_Name__c";
 const CASE_UPDATED_INFO_LAST_NAME = "Case.FEC_Updated_Info_Last_Name__c";
 const CASE_UPDATED_INFO_EMAIL = "Case.FEC_Updated_Info_Email__c";
+const FIELD_UPDATED_INFO_EMAIL = "FEC_Updated_Info_Email__c";
+const FIELD_CASE_EMAIL = "FEC_Case_Email__c";
 const CASE_UPDATED_INFO_DOB = "Case.FEC_Updated_Info_Date_of_Birth__c";
 const CASE_ORIGINAL_INFO_DOB = "Case.FEC_Original_Info_Date_of_Birth__c";
 const FIELD_UPDATED_INFO_DOB = "FEC_Updated_Info_Date_of_Birth__c";
@@ -89,7 +96,14 @@ const FIELD_NEW_ISSUE_DATE = "FEC_New_Issue_Date__c";
 const FIELD_OLD_ISSUE_DATE = "FEC_Old_Issue_Date__c";
 const FIELD_NEW_CITIZEN_ID_NUMBER = "FEC_New_Citizen_ID_Number__c";
 const FIELD_OLD_CITIZEN_ID_NUMBER = "FEC_Old_Citizen_ID_Number__c";
+const FIELD_ORIGINAL_INFO_NATIONAL_ID = "FEC_Original_Info_National_ID__c";
 const FIELD_UPDATED_INFO_NATIONAL_ID = "FEC_Updated_Info_National_ID__c";
+const FIELD_NATIONAL_ID_PASSPORT_ID = "FEC_National_ID_Passport_ID__c";
+const NATIONAL_ID_PASSPORT_FIELDS = new Set([
+  FIELD_ORIGINAL_INFO_NATIONAL_ID,
+  FIELD_UPDATED_INFO_NATIONAL_ID,
+  FIELD_NATIONAL_ID_PASSPORT_ID,
+]);
 const FIELD_CORRECT_DATE_OF_BIRTH = "FEC_Correct_Date_of_Birth__c";
 const FIELD_INCORRECT_DATE_OF_BIRTH = "FEC_Incorrect_Date_of_Birth__c";
 const DATE_FIELDS = new Set([
@@ -134,6 +148,8 @@ const TYPE_DISAGREE = "Disagree";
 const DECISION_USER = "User";
 const DECISION_QUEUE = "Queue";
 const NONE_STRING = '--None--';
+const FIELD_ACCOUNT_CONTRACT_NUMBER_PL = 'FEC_Account_Contract_Number_PL__c';
+const LABEL_ACCOUNT_CONTRACT_NUMBER = 'Account/ Contract Number';
 
 const SLDS_MEDIUM_SIZE_OF_12 = {
   1: 'slds-medium-size_1-of-12',
@@ -150,7 +166,24 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
   12: 'slds-medium-size_12-of-12'
 };
 
+/**
+ * Registry of dynamically loadable components.
+ * ADD a new entry here for every LWC name stored in FEC_LWC_Name__c metadata.
+ * Each value must be a static `() => import('c/<name>')` arrow function —
+ * LWC strict mode (LWC1121) forbids template-literal or variable import() arguments.
+ *
+ * Example:
+ *   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
+ */
+const DYNAMIC_COMPONENT_REGISTRY = {
+  fec_CardInfo: () => import('c/fec_CardInfo'),
+  fec_IPPClosureHandling: () => import('c/fec_IPPClosureHandling'),
+  fec_CardClosureRefundHandling: () => import('c/fec_CardClosureRefundHandling'),
+  fec_PinResetHandling: () => import('c/fec_PinResetHandling')
+};
+
 export default class Fec_CaseBussiness extends LightningElement {
+
   @api recordId;
 
   _isEdit = true;
@@ -173,6 +206,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   @track activeSectionlst = ["routing-action"];
 
+  routingAccordionSectionKey = "routing-action";
+
   // get eyeIcon() {
   //   return this.isMasked ? "utility:preview" : "utility:hide";
   // }
@@ -190,6 +225,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     } else if (error) {
       console.error("Error fetching user group", error);
     }
+  }
+
+  get iconHideConst() {
+    return ICON_HIDE;
   }
 
   // Danh sách cố định cho Decision
@@ -246,6 +285,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     return [...pendingList, vendorOption, ...bottomList];
   }
 
+  draftKey = 'case-draft';
   handleChange(event) {
     const fieldName = event.target.name;
     const value = event.detail.value;
@@ -384,6 +424,14 @@ export default class Fec_CaseBussiness extends LightningElement {
     return this.business?.natureOfCase || null;
   }
 
+  @api getStageName() {
+    return this.business?.stageName ?? STR_EMPTY;
+  }
+
+  @api setNatureOfCaseId(id) {
+    if (id && this.business) this.business = { ...this.business, natureOfCase: id };
+  }
+
   _getCaseFieldValue(apiName) {
     const sections = this.business?.sectionlst ?? [];
     for (const section of sections) {
@@ -471,7 +519,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       { presentUpdatedApiNames: this._getPresentCaseFieldApiNames() },
     );
     if (noUpdate) {
-      this.showToast("Validation", FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
+      this.showToast(FEC_Warning_Title, FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
       return true;
     }
     return false;
@@ -502,10 +550,14 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   connectedCallback() {
     this.getData();
-    this.updateRoutingActionDisplay(STR_EMPTY);
+    if (this.isEdit) {
+      this.updateRoutingActionDisplay(STR_EMPTY);
+    }
   }
 
-  disconnectedCallback() {}
+  disconnectedCallback() {
+    localStorage.removeItem(this.draftKey);
+  }
 
   handleToggleMask(e) {
     let filter = {
@@ -517,11 +569,17 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     let { field } = this.find(filter);
 
-    let isPreview = e.target.iconName === "utility:preview";
-    e.target.iconName = isPreview ? "utility:hide" : "utility:preview";
+    let isPreview = e.target.iconName === ICON_PREVIEW;
+    e.target.iconName = isPreview ? ICON_HIDE : ICON_PREVIEW;
 
     if (isPreview) {
-      field.value = mask(field.original, 4);
+      if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
+        field.value = isOnlyNumber(field.original)
+          ? mask(field.original, 3, 3)
+          : mask(field.original, 2, 3);
+      } else {
+        field.value = mask(field.original, 4);
+      }
     } else {
       field.value = field.original;
 
@@ -541,6 +599,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     categoryId = null,
     subCategoryId = null,
     subCodeId = null,
+    natureOfCaseIdFallback = null,
   ) {
     this.businessLoaded = false;
 
@@ -554,7 +613,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       .then((res) => {
         if (!res) return;
 
-        this.business = { ...res };
+        let sectionlst = [];
+        const natureOfCase = res.natureOfCase || natureOfCaseIdFallback;
+        this.business = { ...res, natureOfCase };
 
         this.activeSectionlst = ["routing-action"];
 
@@ -572,7 +633,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           ? draftCode
           : this.business.routingActionlst[0]?.value;
 
-        if(OUTBOUND_CAMPAIGN == this.business.code) {
+        if (OUTBOUND_CAMPAIGN == this.business.code) {
           this.actionValue = ACTION_RESOLVE;
         }
 
@@ -598,7 +659,8 @@ export default class Fec_CaseBussiness extends LightningElement {
           }
           section.id = crypto.randomUUID();
 
-          this.activeSectionlst.push(section.id);
+          sectionlst.push(section.id);
+          
           section.isLastSection = index === this.business.sectionlst.length - 1;
 
           section.subSectionlst?.forEach((sub, subIndex) => {
@@ -612,10 +674,8 @@ export default class Fec_CaseBussiness extends LightningElement {
                 }
 
                 field.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[field.layout] || SLDS_MEDIUM_SIZE_OF_12[12]);
-
-                if (!this.isEdit) {
-                  field.readonly = true;
-                  field.editable = false;
+                if(field.hidden) {
+                  field.className += ' slds-hide';
                 }
 
                 let currentField = `${obj.name}.${field.apiName}`;
@@ -639,10 +699,15 @@ export default class Fec_CaseBussiness extends LightningElement {
                   ) {
                     field.isHidden =
                       !assignmentType || assignmentType === TYPE_DISAGREE;
-                  } else {
-                    field.isHidden = false;
-                  }
+                } else {
+                  field.isHidden = false;
                 }
+              }
+
+              if (!this.isEdit) {
+                field.readonly = true;
+                field.editable = false;
+              }
 
                 field.original = field.value;
 
@@ -650,11 +715,21 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.type === "DATE" || DATE_FIELDS.has(field.apiName);
                 field.isPhone =
                   field.apiName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
-                  field.apiName === FIELD_REGISTERED_PHONE_NUMBER;
+                  field.apiName === FIELD_REGISTERED_PHONE_NUMBER ||
+                  field.apiName === FIELD_CASE_PHONE_NUMBER;
                 if (field.isDate) {
                   field.displayValue = formatToDDMMYYYY(field.value);
                 } else {
                   field.displayValue = field.value;
+                }
+
+                // Convert label to value for picklist fields
+                const picklistOptions = this.business.picklistOptionsMap?.[obj.name]?.[field.apiName];
+                if (picklistOptions?.length && field.value) {
+                  const opt = picklistOptions.find((o) => o.label === field.value);
+                  if (opt) {
+                    field.value = opt.value;
+                  }
                 }
 
                 field.hasHelpText =
@@ -662,7 +737,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.helpText !== undefined &&
                   field.helpText !== STR_EMPTY;
 
-                field.masked = field.masked && field.value;
+                field.masked = field.masked && field.value && !field.editable;
 
                 if (field.masked) {
                   switch (field.maskingType) {
@@ -673,18 +748,23 @@ export default class Fec_CaseBussiness extends LightningElement {
                         field.value = mask(field.original, 4, 3);
                       }
                       break;
-                  
                     case MASKING_TYPE_PASSPORT:
-                      if(isOnlyNumber(field.original)) {
+                        if (isOnlyNumber(field.original)) {
                         field.value = mask(field.original, 3, 3);
                       } else {
                         field.value = mask(field.original, 2, 3);
-
                       }
                       break;
-                  
                     default:
-                      field.value = mask(field.original, 4, 4);
+                      if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
+                        if (isOnlyNumber(field.original)) {
+                          field.value = mask(field.original, 3, 3);
+                        } else {
+                          field.value = mask(field.original, 2, 3);
+                        }
+                      } else {
+                        field.value = mask(field.original, 4, 4);
+                      }
                       break;
                   }
                 }
@@ -707,13 +787,20 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (actions.some((a) => a.value === "Recall"))
           foundActions.push("Recall");
 
-        // 2. If any were found, call the update method with the combined string
-        if (foundActions.length > 0) {
+        // 2. Nếu có action (Reopen/Recall), gọi update trường hiển thị (chỉ khi user có quyền sửa Case)
+        if (foundActions.length > 0 && this.isEdit) {
           this.updateRoutingActionDisplay(foundActions.join(";"));
         }
+        
         this.businessLoaded = true;
+        this.activeSectionlst = [ ...this.activeSectionlst , ...sectionlst];
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
+        this.applyDraft();
+        // Resolve LWC name strings from componentlst into constructors for lwc:is
+        this._resolveComponentlst();
+        console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
+
       })
       .catch((err) => {
         console.error(
@@ -721,13 +808,14 @@ export default class Fec_CaseBussiness extends LightningElement {
           JSON.stringify(err),
         );
       })
-      .finally(() => {});
+      .finally(() => { });
   }
 
   handleInputKeydown(e) {
     const phoneFields = [
       FIELD_UPDATED_INFO_PHONE_NUMBER,
       FIELD_REGISTERED_PHONE_NUMBER,
+      FIELD_CASE_PHONE_NUMBER,
     ];
     const nationalIdOnlyFields = [
       FIELD_NEW_CITIZEN_ID_NUMBER,
@@ -738,15 +826,6 @@ export default class Fec_CaseBussiness extends LightningElement {
     const fieldName = e.target.fieldName || e.target.dataset?.field;
     if (!fieldName) return;
 
-    // Chặn paste (Ctrl+V / Cmd+V) trên trường phone
-    if (
-      phoneFields.includes(fieldName) &&
-      (e.ctrlKey || e.metaKey) &&
-      e.key.toLowerCase() === "v"
-    ) {
-      e.preventDefault();
-      return;
-    }
     if (e.ctrlKey || e.metaKey) return;
 
     const key = e.key;
@@ -792,16 +871,28 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
   }
 
-  /** Chặn paste vào trường FEC_Updated_Info_Phone_Number__c & FEC_Registered_Phone_Number__c */
+  /** Cho phép paste; sau khi paste chạy validation theo từng field (phone, email, full name, DOB, gender, ...). */
   handlePaste(e) {
-    const fieldName = e.target.fieldName || e.target.dataset?.field;
-    const phoneFields = [
-      FIELD_UPDATED_INFO_PHONE_NUMBER,
-      FIELD_REGISTERED_PHONE_NUMBER,
-    ];
-    if (fieldName && phoneFields.includes(fieldName)) {
-      e.preventDefault();
-    }
+    const target = e.target;
+    setTimeout(() => {
+      if (target && target.value !== undefined) {
+        this.handleChangeInput({ target });
+      }
+    }, 0);
+  }
+
+  handleDateChange(e) {
+    let value = e.target.value;
+    let fieldName = e.target.fieldName || e.target.dataset?.field;
+    let objId = e.target.dataset.obj;
+    this.setDraft(objId, fieldName, value);
+  }
+
+  handlePhoneChange(e) {
+    let value = e.target.value;
+    let fieldName = e.target.fieldName || e.target.dataset?.field;
+    let objId = e.target.dataset.obj;
+    this.setDraft(objId, fieldName, value);
   }
 
   handleChangeInput(e) {
@@ -813,9 +904,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     let objName = e.target.dataset.objName;
     let objId = e.target.dataset.obj;
 
+    this.setDraft(objId, fieldName, value);
+
     if (
       fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
-      fieldName === FIELD_REGISTERED_PHONE_NUMBER
+      fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
+      fieldName === FIELD_CASE_PHONE_NUMBER
     ) {
       value = applyPhoneInputMaxLength(value);
     }
@@ -864,7 +958,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     if (
       (fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
-        fieldName === FIELD_REGISTERED_PHONE_NUMBER) &&
+        fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
+        fieldName === FIELD_CASE_PHONE_NUMBER) &&
       field
     ) {
       field.customError = validateUpdatedInfoPhone(value) || null;
@@ -874,7 +969,11 @@ export default class Fec_CaseBussiness extends LightningElement {
       this.business = { ...this.business };
     }
 
-    if (fieldName === "FEC_Updated_Info_Email__c" && field) {
+    if (
+      (fieldName === FIELD_UPDATED_INFO_EMAIL ||
+        fieldName === FIELD_CASE_EMAIL) &&
+      field
+    ) {
       const emailResult = validateUpdatedInfoEmail(value);
       field.customError = emailResult.valid ? null : emailResult.message;
       field.editWrapperClass =
@@ -900,6 +999,21 @@ export default class Fec_CaseBussiness extends LightningElement {
       const idResult = validateNationalId(value);
       field.customError =
         trimmed === STR_EMPTY ? null : idResult.isValid ? null : idResult.message;
+      field.editWrapperClass =
+        "edit slds-m-around--small slds-p-around--x-small" +
+        (field.customError ? " slds-has-error" : STR_EMPTY);
+      this.business = { ...this.business };
+    }
+    if (fieldName === FIELD_NATIONAL_ID_PASSPORT_ID && field) {
+      const trimmed =
+        value != null && typeof value === "string" ? value.trim() : STR_EMPTY;
+      const idResult = validateIdNumber(value);
+      field.customError =
+        trimmed === STR_EMPTY
+          ? null
+          : idResult.isValid
+            ? null
+            : idResult.message;
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
         (field.customError ? " slds-has-error" : STR_EMPTY);
@@ -1020,6 +1134,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   @api validate() {
     if (!this.validateNatureOfCase()) return false;
 
+    //this._lastValidationError = null;
     let isAllValid = true;
 
     let inputFiellst = this.template.querySelectorAll("lightning-input-field");
@@ -1061,8 +1176,23 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (routeToEle)
       isAllValid = routeToEle && routeToEle.reportValidity() && isAllValid;
 
+    // let accountContractField = this.template.querySelector(
+    //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
+    // );
+    // if (accountContractField) {
+    //   let val = accountContractField.value;
+    //   if (val == null || val === STR_EMPTY || val === NONE_STRING) {
+    //     isAllValid = false;
+    //     this._lastValidationError = LABEL_ACCOUNT_CONTRACT_NUMBER;
+    //   }
+    // }
+
     return isAllValid;
   }
+
+  // @api getLastValidationError() {
+  //   return this._lastValidationError || null;
+  // }
 
   /**
    * Chỉ lưu dữ liệu form (Nature of Case, Account Info, Case Info, Process Action, Routing Action)
@@ -1073,8 +1203,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     let formlst = this.template.querySelectorAll("lightning-record-edit-form");
     let formToSubmit = [];
     formlst?.forEach((item) => {
+      if (!item) return;
       let fieldlst = item.querySelectorAll("lightning-input-field");
-      if (fieldlst && fieldlst.length > 0) {
+      if (fieldlst && fieldlst.length > 0 && item.recordId) {
         formToSubmit.push(item);
       }
     });
@@ -1089,6 +1220,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveOnlyFormTotal = total;
 
       formToSubmit.forEach((item) => {
+        this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
     });
@@ -1109,7 +1241,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     );
     // Chỉ chặn khi có dropdown routing và user chưa cập nhật bất kỳ trường Updated nào.
     if (routeToEle && noUpdate) {
-      this.showToast("Validation", FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
+      this.showToast(FEC_Warning_Title, FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
       return false;
     }
 
@@ -1160,6 +1292,10 @@ export default class Fec_CaseBussiness extends LightningElement {
           params = { ...params, params: { caseId: this.recordId } };
           break;
       }
+      if (method === ACTION_ROUTE_TO && !this.business.nextQueue?.value) {
+        this.showToast(FEC_Error_Title, FEC_MSG_Can_Not_Find_Next_Stage, "error");
+        return false;
+      }
       if (
         ACTIONS_NEED_NOC_BEFORE_RUN.includes(method) &&
         this.business?.natureOfCase
@@ -1171,11 +1307,13 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
       await run({ ...params });
     } else {
-      // Không có routing: chỉ set FEC_Is_Submited__c = true + clear draft + Status = Pending (nếu Case mở).
-      await run({
-        method: "Submit Without Route To",
-        params: { caseId: this.recordId },
-      });
+      if (this.business?.natureOfCase) {
+        await saveCaseNOC({
+          caseId: this.recordId,
+          natureOfCaseId: this.business.natureOfCase,
+        });
+        await markCaseSubmittedWithoutRouting({ caseId: this.recordId });
+      }
     }
     return true;
   }
@@ -1310,7 +1448,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       );
 
       if (subSection) {
-        obj = subSection.objlst?.find((item) => (item.id = filter.obj));
+        obj = subSection.objlst?.find((item) => (item.id === filter.obj));
 
         if (obj) {
           field = obj.fieldlst.find((item) => item.apiName === filter.field);
@@ -1341,16 +1479,44 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   handleFormError(event) {
+    const detail = event?.detail;
     if (this._submitFormsReject != null) {
-      this._submitFormsReject(event.detail);
+      this._submitFormsReject(detail);
       this._submitFormsResolve = null;
       this._submitFormsReject = null;
     }
     if (this._saveOnlyReject != null) {
-      this._saveOnlyReject(event.detail);
+      this._saveOnlyReject(detail);
       this._saveOnlyResolve = null;
       this._saveOnlyReject = null;
     }
+  }
+
+  /**
+   * Gán lại API value cho các trường picklist trước khi submit (data từ Apex dùng toLabel nên value đang là label).
+   * Giữ toLabel để hiển thị tiếng Việt; khi gửi lên server phải dùng API name.
+   */
+  _applyPicklistLabelToApiValue(form) {
+    const map = this.business?.picklistOptionsMap;
+    if (!map) return;
+
+    const fieldlst = form.querySelectorAll("lightning-input-field");
+    fieldlst?.forEach((inputField) => {
+      const objName = inputField.dataset?.objName;
+      const fieldName = inputField.dataset?.field;
+      if (!objName || !fieldName) return;
+
+      const options = map[objName]?.[fieldName];
+      if (!options || !Array.isArray(options) || options.length === 0) return;
+
+      const currentVal = inputField.value;
+      if (currentVal == null || currentVal === STR_EMPTY) return;
+
+      const found = options.find((opt) => opt.label === currentVal);
+      if (found) {
+        inputField.value = found.value;
+      }
+    });
   }
 
   /**
@@ -1361,8 +1527,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     let formlst = this.template.querySelectorAll("lightning-record-edit-form");
     let formToSubmit = [];
     formlst?.forEach((item) => {
+      if (!item) return;
       let fieldlst = item.querySelectorAll("lightning-input-field");
-      if (fieldlst && fieldlst.length > 0) {
+      if (fieldlst && fieldlst.length > 0 && item.recordId) {
         formToSubmit.push(item);
       }
     });
@@ -1377,8 +1544,88 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._submitFormsTotal = total;
 
       formToSubmit.forEach((item) => {
+        this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
     });
+  }
+
+  /**
+   * Resolves LWC name strings from Apex (subSection.componentlst)
+   * into component constructors required by lwc:is.
+   *
+   * LWC strict mode (LWC1121) forbids variable/template-literal import() arguments.
+   * Each name is therefore looked up in DYNAMIC_COMPONENT_REGISTRY which holds
+   * pre-declared static `() => import('c/<name>')` thunks. Unknown names are
+   * skipped with a console warning — the rest of the UI is unaffected.
+   *
+   * Results are stored on each subSection as resolvedComponentlst [{key, ctor}].
+   */
+  _resolveComponentlst() {
+    if (!this.business?.sectionlst) return;
+
+    const resolvePromises = [];
+
+    this.business.sectionlst.forEach((section) => {
+      if (!section.componentlst?.length) return;
+
+      section.resolvedComponentlst = [];
+
+      section.componentlst.forEach((name, idx) => {
+        if (!name) return;
+
+        const loader = DYNAMIC_COMPONENT_REGISTRY[name];
+        if (!loader) {
+          console.warn(
+            `[fec_CaseBussiness] Component "${name}" is not registered in DYNAMIC_COMPONENT_REGISTRY. ` +
+            `Add an entry: ${name}: () => import('c/${name}')`
+          );
+          return;
+        }
+
+        const p = loader()
+          .then((mod) => {
+            section.resolvedComponentlst.push({
+              key: `${name}-${idx}`,
+              ctor: mod.default,
+            });
+          })
+          .catch((err) => {
+            console.error(`[fec_CaseBussiness] Failed to load component "${name}":`, err);
+          });
+
+        resolvePromises.push(p);
+      });
+    });
+
+    Promise.all(resolvePromises).then(() => {
+      this.business = { ...this.business };
+    });
+  }
+
+  applyDraft() {
+    const draft = JSON.parse(localStorage.getItem(this.draftKey));
+    if (!draft || !this.business) return;
+    this.business.sectionlst.forEach(section => {
+        section.subSectionlst.forEach(sub => {
+            sub.objlst.forEach(obj => {
+                obj.fieldlst.forEach(field => {
+            if (!field.editable) return; // ignore non editable
+                    const key = obj.id + '_' + field.apiName;
+            if (draft[key] && !field.value) {
+              field.value = draft[key];
+              field.displayValue = draft[key];
+            }
+          });
+        });
+      });
+    });
+  }
+
+  setDraft(objId, fieldName, value) {
+    let draft = JSON.parse(localStorage.getItem(this.draftKey)) || {};
+    const key = objId + '_' + fieldName;
+    draft[key] = value;
+    localStorage.setItem(this.draftKey, JSON.stringify(draft));
   }
 }

@@ -2,7 +2,7 @@
 <GlobalValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <customValue>
         <fullName>Question and Answer Q&amp;A</fullName>
-        <default>false</default>
+        <default>true</default>
         <label>Question and Answer Q&amp;A</label>
     </customValue>
     <customValue>
