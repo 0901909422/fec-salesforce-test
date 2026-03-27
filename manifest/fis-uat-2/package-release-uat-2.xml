@@ -662,6 +662,7 @@
 		<members>fec_CardClosureRefundForm</members>
 		<members>fec_CardClosureRefundHandling</members>
 		<members>fec_InteractionCreateCase</members>
+		<members>fec_CardBlock</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -688,6 +689,7 @@
 		<members>FEC_CardClosureRefundController</members>
 		<members>FEC_CaseBusinessService</members>
 		<members>FEC_CreateCaseInteractionController</members>
+        <members>FEC_CardLockUnLockController</members>
         <name>ApexClass</name>
     </types>
 	<types>

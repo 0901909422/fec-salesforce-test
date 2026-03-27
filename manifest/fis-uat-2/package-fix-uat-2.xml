@@ -14,6 +14,7 @@
         <members>FEC_GetCSMasterDataService</members>
         <members>FEC_CardLockUnLockCallout</members>
         <members>FEC_ReplacementCardCallout</members>
+        <members>FEC_CardLockUnLockController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -23,6 +24,7 @@
 		<members>fec_templateEditor</members>
         <members>fec_templateListView</members>
 		<members>fec_CaseBussiness</members>
+		<members>fec_CardBlock</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
