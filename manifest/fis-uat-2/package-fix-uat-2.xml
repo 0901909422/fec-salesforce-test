@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
-    
+    <types>
+		<members>FEC_Notification__c.Auto_Notification_for_Customer</members>
+		<members>FEC_Notification__c.Auto_Notification_for_Internal_User</members>
+		<members>FEC_Notification__c.Manual_Notification_for_Internal_User</members>
+		<name>ListView</name>
+	</types>
     <version>65.0</version>
 </Package>
