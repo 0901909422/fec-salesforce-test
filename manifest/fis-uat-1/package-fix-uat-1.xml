@@ -108,6 +108,7 @@
 		<members>fec_AccountOrContractPicklistContainer</members>
 		<members>fec_CardPayment</members>
 		<members>fec_AccountOrContractPicklistCustomerCase</members>
+		<members>fec_CaseModePublisher</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

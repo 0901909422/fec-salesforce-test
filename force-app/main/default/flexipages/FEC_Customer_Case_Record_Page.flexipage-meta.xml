@@ -120,6 +120,9 @@
     </flexiPageRegions>
     <flexiPageRegions>
         <itemInstances>
+            <componentInstances>
+                <componentName>fec_CaseModePublisher</componentName>
+            </componentInstances>
             <componentInstance>
                 <componentInstanceProperties>
                     <name>modeEditCase</name>
