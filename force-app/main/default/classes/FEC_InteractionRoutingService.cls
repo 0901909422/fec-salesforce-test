@@ -178,7 +178,7 @@ public with sharing class FEC_InteractionRoutingService {
         List<ServiceResourceSkill> skillList = [
             SELECT Id,
                    ServiceResourceId,
-                   SkillLevel,
+                   FEC_Skill_Level__c,
                    FEC_Capacity__c,
                    ServiceResource.IsActive,
                    ServiceResource.RelatedRecordId
@@ -206,7 +206,7 @@ public with sharing class FEC_InteractionRoutingService {
                 
                 srSkillLevel.put(
                     s.ServiceResourceId,
-                    s.SkillLevel == null ? 0 : Integer.valueOf(s.SkillLevel)
+                    s.FEC_Skill_Level__c == null ? 0 : Integer.valueOf(s.FEC_Skill_Level__c)
                 );
             }
         }
@@ -285,8 +285,8 @@ public with sharing class FEC_InteractionRoutingService {
             SELECT FEC_Service_Resource__c
             FROM FEC_Service_Resource_Absence__c
             WHERE FEC_Service_Resource__c IN :srIds
-            AND FEC_Start_On__c <= :nowTime
-            AND (FEC_End_On__c >= :nowTime OR FEC_End_On__c = NULL)
+            AND FEC_Start_Date__c <= :nowTime
+            AND (FEC_End_Date__c >= :nowTime OR FEC_End_Date__c = NULL)
         ]) {
             absentSR.add(abs.FEC_Service_Resource__c);
         }
@@ -298,6 +298,8 @@ public with sharing class FEC_InteractionRoutingService {
      */
     private static Map<Id, Integer> getAgentCaseCounts(Set<Id> agentUserIds, Id interactionRtId) {
         Map<Id, Integer> agentCaseCount = new Map<Id, Integer>();
+        Set<String> interationStatuslst = new Set<String>{ 'Open' };
+
         for (AggregateResult ar : [
             SELECT OwnerId ownerId, COUNT(Id) total
             FROM Case
@@ -307,6 +309,7 @@ public with sharing class FEC_InteractionRoutingService {
             AND FEC_Send_To__c = :System.Label.UBankCustomberServiceEmail
             AND OwnerId IN :agentUserIds
             AND IsClosed = false
+            AND FEC_Interaction_Status__c  IN :interationStatuslst
             GROUP BY OwnerId
         ]) {
             agentCaseCount.put((Id) ar.get('ownerId'), (Integer) ar.get('total'));

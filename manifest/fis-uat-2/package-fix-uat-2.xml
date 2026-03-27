@@ -16,6 +16,7 @@
         <members>FEC_TranferInformationCallout</members>
         <members>FEC_CardLockUnLockCallout</members>
         <members>FEC_ReplacementCardCallout</members>
+        <members>FEC_InteractionRoutingService</members>
         <name>ApexClass</name>
     </types>
     <types>
