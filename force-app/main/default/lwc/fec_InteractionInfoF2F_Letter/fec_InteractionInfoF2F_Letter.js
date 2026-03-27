@@ -254,8 +254,6 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
       this.isMasked = true;
       this.phoneDraft = null;
 
-      // 🔥 refresh LDS
-      await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
     } catch (error) {
       console.error("updateInteractionPhone error", error);
     }
@@ -272,11 +270,6 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
       this.revealedPhone = result;
       this.isMasked = false;
 
-      // 🔥 refresh LDS nếu cần
-      await notifyRecordUpdateAvailable([
-        { recordId: this.recordId },
-        { recordId: this.interactionId },
-      ]);
     } catch (e) {
       console.error("revealPhone error", e);
     }
