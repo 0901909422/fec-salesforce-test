@@ -23,6 +23,7 @@
     </types>
     <types>
 		<members>Enhanced_Letterhead_Record_Page</members>
+		<members>FEC_Internal_Case_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -33,6 +34,10 @@
 	<types>
 		<members>FEC_Enhanced_Letterhead__c.FEC_Required_Header_Or_Footer</members>
 		<name>ValidationRule</name>
+	</types>
+	<types>
+		<members>FEC_Service</members>
+		<name>CustomApplication</name>
 	</types>
     <version>65.0</version>
 </Package>
