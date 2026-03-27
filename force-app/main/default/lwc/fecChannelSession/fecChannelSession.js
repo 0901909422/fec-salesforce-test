@@ -1,16 +1,22 @@
+/**
+ * @description LWC Component quản lý danh sách và form tạo/sửa FEC Channel.
+ * Tích hợp tính năng xem lịch sử cấu hình (Config History).
+ * @date 2026-03-17
+ * @author DAT NGO
+ */
 import { LightningElement, wire, track } from 'lwc';
 import getChannels from '@salesforce/apex/FEC_ChannelController.getChannels';
 import deleteChannel from '@salesforce/apex/FEC_ChannelController.deleteChannel';
 import { refreshApex } from '@salesforce/apex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { showLog } from 'c/fecMDMUtils';
-import { 
-    FIELD_CHANNEL_ID, 
-    FIELD_CHANNEL_VN_NAME, 
-    FIELD_CHANNEL_STATUS, 
-    FIELD_NAME, 
-    VARIANT_SUCCESS, 
-    VARIANT_ERROR, 
+import {
+    FIELD_CHANNEL_ID,
+    FIELD_CHANNEL_VN_NAME,
+    FIELD_CHANNEL_STATUS,
+    FIELD_NAME,
+    FIELD_PROCESS_CHANGE_STATUS,
+    VARIANT_ERROR,
     OBJECT_MDM_CHANNEL,
     ACTION_EDIT,
     ACTION_DELETE,
@@ -25,8 +31,6 @@ import {
     LABEL_BUTTON_CANCEL_EDIT,
     LABEL_BUTTON_CANCEL,
     LABEL_CONFIRM_DELETE_CHANNEL,
-    LABEL_TOAST_SAVE_SUCCESS,
-    LABEL_TOAST_DELETE_SUCCESS,
     LABEL_TOAST_ERROR_GENERIC,
     LABEL_ERROR_INVALID_RECORD_ID
 } from 'c/fecConstants';
@@ -36,6 +40,7 @@ const COLUMNS = [
     { label: LABEL_COL_CHANNEL_ID, fieldName: FIELD_CHANNEL_ID, sortable: true },
     { label: LABEL_COL_CHANNEL_VN_NAME, fieldName: FIELD_CHANNEL_VN_NAME, sortable: true },
     { label: LABEL_COL_CHANNEL_STATUS, fieldName: FIELD_CHANNEL_STATUS, sortable: true },
+    { label: 'Process Status', fieldName: FIELD_PROCESS_CHANGE_STATUS, sortable: true },
     {
         type: 'action',
         typeAttributes: {
@@ -43,7 +48,8 @@ const COLUMNS = [
                 { label: LABEL_ACTION_EDIT, name: ACTION_EDIT },
                 { label: LABEL_ACTION_DELETE, name: ACTION_DELETE }
             ]
-        }
+        },
+        fixedWidth: 80
     }
 ];
 
@@ -55,6 +61,9 @@ export default class FecChannelSession extends LightningElement {
     @track sortBy;
     @track sortDirection;
     @track searchTerm = '';
+
+    // Add spinner property to manage loading state
+    @track showSpinner = false;
 
     // --- BỔ SUNG STATE CHO TÍNH NĂNG TOGGLE HISTORY ---
     @track isHistoryVisible = false; // Mặc định ĐÓNG panel History khi mới vào trang
@@ -97,11 +106,6 @@ export default class FecChannelSession extends LightningElement {
     fieldName = FIELD_NAME;
     fieldChannelVnName = FIELD_CHANNEL_VN_NAME;
     fieldChannelStatus = FIELD_CHANNEL_STATUS;
-
-    // --- TIỆN ÍCH LOG ---
-    showLogCustom(methodName, message) {
-        console.log(`[fecChannelSession][${methodName}]: ${message}`);
-    }
 
     get defaultChannelStatus() {
         // Return true for new records, undefined for existing records to allow form to load value
@@ -161,60 +165,111 @@ export default class FecChannelSession extends LightningElement {
             this.showForm = true;
             // Optionally, scroll to form or focus first input for better UX
         } else if (actionName === ACTION_DELETE) {
+            // KIỂM TRA ĐIỀU KIỆN XÓA TẠI ĐÂY
+            if (row[FIELD_PROCESS_CHANGE_STATUS] !== 'New') {
+                showLog('handleRowAction', 'Delete blocked. Status is not New: ' + row[FIELD_PROCESS_CHANGE_STATUS]);
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Cảnh báo',
+                    message: 'Chỉ được phép xóa bản ghi có Process Status là "New".',
+                    variant: 'warning'
+                }));
+                return; // Dừng lại, không gọi hàm xóa
+            }
             this.handleDelete(row.Id);
         }
     }
 
     // --- HÀM XỬ LÝ CLICK TOGGLE ---
     handleToggleHistory() {
-        this.showLogCustom('handleToggleHistory', 'START');
+        showLog('handleToggleHistory', 'START');
         this.isHistoryVisible = !this.isHistoryVisible;
-        
-        /* ĐÃ XÓA đoạn mã setTimeout gọi refreshHistoryPanel() ở đây.
-           Bởi vì: Khi this.isHistoryVisible = true, thẻ <c-fec-config-history> mới được đưa vào DOM.
-           Lúc này, @wire bên trong nó sẽ tự động nhận giá trị selectedId (là '' hoặc ID thực) và tự gọi server lần đầu tiên rất chuẩn xác.
-        */
     }
 
-    // --- BỔ SUNG HÀM REFRESH HISTORY ---
     refreshHistoryPanel() {
-        this.showLogCustom('refreshHistoryPanel', 'START');
+        showLog('refreshHistoryPanel', 'START');
         // Tìm component history thông qua data-id
         const historyComp = this.template.querySelector('[data-id="historyComponent"]');
         if (historyComp) {
             // Gọi hàm được @api expose bên trong fecConfigHistory
             historyComp.refreshData();
-            this.showLogCustom('refreshHistoryPanel', 'Triggered refreshData on child component');
+            showLog('refreshHistoryPanel', 'Triggered refreshData on child component');
         }
     }
 
-    async handleSuccess(event) {
-        this.showLogCustom('handleSuccess', 'START');
+    handleSubmit(event) {
+        event.preventDefault(); // Chặn hành vi lưu mặc định
+        showLog('handleSubmit', 'START');
+
+        const fields = event.detail.fields;
+        let isValid = true;
+
+        // Khai báo các trường bắt buộc cần kiểm tra khoảng trắng
+        const requiredFields = [this.fieldName, this.fieldChannelVnName];
         
+        // Channel ID chỉ bắt buộc khi tạo mới (chưa có selectedId)
+        if (!this.selectedId) {
+            requiredFields.push(this.fieldChannelId);
+        }
+
+        // Quét kiểm tra và làm sạch dữ liệu
+        for (let field of requiredFields) {
+            let val = fields[field];
+            if (val && String(val).trim() === '') {
+                isValid = false;
+                break;
+            }
+            if (val) {
+                fields[field] = String(val).trim(); // Trim sạch 2 đầu
+            }
+        }
+
+        if (!isValid) {
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Lỗi',
+                message: 'Các trường bắt buộc không được để trống hoặc chỉ chứa khoảng trắng.',
+                variant: VARIANT_ERROR
+            }));
+            showLog('handleSubmit', 'RETURN: Validation Failed');
+            return;
+        }
+
+        // Nếu hợp lệ, bật spinner và submit thủ công
+        this.showSpinner = true;
+        this.template.querySelector('lightning-record-edit-form').submit(fields);
+        showLog('handleSubmit', 'RETURN: Submitted to Server');
+    }
+
+    async handleSuccess(event) {
+        showLog('handleSuccess', 'START');
+
         // 1. Hiển thị thông báo thành công
-        const evt = new ShowToastEvent({
+        this.dispatchEvent(new ShowToastEvent({
             title: 'Thành công',
             message: 'Bản ghi đã được lưu thành công.',
             variant: 'success',
-        });
-        this.dispatchEvent(evt);
-        
-        // 2. Đóng form và reset ID về chuỗi rỗng
-        this.selectedId = '';
-        this.showForm = false;
-        
-        // 3. Quan trọng nhất: Gọi refreshApex để cập nhật Datatable
+        }));
+
+        // 2. Gọi refreshApex ngay lập tức để cập nhật bảng
         try {
             await refreshApex(this.wiredResult);
-            this.showLogCustom('handleSuccess', 'refreshApex completed');
-        } catch(error) {
+        } catch (error) {
             console.error('Error refreshing apex:', error);
         }
-        
-        // 4. Refresh History Panel nếu nó đang mở
-        if (this.isHistoryVisible) {
-            this.refreshHistoryPanel();
-        }
+
+        // 3. MẤU CHỐT: Dùng setTimeout để tránh lỗi "Sorry to interrupt"
+        // Trì hoãn việc destroy component Form khỏi DOM khoảng 100ms
+        setTimeout(() => {
+            this.selectedId = '';
+            this.showForm = false;
+            this.showSpinner = false;
+
+            // Refresh History Panel nếu nó đang mở
+            if (this.isHistoryVisible) {
+                this.refreshHistoryPanel();
+            }
+        }, 100);
+
+        showLog('handleSuccess', 'RETURN');
     }
 
     async handleCancel() {
@@ -224,7 +279,7 @@ export default class FecChannelSession extends LightningElement {
     }
 
     async handleDelete(id) {
-        this.showLogCustom('handleDelete', 'START with ID: ' + id);
+        showLog('handleDelete', 'START with ID: ' + id);
         if (!id) {
             this.dispatchEvent(new ShowToastEvent({
                 title: LABEL_TOAST_ERROR_GENERIC,
@@ -236,21 +291,24 @@ export default class FecChannelSession extends LightningElement {
         // Show confirmation dialog and disable UI during delete operation
         if (confirm(LABEL_CONFIRM_DELETE_CHANNEL)) {
             try {
-                this.showSpinner = true; // Add spinner to indicate processing
+                this.showSpinner = true; 
                 await deleteChannel({ recordId: id });
-                
-                // Hiển thị thông báo xóa thành công
+
+                // 1. Tắt spinner NGAY LẬP TỨC sau khi xóa thành công trên server
+                this.showSpinner = false; 
+
+                // 2. Thông báo và Refresh (Hai cái này chạy sau không ảnh hưởng đến UI chính)
                 this.dispatchEvent(new ShowToastEvent({
                     title: 'Thành công',
                     message: 'Đã xóa bản ghi.',
                     variant: 'success'
                 }));
-                
+
                 // Refresh Datatable
                 await refreshApex(this.wiredResult);
-                
+
                 // Refresh History Panel
-                if(this.isHistoryVisible) {
+                if (this.isHistoryVisible) {
                     this.refreshHistoryPanel();
                 }
             } catch (error) {
@@ -267,14 +325,16 @@ export default class FecChannelSession extends LightningElement {
     }
 
     handleError(event) {
-        const errorDetail = event?.detail?.detail || LABEL_TOAST_ERROR_GENERIC;
+        this.showSpinner = false; // Đảm bảo tắt loading khi có lỗi
         
+        const errorDetail = event?.detail?.detail || LABEL_TOAST_ERROR_GENERIC;
+
         // Extract user-friendly error message from Apex error
         let userMessage = LABEL_TOAST_ERROR_GENERIC;
-        
+
         if (errorDetail) {
             const errorMsg = String(errorDetail).toLowerCase();
-            
+
             // Map technical errors to user-friendly messages based on field names
             if (errorMsg.includes('required') || errorMsg.includes('required_field_missing')) {
                 userMessage = 'Please fill in all required fields (Name, Channel ID, Channel Name VN, Status).';
@@ -292,7 +352,7 @@ export default class FecChannelSession extends LightningElement {
                 userMessage = firstSentence ? firstSentence + '.' : LABEL_TOAST_ERROR_GENERIC;
             }
         }
-        
+
         this.dispatchEvent(new ShowToastEvent({ title: LABEL_TOAST_ERROR_GENERIC, message: userMessage, variant: VARIANT_ERROR }));
     }
 
@@ -317,7 +377,4 @@ export default class FecChannelSession extends LightningElement {
         });
         this.filteredChannels = parseData;
     }
-
-    // Add spinner property to manage loading state
-    @track showSpinner = false;
 }

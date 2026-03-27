@@ -593,6 +593,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       .then((res) => {
         if (!res) return;
 
+        let sectionlst = [];
         const natureOfCase = res.natureOfCase || natureOfCaseIdFallback;
         this.business = { ...res, natureOfCase };
 
@@ -638,7 +639,8 @@ export default class Fec_CaseBussiness extends LightningElement {
           }
           section.id = crypto.randomUUID();
 
-          this.activeSectionlst.push(section.id);
+          sectionlst.push(section.id);
+          
           section.isLastSection = index === this.business.sectionlst.length - 1;
 
           section.subSectionlst?.forEach((sub, subIndex) => {
@@ -654,11 +656,6 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[field.layout] || SLDS_MEDIUM_SIZE_OF_12[12]);
                 if(field.hidden) {
                   field.className += ' slds-hide';
-                }
-
-                if (!this.isEdit) {
-                  field.readonly = true;
-                  field.editable = false;
                 }
 
                 let currentField = `${obj.name}.${field.apiName}`;
@@ -685,6 +682,11 @@ export default class Fec_CaseBussiness extends LightningElement {
                 } else {
                   field.isHidden = false;
                 }
+              }
+
+              if (!this.isEdit) {
+                field.readonly = true;
+                field.editable = false;
               }
 
                 field.original = field.value;
@@ -769,11 +771,14 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (foundActions.length > 0 && this.isEdit) {
           this.updateRoutingActionDisplay(foundActions.join(";"));
         }
+        
         this.businessLoaded = true;
+        this.activeSectionlst = [ ...this.activeSectionlst , ...sectionlst];
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
         this.applyDraft();
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
+
       })
       .catch((err) => {
         console.error(

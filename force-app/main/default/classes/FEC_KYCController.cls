@@ -3,6 +3,8 @@ public without sharing class FEC_KYCController {
   public static final String PLASTIC_ID_DC2 = 'DC2';
   public static final String PLASTIC_ID_DP3 = 'DP3';
   public static final String CASE_INTERACTION = 'Interaction';
+  public static final String ADDRESS_TYPE_CURRENT = 'Current Address';
+  public static final String ADDRESS_TYPE_PERMANENT = 'Permanent Address';
 
   @AuraEnabled
   public static String getInterationId(String recordId) {
@@ -126,12 +128,52 @@ public without sharing class FEC_KYCController {
 
       Set<String> fieldlst = FEC_CommonUltils.extractFieldPaths(formulalst);
 
+      Set<String> adhoclst = new Set<String>{
+        'CurrentAddress',
+        'PermanentAddress',
+        'PaymentChannel',
+        'InstallmentDueDate',
+        'Cardholder',
+        'LoanPaymentAmount',
+        'CardPaymentDate',
+        'IPPBalance',
+        'Tenure',
+        'IPPTerm',
+        'LoanPaymentDate',
+        'EmbossingName',
+        'BillingCycle'
+      };
+
+      // Separate real SObject fields from adhoc (computed) tokens
+      Set<String> adhocFieldSet = new Set<String>();
+      Set<String> validFieldlst = new Set<String>();
+
+      for (String item : fieldlst) {
+        if (adhoclst.contains(item)) {
+          adhocFieldSet.add(item);
+        } else {
+          validFieldlst.add(item);
+        }
+      }
+
+      // Inject relationship fields required by adhoc resolvers
+      if (adhocFieldSet.contains('CurrentAddress') || adhocFieldSet.contains('PermanentAddress')) {
+        validFieldlst.add('FEC_Account_or_Contract__r.FEC_Address_Type__c');
+        validFieldlst.add('FEC_Account_or_Contract__r.FEC_Address__c');
+      }
+      if (adhocFieldSet.contains('Cardholder') || adhocFieldSet.contains('CardPaymentDate') || adhocFieldSet.contains('IPPBalance') || adhocFieldSet.contains('Tenure') || adhocFieldSet.contains('IPPTerm') || adhocFieldSet.contains('PaymentChannel') || adhocFieldSet.contains('InstallmentDueDate') || adhocFieldSet.contains('LoanPaymentAmount') || adhocFieldSet.contains('LoanPaymentDate') || adhocFieldSet.contains('EmbossingName') || adhocFieldSet.contains('BillingCycle')) {
+        validFieldlst.add('FEC_Account_or_Contract__c');
+      }
+
       List<Case> caselst2 = FEC_CaseService.getById(
         new Set<Id>{ c.Id },
-        fieldlst
+        validFieldlst
       );
 
       c = caselst2.get(0);
+
+      // Resolve all adhoc tokens via the dispatcher
+      Map<String, String> adhocValues = resolveAdhocFields(c, adhocFieldSet);
 
       QuestionDTO temp;
 
@@ -144,7 +186,8 @@ public without sharing class FEC_KYCController {
         temp.name = item.Name;
         temp.suggestedAnswer = FEC_CommonUltils.resolveTemplate(
           item.FEC_KYC_Suggested_Answer__c,
-          c
+          c,
+          adhocValues
         );
         temp.isMasked = item.FEC_Masking__c;
         temp.fieldName = getToken(item.FEC_KYC_Suggested_Answer__c);
@@ -156,7 +199,6 @@ public without sharing class FEC_KYCController {
             ? 'true'
             : 'false';
           temp.isEditable = kycResultMap.get(item.Id).FEC_Editable__c;
-
         }
 
         if (!typeMap.containsKey(item.FEC_Product_Type__r.Name)) {
@@ -233,12 +275,13 @@ public without sharing class FEC_KYCController {
           FEC_KYC_Product__c,
           FEC_KYC_Result__c,
           FEC_KYC__c,
+          FEC_KYC__r.FEC_Masking__c,
           Name,
           Id,
           CreatedDate
         FROM FEC_KYC_Result__c
         WHERE FEC_Case_Interaction__c = :caseId
-        ORDER BY CreatedDate DESC
+        ORDER BY CreatedDate ASC
       ];
 
       KYCResultDTO resultTemp;
@@ -251,6 +294,7 @@ public without sharing class FEC_KYCController {
         resultTemp.answer = item.FEC_KYC_Answer__c;
         resultTemp.result = item.FEC_KYC_Result__c;
         resultTemp.performedOn = item.CreatedDate?.format();
+        resultTemp.masked = item.FEC_KYC__r?.FEC_Masking__c;
 
         result.add(resultTemp);
       }
@@ -270,6 +314,250 @@ public without sharing class FEC_KYCController {
     Matcher m = p.matcher(input);
 
     return m.find() ? m.group(1) : null;
+  }
+
+  // ─── Adhoc Field Dispatcher ───────────────────────────────────────────────
+
+  private interface AdhocFieldResolver {
+    String resolve(Case c);
+  }
+
+  private class CurrentAddressResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__r == null) return null;
+
+      if (ADDRESS_TYPE_CURRENT.equals(c.FEC_Account_or_Contract__r.FEC_Address_Type__c)) {
+        return c.FEC_Account_or_Contract__r.FEC_Address__c ?? FEC_ConstantCommon.STR_EMPTY;
+      }
+
+      return null;
+    }
+  }
+
+  private class PermanentAddressResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__r == null) return null;
+
+      if (ADDRESS_TYPE_PERMANENT.equals(c.FEC_Account_or_Contract__r.FEC_Address_Type__c)) {
+        return c.FEC_Account_or_Contract__r.FEC_Address__c ?? FEC_ConstantCommon.STR_EMPTY;
+      }
+
+      return null;
+    }
+  }
+
+  private class PaymentChannelResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__c == null) {
+        return null;
+      }
+      List<FEC_Payment_History__c> paymentlst = [
+        SELECT FEC_Payment_Channel__c
+        FROM FEC_Payment_History__c
+        WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+          AND FEC_Payment_Date__c != null
+        ORDER BY FEC_Payment_Date__c DESC
+        LIMIT 1
+      ];
+      return paymentlst.isEmpty() ? null : paymentlst.get(0).FEC_Payment_Channel__c;
+    }
+  }
+
+  private class InstallmentDueDateResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__c == null) {
+        return null;
+      }
+      List<FEC_Repayment_Schedule__c> schedules = [
+        SELECT FEC_Installment_Due_Date__c
+        FROM FEC_Repayment_Schedule__c
+        WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+        ORDER BY FEC_Installment_Due_Date__c DESC
+        LIMIT 1
+      ];
+      return schedules.isEmpty() ? null : FEC_CommonUltils.formatDate(schedules.get(0).FEC_Installment_Due_Date__c);
+    }
+  }
+
+  private class CardholderResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__c == null) {
+        return null;
+      }
+      Integer count = [
+        SELECT COUNT()
+        FROM FEC_Other_Card__c
+        WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+      ];
+      return count == 0 ? null : String.valueOf(count);
+    }
+  }
+
+  private class LoanPaymentAmountResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__c == null) {
+        return null;
+      }
+      List<FEC_Repayment_Schedule__c> schedules = [
+        SELECT FEC_Payment_Amount__c
+        FROM FEC_Repayment_Schedule__c
+        WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+        ORDER BY FEC_Payment_Date__c DESC
+        LIMIT 1
+      ];
+      return schedules.isEmpty() ? null : FEC_CommonUltils.decimalToString(schedules.get(0).FEC_Payment_Amount__c);
+    }
+  }
+
+  private class LoanPaymentDateResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__c == null) {
+        return null;
+      }
+      List<FEC_Repayment_Schedule__c> schedules = [
+        SELECT FEC_Payment_Date__c
+        FROM FEC_Repayment_Schedule__c
+        WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+        ORDER BY FEC_Payment_Date__c DESC
+        LIMIT 1
+      ];
+      return schedules.isEmpty() ? null : FEC_CommonUltils.formatDate(schedules.get(0).FEC_Payment_Date__c);
+    }
+  }
+
+  private class CardPaymentDateResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__c == null) {
+        return null;
+      }
+      List<FEC_Payment_History__c> paymentlst = [
+        SELECT FEC_Payment_Date__c
+        FROM FEC_Payment_History__c
+        WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+          AND FEC_Payment_Date__c != null
+        ORDER BY FEC_Payment_Date__c DESC
+        LIMIT 1
+      ];
+      return paymentlst.isEmpty() ? null : FEC_CommonUltils.formatDate(paymentlst.get(0).FEC_Payment_Date__c);
+    }
+  }
+
+  private class IPPBalanceResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__c == null) {
+        return null;
+      }
+      List<FEC_IPP__c> ipplst = [
+        SELECT FEC_IPP_Balance__c
+        FROM FEC_IPP__c
+        WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+        ORDER BY FEC_IPP_Open_Date__c DESC
+        LIMIT 1
+      ];
+      return ipplst.isEmpty() ? null : FEC_CommonUltils.decimalToString(ipplst.get(0).FEC_IPP_Balance__c);
+    }
+  }
+
+  private class TenureResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      // TODO: return tenure as String
+      return null;
+    }
+  }
+
+  private class IPPTermResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__c == null) {
+        return null;
+      }
+      List<FEC_IPP__c> ipplst = [
+        SELECT FEC_IPP_Term__c
+        FROM FEC_IPP__c
+        WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+        ORDER BY FEC_IPP_Open_Date__c DESC
+        LIMIT 1
+      ];
+      return ipplst.isEmpty() ? null : String.valueOf(ipplst.get(0).FEC_IPP_Term__c);
+    }
+  }
+
+  private class EmbossingNameResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__c == null) {
+        return null;
+      }
+      List<FEC_Other_Card__c> cards = [
+        SELECT FEC_Embossing_Name__c
+        FROM FEC_Other_Card__c
+        WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+          AND FEC_Embossing_Name__c != NULL
+      ];
+      if (cards.isEmpty()) {
+        return null;
+      }
+      List<String> names = new List<String>();
+      for (FEC_Other_Card__c card : cards) {
+        names.add(card.FEC_Embossing_Name__c);
+      }
+      return String.join(names, '\n');
+    }
+  }
+
+  private class BillingCycleResolver implements AdhocFieldResolver {
+    public String resolve(Case c) {
+      if (c.FEC_Account_or_Contract__c == null) {
+        return null;
+      }
+      List<FEC_Statement__c> stmts = [
+        SELECT FEC_Billing_Cycle__c
+        FROM FEC_Statement__c
+        WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+        ORDER BY FEC_Statement_Date__c DESC, CreatedDate DESC
+        LIMIT 1
+      ];
+      return stmts.isEmpty() ? null : FEC_CommonUltils.decimalToString(stmts.get(0).FEC_Billing_Cycle__c);
+    }
+  }
+
+  /**
+   * Dispatcher map — add new adhoc token types here.
+   */
+  private static Map<String, AdhocFieldResolver> buildAdhocResolvers() {
+    return new Map<String, AdhocFieldResolver>{
+      'CurrentAddress'     => new CurrentAddressResolver(),
+      'PermanentAddress'   => new PermanentAddressResolver(),
+      'PaymentChannel'     => new PaymentChannelResolver(),
+      'InstallmentDueDate' => new InstallmentDueDateResolver(),
+      'Cardholder'         => new CardholderResolver(),
+      'LoanPaymentAmount'  => new LoanPaymentAmountResolver(),
+      'CardPaymentDate'    => new CardPaymentDateResolver(),
+      'IPPBalance'         => new IPPBalanceResolver(),
+      'Tenure'             => new TenureResolver(),
+      'IPPTerm'            => new IPPTermResolver(),
+      'LoanPaymentDate'    => new LoanPaymentDateResolver(),
+      'EmbossingName'      => new EmbossingNameResolver(),
+      'BillingCycle'       => new BillingCycleResolver()
+    };
+  }
+
+  /**
+   * Resolves only the adhoc field names found in the template.
+   * Unknown tokens are silently skipped (placeholder stays empty).
+   */
+  private static Map<String, String> resolveAdhocFields(
+    Case c,
+    Set<String> adhocFieldNames
+  ) {
+    Map<String, AdhocFieldResolver> resolvers = buildAdhocResolvers();
+    Map<String, String> result = new Map<String, String>();
+
+    for (String name : adhocFieldNames) {
+      if (resolvers.containsKey(name)) {
+        result.put(name, resolvers.get(name).resolve(c));
+      }
+    }
+
+    return result;
   }
 
   public class KYCDTO {
@@ -325,6 +613,8 @@ public without sharing class FEC_KYCController {
     public String question;
     @AuraEnabled
     public String answer;
+    @AuraEnabled
+    public Boolean masked;
     @AuraEnabled
     public String result;
     @AuraEnabled

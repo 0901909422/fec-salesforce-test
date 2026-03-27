@@ -184,9 +184,9 @@ public without sharing class FEC_StatementsAccountController {
                 );
             }
 
-            s.FEC_Total_Payment_Due__c   = cs.TotalPaymentDue;
-            s.FEC_Minimum_Payment_Due__c = cs.MPAStructure;
-            s.FEC_Current_Payment_Due__c = cs.QualGraceBal;
+            s.FEC_Total_Payment_Due__c   = cs.QualGraceBal ;
+            s.FEC_Minimum_Payment_Due__c = cs.TotalPaymentDue ;
+            s.FEC_Current_Payment_Due__c = cs.MPAStructure;
 
             s.FEC_Payment_Due_Date__c = cs.DueDate;
 
