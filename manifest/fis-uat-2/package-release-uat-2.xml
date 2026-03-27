@@ -1035,6 +1035,9 @@
 		<members>FEC_System_Infomation</members>
 		<members>FEC_Created_By</members>
 		<members>FEC_Last_Modified_By</members>
+		<members>FEC_Message_Content</members>
+		<members>FEC_Subject_Line</members>
+		<members>FEC_Template_Settings</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
