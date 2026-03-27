@@ -54,7 +54,7 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>required</value>
+                    <value>none</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.FEC_Active__c</fieldItem>
                 <identifier>RecordFEC_Active_cField2</identifier>
