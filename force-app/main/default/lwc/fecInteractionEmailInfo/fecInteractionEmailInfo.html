@@ -22,7 +22,6 @@
                       </template>
                     </template>
                     <template if:false={isEditingEmail}>
-                      <span class="empty">{labels.empty}</span>
                     </template>
                   </template>
                 </span>
@@ -56,6 +55,18 @@
                 <span class="value">{sendTo}</span>
                 <span></span>
               </div>
+              <template if:true={showOnHold}>
+                <div class="row">
+                  <span class="label">
+                    {labels.onHold}
+                    <lightning-helptext content={labels.onHoldHelpText} class="slds-m-left_xx-small"></lightning-helptext>
+                  </span>
+                  <span class="value">
+                    <lightning-input type="checkbox" checked={onHold} onchange={handleOnHoldChange} disabled={isReview}></lightning-input>
+                  </span>
+                  <span></span>
+                </div>
+              </template>
               <div class="row">
                 <span class="label">{labels.parentId}</span>
                 <span class="value">
@@ -63,9 +74,6 @@
                     <a href="javascript:void(0);" class="parent-link" onclick={handleNavigateToParent}>
                       {parentId}
                     </a>
-                  </template>
-                  <template if:false={showParentIdLink}>
-                    <span class="empty">{labels.empty}</span>
                   </template>
                 </span>
                 <span></span>
@@ -128,6 +136,18 @@
                 <span class="value">{sendTo}</span>
                 <span></span>
               </div>
+              <template if:true={showOnHold}>
+                <div class="row">
+                  <span class="label">
+                    {labels.onHold}
+                    <lightning-helptext content={labels.onHoldHelpText} class="slds-m-left_xx-small"></lightning-helptext>
+                  </span>
+                  <span class="value">
+                    <lightning-input type="checkbox" checked={onHold} onchange={handleOnHoldChange} disabled="true"></lightning-input>
+                  </span>
+                  <span></span>
+                </div>
+              </template>
               <div class="row">
                 <span class="label">{labels.parentId}</span>
                 <span class="value">
@@ -135,9 +155,6 @@
                     <a href="javascript:void(0);" class="parent-link" onclick={handleNavigateToParent}>
                       {parentId}
                     </a>
-                  </template>
-                  <template if:false={showParentIdLink}>
-                    <span class="empty">--</span>
                   </template>
                 </span>
                 <span></span>

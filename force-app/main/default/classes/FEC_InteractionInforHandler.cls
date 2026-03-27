@@ -14,6 +14,7 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Interaction_Remarks__c,
                FEC_Interaction_Email__c,
                FEC_Send_To__c,
+               FEC_On_Hold__c,
                ParentId,
                IsClosed,
                FEC_Interaction_Status__c
@@ -77,6 +78,17 @@ public without sharing class FEC_InteractionInforHandler {
         update new Case(
             Id = recordId,
             FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
+        );
+    }
+    
+    @AuraEnabled(cacheable=false)
+    public static void updateInteractionOnHold(Id recordId, Boolean onHold) {
+        if (recordId == null) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Record_Id_Invalid);
+        }
+        update new Case(
+            Id = recordId,
+            FEC_On_Hold__c = onHold
         );
     }
     
@@ -583,6 +595,7 @@ public without sharing class FEC_InteractionInforHandler {
         return [
         SELECT FEC_Phone_Number__c,
                FEC_Interaction_Email__c,
+               FEC_On_Hold__c,
                IsClosed,  FEC_Channel__c,
                ClosedDate
         FROM Case
@@ -671,6 +684,7 @@ public without sharing class FEC_InteractionInforHandler {
             return null;
 
         Case c = caselst.get(0);
+        System.debug('c resetViewMode = ' + c);
         if (c.FEC_Get_Next_Work__c == true || c.FEC_Is_Created_From_Search__c) {
             viewMode = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         } else if (c.FEC_First_Access__c == true) {

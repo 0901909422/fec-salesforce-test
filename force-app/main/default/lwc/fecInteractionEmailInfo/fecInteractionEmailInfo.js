@@ -3,10 +3,18 @@ import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { NavigationMixin } from "lightning/navigation";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
+import {
+  subscribe,
+  unsubscribe,
+  APPLICATION_SCOPE,
+  MessageContext,
+} from "lightning/messageService";
+import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 
 // ================= APEX =================
 import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInteraction";
 import updateInteractionEmail from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionEmail";
+import updateInteractionOnHold from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionOnHold";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionIdFromCustomerCase";
 
@@ -21,9 +29,11 @@ import CREATED_ON_FIELD from "@salesforce/schema/Case.FEC_Created_On__c";
 import CREATED_BY_FIELD from "@salesforce/schema/Case.FEC_Created_by__c";
 import SEND_TO_FIELD from "@salesforce/schema/Case.FEC_Send_To__c";
 import PARENT_ID_FIELD from "@salesforce/schema/Case.ParentId";
+import ON_HOLD_FIELD from "@salesforce/schema/Case.FEC_On_Hold__c";
+import CHANNEL_FIELD from "@salesforce/schema/Case.FEC_Channel__c";
 
 // ================= LABELS =================
-import FEC_Interaction_Email_Info_Label from "@salesforce/label/c.FEC_Interaction_Email_Info_Label";
+import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interaction_Information_Label";
 import FEC_Interaction_Email_Label from "@salesforce/label/c.FEC_Interaction_Email_Label";
 import FEC_Interaction_Created_On_Label from "@salesforce/label/c.FEC_Interaction_Created_On_Label";
 import FEC_Interaction_Created_By_Label from "@salesforce/label/c.FEC_Interaction_Created_By_Label";
@@ -34,13 +44,16 @@ import FEC_Interaction_Email_Required_Msg from "@salesforce/label/c.FEC_Interact
 import FEC_Interaction_Email_Invalid_Msg from "@salesforce/label/c.FEC_Interaction_Email_Invalid_Msg";
 import FEC_Interaction_Email_Save_Error from "@salesforce/label/c.FEC_Interaction_Email_Save_Error";
 import FEC_Empty from "@salesforce/label/c.FEC_Empty";
+import FEC_On_Hold_Label from "@salesforce/label/c.FEC_On_Hold_Label";
+import FEC_On_Hold_Help_Text from "@salesforce/label/c.FEC_On_Hold_Help_Text";
+import UBankCustomberServiceEmail from "@salesforce/label/c.UBankCustomberServiceEmail";
 
 import { STR_EMPTY, EMAIL_REGEX } from "c/fec_CommonConst";
 import { formatDateTimeVN } from "c/fec_CommonUtils";
 
 export default class FecInteractionEmailInfo extends NavigationMixin(LightningElement) {
   labels = {
-    interactionEmailInfo: FEC_Interaction_Email_Info_Label,
+    interactionEmailInfo: FEC_Interaction_Information_Label,
     interactionEmail: FEC_Interaction_Email_Label,
     interactionCreatedOn: FEC_Interaction_Created_On_Label,
     interactionCreatedBy: FEC_Interaction_Created_By_Label,
@@ -50,7 +63,9 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     emailRequiredMsg: FEC_Interaction_Email_Required_Msg,
     emailInvalidMsg: FEC_Interaction_Email_Invalid_Msg,
     emailSaveError: FEC_Interaction_Email_Save_Error,
-    empty: FEC_Empty
+    empty: FEC_Empty,
+    onHold: FEC_On_Hold_Label,
+    onHoldHelpText: FEC_On_Hold_Help_Text
   };
 
   @api recordId;
@@ -69,6 +84,10 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
 
   interactionId;
   activeSections = ["interactionEmailInfo"];
+  subscription = null;
+
+  @wire(MessageContext)
+  messageContext;
 
   @wire(getRecord, {
     recordId: "$recordId",
@@ -89,6 +108,40 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
 
   connectedCallback() {
     this.loadStyles();
+    this.subscribeToMessageChannel();
+  }
+
+  disconnectedCallback() {
+    this.unsubscribeToMessageChannel();
+  }
+
+  // ================= LMS HANDLERS =================
+  subscribeToMessageChannel() {
+    if (!this.subscription) {
+      this.subscription = subscribe(
+        this.messageContext,
+        IS_MODE_EDIT,
+        (message) => this.handleMessage(message),
+        { scope: APPLICATION_SCOPE }
+      );
+    }
+  }
+
+  unsubscribeToMessageChannel() {
+    unsubscribe(this.subscription);
+    this.subscription = null;
+  }
+
+  handleMessage(message) {
+    if (message && typeof message.isModeEdit !== "undefined") {
+      this.viewMode = message.isModeEdit ? "handling" : "review";
+      // Close editing mode if switched to review
+      if (!message.isModeEdit) {
+        this.isEditingEmail = false;
+        this.emailDraft = STR_EMPTY;
+        this.emailError = STR_EMPTY;
+      }
+    }
   }
 
   loadStyles() {
@@ -140,6 +193,10 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   RECORD_TYPE_CUSTOMER_CASE = "Customer_Case";
 
   // ================= GETTERS =================
+  get isReview() {
+    return this.viewMode === "review";
+  }
+
   get isInteractionCase() {
     return this.recordTypeDevName === this.RECORD_TYPE_INTERACTION;
   }
@@ -162,7 +219,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
 
   /** Chỉ hiện icon Edit khi trường trống (cho phép nhập mới). Có dữ liệu thì không hiện icon edit. */
   get showEmailEditIcon() {
-    return !this.hasInteractionEmail && !this.isEditingEmail;
+    return !this.isReview && !this.hasInteractionEmail && !this.isEditingEmail;
   }
 
   get displayInteractionEmail() {
@@ -177,8 +234,22 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     return this.record?.[CREATED_BY_FIELD.fieldApiName] || STR_EMPTY;
   }
 
+  get channel() {
+    return this.record?.[CHANNEL_FIELD.fieldApiName] || STR_EMPTY;
+  }
+
   get sendTo() {
     return this.record?.[SEND_TO_FIELD.fieldApiName] || STR_EMPTY;
+  }
+
+  get showOnHold() {
+    // Tạm thời comment điều kiện Send To == 'dichvukhachhang@ubank.vn' để test
+    // return this.channel === "Email" && this.sendTo === UBankCustomberServiceEmail;
+    return this.channel === "Email" && this.sendTo !== STR_EMPTY && this.sendTo != null;
+  }
+
+  get onHold() {
+    return this.record?.[ON_HOLD_FIELD.fieldApiName] || false;
   }
 
   get parentId() {
@@ -194,7 +265,27 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     return !!this.parentId;
   }
 
-  // ================= EMAIL ACTIONS =================
+  // ================= EMAIL/ON HOLD ACTIONS =================
+  async handleOnHoldChange(event) {
+    const isChecked = event.target.checked;
+    if (!this.interactionId) return;
+
+    try {
+      await updateInteractionOnHold({
+        recordId: this.interactionId,
+        onHold: isChecked,
+      });
+      this.record = {
+        ...this.record,
+        [ON_HOLD_FIELD.fieldApiName]: isChecked,
+      };
+    } catch (error) {
+      console.error("updateInteractionOnHold error", error);
+      // Revert UI on error
+      event.target.checked = !isChecked;
+    }
+  }
+
   handleEditEmail() {
     this.isEditingEmail = true;
     this.emailDraft = this.displayInteractionEmail || STR_EMPTY;

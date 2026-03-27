@@ -9951,4 +9951,20 @@
         <shortDescription>FEC_MSG_Card_LockUnlock_Validation_Failed</shortDescription>
         <value>Validation failed.</value>
     </labels>
+    <labels>
+        <fullName>FEC_On_Hold_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>On Hold</shortDescription>
+        <value>On Hold</value>
+    </labels>
+    <labels>
+        <fullName>FEC_On_Hold_Help_Text</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Nếu được check, Interaction này sẽ không được tính vào Capacity...</shortDescription>
+        <value>Nếu được check, Interaction này sẽ không được tính vào Capacity hiện tại của user khi thực hiện phân bổ tự động Interaction Email - Ubank.</value>
+    </labels>
 </CustomLabels>
