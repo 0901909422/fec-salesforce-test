@@ -585,6 +585,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
     if (element) {
       element.option = JSON.stringify(optionlst);
+
+      if (!optionlst || optionlst.length == 0) {
+        element.disabled = true;
+        element.required = false;
+      }
     }
   }
 }

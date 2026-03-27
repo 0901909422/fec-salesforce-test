@@ -12,6 +12,8 @@
         <members>FEC_TemplateTriggerHandler_Test</members>
         <members>FEC_TemplateTriggerHandler</members>
         <members>FEC_GetCSMasterDataService</members>
+        <members>FEC_CaseBusinessService</members>
+        <members>FEC_TranferInformationCallout</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -20,6 +22,7 @@
         <members>fec_templateDetailPage</members>
 		<members>fec_templateEditor</members>
         <members>fec_templateListView</members>
+        <members>fec_CaseEditNOC</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
