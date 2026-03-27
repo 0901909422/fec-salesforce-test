@@ -27,6 +27,7 @@
 	</types>
 	<types>
 		<members>FEC_Enhanced_Letterhead__c-Enhanced Letterhead Layout</members>
+        <members>FEC_Notification_Channel__c-Notification Channels Layout</members>
 		<name>Layout</name>
 	</types>
 	<types>
