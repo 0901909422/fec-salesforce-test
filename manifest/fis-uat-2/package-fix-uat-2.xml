@@ -3,7 +3,35 @@
 	<types>
         <members>FEC_CommonUltils</members>
         <members>FEC_PINReissueServiceCallout</members>
+        <members>FEC_TemplateController_Test</members>
+        <members>FEC_TemplateController</members>
+        <members>FEC_TemplateHistorySelector_Test</members>
+        <members>FEC_TemplateSelector_Test</members>
+        <members>FEC_TemplateSelector</members>
+        <members>FEC_TemplateService_Test</members>
+        <members>FEC_TemplateTriggerHandler_Test</members>
+        <members>FEC_TemplateTriggerHandler</members>
         <name>ApexClass</name>
     </types>
+    <types>
+        <members>fec_CustomDatatable</members>
+        <members>fec_NameLink</members>
+        <members>fec_templateDetailPage</members>
+		<members>fec_templateEditor</members>
+        <members>fec_templateListView</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+		<members>Enhanced_Letterhead_Record_Page</members>
+		<name>FlexiPage</name>
+	</types>
+	<types>
+		<members>FEC_Enhanced_Letterhead__c-Enhanced Letterhead Layout</members>
+		<name>Layout</name>
+	</types>
+	<types>
+		<members>FEC_Enhanced_Letterhead__c.FEC_Required_Header_Or_Footer</members>
+		<name>ValidationRule</name>
+	</types>
     <version>65.0</version>
 </Package>

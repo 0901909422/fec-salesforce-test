@@ -1044,6 +1044,10 @@
 		<name>CustomObject</name>
 	</types>
 	<types>
+		<members>FEC_Enhanced_Letterhead__c.FEC_Required_Header_Or_Footer</members>
+		<name>ValidationRule</name>
+	</types>
+	<types>
 		<members>FEC_Enhanced_Letterhead__c</members>
 		<members>Templates</members>
 		<name>CustomTab</name>
@@ -1070,6 +1074,7 @@
         <members>fec_folderDeleteAction</members>
         <members>fec_CustomDatatable</members>
         <members>fec_TemplateMockData</members>
+        <members>fec_NameLink</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>

@@ -115,4 +115,22 @@ public with sharing class FEC_TemplateController {
             throw new AuraHandledException(e.getMessage());
         }
     }
+
+    /**
+     * Get all Enhanced Letterhead records for the dropdown picker.
+     * @return List of FEC_Enhanced_Letterhead__c with Id and Name
+     */
+    @AuraEnabled
+    public static List<FEC_Enhanced_Letterhead__c> getAllLetterheads() {
+        try {
+            return [
+                SELECT Id, Name
+                FROM FEC_Enhanced_Letterhead__c
+                ORDER BY Name ASC
+                LIMIT 1000
+            ];
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
 }
