@@ -169,6 +169,10 @@ public with sharing class FEC_CaseBusinessService {
 
       Case selectedCase = caselst.get(0);
 
+      if(!selectedCase.FEC_Is_Submited__c) {
+        selectedCase.FEC_Current_Case_Stage__c = null;
+      }
+
       result.sectionlst.add(buildAccountInfor(selectedCase));
       // 03/02/2026 adhoc for product type, category, sub category, sub code
       if (String.isBlank(productTypeId))
