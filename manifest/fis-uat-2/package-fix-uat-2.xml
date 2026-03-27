@@ -11,6 +11,7 @@
         <members>FEC_TemplateService_Test</members>
         <members>FEC_TemplateTriggerHandler_Test</members>
         <members>FEC_TemplateTriggerHandler</members>
+        <members>FEC_GetCSMasterDataService</members>
         <name>ApexClass</name>
     </types>
     <types>
