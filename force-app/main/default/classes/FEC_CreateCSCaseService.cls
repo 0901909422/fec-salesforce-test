@@ -258,7 +258,7 @@ public with sharing class FEC_CreateCSCaseService {
                 txnId,
             System.Label.FEC_CS_CASE_ERROR_CODE,
             System.Label.FEC_CS_CASE_CHANNEL_REQUIRED_MSG
-            );
+                );
         }
         
         // Normalize (tránh lỗi do space / case)
@@ -602,24 +602,18 @@ public with sharing class FEC_CreateCSCaseService {
     String transactionId
     ) {
         try {
-            FEC_API_Log__c log = new FEC_API_Log__c();
+            HttpResponse apiResponse = new HttpResponse();
+            apiResponse.setStatusCode(isSuccess ? 200 : 500);
+            apiResponse.setBody(serializeSafe(responseObj));
             
-            // ===== BASIC INFO =====
-            log.Name = 'API_' + (transactionId != null ? transactionId : String.valueOf(System.now().getTime()));
-            log.FEC_Endpoint__c = endpoint;
-            log.FEC_Method__c = method;
-            
-            // ===== REQUEST / RESPONSE =====
-            log.FEC_Request_String__c = truncateLongString(serializeSafe(requestObj));
-            log.FEC_Response_String__c = truncateLongString(serializeSafe(responseObj));
-            
-            // ===== STATUS =====
-            log.FEC_Is_Success__c = isSuccess;
-            log.FEC_Status_Code__c = statusCode;
-            log.FEC_Error_Message__c = truncateLongString(errorMessage);
-            
-            // ===== INSERT =====
-            insert log;
+            FEC_CommonUltils.logApi(
+                'CreateCSCase',
+            endpoint,
+            method,
+            serializeSafe(requestObj),
+            apiResponse,
+            errorMessage
+                );
             
         } catch (Exception e) {
             System.debug('LOG_API_ERROR: ' + e.getMessage());
