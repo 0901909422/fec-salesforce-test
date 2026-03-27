@@ -22,6 +22,7 @@ import FEC_Website_Account_Label from '@salesforce/label/c.FEC_Website_Account_L
 import FEC_Email_Label from '@salesforce/label/c.FEC_Email_Label';
 import FEC_Work_Phone_Label from '@salesforce/label/c.FEC_Work_Phone_Label';
 import { STR_NA } from 'c/fec_CommonConst';
+import { sortByStringField } from 'c/fec_CommonUtils';
 
 import loadSecondaryInfo from '@salesforce/apex/FEC_SecondaryController.loadSecondaryInfo';
 import logSensitiveFromSecondaryInfo from '@salesforce/apex/FEC_SecondaryController.logSensitiveFromSecondaryInfo';
@@ -77,12 +78,15 @@ export default class Fec_SecondaryInfo extends LightningElement {
     loadData() {
         loadSecondaryInfo({ caseId: this.recordId })
             .then(res => {
-                this.zaloFollower     = res.zaloFollower || STR_NA;
-                this.websiteAccount   = res.websiteAccount || STR_NA;
+
+                this.zaloFollower = res.zaloFollower || STR_NA;
+                this.websiteAccount = res.websiteAccount || STR_NA;
                 this.mobileAppAccount = res.mobileAppAccount || STR_NA;
-                this.reference        = res.references || [];
-                this.contactList = res.contactList || [];
-                this.helpTexts        = res.helpTexts || {};
+                const contactList = res.contactList || [];
+                const references = res.references || [];
+                this.contactList = sortByStringField(contactList, 'channel', 'asc');
+                this.reference = sortByStringField(references, 'fullName', 'asc');
+                this.helpTexts = res.helpTexts || {};
                 this.hasData = true;
             })
             .catch(err => {
