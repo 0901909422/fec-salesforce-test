@@ -18,6 +18,7 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_TranferInformationCallout</members>
 		<members>FEC_CommonUltils</members>
+		<members>FEC_CreateCaseHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -89,6 +90,8 @@
 		<members>FEC_CS_CASE_TYPE_REQUIRED_MSG</members>
 		<members>FEC_CS_CASE_TYPE_TOO_LONG_MSG</members>
 		<members>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</members>
+		<members>FEC_CS_CASE_CHANNEL_INVALID_MSG</members>
+		<members>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

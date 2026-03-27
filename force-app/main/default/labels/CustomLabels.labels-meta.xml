@@ -8043,4 +8043,18 @@
         <shortDescription>FEC CREATE CS CASE SUCCESSFULLY MSG</shortDescription>
         <value>Case created successfully.</value>
     </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CHANNEL_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CHANNEL_INVALID_MSG</shortDescription>
+        <value>Channel is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</shortDescription>
+        <value>Channel is required</value>
+    </labels>
 </CustomLabels>
