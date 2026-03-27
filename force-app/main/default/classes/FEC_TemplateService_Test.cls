@@ -13,7 +13,7 @@ private class FEC_TemplateService_Test {
         insert folder;
 
         FEC_Template__c tmpl = new FEC_Template__c(
-            FEC_Template_Name__c = 'Service Test Template',
+            Name = 'Service Test Template',
             FEC_Folder__c = folder.Id,
             FEC_Active__c = true,
             FEC_Subject_Line__c = 'Hello',
@@ -31,7 +31,7 @@ private class FEC_TemplateService_Test {
         Test.stopTest();
 
         Assert.isNotNull(result);
-        Assert.areEqual('Service Test Template', result.FEC_Template_Name__c);
+        Assert.areEqual('Service Test Template', result.Name);
     }
 
     @IsTest
@@ -48,7 +48,7 @@ private class FEC_TemplateService_Test {
         FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c LIMIT 1];
 
         FEC_Template__c newTmpl = new FEC_Template__c(
-            FEC_Template_Name__c = 'Brand New Template',
+            Name = 'Brand New Template',
             FEC_Folder__c = folder.Id,
             FEC_Active__c = false,
             FEC_Body__c = '<p>New body</p>'
@@ -59,8 +59,8 @@ private class FEC_TemplateService_Test {
         Test.stopTest();
 
         Assert.isNotNull(savedId, 'Should return saved record Id');
-        FEC_Template__c saved = [SELECT FEC_Template_Name__c FROM FEC_Template__c WHERE Id = :savedId];
-        Assert.areEqual('Brand New Template', saved.FEC_Template_Name__c);
+        FEC_Template__c saved = [SELECT Name FROM FEC_Template__c WHERE Id = :savedId];
+        Assert.areEqual('Brand New Template', saved.Name);
     }
 
     @IsTest

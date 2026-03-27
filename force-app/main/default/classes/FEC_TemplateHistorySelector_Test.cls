@@ -24,7 +24,7 @@ private class FEC_TemplateHistorySelector_Test {
         insert folder;
 
         FEC_Template__c tmpl = new FEC_Template__c(
-            FEC_Template_Name__c = 'Original Name',
+            Name = 'Original Name',
             FEC_Folder__c        = folder.Id,
             FEC_Active__c        = false
         );
@@ -37,7 +37,7 @@ private class FEC_TemplateHistorySelector_Test {
      */
     private static void generateHistory(Id templateId) {
         FEC_Template__c tmpl = new FEC_Template__c(Id = templateId);
-        tmpl.FEC_Template_Name__c = 'Updated Name';
+        tmpl.Name = 'Updated Name';
         tmpl.FEC_Active__c        = true;
         update tmpl;
     }

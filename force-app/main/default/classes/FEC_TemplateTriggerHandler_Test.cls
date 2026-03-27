@@ -35,7 +35,7 @@ private class FEC_TemplateTriggerHandler_Test {
         FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
 
         FEC_Template__c tmpl = new FEC_Template__c(
-            FEC_Template_Name__c = 'Welcome Email Template',
+            Name = 'Welcome Email Template',
             FEC_Folder__c = folder.Id
         );
 
@@ -60,7 +60,7 @@ private class FEC_TemplateTriggerHandler_Test {
         FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
 
         FEC_Template__c tmpl = new FEC_Template__c(
-            FEC_Template_Name__c = 'OTP & Verification (V2)',
+            Name = 'OTP & Verification (V2)',
             FEC_Folder__c = folder.Id
         );
 
@@ -86,13 +86,13 @@ private class FEC_TemplateTriggerHandler_Test {
 
         // Insert first template
         insert new FEC_Template__c(
-            FEC_Template_Name__c = 'Promo Email',
+            Name = 'Promo Email',
             FEC_Folder__c = folder.Id
         );
 
         // Insert duplicate in same folder
         FEC_Template__c duplicate = new FEC_Template__c(
-            FEC_Template_Name__c = 'Promo Email',
+            Name = 'Promo Email',
             FEC_Folder__c = folder.Id
         );
 
@@ -116,12 +116,12 @@ private class FEC_TemplateTriggerHandler_Test {
         FEC_Folder__c folder2 = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Support' LIMIT 1];
 
         insert new FEC_Template__c(
-            FEC_Template_Name__c = 'Welcome Email',
+            Name = 'Welcome Email',
             FEC_Folder__c = folder1.Id
         );
 
         FEC_Template__c tmpl2 = new FEC_Template__c(
-            FEC_Template_Name__c = 'Welcome Email',
+            Name = 'Welcome Email',
             FEC_Folder__c = folder2.Id
         );
 
@@ -146,13 +146,13 @@ private class FEC_TemplateTriggerHandler_Test {
         FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
 
         FEC_Template__c tmpl = new FEC_Template__c(
-            FEC_Template_Name__c = 'Old Name',
+            Name = 'Old Name',
             FEC_Folder__c = folder.Id
         );
         insert tmpl;
 
         Test.startTest();
-        tmpl.FEC_Template_Name__c = 'New Name Updated';
+        tmpl.Name = 'New Name Updated';
         update tmpl;
         Test.stopTest();
 
@@ -173,18 +173,18 @@ private class FEC_TemplateTriggerHandler_Test {
         FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
 
         insert new FEC_Template__c(
-            FEC_Template_Name__c = 'Existing Template',
+            Name = 'Existing Template',
             FEC_Folder__c = folder.Id
         );
 
         FEC_Template__c tmpl2 = new FEC_Template__c(
-            FEC_Template_Name__c = 'Another Template',
+            Name = 'Another Template',
             FEC_Folder__c = folder.Id
         );
         insert tmpl2;
 
         Test.startTest();
-        tmpl2.FEC_Template_Name__c = 'Existing Template';
+        tmpl2.Name = 'Existing Template';
         try {
             update tmpl2;
             Assert.fail('Expected DmlException when updating to duplicate name in same folder');
@@ -204,11 +204,11 @@ private class FEC_TemplateTriggerHandler_Test {
 
         List<FEC_Template__c> batch = new List<FEC_Template__c>();
         batch.add(new FEC_Template__c(
-            FEC_Template_Name__c = 'Batch Template',
+            Name = 'Batch Template',
             FEC_Folder__c = folder.Id
         ));
         batch.add(new FEC_Template__c(
-            FEC_Template_Name__c = 'Batch Template',
+            Name = 'Batch Template',
             FEC_Folder__c = folder.Id
         ));
 
@@ -230,12 +230,12 @@ private class FEC_TemplateTriggerHandler_Test {
     static void testNullFolderDuplicate() {
         // Insert template without folder
         insert new FEC_Template__c(
-            FEC_Template_Name__c = 'No Folder Template'
+            Name = 'No Folder Template'
         );
 
         // Insert duplicate without folder
         FEC_Template__c duplicate = new FEC_Template__c(
-            FEC_Template_Name__c = 'No Folder Template'
+            Name = 'No Folder Template'
         );
 
         Test.startTest();

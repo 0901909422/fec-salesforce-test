@@ -5,15 +5,15 @@
 
                 <!-- HEADER -->
                 <div class="slds-p-around_medium slds-border_bottom">
-                    <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
-                        <div class="slds-grid slds-grid_vertical-align-center">
-                            <lightning-icon icon-name="standard:email" size="medium" class="slds-m-right_small"></lightning-icon>
-                            <div>
+                    <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-grid_nowrap">
+                        <div class="slds-grid slds-grid_vertical-align-center" style="min-width: 0;">
+                            <lightning-icon icon-name="standard:email" size="medium" class="slds-m-right_small slds-shrink-none"></lightning-icon>
+                            <div style="min-width: 0;">
                                 <p class="slds-text-title_caps slds-text-color_weak">Template</p>
-                                <h1 class="slds-text-heading_medium">{pageTitle}</h1>
+                                <h1 class="slds-text-heading_medium slds-truncate" title={pageTitle}>{pageTitle}</h1>
                             </div>
                         </div>
-                        <div>
+                        <div class="slds-shrink-none slds-m-left_small">
                             <lightning-button
                                 label={label.backToListLabel}
                                 onclick={handleBack}
@@ -105,7 +105,14 @@
                                             <div class="slds-col slds-size_1-of-2">
                                                 <div class="slds-form-element">
                                                     <span class="slds-form-element__label td-field-label">{label.lastModByLabel}</span>
-                                                    <div class="slds-form-element__static">{lastModifiedByDisplay}</div>
+                                                    <div class="slds-form-element__static">
+                                                        <template if:true={lastModifiedByUrl}>
+                                                            <a href={lastModifiedByUrl}>{lastModifiedByDisplay}</a>
+                                                        </template>
+                                                        <template if:false={lastModifiedByUrl}>
+                                                            {lastModifiedByDisplay}
+                                                        </template>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

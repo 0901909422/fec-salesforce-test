@@ -1,0 +1,19 @@
+{
+  "folders": [
+    {
+      "path": "c:/Users/ASUS/Documents/fec_csm"
+    }
+  ],
+  "settings": {
+    "eslint.workingDirectories": [
+      "c:/Users/ASUS/Documents/fec_csm"
+    ],
+    "eslint.validate": [
+      "javascript",
+      "typescript"
+    ],
+    "eslint.options": {
+      "overrideConfigFile": "c:\\Users\\ASUS\\Documents\\fec_csm\\.eslintrc.json"
+    }
+  }
+}
