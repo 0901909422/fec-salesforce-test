@@ -163,6 +163,7 @@
 		<members>Case.FEC_Owner_Is_User__c</members>
 		<members>Case.FEC_Is_Manager_For_Cur_User__c</members>
 		<members>Case.FEC_Is_Created_From_Search__c</members>
+		<members>Case.FEC_Show_Unfollow__c</members>
         <name>CustomField</name>
     </types>
 	<types>
