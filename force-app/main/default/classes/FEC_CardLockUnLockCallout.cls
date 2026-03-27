@@ -174,6 +174,13 @@ public without sharing class FEC_CardLockUnLockCallout {
                 new List<String>{'Last4Digit'}));
         }
 
+        if (last4Digit.length() > 255) {
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Last4Digit', '255'}));
+        }
+        if (accountNumber.length() > 255) {
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'AccountNumber', '255'}));
+        }
+
         return new ValidationResult(true, null);
     }
 

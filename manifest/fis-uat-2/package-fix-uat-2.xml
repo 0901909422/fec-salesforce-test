@@ -12,6 +12,8 @@
         <members>FEC_TemplateTriggerHandler_Test</members>
         <members>FEC_TemplateTriggerHandler</members>
         <members>FEC_GetCSMasterDataService</members>
+        <members>FEC_CardLockUnLockCallout</members>
+        <members>FEC_ReplacementCardCallout</members>
         <name>ApexClass</name>
     </types>
     <types>
