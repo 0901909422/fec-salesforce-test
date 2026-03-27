@@ -22,6 +22,7 @@
         <members>fec_templateDetailPage</members>
 		<members>fec_templateEditor</members>
         <members>fec_templateListView</members>
+		<members>fec_CaseBussiness</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -46,6 +47,17 @@
 		<members>FEC_Message_Content</members>
 		<members>FEC_Subject_Line</members>
 		<members>FEC_Template_Settings</members>
+        <members>FEC_Current_Card_Status</members>
+        <members>FEC_Card_Block_Reason</members>
+        <members>FEC_New_Block_Code</members>
+        <members>FEC_Verify_Information</members>
+        <members>FEC_Callback</members>
+        <members>FEC_Block_Card_Btn</members>
+        <members>FEC_Block_Card_Header</members>
+        <members>FEC_Block_Card_Success</members>
+        <members>FEC_Block_Card_Failed</members>
+        <members>FEC_Block_Card_Failed_Max</members>
+        <members>FEC_Block_Card_Confirmation_Msg</members>
 		<name>CustomLabel</name>
 	</types>
     <version>65.0</version>

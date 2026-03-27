@@ -615,6 +615,17 @@
 		<members>FEC_Email_Error_OrgWide_Not_Configured_Suffix</members>
 		<members>FEC_Email_Readonly_From_Fecredit</members>
 		<members>FEC_Email_Readonly_From_Ubank</members>
+		<members>FEC_Current_Card_Status</members>
+        <members>FEC_Card_Block_Reason</members>
+        <members>FEC_New_Block_Code</members>
+        <members>FEC_Verify_Information</members>
+        <members>FEC_Callback</members>
+        <members>FEC_Block_Card_Btn</members>
+        <members>FEC_Block_Card_Header</members>
+        <members>FEC_Block_Card_Success</members>
+        <members>FEC_Block_Card_Failed</members>
+        <members>FEC_Block_Card_Failed_Max</members>
+        <members>FEC_Block_Card_Confirmation_Msg</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
