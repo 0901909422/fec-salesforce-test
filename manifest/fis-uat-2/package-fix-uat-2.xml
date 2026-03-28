@@ -28,6 +28,7 @@
         <members>FEC_ApplicationsListController</members>
         <members>FEC_MainInfoController</members>
         <members>FEC_InteractionInforHandler</members>
+		<members>FEC_CustomEmailService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -42,6 +43,7 @@
 		<members>fec_Search</members>
 		<members>fecInteractionEmailInfo</members>
 		<members>fec_CaseDetail_Customer</members>
+		<members>fecInteractionEmailInfoUbank</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -49,6 +51,7 @@
 		<members>FEC_Internal_Case_Record_Page</members>
 		<members>Service_Resource_Record_Page</members>
 		<members>Service_Resource_Skill_Record_Page</members>
+		<members>FEC_Interaction_Case_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -100,6 +103,10 @@
     <types>
 		<members>ServiceResourceSkill</members>
 		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>fecEmailSection</members>
+		<name>AuraDefinitionBundle</name>
 	</types>
     <version>65.0</version>
 </Package>

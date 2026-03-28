@@ -667,6 +667,7 @@
 		<members>fec_CardClosureRefundHandling</members>
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_CardBlock</members>
+		<members>fecInteractionEmailInfoUbank</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
