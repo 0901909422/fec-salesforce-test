@@ -310,5 +310,36 @@ public without sharing class FEC_TranferInformationCallout {
         )
       );
     }
+    
+    if (reqObj.callData == null || reqObj.callData.isEmpty()) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Call Data' }
+        )
+      );
+    }
+
+    Map<String, String> requiredFields = new Map<String, String>{
+      'productType' => 'Product Type',
+      'extAppId' => 'Ext App ID',
+      'phoneNumber' => 'Phone Number',
+      'category' => 'Category',
+      'subCategory' => 'Sub Category',
+      'subCode' => 'Sub Code',
+      'remark' => 'Remark',
+      'csCaseID' => 'CS Case ID'
+    };
+
+    for (String key : requiredFields.keySet()) {
+      if (String.isBlank(reqObj.callData.get(key))) {
+        throw new FEC_APIServiceException(
+          String.format(
+            System.Label.FEC_MSG_Param_Required,
+            new List<String>{ requiredFields.get(key) }
+          )
+        );
+      }
+    }
   }
 }
