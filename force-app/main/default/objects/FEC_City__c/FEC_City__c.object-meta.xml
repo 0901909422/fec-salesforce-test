@@ -153,12 +153,12 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>Country</label>
+    <label>City</label>
     <nameField>
-        <label>Country Name</label>
+        <label>City Name</label>
         <type>Text</type>
     </nameField>
-    <pluralLabel>Countries</pluralLabel>
+    <pluralLabel>Cities</pluralLabel>
     <searchLayouts></searchLayouts>
     <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>

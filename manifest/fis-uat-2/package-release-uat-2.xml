@@ -630,6 +630,7 @@
         <members>FEC_Block_Card_Confirmation_Msg</members>
         <members>FEC_On_Hold_Label</members>
         <members>FEC_On_Hold_Help_Text</members>
+		<members>FEC_Interaction_Email_Info_Ubank_Label</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -1245,5 +1246,13 @@
 		<members>FEC_Service</members>
 		<name>CustomApplication</name>
 	</types>
+
+	<!-- additional -->
+	<types>
+		<members>FEC_City__c</members>
+        <members>FEC_Country__c</members>
+		<name>CustomObject</name>
+	</types>
+
     <version>65.0</version>
 </Package>
