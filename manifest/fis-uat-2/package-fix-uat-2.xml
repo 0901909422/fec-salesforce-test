@@ -27,6 +27,7 @@
         <members>FEC_SearchController</members>
         <members>FEC_ApplicationsListController</members>
         <members>FEC_MainInfoController</members>
+        <members>FEC_InteractionInforHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -39,6 +40,7 @@
 		<members>fec_CaseBussiness</members>
 		<members>fec_CardBlock</members>
 		<members>fec_Search</members>
+		<members>fecInteractionEmailInfo</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -75,11 +77,17 @@
         <members>FEC_Block_Card_Failed</members>
         <members>FEC_Block_Card_Failed_Max</members>
         <members>FEC_Block_Card_Confirmation_Msg</members>
+        <members>FEC_On_Hold_Label</members>
+        <members>FEC_On_Hold_Help_Text</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
 		<members>RD_IT_User_Master_Data_Management</members>
 		<name>PermissionSet</name>
 	</types>
+    <types>
+        <members>FEC_CommonCss</members>
+        <name>StaticResource</name>
+    </types>
     <version>65.0</version>
 </Package>

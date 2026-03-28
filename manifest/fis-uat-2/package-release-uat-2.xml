@@ -628,6 +628,8 @@
         <members>FEC_Block_Card_Failed</members>
         <members>FEC_Block_Card_Failed_Max</members>
         <members>FEC_Block_Card_Confirmation_Msg</members>
+        <members>FEC_On_Hold_Label</members>
+        <members>FEC_On_Hold_Help_Text</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -692,6 +694,7 @@
 		<members>FEC_CaseBusinessService</members>
 		<members>FEC_CreateCaseInteractionController</members>
         <members>FEC_CardLockUnLockController</members>
+        <members>FEC_InteractionInforHandler</members>
         <name>ApexClass</name>
     </types>
 	<types>
