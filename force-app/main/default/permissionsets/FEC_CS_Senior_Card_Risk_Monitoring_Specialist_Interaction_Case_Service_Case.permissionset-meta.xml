@@ -666,6 +666,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Show_Unfollow__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Skip_Search_Internal_Case__c</field>
         <readable>true</readable>
