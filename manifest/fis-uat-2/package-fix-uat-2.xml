@@ -72,5 +72,9 @@
 		<members>FEC_Notification_Channel__c</members>
 		<name>CustomObject</name>
 	</types>
+	<types>
+		<members>RD_IT_User_Master_Data_Management</members>
+		<name>PermissionSet</name>
+	</types>
     <version>65.0</version>
 </Package>
