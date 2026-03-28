@@ -1496,16 +1496,6 @@
         <field>ServiceResourceSkill.FEC_Active__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>ServiceResourceSkill.FEC_Capacity__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>ServiceResourceSkill.FEC_Skill_Level__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Senior Customer Care Specialist - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
