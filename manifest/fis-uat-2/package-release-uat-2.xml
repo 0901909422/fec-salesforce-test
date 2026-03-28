@@ -323,6 +323,8 @@
         <members>FEC_SecondaryInfoLoanAccountController</members>
         <members>FEC_TerminationLoanController</members>
         <members>FEC_CommonUltils</members>
+        <members>FEC_ApplicationsListController</members>
+        <members>FEC_MainInfoController</members>
         <name>ApexClass</name>
     </types>
     <types>

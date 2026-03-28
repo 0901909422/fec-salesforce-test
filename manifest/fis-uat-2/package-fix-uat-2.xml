@@ -25,6 +25,8 @@
         <members>FEC_InteractionRoutingService</members>
         <members>FEC_CardLockUnLockController</members>
         <members>FEC_SearchController</members>
+        <members>FEC_ApplicationsListController</members>
+        <members>FEC_MainInfoController</members>
         <name>ApexClass</name>
     </types>
     <types>
