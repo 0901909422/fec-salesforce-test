@@ -31,14 +31,10 @@ public with sharing class FEC_PsDNBServiceCallout {
     
     // ================= MAIN SEND =================
     public static HttpResponse sendRequest(List<DNBRequest> reqList) {
-        // FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        // FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+       
+        // ✅ dùng Named Credential
+        String endpoint = 'callout:FECredit_Service/api/v1/do-not-bother/create-info';
         
-        // // String endpoint = apiSetting?.FEC_Call_Mock__c
-        // //     ? ''
-        // //     : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-
-        string endpoint = 'https://sf-csm-service-dev.fecredit.cloud/api/v1/do-not-bother/create-info';
         
         // ✅ FIX timestamp ISO + timezone
         String isoTimestamp = formatISOWithTimezone(Datetime.now());
@@ -63,11 +59,14 @@ public with sharing class FEC_PsDNBServiceCallout {
     
     // ================= PARSE =================
     public static DNBResult parseResponse(String jsonResponse, Integer httpStatus) {
+        System.debug('jsonResponse: ' + jsonResponse);
+        System.debug('httpStatus: ' + httpStatus);
+        
         DNBResult result = new DNBResult();
         result.httpStatus = httpStatus;
         result.rawResponse = jsonResponse;
         
-        // ❌ HTTP fail
+        // HTTP fail
         if (httpStatus != 200) {
             result.success = false;
             result.errorMessage = 'HTTP Error: ' + httpStatus;
@@ -84,31 +83,25 @@ public with sharing class FEC_PsDNBServiceCallout {
             Map<String, Object> responseMap =
                 (Map<String, Object>) JSON.deserializeUntyped(jsonResponse);
             
-            result.pxObjClass = (String) responseMap.get('pxObjClass');
-            
-            // ===== Sys =====
-            Map<String, Object> sysMap = (Map<String, Object>) responseMap.get('Sys');
+            // ===== SYS =====
+            Map<String, Object> sysMap = (Map<String, Object>) responseMap.get('sys');
             if (sysMap != null) {
-                result.code = (String) sysMap.get('Code');
-                result.description = (String) sysMap.get('Description');
-                result.requestDateTime = (String) sysMap.get('RequestDateTime');
-                result.transId = (String) sysMap.get('TransID');
-            }
-            
-            // ===== sys2 (QUAN TRỌNG) =====
-            Map<String, Object> sys2Map = (Map<String, Object>) responseMap.get('sys2');
-            if (sys2Map != null) {
-                result.sys2Code = (String) sys2Map.get('code2');
-                result.sys2Message = (String) sys2Map.get('message2');
                 
-                // ✅ SUCCESS đúng spec
-                result.success = (result.sys2Code == '0');
+                Object codeObj = sysMap.get('code');
+                Integer code = codeObj != null ? Integer.valueOf(String.valueOf(codeObj)) : null;
+                
+                result.code = String.valueOf(code);
+                result.transId = (String) sysMap.get('trans_id');
+                result.description = (String) sysMap.get('message');
+                result.success = (code == 0);
+                
             } else {
                 result.success = false;
-                result.errorMessage = 'Missing sys2 in response';
+                result.errorMessage = 'Missing sys in response';
+                return result;
             }
             
-            // ===== result array =====
+            // ===== RESULT ARRAY =====
             if (responseMap.containsKey('result')) {
                 result.resultList = (List<Object>) responseMap.get('result');
             }
@@ -118,6 +111,7 @@ public with sharing class FEC_PsDNBServiceCallout {
             result.errorMessage = ex.getMessage();
         }
         
+        System.debug('result: ' + result);
         return result;
     }
     
@@ -142,26 +136,36 @@ public with sharing class FEC_PsDNBServiceCallout {
             }
         }
         
+        
+        String requestBody = JSON.serialize(reqList);
+        String endpoint = 'callout:FECredit_Service/api/v1/do-not-bother/create-info';
+        
         try {
-            // ===== DEBUG REQUEST =====
-            System.debug('=== REQUEST BODY ===');
-            System.debug(JSON.serializePretty(reqList));
-            
             HttpResponse res = sendRequest(reqList);
-            
-            // ===== DEBUG RESPONSE =====
-            System.debug('=== HTTP STATUS ===');
-            System.debug(res.getStatusCode());
-            
-            System.debug('=== RAW RESPONSE ===');
-            System.debug(res.getBody());
+            FEC_CommonUltils.logApi(
+                API_CONFIG_NAME,                // apiName
+            endpoint,
+            'POST',
+            requestBody,
+            res,
+            null                     // errorMessage
+                );
             
             return parseResponse(res.getBody(), res.getStatusCode());
+            
         } catch (Exception ex) {
-            System.debug('=== EXCEPTION ===');
-            System.debug(ex);
-            System.debug(ex.getMessage());
-            System.debug(ex.getStackTraceString());
+            HttpResponse exceptionRes = new HttpResponse();
+            exceptionRes.setStatusCode(500);
+            exceptionRes.setBody(null);
+            
+            FEC_CommonUltils.logApi(
+                API_CONFIG_NAME,
+            endpoint,
+            'POST',
+            requestBody,
+            exceptionRes,
+            ex.getMessage()
+                );
             
             return error(ex.getMessage());
         }
@@ -175,7 +179,6 @@ public with sharing class FEC_PsDNBServiceCallout {
         return err;
     }
     
-    // ✅ ISO 8601 with timezone (+07:00)
     private static String formatISOWithTimezone(Datetime dt) {
         TimeZone tz = UserInfo.getTimeZone();
         Integer offset = tz.getOffset(dt) / 1000 / 60; // minutes
