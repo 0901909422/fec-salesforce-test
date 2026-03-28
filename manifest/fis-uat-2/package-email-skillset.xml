@@ -6,6 +6,7 @@
         <members>ServiceResourceSkill.FEC_Active__c</members>
         <members>ServiceResourceSkill.FEC_Capacity__c</members>
         <members>ServiceResourceSkill.FEC_Skill_Level__c</members>
+		<members>ServiceResourceSkill.FEC_Skill_Name__c</members>
         <members>FEC_Service_Resource_Absence__c.FEC_End_Date__c</members>
         <members>FEC_Service_Resource_Absence__c.FEC_End_On__c</members>
         <members>FEC_Service_Resource_Absence__c.FEC_Note__c</members>
