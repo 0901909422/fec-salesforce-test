@@ -2,6 +2,6 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>ServiceResourceId</fullName>
     <description>Tên của Agent thêm skill</description>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <type>MasterDetail</type>
 </CustomField>
