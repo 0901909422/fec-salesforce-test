@@ -5,6 +5,7 @@
 		<members>FEC_Notification__c.Auto_Notification_for_Internal_User</members>
 		<members>FEC_Notification__c.Manual_Notification_for_Internal_User</members>
 		<name>ListView</name>
+    </types>
 	<types>
         <members>FEC_CommonUltils</members>
         <members>FEC_PINReissueServiceCallout</members>
@@ -20,6 +21,7 @@
         <members>FEC_CardLockUnLockCallout</members>
         <members>FEC_ReplacementCardCallout</members>
         <members>FEC_CardLockUnLockController</members>
+        <members>FEC_SearchController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -30,6 +32,7 @@
         <members>fec_templateListView</members>
 		<members>fec_CaseBussiness</members>
 		<members>fec_CardBlock</members>
+		<members>fec_Search</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -67,10 +70,6 @@
         <members>FEC_Block_Card_Failed_Max</members>
         <members>FEC_Block_Card_Confirmation_Msg</members>
 		<name>CustomLabel</name>
-	</types>
-    <types>
-		<members>FEC_Notification_Channel__c</members>
-		<name>CustomObject</name>
 	</types>
 	<types>
 		<members>RD_IT_User_Master_Data_Management</members>
