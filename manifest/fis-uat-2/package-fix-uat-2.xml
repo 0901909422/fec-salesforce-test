@@ -29,6 +29,7 @@
         <members>FEC_MainInfoController</members>
         <members>FEC_InteractionInforHandler</members>
 		<members>FEC_CustomEmailService</members>
+        <members>FEC_Notification</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -44,6 +45,7 @@
 		<members>fecInteractionEmailInfo</members>
 		<members>fec_CaseDetail_Customer</members>
 		<members>fecInteractionEmailInfoUbank</members>
+        <members>fec_NotificationOverride</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -52,6 +54,8 @@
 		<members>Service_Resource_Record_Page</members>
 		<members>Service_Resource_Skill_Record_Page</members>
 		<members>FEC_Interaction_Case_Record_Page</members>
+        <members>FEC_Notification_Record_Page_Auto</members>
+		<members>FEC_Notification_Record_Page_Manual</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -87,6 +91,7 @@
         <members>FEC_On_Hold_Label</members>
         <members>FEC_On_Hold_Help_Text</members>
 		<members>FEC_Interaction_Email_Info_Ubank_Label</members>
+        <members>FEC_Notification_Channel_Disabled_Msg</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

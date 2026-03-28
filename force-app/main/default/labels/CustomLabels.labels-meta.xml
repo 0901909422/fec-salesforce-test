@@ -10933,4 +10933,11 @@
         <shortDescription>Interaction Email Info Ubank section label</shortDescription>
         <value>Interaction Information</value>
     </labels>
+    <labels>
+        <fullName>FEC_Notification_Channel_Disabled_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Notification Channel Disabled Message</shortDescription>
+        <value>Notification Channel is disabled. This Notification Type cannot be sent through this channel.</value>
+    </labels>
 </CustomLabels>
