@@ -41,17 +41,21 @@
 		<members>fec_CardBlock</members>
 		<members>fec_Search</members>
 		<members>fecInteractionEmailInfo</members>
+		<members>fec_CaseDetail_Customer</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
 		<members>Enhanced_Letterhead_Record_Page</members>
 		<members>FEC_Internal_Case_Record_Page</members>
+		<members>Service_Resource_Record_Page</members>
+		<members>Service_Resource_Skill_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
 		<members>FEC_Enhanced_Letterhead__c-Enhanced Letterhead Layout</members>
         <members>FEC_Notification_Channel__c-Notification Channels Layout</members>
 		<members>FEC_Notification__c-Notifications Layout</members>
+		<members>ServiceResourceSkill-Service Resource Skill Layout</members>
 		<name>Layout</name>
 	</types>
 	<types>
@@ -89,5 +93,13 @@
         <members>FEC_CommonCss</members>
         <name>StaticResource</name>
     </types>
+	<types>
+        <members>Case.Internal_Case_Compact_Layout</members>
+        <name>CompactLayout</name>
+    </types>
+    <types>
+		<members>ServiceResourceSkill</members>
+		<name>CustomObject</name>
+	</types>
     <version>65.0</version>
 </Package>
