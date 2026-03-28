@@ -8,11 +8,10 @@ public with sharing class FEC_TemplateSelector {
     private static final List<String> BASE_FIELDS = new List<String>{
         'Id',
         'Name',
-        'FEC_Template_Name__c',
         'FEC_API_Name__c',
         'FEC_Description__c',
         'FEC_Folder__c',
-        'FEC_Folder__r.FEC_Folder_Label__c',
+        'FEC_Folder__r.Name',
         'FEC_Enhanced_Letterhead__c',
         'FEC_Enhanced_Letterhead__r.Name',
         'FEC_Applicable_for_Mailbox__c',
@@ -20,6 +19,7 @@ public with sharing class FEC_TemplateSelector {
         'FEC_Subject_Line__c',
         'FEC_Body__c',
         'FEC_Date__c',
+        'LastModifiedById',
         'LastModifiedBy.Name',
         'LastModifiedDate',
         'CreatedDate'
@@ -48,7 +48,7 @@ public with sharing class FEC_TemplateSelector {
         return Database.query(
             buildBaseQuery() +
             ' WHERE Id IN :templateIds' +
-            ' ORDER BY FEC_Template_Name__c ASC'
+            ' ORDER BY Name ASC'
         );
     }
 
@@ -75,7 +75,7 @@ public with sharing class FEC_TemplateSelector {
         if (String.isNotBlank(searchText)) {
             // Bind-variable safe LIKE pattern
             searchText = '%' + String.escapeSingleQuotes(searchText.trim()) + '%';
-            conditions.add('(FEC_Template_Name__c LIKE :searchText OR FEC_Description__c LIKE :searchText)');
+            conditions.add('(Name LIKE :searchText OR FEC_Description__c LIKE :searchText)');
         }
 
         if (activeOnly == true) {
@@ -89,7 +89,7 @@ public with sharing class FEC_TemplateSelector {
             soql += ' WHERE ' + String.join(conditions, ' AND ');
         }
 
-        soql += ' ORDER BY FEC_Template_Name__c ASC';
+        soql += ' ORDER BY Name ASC';
         soql += ' LIMIT 2000';
 
         return Database.query(soql);
@@ -104,7 +104,7 @@ public with sharing class FEC_TemplateSelector {
         return Database.query(
             buildBaseQuery() +
             ' WHERE FEC_Folder__c = :folderId' +
-            ' ORDER BY FEC_Template_Name__c ASC'
+            ' ORDER BY Name ASC'
         );
     }
 

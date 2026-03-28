@@ -15,22 +15,18 @@
                                 icon-name="utility:back"
                             ></lightning-button>
                             <lightning-button
-                                label={label.previewLabel}
-                                onclick={handlePreview}
-                                class="slds-m-right_x-small"
-                                icon-name="utility:preview"
-                            ></lightning-button>
-                            <lightning-button
                                 label={label.buttonSave}
                                 variant="brand"
                                 onclick={handleSave}
                                 class="slds-m-right_x-small"
                             ></lightning-button>
-                            <lightning-button
-                                label={label.saveAndNewLabel}
-                                variant="brand"
-                                onclick={handleSaveAndNew}
-                            ></lightning-button>
+                            <template if:true={isNewMode}>
+                                <lightning-button
+                                    label={label.saveAndNewLabel}
+                                    variant="brand"
+                                    onclick={handleSaveAndNew}
+                                ></lightning-button>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -53,17 +49,17 @@
 
                 <div class="slds-p-around_medium">
 
-                    <!-- SECTION: Information -->
+                    <!-- SECTION: Template Settings -->
                     <div class="slds-section slds-is-open">
                         <h3 class="slds-section__title slds-theme_shade">
-                            <span class="slds-truncate slds-p-horizontal_small">{label.informationLabel}</span>
+                            <span class="slds-truncate slds-p-horizontal_small">{label.templateSettingsLabel}</span>
                         </h3>
 
                         <!-- Row 1: Template Name + API Name -->
                         <div class="slds-grid slds-wrap slds-p-top_small">
                             <div class="slds-col slds-size_1-of-2 slds-p-right_medium">
                                 <lightning-input
-                                    max-length="255"
+                                    max-length="80"
                                     class="name-input"
                                     label={label.FEC_Col_Template_Name}
                                     value={name}
@@ -89,6 +85,7 @@
                                     value={folderId}
                                     options={folderOptions}
                                     placeholder="Search folders..."
+                                    required
                                     onchange={handleFolderChange}
                                 ></c-fec_searchable-combobox>
                             </div>
@@ -142,18 +139,18 @@
                         </div>
                     </div>
 
-                    <!-- SECTION: Subject + Email Body -->
+                    <!-- SECTION: Message Content -->
                     <div class="slds-section slds-is-open slds-m-top_medium">
                         <h3 class="slds-section__title slds-theme_shade">
-                            <span class="slds-truncate slds-p-horizontal_small">{label.emailBodyLabel}</span>
+                            <span class="slds-truncate slds-p-horizontal_small">{label.messageContentLabel}</span>
                         </h3>
 
-                        <!-- Subject -->
+                        <!-- Subject Line -->
                         <div class="slds-grid slds-wrap slds-p-top_small">
                             <div class="slds-col slds-size_1-of-1">
                                 <lightning-input
                                     max-length="255"
-                                    label={label.subjectLabel}
+                                    label={label.subjectLineLabel}
                                     value={subject}
                                     onchange={handleSubjectChange}
                                 ></lightning-input>
@@ -239,21 +236,18 @@
                         class="slds-m-right_x-small"
                     ></lightning-button>
                     <lightning-button
-                        label={label.previewLabel}
-                        onclick={handlePreview}
-                        class="slds-m-right_x-small"
-                    ></lightning-button>
-                    <lightning-button
                         label={label.buttonSave}
                         variant="brand"
                         onclick={handleSave}
                         class="slds-m-right_x-small"
                     ></lightning-button>
-                    <lightning-button
-                        label={label.saveAndNewLabel}
-                        variant="brand"
-                        onclick={handleSaveAndNew}
-                    ></lightning-button>
+                    <template if:true={isNewMode}>
+                        <lightning-button
+                            label={label.saveAndNewLabel}
+                            variant="brand"
+                            onclick={handleSaveAndNew}
+                        ></lightning-button>
+                    </template>
                 </div>
             </div>
         </div>
