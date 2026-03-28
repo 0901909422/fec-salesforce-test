@@ -27,6 +27,7 @@ import {
   MessageContext,
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import IS_MODE_EDIT_INTERACTION from "@salesforce/messageChannel/FEC_Interaction_Case_Mode__c";
 import {
   IsConsoleNavigation,
   getFocusedTabInfo,
@@ -407,14 +408,14 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         fieldNames: FIELDS_TO_CHECK
       })
       let result = await getCase({ caseId: this.recordId });
-      this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_Search_National_ID__c : null;
-      this.phoneNumber = this.fieldPermissions['FEC_Search_Phone_Number__c'] ? result.FEC_Search_Phone_Number__c : null;
-      this.applicationId = this.fieldPermissions['FEC_Search_Application_ID__c'] ? result.FEC_Search_Application_ID__c : null;
-      this.contractNumber = this.fieldPermissions['FEC_Search_Contract_Number__c'] ? result.FEC_Search_Contract_Number__c : null;
-      this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Search_Account_Number__c : null;
-      this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Search_Email_Address__c : null;
-      this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
-      if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress || this.customerNumber) {
+      this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_National_ID_Passport_ID__c : null;
+      this.phoneNumber = this.fieldPermissions['FEC_Search_Phone_Number__c'] ? result.FEC_Phone_Number__c : null;
+      this.applicationId = this.fieldPermissions['FEC_Search_Application_ID__c'] ? result.FEC_Application_ID__c : null;
+      this.contractNumber = this.fieldPermissions['FEC_Search_Contract_Number__c'] ? result.FEC_Contract_Number__c : null;
+      this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Account_Number__c : null;
+      this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Interaction_Email__c : null;
+      //this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
+     if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress) {
         await this.processSearch();
       }
     } catch (error) {
@@ -697,14 +698,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       return;
     }
 
-    //this.seedSampleRows(true);
-    this.processSearch() 
-  }
-
-  async processSearch() {
-    this.isLoaded = false;
-    this.isNoCustomerFound = false;
-
     if (this.recordId) {
       try {
         const fields = {};
@@ -728,6 +721,14 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       );
       }
     }
+    //this.seedSampleRows(true);
+    this.processSearch() 
+  }
+
+  async processSearch() {
+    this.isLoaded = false;
+    this.isNoCustomerFound = false;
+
 
     // Optional: clear old results before new search
     this.cardData = [];
@@ -1169,7 +1170,7 @@ hasAnySearchCriteria(params) {
           cifNumber: cifNumber,
           phone: row?.Phone,
           customerName: row?.FullName,
-          isListView: !this.recordId
+          isListView: this.isListView
         })
           .then(async (res) => {
             // const payload = {
@@ -1182,6 +1183,7 @@ hasAnySearchCriteria(params) {
             );
             if (this.recordId) {
                 //publish(this.messageContext, IS_MODE_EDIT, payload);
+                this.handlePublishMessageChanel();
                 await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
                 // await refreshApex(this.wiredCaseResult);
                 this.dispatchEvent(new RefreshEvent());
@@ -1415,6 +1417,6 @@ hasAnySearchCriteria(params) {
     const payload = {
       isModeEdit: true,
     };
-    publish(this.messageContext, IS_MODE_EDIT, payload);
+    publish(this.messageContext, IS_MODE_EDIT_INTERACTION, payload);
   }
 }

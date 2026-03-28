@@ -1194,6 +1194,7 @@
 		<members>fec_CaseFollowHeadlessAction</members>
 		<members>fec_CaseUnfollowHeadlessAction</members>
 		<members>fec_WatchersInformation</members>
+		<members>fec_CaseModePublisher</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -2023,6 +2024,14 @@
 	<types>
 		<members>FEC_Search_Configuration</members>
 		<name>SearchCustomization</name>
+	</types>
+	<types>
+		<members>fec_AccountOrContractPicklistContainer</members>
+        <name>LightningComponentBundle</name>
+	</types>
+	<types>
+		<members>FEC_Interaction_Case_Mode</members>
+		<name>LightningMessageChannel</name>
 	</types>
 
     <version>65.0</version>

@@ -8066,6 +8066,13 @@
         <value>Case Created By</value>
     </labels>
     <labels>
+        <fullName>FEC_Account_Card_Fetch_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account Card Fetch Error</shortDescription>
+        <value>Failed to retrieve card info for Account Number</value>
+    </labels>
+    <labels>
         <fullName>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -8461,6 +8468,34 @@
         <protected>false</protected>
         <shortDescription>Parent ID</shortDescription>
         <value>Parent ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Complete_field_msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Complete field msg</shortDescription>
+        <value>Complete this field.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Create_Interaction_Failed_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Interaction Failed MSG</shortDescription>
+        <value>Failed to create Interaction</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Create_Interaction_In_List_View_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Interaction In List View Label</shortDescription>
+        <value>Create Interaction</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Create_Successfully_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Successfully MSG</shortDescription>
+        <value>created successfully</value>
     </labels>
     <labels>
         <fullName>FEC_Lookup_Error</fullName>
@@ -9950,6 +9985,929 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_Card_LockUnlock_Validation_Failed</shortDescription>
         <value>Validation failed.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Complete_This_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Complete this field validation message</shortDescription>
+        <value>Complete this field.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Enhanced_Letterhead_Description</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Enhanced_Letterhead_Description</shortDescription>
+        <value>Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Enhanced_Letterhead_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Enhanced_Letterhead_Name</shortDescription>
+        <value>Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Enhanced_Letterhead_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Enhanced_Letterhead_Success</shortDescription>
+        <value>Enhanced Letterhead NAME_MERGE_FIELD was created.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Footer</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Footer</shortDescription>
+        <value>Footer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Header</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Header</shortDescription>
+        <value>Header</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Information section heading</shortDescription>
+        <value>Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Insert_Merge_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Insert_Merge_Field</shortDescription>
+        <value>Insert Merge Field</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Letterhead_Content</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Letterhead_Content</shortDescription>
+        <value>Letterhead Content</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Letterhead_Content_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Letterhead_Content_Info</shortDescription>
+        <value>Add content to the header, footer, or both. When an enhanced letterhead is associated with an email template, a read-only copy of the letterhead is included in the email along with the template.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Letterhead_Success_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Letterhead_Success_Message</shortDescription>
+        <value>Enhanced Letterhead NAME_MERGE_FIELD was saved.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Merge_Field_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Merge_Field_Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Merge_Field_Insert</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Merge_Field_Insert</shortDescription>
+        <value>Insert</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Merge_Field_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Merge_Field_Placeholder</shortDescription>
+        <value>Search merge fields...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Enhanced_Letterhead</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_New_Enhanced_Letterhead</shortDescription>
+        <value>New Enhanced Letterhead</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Object_Account</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Object_Account</shortDescription>
+        <value>Account</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_Closure_No_Eligible</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Closure_No_Eligible</shortDescription>
+        <value>Không có khoản IPP phù hợp để tất toán.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_Closure_Select_One</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Closure_Select_One</shortDescription>
+        <value>Vui lòng chọn 01 khoản IPP</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Back_To_Case</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Back_To_Case</shortDescription>
+        <value>Back to Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Complete</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Complete</shortDescription>
+        <value>Hoàn tất</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Heading</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Heading</shortDescription>
+        <value>Danh sách khoản vay IPP</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppRecordNo</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppRecordNo</shortDescription>
+        <value>IPP Record No.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppPlan</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppPlan</shortDescription>
+        <value>IPP Plan</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppOpenDate</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppOpenDate</shortDescription>
+        <value>IPP Open Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppFirstDueDate</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppFirstDueDate</shortDescription>
+        <value>IPP First Due Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppMatureDate</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppMatureDate</shortDescription>
+        <value>IPP Mature Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppBalance</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppBalance</shortDescription>
+        <value>IPP Balance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppCurrentBalance</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppCurrentBalance</shortDescription>
+        <value>IPP Current Balance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppInterestRate</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppInterestRate</shortDescription>
+        <value>IPP Interest Rate</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppTerm</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppTerm</shortDescription>
+        <value>IPP Term</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppInsurance</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppInsurance</shortDescription>
+        <value>IPP Insurance</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Closure_Col_IppCurrentTerm</fullName>
+        <categories>IPP Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Closure_Col_IppCurrentTerm</shortDescription>
+        <value>IPP Current Term</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CaseType_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG CaseType Null</shortDescription>
+        <value>Casetype is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Category_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Category Null</shortDescription>
+        <value>Category is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Channel_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Channel Null</shortDescription>
+        <value>Channel is null or invalid &quot;&quot;</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Datetime_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Datetime Null</shortDescription>
+        <value>DateTime is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Get_CS_Data_Success</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Get CS Data Success</shortDescription>
+        <value>Get CS master data successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_No_Longer</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG No Longer</shortDescription>
+        <value>&quot; or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ProductType_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG ProductType Null</shortDescription>
+        <value>ProductType is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SubCategory_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG SubCategory Null</shortDescription>
+        <value>SubCategory is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SubCode_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG SubCode Null</shortDescription>
+        <value>SubCode is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Sys_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG_Sys_Null</shortDescription>
+        <value>Sys is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_TransactionId_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG TransactionId Null</shortDescription>
+        <value>TransactionID is null or invalid &quot;&quot;</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_UserType_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG UserType Null</shortDescription>
+        <value>UserType is invalid or no longer than 15 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Success</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case API success description</shortDescription>
+        <value>Case cancelled successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Channel_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case invalid Channel</shortDescription>
+        <value>Invalid Channel. Allowed: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_UserType_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case invalid UserType</shortDescription>
+        <value>Invalid UserType. Allowed: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Phone_Format_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case PhoneNumber format</shortDescription>
+        <value>PhoneNumber format is invalid. Expected format: Vietnamese (0xxxxxxxxx - 10 digits) or International (+xxxxxxxx - 8 to 15 digits with country code)</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Case_Not_Found</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case not found by FEC_ID_Search</shortDescription>
+        <value>Case not found with ID: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Case_Already_Closed_Or_Completed</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case already closed or completed</shortDescription>
+        <value>Case is already Closed or Completed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Case_Already_Resolved</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case already cancelled</shortDescription>
+        <value>Case is already resolved.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CancelCS_Insufficient_Permissions</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel CS Case FLS on Case.Status</shortDescription>
+        <value>Insufficient permissions to update Case Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Object_Additional_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Object_Additional_Info</shortDescription>
+        <value>Additional Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Object_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Object_Case</shortDescription>
+        <value>Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Object_Customer_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Object_Customer_History</shortDescription>
+        <value>Customer History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Object_User</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Object_User</shortDescription>
+        <value>User</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Require_Header_Or_Footer</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Require_Header_Or_Footer</shortDescription>
+        <value>The header and footer fields are empty. Add something to at least one field, then try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Required_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Required information notice</shortDescription>
+        <value>= Required Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Required_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Required_Name</shortDescription>
+        <value>These required fields must be completed: Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Review_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Review error banner heading</shortDescription>
+        <value>Review the errors on this page.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Select_Merge_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Select_Merge_Field</shortDescription>
+        <value>Select Merge Field</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sender</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Sender</shortDescription>
+        <value>Sender</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Action_Clone</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clone row action</shortDescription>
+        <value>Clone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_All_Folders_Tab</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>All Folders tab label</shortDescription>
+        <value>All Folders</value>
+    </labels>
+    <labels>
+        <fullName>FEC_All_Templates_Tab</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>All Templates tab label</shortDescription>
+        <value>All Templates</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Active</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Active column</shortDescription>
+        <value>Active</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Description</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Description column</shortDescription>
+        <value>Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Folder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Folder column</shortDescription>
+        <value>Folder</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Folder_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Folder Name column</shortDescription>
+        <value>Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Last_Modified_By</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Modified By column</shortDescription>
+        <value>Last Modified By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Last_Modified_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Last Modified Date column</shortDescription>
+        <value>Last Modified Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Template_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template Name column</shortDescription>
+        <value>Template Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Filter_Active</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Filter by Active label</shortDescription>
+        <value>Active</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Folder_Tree_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Folder sidebar header</shortDescription>
+        <value>Folders</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Item_Count</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Item count suffix singular</shortDescription>
+        <value>item</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Items_Count</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Items count suffix</shortDescription>
+        <value>items</value>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Folder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Folder button</shortDescription>
+        <value>New Folder</value>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Template button</shortDescription>
+        <value>New Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Folders_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No folders found message</shortDescription>
+        <value>No folders found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Templates_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No templates found message</shortDescription>
+        <value>No templates found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Search_Templates</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search Templates placeholder</shortDescription>
+        <value>Search this list...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_API_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>API Name field label</shortDescription>
+        <value>API Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Applicable_Mailbox</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Applicable for Mailbox field label</shortDescription>
+        <value>Applicable for Mailbox</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Attachment</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Attachment section label</shortDescription>
+        <value>Attachment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Back_To_List</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Back to List button label</shortDescription>
+        <value>Back to List</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Email_Body</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Body section title</shortDescription>
+        <value>Email Body</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Enhanced_Letterhead</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Enhanced Letterhead field label</shortDescription>
+        <value>Enhanced Letterhead</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Management_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template Management page title</shortDescription>
+        <value>Email Templates</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Subject</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Subject field label</shortDescription>
+        <value>Subject</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Folder_Duplicate_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when folder unique name exists</shortDescription>
+        <value>A folder with the API Name &quot;{0}&quot; already exists in Salesforce.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Action_Preview</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Preview row action</shortDescription>
+        <value>Preview</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Folder_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Folder Label</shortDescription>
+        <value>Folder Label</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Col_Parent_Folder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Parent Folder column</shortDescription>
+        <value>Parent Folder</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Button</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label for delete action button</shortDescription>
+        <value>Delete</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Email_Template_Confirmation</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirmation message for email template deletion</shortDescription>
+        <value>Are you sure you want to delete this email template?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Email_Template_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Title for the email template delete modal</shortDescription>
+        <value>Delete Email Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Folder_Confirmation</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirmation message for folder deletion</shortDescription>
+        <value>Are you sure you want to delete this folder?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Delete_Folder_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Title for the folder delete modal</shortDescription>
+        <value>Delete Folder</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Folder_Create_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>folder create success message</shortDescription>
+        <value>The folder named MERGE_FIELD_NAME was created.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Folder_Updated_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>folder updated success message</shortDescription>
+        <value>The folder named MERGE_FIELD_NAME was updated.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Success_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message after folder is deleted</shortDescription>
+        <value>Folder &quot;MERGE_FIELD_NAME&quot; was deleted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Success_Message_Email</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message after email template is deleted</shortDescription>
+        <value>Email template &quot;MERGE_FIELD_NAME&quot; was deleted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Edit_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Edit Template page heading</shortDescription>
+        <value>Edit Email Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Email_Body_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Body section info text</shortDescription>
+        <value>Compose the email body below. Use the merge field button to insert dynamic data at the cursor position.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Required_Fields_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Required fields validation message</shortDescription>
+        <value>These required fields must be completed: Template Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Save_And_New</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Save and New button label</shortDescription>
+        <value>Save &amp; New</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Saved_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template saved success message</shortDescription>
+        <value>Email template was saved successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Enhanced_Letterhead_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Enhanced_Letterhead_Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Created_By</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Created_By</shortDescription>
+        <value>Created By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Last_Modified_By</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Last_Modified_By</shortDescription>
+        <value>Last Modified By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_System_Infomation</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_System_Infomation</shortDescription>
+        <value>System Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Message_Content</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Message Content</shortDescription>
+        <value>Message Content</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Subject_Line</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Subject Line</shortDescription>
+        <value>Subject Line</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Settings</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template Settings</shortDescription>
+        <value>Template Settings</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Card_Status</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Card Status</shortDescription>
+        <value>Current Card Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Card_Block_Reason</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Card Block Reason</shortDescription>
+        <value>Card Block Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Block_Code</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Block Code</shortDescription>
+        <value>New Block Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Verify_Information</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Verify Information</shortDescription>
+        <value>Xác minh thông tin</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Callback</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Callback</shortDescription>
+        <value>Gọi lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Block_Card_Btn</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Block Card Btn</shortDescription>
+        <value>Block Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Block_Card_Header</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Block Card Header</shortDescription>
+        <value>Block Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Block_Card_Success</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Block Card Success</shortDescription>
+        <value>Khoá thẻ thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Block_Card_Failed</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Block Card Failed</shortDescription>
+        <value>Khoá thẻ thất bại. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Block_Card_Failed_Max</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Block Card Failed Max</shortDescription>
+        <value>Khoá thẻ thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Block_Card_Confirmation_Msg</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Block Card Confirmation Msg</shortDescription>
+        <value>Bạn sắp khoá thẻ cho khách hàng này. Bạn có chắc chắn muốn tiếp tục không?</value>
     </labels>
     <labels>
         <fullName>FEC_On_Hold_Label</fullName>

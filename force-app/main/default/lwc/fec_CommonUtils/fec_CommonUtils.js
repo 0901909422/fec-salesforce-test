@@ -39,15 +39,15 @@ const formatDateTime = (curr) => {
 const formatDateTimeVN = (val) => {
   if (!val) return '';
   const d = new Date(val);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   const h = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
   const s = String(d.getSeconds()).padStart(2, "0");
-  return `${day}/${m}/${y} ${h}:${min}:${s}`;
-};
 
+  return `${day}/${month}/${year}, ${h}:${m}:${s}`;
+};
 /**
  * Format seconds as HH:mm:ss
  */
@@ -153,6 +153,11 @@ const maskWorkPhone = (phone) => {
   if (/^84\d{9}$/.test(v)) {
     return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
+
+  if (/^02\d{8}$/.test(v)) {
+    return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
+  }
+
   if (/^0\d{9}$/.test(v)) {
     return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
   }
@@ -566,7 +571,7 @@ const setConsoleTab = async (label, icon) => {
 const urlCmpWithRecordId = (cmp, recordId) => {
   return `/lightning/cmp/c__${cmp}?c__recordId=${recordId}`;
 }
-                                                                                                                                                                                                            
+
 /* ================= NEGATIVE HELPER ================= */
 const isNegative = (value) => {
   if (value === null || value === undefined || value === '') {
@@ -593,6 +598,11 @@ const formatNumber = (value) => {
   } catch {
     return value;
   }
+};
+
+const getCaseIdNumber = (idText) => {
+    const match = idText?.match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
 };
 
 /**
@@ -634,12 +644,23 @@ const toSortDateStr = (val) => {
   }
   return s;
 };
+const sortByStringField = (list = [], field, direction = 'asc') => {
+  if (!Array.isArray(list) || !field) return [];
+
+  const dir = direction === 'desc' ? -1 : 1;
+
+  return [...list].sort((a, b) => {
+    const x = (a[field] || '').toString().trim().toLowerCase();
+    const y = (b[field] || '').toString().trim().toLowerCase();
+
+    return x.localeCompare(y) * dir;
+  });
+};
 
 export {
   formatDate,
   formatDateTime,
   formatDateTimeVN,
-  formatDuration,
   mask,
   formatDateVNI,
   formatToDDMMYYYY,
@@ -659,5 +680,8 @@ export {
   isNegative,
   formatNumber,
   formatNum,
-  toSortDateStr
+  toSortDateStr,
+  formatDuration,
+  getCaseIdNumber,
+  sortByStringField
 };

@@ -257,10 +257,10 @@
                             <value>NAME</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FEC_Start_On__c</value>
+                            <value>FEC_Start_Date__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FEC_End_On__c</value>
+                            <value>FEC_End_Date__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Note__c</value>
