@@ -18,10 +18,11 @@ import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 /* ── Apex ── */
-import getTemplate    from '@salesforce/apex/FEC_TemplateController.getTemplate';
-import saveTemplate   from '@salesforce/apex/FEC_TemplateController.saveTemplate';
-import getAttachments from '@salesforce/apex/FEC_TemplateController.getAttachments';
-import getAllFolders   from '@salesforce/apex/FEC_FolderController.getAllFolders';
+import getTemplate      from '@salesforce/apex/FEC_TemplateController.getTemplate';
+import saveTemplate     from '@salesforce/apex/FEC_TemplateController.saveTemplate';
+import getAttachments   from '@salesforce/apex/FEC_TemplateController.getAttachments';
+import getAllLetterheads from '@salesforce/apex/FEC_TemplateController.getAllLetterheads';
+import getAllFolders     from '@salesforce/apex/FEC_FolderController.getAllFolders';
 
 /* ── Custom Labels (i18n) ── */
 import FEC_New_Template               from '@salesforce/label/c.FEC_New_Template';
@@ -33,11 +34,11 @@ import FEC_Col_Active                 from '@salesforce/label/c.FEC_Col_Active';
 import buttonSave                     from '@salesforce/label/c.FEC_Button_Save';
 import requireInfoLabel               from '@salesforce/label/c.FEC_Required_Information';
 import reviewErrorLabel               from '@salesforce/label/c.FEC_Review_Error';
-import informationLabel               from '@salesforce/label/c.FEC_Information';
 import completeThisFieldLabel         from '@salesforce/label/c.FEC_Complete_This_Field';
 
-import subjectLabel                   from '@salesforce/label/c.FEC_Template_Subject';
-import emailBodyLabel                 from '@salesforce/label/c.FEC_Template_Email_Body';
+import templateSettingsLabel          from '@salesforce/label/c.FEC_Template_Settings';
+import messageContentLabel            from '@salesforce/label/c.FEC_Message_Content';
+import subjectLineLabel               from '@salesforce/label/c.FEC_Subject_Line';
 import emailBodyInfoLabel             from '@salesforce/label/c.FEC_Template_Email_Body_Info';
 import requiredFieldsMsg              from '@salesforce/label/c.FEC_Template_Required_Fields_Msg';
 import templateSavedMsg               from '@salesforce/label/c.FEC_Template_Saved_Success';
@@ -49,7 +50,6 @@ import mailboxLabel                   from '@salesforce/label/c.FEC_Template_App
 import attachmentLabel                from '@salesforce/label/c.FEC_Template_Attachment';
 import backToListLabel                from '@salesforce/label/c.FEC_Template_Back_To_List';
 import saveAndNewLabel                from '@salesforce/label/c.FEC_Template_Save_And_New';
-import previewLabel                   from '@salesforce/label/c.FEC_Action_Preview';
 
 /* ── Constants & Utils ── */
 import { MAILBOX_OPTIONS } from 'c/fec_TemplateConstants';
@@ -99,7 +99,7 @@ export default class Fec_templateEditor extends LightningElement {
     @track folderId              = '';
     @track enhancedLetterheadId  = '';
     @track applicableMailbox     = [];
-    @track isActive              = true;
+    @track isActive              = false;
     @track emailBody             = '';
     @track attachments           = [];     // { id, name, size, type }
 
@@ -134,10 +134,10 @@ export default class Fec_templateEditor extends LightningElement {
         buttonSave,
         requireInfoLabel,
         reviewErrorLabel,
-        informationLabel,
         completeThisFieldLabel,
-        subjectLabel,
-        emailBodyLabel,
+        templateSettingsLabel,
+        messageContentLabel,
+        subjectLineLabel,
         emailBodyInfoLabel,
         requiredFieldsMsg,
         templateSavedMsg,
@@ -147,8 +147,7 @@ export default class Fec_templateEditor extends LightningElement {
         mailboxLabel,
         attachmentLabel,
         backToListLabel,
-        saveAndNewLabel,
-        previewLabel
+        saveAndNewLabel
     };
 
     /* ═══════════════════════════════════════════ */
@@ -161,11 +160,14 @@ export default class Fec_templateEditor extends LightningElement {
 
     get isEditMode() { return !!this._recordId; }
 
+    get isNewMode() { return !this._recordId; }
+
     get mergeFieldLabel() { return '{ }'; }
 
     /* ── Wire: load all folders for the dropdown ── */
     connectedCallback() {
         this._loadFolderOptions();
+        this._loadLetterheadOptions();
         // Pre-fill folder for new templates (not edit, not clone)
         if (!this._recordId && !this._cloneData && this.defaultFolderId) {
             this.folderId = this.defaultFolderId;
@@ -175,13 +177,30 @@ export default class Fec_templateEditor extends LightningElement {
     async _loadFolderOptions() {
         try {
             const data = await getAllFolders();
-            this._folderOptions = (data || []).map(f => ({
-                label: f.FEC_Folder_Label__c,
-                value: f.Id
-            }));
+            this._folderOptions = (data || [])
+                .filter(f => f.Name)
+                .map(f => ({
+                    label: f.Name,
+                    value: f.Id
+                }));
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error('[templateEditor] Error loading folders:', error);
+        }
+    }
+
+    async _loadLetterheadOptions() {
+        try {
+            const data = await getAllLetterheads();
+            this._letterheadOptions = (data || [])
+                .filter(lh => lh.Name)
+                .map(lh => ({
+                    label: lh.Name,
+                    value: lh.Id
+                }));
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('[templateEditor] Error loading letterheads:', error);
         }
     }
 
@@ -350,11 +369,6 @@ export default class Fec_templateEditor extends LightningElement {
         this.dispatchEvent(new CustomEvent('cancel'));
     }
 
-    handlePreview() {
-        // eslint-disable-next-line no-console
-        console.log('[templateEditor] Preview – TBD');
-    }
-
     /* ═══════════════════════════════════════════ */
     /*  PRIVATE HELPERS                            */
     /* ═══════════════════════════════════════════ */
@@ -393,19 +407,32 @@ export default class Fec_templateEditor extends LightningElement {
     }
 
     _validate() {
+        let isValid = true;
+
+        /* Validate Template Name (required) */
         const nameInput = this.template.querySelector('.name-input');
         if (!nameInput || !nameInput.value || nameInput.value.trim() === '') {
             if (nameInput) {
                 nameInput.setCustomValidity(completeThisFieldLabel);
                 nameInput.reportValidity();
             }
+            isValid = false;
+        } else {
+            nameInput.setCustomValidity('');
+            nameInput.reportValidity();
+        }
+
+        /* Validate Folder (required) */
+        if (!this.folderId) {
+            isValid = false;
+        }
+
+        if (!isValid) {
             this.errorMessage = requiredFieldsMsg;
             this.hasErrors = true;
-            return false;
         }
-        nameInput.setCustomValidity('');
-        nameInput.reportValidity();
-        return true;
+
+        return isValid;
     }
 
     /**
@@ -413,7 +440,7 @@ export default class Fec_templateEditor extends LightningElement {
      */
     _buildSObject() {
         const sObj = {
-            FEC_Template_Name__c:       this.name,
+            Name:                       this.name,
             FEC_API_Name__c:            this.apiName,
             FEC_Description__c:         this.description,
             FEC_Subject_Line__c:        this.subject,
@@ -438,7 +465,7 @@ export default class Fec_templateEditor extends LightningElement {
         this.folderId = '';
         this.enhancedLetterheadId = '';
         this.applicableMailbox = [];
-        this.isActive = true;
+        this.isActive = false;
         this.emailBody = '';
         this.attachments = [];
         this.hasErrors = false;
@@ -458,7 +485,7 @@ export default class Fec_templateEditor extends LightningElement {
         this.folderId             = data.folderId || '';
         this.enhancedLetterheadId = data.enhancedLetterheadId || '';
         this.applicableMailbox    = data.applicableMailbox || [];
-        this.isActive             = data.isActive !== undefined ? data.isActive : true;
+        this.isActive             = data.isActive !== undefined ? data.isActive : false;
         this.emailBody            = data.emailBody || '';
         this._originalBody        = '';
         this._apiNameManuallySet  = false;
@@ -475,8 +502,8 @@ export default class Fec_templateEditor extends LightningElement {
             const rec = await getTemplate({ templateId: templateId });
             if (!rec) return;
 
-            this.name                 = rec.FEC_Template_Name__c || '';
-            this.apiName              = rec.FEC_API_Name__c || generateApiName(rec.FEC_Template_Name__c);
+            this.name                 = rec.Name || '';
+            this.apiName              = rec.FEC_API_Name__c || generateApiName(rec.Name);
             this.description          = rec.FEC_Description__c || '';
             this.subject              = rec.FEC_Subject_Line__c || '';
             this.folderId             = rec.FEC_Folder__c || '';
