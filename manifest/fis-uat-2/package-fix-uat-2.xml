@@ -12,8 +12,11 @@
         <members>FEC_TemplateTriggerHandler_Test</members>
         <members>FEC_TemplateTriggerHandler</members>
         <members>FEC_GetCSMasterDataService</members>
+        <members>FEC_CaseBusinessService</members>
+        <members>FEC_TranferInformationCallout</members>
         <members>FEC_CardLockUnLockCallout</members>
         <members>FEC_ReplacementCardCallout</members>
+        <members>FEC_InteractionRoutingService</members>
         <members>FEC_CardLockUnLockController</members>
         <name>ApexClass</name>
     </types>
@@ -23,6 +26,7 @@
         <members>fec_templateDetailPage</members>
 		<members>fec_templateEditor</members>
         <members>fec_templateListView</members>
+        <members>fec_CaseEditNOC</members>
 		<members>fec_CaseBussiness</members>
 		<members>fec_CardBlock</members>
         <name>LightningComponentBundle</name>

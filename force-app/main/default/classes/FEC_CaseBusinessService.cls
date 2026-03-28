@@ -423,10 +423,11 @@ public with sharing class FEC_CaseBusinessService {
           'SELECT Id, Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE Id = :id ' +
-          'AND FEC_Active__c = TRUE ' +
-          'AND FEC_User_Group__c INCLUDES (\'' +
-          String.join(new List<String>(rolelst), '\',\'') +
-          '\')';
+          'AND FEC_Active__c = TRUE'; 
+          // +
+          // 'AND FEC_User_Group__c INCLUDES (\'' +
+          // String.join(new List<String>(rolelst), '\',\'') +
+          // '\')';
 
         bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
       } else {
@@ -435,10 +436,11 @@ public with sharing class FEC_CaseBusinessService {
           'FROM FEC_Case_Stage__c ' +
           'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
           'AND FEC_Active__c = TRUE ' +
-          'AND FEC_Default_Stage__c = TRUE ' +
-          'AND FEC_User_Group__c INCLUDES (\'' +
-          String.join(new List<String>(rolelst), '\',\'') +
-          '\')';
+          'AND FEC_Default_Stage__c = TRUE';
+          // + 
+          // 'AND FEC_User_Group__c INCLUDES (\'' +
+          // String.join(new List<String>(rolelst), '\',\'') +
+          // '\')';
 
         bindVars = new Map<String, Object>{
           'selectedNatureOfCaseId' => selectedNatureOfCaseId
