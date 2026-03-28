@@ -165,7 +165,7 @@ public without sharing class FEC_CardLockUnLockCallout {
         if(String.isBlank(accountNumber)) {
             return new ValidationResult(false,
                 String.format(System.Label.FEC_MSG_Param_Required,
-                new List<String>{'AccountNumber'}));
+                new List<String>{'Account Number'}));
         }
 
         if(String.isBlank(last4Digit)) {
@@ -174,11 +174,23 @@ public without sharing class FEC_CardLockUnLockCallout {
                 new List<String>{'Last4Digit'}));
         }
 
+        if(String.isBlank(blockCode)) {
+            return new ValidationResult(false,
+                String.format(System.Label.FEC_MSG_Param_Required,
+                new List<String>{'Block Code'}));
+        }
+
+        if(String.isBlank(funcCode)) {
+            return new ValidationResult(false,
+                String.format(System.Label.FEC_MSG_Param_Required,
+                new List<String>{'Func Code'}));
+        }
+
         if (last4Digit.length() > 255) {
             return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Last4Digit', '255'}));
         }
         if (accountNumber.length() > 255) {
-            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'AccountNumber', '255'}));
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Account Number', '255'}));
         }
 
         return new ValidationResult(true, null);
