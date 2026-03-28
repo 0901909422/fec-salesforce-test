@@ -1,5 +1,4 @@
 import { LightningElement, api, wire } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 import { subscribe, unsubscribe, onError } from 'lightning/empApi';
@@ -14,10 +13,8 @@ const COLUMNS = [
     { label: 'Date Time', fieldName: 'formattedDatetime', type: 'text', sortable: true }
 ];
 
-export default class Fec_WatchersInformation extends NavigationMixin(LightningElement) {
+export default class Fec_WatchersInformation extends LightningElement {
     @api recordId;
-    /** Flexipage ID của trang Case (vd: FEC_Customer_Case_Record_Page, FEC_Internal_Case_Record_Page) - dùng cho View All URL */
-    @api flexipageId = 'FEC_Customer_Case_Record_Page';
 
     _watchers = [];
     error;
@@ -232,36 +229,6 @@ export default class Fec_WatchersInformation extends NavigationMixin(LightningEl
     handlePageSizeChange(event) {
         this.pageSize = parseInt(event.detail.value, 10);
         this.currentPage = 1;
-    }
-
-    handleViewAllKeydown(event) {
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            this.handleViewAll(event);
-        }
-    }
-
-    handleViewAll(event) {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        if (!this.recordId) {
-            this.showError('Không tìm thấy Case.');
-            return;
-        }
-        try {
-            const ws = encodeURIComponent(`/lightning/r/Case/${this.recordId}/view`);
-            const viewAllUrl = `/lightning/cmp/force__dynamicRelatedListViewAll?force__flexipageId=${encodeURIComponent(this.flexipageId)}&force__cmpId=lst_dynamicRelatedList4&force__recordId=${this.recordId}&ws=${ws}&uid=${Date.now()}`;
-
-            this[NavigationMixin.Navigate]({
-                type: 'standard__webPage',
-                attributes: { url: viewAllUrl }
-            });
-        } catch (err) {
-            console.error('View All navigation error:', err);
-            this.showError(err?.body?.message || err?.message || 'Không thể điều hướng.');
-        }
     }
 
     handlePrevPage() {

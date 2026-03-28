@@ -606,7 +606,11 @@
         <field>Case.FEC_Owner_Is_User__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Parent_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Phone_Number__c</field>
@@ -1188,6 +1192,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Assignment__c.FEC_Date_Time__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Assignment__c.FEC_User_Role__c</field>
         <readable>true</readable>
@@ -1289,6 +1298,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Process_Action_History__c.FEC_Date_Time__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Process_Action_History__c.FEC_Stage_Name__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1320,6 +1334,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Relevant_Ticket__c.FEC_Date_Time__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Relevant_Ticket__c.FEC_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1346,6 +1365,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Relevant_Ticket__c.FE_Sub_Code_Relevant__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Date_Time__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1526,16 +1550,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>ServiceResourceSkill.FEC_Active__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>ServiceResourceSkill.FEC_Capacity__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>ServiceResourceSkill.FEC_Skill_Level__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
