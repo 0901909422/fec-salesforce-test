@@ -12,7 +12,7 @@ private class FEC_TemplateController_Test {
         insert folder;
 
         FEC_Template__c tmpl = new FEC_Template__c(
-            FEC_Template_Name__c = 'Controller Test Template',
+            Name = 'Controller Test Template',
             FEC_Folder__c = folder.Id,
             FEC_Active__c = true,
             FEC_Subject_Line__c = 'Test Subject',
@@ -30,7 +30,7 @@ private class FEC_TemplateController_Test {
         Test.stopTest();
 
         Assert.isNotNull(result);
-        Assert.areEqual('Controller Test Template', result.FEC_Template_Name__c);
+        Assert.areEqual('Controller Test Template', result.Name);
     }
 
     @IsTest
@@ -47,7 +47,7 @@ private class FEC_TemplateController_Test {
         FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c LIMIT 1];
 
         FEC_Template__c newTmpl = new FEC_Template__c(
-            FEC_Template_Name__c = 'New Via Controller',
+            Name = 'New Via Controller',
             FEC_Folder__c = folder.Id,
             FEC_Active__c = false
         );
@@ -59,8 +59,8 @@ private class FEC_TemplateController_Test {
         Test.stopTest();
 
         Assert.isNotNull(savedId);
-        FEC_Template__c saved = [SELECT FEC_Template_Name__c FROM FEC_Template__c WHERE Id = :savedId];
-        Assert.areEqual('New Via Controller', saved.FEC_Template_Name__c);
+        FEC_Template__c saved = [SELECT Name FROM FEC_Template__c WHERE Id = :savedId];
+        Assert.areEqual('New Via Controller', saved.Name);
     }
 
     @IsTest

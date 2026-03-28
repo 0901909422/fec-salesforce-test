@@ -1,6 +1,6 @@
 /**
  * Class Description: Handler class for FEC_Template__c Trigger business logic.
- *                    ① Auto-generate FEC_API_Name__c from FEC_Template_Name__c
+ *                    ① Auto-generate FEC_API_Name__c from Name
  *                    ② Check duplicate FEC_API_Name__c within the same FEC_Folder__c
  * @created  : 2026/03/12
  */
@@ -47,7 +47,7 @@ public without sharing class FEC_TemplateTriggerHandler {
         List<FEC_Template__c> nameChanged = new List<FEC_Template__c>();
         for (FEC_Template__c tmpl : newTemplates) {
             FEC_Template__c oldTmpl = oldMap.get(tmpl.Id);
-            if (tmpl.FEC_Template_Name__c != oldTmpl.FEC_Template_Name__c) {
+            if (tmpl.Name != oldTmpl.Name) {
                 nameChanged.add(tmpl);
             }
         }
@@ -59,7 +59,7 @@ public without sharing class FEC_TemplateTriggerHandler {
         List<FEC_Template__c> needDupCheck = new List<FEC_Template__c>();
         for (FEC_Template__c tmpl : newTemplates) {
             FEC_Template__c oldTmpl = oldMap.get(tmpl.Id);
-            if (tmpl.FEC_Template_Name__c != oldTmpl.FEC_Template_Name__c
+            if (tmpl.Name != oldTmpl.Name
                 || tmpl.FEC_Folder__c != oldTmpl.FEC_Folder__c) {
                 needDupCheck.add(tmpl);
             }
@@ -70,13 +70,13 @@ public without sharing class FEC_TemplateTriggerHandler {
     }
 
     /**
-     * Method Description: Auto-generate FEC_API_Name__c from FEC_Template_Name__c.
+     * Method Description: Auto-generate FEC_API_Name__c from Name.
      *                    Rule: non-alphanumeric → underscore, collapse consecutive, trim.
      * @param templates List of Templates that need API Name generation
      */
     private void generateApiName(List<FEC_Template__c> templates) {
         for (FEC_Template__c tmpl : templates) {
-            String templateName = tmpl.FEC_Template_Name__c;
+            String templateName = tmpl.Name;
             if (String.isNotBlank(templateName)) {
                 String apiName = templateName.trim();
                 apiName = apiName.replaceAll('[^a-zA-Z0-9_]', '_');
@@ -159,7 +159,7 @@ public without sharing class FEC_TemplateTriggerHandler {
                 Id existingId = existingMap.get(compositeKey);
                 // If update: allow the record to match itself
                 if (tmpl.Id == null || tmpl.Id != existingId) {
-                    tmpl.FEC_Template_Name__c.addError(
+                    tmpl.Name.addError(
                         'A template with API Name "' + tmpl.FEC_API_Name__c
                         + '" already exists in the same folder. Please use a different name.'
                     );
@@ -168,7 +168,7 @@ public without sharing class FEC_TemplateTriggerHandler {
 
             // Check within current batch (batch-internal duplicate)
             if (batchMap.containsKey(compositeKey)) {
-                tmpl.FEC_Template_Name__c.addError(
+                tmpl.Name.addError(
                     'Duplicate template name detected in this batch. A template with API Name "'
                     + tmpl.FEC_API_Name__c + '" already exists in the same folder.'
                 );

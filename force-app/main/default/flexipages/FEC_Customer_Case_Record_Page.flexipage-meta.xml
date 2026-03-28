@@ -32,7 +32,7 @@
                                     <rightValue>Interaction</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!Record.FEC_Is_My_Follow_Up__c}</leftValue>
+                                    <leftValue>{!Record.FEC_Show_Unfollow__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
                                 </criteria>
@@ -120,6 +120,9 @@
     </flexiPageRegions>
     <flexiPageRegions>
         <itemInstances>
+            <componentInstances>
+                <componentName>fec_CaseModePublisher</componentName>
+            </componentInstances>
             <componentInstance>
                 <componentInstanceProperties>
                     <name>modeEditCase</name>

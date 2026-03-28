@@ -10800,4 +10800,113 @@
         <shortDescription>FEC_System_Infomation</shortDescription>
         <value>System Information</value>
     </labels>
+    <labels>
+        <fullName>FEC_Message_Content</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Message Content</shortDescription>
+        <value>Message Content</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Subject_Line</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Subject Line</shortDescription>
+        <value>Subject Line</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Settings</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template Settings</shortDescription>
+        <value>Template Settings</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Card_Status</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Card Status</shortDescription>
+        <value>Current Card Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Card_Block_Reason</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Card Block Reason</shortDescription>
+        <value>Card Block Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Block_Code</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Block Code</shortDescription>
+        <value>New Block Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Verify_Information</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Verify Information</shortDescription>
+        <value>Xác minh thông tin</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Callback</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Callback</shortDescription>
+        <value>Gọi lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Block_Card_Btn</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Block Card Btn</shortDescription>
+        <value>Block Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Block_Card_Header</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Block Card Header</shortDescription>
+        <value>Block Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Block_Card_Success</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Block Card Success</shortDescription>
+        <value>Khoá thẻ thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Block_Card_Failed</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Block Card Failed</shortDescription>
+        <value>Khoá thẻ thất bại. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Block_Card_Failed_Max</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Block Card Failed Max</shortDescription>
+        <value>Khoá thẻ thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Block_Card_Confirmation_Msg</fullName>
+        <categories></categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Block Card Confirmation Msg</shortDescription>
+        <value>Bạn sắp khoá thẻ cho khách hàng này. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
 </CustomLabels>
