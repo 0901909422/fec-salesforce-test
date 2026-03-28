@@ -27,6 +27,7 @@
     <aura:attribute name="fromOptions" type="List" default="[]" />
     <aura:attribute name="hasFromOptions" type="Boolean" default="false" />
     <aura:attribute name="incomingToAddress" type="String" default="" />
+    <aura:attribute name="fromDisplay" type="String" default="" />
     <!-- viewMode: handling = hiện đầy đủ compose, review = chỉ hiện feed -->
     <aura:attribute name="isHandling" type="Boolean" default="false" />
     <aura:attribute name="caseRecord" type="Object" />
@@ -95,15 +96,11 @@
             <!-- Inline Compose Section -->
             <aura:if isTrue="{!v.showCompose}">
                 <div class="compose-section">
-                    <!-- From: luôn hiện, Queue match lên đầu + selected -->
+                    <!-- From: read-only, lấy từ Send To của Interaction -->
                     <div class="compose-row">
                         <label class="compose-label">From</label>
                         <div class="compose-field-wrap">
-                            <select class="compose-input fec-from-select" onchange="{!c.onFromChange}">
-                                <aura:iteration items="{!v.fromOptions}" var="opt">
-                                    <option value="{!opt.value}" selected="{!opt.value == v.fromEmail}">{!opt.label}</option>
-                                </aura:iteration>
-                            </select>
+                            <span class="compose-from-text">{!v.fromDisplay}</span>
                         </div>
                     </div>
                     <!-- To: tag input -->

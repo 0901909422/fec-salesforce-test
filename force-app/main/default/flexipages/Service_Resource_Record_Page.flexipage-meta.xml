@@ -185,7 +185,7 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>SkillMasterLabel</value>
+                            <value>FEC_Skill_Name__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Skill_Level__c</value>
