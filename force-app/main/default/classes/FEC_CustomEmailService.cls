@@ -8,18 +8,35 @@ public without sharing class FEC_CustomEmailService {
     @AuraEnabled
     public static Map<String, String> getInteractionEmail(String caseId) {
         Map<String, String> result = new Map<String, String>();
-        List<EmailMessage> msgs = [
-            SELECT FromAddress, ToAddress FROM EmailMessage
-            WHERE ParentId = :caseId AND Incoming = true
-            ORDER BY MessageDate ASC LIMIT 1
-        ];
-        if (!msgs.isEmpty()) {
-            result.put('toEmail', msgs[0].FromAddress);
-            result.put('fromEmail', msgs[0].ToAddress);
-        } else {
-            result.put('toEmail', '');
-            result.put('fromEmail', '');
+        Case c = [SELECT FEC_Send_To__c, FEC_Interaction_Email__c, RecordType.DeveloperName, FEC_Interaction__c FROM Case WHERE Id = :caseId LIMIT 1];
+        
+        String sendTo = c.FEC_Send_To__c;
+        String interactionEmail = c.FEC_Interaction_Email__c;
+        
+        // Nếu là Customer Case thì lấy từ Interaction parent
+        if (String.isBlank(sendTo) && c.FEC_Interaction__c != null) {
+            List<Case> parent = [SELECT FEC_Send_To__c, FEC_Interaction_Email__c FROM Case WHERE Id = :c.FEC_Interaction__c LIMIT 1];
+            if (!parent.isEmpty()) {
+                if (String.isBlank(sendTo)) sendTo = parent[0].FEC_Send_To__c;
+                if (String.isBlank(interactionEmail)) interactionEmail = parent[0].FEC_Interaction_Email__c;
+            }
         }
+        
+        // Lấy tên của email routing address để format "Name <email>"
+        String fromDisplay = sendTo != null ? sendTo : '';
+        if (String.isNotBlank(sendTo)) {
+            List<OrgWideEmailAddress> owas = [SELECT Address, DisplayName FROM OrgWideEmailAddress];
+            for (OrgWideEmailAddress owa : owas) {
+                if (owa.Address != null && owa.Address.equalsIgnoreCase(sendTo) && String.isNotBlank(owa.DisplayName)) {
+                    fromDisplay = owa.DisplayName + ' <' + sendTo + '>';
+                    break;
+                }
+            }
+        }
+        
+        result.put('fromEmail', sendTo != null ? sendTo : '');
+        result.put('fromDisplay', fromDisplay);
+        result.put('toEmail', interactionEmail != null ? interactionEmail : '');
         return result;
     }
 
