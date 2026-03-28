@@ -136,6 +136,10 @@
 		<members>FEC_Email_Error_OrgWide_Not_Configured_Suffix</members>
 		<members>FEC_Email_Readonly_From_Fecredit</members>
 		<members>FEC_Email_Readonly_From_Ubank</members>
+		<members>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</members>
+		<members>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</members>
+		<members>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</members>
+		<members>FEC_PHONE_IS_REQUIRED_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
