@@ -21,9 +21,20 @@ import FEC_INTERACTION_CREATED_ON_LABEL from "@salesforce/label/c.FEC_Interactio
 import FEC_INTERACTION_CREATED_BY_LABEL from "@salesforce/label/c.FEC_Interaction_Created_By_Label";
 import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interaction_Information_Label";
 
+import FEC_PHONE_IS_REQUIRED_MSG from "@salesforce/label/c.FEC_PHONE_IS_REQUIRED_MSG";
+import FEC_PHONE_IS_INVALID_FORMAT_1_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_1_MSG";
+import FEC_PHONE_IS_INVALID_FORMAT_2_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_2_MSG";
+import FEC_PHONE_IS_INVALID_FORMAT_3_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_3_MSG";
+
 import { formatDateTime } from "c/fec_CommonUtils";
 
-import { RECORD_TYPES, VIEW_MODE_REVIEW } from "c/fec_CommonConst";
+import {
+  RECORD_TYPES,
+  VIEW_MODE_REVIEW,
+  ICON_HIDE,
+  ICON_PREVIEW,
+  CLOSED_STATUS,
+} from "c/fec_CommonConst";
 
 export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
   labels = {
@@ -140,14 +151,13 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
   }
 
   get isInteractionClosed() {
-    if (this.record?.FEC_Interaction_Status__c === "Closed") return true;
+    if (this.record?.FEC_Interaction_Status__c === CLOSED_STATUS) return true;
     return false;
   }
 
   get showField() {
     return this.isReview && this.isInteractionClosed;
   }
-
 
   get hasPhone() {
     return !!(
@@ -165,7 +175,7 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
   }
 
   get eyeIcon() {
-    return this.isMasked ? "utility:hide" : "utility:preview";
+    return this.isMasked ? ICON_HIDE : ICON_PREVIEW;
   }
 
   get createdOn() {
@@ -206,29 +216,22 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
     input.setCustomValidity("");
 
     if (!value) {
-      input.setCustomValidity("Phone number is required.");
+      input.setCustomValidity(FEC_PHONE_IS_REQUIRED_MSG);
     } else if (value.startsWith("0")) {
       if (!/^\d{10}$/.test(value)) {
-        input.setCustomValidity(
-          "Phone number starting with 0 must be exactly 10 digits.",
-        );
+        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_1_MSG);
       }
     } else if (value.startsWith("84")) {
       if (!/^\d{11}$/.test(value)) {
-        input.setCustomValidity(
-          "Phone number starting with 84 must be exactly 11 digits.",
-        );
+        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_2_MSG);
       }
     } else {
-      input.setCustomValidity(
-        "Phone number must start with 0 (10 digits) or 84 (11 digits).",
-      );
+      input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_3_MSG);
     }
 
     input.reportValidity();
   }
 
-  
   async handleSavePhone() {
     const input = this.template.querySelector("lightning-input");
 
@@ -253,7 +256,6 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
       this.isEditingPhone = false;
       this.isMasked = true;
       this.phoneDraft = null;
-
     } catch (error) {
       console.error("updateInteractionPhone error", error);
     }
@@ -269,7 +271,6 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
 
       this.revealedPhone = result;
       this.isMasked = false;
-
     } catch (e) {
       console.error("revealPhone error", e);
     }
