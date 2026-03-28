@@ -27,6 +27,7 @@ import {
   MessageContext,
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import IS_MODE_EDIT_INTERACTION from "@salesforce/messageChannel/FEC_Interaction_Case_Mode__c";
 import {
   IsConsoleNavigation,
   getFocusedTabInfo,
@@ -414,7 +415,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Search_Account_Number__c : null;
       this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Search_Email_Address__c : null;
       this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
-      if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress || this.customerNumber) {
+     if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress || this.customerNumber) {
         await this.processSearch();
       }
     } catch (error) {
@@ -1006,6 +1007,7 @@ hasAnySearchCriteria(params) {
           c__recordId: caseIdToUse,
           c__customerName: this.custNameForCreate,
           c__identityNo: this.nationalIdForCreate,
+          c__isCreatedFromSearch: 'true'
         },
       });
     } catch (e) {
@@ -1181,6 +1183,7 @@ hasAnySearchCriteria(params) {
             );
             if (this.recordId) {
                 //publish(this.messageContext, IS_MODE_EDIT, payload);
+                this.handlePublishMessageChanel();
                 await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
                 // await refreshApex(this.wiredCaseResult);
                 this.dispatchEvent(new RefreshEvent());
@@ -1414,6 +1417,6 @@ hasAnySearchCriteria(params) {
     const payload = {
       isModeEdit: true,
     };
-    publish(this.messageContext, IS_MODE_EDIT, payload);
+    publish(this.messageContext, IS_MODE_EDIT_INTERACTION, payload);
   }
 }

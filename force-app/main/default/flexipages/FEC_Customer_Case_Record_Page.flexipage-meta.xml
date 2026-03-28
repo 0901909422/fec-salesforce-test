@@ -32,7 +32,7 @@
                                     <rightValue>Interaction</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!Record.FEC_Is_My_Follow_Up__c}</leftValue>
+                                    <leftValue>{!Record.FEC_Show_Unfollow__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
                                 </criteria>
@@ -120,6 +120,9 @@
     </flexiPageRegions>
     <flexiPageRegions>
         <itemInstances>
+            <componentInstances>
+                <componentName>fec_CaseModePublisher</componentName>
+            </componentInstances>
             <componentInstance>
                 <componentInstanceProperties>
                     <name>modeEditCase</name>
@@ -585,6 +588,11 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>actionNames</name>
+                    <valueList>
+                        <valueListItems>
+                            <value>New</value>
+                        </valueListItems>
+                    </valueList>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>adminFilters</name>
@@ -609,10 +617,28 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>NAME</value>
+                            <value>FEC_Relevant_Ticket_ID__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Status__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Account_or_Contract_Revelant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Code_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>CREATED_DATE</value>
@@ -679,10 +705,28 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>NAME</value>
+                            <value>FEC_Relevant_Ticket_ID__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Status__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Account_or_Contract_Revelant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Code_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>CREATED_DATE</value>
@@ -728,7 +772,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListComponentOverride</name>
-                    <value>ADVGRID</value>
+                    <value>GRID</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>rowsToDisplay</name>
@@ -761,7 +805,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListComponentOverride</name>
-                    <value>ADVGRID</value>
+                    <value>GRID</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>rowsToDisplay</name>

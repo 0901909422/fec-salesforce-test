@@ -187,7 +187,8 @@ public without sharing class FEC_FollowUpController {
     
     /**
      * @description Thêm user được chọn (từ modal Select Follow-Up User) vào danh sách follow-up và bảng Watcher Information.
-     * Chỉ Case Owner mới gọi được. Tạo/cập nhật FEC_Watcher__c, thêm Case Team, cập nhật FEC_Follow_Up_User__c và publish event để LWC Watchers Information refresh.
+     * Chỉ Case Owner mới gọi được. Nếu user đã có watcher đang active → Noti-02 (FEC_MSG_FollowUp_Not02_User_Already_Watcher).
+     * Ngược lại: tạo/cập nhật FEC_Watcher__c, thêm Case Team, cập nhật FEC_Follow_Up_User__c và publish event để LWC Watchers Information refresh.
      */
     @AuraEnabled
     public static String followCaseForUser(String caseId, String targetUserId, String followType) {
@@ -211,6 +212,11 @@ public without sharing class FEC_FollowUpController {
                 SELECT Id, FEC_Active__c FROM FEC_Watcher__c
                 WHERE FEC_Case__c = :caseId AND FEC_Watcher_User__c = :targetUserId LIMIT 1
             ];
+            if (!existingWatchers.isEmpty() && existingWatchers[0].FEC_Active__c == true) {
+                throw new AuraHandledException(
+                    System.Label.FEC_MSG_FollowUp_Not02_User_Already_Watcher
+                );
+            }
             if (!existingWatchers.isEmpty()) {
                 update new FEC_Watcher__c(
                     Id = existingWatchers[0].Id,

@@ -482,7 +482,7 @@ public with sharing class FEC_CommonUltils {
     }
     if (docBody != null) {
       req.setBodyDocument(docBody);
-    } else {
+    } else if (body != null) {
       req.setBody(body);
     }
     req.setTimeout(120000); // 120 seconds timeout
@@ -564,6 +564,19 @@ public with sharing class FEC_CommonUltils {
     String dStr = dd < 10 ? '0' + dd : String.valueOf(dd);
     String mStr = mm < 10 ? '0' + mm : String.valueOf(mm);
     return dStr + '/' + mStr + '/' + yyyy;
+  }
+
+  /** Ngày hiển thị cố định yyyy-MM-dd (không phụ thuộc locale). */
+  public static String formatDateYYYYMMDD(Date d) {
+    if (d == null) {
+      return '';
+    }
+    Integer dd = d.day();
+    Integer mm = d.month();
+    Integer yyyy = d.year();
+    String dStr = dd < 10 ? '0' + dd : String.valueOf(dd);
+    String mStr = mm < 10 ? '0' + mm : String.valueOf(mm);
+    return yyyy + '-' + mStr + '-' + dStr;
   }
 
   public static String decimalToString(Decimal d) {
@@ -947,5 +960,20 @@ public with sharing class FEC_CommonUltils {
     return email.contains('@') 
         ? email.substringBefore('@') 
         : email;
+  }
+
+  public static Id getRecordTypeIdByDev(String devName) {
+    Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+    if (!rtMap.containsKey(devName)) {
+      return null;
+    }
+    Id recordTypeId = rtMap.get(devName).getRecordTypeId();
+    return recordTypeId;
+  }
+
+  public static String mergeApplyTo(String oldVal, String newVal) {
+    if (oldVal == null) return newVal;
+    if (oldVal == newVal) return oldVal;
+    return 'ALL';
   }
 }

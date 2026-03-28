@@ -375,6 +375,7 @@
 		<members>FEC_ContentVersionTriggerHandler</members>
 		<members>FEC_ContentDistributionTriggerHandler</members>
 		<members>FEC_FollowUpController</members>
+		<members>FEC_CaseManagerListService</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -1193,6 +1194,7 @@
 		<members>fec_CaseFollowHeadlessAction</members>
 		<members>fec_CaseUnfollowHeadlessAction</members>
 		<members>fec_WatchersInformation</members>
+		<members>fec_CaseModePublisher</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -1282,6 +1284,7 @@
 		<members>FEC_MSG_FollowUp_Unfollow_Error</members>
 		<members>FEC_MSG_FollowUp_Case_Follow_Success</members>
 		<members>FEC_MSG_Can_Not_Find_Next_Stage</members>
+		<members>FEC_MSG_FollowUp_Not02_User_Already_Watcher</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -2021,6 +2024,14 @@
 	<types>
 		<members>FEC_Search_Configuration</members>
 		<name>SearchCustomization</name>
+	</types>
+	<types>
+		<members>fec_AccountOrContractPicklistContainer</members>
+        <name>LightningComponentBundle</name>
+	</types>
+	<types>
+		<members>FEC_Interaction_Case_Mode</members>
+		<name>LightningMessageChannel</name>
 	</types>
 
     <version>65.0</version>

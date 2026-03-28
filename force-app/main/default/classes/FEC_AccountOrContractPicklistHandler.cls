@@ -6,7 +6,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
         @AuraEnabled public String productName;
     }
     
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static String getInteractionAccountNumber(String caseId){
         try {
             
@@ -42,7 +42,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             WHERE Id = :caseId
             LIMIT 1
         ];
-            return c.FEC_Interaction_View_Mode__c    ;
+            return c.FEC_Interaction_View_Mode__c;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
@@ -58,8 +58,6 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
     ];
         return c.FEC_Interaction__c;
     }
-    
-    
     
     @AuraEnabled
     public static List<GetProductsListResponse> getProductsListByCif(String cifNumber){

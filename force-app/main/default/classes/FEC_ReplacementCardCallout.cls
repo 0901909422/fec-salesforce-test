@@ -183,6 +183,13 @@ public without sharing class FEC_ReplacementCardCallout {
                 new List<String>{'REPL_FEE_FLAG'}));
         }
 
+        if (last4CardNumber.length() > 255) {
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'4LastCardNumber', '255'}));
+        }
+        if (accountNumber.length() > 255) {
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'AccountNumber', '255'}));
+        }
+
         return new ValidationResult(true, null);
     }
 

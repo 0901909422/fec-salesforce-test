@@ -9,12 +9,14 @@ public with sharing class FEC_InteractionRoutingService {
      */
     public static void assignInteractionReply(List<Case> newCases) {
 
-        if (newCases == null || newCases.isEmpty()) return;
+        if (newCases == null || newCases.isEmpty()) {
+            return;
+        }
 
-        Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
-        if (!rtMap.containsKey(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME)) return;
-
-        Id interactionRtId = rtMap.get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+        Id interactionRtId = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
+        if (interactionRtId == null) {
+            return;
+        }
 
         // Lấy Queue
         List<Group> queueGrouplst = [
@@ -93,10 +95,10 @@ public with sharing class FEC_InteractionRoutingService {
 
             ServiceResource sr = userToSR.get(agentId);
 
-            if (!sr.IsActive) continue;
-            if (absentSR.contains(sr.Id)) continue;
-            if (!srCapacity.containsKey(sr.Id)) continue;
-
+            if (!sr.IsActive || absentSR.contains(sr.Id) || !srCapacity.containsKey(sr.Id)) {
+                continue;
+            }
+            
             Integer maxCapacity = srCapacity.get(sr.Id);
             Integer currentCount = agentCaseCount.containsKey(agentId) ? agentCaseCount.get(agentId) : 0;
 
