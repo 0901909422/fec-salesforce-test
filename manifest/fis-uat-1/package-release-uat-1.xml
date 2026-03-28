@@ -1194,6 +1194,7 @@
 		<members>fec_CaseFollowHeadlessAction</members>
 		<members>fec_CaseUnfollowHeadlessAction</members>
 		<members>fec_WatchersInformation</members>
+		<members>fec_CaseModePublisher</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
