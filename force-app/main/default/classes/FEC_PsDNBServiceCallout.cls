@@ -31,19 +31,24 @@ public with sharing class FEC_PsDNBServiceCallout {
     
     // ================= MAIN SEND =================
     public static HttpResponse sendRequest(List<DNBRequest> reqList) {
-       
+        
+        
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
         // ✅ dùng Named Credential
-        String endpoint = 'callout:FECredit_Service/api/v1/do-not-bother/create-info';
+        // String endpoint = 'callout:FECredit_Service/api/v1/do-not-bother/create-info';
+        
+        String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
+            + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
         
         
-        // ✅ FIX timestamp ISO + timezone
-        String isoTimestamp = formatISOWithTimezone(Datetime.now());
+        String isoTimestamp = FEC_CommonUltils.formatISOWithTimezone(Datetime.now());
         
         Map<String, String> headers = new Map<String, String>{
             'requester'    => isoTimestamp,
             'trans_id'     => System.UUID.randomUUID().toString(),
             'source'       => FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
-            'Content-Type' => 'application/json',
+            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
             'confirmer'    => isoTimestamp
         };
         
@@ -51,7 +56,7 @@ public with sharing class FEC_PsDNBServiceCallout {
         
         return FEC_CommonUltils.calloutApiWithHeaders(
             endpoint,
-        'POST',
+        FEC_ConstantCommon.API_METHOD_POST,
         headers,
         body
             );
@@ -59,15 +64,12 @@ public with sharing class FEC_PsDNBServiceCallout {
     
     // ================= PARSE =================
     public static DNBResult parseResponse(String jsonResponse, Integer httpStatus) {
-        System.debug('jsonResponse: ' + jsonResponse);
-        System.debug('httpStatus: ' + httpStatus);
-        
         DNBResult result = new DNBResult();
         result.httpStatus = httpStatus;
         result.rawResponse = jsonResponse;
         
         // HTTP fail
-        if (httpStatus != 200) {
+        if (httpStatus != FEC_ConstantCommon.SUCCESS_CODE_200_NUM) {
             result.success = false;
             result.errorMessage = 'HTTP Error: ' + httpStatus;
             return result;
@@ -97,7 +99,7 @@ public with sharing class FEC_PsDNBServiceCallout {
                 
             } else {
                 result.success = false;
-                result.errorMessage = 'Missing sys in response';
+                result.errorMessage = System.Label.FEC_MSG_Response_Null;
                 return result;
             }
             
@@ -121,7 +123,7 @@ public with sharing class FEC_PsDNBServiceCallout {
         
         // ✅ VALIDATION
         if (reqList == null || reqList.isEmpty()) {
-            return error('Request is empty');
+            return error(String.format(System.Label.FEC_MSG_Param_Required, new List{'Request'}));
         }
         
         for (DNBRequest r : reqList) {
@@ -132,20 +134,21 @@ public with sharing class FEC_PsDNBServiceCallout {
                 String.isBlank(r.type) ||
             String.isBlank(r.type_value)) {
                 
-                return error('Missing required fields in request');
+                return error(System.Label.FEC_MISSING_REQUIRED_FIELDS_MSG);
             }
         }
         
         
         String requestBody = JSON.serialize(reqList);
-        String endpoint = 'callout:FECredit_Service/api/v1/do-not-bother/create-info';
+        String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
+            + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
         
         try {
             HttpResponse res = sendRequest(reqList);
             FEC_CommonUltils.logApi(
                 API_CONFIG_NAME,                // apiName
             endpoint,
-            'POST',
+            FEC_ConstantCommon.API_METHOD_POST,
             requestBody,
             res,
             null                     // errorMessage
@@ -155,13 +158,13 @@ public with sharing class FEC_PsDNBServiceCallout {
             
         } catch (Exception ex) {
             HttpResponse exceptionRes = new HttpResponse();
-            exceptionRes.setStatusCode(500);
+            exceptionRes.setStatusCode(FEC_ConstantCommon.ERROR_CODE_500_NUM);
             exceptionRes.setBody(null);
             
             FEC_CommonUltils.logApi(
                 API_CONFIG_NAME,
             endpoint,
-            'POST',
+            FEC_ConstantCommon.API_METHOD_POST,
             requestBody,
             exceptionRes,
             ex.getMessage()
@@ -179,23 +182,5 @@ public with sharing class FEC_PsDNBServiceCallout {
         return err;
     }
     
-    private static String formatISOWithTimezone(Datetime dt) {
-        TimeZone tz = UserInfo.getTimeZone();
-        Integer offset = tz.getOffset(dt) / 1000 / 60; // minutes
-        
-        Integer hours = offset / 60;
-        Integer minutes = Math.mod(offset, 60);
-        
-        String sign = hours >= 0 ? '+' : '-';
-        
-        return dt.format('yyyy-MM-dd\'T\'HH:mm:ss.SSS') +
-            sign +
-            pad2(Math.abs(hours)) +
-            ':' +
-            pad2(Math.abs(minutes));
-    }
     
-    private static String pad2(Integer val) {
-        return (val < 10 ? '0' : '') + String.valueOf(val);
-    }
 }

@@ -74,7 +74,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_EXTERNAL_NAME = 'External';
     public static final String CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME = 'Other';
     public static final String CHANNEL_CHAT = 'Chat';
-
+    
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
     public static final String PATTERN_APPLICATION_ID = '^(\\d{6}|\\d{8}|\\d{9})$';
@@ -134,7 +134,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUCCESS_CODE_Y = 'Y';
     public static final String SUCCESS_CODE_E = 'E';
     public static final String SUCCESS_CODE_200 = '200';
+    public static final Integer SUCCESS_CODE_200_NUM = 200;
     public static final String SUCCESS_CODE_203 = '203';
+    public static final Integer ERROR_CODE_500_NUM = 500;
     public static final String KEY_ID = 'id';
     public static final String KEY_NAME = 'name';
     public static final String KEY_UPLOADED_BY = 'uploadedBy';
@@ -259,11 +261,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String KEY_NUMBER = 'Number';
     public static final String KEY_TEXT = 'Text';
     public static final String OBJ_ADDITIONAL_INFO = 'FEC_Additional_Info__c';
-
-    public static final String AUTO_METHOD = 'Auto';
     public static final String REQUEST_EXISTING_USER_TYPE  = 'EXISTING';
     public static final String REQUEST_NON_EXISTING_USER_TYPE  = 'NON-EXISTING';
     public static final String REQUEST_PROSPECT_USER_TYPE  = 'PROSPECT';
+
+    public static final String AUTO_METHOD = 'Auto';
 
     // Call api FEC_CancelCSCaseService
     public static final String STATUS_CLOSED = 'Closed';
