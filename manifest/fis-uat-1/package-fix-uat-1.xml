@@ -166,6 +166,10 @@
 		<members>Case.FEC_Is_Created_From_Search__c</members>
 		<members>Case.FEC_Show_Unfollow__c</members>
 		<members>Case.FEC_Is_My_Follow_Up__c</members>
+		<members>FEC_Assignment__c.FEC_Date_Time__c</members>
+		<members>FEC_Process_Action_History__c.FEC_Date_Time__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Date_Time__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Date_Time__c</members>
         <name>CustomField</name>
     </types>
 	<types>
