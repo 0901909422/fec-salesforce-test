@@ -6,6 +6,6 @@
 - Nếu Check thì hệ thống sẽ phân bổ Interaction thuộc skill đang thiết lập cho Agent. 
 - Nếu Uncheck thì sẽ không phân bổ Interaction thuộc skill đang thiết lập cho Agent.</description>
     <label>Active</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <type>Checkbox</type>
 </CustomField>
