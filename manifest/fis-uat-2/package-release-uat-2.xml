@@ -615,6 +615,17 @@
 		<members>FEC_Email_Error_OrgWide_Not_Configured_Suffix</members>
 		<members>FEC_Email_Readonly_From_Fecredit</members>
 		<members>FEC_Email_Readonly_From_Ubank</members>
+		<members>FEC_Current_Card_Status</members>
+        <members>FEC_Card_Block_Reason</members>
+        <members>FEC_New_Block_Code</members>
+        <members>FEC_Verify_Information</members>
+        <members>FEC_Callback</members>
+        <members>FEC_Block_Card_Btn</members>
+        <members>FEC_Block_Card_Header</members>
+        <members>FEC_Block_Card_Success</members>
+        <members>FEC_Block_Card_Failed</members>
+        <members>FEC_Block_Card_Failed_Max</members>
+        <members>FEC_Block_Card_Confirmation_Msg</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -651,10 +662,12 @@
 		<members>fec_CardClosureRefundForm</members>
 		<members>fec_CardClosureRefundHandling</members>
 		<members>fec_InteractionCreateCase</members>
+		<members>fec_CardBlock</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
 		<members>FEC_Interaction_Case_Record_Page</members>
+		<members>FEC_Internal_Case_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -676,6 +689,7 @@
 		<members>FEC_CardClosureRefundController</members>
 		<members>FEC_CaseBusinessService</members>
 		<members>FEC_CreateCaseInteractionController</members>
+        <members>FEC_CardLockUnLockController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1034,6 +1048,9 @@
 		<members>FEC_System_Infomation</members>
 		<members>FEC_Created_By</members>
 		<members>FEC_Last_Modified_By</members>
+		<members>FEC_Message_Content</members>
+		<members>FEC_Subject_Line</members>
+		<members>FEC_Template_Settings</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -1042,6 +1059,10 @@
         <members>FEC_Template__c</members>
         <members>FEC_Content_History_Tracking__c</members>
 		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>FEC_Enhanced_Letterhead__c.FEC_Required_Header_Or_Footer</members>
+		<name>ValidationRule</name>
 	</types>
 	<types>
 		<members>FEC_Enhanced_Letterhead__c</members>
@@ -1070,6 +1091,7 @@
         <members>fec_folderDeleteAction</members>
         <members>fec_CustomDatatable</members>
         <members>fec_TemplateMockData</members>
+        <members>fec_NameLink</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -1188,6 +1210,10 @@
 	<types>
 		<members>RD_IT_User_Master_Data_Management</members>
 		<name>PermissionSet</name>
+	</types>
+	<types>
+		<members>FEC_Notification_Channel__c-Notification Channels Layout</members>
+		<name>Layout</name>
 	</types>
 
 	<!-- search functional -->
