@@ -58,16 +58,11 @@ export default class Fec_KYC extends LightningElement {
   @track prodTypeSectionlst = [];
   @track kycSectionlst = ["KYC", "KYCResult"];
   @track kycResultlst = [];
-  @track isShowKYC = false;
 
   sectionLoaded = false;
 
   get hasProd() {
     return this.kycData.typelst?.length > 0;
-  }
-
-  get isShowKYCResult() {
-    return this.kycResultlst?.length
   }
 
   isEdit = false;
@@ -220,10 +215,6 @@ export default class Fec_KYC extends LightningElement {
     ])
       .then(([res, resultRes]) => {
         if (res) {
-          if (res.typelst) {
-            res.typelst = res.typelst.filter(typeItem => !(typeItem.type === 'Card' && !res.plasticId));
-          }
-
           res.typelst?.forEach((typeItem) => {
             this.prodTypeSectionlst.push(typeItem.type);
 
@@ -301,7 +292,7 @@ export default class Fec_KYC extends LightningElement {
           return mask(value, 5, 3);
         }
 
-        if (COMPANY_PHONE.includes(value.substring(0, 3))) {
+        if(COMPANY_PHONE.includes(value.substring(0, 3))) {
           return mask(value, 3, 3);
         }
 
