@@ -323,6 +323,8 @@
         <members>FEC_SecondaryInfoLoanAccountController</members>
         <members>FEC_TerminationLoanController</members>
         <members>FEC_CommonUltils</members>
+        <members>FEC_ApplicationsListController</members>
+        <members>FEC_MainInfoController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -626,6 +628,9 @@
         <members>FEC_Block_Card_Failed</members>
         <members>FEC_Block_Card_Failed_Max</members>
         <members>FEC_Block_Card_Confirmation_Msg</members>
+        <members>FEC_On_Hold_Label</members>
+        <members>FEC_On_Hold_Help_Text</members>
+		<members>FEC_Interaction_Email_Info_Ubank_Label</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -663,6 +668,7 @@
 		<members>fec_CardClosureRefundHandling</members>
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_CardBlock</members>
+		<members>fecInteractionEmailInfoUbank</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -690,6 +696,7 @@
 		<members>FEC_CaseBusinessService</members>
 		<members>FEC_CreateCaseInteractionController</members>
         <members>FEC_CardLockUnLockController</members>
+        <members>FEC_InteractionInforHandler</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1213,6 +1220,7 @@
 	</types>
 	<types>
 		<members>FEC_Notification_Channel__c-Notification Channels Layout</members>
+		<members>FEC_Notification__c-Notifications Layout</members>
 		<name>Layout</name>
 	</types>
 
@@ -1238,5 +1246,13 @@
 		<members>FEC_Service</members>
 		<name>CustomApplication</name>
 	</types>
+
+	<!-- additional -->
+	<types>
+		<members>FEC_City__c</members>
+        <members>FEC_Country__c</members>
+		<name>CustomObject</name>
+	</types>
+
     <version>65.0</version>
 </Package>

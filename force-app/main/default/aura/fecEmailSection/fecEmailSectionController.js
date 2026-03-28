@@ -82,28 +82,8 @@
         }
         component.set('v.showCompose', true);
         var body = component.get('v.body') || '';
-        // Lazy load fromAddresses chỉ khi user mở compose lần đầu
-        var fromOptions = component.get('v.fromOptions') || [];
-        if (fromOptions.length === 0) {
-            var incomingTo = component.get('v.incomingToAddress') || component.get('v.fromEmail') || '';
-            helper.loadFromAddresses(component, incomingTo);
-        }
         window.setTimeout($A.getCallback(function() {
             helper.initQuill(component, body);
-            // Sync native <select> value sau khi render — thử lại nếu chưa match
-            var fromEmail = component.get('v.fromEmail');
-            function syncFromSelect() {
-                var el = component.getElement();
-                if (!el || !fromEmail) return;
-                var sel = el.querySelector('.fec-from-select');
-                if (sel) {
-                    sel.value = fromEmail;
-                    if (sel.value !== fromEmail) {
-                        window.setTimeout($A.getCallback(syncFromSelect), 150);
-                    }
-                }
-            }
-            syncFromSelect();
         }), 150);
     },
 
