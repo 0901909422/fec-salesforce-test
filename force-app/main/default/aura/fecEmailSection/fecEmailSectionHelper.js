@@ -518,9 +518,9 @@
         a1.setCallback(this, function(r) {
             if (r.getState()==='SUCCESS') {
                 var d=r.getReturnValue()||{};
-                component.set('v.fromEmail',d.fromEmail||'');
-                component.set('v.toEmail',d.toEmail||'');
-                // Lưu incomingToAddress để dùng khi lazy load fromAddresses
+                component.set('v.fromEmail', d.fromEmail||'');
+                component.set('v.fromDisplay', d.fromDisplay||d.fromEmail||'');
+                component.set('v.toEmail', d.toEmail||'');
                 component.set('v.incomingToAddress', d.fromEmail||'');
             }
         });

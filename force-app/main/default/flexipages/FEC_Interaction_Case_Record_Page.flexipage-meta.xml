@@ -60,7 +60,7 @@
                 <componentName>fecInteractionEmailInfo</componentName>
                 <identifier>c_fecInteractionEmailInfo</identifier>
                 <visibilityRule>
-                    <booleanFilter>(1 AND 2) OR (1 AND 3 AND 4)</booleanFilter>
+                    <booleanFilter>(1 AND 2 AND 5) OR (1 AND 3 AND 4)</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -80,6 +80,11 @@
                         <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Internal Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Send_To__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>dichvukhachhang@fecredit.com.vn</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -133,6 +138,25 @@
                         <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
                         <operator>NE</operator>
                         <rightValue>Internal Email</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecInteractionEmailInfoUbank</componentName>
+                <identifier>c_fecInteractionEmailInfoUbank</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Send_To__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>dichvukhachhang@fecredit.com.vn</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -936,6 +960,24 @@
             <componentInstance>
                 <componentName>fecEmailSection</componentName>
                 <identifier>c_fecEmailSection</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 OR (2 AND 3)</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal Email</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>
