@@ -11,6 +11,9 @@
     <columns>FEC_Notification_Status__c</columns>
     <columns>FEC_Notification_Channel__c</columns>
     <columns>FEC_Notification_Template__c</columns>
+    <columns>FEC_Channel__c</columns>
+    <columns>FEC_Current_Status__c</columns>
+    <columns>FEC_Changed_Status__c</columns>
     <filterScope>Everything</filterScope>
     <filters>
         <field>RECORDTYPE</field>

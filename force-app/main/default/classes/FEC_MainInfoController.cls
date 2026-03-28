@@ -240,6 +240,16 @@ public without sharing class FEC_MainInfoController {
             );
 
         if (res == null || res.Addresses == null) return result;
+        List<FEC_City__c> cityList = [SELECT Name, FEC_Code__c FROM FEC_City__c];
+        Map<String, String> cityMap = new Map<String, String>();
+        for (FEC_City__c c : cityList) {
+            cityMap.put(c.FEC_Code__c, c.Name);
+        }
+        List<FEC_District__c> districtList = [SELECT Name, FEC_Code__c FROM FEC_District__c];
+        Map<String, String> districtMap = new Map<String, String>();
+        for (FEC_District__c d : districtList) {
+            districtMap.put(d.FEC_Code__c, d.Name);
+        }
 
         Map<String, FEC_Address_Info__c> existingMap = new Map<String, FEC_Address_Info__c>();
         for (FEC_Address_Info__c a : [
@@ -268,7 +278,7 @@ public without sharing class FEC_MainInfoController {
                 toInsert.add(addr);
             }
 
-            addr.FEC_Address__c = buildFullAddress(ai);
+            addr.FEC_Address__c = buildFullAddress(ai,cityMap, districtMap);
             addr.FEC_Mailing_Address__c = FEC_ConstantCommon.TEXT_YES;
 
             result.toUpdate.add(addr);
@@ -294,14 +304,17 @@ public without sharing class FEC_MainInfoController {
         return null;
     }
 
-    private static String buildFullAddress(FEC_GetAddressesList.AddressInfo a) {
+    private static String buildFullAddress(FEC_GetAddressesList.AddressInfo a, Map<String,String> cityMap, Map<String,String> districtMap) {
+        String cityName = (a.City != null && cityMap.containsKey(a.City)) ? cityMap.get(a.City) : a.City;
+        String districtName = (a.Ward != null && districtMap.containsKey(a.Ward)) ? districtMap.get(a.Ward) : a.Ward;
+
         return FEC_CommonUltils.formatAddress(
             a.Building,
             a.NumberStr,
             a.Street,
             a.Ward,
-            a.District,
-            a.City,
+            districtName,
+            cityName,
             a.CountryName,
             a.ZipCode
         );
