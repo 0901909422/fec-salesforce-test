@@ -281,7 +281,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   // G. Receivers: when sending to Internal User (Auto or Manual)
   get showReceivers() {
-    return this.isAuto && this.isInternal;
+    return this.isInternal;
   }
 
   // H & I. Schedule Start/End Time: Auto + Internal User
