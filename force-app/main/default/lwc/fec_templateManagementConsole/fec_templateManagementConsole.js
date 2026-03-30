@@ -204,6 +204,28 @@ export default class Fec_templateManagementConsole extends LightningElement {
         this.selectedFolderId = event.detail?.recordId;
     }
 
+    /**
+     * Folder link click from template list view.
+     * Switches to All Folders tab and drills into the clicked folder,
+     * including breadcrumb path — exactly as if user had navigated manually.
+     */
+    handleViewFolder(event) {
+        const folderId = event.detail?.folderId;
+        this.activeView = TAB_FOLDERS;
+        this.selectedFolderId = folderId || null;
+        this.searchText = '';
+        this.filterFolderId = null;
+
+        /* Wait for the folder list view to render, then drill into the target folder */
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => {
+            const folderList = this.template.querySelector('c-fec_folder-list-view');
+            if (folderList && folderId) {
+                folderList.navigateToFolder(folderId);
+            }
+        }, 0);
+    }
+
     /** View Template detail from list view (click on template name) */
     handleViewTemplate(event) {
         this.detailRecordId = event.detail.recordId;
@@ -275,6 +297,18 @@ export default class Fec_templateManagementConsole extends LightningElement {
         }
 
         this._editOrigin = 'list';
+    }
+
+    /**
+     * Editor "Save & Close" handler.
+     * Always close editor and return to list view (never go to detail page).
+     */
+    handleEditorSaveAndClose() {
+        this.showEditor = false;
+        this.editorRecordId = null;
+        this.editorCloneData = null;
+        this._editOrigin = 'list';
+        this._refreshAllViews();
     }
 
     /** Editor cancel / back → close editor, return to previous view */
