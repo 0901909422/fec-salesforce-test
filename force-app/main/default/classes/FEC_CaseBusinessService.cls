@@ -203,9 +203,10 @@ public with sharing class FEC_CaseBusinessService {
           CreatedDate
         FROM FEC_Routing_Action_History__c
         WHERE
-          FEC_Routing_Action__c IN :validActionlst
+          FEC_Next_Stage__c = :selectedCase.FEC_Current_Case_Stage__c
+          AND FEC_Routing_Action__c IN :validActionlst
           AND FEC_Case__c = :selectedCase.Id
-        ORDER BY CreatedDate DESC, Id DESC
+        ORDER BY CreatedDate DESC
         LIMIT 1
       ];
 
@@ -227,9 +228,10 @@ public with sharing class FEC_CaseBusinessService {
           CreatedDate
         FROM FEC_Routing_Action_History__c
         WHERE
-          FEC_Routing_Action__c = :ROUTE_TO
+          FEC_Next_Stage__c = :selectedCase.FEC_Current_Case_Stage__c
+          AND FEC_Routing_Action__c = :ROUTE_TO
           AND FEC_Case__c = :selectedCase.Id
-        ORDER BY CreatedDate DESC, Id DESC
+        ORDER BY CreatedDate DESC
         LIMIT 1
       ];
 
@@ -423,11 +425,10 @@ public with sharing class FEC_CaseBusinessService {
           'SELECT Id, Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE Id = :id ' +
-          'AND FEC_Active__c = TRUE'; 
-          // +
-          // 'AND FEC_User_Group__c INCLUDES (\'' +
-          // String.join(new List<String>(rolelst), '\',\'') +
-          // '\')';
+          'AND FEC_Active__c = TRUE ' +
+          'AND FEC_User_Group__c INCLUDES (\'' +
+          String.join(new List<String>(rolelst), '\',\'') +
+          '\')';
 
         bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
       } else {
@@ -436,11 +437,10 @@ public with sharing class FEC_CaseBusinessService {
           'FROM FEC_Case_Stage__c ' +
           'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
           'AND FEC_Active__c = TRUE ' +
-          'AND FEC_Default_Stage__c = TRUE';
-          // + 
-          // 'AND FEC_User_Group__c INCLUDES (\'' +
-          // String.join(new List<String>(rolelst), '\',\'') +
-          // '\')';
+          'AND FEC_Default_Stage__c = TRUE ' +
+          'AND FEC_User_Group__c INCLUDES (\'' +
+          String.join(new List<String>(rolelst), '\',\'') +
+          '\')';
 
         bindVars = new Map<String, Object>{
           'selectedNatureOfCaseId' => selectedNatureOfCaseId
@@ -1143,9 +1143,10 @@ public with sharing class FEC_CaseBusinessService {
           CreatedDate
         FROM FEC_Routing_Action_History__c
         WHERE
-          FEC_Routing_Action__c IN :validActionlst
+          FEC_Next_Stage__c = :updatedCase.FEC_Current_Case_Stage__c
+          AND FEC_Routing_Action__c IN :validActionlst
           AND FEC_Case__c = :caseId
-        ORDER BY CreatedDate DESC, Id DESC
+        ORDER BY CreatedDate DESC
         LIMIT 1
       ];
 
@@ -1747,9 +1748,10 @@ public with sharing class FEC_CaseBusinessService {
           CreatedDate
         FROM FEC_Routing_Action_History__c
         WHERE
-          FEC_Routing_Action__c IN :validActionlst
+          FEC_Next_Stage__c = :updatedCase.FEC_Current_Case_Stage__c
+          AND FEC_Routing_Action__c IN :validActionlst
           AND FEC_Case__c = :caseId
-        ORDER BY CreatedDate DESC, Id DESC
+        ORDER BY CreatedDate DESC
         LIMIT 1
       ];
 

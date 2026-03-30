@@ -34,6 +34,7 @@
 		<members>FEC_IncorrectPaymentController</members>
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_PsDNBServiceCallout</members>
+        <members>FEC_CaseBusinessService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -201,6 +202,7 @@
 		<members>Case.FEC_Parent_ID__c</members>
         <members>FEC_Actual_Master_Data_Setting__c.FEC_LWC_Name__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_LWC_Name__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
