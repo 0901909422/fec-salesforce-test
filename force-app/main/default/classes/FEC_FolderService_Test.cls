@@ -9,11 +9,12 @@ private class FEC_FolderService_Test {
 
     @TestSetup
     static void setupData() {
-        FEC_Folder__c root = new FEC_Folder__c(FEC_Folder_Label__c = 'Root Folder');
+        FEC_Folder__c root = new FEC_Folder__c(Name = 'Root Folder', FEC_Folder_Unique_Name__c= 'Root Folder');
         insert root;
 
         FEC_Folder__c child = new FEC_Folder__c(
-            FEC_Folder_Label__c = 'Child Folder',
+            Name = 'Child Folder',
+            FEC_Folder_Unique_Name__c= 'Child Folder',
             FEC_Parent_Folder__c = root.Id
         );
         insert child;
@@ -21,6 +22,7 @@ private class FEC_FolderService_Test {
         // Template inside root folder
         FEC_Template__c tmpl = new FEC_Template__c(
             Name = 'Root Template',
+            FEC_API_Name__c = 'Root_Template',
             FEC_Folder__c = root.Id,
             FEC_Active__c = true
         );
@@ -29,14 +31,14 @@ private class FEC_FolderService_Test {
 
     @IsTest
     static void testGetFolder() {
-        FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Root Folder' LIMIT 1];
+        FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE Name = 'Root Folder' LIMIT 1];
 
         Test.startTest();
         FEC_Folder__c result = FEC_FolderService.getFolder(folder.Id);
         Test.stopTest();
 
         Assert.isNotNull(result);
-        Assert.areEqual('Root Folder', result.FEC_Folder_Label__c);
+        Assert.areEqual('Root Folder', result.Name);
     }
 
     @IsTest
@@ -55,12 +57,12 @@ private class FEC_FolderService_Test {
         Test.stopTest();
 
         Assert.areEqual(1, results.size(), 'Should return 1 root-level folder');
-        Assert.areEqual('Root Folder', results[0].FEC_Folder_Label__c);
+        Assert.areEqual('Root Folder', results[0].Name);
     }
 
     @IsTest
     static void testGetFolderContents() {
-        FEC_Folder__c root = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Root Folder' LIMIT 1];
+        FEC_Folder__c root = [SELECT Id FROM FEC_Folder__c WHERE Name = 'Root Folder' LIMIT 1];
 
         Test.startTest();
         Map<String, Object> contents = FEC_FolderService.getFolderContents(root.Id);
@@ -75,33 +77,33 @@ private class FEC_FolderService_Test {
 
     @IsTest
     static void testSaveFolderInsert() {
-        FEC_Folder__c newFolder = new FEC_Folder__c(FEC_Folder_Label__c = 'New Folder');
+        FEC_Folder__c newFolder = new FEC_Folder__c(Name = 'New Folder', FEC_Folder_Unique_Name__c= 'New Folder');
 
         Test.startTest();
         Id savedId = FEC_FolderService.saveFolder(newFolder);
         Test.stopTest();
 
         Assert.isNotNull(savedId);
-        FEC_Folder__c saved = [SELECT FEC_Folder_Label__c FROM FEC_Folder__c WHERE Id = :savedId];
-        Assert.areEqual('New Folder', saved.FEC_Folder_Label__c);
+        FEC_Folder__c saved = [SELECT Name FROM FEC_Folder__c WHERE Id = :savedId];
+        Assert.areEqual('New Folder', saved.Name);
     }
 
     @IsTest
     static void testSaveFolderUpdate() {
-        FEC_Folder__c folder = [SELECT Id, FEC_Folder_Label__c FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Child Folder' LIMIT 1];
-        folder.FEC_Folder_Label__c = 'Updated Child';
+        FEC_Folder__c folder = [SELECT Id, Name FROM FEC_Folder__c WHERE Name = 'Child Folder' LIMIT 1];
+        folder.Name = 'Updated Child';
 
         Test.startTest();
         FEC_FolderService.saveFolder(folder);
         Test.stopTest();
 
-        FEC_Folder__c updated = [SELECT FEC_Folder_Label__c FROM FEC_Folder__c WHERE Id = :folder.Id];
-        Assert.areEqual('Updated Child', updated.FEC_Folder_Label__c);
+        FEC_Folder__c updated = [SELECT Name FROM FEC_Folder__c WHERE Id = :folder.Id];
+        Assert.areEqual('Updated Child', updated.Name);
     }
 
     @IsTest
     static void testDeleteFolderWithChildFolders() {
-        FEC_Folder__c root = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Root Folder' LIMIT 1];
+        FEC_Folder__c root = [SELECT Id FROM FEC_Folder__c WHERE Name = 'Root Folder' LIMIT 1];
 
         Test.startTest();
         try {
@@ -117,10 +119,10 @@ private class FEC_FolderService_Test {
     @IsTest
     static void testDeleteFolderWithTemplates() {
         // Remove child folder first to isolate template guard test
-        FEC_Folder__c child = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Child Folder' LIMIT 1];
+        FEC_Folder__c child = [SELECT Id FROM FEC_Folder__c WHERE Name = 'Child Folder' LIMIT 1];
         delete child;
 
-        FEC_Folder__c root = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Root Folder' LIMIT 1];
+        FEC_Folder__c root = [SELECT Id FROM FEC_Folder__c WHERE Name = 'Root Folder' LIMIT 1];
 
         Test.startTest();
         try {
@@ -136,7 +138,7 @@ private class FEC_FolderService_Test {
     @IsTest
     static void testDeleteFolderSuccess() {
         // Delete child folder (has no children of its own)
-        FEC_Folder__c child = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Child Folder' LIMIT 1];
+        FEC_Folder__c child = [SELECT Id FROM FEC_Folder__c WHERE Name = 'Child Folder' LIMIT 1];
 
         Test.startTest();
         FEC_FolderService.deleteFolder(child.Id);
@@ -153,6 +155,6 @@ private class FEC_FolderService_Test {
         Test.stopTest();
 
         Assert.areEqual(1, results.size());
-        Assert.areEqual('Root Folder', results[0].FEC_Folder_Label__c);
+        Assert.areEqual('Root Folder', results[0].Name);
     }
 }

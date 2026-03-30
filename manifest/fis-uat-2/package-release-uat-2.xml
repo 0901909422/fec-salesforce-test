@@ -978,8 +978,8 @@
     </types>
 	<types>
 		<members>fec_CloneLetterheadContainer</members>
-		<members>fec_EditLetterheadContainer</members>
-		<members>fec_NewLetterheadContainer</members>
+		<!--<members>fec_EditLetterheadContainer</members>
+		<members>fec_NewLetterheadContainer</members>-->
 		<name>AuraDefinitionBundle</name>
 	</types>
 	<types>
@@ -1067,6 +1067,8 @@
 		<members>FEC_Message_Content</members>
 		<members>FEC_Subject_Line</members>
 		<members>FEC_Template_Settings</members>
+		<members>FEC_Template_Body</members>
+        <members>FEC_Template_Save_And_Close</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -1076,10 +1078,10 @@
         <members>FEC_Content_History_Tracking__c</members>
 		<name>CustomObject</name>
 	</types>
-	<types>
+	<!--<types>
 		<members>FEC_Enhanced_Letterhead__c.FEC_Required_Header_Or_Footer</members>
 		<name>ValidationRule</name>
-	</types>
+	</types>-->
 	<types>
 		<members>FEC_Enhanced_Letterhead__c</members>
 		<members>Templates</members>

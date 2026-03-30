@@ -1,5 +1,6 @@
 public with sharing class FEC_PsDNBServiceCallout {
     public static final String API_CONFIG_NAME = 'FEC_Ps_DNB';
+    public static FEC_ResponseLog responseLog;
     
     // ================= REQUEST =================
     public class DNBRequest {
@@ -54,12 +55,23 @@ public with sharing class FEC_PsDNBServiceCallout {
         
         String body = JSON.serialize(reqList);
         
-        return FEC_CommonUltils.calloutApiWithHeaders(
+        HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(
             endpoint,
-        FEC_ConstantCommon.API_METHOD_POST,
-        headers,
-        body
-            );
+            FEC_ConstantCommon.API_METHOD_POST,
+            headers,
+            body
+        );
+
+        responseLog = new FEC_ResponseLog(
+            API_CONFIG_NAME,
+            endpoint,
+            FEC_ConstantCommon.API_METHOD_POST,
+            body,
+            res,
+            null
+        );
+
+        return res;
     }
     
     // ================= PARSE =================
@@ -123,7 +135,7 @@ public with sharing class FEC_PsDNBServiceCallout {
         
         // ✅ VALIDATION
         if (reqList == null || reqList.isEmpty()) {
-            return error(String.format(System.Label.FEC_MSG_Param_Required, new List{'Request'}));
+            return error(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Request'}));
         }
         
         for (DNBRequest r : reqList) {
@@ -132,28 +144,16 @@ public with sharing class FEC_PsDNBServiceCallout {
                 String.isBlank(r.nid) ||
                 r.do_not_bother == null ||
                 String.isBlank(r.type) ||
-            String.isBlank(r.type_value)) {
+                String.isBlank(r.type_value)) {
                 
                 return error(System.Label.FEC_MISSING_REQUIRED_FIELDS_MSG);
             }
         }
         
-        
-        String requestBody = JSON.serialize(reqList);
-        String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
-            + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
-        
         try {
             HttpResponse res = sendRequest(reqList);
-            FEC_CommonUltils.logApi(
-                API_CONFIG_NAME,                // apiName
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            requestBody,
-            res,
-            null                     // errorMessage
-                );
-            
+            FEC_CommonUltils.logApiResponse(responseLog);
+
             return parseResponse(res.getBody(), res.getStatusCode());
             
         } catch (Exception ex) {
@@ -161,14 +161,10 @@ public with sharing class FEC_PsDNBServiceCallout {
             exceptionRes.setStatusCode(FEC_ConstantCommon.ERROR_CODE_500_NUM);
             exceptionRes.setBody(null);
             
-            FEC_CommonUltils.logApi(
-                API_CONFIG_NAME,
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            requestBody,
-            exceptionRes,
-            ex.getMessage()
-                );
+            responseLog.response = exceptionRes;
+            responseLog.errorMessage = ex.getMessage();
+
+            FEC_CommonUltils.logApiResponse(responseLog);
             
             return error(ex.getMessage());
         }
