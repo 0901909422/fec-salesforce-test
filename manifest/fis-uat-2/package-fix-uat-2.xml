@@ -33,6 +33,7 @@
         <members>FEC_Notification</members>
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_PsDNBServiceCallout</members>
+		<members>FEC_InteractionSLAController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -168,6 +169,8 @@
 		<members>ServiceResourceSkill</members>
 		<members>FEC_City__c</members>
         <members>FEC_Country__c</members>
+        <members>FEC_Service_Resource_Absence__c</members>
+        <members>ServiceResource</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
