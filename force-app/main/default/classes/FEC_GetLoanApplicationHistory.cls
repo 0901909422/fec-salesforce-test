@@ -106,7 +106,11 @@ public with sharing class FEC_GetLoanApplicationHistory {
       }
 
       // Parse AppInfos
+      // Support both 'AppInfos' and 'AppInfors' (typo in some API versions)
       List<Object> appInfosList = (List<Object>) responseMap.get('AppInfos');
+      if (appInfosList == null) {
+        appInfosList = (List<Object>) responseMap.get('AppInfors');
+      }
       if (appInfosList != null && appInfosList.size() > 0) {
         result.histories = new List<ApplicationHistory>();
         for (Object appInfoObj : appInfosList) {

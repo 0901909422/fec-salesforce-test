@@ -104,6 +104,32 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
+    public static List<Map<String, String>> getApplicationHistory(String applicationId) {
+        if (String.isBlank(applicationId)) {
+            throw new AuraHandledException('Application ID is required.');
+        }
+        try {
+            FEC_GetLoanApplicationHistory.LoanApplicationHistoryRequest req = new FEC_GetLoanApplicationHistory.LoanApplicationHistoryRequest();
+            req.applicationId = applicationId;
+            FEC_GetLoanApplicationHistory.LoanApplicationHistoryResult res = FEC_GetLoanApplicationHistory.getLoanApplicationHistory(req);
+            List<Map<String, String>> rows = new List<Map<String, String>>();
+            if (res != null && res.success && res.histories != null) {
+                for (FEC_GetLoanApplicationHistory.ApplicationHistory h : res.histories) {
+                    rows.add(new Map<String, String>{
+                        'user'     => h.userName,
+                        'activity' => h.activityName,
+                        'status'   => h.statusId,
+                        'editDate' => h.editDate
+                    });
+                }
+            }
+            return rows;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    @AuraEnabled
     public static List<FEC_B2_Contract__c> getB2Contracts(String contractNumber) {
         try {
             return [

@@ -118,18 +118,84 @@
                     <template if:false={isNoCustomerFound}>
                         <lightning-tabset class="slds-m-top_large" active-tab-value={activeTabValue}
                             onactive={handleTabChange}>
-                            <lightning-tab label="Card" value="Card">
+                        <lightning-tab label="Card" value="Card">
                                 <c-masked-toggle-datatable key-field="id" data={cardData} columns={cardColumns}
-                                    hide-checkbox-column onrowaction={handleRowAction}>
+                                    hide-checkbox-column onrowaction={handleRowAction} onshowhistory={handleDblClick}>
                                 </c-masked-toggle-datatable>
+                                <template for:each={cardDataWithHistory} for:item="row">
+                                    <template if:true={row._historyState}>
+                                        <template if:true={row._historyState.expanded}>
+                                            <div key={row.AccountNumber} class="fec-history-wrap">
+                                                <template if:true={row._historyState.loading}>
+                                                    <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
+                                                </template>
+                                                <template if:false={row._historyState.loading}>
+                                                    <table class="fec-history-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>User</th>
+                                                                <th>Activity</th>
+                                                                <th>Status</th>
+                                                                <th>Edit Date</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <template for:each={row._historyState.rows} for:item="h">
+                                                                <tr key={h.editDate}>
+                                                                    <td>{h.user}</td>
+                                                                    <td>{h.activity}</td>
+                                                                    <td>{h.status}</td>
+                                                                    <td>{h.editDate}</td>
+                                                                </tr>
+                                                            </template>
+                                                        </tbody>
+                                                    </table>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </template>
+                                </template>
                             </lightning-tab>
                             <lightning-tab label="Loan" value="Loan">
                                 <div>
                                     <h3 class="slds-text-heading_small slds-m-bottom_x-small">Normal Contracts</h3>
                                     <c-masked-toggle-datatable key-field="id" data={loanContractData}
                                         columns={loanContractColumns} hide-checkbox-column
-                                        onrowaction={handleRowAction}>
+                                        onrowaction={handleRowAction} onshowhistory={handleDblClick}>
                                     </c-masked-toggle-datatable>
+                                    <template for:each={loanContractDataWithHistory} for:item="row">
+                                        <template if:true={row._historyState}>
+                                            <template if:true={row._historyState.expanded}>
+                                                <div key={row.ContractNumber} class="fec-history-wrap">
+                                                    <template if:true={row._historyState.loading}>
+                                                        <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
+                                                    </template>
+                                                    <template if:false={row._historyState.loading}>
+                                                        <table class="fec-history-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>User</th>
+                                                                    <th>Activity</th>
+                                                                    <th>Status</th>
+                                                                    <th>Edit Date</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <template for:each={row._historyState.rows} for:item="h">
+                                                                    <tr key={h.editDate}>
+                                                                        <td>{h.user}</td>
+                                                                        <td>{h.activity}</td>
+                                                                        <td>{h.status}</td>
+                                                                        <td>{h.editDate}</td>
+                                                                    </tr>
+                                                                </template>
+                                                            </tbody>
+                                                        </table>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </template>
+                                    </template>
                                 </div>
                                 <template if:false={isAccountContractSearch}>
                                     <div class="slds-m-top_medium">

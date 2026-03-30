@@ -8,7 +8,7 @@ public without sharing class FEC_CustomEmailService {
     @AuraEnabled
     public static Map<String, String> getInteractionEmail(String caseId) {
         Map<String, String> result = new Map<String, String>();
-        Case c = [SELECT FEC_Send_To__c, FEC_Interaction_Email__c, RecordType.DeveloperName, FEC_Interaction__c FROM Case WHERE Id = :caseId LIMIT 1];
+        Case c = [SELECT FEC_Send_To__c, FEC_Interaction_Email__c, RecordType.DeveloperName, FEC_Interaction__c, OwnerId, Owner.Type FROM Case WHERE Id = :caseId LIMIT 1];
         
         String sendTo = c.FEC_Send_To__c;
         String interactionEmail = c.FEC_Interaction_Email__c;
@@ -19,6 +19,44 @@ public without sharing class FEC_CustomEmailService {
             if (!parent.isEmpty()) {
                 if (String.isBlank(sendTo)) sendTo = parent[0].FEC_Send_To__c;
                 if (String.isBlank(interactionEmail)) interactionEmail = parent[0].FEC_Interaction_Email__c;
+            }
+        }
+
+        // Fallback: nếu vẫn null thì lấy Queue email của case owner
+        if (String.isBlank(sendTo) && c.Owner.Type == FEC_ConstantCommon.GROUP_TYPE_QUEUE) {
+            try {
+                Group q = [SELECT Email FROM Group WHERE Id = :c.OwnerId LIMIT 1];
+                if (String.isNotBlank(q.Email)) sendTo = q.Email;
+            } catch (Exception e) {
+                System.debug('Queue email lookup failed: ' + e.getMessage());
+            }
+        }
+
+        // Fallback: lấy từ EmailMessage incoming gần nhất
+        if (String.isBlank(interactionEmail) || String.isBlank(sendTo)) {
+            List<EmailMessage> incomingMsgs = [
+                SELECT FromAddress, ToAddress FROM EmailMessage
+                WHERE ParentId = :caseId AND Incoming = true
+                ORDER BY MessageDate DESC LIMIT 1
+            ];
+            if (!incomingMsgs.isEmpty()) {
+                if (String.isBlank(interactionEmail)) interactionEmail = incomingMsgs[0].FromAddress;
+                if (String.isBlank(sendTo)) sendTo = incomingMsgs[0].ToAddress;
+            }
+        }
+
+        // Fallback: tìm Customer Case có FEC_Interaction__c = caseId
+        if (String.isBlank(sendTo) || String.isBlank(interactionEmail)) {
+            List<Case> childCases = [
+                SELECT FEC_Send_To__c, FEC_Interaction_Email__c
+                FROM Case
+                WHERE FEC_Interaction__c = :caseId
+                AND (FEC_Send_To__c != null OR FEC_Interaction_Email__c != null)
+                ORDER BY CreatedDate DESC LIMIT 1
+            ];
+            if (!childCases.isEmpty()) {
+                if (String.isBlank(sendTo)) sendTo = childCases[0].FEC_Send_To__c;
+                if (String.isBlank(interactionEmail)) interactionEmail = childCases[0].FEC_Interaction_Email__c;
             }
         }
         
@@ -199,7 +237,7 @@ public without sharing class FEC_CustomEmailService {
      * Gửi email custom với đầy đủ validation, attachment, logging
      */
     @AuraEnabled
-    public static void sendEmail(
+    public static String sendEmailV2(
         String caseId,
         String fromEmail,
         String toEmail,
@@ -209,6 +247,7 @@ public without sharing class FEC_CustomEmailService {
         List<AttachmentWrapper> attachments,
         String titleReply
     ) {
+        System.debug('### sendEmailV2 called: caseId=' + caseId + ' from=' + fromEmail + ' to=' + toEmail + ' subject=' + subject);
         try {
             // 1. Validate case status
             Case c = [
@@ -243,14 +282,14 @@ public without sharing class FEC_CustomEmailService {
             }
 
             mail.setSubject(subject);
-            mail.setHtmlBody(body.replace('\n', '<br/>'));
-            mail.setWhatId(caseId);
-            mail.setSaveAsActivity(true);
+            mail.setHtmlBody(body != null ? body.replace('\n', '<br/>') : '');
+            mail.setSaveAsActivity(false);
 
             // 4. Set OrgWideEmailAddress (From)
+            System.debug('### Step 4: setFromAddress from=' + fromEmail);
             setFromAddress(mail, fromEmail);
+            System.debug('### Step 5: attachments');
 
-            // 5. Handle attachments
             if (attachments != null && !attachments.isEmpty()) {
                 List<Messaging.EmailFileAttachment> emailAttachments = new List<Messaging.EmailFileAttachment>();
                 for (AttachmentWrapper att : attachments) {
@@ -269,10 +308,40 @@ public without sharing class FEC_CustomEmailService {
             }
 
             // 6. Send
-            Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+            System.debug('### About to sendEmail: from=' + fromEmail + ' to=' + toEmail);
+            List<Messaging.SendEmailResult> results = Messaging.sendEmail(
+                new List<Messaging.SingleEmailMessage>{ mail }, false
+            );
+            if (!results.isEmpty() && !results[0].isSuccess()) {
+                List<String> errs = new List<String>();
+                for (Messaging.SendEmailError e : results[0].getErrors()) {
+                    errs.add(e.getStatusCode() + ': ' + e.getMessage());
+                }
+                throw new AuraHandledException('Send failed: ' + String.join(errs, '; '));
+            }
 
-            // 7. Post-send: update case fields + create Task log
+            // 7. Tạo EmailMessage outgoing để lưu lịch sử trong feed
+            try {
+                EmailMessage em = new EmailMessage();
+                em.ParentId = caseId;
+                em.FromAddress = fromEmail;
+                em.ToAddress = toEmail;
+                if (String.isNotBlank(ccEmail)) em.CcAddress = ccEmail;
+                em.Subject = subject;
+                em.HtmlBody = body;
+                em.TextBody = body.replaceAll('<[^>]+>', '');
+                em.Incoming = false;
+                em.Status = '3';
+                em.MessageDate = Datetime.now();
+                insert em;
+            } catch (Exception emEx) {
+                System.debug('EmailMessage insert skipped: ' + emEx.getMessage());
+            }
+
+            // 8. Post-send: update case fields + create Task log
             updateCaseAfterSend(caseId, fromEmail, toEmail, ccEmail, subject, titleReply);
+            System.debug('### sendEmail completed successfully');
+            return 'OK';
 
         } catch (AuraHandledException e) {
             throw e;
@@ -313,23 +382,10 @@ public without sharing class FEC_CustomEmailService {
             return;
         }
 
-        // Tìm OrgWide cùng domain (cho Email-to-Case routing addresses)
-        String fromDomain = fromEmail.contains('@') ? fromEmail.substringAfter('@') : '';
-        if (String.isNotBlank(fromDomain)) {
-            List<OrgWideEmailAddress> domainMatch = [
-                SELECT Id, Address FROM OrgWideEmailAddress
-                WHERE Address LIKE :('%@' + fromDomain) LIMIT 1
-            ];
-            if (!domainMatch.isEmpty()) {
-                mail.setOrgWideEmailAddressId(domainMatch[0].Id);
-                return;
-            }
-        }
-
-        // Không tìm thấy OrgWide phù hợp → throw lỗi rõ ràng
-        throw new AuraHandledException(
-            Label.FEC_Email_Error_OrgWide_Not_Configured + fromEmail + Label.FEC_Email_Error_OrgWide_Not_Configured_Suffix
-        );
+        // Không có OrgWide → dùng EmailRoutingAddress (Email-to-Case)
+        // Salesforce tự route qua routing address khi setWhatId = caseId
+        // Chỉ set ReplyTo để khách hàng reply về đúng địa chỉ
+        mail.setReplyTo(fromEmail);
     }
 
     private static void updateCaseAfterSend(
@@ -340,7 +396,7 @@ public without sharing class FEC_CustomEmailService {
         if (String.isNotBlank(fromEmail))   cUpdate.FEC_Email_From__c  = fromEmail;
         if (String.isNotBlank(toEmail))     cUpdate.FEC_Send_To__c     = toEmail;
         if (String.isNotBlank(ccEmail))     cUpdate.FEC_Email_CC__c    = ccEmail;
-        if (String.isNotBlank(titleReply))  cUpdate.FEC_Title_Reply__c = titleReply;
+        // FEC_Title_Reply__c is restricted picklist - skip update to avoid invalid value error
         update cUpdate;
 
         // Create Task as audit log
