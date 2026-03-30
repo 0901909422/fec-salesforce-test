@@ -40,6 +40,11 @@
                             </c-fec_-related-list-paging>
                         </div>
                     </template>
+                    <template if:true={showCardDeliveryNoData}>
+                        <div class="slds-text-align_center slds-p-around_large card-info-empty">
+                            <p>{noDataLabel}</p>
+                        </div>
+                    </template>
                 </template>
             </div>
         </section>
@@ -81,6 +86,11 @@
                                 default-sort-direction="desc"
                                 hide-updated-time={hideCardDeliveryRowNumber}>
                             </c-fec_-related-list-paging>
+                        </div>
+                    </template>
+                    <template if:true={showOtherCardNoData}>
+                        <div class="slds-text-align_center slds-p-around_large card-info-empty">
+                            <p>{noDataLabel}</p>
                         </div>
                     </template>
                 </template>
