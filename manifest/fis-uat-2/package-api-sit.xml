@@ -23,7 +23,7 @@
 		<members>FEC_GetCSMasterDataService</members>
 		<members>FEC_GetPaymentInfo</members>
 		<members>FEC_ResponseLog</members>
-		<members>FEC_CreateCaseHandler</members>
+		<members>FEC_PsDNBServiceCallout</members>
         <name>ApexClass</name>
     </types>
     <types>
