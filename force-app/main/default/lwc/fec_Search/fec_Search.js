@@ -916,7 +916,7 @@ hasAnySearchCriteria(params) {
                     }
                 }
                 // NHÓM THEO LOAN (ContractNumber)
-                else if (['CDL', 'PL', 'TW', 'FC_CDL', 'FC_TW', 'FC_CDL_G'].includes(productCode)) {
+                else if (app.ContractNumber) {
                     const contractNum = app.ContractNumber;
                     if (loanContractMap.has(contractNum)) {
                         let existingRec = loanContractMap.get(contractNum);
