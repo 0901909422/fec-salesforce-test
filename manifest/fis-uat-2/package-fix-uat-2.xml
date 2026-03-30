@@ -84,10 +84,6 @@
 		<name>Layout</name>
 	</types>
 	<types>
-		<members>FEC_Enhanced_Letterhead__c.FEC_Required_Header_Or_Footer</members>
-		<name>ValidationRule</name>
-	</types>
-	<types>
 		<members>FEC_Service</members>
 		<name>CustomApplication</name>
 	</types>
@@ -185,6 +181,7 @@
         <members>ServiceResource</members>
         <members>FEC_Template__c</members>
         <members>FEC_Folder__c</members>
+        <members>FEC_Enhanced_Letterhead__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
