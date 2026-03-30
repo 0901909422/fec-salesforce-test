@@ -28,16 +28,23 @@ public with sharing class FEC_InteractionSLAController {
     'Hoàn tất/ Đã phản hồi', 'Liên hệ lại sau', 'Mất kết nối', 'Lỗi hệ thống', 'Test'
   };
   private static final Set<String> CHAT_SUBCHANNELS = new Set<String>{
-    'Facebook', 'Zalo', 'Website', 'Mobile App', 'Mobile App Chat'
+    'Facebook', 'Zalo', 'Website', 'Mobile App'
   };
-  // F2F + F2F | Letter + Letter | Internal (Email/Task/Other) | External
+  // F2F + (F2F | Letter | Incoming/Outgoing Email) | Letter + Letter | Internal (Email/Task/Other) | External
   private static final Set<String> OUTCOME_CODES_F2F = new Set<String>{ 'Hoàn tất/ Đã phản hồi', 'Lỗi hệ thống', 'Test' };
   private static final Set<String> OUTCOME_CODES_LETTER = new Set<String>{ 'Hoàn tất/ Đã phản hồi', 'Lỗi hệ thống', 'Test' };
+  /** Subchannel hợp lệ khi FEC_Channel__c = F2F (cùng bộ Outcome OUTCOME_CODES_F2F). */
+  private static final Set<String> F2F_INTERACTION_SUBCHANNELS = new Set<String>{
+    FEC_ConstantCommon.CHANNEL_F2F_SUBCHANNEL_NAME,
+    FEC_ConstantCommon.CHANNEL_LETTER_SUBCHANNEL_NAME,
+    FEC_ConstantCommon.CHANNEL_EMAIL_INCOMING_SUBCHANNEL_NAME,
+    FEC_ConstantCommon.CHANNEL_EMAIL_OUTGOING_SUBCHANNEL_NAME
+  };
   private static final Set<String> OUTCOME_CODES_INTERNAL_EMAIL = new Set<String>{ 'Hoàn tất/ Đã phản hồi', 'Thư rác', 'Lỗi hệ thống', 'Test' };
   private static final Set<String> OUTCOME_CODES_INTERNAL_TASK = new Set<String>{ 'Hoàn tất/ Đã phản hồi', 'Lỗi hệ thống', 'Test' };
   private static final Set<String> OUTCOME_CODES_INTERNAL_OTHER = new Set<String>{ 'Hoàn tất/ Đã phản hồi', 'Lỗi hệ thống', 'Test' };
   private static final Set<String> INTERNAL_OTHER_SUBCHANNELS = new Set<String>{ 'iCollect', 'iSale', 'Vtiger' };
-  // External: chỉ theo FEC_Channel__c = External (không bắt Subchannel = SBV/EA/VPBank — field Subchannel Interaction thường là Inbound/Outbound/Other nên điều kiện cũ không khớp → trả về cả picklist)
+  // External: chỉ theo FEC_Channel__c = External (không bắt Subchannel = SBV/EA/VPBank 
   private static final Set<String> OUTCOME_CODES_EXTERNAL = new Set<String>{ 'Hoàn tất/ Đã phản hồi', 'Lỗi hệ thống', 'Test' };
   // Customer Type áp dụng cho Inbound/Outbound Call: Existing, Non-existing
   private static final Set<String> CUSTOMER_TYPES_FOR_CALL = new Set<String>{ 'Existing', 'Non-existing' };
@@ -118,7 +125,8 @@ public with sharing class FEC_InteractionSLAController {
 
   /**
    * Lấy danh sách Outcome Code được phép chọn theo Channel + Sub Channel + Customer Type của Case (Interaction).
-   * Điều kiện Inbound/Outbound Call: FEC_Customer_Type__c = Existing hoặc Non-existing.
+   * Điều kiện Inbound/Outbound Call (và các kênh dùng isCallCustomerTypeAllowed): FEC_Customer_Type__c = Existing hoặc Non-existing.
+   * Kênh F2F: chấp nhận Subchannel F2F / Letter / Incoming Email / Outgoing Email; Customer Type trống vẫn áp dụng bộ 3 Outcome.
    * @param recordId Id Case (Interaction hoặc Case con)
    * @return Danh sách option {label, value} đã lọc
    */
@@ -153,9 +161,18 @@ public with sharing class FEC_InteractionSLAController {
         allowedValues = OUTCOME_CODES_EMAIL_OUTGOING;
       } else if (channel == FEC_ConstantCommon.CHANNEL_CHAT_NAME && subChannel != null && CHAT_SUBCHANNELS.contains(subChannel) && isCallCustomerTypeAllowed) {
         allowedValues = OUTCOME_CODES_CHAT;
-      } else if (channel == FEC_ConstantCommon.CHANNEL_F2F_NAME && subChannel == FEC_ConstantCommon.CHANNEL_F2F_SUBCHANNEL_NAME && isCallCustomerTypeAllowed) {
+      } else if (
+        channel == FEC_ConstantCommon.CHANNEL_F2F_NAME &&
+        subChannel != null &&
+        F2F_INTERACTION_SUBCHANNELS.contains(subChannel) &&
+        (isCallCustomerTypeAllowed || String.isBlank(customerType))
+      ) {
         allowedValues = OUTCOME_CODES_F2F;
-      } else if (channel == FEC_ConstantCommon.CHANNEL_LETTER_NAME && subChannel == FEC_ConstantCommon.CHANNEL_LETTER_SUBCHANNEL_NAME && isCallCustomerTypeAllowed) {
+      } else if (
+        channel == FEC_ConstantCommon.CHANNEL_LETTER_NAME &&
+        subChannel == FEC_ConstantCommon.CHANNEL_LETTER_SUBCHANNEL_NAME &&
+        (isCallCustomerTypeAllowed || String.isBlank(customerType))
+      ) {
         allowedValues = OUTCOME_CODES_LETTER;
       } else if (channel == FEC_ConstantCommon.CHANNEL_INTERNAL_NAME && subChannel == FEC_ConstantCommon.CHANNEL_INTERNAL_EMAIL_SUBCHANNEL_NAME) {
         allowedValues = OUTCOME_CODES_INTERNAL_EMAIL;

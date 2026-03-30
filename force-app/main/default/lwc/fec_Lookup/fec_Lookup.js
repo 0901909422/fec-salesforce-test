@@ -450,7 +450,12 @@ export default class Lookup extends LightningElement {
             css += 'slds-has-error ';
         }
         if (!this.isMultiSelect) {
-            css += (this.hasSelection() ? 'slds-combobox__input-value has-custom-border' : '');
+            css += (this.hasSelection() ? ' slds-combobox__input-value has-custom-border ' : ' ');
+        }
+
+        // THÊM ĐOẠN NÀY: Nếu là readonly thì thêm class để ẩn con trỏ
+        if (this.isInputReadonly) {
+            css += ' readonly-no-cursor ';
         }
         return css;
     }
@@ -502,11 +507,20 @@ export default class Lookup extends LightningElement {
         return (this.isMultiSelect && this.hasSelection()) ? 'slds-listbox_selection-group selectionGroup' : '';
     }
 
+    // get isInputReadonly() {
+    //     if (this.isMultiSelect) {
+    //         return false;
+    //     }
+    //     return this.hasSelection();
+    // }
+
     get isInputReadonly() {
+        // Nếu là MultiSelect thì cho phép gõ tiếp để tìm thêm
         if (this.isMultiSelect) {
-            return false;
+            return this.readOnly;
         }
-        return this.hasSelection();
+        // Nếu đã có selection (Single select) HOẶC field được set readonly từ cha -> khóa input
+        return this.readOnly || this.hasSelection();
     }
 
     get isExpanded() {

@@ -88,7 +88,7 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>none</value>
+                    <value>required</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.FEC_Header__c</fieldItem>
                 <identifier>RecordFEC_Header_cField2</identifier>
@@ -98,7 +98,7 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>none</value>
+                    <value>required</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.FEC_Footer__c</fieldItem>
                 <identifier>RecordFEC_Footer_cField2</identifier>

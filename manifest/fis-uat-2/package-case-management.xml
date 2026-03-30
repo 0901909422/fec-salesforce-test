@@ -147,6 +147,10 @@
         <members>FEC_Block_Card_Failed</members>
         <members>FEC_Block_Card_Failed_Max</members>
         <members>FEC_Block_Card_Confirmation_Msg</members>
+		<members>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</members>
+		<members>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</members>
+		<members>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</members>
+		<members>FEC_PHONE_IS_REQUIRED_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -184,6 +188,7 @@
 		<members>fec_CardClosureRefundHandling</members>
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_CardBlock</members>
+		<members>fecInteractionInfo</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>

@@ -49,7 +49,8 @@ import letterheadLabel                from '@salesforce/label/c.FEC_Template_Enh
 import mailboxLabel                   from '@salesforce/label/c.FEC_Template_Applicable_Mailbox';
 import attachmentLabel                from '@salesforce/label/c.FEC_Template_Attachment';
 import backToListLabel                from '@salesforce/label/c.FEC_Template_Back_To_List';
-import saveAndNewLabel                from '@salesforce/label/c.FEC_Template_Save_And_New';
+import saveAndCloseLabel              from '@salesforce/label/c.FEC_Template_Save_And_Close';
+import bodyLabel                      from '@salesforce/label/c.FEC_Template_Body';
 
 /* ── Constants & Utils ── */
 import { MAILBOX_OPTIONS } from 'c/fec_TemplateConstants';
@@ -147,7 +148,8 @@ export default class Fec_templateEditor extends LightningElement {
         mailboxLabel,
         attachmentLabel,
         backToListLabel,
-        saveAndNewLabel
+        saveAndCloseLabel,
+        bodyLabel
     };
 
     /* ═══════════════════════════════════════════ */
@@ -244,11 +246,17 @@ export default class Fec_templateEditor extends LightningElement {
 
     handleNameChange(event) {
         this.name = event.target.value;
-        /* Auto-generate API name from template name (only if not manually overridden) */
-        if (!this._apiNameManuallySet) {
+        if (this.name) { this.hasErrors = false; }
+    }
+
+    /**
+     * Auto-generate API name when user tabs out of Template Name,
+     * but only if API Name is still empty (not manually set).
+     */
+    handleNameBlur() {
+        if (!this.apiName && this.name) {
             this.apiName = generateApiName(this.name);
         }
-        if (this.name) { this.hasErrors = false; }
     }
 
     handleApiNameChange(event) {
@@ -352,7 +360,7 @@ export default class Fec_templateEditor extends LightningElement {
     }
 
     /* ═══════════════════════════════════════════ */
-    /*  SAVE / SAVE & NEW / BACK / PREVIEW         */
+    /*  SAVE / SAVE & CLOSE / BACK                 */
     /* ═══════════════════════════════════════════ */
 
     async handleSave() {
@@ -360,7 +368,7 @@ export default class Fec_templateEditor extends LightningElement {
         await this._performSave(false);
     }
 
-    async handleSaveAndNew() {
+    async handleSaveAndClose() {
         if (!this._validate()) return;
         await this._performSave(true);
     }
@@ -375,9 +383,9 @@ export default class Fec_templateEditor extends LightningElement {
 
     /**
      * Core save logic – calls Apex saveTemplate, handles response.
-     * @param {Boolean} andNew  If true, reset form after save.
+     * @param {Boolean} andClose  If true, navigate back to list view after save.
      */
-    async _performSave(andNew) {
+    async _performSave(andClose) {
         this._isSaving = true;
         try {
             const sObj = this._buildSObject();
@@ -393,8 +401,9 @@ export default class Fec_templateEditor extends LightningElement {
                 variant: 'success'
             }));
 
-            if (andNew) {
-                this._resetForm();
+            if (andClose) {
+                /* Save & Close → return to list view */
+                this.dispatchEvent(new CustomEvent('saveandclose', { detail: { recordId: savedId } }));
             } else {
                 this.dispatchEvent(new CustomEvent('save', { detail: { recordId: savedId } }));
             }
@@ -408,6 +417,7 @@ export default class Fec_templateEditor extends LightningElement {
 
     _validate() {
         let isValid = true;
+        const missingFields = [];
 
         /* Validate Template Name (required) */
         const nameInput = this.template.querySelector('.name-input');
@@ -416,19 +426,43 @@ export default class Fec_templateEditor extends LightningElement {
                 nameInput.setCustomValidity(completeThisFieldLabel);
                 nameInput.reportValidity();
             }
+            missingFields.push(FEC_Col_Template_Name);
             isValid = false;
         } else {
             nameInput.setCustomValidity('');
             nameInput.reportValidity();
         }
 
-        /* Validate Folder (required) */
-        if (!this.folderId) {
+        /* Validate API Name (required) */
+        const apiInput = this.template.querySelector('.api-name-input');
+        if (!apiInput || !apiInput.value || apiInput.value.trim() === '') {
+            if (apiInput) {
+                apiInput.setCustomValidity(completeThisFieldLabel);
+                apiInput.reportValidity();
+            }
+            missingFields.push(apiNameLabel);
             isValid = false;
+        } else {
+            apiInput.setCustomValidity('');
+            apiInput.reportValidity();
+        }
+
+        /* Validate Folder (required) – uses searchable combobox @api */
+        const folderCmp = this.template.querySelector('.folder-combobox');
+        if (!this.folderId) {
+            if (folderCmp) {
+                folderCmp.setCustomValidity(completeThisFieldLabel);
+                folderCmp.reportValidity();
+            }
+            missingFields.push(FEC_Col_Folder);
+            isValid = false;
+        } else if (folderCmp) {
+            folderCmp.setCustomValidity('');
+            folderCmp.reportValidity();
         }
 
         if (!isValid) {
-            this.errorMessage = requiredFieldsMsg;
+            this.errorMessage = requiredFieldsMsg.replace('{0}', missingFields.join(', '));
             this.hasErrors = true;
         }
 

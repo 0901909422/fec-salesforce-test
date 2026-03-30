@@ -155,10 +155,9 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Folder</label>
     <nameField>
-        <displayFormat>F-{0000}</displayFormat>
         <label>Folder Name</label>
         <trackHistory>false</trackHistory>
-        <type>AutoNumber</type>
+        <type>Text</type>
     </nameField>
     <pluralLabel>Folders</pluralLabel>
     <searchLayouts></searchLayouts>

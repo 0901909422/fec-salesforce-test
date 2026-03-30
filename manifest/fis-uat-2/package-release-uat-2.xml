@@ -24,6 +24,7 @@
 		<members>FEC_GetCSMasterDataService</members>
 		<members>FEC_GetPaymentInfo</members>
 		<members>FEC_ResponseLog</members>
+		<members>FEC_PsDNBServiceCallout</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -43,6 +44,7 @@
 		<members>FEC_API_Config.FEC_Get_Loan_Sec_Info</members>
 		<members>FEC_API_Config.FEC_Get_Removable_Phone_Status</members>
 		<members>FEC_API_Config.FEC_Update_Customer_Address</members>
+		<members>FEC_API_Config.FEC_Ps_DNB</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -120,6 +122,9 @@
 		<members>FEC_MSG_CancelCS_Case_Already_Closed_Or_Completed</members>
 		<members>FEC_MSG_CancelCS_Case_Already_Resolved</members>
 		<members>FEC_MSG_CancelCS_Insufficient_Permissions</members>
+		<members>FEC_CS_CASE_CHANNEL_INVALID_MSG</members>
+		<members>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</members>
+		<members>FEC_MISSING_REQUIRED_FIELDS_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -631,6 +636,10 @@
         <members>FEC_On_Hold_Label</members>
         <members>FEC_On_Hold_Help_Text</members>
 		<members>FEC_Interaction_Email_Info_Ubank_Label</members>
+		<members>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</members>
+		<members>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</members>
+		<members>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</members>
+		<members>FEC_PHONE_IS_REQUIRED_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -969,8 +978,8 @@
     </types>
 	<types>
 		<members>fec_CloneLetterheadContainer</members>
-		<members>fec_EditLetterheadContainer</members>
-		<members>fec_NewLetterheadContainer</members>
+		<!--<members>fec_EditLetterheadContainer</members>
+		<members>fec_NewLetterheadContainer</members>-->
 		<name>AuraDefinitionBundle</name>
 	</types>
 	<types>
@@ -1058,6 +1067,8 @@
 		<members>FEC_Message_Content</members>
 		<members>FEC_Subject_Line</members>
 		<members>FEC_Template_Settings</members>
+		<members>FEC_Template_Body</members>
+        <members>FEC_Template_Save_And_Close</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -1067,10 +1078,10 @@
         <members>FEC_Content_History_Tracking__c</members>
 		<name>CustomObject</name>
 	</types>
-	<types>
+	<!--<types>
 		<members>FEC_Enhanced_Letterhead__c.FEC_Required_Header_Or_Footer</members>
 		<name>ValidationRule</name>
-	</types>
+	</types>-->
 	<types>
 		<members>FEC_Enhanced_Letterhead__c</members>
 		<members>Templates</members>

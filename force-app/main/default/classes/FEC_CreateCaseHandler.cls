@@ -127,6 +127,35 @@ public without sharing class FEC_CreateCaseHandler {
         return res;
     }
     
+    
+    @AuraEnabled
+    public static void updateInteractionCaseWithCustomerHistory(
+        Id interactionId,
+        Id customerHistoryId
+    ) {
+        try {
+            // Query record
+            Case interaction = [
+                SELECT Id, FEC_Account_or_Contract__c
+                FROM Case
+                WHERE Id = :interactionId
+                LIMIT 1
+            ];
+            
+            // Update field
+            interaction.FEC_Account_or_Contract__c = customerHistoryId;
+            
+            update interaction;
+            
+        } catch (Exception e) {
+            // Log properly
+            System.debug('ERROR updateInteractionCaseWithCustomerHistory: ' + e.getMessage());
+            // Surface error to LWC / caller
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+    
+    
     @AuraEnabled
     public static FEC_InteractionCaseResponse createInteractionCaseManual(FEC_InteractionCaseDTO dto) {
         
