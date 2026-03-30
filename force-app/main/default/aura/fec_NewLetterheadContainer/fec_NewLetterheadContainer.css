@@ -1,9 +1,0 @@
-.THIS.scrolling-viewport {
-    background-color: #f3f3f2; /* Grey background */
-    height: 100vh;             /* Full screen height */
-    overflow-y: scroll;        /* Force scrollbar to stay on the container */
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
