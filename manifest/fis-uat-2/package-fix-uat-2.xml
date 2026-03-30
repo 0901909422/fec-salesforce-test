@@ -34,6 +34,7 @@
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_PsDNBServiceCallout</members>
 		<members>FEC_InteractionSLAController</members>
+        <members>FEC_LookupController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -54,6 +55,7 @@
 		<members>fec_CommonConst</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_InteractionMyCaseInfo</members>
+        <members>fec_Lookup</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -179,11 +181,24 @@
 	</types>
     <types>
 		<members>Case.FEC_Parent_ID__c</members>
+        <members>FEC_Notification__c.FEC_Receivers__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
         <members>FEC_API_Config.FEC_Ps_DNB</members>
 		<name>CustomMetadata</name>
+	</types>
+    <types>
+		
+		<name>ApexClass</name>
+	</types>
+	<types>
+		
+		<name>CustomField</name>
+	</types>
+	<types>
+		
+		<name>LightningComponentBundle</name>
 	</types>
     <version>65.0</version>
 </Package>
