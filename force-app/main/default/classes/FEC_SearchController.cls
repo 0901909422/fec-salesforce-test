@@ -244,23 +244,10 @@ public with sharing class FEC_SearchController {
     @AuraEnabled
     public static Id createInternalCaseOnSkip() {
         try {
-            Map<String, Schema.RecordTypeInfo> rtMap =
-                Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
-
-            Schema.RecordTypeInfo rtInfo =
-                rtMap.get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME);
-
-            if (rtInfo == null) {
-                throw new AuraHandledException(
-                    String.format(
-                        System.Label.FEC_MSG_RecordType_Not_Found,
-                        new List<String>{FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME}
-                    )
-                );
-            }
+            Id recordTypeId = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME);
 
             Case c = new Case();
-            c.RecordTypeId = rtInfo.getRecordTypeId();
+            c.RecordTypeId = recordTypeId;
             c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
             c.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.CASE_INTERNAL_REQUEST;
             c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
