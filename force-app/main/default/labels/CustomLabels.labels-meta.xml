@@ -7723,20 +7723,6 @@
         <value>Không tìm thấy kết quả</value>
     </labels>
     <labels>
-        <fullName>FEC_Email_Subject_Case_Owner_Change</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Email subject when Case owner changes (Send Notification)</shortDescription>
-        <value>Case {0} đã được phân công cho bạn</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Email_Body_Case_Owner_Change</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Email body when Case owner changes. {0}=Case Number, {1}=Case link URL</shortDescription>
-        <value>Case {0} đã được phân công cho bạn. Vui lòng xem và xử lý: {1}</value>
-    </labels>
-    <labels>
         <fullName>FEC_Account_Card_Fetch_Error</fullName>
         <language>en_US</language>
         <protected>false</protected>
