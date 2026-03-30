@@ -8,12 +8,13 @@ private class FEC_FolderSelector_Test {
 
     @TestSetup
     static void setupData() {
-        FEC_Folder__c root1 = new FEC_Folder__c(FEC_Folder_Label__c = 'Marketing');
-        FEC_Folder__c root2 = new FEC_Folder__c(FEC_Folder_Label__c = 'Support');
+        FEC_Folder__c root1 = new FEC_Folder__c(Name = 'Marketing',FEC_Folder_Unique_Name__c = 'Marketing');
+        FEC_Folder__c root2 = new FEC_Folder__c(Name = 'Support', FEC_Folder_Unique_Name__c = 'Support');
         insert new List<FEC_Folder__c>{ root1, root2 };
 
         FEC_Folder__c child = new FEC_Folder__c(
-            FEC_Folder_Label__c = 'Promotions',
+            Name = 'Promotions',
+            FEC_Folder_Unique_Name__c = 'Promotions',
             FEC_Parent_Folder__c = root1.Id
         );
         insert child;
@@ -21,14 +22,14 @@ private class FEC_FolderSelector_Test {
 
     @IsTest
     static void testSelectById() {
-        FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
+        FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE Name = 'Marketing' LIMIT 1];
 
         Test.startTest();
         FEC_Folder__c result = FEC_FolderSelector.selectById(folder.Id);
         Test.stopTest();
 
         Assert.isNotNull(result);
-        Assert.areEqual('Marketing', result.FEC_Folder_Label__c);
+        Assert.areEqual('Marketing', result.Name);
     }
 
     @IsTest
@@ -51,14 +52,14 @@ private class FEC_FolderSelector_Test {
 
     @IsTest
     static void testSelectByParentId() {
-        FEC_Folder__c parent = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
+        FEC_Folder__c parent = [SELECT Id FROM FEC_Folder__c WHERE Name = 'Marketing' LIMIT 1];
 
         Test.startTest();
         List<FEC_Folder__c> results = FEC_FolderSelector.selectByParentId(parent.Id);
         Test.stopTest();
 
         Assert.areEqual(1, results.size(), 'Marketing should have 1 child folder');
-        Assert.areEqual('Promotions', results[0].FEC_Folder_Label__c);
+        Assert.areEqual('Promotions', results[0].Name);
     }
 
     @IsTest
