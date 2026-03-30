@@ -26,11 +26,12 @@ import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 import CASE_OBJECT from "@salesforce/schema/Case";
 import INTERACTION_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Interaction_Email__c";
 import CREATED_ON_FIELD from "@salesforce/schema/Case.FEC_Created_On__c";
-import CREATED_BY_FIELD from "@salesforce/schema/Case.FEC_Created_by__c";
+ import CREATED_BY_FIELD from "@salesforce/schema/Case.FEC_Created_by__c";
 import SEND_TO_FIELD from "@salesforce/schema/Case.FEC_Send_To__c";
 import PARENT_ID_FIELD from "@salesforce/schema/Case.ParentId";
 import ON_HOLD_FIELD from "@salesforce/schema/Case.FEC_On_Hold__c";
 import CHANNEL_FIELD from "@salesforce/schema/Case.FEC_Channel__c";
+import SUBCHANNEL_FIELD from "@salesforce/schema/Case.FEC_Interaction_Subchannel__c";
 
 // ================= LABELS =================
 import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interaction_Information_Label";
@@ -55,7 +56,11 @@ import {
   VIEW_MODE_REVIEW,
   RECORD_TYPE_INTERACTION,
   RECORD_TYPE_CUSTOMER_CASE,
+  RECORD_TYPE_INTERNAL_CASE,
   NAV_ACTION_VIEW,
+  CHANNEL_EMAIL,
+  CHANNEL_INTERNAL,
+  SUB_CHANNEL_INTERNAL_EMAIL,
 } from "c/fec_CommonConst";
 import { formatDateTimeVN } from "c/fec_CommonUtils";
 
@@ -205,7 +210,10 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   }
 
   get isCustomerCase() {
-    return this.recordTypeDevName === RECORD_TYPE_CUSTOMER_CASE;
+    return (
+      this.recordTypeDevName === RECORD_TYPE_CUSTOMER_CASE ||
+      this.recordTypeDevName === RECORD_TYPE_INTERNAL_CASE
+    );
   }
 
   get hasInteractionEmail() {
@@ -238,17 +246,32 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   }
 
   get channel() {
-    return this.record?.[CHANNEL_FIELD.fieldApiName] || STR_EMPTY;
+    return (this.record?.[CHANNEL_FIELD.fieldApiName] || STR_EMPTY).trim();
+  }
+
+  get subChannel() {
+    return (this.record?.[SUBCHANNEL_FIELD.fieldApiName] || STR_EMPTY).trim();
   }
 
   get sendTo() {
-    return this.record?.[SEND_TO_FIELD.fieldApiName] || STR_EMPTY;
+    return (this.record?.[SEND_TO_FIELD.fieldApiName] || STR_EMPTY).trim();
   }
 
   get showOnHold() {
-    // Tạm thời comment điều kiện Send To == 'dichvukhachhang@ubank.vn' để test
-    // return this.channel === "Email" && this.sendTo === UBankCustomberServiceEmail;
-    return this.channel === "Email" && this.sendTo !== STR_EMPTY && this.sendTo != null;
+    if (!this.record) return false;
+    
+    const channel = this.channel.toLowerCase();
+    const subChannel = this.subChannel.toLowerCase();
+    const sendTo = this.sendTo;
+
+    // 1. Luôn ẩn nếu là Internal Email
+    if (channel.includes("internal") && subChannel.includes("internal email")) {
+      return false;
+    }
+
+    // 2. Hiển thị nếu là channel Email
+    // Nếu quý khách thấy thông tin đã đủ mà vẫn ẩn, chúng tôi tạm bỏ check sendTo rỗng để đảm bảo nút xuất hiện
+    return channel.includes("email") || channel === "email";
   }
 
   get onHold() {
