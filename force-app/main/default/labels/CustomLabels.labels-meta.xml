@@ -11003,4 +11003,196 @@
         <shortDescription>Save and Close button label</shortDescription>
         <value>Save &amp; Close</value>
     </labels>
+    <labels>
+        <fullName>FEC_LBL_Incorrect_Payment_Form_Title</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Incorrect_Payment_Form_Title</shortDescription>
+        <value>Incorrect Payment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Incorrect_Contract_Number</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Incorrect_Contract_Number</shortDescription>
+        <value>Incorrect Contract Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Select_Contract_Number</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Select_Contract_Number</shortDescription>
+        <value>Select contract number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Incorrect_Contract_Hint</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Incorrect_Contract_Hint</shortDescription>
+        <value>Có thể để trống trong trường hợp không ghi số HĐ khi thanh toán (tiền treo).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Payment_Method</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Payment_Method</shortDescription>
+        <value>Payment Method</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Payment_Method_Bank_Transfer</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Payment_Method_Bank_Transfer</shortDescription>
+        <value>Bank transfer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Payment_Method_Other_Channels</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Payment_Method_Other_Channels</shortDescription>
+        <value>Other channels</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_No_Payment_History_Found</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_No_Payment_History_Found</shortDescription>
+        <value>No Payment History Found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Bill_Date</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Bill_Date</shortDescription>
+        <value>Bill Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Bill_Amount</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Bill_Amount</shortDescription>
+        <value>Bill Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Excess_Amount</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Excess_Amount</shortDescription>
+        <value>Excess Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Correct_Contract</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Correct_Contract</shortDescription>
+        <value>Correct Account/ Contract</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Adjusted_Amount</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Adjusted_Amount</shortDescription>
+        <value>Adjusted Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Remove_Row</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Remove_Row</shortDescription>
+        <value>Remove row</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Add_Item</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Add_Item</shortDescription>
+        <value>Add Item</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</shortDescription>
+        <value>Tổng số tiền điều chỉnh phải bằng số tiền thanh toán.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IncorrectPayment_LoanInfo_NotRetrieved</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IncorrectPayment_LoanInfo_NotRetrieved</shortDescription>
+        <value>Loan security information could not be retrieved.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row</shortDescription>
+        <value>No valid adjustment row with both Correct Contract and Adjusted Amount.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IncorrectPayment_Case_Not_Found</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IncorrectPayment_Case_Not_Found</shortDescription>
+        <value>Case not found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IncorrectPayment_No_Update_Case_Access</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IncorrectPayment_No_Update_Case_Access</shortDescription>
+        <value>Insufficient access to update Case.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IncorrectPayment_No_Update_Case_Fields_Access</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IncorrectPayment_No_Update_Case_Fields_Access</shortDescription>
+        <value>Insufficient access to update Case fields.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_AddIpp_Default_Failed</fullName>
+        <categories>IPP Conversion Apex</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_AddIpp_Default_Failed</shortDescription>
+        <value>Chuyển đổi thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_AddIpp_Default_Success</fullName>
+        <categories>IPP Conversion Apex</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_AddIpp_Default_Success</shortDescription>
+        <value>Thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Retail_UI</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Retail_UI</shortDescription>
+        <value>Giao dịch chưa sao kê##Check IPP Details##Convert IPP##IPP Conversion##Bạn sắp chuyển đổi giao dịch này. Bạn có chắc chắn muốn tiếp tục không?##Thành công##Khác##Có##Không##Khách hàng</value>
+    </labels>
 </CustomLabels>
