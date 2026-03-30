@@ -58,13 +58,11 @@
     </actionOverrides>
     <actionOverrides>
         <actionName>Edit</actionName>
-        <content>fec_EditLetterheadContainer</content>
-        <formFactor>Large</formFactor>
-        <skipRecordTypeSelect>false</skipRecordTypeSelect>
-        <type>LightningComponent</type>
+        <type>Default</type>
     </actionOverrides>
     <actionOverrides>
         <actionName>Edit</actionName>
+        <formFactor>Large</formFactor>
         <type>Default</type>
     </actionOverrides>
     <actionOverrides>
@@ -88,14 +86,11 @@
     </actionOverrides>
     <actionOverrides>
         <actionName>New</actionName>
-        <comment>Using custom component instead of standard action</comment>
-        <content>fec_NewLetterheadContainer</content>
-        <formFactor>Large</formFactor>
-        <skipRecordTypeSelect>false</skipRecordTypeSelect>
-        <type>LightningComponent</type>
+        <type>Default</type>
     </actionOverrides>
     <actionOverrides>
         <actionName>New</actionName>
+        <formFactor>Large</formFactor>
         <type>Default</type>
     </actionOverrides>
     <actionOverrides>
