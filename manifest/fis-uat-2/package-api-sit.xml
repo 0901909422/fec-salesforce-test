@@ -254,11 +254,5 @@
 		<members>RD_IT_User_Master_Data_Management</members>
 		<name>PermissionSet</name>
 	</types>
-	<types>
-		<members>fec_CaseBussiness</members>
-		<members>fec_PinResetHandling</members>
-		<members>fec_PinResetView</members>
-		<name>LightningComponentBundle</name>
-	</types>
     <version>65.0</version>
 </Package>
