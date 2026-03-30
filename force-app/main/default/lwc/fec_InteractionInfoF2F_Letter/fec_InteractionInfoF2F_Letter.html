@@ -56,6 +56,14 @@
                 <span class="value">{createdOn}</span>
                 <span></span>
               </div>
+
+              <template if:true={showField}>
+                <div class="row">
+                  <span class="label">{labels.outcomeCode}</span>
+                  <span class="value">{outcomeCode}</span>
+                  <span></span>
+                </div>
+              </template>
             </div>
 
             <!-- RIGHT -->
@@ -65,6 +73,13 @@
                 <span class="value">{createdBy}</span>
                 <span></span>
               </div>
+              <template if:true={showField}>
+                <div class="row">
+                  <span class="label">{labels.remarks}</span>
+                  <span class="value">{interactionRemark}</span>
+                  <span></span>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -97,7 +112,13 @@
                 <span class="value">{createdOn}</span>
                 <span></span>
               </div>
-
+              <template if:true={showField}>
+                <div class="row">
+                  <span class="label">{labels.outcomeCode}</span>
+                  <span class="value">{outcomeCode}</span>
+                  <span></span>
+                </div>
+              </template>
 
             </div>
 
@@ -108,7 +129,13 @@
                 <span class="value">{createdBy}</span>
                 <span></span>
               </div>
-
+              <template if:true={showField}>
+                <div class="row">
+                  <span class="label">{labels.remarks}</span>
+                  <span class="value">{interactionRemark}</span>
+                  <span></span>
+                </div>
+              </template>
             </div>
           </div>
         </div>

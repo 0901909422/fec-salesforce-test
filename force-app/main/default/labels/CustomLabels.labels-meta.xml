@@ -10934,6 +10934,34 @@
         <value>Interaction Information</value>
     </labels>
     <labels>
+        <fullName>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</shortDescription>
+        <value>Phone number starting with 0 must be exactly 10 digits.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</shortDescription>
+        <value>Phone number starting with 84 must be exactly 11 digits.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</shortDescription>
+        <value>Phone number must start with 0 (10 digits) or 84 (11 digits).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PHONE_IS_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_PHONE_IS_REQUIRED_MSG</shortDescription>
+        <value>Phone number is required.</value>
+    </labels>
+    <labels>
         <fullName>FEC_CS_CASE_CHANNEL_INVALID_MSG</fullName>
         <language>en_US</language>
         <protected>false</protected>
