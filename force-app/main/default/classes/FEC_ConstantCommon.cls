@@ -310,4 +310,5 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_STATUS_CLOSED    = 'Closed';
     public static final String CASE_STATUS_RESOLVED  = 'Resolved';
     public static final String CASE_STATUS_CANCELLED = 'Cancelled';
+    public static final String CASE_INTERNAL_REQUEST = 'Internal Request';
 }
