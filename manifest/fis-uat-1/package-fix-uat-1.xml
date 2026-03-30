@@ -47,7 +47,7 @@
 		<members>FEC_ContentDocumentTriggerHandler</members>
 		<members>FEC_ContentVersionTriggerHandler</members>
 		<members>FEC_FileActionOnReviewService</members>
-		<members>FEC_CaseOwnerChangeNotification</members>
+		<!--<members>FEC_CaseOwnerChangeNotification</members>-->
 		<members>FEC_CaseTriggerHandler</members>
 		<members>FEC_KYCController</members>
 		<members>CaseSearchDeletionBatch</members>
