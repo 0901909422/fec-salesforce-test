@@ -35,6 +35,9 @@
 		<members>FEC_PsDNBServiceCallout</members>
 		<members>FEC_InteractionSLAController</members>
 		<members>FEC_CreateCaseHandler</members>
+        <members>FEC_FolderService_Test</members>
+        <members>FEC_FolderSelector_Test</members>
+        <members>FEC_FolderTriggerHandler_Test</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -55,6 +58,10 @@
 		<members>fec_CommonConst</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_InteractionMyCaseInfo</members>
+		<members>fec_folderListView</members>
+		<members>fec_folderTreePanel</members>
+		<members>fec_searchableCombobox</members>
+		<members>fec_templateManagementConsole</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -172,6 +179,8 @@
         <members>FEC_Country__c</members>
         <members>FEC_Service_Resource_Absence__c</members>
         <members>ServiceResource</members>
+        <members>FEC_Template__c</members>
+        <members>FEC_Folder__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
