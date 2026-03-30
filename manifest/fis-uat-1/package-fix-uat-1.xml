@@ -109,6 +109,7 @@
 		<members>fec_CardPayment</members>
 		<members>fec_AccountOrContractPicklistCustomerCase</members>
 		<members>fec_CaseModePublisher</members>
+		<members>fec_CardInfo</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -263,8 +264,8 @@
 		<members>FEC_Toast_Search_Validation</members>
 		<members>FEC_MSG_Error_API_Label</members>
 		<members>FEC_List_relevant_case_empty</members>
-		<members>FEC_Email_Subject_Case_Owner_Change</members>
-		<members>FEC_Email_Body_Case_Owner_Change</members>
+		<!--<members>FEC_Email_Subject_Case_Owner_Change</members>
+		<members>FEC_Email_Body_Case_Owner_Change</members>-->
 		<members>FEC_Wrap_Up_Modal_Btn_Cancel</members>
 		<members>FEC_Account_Card_Fetch_Error</members>
 		<members>FEC_MSG_FollowUp_Not02_User_Already_Watcher</members>
@@ -510,7 +511,7 @@
 		<members>FEC_Stage_Screen__c.FEC_Restrict_Update_Code</members>
 		<members>FEC_Sub_Category__c.FEC_Restrict_Update_Code</members>
 		<members>FEC_Sub_Code__c.FEC_Restrict_Update_Code</members>
-		<members>Case.FEC_Restrict_Change_Owner_Non_Owner</members>
+		<!--<members>Case.FEC_Restrict_Change_Owner_Non_Owner</members>-->
 		<members>Case.FEC_Restrict_Change_Owner_When_Resolved</members>
 		<name>ValidationRule</name>
 	</types>
