@@ -10961,4 +10961,25 @@
         <shortDescription>FEC_PHONE_IS_REQUIRED_MSG</shortDescription>
         <value>Phone number is required.</value>
     </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CHANNEL_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CHANNEL_INVALID_MSG</shortDescription>
+        <value>Channel is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</shortDescription>
+        <value>Channel is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MISSING_REQUIRED_FIELDS_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MISSING_REQUIRED_FIELDS_MSG</shortDescription>
+        <value>Missing required fields in request</value>
+    </labels>
 </CustomLabels>
