@@ -29,6 +29,8 @@
         <members>FEC_MainInfoController</members>
         <members>FEC_InteractionInforHandler</members>
 		<members>FEC_CustomEmailService</members>
+        <members>FEC_IPPConversionController</members>
+		<members>FEC_IncorrectPaymentController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -44,6 +46,8 @@
 		<members>fecInteractionEmailInfo</members>
 		<members>fec_CaseDetail_Customer</members>
 		<members>fecInteractionEmailInfoUbank</members>
+        <members>fec_IncorrectPaymentForm</members>
+		<members>fec_IPPConversionRetailForm</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -157,6 +161,8 @@
 	</types>
     <types>
 		<members>Case.FEC_Parent_ID__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_LWC_Name__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_LWC_Name__c</members>
 		<name>CustomField</name>
 	</types>
     <version>65.0</version>
