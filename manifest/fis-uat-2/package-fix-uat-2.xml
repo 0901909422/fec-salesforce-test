@@ -99,6 +99,30 @@
 		<members>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</members>
 		<members>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</members>
 		<members>FEC_PHONE_IS_REQUIRED_MSG</members>
+        <members>FEC_LBL_Incorrect_Payment_Form_Title</members>
+        <members>FEC_LBL_Incorrect_Contract_Number</members>
+        <members>FEC_LBL_Select_Contract_Number</members>
+        <members>FEC_LBL_Incorrect_Contract_Hint</members>
+        <members>FEC_LBL_Payment_Method</members>
+        <members>FEC_LBL_Payment_Method_Bank_Transfer</members>
+        <members>FEC_LBL_Payment_Method_Other_Channels</members>
+        <members>FEC_LBL_No_Payment_History_Found</members>
+        <members>FEC_LBL_Bill_Date</members>
+        <members>FEC_LBL_Bill_Amount</members>
+        <members>FEC_LBL_Excess_Amount</members>
+        <members>FEC_LBL_Correct_Contract</members>
+        <members>FEC_LBL_Adjusted_Amount</members>
+        <members>FEC_LBL_Remove_Row</members>
+        <members>FEC_LBL_Add_Item</members>
+        <members>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</members>
+        <members>FEC_MSG_IncorrectPayment_LoanInfo_NotRetrieved</members>
+        <members>FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row</members>
+        <members>FEC_MSG_IncorrectPayment_Case_Not_Found</members>
+        <members>FEC_MSG_IncorrectPayment_No_Update_Case_Access</members>
+        <members>FEC_MSG_IncorrectPayment_No_Update_Case_Fields_Access</members>
+        <members>FEC_LBL_Incorrect_Payment_Form_Title</members>
+        <members>FEC_MSG_IPP_AddIpp_Default_Success</members>
+        <members>FEC_LBL_IPP_Retail_UI</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
