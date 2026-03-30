@@ -109,11 +109,11 @@ public with sharing class FEC_IPPConversionController {
         dto.emi = null;
         dto.errorMessage = null;
         if (transactionId == null) {
-            dto.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Transaction Id' }) : 'Transaction Id is required.';
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Transaction Id' });
             return dto;
         }
         if (!Schema.sObjectType.FEC_Transaction__c.isAccessible()) {
-            dto.errorMessage = System.Label.FEC_MSG_Not_Found != null ? String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' }) : 'Transaction not found.';
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' });
             return dto;
         }
         List<FEC_Transaction__c> txs = [
@@ -127,18 +127,18 @@ public with sharing class FEC_IPPConversionController {
         SObjectAccessDecision txDecision = Security.stripInaccessible(AccessType.READABLE, txs);
         txs = (List<FEC_Transaction__c>) txDecision.getRecords();
         if (txs.isEmpty()) {
-            dto.errorMessage = System.Label.FEC_MSG_Not_Found != null ? String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' }) : 'Transaction not found.';
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' });
             return dto;
         }
         FEC_Transaction__c tx = txs[0];
         if (tx.FEC_Transaction_Amount__c == null || tx.FEC_Transaction_Amount__c <= 0) {
-            dto.errorMessage = System.Label.FEC_MSG_From_To_Invalid != null ? String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{ 'Amount', '0' }) : 'Invalid amount.';
+            dto.errorMessage = String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{ 'Amount', '0' });
             return dto;
         }
         String chAcc = (tx.FEC_Customer_History__c != null && tx.FEC_Customer_History__r != null) ? tx.FEC_Customer_History__r.FEC_Account_Number__c : null;
         String accountNumber = getAccountNumberForGetIPPDetails(caseId, chAcc);
         if (String.isBlank(accountNumber)) {
-            dto.errorMessage = System.Label.FEC_MSG_AccountNumber_Invalid != null ? System.Label.FEC_MSG_AccountNumber_Invalid : 'Invalid account number for IPP check.';
+            dto.errorMessage = System.Label.FEC_MSG_AccountNumber_Invalid;
             return dto;
         }
         Date effDate = tx.FEC_Effective_Date__c != null ? tx.FEC_Effective_Date__c : Date.today();
@@ -189,15 +189,15 @@ public with sharing class FEC_IPPConversionController {
         result.message = null;
         result.errorMessage = null;
         if (caseId == null) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' }) : 'Case Id is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
             return result;
         }
         if (transactionId == null) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Transaction Id' }) : 'Transaction Id is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Transaction Id' });
             return result;
         }
         if (tenor == null || tenor <= 0) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Tenor' }) : 'Tenor is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Tenor' });
             return result;
         }
         Case c = loadCaseForIPPConversion(caseId);
@@ -207,7 +207,7 @@ public with sharing class FEC_IPPConversionController {
             return result;
         }
         if (!Schema.sObjectType.FEC_Transaction__c.isAccessible()) {
-            result.errorMessage = System.Label.FEC_MSG_Not_Found != null ? String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' }) : 'Transaction not found.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' });
             return result;
         }
         List<FEC_Transaction__c> txs = [
@@ -221,21 +221,21 @@ public with sharing class FEC_IPPConversionController {
         SObjectAccessDecision txDec = Security.stripInaccessible(AccessType.READABLE, txs);
         txs = (List<FEC_Transaction__c>) txDec.getRecords();
         if (txs.isEmpty()) {
-            result.errorMessage = System.Label.FEC_MSG_Not_Found != null ? String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' }) : 'Transaction not found.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Transaction' });
             return result;
         }
         FEC_Transaction__c tx = txs[0];
         if (tx.FEC_Transaction_Amount__c == null || tx.FEC_Transaction_Amount__c <= 0) {
-            result.errorMessage = System.Label.FEC_MSG_From_To_Invalid != null ? String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{ 'Amount', '0' }) : 'Invalid amount.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{ 'Amount', '0' });
             return result;
         }
         if (String.isBlank(tx.FEC_Transaction_Plan__c)) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Plan Number' }) : 'Plan Number is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Plan Number' });
             return result;
         }
         String cardNo = resolveCardNumberForAddIpp(tx, c);
         if (String.isBlank(cardNo)) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' }) : 'Card Number is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
             return result;
         }
         Date effectiveDate = tx.FEC_Effective_Date__c != null ? tx.FEC_Effective_Date__c : Date.today();
@@ -278,15 +278,15 @@ public with sharing class FEC_IPPConversionController {
         result.message = null;
         result.errorMessage = null;
         if (caseId == null) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' }) : 'Case Id is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
             return result;
         }
         if (transactionAmount == null || transactionAmount <= 0) {
-            result.errorMessage = System.Label.FEC_MSG_From_To_Invalid != null ? String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{ 'Số tiền GD', '0' }) : 'Transaction amount must be greater than 0.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{ 'Số tiền GD', '0' });
             return result;
         }
         if (installmentTerm == null || installmentTerm <= 0) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Kỳ hạn góp' }) : 'Installment term is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Kỳ hạn góp' });
             return result;
         }
         Case c = loadCaseForIPPConversion(caseId);
@@ -296,12 +296,12 @@ public with sharing class FEC_IPPConversionController {
             return result;
         }
         if (String.isBlank(transactionPlan)) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Plan Number' }) : 'Plan Number is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Plan Number' });
             return result;
         }
         String cardNo = resolveCardNumberForAddIpp(null, c);
         if (String.isBlank(cardNo)) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' }) : 'Card Number is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
             return result;
         }
         Date effDate = Date.today();
@@ -357,15 +357,15 @@ public with sharing class FEC_IPPConversionController {
         result.message = null;
         result.errorMessage = null;
         if (caseId == null) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' }) : 'Case Id is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
             return result;
         }
         if (amount == null || amount <= 0) {
-            result.errorMessage = System.Label.FEC_MSG_From_To_Invalid != null ? String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{ 'Dư nợ gốc hiện tại', '0' }) : 'Amount must be greater than 0.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_From_To_Invalid, new List<String>{ 'Dư nợ gốc hiện tại', '0' });
             return result;
         }
         if (tenor == null || tenor <= 0) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Kỳ hạn góp' }) : 'Tenor is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Kỳ hạn góp' });
             return result;
         }
         Case c = loadCaseForIPPConversion(caseId);
@@ -376,12 +376,12 @@ public with sharing class FEC_IPPConversionController {
         }
         String planForApi = String.isNotBlank(planNumber) ? planNumber : planIPP;
         if (String.isBlank(planForApi)) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Plan Number' }) : 'Plan Number is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Plan Number' });
             return result;
         }
         String cardNo = resolveCardNumberForAddIpp(null, c);
         if (String.isBlank(cardNo)) {
-            result.errorMessage = System.Label.FEC_MSG_Param_Required != null ? String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' }) : 'Card Number is required.';
+            result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
             return result;
         }
         Date effDate = Date.today();
