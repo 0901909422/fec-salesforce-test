@@ -22,6 +22,9 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
         totalIPPBalanceLabel: FEC_Total_IPP_Balance_Label,
         totalIPPCurrentBalanceLabel: FEC_Total_IPP_Current_Balance_Label
     };
+
+    /** Khi gọi thành công nhưng không có bản ghi IPP */
+    noDataLabel = 'No data';
     
     // Message Context for LMS
     @wire(MessageContext)
@@ -132,9 +135,16 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
         return !this.isLoading && this.hasError && (!this.ippData || this.ippData.length === 0);
     }
 
-    // Hiển thị bảng khi có dữ liệu HOẶC khi không lỗi (tránh ẩn bảng khi đã load được data)
     get showTable() {
-        return (this.ippData && this.ippData.length > 0) || !this.hasError;
+        return Array.isArray(this.ippData) && this.ippData.length > 0;
+    }
+
+    get showIPPNoData() {
+        return (
+            !this.isLoading &&
+            !this.hasError &&
+            (!this.ippData || this.ippData.length === 0)
+        );
     }
 
     // Handle accordion toggle - IPP Details
@@ -227,7 +237,7 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
         getIPPRecords({ caseId: this.recordId })
             .then(records => {
                 if (!records || records.length === 0) {
-                    this.hasError = true;
+                    this.hasError = false;
                     this.ippData = [];
                     this.totalIPPBalance = 0;
                     this.totalIPPCurrentBalance = 0;
