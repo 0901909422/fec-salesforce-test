@@ -99,40 +99,15 @@
                             <div class="row">
                                 <span class="label">{labels.interactionPhone}</span>
                                 <span class="value">
+                                    <!-- Có phone -->
                                     <template if:true={hasPhone}>
                                         {displayPhone}
                                     </template>
-
-                                    <template if:false={hasPhone}>
-                                        <template if:true={isEditingPhone}>
-                                            <lightning-input type="tel" value={phoneDraft} onchange={handlePhoneChange}
-                                                variant="label-hidden">
-                                            </lightning-input>
-                                        </template>
-
-                                        <template if:false={isEditingPhone}>
-                                            <span class="empty">--</span>
-                                        </template>
-                                    </template>
                                 </span>
-
+                                <!-- ICON -->
                                 <template if:true={hasPhone}>
                                     <lightning-icon icon-name={eyeIcon} size="x-small" class="eye-icon"
                                         onclick={handleToggleMask}>
-                                    </lightning-icon>
-                                </template>
-
-                                <template if:false={hasPhone}>
-                                    <template if:false={isEditingPhone}>
-                                        <lightning-icon icon-name="utility:edit" size="x-small" class="eye-icon"
-                                            onclick={handleEditPhone}>
-                                        </lightning-icon>
-                                    </template>
-                                </template>
-
-                                <template if:true={isEditingPhone}>
-                                    <lightning-icon icon-name="utility:check" size="x-small" class="eye-icon save-icon"
-                                        onclick={handleSavePhone}>
                                     </lightning-icon>
                                 </template>
                             </div>

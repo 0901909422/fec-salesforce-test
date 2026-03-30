@@ -38,12 +38,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   get isEdit() {
     const isInternal = this.recordTypeDevName === RECORD_TYPE_INTERNAL_CASE;
     const isHandling = this.interactionViewMode === VIEW_MODE_HANDLING;
-
-    const defaultEdit =
-      this.modeEditCase &&
-      !this.isSubmited &&
-      !isInternal;
-
+    const defaultEdit = this.modeEditCase && !this.isSubmited && !isInternal;
     const isSpecialCase = isInternal && isHandling;
 
     return defaultEdit || isSpecialCase;
@@ -115,18 +110,17 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   connectedCallback() {
     this.subscribeToMessageChannel();
-    
-    getCase({
-      recordId: this.recordId
+
+    resetViewMode({
+      recordId: this.recordId,
+      viewMode: VIEW_MODE_REVIEW,
     })
+      .then(() => {
+        return getCase({ recordId: this.recordId });
+      })
       .then((res) => {
         this.productTypeSelectedId = res.FEC_Product_Type__c;
-
-        if (this.productTypeSelectedId) {
-          this.disableProdType = true;
-        } else {
-          this.disableProdType = false;
-        }
+        this.disableProdType = !!this.productTypeSelectedId;
 
         this.categorySelectedId = res.FEC_Category__c;
 
@@ -141,55 +135,34 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.getCategory();
         this.getSubCategory();
         this.getSubCode();
-        getByCase({
+
+        return getByCase({
           caseId: this.recordId,
           productTypeId: this.productTypeSelectedId,
           categoryId: this.categorySelectedId,
           subCategoryId: this.subCategorySelectedId,
           subCodeId: this.subCodeSelectedId,
-        })
-          .then((res) => {
-            if (!res) return;
-            let business = { ...res };
-            const actions = business.routingActionlst || [];
-            const foundActions = [];
+        });
+      })
+      .then((res) => {
+        if (!res) return;
 
-            if (actions.some((a) => a.value === ACTION_REOPEN))
-              foundActions.push(ACTION_REOPEN);
-            if (actions.some((a) => a.value === ACTION_RECALL))
-              foundActions.push(ACTION_RECALL);
+        let business = { ...res };
+        const actions = business.routingActionlst || [];
+        const foundActions = [];
 
-            // 2. If any were found, call the update method with the combined string
-            if (foundActions.length > 0) {
-              this.updateRoutingActionDisplay(foundActions.join(";"));
-            } else {
-              this.updateRoutingActionDisplay("");
-            }
-          })
+        if (actions.some((a) => a.value === ACTION_REOPEN))
+          foundActions.push(ACTION_REOPEN);
+        if (actions.some((a) => a.value === ACTION_RECALL))
+          foundActions.push(ACTION_RECALL);
+
+        this.updateRoutingActionDisplay(
+          foundActions.length > 0 ? foundActions.join(";") : ""
+        );
       })
       .catch((err) => {
-        console.log("🚀 ~ Fec_CaseEditNOC ~ connectedCallback ~ err:", err);
-       })
-      .finally(() => { });
-
-    // getProductTypeIds({
-    //   recordId: this.recordId
-    // })
-    //   .then((result) => {
-    //     console.log(">>>>>>result: ", result);
-    //     this.productTypeFilter = {
-    //       criteria: [
-    //         {
-    //           fieldPath: "Id",
-    //           operator: "in",
-    //           value: result
-    //         }
-    //       ]
-    //     };
-    //   })
-    //   .catch((error) => {
-    //     console.log("error", error);
-    //   });
+        console.log("Error:", err);
+      });
   }
 
   updateRoutingActionDisplay(field) {
@@ -237,11 +210,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (!message || message.isModeEdit === STR_UNDEFINED) return;
 
     this.modeEditCase = message.isModeEdit === true;
+    const newViewMode = this.modeEditCase ? VIEW_MODE_HANDLING : VIEW_MODE_REVIEW;
 
-    resetViewMode({
-      recordId: this.recordId,
-      viewMode: this.modeEditCase ? VIEW_MODE_HANDLING : VIEW_MODE_REVIEW
-    })
+    resetViewMode({ recordId: this.recordId, viewMode: newViewMode })
       .then(() => {
         this.reloadData();
       })
@@ -261,7 +232,6 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
-
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -585,11 +555,6 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
     if (element) {
       element.option = JSON.stringify(optionlst);
-
-      if (!optionlst || optionlst.length == 0) {
-        element.disabled = true;
-        element.required = false;
-      }
     }
   }
 }
