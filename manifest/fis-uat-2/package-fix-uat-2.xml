@@ -39,6 +39,7 @@
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_PsDNBServiceCallout</members>
 		<members>FEC_InteractionSLAController</members>
+		<members>FEC_CreateCaseHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -213,6 +214,7 @@
         <members>FEC_Actual_Master_Data_Setting__c.FEC_LWC_Name__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_LWC_Name__c</members>
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
+		<members>Case.FEC_Account_Contract_Number_PL__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
