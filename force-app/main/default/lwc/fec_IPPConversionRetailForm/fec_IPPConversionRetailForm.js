@@ -25,7 +25,7 @@ import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
 import FEC_Toast_Validation_Message from '@salesforce/label/c.FEC_Toast_Validation_Message';
 import FEC_MSG_Param_Required from '@salesforce/label/c.FEC_MSG_Param_Required';
-import { STR_EMPTY } from 'c/fec_CommonConst';
+import { STR_EMPTY, FORM_STATE_LOADING, FORM_STATE_NONE, FORM_STATE_HAS_DATA } from 'c/fec_CommonConst';
 import { formatToDDMMYYYY } from 'c/fec_CommonUtils';
 
 function parseIppRetailUiBundled(raw) {
@@ -115,7 +115,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         { label: IPP_RETAIL_UI.plOther, value: IPP_RETAIL_UI.plOther }
     ];
 
-    state = 'LOADING';
+    state = FORM_STATE_LOADING;
 
     transactionColumns = [
         { label: CONST.COL_TRX_CODE, fieldName: 'transactionCode', type: 'text' },
@@ -143,7 +143,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
 
     loadEligibleTransactions() {
         if (!this.recordId) {
-            this.state = 'NONE';
+            this.state = FORM_STATE_NONE;
             return;
         }
         this.isLoading = true;
@@ -156,13 +156,13 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                     postingDateStr: formatToDDMMYYYY(t.postingDateStr) || t.postingDateStr || STR_EMPTY
                 }));
                 if (this.transactions.length === 0) {
-                    this.state = 'NONE';
+                    this.state = FORM_STATE_NONE;
                 } else {
-                    this.state = 'HAS_DATA';
+                    this.state = FORM_STATE_HAS_DATA;
                 }
             })
             .catch((err) => {
-                this.state = 'NONE';
+                this.state = FORM_STATE_NONE;
                 this.showToast(FEC_Toast_Error, err?.body?.message || err?.message || FEC_Toast_Error_Generic, CONST.VARIANT_ERROR);
             })
             .finally(() => {
@@ -403,15 +403,15 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     get hasNoEligibleTransactions() {
-        return this.state === 'NONE' && !this.isLoading;
+        return this.state === FORM_STATE_NONE && !this.isLoading;
     }
 
     get hasEligibleTransactions() {
-        return this.state === 'HAS_DATA' && this.transactions.length > 0;
+        return this.state === FORM_STATE_HAS_DATA && this.transactions.length > 0;
     }
 
     get showCheckDetailsButton() {
-        return this.state === 'HAS_DATA' && this.selectedTransactionId;
+        return this.state === FORM_STATE_HAS_DATA && this.selectedTransactionId;
     }
 
     get showDetailsSection() {
