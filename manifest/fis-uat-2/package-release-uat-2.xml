@@ -1067,6 +1067,8 @@
 		<members>FEC_Message_Content</members>
 		<members>FEC_Subject_Line</members>
 		<members>FEC_Template_Settings</members>
+		<members>FEC_Template_Body</members>
+        <members>FEC_Template_Save_And_Close</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
