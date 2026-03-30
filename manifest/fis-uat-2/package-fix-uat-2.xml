@@ -115,6 +115,8 @@
         <members>FEC_CS_CASE_CHANNEL_INVALID_MSG</members>
 		<members>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</members>
 		<members>FEC_MISSING_REQUIRED_FIELDS_MSG</members>
+        <members>FEC_Template_Body</members>
+        <members>FEC_Template_Save_And_Close</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
