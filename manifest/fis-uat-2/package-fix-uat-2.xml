@@ -221,5 +221,9 @@
         <members>FEC_API_Config.FEC_Ps_DNB</members>
 		<name>CustomMetadata</name>
 	</types>
+    <types>
+		<members>ServiceResourceSkill-en_US</members>
+		<name>CustomObjectTranslation</name>
+	</types>
     <version>65.0</version>
 </Package>
