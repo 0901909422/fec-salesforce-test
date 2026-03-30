@@ -4,10 +4,6 @@
  ****************************************************************************************/
 
 public with sharing class FEC_IncorrectPaymentController {
-    private static final String STR_EMPTY = '';
-    private static final String PAYMENT_PREFIX = 'pay_';
-    private static final String DATE_FORMAT_DDMMYYYY = 'dd/MM/yyyy';
-
     public class PaymentDTO {
         @AuraEnabled public String id;
         @AuraEnabled public String paymentNo;
@@ -59,31 +55,24 @@ public with sharing class FEC_IncorrectPaymentController {
                 continue;
             }
             PaymentDTO dto = new PaymentDTO();
-            dto.id = PAYMENT_PREFIX + String.valueOf(idx);
+            dto.id = FEC_ConstantCommon.PAYMENT_PREFIX + String.valueOf(idx);
             dto.paymentNo = String.valueOf(idx + 1);
-            dto.paymentDate = formatIppPaymentDate(ph.ValueDate);
-            dto.bookingDate = formatIppPaymentDate(ph.BookingDate);
+            dto.paymentDate = FEC_CommonUltils.formatDateDDMMYYYY(ph.ValueDate);
+            dto.bookingDate = FEC_CommonUltils.formatDateDDMMYYYY(ph.BookingDate);
             dto.paymentAmount = ph.AmountOfMoney;
-            dto.particulars = ph.ChkNo != null ? ph.ChkNo : STR_EMPTY;
+            dto.particulars = ph.ChkNo != null ? ph.ChkNo : FEC_ConstantCommon.STR_EMPTY;
             result.add(dto);
             idx++;
         }
         return result;
     }
 
-    private static String formatIppPaymentDate(Date d) {
-        if (d == null) {
-            return STR_EMPTY;
-        }
-        return Datetime.newInstance(d.year(), d.month(), d.day(), 0, 0, 0).format(DATE_FORMAT_DDMMYYYY);
-    }
-
     @AuraEnabled(cacheable=true)
     public static SubCodeConfigDTO getSubCodeConfig(Id caseId) {
         SubCodeConfigDTO dto = new SubCodeConfigDTO();
-        dto.subCode = STR_EMPTY;
-        dto.incorrectContractNumber = STR_EMPTY;
-        dto.paymentMethod = STR_EMPTY;
+        dto.subCode = FEC_ConstantCommon.STR_EMPTY;
+        dto.incorrectContractNumber = FEC_ConstantCommon.STR_EMPTY;
+        dto.paymentMethod = FEC_ConstantCommon.STR_EMPTY;
         if (caseId == null) return dto;
         List<Case> cases = [
             SELECT Id, FEC_SubCode__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c
@@ -92,8 +81,8 @@ public with sharing class FEC_IncorrectPaymentController {
             LIMIT 1
         ];
         if (cases.isEmpty()) return dto;
-        dto.incorrectContractNumber = cases[0].FEC_Incorrect_Contract_Number__c != null ? cases[0].FEC_Incorrect_Contract_Number__c : STR_EMPTY;
-        dto.paymentMethod = cases[0].FEC_Payment_Method__c != null ? cases[0].FEC_Payment_Method__c : STR_EMPTY;
+        dto.incorrectContractNumber = cases[0].FEC_Incorrect_Contract_Number__c != null ? cases[0].FEC_Incorrect_Contract_Number__c : FEC_ConstantCommon.STR_EMPTY;
+        dto.paymentMethod = cases[0].FEC_Payment_Method__c != null ? cases[0].FEC_Payment_Method__c : FEC_ConstantCommon.STR_EMPTY;
         if (cases[0].FEC_SubCode__c == null) return dto;
         Id subCodeId = cases[0].FEC_SubCode__c;
         List<FEC_Nature_of_Case__c> nocs = [
@@ -103,7 +92,7 @@ public with sharing class FEC_IncorrectPaymentController {
             LIMIT 1
         ];
         if (nocs.isEmpty() || nocs[0].FEC_Sub_Code__r == null) return dto;
-        dto.subCode = nocs[0].FEC_Sub_Code__r.FEC_Code__c != null ? nocs[0].FEC_Sub_Code__r.FEC_Code__c : STR_EMPTY;
+        dto.subCode = nocs[0].FEC_Sub_Code__r.FEC_Code__c != null ? nocs[0].FEC_Sub_Code__r.FEC_Code__c : FEC_ConstantCommon.STR_EMPTY;
         return dto;
     }
 
