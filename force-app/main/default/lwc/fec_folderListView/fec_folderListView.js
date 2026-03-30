@@ -15,6 +15,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 /* ── Apex ── */
 import getTopLevelFolders from '@salesforce/apex/FEC_FolderController.getTopLevelFolders';
 import getFolderContents  from '@salesforce/apex/FEC_FolderController.getFolderContents';
+import getFolder          from '@salesforce/apex/FEC_FolderController.getFolder';
 import deleteFolder       from '@salesforce/apex/FEC_FolderController.deleteFolder';
 import deleteTemplate     from '@salesforce/apex/FEC_TemplateController.deleteTemplate';
 
@@ -93,6 +94,48 @@ export default class Fec_folderListView extends LightningElement {
     @api
     refreshData() {
         return this._loadData();
+    }
+
+    /**
+     * Navigate directly into a specific folder (called by parent).
+     * Builds the ancestor breadcrumb path by walking up FEC_Parent_Folder__c,
+     * then loads the folder contents — exactly as if the user had clicked through.
+     * @param {String} folderId  The target folder Id to drill into.
+     */
+    @api
+    async navigateToFolder(folderId) {
+        if (!folderId) return;
+        try {
+            /* Build ancestor chain by walking up parent references */
+            const ancestors = [];
+            let currentId = folderId;
+            let folderRec = await getFolder({ folderId: currentId });
+
+            /* Cache the target folder name */
+            if (folderRec) {
+                this._folderNameCache[folderRec.Id] = folderRec.Name;
+            }
+
+            /* Walk up the parent chain to build breadcrumbs */
+            while (folderRec && folderRec.FEC_Parent_Folder__c) {
+                const parentId = folderRec.FEC_Parent_Folder__c;
+                const parentName = folderRec.FEC_Parent_Folder__r
+                    ? folderRec.FEC_Parent_Folder__r.Name
+                    : '';
+                ancestors.unshift({ id: parentId, name: parentName });
+                this._folderNameCache[parentId] = parentName;
+                // Move up one level
+                folderRec = await getFolder({ folderId: parentId });
+            }
+
+            /* Set state and load data */
+            this.breadcrumbs = ancestors;
+            this.currentFolderId = folderId;
+            await this._loadData();
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('[folderListView] Error navigating to folder:', error);
+        }
     }
 
     /* ═══════════════════════════════════════════ */

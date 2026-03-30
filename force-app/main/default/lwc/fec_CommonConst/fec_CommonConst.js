@@ -97,7 +97,7 @@ const ERROR_MODAL_TITLE = "Error";
 const SUCCESS_MODAL_TITLE = "Success";
 const SUCCESS_TOAST_TYPE = "success";
 const ERROR_TOAST_TYPE = "error";
-
+const CLOSED_STATUS = "Closed";
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -155,5 +155,6 @@ export {
     SUCCESS_TOAST_TYPE,
     ERROR_TOAST_TYPE,
     RESULT_ERROR,
-    RESULT_SUCCESS
+    RESULT_SUCCESS,
+    CLOSED_STATUS
 };

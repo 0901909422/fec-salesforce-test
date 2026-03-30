@@ -23,12 +23,19 @@ import FEC_OUTCOME_CODE_LABEL from "@salesforce/label/c.FEC_Outcome_Code_Label";
 import FEC_REMARKS_LABEL from "@salesforce/label/c.FEC_Interaction_Remark_Label";
 import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interaction_Information_Label";
 import FEC_Interaction_Email_Label from "@salesforce/label/c.FEC_Interaction_Email_Label";
-
+import FEC_PHONE_IS_REQUIRED_MSG from "@salesforce/label/c.FEC_PHONE_IS_REQUIRED_MSG";
+import FEC_PHONE_IS_INVALID_FORMAT_1_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_1_MSG";
+import FEC_PHONE_IS_INVALID_FORMAT_2_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_2_MSG";
+import FEC_PHONE_IS_INVALID_FORMAT_3_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_3_MSG";
 import { formatDateTime } from "c/fec_CommonUtils";
-import { RECORD_TYPES, VIEW_MODE_REVIEW, ICON_PREVIEW, ICON_HIDE } from "c/fec_CommonConst";
+import {
+  RECORD_TYPES,
+  VIEW_MODE_REVIEW,
+  ICON_PREVIEW,
+  ICON_HIDE,
+} from "c/fec_CommonConst";
 
 export default class Fec_InteractionMyCaseInfo extends LightningElement {
-
   // ================= LABEL MAP =================
   labels = {
     interactionPhone: FEC_INTERACTION_PHONE_LABEL,
@@ -37,7 +44,7 @@ export default class Fec_InteractionMyCaseInfo extends LightningElement {
     outcomeCode: FEC_OUTCOME_CODE_LABEL,
     remarks: FEC_REMARKS_LABEL,
     interactionInformation: FEC_Interaction_Information_Label,
-    interactionEmail: FEC_Interaction_Email_Label
+    interactionEmail: FEC_Interaction_Email_Label,
   };
 
   // ================= API =================
@@ -64,12 +71,10 @@ export default class Fec_InteractionMyCaseInfo extends LightningElement {
   // ================= WIRE: CASE CONTEXT =================
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [ISCLOSED, VIEW_MODE, RECORDTYPE_ID]
+    fields: [ISCLOSED, VIEW_MODE, RECORDTYPE_ID],
   })
   async wiredCase({ data, error }) {
-
     if (data) {
-
       this.isClosed = getFieldValue(data, ISCLOSED);
       this.viewMode = getFieldValue(data, VIEW_MODE);
       this.recordTypeId = getFieldValue(data, RECORDTYPE_ID);
@@ -78,11 +83,9 @@ export default class Fec_InteractionMyCaseInfo extends LightningElement {
       await this.resolveInteractionId();
 
       this.loadInteraction();
-
     } else if (error) {
       console.error("getRecord error", error);
     }
-
   }
 
   // ================= LIFECYCLE =================
@@ -91,66 +94,51 @@ export default class Fec_InteractionMyCaseInfo extends LightningElement {
   }
 
   loadStyles() {
-    loadStyle(this, COMMON_STYLES)
-      .catch((e) => console.error("Load style error", e));
+    loadStyle(this, COMMON_STYLES).catch((e) =>
+      console.error("Load style error", e),
+    );
   }
 
   // ================= RECORD TYPE =================
   async resolveRecordType() {
-
     if (!this.recordTypeId) return;
 
     try {
-
       this.recordTypeDevName = await getRecordTypeName({
-        recordId: this.recordId
+        recordId: this.recordId,
       });
-
     } catch (e) {
       console.error("getRecordTypeName error", e);
     }
-
   }
 
   // ================= INTERACTION ID =================
   async resolveInteractionId() {
-
     if (this.isInteractionCase) {
-
       this.interactionId = this.recordId;
-
     } else if (this.isCustomerCase) {
-
       try {
-
         this.interactionId = await getInteractionIdFromCustomerCase({
-          caseId: this.recordId
+          caseId: this.recordId,
         });
-
       } catch (e) {
         console.error("getInteractionIdFromCustomerCase error", e);
       }
-
     }
-
   }
 
   // ================= LOAD INTERACTION =================
   loadInteraction() {
-
     if (!this.interactionId) return;
 
     getInteraction({ recordId: this.interactionId })
       .then((result) => {
-
         this.record = result;
         this.isLoaded = true;
-
       })
       .catch((error) => {
         console.error("getInteraction error", error);
       });
-
   }
 
   // ================= GETTERS =================
@@ -168,22 +156,18 @@ export default class Fec_InteractionMyCaseInfo extends LightningElement {
   }
 
   get hasPhone() {
-
     return !!(
       this.record?.FEC_Phone_Number__c ||
       this.record?.FEC_Interaction_Masked_Phone__c
     );
-
   }
 
   get displayPhone() {
-
     if (!this.hasPhone) return null;
 
     return this.isMasked
       ? this.record?.FEC_Interaction_Masked_Phone__c
       : this.revealedPhone;
-
   }
 
   get eyeIcon() {
@@ -191,12 +175,10 @@ export default class Fec_InteractionMyCaseInfo extends LightningElement {
   }
 
   get createdOn() {
-
     const value = this.record?.FEC_Created_On__c;
     if (!value) return "";
 
     return formatDateTime(new Date(value));
-
   }
 
   get createdBy() {
@@ -218,13 +200,11 @@ export default class Fec_InteractionMyCaseInfo extends LightningElement {
   // ================= PHONE ACTIONS =================
 
   handleToggleMask() {
-
     if (this.isMasked) {
       this.revealPhone();
     } else {
       this.isMasked = true;
     }
-
   }
 
   handleEditPhone() {
@@ -234,47 +214,71 @@ export default class Fec_InteractionMyCaseInfo extends LightningElement {
 
   handlePhoneChange(event) {
     this.phoneDraft = event.target.value;
-  }
 
-  handleSavePhone() {
+    const input = event.target;
+    const value = this.phoneDraft;
+
+    // reset lỗi
+    input.setCustomValidity("");
+
+    if (!value) {
+      input.setCustomValidity(FEC_PHONE_IS_REQUIRED_MSG);
+    } else if (value.startsWith("0")) {
+      if (!/^\d{10}$/.test(value)) {
+        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_1_MSG);
+      }
+    } else if (value.startsWith("84")) {
+      if (!/^\d{11}$/.test(value)) {
+        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_2_MSG);
+      }
+    } else {
+      input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_3_MSG);
+    }
+
+    input.reportValidity();
+  }
+  
+  async handleSavePhone() {
+    const input = this.template.querySelector("lightning-input");
+
+    if (!input || !input.checkValidity()) {
+      input.reportValidity();
+      return;
+    }
 
     if (!this.phoneDraft || !this.interactionId) return;
 
-    updateInteractionPhone({
-      recordId: this.interactionId,
-      phone: this.phoneDraft
-    })
-      .then((maskedPhone) => {
-
-        this.record = {
-          ...this.record,
-          FEC_Interaction_Masked_Phone__c: maskedPhone
-        };
-
-        this.isEditingPhone = false;
-        this.isMasked = true;
-        this.phoneDraft = null;
-
-      })
-      .catch((error) => {
-        console.error("updateInteractionPhone error", error);
+    try {
+      const maskedPhone = await updateInteractionPhone({
+        recordId: this.interactionId,
+        phone: this.phoneDraft,
       });
 
+      this.record = {
+        ...this.record,
+        FEC_Interaction_Masked_Phone__c: maskedPhone,
+      };
+
+      this.isEditingPhone = false;
+      this.isMasked = true;
+      this.phoneDraft = null;
+    } catch (error) {
+      console.error("updateInteractionPhone error", error);
+    }
   }
 
-  revealPhone() {
-
+  async revealPhone() {
     if (!this.interactionId) return;
 
-    getInteractionPhoneReveal({ recordId: this.interactionId })
-      .then((result) => {
+    try {
+      const result = await getInteractionPhoneReveal({
+        recordId: this.interactionId,
+      });
 
-        this.revealedPhone = result;
-        this.isMasked = false;
-
-      })
-      .catch((e) => console.error("revealPhone error", e));
-
+      this.revealedPhone = result;
+      this.isMasked = false;
+    } catch (e) {
+      console.error("revealPhone error", e);
+    }
   }
-
 }

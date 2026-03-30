@@ -1,5 +1,5 @@
 <template>
-    <div class="slds-form-element" onkeydown={handleKeyDown}>
+    <div class={formElementClass} onkeydown={handleKeyDown}>
         <template if:true={label}>
             <label class="slds-form-element__label">
                 <template if:true={required}>
@@ -79,5 +79,8 @@
                 </div>
             </div>
         </div>
+        <template if:true={_errorMessage}>
+            <div class="slds-form-element__help" aria-live="assertive">{_errorMessage}</div>
+        </template>
     </div>
 </template>

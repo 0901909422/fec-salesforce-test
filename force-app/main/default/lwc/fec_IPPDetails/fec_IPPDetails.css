@@ -150,3 +150,7 @@ span.slds-text-color_error {
 .ipp-details-table-wrapper {
     --fec-ipp-table-border-right: 1px solid #d8dde6;
 }
+
+.ipp-details-empty {
+    color: #706e6b;
+}

@@ -157,3 +157,7 @@ span.slds-text-color_error,
     color: #ea001e !important;
     font-weight: 600;
 }
+
+.card-payment-empty {
+    color: #706e6b;
+}

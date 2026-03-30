@@ -9,6 +9,7 @@
             clone-data={editorCloneData}
             default-folder-id={currentFolderId}
             onsave={handleEditorSave}
+            onsaveandclose={handleEditorSaveAndClose}
             oncancel={handleEditorCancel}
         ></c-fec_template-editor>
     </template>
@@ -117,6 +118,7 @@
                                 onedittemplate={handleEditTemplate}
                                 onviewtemplate={handleViewTemplate}
                                 onclonetemplate={handleCloneTemplate}
+                                onviewfolder={handleViewFolder}
                             ></c-fec_template-list-view>
                         </template>
                         <template if:true={isFoldersView}>

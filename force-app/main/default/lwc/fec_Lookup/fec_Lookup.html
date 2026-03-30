@@ -20,7 +20,7 @@
                         <!-- Text input -->
                         <input type="text" class={getInputClass} aria-autocomplete="list" aria-controls="listbox"
                             autocomplete="off" role="textbox" placeholder={placeholder} value={getInputValue}
-                            readonly={readOnly} disabled={disabled} onfocus={handleFocus} onblur={handleBlur} oninput={handleInput}
+                            readonly={isInputReadonly} disabled={disabled} onfocus={handleFocus} onblur={handleBlur} oninput={handleInput}
                             onkeyup={arrowNavigationUp} onkeydown={arrowNavigationDown}></input>
 
                         <!-- Spinner -->

@@ -8038,20 +8038,6 @@
         <value>Không tìm thấy kết quả</value>
     </labels>
     <labels>
-        <fullName>FEC_Email_Subject_Case_Owner_Change</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Email subject when Case owner changes (Send Notification)</shortDescription>
-        <value>Case {0} đã được phân công cho bạn</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Email_Body_Case_Owner_Change</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Email body when Case owner changes. {0}=Case Number, {1}=Case link URL</shortDescription>
-        <value>Case {0} đã được phân công cho bạn. Vui lòng xem và xử lý: {1}</value>
-    </labels>
-    <labels>
         <fullName>FEC_Account_Card_Fetch_Error</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -10932,5 +10918,75 @@
         <protected>false</protected>
         <shortDescription>Interaction Email Info Ubank section label</shortDescription>
         <value>Interaction Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</shortDescription>
+        <value>Phone number starting with 0 must be exactly 10 digits.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</shortDescription>
+        <value>Phone number starting with 84 must be exactly 11 digits.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</shortDescription>
+        <value>Phone number must start with 0 (10 digits) or 84 (11 digits).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PHONE_IS_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_PHONE_IS_REQUIRED_MSG</shortDescription>
+        <value>Phone number is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CHANNEL_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CHANNEL_INVALID_MSG</shortDescription>
+        <value>Channel is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</shortDescription>
+        <value>Channel is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MISSING_REQUIRED_FIELDS_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MISSING_REQUIRED_FIELDS_MSG</shortDescription>
+        <value>Missing required fields in request</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Channel_Disabled_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Notification Channel Disabled Message</shortDescription>
+        <value>Notification Channel is disabled. This Notification Type cannot be sent through this channel.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Body</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Body field label</shortDescription>
+        <value>Body</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Save_And_Close</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Save and Close button label</shortDescription>
+        <value>Save &amp; Close</value>
     </labels>
 </CustomLabels>
