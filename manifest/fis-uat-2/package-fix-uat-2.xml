@@ -34,6 +34,7 @@
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_PsDNBServiceCallout</members>
 		<members>FEC_InteractionSLAController</members>
+		<members>FEC_CreateCaseHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
