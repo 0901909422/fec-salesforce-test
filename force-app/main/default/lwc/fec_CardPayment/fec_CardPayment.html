@@ -189,16 +189,23 @@
                 
                 <!-- Card Payment Table with Pagination -->
                 <template if:false={isLoading}>
-                    <c-fec_-related-list-paging
-                        columns={columns}
-                        records={cardPaymentData}
-                        page-size={pageSize}
-                        hide-row-number={hideRowNumber}
-                        hide-updated-time={hideUpdatedTime}
-                        default-sorted-by="FEC_Open_Date_Formatted__c"
-                        default-sort-direction="desc"
-                        column-count="2">
-                    </c-fec_-related-list-paging>
+                    <template if:true={hasCardPaymentTableData}>
+                        <c-fec_-related-list-paging
+                            columns={columns}
+                            records={cardPaymentData}
+                            page-size={pageSize}
+                            hide-row-number={hideRowNumber}
+                            hide-updated-time={hideUpdatedTime}
+                            default-sorted-by="FEC_Open_Date_Formatted__c"
+                            default-sort-direction="desc"
+                            column-count="2">
+                        </c-fec_-related-list-paging>
+                    </template>
+                    <template if:true={showCardPaymentNoData}>
+                        <div class="slds-text-align_center slds-p-around_large card-payment-empty">
+                            <p>{noDataLabel}</p>
+                        </div>
+                    </template>
                 </template>
             </div>
         </section>
