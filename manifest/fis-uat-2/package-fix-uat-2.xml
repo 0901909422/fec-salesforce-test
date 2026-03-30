@@ -115,6 +115,10 @@
 		<members>FEC_MISSING_REQUIRED_FIELDS_MSG</members>
         <members>FEC_Template_Body</members>
         <members>FEC_Template_Save_And_Close</members>
+        <members>FEC_MSG_Channel_Validation</members>
+        <members>FEC_MSG_Data_Request_Master_Data</members>
+        <members>FEC_MSG_TransactionId_Validation</members> 
+        <members>FEC_MSG_Limit_Character</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
