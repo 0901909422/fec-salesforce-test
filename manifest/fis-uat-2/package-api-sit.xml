@@ -25,10 +25,6 @@
 		<members>FEC_ResponseLog</members>
         <name>ApexClass</name>
     </types>
-	<types>
-		<members>Case.FEC_Transfer_Call_to_Collections_Remarks__c</members>
-		<name>CustomField</name>
-	</types>
     <types>
 		<members>FEC_API_Config.FEC_CardLockUnlock</members>
         <members>FEC_API_Config.FEC_ReplacementCard</members>

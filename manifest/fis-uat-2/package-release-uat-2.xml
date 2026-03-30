@@ -631,6 +631,10 @@
         <members>FEC_On_Hold_Label</members>
         <members>FEC_On_Hold_Help_Text</members>
 		<members>FEC_Interaction_Email_Info_Ubank_Label</members>
+		<members>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</members>
+		<members>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</members>
+		<members>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</members>
+		<members>FEC_PHONE_IS_REQUIRED_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
