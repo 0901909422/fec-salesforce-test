@@ -30,6 +30,7 @@
         <members>FEC_MainInfoController</members>
         <members>FEC_InteractionInforHandler</members>
 		<members>FEC_CustomEmailService</members>
+        <members>FEC_Notification</members>
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_PsDNBServiceCallout</members>
         <name>ApexClass</name>
@@ -47,6 +48,7 @@
 		<members>fecInteractionEmailInfo</members>
 		<members>fec_CaseDetail_Customer</members>
 		<members>fecInteractionEmailInfoUbank</members>
+        <members>fec_NotificationOverride</members>
 		<members>fecInteractionInfo</members>
 		<members>fec_CommonConst</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
@@ -59,6 +61,8 @@
 		<members>Service_Resource_Record_Page</members>
 		<members>Service_Resource_Skill_Record_Page</members>
 		<members>FEC_Interaction_Case_Record_Page</members>
+        <members>FEC_Notification_Record_Page_Auto</members>
+		<members>FEC_Notification_Record_Page_Manual</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -94,6 +98,7 @@
         <members>FEC_On_Hold_Label</members>
         <members>FEC_On_Hold_Help_Text</members>
 		<members>FEC_Interaction_Email_Info_Ubank_Label</members>
+        <members>FEC_Notification_Channel_Disabled_Msg</members>
         <members>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</members>
 		<members>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</members>
 		<members>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</members>
