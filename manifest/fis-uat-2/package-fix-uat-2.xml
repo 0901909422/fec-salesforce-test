@@ -198,17 +198,5 @@
         <members>FEC_API_Config.FEC_Ps_DNB</members>
 		<name>CustomMetadata</name>
 	</types>
-    <types>
-		
-		<name>ApexClass</name>
-	</types>
-	<types>
-		
-		<name>CustomField</name>
-	</types>
-	<types>
-		
-		<name>LightningComponentBundle</name>
-	</types>
     <version>65.0</version>
 </Package>
