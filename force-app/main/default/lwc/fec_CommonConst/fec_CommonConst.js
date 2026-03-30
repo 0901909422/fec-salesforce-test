@@ -45,6 +45,7 @@ const MSG_UNKNOWN_ERROR = 'Unknown error';
 const CASE_OBJECT_API_NAME = 'Case';
 const NAV_ACTION_VIEW = 'view';
 const NAV_ACTION_LIST = 'list';
+const CASE_ORIGIN_EMAIL_UBANK = 'Email_Ubank';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const RESULT_ERROR = "result-error";
 const RESULT_SUCCESS = "result-success";
@@ -147,6 +148,7 @@ export {
     NAV_ACTION_VIEW,
     NAV_ACTION_LIST,
     EMAIL_REGEX,
+    CASE_ORIGIN_EMAIL_UBANK,
     CHANNEL_OPTIONS,
     SUB_CHANNEL_MAP,
     RECORD_TYPES,

@@ -208,6 +208,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUBCHANNEL_INCOMING_EMAIL = 'Incoming Email';
     public static final String CASE_ORIGIN_EMAIL2CASE = 'Email2Case';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
+    public static final String CASE_ORIGIN_EMAIL_UBANK = 'Email_Ubank';
+    public static final string CASE_ORIGN_EMAIL_FE ='Email-FE';
+    public static final string CASE_ORIGN_EMAIL_INTERNAL ='Email-Internal';
+
     
     public static final String KEY_VALID_CHANNELS_WED = 'WED';
     public static final String KEY_VALID_CHANNELS_MOBILE = 'MOBILE';

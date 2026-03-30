@@ -427,7 +427,7 @@ public without sharing class FEC_CaseTriggerHandler {
         List<Id> caseIdsToUpdate = new List<Id>();
 
         for (Case c : newCases) {
-            if ((c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE || c.Origin == FEC_ConstantCommon.EMAIL) 
+            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK 
                 && c.RecordTypeId == interactionRecordTypeId) {
                 caseIdsToUpdate.add(c.Id);
             }
@@ -450,7 +450,7 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         for (Case c : newCases) {
-            if ((c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE || c.Origin == FEC_ConstantCommon.EMAIL)
+            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK
                     && c.RecordTypeId == interactionRecordTypeId
                     && String.isBlank(c.FEC_Channel__c)) {
                 c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
@@ -476,7 +476,8 @@ public without sharing class FEC_CaseTriggerHandler {
         for (EmailMessage em : [SELECT Id, ParentId, FromAddress, CreatedDate
                                 FROM EmailMessage
                                 WHERE ParentId IN :caseIds
-                                AND FromAddress != NULL AND ToAddress  = :sendToValue
+                                AND FromAddress != NULL
+                                AND ToAddress  = :sendToValue
                                 ORDER BY CreatedDate ASC]) {
             if (!caseIdToFromAddress.containsKey(em.ParentId)) {
                 caseIdToFromAddress.put(em.ParentId, em.FromAddress);

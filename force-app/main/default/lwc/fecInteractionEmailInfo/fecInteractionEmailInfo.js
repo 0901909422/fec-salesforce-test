@@ -22,6 +22,7 @@ import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_InteractionIn
 import ISCLOSED from "@salesforce/schema/Case.IsClosed";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
+import ORIGIN_FIELD from "@salesforce/schema/Case.Origin";
 
 import CASE_OBJECT from "@salesforce/schema/Case";
 import INTERACTION_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Interaction_Email__c";
@@ -61,6 +62,7 @@ import {
   CHANNEL_EMAIL,
   CHANNEL_INTERNAL,
   SUB_CHANNEL_INTERNAL_EMAIL,
+  CASE_ORIGIN_EMAIL_UBANK,
 } from "c/fec_CommonConst";
 import { formatDateTimeVN } from "c/fec_CommonUtils";
 
@@ -259,10 +261,14 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
 
   get showOnHold() {
     if (!this.record) return false;
+
+    const origin = this.record?.[ORIGIN_FIELD.fieldApiName];
+    if (origin !== CASE_ORIGIN_EMAIL_UBANK) {
+        return false;
+    }
     
     const channel = this.channel.toLowerCase();
     const subChannel = this.subChannel.toLowerCase();
-    const sendTo = this.sendTo;
 
     // 1. Luôn ẩn nếu là Internal Email
     if (channel.includes("internal") && subChannel.includes("internal email")) {
@@ -270,7 +276,6 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     }
 
     // 2. Hiển thị nếu là channel Email
-    // Nếu quý khách thấy thông tin đã đủ mà vẫn ẩn, chúng tôi tạm bỏ check sendTo rỗng để đảm bảo nút xuất hiện
     return channel.includes("email") || channel === "email";
   }
 

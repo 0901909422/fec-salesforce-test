@@ -27,8 +27,18 @@
         <label>Twitter</label>
     </standardValue>
     <standardValue>
-        <fullName>Email2Case</fullName>
+        <fullName>Email_Ubank</fullName>
         <default>false</default>
-        <label>Email2Case</label>
+        <label>Email-Ubank</label>
+    </standardValue>
+    <standardValue>
+        <fullName>Email-FE</fullName>
+        <default>false</default>
+        <label>Email-FE</label>
+    </standardValue>
+    <standardValue>
+        <fullName>Email-Internal</fullName>
+        <default>false</default>
+        <label>Email-Internal</label>
     </standardValue>
 </StandardValueSet>
