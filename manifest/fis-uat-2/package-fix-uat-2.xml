@@ -38,6 +38,7 @@
         <members>FEC_FolderService_Test</members>
         <members>FEC_FolderSelector_Test</members>
         <members>FEC_FolderTriggerHandler_Test</members>
+        <members>FEC_UpdateCustomerContact</members>
         <name>ApexClass</name>
     </types>
     <types>
