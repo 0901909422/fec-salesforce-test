@@ -1279,6 +1279,10 @@
         <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
 		<name>CustomField</name>
 	</types>
+    <types>
+		<members>FEC_UpdateCustomerContact</members>
+        <name>ApexClass</name>
+    </types>
 
     <version>65.0</version>
 </Package>
