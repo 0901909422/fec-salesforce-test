@@ -123,9 +123,10 @@
                                     hide-checkbox-column onrowaction={handleRowAction} onshowhistory={handleDblClick}>
                                 </c-masked-toggle-datatable>
                                 <template for:each={cardDataWithHistory} for:item="row">
-                                    <template if:true={row._historyState}>
-                                        <template if:true={row._historyState.expanded}>
-                                            <div key={row.AccountNumber} class="fec-history-wrap">
+                                    <template if:true={isAccountContractSearch}>
+                                        <template if:true={row._historyState}>
+                                            <template if:true={row._historyState.expanded}>
+                                                <div key={row.AccountNumber} class="fec-history-wrap">
                                                 <template if:true={row._historyState.loading}>
                                                     <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
                                                 </template>
@@ -154,6 +155,7 @@
                                             </div>
                                         </template>
                                     </template>
+                                    </template>
                                 </template>
                             </lightning-tab>
                             <lightning-tab label="Loan" value="Loan">
@@ -164,9 +166,10 @@
                                         onrowaction={handleRowAction} onshowhistory={handleDblClick}>
                                     </c-masked-toggle-datatable>
                                     <template for:each={loanContractDataWithHistory} for:item="row">
-                                        <template if:true={row._historyState}>
-                                            <template if:true={row._historyState.expanded}>
-                                                <div key={row.ContractNumber} class="fec-history-wrap">
+                                        <template if:true={isAccountContractSearch}>
+                                            <template if:true={row._historyState}>
+                                                <template if:true={row._historyState.expanded}>
+                                                    <div key={row.ContractNumber} class="fec-history-wrap">
                                                     <template if:true={row._historyState.loading}>
                                                         <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
                                                     </template>
@@ -194,6 +197,7 @@
                                                     </template>
                                                 </div>
                                             </template>
+                                        </template>
                                         </template>
                                     </template>
                                 </div>

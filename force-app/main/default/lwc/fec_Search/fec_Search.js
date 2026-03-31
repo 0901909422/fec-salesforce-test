@@ -136,7 +136,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
               value: { fieldName: "AccountNumber" },
               fieldName: "AccountNumber",
               selectedType: "Card",
-              isExpanded: { fieldName: "_isExpanded" }
+              isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false
             },
         sortable: false,
       },
@@ -203,7 +203,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
               value: { fieldName: "ContractNumber" },
               fieldName: "ContractNumber",
               selectedType: "Loan",
-              isExpanded: { fieldName: "_isExpanded" }
+              isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false
             },
         sortable: false,
       },
