@@ -46,6 +46,7 @@
         <members>FEC_UpdateCustomerContact</members>
 		<members>FEC_GetCSAttachedFile</members>
 		<members>FEC_GetCSCaseStatusService</members>
+        <members>FEC_RemovePhoneController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -74,6 +75,7 @@
 		<members>fec_searchableCombobox</members>
 		<members>fec_templateManagementConsole</members>
 		<members>fec_IPPClosureForm</members>
+        <members>fec_RemovePhoneForm</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -155,6 +157,13 @@
 		<members>FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG</members>
 		<members>FEC_Template_Management_Title</members>
 		<members>FEC_Template_Required_Fields_Msg</members>
+        <members>FEC_MSG_Remove_Phone_Invalid_Format</members>
+        <members>FEC_MSG_Remove_Phone_Service_Failed</members>
+        <members>FEC_LBL_Remove_Phone_Phone_Type</members>
+        <members>FEC_LBL_Remove_Phone_Removable</members>
+        <members>FEC_LBL_Remove_Phone_Section_Title</members>
+        <members>FEC_LBL_Remove_Phone_Input_Label</members>
+        <members>FEC_Btn_Remove_Phone_Check_Eligibility</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
