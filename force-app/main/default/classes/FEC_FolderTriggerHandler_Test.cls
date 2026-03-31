@@ -18,11 +18,11 @@ private class FEC_FolderTriggerHandler_Test {
     static void setupData() {
         List<FEC_Folder__c> parents = new List<FEC_Folder__c>();
         parents.add(new FEC_Folder__c(
-            FEC_Folder_Label__c = 'Parent A',
+            Name = 'Parent A',
             FEC_Folder_Unique_Name__c = 'Parent_A'
         ));
         parents.add(new FEC_Folder__c(
-            FEC_Folder_Label__c = 'Parent B',
+            Name = 'Parent B',
             FEC_Folder_Unique_Name__c = 'Parent_B'
         ));
         insert parents;
@@ -33,10 +33,10 @@ private class FEC_FolderTriggerHandler_Test {
      */
     @IsTest
     static void testAutoGenerateUniqueName() {
-        FEC_Folder__c parentA = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Parent A' LIMIT 1];
+        FEC_Folder__c parentA = [SELECT Id FROM FEC_Folder__c WHERE Name = 'Parent A' LIMIT 1];
 
         FEC_Folder__c folder = new FEC_Folder__c(
-            FEC_Folder_Label__c = 'Marketing Emails',
+            Name = 'Marketing Emails',
             FEC_Folder_Unique_Name__c = 'Marketing_Emails',
             FEC_Parent_Folder__c = parentA.Id
         );
@@ -60,23 +60,23 @@ private class FEC_FolderTriggerHandler_Test {
      */
     @IsTest
     static void testUpdateCausesDuplicate() {
-        FEC_Folder__c parentA = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Parent A' LIMIT 1];
+        FEC_Folder__c parentA = [SELECT Id FROM FEC_Folder__c WHERE Name = 'Parent A' LIMIT 1];
 
         insert new FEC_Folder__c(
-            FEC_Folder_Label__c = 'Existing Folder',
+            Name = 'Existing Folder',
             FEC_Folder_Unique_Name__c = 'Existing_Folder',
             FEC_Parent_Folder__c = parentA.Id
         );
 
         FEC_Folder__c folder2 = new FEC_Folder__c(
-            FEC_Folder_Label__c = 'Another Folder',
+            Name = 'Another Folder',
             FEC_Folder_Unique_Name__c = 'Another_Folder',
             FEC_Parent_Folder__c = parentA.Id
         );
         insert folder2;
 
         Test.startTest();
-        folder2.FEC_Folder_Label__c = 'Existing Folder';
+        folder2.Name = 'Existing Folder';
         try {
             update folder2;
         } catch (DmlException e) {

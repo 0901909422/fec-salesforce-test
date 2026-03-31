@@ -48,6 +48,29 @@ export default class Fec_searchableCombobox extends LightningElement {
     @track _searchTerm   = '';
     @track _isOpen       = false;
     @track _hasFocus     = false;
+    @track _errorMessage = '';
+
+    /* ═══════════════════════════════════════════ */
+    /*  PUBLIC VALIDATION API                      */
+    /* ═══════════════════════════════════════════ */
+
+    /**
+     * Set a custom validity message (mirrors lightning-input API).
+     * Pass '' to clear the error.
+     */
+    @api
+    setCustomValidity(message) {
+        this._errorMessage = message || '';
+    }
+
+    /**
+     * Show or clear the error message (mirrors lightning-input API).
+     * @returns {Boolean} true if valid (no error message).
+     */
+    @api
+    reportValidity() {
+        return !this._errorMessage;
+    }
 
     /* ═══════════════════════════════════════════ */
     /*  COMPUTED                                   */
@@ -89,6 +112,13 @@ export default class Fec_searchableCombobox extends LightningElement {
         return 'slds-combobox_container';
     }
 
+    /** Apply slds-has-error when an error message is set */
+    get formElementClass() {
+        return this._errorMessage
+            ? 'slds-form-element slds-has-error'
+            : 'slds-form-element';
+    }
+
     /* ═══════════════════════════════════════════ */
     /*  EVENT HANDLERS                             */
     /* ═══════════════════════════════════════════ */
@@ -119,6 +149,7 @@ export default class Fec_searchableCombobox extends LightningElement {
         this._value = selectedValue;
         this._isOpen = false;
         this._searchTerm = '';
+        this._errorMessage = '';
 
         this.dispatchEvent(new CustomEvent('change', {
             detail: { value: selectedValue }

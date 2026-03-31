@@ -155,7 +155,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Country</label>
     <nameField>
-        <label>Country Name Name</label>
+        <label>Country Name</label>
         <type>Text</type>
     </nameField>
     <pluralLabel>Countries</pluralLabel>

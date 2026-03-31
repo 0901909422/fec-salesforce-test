@@ -48,6 +48,9 @@ import {
   MANUAL_NOTIFICATION_TYPE
 } from "c/fec_CommonConst";
 
+import { getRecord } from 'lightning/uiRecordApi';
+import FEC_Notification_Channel_Disabled_Msg from "@salesforce/label/c.FEC_Notification_Channel_Disabled_Msg";
+
 const SUB_CATEGORY_OBJECT = "FEC_Sub_Category__c";
 const SUB_CODE_OBJECT = "FEC_Sub_Code__c";
 
@@ -59,6 +62,9 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   @api recordId;
   @api recordTypeId;
 
+  showChannelWarning = false;
+  selectedNotiChannelId = null;
+  channelDisabled = FEC_Notification_Channel_Disabled_Msg
   isMultiRequired = false;
   FEC_Tab_Nature_Of_Case = FEC_Tab_Nature_Of_Case;
   FEC_Col_Channel = FEC_Col_Channel;
@@ -116,10 +122,34 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   selectedNotificationTemplateId = null;
 
+  selectedAssignedToQueueId = null;
+
   @wire(IsConsoleNavigation) isConsoleNavigation;
 
   @wire(getObjectInfo, { objectApiName: '$notificationObject' })
   objectInfo;
+
+  @wire(getRecord, { recordId: '$selectedNotiChannelId', fields: ['FEC_Notification_Channel__c.FEC_Noti_Channel_Status__c'] })
+  wiredChannelStatus({ error, data }) {
+    if (data) {
+      const status = data.fields.FEC_Noti_Channel_Status__c.value;
+      // Show warning only if the status explicitly equals false
+      this.showChannelWarning = status === false;
+    } else if (error) {
+      console.error('Error fetching channel status', error);
+      this.showChannelWarning = false;
+    }
+  }
+
+  handleNotificationChannelChange(event) {
+    // lightning-input-field lookup returns an array of selected IDs
+    const selectedIds = event.detail.value;
+    this.selectedNotiChannelId = selectedIds && selectedIds.length > 0 ? selectedIds[0] : null;
+    
+    if (!this.selectedNotiChannelId) {
+      this.showChannelWarning = false;
+    }
+  }
 
   get objectLabel() {
     return this.objectInfo?.data?.label;
@@ -134,6 +164,9 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
       // Use related Object API Names from lookup components
       case CHANNEL_FIELD.fieldApiName:
         this.selectedChannelId = joined || null;
+        break;
+      case 'Group': // <--- ADD THIS CASE
+        this.selectedAssignedToQueueId = joined || null;
         break;
       case PRODUCT_TYPE_FIELD.fieldApiName:
         this.selectedProductTypeId = joined || null;
@@ -253,7 +286,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   // G. Receivers: when sending to Internal User (Auto or Manual)
   get showReceivers() {
-    return this.isAuto && this.isInternal;
+    return this.isInternal;
   }
 
   // H & I. Schedule Start/End Time: Auto + Internal User
@@ -292,6 +325,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
             this.targetGroup = res.FEC_Target_Group__c;
             this.recordType.DeveloperName = res.RecordType.DeveloperName;
             this.recordTypeId = res.RecordTypeId;
+            this.selectedNotiChannelId = res.FEC_Notification_Channel__c;
           }
         })
         .catch((e) => {
@@ -312,6 +346,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     // Map selected lookup IDs into fields if present
     fields[CHANNEL_FIELD.fieldApiName] = this.selectedChannelId || fields[CHANNEL_FIELD.fieldApiName];
     fields[PRODUCT_TYPE_FIELD.fieldApiName] = this.selectedProductTypeId || fields[PRODUCT_TYPE_FIELD.fieldApiName];
+    fields[ASSIGNED_TO_QUEUE_FIELD.fieldApiName] = this.selectedAssignedToQueueId || fields[ASSIGNED_TO_QUEUE_FIELD.fieldApiName];
     fields[CATEGORY_FIELD.fieldApiName] = this.selectedCategoryId || fields[CATEGORY_FIELD.fieldApiName];
     fields[SUB_CATEGORY_FIELD.fieldApiName] = this.selectedSubCategoryId;
     fields[SUB_CODE_FIELD.fieldApiName] = this.selectedSubCodeId;
@@ -343,26 +378,38 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     this.isSaveAndNew = true;
   }
 
+  // Sửa lại hàm closeTab để nhận vào một tabId cụ thể
+  async closeCurrentTab(tabId) {
+    await closeTab(tabId);
+  }
+
   async handleSuccess(event) {
     const id = event?.detail?.id;
     const name = event?.detail?.fields?.Name?.value;
+
+    // 1. Lấy ID của tab hiện tại NGAY LẬP TỨC trước khi navigate
+    let currentTabId = null;
+    if (this.isConsoleNavigation) {
+      const tabInfo = await getFocusedTabInfo();
+      currentTabId = tabInfo.tabId;
+    }
+
+    // 2. Hiển thị Toast
+    this.dispatchEvent(
+      new ShowToastEvent({
+        title: this.recordId ? 'Success' : 'Notification created',
+        message: this.objectLabel + ' "' + name + '" was ' + (this.recordId ? 'saved.' : 'created.'),
+        variant: 'success'
+      })
+    );
+
+    // 3. Xử lý điều hướng
     if (this.recordId) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: 'Success',
-          // Cộng thêm ' "' và '" ' vào hai đầu của biến name
-          message: this.objectLabel + ' "' + name + '" was saved.',
-          variant: 'success'
-        })
-      );
+      // Trường hợp Edit: Chỉ cần đóng tab hiện tại
+      await this.closeCurrentTab(currentTabId);
     } else if (this.isSaveAndNew) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: 'Notification created',
-          message: this.objectLabel + ' "' + name + '" was created.',
-          variant: 'success'
-        })
-      );
+      // Trường hợp Create - Save & New
+      this.isSaveAndNew = false; // Reset biến flag
       this[NavigationMixin.Navigate]({
         type: 'standard__objectPage',
         attributes: {
@@ -374,14 +421,9 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
           nooverride: '0'
         }
       });
+      await this.closeCurrentTab(currentTabId);
     } else {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: 'Notification created',
-          message: this.objectLabel + ' "' + name + '" was created.',
-          variant: 'success'
-        })
-      );
+      // Trường hợp Create - Save thông thường
       this[NavigationMixin.Navigate]({
         type: 'standard__recordPage',
         attributes: {
@@ -390,9 +432,9 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
           actionName: 'view'
         }
       });
+      // Đóng tab "New" cũ sau khi đã mở tab "View" mới
+      setTimeout(() => this.closeCurrentTab(currentTabId), 500);
     }
-    await this.closeTab();
-
   }
 
   handleError(event) {
@@ -435,6 +477,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     this.selectedSubCategoryId = null;
     this.selectedSubCodeId = null;
     this.selectedNotificationTemplateId = null;
+    this.selectedAssignedToQueueId = null;
 
     // Reset all fields within the lightning-record-edit-form
     const form = this.template.querySelector('lightning-record-edit-form');

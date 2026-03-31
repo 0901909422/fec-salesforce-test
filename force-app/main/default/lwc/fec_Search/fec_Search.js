@@ -22,6 +22,7 @@ import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
 import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
+import createInternalCaseOnSkip from "@salesforce/apex/FEC_SearchController.createInternalCaseOnSkip";
 import {
   publish,
   MessageContext,
@@ -924,7 +925,7 @@ hasAnySearchCriteria(params) {
                     }
                 }
                 // NHÓM THEO LOAN (ContractNumber)
-                else if (['CDL', 'PL', 'TW', 'FC_CDL', 'FC_TW', 'FC_CDL_G'].includes(productCode)) {
+                else if (app.ContractNumber) {
                     const contractNum = app.ContractNumber;
                     if (loanContractMap.has(contractNum)) {
                         let existingRec = loanContractMap.get(contractNum);
@@ -1036,8 +1037,18 @@ hasAnySearchCriteria(params) {
     // Nếu result có giá trị 'confirmed' (do mình định nghĩa ở handleConfirm)
     if (result === "confirm") {
        if (!this.recordId || this.recordId === '') {
+           const caseId = await createInternalCaseOnSkip();
+
             this.showToast("Thông báo", "Skip thành công.", "success");
             this.dispatchEvent(new CustomEvent('skippedwithoutrecord', { bubbles: true, composed: true }));
+            this[NavigationMixin.Navigate]({
+              type: "standard__recordPage",
+              attributes: {
+                recordId: caseId,
+                objectApiName: "Case",
+                actionName: "view",
+              },
+            });
             return;
         }
       this.isLoaded = false;
@@ -1322,7 +1333,7 @@ hasAnySearchCriteria(params) {
           cifNumber: cifNumber,
           phone: row?.Phone,
           customerName: row?.FullName,
-          isListView: this.isListView
+          isListView: !this.recordId
         })
           .then(async (res) => {
             // const payload = {
