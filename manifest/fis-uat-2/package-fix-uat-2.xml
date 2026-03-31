@@ -78,6 +78,8 @@
 		<members>fec_templateManagementConsole</members>
 		<members>fec_IPPClosureForm</members>
         <members>fec_RemovePhoneForm</members>
+		<members>fec_MergeFieldPicker</members>
+		<members>fec_folderEditor</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
