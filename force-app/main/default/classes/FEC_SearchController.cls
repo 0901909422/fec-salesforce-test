@@ -19,7 +19,7 @@ public with sharing class FEC_SearchController {
                  FEC_Search_Account_Number__c, FEC_Search_Application_ID__c,
                  FEC_Search_Contract_Number__c, FEC_Search_Customer_Number__c,
                  FEC_Search_Email_Address__c, FEC_Search_National_ID__c,
-                 FEC_Search_Phone_Number__c,
+                 FEC_Search_Phone_Number__c, FEC_Application_ID__c, FEC_Account_Number__c, FEC_Interaction_Email__c,
                  (SELECT Id FROM Customer_Histories__r)
                 FROM Case
                 WHERE Id = :caseId
@@ -242,6 +242,37 @@ public with sharing class FEC_SearchController {
         } catch (Exception e) {
             // Log error and pass to the UI
             throw new AuraHandledException(System.Label.FEC_Account_Card_Fetch_Error + ' [' + accountNumber + ']. ' + e.getMessage());
+        }
+    }
+    
+    /**
+     * Creates an Internal Case when user skips search (List View).
+     * - RecordType = CASE_INTERNAL_RECORD_TYPE_DEV_NAME
+     * - FEC_Account_or_Contract__c = 'internal request'
+     * @return Id The newly created Case Id
+    */
+    @AuraEnabled
+    public static Id createInternalCaseOnSkip() {
+        try {
+            Id recordTypeId = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME);
+
+            Case c = new Case();
+            c.RecordTypeId = recordTypeId;
+            c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
+            c.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.CASE_INTERNAL_REQUEST;
+            c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+            c.FEC_Skip_Search_Internal_Case__c = true;
+
+            insert c;
+
+            return c.Id;
+
+        } catch (Exception e) {
+            throw new AuraHandledException(
+                'Line: ' + e.getLineNumber() +
+                ' | Type: ' + e.getTypeName() +
+                ' | Msg: ' + e.getMessage()
+            );
         }
     }
 }
