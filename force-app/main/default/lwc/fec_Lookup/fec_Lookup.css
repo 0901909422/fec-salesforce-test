@@ -25,3 +25,16 @@
     font-size: 0.75rem;
     font-weight: 400;
 }
+
+/* Khi ô input ở trạng thái readonly, ẩn con trỏ nhấp nháy */
+.readonly-no-cursor {
+    caret-color: transparent;
+    cursor: default; /* Đổi con trỏ chuột từ dạng chữ I sang dạng mũi tên cho giống nhãn (label) */
+}
+
+/* Đảm bảo khi hover vào ô đã chọn không hiện khung xanh quá đậm nếu không cần thiết */
+.readonly-no-cursor:focus {
+    outline: none;
+    box-shadow: none;
+    border-color: #dddbda; /* Giữ màu border mặc định của SLDS */
+}

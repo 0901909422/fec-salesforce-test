@@ -130,7 +130,11 @@
               </template>
 
               <template if:true={showAssignedToQueue}>
-                <lightning-input-field field-name={assignedToQueueField}></lightning-input-field>
+                <template if:true={showAssignedToQueue}>
+                  <c-fec_-lookup label="Assigned to Queue" placeholder="Search Queue..." data-id="assignedToQueue"
+                    object-api-name="Group" field-api-name="Name" icon-name="standard:groups" onselect={handleSelected}>
+                  </c-fec_-lookup>
+                </template>
               </template>
             </div>
             <div class="slds-col slds-size_1-of-2 column">

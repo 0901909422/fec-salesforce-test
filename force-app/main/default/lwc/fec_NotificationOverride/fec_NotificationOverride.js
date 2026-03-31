@@ -122,6 +122,8 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   selectedNotificationTemplateId = null;
 
+  selectedAssignedToQueueId = null;
+
   @wire(IsConsoleNavigation) isConsoleNavigation;
 
   @wire(getObjectInfo, { objectApiName: '$notificationObject' })
@@ -162,6 +164,9 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
       // Use related Object API Names from lookup components
       case CHANNEL_FIELD.fieldApiName:
         this.selectedChannelId = joined || null;
+        break;
+      case 'Group': // <--- ADD THIS CASE
+        this.selectedAssignedToQueueId = joined || null;
         break;
       case PRODUCT_TYPE_FIELD.fieldApiName:
         this.selectedProductTypeId = joined || null;
@@ -341,6 +346,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     // Map selected lookup IDs into fields if present
     fields[CHANNEL_FIELD.fieldApiName] = this.selectedChannelId || fields[CHANNEL_FIELD.fieldApiName];
     fields[PRODUCT_TYPE_FIELD.fieldApiName] = this.selectedProductTypeId || fields[PRODUCT_TYPE_FIELD.fieldApiName];
+    fields[ASSIGNED_TO_QUEUE_FIELD.fieldApiName] = this.selectedAssignedToQueueId || fields[ASSIGNED_TO_QUEUE_FIELD.fieldApiName];
     fields[CATEGORY_FIELD.fieldApiName] = this.selectedCategoryId || fields[CATEGORY_FIELD.fieldApiName];
     fields[SUB_CATEGORY_FIELD.fieldApiName] = this.selectedSubCategoryId;
     fields[SUB_CODE_FIELD.fieldApiName] = this.selectedSubCodeId;
@@ -471,6 +477,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     this.selectedSubCategoryId = null;
     this.selectedSubCodeId = null;
     this.selectedNotificationTemplateId = null;
+    this.selectedAssignedToQueueId = null;
 
     // Reset all fields within the lightning-record-edit-form
     const form = this.template.querySelector('lightning-record-edit-form');
