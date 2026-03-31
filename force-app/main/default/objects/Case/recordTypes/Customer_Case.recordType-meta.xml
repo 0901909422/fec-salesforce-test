@@ -12,6 +12,14 @@
             <default>false</default>
         </values>
         <values>
+            <fullName>Email-FE</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Email-Internal</fullName>
+            <default>false</default>
+        </values>
+        <values>
             <fullName>Facebook</fullName>
             <default>false</default>
         </values>

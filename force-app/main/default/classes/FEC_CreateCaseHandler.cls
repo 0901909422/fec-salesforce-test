@@ -65,9 +65,11 @@ public without sharing class FEC_CreateCaseHandler {
         if (dto == null) {
             throw new IllegalArgumentException(System.Label.FEC_MSG_Interaction_Case_DTO_Null);
         }
+        
         Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
             .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
         Case interactionCase = new Case();
+        // System.debug('interactionRecordTypeId' + interactionRecordTypeId);
         interactionCase.RecordTypeId = interactionRecordTypeId;
         
         // ---------------------------
@@ -75,11 +77,10 @@ public without sharing class FEC_CreateCaseHandler {
         // ---------------------------
         
         
-        if( dto.channel == FEC_ConstantCommon.CHANNEL_INBOUND_API ) {
-            interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
-        }else if ( dto.channel == FEC_ConstantCommon.CHANNEL_OUTBOUND_API ) {
-            interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
+        if( dto.channel != null ) {
+            interactionCase.FEC_Channel__c = dto.channel;
         }
+        
         if( dto.subChannel != null ) {
             interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
         }
@@ -124,8 +125,38 @@ public without sharing class FEC_CreateCaseHandler {
             res.caseNo = res.linkId.substringBetween('>', '</');
         }
         
+        system.debug('Created interaction case with Id: ' + res.caseId + ', Link Id: ' + res.linkId + ', Case No: ' + res.caseNo);
         return res;
     }
+    
+    
+    @AuraEnabled
+    public static void updateInteractionCaseWithCustomerHistory(
+        Id interactionId,
+    Id customerHistoryId
+    ) {
+        try {
+            // Query record
+            Case interaction = [
+                SELECT Id, FEC_Account_or_Contract__c
+                FROM Case
+                WHERE Id = :interactionId
+                LIMIT 1
+            ];
+            
+            // Update field
+            interaction.FEC_Account_or_Contract__c = customerHistoryId;
+            
+            update interaction;
+            
+        } catch (Exception e) {
+            // Log properly
+            System.debug('ERROR updateInteractionCaseWithCustomerHistory: ' + e.getMessage());
+            // Surface error to LWC / caller
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+    
     
     @AuraEnabled
     public static FEC_InteractionCaseResponse createInteractionCaseManual(FEC_InteractionCaseDTO dto) {
@@ -251,7 +282,7 @@ public without sharing class FEC_CreateCaseHandler {
         insert c;
         return c;
     }
-
+    
     // Create case with no recordId in Lisview
     @AuraEnabled
     public static Id createInternalCase(String customerName, String nationalId) {
@@ -265,7 +296,7 @@ public without sharing class FEC_CreateCaseHandler {
         c.FEC_Customer_Name__c = customerName;
         c.FEC_National_ID_Passport_ID__c = nationalId;
         c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
-
+        
         insert c;
         return c.Id;
     }
