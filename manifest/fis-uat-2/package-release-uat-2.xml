@@ -1272,6 +1272,13 @@
         <members>FEC_Country__c</members>
 		<name>CustomObject</name>
 	</types>
+	<types>
+		<members>FEC_Actual_Master_Data_Setting__c.FEC_LWC_Name__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_LWC_Name__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
+		<name>CustomField</name>
+	</types>
 
     <version>65.0</version>
 </Package>
