@@ -11232,4 +11232,19 @@
         <shortDescription>FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG</shortDescription>
         <value>NationalID is required</value>
     </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_DATETIME_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_DATETIME_INVALID_MSG</shortDescription>
+        <value>DateTime_x is null or invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Endpoint_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Endpoint Null</shortDescription>
+        <value>Endpoint is null or empty. Please check API configuration.</value>
+    </labels>
 </CustomLabels>
