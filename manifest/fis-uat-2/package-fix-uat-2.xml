@@ -157,6 +157,7 @@
 		<members>FEC_Template_Required_Fields_Msg</members>
 		<members>FEC_MSG_IPP_AddIpp_Default_Failed</members>
         <members>FEC_CS_CASE_DATETIME_INVALID_MSG</members>
+		<members>FEC_MSG_Endpoint_Null</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
