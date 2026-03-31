@@ -32,20 +32,14 @@ public with sharing class FEC_PsDNBServiceCallout {
         
         
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        
-        FEC_API_Config__mdt apiConfig = [
-            SELECT FEC_Endpoint__c
-            FROM FEC_API_Config__mdt
-            WHERE DeveloperName = :API_CONFIG_NAME
-            LIMIT 1
-        ];
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
         
         String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
             + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
         System.debug('FINAL endpoint = ' + endpoint);
         
         if (String.isBlank(endpoint)) {
-            throw new CalloutException('Endpoint is null or empty. Please check API configuration.');
+            throw new CalloutException(System.Label.FEC_MSG_Endpoint_Null);
         }
         
         String isoTimestamp = FEC_CommonUltils.formatISOWithTimezone(Datetime.now());
@@ -148,12 +142,12 @@ public with sharing class FEC_PsDNBServiceCallout {
             }
             
             if (r.nid != null && r.nid.length() > 255) {
-                return error('Field nid tối đa 255 ký tự');
+                return error(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Field nid', '255'}));
             }
             
             // ✅ validate max length type_value (<=40)
             if (r.type_value != null && r.type_value.length() > 40) {
-                return error('Field type_value tối đa 40 ký tự');
+                return error(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Field type_value', '40'}));
             }
         }
         
