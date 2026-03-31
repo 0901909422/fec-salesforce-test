@@ -48,6 +48,7 @@
 		<members>FEC_GetCSCaseStatusService</members>
 		<members>FEC_CustomerIntegrationService</members>
 		<members>FEC_FullCustomerIntegrationJob</members>
+        <members>FEC_CreateCaseInteractionController</members>
         <name>ApexClass</name>
     </types>
     <types>
