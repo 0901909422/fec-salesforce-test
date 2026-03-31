@@ -121,6 +121,10 @@
 		<members>FEC_CS_CASE_CHANNEL_INVALID_MSG</members>
 		<members>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</members>
 		<members>FEC_MISSING_REQUIRED_FIELDS_MSG</members>
+		<members>FEC_GET_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_REQUIRE_MSG</members>
+		<members>FEC_GET_CASE_STATUS_INCLUDE_FINISHED_REQUEST_REQUIRE_MSG</members>
+		<members>FEC_GET_CASE_STATUS_INVALID_CHANNEL_MSG</members>
+		<members>FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

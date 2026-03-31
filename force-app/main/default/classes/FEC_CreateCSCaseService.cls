@@ -193,7 +193,7 @@ public with sharing class FEC_CreateCSCaseService {
         if (String.isBlank(sys.TransactionID) || sys.TransactionID.length() > 36) {
             throw new ValidationException(null, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_TRANSACTION_ID_MSG);
         }
-        
+        validateDateTime(sys.DateTime_x,  sys.TransactionID);
         validateChannel(sys.Channel, sys.TransactionID);
         
         validateCustomerInfo(customer, sys.TransactionID);
@@ -270,6 +270,19 @@ public with sharing class FEC_CreateCSCaseService {
                 txnId,
             System.Label.FEC_CS_CASE_ERROR_CODE,
             System.Label.FEC_CS_CASE_CHANNEL_INVALID_MSG
+                );
+        }
+    }
+    
+    
+    private static void validateDateTime(DateTime dateTime_x, String txnId) {
+        
+        // Required check
+        if (dateTime_x == null) {
+            throw new ValidationException(
+                txnId,
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_DATETIME_INVALID_MSG
                 );
         }
     }
