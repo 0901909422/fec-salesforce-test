@@ -200,13 +200,13 @@ public with sharing class FEC_GetCSCaseStatusService {
         try {
             HttpResponse apiResponse = new HttpResponse();
             apiResponse.setStatusCode(isSuccess ? 200 : 500);
-            apiResponse.setBody(serializeSafe(responseObj));
+            apiResponse.setBody(FEC_CommonUltils.serializeSafe(responseObj));
             
             FEC_CommonUltils.logApi(
                 'GetCSCaseStatus',
             endpoint,
             method,
-            serializeSafe(requestObj),
+            FEC_CommonUltils.serializeSafe(requestObj),
             apiResponse,
             errorMessage
                 );
