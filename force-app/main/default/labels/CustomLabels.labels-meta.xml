@@ -11209,4 +11209,12 @@
         <shortDescription>FEC_CS_CASE_DATETIME_INVALID_MSG</shortDescription>
         <value>DateTime_x is null or invalid</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_Endpoint_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Endpoint Null</shortDescription>
+        <value>Endpoint is null or empty. Please check API configuration.</value>
+    </labels>
 </CustomLabels>
