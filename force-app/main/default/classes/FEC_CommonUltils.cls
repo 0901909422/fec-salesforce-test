@@ -832,6 +832,26 @@ public with sharing class FEC_CommonUltils {
     HttpResponse response,
     String errorMessage
   ){
+    Boolean isSuccess = (response.getStatusCode() == 200);
+    String statusCode =  String.valueOf(response.getStatusCode());
+    String responseBody = response.getBody();
+    try {
+      FEC_API_Log__c log = new FEC_API_Log__c();
+
+      log.Name = apiName;
+      log.FEC_Endpoint__c = endpoint;
+      log.FEC_Method__c = method;
+      log.FEC_Request_String__c = requestBody;
+      log.FEC_Status_Code__c =  statusCode;
+      log.FEC_Response_String__c = responseBody;
+      log.FEC_Is_Success__c = isSuccess;
+      log.FEC_Error_Message__c = errorMessage;
+
+      // insert log;
+
+    } catch(Exception e) {
+      System.debug('LOG INSERT ERROR: ' + e.getMessage());
+    }
   }
 
   public static String pickNameByLanguage(String nameEN, String nameVN, String language) {
@@ -950,7 +970,7 @@ public with sharing class FEC_CommonUltils {
     Id recordTypeId = rtMap.get(devName).getRecordTypeId();
     return recordTypeId;
   }
-  
+
   public static String mergeApplyTo(String oldVal, String newVal) {
     if (oldVal == null) return newVal;
     if (oldVal == newVal) return oldVal;
