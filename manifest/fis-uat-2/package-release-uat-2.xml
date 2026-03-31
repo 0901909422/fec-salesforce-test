@@ -132,6 +132,7 @@
 		<members>FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG</members>
 		<members>FEC_MSG_IPP_AddIpp_Default_Failed</members>
 		<members>FEC_CS_CASE_DATETIME_INVALID_MSG</members>
+		<members>FEC_MSG_Endpoint_Null</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -337,6 +338,8 @@
         <members>FEC_CommonUltils</members>
         <members>FEC_ApplicationsListController</members>
         <members>FEC_MainInfoController</members>
+		<members>FEC_CustomerIntegrationService</members>
+		<members>FEC_FullCustomerIntegrationJob</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -1290,6 +1293,13 @@
 		<members>FEC_UpdateCustomerContact</members>
         <name>ApexClass</name>
     </types>
+	<types>
+		<members>FEC_MSG_Channel_Validation</members>
+        <members>FEC_MSG_Data_Request_Master_Data</members>
+        <members>FEC_MSG_TransactionId_Validation</members> 
+        <members>FEC_MSG_Limit_Character</members>
+		<name>CustomLabel</name>
+	</types>
 
     <version>65.0</version>
 </Package>
