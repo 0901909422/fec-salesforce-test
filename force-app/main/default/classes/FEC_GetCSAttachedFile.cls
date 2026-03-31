@@ -2,10 +2,7 @@ global with sharing class FEC_GetCSAttachedFile {
 
     webservice static GetCSAttachedFileResponseType GetCSAttachedFileRequest(
         SysType Sys,
-        String ContractOrAccountInfos,
-        String UserType,
-        String CaseID,
-        String FileID
+        RequestInfoType RequestInfo
     ) {
         GetCSAttachedFileResponseType response = new GetCSAttachedFileResponseType();
         response.Sys = new SysType2();
@@ -24,10 +21,12 @@ global with sharing class FEC_GetCSAttachedFile {
         }
 
         try {
-            validateInput(Sys, ContractOrAccountInfos, UserType, CaseID, FileID);
+            validateInput(Sys, RequestInfo);
 
-            Case targetCase = getCaseById(CaseID);
-            ContentVersion latestVersion = getAttachedFileVersion(targetCase.Id, FileID);
+            Case targetCase = getCaseById(RequestInfo.CaseID);
+            validateCaseAccess(targetCase, RequestInfo.ContractOrAccountInfos, RequestInfo.UserType);
+            
+            ContentVersion latestVersion = getAttachedFileVersion(targetCase.Id, RequestInfo.FileID);
 
             response.Sys.Code = FEC_ConstantCommon.CODE_SUCCESS;
             response.Sys.Description = FEC_ConstantCommon.SUCCESS_MESSAGE;
@@ -43,10 +42,7 @@ global with sharing class FEC_GetCSAttachedFile {
 
     private static void validateInput(
         SysType sys,
-        String contractOrAccountInfos,
-        String userType,
-        String caseId,
-        String fileId
+        RequestInfoType requestInfo
     ) {
         if (sys == null) {
             throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Sys'}));
@@ -60,7 +56,7 @@ global with sharing class FEC_GetCSAttachedFile {
                 new List<String>{String.join(FEC_ConstantCommon.CANCEL_CS_VALID_CHANNELS_ORDERED, ', ')}
             ));
         }
-        if (sys.TransactionID.length() > FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN) {
+        if (String.isNotBlank(sys.TransactionID) && sys.TransactionID.length() > FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN) {
             throw new ServiceException(String.format(
                 System.Label.FEC_MSG_Param_Maxlength,
                 new List<String>{
@@ -69,26 +65,46 @@ global with sharing class FEC_GetCSAttachedFile {
                 }
             ));
         }
-        if (String.isBlank(contractOrAccountInfos)) {
+
+        if (requestInfo == null) {
+            throw new ServiceException(String.format(
+                System.Label.FEC_MSG_Param_Required,
+                new List<String>{'RequestInfo'}
+            ));
+        }
+
+        if (requestInfo.ContractOrAccountInfos == null) {
             throw new ServiceException(String.format(
                 System.Label.FEC_MSG_Param_Required,
                 new List<String>{'ContractOrAccountInfos'}
             ));
         }
-        if (contractOrAccountInfos.length() > FEC_ConstantCommon.CANCEL_CS_CONTRACT_OR_ACCOUNT_MAX_LEN) {
+        if (String.isBlank(requestInfo.ContractOrAccountInfos.ContractOrAccountNumber)) {
+            throw new ServiceException(String.format(
+                System.Label.FEC_MSG_Param_Required,
+                new List<String>{'ContractOrAccountNumber'}
+            ));
+        }
+        if (requestInfo.ContractOrAccountInfos.ContractOrAccountNumber.length() > FEC_ConstantCommon.CANCEL_CS_CONTRACT_OR_ACCOUNT_MAX_LEN) {
             throw new ServiceException(String.format(
                 System.Label.FEC_MSG_Param_Maxlength,
                 new List<String>{
-                    'ContractOrAccountInfos',
+                    'ContractOrAccountNumber',
                     String.valueOf(FEC_ConstantCommon.CANCEL_CS_CONTRACT_OR_ACCOUNT_MAX_LEN)
                 }
             ));
         }
+        if (String.isBlank(requestInfo.ContractOrAccountInfos.ProductType)) {
+            throw new ServiceException(String.format(
+                System.Label.FEC_MSG_Param_Required,
+                new List<String>{'ProductType'}
+            ));
+        }
 
-        if (String.isBlank(userType)) {
+        if (String.isBlank(requestInfo.UserType)) {
             throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'UserType'}));
         }
-        if (userType.length() > 15) {
+        if (requestInfo.UserType.length() > 15) {
             throw new ServiceException(String.format(
                 System.Label.FEC_MSG_Param_Maxlength,
                 new List<String>{'UserType', '15'}
@@ -98,7 +114,7 @@ global with sharing class FEC_GetCSAttachedFile {
             FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE,
             FEC_ConstantCommon.REQUEST_NON_EXISTING_USER_TYPE
         };
-        if (!validUserTypes.contains(userType)) {
+        if (!validUserTypes.contains(requestInfo.UserType)) {
             throw new ServiceException(String.format(
                 System.Label.FEC_MSG_CancelCS_UserType_Invalid,
                 new List<String>{
@@ -107,26 +123,28 @@ global with sharing class FEC_GetCSAttachedFile {
             ));
         }
 
-        if (String.isBlank(caseId)) {
+        if (String.isBlank(requestInfo.CaseID)) {
             throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CaseID'}));
         }
-        if (caseId.length() > FEC_ConstantCommon.CANCEL_CS_CASE_ID_MAX_LEN) {
+        if (requestInfo.CaseID.length() > FEC_ConstantCommon.CANCEL_CS_CASE_ID_MAX_LEN) {
             throw new ServiceException(String.format(
                 System.Label.FEC_MSG_Param_Maxlength,
                 new List<String>{'CaseID', String.valueOf(FEC_ConstantCommon.CANCEL_CS_CASE_ID_MAX_LEN)}
             ));
         }
-        if (String.isBlank(fileId)) {
+        if (String.isBlank(requestInfo.FileID)) {
             throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'FileID'}));
         }
-        if (!isExpectedSObjectId(fileId, ContentDocument.SObjectType)) {
+        if (!isExpectedSObjectId(requestInfo.FileID, ContentDocument.SObjectType)) {
             throw new ServiceException(System.Label.FEC_MSG_GetCSAttached_FileID_Invalid);
         }
     }
 
     private static Case getCaseById(String caseId) {
         List<Case> cases = [
-            SELECT Id
+            SELECT Id, FEC_ID_Search__c, FEC_Customer_Type__c, 
+                   FEC_Account_Number__c, FEC_Contract_Number__c,
+                   FEC_Account_or_Contract__c, AccountId
             FROM Case
             WHERE FEC_ID_Search__c = :caseId
             LIMIT 1
@@ -138,6 +156,39 @@ global with sharing class FEC_GetCSAttachedFile {
             ));
         }
         return cases[0];
+    }
+    
+    private static void validateCaseAccess(Case targetCase, ContractOrAccountInfoType contractOrAccountInfos, String userType) {
+        if (String.isNotBlank(userType)) {
+            String expectedCustomerType = userType.equals(FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE) 
+                ? FEC_ConstantCommon.CASE_EXISTING_CUSTOMER 
+                : FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
+            
+            if (targetCase.FEC_Customer_Type__c != expectedCustomerType) {
+                throw new ServiceException(String.format(
+                    'Case customer type mismatch. Expected: {0}, Found: {1}',
+                    new List<String>{expectedCustomerType, String.valueOf(targetCase.FEC_Customer_Type__c)}
+                ));
+            }
+        }
+        
+        if (contractOrAccountInfos != null && 
+            String.isNotBlank(contractOrAccountInfos.ContractOrAccountNumber)) {
+            String requestNumber = contractOrAccountInfos.ContractOrAccountNumber;
+            Boolean isMatch = false;
+            
+            if (String.isNotBlank(targetCase.FEC_Account_Number__c) && 
+                targetCase.FEC_Account_Number__c.equals(requestNumber)) {
+                isMatch = true;
+            } else if (String.isNotBlank(targetCase.FEC_Contract_Number__c) && 
+                       targetCase.FEC_Contract_Number__c.equals(requestNumber)) {
+                isMatch = true;
+            }
+            
+            if (!isMatch) {
+                throw new ServiceException('Contract or Account information does not match the case');
+            }
+        }
     }
 
     private static ContentVersion getAttachedFileVersion(Id caseSfId, String fileId) {
@@ -153,7 +204,7 @@ global with sharing class FEC_GetCSAttachedFile {
         }
 
         List<ContentVersion> versions = [
-            SELECT Id, Title, FileExtension, VersionData
+            SELECT Id, Title, FileExtension, VersionData, ContentSize
             FROM ContentVersion
             WHERE ContentDocumentId = :links[0].ContentDocumentId
             ORDER BY VersionNumber DESC
@@ -165,6 +216,7 @@ global with sharing class FEC_GetCSAttachedFile {
                 new List<String>{fileId}
             ));
         }
+        
         return versions[0];
     }
 
@@ -224,6 +276,18 @@ global with sharing class FEC_GetCSAttachedFile {
         webservice String Code;
         webservice String Description;
         webservice String TransactionID;
+    }
+
+    global class ContractOrAccountInfoType {
+        webservice String ContractOrAccountNumber;
+        webservice String ProductType;
+    }
+
+    global class RequestInfoType {
+        webservice String CaseID;
+        webservice String UserType;
+        webservice String FileID;
+        webservice ContractOrAccountInfoType ContractOrAccountInfos;
     }
 
     global class GetCSAttachedFileResponseType {
