@@ -39,7 +39,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss';
     public static final String DATE_FORMAT = 'yyyy-MM-dd';
     public static final String DATE_FORMAT_MMYYYY = 'MM/yyyy';
+    public static final String DATE_FORMAT_DDMMYYYY = 'dd/MM/yyyy';
     public static final String DATETIME_FORMAT_OUTPUT = 'dd/MM/yyyy HH:mm:ss';
+    public static final String PAYMENT_PREFIX = 'pay_';
     
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
@@ -273,6 +275,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String STATUS_CANCELLED  = 'Cancelled';
     public static final String CODE_SUCCESS      = '1';
     public static final String CODE_FAILURE      = '3';
+    public static final String CODE_SYS_ERROR    = '0';
     public static final String ERROR_PREFIX      = 'Error: ';
     public static final String SUCCESS_MESSAGE_CANCEL_CASE = System.Label.FEC_MSG_CancelCS_Success;
     public static final String PHONE_REGEX_VN    = '^0[0-9]{9}$';

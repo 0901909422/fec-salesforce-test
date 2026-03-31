@@ -346,11 +346,11 @@ public with sharing class FEC_UpdateCustomerContact {
   }
 
   /**
-   * @description Queries FEC_Contact_List__c records matching the Case's account/contract,
-   *              and the CommunicationType + Channel from the given CustomerContactRequest.
-   * @param caseId  The Id of the Case record.
-   * @param req     A CustomerContactRequest containing CommunicationType and Channel.
-   * @return        List of matching FEC_Contact_List__c records.
+   * @description Tìm FEC_Contact_List__c theo Customer History, kênh, loại liên lạc và
+   *              FEC_Contact_String__c trùng email/điện thoại gốc trên History.
+   * @param selectedCase Case có FEC_Account_or_Contract__c = Id Customer History.
+   * @param req Yêu cầu (CommunicationType, Channel).
+   * @return Danh sách bản ghi khớp.
    */
   public static List<FEC_Contact_List__c> getMatchingContactList(
     Case selectedCase,
@@ -363,13 +363,47 @@ public with sharing class FEC_UpdateCustomerContact {
       FEC_ConstantCommon.EMAIL => FEC_ConstantCommon.EMAIL
     };
 
+    String originalContactString;
+    if (accountOrContractId != null) {
+      List<FEC_Customer_History__c> historyRows = [
+        SELECT FEC_Email__c, FEC_Primary_Phone__c
+        FROM FEC_Customer_History__c
+        WHERE Id = :accountOrContractId
+        LIMIT 1
+      ];
+      if (!historyRows.isEmpty()) {
+        originalContactString = FEC_ConstantCommon.EMAIL.equals(req.CommunicationType)
+          ? historyRows[0].FEC_Email__c
+          : historyRows[0].FEC_Primary_Phone__c;
+      }
+    }
+
+    if (String.isNotBlank(originalContactString)) {
+      return [
+        SELECT
+          Id,
+          FEC_Customer_History__c,
+          FEC_Communication_Type__c,
+          FEC_Channel__c,
+          FEC_Contact_ID__c,
+          FEC_Contact_String__c
+        FROM FEC_Contact_List__c
+        WHERE
+          FEC_Customer_History__c = :accountOrContractId
+          AND FEC_Communication_Type__c = :typeMap.get(req.CommunicationType)
+          AND FEC_Channel__c = :req.Channel
+          AND FEC_Contact_String__c = :originalContactString
+      ];
+    }
+
     return [
       SELECT
         Id,
         FEC_Customer_History__c,
         FEC_Communication_Type__c,
         FEC_Channel__c,
-        FEC_Contact_ID__c
+        FEC_Contact_ID__c,
+        FEC_Contact_String__c
       FROM FEC_Contact_List__c
       WHERE
         FEC_Customer_History__c = :accountOrContractId
