@@ -36,7 +36,6 @@
 		<members>FEC_PsDNBServiceCallout</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_Notification</members>
-		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_PsDNBServiceCallout</members>
 		<members>FEC_InteractionSLAController</members>
         <members>FEC_LookupController</members>
@@ -46,6 +45,7 @@
         <members>FEC_FolderTriggerHandler_Test</members>
         <members>FEC_UpdateCustomerContact</members>
 		<members>FEC_GetCSAttachedFile</members>
+		<members>FEC_GetCSCaseStatusService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -149,6 +149,10 @@
 		<members>FEC_MISSING_REQUIRED_FIELDS_MSG</members>
         <members>FEC_Template_Body</members>
         <members>FEC_Template_Save_And_Close</members>
+        <members>FEC_GET_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_REQUIRE_MSG</members>
+		<members>FEC_GET_CASE_STATUS_INCLUDE_FINISHED_REQUEST_REQUIRE_MSG</members>
+		<members>FEC_GET_CASE_STATUS_INVALID_CHANNEL_MSG</members>
+		<members>FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
