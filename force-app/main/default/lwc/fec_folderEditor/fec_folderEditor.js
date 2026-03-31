@@ -76,29 +76,28 @@ export default class Fec_folderEditor extends LightningElement {
         return this.recordId ? 'Edit Folder' : 'New Folder';
     }
 
-    // get parentFolderOptions() {
-    //     const opts = [{ label: '— None —', value: '' }];
-    //     (this._allFolders || []).forEach(f => {
-    //         // Exclude self when editing
-    //         if (f.Id !== this.recordId) {
-    //             opts.push({ label: f.Name, value: f.Id });
-    //         }
-    //     });
-    //     return opts;
-    // }
-
     // ─── Handlers ────────────────────────────────────────
 
     handleNameChange(event) {
         this.folderName = event.detail.value;
-        if (!this._uniqueNameManuallySet) {
-            this.uniqueName = generateApiName(this.folderName);
+        this.uniqueName = generateApiName(this.folderName);
+        const env = {
+            detail: {
+                value: this.uniqueName
+            }
         }
+        this.handleUniqueNameChange(env);
     }
 
     handleUniqueNameChange(event) {
         this.uniqueName = event.detail.value;
         this._uniqueNameManuallySet = true;
+        const uniqueNameInput = this.template.querySelector('.folder-unique-name-input');
+        if (uniqueNameInput && this.uniqueName) {
+            uniqueNameInput.value = this.uniqueName;
+            uniqueNameInput.setCustomValidity('');
+            uniqueNameInput.reportValidity();
+        }
     }
 
     handleParentChange(event) {

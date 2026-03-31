@@ -33,6 +33,7 @@
                     required
                     max-length="255"
                     onchange={handleUniqueNameChange}
+                    onclick={handleUniqueNameClick}
                 ></lightning-input>
                 <div lwc:if={isDuplicated}>
                     <p class="slds-text-color_error">{errorDuplicate}</p>
