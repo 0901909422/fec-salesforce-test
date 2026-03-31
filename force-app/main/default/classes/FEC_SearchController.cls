@@ -106,7 +106,7 @@ public with sharing class FEC_SearchController {
     @AuraEnabled
     public static List<Map<String, String>> getApplicationHistory(String applicationId) {
         if (String.isBlank(applicationId)) {
-            throw new AuraHandledException('Application ID is required.');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Application ID'}));
         }
         try {
             FEC_GetLoanApplicationHistory.LoanApplicationHistoryRequest req = new FEC_GetLoanApplicationHistory.LoanApplicationHistoryRequest();

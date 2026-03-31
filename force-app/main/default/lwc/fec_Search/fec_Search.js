@@ -1157,7 +1157,7 @@ hasAnySearchCriteria(params) {
       isListView: !this.recordId
     })
       .then(async (res) => {
-        this.showToast('Success', 'History created successfully', 'success');
+        this.showToast(this.FEC_Toast_Refresh_Success || 'Success', 'History created successfully', 'success');
         if (this.recordId) {
           await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
           this.dispatchEvent(new RefreshEvent());
@@ -1169,7 +1169,7 @@ hasAnySearchCriteria(params) {
           });
         }
       })
-      .catch(() => { this.showToast('Error', 'Failed to create history', 'error'); })
+      .catch(() => { this.showToast(this.FEC_Toast_Error || 'Error', this.FEC_MSG_Create_Customer_History_Error || 'Failed to create history', 'error'); })
       .finally(() => { this.isLoaded = true; });
   }
 

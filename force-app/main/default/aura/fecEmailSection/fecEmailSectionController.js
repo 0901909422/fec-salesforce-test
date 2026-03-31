@@ -327,7 +327,7 @@
         var tags = component.get('v.toTags');
         var finalToEmail = toEmail || (tags && tags.length > 0 ? tags.join(',') : '');
         console.log('sendEmail clicked: toEmail=', toEmail, 'tags=', JSON.stringify(tags), 'final=', finalToEmail);
-        if (!finalToEmail) { component.set('v.errorMsg', 'To email is required.'); return; }
+        if (!finalToEmail) { component.set('v.errorMsg', $A.get('$Label.c.FEC_Email_Error_Empty') || 'To email is required.'); return; }
         var subject = component.get('v.subject');
         var body = window._fecQuill ? window._fecQuill.root.innerHTML : component.get('v.body');
         if (!subject) { component.set('v.errorMsg', 'Subject is required.'); return; }

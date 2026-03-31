@@ -40,8 +40,16 @@ public without sharing class FEC_CustomEmailService {
                 ORDER BY MessageDate DESC LIMIT 1
             ];
             if (!incomingMsgs.isEmpty()) {
+                // FromAddress = email khách (interactionEmail), ToAddress = routing address (sendTo)
                 if (String.isBlank(interactionEmail)) interactionEmail = incomingMsgs[0].FromAddress;
-                if (String.isBlank(sendTo)) sendTo = incomingMsgs[0].ToAddress;
+                // Chỉ set sendTo từ ToAddress nếu ToAddress là EmailRoutingAddress
+                if (String.isBlank(sendTo) && String.isNotBlank(incomingMsgs[0].ToAddress)) {
+                    List<SObject> routings = Database.query(
+                        'SELECT Id FROM EmailRoutingAddress WHERE Address = :addr LIMIT 1'
+                        .replace(':addr', '\'' + incomingMsgs[0].ToAddress + '\'')
+                    );
+                    if (!routings.isEmpty()) sendTo = incomingMsgs[0].ToAddress;
+                }
             }
         }
 
@@ -394,7 +402,7 @@ public without sharing class FEC_CustomEmailService {
         // Update case fields
         Case cUpdate = new Case(Id = caseId);
         if (String.isNotBlank(fromEmail))   cUpdate.FEC_Email_From__c  = fromEmail;
-        if (String.isNotBlank(toEmail))     cUpdate.FEC_Send_To__c     = toEmail;
+        // FEC_Send_To__c là routing address - không update để tránh ghi đè
         if (String.isNotBlank(ccEmail))     cUpdate.FEC_Email_CC__c    = ccEmail;
         // FEC_Title_Reply__c is restricted picklist - skip update to avoid invalid value error
         update cUpdate;
