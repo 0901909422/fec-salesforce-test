@@ -7,6 +7,9 @@
         <members>FEC_ChatHubCaseController</members>
         <members>FEC_ChatHubInitController</members>
         <members>FEC_Utils</members>
+        <members>FEC_AttachmentControllerTest</members>
+        <members>FEC_ChatControllersTest</members>
+        <members>FEC_ChatHubInitControllerTest</members>
         <name>ApexClass</name>
     </types>
 
