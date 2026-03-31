@@ -164,6 +164,8 @@
         <members>FEC_LBL_Remove_Phone_Section_Title</members>
         <members>FEC_LBL_Remove_Phone_Input_Label</members>
         <members>FEC_Btn_Remove_Phone_Check_Eligibility</members>
+		<members>FEC_MSG_IPP_AddIpp_Default_Failed</members>
+        <members>FEC_CS_CASE_DATETIME_INVALID_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
