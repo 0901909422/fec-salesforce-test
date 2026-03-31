@@ -301,7 +301,7 @@ public with sharing class FEC_ChatHubCaseController {
         FEC_InteractionCaseDTO dto = (FEC_InteractionCaseDTO)JSON.deserialize(jsonInput, FEC_InteractionCaseDTO.class);
         
         if (dto == null) {
-            throw new IllegalArgumentException(System.Label.FEC_MSG_Interaction_Case_DTO_Null);
+            throw new IllegalArgumentException('Interaction Case DTO is null. Please provide valid data.');
         }
         try {
             Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName().get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
