@@ -330,8 +330,23 @@ export default class Fec_templateEditor extends LightningElement {
 
     handleMergeFieldInsert(event) {
         const mergeTag = event.detail;
+        const editorEl = this.template.querySelector('.body-editor');
 
-        if (this._savedRange) {
+        // Nếu không có editor => fallback
+        if (!editorEl) {
+            this.emailBody = (this.emailBody || '') + mergeTag;
+            this._savedRange = null;
+            this.handleClosePicker();
+            return;
+        }
+
+        // Nếu có savedRange nhưng nó nằm ngoài editor => KHÔNG restore selection ngoài editor
+        const canUseRange = this._savedRange && this._isRangeInsideRichText(this._savedRange, editorEl);
+
+        if (canUseRange) {
+            // Force focus về editor trước khi thao tác selection (giảm rủi ro selection "nhảy")
+            editorEl.focus?.();
+
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(this._savedRange);
@@ -345,16 +360,64 @@ export default class Fec_templateEditor extends LightningElement {
             sel.removeAllRanges();
             sel.addRange(this._savedRange);
 
-            const editorEl = this.template.querySelector('.body-editor');
-            if (editorEl) { this.emailBody = editorEl.value; }
+            // Sync model
+            // Nếu editor là textarea/input => value; nếu contenteditable => textContent/innerHTML
+            this.emailBody = editorEl.value ?? editorEl.innerHTML ?? this.emailBody;
         } else {
-            this.emailBody = (this.emailBody || '') + mergeTag;
+            // Fallback: insert vào cuối body (hoặc append string)
+            // Nếu editor là textarea/input:
+            if (editorEl.value !== undefined) {
+                const start = editorEl.selectionStart ?? editorEl.value.length;
+                const end = editorEl.selectionEnd ?? editorEl.value.length;
+                const v = editorEl.value;
+
+                editorEl.value = v.slice(0, start) + mergeTag + v.slice(end);
+                // put cursor after inserted text
+                const pos = start + mergeTag.length;
+                editorEl.setSelectionRange?.(pos, pos);
+
+                this.emailBody = editorEl.value;
+            } else {
+                // Nếu là contenteditable div:
+                editorEl.focus?.();
+                editorEl.insertAdjacentText('beforeend', mergeTag);
+                this.emailBody = editorEl.innerHTML;
+            }
         }
 
         this._savedRange = null;
         this.handleClosePicker();
     }
 
+    _isNodeInsideHostShadow(node, hostEl) {
+        if (!node || !hostEl) return false;
+
+        // Nếu node là Text node thì chuyển lên parent
+        let cur = (node.nodeType === Node.TEXT_NODE) ? node.parentNode : node;
+
+        // Đi ngược qua các shadow boundary bằng getRootNode().host
+        while (cur) {
+            if (cur === hostEl) return true; // trường hợp node ở light DOM của host (hiếm)
+            const root = cur.getRootNode?.();
+            if (!root) return false;
+
+            // Nếu root là ShadowRoot và host khớp => thuộc hostEl
+            if (root.host) {
+                if (root.host === hostEl) return true;
+                cur = root.host; // nhảy lên host để tiếp tục climb
+            } else {
+                // root không có host => Document
+                return false;
+            }
+        }
+        return false;
+    }
+
+    _isRangeInsideRichText(range, richTextHostEl) {
+        if (!range || !richTextHostEl) return false;
+        const container = range.commonAncestorContainer;
+        return this._isNodeInsideHostShadow(container, richTextHostEl);
+    }
     handleClosePicker() {
         this.isPickerOpen = false;
     }

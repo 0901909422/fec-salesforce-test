@@ -32,11 +32,7 @@ import FEC_Toast_Save_Success from '@salesforce/label/c.FEC_Toast_Save_Success';
 import FEC_Toast_Save_Error from '@salesforce/label/c.FEC_Toast_Save_Error';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
 import { formatToDDMMYYYY } from 'c/fec_CommonUtils';
-import { STR_EMPTY } from 'c/fec_CommonConst';
-
-const STATE_LOADING = 'LOADING';
-const STATE_NONE = 'NONE';
-const STATE_HAS_DATA = 'HAS_DATA';
+import { STR_EMPTY, FORM_STATE_LOADING, FORM_STATE_NONE, FORM_STATE_HAS_DATA } from 'c/fec_CommonConst';
 
 export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement) {
 
@@ -48,7 +44,7 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
     @track completeLoading = false;
     @track showNoti11 = false;
 
-    state = STATE_LOADING;
+    state = FORM_STATE_LOADING;
 
     labelLoading = LBL_LOADING;
     labelSaving = FEC_SPINNER_SAVING;
@@ -76,7 +72,7 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
 
     loadEligibleIPPs() {
         if (!this.recordId) {
-            this.state = STATE_NONE;
+            this.state = FORM_STATE_NONE;
             return;
         }
         this.isLoading = true;
@@ -88,13 +84,13 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
                 const rows = (data || []).map(row => this.mapRowToDisplay(row));
                 this.ippList = rows;
                 if (rows.length === 0) {
-                    this.state = STATE_NONE;
+                    this.state = FORM_STATE_NONE;
                 } else {
-                    this.state = STATE_HAS_DATA;
+                    this.state = FORM_STATE_HAS_DATA;
                 }
             })
             .catch((err) => {
-                this.state = STATE_NONE;
+                this.state = FORM_STATE_NONE;
                 this.showToast(FEC_Toast_Error, err?.body?.message || err?.message || FEC_Toast_Error_Generic, 'error');
             })
             .finally(() => {
@@ -180,11 +176,11 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
     }
 
     get hasNoEligibleIPPs() {
-        return this.state === STATE_NONE && !this.isLoading;
+        return this.state === FORM_STATE_NONE && !this.isLoading;
     }
 
     get hasEligibleIPPs() {
-        return this.state === STATE_HAS_DATA && this.ippList.length > 0;
+        return this.state === FORM_STATE_HAS_DATA && this.ippList.length > 0;
     }
 
     get noti11Message() {

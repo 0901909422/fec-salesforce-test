@@ -181,6 +181,8 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_CardClosureRefundHandling: () => import('c/fec_CardClosureRefundHandling'),
   fec_PinResetHandling: () => import('c/fec_PinResetHandling'),
   fec_CardBlock: () => import('c/fec_CardBlock'),
+  fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
+  fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
 };
 
 export default class Fec_CaseBussiness extends LightningElement {
