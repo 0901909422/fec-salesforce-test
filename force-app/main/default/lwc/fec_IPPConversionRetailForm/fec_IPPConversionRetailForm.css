@@ -1,0 +1,14 @@
+/* Align Tenor combobox row with readonly values (same control height) */
+.details-row .slds-form-element__control {
+  min-height: 2.5rem;
+}
+.details-row .detail-control,
+.details-row .detail-value {
+  display: flex;
+  align-items: center;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.details-row .detail-control lightning-combobox {
+  width: 100%;
+}

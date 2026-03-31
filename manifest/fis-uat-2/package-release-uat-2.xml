@@ -678,6 +678,8 @@
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_CardBlock</members>
 		<members>fecInteractionEmailInfoUbank</members>
+		<members>fec_IPPConversionRetailForm</members>
+		<members>fec_IncorrectPaymentForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -706,6 +708,8 @@
 		<members>FEC_CreateCaseInteractionController</members>
         <members>FEC_CardLockUnLockController</members>
         <members>FEC_InteractionInforHandler</members>
+        <members>FEC_IPPConversionController</members>
+        <members>FEC_IncorrectPaymentController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -945,6 +949,10 @@
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
         <name>PermissionSet</name>
     </types>
+    <types>
+		<members>ServiceResourceSkill-en_US</members>
+		<name>CustomObjectTranslation</name>
+	</types>
 
 	<!-- template management -->
 	<types>
@@ -1263,6 +1271,13 @@
 		<members>FEC_City__c</members>
         <members>FEC_Country__c</members>
 		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>FEC_Actual_Master_Data_Setting__c.FEC_LWC_Name__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_LWC_Name__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
+		<name>CustomField</name>
 	</types>
 
     <version>65.0</version>
