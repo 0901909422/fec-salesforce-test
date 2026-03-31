@@ -153,6 +153,8 @@
 		<members>FEC_GET_CASE_STATUS_INCLUDE_FINISHED_REQUEST_REQUIRE_MSG</members>
 		<members>FEC_GET_CASE_STATUS_INVALID_CHANNEL_MSG</members>
 		<members>FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG</members>
+		<members>FEC_Template_Management_Title</members>
+		<members>FEC_Template_Required_Fields_Msg</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -201,7 +203,6 @@
         <members>FEC_CS_Unit_Head_of_Customer_Care_Interaction_Case_Service_Case</members>
         <members>FEC_CS_Unit_Head_of_Office_Based_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
-        <types>
 		<members>FEC_CS_CS_Ecom_Officer_Master_Data_Management</members>
 		<members>FEC_CS_CS_Ecom_Specialist_Master_Data_Management</members>
 		<members>FEC_CS_CS_Ecom_Team_Leader_Master_Data_Management</members>

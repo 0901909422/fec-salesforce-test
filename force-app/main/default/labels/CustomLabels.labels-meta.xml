@@ -10616,7 +10616,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Template Management page title</shortDescription>
-        <value>Email Templates</value>
+        <value>Templates</value>
     </labels>
     <labels>
         <fullName>FEC_Template_Subject</fullName>
@@ -10735,7 +10735,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Required fields validation message</shortDescription>
-        <value>These required fields must be completed: Template Name</value>
+        <value>These required fields must be completed: {0}</value>
     </labels>
     <labels>
         <fullName>FEC_Template_Save_And_New</fullName>
