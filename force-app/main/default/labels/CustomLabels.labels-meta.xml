@@ -11013,6 +11013,8 @@
         <protected>false</protected>
         <shortDescription>MSG TransactionId Validation</shortDescription>
         <value>TransactionID exceeds maximum length of</value>
+    </labels>
+    <labels>
         <fullName>FEC_LBL_Incorrect_Payment_Form_Title</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
