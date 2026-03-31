@@ -291,7 +291,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   fetchTransferUsers() {
     this.isLoaded = false;
-    getTransferUsers()
+    getTransferUsers({ caseId: this.recordId })
       .then((result) => {
         const userOptions = result.map((user) => ({
           label: user.Name,
@@ -786,7 +786,9 @@ export default class Fec_CaseBussiness extends LightningElement {
           JSON.stringify(err),
         );
       })
-      .finally(() => { });
+      .finally(() => {
+        this.businessLoaded = true;
+      });
   }
 
   handleInputKeydown(e) {
