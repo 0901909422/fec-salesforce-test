@@ -338,6 +338,8 @@
         <members>FEC_CommonUltils</members>
         <members>FEC_ApplicationsListController</members>
         <members>FEC_MainInfoController</members>
+		<members>FEC_CustomerIntegrationService</members>
+		<members>FEC_FullCustomerIntegrationJob</members>
         <name>ApexClass</name>
     </types>
     <types>

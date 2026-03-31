@@ -46,6 +46,8 @@
         <members>FEC_UpdateCustomerContact</members>
 		<members>FEC_GetCSAttachedFile</members>
 		<members>FEC_GetCSCaseStatusService</members>
+		<members>FEC_CustomerIntegrationService</members>
+		<members>FEC_FullCustomerIntegrationJob</members>
         <name>ApexClass</name>
     </types>
     <types>
