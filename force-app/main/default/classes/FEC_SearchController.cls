@@ -97,6 +97,16 @@ public with sharing class FEC_SearchController {
         objCase.FEC_Account_or_Contract__c = rec.Id;
         update objCase;
 
+        // ===== CALL API Demographic  =====
+       System.enqueueJob(
+        new FEC_FullCustomerIntegrationJob(
+            rec.Id,      
+            cifNumber,
+            phone,
+            fieldName == 'AccountNumber' ? value : null
+        )
+    );
+
         return objCase.Id;
         } catch (Exception e) {
             throw new AuraHandledException('Line: ' + e.getLineNumber() + ' | Type: ' + e.getTypeName() + ' | Msg: ' + e.getMessage());
@@ -234,7 +244,7 @@ public with sharing class FEC_SearchController {
             throw new AuraHandledException(System.Label.FEC_Account_Card_Fetch_Error + ' [' + accountNumber + ']. ' + e.getMessage());
         }
     }
-
+    
     /**
      * Creates an Internal Case when user skips search (List View).
      * - RecordType = CASE_INTERNAL_RECORD_TYPE_DEV_NAME
