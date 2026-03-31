@@ -275,6 +275,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String STATUS_CANCELLED  = 'Cancelled';
     public static final String CODE_SUCCESS      = '1';
     public static final String CODE_FAILURE      = '3';
+    public static final String CODE_SYS_ERROR    = '0';
     public static final String ERROR_PREFIX      = 'Error: ';
     public static final String SUCCESS_MESSAGE_CANCEL_CASE = System.Label.FEC_MSG_CancelCS_Success;
     public static final String PHONE_REGEX_VN    = '^0[0-9]{9}$';
