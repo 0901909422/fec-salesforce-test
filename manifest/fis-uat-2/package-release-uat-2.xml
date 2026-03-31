@@ -1293,6 +1293,13 @@
 		<members>FEC_UpdateCustomerContact</members>
         <name>ApexClass</name>
     </types>
+	<types>
+		<members>FEC_MSG_Channel_Validation</members>
+        <members>FEC_MSG_Data_Request_Master_Data</members>
+        <members>FEC_MSG_TransactionId_Validation</members> 
+        <members>FEC_MSG_Limit_Character</members>
+		<name>CustomLabel</name>
+	</types>
 
     <version>65.0</version>
 </Package>
