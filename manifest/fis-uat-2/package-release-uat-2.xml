@@ -24,6 +24,8 @@
 		<members>FEC_GetCSMasterDataService</members>
 		<members>FEC_GetPaymentInfo</members>
 		<members>FEC_ResponseLog</members>
+		<members>FEC_PsDNBServiceCallout</members>
+		<members>FEC_GetCSAttachedFile</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -43,6 +45,7 @@
 		<members>FEC_API_Config.FEC_Get_Loan_Sec_Info</members>
 		<members>FEC_API_Config.FEC_Get_Removable_Phone_Status</members>
 		<members>FEC_API_Config.FEC_Update_Customer_Address</members>
+		<members>FEC_API_Config.FEC_Ps_DNB</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -120,6 +123,16 @@
 		<members>FEC_MSG_CancelCS_Case_Already_Closed_Or_Completed</members>
 		<members>FEC_MSG_CancelCS_Case_Already_Resolved</members>
 		<members>FEC_MSG_CancelCS_Insufficient_Permissions</members>
+		<members>FEC_CS_CASE_CHANNEL_INVALID_MSG</members>
+		<members>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</members>
+		<members>FEC_MISSING_REQUIRED_FIELDS_MSG</members>
+		<members>FEC_GET_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_REQUIRE_MSG</members>
+		<members>FEC_GET_CASE_STATUS_INCLUDE_FINISHED_REQUEST_REQUIRE_MSG</members>
+		<members>FEC_GET_CASE_STATUS_INVALID_CHANNEL_MSG</members>
+		<members>FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG</members>
+		<members>FEC_MSG_IPP_AddIpp_Default_Failed</members>
+		<members>FEC_CS_CASE_DATETIME_INVALID_MSG</members>
+		<members>FEC_MSG_Endpoint_Null</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -325,6 +338,8 @@
         <members>FEC_CommonUltils</members>
         <members>FEC_ApplicationsListController</members>
         <members>FEC_MainInfoController</members>
+		<members>FEC_CustomerIntegrationService</members>
+		<members>FEC_FullCustomerIntegrationJob</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -673,6 +688,8 @@
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_CardBlock</members>
 		<members>fecInteractionEmailInfoUbank</members>
+		<members>fec_IPPConversionRetailForm</members>
+		<members>fec_IncorrectPaymentForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -701,6 +718,8 @@
 		<members>FEC_CreateCaseInteractionController</members>
         <members>FEC_CardLockUnLockController</members>
         <members>FEC_InteractionInforHandler</members>
+        <members>FEC_IPPConversionController</members>
+        <members>FEC_IncorrectPaymentController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -940,6 +959,10 @@
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
         <name>PermissionSet</name>
     </types>
+    <types>
+		<members>ServiceResourceSkill-en_US</members>
+		<name>CustomObjectTranslation</name>
+	</types>
 
 	<!-- template management -->
 	<types>
@@ -973,8 +996,8 @@
     </types>
 	<types>
 		<members>fec_CloneLetterheadContainer</members>
-		<members>fec_EditLetterheadContainer</members>
-		<members>fec_NewLetterheadContainer</members>
+		<!--<members>fec_EditLetterheadContainer</members>
+		<members>fec_NewLetterheadContainer</members>-->
 		<name>AuraDefinitionBundle</name>
 	</types>
 	<types>
@@ -1062,6 +1085,8 @@
 		<members>FEC_Message_Content</members>
 		<members>FEC_Subject_Line</members>
 		<members>FEC_Template_Settings</members>
+		<members>FEC_Template_Body</members>
+        <members>FEC_Template_Save_And_Close</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -1071,10 +1096,10 @@
         <members>FEC_Content_History_Tracking__c</members>
 		<name>CustomObject</name>
 	</types>
-	<types>
+	<!--<types>
 		<members>FEC_Enhanced_Letterhead__c.FEC_Required_Header_Or_Footer</members>
 		<name>ValidationRule</name>
-	</types>
+	</types>-->
 	<types>
 		<members>FEC_Enhanced_Letterhead__c</members>
 		<members>Templates</members>
@@ -1256,6 +1281,24 @@
 		<members>FEC_City__c</members>
         <members>FEC_Country__c</members>
 		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>FEC_Actual_Master_Data_Setting__c.FEC_LWC_Name__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_LWC_Name__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
+		<name>CustomField</name>
+	</types>
+    <types>
+		<members>FEC_UpdateCustomerContact</members>
+        <name>ApexClass</name>
+    </types>
+	<types>
+		<members>FEC_MSG_Channel_Validation</members>
+        <members>FEC_MSG_Data_Request_Master_Data</members>
+        <members>FEC_MSG_TransactionId_Validation</members> 
+        <members>FEC_MSG_Limit_Character</members>
+		<name>CustomLabel</name>
 	</types>
 
     <version>65.0</version>

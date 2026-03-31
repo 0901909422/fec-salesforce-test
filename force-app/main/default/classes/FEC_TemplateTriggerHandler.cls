@@ -33,7 +33,7 @@ public without sharing class FEC_TemplateTriggerHandler {
      * @param newTemplates List of new Templates to be inserted
      */
     private void onBeforeInsert(List<FEC_Template__c> newTemplates) {
-        generateApiName(newTemplates);
+        // generateApiName(newTemplates);
         checkDuplicateApiName(newTemplates);
     }
 
@@ -43,23 +43,12 @@ public without sharing class FEC_TemplateTriggerHandler {
      * @param oldMap Map containing old Template values before update
      */
     private void onBeforeUpdate(List<FEC_Template__c> newTemplates, Map<Id, FEC_Template__c> oldMap) {
-        // Only re-generate API Name if Template Name has changed
-        List<FEC_Template__c> nameChanged = new List<FEC_Template__c>();
-        for (FEC_Template__c tmpl : newTemplates) {
-            FEC_Template__c oldTmpl = oldMap.get(tmpl.Id);
-            if (tmpl.Name != oldTmpl.Name) {
-                nameChanged.add(tmpl);
-            }
-        }
-        if (!nameChanged.isEmpty()) {
-            generateApiName(nameChanged);
-        }
-
+        
         // Check duplicate on all records where Name or Folder has changed
         List<FEC_Template__c> needDupCheck = new List<FEC_Template__c>();
         for (FEC_Template__c tmpl : newTemplates) {
             FEC_Template__c oldTmpl = oldMap.get(tmpl.Id);
-            if (tmpl.Name != oldTmpl.Name
+            if (tmpl.FEC_API_Name__c != oldTmpl.FEC_API_Name__c
                 || tmpl.FEC_Folder__c != oldTmpl.FEC_Folder__c) {
                 needDupCheck.add(tmpl);
             }

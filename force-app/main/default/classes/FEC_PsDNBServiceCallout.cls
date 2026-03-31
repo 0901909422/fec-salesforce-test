@@ -45,7 +45,7 @@ public with sharing class FEC_PsDNBServiceCallout {
         System.debug('FINAL endpoint = ' + endpoint);
         
         if (String.isBlank(endpoint)) {
-            throw new CalloutException('Endpoint is null or empty. Please check API configuration.');
+            throw new CalloutException(System.Label.FEC_MSG_Endpoint_Null);
         }
         
         String isoTimestamp = FEC_CommonUltils.formatISOWithTimezone(Datetime.now());
@@ -148,12 +148,12 @@ public with sharing class FEC_PsDNBServiceCallout {
             }
             
             if (r.nid != null && r.nid.length() > 255) {
-                return error('Field nid tối đa 255 ký tự');
+                return error(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Field nid', '255'}));
             }
             
             // ✅ validate max length type_value (<=40)
             if (r.type_value != null && r.type_value.length() > 40) {
-                return error('Field type_value tối đa 40 ký tự');
+                return error(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Field type_value', '40'}));
             }
         }
         

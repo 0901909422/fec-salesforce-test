@@ -5,6 +5,16 @@
         {headerLabel}
       </h2>
     </div>
+    <template if:true={showChannelWarning}>
+      <div class="slds-scoped-notification slds-media slds-media_center slds-theme_error slds-m-around_medium" role="status">
+          <div class="slds-media__figure">
+              <lightning-icon icon-name="utility:error" variant="inverse" size="small"></lightning-icon>
+          </div>
+          <div class="slds-media__body">
+              <p>{channelDisabled}</p>
+          </div>
+      </div>
+  </template>
 
     <lightning-record-edit-form object-api-name={notificationObject} record-id={recordId} onsuccess={handleSuccess}
       onsubmit={handleSubmit} onerror={handleError} record-type-id={recordTypeId}>
@@ -34,9 +44,9 @@
                 <lightning-input-field field-name={customerTypeField}></lightning-input-field>
               </template>
               <template if:true={isDisplay}>
-                <c-fec_-lookup label={FEC_Col_Channel} placeholder={placeholderSearchChannel} is-multi-select data-id="channel"
-                  object-api-name="FEC_Channel__c" required field-api-name="Name" icon-name="standard:contact"
-                  onselect={handleSelected}></c-fec_-lookup>
+                <c-fec_-lookup label={FEC_Col_Channel} placeholder={placeholderSearchChannel} is-multi-select
+                  data-id="channel" object-api-name="FEC_Channel__c" required field-api-name="Name"
+                  icon-name="standard:contact" onselect={handleSelected}></c-fec_-lookup>
               </template>
 
               <!-- <c-lwc-multi-lookup object-name="FEC_Channel__c" field-name="Name" label="Channel"></c-lwc-multi-lookup> -->
@@ -73,15 +83,15 @@
                   required></c-fec_-lookup>
               </div>
               <div class="slds-col slds-size_1-of-2 column">
-                <c-fec_-lookup label={FEC_Label_Sub_Category} placeholder={placeholderSearchSubCategory} data-id="subCategory"
-                  object-api-name="FEC_Sub_Category__c" field-api-name="Name" icon-name="standard:contact"
-                  disabled={isCategory} selected-product-type-id={selectedProductTypeId}
+                <c-fec_-lookup label={FEC_Label_Sub_Category} placeholder={placeholderSearchSubCategory}
+                  data-id="subCategory" object-api-name="FEC_Sub_Category__c" field-api-name="Name"
+                  icon-name="standard:contact" disabled={isCategory} selected-product-type-id={selectedProductTypeId}
                   selected-category-id={selectedCategoryId} onselect={handleSelected} required></c-fec_-lookup>
                 <c-fec_-lookup label={FEC_Label_Sub_Code} placeholder={placeholderSearchSubCode} data-id="subCode"
                   object-api-name="FEC_Sub_Code__c" disabled={isSubCategory}
                   selected-product-type-id={selectedProductTypeId} selected-category-id={selectedCategoryId}
-                  selected-sub-category-id={selectedSubCategoryId}
-                  field-api-name="Name" icon-name="standard:contact" onselect={handleSelected} required></c-fec_-lookup>
+                  selected-sub-category-id={selectedSubCategoryId} field-api-name="Name" icon-name="standard:contact"
+                  onselect={handleSelected}></c-fec_-lookup>
               </div>
             </div>
           </div>
@@ -120,13 +130,18 @@
               </template>
 
               <template if:true={showAssignedToQueue}>
-                <lightning-input-field field-name={assignedToQueueField}></lightning-input-field>
+                <template if:true={showAssignedToQueue}>
+                  <c-fec_-lookup label="Assigned to Queue" placeholder="Search Queue..." data-id="assignedToQueue"
+                    object-api-name="Group" field-api-name="Name" icon-name="standard:groups" onselect={handleSelected}>
+                  </c-fec_-lookup>
+                </template>
               </template>
             </div>
             <div class="slds-col slds-size_1-of-2 column">
               <template if:true={isDisplay}>
                 <lightning-input-field field-name={notificationStatusField}></lightning-input-field>
-                <lightning-input-field field-name={notificationChannelField} required></lightning-input-field>
+                <lightning-input-field field-name={notificationChannelField} required
+                  onchange={handleNotificationChannelChange}>></lightning-input-field>
               </template>
               <template if:true={showReceivers}>
                 <lightning-input-field field-name={receiversField}></lightning-input-field>

@@ -27,7 +27,7 @@ public without sharing class FEC_Notification {
     public static FEC_Notification__c getNotificationById(Id recordId) {
     try {
       FEC_Notification__c noti = [
-        SELECT Id, Name, RecordType.Name, RecordTypeId, RecordType.DeveloperName, FEC_Target_Group__c FROM FEC_Notification__c
+        SELECT Id, Name, RecordType.Name, RecordTypeId, RecordType.DeveloperName, FEC_Target_Group__c, FEC_Notification_Channel__c FROM FEC_Notification__c
         WHERE Id = :recordId
       ];
 
