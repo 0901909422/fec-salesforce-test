@@ -45,6 +45,7 @@
         <members>FEC_FolderSelector_Test</members>
         <members>FEC_FolderTriggerHandler_Test</members>
         <members>FEC_UpdateCustomerContact</members>
+		<members>FEC_GetCSAttachedFile</members>
         <name>ApexClass</name>
     </types>
     <types>

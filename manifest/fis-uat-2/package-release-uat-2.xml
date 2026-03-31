@@ -25,6 +25,7 @@
 		<members>FEC_GetPaymentInfo</members>
 		<members>FEC_ResponseLog</members>
 		<members>FEC_PsDNBServiceCallout</members>
+		<members>FEC_GetCSAttachedFile</members>
         <name>ApexClass</name>
     </types>
 	<types>
