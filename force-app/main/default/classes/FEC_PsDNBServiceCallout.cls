@@ -23,11 +23,8 @@ public with sharing class FEC_PsDNBServiceCallout {
         @AuraEnabled public String rawResponse;
         @AuraEnabled public Boolean success;
         @AuraEnabled public String errorMessage;
-        
-        // NEW (theo spec)
-        @AuraEnabled public String sys2Code;
-        @AuraEnabled public String sys2Message;
         @AuraEnabled public List<Object> resultList;
+        
     }
     
     // ================= MAIN SEND =================
@@ -35,13 +32,21 @@ public with sharing class FEC_PsDNBServiceCallout {
         
         
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
-        // ✅ dùng Named Credential
-        // String endpoint = 'callout:FECredit_Service/api/v1/do-not-bother/create-info';
+        
+        FEC_API_Config__mdt apiConfig = [
+            SELECT FEC_Endpoint__c
+            FROM FEC_API_Config__mdt
+            WHERE DeveloperName = :API_CONFIG_NAME
+            LIMIT 1
+        ];
         
         String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
             + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
+        System.debug('FINAL endpoint = ' + endpoint);
         
+        if (String.isBlank(endpoint)) {
+            throw new CalloutException('Endpoint is null or empty. Please check API configuration.');
+        }
         
         String isoTimestamp = FEC_CommonUltils.formatISOWithTimezone(Datetime.now());
         
@@ -57,20 +62,11 @@ public with sharing class FEC_PsDNBServiceCallout {
         
         HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(
             endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            headers,
-            body
-        );
-
-        responseLog = new FEC_ResponseLog(
-            API_CONFIG_NAME,
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            body,
-            res,
-            null
-        );
-
+        FEC_ConstantCommon.API_METHOD_POST,
+        headers,
+        body
+            );
+        
         return res;
     }
     
@@ -96,6 +92,8 @@ public with sharing class FEC_PsDNBServiceCallout {
         try {
             Map<String, Object> responseMap =
                 (Map<String, Object>) JSON.deserializeUntyped(jsonResponse);
+            
+            System.debug('responseMap: ' + responseMap);
             
             // ===== SYS =====
             Map<String, Object> sysMap = (Map<String, Object>) responseMap.get('sys');
@@ -144,31 +142,93 @@ public with sharing class FEC_PsDNBServiceCallout {
                 String.isBlank(r.nid) ||
                 r.do_not_bother == null ||
                 String.isBlank(r.type) ||
-                String.isBlank(r.type_value)) {
+            String.isBlank(r.type_value)) {
                 
                 return error(System.Label.FEC_MISSING_REQUIRED_FIELDS_MSG);
             }
+            
+            if (r.nid != null && r.nid.length() > 255) {
+                return error('Field nid tối đa 255 ký tự');
+            }
+            
+            // ✅ validate max length type_value (<=40)
+            if (r.type_value != null && r.type_value.length() > 40) {
+                return error('Field type_value tối đa 40 ký tự');
+            }
         }
+        
         
         try {
             HttpResponse res = sendRequest(reqList);
-            FEC_CommonUltils.logApiResponse(responseLog);
-
-            return parseResponse(res.getBody(), res.getStatusCode());
+            
+            logApiFull(
+                API_CONFIG_NAME,
+            FEC_ConstantCommon.API_METHOD_POST,
+            reqList,
+            res != null ? res.getBody() : null,
+            true,
+            String.valueOf(res != null ? res.getStatusCode() : null),
+            null,
+            null
+                );
+            
+            System.debug('HTTP Response: ' + res);
+            
+            return parseResponse(
+                res != null ? res.getBody() : null,
+            res != null ? res.getStatusCode() : 500
+                );
             
         } catch (Exception ex) {
-            HttpResponse exceptionRes = new HttpResponse();
-            exceptionRes.setStatusCode(FEC_ConstantCommon.ERROR_CODE_500_NUM);
-            exceptionRes.setBody(null);
             
-            responseLog.response = exceptionRes;
-            responseLog.errorMessage = ex.getMessage();
-
-            FEC_CommonUltils.logApiResponse(responseLog);
+            // ✅ LOG ERROR
+            logApiFull(
+                API_CONFIG_NAME,
+            FEC_ConstantCommon.API_METHOD_POST,
+            reqList,
+            null,
+            false,
+            '500',
+            ex.getMessage(),
+            null
+                );
+            
+            System.debug('ERROR: ' + ex.getMessage());
+            System.debug('STACK: ' + ex.getStackTraceString());
             
             return error(ex.getMessage());
         }
     }
+    
+    private static void logApiFull(
+        String endpoint,
+    String method,
+    Object requestObj,
+    Object responseObj,
+    Boolean isSuccess,
+    String statusCode,
+    String errorMessage,
+    String transactionId
+    ) {
+        try {
+            HttpResponse apiResponse = new HttpResponse();
+            apiResponse.setStatusCode(isSuccess ? 200 : 500);
+            apiResponse.setBody(FEC_CommonUltils.serializeSafe(responseObj));
+            
+            FEC_CommonUltils.logApi(
+                'FEC_Ps_DNB',
+            endpoint,
+            method,
+            FEC_CommonUltils.serializeSafe(requestObj),
+            apiResponse,
+            errorMessage
+                );
+            
+        } catch (Exception e) {
+            System.debug('LOG_API_ERROR: ' + e.getMessage());
+        }
+    }
+    
     
     // ================= HELPER =================
     private static DNBResult error(String msg) {

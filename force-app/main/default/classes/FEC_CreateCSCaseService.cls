@@ -617,13 +617,13 @@ public with sharing class FEC_CreateCSCaseService {
         try {
             HttpResponse apiResponse = new HttpResponse();
             apiResponse.setStatusCode(isSuccess ? 200 : 500);
-            apiResponse.setBody(serializeSafe(responseObj));
+            apiResponse.setBody(FEC_CommonUltils.serializeSafe(responseObj));
             
             FEC_CommonUltils.logApi(
                 'CreateCSCase',
             endpoint,
             method,
-            serializeSafe(requestObj),
+            FEC_CommonUltils.serializeSafe(requestObj),
             apiResponse,
             errorMessage
                 );
@@ -632,15 +632,7 @@ public with sharing class FEC_CreateCSCaseService {
             System.debug('LOG_API_ERROR: ' + e.getMessage());
         }
     }
-    
-    private static String serializeSafe(Object obj) {
-        try {
-            return obj != null ? JSON.serialize(obj) : null;
-        } catch (Exception e) {
-            return 'SERIALIZE_ERROR: ' + e.getMessage();
-        }
-    }
-    
+  
     private static String truncateLongString(String input) {
         Integer MAX_LENGTH = 30000; // adjust theo field length
         
