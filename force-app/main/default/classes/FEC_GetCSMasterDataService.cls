@@ -35,7 +35,7 @@ global with sharing class FEC_GetCSMasterDataService {
             return res;
         }
 
-        if (!String.isBlank(Sys.TransactionID) && Sys.TransactionID.length() > FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN) {
+        if (String.isBlank(Sys.TransactionID) || Sys.TransactionID.length() > FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN) {
             res.Sys.Code = '103';
             res.Sys.Description = System.Label.FEC_MSG_TransactionId_Validation + FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN + System.Label.FEC_MSG_Limit_Character;
             return res;
