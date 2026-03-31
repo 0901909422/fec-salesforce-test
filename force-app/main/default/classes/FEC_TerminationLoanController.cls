@@ -65,29 +65,28 @@ public with sharing class FEC_TerminationLoanController {
         try {
             basicRes = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(transId, requestorId, dateTimeStr, contractNumber);
         } catch (Exception e) {
-            dto.error = e.getMessage();
-            return dto;
+            System.debug('[Controller] GetLoanBasicInfo Exception: ' + e.getMessage());
         }
 
         try {
             secRes = FEC_GetLoanSecInfo.callGetLoanSecInfo(transId, requestorId, dateTimeStr, contractNumber);
         } catch (Exception e) {
-            dto.error = e.getMessage();
-            return dto;
+            System.debug('[Controller] GetLoanSecInfo Exception: ' + e.getMessage());
         }
 
-        buildEarlyTermination(result, basicRes, secRes);
-        buildOverdue(result, basicRes, secRes);
-        buildFeeChargeList(result, basicRes);
-        if (secRes?.LoanSecInfo != null) {
-            saveEarlyTerminationToRecord(caseId, secRes);
+        if (secRes != null && secRes.LoanSecInfo != null) {
+            buildEarlyTermination(result, basicRes, secRes);
         }
-        if (basicRes?.LoanBasicInfo != null) {
-            saveFeeChargeToRecord(caseId, basicRes);
+
+        if (basicRes != null && basicRes.LoanBasicInfo != null) {
+            buildOverdue(result, basicRes, secRes);
+            buildFeeChargeList(result, basicRes);
         }
+
         dto.earlyTermination = (List<Map<String, Object>>)result.get('earlyTermination');
         dto.overdue = (List<Map<String, Object>>)result.get('overdue');
         dto.feeChargeList = (List<Map<String, Object>>)result.get('feeChargeList');
+
         return dto;
     }
 
@@ -213,7 +212,7 @@ public with sharing class FEC_TerminationLoanController {
         addField(rows, System.Label.FEC_Termination_Field_Repayment_Fee_Overdue_Label, termSim?.RepaymentFeeOverdue, false);
         addField(rows, System.Label.FEC_Termination_Field_Penalty_Fee_Overdue_Label, termSim?.PenaltyFeeOverdue, false);
         addField(rows, System.Label.FEC_Termination_Field_Overdue_Penalty_Label, passDue?.OverduePenalty, false);
-
+        
         result.put('overdue', rows);
     }
 
@@ -232,7 +231,7 @@ public with sharing class FEC_TerminationLoanController {
         if (iooi != null) {
             listData.add(buildFeeRow('Interest on Overdue Interest', iooi.AssessedAmount, iooi.CollectedAmount, iooi.WaivedAmount, iooi.OutstandingAmount));
         }
-
+        
         result.put('feeChargeList', listData);
     }
 
