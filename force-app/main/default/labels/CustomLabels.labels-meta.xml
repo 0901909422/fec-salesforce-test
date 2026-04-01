@@ -9496,6 +9496,22 @@
         <value>Case not found with ID: {0}</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Case_Customer_Type_Mismatch</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case FEC_Customer_Type__c does not match expected user type</shortDescription>
+        <value>Case customer type mismatch. Expected: {0}, Found: {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Contract_Or_Account_Info_Case_Mismatch</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract or account number does not match the case</shortDescription>
+        <value>Contract or Account information does not match the case</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_CancelCS_Case_Already_Closed_Or_Completed</fullName>
         <categories>API</categories>
         <language>en_US</language>

@@ -166,7 +166,7 @@ global with sharing class FEC_GetCSAttachedFile {
             
             if (targetCase.FEC_Customer_Type__c != expectedCustomerType) {
                 throw new ServiceException(String.format(
-                    'Case customer type mismatch. Expected: {0}, Found: {1}',
+                    System.Label.FEC_MSG_Case_Customer_Type_Mismatch,
                     new List<String>{expectedCustomerType, String.valueOf(targetCase.FEC_Customer_Type__c)}
                 ));
             }
@@ -186,7 +186,7 @@ global with sharing class FEC_GetCSAttachedFile {
             }
             
             if (!isMatch) {
-                throw new ServiceException('Contract or Account information does not match the case');
+                throw new ServiceException(System.Label.FEC_MSG_Contract_Or_Account_Info_Case_Mismatch);
             }
         }
     }
