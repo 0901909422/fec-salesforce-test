@@ -32,13 +32,7 @@ public with sharing class FEC_PsDNBServiceCallout {
         
         
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        
-        FEC_API_Config__mdt apiConfig = [
-            SELECT FEC_Endpoint__c
-            FROM FEC_API_Config__mdt
-            WHERE DeveloperName = :API_CONFIG_NAME
-            LIMIT 1
-        ];
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
         
         String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
             + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
