@@ -205,7 +205,7 @@ public with sharing class FEC_GetLoanBasicInfo {
             if (responseLog != null) {
                 responseLog.errorMessage = ex.getMessage();
             }
-            System.debug('### GET LOAN BASIC INFO ERROR: ' + ex.getMessage());
+            // System.debug('### GET LOAN BASIC INFO ERROR: ' + ex.getMessage());
             throw ex;
         }
     }

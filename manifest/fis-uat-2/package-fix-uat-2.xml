@@ -51,6 +51,9 @@
 		<members>FEC_GetLoanApplicationHistory</members>
 		<members>FEC_CaseEditNOCController</members>
 		<members>FEC_GetAssetsList</members>
+		<members>FEC_GetLoanBasicInfo</members>
+		<members>FEC_GetLoanSecInfo</members>
+		<members>FEC_MainInfoAccountController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -84,6 +87,8 @@
 		<members>fec_folderEditor</members>
 		<members>customDblclickCell</members>
 		<members>maskedToggleDatatable</members>
+		<members>fec_CommonRecordDetailSection</members>
+		<members>fec_InteractionCreateCase</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -186,10 +191,56 @@
         <members>FEC_MSG_IPP_No_Eligible_Transactions</members>
         <members>FEC_MSG_IPP_Conversion_Success</members>
         <members>FEC_MSG_IPP_Conversion_Fail_Disable</members>
+        <members>FEC_MSG_GetCSAttached_FileID_Invalid</members>
+        <members>FEC_MSG_GetCSAttached_File_No_Content</members>
+        <members>FEC_MSG_GetCSAttached_File_Not_Linked_To_Case</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
-		<members>RD_IT_User_Master_Data_Management</members>
+        <members>FEC_CS_CS_Ecom_Officer_Customer_360</members>
+		<members>FEC_CS_CS_Ecom_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Ecom_Team_Leader_Customer_360</members>
+		<members>FEC_CS_CS_Inbound_Officer_Customer_360</members>
+		<members>FEC_CS_CS_Inbound_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Inbound_Team_Leader_Customer_360</members>
+		<members>FEC_CS_CS_Operations_Management_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Operations_Manager_Customer_360</members>
+		<members>FEC_CS_CS_Outbound_Officer_Customer_360</members>
+		<members>FEC_CS_CS_Outbound_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Outbound_Team_Leader_Customer_360</members>
+		<members>FEC_CS_CS_Quality_Control_Manager_Customer_360</members>
+		<members>FEC_CS_CS_Quality_Control_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Support_Manager_Customer_360</members>
+		<members>FEC_CS_CS_Support_Specialist_Customer_360</members>
+		<members>FEC_CS_Card_Risk_Monitoring_Specialist_Customer_360</members>
+		<members>FEC_CS_Center_Director_Customer_360</members>
+		<members>FEC_CS_Customer_Care_Manager_Customer_360</members>
+		<members>FEC_CS_Customer_Care_Specialist_Customer_360</members>
+		<members>FEC_CS_Customer_Experience_Manager_1_Customer_360</members>
+		<members>FEC_CS_Customer_Experience_Manager_2_Customer_360</members>
+		<members>FEC_CS_Customer_Experience_Manager_3_Customer_360</members>
+		<members>FEC_CS_Head_of_CS_Contact_Center_Dept_Customer_360</members>
+		<members>FEC_CS_Head_of_CS_QC_OM_Dept_Customer_360</members>
+		<members>FEC_CS_Head_of_Customer_Care_Dept_Customer_360</members>
+		<members>FEC_CS_Office_Based_Team_Leader_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Ecom_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Inbound_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Operations_Management_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Outbound_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Quality_Control_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Support_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_Card_Risk_Monitoring_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_Customer_Care_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_Office_Based_Specialist_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Ecom_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Inbound_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Operations_Management_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Outbound_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Quality_Control_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Support_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_Customer_Care_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_Office_Based_Customer_360</members>
+		<members>RD_IT_User_Customer_360</members>
         <members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Ecom_Team_Leader_Interaction_Case_Service_Case</members>
@@ -278,6 +329,8 @@
 		<members>FEC_CS_Unit_Head_of_Customer_Care_Master_Data_Management</members>
 		<members>FEC_CS_Unit_Head_of_Office_Based_Master_Data_Management</members>
 		<members>RD_IT_User_Master_Data_Management</members>
+		<members>RD_IT_User_System_Management</members>
+        <members>FEC_Common_System_Setting</members>
 		<name>PermissionSet</name>
 	</types>
     <types>
@@ -290,13 +343,16 @@
     </types>
     <types>
 		<members>ServiceResourceSkill</members>
-		<members>FEC_City__c</members>
-        <members>FEC_Country__c</members>
+		<members>FEC_Country__c</members>
+		<members>FEC_District__c</members>
+		<members>FEC_Province__c</members>
+		<members>FEC_Ward__c</members>
         <members>FEC_Service_Resource_Absence__c</members>
         <members>ServiceResource</members>
         <members>FEC_Template__c</members>
         <members>FEC_Folder__c</members>
         <members>FEC_Enhanced_Letterhead__c</members>
+        <members>FEC_Case_Status__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -316,6 +372,8 @@
 		<members>Case.FEC_Bill_Date__c</members>
 		<members>Case.FEC_Incorrect_Contract_Number__c</members>
 		<members>Case.FEC_Payment_Method__c</members>
+		<members>Case.FEC_New_Block_Code__c</members>
+		<members>Case.FEC_Card_Block_Reason__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
