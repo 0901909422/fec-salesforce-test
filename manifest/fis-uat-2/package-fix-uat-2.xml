@@ -89,6 +89,7 @@
 		<members>customDblclickCell</members>
 		<members>maskedToggleDatatable</members>
 		<members>fec_CommonRecordDetailSection</members>
+		<members>fec_InteractionCreateCase</members>
 		<members>fec_CaseNote</members>
 		<members>fec_NewNoteModal</members>
         <name>LightningComponentBundle</name>
@@ -378,7 +379,11 @@
 		<members>Case.FEC_Payment_Method__c</members>
 		<members>Case.FEC_New_Block_Code__c</members>
 		<members>Case.FEC_Card_Block_Reason__c</members>
+<<<<<<< manifest/fis-uat-2/package-fix-uat-2.xml
         <members>Case.FEC_Is_MyCaseAPI_Interaction__c</members>
+=======
+        <members>FEC_Notification__c.FEC_Notification_Template__c</members>
+>>>>>>> manifest/fis-uat-2/package-fix-uat-2.xml
 		<name>CustomField</name>
 	</types>
 	<types>

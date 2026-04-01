@@ -118,7 +118,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   selectedSubCodeId = null;
 
-  selectedNotificationTemplateId = null;
+  //selectedNotificationTemplateId = null;
 
   selectedAssignedToQueueId = null;
 
@@ -193,9 +193,9 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
       case SUB_CODE_OBJECT:
         this.selectedSubCodeId = joined || null;
         break;
-      case 'EmailTemplate':
-        this.selectedNotificationTemplateId = joined || null;
-        break;
+      // case 'EmailTemplate':
+      //   this.selectedNotificationTemplateId = joined || null;
+      //   break;
       default:
         // no-op
         break;
@@ -367,7 +367,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     fields[CATEGORY_FIELD.fieldApiName] = this.selectedCategoryId || fields[CATEGORY_FIELD.fieldApiName];
     fields[SUB_CATEGORY_FIELD.fieldApiName] = this.selectedSubCategoryId;
     fields[SUB_CODE_FIELD.fieldApiName] = this.selectedSubCodeId;
-    fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName] = this.selectedNotificationTemplateId || fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName];
+    //fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName] = this.selectedNotificationTemplateId || fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName];
     if (this.selectedCurrentStatusCsv !== undefined) {
       fields[CURRENT_STATUS_FIELD.fieldApiName] = this.selectedCurrentStatusCsv;
     }
@@ -499,7 +499,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     this.selectedCategoryId = null;
     this.selectedSubCategoryId = null;
     this.selectedSubCodeId = null;
-    this.selectedNotificationTemplateId = null;
+    //this.selectedNotificationTemplateId = null;
     this.selectedAssignedToQueueId = null;
     this.selectedCurrentStatusCsv = undefined;
     this.selectedChangedStatusCsv = undefined;
