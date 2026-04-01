@@ -182,6 +182,10 @@
         <members>FEC_MSG_Create_Customer_History_Success</members>
         <members>FEC_MSG_Case_Customer_Type_Mismatch</members>
         <members>FEC_MSG_Contract_Or_Account_Info_Case_Mismatch</members>
+        <members>FEC_MSG_IPP_Conversion_Fail_Retry</members>
+        <members>FEC_MSG_IPP_No_Eligible_Transactions</members>
+        <members>FEC_MSG_IPP_Conversion_Success</members>
+        <members>FEC_MSG_IPP_Conversion_Fail_Disable</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
