@@ -48,6 +48,7 @@
 		<members>FEC_GetCSCaseStatusService</members>
 		<members>FEC_CustomerIntegrationService</members>
 		<members>FEC_FullCustomerIntegrationJob</members>
+		<members>FEC_GetLoanApplicationHistory</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -78,6 +79,8 @@
 		<members>fec_IPPClosureForm</members>
 		<members>fec_MergeFieldPicker</members>
 		<members>fec_folderEditor</members>
+		<members>customDblclickCell</members>
+		<members>maskedToggleDatatable</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -166,6 +169,7 @@
 		<members>FEC_MSG_IPP_AddIpp_Default_Failed</members>
         <members>FEC_CS_CASE_DATETIME_INVALID_MSG</members>
 		<members>FEC_MSG_Endpoint_Null</members>
+        <members>FEC_MSG_Create_Customer_History_Success</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -300,6 +304,10 @@
     <types>
 		<members>ServiceResourceSkill-en_US</members>
 		<name>CustomObjectTranslation</name>
+	</types>
+	<types>
+		<members>Case</members>
+		<name>Settings</name>
 	</types>
     <version>65.0</version>
 </Package>
