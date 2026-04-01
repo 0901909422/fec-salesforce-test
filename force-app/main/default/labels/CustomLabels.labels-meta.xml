@@ -11249,4 +11249,12 @@
         <shortDescription>MSG Endpoint Null</shortDescription>
         <value>Endpoint is null or empty. Please check API configuration.</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Customer_History_Success</fullName>
+        <categories>Customer History</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Customer History Success</shortDescription>
+        <value>Create Customer History Successfully</value>
+    </labels>
 </CustomLabels>
