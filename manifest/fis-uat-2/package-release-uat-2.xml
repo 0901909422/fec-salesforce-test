@@ -690,6 +690,7 @@
 		<members>fecInteractionEmailInfoUbank</members>
 		<members>fec_IPPConversionRetailForm</members>
 		<members>fec_IncorrectPaymentForm</members>
+        <members>fec_RemovePhoneForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -720,6 +721,7 @@
         <members>FEC_InteractionInforHandler</members>
         <members>FEC_IPPConversionController</members>
         <members>FEC_IncorrectPaymentController</members>
+        <members>FEC_RemovePhoneController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1299,6 +1301,15 @@
         <members>FEC_MSG_TransactionId_Validation</members> 
         <members>FEC_MSG_Limit_Character</members>
         <members>FEC_MSG_Create_Customer_History_Success</members>
+        <members>FEC_MSG_Case_Customer_Type_Mismatch</members>
+        <members>FEC_MSG_Contract_Or_Account_Info_Case_Mismatch</members>
+		<members>FEC_MSG_Remove_Phone_Invalid_Format</members>
+        <members>FEC_MSG_Remove_Phone_Service_Failed</members>
+        <members>FEC_LBL_Remove_Phone_Phone_Type</members>
+        <members>FEC_LBL_Remove_Phone_Removable</members>
+        <members>FEC_LBL_Remove_Phone_Section_Title</members>
+        <members>FEC_LBL_Remove_Phone_Input_Label</members>
+        <members>FEC_Btn_Remove_Phone_Check_Eligibility</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

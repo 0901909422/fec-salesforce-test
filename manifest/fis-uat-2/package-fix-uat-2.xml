@@ -34,9 +34,7 @@
 		<members>FEC_IncorrectPaymentController</members>
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_PsDNBServiceCallout</members>
-        <members>FEC_CaseBusinessService</members>
         <members>FEC_Notification</members>
-		<members>FEC_PsDNBServiceCallout</members>
 		<members>FEC_InteractionSLAController</members>
         <members>FEC_LookupController</members>
 		<members>FEC_CreateCaseHandler</members>
@@ -46,9 +44,13 @@
         <members>FEC_UpdateCustomerContact</members>
 		<members>FEC_GetCSAttachedFile</members>
 		<members>FEC_GetCSCaseStatusService</members>
+        <members>FEC_RemovePhoneController</members>
 		<members>FEC_CustomerIntegrationService</members>
 		<members>FEC_FullCustomerIntegrationJob</members>
+        <members>FEC_CreateCaseInteractionController</members>
 		<members>FEC_GetLoanApplicationHistory</members>
+		<members>FEC_CaseEditNOCController</members>
+		<members>FEC_GetAssetsList</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -77,6 +79,7 @@
 		<members>fec_searchableCombobox</members>
 		<members>fec_templateManagementConsole</members>
 		<members>fec_IPPClosureForm</members>
+        <members>fec_RemovePhoneForm</members>
 		<members>fec_MergeFieldPicker</members>
 		<members>fec_folderEditor</members>
 		<members>customDblclickCell</members>
@@ -166,10 +169,19 @@
 		<members>FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG</members>
 		<members>FEC_Template_Management_Title</members>
 		<members>FEC_Template_Required_Fields_Msg</members>
+        <members>FEC_MSG_Remove_Phone_Invalid_Format</members>
+        <members>FEC_MSG_Remove_Phone_Service_Failed</members>
+        <members>FEC_LBL_Remove_Phone_Phone_Type</members>
+        <members>FEC_LBL_Remove_Phone_Removable</members>
+        <members>FEC_LBL_Remove_Phone_Section_Title</members>
+        <members>FEC_LBL_Remove_Phone_Input_Label</members>
+        <members>FEC_Btn_Remove_Phone_Check_Eligibility</members>
 		<members>FEC_MSG_IPP_AddIpp_Default_Failed</members>
         <members>FEC_CS_CASE_DATETIME_INVALID_MSG</members>
 		<members>FEC_MSG_Endpoint_Null</members>
         <members>FEC_MSG_Create_Customer_History_Success</members>
+        <members>FEC_MSG_Case_Customer_Type_Mismatch</members>
+        <members>FEC_MSG_Contract_Or_Account_Info_Case_Mismatch</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -295,6 +307,11 @@
         <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
         <members>FEC_Notification__c.FEC_Receivers__c</members>
 		<members>Case.FEC_Account_Contract_Number_PL__c</members>
+        <members>Case.FEC_Adjusted_Amount__c</members>
+		<members>Case.FEC_Bill_Amount__c</members>
+		<members>Case.FEC_Bill_Date__c</members>
+		<members>Case.FEC_Incorrect_Contract_Number__c</members>
+		<members>Case.FEC_Payment_Method__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>

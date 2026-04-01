@@ -25,7 +25,7 @@ import {
   isOnlyNumber
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY, ICON_HIDE, ICON_PREVIEW } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -183,6 +183,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_CardBlock: () => import('c/fec_CardBlock'),
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
+  fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
 };
 
 export default class Fec_CaseBussiness extends LightningElement {
@@ -675,6 +676,9 @@ export default class Fec_CaseBussiness extends LightningElement {
                 if (field.value == null || field.value === undefined) {
                   field.value = STR_EMPTY;
                 }
+               if (field.apiName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
+                  field.isInternalRequest = field.value === INTERNAL_REQUEST;
+                }
 
                 field.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[field.layout] || SLDS_MEDIUM_SIZE_OF_12[12]);
                 if(field.hidden) {
@@ -950,6 +954,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     if (field) {
       field.value = value;
+      if (fieldName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
+        field.isInternalRequest = value === INTERNAL_REQUEST;
+      }
       if (field.isDate) {
         field.displayValue = formatToDDMMYYYY(value);
       }
