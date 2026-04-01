@@ -52,6 +52,7 @@
         <members>FEC_CreateCaseInteractionController</members>
 		<members>FEC_GetLoanApplicationHistory</members>
 		<members>FEC_CaseEditNOCController</members>
+		<members>FEC_GetAssetsList</members>
         <name>ApexClass</name>
     </types>
     <types>
