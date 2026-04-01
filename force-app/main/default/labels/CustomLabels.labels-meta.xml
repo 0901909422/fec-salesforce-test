@@ -11004,7 +11004,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Limit Character</shortDescription>
-        <value>characters.</value>
+        <value>&quot; characters.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_TransactionId_Validation</fullName>
@@ -11012,7 +11012,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG TransactionId Validation</shortDescription>
-        <value>TransactionID exceeds maximum length of</value>
+        <value>TransactionID null or exceeds maximum length of &quot;</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Incorrect_Payment_Form_Title</fullName>
@@ -11248,5 +11248,13 @@
         <protected>false</protected>
         <shortDescription>MSG Endpoint Null</shortDescription>
         <value>Endpoint is null or empty. Please check API configuration.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Customer_History_Success</fullName>
+        <categories>Customer History</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Customer History Success</shortDescription>
+        <value>Create Customer History Successfully</value>
     </labels>
 </CustomLabels>

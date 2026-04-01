@@ -25,7 +25,8 @@ import FEC_PHONE_IS_REQUIRED_MSG from "@salesforce/label/c.FEC_PHONE_IS_REQUIRED
 import FEC_PHONE_IS_INVALID_FORMAT_1_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_1_MSG";
 import FEC_PHONE_IS_INVALID_FORMAT_2_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_2_MSG";
 import FEC_PHONE_IS_INVALID_FORMAT_3_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_3_MSG";
-
+import FEC_OUTCOME_CODE_LABEL from "@salesforce/label/c.FEC_Outcome_Code_Label";
+import FEC_REMARKS_LABEL from "@salesforce/label/c.FEC_Interaction_Remark_Label";
 import { formatDateTime } from "c/fec_CommonUtils";
 
 import {
@@ -42,6 +43,8 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
     interactionCreatedOn: FEC_INTERACTION_CREATED_ON_LABEL,
     interactionCreatedBy: FEC_INTERACTION_CREATED_BY_LABEL,
     interactionInformation: FEC_Interaction_Information_Label,
+    outcomeCode: FEC_OUTCOME_CODE_LABEL,
+    remarks: FEC_REMARKS_LABEL,
   };
   // ================= API =================
   @api recordId;
@@ -186,6 +189,14 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
 
   get createdBy() {
     return this.record?.FEC_Created_by__c;
+  }
+
+  get outcomeCode() {
+    return this.record?.FEC_Outcome_Code__c;
+  }
+
+  get interactionRemark() {
+    return this.record?.FEC_Interaction_Remarks__c;
   }
 
   // ================= PHONE ACTIONS =================

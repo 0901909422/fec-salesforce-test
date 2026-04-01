@@ -1,11 +1,22 @@
 import { LightningElement, api } from 'lwc';
 
 export default class CustomDblclickCell extends LightningElement {
-    @api value; // e.g., AccountNumber / ContractNumber / UserId
+    @api value;
     @api fieldName;
     @api selectedType;
+    @api isExpanded = false;
+
+    // Single click → toggle Application History
+    handleClick(event) {
+        this.dispatchEvent(new CustomEvent('showhistory', {
+            detail: { value: this.value, fieldName: this.fieldName },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    // Double click → create history (navigate to case)
     handleDblClick(event) {
-        // Mimic lightning-datatable rowaction payload so parent handler continues to work
         const detail = {
             action: {
                 name: 'create_history',
