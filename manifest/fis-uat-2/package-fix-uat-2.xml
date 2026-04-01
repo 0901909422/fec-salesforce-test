@@ -54,6 +54,7 @@
 		<members>FEC_GetLoanBasicInfo</members>
 		<members>FEC_GetLoanSecInfo</members>
 		<members>FEC_MainInfoAccountController</members>
+		<members>FEC_CaseRelatedNoteHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -88,6 +89,8 @@
 		<members>customDblclickCell</members>
 		<members>maskedToggleDatatable</members>
 		<members>fec_CommonRecordDetailSection</members>
+		<members>fec_CaseNote</members>
+		<members>fec_NewNoteModal</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -98,6 +101,8 @@
 		<members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Notification_Record_Page_Auto</members>
 		<members>FEC_Notification_Record_Page_Manual</members>
+		<members>FEC_Customer_Case_Record_Page</members>
+		<members>FEC_Interaction_Case_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
