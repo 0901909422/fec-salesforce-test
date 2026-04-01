@@ -35,6 +35,9 @@ export default class Fec_CardInfo extends LightningElement {
     subscription = null;
     channelName = '/event/FEC_Card_Info_Refresh__e';
     
+    /** Empty state khi API OK nhưng không có dòng (Card Delivery / Other Card) */
+    noDataLabel = 'No data';
+
     customLabel = {
         cardDeliveryLabel: FEC_Card_Delivery_Label,
         otherCardLabel: FEC_Other_Card_Label
@@ -271,13 +274,29 @@ export default class Fec_CardInfo extends LightningElement {
             : 'slds-accordion__content slds-hide';
     }
 
-    // Chỉ hiển thị bảng khi có dữ liệu (không hiển thị "No data" ở body)
     get hasCardDeliveryData() {
         return Array.isArray(this.cardDeliveryData) && this.cardDeliveryData.length > 0;
     }
 
+    /** API thành công, không lỗi, nhưng không có dòng dữ liệu — hiển thị empty state */
+    get showCardDeliveryNoData() {
+        return (
+            !this.isCardDeliveryLoading &&
+            !this.hasCardDeliveryError &&
+            !this.hasCardDeliveryData
+        );
+    }
+
     get hasOtherCardData() {
         return Array.isArray(this.otherCardData) && this.otherCardData.length > 0;
+    }
+
+    get showOtherCardNoData() {
+        return (
+            !this.isOtherCardLoading &&
+            !this.hasOtherCardError &&
+            !this.hasOtherCardData
+        );
     }
 
     // Hide row number for Card Delivery
