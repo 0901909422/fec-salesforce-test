@@ -8,6 +8,6 @@
     <columns>IsActive</columns>
     <columns>LastModifiedBy</columns>
     <columns>LastModifiedDate</columns>
-    <filterScope>Mine</filterScope>
+    <filterScope>Everything</filterScope>
     <label>All Service Resource</label>
 </ListView>

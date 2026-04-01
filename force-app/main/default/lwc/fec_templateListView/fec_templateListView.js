@@ -161,11 +161,23 @@ export default class Fec_templateListView extends LightningElement {
                 wrapText: true,
                 typeAttributes: {
                     label: { fieldName: 'name' },
-                    rowId: { fieldName: 'id' }
+                    rowId: { fieldName: 'id' },
+                    columnName: 'templateName'
                 }
             },
             { label: FEC_Col_Description,        fieldName: 'description',       type: 'text',  sortable: false, wrapText: true },
-            { label: FEC_Col_Folder,             fieldName: 'folderName',        type: 'text',  sortable: true, wrapText: true },
+            {
+                label: FEC_Col_Folder,
+                fieldName: 'folderName',
+                type: 'nameLink',
+                sortable: true,
+                wrapText: true,
+                typeAttributes: {
+                    label: { fieldName: 'folderName' },
+                    rowId: { fieldName: 'folderId' },
+                    columnName: 'folder'
+                }
+            },
             { label: FEC_Col_Last_Modified_By,   fieldName: 'lastModifiedByUrl', type: 'url',   sortable: true, wrapText: true,
                 typeAttributes: {
                     label: { fieldName: 'lastModifiedBy' },
@@ -208,13 +220,22 @@ export default class Fec_templateListView extends LightningElement {
 
     /**
      * Name-link click handler (custom nameLink column type).
-     * Dispatches viewtemplate event to navigate to detail page.
+     * Routes to the correct event based on which column was clicked.
      */
     handleNameLinkClick(event) {
-        const rowId = event.detail.rowId;
-        this.dispatchEvent(new CustomEvent('viewtemplate', {
-            detail: { recordId: rowId }
-        }));
+        const { rowId, columnName } = event.detail;
+
+        if (columnName === 'folder') {
+            /* Folder link → navigate to All Folders tab with this folder selected */
+            this.dispatchEvent(new CustomEvent('viewfolder', {
+                detail: { folderId: rowId }
+            }));
+        } else {
+            /* Template Name link → navigate to detail page */
+            this.dispatchEvent(new CustomEvent('viewtemplate', {
+                detail: { recordId: rowId }
+            }));
+        }
     }
 
     /**
@@ -334,6 +355,7 @@ export default class Fec_templateListView extends LightningElement {
             id:               rec.Id,
             name:             rec.Name || '',
             description:      rec.FEC_Description__c || '',
+            folderId:         rec.FEC_Folder__c || '',
             folderName:       rec.FEC_Folder__r ? rec.FEC_Folder__r.Name : '',
             lastModifiedBy:   rec.LastModifiedBy ? rec.LastModifiedBy.Name : '',
             lastModifiedByUrl: rec.LastModifiedById ? `/lightning/r/User/${rec.LastModifiedById}/view` : '',

@@ -64,6 +64,8 @@
         <members>FEC_SecondaryInfoLoanAccountController</members>
         <members>FEC_TerminationLoanController</members>
         <members>FEC_CommonUltils</members>
+         <members>FEC_CustomerIntegrationService</members>
+          <members>FEC_FullCustomerIntegrationJob</members>
         <name>ApexClass</name>
     </types>
     <types>

@@ -372,7 +372,7 @@ public with sharing class FEC_GetAssetsList {
 
     // Query for the Case to get the Contract Number
     List<Case> cases = [
-      SELECT Id, FEC_Contract_Number__c
+      SELECT Id, FEC_Contract_Number__c, FEC_Search_Contract_Number__c 
       FROM Case
       WHERE Id = :caseId
     ];
@@ -386,7 +386,7 @@ public with sharing class FEC_GetAssetsList {
       );
     }
 
-    if (String.isBlank(cases[0].FEC_Contract_Number__c)) {
+    if (String.isBlank(cases[0].FEC_Contract_Number__c) && String.isBlank(cases[0].FEC_Search_Contract_Number__c)) {
       throw new AuraHandledException(
         String.format(
           System.Label.FEC_MSG_Invalid,
@@ -397,7 +397,14 @@ public with sharing class FEC_GetAssetsList {
 
     // Call the API
     AssetsListRequest req = new AssetsListRequest();
-    req.ContractNumber = cases[0].FEC_Contract_Number__c;
+    String contractNumber = cases[0].FEC_Contract_Number__c;
+
+    if (String.isBlank(contractNumber)) {
+        contractNumber = cases[0].FEC_Search_Contract_Number__c;
+    }
+    
+    req.ContractNumber = contractNumber != null ? contractNumber.trim() : null;
+    
     AssetsListResult response = getAssetsList(req);
 
     if (

@@ -624,12 +624,12 @@
         if (window._fecQuill) window._fecQuill.root.innerHTML = this.cleanBody(updated);
     },
 
-    doSendEmail: function(component, tags, subject, body, attachments) {
-        var action = component.get('c.sendEmail');
+    doSendEmail: function(component, toEmail, subject, body, attachments) {
+        var action = component.get('c.sendEmailV2');
         action.setParams({
             caseId: component.get('v.recordId'),
             fromEmail: component.get('v.fromEmail'),
-            toEmail: tags.join(','),
+            toEmail: toEmail,
             ccEmail: component.get('v.ccEmail') || null,
             subject: subject,
             body: body,
@@ -639,9 +639,13 @@
         action.setCallback(this, function(response) {
             component.set('v.isSending', false);
             var state = response.getState();
+            console.log('sendEmail state:', state, response.getError());
             if (state === 'SUCCESS') {
                 // Reset compose
                 component.set('v.showCompose', false);
+                var sentSubject = subject;
+                var sentTo = toEmail;
+                var sentFrom = component.get('v.fromEmail');
                 component.set('v.subject', '');
                 component.set('v.body', '');
                 component.set('v.ccEmail', '');
@@ -649,6 +653,29 @@
                 component.set('v.toInput', '');
                 component.set('v.attachments', []);
                 if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
+
+                // Thêm email vừa gửi vào feed ngay lập tức
+                var now = new Date();
+                var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                var h = now.getHours(), min = now.getMinutes(), ampm = h >= 12 ? 'pm' : 'am';
+                var h12 = h % 12 || 12, minStr = min < 10 ? '0' + min : min;
+                var ds = now.getDate() + ' ' + MONTHS[now.getMonth()] + ' ' + now.getFullYear() + ' at ' + h12 + ':' + minStr + ' ' + ampm;
+                var sentItem = {
+                    Id: 'sent_' + now.getTime(),
+                    fromName: sentFrom,
+                    toAddress: sentTo,
+                    ccAddress: component.get('v.ccEmail') || '',
+                    subject: sentSubject,
+                    subjectPreview: sentSubject,
+                    bodyFull: body.replace(/<[^>]+>/g, ''),
+                    messageDate: ds,
+                    messageRawDate: now.toISOString(),
+                    expanded: false,
+                    showDD: false
+                };
+                var currentList = component.get('v.emailList') || [];
+                component.set('v.emailList', [sentItem].concat(currentList));
+
                 // Toast success
                 try {
                     var toast = $A.get('e.force:showToast');

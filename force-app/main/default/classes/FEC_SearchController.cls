@@ -73,6 +73,7 @@ public with sharing class FEC_SearchController {
         objCase.FEC_Search_Products__c = searchProducts;
         objCase.FEC_Product_Type__c = productTypeId;
         objCase.FEC_Customer_Name__c = customerName;
+        objCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
         if (fieldName == 'AccountNumber') {
             objCase.FEC_Account_Number__c = value;
         }
@@ -89,6 +90,7 @@ public with sharing class FEC_SearchController {
         rec.Name = value;
         rec.FEC_CIF_Number__c = cifNumber;
         rec.FEC_Work_Phone__c = phone;
+        rec.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_EXISTING_CUSTOMER;
         rec.FEC_Case__c = objCase.Id; // Gán ID vừa tạo/update vào trường bắt buộc
 
         insert rec;
@@ -97,9 +99,45 @@ public with sharing class FEC_SearchController {
         objCase.FEC_Account_or_Contract__c = rec.Id;
         update objCase;
 
+        // ===== CALL API Demographic  =====
+       System.enqueueJob(
+        new FEC_FullCustomerIntegrationJob(
+            rec.Id,      
+            cifNumber,
+            phone,
+            fieldName == 'AccountNumber' ? value : null
+        )
+    );
+
         return objCase.Id;
         } catch (Exception e) {
             throw new AuraHandledException('Line: ' + e.getLineNumber() + ' | Type: ' + e.getTypeName() + ' | Msg: ' + e.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static List<Map<String, String>> getApplicationHistory(String applicationId) {
+        if (String.isBlank(applicationId)) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Application ID'}));
+        }
+        try {
+            FEC_GetLoanApplicationHistory.LoanApplicationHistoryRequest req = new FEC_GetLoanApplicationHistory.LoanApplicationHistoryRequest();
+            req.applicationId = applicationId;
+            FEC_GetLoanApplicationHistory.LoanApplicationHistoryResult res = FEC_GetLoanApplicationHistory.getLoanApplicationHistory(req);
+            List<Map<String, String>> rows = new List<Map<String, String>>();
+            if (res != null && res.success && res.histories != null) {
+                for (FEC_GetLoanApplicationHistory.ApplicationHistory h : res.histories) {
+                    rows.add(new Map<String, String>{
+                        'user'     => h.userName,
+                        'activity' => h.activityName,
+                        'status'   => h.statusId,
+                        'editDate' => h.editDate
+                    });
+                }
+            }
+            return rows;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
         }
     }
 
@@ -232,6 +270,37 @@ public with sharing class FEC_SearchController {
         } catch (Exception e) {
             // Log error and pass to the UI
             throw new AuraHandledException(System.Label.FEC_Account_Card_Fetch_Error + ' [' + accountNumber + ']. ' + e.getMessage());
+        }
+    }
+    
+    /**
+     * Creates an Internal Case when user skips search (List View).
+     * - RecordType = CASE_INTERNAL_RECORD_TYPE_DEV_NAME
+     * - FEC_Account_or_Contract__c = 'internal request'
+     * @return Id The newly created Case Id
+    */
+    @AuraEnabled
+    public static Id createInternalCaseOnSkip() {
+        try {
+            Id recordTypeId = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME);
+
+            Case c = new Case();
+            c.RecordTypeId = recordTypeId;
+            c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
+            c.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.CASE_INTERNAL_REQUEST;
+            c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+            c.FEC_Skip_Search_Internal_Case__c = true;
+
+            insert c;
+
+            return c.Id;
+
+        } catch (Exception e) {
+            throw new AuraHandledException(
+                'Line: ' + e.getLineNumber() +
+                ' | Type: ' + e.getTypeName() +
+                ' | Msg: ' + e.getMessage()
+            );
         }
     }
 }
