@@ -133,10 +133,6 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CreateCaseHanlder</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
         <apexClass>FEC_CreateCaseInteractionController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
