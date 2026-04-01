@@ -257,19 +257,11 @@ public with sharing class FEC_UpdateCustomerContact {
     if (String.isBlank(req.CommunicationType)) {
       throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CommunicationType'}));
     } else {
-      Set<String> validTypelst = new Set<String>{ FEC_ConstantCommon.PRIMARY_PHONE, FEC_ConstantCommon.EMAIL };
-
-      if (!validTypelst.contains(req.CommunicationType)) {
-        throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'CommunicationType'}));
-      }
-
+      Boolean isEmailCommType = FEC_ConstantCommon.EMAIL.equals(req.CommunicationType);
       if (
-        (FEC_ConstantCommon.PRIMARY_PHONE.equals(req.CommunicationType) &&
-        !(FEC_CommonUltils.isPhone(req.ContactString)) ||
-        (FEC_ConstantCommon.EMAIL.equals(req.CommunicationType) &&
-        !FEC_CommonUltils.isMail(req.ContactString)))
+        (isEmailCommType && !FEC_CommonUltils.isMail(req.ContactString)) ||
+        (!isEmailCommType && !FEC_CommonUltils.isPhone(req.ContactString))
       ) {
-        // valid
         throw new FEC_APIServiceException(
           String.format(System.Label.FEC_MSG_Invalid, new List<String>{'ContactString'})
         );
@@ -286,6 +278,8 @@ public with sharing class FEC_UpdateCustomerContact {
         FEC_Updated_Info_Phone_Number__c,
         FEC_Updated_Info_Email__c,
         FEC_Account_or_Contract__r.FEC_CIF_Number__c,
+        FEC_Account_or_Contract__r.FEC_Email__c,
+        FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
         FEC_Process_Action_Count__c,
         FEC_Current_Case_Stage__c,
         FEC_Current_Case_Stage__r.Name
@@ -301,23 +295,26 @@ public with sharing class FEC_UpdateCustomerContact {
     CustomerContactRequest req = new CustomerContactRequest();
     req.CIFNumber = selectedCase.FEC_Account_or_Contract__r?.FEC_CIF_Number__c;
 
-    req.Channel = selectedCase.FEC_Channel__c;
-
     if (PHONE_UPDATE.equals(method)) {
-      req.CommunicationType = FEC_ConstantCommon.PRIMARY_PHONE;
       req.ContactString = selectedCase.FEC_Updated_Info_Phone_Number__c;
     } else if (EMAIL_UPDATE.equals(method)) {
-      req.CommunicationType = FEC_ConstantCommon.EMAIL;
       req.ContactString = selectedCase.FEC_Updated_Info_Email__c;
     }
 
     List<FEC_Contact_List__c> contactlst = getMatchingContactList(
       selectedCase,
-      req
+      method
     );
 
     if (!contactlst.isEmpty()) {
-      req.ContactId = contactlst.get(0).FEC_Contact_ID__c;
+      FEC_Contact_List__c matched = contactlst.get(0);
+      req.ContactId = matched.FEC_Contact_ID__c;
+      req.Channel = selectedCase.FEC_Channel__c;
+      req.CommunicationType = matched.FEC_Communication_Type__c;
+    } else {
+      throw new FEC_APIServiceException(
+        String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Matching FEC_Contact_List__c'})
+      );
     }
 
     UpdateContactResult result = updateCustomerContact(req);
@@ -346,22 +343,89 @@ public with sharing class FEC_UpdateCustomerContact {
   }
 
   /**
-   * @description Queries FEC_Contact_List__c records matching the Case's account/contract,
-   *              and the CommunicationType + Channel from the given CustomerContactRequest.
-   * @param caseId  The Id of the Case record.
-   * @param req     A CustomerContactRequest containing CommunicationType and Channel.
-   * @return        List of matching FEC_Contact_List__c records.
+   * @description Tìm FEC_Contact_List__c theo Customer History và originalContactString để lấy
+   *              đúng CommunicationType/ContactId/Channel tương ứng từ bản ghi khớp.
+   * @param selectedCase Case có FEC_Account_or_Contract__c = Id Customer History.
+   * @param method PHONE_UPDATE hoặc EMAIL_UPDATE.
+   * @return Danh sách bản ghi khớp.
    */
   public static List<FEC_Contact_List__c> getMatchingContactList(
     Case selectedCase,
-    CustomerContactRequest req
+    String method
   ) {
     Id accountOrContractId = selectedCase.FEC_Account_or_Contract__c;
+    if (!PHONE_UPDATE.equals(method) && !EMAIL_UPDATE.equals(method)) {
+      return new List<FEC_Contact_List__c>();
+    }
 
-    Map<String, String> typeMap = new Map<String, String> {
-      FEC_ConstantCommon.PRIMARY_PHONE => FEC_ConstantCommon.PHONE,
-      FEC_ConstantCommon.EMAIL => FEC_ConstantCommon.EMAIL
-    };
+    String originalContactString = EMAIL_UPDATE.equals(method)
+      ? selectedCase.FEC_Account_or_Contract__r?.FEC_Email__c
+      : selectedCase.FEC_Account_or_Contract__r?.FEC_Primary_Phone__c;
+    String caseChannel = selectedCase.FEC_Channel__c;
+
+    if (String.isBlank(originalContactString) || accountOrContractId == null) {
+      return new List<FEC_Contact_List__c>();
+    }
+
+    if (PHONE_UPDATE.equals(method)) {
+      List<String> phoneCandidates = buildPhoneMatchCandidates(
+        originalContactString
+      );
+      if (phoneCandidates.isEmpty()) {
+        return new List<FEC_Contact_List__c>();
+      }
+      List<FEC_Contact_List__c> withCaseChannel = [
+        SELECT
+          Id,
+          FEC_Customer_History__c,
+          FEC_Communication_Type__c,
+          FEC_Channel__c,
+          FEC_Contact_ID__c,
+          FEC_Contact_String__c
+        FROM FEC_Contact_List__c
+        WHERE
+          FEC_Customer_History__c = :accountOrContractId
+          AND FEC_Channel__c = :caseChannel
+          AND FEC_Contact_String__c IN :phoneCandidates
+        ORDER BY CreatedDate DESC, Id DESC
+      ];
+      if (!withCaseChannel.isEmpty()) {
+        return withCaseChannel;
+      }
+      return [
+        SELECT
+          Id,
+          FEC_Customer_History__c,
+          FEC_Communication_Type__c,
+          FEC_Channel__c,
+          FEC_Contact_ID__c,
+          FEC_Contact_String__c
+        FROM FEC_Contact_List__c
+        WHERE
+          FEC_Customer_History__c = :accountOrContractId
+          AND FEC_Contact_String__c IN :phoneCandidates
+        ORDER BY CreatedDate DESC, Id DESC
+      ];
+    }
+
+    List<FEC_Contact_List__c> withCaseChannel = [
+      SELECT
+        Id,
+        FEC_Customer_History__c,
+        FEC_Communication_Type__c,
+        FEC_Channel__c,
+        FEC_Contact_ID__c,
+        FEC_Contact_String__c
+      FROM FEC_Contact_List__c
+      WHERE
+        FEC_Customer_History__c = :accountOrContractId
+        AND FEC_Channel__c = :caseChannel
+        AND FEC_Contact_String__c = :originalContactString
+      ORDER BY CreatedDate DESC, Id DESC
+    ];
+    if (!withCaseChannel.isEmpty()) {
+      return withCaseChannel;
+    }
 
     return [
       SELECT
@@ -369,12 +433,28 @@ public with sharing class FEC_UpdateCustomerContact {
         FEC_Customer_History__c,
         FEC_Communication_Type__c,
         FEC_Channel__c,
-        FEC_Contact_ID__c
+        FEC_Contact_ID__c,
+        FEC_Contact_String__c
       FROM FEC_Contact_List__c
       WHERE
         FEC_Customer_History__c = :accountOrContractId
-        AND FEC_Communication_Type__c = :typeMap.get(req.CommunicationType)
-        AND FEC_Channel__c = :req.Channel
+        AND FEC_Contact_String__c = :originalContactString
+      ORDER BY CreatedDate DESC, Id DESC
     ];
+  }
+
+  private static List<String> buildPhoneMatchCandidates(String raw) {
+    Set<String> out = new Set<String>();
+    if (String.isBlank(raw)) {
+      return new List<String>();
+    }
+    String t = raw.trim();
+    out.add(t);
+    if (t.startsWith('0') && t.length() == 10) {
+      out.add('84' + t.substring(1));
+    } else if (t.startsWith('84') && t.length() == 11) {
+      out.add('0' + t.substring(2));
+    }
+    return new List<String>(out);
   }
 }
