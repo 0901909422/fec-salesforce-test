@@ -11401,4 +11401,28 @@
         <shortDescription>FEC_MSG_IPP_No_Eligible_Transactions</shortDescription>
         <value>Không có giao dịch hợp lệ để chuyển đổi trả góp.</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_GetCSAttached_FileID_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Get CS Attached File invalid FileID (ContentDocument)</shortDescription>
+        <value>FileID is invalid. Expected ContentDocument record Id.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_GetCSAttached_File_No_Content</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Get CS Attached File no ContentVersion</shortDescription>
+        <value>No file content found for FileID: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_GetCSAttached_File_Not_Linked_To_Case</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Get CS Attached File not linked to Case</shortDescription>
+        <value>File is not attached to this Case or FileID is invalid.</value>
+    </labels>
 </CustomLabels>

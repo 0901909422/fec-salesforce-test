@@ -117,8 +117,12 @@
           <div class="slds-grid">
             <div class="slds-col slds-size_1-of-2 column">
               <template if:true={showStatusPair}>
-                <lightning-input-field field-name={currentStatusField}></lightning-input-field>
-                <lightning-input-field field-name={changedStatusField}></lightning-input-field>
+                <c-fec_-lookup label="Current Status" placeholder={placeholderSearchCaseStatus} is-multi-select
+                  data-id="currentStatus" object-api-name="FEC_Case_Status__c" field-api-name="Name"
+                  icon-name="standard:case" onselect={handleSelected}></c-fec_-lookup>
+                <c-fec_-lookup label="Changed Status" placeholder={placeholderSearchCaseStatus} is-multi-select
+                  data-id="changedStatus" object-api-name="FEC_Case_Status__c" field-api-name="Name"
+                  icon-name="standard:case" onselect={handleSelected}></c-fec_-lookup>
               </template>
 
               <template if:true={showApplicableUserGroups}>

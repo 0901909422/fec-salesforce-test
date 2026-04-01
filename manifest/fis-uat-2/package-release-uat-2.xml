@@ -1280,8 +1280,11 @@
 
 	<!-- additional -->
 	<types>
-		<members>FEC_City__c</members>
-        <members>FEC_Country__c</members>
+		<members>FEC_Country__c</members>
+		<members>FEC_District__c</members>
+		<members>FEC_Province__c</members>
+		<members>FEC_Ward__c</members>
+        <members>FEC_Case_Status__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -1314,6 +1317,9 @@
         <members>FEC_MSG_IPP_No_Eligible_Transactions</members>
         <members>FEC_MSG_IPP_Conversion_Success</members>
         <members>FEC_MSG_IPP_Conversion_Fail_Disable</members>
+        <members>FEC_MSG_GetCSAttached_FileID_Invalid</members>
+        <members>FEC_MSG_GetCSAttached_File_No_Content</members>
+        <members>FEC_MSG_GetCSAttached_File_Not_Linked_To_Case</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
