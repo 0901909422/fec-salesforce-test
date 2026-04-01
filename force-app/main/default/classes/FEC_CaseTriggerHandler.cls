@@ -473,22 +473,26 @@ public without sharing class FEC_CaseTriggerHandler {
         String sendToValue = System.Label.UBankCustomberServiceEmail;
 
         Map<Id, String> caseIdToFromAddress = new Map<Id, String>();
-        for (EmailMessage em : [SELECT Id, ParentId, FromAddress, CreatedDate
+        for (EmailMessage em : [SELECT Id, ParentId, FromAddress, CreatedDate, ThreadIdentifier, MessageIdentifier
                                 FROM EmailMessage
                                 WHERE ParentId IN :caseIds
                                 AND FromAddress != NULL
                                 AND ToAddress  = :sendToValue
                                 ORDER BY CreatedDate ASC]) {
-            if (!caseIdToFromAddress.containsKey(em.ParentId)) {
+            if (em.ThreadIdentifier == em.MessageIdentifier && !caseIdToFromAddress.containsKey(em.ParentId)) {
                 caseIdToFromAddress.put(em.ParentId, em.FromAddress);
             }
+        }
+
+        if (caseIdToFromAddress.isEmpty()) {
+            return;
         }
 
         List<Case> casesToDml = [
             SELECT Id, RecordTypeId, OwnerId, FEC_Is_Reply_Interaction_email__c, 
                    ParentId, FEC_Channel__c, FEC_Send_To__c 
             FROM Case 
-            WHERE Id IN :caseIds
+            WHERE Id IN :caseIdToFromAddress.keySet()
         ];
 
         for (Case c : casesToDml) {
