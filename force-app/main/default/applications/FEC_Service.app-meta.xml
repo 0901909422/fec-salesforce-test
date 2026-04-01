@@ -18,6 +18,24 @@
         <type>Flexipage</type>
         <pageOrSobjectType>FEC_Assignment__c</pageOrSobjectType>
     </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <comment>Action override created by Lightning App Builder during activation.</comment>
+        <content>KYC_Record_Page</content>
+        <formFactor>Large</formFactor>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
+        <pageOrSobjectType>FEC_KYC__c</pageOrSobjectType>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <comment>Action override created by Lightning App Builder during activation.</comment>
+        <content>KYC_Record_Page</content>
+        <formFactor>Small</formFactor>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
+        <pageOrSobjectType>FEC_KYC__c</pageOrSobjectType>
+    </actionOverrides>
     <brand>
         <headerColor>#2DE70B</headerColor>
         <logo>feclogo</logo>
@@ -29,6 +47,8 @@
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
     <isNavPersonalizationDisabled>true</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
     <label>FEC Service</label>
     <navType>Console</navType>
     <profileActionOverrides>
@@ -592,9 +612,17 @@
     <tabs>standard-ServiceResource</tabs>
     <tabs>FEC_Enhanced_Letterhead__c</tabs>
     <tabs>Templates</tabs>
+    <tabs>FEC_Clear_Session__c</tabs>
+    <tabs>Clear_Session_New</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
+        <mappings>
+            <tab>Clear_Session_New</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Clear_Session__c</tab>
+        </mappings>
         <mappings>
             <tab>FEC_Account_Contract_Search</tab>
         </mappings>

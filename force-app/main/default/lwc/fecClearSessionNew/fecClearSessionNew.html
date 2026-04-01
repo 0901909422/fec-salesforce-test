@@ -1,0 +1,45 @@
+<template>
+    <div class="fec-cs-container">
+        <div class="fec-cs-header">
+            <span class="fec-cs-title">Select user to clear session</span>
+        </div>
+        <p class="fec-cs-subtitle">Find user by Name, User Name, Email or Alias</p>
+        <div class="fec-cs-search-row">
+            <div class="fec-cs-search-wrap">
+                <input
+                    type="text"
+                    class="fec-cs-input"
+                    placeholder="Search..."
+                    onchange={handleSearchChange}
+                    onkeyup={handleSearchKeyup} />
+                <template if:true={showDropdown}>
+                    <div class="fec-cs-dropdown">
+                        <template for:each={searchResults} for:item="u">
+                            <div key={u.id} class="fec-cs-dropdown-item" data-id={u.id} data-name={u.name} data-email={u.email} onclick={handleSelectUser}>
+                                <span class="fec-cs-user-name">{u.name}</span>
+                                <span class="fec-cs-user-email">{u.email}</span>
+                            </div>
+                        </template>
+                        <template if:true={noResults}>
+                            <div class="fec-cs-dropdown-empty">No users found</div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+            <button class="slds-button slds-button_brand" onclick={handleClearSession} disabled={isSending}>Clear Session</button>
+        </div>
+        <template if:true={hasSelectedUsers}>
+            <div class="fec-cs-tags">
+                <template for:each={selectedUsers} for:item="u">
+                    <span key={u.id} class="fec-cs-tag">
+                        {u.email}
+                        <span class="fec-cs-tag-remove" data-id={u.id} onclick={handleRemoveUser}>&#x2715;</span>
+                    </span>
+                </template>
+            </div>
+        </template>
+        <template if:true={isSending}>
+            <lightning-spinner size="small" alternative-text="Processing"></lightning-spinner>
+        </template>
+    </div>
+</template>

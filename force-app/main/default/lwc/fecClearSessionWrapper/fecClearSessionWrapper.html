@@ -1,0 +1,18 @@
+<template>
+    <!-- List View -->
+    <template if:false={showNew}>
+        <div class="slds-var-m-bottom_small slds-align_absolute-center" style="justify-content:flex-end;display:flex;padding:0.5rem 0;">
+            <lightning-button variant="brand" label="New" onclick={handleNew}></lightning-button>
+        </div>
+        <lightning-list-view
+            object-api-name="FEC_Clear_Session__c"
+            list-name="All_Clear_Sessions"
+            show-action-bar="false">
+        </lightning-list-view>
+    </template>
+
+    <!-- New Form -->
+    <template if:true={showNew}>
+        <c-fec-clear-session-new onback={handleBack}></c-fec-clear-session-new>
+    </template>
+</template>
