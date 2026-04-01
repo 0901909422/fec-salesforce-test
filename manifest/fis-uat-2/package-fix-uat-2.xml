@@ -172,6 +172,8 @@
         <members>FEC_CS_CASE_DATETIME_INVALID_MSG</members>
 		<members>FEC_MSG_Endpoint_Null</members>
         <members>FEC_MSG_Create_Customer_History_Success</members>
+        <members>FEC_MSG_Case_Customer_Type_Mismatch</members>
+        <members>FEC_MSG_Contract_Or_Account_Info_Case_Mismatch</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
