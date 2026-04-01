@@ -88,6 +88,7 @@
 		<members>customDblclickCell</members>
 		<members>maskedToggleDatatable</members>
 		<members>fec_CommonRecordDetailSection</members>
+		<members>fec_InteractionCreateCase</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
