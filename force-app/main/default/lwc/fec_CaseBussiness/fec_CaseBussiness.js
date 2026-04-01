@@ -25,7 +25,7 @@ import {
   isOnlyNumber
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY, ICON_HIDE, ICON_PREVIEW } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -43,6 +43,8 @@ import FEC_Decision_Label from "@salesforce/label/c.FEC_Decision_Label";
 import FEC_Choose_Decision_Label from "@salesforce/label/c.FEC_Choose_Decision_Label";
 import FEC_Sub_Decision_Label from "@salesforce/label/c.FEC_Sub_Decision_Label";
 import FEC_Choose_Sub_Decision_Label from "@salesforce/label/c.FEC_Choose_Sub_Decision_Label";
+import { publish, MessageContext } from "lightning/messageService";
+import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 
 
 const ACTION_PHONE_UPDATE = "Phone Update";
@@ -183,6 +185,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_CardBlock: () => import('c/fec_CardBlock'),
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
+  fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
 };
 
 export default class Fec_CaseBussiness extends LightningElement {
@@ -229,6 +232,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       console.error("Error fetching user group", error);
     }
   }
+  
+  @wire(MessageContext)
+  messageContext;
 
   get iconHideConst() {
     return ICON_HIDE;
@@ -314,7 +320,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   fetchTransferUsers() {
     this.isLoaded = false;
-    getTransferUsers()
+    getTransferUsers({ caseId: this.recordId })
       .then((result) => {
         const userOptions = result.map((user) => ({
           label: user.Name,
@@ -675,6 +681,9 @@ export default class Fec_CaseBussiness extends LightningElement {
                 if (field.value == null || field.value === undefined) {
                   field.value = STR_EMPTY;
                 }
+               if (field.apiName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
+                  field.isInternalRequest = field.value === INTERNAL_REQUEST;
+                }
 
                 field.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[field.layout] || SLDS_MEDIUM_SIZE_OF_12[12]);
                 if(field.hidden) {
@@ -794,7 +803,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (foundActions.length > 0 && this.isEdit) {
           this.updateRoutingActionDisplay(foundActions.join(";"));
         }
-        
+        this._applyInternalFieldVisibility();
         this.businessLoaded = true;
         this.activeSectionlst = [ ...this.activeSectionlst , ...sectionlst];
 
@@ -812,6 +821,31 @@ export default class Fec_CaseBussiness extends LightningElement {
         );
       })
       .finally(() => { });
+  }
+
+  _applyInternalFieldVisibility() {
+    if (!this.business?.sectionlst) return;
+
+    const accountValue = this._getCaseFieldValue(FIELD_ACCOUNT_CONTRACT_NUMBER_PL);
+    const isInternal = accountValue?.trim() === INTERNAL_REQUEST;
+
+    this.business.sectionlst = this.business.sectionlst.map(section => ({
+      ...section,
+      subSectionlst: section.subSectionlst?.map(sub => ({
+        ...sub,
+        objlst: sub.objlst?.map(obj => ({
+          ...obj,
+          fieldlst: obj.fieldlst?.map(field => ({
+            ...field,
+            isHidden: isInternal
+              ? field.apiName !== FIELD_ACCOUNT_CONTRACT_NUMBER_PL
+              : false,
+          })) || [],
+        })) || [],
+      })) || [],
+    }));
+
+    this.business = { ...this.business };
   }
 
   handleInputKeydown(e) {
@@ -950,6 +984,29 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     if (field) {
       field.value = value;
+      if (fieldName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
+        field.isInternalRequest = value === INTERNAL_REQUEST;
+        publish(this.messageContext, CASE_NOC, {
+          accountType: value 
+        });
+        this.business.sectionlst = this.business.sectionlst.map(section => ({
+          ...section,
+          subSectionlst: section.subSectionlst?.map(sub => ({
+            ...sub,
+            objlst: sub.objlst?.map(obj => ({
+              ...obj,
+              fieldlst: obj.fieldlst?.map(f => ({
+                ...f,
+                isHidden: value === INTERNAL_REQUEST
+                  ? f.apiName !== FIELD_ACCOUNT_CONTRACT_NUMBER_PL
+                  : false,
+              })) || [],
+            })) || [],
+          })) || [],
+        }));
+        this.business = { ...this.business };
+      }
+      
       if (field.isDate) {
         field.displayValue = formatToDDMMYYYY(value);
       }

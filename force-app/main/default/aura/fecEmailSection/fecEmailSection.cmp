@@ -103,22 +103,11 @@
                             <span class="compose-from-text">{!v.fromDisplay}</span>
                         </div>
                     </div>
-                    <!-- To: tag input -->
-                    <div class="compose-row compose-row-tags">
+                    <!-- To: read-only, lấy từ Interaction Email của case -->
+                    <div class="compose-row">
                         <label class="compose-label">To <abbr title="required" style="color:#c23934">*</abbr></label>
-                        <div class="compose-field-wrap compose-tags-wrap">
-                            <aura:iteration items="{!v.toTags}" var="tag">
-                                <span class="email-tag">
-                                    {!tag}
-                                    <span class="email-tag-remove" data-tag="{!tag}" onclick="{!c.removeToTag}">&#x2715;</span>
-                                </span>
-                            </aura:iteration>
-                            <input type="text" class="compose-tag-input" aura:id="toTagInput"
-                                   value="{!v.toInput}"
-                                   placeholder="{!empty(v.toTags) ? 'Enter email...' : ''}"
-                                   onkeydown="{!c.onToKeydown}"
-                                   onchange="{!c.onToInputChange}"
-                                   onblur="{!c.onToBlur}" />
+                        <div class="compose-field-wrap">
+                            <span class="compose-from-text">{!v.toEmail}</span>
                         </div>
                     </div>
                     <!-- CC -->

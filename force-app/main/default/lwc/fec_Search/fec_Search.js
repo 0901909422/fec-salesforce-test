@@ -14,11 +14,16 @@ import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
 import getB2Contracts from "@salesforce/apex/FEC_SearchController.getB2Contracts";
 import getCash24Contracts from "@salesforce/apex/FEC_SearchController.getCash24Contracts";
 import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
+
 import FEC_National_ID_Passport_ID_Label  from '@salesforce/label/c.FEC_National_ID_Passport_ID_Label';
 import FEC_Toast_Search_Validation from '@salesforce/label/c.FEC_Toast_Search_Validation';
 import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
+import FEC_Toast_Refresh_Success from '@salesforce/label/c.FEC_Toast_Refresh_Success';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
+import FEC_MSG_Create_Customer_History_Error from '@salesforce/label/c.FEC_MSG_Create_Customer_History_Error';
+import FEC_MSG_Create_Customer_History_Success from '@salesforce/label/c.FEC_MSG_Create_Customer_History_Success';
+
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
 import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
@@ -35,6 +40,7 @@ import {
   refreshTab,
 } from "lightning/platformWorkspaceApi";
 import getCardInfoByAccountNumber from "@salesforce/apex/FEC_SearchController.getCardInfoByAccountNumber";
+import getApplicationHistory from "@salesforce/apex/FEC_SearchController.getApplicationHistory";
 import CASE_ID_FIELD from "@salesforce/schema/Case.Id";
 import SEARCH_NATIONAL_ID_FIELD from "@salesforce/schema/Case.FEC_Search_National_ID__c";
 import SEARCH_PHONE_FIELD from "@salesforce/schema/Case.FEC_Search_Phone_Number__c";
@@ -76,11 +82,15 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   isSkip;
   wiredCaseResult;
   fieldPermissions;
+
   FEC_Toast_Search_Validation = FEC_Toast_Search_Validation;
   FEC_Toast_Validation_Title = FEC_Toast_Validation_Title;
   FEC_Toast_Error = FEC_Toast_Error;
   FEC_Toast_Error_Generic = FEC_Toast_Error_Generic;
   FEC_National_ID_Passport_ID_Label = FEC_National_ID_Passport_ID_Label;
+  FEC_MSG_Create_Customer_History_Error = FEC_MSG_Create_Customer_History_Error;
+  FEC_MSG_Create_Customer_History_Success = FEC_MSG_Create_Customer_History_Success;
+  FEC_Toast_Refresh_Success = FEC_Toast_Refresh_Success;
 
   @wire(MessageContext)
   messageContext;
@@ -134,10 +144,12 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         typeAttributes:  {
               value: { fieldName: "AccountNumber" },
               fieldName: "AccountNumber",
-              selectedType: "Card"
+              selectedType: "Card",
+              isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false
             },
         sortable: false,
       },
+      { label: "Application ID", fieldName: "ApplicationID", sortable: true },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
       {
         label: "National ID 1",
@@ -199,10 +211,12 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         typeAttributes:  {
               value: { fieldName: "ContractNumber" },
               fieldName: "ContractNumber",
-              selectedType: "Loan"
+              selectedType: "Loan",
+              isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false
             },
         sortable: false,
       },
+      { label: "Application ID", fieldName: "ApplicationID", sortable: true },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
       {
         label: "National ID 1",
@@ -377,6 +391,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   loanCash24Data = [];
   insuranceData = [];
   ubankData = [];
+
+  // Application History state: key = applicationId, value = { loading, rows, expanded }
+  appHistoryMap = {};
 
   @wire(getCase, { caseId: "$recordId" })
   wiredCase(result) {
@@ -903,6 +920,7 @@ hasAnySearchCriteria(params) {
                     } else {
                         cardMap.set(accNum, {
                             id: app.ApplicationID,
+                            ApplicationID: app.ApplicationID,
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
@@ -926,6 +944,7 @@ hasAnySearchCriteria(params) {
                     } else {
                         loanContractMap.set(contractNum, {
                             id: app.ApplicationID,
+                            ApplicationID: app.ApplicationID,
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
@@ -1105,6 +1124,148 @@ hasAnySearchCriteria(params) {
       },
       this,
     );
+  }
+
+  // Double-click on link in custom table → create history (navigate)
+  handleDblClickRow(event) {
+    event.stopPropagation();
+    const key = event.currentTarget.dataset.key;
+    const fieldName = event.currentTarget.dataset.field;
+    if (!key || !fieldName) return;
+
+    // Find row data
+    let row = null;
+    let selectedType = '';
+    if (fieldName === 'AccountNumber') {
+      row = this.cardData.find(r => r.AccountNumber === key);
+      selectedType = 'Card';
+    } else if (fieldName === 'ContractNumber') {
+      row = this.loanContractData.find(r => r.ContractNumber === key);
+      selectedType = 'Loan';
+    }
+    if (!row) return;
+
+    // Reuse handleRowAction logic
+    const cifNumber = row?.CIFNumber ?? '';
+    let categories = [];
+    if (this.cardData && this.cardData.length > 0) categories.push('Card');
+    if (this.loanContractData && this.loanContractData.length > 0) categories.push('Loan');
+    if (this.insuranceData && this.insuranceData.length > 0) categories.push('Insurance');
+    let searchProducts = categories.join(';');
+
+    this.isLoaded = false;
+    createHistory({
+      value: key,
+      fieldName: fieldName,
+      caseId: this.recordId,
+      searchProducts: searchProducts,
+      selectedType: selectedType,
+      cifNumber: cifNumber,
+      phone: row?.Phone,
+      customerName: row?.FullName,
+      isListView: !this.recordId
+    })
+      .then(async (res) => {
+        this.showToast(this.FEC_Toast_Refresh_Success, this.FEC_MSG_Create_Customer_History_Success, 'success');
+        if (this.recordId) {
+          await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+          this.dispatchEvent(new RefreshEvent());
+        } else {
+          this.dispatchEvent(new CustomEvent('closerequest', { bubbles: true, composed: true }));
+          this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: { recordId: res, objectApiName: 'Case', actionName: 'view' }
+          });
+        }
+      })
+      .catch(() => { this.showToast(this.FEC_Toast_Error, this.FEC_MSG_Create_Customer_History_Error, 'error'); })
+      .finally(() => { this.isLoaded = true; });
+  }
+
+  // Handle single click on Account/Contract Number → toggle Application History
+  handleDblClick(event) {
+    const { value, fieldName } = event.detail || {};
+    if (!value) return;
+    this._toggleHistory(value, fieldName);
+  }
+
+  // Handle click from custom table toggle button or link
+  handleToggleHistory(event) {
+    const key = event.currentTarget.dataset.key;
+    const fieldName = event.currentTarget.dataset.field;
+    if (!key) return;
+    this._toggleHistory(key, fieldName);
+  }
+
+  _toggleHistory(key, fieldName) {
+    // Find applicationId
+    let applicationId = null;
+    if (fieldName === 'AccountNumber') {
+      const row = this.cardData.find(r => r.AccountNumber === key);
+      applicationId = row?.ApplicationID;
+    } else if (fieldName === 'ContractNumber') {
+      const row = this.loanContractData.find(r => r.ContractNumber === key);
+      applicationId = row?.ApplicationID;
+    }
+    if (!applicationId) return;
+
+    const current = this.appHistoryMap[key] || {};
+
+    // Toggle collapse
+    if (current.expanded) {
+      this.appHistoryMap = { ...this.appHistoryMap, [key]: { ...current, expanded: false } };
+      this._refreshData();
+      return;
+    }
+
+    // Already loaded → just expand
+    if (current.rows) {
+      this.appHistoryMap = { ...this.appHistoryMap, [key]: { ...current, expanded: true } };
+      this._refreshData();
+      return;
+    }
+
+    // Load from API
+    this.appHistoryMap = { ...this.appHistoryMap, [key]: { loading: true, expanded: true, rows: null } };
+    this._refreshData();
+
+    getApplicationHistory({ applicationId })
+      .then(rows => {
+        this.appHistoryMap = { ...this.appHistoryMap, [key]: { loading: false, expanded: true, rows: rows || [] } };
+        this._refreshData();
+      })
+      .catch(() => {
+        this.appHistoryMap = { ...this.appHistoryMap, [key]: { loading: false, expanded: true, rows: [] } };
+        this._refreshData();
+      });
+  }
+
+  // Force LWC reactivity for appHistoryMap
+  _refreshData() {
+    this.cardData = this.cardData.map(r => ({
+      ...r,
+      _isExpanded: !!(this.appHistoryMap[r.AccountNumber]?.expanded)
+    }));
+    this.loanContractData = this.loanContractData.map(r => ({
+      ...r,
+      _isExpanded: !!(this.appHistoryMap[r.ContractNumber]?.expanded)
+    }));
+  }
+
+  get cardDataWithHistory() {
+    return this.cardData.map(r => ({
+      ...r,
+      _historyState: this.appHistoryMap[r.AccountNumber] || null,
+      _btnClass: (this.appHistoryMap[r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn'
+    }));
+  }
+
+  get loanContractDataWithHistory() {
+    return this.loanContractData.map(r => ({
+      ...r,
+      _historyState: this.appHistoryMap[r.ContractNumber] || null,
+      _btnClass: (this.appHistoryMap[r.ContractNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn'
+    }));
   }
 
   // Handle button actions from datatable rows
