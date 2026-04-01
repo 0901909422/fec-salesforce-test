@@ -11202,4 +11202,12 @@
         <shortDescription>FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG</shortDescription>
         <value>NationalID is required</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Customer_History_Success</fullName>
+        <categories>Customer History</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Customer History Success</shortDescription>
+        <value>Create Customer History Successfully</value>
+    </labels>
 </CustomLabels>

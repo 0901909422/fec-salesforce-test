@@ -14,11 +14,16 @@ import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
 import getB2Contracts from "@salesforce/apex/FEC_SearchController.getB2Contracts";
 import getCash24Contracts from "@salesforce/apex/FEC_SearchController.getCash24Contracts";
 import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
+
 import FEC_National_ID_Passport_ID_Label  from '@salesforce/label/c.FEC_National_ID_Passport_ID_Label';
 import FEC_Toast_Search_Validation from '@salesforce/label/c.FEC_Toast_Search_Validation';
 import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
+import FEC_Toast_Refresh_Success from '@salesforce/label/c.FEC_Toast_Refresh_Success';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
+import FEC_MSG_Create_Customer_History_Error from '@salesforce/label/c.FEC_MSG_Create_Customer_History_Error';
+import FEC_MSG_Create_Customer_History_Success from '@salesforce/label/c.FEC_MSG_Create_Customer_History_Success';
+
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
 import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
@@ -77,11 +82,15 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   isSkip;
   wiredCaseResult;
   fieldPermissions;
+
   FEC_Toast_Search_Validation = FEC_Toast_Search_Validation;
   FEC_Toast_Validation_Title = FEC_Toast_Validation_Title;
   FEC_Toast_Error = FEC_Toast_Error;
   FEC_Toast_Error_Generic = FEC_Toast_Error_Generic;
   FEC_National_ID_Passport_ID_Label = FEC_National_ID_Passport_ID_Label;
+  FEC_MSG_Create_Customer_History_Error = FEC_MSG_Create_Customer_History_Error;
+  FEC_MSG_Create_Customer_History_Success = FEC_MSG_Create_Customer_History_Success;
+  FEC_Toast_Refresh_Success = FEC_Toast_Refresh_Success;
 
   @wire(MessageContext)
   messageContext;
@@ -1157,7 +1166,7 @@ hasAnySearchCriteria(params) {
       isListView: !this.recordId
     })
       .then(async (res) => {
-        this.showToast(this.FEC_Toast_Refresh_Success || 'Success', 'History created successfully', 'success');
+        this.showToast(this.FEC_Toast_Refresh_Success, this.FEC_MSG_Create_Customer_History_Success, 'success');
         if (this.recordId) {
           await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
           this.dispatchEvent(new RefreshEvent());
@@ -1169,7 +1178,7 @@ hasAnySearchCriteria(params) {
           });
         }
       })
-      .catch(() => { this.showToast(this.FEC_Toast_Error || 'Error', this.FEC_MSG_Create_Customer_History_Error || 'Failed to create history', 'error'); })
+      .catch(() => { this.showToast(this.FEC_Toast_Error, this.FEC_MSG_Create_Customer_History_Error, 'error'); })
       .finally(() => { this.isLoaded = true; });
   }
 
