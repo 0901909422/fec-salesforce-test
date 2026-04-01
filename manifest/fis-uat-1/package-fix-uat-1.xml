@@ -270,6 +270,11 @@
 		<members>FEC_Wrap_Up_Modal_Btn_Cancel</members>
 		<members>FEC_Account_Card_Fetch_Error</members>
 		<members>FEC_MSG_FollowUp_Not02_User_Already_Watcher</members>
+		<members>FEC_MSG_Action_Owner_Only</members>
+		<members>FEC_MSG_Edit_Owner_Only</members>
+		<members>FEC_MSG_Escalate_Owner_Only</members>
+		<members>FEC_MSG_Transfer_Owner_Only</members>
+		<members>FEC_MSG_Update_Team_Permission_Denied</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
