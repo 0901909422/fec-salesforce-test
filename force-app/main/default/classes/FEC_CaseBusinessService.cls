@@ -88,8 +88,8 @@ public with sharing class FEC_CaseBusinessService {
     String subCategoryId,
     String subCodeId
   ) {
+    Business result = new Business();
     try {
-      Business result = new Business();
       List<Section> sectionlst = new List<Section>();
 
       Id currentUserId = UserInfo.getUserId();
@@ -129,6 +129,12 @@ public with sharing class FEC_CaseBusinessService {
           FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
           FEC_Account_or_Contract__r.FEC_Date_of_Issue__c,
           FEC_Account_or_Contract__r.FEC_Place_of_Issue__c,
+          FEC_Account_or_Contract__r.FEC_Account_Status__c,
+          FEC_Account_or_Contract__r.FEC_Application_ID__c,
+          FEC_Account_or_Contract__r.FEC_Plastic_ID__c,
+          FEC_Account_or_Contract__r.FEC_Block_Code_1__c,
+          FEC_Account_or_Contract__r.FEC_Block_Code_2__c,
+          FEC_Account_or_Contract__r.FEC_Block_Code__c,
           FEC_Process_Action_Count__c,
           FEC_Original_Info_Phone_Number__c,
           FEC_Updated_Info_Phone_Number__c,
@@ -327,7 +333,9 @@ public with sharing class FEC_CaseBusinessService {
 
       if (natureOfCaselst.isEmpty()) {
         selectedCase.FEC_Current_Case_Stage__c = null;
-        update selectedCase;
+        try { update selectedCase; } catch (DmlException e) {
+          System.debug('Update case failed (no NOC): ' + e.getMessage());
+        }
         return result;
       }
 
@@ -359,7 +367,11 @@ public with sharing class FEC_CaseBusinessService {
 
       //  adhoc for Category = “Undelivered Card”
       if (CATEGORY_UNDELIVERED_CARD.equals(catergoryCode)) {
-        undeliveriedCardUpdate(selectedCase);
+        try {
+          undeliveriedCardUpdate(selectedCase);
+        } catch (Exception e) {
+          System.debug('undeliveriedCardUpdate failed: ' + e.getMessage());
+        }
       }
 
       Error err = new Error();
@@ -455,7 +467,9 @@ public with sharing class FEC_CaseBusinessService {
 
       if (stagelst.isEmpty()) {
         selectedCase.FEC_Current_Case_Stage__c = null;
-        update selectedCase;
+        try { update selectedCase; } catch (DmlException e) {
+          System.debug('Update case failed (no stage): ' + e.getMessage());
+        }
         return result;
       }
 
@@ -477,6 +491,7 @@ public with sharing class FEC_CaseBusinessService {
           'FEC_Field_ReadOnly__c, FEC_Section__c, FEC_Field_Order_Display__c,' +
           'FEC_Field_Label_Name__c, FEC_Editable_User_Group__c, FEC_Field_Masking__c, FEC_Masking_Type__c, ' +
           'FEC_Sub_Section__c, FEC_Sub_Section_Order__c, FEC_Sub_Section_Layout__c, FEC_Field_Reverted__c, FEC_Sub_Section_Field_Layout__c ' +
+          ', FEC_LWC_Name__c ' +
           'FROM ' +
           masterDataSettingObj +
           ' ' +
@@ -512,6 +527,7 @@ public with sharing class FEC_CaseBusinessService {
         Decimal subSectionOrderTemp;
         Decimal subSectionLayoutTemp;
         SObject objTemp;
+        String lwcName;
 
         for (SObject item : masterDatalst) {
           sectionNameTemp = (String) item.get('FEC_Section__c');
@@ -522,6 +538,7 @@ public with sharing class FEC_CaseBusinessService {
           subSectionLayoutTemp = (Decimal) item.get(
             'FEC_Sub_Section_Layout__c'
           );
+          lwcName = (String)item.get('FEC_LWC_Name__c');
 
           if (String.isNotBlank(cObjNameTemp)) {
             if (!objToFieldlstMap.containsKey(cObjNameTemp))
@@ -535,6 +552,9 @@ public with sharing class FEC_CaseBusinessService {
 
           if (sectionTemp == null) {
             sectionTemp = new Section(sectionNameTemp);
+            if (String.isNotBlank(lwcName)) {
+              sectionTemp.componentlst.add(lwcName);
+            }
             result.sectionlst.add(sectionTemp);
           }
 
@@ -618,8 +638,6 @@ public with sharing class FEC_CaseBusinessService {
 
           sectionItem.sort();
         }
-
-        result.removeEmptySections();
       }
 
       // ============================== GET ROUNTING AND PROCESS ACTION ===============================
@@ -720,21 +738,26 @@ public with sharing class FEC_CaseBusinessService {
 
       return result;
     } catch (CaseBusinessServiceException e) {
-      throw new AuraHandledException(e.getMessage());
+      System.debug('getByCase CaseBusinessServiceException: ' + e.getMessage());
     } catch (AuraHandledException e) {
-      throw new AuraHandledException(e.getMessage());
+      System.debug('getByCase AuraHandledException: ' + e.getMessage());
     } catch (Exception e) {
-      throw new AuraHandledException(e.getMessage());
+      System.debug('getByCase Exception: ' + e.getMessage());
     }
+    return result;
   }
 
   @AuraEnabled
   public static void saveCaseNOC(String caseId, String natureOfCaseId) {
     if (String.isBlank(caseId) || String.isBlank(natureOfCaseId))
       return;
+    
+    Id currentUserId = UserInfo.getUserId();
+    
     List<Case> caselst = [
       SELECT
         Id,
+        OwnerId,
         FEC_Product_Type__c,
         FEC_Category__c,
         FEC_SubCategory__c,
@@ -747,6 +770,10 @@ public with sharing class FEC_CaseBusinessService {
       return;
 
     Case c = caselst.get(0);
+    
+    if (c.OwnerId != currentUserId) {
+      throw new AuraHandledException(System.Label.FEC_MSG_Edit_Owner_Only);
+    }
     List<FEC_Actual_Nature_of_Case__c> actualst = [
       SELECT
         Id,
@@ -799,6 +826,14 @@ public with sharing class FEC_CaseBusinessService {
   ) {
     if (String.isBlank(caseId))
       return;
+    
+    Id currentUserId = UserInfo.getUserId();
+    Case existingCase = [SELECT Id, OwnerId FROM Case WHERE Id = :caseId LIMIT 1];
+    
+    if (existingCase.OwnerId != currentUserId) {
+      throw new AuraHandledException(System.Label.FEC_MSG_Edit_Owner_Only);
+    }
+    
     if (String.isNotBlank(natureOfCaseId))
       saveCaseNOC(caseId, natureOfCaseId);
 
@@ -1542,6 +1577,8 @@ public with sharing class FEC_CaseBusinessService {
 
   private static void cancel(String caseId) {
     try {
+      Id currentUserId = UserInfo.getUserId();
+      
       List<Case> caselst = [
         SELECT Id, OwnerId, Status
         FROM Case
@@ -1554,6 +1591,13 @@ public with sharing class FEC_CaseBusinessService {
         );
 
       Case updatedCase = caselst.get(0);
+      
+      if (updatedCase.OwnerId != currentUserId) {
+        throw new CaseBusinessServiceException(
+          System.Label.FEC_MSG_Action_Owner_Only
+        );
+      }
+      
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
 
       update updatedCase;
@@ -1564,6 +1608,8 @@ public with sharing class FEC_CaseBusinessService {
 
   private static void reopen(String caseId) {
     try {
+      Id currentUserId = UserInfo.getUserId();
+      
       List<Case> caselst = [
         SELECT Id, OwnerId, Status
         FROM Case
@@ -1576,6 +1622,13 @@ public with sharing class FEC_CaseBusinessService {
         );
 
       Case updatedCase = caselst.get(0);
+      
+      if (updatedCase.OwnerId != currentUserId) {
+        throw new CaseBusinessServiceException(
+          System.Label.FEC_MSG_Action_Owner_Only
+        );
+      }
+      
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
 
       update updatedCase;
@@ -1586,6 +1639,8 @@ public with sharing class FEC_CaseBusinessService {
 
   private static void reject(String caseId) {
     try {
+      Id currentUserId = UserInfo.getUserId();
+      
       List<Case> caselst = [
         SELECT Id, OwnerId, Status
         FROM Case
@@ -1598,6 +1653,13 @@ public with sharing class FEC_CaseBusinessService {
         );
 
       Case updatedCase = caselst.get(0);
+      
+      if (updatedCase.OwnerId != currentUserId) {
+        throw new CaseBusinessServiceException(
+          System.Label.FEC_MSG_Action_Owner_Only
+        );
+      }
+      
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED;
 
       update updatedCase;
@@ -1608,6 +1670,8 @@ public with sharing class FEC_CaseBusinessService {
 
   private static void resolve(String caseId) {
     try {
+      Id currentUserId = UserInfo.getUserId();
+      
       List<Case> caselst = [
         SELECT Id, OwnerId, Status
         FROM Case
@@ -1620,6 +1684,13 @@ public with sharing class FEC_CaseBusinessService {
         );
 
       Case updatedCase = caselst.get(0);
+      
+      if (updatedCase.OwnerId != currentUserId) {
+        throw new CaseBusinessServiceException(
+          System.Label.FEC_MSG_Action_Owner_Only
+        );
+      }
+      
       updatedCase.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
 
       update updatedCase;
@@ -1628,6 +1699,8 @@ public with sharing class FEC_CaseBusinessService {
     }
   }
   private static void transfer(String caseId, String userOrQueueId) {
+    Id currentUserId = UserInfo.getUserId();
+    
     List<Case> caselst = [
       SELECT Id, OwnerId, Status
       FROM Case
@@ -1639,13 +1712,20 @@ public with sharing class FEC_CaseBusinessService {
         String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Case Id' })
       );
 
+    Case updatedCase = caselst.get(0);
+    
+    if (updatedCase.OwnerId != currentUserId) {
+      throw new CaseBusinessServiceException(
+        System.Label.FEC_MSG_Transfer_Owner_Only
+      );
+    }
+
     if (userOrQueueId == null) {
       throw new CaseBusinessServiceException(
         String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'User/Queue Id' })
       );
     }
     try {
-      Case updatedCase = caselst.get(0);
       updatedCase.OwnerId = userOrQueueId;
       registerSkipOwnerChangeRoutingHistory(updatedCase.Id);
       update updatedCase;
@@ -1656,6 +1736,8 @@ public with sharing class FEC_CaseBusinessService {
 
   private static void escalate(String caseId) {
     try {
+      Id currentUserId = UserInfo.getUserId();
+      
       // 1. Use TYPEOF to safely access User-specific fields on the Owner polymorphic lookup
       List<Case> caselst = [
         SELECT
@@ -1676,6 +1758,13 @@ public with sharing class FEC_CaseBusinessService {
       }
 
       Case updatedCase = caselst.get(0);
+      
+      // Kiểm tra xem user hiện tại có phải là Owner không
+      if (updatedCase.OwnerId != currentUserId) {
+        throw new CaseBusinessServiceException(
+          System.Label.FEC_MSG_Escalate_Owner_Only
+        );
+      }
 
       // 2. Check if the Owner is actually a User (not a Queue)
       if (updatedCase.Owner instanceof User) {
@@ -2253,14 +2342,6 @@ public with sharing class FEC_CaseBusinessService {
       return null;
     }
 
-    public void removeEmptySections() {
-      for (Integer i = sectionlst.size() - 1; i >= 0; i--) {
-        Section s = sectionlst[i];
-        if (!s.removeIfNoFieldDeep()) {
-          sectionlst.remove(i);
-        }
-      }
-    }
   }
 
   public class Section implements Comparable {
@@ -2282,11 +2363,15 @@ public with sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public Decimal layout;
 
+    @AuraEnabled
+    public List<String> componentlst;
+
     // Default constructor
     public Section() {
       this.objlst = new List<CObject>();
       this.subSectionlst = new List<Section>();
       this.error = new Error();
+      this.componentlst = new List<String>();
     }
 
     public Section(String name) {
@@ -2294,6 +2379,7 @@ public with sharing class FEC_CaseBusinessService {
       this.objlst = new List<CObject>();
       this.subSectionlst = new List<Section>();
       this.error = new Error();
+      this.componentlst = new List<String>();
     }
 
     public Section(String name, Decimal order, Decimal layout) {
@@ -2303,6 +2389,7 @@ public with sharing class FEC_CaseBusinessService {
       this.layout = layout;
       this.subSectionlst = new List<Section>();
       this.error = new Error();
+      this.componentlst = new List<String>();
     }
 
     // Parameterized constructor
@@ -2724,6 +2811,30 @@ public with sharing class FEC_CaseBusinessService {
     if (String.isBlank(caseId) || String.isBlank(decision))
       return;
 
+    Id currentUserId = UserInfo.getUserId();
+    
+    // Kiểm tra xem user hiện tại có phải là Owner hoặc Case Participant không
+    Case currentCase = [
+      SELECT Id, OwnerId, FEC_Case_Participants__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    
+    Boolean isOwner = currentCase.OwnerId == currentUserId;
+    Boolean isParticipant = false;
+    
+    if (String.isNotBlank(currentCase.FEC_Case_Participants__c)) {
+      List<String> participants = currentCase.FEC_Case_Participants__c.split(';');
+      isParticipant = participants.contains(String.valueOf(currentUserId));
+    }
+    
+    if (!isOwner && !isParticipant) {
+      throw new AuraHandledException(
+        System.Label.FEC_MSG_Update_Team_Permission_Denied
+      );
+    }
+
     // 1. Tạo Map ánh xạ từ Decision (Input) sang FEC_Team__c (Output)
     Map<String, String> decisionToTeamMap = new Map<String, String>{
       // Nhóm thường (Pending-) -> Bỏ prefix
@@ -3022,12 +3133,28 @@ public with sharing class FEC_CaseBusinessService {
   }
 
   @AuraEnabled(cacheable=true)
-  public static List<User> getTransferUsers() {
-    // 1. Lấy thông tin Group của User hiện tại
+  public static List<User> getTransferUsers(String caseId) {
+    Id currentUserId = UserInfo.getUserId();
+    
+    // 1. Kiểm tra xem user hiện tại có phải là Owner của Case không
+    if (String.isNotBlank(caseId)) {
+      List<Case> caselst = [
+        SELECT Id, OwnerId
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+      ];
+      
+      if (!caselst.isEmpty() && caselst[0].OwnerId != currentUserId) {
+        return new List<User>();
+      }
+    }
+    
+    // 2. Lấy thông tin Group của User hiện tại
     User currentUser = [
       SELECT FEC_User_Group__c
       FROM User
-      WHERE Id = :UserInfo.getUserId()
+      WHERE Id = :currentUserId
       LIMIT 1
     ];
 
@@ -3035,14 +3162,14 @@ public with sharing class FEC_CaseBusinessService {
       return new List<User>();
     }
 
-    // 2. Trả về danh sách User cùng Group (loại trừ chính mình)
+    // 3. Trả về danh sách User cùng Group (loại trừ chính mình)
     return [
       SELECT Id, Name
       FROM User
       WHERE
         IsActive = TRUE
         AND FEC_User_Group__c = :currentUser.FEC_User_Group__c
-        AND Id != :UserInfo.getUserId()
+        AND Id != :currentUserId
       ORDER BY Name ASC
     ];
   }
@@ -3366,6 +3493,70 @@ public with sharing class FEC_CaseBusinessService {
     caseDetails.objlst.add(caseObj);
 
     main.subSectionlst.add(caseDetails);
+
+    // C360 Info sub-section
+    Section c360Details = new Section('C360 Info', 2, 12);
+    CObject c360Obj = new CObject('FEC_Customer_History__c');
+    if (c.FEC_Account_or_Contract__c != null) {
+      c360Obj.id = c.FEC_Account_or_Contract__c;
+    }
+
+    c360Obj.fieldlst.add(
+      new Field(
+        'FEC_Account_Status__c',
+        'Account Status',
+        c.FEC_Account_or_Contract__r?.FEC_Account_Status__c,
+        true, false, false, 1, false, null, 3, null
+      )
+    );
+
+    c360Obj.fieldlst.add(
+      new Field(
+        'FEC_Application_ID__c',
+        'Application ID',
+        c.FEC_Account_or_Contract__r?.FEC_Application_ID__c,
+        true, false, false, 1, false, null, 3, null
+      )
+    );
+
+    c360Obj.fieldlst.add(
+      new Field(
+        'FEC_Plastic_ID__c',
+        'Plastic ID',
+        c.FEC_Account_or_Contract__r?.FEC_Plastic_ID__c,
+        true, false, false, 1, false, null, 3, null
+      )
+    );
+
+    c360Obj.fieldlst.add(
+      new Field(
+        'FEC_Block_Code_1__c',
+        'Block Code 1',
+        c.FEC_Account_or_Contract__r?.FEC_Block_Code_1__c,
+        true, false, false, 1, false, null, 3, null
+      )
+    );
+
+    c360Obj.fieldlst.add(
+      new Field(
+        'FEC_Block_Code_2__c',
+        'Block Code 2',
+        c.FEC_Account_or_Contract__r?.FEC_Block_Code_2__c,
+        true, false, false, 1, false, null, 3, null
+      )
+    );
+
+    c360Obj.fieldlst.add(
+      new Field(
+        'FEC_Block_Code__c',
+        'Block Code',
+        c.FEC_Account_or_Contract__r?.FEC_Block_Code__c,
+        true, false, false, 1, false, null, 3, null
+      )
+    );
+
+    c360Details.objlst.add(c360Obj);
+    main.subSectionlst.add(c360Details);
 
     return main;
   }

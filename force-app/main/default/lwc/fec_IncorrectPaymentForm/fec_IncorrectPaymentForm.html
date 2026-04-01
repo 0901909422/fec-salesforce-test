@@ -1,0 +1,214 @@
+<template>
+  <div class="slds-card slds-p-around_medium">
+    <div class="slds-accordion">
+      <section class={formSectionClass}>
+        <div class="slds-accordion__summary" onclick={toggleMainSection}>
+          <h3 class="slds-accordion__summary-heading">
+            <span class="slds-accordion__summary-content slds-grid">
+              <lightning-icon
+                icon-name={sectionIconName}
+                size="x-small"
+                class="slds-m-right_x-small"
+              ></lightning-icon>
+              <span>{customLabel.sectionTitle}</span>
+            </span>
+          </h3>
+        </div>
+        <div class={formContentClass}>
+          <template if:true={configLoaded}>
+            <div
+              class="slds-grid slds-gutters slds-wrap slds-m-bottom_small slds-grid_vertical-align-start"
+            >
+              <div
+                class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-form-element"
+              >
+                <c-fec_-combo-box
+                  data-id="incorrect-contract"
+                  label={customLabel.incorrectContractNumber}
+                  placeholder={customLabel.selectContractPlaceholder}
+                  value={incorrectContract}
+                  option={formattedIncorrectContractOption}
+                  onremove={handleRemoveIncorrectContract}
+                  onchange={handleChangeIncorrectContract}
+                ></c-fec_-combo-box>
+                <p
+                  class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small"
+                >
+                  {customLabel.incorrectContractHint}
+                </p>
+              </div>
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-combobox
+                  name="paymentMethod"
+                  label={customLabel.paymentMethod}
+                  value={paymentMethod}
+                  options={paymentMethodOptions}
+                  onchange={handlePaymentMethodChange}
+                  required
+                >
+                </lightning-combobox>
+              </div>
+            </div>
+
+            <template if:true={paymentHistoryLoading}>
+              <lightning-spinner
+                alternative-text={customLabel.loading}
+                size="small"
+              ></lightning-spinner>
+            </template>
+
+            <template if:false={paymentHistoryLoading}>
+              <template if:true={hasPaymentHistory}>
+                <div class="slds-m-bottom_small">
+                  <template for:each={datatableKeyItems} for:item="keyItem">
+                    <lightning-datatable
+                      key={keyItem.id}
+                      key-field="id"
+                      data={paymentHistory}
+                      columns={paymentHistoryColumns}
+                      max-row-selection="1"
+                      selected-rows={selectedRowIds}
+                      onrowselection={handlePaymentRowSelect}
+                    >
+                    </lightning-datatable>
+                  </template>
+                </div>
+              </template>
+              <template if:false={hasPaymentHistory}>
+                <template if:true={incorrectContractTrimmed}>
+                  <p class="slds-text-color_weak slds-m-bottom_small">
+                    {customLabel.noPaymentHistoryFound}
+                  </p>
+                </template>
+              </template>
+            </template>
+
+            <template if:true={showManualBill}>
+              <div class="slds-grid slds-gutters slds-wrap slds-m-bottom_small">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                  <lightning-input
+                    type="date"
+                    date-style="short"
+                    placeholder={customLabel.datePlaceholder}
+                    label={customLabel.billDate}
+                    value={manualBillDate}
+                    onchange={handleManualBillDateChange}
+                  ></lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                  <lightning-input
+                    name="manualBillAmount"
+                    type="number"
+                    label={customLabel.billAmount}
+                    value={manualBillAmount}
+                    onchange={handleManualBillAmountChange}
+                    formatter="decimal"
+                    required
+                  ></lightning-input>
+                </div>
+              </div>
+            </template>
+
+            <template if:true={showSelectedBillReadOnly}>
+              <div class="slds-grid slds-gutters slds-wrap slds-m-bottom_small">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                  <lightning-input
+                    label={customLabel.billDate}
+                    value={displayBillDate}
+                    disabled
+                  ></lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                  <lightning-input
+                    type="text"
+                    label={customLabel.billAmount}
+                    value={displayBillAmount}
+                    disabled
+                  ></lightning-input>
+                </div>
+              </div>
+            </template>
+
+            <template if:true={showTh2Row1}>
+              <div class="slds-grid slds-gutters slds-wrap slds-m-bottom_small">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                  <lightning-input
+                    label={customLabel.paymentDate}
+                    value={displayPaymentDate}
+                    disabled
+                    required
+                  ></lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                  <lightning-input
+                    type="text"
+                    label={customLabel.excessAmount}
+                    value={displayExcessAmount}
+                    disabled
+                    required
+                  ></lightning-input>
+                </div>
+              </div>
+            </template>
+
+            <div class="slds-m-top_medium">
+              <template if:true={adjustmentRows.length}>
+                <template for:each={adjustmentRows} for:item="row">
+                  <div
+                    key={row.id}
+                    class="slds-grid slds-gutters_small slds-wrap slds-m-bottom_small slds-grid_vertical-align-end"
+                  >
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                      <lightning-input
+                        data-id={row.id}
+                        label={customLabel.correctContract}
+                        value={row.correctContract}
+                        onchange={handleAdjustmentCorrectContractChange}
+                        required
+                      ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12">
+                      <lightning-input
+                        data-id={row.id}
+                        type="number"
+                        label={customLabel.adjustedAmount}
+                        value={row.adjustedAmount}
+                        onchange={handleAdjustmentAmountChange}
+                        formatter="decimal"
+                        required
+                      ></lightning-input>
+                    </div>
+                    <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12 slds-grid slds-grid_vertical-align-center slds-no-flex"
+                      data-id={row.id}
+                      onclick={handleRemoveAdjustment}
+                    >
+                      <lightning-button
+                        icon-name="utility:delete"
+                        variant="neutral"
+                        title={customLabel.removeRow}
+                      ></lightning-button>
+                    </div>
+                  </div>
+                </template>
+              </template>
+              <div class="slds-grid slds-gutters slds-wrap slds-m-top_small">
+                <div class="slds-col">
+                  <lightning-button
+                    label={customLabel.addItem}
+                    icon-name="utility:add"
+                    variant="neutral"
+                    onclick={handleAddAdjustment}
+                  ></lightning-button>
+                </div>
+              </div>
+              <p class="slds-m-top_small slds-text-body_small slds-text-color_error">
+                {customLabel.adjustedAmountMustEqualPayment}
+              </p>
+            </div>
+          </template>
+        </div>
+      </section>
+    </div>
+  </div>
+</template>

@@ -193,7 +193,7 @@ public with sharing class FEC_CreateCSCaseService {
         if (String.isBlank(sys.TransactionID) || sys.TransactionID.length() > 36) {
             throw new ValidationException(null, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_TRANSACTION_ID_MSG);
         }
-        
+        validateDateTime(sys.DateTime_x,  sys.TransactionID);
         validateChannel(sys.Channel, sys.TransactionID);
         
         validateCustomerInfo(customer, sys.TransactionID);
@@ -270,6 +270,19 @@ public with sharing class FEC_CreateCSCaseService {
                 txnId,
             System.Label.FEC_CS_CASE_ERROR_CODE,
             System.Label.FEC_CS_CASE_CHANNEL_INVALID_MSG
+                );
+        }
+    }
+    
+    
+    private static void validateDateTime(DateTime dateTime_x, String txnId) {
+        
+        // Required check
+        if (dateTime_x == null) {
+            throw new ValidationException(
+                txnId,
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_DATETIME_INVALID_MSG
                 );
         }
     }
@@ -604,13 +617,13 @@ public with sharing class FEC_CreateCSCaseService {
         try {
             HttpResponse apiResponse = new HttpResponse();
             apiResponse.setStatusCode(isSuccess ? 200 : 500);
-            apiResponse.setBody(serializeSafe(responseObj));
+            apiResponse.setBody(FEC_CommonUltils.serializeSafe(responseObj));
             
             FEC_CommonUltils.logApi(
                 'CreateCSCase',
             endpoint,
             method,
-            serializeSafe(requestObj),
+            FEC_CommonUltils.serializeSafe(requestObj),
             apiResponse,
             errorMessage
                 );
@@ -619,15 +632,7 @@ public with sharing class FEC_CreateCSCaseService {
             System.debug('LOG_API_ERROR: ' + e.getMessage());
         }
     }
-    
-    private static String serializeSafe(Object obj) {
-        try {
-            return obj != null ? JSON.serialize(obj) : null;
-        } catch (Exception e) {
-            return 'SERIALIZE_ERROR: ' + e.getMessage();
-        }
-    }
-    
+  
     private static String truncateLongString(String input) {
         Integer MAX_LENGTH = 30000; // adjust theo field length
         

@@ -24,7 +24,7 @@ import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCode
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
-import { ACTION_REOPEN, ACTION_RECALL,RECORD_TYPE_INTERNAL_CASE, VIEW_MODE_HANDLING, VIEW_MODE_REVIEW, STR_UNDEFINED} from "c/fec_CommonConst";
+import { ACTION_REOPEN, ACTION_RECALL,RECORD_TYPE_INTERNAL_CASE, VIEW_MODE_HANDLING, VIEW_MODE_REVIEW, STR_UNDEFINED, INTERNAL_REQUEST} from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
@@ -34,6 +34,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
   @api modeEditCase;
 
   isSubmited = true;
+  _isInternalRequest = false;
+  _internalProductTypeId = null;
+  _internalApplied = false;
 
   get isEdit() {
     const isInternal = this.recordTypeDevName === RECORD_TYPE_INTERNAL_CASE;
@@ -108,12 +111,25 @@ export default class Fec_CaseEditNOC extends LightningElement {
     return JSON.stringify(this.subCodeOptionlst);
   }
 
+  renderedCallback() {
+    if (this._internalProductTypeId && !this._internalApplied) {
+      const el = this.template.querySelector(`c-fec_-combo-box[data-id="prod-type"]`);
+      if (el) {
+        el.value = this._internalProductTypeId;
+        el.disabled = true;
+        this._internalApplied = true;
+      }
+    }
+  }
+
   connectedCallback() {
     this.subscribeToMessageChannel();
+     const isInternalEdit = this.modeEditCase;
+     const initialViewMode = isInternalEdit ? VIEW_MODE_HANDLING : VIEW_MODE_REVIEW;
 
     resetViewMode({
       recordId: this.recordId,
-      viewMode: VIEW_MODE_REVIEW,
+      viewMode: initialViewMode,
     })
       .then(() => {
         return getCase({ recordId: this.recordId });
@@ -131,6 +147,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
+        this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -222,6 +239,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   reloadData() {
+    this._internalApplied = false;
+    this._internalProductTypeId = null;
+
     getCase({ recordId: this.recordId })
       .then((res) => {
         this.productTypeSelectedId = res.FEC_Product_Type__c;
@@ -232,6 +252,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
+        this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -368,6 +389,19 @@ export default class Fec_CaseEditNOC extends LightningElement {
         JSON.stringify(res)
       );
       this.productTypeOptionlst = res;
+      if (this._isInternalRequest && !this.productTypeSelectedId) {
+        const internalOption = res?.find((opt) => opt.label === INTERNAL_REQUEST);
+
+        if (internalOption) {
+          this.productTypeSelectedId = internalOption.value;
+          this.disableProdType = true;
+          this._internalProductTypeId = internalOption.value;
+          this._internalApplied = false; 
+          this.getCategory();
+          this.getSubCategory();
+          this.getSubCode();
+        }
+      }
     });
   }
 

@@ -124,6 +124,18 @@
             <routingName>Support Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
+        <routingAddresses>
+            <addressType>EmailToCase</addressType>
+            <caseOrigin>Email</caseOrigin>
+            <caseOwner>FEC_Ubank_Email</caseOwner>
+            <caseOwnerType>Queue</caseOwnerType>
+            <casePriority>Medium</casePriority>
+            <createTask>false</createTask>
+            <emailAddress>dichvukhachhang@ubank.vn</emailAddress>
+            <isVerified>false</isVerified>
+            <routingName>Ubank Email</routingName>
+            <saveEmailHeaders>false</saveEmailHeaders>
+        </routingAddresses>
         <unauthorizedSenderAction>Discard</unauthorizedSenderAction>
         <useEmailHeadersForThreading>true</useEmailHeadersForThreading>
     </emailToCase>
