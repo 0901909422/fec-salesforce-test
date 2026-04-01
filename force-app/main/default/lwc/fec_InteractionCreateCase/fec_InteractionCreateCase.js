@@ -12,17 +12,17 @@ import { publish, MessageContext } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import createCustomerCaseFromCase from "@salesforce/apex/FEC_CreateCaseInteractionController.createCustomerCaseFromCase";
 import createCustomerCaseFromCaseNonExistingCustomer from "@salesforce/apex/FEC_CreateCaseInteractionController.createCustomerCaseFromCaseNonExistingCustomer";
-import { getRecord, getFieldValue } from "lightning/uiRecordApi";
-import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
-import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
+// import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+// import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
+// import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 
 export default class Fec_InteractionCreateCase extends NavigationMixin(
   LightningElement,
 ) {
   isLoading = false;
-  viewMode; // handling | review
-  _resetDone = false;
-  _initialized = false;
+  // viewMode; // handling | review
+  // _resetDone = false;
+  // _initialized = false;
   @wire(CurrentPageReference)
   pageRef;
 
@@ -32,15 +32,15 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
   @wire(MessageContext)
   messageContext;
 
-  @wire(getRecord, {
-    recordId: "$recordId",
-    fields: [VIEW_MODE],
-  })
-  wiredViewMode({ data }) {
-    if (data) {
-      this.viewMode = getFieldValue(data, VIEW_MODE);
-    }
-  }
+  // @wire(getRecord, {
+  //   recordId: "$recordId",
+  //   fields: [VIEW_MODE],
+  // })
+  // wiredViewMode({ data }) {
+  //   if (data) {
+  //     this.viewMode = getFieldValue(data, VIEW_MODE);
+  //   }
+  // }
 
   get recordId() {
     // Access parameters via the 'state' object
@@ -70,23 +70,24 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
     }
   }
 
-  @wire(CurrentPageReference)
-  setPageRef(pageRef) {
-    if (pageRef) {
-      this.pageRef = pageRef;
+  // @wire(CurrentPageReference)
+  // setPageRef(pageRef) {
+  //   if (pageRef) {
+  //     this.pageRef = pageRef;
 
-      if (this.recordId && !this._initialized) {
-        this._initialized = true;
-        this.handleInit();
-      }
-    }
-  }
+  //     if (this.recordId && !this._initialized) {
+  //       this._initialized = true;
+  //       this.handleInit();
+  //     }
+  //   }
+  // }
 
-  async handleInit() {
+  async connectedCallback() {
     this.isLoading = true;
     if (!this.isNonExistingCustomer) {
       createCustomerCaseFromCase({ caseId: this.recordId })
         .then(async (newCaseId) => {
+          await this.handlePublishMessageChanel();
           this.isLoading = false;
           if (this.isConsoleNavigation) {
             const focusedTab = await getFocusedTabInfo();
@@ -105,7 +106,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
             }
 
             await closeTab(currentTabId);
-            await this.handlePublishMessageChanel();
+            // await this.handlePublishMessageChanel();
           } else {
             this[NavigationMixin.Navigate]({
               type: "standard__recordPage",
@@ -115,9 +116,9 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
                 actionName: "view",
               },
             });
-            if (this.recordId) {
-              await resetViewMode({ recordId: this.recordId, viewMode: "handling" });
-            }
+            // if (this.recordId) {
+            //   await resetViewMode({ recordId: this.recordId, viewMode: "handling" });
+            // }
           }
         })
         .catch((error) => {
@@ -132,6 +133,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
         isCreatedFromSearch: this.isCreatedFromSearch
       })
         .then(async (newCaseId) => {
+          await this.handlePublishMessageChanel();
           this.isLoading = false;
           if (this.isConsoleNavigation) {
             const focusedTab = await getFocusedTabInfo();
@@ -150,7 +152,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
             }
 
             await closeTab(currentTabId);
-            await this.handlePublishMessageChanel();
+            // await this.handlePublishMessageChanel();
           } else {
             this[NavigationMixin.Navigate]({
               type: "standard__recordPage",
@@ -161,9 +163,9 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
               },
             });
           }
-          if (this.recordId) {
-              await resetViewMode({ recordId: this.recordId, viewMode: "handling" });
-            }
+          // if (this.recordId) {
+          //     await resetViewMode({ recordId: this.recordId, viewMode: "handling" });
+          //   }
         })
         
         .catch((error) => {
