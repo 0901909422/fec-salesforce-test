@@ -365,6 +365,8 @@
 		<members>Case.FEC_Bill_Date__c</members>
 		<members>Case.FEC_Incorrect_Contract_Number__c</members>
 		<members>Case.FEC_Payment_Method__c</members>
+		<members>Case.FEC_New_Block_Code__c</members>
+		<members>Case.FEC_Card_Block_Reason__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>

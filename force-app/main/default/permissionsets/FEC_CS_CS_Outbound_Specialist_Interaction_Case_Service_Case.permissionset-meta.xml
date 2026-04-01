@@ -116,6 +116,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Card_Block_Reason__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Card_Block_Service_Attempts__c</field>
         <readable>true</readable>
@@ -524,6 +529,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_National_ID_Passport_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_New_Block_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
