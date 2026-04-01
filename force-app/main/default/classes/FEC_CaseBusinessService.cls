@@ -477,6 +477,7 @@ public with sharing class FEC_CaseBusinessService {
           'FEC_Field_ReadOnly__c, FEC_Section__c, FEC_Field_Order_Display__c,' +
           'FEC_Field_Label_Name__c, FEC_Editable_User_Group__c, FEC_Field_Masking__c, FEC_Masking_Type__c, ' +
           'FEC_Sub_Section__c, FEC_Sub_Section_Order__c, FEC_Sub_Section_Layout__c, FEC_Field_Reverted__c, FEC_Sub_Section_Field_Layout__c ' +
+          ', FEC_LWC_Name__c ' +
           'FROM ' +
           masterDataSettingObj +
           ' ' +
@@ -512,6 +513,7 @@ public with sharing class FEC_CaseBusinessService {
         Decimal subSectionOrderTemp;
         Decimal subSectionLayoutTemp;
         SObject objTemp;
+        String lwcName;
 
         for (SObject item : masterDatalst) {
           sectionNameTemp = (String) item.get('FEC_Section__c');
@@ -522,6 +524,7 @@ public with sharing class FEC_CaseBusinessService {
           subSectionLayoutTemp = (Decimal) item.get(
             'FEC_Sub_Section_Layout__c'
           );
+          lwcName = (String)item.get('FEC_LWC_Name__c');
 
           if (String.isNotBlank(cObjNameTemp)) {
             if (!objToFieldlstMap.containsKey(cObjNameTemp))
@@ -535,6 +538,9 @@ public with sharing class FEC_CaseBusinessService {
 
           if (sectionTemp == null) {
             sectionTemp = new Section(sectionNameTemp);
+            if (String.isNotBlank(lwcName)) {
+              sectionTemp.componentlst.add(lwcName);
+            }
             result.sectionlst.add(sectionTemp);
           }
 
@@ -2282,11 +2288,15 @@ public with sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public Decimal layout;
 
+    @AuraEnabled
+    public List<String> componentlst;
+
     // Default constructor
     public Section() {
       this.objlst = new List<CObject>();
       this.subSectionlst = new List<Section>();
       this.error = new Error();
+      this.componentlst = new List<String>();
     }
 
     public Section(String name) {
@@ -2294,6 +2304,7 @@ public with sharing class FEC_CaseBusinessService {
       this.objlst = new List<CObject>();
       this.subSectionlst = new List<Section>();
       this.error = new Error();
+      this.componentlst = new List<String>();
     }
 
     public Section(String name, Decimal order, Decimal layout) {
@@ -2303,6 +2314,7 @@ public with sharing class FEC_CaseBusinessService {
       this.layout = layout;
       this.subSectionlst = new List<Section>();
       this.error = new Error();
+      this.componentlst = new List<String>();
     }
 
     // Parameterized constructor

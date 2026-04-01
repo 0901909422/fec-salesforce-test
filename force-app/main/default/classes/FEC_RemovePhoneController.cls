@@ -1,7 +1,6 @@
 public with sharing class FEC_RemovePhoneController {
 
-    private static final Pattern PHONE_PATTERN_0 = Pattern.compile('^0[0-9]{9}$');
-    private static final Pattern PHONE_PATTERN_84 = Pattern.compile('^84[0-9]{9}$');
+    private static final Pattern PHONE_VALID_PATTERN = Pattern.compile(FEC_ConstantCommon.PATTERN_PHONE_NUMBER);
 
     public class RemovablePhoneRowDTO {
         @AuraEnabled public String id;
@@ -66,7 +65,7 @@ public with sharing class FEC_RemovePhoneController {
             return false;
         }
         String normalized = phone.trim();
-        return PHONE_PATTERN_0.matcher(normalized).matches() || PHONE_PATTERN_84.matcher(normalized).matches();
+        return PHONE_VALID_PATTERN.matcher(normalized).matches();
     }
 
     private static Boolean isTechnicalSuccess(FEC_GetRemovablePhoneStatus.PhoneCheckResult r) {
