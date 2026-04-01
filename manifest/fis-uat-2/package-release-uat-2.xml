@@ -1280,8 +1280,10 @@
 
 	<!-- additional -->
 	<types>
-		<members>FEC_City__c</members>
-        <members>FEC_Country__c</members>
+		<members>FEC_Country__c</members>
+		<members>FEC_District__c</members>
+		<members>FEC_Province__c</members>
+		<members>FEC_Ward__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>

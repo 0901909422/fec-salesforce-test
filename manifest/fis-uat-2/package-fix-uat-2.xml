@@ -293,8 +293,10 @@
     </types>
     <types>
 		<members>ServiceResourceSkill</members>
-		<members>FEC_City__c</members>
-        <members>FEC_Country__c</members>
+		<members>FEC_Country__c</members>
+		<members>FEC_District__c</members>
+		<members>FEC_Province__c</members>
+		<members>FEC_Ward__c</members>
         <members>FEC_Service_Resource_Absence__c</members>
         <members>ServiceResource</members>
         <members>FEC_Template__c</members>
