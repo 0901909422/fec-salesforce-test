@@ -302,6 +302,7 @@
         <members>FEC_Template__c</members>
         <members>FEC_Folder__c</members>
         <members>FEC_Enhanced_Letterhead__c</members>
+        <members>FEC_Case_Status__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
