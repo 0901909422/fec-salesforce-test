@@ -73,6 +73,11 @@
                             </c-fec_-related-list-paging>
                         </div>
                     </template>
+                    <template if:true={showIPPNoData}>
+                        <div class="slds-text-align_center slds-p-around_large ipp-details-empty">
+                            <p>{noDataLabel}</p>
+                        </div>
+                    </template>
                 </template>
                 <template if:true={isLoading}>
                     <div class="slds-is-relative slds-p-vertical_large">
