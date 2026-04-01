@@ -146,7 +146,7 @@ public without sharing class FEC_ApplicationsListController {
                 }
 
                 Map<String, String> cityMap = new Map<String, String>();
-                for (FEC_City__c c : [SELECT Name, FEC_Code__c FROM FEC_City__c]) {
+                for (FEC_Province__c c : [SELECT Name, FEC_Code__c FROM FEC_Province__c]) {
                     cityMap.put(c.FEC_Code__c, c.Name);
                 }
 
