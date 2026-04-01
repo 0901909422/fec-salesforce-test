@@ -129,12 +129,6 @@ public with sharing class FEC_CaseBusinessService {
           FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
           FEC_Account_or_Contract__r.FEC_Date_of_Issue__c,
           FEC_Account_or_Contract__r.FEC_Place_of_Issue__c,
-          FEC_Account_or_Contract__r.FEC_Account_Status__c,
-          FEC_Account_or_Contract__r.FEC_Application_ID__c,
-          FEC_Account_or_Contract__r.FEC_Plastic_ID__c,
-          FEC_Account_or_Contract__r.FEC_Block_Code_1__c,
-          FEC_Account_or_Contract__r.FEC_Block_Code_2__c,
-          FEC_Account_or_Contract__r.FEC_Block_Code__c,
           FEC_Process_Action_Count__c,
           FEC_Original_Info_Phone_Number__c,
           FEC_Updated_Info_Phone_Number__c,
@@ -638,6 +632,8 @@ public with sharing class FEC_CaseBusinessService {
 
           sectionItem.sort();
         }
+
+        result.removeEmptySections();
       }
 
       // ============================== GET ROUNTING AND PROCESS ACTION ===============================
@@ -2342,6 +2338,14 @@ public with sharing class FEC_CaseBusinessService {
       return null;
     }
 
+    public void removeEmptySections() {
+      for (Integer i = sectionlst.size() - 1; i >= 0; i--) {
+        Section s = sectionlst[i];
+        if (!s.removeIfNoFieldDeep()) {
+          sectionlst.remove(i);
+        }
+      }
+    }
   }
 
   public class Section implements Comparable {
