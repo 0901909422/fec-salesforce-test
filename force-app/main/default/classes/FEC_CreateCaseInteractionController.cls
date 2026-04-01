@@ -122,7 +122,7 @@ public with sharing class FEC_CreateCaseInteractionController {
         );
       insert newInfo;
       
-      FEC_Customer_History__c newHistory = createHistoryNonExistingCustomer(interaction.Id, customerName);
+      FEC_Customer_History__c newHistory = createHistoryNonExistingCustomer(interaction.Id, customerName, nationalPassportId);
 
       interaction.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
       interaction.FEC_Account_or_Contract__c = newHistory.Id;
@@ -140,7 +140,7 @@ public with sharing class FEC_CreateCaseInteractionController {
   }
   
   @AuraEnabled
-  public static FEC_Customer_History__c  createHistoryNonExistingCustomer(Id caseId, String customerName) {
+  public static FEC_Customer_History__c  createHistoryNonExistingCustomer(Id caseId, String customerName, String nationalPassportId) {
     
     FEC_Customer_History__c rec = new FEC_Customer_History__c();
     rec.Name = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
@@ -149,6 +149,7 @@ public with sharing class FEC_CreateCaseInteractionController {
     rec.FEC_Account_Number__c = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
     rec.FEC_Case__c = caseId;
     rec.FEC_Product_Code__c = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
+    rec.FEC_National_ID_Passport_ID__c = nationalPassportId;
     try {
       insert rec;
     } catch (Exception e) {
