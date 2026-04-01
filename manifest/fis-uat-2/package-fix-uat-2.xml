@@ -49,6 +49,7 @@
 		<members>FEC_CustomerIntegrationService</members>
 		<members>FEC_FullCustomerIntegrationJob</members>
 		<members>FEC_GetLoanApplicationHistory</members>
+		<members>FEC_CaseEditNOCController</members>
         <name>ApexClass</name>
     </types>
     <types>
