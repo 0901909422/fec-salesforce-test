@@ -630,8 +630,6 @@ public with sharing class FEC_CaseBusinessService {
 
           sectionItem.sort();
         }
-
-        result.removeEmptySections();
       }
 
       // ============================== GET ROUNTING AND PROCESS ACTION ===============================
@@ -2331,9 +2329,6 @@ public with sharing class FEC_CaseBusinessService {
       return null;
     }
 
-    public void removeEmptySections() {
-      
-    }
   }
 
   public class Section implements Comparable {
