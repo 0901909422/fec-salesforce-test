@@ -59,6 +59,7 @@
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_CaseManagerListService</members>
 		<members>FEC_GetStatus</members>
+		<members>FEC_CaseEditNOCController</members>
         <name>ApexClass</name>
     </types>
     <types>
