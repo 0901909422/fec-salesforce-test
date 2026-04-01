@@ -847,7 +847,7 @@ public with sharing class FEC_CommonUltils {
       log.FEC_Is_Success__c = isSuccess;
       log.FEC_Error_Message__c = errorMessage;
 
-      // insert log;
+      insert log;
 
     } catch(Exception e) {
       System.debug('LOG INSERT ERROR: ' + e.getMessage());
