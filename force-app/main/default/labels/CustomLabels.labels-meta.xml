@@ -11257,4 +11257,60 @@
         <shortDescription>MSG Create Customer History Success</shortDescription>
         <value>Create Customer History Successfully</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_Remove_Phone_Invalid_Format</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Remove_Phone_Invalid_Format</shortDescription>
+        <value>Số điện thoại không đúng định dạng. Vui lòng nhập 10 số bắt đầu bằng 0 hoặc 11 số bắt đầu bằng 84.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Remove_Phone_Service_Failed</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Remove_Phone_Service_Failed</shortDescription>
+        <value>Dịch vụ lỗi. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Remove_Phone_Phone_Type</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Remove_Phone_Phone_Type</shortDescription>
+        <value>Phone Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Remove_Phone_Removable</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Remove_Phone_Removable</shortDescription>
+        <value>Removable</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Remove_Phone_Section_Title</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Remove_Phone_Section_Title</shortDescription>
+        <value>Remove Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Remove_Phone_Input_Label</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Remove_Phone_Input_Label</shortDescription>
+        <value>Removed Phone Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Remove_Phone_Check_Eligibility</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Btn_Remove_Phone_Check_Eligibility</shortDescription>
+        <value>Check Eligibility</value>
+    </labels>
 </CustomLabels>
