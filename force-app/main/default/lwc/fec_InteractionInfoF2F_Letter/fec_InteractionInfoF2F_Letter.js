@@ -2,7 +2,7 @@ import { LightningElement, api, track, wire } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
-
+import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 // ================= APEX =================
 import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInteraction";
 import getInteractionPhoneReveal from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionPhoneReveal";
@@ -21,9 +21,21 @@ import FEC_INTERACTION_CREATED_ON_LABEL from "@salesforce/label/c.FEC_Interactio
 import FEC_INTERACTION_CREATED_BY_LABEL from "@salesforce/label/c.FEC_Interaction_Created_By_Label";
 import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interaction_Information_Label";
 
+import FEC_PHONE_IS_REQUIRED_MSG from "@salesforce/label/c.FEC_PHONE_IS_REQUIRED_MSG";
+import FEC_PHONE_IS_INVALID_FORMAT_1_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_1_MSG";
+import FEC_PHONE_IS_INVALID_FORMAT_2_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_2_MSG";
+import FEC_PHONE_IS_INVALID_FORMAT_3_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_3_MSG";
+import FEC_OUTCOME_CODE_LABEL from "@salesforce/label/c.FEC_Outcome_Code_Label";
+import FEC_REMARKS_LABEL from "@salesforce/label/c.FEC_Interaction_Remark_Label";
 import { formatDateTime } from "c/fec_CommonUtils";
 
-import { RECORD_TYPES, VIEW_MODE_REVIEW } from "c/fec_CommonConst";
+import {
+  RECORD_TYPES,
+  VIEW_MODE_REVIEW,
+  ICON_HIDE,
+  ICON_PREVIEW,
+  CLOSED_STATUS,
+} from "c/fec_CommonConst";
 
 export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
   labels = {
@@ -31,6 +43,8 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
     interactionCreatedOn: FEC_INTERACTION_CREATED_ON_LABEL,
     interactionCreatedBy: FEC_INTERACTION_CREATED_BY_LABEL,
     interactionInformation: FEC_Interaction_Information_Label,
+    outcomeCode: FEC_OUTCOME_CODE_LABEL,
+    remarks: FEC_REMARKS_LABEL,
   };
   // ================= API =================
   @api recordId;
@@ -139,6 +153,15 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
     return this.viewMode === VIEW_MODE_REVIEW;
   }
 
+  get isInteractionClosed() {
+    if (this.record?.FEC_Interaction_Status__c === CLOSED_STATUS) return true;
+    return false;
+  }
+
+  get showField() {
+    return this.isReview && this.isInteractionClosed;
+  }
+
   get hasPhone() {
     return !!(
       this.record?.FEC_Phone_Number__c ||
@@ -155,7 +178,7 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
   }
 
   get eyeIcon() {
-    return this.isMasked ? "utility:hide" : "utility:preview";
+    return this.isMasked ? ICON_HIDE : ICON_PREVIEW;
   }
 
   get createdOn() {
@@ -166,6 +189,14 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
 
   get createdBy() {
     return this.record?.FEC_Created_by__c;
+  }
+
+  get outcomeCode() {
+    return this.record?.FEC_Outcome_Code__c;
+  }
+
+  get interactionRemark() {
+    return this.record?.FEC_Interaction_Remarks__c;
   }
 
   // ================= PHONE ACTIONS =================
@@ -182,40 +213,77 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
     this.phoneDraft = "";
   }
 
+  // handlePhoneChange(event) {
+  //   this.phoneDraft = event.target.value;
+  // }
+
   handlePhoneChange(event) {
     this.phoneDraft = event.target.value;
+
+    const input = event.target;
+    const value = this.phoneDraft;
+
+    // reset lỗi
+    input.setCustomValidity("");
+
+    if (!value) {
+      input.setCustomValidity(FEC_PHONE_IS_REQUIRED_MSG);
+    } else if (value.startsWith("0")) {
+      if (!/^\d{10}$/.test(value)) {
+        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_1_MSG);
+      }
+    } else if (value.startsWith("84")) {
+      if (!/^\d{11}$/.test(value)) {
+        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_2_MSG);
+      }
+    } else {
+      input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_3_MSG);
+    }
+
+    input.reportValidity();
   }
 
-  handleSavePhone() {
+  async handleSavePhone() {
+    const input = this.template.querySelector("lightning-input");
+
+    if (!input || !input.checkValidity()) {
+      input.reportValidity();
+      return;
+    }
+
     if (!this.phoneDraft || !this.interactionId) return;
 
-    updateInteractionPhone({
-      recordId: this.interactionId,
-      phone: this.phoneDraft,
-    })
-      .then((maskedPhone) => {
-        this.record = {
-          ...this.record,
-          FEC_Interaction_Masked_Phone__c: maskedPhone,
-        };
-
-        this.isEditingPhone = false;
-        this.isMasked = true;
-        this.phoneDraft = null;
-      })
-      .catch((error) => {
-        console.error("updateInteractionPhone error", error);
+    try {
+      const maskedPhone = await updateInteractionPhone({
+        recordId: this.interactionId,
+        phone: this.phoneDraft,
       });
+
+      this.record = {
+        ...this.record,
+        FEC_Interaction_Masked_Phone__c: maskedPhone,
+      };
+
+      this.isEditingPhone = false;
+      this.isMasked = true;
+      this.phoneDraft = null;
+    } catch (error) {
+      console.error("updateInteractionPhone error", error);
+    }
   }
 
-  revealPhone() {
+  async revealPhone() {
     if (!this.interactionId) return;
 
-    getInteractionPhoneReveal({ recordId: this.interactionId })
-      .then((result) => {
-        this.revealedPhone = result;
-        this.isMasked = false;
-      })
-      .catch((e) => console.error("revealPhone error", e));
+    try {
+      const result = await getInteractionPhoneReveal({
+        recordId: this.interactionId,
+      });
+
+      this.revealedPhone = result;
+      this.isMasked = false;
+    } catch (e) {
+      console.error("revealPhone error", e);
+    }
   }
 }

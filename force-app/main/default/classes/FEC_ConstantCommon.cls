@@ -39,7 +39,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss';
     public static final String DATE_FORMAT = 'yyyy-MM-dd';
     public static final String DATE_FORMAT_MMYYYY = 'MM/yyyy';
+    public static final String DATE_FORMAT_DDMMYYYY = 'dd/MM/yyyy';
     public static final String DATETIME_FORMAT_OUTPUT = 'dd/MM/yyyy HH:mm:ss';
+    public static final String PAYMENT_PREFIX = 'pay_';
     
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
@@ -74,7 +76,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_EXTERNAL_NAME = 'External';
     public static final String CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME = 'Other';
     public static final String CHANNEL_CHAT = 'Chat';
-
+    
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
     public static final String PATTERN_APPLICATION_ID = '^(\\d{6}|\\d{8}|\\d{9})$';
@@ -134,7 +136,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUCCESS_CODE_Y = 'Y';
     public static final String SUCCESS_CODE_E = 'E';
     public static final String SUCCESS_CODE_200 = '200';
+    public static final Integer SUCCESS_CODE_200_NUM = 200;
     public static final String SUCCESS_CODE_203 = '203';
+    public static final Integer ERROR_CODE_500_NUM = 500;
     public static final String KEY_ID = 'id';
     public static final String KEY_NAME = 'name';
     public static final String KEY_UPLOADED_BY = 'uploadedBy';
@@ -207,6 +211,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRIMARY_PHONE = 'Primary Phone';
     public static final String SUBCHANNEL_INCOMING_EMAIL = 'Incoming Email';
     public static final String CASE_ORIGIN_EMAIL2CASE = 'Email2Case';
+    public static final String CASE_ORIGIN_EMAIL_UBANK = 'Email Ubank';
+    public static final String CASE_ORIGIN_EMAIL_FECREDIT = 'Email FECredit';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
     
     public static final String KEY_VALID_CHANNELS_WED = 'WED';
@@ -259,11 +265,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String KEY_NUMBER = 'Number';
     public static final String KEY_TEXT = 'Text';
     public static final String OBJ_ADDITIONAL_INFO = 'FEC_Additional_Info__c';
-
-    public static final String AUTO_METHOD = 'Auto';
     public static final String REQUEST_EXISTING_USER_TYPE  = 'EXISTING';
     public static final String REQUEST_NON_EXISTING_USER_TYPE  = 'NON-EXISTING';
     public static final String REQUEST_PROSPECT_USER_TYPE  = 'PROSPECT';
+
+    public static final String AUTO_METHOD = 'Auto';
 
     // Call api FEC_CancelCSCaseService
     public static final String STATUS_CLOSED = 'Closed';
@@ -271,6 +277,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String STATUS_CANCELLED  = 'Cancelled';
     public static final String CODE_SUCCESS      = '1';
     public static final String CODE_FAILURE      = '3';
+    public static final String CODE_SYS_ERROR    = '0';
     public static final String ERROR_PREFIX      = 'Error: ';
     public static final String SUCCESS_MESSAGE_CANCEL_CASE = System.Label.FEC_MSG_CancelCS_Success;
     public static final String PHONE_REGEX_VN    = '^0[0-9]{9}$';
@@ -308,4 +315,15 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_STATUS_CLOSED    = 'Closed';
     public static final String CASE_STATUS_RESOLVED  = 'Resolved';
     public static final String CASE_STATUS_CANCELLED = 'Cancelled';
+    public static final String CASE_INTERNAL_REQUEST = 'Internal Request';
+    public static final Set<String> SUPPORTED_CHANNELS = new Set<String>{
+        'INBOUND',
+        'OUTBOUND',
+        'CHAT',
+        'WEBSITE',
+        'FE_MOBILE_APP',
+        'EXTERNAL',
+        'INTERNAL',
+        'ZALO'
+    };
 }

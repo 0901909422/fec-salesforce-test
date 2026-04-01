@@ -30,10 +30,26 @@ const VIEW_MAP = {
     all_folders:   TAB_FOLDERS
 };
 
+/** Reverse map: view constant → nav item name */
+const REVERSE_VIEW_MAP = {
+    [TAB_TEMPLATES]: 'all_templates',
+    [TAB_FOLDERS]:   'all_folders'
+};
+
 export default class Fec_folderTreePanel extends LightningElement {
 
-    /** Current active view (from parent) */
-    @api activeView;
+    /** Current active view (from parent) – syncs sidebar highlight */
+    _activeView;
+    @api
+    get activeView() { return this._activeView; }
+    set activeView(value) {
+        this._activeView = value;
+        /* Keep sidebar highlight in sync when parent changes the view programmatically */
+        const navItem = REVERSE_VIEW_MAP[value];
+        if (navItem) {
+            this.selectedNavItem = navItem;
+        }
+    }
 
     /** Labels */
     label = {

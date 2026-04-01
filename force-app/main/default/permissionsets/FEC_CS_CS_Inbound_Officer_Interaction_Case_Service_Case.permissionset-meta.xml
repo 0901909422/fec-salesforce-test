@@ -47,11 +47,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Case.FEC_Account_Number__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>Case.FEC_Account_or_Contract__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -63,6 +58,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Actual_Nature_of_Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Adjusted_Amount__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -178,11 +178,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Confirm_D2C_Assessment__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.FEC_Contract_Number__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -333,6 +328,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_IPP_To_Close__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Incorrect_Contract_Number__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -609,6 +609,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_Parent_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Payment_Method__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

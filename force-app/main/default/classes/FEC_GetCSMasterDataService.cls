@@ -11,6 +11,7 @@
 ****************************************************************************************/
 
 global with sharing class FEC_GetCSMasterDataService {
+    private static final Integer MAX_TRANSACTION_ID = 36;
 
     // Cache
     private static Map<String, List<AdditionalPropertyType>> cacheByApplyTo = new Map<String, List<AdditionalPropertyType>>();
@@ -21,13 +22,24 @@ global with sharing class FEC_GetCSMasterDataService {
     // ==========================================================
     webservice static GetCSMasterDataResponse GetCSMasterDataRequest(SysRequestType Sys) {
 
+        GetCSMasterDataResponse res = initResponse(Sys);
         if (Sys == null) {
-            throw new CalloutException(
-                String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Sys'})
-            );
+            res.Sys.Code = '101';
+            res.Sys.Description = System.Label.FEC_MSG_Sys_Null;
+            return res;
         }
 
-        GetCSMasterDataResponse res = initResponse(Sys);
+        if (String.isBlank(Sys.Channel) || !FEC_ConstantCommon.SUPPORTED_CHANNELS.contains(Sys.Channel)) {
+            res.Sys.Code = '102';
+            res.Sys.Description = System.Label.FEC_MSG_Channel_Validation + Sys.Channel + System.Label.FEC_MSG_Data_Request_Master_Data;
+            return res;
+        }
+
+        if (String.isBlank(Sys.TransactionID) || Sys.TransactionID.length() > FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN) {
+            res.Sys.Code = '103';
+            res.Sys.Description = System.Label.FEC_MSG_TransactionId_Validation + FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN + System.Label.FEC_MSG_Limit_Character;
+            return res;
+        }
 
         // Load settings ONCE
         loadSettings();
@@ -314,17 +326,9 @@ global with sharing class FEC_GetCSMasterDataService {
     private static GetCSMasterDataResponse initResponse(SysRequestType Sys) { 
         GetCSMasterDataResponse r = new GetCSMasterDataResponse();
         r.Sys = new SysResponseType();
-        r.Sys.TransactionID = Sys != null ? Sys.TransactionID : null; 
+        r.Sys.TransactionID = Sys != null ? Sys.TransactionID : null;
         r.Sys.DateTime_x = System.now();
         r.MasterDataItems = new List<MasterDataItemType>();
-        return r;
-    }
-
-    private static GetCSMasterDataResponse error(
-        GetCSMasterDataResponse r, String code, String msg
-    ) {
-        r.Sys.Code = code;
-        r.Sys.Description = msg;
         return r;
     }
 
