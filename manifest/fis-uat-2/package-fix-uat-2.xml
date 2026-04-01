@@ -300,6 +300,11 @@
         <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
         <members>FEC_Notification__c.FEC_Receivers__c</members>
 		<members>Case.FEC_Account_Contract_Number_PL__c</members>
+        <members>Case.FEC_Adjusted_Amount__c</members>
+		<members>Case.FEC_Bill_Amount__c</members>
+		<members>Case.FEC_Bill_Date__c</members>
+		<members>Case.FEC_Incorrect_Contract_Number__c</members>
+		<members>Case.FEC_Payment_Method__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
