@@ -40,7 +40,7 @@ import Cancel from '@salesforce/label/c.Cancel';
 import FEC_Button_SaveAndNew from '@salesforce/label/c.FEC_Button_SaveAndNew';
 import FEC_Save from '@salesforce/label/c.FEC_Save';
 import FEC_Toast_Save_Error_Message from '@salesforce/label/c.FEC_Toast_Save_Error_Message';
-
+import FEC_LABEL_CASE_STATUS from "@salesforce/label/c.FEC_LABEL_CASE_STATUS";
 import {
   AUTO_NOTIFICATION_HEADER_VI,
   MANUAL_NOTIFICATION_HEADER_VI,
@@ -96,8 +96,6 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   subCodeField = SUB_CODE_FIELD;
 
   // Notification Information fields
-  currentStatusField = CURRENT_STATUS_FIELD;
-  changedStatusField = CHANGED_STATUS_FIELD;
   notificationStatusField = NOTIFICATION_STATUS_FIELD;
   notificationChannelField = NOTIFICATION_CHANNEL_FIELD;
   notificationTemplateField = NOTIFICATION_TEMPLATE_FIELD;
@@ -123,6 +121,10 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   selectedNotificationTemplateId = null;
 
   selectedAssignedToQueueId = null;
+
+  /** Phase 1: CSV of FEC_Case_Status__c Ids (comma-separated). Undefined = user has not changed lookup (preserve on edit). */
+  selectedCurrentStatusCsv;
+  selectedChangedStatusCsv;
 
   @wire(IsConsoleNavigation) isConsoleNavigation;
 
@@ -156,8 +158,19 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   }
 
   handleSelected(event) {
-    const ids = event.detail.map(e => e?.id);
+    const ids = (event.detail || []).map((e) => e?.id);
     const joined = ids.join(',');
+    const dataId = event.currentTarget?.dataset?.id;
+
+    if (dataId === 'currentStatus') {
+      this.selectedCurrentStatusCsv = joined;
+      return;
+    }
+    if (dataId === 'changedStatus') {
+      this.selectedChangedStatusCsv = joined;
+      return;
+    }
+
     const source = event?.target?.objectApiName;
 
     switch (source) {
@@ -215,6 +228,10 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   get placeholderSearchSubCode() {
     return LBL_SearchBtn + ' ' + FEC_Label_Sub_Code + '...';
+  }
+
+  get placeholderSearchCaseStatus() {
+    return LBL_SearchBtn + FEC_LABEL_CASE_STATUS;
   }
 
   get placeholderSearchNotificationTemplate() {
@@ -351,6 +368,12 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     fields[SUB_CATEGORY_FIELD.fieldApiName] = this.selectedSubCategoryId;
     fields[SUB_CODE_FIELD.fieldApiName] = this.selectedSubCodeId;
     fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName] = this.selectedNotificationTemplateId || fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName];
+    if (this.selectedCurrentStatusCsv !== undefined) {
+      fields[CURRENT_STATUS_FIELD.fieldApiName] = this.selectedCurrentStatusCsv;
+    }
+    if (this.selectedChangedStatusCsv !== undefined) {
+      fields[CHANGED_STATUS_FIELD.fieldApiName] = this.selectedChangedStatusCsv;
+    }
 
     let isFormValid = true;
     const lookupComponents = this.template.querySelectorAll('c-fec_-lookup');
@@ -478,6 +501,8 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     this.selectedSubCodeId = null;
     this.selectedNotificationTemplateId = null;
     this.selectedAssignedToQueueId = null;
+    this.selectedCurrentStatusCsv = undefined;
+    this.selectedChangedStatusCsv = undefined;
 
     // Reset all fields within the lightning-record-edit-form
     const form = this.template.querySelector('lightning-record-edit-form');
