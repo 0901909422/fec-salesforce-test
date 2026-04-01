@@ -24,7 +24,16 @@ import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCode
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
-import { ACTION_REOPEN, ACTION_RECALL } from "c/fec_CommonConst";
+import { 
+  ACTION_REOPEN, 
+  ACTION_RECALL,
+  // RECORD_TYPE_INTERNAL_CASE, 
+  VIEW_MODE_HANDLING, 
+  // VIEW_MODE_REVIEW, 
+  // STR_UNDEFINED, 
+  // INTERNAL_REQUEST, 
+  // INTERNAL_UBANK
+} from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
 
@@ -35,7 +44,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
   isSubmited = true;
 
   get isEdit() {
-    return this.modeEditCase && !this.isSubmited;
+    
+    const defaultEdit = (this.modeEditCase || this.interactionViewMode === VIEW_MODE_HANDLING) ? true : false;
+    return defaultEdit && !this.isSubmited;
   }
 
   get natureOfCaseLabel() {
@@ -68,6 +79,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   natureOfCase;
 
   disableProdType;
+  interactionViewMode;
 
   get disableCategory() {
     return !this.productTypeSelectedId;
@@ -122,6 +134,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.subCodeSelectedId = res.FEC_SubCode__c;
 
         this.isSubmited = res.FEC_Is_Submited__c;
+        this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
 
         this.getProdType();
         this.getCategory();
