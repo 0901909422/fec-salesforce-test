@@ -2010,12 +2010,17 @@
 	<!--<types>
 		<members>FEC_CaseOwnerChangeNotification</members>
         <name>ApexClass</name>
-    </types>
+    </types>-->
     <types>
-		<members>FEC_Email_Subject_Case_Owner_Change</members>
-		<members>FEC_Email_Body_Case_Owner_Change</members>
+		<!--<members>FEC_Email_Subject_Case_Owner_Change</members>
+		<members>FEC_Email_Body_Case_Owner_Change</members>-->
+		<members>FEC_MSG_Action_Owner_Only</members>
+		<members>FEC_MSG_Edit_Owner_Only</members>
+		<members>FEC_MSG_Escalate_Owner_Only</members>
+		<members>FEC_MSG_Transfer_Owner_Only</members>
+		<members>FEC_MSG_Update_Team_Permission_Denied</members>
 		<name>CustomLabel</name>
-	</types>-->
+	</types>
 	<types>
 		<!--<members>Case.FEC_Restrict_Change_Owner_Non_Owner</members>-->
 		<members>Case.FEC_Restrict_Change_Owner_When_Resolved</members>
