@@ -10983,6 +10983,38 @@
         <value>Save &amp; Close</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Channel_Validation</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Channel Validation</shortDescription>
+        <value>Channel id &quot;</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Data_Request_Master_Data</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Data Request Master Data</shortDescription>
+        <value>&quot; is not supported.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Limit_Character</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Limit Character</shortDescription>
+        <value>&quot; characters.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_TransactionId_Validation</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG TransactionId Validation</shortDescription>
+        <value>TransactionID null or exceeds maximum length of &quot;</value>
+    </labels>
+    <labels>
         <fullName>FEC_LBL_Incorrect_Payment_Form_Title</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -11201,6 +11233,21 @@
         <protected>false</protected>
         <shortDescription>FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG</shortDescription>
         <value>NationalID is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_DATETIME_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_DATETIME_INVALID_MSG</shortDescription>
+        <value>DateTime_x is null or invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Endpoint_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Endpoint Null</shortDescription>
+        <value>Endpoint is null or empty. Please check API configuration.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Create_Customer_History_Success</fullName>

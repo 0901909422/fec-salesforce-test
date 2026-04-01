@@ -996,4 +996,12 @@ public with sharing class FEC_CommonUltils {
     public static String pad2(Integer val) {
         return (val < 10 ? '0' : '') + String.valueOf(val);
     }
+
+  public static String serializeSafe(Object obj) {
+    try {
+      return obj != null ? JSON.serialize(obj) : null;
+    } catch (Exception e) {
+      return 'SERIALIZE_ERROR: ' + e.getMessage();
+    }
+  }
 }

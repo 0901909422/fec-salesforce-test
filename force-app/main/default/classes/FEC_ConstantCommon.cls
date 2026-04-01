@@ -316,4 +316,14 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_STATUS_RESOLVED  = 'Resolved';
     public static final String CASE_STATUS_CANCELLED = 'Cancelled';
     public static final String CASE_INTERNAL_REQUEST = 'Internal Request';
+    public static final Set<String> SUPPORTED_CHANNELS = new Set<String>{
+        'INBOUND',
+        'OUTBOUND',
+        'CHAT',
+        'WEBSITE',
+        'FE_MOBILE_APP',
+        'EXTERNAL',
+        'INTERNAL',
+        'ZALO'
+    };
 }
