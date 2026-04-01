@@ -1296,6 +1296,7 @@
 	</types>
     <types>
 		<members>FEC_UpdateCustomerContact</members>
+		<members>FEC_MainInfoAccountController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1325,6 +1326,7 @@
     <types>
 		<members>customDblclickCell</members>
 		<members>maskedToggleDatatable</members>
+		<members>fec_CommonRecordDetailSection</members>
         <name>LightningComponentBundle</name>
     </types>
 
