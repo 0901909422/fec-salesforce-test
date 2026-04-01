@@ -182,6 +182,7 @@ public with sharing class FEC_CaseEditNOCController {
           Id,
           CaseNumber,
           FEC_Account_or_Contract__c,
+          FEC_Account_Contract_Number_PL__c,
           FEC_Product_Type__c,
           FEC_Category__c,
           FEC_SubCategory__c,
