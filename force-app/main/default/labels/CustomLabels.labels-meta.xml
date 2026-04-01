@@ -11329,4 +11329,36 @@
         <shortDescription>FEC_Btn_Remove_Phone_Check_Eligibility</shortDescription>
         <value>Check Eligibility</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_Conversion_Fail_Disable</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Conversion_Fail_Disable</shortDescription>
+        <value>Đã vượt quá số lần thử. Không thể chuyển đổi trả góp.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_Conversion_Fail_Retry</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Conversion_Fail_Retry</shortDescription>
+        <value>Chuyển đổi thất bại. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_Conversion_Success</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Conversion_Success</shortDescription>
+        <value>Chuyển đổi trả góp thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_No_Eligible_Transactions</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_No_Eligible_Transactions</shortDescription>
+        <value>Không có giao dịch hợp lệ để chuyển đổi trả góp.</value>
+    </labels>
 </CustomLabels>
