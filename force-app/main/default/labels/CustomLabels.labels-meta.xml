@@ -2900,6 +2900,14 @@
         <value>Customer information updated successfully</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Action_Owner_Only</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Only Case Owner can perform this routing action</shortDescription>
+        <value>Chỉ Case Owner mới có thể thực hiện thao tác này.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_API_Error</fullName>
         <categories>API</categories>
         <language>en_US</language>
@@ -3039,6 +3047,14 @@
         <value>DateTime is null</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Edit_Owner_Only</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Only Case Owner can edit case draft or nature of case</shortDescription>
+        <value>Chỉ Case Owner mới có thể chỉnh sửa thông tin này.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Eligible</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -3085,6 +3101,14 @@
         <protected>false</protected>
         <shortDescription>MSG Error Panel Title</shortDescription>
         <value>We hit a snag</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Escalate_Owner_Only</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Only Case Owner can escalate the case</shortDescription>
+        <value>Chỉ Case Owner mới có thể escalate Case.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Escalation_Failed_Prefix</fullName>
@@ -3621,6 +3645,14 @@
         <value>TransID is null or no longer than 36 characters</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Transfer_Owner_Only</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Only Case Owner can transfer the case</shortDescription>
+        <value>Chỉ Case Owner mới có thể transfer Case.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_UNFOLLOW_INFO</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3634,6 +3666,14 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_UPDATED_INFO_NOT_UPDATED</shortDescription>
         <value>The information has not been updated.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Update_Team_Permission_Denied</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User must be Case Owner or Case Participant to update team</shortDescription>
+        <value>Bạn không có quyền cập nhật Team. Chỉ Owner hoặc Case Participant mới được phép.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_User_Queue_Id_Invalid</fullName>
