@@ -1,0 +1,44 @@
+<template>
+    <template if:true={isOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_large" aria-modal="true">
+            <div class="slds-modal__container">
+
+                <!-- HEADER -->
+                <div class="slds-modal__header">
+                    <lightning-button-icon
+                        icon-name="utility:close"
+                        alternative-text="Close"
+                        variant="bare-inverse"
+                        class="slds-modal__close"
+                        onclick={handleClose}
+                    ></lightning-button-icon>
+                    <h1 class="slds-modal__title slds-hyphenate">Template Preview</h1>
+                </div>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium" style="min-height: 300px;">
+
+                    <!-- Subject -->
+                    <div class="slds-form-element slds-m-bottom_medium">
+                        <span class="slds-form-element__label slds-text-title_bold">Subject</span>
+                        <div class="slds-form-element__static slds-p-top_xx-small">{subjectDisplay}</div>
+                    </div>
+
+                    <hr class="slds-m-vertical_small" />
+
+                    <!-- Email Body (scrollable rich HTML) -->
+                    <div class="preview-body-container preview-body-scroll" lwc:dom="manual"></div>
+                </div>
+
+                <!-- FOOTER -->
+                <div class="slds-modal__footer">
+                    <lightning-button
+                        label="Close"
+                        onclick={handleClose}
+                    ></lightning-button>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open" onclick={handleBackdropClick}></div>
+    </template>
+</template>

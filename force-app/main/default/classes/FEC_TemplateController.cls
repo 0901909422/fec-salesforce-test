@@ -124,7 +124,7 @@ public with sharing class FEC_TemplateController {
     public static List<FEC_Enhanced_Letterhead__c> getAllLetterheads() {
         try {
             return [
-                SELECT Id, Name
+                SELECT Id, Name, FEC_Header__c, FEC_Footer__c
                 FROM FEC_Enhanced_Letterhead__c
                 ORDER BY Name ASC
                 LIMIT 1000
