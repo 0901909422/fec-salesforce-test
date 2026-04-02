@@ -98,16 +98,16 @@ public with sharing class FEC_SearchController {
         // 5. Cập nhật lại Case để liên kết ngược với History record vừa tạo
         objCase.FEC_Account_or_Contract__c = rec.Id;
         update objCase;
-
+        
         // ===== CALL API Demographic  =====
        System.enqueueJob(
-        new FEC_FullCustomerIntegrationJob(
-            rec.Id,      
-            cifNumber,
-            phone,
-            fieldName == 'AccountNumber' ? value : null
-        )
-    );
+            new FEC_FullCustomerIntegrationJob(
+                rec.Id,      
+                cifNumber,
+                phone,
+                fieldName == 'AccountNumber' ? value : null
+                )
+        );
 
         return objCase.Id;
         } catch (Exception e) {
