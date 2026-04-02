@@ -37,6 +37,11 @@
         <members>FEC_RePayment_Schedule__c.FEC_Total_Installment_Amount__c</members>
         <members>FEC_RePayment_Schedule__c.FEC_Total_Interest__c</members>
         <members>FEC_RePayment_Schedule__c.FEC_Total_Principal__c</members>
+        <members>FEC_Address_Info__c.FEC_Country_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_District_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_Full_Address__c</members>
+        <members>FEC_Address_Info__c.FEC_Province_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_Ward_Text__c</members>
         <name>CustomField</name>
     </types>
     <types>
