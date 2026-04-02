@@ -117,9 +117,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .finally(() => { });
   }
 
-  connectedCallback() {
+  async connectedCallback() {
     try {
-      resetViewMode({
+      await resetViewMode({
         recordId: this.recordId,
         viewMode: VIEW_MODE_REVIEW,
       });
