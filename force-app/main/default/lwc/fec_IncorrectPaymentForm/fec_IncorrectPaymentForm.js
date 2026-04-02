@@ -3,12 +3,15 @@
  * Description  : Incorrect Payment Form (child of dynamic LWC loader) - contract input, GetLoanSecInfo, adjustments (TH1/TH2 by subcode config).
  ****************************************************************************************/
 
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getPaymentHistoryFromSOAP from '@salesforce/apex/FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP';
 import getSubCodeConfig from '@salesforce/apex/FEC_IncorrectPaymentController.getSubCodeConfig';
 import getIncorrectContractOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getIncorrectContractOptions';
 import saveAdjustment from '@salesforce/apex/FEC_IncorrectPaymentController.saveAdjustment';
+import getBankNamePicklistOptions from '@salesforce/apex/FEC_RefundRequestController.getBankNamePicklistOptions';
+import getProvinceCityOptions from '@salesforce/apex/FEC_RefundRequestController.getProvinceCityOptions';
+import getBankBranchOptions from '@salesforce/apex/FEC_RefundRequestController.getBankBranchOptions';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
 import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
@@ -39,6 +42,11 @@ import FEC_MSG_Adjusted_Amount_Must_Equal_Payment from '@salesforce/label/c.FEC_
 import FEC_Toast_Validation_Message from '@salesforce/label/c.FEC_Toast_Validation_Message';
 import FEC_LBL_Payment_Method_Bank_Transfer from '@salesforce/label/c.FEC_LBL_Payment_Method_Bank_Transfer';
 import FEC_LBL_Payment_Method_Other_Channels from '@salesforce/label/c.FEC_LBL_Payment_Method_Other_Channels';
+import FEC_LBL_Beneficiary_Name from '@salesforce/label/c.FEC_LBL_Beneficiary_Name';
+import FEC_LBL_Beneficiary_Account from '@salesforce/label/c.FEC_LBL_Beneficiary_Account';
+import FEC_LBL_Bank_Name from '@salesforce/label/c.FEC_LBL_Bank_Name';
+import FEC_LBL_Bank_Branch from '@salesforce/label/c.FEC_LBL_Bank_Branch';
+import FEC_LBL_Province_City from '@salesforce/label/c.FEC_LBL_Province_City';
 
 const CONST = {
     EMPTY: '',
@@ -80,6 +88,14 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     @track paymentHistoryTableKey = 0;
     @track incorrectContractOptionlst = [];
     @track activeSections = [CONST.SECTION_MAIN];
+    @track beneficiaryName = CONST.EMPTY;
+    @track beneficiaryAccount = CONST.EMPTY;
+    @track bankName = CONST.EMPTY;
+    @track bankBranch = CONST.EMPTY;
+    @track provinceCity = CONST.EMPTY;
+    @track bankOptions = [];
+    @track bankBranchOptions = [];
+    @track provinceOptions = [];
     _lastLoadedContract = CONST.EMPTY;
 
     customLabel = {
@@ -99,6 +115,11 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         removeRow: FEC_LBL_Remove_Row,
         addItem: FEC_LBL_Add_Item,
         adjustedAmountMustEqualPayment: FEC_MSG_Adjusted_Amount_Must_Equal_Payment,
+        beneficiaryName: FEC_LBL_Beneficiary_Name,
+        beneficiaryAccount: FEC_LBL_Beneficiary_Account,
+        bankName: FEC_LBL_Bank_Name,
+        bankBranch: FEC_LBL_Bank_Branch,
+        provinceCity: FEC_LBL_Province_City,
         datePlaceholder: CONST.DATE_PLACEHOLDER
     };
 
@@ -114,6 +135,33 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         { label: FEC_LBL_Payment_Method_Bank_Transfer, value: FEC_LBL_Payment_Method_Bank_Transfer },
         { label: FEC_LBL_Payment_Method_Other_Channels, value: FEC_LBL_Payment_Method_Other_Channels }
     ];
+
+    @wire(getBankNamePicklistOptions)
+    wiredBanks({ data, error }) {
+        if (data) {
+            this.bankOptions = data.map((r) => ({ label: r.label, value: r.value }));
+        } else if (error) {
+            this.bankOptions = [];
+        }
+    }
+
+    @wire(getProvinceCityOptions)
+    wiredProvinces({ data, error }) {
+        if (data) {
+            this.provinceOptions = data.map((r) => ({ label: r.label, value: r.value }));
+        } else if (error) {
+            this.provinceOptions = [];
+        }
+    }
+
+    @wire(getBankBranchOptions)
+    wiredBankBranches({ data, error }) {
+        if (data) {
+            this.bankBranchOptions = data.map((r) => ({ label: r.label, value: r.value }));
+        } else if (error) {
+            this.bankBranchOptions = [];
+        }
+    }
 
     get showManualBill() {
         if (this.selectedPaymentId) return false;
@@ -229,6 +277,11 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 this.subCode = data.subCode || CONST.EMPTY;
                 this.incorrectContract = data.incorrectContractNumber != null ? data.incorrectContractNumber : CONST.EMPTY;
                 this.paymentMethod = data.paymentMethod != null ? data.paymentMethod : CONST.EMPTY;
+                this.beneficiaryName = data.beneficiaryName != null ? data.beneficiaryName : CONST.EMPTY;
+                this.beneficiaryAccount = data.beneficiaryAccount != null ? data.beneficiaryAccount : CONST.EMPTY;
+                this.bankName = data.bankName != null ? data.bankName : CONST.EMPTY;
+                this.bankBranch = data.bankBranch != null ? data.bankBranch : CONST.EMPTY;
+                this.provinceCity = data.provinceCity != null ? data.provinceCity : CONST.EMPTY;
                 return getIncorrectContractOptions({ caseId: this.recordId })
                     .then((contractOpts) => {
                         this.incorrectContractOptionlst = contractOpts || [];
@@ -247,6 +300,11 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 this.configLoaded = true;
                 this.subCode = CONST.EMPTY;
                 this.incorrectContractOptionlst = [];
+                this.beneficiaryName = CONST.EMPTY;
+                this.beneficiaryAccount = CONST.EMPTY;
+                this.bankName = CONST.EMPTY;
+                this.bankBranch = CONST.EMPTY;
+                this.provinceCity = CONST.EMPTY;
             });
     }
 
@@ -375,6 +433,26 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         this.paymentMethod = event.detail.value || CONST.EMPTY;
     }
 
+    handleBeneficiaryNameChange(event) {
+        this.beneficiaryName = event.target.value || CONST.EMPTY;
+    }
+
+    handleBeneficiaryAccountChange(event) {
+        this.beneficiaryAccount = event.target.value || CONST.EMPTY;
+    }
+
+    handleBankNameChange(event) {
+        this.bankName = event.detail.value || CONST.EMPTY;
+    }
+
+    handleBankBranchChange(event) {
+        this.bankBranch = event.detail.value || CONST.EMPTY;
+    }
+
+    handleProvinceCityChange(event) {
+        this.provinceCity = event.detail.value || CONST.EMPTY;
+    }
+
     handleAddAdjustment() {
         this.adjustments = [...this.adjustments, { id: this.nextAdjustmentId, correctContract: CONST.EMPTY, adjustedAmount: null }];
         this.nextAdjustmentId += 1;
@@ -410,22 +488,30 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         this.adjustments = next;
     }
 
-    validatePaymentMethodField() {
-        const paymentMethodCmp = this.template.querySelector('lightning-combobox[name="paymentMethod"]');
-        if (!paymentMethodCmp) return true;
-        paymentMethodCmp.reportValidity();
-        return paymentMethodCmp.checkValidity();
-    }
-
-    validateManualBillAmountField() {
-        const manualBillAmountCmp = this.template.querySelector('lightning-input[name="manualBillAmount"]');
-        if (!manualBillAmountCmp) return true;
-        manualBillAmountCmp.reportValidity();
-        return manualBillAmountCmp.checkValidity();
+    validateFields(selectors) {
+        let isValid = true;
+        selectors.forEach((selector) => {
+            const cmp = this.template.querySelector(selector);
+            if (!cmp) return;
+            cmp.reportValidity();
+            if (!cmp.checkValidity()) {
+                isValid = false;
+            }
+        });
+        return isValid;
     }
 
     @api saveAdjustments() {
-        if (!this.validatePaymentMethodField()) {
+        if (!this.validateFields(['lightning-combobox[name="paymentMethod"]'])) {
+            return Promise.reject(new Error('validation'));
+        }
+        if (!this.validateFields([
+            'lightning-input[name="beneficiaryName"]',
+            'lightning-input[name="beneficiaryAccount"]',
+            'lightning-input[name="bankName"]',
+            'lightning-input[name="bankBranch"]',
+            'lightning-input[name="provinceCity"]'
+        ])) {
             return Promise.reject(new Error('validation'));
         }
         const valid = this.adjustments.filter(a => (a.correctContract && String(a.correctContract).trim()) && (a.adjustedAmount != null && a.adjustedAmount !== 0));
@@ -443,7 +529,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             billAmount = this.manualBillAmount ?? null;
         }
         const billFieldsRendered = this.showManualBill || this.selectedPaymentId;
-        if (this.showManualBill && !this.validateManualBillAmountField()) {
+        if (this.showManualBill && !this.validateFields(['lightning-input[name="manualBillAmount"]'])) {
             return Promise.reject(new Error('validation'));
         }
         if (!billFieldsRendered && (billAmount == null || billAmount === 0)) {
@@ -457,7 +543,19 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         }
         this.isLoading = true;
         const payload = valid.map(a => ({ correctContract: (a.correctContract || CONST.EMPTY).trim(), adjustedAmount: a.adjustedAmount }));
-        return saveAdjustment({ caseId: this.recordId, incorrectContract: this.incorrectContract || CONST.EMPTY, paymentMethod: this.paymentMethod || CONST.EMPTY, billDate: billDate || CONST.EMPTY, billAmount: billAmount, adjustments: payload })
+        return saveAdjustment({
+            caseId: this.recordId,
+            incorrectContract: this.incorrectContract || CONST.EMPTY,
+            paymentMethod: this.paymentMethod || CONST.EMPTY,
+            billDate: billDate || CONST.EMPTY,
+            billAmount: billAmount,
+            adjustments: payload,
+            beneficiaryName: this.beneficiaryName || CONST.EMPTY,
+            beneficiaryAccount: this.beneficiaryAccount || CONST.EMPTY,
+            bankName: this.bankName || CONST.EMPTY,
+            bankBranch: this.bankBranch || CONST.EMPTY,
+            provinceCity: this.provinceCity || CONST.EMPTY
+        })
             .then(() => {
                 this.isLoading = false;
                 this.dispatchEvent(new ShowToastEvent({ title: FEC_Success_Title, message: FEC_Toast_Save_Success, variant: CONST.VARIANT_SUCCESS }));
