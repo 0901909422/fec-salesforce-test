@@ -427,7 +427,7 @@ public without sharing class FEC_CaseTriggerHandler {
         List<Id> caseIdsToUpdate = new List<Id>();
 
         for (Case c : newCases) {
-            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK 
+            if ((c.Origin != null && c.Origin.startsWith('Email')) 
                 && c.RecordTypeId == interactionRecordTypeId) {
                 caseIdsToUpdate.add(c.Id);
             }
@@ -450,12 +450,19 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         for (Case c : newCases) {
-            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK
-                    && c.RecordTypeId == interactionRecordTypeId
-                    && String.isBlank(c.FEC_Channel__c)) {
-                c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
-                c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
-                c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+            if (c.RecordTypeId == interactionRecordTypeId && String.isBlank(c.FEC_Channel__c)) {
+                // Phân loại cho Ubank hoặc FE -> Channel Email
+                if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK || c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_FE) {
+                    c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
+                    c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+                    c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+                } 
+                // Phân loại cho Internal -> Channel Internal
+                else if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_INTERNAL) {
+                    c.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INTERNAL;
+                    c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INTERNAL_EMAIL;
+                    c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+                }
             }
         }
     }
@@ -472,40 +479,50 @@ public without sharing class FEC_CaseTriggerHandler {
 
         String sendToValue = System.Label.UBankCustomberServiceEmail;
 
-        Map<Id, String> caseIdToFromAddress = new Map<Id, String>();
-        for (EmailMessage em : [SELECT Id, ParentId, FromAddress, CreatedDate, ThreadIdentifier, MessageIdentifier
+        Map<Id, EmailMessage> caseIdToEmailMap = new Map<Id, EmailMessage>();
+        for (EmailMessage em : [SELECT Id, ParentId, FromAddress, ToAddress, CreatedDate
                                 FROM EmailMessage
                                 WHERE ParentId IN :caseIds
-                                AND FromAddress != NULL
-                                AND ToAddress  = :sendToValue
+                                AND FromAddress != NULL 
                                 ORDER BY CreatedDate ASC]) {
-            if (em.ThreadIdentifier == em.MessageIdentifier && !caseIdToFromAddress.containsKey(em.ParentId)) {
-                caseIdToFromAddress.put(em.ParentId, em.FromAddress);
+            if (!caseIdToEmailMap.containsKey(em.ParentId)) {
+                caseIdToEmailMap.put(em.ParentId, em);
             }
-        }
-
-        if (caseIdToFromAddress.isEmpty()) {
-            return;
         }
 
         List<Case> casesToDml = [
             SELECT Id, RecordTypeId, OwnerId, FEC_Is_Reply_Interaction_email__c, 
                    ParentId, FEC_Channel__c, FEC_Send_To__c 
             FROM Case 
-            WHERE Id IN :caseIdToFromAddress.keySet()
+            WHERE Id IN :caseIds
         ];
 
+        List<Case> casesForRouting = new List<Case>();
+
         for (Case c : casesToDml) {
-            String fromAddr = caseIdToFromAddress.get(c.Id);
-            c.FEC_Interaction_Email__c = fromAddr;
-            c.FEC_Send_To__c = sendToValue;
-            c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
-            c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+            EmailMessage relatedEmail = caseIdToEmailMap.get(c.Id);
+            
+            if (relatedEmail != null) {
+                c.FEC_Interaction_Email__c = relatedEmail.FromAddress;
+            }
+
+            if (c.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_INTERNAL) {
+                if (relatedEmail != null) {
+                    c.FEC_Send_To__c = relatedEmail.ToAddress;
+                }
+            } else {
+                c.FEC_Send_To__c = sendToValue;
+                c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+                c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+                casesForRouting.add(c);
+            }
         }
 
         // assignCases(casesToDml);
-        FEC_InteractionRoutingService.assignInteractionReply(casesToDml);
-        FEC_InteractionRoutingService.assignNewInteractionEmail(casesToDml);
+        if (!casesForRouting.isEmpty()) {
+            FEC_InteractionRoutingService.assignInteractionReply(casesForRouting);
+            FEC_InteractionRoutingService.assignNewInteractionEmail(casesForRouting);
+        }
 
         if (!casesToDml.isEmpty()) {
             isExecuting = true;

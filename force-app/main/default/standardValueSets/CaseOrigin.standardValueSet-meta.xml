@@ -27,7 +27,7 @@
         <label>Twitter</label>
     </standardValue>
     <standardValue>
-        <fullName>Email_Ubank</fullName>
+        <fullName>Email-Ubank</fullName>
         <default>false</default>
         <label>Email-Ubank</label>
     </standardValue>

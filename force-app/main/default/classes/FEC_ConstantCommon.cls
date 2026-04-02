@@ -70,6 +70,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_LETTER_SUBCHANNEL_NAME = 'Letter';
     public static final String CHANNEL_INTERNAL_NAME = 'Internal';
     public static final String CHANNEL_INTERNAL_EMAIL_SUBCHANNEL_NAME = 'Email';
+    public static final String SUBCHANNEL_INTERNAL_EMAIL = 'Internal Email';
     public static final String CHANNEL_INTERNAL_TASK_SUBCHANNEL_NAME = 'Task';
     public static final String CHANNEL_EXTERNAL_NAME = 'External';
     public static final String CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME = 'Other';
@@ -209,8 +210,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_ORIGIN_EMAIL2CASE = 'Email2Case';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
     public static final String CASE_ORIGIN_EMAIL_UBANK = 'Email-Ubank';
-    public static final string CASE_ORIGN_EMAIL_FE ='Email-FE';
-    public static final string CASE_ORIGN_EMAIL_INTERNAL ='Email-Internal';
+    public static final string CASE_ORIGIN_EMAIL_FE ='Email-FE';
+    public static final string CASE_ORIGIN_EMAIL_INTERNAL ='Email-Internal';
 
     
     public static final String KEY_VALID_CHANNELS_WED = 'WED';
