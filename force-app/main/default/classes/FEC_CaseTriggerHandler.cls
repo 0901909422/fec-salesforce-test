@@ -96,6 +96,7 @@ public without sharing class FEC_CaseTriggerHandler {
         FEC_CasePendingStatusService.syncPendingStatusFromLatestRouteTo(newCases, null);
         syncGlobalSearch(newCases, null);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
+        redirectEmailReplyToCustomerCase(newCases);
     }
 
     /**
@@ -451,12 +452,19 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         for (Case c : newCases) {
-            if ((c.Origin != null && c.Origin.startsWith('Email'))
-                    && c.RecordTypeId == interactionRecordTypeId
-                    && String.isBlank(c.FEC_Channel__c)) {
-                c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
-                c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
-                c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+            if (c.RecordTypeId == interactionRecordTypeId && String.isBlank(c.FEC_Channel__c)) {
+                // Phân loại cho Ubank hoặc FE -> Channel Email
+                if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK || c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_FE) {
+                    c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
+                    c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+                    c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+                } 
+                // Phân loại cho Internal -> Channel Internal
+                else if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_INTERNAL) {
+                    c.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INTERNAL;
+                    c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INTERNAL_EMAIL;
+                    c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+                }
             }
         }
     }
@@ -473,14 +481,14 @@ public without sharing class FEC_CaseTriggerHandler {
 
         String sendToValue = System.Label.UBankCustomberServiceEmail;
 
-        Map<Id, String> caseIdToFromAddress = new Map<Id, String>();
-        for (EmailMessage em : [SELECT Id, ParentId, FromAddress, CreatedDate
+        Map<Id, EmailMessage> caseIdToEmailMap = new Map<Id, EmailMessage>();
+        for (EmailMessage em : [SELECT Id, ParentId, FromAddress, ToAddress, CreatedDate
                                 FROM EmailMessage
                                 WHERE ParentId IN :caseIds
-                                AND FromAddress != NULL AND ToAddress  = :sendToValue
+                                AND FromAddress != NULL 
                                 ORDER BY CreatedDate ASC]) {
-            if (!caseIdToFromAddress.containsKey(em.ParentId)) {
-                caseIdToFromAddress.put(em.ParentId, em.FromAddress);
+            if (!caseIdToEmailMap.containsKey(em.ParentId)) {
+                caseIdToEmailMap.put(em.ParentId, em);
             }
         }
 
@@ -491,17 +499,32 @@ public without sharing class FEC_CaseTriggerHandler {
             WHERE Id IN :caseIds
         ];
 
+        List<Case> casesForRouting = new List<Case>();
+
         for (Case c : casesToDml) {
-            String fromAddr = caseIdToFromAddress.get(c.Id);
-            c.FEC_Interaction_Email__c = fromAddr;
-            c.FEC_Send_To__c = sendToValue;
-            c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
-            c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+            EmailMessage relatedEmail = caseIdToEmailMap.get(c.Id);
+            
+            if (relatedEmail != null) {
+                c.FEC_Interaction_Email__c = relatedEmail.FromAddress;
+            }
+
+            if (c.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_INTERNAL) {
+                if (relatedEmail != null) {
+                    c.FEC_Send_To__c = relatedEmail.ToAddress;
+                }
+            } else {
+                c.FEC_Send_To__c = sendToValue;
+                c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+                c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+                casesForRouting.add(c);
+            }
         }
 
         // assignCases(casesToDml);
-        FEC_InteractionRoutingService.assignInteractionReply(casesToDml);
-        FEC_InteractionRoutingService.assignNewInteractionEmail(casesToDml);
+        if (!casesForRouting.isEmpty()) {
+            FEC_InteractionRoutingService.assignInteractionReply(casesForRouting);
+            FEC_InteractionRoutingService.assignNewInteractionEmail(casesForRouting);
+        }
 
         if (!casesToDml.isEmpty()) {
             isExecuting = true;
@@ -864,6 +887,83 @@ public without sharing class FEC_CaseTriggerHandler {
             }
         }
     }
+
+    /**
+     * Khi Email-to-Case tạo case mới từ email reply của khách có thread token Customer Case,
+     * tạo EmailMessage incoming trên Customer Case đó và xóa case mới (async).
+     */
+    private void redirectEmailReplyToCustomerCase(List<Case> newCases) {
+        Set<Id> candidateIds = new Set<Id>();
+        for (Case c : newCases) {
+            if (c.ParentId == null) continue;
+            if (c.Origin == null || !c.Origin.startsWith('Email')) continue;
+            candidateIds.add(c.Id);
+        }
+        if (candidateIds.isEmpty()) return;
+
+        // Kiểm tra parent là Customer Case
+        Map<Id, Case> caseMap = new Map<Id, Case>(
+            [SELECT Id, ParentId FROM Case WHERE Id IN :candidateIds]
+        );
+        Set<Id> parentIds = new Set<Id>();
+        for (Case c : caseMap.values()) parentIds.add(c.ParentId);
+
+        Map<Id, Case> parentMap = new Map<Id, Case>(
+            [SELECT Id, RecordType.DeveloperName FROM Case WHERE Id IN :parentIds]
+        );
+
+        Set<Id> validCaseIds = new Set<Id>();
+        for (Case c : caseMap.values()) {
+            Case parent = parentMap.get(c.ParentId);
+            if (parent != null && parent.RecordType.DeveloperName == FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME) {
+                validCaseIds.add(c.Id);
+            }
+        }
+        if (validCaseIds.isEmpty()) return;
+
+        // Copy EmailMessage incoming sang Customer Case
+        List<EmailMessage> incomingMsgs = [
+            SELECT Id, ParentId, FromAddress, FromName, ToAddress, CcAddress,
+                   Subject, TextBody, HtmlBody, MessageDate
+            FROM EmailMessage
+            WHERE ParentId IN :validCaseIds AND Incoming = true
+        ];
+        List<EmailMessage> toInsert = new List<EmailMessage>();
+        for (EmailMessage em : incomingMsgs) {
+            Case c = caseMap.get(em.ParentId);
+            if (c == null) continue;
+            EmailMessage newEm = new EmailMessage();
+            newEm.ParentId    = c.ParentId;
+            newEm.FromAddress = em.FromAddress;
+            newEm.FromName    = em.FromName;
+            newEm.ToAddress   = em.ToAddress;
+            newEm.CcAddress   = em.CcAddress;
+            newEm.Subject     = em.Subject != null
+                ? em.Subject.replaceAll('(?i)\\s*\\[\\s*ref:[^\\]]*:ref\\s*\\]', '').trim() : '';
+            newEm.TextBody    = em.TextBody;
+            newEm.HtmlBody    = em.HtmlBody;
+            newEm.Incoming    = true;
+            newEm.Status      = '0';
+            newEm.MessageDate = em.MessageDate != null ? em.MessageDate : Datetime.now();
+            toInsert.add(newEm);
+        }
+        if (!toInsert.isEmpty()) {
+            try { insert toInsert; } catch (Exception e) {
+                System.debug('redirectEmailReply insert failed: ' + e.getMessage());
+            }
+        }
+
+        // Xóa case async để tránh conflict với các service đang chạy trong cùng transaction
+        deleteCasesAsync(new List<Id>(validCaseIds));
+    }
+
+    @future
+    private static void deleteCasesAsync(List<Id> caseIds) {
+        try {
+            List<Case> toDelete = [SELECT Id FROM Case WHERE Id IN :caseIds];
+            if (!toDelete.isEmpty()) delete toDelete;
+        } catch (Exception e) {
+            System.debug('deleteCasesAsync failed: ' + e.getMessage());
+        }
+    }
 }
-
-

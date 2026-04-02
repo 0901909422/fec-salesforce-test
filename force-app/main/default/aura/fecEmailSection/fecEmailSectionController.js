@@ -76,12 +76,14 @@
         var orig = component.get('v.originalSubject');
         component.set('v.subject', orig ? 'RE: ' + orig : '');
         component.set('v.errorMsg', '');
-        var toEmail = component.get('v.toEmail');
-        console.log('openCompose: toEmail=', toEmail, 'toTags=', JSON.stringify(component.get('v.toTags')));
-        if (toEmail && component.get('v.toTags').length === 0) {
-            component.set('v.toTags', [toEmail]);
+        component.set('v.serviceCaseToError', '');
+        var isServiceCase = component.get('v.isServiceCase');
+        if (!isServiceCase) {
+            var toEmail = component.get('v.toEmail');
+            if (toEmail && component.get('v.toTags').length === 0) {
+                component.set('v.toTags', [toEmail]);
+            }
         }
-        console.log('openCompose after set: toTags=', JSON.stringify(component.get('v.toTags')));
         component.set('v.showCompose', true);
         var body = component.get('v.body') || '';
         window.setTimeout($A.getCallback(function() {
@@ -93,9 +95,13 @@
         var orig = component.get('v.originalSubject');
         component.set('v.subject', orig ? 'RE: ' + orig : '');
         component.set('v.errorMsg', '');
-        var toEmail = component.get('v.toEmail');
-        if (toEmail && component.get('v.toTags').length === 0) {
-            component.set('v.toTags', [toEmail]);
+        component.set('v.serviceCaseToError', '');
+        var isServiceCase = component.get('v.isServiceCase');
+        if (!isServiceCase) {
+            var toEmail = component.get('v.toEmail');
+            if (toEmail && component.get('v.toTags').length === 0) {
+                component.set('v.toTags', [toEmail]);
+            }
         }
         component.set('v.showCompose', true);
         var body = component.get('v.body') || '';
@@ -161,6 +167,11 @@
 
     onFromChange: function(component, event, helper) {
         component.set('v.fromEmail', event.target.value);
+    },
+
+    onServiceCaseToChange: function(component, event, helper) {
+        component.set('v.serviceCaseToEmail', event.target.value);
+        component.set('v.serviceCaseToError', '');
     },
 
     onFromInputChange: function(component, event, helper) {
@@ -322,12 +333,27 @@
     },
 
     sendEmail: function(component, event, helper) {
-        // Ưu tiên v.toEmail (điền sẵn từ case), fallback sang toTags
-        var toEmail = component.get('v.toEmail');
-        var tags = component.get('v.toTags');
-        var finalToEmail = toEmail || (tags && tags.length > 0 ? tags.join(',') : '');
-        console.log('sendEmail clicked: toEmail=', toEmail, 'tags=', JSON.stringify(tags), 'final=', finalToEmail);
-        if (!finalToEmail) { component.set('v.errorMsg', $A.get('$Label.c.FEC_Email_Error_Empty') || 'To email is required.'); return; }
+        // Service Case: dùng serviceCaseToEmail; Interaction: dùng toEmail/toTags
+        var isServiceCase = component.get('v.isServiceCase');
+        var finalToEmail;
+        if (isServiceCase) {
+            finalToEmail = (component.get('v.serviceCaseToEmail') || '').trim();
+            if (!finalToEmail) {
+                component.set('v.serviceCaseToError', $A.get('$Label.c.FEC_Email_Error_To_Required') || 'To email không được để trống.');
+                return;
+            }
+            var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRe.test(finalToEmail)) {
+                component.set('v.serviceCaseToError', 'To ' + ($A.get('$Label.c.FEC_Email_Error_Invalid') || 'email không hợp lệ: "') + finalToEmail + '"');
+                return;
+            }
+            component.set('v.serviceCaseToError', '');
+        } else {
+            var toEmail = component.get('v.toEmail');
+            var tags = component.get('v.toTags');
+            finalToEmail = toEmail || (tags && tags.length > 0 ? tags.join(',') : '');
+            if (!finalToEmail) { component.set('v.errorMsg', $A.get('$Label.c.FEC_Email_Error_Empty') || 'To email is required.'); return; }
+        }
         var subject = component.get('v.subject');
         var body = window._fecQuill ? window._fecQuill.root.innerHTML : component.get('v.body');
         if (!subject) { component.set('v.errorMsg', 'Subject is required.'); return; }

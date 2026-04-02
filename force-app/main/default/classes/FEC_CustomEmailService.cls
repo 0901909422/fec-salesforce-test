@@ -88,8 +88,14 @@ public without sharing class FEC_CustomEmailService {
 
     @AuraEnabled
     public static String getCaseSubject(String caseId) {
-        Case c = [SELECT Subject FROM Case WHERE Id = :caseId LIMIT 1];
+        Case c = [SELECT Subject, RecordType.DeveloperName FROM Case WHERE Id = :caseId LIMIT 1];
         return c.Subject;
+    }
+
+    @AuraEnabled
+    public static String getCaseRecordTypeName(String caseId) {
+        Case c = [SELECT RecordType.DeveloperName FROM Case WHERE Id = :caseId LIMIT 1];
+        return c.RecordType.DeveloperName;
     }
 
     @AuraEnabled
@@ -302,7 +308,7 @@ public without sharing class FEC_CustomEmailService {
 
             // 4. Set OrgWideEmailAddress (From)
             System.debug('### Step 4: setFromAddress from=' + fromEmail);
-            setFromAddress(mail, fromEmail);
+            setFromAddress(mail, fromEmail, caseId);
             System.debug('### Step 5: attachments');
 
             if (attachments != null && !attachments.isEmpty()) {
@@ -385,8 +391,17 @@ public without sharing class FEC_CustomEmailService {
         }
     }
 
-    private static void setFromAddress(Messaging.SingleEmailMessage mail, String fromEmail) {
+    private static void setFromAddress(Messaging.SingleEmailMessage mail, String fromEmail, String caseId) {
         if (String.isBlank(fromEmail)) return;
+
+        // Kiểm tra có phải Customer Case không
+        Boolean isCustomerCase = false;
+        if (String.isNotBlank(caseId)) {
+            try {
+                Case c = [SELECT RecordType.DeveloperName FROM Case WHERE Id = :caseId LIMIT 1];
+                isCustomerCase = (c.RecordType.DeveloperName == FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME);
+            } catch (Exception e) {}
+        }
 
         // Tìm OrgWideEmailAddress khớp trực tiếp
         List<OrgWideEmailAddress> orgEmails = [
@@ -395,13 +410,23 @@ public without sharing class FEC_CustomEmailService {
         ];
         if (!orgEmails.isEmpty()) {
             mail.setOrgWideEmailAddressId(orgEmails[0].Id);
-            return;
         }
 
-        // Không có OrgWide → dùng EmailRoutingAddress (Email-to-Case)
-        // Salesforce tự route qua routing address khi setWhatId = caseId
-        // Chỉ set ReplyTo để khách hàng reply về đúng địa chỉ
-        mail.setReplyTo(fromEmail);
+        // Chỉ set ReplyTo = Email Service Address cho Customer Case
+        // để khi khách reply, Salesforce nhận được qua Email-to-Case
+        if (isCustomerCase) {
+            try {
+                List<SObject> routings = Database.query(
+                    'SELECT Id, EmailServiceAddress FROM EmailRoutingAddress WHERE Address = :fromEmail LIMIT 1'
+                );
+                if (!routings.isEmpty()) {
+                    String svcAddr = (String) routings[0].get('EmailServiceAddress');
+                    if (String.isNotBlank(svcAddr)) mail.setReplyTo(svcAddr);
+                }
+            } catch (Exception e) {
+                System.debug('EmailServiceAddress lookup failed: ' + e.getMessage());
+            }
+        }
     }
 
     private static void updateCaseAfterSend(

@@ -9844,6 +9844,27 @@
         <value>dichvukhachhang@ubank.com.vn</value>
     </labels>
     <labels>
+        <fullName>FEC_Email_Label_From</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email compose - From label</shortDescription>
+        <value>From</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Label_To</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email compose - To label</shortDescription>
+        <value>To</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_To_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email compose - To email required error</shortDescription>
+        <value>To email không được để trống.</value>
+    </labels>
+    <labels>
         <fullName>FEC_Card_Number_Required_MSG</fullName>
         <language>en_US</language>
         <protected>false</protected>
