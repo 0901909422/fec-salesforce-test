@@ -782,7 +782,10 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                     isAttachmentOnly: isAttachmentOnly
                 });
                 if (success) {
-                    showToast(this, 'Success', 'Chat history saved successfully.', 'success');
+                    const toastMessage = isAttachmentOnly
+                        ? 'File saved successfully.'
+                        : 'Chat history saved successfully.';
+                    showToast(this, 'Success', toastMessage, 'success');
 
                     try {
                         const caseId = await checkExistCaseByExtInteractionID({ strExtInteractionID: sessionId });
