@@ -1,5 +1,9 @@
 public with sharing class FEC_CaseBusinessService {
+  public static final String TYPE_LWC = 'LWC';
+
   public static final String ROUTE_TO = 'Route to';
+  /** Routing Action History khi đổi Owner (UI/API), không phải luồng Route to nghiệp vụ. */
+  public static final String CHANGE_OWNER = 'Change Owner';
   public static final String REVERT = 'Revert';
   public static final String CANCEL = 'Cancel';
   public static final String ESCALATE = 'Escalate';
@@ -429,10 +433,11 @@ public with sharing class FEC_CaseBusinessService {
           'SELECT Id, Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE Id = :id ' +
-          'AND FEC_Active__c = TRUE ' +
-          'AND FEC_User_Group__c INCLUDES (\'' +
-          String.join(new List<String>(rolelst), '\',\'') +
-          '\')';
+          'AND FEC_Active__c = TRUE'; 
+          // +
+          // 'AND FEC_User_Group__c INCLUDES (\'' +
+          // String.join(new List<String>(rolelst), '\',\'') +
+          // '\')';
 
         bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
       } else {
@@ -441,10 +446,11 @@ public with sharing class FEC_CaseBusinessService {
           'FROM FEC_Case_Stage__c ' +
           'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
           'AND FEC_Active__c = TRUE ' +
-          'AND FEC_Default_Stage__c = TRUE ' +
-          'AND FEC_User_Group__c INCLUDES (\'' +
-          String.join(new List<String>(rolelst), '\',\'') +
-          '\')';
+          'AND FEC_Default_Stage__c = TRUE';
+          // + 
+          // 'AND FEC_User_Group__c INCLUDES (\'' +
+          // String.join(new List<String>(rolelst), '\',\'') +
+          // '\')';
 
         bindVars = new Map<String, Object>{
           'selectedNatureOfCaseId' => selectedNatureOfCaseId
@@ -482,7 +488,8 @@ public with sharing class FEC_CaseBusinessService {
           'FEC_Field_Mandatory__c, FEC_Field_Object_Name__c, ' +
           'FEC_Field_ReadOnly__c, FEC_Section__c, FEC_Field_Order_Display__c,' +
           'FEC_Field_Label_Name__c, FEC_Editable_User_Group__c, FEC_Field_Masking__c, FEC_Masking_Type__c, ' +
-          'FEC_Sub_Section__c, FEC_Sub_Section_Order__c, FEC_Sub_Section_Layout__c, FEC_Field_Reverted__c, FEC_Sub_Section_Field_Layout__c ' +
+          'FEC_Sub_Section__c, FEC_Sub_Section_Order__c, FEC_Sub_Section_Layout__c, FEC_Field_Reverted__c, FEC_Sub_Section_Field_Layout__c, ' +
+          'FEC_LWC_Name__c, FEC_Type__c ' +
           'FROM ' +
           masterDataSettingObj +
           ' ' +
@@ -528,6 +535,7 @@ public with sharing class FEC_CaseBusinessService {
           subSectionLayoutTemp = (Decimal) item.get(
             'FEC_Sub_Section_Layout__c'
           );
+          String itemType = (String) item.get('FEC_Type__c');
 
           if (String.isNotBlank(cObjNameTemp)) {
             if (!objToFieldlstMap.containsKey(cObjNameTemp))
@@ -544,6 +552,12 @@ public with sharing class FEC_CaseBusinessService {
             result.sectionlst.add(sectionTemp);
           }
 
+          if (TYPE_LWC.equals(itemType)) {
+            String lwcName = (String) item.get('FEC_LWC_Name__c');
+            if (String.isNotBlank(lwcName)) {
+              sectionTemp.componentlst.add(lwcName);
+            }
+          } else {
           if (String.isNotBlank(subSectionNameTemp)) {
             subSectionTemp = sectionTemp.findSubSection(subSectionNameTemp);
 
@@ -561,10 +575,12 @@ public with sharing class FEC_CaseBusinessService {
             if (cObjTemp == null) {
               cObjTemp = new CObject(cObjNameTemp);
               subSectionTemp.objlst.add(cObjTemp);
-            }
 
             cObjTemp.masterDataSettinglst.add(item);
+              }
           }
+          }
+
         }
 
         // =============================== GET DATA FROM FIELD OF MASTER DATA SETTING ============================
@@ -912,6 +928,11 @@ public with sharing class FEC_CaseBusinessService {
       toUpdate.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
     }
     Database.update(toUpdate, AccessLevel.SYSTEM_MODE);
+  }
+
+  @AuraEnabled
+  public static void markCaseSubmittedWithoutRouting(String caseId) {
+    markCaseSubmittedAndClearDrafts(caseId);
   }
 
   @AuraEnabled
@@ -1381,7 +1402,7 @@ public with sharing class FEC_CaseBusinessService {
 
   /**
    * Tạo bản ghi Routing Action History khi Change Owner (OwnerId thay đổi).
-   * Gán: Routing Action = Route to, Description = Change Owner; Stage Name = FEC_Code của stage trước khi đổi.
+   * Gán: Routing Action = Change Owner; Description = Change Owner (FEC_RAH_DESCRIPTION_CHANGE_OWNER); Stage Name = FEC_Code của stage trước khi đổi.
    * @param newCases Trigger.new (sau update)
    * @param oldMap Trigger.oldMap
    */
@@ -1400,7 +1421,7 @@ public with sharing class FEC_CaseBusinessService {
       ' skipSetSize(before)=' + caseIdsSkipOwnerChangeRoutingHistory.size()
     );
 
-    // Đã có history + đổi owner từ route() / takeOwnership — không tạo thêm bản Route to (Change Owner) từ trigger
+    // Đã có history + đổi owner từ route() / takeOwnership — không tạo thêm bản Change Owner từ trigger
     if (!caseIdsSkipOwnerChangeRoutingHistory.isEmpty()) {
       List<Case> filtered = new List<Case>();
       for (Case c : ownerChangedCases) {
@@ -1543,7 +1564,7 @@ public with sharing class FEC_CaseBusinessService {
 
     return new FEC_Routing_Action_History__c(
       FEC_Case__c = c.Id,
-      FEC_Routing_Action__c = ROUTE_TO,
+      FEC_Routing_Action__c = CHANGE_OWNER,
       FEC_Decision__c = '',
       FEC_Original_User_Queue__c = originalName,
       FEC_Original_User_Queue_ID__c = oldCase.OwnerId != null
@@ -1971,7 +1992,9 @@ public with sharing class FEC_CaseBusinessService {
         FEC_Sub_Section_Layout__c,
         OwnerId,
         FEC_Field_Reverted__c,
-        FEC_Sub_Section_Field_Layout__c
+        FEC_Sub_Section_Field_Layout__c, 
+        FEC_LWC_Name__c, 
+        FEC_Type__c
       FROM FEC_Master_Data_Setting__c
       WHERE FEC_Nature_of_Case__c = :natureOfCaseId
       // AND FEC_Stage_Name__c = :stageNameId
@@ -2008,6 +2031,8 @@ public with sharing class FEC_CaseBusinessService {
       tgt.FEC_Sub_Section_Layout__c = src.FEC_Sub_Section_Layout__c;
       tgt.FEC_Field_Reverted__c = src.FEC_Field_Reverted__c;
       tgt.FEC_Sub_Section_Field_Layout__c = src.FEC_Sub_Section_Field_Layout__c;
+      tgt.FEC_LWC_Name__c = src.FEC_LWC_Name__c;
+      tgt.FEC_Type__c = src.FEC_Type__c;
 
       targetlst.add(tgt);
     }
@@ -2354,11 +2379,15 @@ public with sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public Decimal layout;
 
+    @AuraEnabled
+    public List<String> componentlst;
+
     // Default constructor
     public Section() {
       this.objlst = new List<CObject>();
       this.subSectionlst = new List<Section>();
       this.error = new Error();
+      this.componentlst = new List<String>();
     }
 
     public Section(String name) {
@@ -2366,6 +2395,7 @@ public with sharing class FEC_CaseBusinessService {
       this.objlst = new List<CObject>();
       this.subSectionlst = new List<Section>();
       this.error = new Error();
+      this.componentlst = new List<String>();
     }
 
     public Section(String name, Decimal order, Decimal layout) {
@@ -2375,12 +2405,14 @@ public with sharing class FEC_CaseBusinessService {
       this.layout = layout;
       this.subSectionlst = new List<Section>();
       this.error = new Error();
+      this.componentlst = new List<String>();
     }
 
     // Parameterized constructor
     public Section(String name, List<CObject> objlst) {
       this.name = name;
       this.objlst = objlst != null ? objlst : new List<CObject>();
+      this.componentlst = new List<String>();
       this.error = new Error();
     }
 
@@ -2388,6 +2420,7 @@ public with sharing class FEC_CaseBusinessService {
       this.name = name;
       this.error = err;
       this.subSectionlst = new List<Section>();
+      this.componentlst = new List<String>();
     }
 
     public CObject findObj(String name) {
