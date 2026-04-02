@@ -14,6 +14,8 @@ public with sharing class FEC_TemplateSelector {
         'FEC_Folder__r.Name',
         'FEC_Enhanced_Letterhead__c',
         'FEC_Enhanced_Letterhead__r.Name',
+        'FEC_Enhanced_Letterhead__r.FEC_Header__c',
+        'FEC_Enhanced_Letterhead__r.FEC_Footer__c',
         'FEC_Applicable_for_Mailbox__c',
         'FEC_Active__c',
         'FEC_Subject_Line__c',
