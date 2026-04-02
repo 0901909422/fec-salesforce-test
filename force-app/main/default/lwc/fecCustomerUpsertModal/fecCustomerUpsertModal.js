@@ -84,6 +84,10 @@ export default class FecCustomerUpsertModal extends LightningElement {
         return getTomorrowDate();
     }
 
+    get isUploadButtonDisabled() {
+        return this.isUploadDisabled || this.isLoading;
+    }
+
     @wire(getRecord, { recordId: USER_ID, fields: [USER_NAME_FIELD] })
     wiredUser({ error, data }) {
         if (data) {
