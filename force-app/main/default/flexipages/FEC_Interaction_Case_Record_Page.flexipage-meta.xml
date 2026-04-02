@@ -230,16 +230,6 @@
                 <identifier>force_relatedListSingleContainer</identifier>
             </componentInstance>
         </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>accordionSections</name>
-                    <value>Facet-f90554e8-6730-442a-8e89-8cf067ebd3f4</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:accordion</componentName>
-                <identifier>flexipage_accordion</identifier>
-            </componentInstance>
-        </itemInstances>
         <name>Facet-e1be460e-3f2e-4dc3-ab68-a4a3bf042bbb</name>
         <type>Facet</type>
     </flexiPageRegions>

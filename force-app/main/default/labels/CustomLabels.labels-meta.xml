@@ -11551,4 +11551,18 @@
         <shortDescription>Template History tab label</shortDescription>
         <value>Template History Tracking</value>
     </labels>
+    <labels>
+        <fullName>FEC_Alt_Remove_From_Record</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Alt_Remove_From_Record</shortDescription>
+        <value>Remove from Record</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Alt_View</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Alt_View</shortDescription>
+        <value>View</value>
+    </labels>
 </CustomLabels>
