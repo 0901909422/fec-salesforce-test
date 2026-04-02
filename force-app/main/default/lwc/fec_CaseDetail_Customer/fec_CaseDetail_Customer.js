@@ -121,9 +121,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       viewMode: VIEW_MODE_REVIEW,
     });
 
+    this.subscribeToMessageChannel();
     this.loadRemarkHistory();
 
-    this.subscribeToMessageChannel();
 
     this.isLoaded = true;
   }
