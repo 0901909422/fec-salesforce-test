@@ -15,15 +15,15 @@ public without sharing class FEC_PINReissueServiceCallout {
     // RESPONSE CLASSES
     // ============================================================
     public class PINResponse {
-        public String pxObjClass;
-        public String RespCode;
-        public String RespDesc;
-        public String TransDTTM;
-        public String TransID;
+        @AuraEnabled public String pxObjClass;
+        @AuraEnabled public String RespCode;
+        @AuraEnabled public String RespDesc;
+        @AuraEnabled public String TransDTTM;
+        @AuraEnabled public String TransID;
         
-        public String errorCode;
-        public String errorMessage;
-        public Boolean isSuccess;
+        @AuraEnabled public String errorCode;
+        @AuraEnabled public String errorMessage;
+        @AuraEnabled public Boolean isSuccess;
     }
     
     // ============================================================
@@ -66,8 +66,8 @@ public without sharing class FEC_PINReissueServiceCallout {
     // ============================================================
     public static PINResponse callPINReissue(
         String nationalID,
-        String transId,
-        String mobile
+    String transId,
+    String mobile
     ){
         PINResponse response = new PINResponse();
         try{
@@ -76,7 +76,7 @@ public without sharing class FEC_PINReissueServiceCallout {
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_PINReissueService');
             
             String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
-                            + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
+                + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
             endpoint += '?NationalID=' + nationalID;
             endpoint += '&TransID=' + transId;
             endpoint += '&Mobile=' + mobile;
@@ -86,12 +86,12 @@ public without sharing class FEC_PINReissueServiceCallout {
             // Log response
             responseLog = new ResponseLog(
                 'FEC_PINReissue',
-                endpoint,
-                FEC_ConstantCommon.API_METHOD_GET,
-                null,
-                res,
-                null
-            );
+            endpoint,
+            FEC_ConstantCommon.API_METHOD_GET,
+            null,
+            res,
+            null
+                );
             
             if (res.getStatusCode() == 200) {
                 response = (PINResponse)JSON.deserialize(res.getBody(), PINResponse.class);
@@ -119,8 +119,8 @@ public without sharing class FEC_PINReissueServiceCallout {
     // ============================================================
     public static ValidationResult validateRequest(
         String nationalID,
-        String transId,
-        String mobile
+    String transId,
+    String mobile
     ){
         
         if(String.isBlank(transId)) {
@@ -146,12 +146,12 @@ public without sharing class FEC_PINReissueServiceCallout {
         if (responseLog != null) {
             FEC_CommonUltils.logApi(
                 responseLog.apiName,
-                responseLog.endpoint,
-                responseLog.method,
-                responseLog.requestBody,
-                responseLog.response,
-                responseLog.errorMessage
-            );
+            responseLog.endpoint,
+            responseLog.method,
+            responseLog.requestBody,
+            responseLog.response,
+            responseLog.errorMessage
+                );
         }
     }
 }

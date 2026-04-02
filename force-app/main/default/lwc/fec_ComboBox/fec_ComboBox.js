@@ -5,12 +5,19 @@ export default class Fec_ComboBox extends LightningElement {
 
   @api label;
   @api placeholder;
-  @api value;
   @api disabled;
   @api required;
 
   openSearch = false;
   @api searchKey;
+
+  _value;
+  @api get value() {
+    return this._value;
+  }
+  set value(val) {
+    this._value = (val === null || val === undefined || val === '') ? undefined : val;
+  }
 
   get optionLabel() {
     return this.optionlst?.find((item) => item.value === this.value)?.label;
@@ -48,6 +55,12 @@ export default class Fec_ComboBox extends LightningElement {
 
   get showClose() {
     return !this.disabled
+  }
+
+  @api clear() {
+    this.value = undefined;
+    this.searchKey = undefined;
+    this.openSearch = false;
   }
 
   connectedCallback() {
