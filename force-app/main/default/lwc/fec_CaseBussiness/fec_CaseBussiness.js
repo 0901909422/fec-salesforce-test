@@ -5,6 +5,7 @@ import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransf
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
+import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
 import { getRecord, getFieldValue, updateRecord } from "lightning/uiRecordApi";
 import USER_ID from "@salesforce/user/Id";
@@ -24,7 +25,7 @@ import {
   isOnlyNumber
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY, ICON_HIDE, ICON_PREVIEW } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -42,6 +43,8 @@ import FEC_Decision_Label from "@salesforce/label/c.FEC_Decision_Label";
 import FEC_Choose_Decision_Label from "@salesforce/label/c.FEC_Choose_Decision_Label";
 import FEC_Sub_Decision_Label from "@salesforce/label/c.FEC_Sub_Decision_Label";
 import FEC_Choose_Sub_Decision_Label from "@salesforce/label/c.FEC_Choose_Sub_Decision_Label";
+import { publish, MessageContext } from "lightning/messageService";
+import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 
 
 const ACTION_PHONE_UPDATE = "Phone Update";
@@ -165,7 +168,29 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
   12: 'slds-medium-size_12-of-12'
 };
 
+/**
+ * Registry of dynamically loadable components.
+ * ADD a new entry here for every LWC name stored in FEC_LWC_Name__c metadata.
+ * Each value must be a static `() => import('c/<name>')` arrow function —
+ * LWC strict mode (LWC1121) forbids template-literal or variable import() arguments.
+ *
+ * Example:
+ *   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
+ */
+const DYNAMIC_COMPONENT_REGISTRY = {
+  fec_CardInfo: () => import('c/fec_CardInfo'),
+  fec_IPPClosureHandling: () => import('c/fec_IPPClosureHandling'),
+  fec_CardClosureRefundHandling: () => import('c/fec_CardClosureRefundHandling'),
+  fec_PinResetHandling: () => import('c/fec_PinResetHandling'),
+  fec_CardBlock: () => import('c/fec_CardBlock'),
+  fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
+  fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
+  fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
+  fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
+};
+
 export default class Fec_CaseBussiness extends LightningElement {
+
   @api recordId;
 
   _isEdit = true;
@@ -188,6 +213,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   @track activeSectionlst = ["routing-action"];
 
+  routingAccordionSectionKey = "routing-action";
+
   // get eyeIcon() {
   //   return this.isMasked ? "utility:preview" : "utility:hide";
   // }
@@ -206,6 +233,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       console.error("Error fetching user group", error);
     }
   }
+  
+  @wire(MessageContext)
+  messageContext;
 
   get iconHideConst() {
     return ICON_HIDE;
@@ -652,6 +682,9 @@ export default class Fec_CaseBussiness extends LightningElement {
                 if (field.value == null || field.value === undefined) {
                   field.value = STR_EMPTY;
                 }
+               if (field.apiName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
+                  field.isInternalRequest = field.value === INTERNAL_REQUEST;
+                }
 
                 field.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[field.layout] || SLDS_MEDIUM_SIZE_OF_12[12]);
                 if(field.hidden) {
@@ -771,12 +804,14 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (foundActions.length > 0 && this.isEdit) {
           this.updateRoutingActionDisplay(foundActions.join(";"));
         }
-        
+        this._applyInternalFieldVisibility();
         this.businessLoaded = true;
         this.activeSectionlst = [ ...this.activeSectionlst , ...sectionlst];
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
         this.applyDraft();
+        // Resolve LWC name strings from componentlst into constructors for lwc:is
+        this._resolveComponentlst();
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
 
       })
@@ -789,6 +824,31 @@ export default class Fec_CaseBussiness extends LightningElement {
       .finally(() => {
         this.businessLoaded = true;
       });
+  }
+
+  _applyInternalFieldVisibility() {
+    if (!this.business?.sectionlst) return;
+
+    const accountValue = this._getCaseFieldValue(FIELD_ACCOUNT_CONTRACT_NUMBER_PL);
+    const isInternal = accountValue?.trim() === INTERNAL_REQUEST;
+
+    this.business.sectionlst = this.business.sectionlst.map(section => ({
+      ...section,
+      subSectionlst: section.subSectionlst?.map(sub => ({
+        ...sub,
+        objlst: sub.objlst?.map(obj => ({
+          ...obj,
+          fieldlst: obj.fieldlst?.map(field => ({
+            ...field,
+            isHidden: isInternal
+              ? field.apiName !== FIELD_ACCOUNT_CONTRACT_NUMBER_PL
+              : false,
+          })) || [],
+        })) || [],
+      })) || [],
+    }));
+
+    this.business = { ...this.business };
   }
 
   handleInputKeydown(e) {
@@ -927,6 +987,29 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     if (field) {
       field.value = value;
+      if (fieldName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
+        field.isInternalRequest = value === INTERNAL_REQUEST;
+        publish(this.messageContext, CASE_NOC, {
+          accountType: value 
+        });
+        this.business.sectionlst = this.business.sectionlst.map(section => ({
+          ...section,
+          subSectionlst: section.subSectionlst?.map(sub => ({
+            ...sub,
+            objlst: sub.objlst?.map(obj => ({
+              ...obj,
+              fieldlst: obj.fieldlst?.map(f => ({
+                ...f,
+                isHidden: value === INTERNAL_REQUEST
+                  ? f.apiName !== FIELD_ACCOUNT_CONTRACT_NUMBER_PL
+                  : false,
+              })) || [],
+            })) || [],
+          })) || [],
+        }));
+        this.business = { ...this.business };
+      }
+      
       if (field.isDate) {
         field.displayValue = formatToDDMMYYYY(value);
       }
@@ -1292,6 +1375,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           caseId: this.recordId,
           natureOfCaseId: this.business.natureOfCase,
         });
+        await markCaseSubmittedWithoutRouting({ caseId: this.recordId });
       }
     }
     return true;
@@ -1532,6 +1616,59 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
+    });
+  }
+
+  /**
+   * Resolves LWC name strings from Apex (subSection.componentlst)
+   * into component constructors required by lwc:is.
+   *
+   * LWC strict mode (LWC1121) forbids variable/template-literal import() arguments.
+   * Each name is therefore looked up in DYNAMIC_COMPONENT_REGISTRY which holds
+   * pre-declared static `() => import('c/<name>')` thunks. Unknown names are
+   * skipped with a console warning — the rest of the UI is unaffected.
+   *
+   * Results are stored on each subSection as resolvedComponentlst [{key, ctor}].
+   */
+  _resolveComponentlst() {
+    if (!this.business?.sectionlst) return;
+
+    const resolvePromises = [];
+
+    this.business.sectionlst.forEach((section) => {
+      if (!section.componentlst?.length) return;
+
+      section.resolvedComponentlst = [];
+
+      section.componentlst.forEach((name, idx) => {
+        if (!name) return;
+
+        const loader = DYNAMIC_COMPONENT_REGISTRY[name];
+        if (!loader) {
+          console.warn(
+            `[fec_CaseBussiness] Component "${name}" is not registered in DYNAMIC_COMPONENT_REGISTRY. ` +
+            `Add an entry: ${name}: () => import('c/${name}')`
+          );
+          return;
+        }
+
+        const p = loader()
+          .then((mod) => {
+            section.resolvedComponentlst.push({
+              key: `${name}-${idx}`,
+              ctor: mod.default,
+            });
+          })
+          .catch((err) => {
+            console.error(`[fec_CaseBussiness] Failed to load component "${name}":`, err);
+          });
+
+        resolvePromises.push(p);
+      });
+    });
+
+    Promise.all(resolvePromises).then(() => {
+      this.business = { ...this.business };
     });
   }
 
