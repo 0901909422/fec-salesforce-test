@@ -1,7 +1,3 @@
-/**
- * Refund Request — Case context, picklists, receipt lines (total refund = sum of line amounts), beneficiary/bank on Customer History.
- * Bank name options are loaded from FEC_Bank_Name__c.FEC_Bank_Name_Noaccent__c.
- */
 public with sharing class FEC_RefundRequestController {
 
     private static final String OBJ_CUSTOMER_HISTORY = 'FEC_Customer_History__c';
