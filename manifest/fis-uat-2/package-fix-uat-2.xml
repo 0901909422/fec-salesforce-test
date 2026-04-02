@@ -89,6 +89,7 @@
 		<members>maskedToggleDatatable</members>
 		<members>fec_CommonRecordDetailSection</members>
 		<members>fec_InteractionCreateCase</members>
+		<members>fec_templatePreviewModal</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -194,6 +195,8 @@
         <members>FEC_MSG_GetCSAttached_FileID_Invalid</members>
         <members>FEC_MSG_GetCSAttached_File_No_Content</members>
         <members>FEC_MSG_GetCSAttached_File_Not_Linked_To_Case</members>
+        <members>FEC_Content_History_Tab</members>
+        <members>FEC_Template_History_Tab</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
