@@ -11440,6 +11440,13 @@
         <value>Start Date cannot be in the past. Please select today or a future date.</value>
     </labels>
     <labels>
+        <fullName>FEC_Start_Date_Less_Than_Today</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Start date cannot be in the past</shortDescription>
+        <value>Start Date cannot be in the past. Please select today or a future date.</value>
+    </labels>
+    <labels>
         <fullName>FEC_Content_History_Tab</fullName>
         <language>vi</language>
         <protected>false</protected>
