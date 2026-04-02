@@ -142,7 +142,7 @@ public without sharing class FEC_GetNextWorkController {
         // Create history record
         FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c();
         history.FEC_Case__c = caseId;
-        history.FEC_Routing_Action__c = FEC_ConstantCommon.CASE_ROUTING_ACTION;
+        history.FEC_Routing_Action__c = FEC_ConstantCommon.CASE_TYPE_DESCRIPTION;
         history.FEC_Decision__c = '';
         history.FEC_Original_User_Queue__c = oldCase.Owner.Name;
         history.FEC_Updated_User_Queue__c = FEC_CommonUltils.getEmailPrefix(u.Email);
@@ -171,7 +171,7 @@ public without sharing class FEC_GetNextWorkController {
                 CreatedDate
             FROM FEC_Routing_Action_History__c
             WHERE FEC_Case__c = :caseId
-            AND FEC_Routing_Action__c = :FEC_ConstantCommon.CASE_ROUTING_ACTION
+            AND FEC_Routing_Action__c = :FEC_ConstantCommon.CASE_TYPE_DESCRIPTION
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];
