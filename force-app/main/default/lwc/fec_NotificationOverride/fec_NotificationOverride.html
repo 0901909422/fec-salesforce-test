@@ -158,9 +158,10 @@
 
               <!-- <lightning-input-field field-name={notificationTemplateField}></lightning-input-field> -->
               <template if:true={isDisplay}>
-                <c-fec_-lookup label={FEC_Notification_Template} placeholder={placeholderSearchNotificationTemplate}
+                <!-- <c-fec_-lookup label={FEC_Notification_Template} placeholder={placeholderSearchNotificationTemplate}
                   data-id="notificationTemplate" object-api-name="EmailTemplate" field-api-name="Name"
-                  icon-name="standard:contact" onselect={handleSelected} required></c-fec_-lookup>
+                  icon-name="standard:contact" onselect={handleSelected} required></c-fec_-lookup> -->
+                <lightning-input-field field-name={notificationTemplateField} required></lightning-input-field>
               </template>
 
             </div>
