@@ -1,9 +1,31 @@
 import { LightningElement, api, wire, track } from "lwc";
 import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page";
 import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
+
+//COLUMN HEADER LABELS
+import FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN from "@salesforce/label/c.FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN";
+import FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN from "@salesforce/label/c.FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN";
+import FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN from "@salesforce/label/c.FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN";
+import FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN from "@salesforce/label/c.FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN";
+
+import FEC_Alt_View from "@salesforce/label/c.FEC_Alt_View";
+import FEC_Alt_Remove_From_Record from "@salesforce/label/c.FEC_Alt_Remove_From_Record";
+import FEC_Button_Delete from "@salesforce/label/c.FEC_Button_Delete";
+
 import getNotes from "@salesforce/apex/FEC_CaseRelatedNoteHandler.getNotes";
 import removeNoteFromRecord from "@salesforce/apex/FEC_CaseRelatedNoteHandler.removeNoteFromRecord";
 import deleteNote from "@salesforce/apex/FEC_CaseRelatedNoteHandler.deleteNote";
+
+import FEC_RELATED_NOTES_REMOVED_MSG from "@salesforce/label/c.FEC_RELATED_NOTES_REMOVED_MSG";
+import FEC_RELATED_NOTES_DELETED_MSG from "@salesforce/label/c.FEC_RELATED_NOTES_DELETED_MSG";
+
+import FEC_RELATED_NOTES_REMOVE_BTN from "@salesforce/label/c.FEC_RELATED_NOTES_REMOVE_BTN";
+import FEC_RELATED_NOTES_DELETE_BTN from "@salesforce/label/c.FEC_RELATED_NOTES_DELETE_BTN";
+
+import FEC_RELATED_NOTES_DELETE_MODAL_MSG from "@salesforce/label/c.FEC_RELATED_NOTES_DELETE_MODAL_MSG";
+import FEC_RELATED_NOTES_REMOVE_MODAL_MSG from "@salesforce/label/c.FEC_RELATED_NOTES_REMOVE_MODAL_MSG";
+
+import { SUCCESS_MODAL_TITLE } from "c/fec_CommonConst";
 import { formatDateTime } from "c/fec_CommonUtils";
 import {
   subscribe,
@@ -98,12 +120,21 @@ export default class Fec_CaseNote extends LightningElement {
 
   columns = [
     {
-      label: "Title",
+      label: FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN,
       fieldName: "title",
     },
-    { label: "Text Preview", fieldName: "preview" },
-    { label: "Created By", fieldName: "createdByName" },
-    { label: "Last Modified", fieldName: "lastModifiedDateText" },
+    {
+      label: FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN,
+      fieldName: "preview",
+    },
+    {
+      label: FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN,
+      fieldName: "createdByName",
+    },
+    {
+      label: FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN,
+      fieldName: "lastModifiedDateText",
+    },
     // 👉 ACTION COLUMN
     {
       type: "action",
@@ -127,9 +158,9 @@ export default class Fec_CaseNote extends LightningElement {
 
   getRowActions(row, doneCallback) {
     const actions = [
-      { label: "View", name: "view" },
-      { label: "Delete", name: "delete" },
-      { label: "Remove from Record", name: "remove" },
+      { label: FEC_Alt_View, name: "view" },
+      { label: FEC_Button_Delete, name: "delete" },
+      { label: FEC_Alt_Remove_From_Record, name: "remove" },
     ];
     doneCallback(actions);
   }
@@ -180,7 +211,11 @@ export default class Fec_CaseNote extends LightningElement {
       noteId: this.selectedRow.id,
     })
       .then(() => {
-        this.showToast("Success", "Note removed from record", "success");
+        this.showToast(
+          SUCCESS_MODAL_TITLE,
+          FEC_RELATED_NOTES_REMOVED_MSG,
+          "success",
+        );
         this.closeConfirmModal();
         return refreshApex(this.wiredNotesResult);
       })
@@ -194,7 +229,11 @@ export default class Fec_CaseNote extends LightningElement {
     console.log(this.selectedRow.id);
     deleteNote({ noteId: this.selectedRow.id })
       .then(() => {
-        this.showToast("Success", "Note deleted", "success");
+        this.showToast(
+          SUCCESS_MODAL_TITLE,
+          FEC_RELATED_NOTES_DELETED_MSG,
+          "success",
+        );
         this.closeConfirmModal();
         return refreshApex(this.wiredNotesResult);
       })
@@ -204,17 +243,21 @@ export default class Fec_CaseNote extends LightningElement {
   }
 
   get modalTitle() {
-    return this.confirmType === "remove" ? "Remove file?" : "Delete File?";
+    return this.confirmType === "remove"
+      ? FEC_RELATED_NOTES_REMOVE_BTN
+      : FEC_RELATED_NOTES_DELETE_BTN;
   }
 
   get modalMessage() {
     return this.confirmType === "remove"
-      ? "The file will be removed from the record, but not deleted."
-      : "Deleting a file also removes it from any records or posts it's attached to.";
+      ? FEC_RELATED_NOTES_REMOVE_MODAL_MSG
+      : FEC_RELATED_NOTES_DELETE_MODAL_MSG;
   }
 
   get confirmLabel() {
-    return this.confirmType === "remove" ? "Remove from Record" : "Delete";
+    return this.confirmType === "remove"
+      ? FEC_Alt_Remove_From_Record
+      : FEC_Button_Delete;
   }
   // ===== Computed Properties =====
   get totalRecords() {

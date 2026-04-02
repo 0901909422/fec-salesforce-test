@@ -4,26 +4,26 @@
 
             <!-- HEADER -->
             <header class="slds-modal__header">
-                <h2 class="slds-text-heading_medium">New Note</h2>
+                <h2 class="slds-text-heading_medium">{modalTitle}</h2>
             </header>
 
             <!-- BODY -->
             <div class="slds-modal__content slds-p-around_medium">
 
-                <lightning-input label="Title" value={title} onchange={handleTitle}>
+                <lightning-input label={labels.titleField} value={title} onchange={handleTitle}>
                 </lightning-input>
 
-                <lightning-input-rich-text label="Compose text" value={content} onchange={handleContent}>
+                <lightning-input-rich-text label={labels.composeTextField} value={content} onchange={handleContent}>
                 </lightning-input-rich-text>
 
             </div>
 
             <!-- FOOTER -->
             <footer class="slds-modal__footer">
-                <lightning-button label="Cancel" onclick={handleClose}>
+                <lightning-button label={labels.cancelBtn} onclick={handleClose}>
                 </lightning-button>
 
-                <lightning-button variant="brand" label="Save" onclick={handleSave}>
+                <lightning-button variant="brand" label={labels.saveBtn} onclick={handleSave}>
                 </lightning-button>
             </footer>
 
