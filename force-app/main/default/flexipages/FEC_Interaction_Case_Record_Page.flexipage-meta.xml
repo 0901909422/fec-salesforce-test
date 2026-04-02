@@ -33,6 +33,38 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_CardBlock</componentName>
+                <identifier>c_fec_CardBlock</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-6282aa0d-44a6-4e8b-bf1f-d8ac24d418be</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-6282aa0d-44a6-4e8b-bf1f-d8ac24d418be</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>label</name>
+                    <value>Test</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>name</name>
+                    <value>accordionSection1</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:accordionSection</componentName>
+                <identifier>flexipage_accordionSection</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-f90554e8-6730-442a-8e89-8cf067ebd3f4</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentName>fecInteractionInfo</componentName>
                 <identifier>c_fecInteractionInfo</identifier>
                 <visibilityRule>
