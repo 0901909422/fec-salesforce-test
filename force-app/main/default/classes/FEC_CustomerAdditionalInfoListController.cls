@@ -180,11 +180,12 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
 
     /**
      * Lấy lịch sử thay đổi của một Config cụ thể
+     * Sắp xếp theo CreatedDate DESC, nếu cùng thời gian thì theo status flow (Processed > Processing > Reuploaded > Uploaded)
      * @param configId ID của bản ghi Config
      */
     @AuraEnabled(cacheable=false)
     public static List<FEC_CustomerDataConfigHistory__c> getConfigHistory(Id configId) {
-        return [
+        List<FEC_CustomerDataConfigHistory__c> lstHistory = [
             SELECT Id, 
                    FEC_KeyIdentifier__c, 
                    FEC_FieldID__c, 
@@ -200,5 +201,38 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
             WHERE FEC_Customers_Data_Config__c = :configId
             ORDER BY CreatedDate DESC
         ];
+
+        // Sort phụ theo status priority khi CreatedDate giống nhau
+        Map<String, Integer> mapStatusOrder = new Map<String, Integer>{
+            'Processed' => 0,
+            'Processing' => 1,
+            'Reuploaded' => 2,
+            'Uploaded' => 3
+        };
+
+        lstHistory.sort(new HistoryComparator(mapStatusOrder));
+        return lstHistory;
+    }
+
+    /**
+     * Comparator để sort history: CreatedDate DESC, rồi status priority ASC
+     */
+    private class HistoryComparator implements Comparator<FEC_CustomerDataConfigHistory__c> {
+        private Map<String, Integer> statusOrder;
+
+        public HistoryComparator(Map<String, Integer> statusOrder) {
+            this.statusOrder = statusOrder;
+        }
+
+        public Integer compare(FEC_CustomerDataConfigHistory__c a, FEC_CustomerDataConfigHistory__c b) {
+            // CreatedDate DESC
+            if (a.CreatedDate > b.CreatedDate) return -1;
+            if (a.CreatedDate < b.CreatedDate) return 1;
+
+            // Cùng CreatedDate → sort theo status priority (số nhỏ lên trước)
+            Integer orderA = statusOrder.containsKey(a.FEC_Status__c) ? statusOrder.get(a.FEC_Status__c) : 99;
+            Integer orderB = statusOrder.containsKey(b.FEC_Status__c) ? statusOrder.get(b.FEC_Status__c) : 99;
+            return orderA - orderB;
+        }
     }
 }
