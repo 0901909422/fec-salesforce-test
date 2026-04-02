@@ -199,22 +199,22 @@ public with sharing class FEC_RefundRequestController {
         SaveRefundResultDTO res = new SaveRefundResultDTO();
         res.success = false;
         if (caseId == null) {
-            res.errorMessage = 'Case Id is required.';
+            res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
             return res;
         }
         if (!Schema.sObjectType.FEC_Case_Refund_Details__c.isDeletable()
             || !Schema.sObjectType.FEC_Case_Refund_Details__c.isCreateable()
             || !Schema.sObjectType.FEC_Customer_History__c.isUpdateable()
             || !Schema.sObjectType.Case.isUpdateable()) {
-            res.errorMessage = 'Insufficient access.';
+            res.errorMessage = System.Label.FEC_MSG_Insufficient_Access;
             return res;
         }
         if (refundAmount != null && refundAmount < 0) {
-            res.errorMessage = 'Refund amount must be greater than or equal to 0.';
+            res.errorMessage = System.Label.FEC_MSG_Refund_Request_Amount_Nonnegative;
             return res;
         }
         if (receiptLines == null || receiptLines.isEmpty()) {
-            res.errorMessage = 'At least one receipt line is required.';
+            res.errorMessage = System.Label.FEC_MSG_Refund_Request_Receipt_Lines_Required;
             return res;
         }
         List<Case> caseRows = [
@@ -242,16 +242,16 @@ public with sharing class FEC_RefundRequestController {
             }
             if (String.isBlank(line.receiptDateIso) || line.receiptAmount == null || line.receiptAmount <= 0 || String.isBlank(line.transactionNo)
                 || String.isBlank(line.paymentChannel)) {
-                res.errorMessage = 'Each receipt line must have date, positive amount, transaction number, and payment channel.';
+                res.errorMessage = System.Label.FEC_MSG_Refund_Request_Receipt_Line_Incomplete;
                 return res;
             }
             Date rd = parseIsoDate(line.receiptDateIso);
             if (rd == null) {
-                res.errorMessage = 'Invalid receipt date.';
+                res.errorMessage = String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{ 'Receipt date', String.isNotBlank(line.receiptDateIso) ? line.receiptDateIso : '' });
                 return res;
             }
             if (rd > todayDt) {
-                res.errorMessage = 'Receipt date cannot be in the future.';
+                res.errorMessage = System.Label.FEC_MSG_Refund_Request_Receipt_Date_Future;
                 return res;
             }
             FEC_Case_Refund_Details__c dtl = new FEC_Case_Refund_Details__c();
@@ -263,18 +263,18 @@ public with sharing class FEC_RefundRequestController {
             toInsert.add(dtl);
         }
         if (toInsert.isEmpty()) {
-            res.errorMessage = 'At least one receipt line is required.';
+            res.errorMessage = System.Label.FEC_MSG_Refund_Request_Receipt_Lines_Required;
             return res;
         }
         if (String.isBlank(beneficiaryName)
             || String.isBlank(beneficiaryAccount)
             || String.isBlank(bankBranch)
             || String.isBlank(provinceCity)) {
-            res.errorMessage = 'Beneficiary and bank fields are required.';
+            res.errorMessage = System.Label.FEC_MSG_Card_Block_Beneficiary_Required;
             return res;
         }
         if (String.isBlank(bankPicklistValue)) {
-            res.errorMessage = 'Bank Name is required.';
+            res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ System.Label.FEC_LBL_Bank_Name });
             return res;
         }
         Savepoint sp = Database.setSavepoint();
@@ -287,7 +287,7 @@ public with sharing class FEC_RefundRequestController {
             existing = (List<FEC_Case_Refund_Details__c>) Security.stripInaccessible(AccessType.READABLE, existing).getRecords();
             if (!existing.isEmpty()) {
                 if (!Schema.sObjectType.FEC_Case_Refund_Details__c.isDeletable()) {
-                    res.errorMessage = 'Insufficient access.';
+                    res.errorMessage = System.Label.FEC_MSG_Insufficient_Access;
                     return res;
                 }
                 List<Id> delIds = new List<Id>();
@@ -309,28 +309,28 @@ public with sharing class FEC_RefundRequestController {
             SObjectAccessDecision histDec = Security.stripInaccessible(AccessType.UPDATABLE, new List<SObject>{ histUpd });
             if (histDec.getRecords().isEmpty()) {
                 Database.rollback(sp);
-                res.errorMessage = 'Insufficient access.';
+                res.errorMessage = System.Label.FEC_MSG_Insufficient_Access;
                 return res;
             }
             update histDec.getRecords();
             SObjectAccessDecision caseDec = Security.stripInaccessible(AccessType.UPDATABLE, new List<SObject>{ caseUpd });
             if (caseDec.getRecords().isEmpty()) {
                 Database.rollback(sp);
-                res.errorMessage = 'Insufficient access.';
+                res.errorMessage = System.Label.FEC_MSG_Insufficient_Access;
                 return res;
             }
             update caseDec.getRecords();
             SObjectAccessDecision insDec = Security.stripInaccessible(AccessType.CREATABLE, toInsert);
             if (insDec.getRecords().isEmpty()) {
                 Database.rollback(sp);
-                res.errorMessage = 'Insufficient access.';
+                res.errorMessage = System.Label.FEC_MSG_Insufficient_Access;
                 return res;
             }
             insert insDec.getRecords();
             res.success = true;
         } catch (Exception e) {
             Database.rollback(sp);
-            res.errorMessage = 'Unable to save refund request.';
+            res.errorMessage = System.Label.FEC_Toast_Save_Error_Message;
         }
         return res;
     }
