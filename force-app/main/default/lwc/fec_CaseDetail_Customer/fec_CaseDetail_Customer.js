@@ -115,17 +115,21 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .finally(() => { });
   }
 
-  connectedCallback() {
-    resetViewMode({
-      recordId: this.recordId,
-      viewMode: VIEW_MODE_REVIEW,
-    });
+  async connectedCallback() {
+    try {
+      await resetViewMode({
+        recordId: this.recordId,
+        viewMode: VIEW_MODE_REVIEW,
+      });
 
-    this.loadRemarkHistory();
+      this.subscribeToMessageChannel();
+      this.loadRemarkHistory();
 
-    this.subscribeToMessageChannel();
-
-    this.isLoaded = true;
+    } catch (err) {
+      console.error("Failed to reset view mode:", err);
+    } finally {
+      this.isLoaded = true;
+    }
   }
 
   subscribeToMessageChannel() {

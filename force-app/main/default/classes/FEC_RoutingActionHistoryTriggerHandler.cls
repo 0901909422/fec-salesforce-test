@@ -116,8 +116,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   }
 
   /**
-   * Pending-{Team} hoặc Pending-{Team1}_{Team2} từ bản ghi Route to (map Team qua ID Owner;
-   * FEC_Original_User_Queue__c / FEC_Updated_User_Queue__c là nhãn, không dùng để map).
+   * Pending-{Team} hoặc Pending-{Team1}_{Team2} từ một dòng history (Route to / Change Owner;
+   * map Team qua ID Owner; FEC_Original_User_Queue__c / FEC_Updated_User_Queue__c là nhãn).
    */
   public static String buildPendingStatusFromRouteHistoryRow(
     FEC_Routing_Action_History__c history
