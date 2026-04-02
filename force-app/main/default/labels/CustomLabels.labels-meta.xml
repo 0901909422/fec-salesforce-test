@@ -11432,4 +11432,11 @@
         <shortDescription>Error duplicate key identifier values in uploaded file</shortDescription>
         <value>File contains duplicate Key Identifier values: {0}. Each key must be unique.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Start_Date_Less_Than_Today</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Start date cannot be in the past</shortDescription>
+        <value>Start Date cannot be in the past. Please select today or a future date.</value>
+    </labels>
 </CustomLabels>
