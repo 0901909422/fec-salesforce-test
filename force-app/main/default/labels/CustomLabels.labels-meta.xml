@@ -11425,4 +11425,11 @@
         <shortDescription>Get CS Attached File not linked to Case</shortDescription>
         <value>File is not attached to this Case or FileID is invalid.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Error_Duplicate_Key_In_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error duplicate key identifier values in uploaded file</shortDescription>
+        <value>File contains duplicate Key Identifier values: {0}. Each key must be unique.</value>
+    </labels>
 </CustomLabels>

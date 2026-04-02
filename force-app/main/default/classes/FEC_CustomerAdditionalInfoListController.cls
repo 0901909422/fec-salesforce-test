@@ -79,7 +79,7 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
      * @return List<Map<String, Object>> Danh sách thông tin file
      * @created: 2026/01/02 trung.bui.4
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled(cacheable=false)
     public static List<Map<String, Object>> getRelatedFiles(Id recordId) {
         List<Map<String, Object>> lstFiles = new List<Map<String, Object>>();
         
