@@ -59,6 +59,7 @@ public without sharing class FEC_PinResetHandler {
             Case selectedCase = caselst.get(0);
             String transactionId = String.valueOf(UUID.randomUUID());
             FEC_PINReissueServiceCallout.PINResponse response = FEC_PINReissueServiceCallout.callPINReissue(nationalId,transactionId, mobile);
+            FEC_PINReissueServiceCallout.logApiResponse();
             
             if (response.isSuccess && selectedCase.FEC_Process_Action_Count__c > 0) {
                 selectedCase.FEC_Process_Action_Count__c -= 1;

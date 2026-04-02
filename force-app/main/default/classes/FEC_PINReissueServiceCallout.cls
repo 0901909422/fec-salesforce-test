@@ -110,7 +110,6 @@ public without sharing class FEC_PINReissueServiceCallout {
             response.isSuccess = false;
         }
         System.debug('### PIN RESPONSE: ' + response);
-        logApiResponse();
         return response;
     }
     
