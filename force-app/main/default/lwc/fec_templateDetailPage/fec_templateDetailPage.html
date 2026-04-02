@@ -21,6 +21,13 @@
                                 class="slds-m-right_x-small"
                             ></lightning-button>
                             <lightning-button
+                                label={label.previewLabel}
+                                variant="neutral"
+                                onclick={handlePreview}
+                                icon-name="utility:preview"
+                                class="slds-m-right_x-small"
+                            ></lightning-button>
+                            <lightning-button
                                 label={label.editLabel}
                                 variant="brand"
                                 onclick={handleEdit}
@@ -189,7 +196,7 @@
                     </lightning-tab>
 
                     <!-- ─── TAB 2: Template History ─── -->
-                    <lightning-tab label="Template History" value="templateHistory">
+                    <lightning-tab label={label.templateHistoryTabLabel} value="templateHistory">
                         <div class="slds-p-around_medium">
                             <template if:true={hasTemplateHistory}>
                                 <lightning-datatable
@@ -208,7 +215,7 @@
                     </lightning-tab>
 
                     <!-- ─── TAB 3: Content History ─── -->
-                    <lightning-tab label="Content History" value="contentHistory">
+                    <lightning-tab label={label.contentHistoryTabLabel} value="contentHistory">
                         <div class="slds-p-around_medium">
                             <template if:true={hasContentHistory}>
                                 <lightning-datatable
@@ -231,6 +238,20 @@
             </div>
         </div>
     </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- TEMPLATE PREVIEW MODAL                                 -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <template if:true={record}>
+        <c-fec_template-preview-modal
+            subject={record.subject}
+            email-body={record.emailBody}
+            header-html={record.letterheadHeaderHtml}
+            footer-html={record.letterheadFooterHtml}
+            is-open={_isPreviewOpen}
+            onclose={handleClosePreview}
+        ></c-fec_template-preview-modal>
+    </template>
 
     <!-- ═══════════════════════════════════════════════════════ -->
     <!-- CONTENT DIFF VIEWER MODAL                              -->
