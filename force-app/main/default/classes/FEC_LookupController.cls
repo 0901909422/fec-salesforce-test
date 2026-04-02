@@ -4,6 +4,25 @@ public with sharing class FEC_LookupController {
     String selectedProductTypeId, String selectedCategoryId, String selectedSubCategoryId) {
         
         List<LookupSearchResult> results = new List<LookupSearchResult>();
+        if (sObjectName == 'Case.Status') {
+            Schema.DescribeFieldResult fieldResult = Case.Status.getDescribe();
+            List<Schema.PicklistEntry> ple = fieldResult.getPicklistValues();
+            
+            for(Schema.PicklistEntry pickListVal : ple) {
+                // Ensure it's active, matches the search term, and isn't already selected
+                if(pickListVal.isActive() && 
+                   pickListVal.getLabel().containsIgnoreCase(searchTerm) && 
+                   (selectedIds == null || !selectedIds.contains(pickListVal.getValue()))) {
+                    
+                    LookupSearchResult res = new LookupSearchResult();
+                    res.id = pickListVal.getValue(); // Use API value as the ID
+                    res.title = pickListVal.getLabel();
+                    res.subtitle = 'Case Status';
+                    results.add(res);
+                }
+            }
+            return results;
+        }
         String searchKey = '%' + searchTerm + '%';
         
         // Xác định trường định danh (Key): Nếu là Group thì dùng DeveloperName, ngược lại dùng Id
