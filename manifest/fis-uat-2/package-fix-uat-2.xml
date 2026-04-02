@@ -54,6 +54,9 @@
 		<members>FEC_GetLoanBasicInfo</members>
 		<members>FEC_GetLoanSecInfo</members>
 		<members>FEC_MainInfoAccountController</members>
+		<members>FEC_CaseRelatedNoteHandler</members>
+		<members>FEC_CloseInterationSchedulerBatch</members>
+		<members>FEC_PinResetHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -91,6 +94,9 @@
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_templatePreviewModal</members>
 		<members>fec_ComboBox</members>
+		<members>fec_PinResetView</members>
+		<members>fec_CaseNote</members>
+		<members>fec_NewNoteModal</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -101,6 +107,7 @@
 		<members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Notification_Record_Page_Auto</members>
 		<members>FEC_Notification_Record_Page_Manual</members>
+		<members>FEC_Customer_Case_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -379,6 +386,7 @@
 		<members>Case.FEC_New_Block_Code__c</members>
 		<members>Case.FEC_Card_Block_Reason__c</members>
         <members>FEC_Notification__c.FEC_Notification_Template__c</members>
+        <members>Case.FEC_Is_MyCaseAPI_Interaction__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>

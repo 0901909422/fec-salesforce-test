@@ -11426,6 +11426,118 @@
         <value>File is not attached to this Case or FileID is invalid.</value>
     </labels>
     <labels>
+        <fullName>FEC_ACTION_CANCEL</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_COMPOSE_TEXT_FIELD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_COMPOSE_TEXT_FIELD</shortDescription>
+        <value>Compose text</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_CREATED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_CREATED_MSG</shortDescription>
+        <value>Note created</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_DELETED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_DELETED_MSG</shortDescription>
+        <value>Note deleted</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_DELETE_BTN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_DELETE_BTN</shortDescription>
+        <value>Delete File?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_DELETE_MODAL_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_DELETE_MODAL_MSG</shortDescription>
+        <value>Deleting a file also removes it from any records or posts it&apos;s attached to.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_EDIT_NOTE_MODAL_TITLE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_EDIT_NOTE_MODAL_TITLE</shortDescription>
+        <value>Edit Note</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_NEW_NOTE_MODAL_TITLE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_NEW_NOTE_MODAL_TITLE</shortDescription>
+        <value>New Note</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_REMOVED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_REMOVED_MSG</shortDescription>
+        <value>Note removed from record</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_REMOVE_BTN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_REMOVE_BTN</shortDescription>
+        <value>Remove file?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_REMOVE_MODAL_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_REMOVE_MODAL_MSG</shortDescription>
+        <value>The file will be removed from the record, but not deleted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN</shortDescription>
+        <value>Created By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN</shortDescription>
+        <value>Last Modified</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN</shortDescription>
+        <value>Text Preview</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN</shortDescription>
+        <value>Title</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_UPDATED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_UPDATED_MSG</shortDescription>
+        <value>Note updated</value>
+    </labels>
+    <labels>
         <fullName>FEC_Content_History_Tab</fullName>
         <language>vi</language>
         <protected>false</protected>

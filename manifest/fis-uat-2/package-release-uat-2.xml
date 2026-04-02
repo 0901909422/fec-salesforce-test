@@ -1297,6 +1297,8 @@
     <types>
 		<members>FEC_UpdateCustomerContact</members>
 		<members>FEC_MainInfoAccountController</members>
+		<members>FEC_CaseRelatedNoteHandler</members>
+		<members>FEC_CloseInterationSchedulerBatch</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1330,8 +1332,14 @@
 		<members>maskedToggleDatatable</members>
 		<members>fec_CommonRecordDetailSection</members>
 		<members>fec_templatePreviewModal</members>
+		<members>fec_CaseNote</members>
+		<members>fec_NewNoteModal</members>
         <name>LightningComponentBundle</name>
     </types>
+	<types>
+		<members>FEC_Customer_Case_Record_Page</members>
+		<name>FlexiPage</name>
+	</types>
 
     <version>65.0</version>
 </Package>
