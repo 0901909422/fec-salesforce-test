@@ -72,6 +72,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_LETTER_SUBCHANNEL_NAME = 'Letter';
     public static final String CHANNEL_INTERNAL_NAME = 'Internal';
     public static final String CHANNEL_INTERNAL_EMAIL_SUBCHANNEL_NAME = 'Email';
+    public static final String SUBCHANNEL_INTERNAL_EMAIL = 'Internal Email';
     public static final String CHANNEL_INTERNAL_TASK_SUBCHANNEL_NAME = 'Task';
     public static final String CHANNEL_EXTERNAL_NAME = 'External';
     public static final String CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME = 'Other';
@@ -232,9 +233,12 @@ public with sharing class FEC_ConstantCommon {
     //Get Next Work
     public static final String CASE_TYPE_DESCRIPTION = 'Get Next Work';
     public static final String CASE_ROUTING_ACTION = 'Route to';
+    /** Giá trị trường FEC_Routing_Action__c khi đổi Owner (Salesforce / trigger). */
+    public static final String FEC_ROUTING_ACTION_CHANGE_OWNER = 'Change Owner';
     /** Routing Action History: cộng dồn FEC_Team__c / Pending-{Team1}_{Team2} (cùng luồng Route to). */
     public static final Set<String> ROUTING_ACTIONS_SYNC_CASE_TEAMS = new Set<String>{
         CASE_ROUTING_ACTION,
+        FEC_ROUTING_ACTION_CHANGE_OWNER,
         'Revert',
         'Escalate',
         'Transfer',
@@ -310,6 +314,7 @@ public with sharing class FEC_ConstantCommon {
     // Email readonly from addresses
     public static final String EMAIL_READONLY_FROM_FECREDIT = 'dichvukhachhang@fecredit.com.vn';
     public static final String EMAIL_READONLY_FROM_UBANK    = 'dichvukhachhang@ubank.com.vn';
+    public static final String EMAIL_UBANK_VN    = 'dichvukhachhang@ubank.vn';
 
     // Case statuses blocked from sending email
     public static final String CASE_STATUS_CLOSED    = 'Closed';
@@ -326,4 +331,14 @@ public with sharing class FEC_ConstantCommon {
         'INTERNAL',
         'ZALO'
     };
+
+    public static final String QUEUE_UBANK_EMAIL_NAME = 'FEC_Ubank_Email';
+    public static final String QUEUE_CSM_MAILBOX_NAME = 'FEC_CSM_Mailbox';
+    public static final String QUEUE_SUPPORT_MAILBOX_NAME = 'FEC_Support_Mailbox';
+    public static final String QUEUE_CARE_MAILBOX_NAME = 'FEC_Care_Mailbox';
+    public static final String QUEUE_ECOM_MAILBOX_NAME = 'FEC_Ecom_Mailbox';
+    public static final String QUEUE_OFFICE_BASED_MAILBOX_NAME = 'FEC_Office_Based_Mailbox';
+    public static final String QUEUE_DAY_2_CHECK_NAME = 'FEC_Day_2_Check';
+    public static final String QUEUE_OM_MAILBOX_NAME = 'FEC_OM_Mailbox';
+    public static final String QUEUE_QUALITY_CONTROL_MAILBOX_NAME = 'FEC_Quality_Control_Mailbox';
 }

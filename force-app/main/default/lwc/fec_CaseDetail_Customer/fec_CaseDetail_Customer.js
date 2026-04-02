@@ -35,7 +35,7 @@ import {
   STR_UNDEFINED,
   VIEW_MODE_HANDLING,
   VIEW_MODE_REVIEW,
-  RECORD_TYPE_INTERNAL_CASE
+  // RECORD_TYPE_INTERNAL_CASE
 } from "c/fec_CommonConst";
 
 export default class Fec_CaseDetail_Customer extends LightningElement {
@@ -124,10 +124,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         viewMode: VIEW_MODE_REVIEW,
       });
 
-      this.loadRemarkHistory();
       this.subscribeToMessageChannel();
+      this.loadRemarkHistory();
 
-      this.checkInternalCaseEditMode();
+      // this.checkInternalCaseEditMode();
     } catch (err) {
       console.error("Failed to reset view mode:", err);
     } finally {
@@ -135,24 +135,24 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     }
   }
 
-  checkInternalCaseEditMode() {
-    if (!this.recordId) return;
+  // checkInternalCaseEditMode() {
+  //   if (!this.recordId) return;
 
-    getCase({ recordId: this.recordId })
-      .then((res) => {
-        const isInternal = res.RecordType?.DeveloperName === RECORD_TYPE_INTERNAL_CASE;
-        const isHandling = res.FEC_Interaction_View_Mode__c === VIEW_MODE_HANDLING;
-        const isSubmited = res.FEC_Is_Submited__c;
+  //   getCase({ recordId: this.recordId })
+  //     .then((res) => {
+  //       const isInternal = res.RecordType?.DeveloperName === RECORD_TYPE_INTERNAL_CASE;
+  //       const isHandling = res.FEC_Interaction_View_Mode__c === VIEW_MODE_HANDLING;
+  //       const isSubmited = res.FEC_Is_Submited__c;
 
-        if (isInternal && isHandling && !isSubmited) {
+  //       if (isInternal && isHandling && !isSubmited) {
 
-          this.handleMessage({ isModeEdit: true });
-        }
-      })
-      .catch((err) => {
-        console.error("checkInternalCaseEditMode err:", err);
-      });
-  }
+  //         this.handleMessage({ isModeEdit: true });
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       console.error("checkInternalCaseEditMode err:", err);
+  //     });
+  // }
 
   subscribeToMessageChannel() {
     this.subscription = subscribe(

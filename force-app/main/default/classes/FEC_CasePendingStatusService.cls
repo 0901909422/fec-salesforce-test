@@ -1,6 +1,9 @@
 /**
- * Trạng thái hiển thị khi Pending: Standard Status = Pending, chuỗi ghép team = FEC_Team__c
- * (một hoặc nhiều team cách nhau bởi "_"). Pending-{teams} qua formula FEC_Final_Status__c và computePendingStatusForCase.
+ * Trạng thái hiển thị khi Pending: Standard Status = Pending; chuỗi Pending-{team}
+ * qua formula FEC_Final_Status__c (FEC_Team__c) và computePendingStatusForCase.
+ *
+ * computePendingStatusForCase (khi Status = Pending): ưu tiên bản ghi **FEC_Routing_Action_History__c**
+ * có Routing Action = Change Owner mới nhất để tính Pending-{team} (thay cho dựa vào Route to mới nhất).
  *
  * Khi đổi Owner: nếu Status trước đó là Open và Case đã submit (FEC_Is_Submited__c)
  * thì chuyển Status standard sang Pending. Case nháp chưa submit giữ Open.
@@ -16,7 +19,15 @@ public without sharing class FEC_CasePendingStatusService {
    * @param newCases Trigger.new
    * @param oldMap Trigger.oldMap (null khi insert)
    */
+  /** @deprecated Chuyển sang syncPendingStatusWhenSubmittedOwnerChanges (tên cũ gây nhầm). */
   public static void syncPendingStatusFromLatestRouteTo(
+    List<Case> newCases,
+    Map<Id, Case> oldMap
+  ) {
+    syncPendingStatusWhenSubmittedOwnerChanges(newCases, oldMap);
+  }
+
+  public static void syncPendingStatusWhenSubmittedOwnerChanges(
     List<Case> newCases,
     Map<Id, Case> oldMap
   ) {
@@ -81,8 +92,10 @@ public without sharing class FEC_CasePendingStatusService {
   }
 
   /**
-   * Chuỗi hiển thị Pending: Pending hoặc Pending-{Team} / Pending-{Team1}_{Team2}
-   * theo FEC_Team__c trên Case (khớp công thức FEC_Final_Status__c).
+   * Chuỗi hiển thị Pending: Pending hoặc Pending-{Team} / Pending-{Team1}_{Team2}.
+   * Bước 1: nếu có bản ghi Routing Action History **Change Owner** mới nhất → tính từ
+   * FEC_Original_User_Queue_ID__c / FEC_Updated_User_Queue_ID__c (giống buildPendingStatusFromRouteHistoryRow).
+   * Ngược lại: theo FEC_Team__c trên Case (khớp công thức FEC_Final_Status__c).
    */
   public static String computePendingStatusForCase(Id caseId) {
     if (caseId == null) {
@@ -100,6 +113,22 @@ public without sharing class FEC_CasePendingStatusService {
     Case c = rows[0];
     if (c.Status != FEC_ConstantCommon.CASE_STATUS_PENDING) {
       return c.Status;
+    }
+    List<FEC_Routing_Action_History__c> latestChangeOwner = [
+      SELECT
+        FEC_Original_User_Queue_ID__c,
+        FEC_Updated_User_Queue_ID__c
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Routing_Action__c = :FEC_ConstantCommon.FEC_ROUTING_ACTION_CHANGE_OWNER
+      ORDER BY CreatedDate DESC, Id DESC
+      LIMIT 1
+    ];
+    if (!latestChangeOwner.isEmpty()) {
+      return FEC_RoutingActionHistoryTriggerHandler.buildPendingStatusFromRouteHistoryRow(
+        latestChangeOwner[0]
+      );
     }
     if (String.isBlank(c.FEC_Team__c)) {
       return FEC_ConstantCommon.CASE_STATUS_PENDING;
