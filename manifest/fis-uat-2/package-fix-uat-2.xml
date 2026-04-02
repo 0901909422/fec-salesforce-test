@@ -90,6 +90,7 @@
 		<members>fec_CommonRecordDetailSection</members>
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_templatePreviewModal</members>
+		<members>fec_ComboBox</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
