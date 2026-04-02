@@ -9,6 +9,7 @@ import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInte
 import updateInteractionEmail from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionEmail";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionIdFromCustomerCase";
+import getParentCaseNumber from "@salesforce/apex/FEC_InteractionInforHandler.getParentCaseNumber";
 
 // ================= SCHEMA =================
 import ISCLOSED from "@salesforce/schema/Case.IsClosed";
@@ -61,6 +62,7 @@ export default class FecInteractionEmailInfoUbank extends NavigationMixin(Lightn
   @track record;
   @track emailDraft = STR_EMPTY;
   @track emailError = STR_EMPTY;
+  @track parentCaseNumber = STR_EMPTY;
 
   isLoaded = false;
   isEditingEmail = false;
@@ -123,6 +125,9 @@ export default class FecInteractionEmailInfoUbank extends NavigationMixin(Lightn
       .then((result) => {
         this.record = result;
         this.isLoaded = true;
+        getParentCaseNumber({ caseId: this.recordId })
+          .then((num) => { this.parentCaseNumber = num || STR_EMPTY; })
+          .catch(() => { this.parentCaseNumber = STR_EMPTY; });
       })
       .catch((error) => {
         console.error("getInteraction error", error);
@@ -167,11 +172,11 @@ export default class FecInteractionEmailInfoUbank extends NavigationMixin(Lightn
   }
 
   get parentId() {
-    return this.record?.[PARENT_ID_FIELD.fieldApiName] || STR_EMPTY;
+    return this.parentCaseNumber || this.record?.ParentId || STR_EMPTY;
   }
 
   get showParentIdLink() {
-    return !!this.record?.[PARENT_ID_FIELD.fieldApiName];
+    return !!(this.record?.ParentId || this.parentCaseNumber);
   }
 
   get externalInteractionId() {
@@ -226,7 +231,7 @@ export default class FecInteractionEmailInfoUbank extends NavigationMixin(Lightn
 
   // ================= NAVIGATION =================
   handleNavigateToParent() {
-    const pid = this.record?.[PARENT_ID_FIELD.fieldApiName];
+    const pid = this.record?.ParentId;
     if (!pid) return;
     this[NavigationMixin.Navigate]({
       type: "standard__recordPage",

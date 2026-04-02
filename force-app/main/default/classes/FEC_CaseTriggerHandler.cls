@@ -59,6 +59,8 @@ public without sharing class FEC_CaseTriggerHandler {
         assignEntitlement(newCases);
         syncGlobalSearchFromParent(newCases, null);
         setEmail2CaseChannelBeforeInsert(newCases);
+        setParentIdFromEmailThread(newCases);
+        stripSubjectThreadToken(newCases);
     }
 
     /**
@@ -426,7 +428,7 @@ public without sharing class FEC_CaseTriggerHandler {
         List<Id> caseIdsToUpdate = new List<Id>();
 
         for (Case c : newCases) {
-            if ((c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE || c.Origin == FEC_ConstantCommon.EMAIL) 
+            if ((c.Origin != null && c.Origin.startsWith('Email')) 
                 && c.RecordTypeId == interactionRecordTypeId) {
                 caseIdsToUpdate.add(c.Id);
             }
@@ -449,7 +451,7 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         for (Case c : newCases) {
-            if ((c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL2CASE || c.Origin == FEC_ConstantCommon.EMAIL)
+            if ((c.Origin != null && c.Origin.startsWith('Email'))
                     && c.RecordTypeId == interactionRecordTypeId
                     && String.isBlank(c.FEC_Channel__c)) {
                 c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
@@ -814,4 +816,54 @@ public without sharing class FEC_CaseTriggerHandler {
         }
     }
 
+    /**
+     * Parse thread token [ ref:ORGID.CASEID:ref ] từ Subject của case mới tạo bởi email reply
+     * và set ParentId = Case ID gốc
+     */
+    private void setParentIdFromEmailThread(List<Case> newCases) {
+        Pattern threadPattern = Pattern.compile('\\[ ref:[A-Za-z0-9]+\\.([A-Za-z0-9]{15,18}):ref \\]');
+        Set<String> parentCaseIds = new Set<String>();
+        Map<Case, String> caseToParentId = new Map<Case, String>();
+
+        for (Case c : newCases) {
+            if (String.isBlank(c.Subject) || c.ParentId != null) continue;
+            Matcher m = threadPattern.matcher(c.Subject);
+            if (m.find()) {
+                String rawId = m.group(1);
+                parentCaseIds.add(rawId);
+                caseToParentId.put(c, rawId);
+            }
+        }
+
+        if (parentCaseIds.isEmpty()) return;
+
+        Map<String, Case> validParents = new Map<String, Case>();
+        for (Case parent : [SELECT Id, FEC_Send_To__c, FEC_Interaction_Email__c FROM Case WHERE Id IN :parentCaseIds]) {
+            validParents.put(String.valueOf(parent.Id).substring(0, 15), parent);
+            validParents.put(String.valueOf(parent.Id), parent);
+        }
+
+        for (Case c : caseToParentId.keySet()) {
+            String rawId = caseToParentId.get(c);
+            String key15 = rawId.length() >= 15 ? rawId.substring(0, 15) : rawId;
+            Case parentCase = validParents.containsKey(rawId) ? validParents.get(rawId) : validParents.get(key15);
+            if (parentCase != null) {
+                c.ParentId = parentCase.Id;
+                if (String.isBlank(c.FEC_Send_To__c) && String.isNotBlank(parentCase.FEC_Send_To__c)) {
+                    c.FEC_Send_To__c = parentCase.FEC_Send_To__c;
+                }
+            }
+        }
+    }
+
+    private void stripSubjectThreadToken(List<Case> cases) {
+        Pattern p = Pattern.compile('\\s*\\[\\s*ref:[^\\]]*:ref\\s*\\]');
+        for (Case c : cases) {
+            if (String.isNotBlank(c.Subject)) {
+                c.Subject = p.matcher(c.Subject).replaceAll('').trim();
+            }
+        }
+    }
 }
+
+

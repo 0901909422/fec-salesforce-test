@@ -289,7 +289,14 @@ public without sharing class FEC_CustomEmailService {
                 if (!ccList.isEmpty()) mail.setCcAddresses(ccList);
             }
 
-            mail.setSubject(subject);
+            // Append Salesforce thread identifier to subject for reply tracking
+            String orgId = UserInfo.getOrganizationId();
+            String shortOrgId = orgId.substring(0, 15);
+            String shortCaseId = caseId.substring(0, 15);
+            String threadToken = '[ ref:' + shortOrgId + '.' + shortCaseId + ':ref ]';
+            String subjectWithThread = subject.contains('[ ref:') ? subject : subject + ' ' + threadToken;
+
+            mail.setSubject(subjectWithThread);
             mail.setHtmlBody(body != null ? body.replace('\n', '<br/>') : '');
             mail.setSaveAsActivity(false);
 
@@ -317,6 +324,7 @@ public without sharing class FEC_CustomEmailService {
 
             // 6. Send
             System.debug('### About to sendEmail: from=' + fromEmail + ' to=' + toEmail);
+            mail.setWhatId(caseId); // Link email to Case for Email-to-Case routing
             List<Messaging.SendEmailResult> results = Messaging.sendEmail(
                 new List<Messaging.SingleEmailMessage>{ mail }, false
             );
@@ -335,7 +343,7 @@ public without sharing class FEC_CustomEmailService {
                 em.FromAddress = fromEmail;
                 em.ToAddress = toEmail;
                 if (String.isNotBlank(ccEmail)) em.CcAddress = ccEmail;
-                em.Subject = subject;
+                em.Subject = subjectWithThread;
                 em.HtmlBody = body;
                 em.TextBody = body.replaceAll('<[^>]+>', '');
                 em.Incoming = false;
