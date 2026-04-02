@@ -1,4 +1,6 @@
 public with sharing class FEC_CaseBusinessService {
+  public static final String TYPE_LWC = 'LWC';
+
   public static final String ROUTE_TO = 'Route to';
   public static final String REVERT = 'Revert';
   public static final String CANCEL = 'Cancel';
@@ -129,12 +131,6 @@ public with sharing class FEC_CaseBusinessService {
           FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
           FEC_Account_or_Contract__r.FEC_Date_of_Issue__c,
           FEC_Account_or_Contract__r.FEC_Place_of_Issue__c,
-          FEC_Account_or_Contract__r.FEC_Account_Status__c,
-          FEC_Account_or_Contract__r.FEC_Application_ID__c,
-          FEC_Account_or_Contract__r.FEC_Plastic_ID__c,
-          FEC_Account_or_Contract__r.FEC_Block_Code_1__c,
-          FEC_Account_or_Contract__r.FEC_Block_Code_2__c,
-          FEC_Account_or_Contract__r.FEC_Block_Code__c,
           FEC_Process_Action_Count__c,
           FEC_Original_Info_Phone_Number__c,
           FEC_Updated_Info_Phone_Number__c,
@@ -490,8 +486,8 @@ public with sharing class FEC_CaseBusinessService {
           'FEC_Field_Mandatory__c, FEC_Field_Object_Name__c, ' +
           'FEC_Field_ReadOnly__c, FEC_Section__c, FEC_Field_Order_Display__c,' +
           'FEC_Field_Label_Name__c, FEC_Editable_User_Group__c, FEC_Field_Masking__c, FEC_Masking_Type__c, ' +
-          'FEC_Sub_Section__c, FEC_Sub_Section_Order__c, FEC_Sub_Section_Layout__c, FEC_Field_Reverted__c, FEC_Sub_Section_Field_Layout__c ' +
-          ', FEC_LWC_Name__c ' +
+          'FEC_Sub_Section__c, FEC_Sub_Section_Order__c, FEC_Sub_Section_Layout__c, FEC_Field_Reverted__c, FEC_Sub_Section_Field_Layout__c, ' +
+          'FEC_LWC_Name__c, FEC_Type__c ' +
           'FROM ' +
           masterDataSettingObj +
           ' ' +
@@ -527,7 +523,6 @@ public with sharing class FEC_CaseBusinessService {
         Decimal subSectionOrderTemp;
         Decimal subSectionLayoutTemp;
         SObject objTemp;
-        String lwcName;
 
         for (SObject item : masterDatalst) {
           sectionNameTemp = (String) item.get('FEC_Section__c');
@@ -538,7 +533,7 @@ public with sharing class FEC_CaseBusinessService {
           subSectionLayoutTemp = (Decimal) item.get(
             'FEC_Sub_Section_Layout__c'
           );
-          lwcName = (String)item.get('FEC_LWC_Name__c');
+          String itemType = (String) item.get('FEC_Type__c');
 
           if (String.isNotBlank(cObjNameTemp)) {
             if (!objToFieldlstMap.containsKey(cObjNameTemp))
@@ -552,33 +547,38 @@ public with sharing class FEC_CaseBusinessService {
 
           if (sectionTemp == null) {
             sectionTemp = new Section(sectionNameTemp);
-            if (String.isNotBlank(lwcName)) {
-              sectionTemp.componentlst.add(lwcName);
-            }
             result.sectionlst.add(sectionTemp);
           }
 
-          if (String.isNotBlank(subSectionNameTemp)) {
-            subSectionTemp = sectionTemp.findSubSection(subSectionNameTemp);
-
-            if (subSectionTemp == null) {
-              subSectionTemp = new Section(
-                subSectionNameTemp,
-                subSectionOrderTemp,
-                subSectionLayoutTemp
-              );
-              sectionTemp.subSectionlst.add(subSectionTemp);
+          if (TYPE_LWC.equals(itemType)) {
+            String lwcName = (String) item.get('FEC_LWC_Name__c');
+            if (String.isNotBlank(lwcName)) {
+              sectionTemp.componentlst.add(lwcName);
             }
+          } else {
+            if (String.isNotBlank(subSectionNameTemp)) {
+              subSectionTemp = sectionTemp.findSubSection(subSectionNameTemp);
 
-            cObjTemp = subSectionTemp.findObj(cObjNameTemp);
+              if (subSectionTemp == null) {
+                subSectionTemp = new Section(
+                  subSectionNameTemp,
+                  subSectionOrderTemp,
+                  subSectionLayoutTemp
+                );
+                sectionTemp.subSectionlst.add(subSectionTemp);
+              }
 
-            if (cObjTemp == null) {
-              cObjTemp = new CObject(cObjNameTemp);
-              subSectionTemp.objlst.add(cObjTemp);
+              cObjTemp = subSectionTemp.findObj(cObjNameTemp);
+
+              if (cObjTemp == null) {
+                cObjTemp = new CObject(cObjNameTemp);
+                subSectionTemp.objlst.add(cObjTemp);
+
+                cObjTemp.masterDataSettinglst.add(item);
+              }
             }
-
-            cObjTemp.masterDataSettinglst.add(item);
           }
+
         }
 
         // =============================== GET DATA FROM FIELD OF MASTER DATA SETTING ============================
@@ -638,6 +638,8 @@ public with sharing class FEC_CaseBusinessService {
 
           sectionItem.sort();
         }
+
+        result.removeEmptySections();
       }
 
       // ============================== GET ROUNTING AND PROCESS ACTION ===============================
@@ -1988,7 +1990,9 @@ public with sharing class FEC_CaseBusinessService {
         FEC_Sub_Section_Layout__c,
         OwnerId,
         FEC_Field_Reverted__c,
-        FEC_Sub_Section_Field_Layout__c
+        FEC_Sub_Section_Field_Layout__c, 
+        FEC_LWC_Name__c, 
+        FEC_Type__c
       FROM FEC_Master_Data_Setting__c
       WHERE FEC_Nature_of_Case__c = :natureOfCaseId
       // AND FEC_Stage_Name__c = :stageNameId
@@ -2025,6 +2029,8 @@ public with sharing class FEC_CaseBusinessService {
       tgt.FEC_Sub_Section_Layout__c = src.FEC_Sub_Section_Layout__c;
       tgt.FEC_Field_Reverted__c = src.FEC_Field_Reverted__c;
       tgt.FEC_Sub_Section_Field_Layout__c = src.FEC_Sub_Section_Field_Layout__c;
+      tgt.FEC_LWC_Name__c = src.FEC_LWC_Name__c;
+      tgt.FEC_Type__c = src.FEC_Type__c;
 
       targetlst.add(tgt);
     }
@@ -2342,6 +2348,14 @@ public with sharing class FEC_CaseBusinessService {
       return null;
     }
 
+    public void removeEmptySections() {
+      for (Integer i = sectionlst.size() - 1; i >= 0; i--) {
+        Section s = sectionlst[i];
+        if (!s.removeIfNoFieldDeep()) {
+          sectionlst.remove(i);
+        }
+      }
+    }
   }
 
   public class Section implements Comparable {
@@ -2396,6 +2410,7 @@ public with sharing class FEC_CaseBusinessService {
     public Section(String name, List<CObject> objlst) {
       this.name = name;
       this.objlst = objlst != null ? objlst : new List<CObject>();
+      this.componentlst = new List<String>();
       this.error = new Error();
     }
 
@@ -2403,6 +2418,7 @@ public with sharing class FEC_CaseBusinessService {
       this.name = name;
       this.error = err;
       this.subSectionlst = new List<Section>();
+      this.componentlst = new List<String>();
     }
 
     public CObject findObj(String name) {
