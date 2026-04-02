@@ -19,6 +19,8 @@ export default class Fec_PinResetView extends LightningElement {
 
   cardNumber;
   cifNumber;
+  nationalId;
+  mobile;
   processActionCount = 0;
 
   isOpen = false;
@@ -39,8 +41,11 @@ export default class Fec_PinResetView extends LightningElement {
   loadCardInfo() {
     getCardInfo({ customerCaseId: this.recordId })
       .then((res) => {
+        console.log("res: ", JSON.stringify(res));
         this.cardNumber = res.cardNumber;
         this.cifNumber = res.cifNumber;
+        this.nationalId = res.nationalId;
+        this.mobile = res.mobile;
         this.processActionCount = res.processActionCount;
       })
       .catch((err) => {
@@ -103,11 +108,12 @@ export default class Fec_PinResetView extends LightningElement {
 
     resetPin({
       caseId: this.recordId,
-      cardNumber: this.cardNumber,
-      cifNumber: this.cifNumber,
+      nationalId: this.nationalId,
+      mobile: this.mobile,
     })
       .then((res) => {
-        if (res.isSuccess) {
+        console.log("res from api: ", JSON.stringify(res));
+        if (res.isSuccess && res.RespDesc == null) {
           this.showToast(SUCCESS_MODAL_TITLE, res.RespDesc, SUCCESS_TOAST_TYPE);
         } else {
           this.showToast(ERROR_MODAL_TITLE, res.RespDesc || res.errorMessage, ERROR_MODAL_TITLE);
