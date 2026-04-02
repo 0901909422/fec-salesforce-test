@@ -67,7 +67,7 @@ export default class Fec_InteractionHighlight extends LightningElement {
   }
 
   loadStyles() {
-    loadStyle(this, COMMON_STYLES).catch(() => {});
+    loadStyle(this, COMMON_STYLES).catch(() => { });
   }
 
   loadData() {

@@ -145,6 +145,16 @@ public without sharing class FEC_ApplicationsListController {
                     addrRes = null;
                 }
 
+                Map<String, String> cityMap = new Map<String, String>();
+                for (FEC_Province__c c : [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_Province__c]) {
+                    cityMap.put(c.FEC_Code__c, c.FEC_Name_VN__c);
+                }
+
+                Map<String, String> districtMap = new Map<String, String>();
+                for (FEC_District__c d : [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_District__c]) {
+                    districtMap.put(d.FEC_Code__c, d.FEC_Name_VN__c);
+                }
+
             for (FEC_GetApplicationsList.ApplicationInfo st: statusRes.Applications) {
                 String accountNumbers = FEC_ConstantCommon.STR_NA;
                 Map<String,Object> row = new Map<String,Object>();
@@ -174,6 +184,8 @@ public without sharing class FEC_ApplicationsListController {
 
                 if (cus.Addresses != null) {
                     for (FEC_GetCustomerList.Address ad : cus.Addresses) {
+                         String districtName = (ad.District != null && districtMap.containsKey(ad.District)) ? districtMap.get(ad.District) : ad.District;
+                         String cityName = (ad.City != null && cityMap.containsKey(ad.City)) ? cityMap.get(ad.City) : ad.City;
 
                         if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_CURRES) {
 
@@ -184,8 +196,8 @@ public without sharing class FEC_ApplicationsListController {
                                     ad.HouseNumber,
                                     ad.Street,
                                     ad.Ward,
-                                    ad.District,
-                                    ad.City,
+                                    districtName,
+                                    cityName,
                                     ad.CountryName,
                                     ad.ZipCode
                                 )
@@ -200,6 +212,9 @@ public without sharing class FEC_ApplicationsListController {
                 if (addrRes != null && addrRes.Addresses != null) {
                     for (FEC_GetAddressesList.AddressInfo ad
                         : addrRes.Addresses) {
+                        String districtName = (ad.District != null && districtMap.containsKey(ad.District)) ? districtMap.get(ad.District) : ad.District;
+                        String cityName = (ad.City != null && cityMap.containsKey(ad.City)) ? cityMap.get(ad.City) : ad.City;
+
                         if (ad.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
                             row.put(
                                 'permanentAddress',
@@ -208,8 +223,8 @@ public without sharing class FEC_ApplicationsListController {
                                     ad.NumberStr,
                                     ad.Street,
                                     ad.Ward,
-                                    ad.District,
-                                    ad.City,
+                                    districtName,
+                                    cityName,
                                     ad.CountryName,
                                     ad.ZipCode
                                 )
@@ -223,8 +238,8 @@ public without sharing class FEC_ApplicationsListController {
                                     ad.NumberStr,
                                     ad.Street,
                                     ad.Ward,
-                                    ad.District,
-                                    ad.City,
+                                    districtName,
+                                    cityName,
                                     ad.CountryName,
                                     ad.ZipCode
                                 )

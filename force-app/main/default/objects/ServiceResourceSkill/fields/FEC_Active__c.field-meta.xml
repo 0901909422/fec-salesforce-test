@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Active__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Trạng thái của skill
+- Nếu Check thì hệ thống sẽ phân bổ Interaction thuộc skill đang thiết lập cho Agent. 
+- Nếu Uncheck thì sẽ không phân bổ Interaction thuộc skill đang thiết lập cho Agent.</description>
+    <label>Active</label>
+    <trackHistory>true</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

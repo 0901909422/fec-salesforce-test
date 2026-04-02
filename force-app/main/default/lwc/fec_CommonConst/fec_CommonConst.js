@@ -40,7 +40,69 @@ const RECORD_TYPE_CUSTOMER_CASE = 'Customer_Case';
 const RECORD_TYPE_INTERNAL_CASE = 'Internal_Case';
 const NON_EXISTING_CUSTOMER_PRODUCT_NAME = "Non-Existing Customer";
 const NON_EXISTING_CUSTOMER_TYPE = "Non-existing";
-
+const MSG_NO_RESULTS = 'Không tìm thấy kết quả';
+const MSG_UNKNOWN_ERROR = 'Unknown error';
+const CASE_OBJECT_API_NAME = 'Case';
+const NAV_ACTION_VIEW = 'view';
+const NAV_ACTION_LIST = 'list';
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const RESULT_ERROR = "result-error";
+const RESULT_SUCCESS = "result-success";
+const CHANNEL_OPTIONS = [
+  { label: "Inbound", value: "Inbound" },
+  { label: "Outbound", value: "Outbound" },
+  { label: "Email", value: "Email" },
+  { label: "Chat", value: "Chat" },
+  { label: "F2F", value: "F2F" },
+  { label: "Letter", value: "Letter" },
+  { label: "Internal", value: "Internal" },
+  { label: "External", value: "External" },
+];
+const SUB_CHANNEL_MAP = {
+  Inbound: [{ label: "Inbound Call", value: "Inbound Call" }],
+  Outbound: [{ label: "Outbound Call", value: "Outbound Call" }],
+  Email: [
+    { label: "Incoming Email", value: "Incoming Email" },
+    { label: "Outgoing Email", value: "Outgoing Email" },
+  ],
+  Chat: [
+    { label: "Facebook", value: "Facebook" },
+    { label: "Zalo", value: "Zalo" },
+    { label: "Website", value: "Website" },
+    { label: "Mobile App", value: "Mobile App" },
+  ],
+  F2F: [{ label: "F2F", value: "F2F" }],
+  Letter: [{ label: "Letter", value: "Letter" }],
+  Internal: [
+    { label: "Internal Email", value: "Internal Email" },
+    { label: "iCollect", value: "iCollect" },
+    { label: "iSale", value: "iSale" },
+    { label: "VTiger", value: "VTiger" },
+  ],
+  External: [
+    { label: "PR/MKT", value: "PR/MKT" },
+    { label: "SBV", value: "SBV" },
+    { label: "EA", value: "EA" },
+    { label: "VPBank", value: "VPBank" },
+    { label: "Website", value: "Website" },
+    { label: "Zalo", value: "Zalo" },
+    { label: "Mobile App", value: "Mobile App" },
+  ],
+};
+const RECORD_TYPES = {
+  INTERACTION: "Interaction",
+  CUSTOMER_CASE: "Customer_Case",
+};
+const ERROR_MODAL_TITLE = "Error";
+const SUCCESS_MODAL_TITLE = "Success";
+const SUCCESS_TOAST_TYPE = "success";
+const ERROR_TOAST_TYPE = "error";
+const CLOSED_STATUS = "Closed";
+const FORM_STATE_LOADING = 'LOADING';
+const FORM_STATE_NONE = 'NONE';
+const FORM_STATE_HAS_DATA = 'HAS_DATA';
+const INTERNAL_REQUEST = 'Internal Request';
+const INTERNAL_UBANK = 'Ubank'
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -84,4 +146,25 @@ export {
     RECORD_TYPE_INTERNAL_CASE,
     NON_EXISTING_CUSTOMER_PRODUCT_NAME,
     NON_EXISTING_CUSTOMER_TYPE,
+    MSG_NO_RESULTS,
+    MSG_UNKNOWN_ERROR,
+    CASE_OBJECT_API_NAME,
+    NAV_ACTION_VIEW,
+    NAV_ACTION_LIST,
+    EMAIL_REGEX,
+    CHANNEL_OPTIONS,
+    SUB_CHANNEL_MAP,
+    RECORD_TYPES,
+    ERROR_MODAL_TITLE,
+    SUCCESS_MODAL_TITLE,
+    SUCCESS_TOAST_TYPE,
+    ERROR_TOAST_TYPE,
+    RESULT_ERROR,
+    RESULT_SUCCESS,
+    CLOSED_STATUS,
+    FORM_STATE_LOADING,
+    FORM_STATE_NONE,
+    FORM_STATE_HAS_DATA,
+    INTERNAL_REQUEST,
+    INTERNAL_UBANK
 };

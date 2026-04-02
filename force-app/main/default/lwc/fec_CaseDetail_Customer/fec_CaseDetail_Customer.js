@@ -21,6 +21,7 @@ import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
 import FEC_MSG_Submit from "@salesforce/label/c.FEC_MSG_Submit";
 import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
+import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 
 import { RefreshEvent } from "lightning/refresh";
 
@@ -34,6 +35,7 @@ import {
   STR_UNDEFINED,
   VIEW_MODE_HANDLING,
   VIEW_MODE_REVIEW,
+  RECORD_TYPE_INTERNAL_CASE
 } from "c/fec_CommonConst";
 
 export default class Fec_CaseDetail_Customer extends LightningElement {
@@ -115,17 +117,41 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .finally(() => { });
   }
 
-  connectedCallback() {
-    resetViewMode({
-      recordId: this.recordId,
-      viewMode: VIEW_MODE_REVIEW,
-    });
+  async connectedCallback() {
+    try {
+      await resetViewMode({
+        recordId: this.recordId,
+        viewMode: VIEW_MODE_REVIEW,
+      });
 
-    this.loadRemarkHistory();
+      this.loadRemarkHistory();
+      this.subscribeToMessageChannel();
 
-    this.subscribeToMessageChannel();
+      this.checkInternalCaseEditMode();
+    } catch (err) {
+      console.error("Failed to reset view mode:", err);
+    } finally {
+      this.isLoaded = true;
+    }
+  }
 
-    this.isLoaded = true;
+  checkInternalCaseEditMode() {
+    if (!this.recordId) return;
+
+    getCase({ recordId: this.recordId })
+      .then((res) => {
+        const isInternal = res.RecordType?.DeveloperName === RECORD_TYPE_INTERNAL_CASE;
+        const isHandling = res.FEC_Interaction_View_Mode__c === VIEW_MODE_HANDLING;
+        const isSubmited = res.FEC_Is_Submited__c;
+
+        if (isInternal && isHandling && !isSubmited) {
+
+          this.handleMessage({ isModeEdit: true });
+        }
+      })
+      .catch((err) => {
+        console.error("checkInternalCaseEditMode err:", err);
+      });
   }
 
   subscribeToMessageChannel() {

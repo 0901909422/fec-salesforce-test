@@ -1,0 +1,58 @@
+<template>
+    <!-- Backdrop -->
+    <div class="dv-backdrop" onclick={handleClose}></div>
+
+    <!-- Modal -->
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_large" aria-modal="true">
+        <div class="slds-modal__container">
+
+            <!-- Header -->
+            <div class="slds-modal__header">
+                <lightning-button-icon
+                    icon-name="utility:close"
+                    alternative-text="Close"
+                    class="slds-modal__close"
+                    onclick={handleClose}
+                ></lightning-button-icon>
+                <h2 class="slds-text-heading_medium">Audit Content Log</h2>
+            </div>
+
+            <!-- Body -->
+            <div class="slds-modal__content slds-p-around_medium">
+                <!-- Meta info -->
+                <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium">
+                    <div>
+                        <span class="slds-text-title_bold">Changed By: </span>
+                        <span>{changedBy}</span>
+                    </div>
+                    <div>
+                        <span class="slds-text-title_bold">Changed Date: </span>
+                        <span>{changedDate}</span>
+                    </div>
+                </div>
+
+                <!-- Two-panel diff -->
+                <div class="slds-grid slds-gutters">
+                    <!-- Left: Original Value -->
+                    <div class="slds-col slds-size_1-of-2">
+                        <h3 class="slds-text-heading_small slds-m-bottom_x-small dv-panel-title">Original Value</h3>
+                        <div class="dv-panel dv-panel-old" lwc:dom="manual"></div>
+                    </div>
+                    <!-- Right: New Value -->
+                    <div class="slds-col slds-size_1-of-2">
+                        <h3 class="slds-text-heading_small slds-m-bottom_x-small dv-panel-title">New Value</h3>
+                        <div class="dv-panel dv-panel-new" lwc:dom="manual"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="slds-modal__footer">
+                <lightning-button
+                    label="Close"
+                    onclick={handleClose}
+                ></lightning-button>
+            </div>
+        </div>
+    </section>
+</template>

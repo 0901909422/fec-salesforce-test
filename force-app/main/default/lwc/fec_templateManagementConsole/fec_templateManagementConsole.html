@@ -1,0 +1,151 @@
+<template>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- TEMPLATE EDITOR (full-page, replaces list view)        -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <template if:true={showEditor}>
+        <c-fec_template-editor
+            record-id={editorRecordId}
+            clone-data={editorCloneData}
+            default-folder-id={currentFolderId}
+            onsave={handleEditorSave}
+            onsaveandclose={handleEditorSaveAndClose}
+            oncancel={handleEditorCancel}
+        ></c-fec_template-editor>
+    </template>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- TEMPLATE DETAIL PAGE (full-page, 3 tabs)               -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <template if:true={showDetail}>
+        <c-fec_template-detail-page
+            record-id={detailRecordId}
+            onback={handleDetailBack}
+            onedit={handleDetailEdit}
+        ></c-fec_template-detail-page>
+    </template>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- LIST VIEW (normal console layout)                      -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <template if:true={showListView}>
+        <div class="tmc-page-container">
+
+            <!-- PAGE HEADER -->
+            <div class="tmc-page-header">
+                <div class="tmc-page-header-left">
+                    <lightning-icon
+                        icon-name="standard:email"
+                        size="medium"
+                        class="tmc-page-header-icon"
+                    ></lightning-icon>
+                    <div>
+                        <span class="tmc-page-header-title">{pageTitle}</span>
+                        <span class="tmc-page-header-count">{itemCountLabel}</span>
+                    </div>
+                </div>
+                <div class="tmc-page-header-actions">
+                        <lightning-button
+                        label={label.FEC_New_Template}
+                        variant="neutral"
+                        onclick={handleNewTemplate}
+                    ></lightning-button>
+                    <lightning-button
+                        label={label.FEC_New_Folder}
+                        variant="neutral"
+                        onclick={handleNewFolder}
+                    ></lightning-button>
+                </div>
+            </div>
+
+            <!-- BODY: Sidebar (left) + Main content (right) -->
+            <div class="tmc-body">
+
+                <!-- LEFT SIDEBAR -->
+                <div class="tmc-sidebar">
+                    <c-fec_folder-tree-panel
+                        active-view={activeView}
+                        onviewchange={handleViewChange}
+                    ></c-fec_folder-tree-panel>
+                </div>
+
+                <!-- RIGHT: Toolbar + List content -->
+                <div class="tmc-main">
+
+                    <!-- Toolbar: search + active filter -->
+                    <div class="tmc-toolbar">
+                        <div class="tmc-toolbar-search">
+                            <lightning-input
+                                type="search"
+                                label={label.FEC_Search_Templates}
+                                value={searchText}
+                                onchange={handleSearchChange}
+                                variant="label-hidden"
+                                placeholder={label.FEC_Search_Templates}
+                            ></lightning-input>
+                        </div>
+
+                        <!-- Filters (shown on Templates view only) -->
+                        <template if:true={isTemplatesView}>
+                            <div class="tmc-toolbar-filter">
+                                <lightning-combobox
+                                    label={label.FEC_Col_Folder}
+                                    value={filterFolderId}
+                                    options={folderFilterOptions}
+                                    onchange={handleFolderFilterChange}
+                                    variant="label-hidden"
+                                ></lightning-combobox>
+                            </div>
+                            <div class="tmc-toolbar-filter">
+                                <lightning-combobox
+                                    label={label.FEC_Filter_Active}
+                                    value={filterActive}
+                                    options={activeOptions}
+                                    onchange={handleActiveChange}
+                                    variant="label-hidden"
+                                ></lightning-combobox>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- List content area -->
+                    <div class="tmc-list-area">
+                        <template if:true={isTemplatesView}>
+                            <c-fec_template-list-view
+                                selected-folder-id={filterFolderId}
+                                search-text={searchText}
+                                filter-active={filterActive}
+                                onedittemplate={handleEditTemplate}
+                                onviewtemplate={handleViewTemplate}
+                                onclonetemplate={handleCloneTemplate}
+                                onviewfolder={handleViewFolder}
+                            ></c-fec_template-list-view>
+                        </template>
+                        <template if:true={isFoldersView}>
+                            <c-fec_folder-list-view
+                                search-text={searchText}
+                                onclickfolder={handleClickFolder}
+                                onedittemplate={handleEditTemplate}
+                                onviewtemplate={handleViewTemplate}
+                                oneditfolder={handleEditFolder}
+                                onloaddata={handleOnLoadData}
+                            ></c-fec_folder-list-view>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- FOLDER EDITOR MODAL                                    -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <template if:true={showFolderEditor}>
+        <c-fec_folder-editor
+            record-id={folderEditorRecordId}
+            parent-folder-id={selectedFolderId}
+            onsave={handleFolderEditorSave}
+            oncancel={handleFolderEditorCancel}
+        ></c-fec_folder-editor>
+    </template>
+</template>

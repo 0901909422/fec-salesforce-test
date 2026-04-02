@@ -591,10 +591,10 @@ public without sharing class FEC_MainInfoAccountController {
         if (emeaRes != null) {
             localUse = emeaRes.localUseInd;
         }
-        update new FEC_Customer_History__c(
+        /* Không gán FEC_Contract_Number__c = null khi MainCard/API thiếu — tránh xóa số HĐ đã lưu từ luồng Loan (GetLoanBasicInfo). */
+        FEC_Customer_History__c rec = new FEC_Customer_History__c(
             Id = accountId,
             FEC_Account_Number__c = m != null ? m.AccountNumber : null,
-            FEC_Contract_Number__c = m != null ? m.ContractNumber : null,
             FEC_Account_Status__c = m != null ? m.Status : null,
             FEC_Credit_Limit__c = m != null ? m.CreditLimit : null,
             FEC_OTB__c = m != null ? m.OTB : null,
@@ -618,7 +618,7 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Customer_Segment__c = m != null ? m.CustomerSegment : null,
             FEC_Expiry_Date__c = m != null ? m.ExpiryDate : null,
             //FEC_Card_Type__c = 
-            //FEC_Plastic_ID__c = 
+            FEC_Plastic_ID__c = m != null ? m.PlasticIndicator : null,
             FEC_Scheme_ID__c      = a != null ? a.SchemeId : null,
             FEC_Scheme_Desc__c    = a != null ? a.SchemeDesc : null,
             /* ===== CARD STATUS ===== */
@@ -631,5 +631,9 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Local_Use__c = localUse
             /* ===== DEBT SALE ===== */
         );
+        if (m != null && String.isNotBlank(m.ContractNumber)) {
+            rec.FEC_Contract_Number__c = m.ContractNumber;
+        }
+        update rec;
     } 
 }

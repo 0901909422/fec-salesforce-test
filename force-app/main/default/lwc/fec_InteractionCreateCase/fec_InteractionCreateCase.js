@@ -22,6 +22,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
   isLoading = false;
   // viewMode; // handling | review
   // _resetDone = false;
+  // _initialized = false;
   @wire(CurrentPageReference)
   pageRef;
 
@@ -69,12 +70,19 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
     }
   }
 
-  async connectedCallback() {
-    if (!this.recordId) {
-      console.error("recordId is undefined");
-      return;
-    }
+  // @wire(CurrentPageReference)
+  // setPageRef(pageRef) {
+  //   if (pageRef) {
+  //     this.pageRef = pageRef;
 
+  //     if (this.recordId && !this._initialized) {
+  //       this._initialized = true;
+  //       this.handleInit();
+  //     }
+  //   }
+  // }
+
+  async connectedCallback() {
     this.isLoading = true;
     if (!this.isNonExistingCustomer) {
       createCustomerCaseFromCase({ caseId: this.recordId })

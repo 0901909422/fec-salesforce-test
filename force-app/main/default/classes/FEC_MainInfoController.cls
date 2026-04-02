@@ -240,6 +240,16 @@ public without sharing class FEC_MainInfoController {
             );
 
         if (res == null || res.Addresses == null) return result;
+        List<FEC_Province__c> cityList = [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_Province__c];
+        Map<String, String> cityMap = new Map<String, String>();
+        for (FEC_Province__c c : cityList) {
+            cityMap.put(c.FEC_Code__c, c.FEC_Name_VN__c);
+        }
+        List<FEC_District__c> districtList = [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_District__c];
+        Map<String, String> districtMap = new Map<String, String>();
+        for (FEC_District__c d : districtList) {
+            districtMap.put(d.FEC_Code__c, d.FEC_Name_VN__c);
+        }
 
         Map<String, FEC_Address_Info__c> existingMap = new Map<String, FEC_Address_Info__c>();
         for (FEC_Address_Info__c a : [
@@ -268,7 +278,7 @@ public without sharing class FEC_MainInfoController {
                 toInsert.add(addr);
             }
 
-            addr.FEC_Address__c = buildFullAddress(ai);
+            addr.FEC_Address__c = buildFullAddress(ai,cityMap, districtMap);
             addr.FEC_Mailing_Address__c = FEC_ConstantCommon.TEXT_YES;
 
             result.toUpdate.add(addr);
@@ -294,14 +304,17 @@ public without sharing class FEC_MainInfoController {
         return null;
     }
 
-    private static String buildFullAddress(FEC_GetAddressesList.AddressInfo a) {
+    private static String buildFullAddress(FEC_GetAddressesList.AddressInfo a, Map<String,String> cityMap, Map<String,String> districtMap) {
+        String cityName = (a.City != null && cityMap.containsKey(a.City)) ? cityMap.get(a.City) : a.City;
+        String districtName = (a.District!= null && districtMap.containsKey(a.District)) ? districtMap.get(a.District) : a.District;
+
         return FEC_CommonUltils.formatAddress(
             a.Building,
             a.NumberStr,
             a.Street,
             a.Ward,
-            a.District,
-            a.City,
+            districtName,
+            cityName,
             a.CountryName,
             a.ZipCode
         );
