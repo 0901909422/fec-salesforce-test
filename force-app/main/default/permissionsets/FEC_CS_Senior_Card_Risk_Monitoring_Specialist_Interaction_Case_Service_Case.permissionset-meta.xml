@@ -442,9 +442,10 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Case. FEC_Is_MyCaseAPI_Interaction__c </field>
+        <field>Case.FEC_Is_MyCaseAPI_Interaction__c</field>
         <readable>true</readable>
-    </fieldPermissions>    <fieldPermissions>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_Is_My_Follow_Up__c</field>
         <readable>true</readable>
