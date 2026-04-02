@@ -1562,6 +1562,11 @@
         <field>ServiceResourceSkill.FEC_Active__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>ServiceResourceSkill.FEC_Skill_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Center Director - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
