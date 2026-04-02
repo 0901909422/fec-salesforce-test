@@ -11319,7 +11319,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Remove_Phone_Invalid_Format</shortDescription>
-        <value>Số điện thoại không đúng định dạng. Vui lòng nhập 10 số bắt đầu bằng 0 hoặc 11 số bắt đầu bằng 84.</value>
+        <value>Phone number must start with 0 (10 digits) or 84 (11 digits)</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Remove_Phone_Service_Failed</fullName>
