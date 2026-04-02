@@ -6,12 +6,13 @@ import FEC_MainInfo_Contract_Status_Label from '@salesforce/label/c.FEC_MainInfo
 import FEC_LBL_Remove_Phone_Phone_Type from '@salesforce/label/c.FEC_LBL_Remove_Phone_Phone_Type';
 import FEC_LBL_Remove_Phone_Removable from '@salesforce/label/c.FEC_LBL_Remove_Phone_Removable';
 import FEC_Reason_Label from '@salesforce/label/c.FEC_Reason_Label';
+import FEC_MSG_Remove_Phone_Invalid_Format from '@salesforce/label/c.FEC_MSG_Remove_Phone_Invalid_Format';
 import FEC_MSG_Remove_Phone_Service_Failed from '@salesforce/label/c.FEC_MSG_Remove_Phone_Service_Failed';
 import FEC_LBL_Remove_Phone_Section_Title from '@salesforce/label/c.FEC_LBL_Remove_Phone_Section_Title';
 import FEC_LBL_Remove_Phone_Input_Label from '@salesforce/label/c.FEC_LBL_Remove_Phone_Input_Label';
 import FEC_Btn_Remove_Phone_Check_Eligibility from '@salesforce/label/c.FEC_Btn_Remove_Phone_Check_Eligibility';
 import Loading from '@salesforce/label/c.Loading';
-import { STR_EMPTY, RESULT_ERROR, MSG_PHONE_FORMAT_0_OR_84 } from 'c/fec_CommonConst';
+import { STR_EMPTY, RESULT_ERROR } from 'c/fec_CommonConst';
 
 export default class Fec_RemovePhoneForm extends LightningElement {
 
@@ -43,12 +44,9 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     handlePhoneChange(event) {
         this.phone = (event.target.value || STR_EMPTY).trim();
-        const input = event.target;
-        if (input && typeof input.setCustomValidity === 'function') {
-            input.setCustomValidity(STR_EMPTY);
-            if (typeof input.reportValidity === 'function') {
-                input.reportValidity();
-            }
+        const phoneInput = this.template.querySelector('lightning-input');
+        if (phoneInput) {
+            phoneInput.setCustomValidity('');
         }
         if (this.phone !== this.lastCheckedPhone) {
             this.hasLoadedSuccessData = false;
@@ -73,17 +71,20 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     handleCheckEligibility() {
         if (!this.isPhoneValid(this.phone)) {
-            const input = this.template.querySelector('lightning-input[name="removedPhone"]');
-            if (input && typeof input.setCustomValidity === 'function') {
-                input.setCustomValidity(MSG_PHONE_FORMAT_0_OR_84);
-                if (typeof input.reportValidity === 'function') {
-                    input.reportValidity();
-                }
+            const phoneInput = this.template.querySelector('lightning-input');
+            if (phoneInput) {
+                phoneInput.setCustomValidity(FEC_MSG_Remove_Phone_Invalid_Format);
+                phoneInput.reportValidity();
             }
+            this.resultMessage = STR_EMPTY;
             this.hasLoadedSuccessData = false;
             this.rows = [];
             this.selectedRowIds = [];
             return;
+        }
+        const phoneInputClear = this.template.querySelector('lightning-input');
+        if (phoneInputClear) {
+            phoneInputClear.setCustomValidity('');
         }
         this.isLoading = true;
         this.resultMessage = STR_EMPTY;
