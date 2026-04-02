@@ -19,7 +19,7 @@ import {
   APPLICATION_SCOPE,
   MessageContext
 } from "lightning/messageService";
-import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Interaction_Case_Mode__c";
 
 import { mask, isOnlyNumber, formatNumber, formatDate } from "c/fec_CommonUtils";
 import { ICON_PREVIEW, ICON_HIDE, MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, COMPANY_PHONE } from "c/fec_CommonConst";
@@ -131,6 +131,13 @@ export default class Fec_KYC extends LightningElement {
       .catch((error) => {
         console.error("Error loading common styles", error);
       });
+  }
+
+  disconnectedCallback() {
+    if (this.subscription) {
+      unsubscribe(this.subscription);
+      this.subscription = null;
+    }
   }
 
   subscribeToMessageChannel() {
