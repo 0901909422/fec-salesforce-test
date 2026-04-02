@@ -48,6 +48,7 @@ import cannotDeleteFileMsg from '@salesforce/label/c.FEC_Cannot_Delete_File';
 import endDateLessThanTodayMsg from '@salesforce/label/c.End_Date_Less_Than_Today_Validation_Msg';
 import endDateAfterOrEquealStartDateMsg from '@salesforce/label/c.End_Date_After_Or_Equal_Start_Date_Validation_Msg';
 import errorDuplicateKeyInFile from '@salesforce/label/c.FEC_Error_Duplicate_Key_In_File';
+import startDateLessThanTodayMsg from '@salesforce/label/c.FEC_Start_Date_Less_Than_Today';
 
 export default class FecCustomerUpsertModal extends LightningElement {
     label = {
@@ -297,6 +298,13 @@ export default class FecCustomerUpsertModal extends LightningElement {
 
         if (!allValid) {
             this.showToast(FAIL_TITLE, errorRequiredFields, 'error');
+            return;
+        }
+
+        const startDate = this.localData.FEC_StartDate__c;
+        const today = new Date().toISOString().split('T')[0];
+        if (startDate && startDate < today) {
+            this.showToast(FAIL_TITLE, startDateLessThanTodayMsg, 'error');
             return;
         }
 

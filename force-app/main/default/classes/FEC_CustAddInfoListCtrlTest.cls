@@ -73,4 +73,95 @@ private class FEC_CustAddInfoListCtrlTest {
         } catch(Exception e) { caught = true; }
         System.assert(caught, 'Phải bắt được lỗi');
     }
+
+    @isTest
+    static void testGetRelatedFiles() {
+        FEC_CustomerAdditionalInfoConfig__c cfg = [SELECT Id FROM FEC_CustomerAdditionalInfoConfig__c LIMIT 1];
+        
+        // Tạo file với Description = ORIGINAL_USER_UPLOAD
+        ContentVersion cv = new ContentVersion(
+            Title = 'TestExcel.xlsx',
+            PathOnClient = 'TestExcel.xlsx',
+            VersionData = Blob.valueOf('Excel content'),
+            Description = FEC_ConstantCommon.ORIGINAL_USER_UPLOAD,
+            FEC_Comments__c = FEC_ConstantCommon.UPLOADED_STATUS,
+            FirstPublishLocationId = cfg.Id
+        );
+        insert cv;
+
+        Test.startTest();
+        List<Map<String, Object>> files = FEC_CustomerAdditionalInfoListController.getRelatedFiles(cfg.Id);
+        Test.stopTest();
+
+        System.assert(files.size() > 0, 'Phải trả về ít nhất 1 file');
+        System.assertNotEquals(null, files[0].get(FEC_ConstantCommon.KEY_ID));
+        System.assertEquals('TestExcel.xlsx', files[0].get(FEC_ConstantCommon.KEY_NAME));
+    }
+
+    @isTest
+    static void testDeleteConfig() {
+        // Tạo config mới với file và detail records
+        FEC_CustomerAdditionalInfoConfig__c cfg = new FEC_CustomerAdditionalInfoConfig__c(
+            FEC_KeyIdentifier__c = 'DEL_TEST',
+            FEC_FieldID__c = 'DEL_FIELD',
+            FEC_Status__c = FEC_ConstantCommon.UPLOADED_STATUS
+        );
+        insert cfg;
+
+        ContentVersion cv = new ContentVersion(
+            Title = 'ToDelete.xlsx',
+            PathOnClient = 'ToDelete.xlsx',
+            VersionData = Blob.valueOf('content'),
+            FirstPublishLocationId = cfg.Id
+        );
+        insert cv;
+
+        FEC_CustomerAdditionalInfo__c detail = new FEC_CustomerAdditionalInfo__c(
+            FEC_Config__c = cfg.Id,
+            FEC_KeyIDValue__c = 'DEL_KEY'
+        );
+        insert detail;
+
+        FEC_CustomerDataConfigHistory__c history = new FEC_CustomerDataConfigHistory__c(
+            FEC_Customers_Data_Config__c = cfg.Id,
+            FEC_KeyIdentifier__c = 'DEL_TEST',
+            FEC_FieldID__c = 'DEL_FIELD',
+            FEC_Status__c = FEC_ConstantCommon.UPLOADED_STATUS
+        );
+        insert history;
+
+        Test.startTest();
+        FEC_CustomerAdditionalInfoListController.deleteConfig(cfg.Id);
+        Test.stopTest();
+
+        List<FEC_CustomerAdditionalInfoConfig__c> remaining = [SELECT Id FROM FEC_CustomerAdditionalInfoConfig__c WHERE Id = :cfg.Id];
+        System.assertEquals(0, remaining.size(), 'Config phải bị xóa');
+    }
+
+    @isTest
+    static void testDeleteConfigException() {
+        Boolean caught = false;
+        try {
+            // Dùng fake ID để trigger exception
+            FEC_CustomerAdditionalInfoListController.deleteConfig('a0000000000FAKE');
+        } catch(Exception e) { caught = true; }
+        System.assert(caught, 'Phải bắt được lỗi khi xóa config không tồn tại');
+    }
+
+    @isTest
+    static void testCheckDuplicateNotFound() {
+        Boolean isDup = FEC_CustomerAdditionalInfoListController.checkDuplicateConfig('NONEXIST', 'NONE', null);
+        System.assertEquals(false, isDup, 'Không nên tìm thấy duplicate');
+    }
+
+    @isTest
+    static void testDeleteFileNull() {
+        // Test deleteFile với null ID
+        Boolean caught = false;
+        try {
+            FEC_CustomerAdditionalInfoListController.deleteFile(null);
+        } catch(Exception e) { caught = true; }
+        // Không nên throw vì có null check
+        System.assert(!caught, 'Không nên throw lỗi khi ID null');
+    }
 }
