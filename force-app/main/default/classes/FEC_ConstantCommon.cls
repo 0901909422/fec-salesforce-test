@@ -207,9 +207,12 @@ public with sharing class FEC_ConstantCommon {
     //Get Next Work
     public static final String CASE_TYPE_DESCRIPTION = 'Get Next Work';
     public static final String CASE_ROUTING_ACTION = 'Route to';
+    /** Giá trị trường FEC_Routing_Action__c khi đổi Owner (Salesforce / trigger). */
+    public static final String FEC_ROUTING_ACTION_CHANGE_OWNER = 'Change Owner';
     /** Routing Action History: cộng dồn FEC_Team__c / Pending-{Team1}_{Team2} (cùng luồng Route to). */
     public static final Set<String> ROUTING_ACTIONS_SYNC_CASE_TEAMS = new Set<String>{
         CASE_ROUTING_ACTION,
+        FEC_ROUTING_ACTION_CHANGE_OWNER,
         'Revert',
         'Escalate',
         'Transfer',
