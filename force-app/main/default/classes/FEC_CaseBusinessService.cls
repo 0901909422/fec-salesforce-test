@@ -1,7 +1,7 @@
 public with sharing class FEC_CaseBusinessService {
   public static final String TYPE_LWC = 'LWC';
 
-  public static final String ROUTE_TO = 'Change Owner';
+  public static final String ROUTE_TO = 'Route to';
   /** Routing Action History khi đổi Owner (UI/API), không phải luồng Route to nghiệp vụ. */
   public static final String CHANGE_OWNER = 'Change Owner';
   public static final String REVERT = 'Revert';
