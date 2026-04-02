@@ -46,13 +46,12 @@ public with sharing class FEC_CreateCSCaseService {
             } else if (externalSystems.contains(subChannel)) {
                 interactionDTO.channel = FEC_ConstantCommon.CHANNEL_EXTERNAL;
                 interactionDTO.subChannel = subChannel;
-            } else {
-                interactionDTO.channel = FEC_ConstantCommon.CHANNEL_EXTERNAL;
-                interactionDTO.subChannel = FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
-            }
+            } 
+            interactionDTO.phoneNumber = req.CustomerInfo.PhoneNumber;
+            interactionDTO.email = req.CustomerInfo.EmailAddress;
             
             FEC_CreateCaseHandler.FEC_InteractionCaseResponse interactionResp =
-                FEC_CreateCaseHandler.createInteractionCase(interactionDTO);
+                FEC_CreateCaseHandler.createInteractionCaseMyCaseAPI(interactionDTO);
             
             //--------------------------
             //CREATE CUSTOMER HISTORY IF CUSTOMER IS EXISTED

@@ -135,9 +135,9 @@
                         <rightValue>External</rightValue>
                     </criteria>
                     <criteria>
-                        <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
-                        <operator>NE</operator>
-                        <rightValue>Internal Email</rightValue>
+                        <leftValue>{!Record.FEC_Is_MyCaseAPI_Interaction__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -166,7 +166,7 @@
                 <componentName>fec_KYC</componentName>
                 <identifier>c_fec_KYC</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
+                    <booleanFilter>1 AND 2 AND 3</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -176,6 +176,11 @@
                         <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
                         <operator>NE</operator>
                         <rightValue>Internal Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Non-existing</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -860,10 +865,16 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>true</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Non-existing</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -881,10 +892,16 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab2</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>true</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Non-existing</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -902,10 +919,21 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab21</identifier>
                 <visibilityRule>
+                    <booleanFilter>(1 OR 2) AND 3</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>review</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>handling</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Non-existing</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -944,10 +972,21 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab26</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2 AND 3</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>true</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Loan</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Non-existing</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>

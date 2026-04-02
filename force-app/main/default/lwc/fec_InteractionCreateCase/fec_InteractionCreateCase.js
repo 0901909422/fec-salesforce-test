@@ -87,7 +87,6 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
     if (!this.isNonExistingCustomer) {
       createCustomerCaseFromCase({ caseId: this.recordId })
         .then(async (newCaseId) => {
-          await this.handlePublishMessageChanel();
           this.isLoading = false;
           if (this.isConsoleNavigation) {
             const focusedTab = await getFocusedTabInfo();
@@ -105,8 +104,12 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
               });
             }
 
-            await closeTab(currentTabId);
             // await this.handlePublishMessageChanel();
+            // await closeTab(currentTabId);
+            setTimeout(async () => {
+              await this.handlePublishMessageChanel();
+              closeTab(currentTabId);
+            }, 2000);
           } else {
             this[NavigationMixin.Navigate]({
               type: "standard__recordPage",
@@ -133,7 +136,6 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
         isCreatedFromSearch: this.isCreatedFromSearch
       })
         .then(async (newCaseId) => {
-          await this.handlePublishMessageChanel();
           this.isLoading = false;
           if (this.isConsoleNavigation) {
             const focusedTab = await getFocusedTabInfo();
@@ -151,8 +153,11 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
               });
             }
 
-            await closeTab(currentTabId);
-            // await this.handlePublishMessageChanel();
+            // await closeTab(currentTabId);
+            setTimeout(async () => {
+              await this.handlePublishMessageChanel();
+              closeTab(currentTabId);
+            }, 2000);
           } else {
             this[NavigationMixin.Navigate]({
               type: "standard__recordPage",

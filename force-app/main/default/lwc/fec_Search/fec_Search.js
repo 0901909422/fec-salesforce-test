@@ -421,8 +421,14 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       .catch((err) => console.error(err));
 
     try {
+      let objectName;
+      if (this.recordId) {
+        objectName = 'Case';
+      } else {
+        objectName = 'FEC_Customer_Search__c';
+      }
       this.fieldPermissions = await checkFieldEditPermissions({
-        sObjectType: 'Case',
+        sObjectType: objectName,
         fieldNames: FIELDS_TO_CHECK
       })
       let result = await getCase({ caseId: this.recordId });
