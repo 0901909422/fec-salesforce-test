@@ -1372,8 +1372,8 @@ public with sharing class FEC_CaseBusinessService {
   }
 
   /**
-   * Bản ghi Route to mới nhất → Status Pending-{Team} hoặc Pending-{Team1}_{Team2}
-   * (map Team qua FEC_Original_User_Queue_ID__c / FEC_Updated_User_Queue_ID__c).
+   * Chuỗi Pending-{Team} theo FEC_CasePendingStatusService.computePendingStatusForCase
+   * (ưu tiên bản ghi Routing Action History **Change Owner** mới nhất).
    */
   public static String getPendingStatusFromLatestRouteTo(Id caseId) {
     return FEC_CasePendingStatusService.computePendingStatusForCase(caseId);
@@ -1447,7 +1447,9 @@ public with sharing class FEC_CaseBusinessService {
 
     if (!histories.isEmpty()) {
       try {
-        insert histories;
+        // SYSTEM_MODE: ghi nhận lịch sử phân bổ dù user không có Create/FLS trên FEC_Routing_Action_History__c
+        // (đồng bộ với route() Database.insert(history, AccessLevel.SYSTEM_MODE))
+        Database.insert(histories, AccessLevel.SYSTEM_MODE);
         System.debug(
           'FEC_DEBUG CaseBusinessService.createRoutingActionHistoryOnOwnerChange inserted historiesCount=' +
           histories.size()
@@ -1546,6 +1548,7 @@ public with sharing class FEC_CaseBusinessService {
     return new FEC_Routing_Action_History__c(
       FEC_Case__c = c.Id,
       FEC_Routing_Action__c = CHANGE_OWNER,
+      FEC_Perform_User__c = UserInfo.getUserId(),
       FEC_Decision__c = '',
       FEC_Original_User_Queue__c = originalName,
       FEC_Original_User_Queue_ID__c = oldCase.OwnerId != null
@@ -2747,8 +2750,10 @@ public with sharing class FEC_CaseBusinessService {
         FEC_Updated_User_Queue__c,
         FEC_Updated_User_Queue_ID__c
       FROM FEC_Routing_Action_History__c
-      WHERE FEC_Case__c = :caseId AND FEC_Routing_Action__c = :ROUTE_TO
-      ORDER BY CreatedDate DESC
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Routing_Action__c IN (:ROUTE_TO, :CHANGE_OWNER)
+      ORDER BY CreatedDate DESC, Id DESC
       LIMIT 1
     ];
     System.debug('historyList: ' + historyList);
