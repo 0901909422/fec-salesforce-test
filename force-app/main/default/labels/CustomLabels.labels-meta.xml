@@ -11537,4 +11537,18 @@
         <shortDescription>FEC_RELATED_NOTES_UPDATED_MSG</shortDescription>
         <value>Note updated</value>
     </labels>
+    <labels>
+        <fullName>FEC_Content_History_Tab</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Content History tab label</shortDescription>
+        <value>Content History Tracking</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_History_Tab</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Template History tab label</shortDescription>
+        <value>Template History Tracking</value>
+    </labels>
 </CustomLabels>

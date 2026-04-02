@@ -92,6 +92,7 @@
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_CaseNote</members>
 		<members>fec_NewNoteModal</members>
+		<members>fec_templatePreviewModal</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -199,22 +200,6 @@
         <members>FEC_MSG_GetCSAttached_FileID_Invalid</members>
         <members>FEC_MSG_GetCSAttached_File_No_Content</members>
         <members>FEC_MSG_GetCSAttached_File_Not_Linked_To_Case</members>
-		<members>FEC_ACTION_CANCEL</members>
-		<members>FEC_RELATED_NOTES_COMPOSE_TEXT_FIELD</members>
-		<members>FEC_RELATED_NOTES_CREATED_MSG</members>
-		<members>FEC_RELATED_NOTES_DELETED_MSG</members>
-		<members>FEC_RELATED_NOTES_DELETE_BTN</members>
-		<members>FEC_RELATED_NOTES_DELETE_MODAL_MSG</members>
-		<members>FEC_RELATED_NOTES_EDIT_NOTE_MODAL_TITLE</members>
-		<members>FEC_RELATED_NOTES_NEW_NOTE_MODAL_TITLE</members>
-		<members>FEC_RELATED_NOTES_REMOVED_MSG</members>
-		<members>FEC_RELATED_NOTES_REMOVE_BTN</members>
-		<members>FEC_RELATED_NOTES_REMOVE_MODAL_MSG</members>
-		<members>FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN</members>
-		<members>FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN</members>
-		<members>FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN</members>
-		<members>FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN</members>
-		<members>FEC_RELATED_NOTES_UPDATED_MSG</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
