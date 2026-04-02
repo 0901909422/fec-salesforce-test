@@ -92,10 +92,11 @@
 		<members>maskedToggleDatatable</members>
 		<members>fec_CommonRecordDetailSection</members>
 		<members>fec_InteractionCreateCase</members>
+		<members>fec_templatePreviewModal</members>
+		<members>fec_ComboBox</members>
+		<members>fec_PinResetView</members>
 		<members>fec_CaseNote</members>
 		<members>fec_NewNoteModal</members>
-		<members>fec_templatePreviewModal</members>
-		<members>fec_PinResetView</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

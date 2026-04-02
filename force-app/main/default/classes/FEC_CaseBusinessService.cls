@@ -2,6 +2,8 @@ public with sharing class FEC_CaseBusinessService {
   public static final String TYPE_LWC = 'LWC';
 
   public static final String ROUTE_TO = 'Route to';
+  // Change Owner
+  public static final String CHANGE_OWNER = 'Change Owner';
   public static final String REVERT = 'Revert';
   public static final String CANCEL = 'Cancel';
   public static final String ESCALATE = 'Escalate';
@@ -1400,7 +1402,7 @@ public with sharing class FEC_CaseBusinessService {
 
   /**
    * Tạo bản ghi Routing Action History khi Change Owner (OwnerId thay đổi).
-   * Gán: Routing Action = Route to, Description = Change Owner; Stage Name = FEC_Code của stage trước khi đổi.
+   * Gán: Routing Action = Change Owner, Description = Change Owner; Stage Name = FEC_Code của stage trước khi đổi.
    * @param newCases Trigger.new (sau update)
    * @param oldMap Trigger.oldMap
    */
@@ -1562,7 +1564,7 @@ public with sharing class FEC_CaseBusinessService {
 
     return new FEC_Routing_Action_History__c(
       FEC_Case__c = c.Id,
-      FEC_Routing_Action__c = ROUTE_TO,
+      FEC_Routing_Action__c = CHANGE_OWNER,
       FEC_Decision__c = '',
       FEC_Original_User_Queue__c = originalName,
       FEC_Original_User_Queue_ID__c = oldCase.OwnerId != null
