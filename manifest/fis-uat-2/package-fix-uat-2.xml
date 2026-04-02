@@ -382,7 +382,15 @@
 		<members>Case.FEC_Card_Block_Reason__c</members>
         <members>FEC_Notification__c.FEC_Notification_Template__c</members>
 		<members>FEC_Bank_Branch__c.FEC_Bank_Branch_Name_Noaccent__c</members>
+		<members>FEC_Bank_Branch__c.FEC_Bank_Branch_Name__c</members>
+		<members>FEC_Bank_Branch__c.FEC_Bank_Name__c</members>
 		<members>FEC_Bank_Name__c.FEC_Bank_Name_Noaccent__c</members>
+		<members>FEC_Bank_Name__c.FEC_Active__c</members>
+		<members>FEC_Bank_Name__c.FEC_Bank_Full_Name__c</members>
+		<members>FEC_Bank_Name__c.FEC_Bank_Name_English__c</members>
+	    <members>FEC_Bank_Name__c.FEC_Bank_Name_Vietnamese__c</members>
+		<members>FEC_Bank_Name__c.FEC_Pzinskey__c</members>
+		<members>FEC_Case_Refund_Details__c.FEC_Case__c</members>
 		<members>FEC_Case_Refund_Details__c.FEC_Payment_Channel__c</members>
 		<members>FEC_Case_Refund_Details__c.FEC_Receipt_Amount__c</members>
 		<members>FEC_Case_Refund_Details__c.FEC_Receipt_Date__c</members>
