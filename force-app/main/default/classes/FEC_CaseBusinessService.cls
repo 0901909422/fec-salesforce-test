@@ -1,7 +1,9 @@
-public with sharing class FEC_CaseBusinessService {
+public without sharing class FEC_CaseBusinessService {
   public static final String TYPE_LWC = 'LWC';
 
   public static final String ROUTE_TO = 'Route to';
+  /** Routing Action History khi đổi Owner (UI/API), không phải luồng Route to nghiệp vụ. */
+  public static final String CHANGE_OWNER = 'Change Owner';
   public static final String REVERT = 'Revert';
   public static final String CANCEL = 'Cancel';
   public static final String ESCALATE = 'Escalate';
@@ -556,27 +558,28 @@ public with sharing class FEC_CaseBusinessService {
               sectionTemp.componentlst.add(lwcName);
             }
           } else {
-            if (String.isNotBlank(subSectionNameTemp)) {
-              subSectionTemp = sectionTemp.findSubSection(subSectionNameTemp);
+          if (String.isNotBlank(subSectionNameTemp)) {
+            subSectionTemp = sectionTemp.findSubSection(subSectionNameTemp);
 
-              if (subSectionTemp == null) {
-                subSectionTemp = new Section(
-                  subSectionNameTemp,
-                  subSectionOrderTemp,
-                  subSectionLayoutTemp
-                );
-                sectionTemp.subSectionlst.add(subSectionTemp);
-              }
+            if (subSectionTemp == null) {
+              subSectionTemp = new Section(
+                subSectionNameTemp,
+                subSectionOrderTemp,
+                subSectionLayoutTemp
+              );
+              sectionTemp.subSectionlst.add(subSectionTemp);
+            }
 
+            if (String.isNotBlank(cObjNameTemp)) {
               cObjTemp = subSectionTemp.findObj(cObjNameTemp);
 
               if (cObjTemp == null) {
                 cObjTemp = new CObject(cObjNameTemp);
                 subSectionTemp.objlst.add(cObjTemp);
-
-                cObjTemp.masterDataSettinglst.add(item);
               }
+              cObjTemp.masterDataSettinglst.add(item);
             }
+          }
           }
 
         }
@@ -1389,8 +1392,8 @@ public with sharing class FEC_CaseBusinessService {
   }
 
   /**
-   * Bản ghi Route to mới nhất → Status Pending-{Team} hoặc Pending-{Team1}_{Team2}
-   * (map Team qua FEC_Original_User_Queue_ID__c / FEC_Updated_User_Queue_ID__c).
+   * Chuỗi Pending-{Team} theo FEC_CasePendingStatusService.computePendingStatusForCase
+   * (ưu tiên bản ghi Routing Action History **Change Owner** mới nhất).
    */
   public static String getPendingStatusFromLatestRouteTo(Id caseId) {
     return FEC_CasePendingStatusService.computePendingStatusForCase(caseId);
@@ -1400,7 +1403,7 @@ public with sharing class FEC_CaseBusinessService {
 
   /**
    * Tạo bản ghi Routing Action History khi Change Owner (OwnerId thay đổi).
-   * Gán: Routing Action = Route to, Description = Change Owner; Stage Name = FEC_Code của stage trước khi đổi.
+   * Gán: Routing Action = Change Owner; Description = Change Owner (FEC_RAH_DESCRIPTION_CHANGE_OWNER); Stage Name = FEC_Code của stage trước khi đổi.
    * @param newCases Trigger.new (sau update)
    * @param oldMap Trigger.oldMap
    */
@@ -1419,7 +1422,7 @@ public with sharing class FEC_CaseBusinessService {
       ' skipSetSize(before)=' + caseIdsSkipOwnerChangeRoutingHistory.size()
     );
 
-    // Đã có history + đổi owner từ route() / takeOwnership — không tạo thêm bản Route to (Change Owner) từ trigger
+    // Đã có history + đổi owner từ route() / takeOwnership — không tạo thêm bản Change Owner từ trigger
     if (!caseIdsSkipOwnerChangeRoutingHistory.isEmpty()) {
       List<Case> filtered = new List<Case>();
       for (Case c : ownerChangedCases) {
@@ -1464,7 +1467,9 @@ public with sharing class FEC_CaseBusinessService {
 
     if (!histories.isEmpty()) {
       try {
-        insert histories;
+        // SYSTEM_MODE: ghi nhận lịch sử phân bổ dù user không có Create/FLS trên FEC_Routing_Action_History__c
+        // (đồng bộ với route() Database.insert(history, AccessLevel.SYSTEM_MODE))
+        Database.insert(histories, AccessLevel.SYSTEM_MODE);
         System.debug(
           'FEC_DEBUG CaseBusinessService.createRoutingActionHistoryOnOwnerChange inserted historiesCount=' +
           histories.size()
@@ -1562,7 +1567,8 @@ public with sharing class FEC_CaseBusinessService {
 
     return new FEC_Routing_Action_History__c(
       FEC_Case__c = c.Id,
-      FEC_Routing_Action__c = ROUTE_TO,
+      FEC_Routing_Action__c = CHANGE_OWNER,
+      FEC_Perform_User__c = UserInfo.getUserId(),
       FEC_Decision__c = '',
       FEC_Original_User_Queue__c = originalName,
       FEC_Original_User_Queue_ID__c = oldCase.OwnerId != null
@@ -2776,8 +2782,10 @@ public with sharing class FEC_CaseBusinessService {
         FEC_Updated_User_Queue__c,
         FEC_Updated_User_Queue_ID__c
       FROM FEC_Routing_Action_History__c
-      WHERE FEC_Case__c = :caseId AND FEC_Routing_Action__c = :ROUTE_TO
-      ORDER BY CreatedDate DESC
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Routing_Action__c IN (:ROUTE_TO, :CHANGE_OWNER)
+      ORDER BY CreatedDate DESC, Id DESC
       LIMIT 1
     ];
     System.debug('historyList: ' + historyList);

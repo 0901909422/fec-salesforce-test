@@ -55,6 +55,8 @@
 		<members>FEC_GetLoanSecInfo</members>
 		<members>FEC_MainInfoAccountController</members>
 		<members>FEC_CaseRelatedNoteHandler</members>
+		<members>FEC_CloseInterationSchedulerBatch</members>
+		<members>FEC_PinResetHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -90,9 +92,11 @@
 		<members>maskedToggleDatatable</members>
 		<members>fec_CommonRecordDetailSection</members>
 		<members>fec_InteractionCreateCase</members>
+		<members>fec_templatePreviewModal</members>
+		<members>fec_ComboBox</members>
+		<members>fec_PinResetView</members>
 		<members>fec_CaseNote</members>
 		<members>fec_NewNoteModal</members>
-		<members>fec_templatePreviewModal</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -104,7 +108,6 @@
         <members>FEC_Notification_Record_Page_Auto</members>
 		<members>FEC_Notification_Record_Page_Manual</members>
 		<members>FEC_Customer_Case_Record_Page</members>
-		<members>FEC_Interaction_Case_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -200,6 +203,26 @@
         <members>FEC_MSG_GetCSAttached_FileID_Invalid</members>
         <members>FEC_MSG_GetCSAttached_File_No_Content</members>
         <members>FEC_MSG_GetCSAttached_File_Not_Linked_To_Case</members>
+        <members>FEC_Content_History_Tab</members>
+        <members>FEC_Template_History_Tab</members>
+		<members>FEC_ACTION_CANCEL</members>
+        <members>FEC_RELATED_NOTES_COMPOSE_TEXT_FIELD</members>
+        <members>FEC_RELATED_NOTES_CREATED_MSG</members>
+        <members>FEC_RELATED_NOTES_DELETED_MSG</members>
+        <members>FEC_RELATED_NOTES_DELETE_BTN</members>
+        <members>FEC_RELATED_NOTES_DELETE_MODAL_MSG</members>
+        <members>FEC_RELATED_NOTES_EDIT_NOTE_MODAL_TITLE</members>
+        <members>FEC_RELATED_NOTES_NEW_NOTE_MODAL_TITLE</members>
+        <members>FEC_RELATED_NOTES_REMOVED_MSG</members>
+        <members>FEC_RELATED_NOTES_REMOVE_BTN</members>
+        <members>FEC_RELATED_NOTES_REMOVE_MODAL_MSG</members>
+        <members>FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN</members>
+        <members>FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN</members>
+        <members>FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN</members>
+        <members>FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN</members>
+        <members>FEC_RELATED_NOTES_UPDATED_MSG</members>
+		<members>FEC_Alt_View</members>
+        <members>FEC_Alt_Remove_From_Record</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -380,11 +403,8 @@
 		<members>Case.FEC_Payment_Method__c</members>
 		<members>Case.FEC_New_Block_Code__c</members>
 		<members>Case.FEC_Card_Block_Reason__c</members>
-<<<<<<< manifest/fis-uat-2/package-fix-uat-2.xml
-        <members>Case.FEC_Is_MyCaseAPI_Interaction__c</members>
-=======
         <members>FEC_Notification__c.FEC_Notification_Template__c</members>
->>>>>>> manifest/fis-uat-2/package-fix-uat-2.xml
+        <members>Case.FEC_Is_MyCaseAPI_Interaction__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>

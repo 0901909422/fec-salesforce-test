@@ -9,37 +9,39 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
   
   // ================= BATCH =================
   public Database.QueryLocator start(Database.BatchableContext bc) {
-    Set<String> statuslst = new Set<String>{ 'Open' };
-    Set<String> interationStatuslst = new Set<String>{ 'Open' };
+    Set<String> statuslst = new Set<String>{ FEC_ConstantCommon.CASE_STATUS_OPEN };
+    Set<String> interationStatuslst = new Set<String>{ FEC_ConstantCommon.CASE_STATUS_OPEN };
     
     Map<String, Id> queueDevNameToId = new Map<String, Id>();
+    
+    Set<String> queueNames = new Set<String>{
+      FEC_ConstantCommon.QUEUE_UBANK_EMAIL_NAME,
+      FEC_ConstantCommon.QUEUE_CSM_MAILBOX_NAME,
+      FEC_ConstantCommon.QUEUE_SUPPORT_MAILBOX_NAME,
+      FEC_ConstantCommon.QUEUE_CARE_MAILBOX_NAME,
+      FEC_ConstantCommon.QUEUE_ECOM_MAILBOX_NAME,
+      FEC_ConstantCommon.QUEUE_OFFICE_BASED_MAILBOX_NAME,
+      FEC_ConstantCommon.QUEUE_DAY_2_CHECK_NAME,
+      FEC_ConstantCommon.QUEUE_OM_MAILBOX_NAME,
+      FEC_ConstantCommon.QUEUE_QUALITY_CONTROL_MAILBOX_NAME
+    };
     
     List<Group> groups = [
     SELECT Id, DeveloperName
     FROM Group
-    WHERE Type = 'Queue'
-    AND DeveloperName IN (
-        'FEC_Ubank_Email',
-        'FEC_CSM_Mailbox',
-        'FEC_Support_Mailbox',
-        'FEC_Care_Mailbox',
-        'FEC_Ecom_Mailbox',
-        'FEC_Office_Based_Mailbox',
-        'FEC_Day_2_Check',
-        'FEC_OM_Mailbox',
-        'FEC_Quality_Control_Mailbox'
-      )
-    ];
+    WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+    AND DeveloperName IN :queueNames
+];
     
     for (Group g : groups) {
       queueDevNameToId.put(g.DeveloperName, g.Id);
     }
     // Luồng 4 - Email
-    Set<String> emailChannelSet = new Set<String>{ 'Email' };
-    Set<String> sendToSet = new Set<String>{ 'dichvukhachhang@ubank.vn' };
+    Set<String> emailChannelSet = new Set<String>{ FEC_ConstantCommon.EMAIL };
+    Set<String> sendToSet = new Set<String>{ FEC_ConstantCommon.EMAIL_UBANK_VN };
     Set<Id> ubankEmailQueueIds = new Set<Id>();
-    if (queueDevNameToId.containsKey('FEC_Ubank_Email')) {
-      ubankEmailQueueIds.add(queueDevNameToId.get('FEC_Ubank_Email'));
+    if (queueDevNameToId.containsKey(FEC_ConstantCommon.QUEUE_UBANK_EMAIL_NAME)) {
+      ubankEmailQueueIds.add(queueDevNameToId.get(FEC_ConstantCommon.QUEUE_UBANK_EMAIL_NAME));
     }
     
     Set<Id> userUBankIds = new Set<Id>();
@@ -57,19 +59,19 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
     }
     
     // Luồng 5 - Internal Email
-    Set<String> internalChannelSet = new Set<String>{ 'Internal' };
-    Set<String> internalSubChannelSet = new Set<String>{ 'Internal Email' };
+    Set<String> internalChannelSet = new Set<String>{ FEC_ConstantCommon.CHANNEL_INTERNAL };
+    Set<String> internalSubChannelSet = new Set<String>{ FEC_ConstantCommon.SUBCHANNEL_INTERNAL_EMAIL };
     Set<Id> internalMailboxQueueIds = new Set<Id>();
     
     for (String key : new List<String>{
-      'FEC_CSM_Mailbox',
-      'FEC_Support_Mailbox',
-      'FEC_Care_Mailbox',
-      'FEC_Ecom_Mailbox',
-      'FEC_Office_Based_Mailbox',
-      'FEC_Day_2_Check',
-      'FEC_OM_Mailbox',
-      'FEC_Quality_Control_Mailbox'
+      FEC_ConstantCommon.QUEUE_CSM_MAILBOX_NAME,
+      FEC_ConstantCommon.QUEUE_SUPPORT_MAILBOX_NAME,
+      FEC_ConstantCommon.QUEUE_CARE_MAILBOX_NAME,
+      FEC_ConstantCommon.QUEUE_ECOM_MAILBOX_NAME,
+      FEC_ConstantCommon.QUEUE_OFFICE_BASED_MAILBOX_NAME,
+      FEC_ConstantCommon.QUEUE_DAY_2_CHECK_NAME,
+      FEC_ConstantCommon.QUEUE_OM_MAILBOX_NAME,
+      FEC_ConstantCommon.QUEUE_QUALITY_CONTROL_MAILBOX_NAME
     }) {
       if (queueDevNameToId.containsKey(key)) {
         internalMailboxQueueIds.add(queueDevNameToId.get(key));
@@ -90,27 +92,22 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
       }
     }
     
-    // return Database.getQueryLocator(
-    //   'SELECT Id, RecordTypeId, Status, OwnerId  ' +
-    //   'FROM Case ' +
-    //   'WHERE RecordType.DeveloperName = \'Interaction\' AND Status IN :statuslst AND FEC_Interaction_Status__c  IN :interationStatuslst'
-    //   );
     
     String query =
       'SELECT Id, RecordTypeId, Status, OwnerId, ' +
       'FEC_Channel__c, FEC_Interaction_Subchannel__c, FEC_Send_To__c, IsClosed ' +
       'FROM Case ' +
-      'WHERE RecordType.DeveloperName = \'Interaction\' ' +
+      'WHERE RecordType.DeveloperName = \'' + FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME + '\' ' +
       'AND Status IN :statuslst ' +
       'AND FEC_Interaction_Status__c IN :interationStatuslst ' +
       
     'AND (FEC_Channel__c != \'Email\' ' +
       '     OR IsClosed = TRUE ' +
-      '     OR FEC_Send_To__c != \'dichvukhachhang@ubank.vn\' ' +
+      '     OR FEC_Send_To__c != \'' + FEC_ConstantCommon.EMAIL_UBANK_VN + '\' '  +
       '     OR OwnerId NOT IN :userUBankIds) ' +
       
     'AND (FEC_Channel__c != \'Internal\' ' +
-      '     OR FEC_Interaction_Subchannel__c != \'Internal Email\' ' +
+      '     OR FEC_Interaction_Subchannel__c != \'' + FEC_ConstantCommon.SUBCHANNEL_INTERNAL_EMAIL + '\' ' +
       '     OR IsClosed = TRUE ' +
       '     OR OwnerId NOT IN :userInternalMailIds)';
     
