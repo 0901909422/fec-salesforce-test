@@ -57,6 +57,7 @@
 		<members>FEC_CaseRelatedNoteHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_PinResetHandler</members>
+		<members>FEC_GetMRCInfo</members>
         <name>ApexClass</name>
     </types>
     <types>
