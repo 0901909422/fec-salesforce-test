@@ -64,8 +64,8 @@
     <lightning:accordion allowMultipleSectionsOpen="true" activeSectionName="emailSection" class="fec-accordion-custom">
         <lightning:accordionSection name="emailSection" label="Email" class="fec-accordion-section-custom">
 
-            <!-- Compose UI: chỉ hiện khi viewMode = handling HOẶC là Service Case -->
-            <aura:if isTrue="{!or(v.isHandling, v.isServiceCase)}">
+            <!-- Compose UI: chỉ hiện khi viewMode = handling -->
+            <aura:if isTrue="{!v.isHandling}">
 
             <!-- ===== SERVICE CASE COMPOSE ===== -->
             <aura:if isTrue="{!v.isServiceCase}">
