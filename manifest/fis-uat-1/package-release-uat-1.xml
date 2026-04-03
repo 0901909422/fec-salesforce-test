@@ -1261,6 +1261,8 @@
 		<members>FEC_Follow_Up_Until_Unfollow</members>
 		<members>FEC_Follow_Up_Label</members>
 		<members>FEC_Follow_Up_Until_Resolved</members>
+		<members>FEC_Select_Follow_Up_User_Type_Resolved</members>
+		<members>FEC_Select_Follow_Up_User_Type_Unfollow</members>
 		<members>FEC_ACTION_SELECT_USER</members>
 		<members>FEC_ACTION_CANCEL</members>
 		<members>FEC_ACTION_CONFIRM</members>
