@@ -53,12 +53,12 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/29 - Added updateCaseParticipants for Customer Case / Internal Case
      */
     private void onBeforeInsert(List<Case> newCases) {
+        setEmail2CaseChannelBeforeInsert(newCases);
         generateFECIdSearch(newCases);
         updateCaseParticipantsOnInsert(newCases);
         syncChannelFromInteractionForCustomerCase(newCases);
         assignEntitlement(newCases);
         syncGlobalSearchFromParent(newCases, null);
-        setEmail2CaseChannelBeforeInsert(newCases);
         setParentIdFromEmailThread(newCases);
         stripSubjectThreadToken(newCases);
     }
@@ -106,7 +106,9 @@ public without sharing class FEC_CaseTriggerHandler {
         isExecuting = true;
         handleFollowUpOnResolved(newCases, oldMap);
         handleAutoFollowUpOnUpdate(newCases, oldMap);
-        FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(newCases, oldMap);
+        if (!FEC_GetNextWorkController.isGetNextWork) {
+            FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(newCases, oldMap);
+        }
         FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, oldMap);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
         syncGlobalSearch(newCases, oldMap);
@@ -442,7 +444,7 @@ public without sharing class FEC_CaseTriggerHandler {
         for (Case c : newCases) {
             if (c.RecordTypeId == interactionRecordTypeId && String.isBlank(c.FEC_Channel__c)) {
                 // Phân loại cho Ubank hoặc FE -> Channel Email
-                if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK || c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_FE) {
+                if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK || c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_FECREDIT) {
                     c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
                     c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
                     c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
