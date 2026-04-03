@@ -76,21 +76,16 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/01/16 Toannd61
      */
     private void onAfterInsert(List<Case> newCases) {
-        // Tránh recursive trigger
-        if (isExecuting) {
+        if (FEC_CaseHandlingUserSyncService.inSyncUpdate || isExecuting) {
             return;
         }
-        
+
         isExecuting = true;
-        
-        try {
-            handleAutoFollowUpOnInsert(newCases);
-        } finally {
-            isExecuting = false;
-            FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
-            syncGlobalSearch(newCases, null);
-            FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
-        }
+        handleAutoFollowUpOnInsert(newCases);
+        FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
+        syncGlobalSearch(newCases, null);
+        FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
+        isExecuting = false;
     }
 
     /**
@@ -103,28 +98,18 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/02/02
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
-        if (FEC_CaseHandlingUserSyncService.inSyncUpdate) {
+        if (FEC_CaseHandlingUserSyncService.inSyncUpdate || isExecuting) {
             return;
         }
-        // Tránh recursive trigger
-        if (isExecuting) {
-            return;
-        }
-        
+
         isExecuting = true;
-        
-        try {
-            handleFollowUpOnResolved(newCases, oldMap);
-            handleAutoFollowUpOnUpdate(newCases, oldMap);
-            FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(newCases, oldMap);
-        } finally {
-            isExecuting = false;
-            // Sau owner/history và sau khi nhả cờ: đồng bộ phụ; trong finally để vẫn chạy khi try throw
-            FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, oldMap);
-            FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
-            syncGlobalSearch(newCases, oldMap);
-            FEC_CaseHandlingUserSyncService.syncAfterCaseUpdate(newCases);
-        }
+        handleFollowUpOnResolved(newCases, oldMap);
+        handleAutoFollowUpOnUpdate(newCases, oldMap);
+        FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(newCases, oldMap);
+        FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, oldMap);
+        FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
+        syncGlobalSearch(newCases, oldMap);
+        isExecuting = false;
     }
 
     private void syncGlobalSearch(List<Case> newCases, Map<Id, Case> oldMap) {
