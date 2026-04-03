@@ -122,7 +122,9 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
                     configsToUpdateStatus.add(config);
                     
                 } else {
-                    System.debug('Config ' + config.Id + ' không có file JSON hợp lệ.');
+                    config.FEC_Status__c = FEC_ConstantCommon.PROCESSED_STATUS;
+                    configsToUpdateStatus.add(config);
+                    System.debug('Config ' + config.Id + ' không có file JSON hợp lệ. Chuyển sang Processed.');
                 }
             } catch (Exception e) {
                 config.FEC_Status__c = 'Failed';

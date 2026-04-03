@@ -10,7 +10,7 @@
                     <lightning-combobox data-id="keyId" name="FEC_KeyIdentifier__c" label={label.lblDataLinkage} options={accountLinkageOptions} value={localData.FEC_KeyIdentifier__c} disabled={isEditting} required onchange={handleInputChange}></lightning-combobox>
                 </lightning-layout-item>
                 <lightning-layout-item size="6" padding="around-small">
-                    <lightning-input data-id="fieldId" type="text" label={label.lblFieldId} value={localData.FEC_FieldID__c} onchange={handleInputChange} name="FEC_FieldID__c" disabled={isEditting} required></lightning-input>
+                    <lightning-input data-id="fieldId" type="text" label={label.lblFieldId} value={localData.FEC_FieldID__c} onchange={handleInputChange} onblur={handleFieldIdBlur} name="FEC_FieldID__c" disabled={isEditting} required></lightning-input>
                 </lightning-layout-item>
                 <lightning-layout-item size="6" padding="around-small">
                     <lightning-input type="text" label={label.lblFieldName} value={localData.FEC_FieldName__c} onchange={handleInputChange} name="FEC_FieldName__c" required></lightning-input>
