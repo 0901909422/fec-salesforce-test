@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Full_Address__c</fullName>
+    <description>Địa chỉ đầy đủ được ghép từ các field Building, Number, Street, Ward, District, City, Country, ZipCode</description>
+    <externalId>false</externalId>
+    <formula>SUBSTITUTE(
+    TRIM(
+        IF(NOT(ISBLANK(FEC_Building__c)), FEC_Building__c &amp; &quot;, &quot;, &quot;&quot;) &amp;
+        IF(NOT(ISBLANK(FEC_Number__c)), FEC_Number__c &amp; &quot;, &quot;, &quot;&quot;) &amp;
+        IF(NOT(ISBLANK(FEC_Street__c)), FEC_Street__c &amp; &quot;, &quot;, &quot;&quot;) &amp;
+
+        /* WARD */
+        IF(
+            NOT(ISBLANK(FEC_Ward__c)),
+            FEC_Ward__r.FEC_Name_VN__c &amp; &quot;, &quot;,
+            IF(NOT(ISBLANK(FEC_Ward_Text__c)), FEC_Ward_Text__c &amp; &quot;, &quot;, &quot;&quot;)
+        ) &amp;
+
+        /* DISTRICT */
+        IF(
+            NOT(ISBLANK(FEC_District__c)),
+            FEC_District__r.FEC_Name_VN__c &amp; &quot;, &quot;,
+            IF(NOT(ISBLANK(FEC_District_Text__c)), FEC_District_Text__c &amp; &quot;, &quot;, &quot;&quot;)
+        ) &amp;
+
+        /* PROVINCE */
+        IF(
+            NOT(ISBLANK(FEC_Province__c)),
+            FEC_Province__r.FEC_Name_VN__c &amp; &quot;, &quot;,
+            IF(NOT(ISBLANK(FEC_Province_Text__c)), FEC_Province_Text__c &amp; &quot;, &quot;, &quot;&quot;)
+        ) &amp;
+
+        /* COUNTRY */
+        IF(
+            NOT(ISBLANK(FEC_Country__c)),
+            FEC_Country__r.FEC_Name_VN__c &amp; &quot;, &quot;,
+            IF(NOT(ISBLANK(FEC_Country_Text__c)), FEC_Country_Text__c &amp; &quot;, &quot;, &quot;&quot;)
+        ) &amp;
+
+        IF(NOT(ISBLANK(FEC_ZipCode__c)), FEC_ZipCode__c, &quot;&quot;)
+    ),
+    &quot;, ,&quot;,
+    &quot;,&quot;
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Address</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
