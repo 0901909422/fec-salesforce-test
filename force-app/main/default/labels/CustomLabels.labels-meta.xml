@@ -2998,6 +2998,14 @@
         <value>User không tồn tại hoặc không active.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_FollowUp_Unfollow_Not_Allowed_After_Submit</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unfollow not allowed after case submitted while open</shortDescription>
+        <value>Không thể unfollow Case đã submit khi Case chưa ở trạng thái Resolved.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_From_To_Invalid</fullName>
         <categories>API</categories>
         <language>en_US</language>
