@@ -482,20 +482,63 @@ const _normalizeForCompare = (v) => {
   return v.trim();
 };
 
-/** Picklist Case → API value để so sánh (label/value đầu vào → cùng dạng value). */
-const _normalizePicklistFieldForCompare = (caseFieldOptions, fieldApiName, raw) => {
+/** Tìm option theo raw (label hoặc value, có trim); dùng submit & label→API. */
+const findPicklistOptionByRaw = (options, raw) => {
+  if (!options || !Array.isArray(options) || options.length === 0) return undefined;
+  if (raw == null || raw === STR_EMPTY) return undefined;
+  const rawPl = typeof raw === "string" ? raw.trim() : raw;
+  let opt = options.find((o) => o.label === raw);
+  if (!opt && typeof rawPl === "string") {
+    opt = options.find((o) => {
+      const lb = o?.label;
+      const t =
+        typeof lb === "string" ? lb.trim() : String(lb ?? STR_EMPTY).trim();
+      return t === rawPl;
+    });
+  }
+  if (!opt) {
+    opt = options.find((o) => o.value === raw || o.value === rawPl);
+  }
+  return opt;
+};
+
+/** Chuẩn hóa raw (label hoặc API value) về API value theo mảng options. */
+const _normalizePicklistRawWithOpts = (opts, raw) => {
   const n = _normalizeForCompare(raw);
-  if (!caseFieldOptions || !fieldApiName) return n;
-  const opts = caseFieldOptions[fieldApiName];
   if (!opts || !Array.isArray(opts) || opts.length === 0) return n;
-  for (let i = 0; i < opts.length; i++) {
-    const o = opts[i];
-    if (_normalizeForCompare(o?.label) === n) return _normalizeForCompare(o?.value);
-  }
-  for (let i = 0; i < opts.length; i++) {
-    const o = opts[i];
-    if (_normalizeForCompare(o?.value) === n) return _normalizeForCompare(o?.value);
-  }
+  if (!n) return n;
+  const opt = findPicklistOptionByRaw(opts, raw);
+  if (opt) return _normalizeForCompare(opt.value);
+  return n;
+};
+
+/** Picklist options cặp Original/Updated: ưu tiên original, không có thì updated. */
+const _picklistOptsForOriginalUpdatedPair = (caseFieldOptions, pair) => {
+  if (!caseFieldOptions || !pair) return null;
+  let opts = caseFieldOptions[pair.original];
+  if (opts && Array.isArray(opts) && opts.length > 0) return opts;
+  opts = caseFieldOptions[pair.updated];
+  if (opts && Array.isArray(opts) && opts.length > 0) return opts;
+  return null;
+};
+
+const _GENDER_OU_PAIR = ORIGINAL_UPDATED_FIELD_PAIRS.find(
+  (p) => p.updated === "FEC_Updated_Info_Gender__c",
+);
+
+const _isGenderOriginalUpdatedPair = (pair) =>
+  pair != null &&
+  _GENDER_OU_PAIR != null &&
+  pair.original === _GENDER_OU_PAIR.original &&
+  pair.updated === _GENDER_OU_PAIR.updated;
+
+/** Chuẩn hóa Gender (M/F, Male/Female, Nam/Nữ, …) về M/F trước khi so sánh */
+const _canonicalGenderApiForCompare = (s) => {
+  const n = _normalizeForCompare(s);
+  if (!n) return n;
+  const k = n.toLowerCase();
+  if (k === "m" || k === "male" || k === "nam") return "M";
+  if (k === "f" || k === "female" || k === "nữ" || k === "nu") return "F";
   return n;
 };
 
@@ -508,20 +551,30 @@ const checkNoUpdateInSubmit = (getOriginalValue, getUpdatedValue, options) => {
       (Set.prototype.isPrototypeOf(presentSet) || Array.isArray(presentSet))
       ? ORIGINAL_UPDATED_FIELD_PAIRS.filter((p) =>
         Set.prototype.isPrototypeOf(presentSet)
-          ? presentSet.has(p.updated)
-          : presentSet.includes(p.updated),
+          ? presentSet.has(p.updated) && presentSet.has(p.original)
+          : presentSet.includes(p.updated) && presentSet.includes(p.original),
       )
       : ORIGINAL_UPDATED_FIELD_PAIRS;
 
   if (pairsToCheck.length === 0) return false;
 
   for (const pair of pairsToCheck) {
-    const orig = picklistCase
-      ? _normalizePicklistFieldForCompare(picklistCase, pair.original, getOriginalValue(pair.original))
-      : _normalizeForCompare(getOriginalValue(pair.original));
-    const upd = picklistCase
-      ? _normalizePicklistFieldForCompare(picklistCase, pair.updated, getUpdatedValue(pair.updated))
-      : _normalizeForCompare(getUpdatedValue(pair.updated));
+    const rawOrig = getOriginalValue(pair.original);
+    const rawUpd = getUpdatedValue(pair.updated);
+    let orig;
+    let upd;
+    if (picklistCase) {
+      const pairOpts = _picklistOptsForOriginalUpdatedPair(picklistCase, pair);
+      orig = _normalizePicklistRawWithOpts(pairOpts, rawOrig);
+      upd = _normalizePicklistRawWithOpts(pairOpts, rawUpd);
+    } else {
+      orig = _normalizeForCompare(rawOrig);
+      upd = _normalizeForCompare(rawUpd);
+    }
+    if (_isGenderOriginalUpdatedPair(pair)) {
+      orig = _canonicalGenderApiForCompare(orig);
+      upd = _canonicalGenderApiForCompare(upd);
+    }
     if (orig !== upd) return false;
   }
   return true;
@@ -619,6 +672,7 @@ export {
   validateNationalId,
   validateUpdatedInfoNationalID,
   checkNoUpdateInSubmit,
+  findPicklistOptionByRaw,
   isOnlyNumber,
   setConsoleTab,
   urlCmpWithRecordId,

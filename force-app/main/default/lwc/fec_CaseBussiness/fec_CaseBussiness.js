@@ -21,6 +21,7 @@ import {
   validateNationalId,
   validateUpdatedInfoNationalID,
   checkNoUpdateInSubmit,
+  findPicklistOptionByRaw,
   isOnlyNumber
 } from "c/fec_CommonUtils";
 
@@ -714,7 +715,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                 // Convert label to value for picklist fields
                 const picklistOptions = this.business.picklistOptionsMap?.[obj.name]?.[field.apiName];
                 if (picklistOptions?.length && field.value) {
-                  const opt = picklistOptions.find((o) => o.label === field.value);
+                  const opt = findPicklistOptionByRaw(picklistOptions, field.value);
                   if (opt) {
                     field.value = opt.value;
                   }
@@ -1505,7 +1506,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       const currentVal = inputField.value;
       if (currentVal == null || currentVal === STR_EMPTY) return;
 
-      const found = options.find((opt) => opt.label === currentVal);
+      const found = findPicklistOptionByRaw(options, currentVal);
       if (found) {
         inputField.value = found.value;
       }
