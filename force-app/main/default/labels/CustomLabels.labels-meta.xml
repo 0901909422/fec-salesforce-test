@@ -9865,6 +9865,97 @@
         <value>To email không được để trống.</value>
     </labels>
     <labels>
+        <fullName>FEC_Clear_Session_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Page title</shortDescription>
+        <value>New Clear Session</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Header</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Header text</shortDescription>
+        <value>Select user to clear session</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Subtitle</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Subtitle text</shortDescription>
+        <value>Find user by Name, User Name, Email or Alias</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Search_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Search placeholder</shortDescription>
+        <value>Search...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_No_Users</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - No users found</shortDescription>
+        <value>No users found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Btn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Button label</shortDescription>
+        <value>Clear Session</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Processing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Processing spinner text</shortDescription>
+        <value>Processing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Validation_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Validation toast title</shortDescription>
+        <value>Validation</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Validation_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Validation message</shortDescription>
+        <value>Please select at least one user.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Success_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Success toast title</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Success_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Success message</shortDescription>
+        <value>Clear session completed.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Error_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Error toast title</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Error_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Error message fallback</shortDescription>
+        <value>Clear session failed.</value>
+    </labels>
+    <labels>
         <fullName>FEC_Card_Number_Required_MSG</fullName>
         <language>en_US</language>
         <protected>false</protected>

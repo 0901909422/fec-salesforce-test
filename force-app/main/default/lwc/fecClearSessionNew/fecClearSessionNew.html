@@ -1,15 +1,15 @@
 <template>
     <div class="fec-cs-container">
         <div class="fec-cs-header">
-            <span class="fec-cs-title">Select user to clear session</span>
+            <span class="fec-cs-title">{labels.header}</span>
         </div>
-        <p class="fec-cs-subtitle">Find user by Name, User Name, Email or Alias</p>
+        <p class="fec-cs-subtitle">{labels.subtitle}</p>
         <div class="fec-cs-search-row">
             <div class="fec-cs-search-wrap">
                 <input
                     type="text"
                     class="fec-cs-input"
-                    placeholder="Search..."
+                    placeholder={labels.searchPlaceholder}
                     onchange={handleSearchChange}
                     onkeyup={handleSearchKeyup} />
                 <template if:true={showDropdown}>
@@ -21,12 +21,12 @@
                             </div>
                         </template>
                         <template if:true={noResults}>
-                            <div class="fec-cs-dropdown-empty">No users found</div>
+                            <div class="fec-cs-dropdown-empty">{labels.noUsers}</div>
                         </template>
                     </div>
                 </template>
             </div>
-            <button class="slds-button slds-button_brand" onclick={handleClearSession} disabled={isSending}>Clear Session</button>
+            <button class="slds-button slds-button_brand" onclick={handleClearSession} disabled={isSending}>{labels.btnLabel}</button>
         </div>
         <template if:true={hasSelectedUsers}>
             <div class="fec-cs-tags">
@@ -39,7 +39,7 @@
             </div>
         </template>
         <template if:true={isSending}>
-            <lightning-spinner size="small" alternative-text="Processing"></lightning-spinner>
+            <lightning-spinner size="small" alternative-text={labels.processing}></lightning-spinner>
         </template>
     </div>
 </template>

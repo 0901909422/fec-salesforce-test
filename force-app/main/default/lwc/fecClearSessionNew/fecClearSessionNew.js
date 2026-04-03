@@ -5,6 +5,20 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import searchUsers from '@salesforce/apex/FEC_ClearSessionController.searchUsers';
 import clearSessions from '@salesforce/apex/FEC_ClearSessionController.clearSessions';
 
+import FEC_Clear_Session_Title from '@salesforce/label/c.FEC_Clear_Session_Title';
+import FEC_Clear_Session_Header from '@salesforce/label/c.FEC_Clear_Session_Header';
+import FEC_Clear_Session_Subtitle from '@salesforce/label/c.FEC_Clear_Session_Subtitle';
+import FEC_Clear_Session_Search_Placeholder from '@salesforce/label/c.FEC_Clear_Session_Search_Placeholder';
+import FEC_Clear_Session_No_Users from '@salesforce/label/c.FEC_Clear_Session_No_Users';
+import FEC_Clear_Session_Btn from '@salesforce/label/c.FEC_Clear_Session_Btn';
+import FEC_Clear_Session_Processing from '@salesforce/label/c.FEC_Clear_Session_Processing';
+import FEC_Clear_Session_Validation_Title from '@salesforce/label/c.FEC_Clear_Session_Validation_Title';
+import FEC_Clear_Session_Validation_Msg from '@salesforce/label/c.FEC_Clear_Session_Validation_Msg';
+import FEC_Clear_Session_Success_Title from '@salesforce/label/c.FEC_Clear_Session_Success_Title';
+import FEC_Clear_Session_Success_Msg from '@salesforce/label/c.FEC_Clear_Session_Success_Msg';
+import FEC_Clear_Session_Error_Title from '@salesforce/label/c.FEC_Clear_Session_Error_Title';
+import FEC_Clear_Session_Error_Msg from '@salesforce/label/c.FEC_Clear_Session_Error_Msg';
+
 export default class FecClearSessionNew extends NavigationMixin(LightningElement) {
     @api recordId;
     isSending = false;
@@ -14,11 +28,20 @@ export default class FecClearSessionNew extends NavigationMixin(LightningElement
     showDropdown = false;
     noResults = false;
 
+    labels = {
+        header: FEC_Clear_Session_Header,
+        subtitle: FEC_Clear_Session_Subtitle,
+        searchPlaceholder: FEC_Clear_Session_Search_Placeholder,
+        noUsers: FEC_Clear_Session_No_Users,
+        btnLabel: FEC_Clear_Session_Btn,
+        processing: FEC_Clear_Session_Processing
+    };
+
     @wire(CurrentPageReference)
     pageRef;
 
     connectedCallback() {
-        document.title = 'New Clear Session';
+        document.title = FEC_Clear_Session_Title;
     }
 
     get hasSelectedUsers() { return this.selectedUsers.length > 0; }
@@ -57,31 +80,37 @@ export default class FecClearSessionNew extends NavigationMixin(LightningElement
 
     handleClearSession() {
         if (this.selectedUsers.length === 0) {
-            this.dispatchEvent(new ShowToastEvent({ title: 'Validation', message: 'Please select at least one user.', variant: 'warning' }));
+            this.dispatchEvent(new ShowToastEvent({
+                title: FEC_Clear_Session_Validation_Title,
+                message: FEC_Clear_Session_Validation_Msg,
+                variant: 'warning'
+            }));
             return;
         }
         this.isSending = true;
         const userIds = this.selectedUsers.map(u => u.id);
         clearSessions({ userIds })
             .then(() => {
-                this.dispatchEvent(new ShowToastEvent({ title: 'Success', message: 'Clear session completed.', variant: 'success' }));
+                this.dispatchEvent(new ShowToastEvent({
+                    title: FEC_Clear_Session_Success_Title,
+                    message: FEC_Clear_Session_Success_Msg,
+                    variant: 'success'
+                }));
                 this.selectedUsers = [];
                 this.isSending = false;
-                // Navigate to list view
                 this[NavigationMixin.Navigate]({
                     type: 'standard__objectPage',
-                    attributes: {
-                        objectApiName: 'FEC_Clear_Session__c',
-                        actionName: 'list'
-                    },
-                    state: {
-                        filterName: 'All_Clear_Sessions'
-                    }
+                    attributes: { objectApiName: 'FEC_Clear_Session__c', actionName: 'list' },
+                    state: { filterName: 'All_Clear_Sessions' }
                 });
             })
             .catch(e => {
-                const msg = e?.body?.message || 'Clear session failed.';
-                this.dispatchEvent(new ShowToastEvent({ title: 'Error', message: msg, variant: 'error' }));
+                const msg = e?.body?.message || FEC_Clear_Session_Error_Msg;
+                this.dispatchEvent(new ShowToastEvent({
+                    title: FEC_Clear_Session_Error_Title,
+                    message: msg,
+                    variant: 'error'
+                }));
                 this.isSending = false;
             });
     }
