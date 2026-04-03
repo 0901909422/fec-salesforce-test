@@ -1004,6 +1004,22 @@ public with sharing class FEC_CommonUltils {
       return 'SERIALIZE_ERROR: ' + e.getMessage();
     }
   }
+
+  /**
+  * Remove trailing comma (,) at the end of string
+  */
+  public static String removeTrailingComma(String input) {
+      if (String.isBlank(input)) return input;
+
+      String result = input.trim();
+
+      while (result.endsWith(',')) {
+          result = result.substring(0, result.length() - 1).trim();
+      }
+
+      return result;
+  }
+
   /**
    * Uppercase ASCII; strips common Vietnamese diacritics for default beneficiary display.
    */

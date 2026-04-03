@@ -81,19 +81,13 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/01/16 Toannd61
      */
     private void onAfterInsert(List<Case> newCases) {
-        
         isExecuting = true;
-        
-        try {
-            handleAutoFollowUpOnInsert(newCases);
-            updateEmail2CaseFieldsOnInsert(newCases);
-        } finally {
-            isExecuting = false;
-        }
-        // Sau finally: tránh isExecuting chặn trigger lồng; đồng bộ Status từ Route to mới nhất
-        FEC_CasePendingStatusService.syncPendingStatusFromLatestRouteTo(newCases, null);
+        handleAutoFollowUpOnInsert(newCases);
+        updateEmail2CaseFieldsOnInsert(newCases);
+        FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
         syncGlobalSearch(newCases, null);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
+        isExecuting = false;
     }
 
     /**
@@ -106,20 +100,16 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/02/02
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
-        
         isExecuting = true;
-        
-        try {
-            handleFollowUpOnResolved(newCases, oldMap);
-            handleAutoFollowUpOnUpdate(newCases, oldMap);
+        handleFollowUpOnResolved(newCases, oldMap);
+        handleAutoFollowUpOnUpdate(newCases, oldMap);
+        if (!FEC_GetNextWorkController.isGetNextWork) {
             FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(newCases, oldMap);
-        } finally {
-            isExecuting = false;
         }
-        // Sau owner/history: re-query DB trong service để Status khớp Route to mới nhất
-        FEC_CasePendingStatusService.syncPendingStatusFromLatestRouteTo(newCases, oldMap);
+        FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, oldMap);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
         syncGlobalSearch(newCases, oldMap);
+        isExecuting = false;
     }
 
     private void syncGlobalSearch(List<Case> newCases, Map<Id, Case> oldMap) {
