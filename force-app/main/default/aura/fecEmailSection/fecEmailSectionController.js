@@ -92,12 +92,17 @@
     },
 
     handleReply: function(component, event, helper) {
-        var orig = component.get('v.originalSubject');
+        var isServiceCase = component.get('v.isServiceCase');
+        var emailSubject = event.currentTarget ? event.currentTarget.dataset.subject : null;
+        var emailFrom = event.currentTarget ? event.currentTarget.dataset.from : null;
+        var orig = emailSubject || component.get('v.originalSubject');
         component.set('v.subject', orig ? 'RE: ' + orig : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
-        var isServiceCase = component.get('v.isServiceCase');
-        if (!isServiceCase) {
+        if (isServiceCase) {
+            // Pre-fill To = fromAddress của email khách (người gửi email đó)
+            if (emailFrom) component.set('v.serviceCaseToEmail', emailFrom);
+        } else {
             var toEmail = component.get('v.toEmail');
             if (toEmail && component.get('v.toTags').length === 0) {
                 component.set('v.toTags', [toEmail]);
@@ -109,12 +114,20 @@
     },
 
     handleReplyAll: function(component, event, helper) {
-        var orig = component.get('v.originalSubject');
+        var isServiceCase = component.get('v.isServiceCase');
+        var emailSubject = event.currentTarget ? event.currentTarget.dataset.subject : null;
+        var emailFrom = event.currentTarget ? event.currentTarget.dataset.from : null;
+        var orig = emailSubject || component.get('v.originalSubject');
         component.set('v.subject', orig ? 'RE: ' + orig : '');
         component.set('v.errorMsg', '');
-        var toEmail = component.get('v.toEmail');
-        if (toEmail && component.get('v.toTags').length === 0) {
-            component.set('v.toTags', [toEmail]);
+        component.set('v.serviceCaseToError', '');
+        if (isServiceCase) {
+            if (emailFrom) component.set('v.serviceCaseToEmail', emailFrom);
+        } else {
+            var toEmail = component.get('v.toEmail');
+            if (toEmail && component.get('v.toTags').length === 0) {
+                component.set('v.toTags', [toEmail]);
+            }
         }
         component.set('v.showCompose', true);
         var body = component.get('v.body') || '';
@@ -122,10 +135,13 @@
     },
 
     handleForward: function(component, event, helper) {
-        var orig = component.get('v.originalSubject');
+        var emailSubject = event.currentTarget ? event.currentTarget.dataset.subject : null;
+        var orig = emailSubject || component.get('v.originalSubject');
         component.set('v.subject', orig ? 'FW: ' + orig : '');
         component.set('v.errorMsg', '');
+        component.set('v.serviceCaseToError', '');
         component.set('v.toTags', []);
+        component.set('v.serviceCaseToEmail', '');
         component.set('v.showCompose', true);
         var body = component.get('v.body') || '';
         window.setTimeout($A.getCallback(function() { helper.initQuill(component, body); }), 150);

@@ -749,7 +749,7 @@
                     }
                     var rb=(m.TextBody||'').replace(/<[^>]+>/g,''), subj=m.Subject||'';
                     var subjDisplay = subj.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim();
-                    return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb.substring(0,80),bodyFull:rb,messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false};
+                    return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb.substring(0,80),bodyFull:rb,messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false};
                 });
                 // Sort
                 list.sort(function(a,b){
