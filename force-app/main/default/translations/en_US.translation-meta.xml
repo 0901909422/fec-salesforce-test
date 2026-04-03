@@ -789,10 +789,6 @@
         <label>Chọn Quyết định</label>
     </customLabels>
     <customLabels>
-        <name>FEC_Sub_Decision_Label</name>
-        <label>Sub Decision</label>
-    </customLabels>
-    <customLabels>
         <name>FEC_Choose_Sub_Decision_Label</name>
         <label>Chọn Quyết định phụ</label>
     </customLabels>
