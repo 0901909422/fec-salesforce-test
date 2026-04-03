@@ -341,4 +341,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String QUEUE_DAY_2_CHECK_NAME = 'FEC_Day_2_Check';
     public static final String QUEUE_OM_MAILBOX_NAME = 'FEC_OM_Mailbox';
     public static final String QUEUE_QUALITY_CONTROL_MAILBOX_NAME = 'FEC_Quality_Control_Mailbox';
+    public static final String PRODUCT_TYPE_CARD_CASE = 'Card';
+    public static final String PRODUCT_TYPE_LOAN_CASE = 'Loan';
+    public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
 }

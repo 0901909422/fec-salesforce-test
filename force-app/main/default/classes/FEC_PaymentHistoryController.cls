@@ -36,7 +36,7 @@ public without sharing class FEC_PaymentHistoryController {
        ===================================================== */
     private static String getCustomerAccountNumber(Id caseId) {
         Case c = [
-            SELECT FEC_Account_or_Contract__c
+            SELECT FEC_Account_or_Contract__c, FEC_Product_Type__r.Name
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -49,13 +49,17 @@ public without sharing class FEC_PaymentHistoryController {
         }
 
         FEC_Customer_History__c ch = [
-            SELECT FEC_Account_Number__c
+            SELECT FEC_Account_Number__c,FEC_Contract_Number__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
         ];
 
-        return ch.FEC_Account_Number__c;
+        return FEC_CommonUltils.resolveAccountNumber(
+            c.FEC_Product_Type__r.Name,
+            ch.FEC_Account_Number__c,
+            ch.FEC_Contract_Number__c
+        );
     }
 
     /* =====================================================

@@ -56,7 +56,7 @@ public without sharing class FEC_MainInfoController {
 
         /* ===== LOAD CASE ===== */
         Case c = [
-            SELECT Id, FEC_Account_or_Contract__c
+            SELECT Id, FEC_Account_or_Contract__c,FEC_Product_Type__r.Name
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -70,6 +70,7 @@ public without sharing class FEC_MainInfoController {
             hist = [
                 SELECT Id,
                     FEC_Account_Number__c,
+                    FEC_Contract_Number__c
                     FEC_First_Name__c,
                     FEC_Middle_Name__c,
                     FEC_Last_Name__c,
@@ -88,7 +89,11 @@ public without sharing class FEC_MainInfoController {
                 LIMIT 1
             ];
 
-            accountNumber = hist.FEC_Account_Number__c;
+           accountNumber = FEC_CommonUltils.resolveAccountNumber(
+                c.FEC_Product_Type__r.Name,
+                hist.FEC_Account_Number__c,
+                hist.FEC_Contract_Number__c
+            );
             cifNumber = hist.FEC_CIF_Number__c;
         }
         /* ===== CACHE HIT ===== */

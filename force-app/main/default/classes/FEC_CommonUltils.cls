@@ -1004,4 +1004,17 @@ public with sharing class FEC_CommonUltils {
       return 'SERIALIZE_ERROR: ' + e.getMessage();
     }
   }
+
+  public static String resolveAccountNumber(
+      String productTypeName,
+      String accountNumber,
+      String contractNumber
+  ) {
+      if ((productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE
+          || productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE)
+          && String.isNotBlank(contractNumber)) {
+          return contractNumber;
+      }
+      return accountNumber;
+  }
 }
