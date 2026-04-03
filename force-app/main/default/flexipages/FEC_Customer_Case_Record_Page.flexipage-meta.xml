@@ -39,6 +39,38 @@
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
+                            <value>Case.Reopen</value>
+                            <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Final_Status__c}</leftValue>
+                                    <operator>CONTAINS</operator>
+                                    <rightValue>Resolved</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>review</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Case.Recall</value>
+                            <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Final_Status__c}</leftValue>
+                                    <operator>CONTAINS</operator>
+                                    <rightValue>Pending</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>review</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
+                        <valueListItems>
                             <value>Case.New_Assignment</value>
                             <visibilityRule>
                                 <criteria>
