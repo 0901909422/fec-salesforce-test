@@ -336,18 +336,16 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       return;
     }
 
-    this.isLoaded = false;
-    await Promise.resolve();
-
     // Kiểm tra chặn submit (vd: original === updated phone)
     if (caseBusinessEle?.checkSubmitBlock) {
       const blocked = await caseBusinessEle.checkSubmitBlock();
       if (blocked) {
-        this.isLoaded = true;
         this.isSubmitting = false;
         return;
       }
     }
+
+    this.isLoaded = false;
 
     try {
       const stageName = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
