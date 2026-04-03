@@ -1,4 +1,4 @@
-public with sharing class FEC_CaseBusinessService {
+public without sharing class FEC_CaseBusinessService {
   public static final String ROUTE_TO = 'Route to';
   // Change Owner
   public static final String CHANGE_OWNER = 'Change Owner';
