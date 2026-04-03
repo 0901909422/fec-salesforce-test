@@ -564,6 +564,14 @@
         <apexClass>FEC_UpdateCustomerContact</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>ArchiveCaseController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DeleteArchiveCaseBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <customMetadataTypeAccesses>
         <enabled>true</enabled>
         <name>FEC_API_Config__mdt</name>
@@ -679,4 +687,9 @@
         <enabled>true</enabled>
         <name>TransferAnyEntity</name>
     </userPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchiveExternalId__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
 </PermissionSet>

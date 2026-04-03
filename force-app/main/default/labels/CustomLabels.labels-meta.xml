@@ -11579,4 +11579,39 @@
         <shortDescription>FEC_Alt_View</shortDescription>
         <value>View</value>
     </labels>
+    <labels>
+        <fullName>TECH_LIST_ATT_IGNORED</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_LIST_ATT_IGNORED</shortDescription>
+        <value>attributes,Id,CaseNumber,CreatedById,LastModifiedById,RecordTypeId,CreatedDate,LastModifiedDate</value>
+    </labels>
+    <labels>
+        <fullName>TECH_CASE_RECORDTYPE_NAME_CUSTOMER_CASE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_CASE_RECORDTYPE_NAME_CUSTOMER_CASE</shortDescription>
+        <value>Customer Case</value>
+    </labels>
+    <labels>
+        <fullName>TECH_CASE_RECORDTYPE_NAME_INTERACTION</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_CASE_RECORDTYPE_NAME_INTERACTION</shortDescription>
+        <value>Interaction</value>
+    </labels>
+    <labels>
+        <fullName>TECH_CASE_RECORDTYPE_NAME_SEARCH_INTERACTION</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_CASE_RECORDTYPE_NAME_SEARCH_INTERACTION</shortDescription>
+        <value>Search Interaction</value>
+    </labels>
+    <labels>
+        <fullName>TECH_CASE_RECORDTYPE_NAME_INTERNAL_CASE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_CASE_RECORDTYPE_NAME_INTERNAL_CASE</shortDescription>
+        <value>Internal Case</value>
+    </labels>
 </CustomLabels>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+
+    <types>
+        <members>Case.ArchiveExternalId__c</members>
+        <name>CustomField</name>
+    </types>
+
+    <types>
+        <members>ArchiveCaseController</members>
+        <members>ArchiveCaseController_Test</members>
+        <members>DeleteArchiveCaseBatch</members>
+        <members>DeleteArchiveCaseBatch_Test</members>
+        <members>FEC_MockupEndpoint</members>
+        <name>ApexClass</name>
+    </types>
+
+    <types>
+        <members>ArchiveCaseRedirect</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
+
+    <types>
+        <members>TECH_LIST_ATT_IGNORED</members>
+        <members>TECH_CASE_RECORDTYPE_NAME_CUSTOMER_CASE</members>
+        <members>TECH_CASE_RECORDTYPE_NAME_INTERACTION</members>
+        <members>TECH_CASE_RECORDTYPE_NAME_SEARCH_INTERACTION</members>
+        <members>TECH_CASE_RECORDTYPE_NAME_INTERNAL_CASE</members>
+        <name>CustomLabel</name>
+    </types>
+
+    <types>
+        <members>FEC_Common_System_Setting</members>
+        <name>PermissionSet</name>
+    </types>
+
+    <version>65.0</version>
+</Package>
