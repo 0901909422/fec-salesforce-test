@@ -324,7 +324,6 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     }
 
     this.isLoaded = false;
-    await Promise.resolve();
 
     try {
       const stageName = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
