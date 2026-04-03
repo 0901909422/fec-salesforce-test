@@ -22,11 +22,18 @@
                             ></lightning-button>
                             <template if:true={isNewMode}>
                                 <lightning-button
-                                    label={label.saveAndNewLabel}
+                                    label={label.saveAndCloseLabel}
                                     variant="brand"
-                                    onclick={handleSaveAndNew}
+                                    onclick={handleSaveAndClose}
+                                    class="slds-m-right_x-small"
                                 ></lightning-button>
                             </template>
+                            <lightning-button
+                                label={label.previewLabel}
+                                variant="neutral"
+                                onclick={handlePreview}
+                                icon-name="utility:preview"
+                            ></lightning-button>
                         </div>
                     </div>
                 </div>
@@ -65,13 +72,16 @@
                                     value={name}
                                     required
                                     onchange={handleNameChange}
+                                    onblur={handleNameBlur}
                                 ></lightning-input>
                             </div>
                             <div class="slds-col slds-size_1-of-2">
                                 <lightning-input
                                     max-length="255"
+                                    class="api-name-input"
                                     label={label.apiNameLabel}
                                     value={apiName}
+                                    required
                                     onchange={handleApiNameChange}
                                 ></lightning-input>
                             </div>
@@ -81,6 +91,7 @@
                         <div class="slds-grid slds-wrap slds-p-top_small">
                             <div class="slds-col slds-size_1-of-2 slds-p-right_medium">
                                 <c-fec_searchable-combobox
+                                    class="folder-combobox"
                                     label={label.FEC_Col_Folder}
                                     value={folderId}
                                     options={folderOptions}
@@ -157,9 +168,9 @@
                             </div>
                         </div>
 
-                        <p class="slds-p-vertical_small slds-text-body_small slds-text-color_weak te-content-info">
-                            {label.emailBodyInfoLabel}
-                        </p>
+                        <div class="slds-form-element slds-p-top_small">
+                            <label class="slds-form-element__label">{label.bodyLabel}</label>
+                        </div>
 
                         <div class="slds-m-top_small slds-m-bottom_large">
                             <lightning-input-rich-text
@@ -243,15 +254,32 @@
                     ></lightning-button>
                     <template if:true={isNewMode}>
                         <lightning-button
-                            label={label.saveAndNewLabel}
+                            label={label.saveAndCloseLabel}
                             variant="brand"
-                            onclick={handleSaveAndNew}
+                            onclick={handleSaveAndClose}
+                            class="slds-m-right_x-small"
                         ></lightning-button>
                     </template>
+                    <lightning-button
+                        label={label.previewLabel}
+                        variant="neutral"
+                        onclick={handlePreview}
+                        icon-name="utility:preview"
+                    ></lightning-button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- PREVIEW MODAL -->
+    <c-fec_template-preview-modal
+        subject={subject}
+        email-body={emailBody}
+        header-html={selectedLetterheadHeaderHtml}
+        footer-html={selectedLetterheadFooterHtml}
+        is-open={isPreviewOpen}
+        onclose={handleClosePreview}
+    ></c-fec_template-preview-modal>
 
     <!-- MERGE FIELD PICKER MODAL -->
     <template if:true={isPickerOpen}>

@@ -1,3 +1,8 @@
 <template>
-    <button class="slds-button" ondblclick={handleDblClick}>{value}</button>
+    <span class="fec-cell-wrap">
+        <template if:true={isExpanded}>
+            <span class="fec-expand-icon" onclick={handleClick}>&#8722;</span>
+        </template>
+        <button class="slds-button" onclick={handleClick} ondblclick={handleDblClick}>{value}</button>
+    </span>
 </template>

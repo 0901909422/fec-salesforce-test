@@ -6,9 +6,9 @@ User có thể nhập giá trị số nguyên từ 1~100</description>
     <externalId>false</externalId>
     <label>Skill Level</label>
     <precision>3</precision>
-    <required>false</required>
+    <required>true</required>
     <scale>0</scale>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <type>Number</type>
     <unique>false</unique>
 </CustomField>

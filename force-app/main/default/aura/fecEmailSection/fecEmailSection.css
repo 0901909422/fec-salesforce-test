@@ -406,6 +406,18 @@
     padding:0 var(--lwc-spacingXxxSmall, 0.25rem);
 }
 
+/* From text - same style as compose-input */
+.THIS .compose-from-text {
+    font-size: var(--lwc-fontSize4, 0.875rem);
+    color: var(--lwc-colorTextLabel, #3e3e3c);
+    flex: 1;
+    line-height: 2rem;
+    padding: 0 var(--lwc-spacingSmall, 0.75rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* Plain input rows */
 .THIS .compose-input {
     width: 100%; border: none; outline: none;

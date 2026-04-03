@@ -3,7 +3,7 @@
     <fullName>FEC_Applicable_for_Mailbox__c</fullName>
     <label>Applicable for Mailbox</label>
     <required>false</required>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>MultiselectPicklist</type>
     <valueSet>

@@ -40,7 +40,7 @@ import Cancel from '@salesforce/label/c.Cancel';
 import FEC_Button_SaveAndNew from '@salesforce/label/c.FEC_Button_SaveAndNew';
 import FEC_Save from '@salesforce/label/c.FEC_Save';
 import FEC_Toast_Save_Error_Message from '@salesforce/label/c.FEC_Toast_Save_Error_Message';
-
+import FEC_LABEL_CASE_STATUS from "@salesforce/label/c.FEC_LABEL_CASE_STATUS";
 import {
   AUTO_NOTIFICATION_HEADER_VI,
   MANUAL_NOTIFICATION_HEADER_VI,
@@ -48,8 +48,13 @@ import {
   MANUAL_NOTIFICATION_TYPE
 } from "c/fec_CommonConst";
 
+import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import FEC_Notification_Channel_Disabled_Msg from "@salesforce/label/c.FEC_Notification_Channel_Disabled_Msg";
+
 const SUB_CATEGORY_OBJECT = "FEC_Sub_Category__c";
 const SUB_CODE_OBJECT = "FEC_Sub_Code__c";
+
+const FIELDS = [CURRENT_STATUS_FIELD, CHANGED_STATUS_FIELD];
 
 /**
  * FEC Notification Override
@@ -59,6 +64,21 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   @api recordId;
   @api recordTypeId;
 
+  // Trackers for lookup UI population (Pills)
+  @track initialChannel = [];
+  @track initialProductType = [];
+  @track initialCategory = [];
+  @track initialSubCategory = [];
+  @track initialSubCode = [];
+  @track initialCurrentStatus = [];
+  @track initialChangedStatus = [];
+  @track initialAssignedToQueue = [];
+  @track initialCurrentStatus = [];
+  @track initialChangedStatus = [];
+
+  showChannelWarning = false;
+  selectedNotiChannelId = null;
+  channelDisabled = FEC_Notification_Channel_Disabled_Msg
   isMultiRequired = false;
   FEC_Tab_Nature_Of_Case = FEC_Tab_Nature_Of_Case;
   FEC_Col_Channel = FEC_Col_Channel;
@@ -90,8 +110,6 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   subCodeField = SUB_CODE_FIELD;
 
   // Notification Information fields
-  currentStatusField = CURRENT_STATUS_FIELD;
-  changedStatusField = CHANGED_STATUS_FIELD;
   notificationStatusField = NOTIFICATION_STATUS_FIELD;
   notificationChannelField = NOTIFICATION_CHANNEL_FIELD;
   notificationTemplateField = NOTIFICATION_TEMPLATE_FIELD;
@@ -114,26 +132,115 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   selectedSubCodeId = null;
 
-  selectedNotificationTemplateId = null;
+  //selectedNotificationTemplateId = null;
+
+  selectedAssignedToQueueId = null;
+
+  /** Phase 1: CSV of FEC_Case_Status__c Ids (comma-separated). Undefined = user has not changed lookup (preserve on edit). */
+  selectedCurrentStatusCsv;
+  selectedChangedStatusCsv;
+  // Track Status selections
+  selectedCurrentStatus = null;
+  selectedChangedStatus = null;
 
   @wire(IsConsoleNavigation) isConsoleNavigation;
 
   @wire(getObjectInfo, { objectApiName: '$notificationObject' })
   objectInfo;
 
+  @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
+  wiredRecord({ error, data }) {
+    if (data) {
+      // 1. Auto-fill Current Status
+      let currentStatusStr = getFieldValue(data, CURRENT_STATUS_FIELD);
+      if (currentStatusStr) {
+        // Salesforce Multi-Select Picklists use ';' as a delimiter. 
+        // Change to ',' if your field uses comma separation.
+        let statusArray = currentStatusStr.split(';');
+
+        this.initialCurrentStatus = statusArray.map(status => {
+          return {
+            id: status,
+            title: status,
+            subtitle: 'Case Status'
+          };
+        });
+
+        // Keep the string for your save operation
+        this.selectedCurrentStatus = currentStatusStr;
+      }
+
+      // 2. Auto-fill Changed Status
+      let changedStatusStr = getFieldValue(data, CHANGED_STATUS_FIELD);
+      if (changedStatusStr) {
+        let changedArray = changedStatusStr.split(';');
+
+        this.initialChangedStatus = changedArray.map(status => {
+          let trimmedStatus = status.trim();
+          return {
+            id: trimmedStatus,
+            title: trimmedStatus,
+            subtitle: 'Case Status'
+          };
+        });
+
+        // Keep the string for your save operation
+        this.selectedChangedStatus = changedStatusStr;
+      }
+    } else if (error) {
+      console.error('Error fetching existing record values', error);
+    }
+  }
+
+  @wire(getRecord, { recordId: '$selectedNotiChannelId', fields: ['FEC_Notification_Channel__c.FEC_Noti_Channel_Status__c'] })
+  wiredChannelStatus({ error, data }) {
+    if (data) {
+      const status = data.fields.FEC_Noti_Channel_Status__c.value;
+      // Show warning only if the status explicitly equals false
+      this.showChannelWarning = status === false;
+    } else if (error) {
+      console.error('Error fetching channel status', error);
+      this.showChannelWarning = false;
+    }
+  }
+
+  handleNotificationChannelChange(event) {
+    // lightning-input-field lookup returns an array of selected IDs
+    const selectedIds = event.detail.value;
+    this.selectedNotiChannelId = selectedIds && selectedIds.length > 0 ? selectedIds[0] : null;
+    
+    if (!this.selectedNotiChannelId) {
+      this.showChannelWarning = false;
+    }
+  }
+
   get objectLabel() {
     return this.objectInfo?.data?.label;
   }
 
   handleSelected(event) {
-    const ids = event.detail.map(e => e?.id);
+    const ids = (event.detail || []).map((e) => e?.id);
     const joined = ids.join(',');
+    const dataId = event.currentTarget?.dataset?.id;
+
+    if (dataId === 'currentStatus') {
+      this.selectedCurrentStatus = ids.join(';') || null;
+      return; 
+    }
+    if (dataId === 'changedStatus') {
+      this.selectedChangedStatus = ids.join(';') || null;
+      return;
+    }
+
     const source = event?.target?.objectApiName;
 
     switch (source) {
       // Use related Object API Names from lookup components
       case CHANNEL_FIELD.fieldApiName:
         this.selectedChannelId = joined || null;
+        break;
+      case 'Group': // <--- ADD THIS CASE
+        this.selectedAssignedToQueueId = joined || null;
         break;
       case PRODUCT_TYPE_FIELD.fieldApiName:
         this.selectedProductTypeId = joined || null;
@@ -147,9 +254,9 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
       case SUB_CODE_OBJECT:
         this.selectedSubCodeId = joined || null;
         break;
-      case 'EmailTemplate':
-        this.selectedNotificationTemplateId = joined || null;
-        break;
+      // case 'EmailTemplate':
+      //   this.selectedNotificationTemplateId = joined || null;
+      //   break;
       default:
         // no-op
         break;
@@ -182,6 +289,10 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   get placeholderSearchSubCode() {
     return LBL_SearchBtn + ' ' + FEC_Label_Sub_Code + '...';
+  }
+
+  get placeholderSearchCaseStatus() {
+    return LBL_SearchBtn + ' ' + FEC_LABEL_CASE_STATUS + '...';
   }
 
   get placeholderSearchNotificationTemplate() {
@@ -253,7 +364,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   // G. Receivers: when sending to Internal User (Auto or Manual)
   get showReceivers() {
-    return this.isAuto && this.isInternal;
+    return this.isInternal;
   }
 
   // H & I. Schedule Start/End Time: Auto + Internal User
@@ -284,19 +395,80 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
           console.log('Error getting record type name:', e);
         });
     }
+    // if (this.recordId) {
+    //   getNotificationById({ recordId: this.recordId })
+    //     .then((res) => {
+    //       if (res) {
+    //         this.headerLabel = 'Edit ' + res.Name;
+    //         this.targetGroup = res.FEC_Target_Group__c;
+    //         this.recordType.DeveloperName = res.RecordType.DeveloperName;
+    //         this.recordTypeId = res.RecordTypeId;
+    //         this.selectedNotiChannelId = res.FEC_Notification_Channel__c;
+    //       }
+    //     })
+    //     .catch((e) => {
+    //       console.log('Error getting record:', e);
+    //     });
+    // }
+
     if (this.recordId) {
       getNotificationById({ recordId: this.recordId })
-        .then((res) => {
-          if (res) {
+        .then((response) => {
+          if (response && response.record) {
+            const res = response.record;
+
+            // Map data to local tracking variables for saving and logic
             this.headerLabel = 'Edit ' + res.Name;
             this.targetGroup = res.FEC_Target_Group__c;
             this.recordType.DeveloperName = res.RecordType.DeveloperName;
             this.recordTypeId = res.RecordTypeId;
+            this.selectedNotiChannelId = res.FEC_Notification_Channel__c;
+            this.selectedChannelId = res.FEC_Channel__c;
+            this.selectedProductTypeId = res.FEC_Product_Type__c;
+            this.selectedCategoryId = res.FEC_Category__c;
+            this.selectedSubCategoryId = res.FEC_SubCategory__c;
+            this.selectedSubCodeId = res.FEC_SubCode__c;
+            this.selectedAssignedToQueueId = res.FEC_Assigned_to_Queue__c || null;
+            this.selectedCurrentStatus = res.FEC_Current_Status__c;
+            this.selectedChangedStatus = res.FEC_Changed_Status__c;
+            // Populating UI Pills for Multi-Select Channel
+            if (res.FEC_Channel__c && response.channels) {
+                this.initialChannel = response.channels.map(ch => ({
+                    id: ch.Id, title: ch.Name, subtitle: 'FEC_Channel__c'
+                }));
+            }
+
+            // Populating UI Pills for Multi-Select Case Statuses (split by semicolon)
+            if (res.FEC_Current_Status__c) {
+                this.initialCurrentStatus = res.FEC_Current_Status__c.split(';').map(s => ({ id: s, title: s, subtitle: 'Status' }));
+            }
+            if (res.FEC_Changed_Status__c) {
+                this.initialChangedStatus = res.FEC_Changed_Status__c.split(';').map(s => ({ id: s, title: s, subtitle: 'Status' }));
+            }
+
+            // Populating UI Pills for Single-Select Lookups
+            if (res.FEC_Product_Type__c) {
+                this.initialProductType = [{ id: res.FEC_Product_Type__c, title: res.FEC_Product_Type__r.Name }];
+            }
+            if (res.FEC_Category__c) {
+                this.initialCategory = [{ id: res.FEC_Category__c, title: res.FEC_Category__r.Name }];
+            }
+            if (res.FEC_SubCategory__c) {
+                this.initialSubCategory = [{ id: res.FEC_SubCategory__c, title: res.FEC_SubCategory__r.Name }];
+            }
+            if (res.FEC_SubCode__c) {
+                this.initialSubCode = [{ id: res.FEC_SubCode__c, title: res.FEC_SubCode__r.Name }];
+            }
+            if (res.FEC_Assigned_to_Queue__c && response.queue) {
+                this.initialAssignedToQueue = [{ 
+                    id: response.queue.DeveloperName, 
+                    title: response.queue.Name, 
+                    subtitle: 'Group' 
+                }];
+            }
           }
         })
-        .catch((e) => {
-          console.log('Error getting record:', e);
-        });
+        .catch((e) => console.error('Error loading record', e));
     }
   }
 
@@ -312,10 +484,17 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     // Map selected lookup IDs into fields if present
     fields[CHANNEL_FIELD.fieldApiName] = this.selectedChannelId || fields[CHANNEL_FIELD.fieldApiName];
     fields[PRODUCT_TYPE_FIELD.fieldApiName] = this.selectedProductTypeId || fields[PRODUCT_TYPE_FIELD.fieldApiName];
+    fields[ASSIGNED_TO_QUEUE_FIELD.fieldApiName] = this.selectedAssignedToQueueId || fields[ASSIGNED_TO_QUEUE_FIELD.fieldApiName];
     fields[CATEGORY_FIELD.fieldApiName] = this.selectedCategoryId || fields[CATEGORY_FIELD.fieldApiName];
     fields[SUB_CATEGORY_FIELD.fieldApiName] = this.selectedSubCategoryId;
     fields[SUB_CODE_FIELD.fieldApiName] = this.selectedSubCodeId;
-    fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName] = this.selectedNotificationTemplateId || fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName];
+    //fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName] = this.selectedNotificationTemplateId || fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName];
+    if (this.selectedCurrentStatus !== null) {
+      fields[CURRENT_STATUS_FIELD.fieldApiName] = this.selectedCurrentStatus;
+    }
+    if (this.selectedChangedStatus !== null) {
+      fields[CHANGED_STATUS_FIELD.fieldApiName] = this.selectedChangedStatus;
+    }
 
     let isFormValid = true;
     const lookupComponents = this.template.querySelectorAll('c-fec_-lookup');
@@ -343,26 +522,38 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     this.isSaveAndNew = true;
   }
 
+  // Sửa lại hàm closeTab để nhận vào một tabId cụ thể
+  async closeCurrentTab(tabId) {
+    await closeTab(tabId);
+  }
+
   async handleSuccess(event) {
     const id = event?.detail?.id;
     const name = event?.detail?.fields?.Name?.value;
+
+    // 1. Lấy ID của tab hiện tại NGAY LẬP TỨC trước khi navigate
+    let currentTabId = null;
+    if (this.isConsoleNavigation) {
+      const tabInfo = await getFocusedTabInfo();
+      currentTabId = tabInfo.tabId;
+    }
+
+    // 2. Hiển thị Toast
+    this.dispatchEvent(
+      new ShowToastEvent({
+        title: this.recordId ? 'Success' : 'Notification created',
+        message: this.objectLabel + ' "' + name + '" was ' + (this.recordId ? 'saved.' : 'created.'),
+        variant: 'success'
+      })
+    );
+
+    // 3. Xử lý điều hướng
     if (this.recordId) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: 'Success',
-          // Cộng thêm ' "' và '" ' vào hai đầu của biến name
-          message: this.objectLabel + ' "' + name + '" was saved.',
-          variant: 'success'
-        })
-      );
+      // Trường hợp Edit: Chỉ cần đóng tab hiện tại
+      await this.closeCurrentTab(currentTabId);
     } else if (this.isSaveAndNew) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: 'Notification created',
-          message: this.objectLabel + ' "' + name + '" was created.',
-          variant: 'success'
-        })
-      );
+      // Trường hợp Create - Save & New
+      this.isSaveAndNew = false; // Reset biến flag
       this[NavigationMixin.Navigate]({
         type: 'standard__objectPage',
         attributes: {
@@ -374,14 +565,9 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
           nooverride: '0'
         }
       });
+      await this.closeCurrentTab(currentTabId);
     } else {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: 'Notification created',
-          message: this.objectLabel + ' "' + name + '" was created.',
-          variant: 'success'
-        })
-      );
+      // Trường hợp Create - Save thông thường
       this[NavigationMixin.Navigate]({
         type: 'standard__recordPage',
         attributes: {
@@ -390,9 +576,9 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
           actionName: 'view'
         }
       });
+      // Đóng tab "New" cũ sau khi đã mở tab "View" mới
+      setTimeout(() => this.closeCurrentTab(currentTabId), 500);
     }
-    await this.closeTab();
-
   }
 
   handleError(event) {
@@ -434,7 +620,10 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     this.selectedCategoryId = null;
     this.selectedSubCategoryId = null;
     this.selectedSubCodeId = null;
-    this.selectedNotificationTemplateId = null;
+    //this.selectedNotificationTemplateId = null;
+    this.selectedAssignedToQueueId = null;
+    this.selectedCurrentStatus = null;
+    this.selectedChangedStatus = null;
 
     // Reset all fields within the lightning-record-edit-form
     const form = this.template.querySelector('lightning-record-edit-form');

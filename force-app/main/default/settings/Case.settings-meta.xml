@@ -137,6 +137,7 @@
         <routingAddresses>
             <addressType>EmailToCase</addressType>
             <caseOrigin>Email-Ubank</caseOrigin>
+            <caseOrigin>Email</caseOrigin>
             <caseOwner>FEC_Ubank_Email</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>Medium</casePriority>
@@ -158,6 +159,9 @@
             <emailServicesAddress>minhtung2108@r-21eh14cxkc851ukhcsnyju363ag86qleba1us04km2qxl91sto.az-9oecxmaw.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>true</isVerified>
             <routingName>minhtung E2C</routingName>
+            <emailAddress>dichvukhachhang@ubank.vn</emailAddress>
+            <isVerified>false</isVerified>
+            <routingName>Ubank Email</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <unauthorizedSenderAction>Discard</unauthorizedSenderAction>

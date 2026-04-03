@@ -49,7 +49,9 @@ import letterheadLabel                from '@salesforce/label/c.FEC_Template_Enh
 import mailboxLabel                   from '@salesforce/label/c.FEC_Template_Applicable_Mailbox';
 import attachmentLabel                from '@salesforce/label/c.FEC_Template_Attachment';
 import backToListLabel                from '@salesforce/label/c.FEC_Template_Back_To_List';
-import saveAndNewLabel                from '@salesforce/label/c.FEC_Template_Save_And_New';
+import saveAndCloseLabel              from '@salesforce/label/c.FEC_Template_Save_And_Close';
+import bodyLabel                      from '@salesforce/label/c.FEC_Template_Body';
+import previewLabel                   from '@salesforce/label/c.FEC_Action_Preview';
 
 /* ── Constants & Utils ── */
 import { MAILBOX_OPTIONS } from 'c/fec_TemplateConstants';
@@ -106,6 +108,9 @@ export default class Fec_templateEditor extends LightningElement {
     /* Merge-field picker */
     @track isPickerOpen = false;
 
+    /* Preview modal */
+    @track isPreviewOpen = false;
+
     /* Cursor position for merge field insert */
     _savedRange = null;
 
@@ -120,6 +125,9 @@ export default class Fec_templateEditor extends LightningElement {
 
     /* Letterhead options – placeholder for future EnhancedLetterhead query */
     @track _letterheadOptions = [];
+
+    /** Raw letterhead records keyed by Id for header/footer lookup */
+    _letterheadMap = {};
 
     /* ═══════════════════════════════════════════ */
     /*  LABELS                                     */
@@ -147,7 +155,9 @@ export default class Fec_templateEditor extends LightningElement {
         mailboxLabel,
         attachmentLabel,
         backToListLabel,
-        saveAndNewLabel
+        saveAndCloseLabel,
+        bodyLabel,
+        previewLabel
     };
 
     /* ═══════════════════════════════════════════ */
@@ -162,7 +172,7 @@ export default class Fec_templateEditor extends LightningElement {
 
     get isNewMode() { return !this._recordId; }
 
-    get mergeFieldLabel() { return '{ }'; }
+    get mergeFieldLabel() { return 'Merge Fields { }'; }
 
     /* ── Wire: load all folders for the dropdown ── */
     connectedCallback() {
@@ -192,12 +202,19 @@ export default class Fec_templateEditor extends LightningElement {
     async _loadLetterheadOptions() {
         try {
             const data = await getAllLetterheads();
-            this._letterheadOptions = (data || [])
-                .filter(lh => lh.Name)
-                .map(lh => ({
-                    label: lh.Name,
-                    value: lh.Id
-                }));
+            const filtered = (data || []).filter(lh => lh.Name);
+            this._letterheadOptions = filtered.map(lh => ({
+                label: lh.Name,
+                value: lh.Id
+            }));
+            // Build a map for header/footer lookup in Preview
+            this._letterheadMap = {};
+            filtered.forEach(lh => {
+                this._letterheadMap[lh.Id] = {
+                    headerHtml: lh.FEC_Header__c || '',
+                    footerHtml: lh.FEC_Footer__c || ''
+                };
+            });
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error('[templateEditor] Error loading letterheads:', error);
@@ -244,11 +261,17 @@ export default class Fec_templateEditor extends LightningElement {
 
     handleNameChange(event) {
         this.name = event.target.value;
-        /* Auto-generate API name from template name (only if not manually overridden) */
-        if (!this._apiNameManuallySet) {
+        if (this.name) { this.hasErrors = false; }
+    }
+
+    /**
+     * Auto-generate API name when user tabs out of Template Name,
+     * but only if API Name is still empty (not manually set).
+     */
+    handleNameBlur() {
+        if (!this.apiName && this.name) {
             this.apiName = generateApiName(this.name);
         }
-        if (this.name) { this.hasErrors = false; }
     }
 
     handleApiNameChange(event) {
@@ -322,8 +345,23 @@ export default class Fec_templateEditor extends LightningElement {
 
     handleMergeFieldInsert(event) {
         const mergeTag = event.detail;
+        const editorEl = this.template.querySelector('.body-editor');
 
-        if (this._savedRange) {
+        // Nếu không có editor => fallback
+        if (!editorEl) {
+            this.emailBody = (this.emailBody || '') + mergeTag;
+            this._savedRange = null;
+            this.handleClosePicker();
+            return;
+        }
+
+        // Nếu có savedRange nhưng nó nằm ngoài editor => KHÔNG restore selection ngoài editor
+        const canUseRange = this._savedRange && this._isRangeInsideRichText(this._savedRange, editorEl);
+
+        if (canUseRange) {
+            // Force focus về editor trước khi thao tác selection (giảm rủi ro selection "nhảy")
+            editorEl.focus?.();
+
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(this._savedRange);
@@ -337,22 +375,94 @@ export default class Fec_templateEditor extends LightningElement {
             sel.removeAllRanges();
             sel.addRange(this._savedRange);
 
-            const editorEl = this.template.querySelector('.body-editor');
-            if (editorEl) { this.emailBody = editorEl.value; }
+            // Sync model
+            // Nếu editor là textarea/input => value; nếu contenteditable => textContent/innerHTML
+            this.emailBody = editorEl.value ?? editorEl.innerHTML ?? this.emailBody;
         } else {
-            this.emailBody = (this.emailBody || '') + mergeTag;
+            // Fallback: insert vào cuối body (hoặc append string)
+            // Nếu editor là textarea/input:
+            if (editorEl.value !== undefined) {
+                const start = editorEl.selectionStart ?? editorEl.value.length;
+                const end = editorEl.selectionEnd ?? editorEl.value.length;
+                const v = editorEl.value;
+
+                editorEl.value = v.slice(0, start) + mergeTag + v.slice(end);
+                // put cursor after inserted text
+                const pos = start + mergeTag.length;
+                editorEl.setSelectionRange?.(pos, pos);
+
+                this.emailBody = editorEl.value;
+            } else {
+                // Nếu là contenteditable div:
+                editorEl.focus?.();
+                editorEl.insertAdjacentText('beforeend', mergeTag);
+                this.emailBody = editorEl.innerHTML;
+            }
         }
 
         this._savedRange = null;
         this.handleClosePicker();
     }
 
+    _isNodeInsideHostShadow(node, hostEl) {
+        if (!node || !hostEl) return false;
+
+        // Nếu node là Text node thì chuyển lên parent
+        let cur = (node.nodeType === Node.TEXT_NODE) ? node.parentNode : node;
+
+        // Đi ngược qua các shadow boundary bằng getRootNode().host
+        while (cur) {
+            if (cur === hostEl) return true; // trường hợp node ở light DOM của host (hiếm)
+            const root = cur.getRootNode?.();
+            if (!root) return false;
+
+            // Nếu root là ShadowRoot và host khớp => thuộc hostEl
+            if (root.host) {
+                if (root.host === hostEl) return true;
+                cur = root.host; // nhảy lên host để tiếp tục climb
+            } else {
+                // root không có host => Document
+                return false;
+            }
+        }
+        return false;
+    }
+
+    _isRangeInsideRichText(range, richTextHostEl) {
+        if (!range || !richTextHostEl) return false;
+        const container = range.commonAncestorContainer;
+        return this._isNodeInsideHostShadow(container, richTextHostEl);
+    }
     handleClosePicker() {
         this.isPickerOpen = false;
     }
 
     /* ═══════════════════════════════════════════ */
-    /*  SAVE / SAVE & NEW / BACK / PREVIEW         */
+    /*  PREVIEW MODAL                              */
+    /* ═══════════════════════════════════════════ */
+
+    /** Letterhead header HTML for the currently selected letterhead (or empty) */
+    get selectedLetterheadHeaderHtml() {
+        const lh = this._letterheadMap[this.enhancedLetterheadId];
+        return lh ? lh.headerHtml : '';
+    }
+
+    /** Letterhead footer HTML for the currently selected letterhead (or empty) */
+    get selectedLetterheadFooterHtml() {
+        const lh = this._letterheadMap[this.enhancedLetterheadId];
+        return lh ? lh.footerHtml : '';
+    }
+
+    handlePreview() {
+        this.isPreviewOpen = true;
+    }
+
+    handleClosePreview() {
+        this.isPreviewOpen = false;
+    }
+
+    /* ═══════════════════════════════════════════ */
+    /*  SAVE / SAVE & CLOSE / BACK                 */
     /* ═══════════════════════════════════════════ */
 
     async handleSave() {
@@ -360,7 +470,7 @@ export default class Fec_templateEditor extends LightningElement {
         await this._performSave(false);
     }
 
-    async handleSaveAndNew() {
+    async handleSaveAndClose() {
         if (!this._validate()) return;
         await this._performSave(true);
     }
@@ -375,9 +485,9 @@ export default class Fec_templateEditor extends LightningElement {
 
     /**
      * Core save logic – calls Apex saveTemplate, handles response.
-     * @param {Boolean} andNew  If true, reset form after save.
+     * @param {Boolean} andClose  If true, navigate back to list view after save.
      */
-    async _performSave(andNew) {
+    async _performSave(andClose) {
         this._isSaving = true;
         try {
             const sObj = this._buildSObject();
@@ -393,8 +503,9 @@ export default class Fec_templateEditor extends LightningElement {
                 variant: 'success'
             }));
 
-            if (andNew) {
-                this._resetForm();
+            if (andClose) {
+                /* Save & Close → return to list view */
+                this.dispatchEvent(new CustomEvent('saveandclose', { detail: { recordId: savedId } }));
             } else {
                 this.dispatchEvent(new CustomEvent('save', { detail: { recordId: savedId } }));
             }
@@ -408,6 +519,7 @@ export default class Fec_templateEditor extends LightningElement {
 
     _validate() {
         let isValid = true;
+        const missingFields = [];
 
         /* Validate Template Name (required) */
         const nameInput = this.template.querySelector('.name-input');
@@ -416,19 +528,43 @@ export default class Fec_templateEditor extends LightningElement {
                 nameInput.setCustomValidity(completeThisFieldLabel);
                 nameInput.reportValidity();
             }
+            missingFields.push(FEC_Col_Template_Name);
             isValid = false;
         } else {
             nameInput.setCustomValidity('');
             nameInput.reportValidity();
         }
 
-        /* Validate Folder (required) */
-        if (!this.folderId) {
+        /* Validate API Name (required) */
+        const apiInput = this.template.querySelector('.api-name-input');
+        if (!apiInput || !apiInput.value || apiInput.value.trim() === '') {
+            if (apiInput) {
+                apiInput.setCustomValidity(completeThisFieldLabel);
+                apiInput.reportValidity();
+            }
+            missingFields.push(apiNameLabel);
             isValid = false;
+        } else {
+            apiInput.setCustomValidity('');
+            apiInput.reportValidity();
+        }
+
+        /* Validate Folder (required) – uses searchable combobox @api */
+        const folderCmp = this.template.querySelector('.folder-combobox');
+        if (!this.folderId) {
+            if (folderCmp) {
+                folderCmp.setCustomValidity(completeThisFieldLabel);
+                folderCmp.reportValidity();
+            }
+            missingFields.push(FEC_Col_Folder);
+            isValid = false;
+        } else if (folderCmp) {
+            folderCmp.setCustomValidity('');
+            folderCmp.reportValidity();
         }
 
         if (!isValid) {
-            this.errorMessage = requiredFieldsMsg;
+            this.errorMessage = requiredFieldsMsg.replace('{0}', missingFields.join(', '));
             this.hasErrors = true;
         }
 

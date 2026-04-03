@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Translations xmlns="http://soap.sforce.com/2006/04/metadata">
     <customLabels>
-        <name>FEC_Action_Delete</name>
-        <label>Xóa</label>
-    </customLabels>
-    <customLabels>
-        <name>FEC_Action_Edit</name>
-        <label>Sửa</label>
-    </customLabels>
-    <customLabels>
         <name>FEC_Add_Stage</name>
         <label>Thêm giai đoạn</label>
     </customLabels>
@@ -795,10 +787,6 @@
     <customLabels>
         <name>FEC_Choose_Decision_Label</name>
         <label>Chọn Quyết định</label>
-    </customLabels>
-    <customLabels>
-        <name>FEC_Sub_Decision_Label</name>
-        <label>Quyết định phụ</label>
     </customLabels>
     <customLabels>
         <name>FEC_Choose_Sub_Decision_Label</name>

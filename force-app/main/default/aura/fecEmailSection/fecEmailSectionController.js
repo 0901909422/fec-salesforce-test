@@ -77,33 +77,15 @@
         component.set('v.subject', orig ? 'RE: ' + orig : '');
         component.set('v.errorMsg', '');
         var toEmail = component.get('v.toEmail');
+        console.log('openCompose: toEmail=', toEmail, 'toTags=', JSON.stringify(component.get('v.toTags')));
         if (toEmail && component.get('v.toTags').length === 0) {
             component.set('v.toTags', [toEmail]);
         }
+        console.log('openCompose after set: toTags=', JSON.stringify(component.get('v.toTags')));
         component.set('v.showCompose', true);
         var body = component.get('v.body') || '';
-        // Lazy load fromAddresses chỉ khi user mở compose lần đầu
-        var fromOptions = component.get('v.fromOptions') || [];
-        if (fromOptions.length === 0) {
-            var incomingTo = component.get('v.incomingToAddress') || component.get('v.fromEmail') || '';
-            helper.loadFromAddresses(component, incomingTo);
-        }
         window.setTimeout($A.getCallback(function() {
             helper.initQuill(component, body);
-            // Sync native <select> value sau khi render — thử lại nếu chưa match
-            var fromEmail = component.get('v.fromEmail');
-            function syncFromSelect() {
-                var el = component.getElement();
-                if (!el || !fromEmail) return;
-                var sel = el.querySelector('.fec-from-select');
-                if (sel) {
-                    sel.value = fromEmail;
-                    if (sel.value !== fromEmail) {
-                        window.setTimeout($A.getCallback(syncFromSelect), 150);
-                    }
-                }
-            }
-            syncFromSelect();
         }), 150);
     },
 
@@ -340,12 +322,18 @@
     },
 
     sendEmail: function(component, event, helper) {
+        // Ưu tiên v.toEmail (điền sẵn từ case), fallback sang toTags
+        var toEmail = component.get('v.toEmail');
         var tags = component.get('v.toTags');
-        if (!tags || tags.length === 0) { component.set('v.errorMsg', 'To email is required.'); return; }
+        var finalToEmail = toEmail || (tags && tags.length > 0 ? tags.join(',') : '');
+        console.log('sendEmail clicked: toEmail=', toEmail, 'tags=', JSON.stringify(tags), 'final=', finalToEmail);
+        if (!finalToEmail) { component.set('v.errorMsg', $A.get('$Label.c.FEC_Email_Error_Empty') || 'To email is required.'); return; }
         var subject = component.get('v.subject');
         var body = window._fecQuill ? window._fecQuill.root.innerHTML : component.get('v.body');
         if (!subject) { component.set('v.errorMsg', 'Subject is required.'); return; }
-        if (!body || body === '<p><br></p>' || body.trim() === '') { component.set('v.errorMsg', 'Body is required.'); return; }
+        var bodyText = window._fecQuill ? window._fecQuill.getText().trim() : (body || '').replace(/<[^>]+>/g,'').trim();
+        if (!bodyText) { component.set('v.errorMsg', 'Body is required.'); return; }
+        console.log('sendEmail: calling doSendEmail, fromEmail=', component.get('v.fromEmail'), 'toEmail=', finalToEmail);
 
         component.set('v.isSending', true);
         component.set('v.errorMsg', '');
@@ -353,7 +341,7 @@
         // Read attachments as base64 then send
         var attachments = component.get('v.attachments') || [];
         if (attachments.length === 0) {
-            helper.doSendEmail(component, tags, subject, body, []);
+            helper.doSendEmail(component, finalToEmail, subject, body, []);
             return;
         }
 
@@ -373,7 +361,7 @@
                 };
                 pending--;
                 if (pending === 0) {
-                    helper.doSendEmail(component, tags, subject, body, converted);
+                    helper.doSendEmail(component, finalToEmail, subject, body, converted);
                 }
             });
             reader.onerror = $A.getCallback(function() {

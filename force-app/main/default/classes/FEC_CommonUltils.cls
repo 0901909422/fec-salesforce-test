@@ -976,4 +976,32 @@ public with sharing class FEC_CommonUltils {
     if (oldVal == newVal) return oldVal;
     return 'ALL';
   }
+
+  public static String formatISOWithTimezone(Datetime dt) {
+        TimeZone tz = UserInfo.getTimeZone();
+        Integer offset = tz.getOffset(dt) / 1000 / 60; // minutes
+        
+        Integer hours = offset / 60;
+        Integer minutes = Math.mod(offset, 60);
+        
+        String sign = hours >= 0 ? '+' : '-';
+        
+        return dt.format('yyyy-MM-dd\'T\'HH:mm:ss.SSS') +
+            sign +
+            pad2(Math.abs(hours)) +
+            ':' +
+            pad2(Math.abs(minutes));
+    }
+    
+    public static String pad2(Integer val) {
+        return (val < 10 ? '0' : '') + String.valueOf(val);
+    }
+
+  public static String serializeSafe(Object obj) {
+    try {
+      return obj != null ? JSON.serialize(obj) : null;
+    } catch (Exception e) {
+      return 'SERIALIZE_ERROR: ' + e.getMessage();
+    }
+  }
 }

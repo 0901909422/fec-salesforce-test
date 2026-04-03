@@ -9,6 +9,9 @@ public with sharing class FEC_CreateCSCaseService {
     public static CreateCSCaseResponse CreateCSCaseRequest(
         CaseRequestType req
     ) {
+        Boolean isSuccess = true;
+        String errorMessage;
+        CreateCSCaseResponse response;
         try {
             
             // -------------------------
@@ -28,6 +31,7 @@ public with sharing class FEC_CreateCSCaseService {
             req.CreatorInfo
                 );
             
+            CustomerResponse customerResp = getCustomerInfo(req.CustomerInfo.ContractOrAccountNumber);
             // -------------------------
             // CREATE INTERACTION CASE
             // -------------------------
@@ -42,26 +46,36 @@ public with sharing class FEC_CreateCSCaseService {
             } else if (externalSystems.contains(subChannel)) {
                 interactionDTO.channel = FEC_ConstantCommon.CHANNEL_EXTERNAL;
                 interactionDTO.subChannel = subChannel;
-            } else {
-                interactionDTO.channel = FEC_ConstantCommon.CHANNEL_EXTERNAL;
-                interactionDTO.subChannel = FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
-            }
+            } 
+            interactionDTO.phoneNumber = req.CustomerInfo.PhoneNumber;
+            interactionDTO.email = req.CustomerInfo.EmailAddress;
             
             FEC_CreateCaseHandler.FEC_InteractionCaseResponse interactionResp =
-                FEC_CreateCaseHandler.createInteractionCase(interactionDTO);
+                FEC_CreateCaseHandler.createInteractionCaseMyCaseAPI(interactionDTO);
             
             //--------------------------
             //CREATE CUSTOMER HISTORY IF CUSTOMER IS EXISTED
             //--------------------------
-            CustomerResponse customerResp = getCustomerInfo(req.CustomerInfo.ContractOrAccountNumber);
+            
             FEC_Customer_History__c custHistoryRec = new FEC_Customer_History__c();
+            Id customerHistoryId = null;
             if(customerResp != null ){
                 custHistoryRec.Name = customerResp.name;
                 custHistoryRec.FEC_Account_Number__c = customerResp.contractOrAccountNumber;
                 custHistoryRec.FEC_Case__c = interactionResp.caseId;
                 custHistoryRec.FEC_CIF_Number__c = customerResp.cifNumber;
                 insert custHistoryRec;
+                
+                customerHistoryId = custHistoryRec.Id;
             }
+            
+            if (customerHistoryId != null) {
+                FEC_CreateCaseHandler.updateInteractionCaseWithCustomerHistory(
+                    interactionResp.caseId,
+                customerHistoryId
+                    );
+            }
+            
             
             // -------------------------
             // CREATE CUSTOMER CASE
@@ -121,21 +135,43 @@ public with sharing class FEC_CreateCSCaseService {
             // -------------------------
             // SUCCESS RESPONSE
             // -------------------------
-            return createCaseResponse(
+            // return createCaseResponse(
+            //     caseNo,
+            // req.Sys.TransactionID,
+            // System.Label.FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG
+            //     );
+            // ===== RESPONSE =====
+            response = createCaseResponse(
                 caseNo,
             req.Sys.TransactionID,
             System.Label.FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG
                 );
             
         } catch (ValidationException ve) {
+            isSuccess = false;
             return errorResponse(ve.transactionId, ve.code, ve.getMessage());
         } catch (Exception e) {
+            isSuccess = false;
             return errorResponse(
                 req != null && req.Sys != null ? req.Sys.TransactionID : null,
             '500',
             'Internal server error: ' + e.getMessage()
                 );
         }
+        
+        // 🔥 ALWAYS LOG HERE (DUY NHẤT 1 CHỖ)
+        logApiFull(
+            'CreateCSCase',
+        'POST',
+        req,
+        response,
+        isSuccess,
+        isSuccess ? '200' : '500',
+        errorMessage,
+        req != null && req.Sys != null ? req.Sys.TransactionID : null
+            );
+        
+        return response;
     }
     
     // =================================================
@@ -156,6 +192,8 @@ public with sharing class FEC_CreateCSCaseService {
         if (String.isBlank(sys.TransactionID) || sys.TransactionID.length() > 36) {
             throw new ValidationException(null, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_TRANSACTION_ID_MSG);
         }
+        validateDateTime(sys.DateTime_x,  sys.TransactionID);
+        validateChannel(sys.Channel, sys.TransactionID);
         
         validateCustomerInfo(customer, sys.TransactionID);
         
@@ -206,6 +244,48 @@ public with sharing class FEC_CreateCSCaseService {
         }
         return ctx;
     }
+    
+    //==================================================
+    // CHANNEL VALIDATION
+    //==================================================
+    
+    private static void validateChannel(String channel, String txnId) {
+        
+        // Required check
+        if (String.isBlank(channel)) {
+            throw new ValidationException(
+                txnId,
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_CHANNEL_REQUIRED_MSG
+                );
+        }
+        
+        // Normalize (tránh lỗi do space / case)
+        String normalizedChannel = channel.trim();
+        
+        // Validate value
+        if (!channelSet.contains(normalizedChannel)) {
+            throw new ValidationException(
+                txnId,
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_CHANNEL_INVALID_MSG
+                );
+        }
+    }
+    
+    
+    private static void validateDateTime(DateTime dateTime_x, String txnId) {
+        
+        // Required check
+        if (dateTime_x == null) {
+            throw new ValidationException(
+                txnId,
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_DATETIME_INVALID_MSG
+                );
+        }
+    }
+    
     
     // =================================================
     // CUSTOMER VALIDATION
@@ -523,7 +603,44 @@ public with sharing class FEC_CreateCSCaseService {
         return resp;
     }
     
-    
+    private static void logApiFull(
+        String endpoint,
+    String method,
+    Object requestObj,
+    Object responseObj,
+    Boolean isSuccess,
+    String statusCode,
+    String errorMessage,
+    String transactionId
+    ) {
+        try {
+            HttpResponse apiResponse = new HttpResponse();
+            apiResponse.setStatusCode(isSuccess ? 200 : 500);
+            apiResponse.setBody(FEC_CommonUltils.serializeSafe(responseObj));
+            
+            FEC_CommonUltils.logApi(
+                'CreateCSCase',
+            endpoint,
+            method,
+            FEC_CommonUltils.serializeSafe(requestObj),
+            apiResponse,
+            errorMessage
+                );
+            
+        } catch (Exception e) {
+            System.debug('LOG_API_ERROR: ' + e.getMessage());
+        }
+    }
+  
+    private static String truncateLongString(String input) {
+        Integer MAX_LENGTH = 30000; // adjust theo field length
+        
+        if (String.isBlank(input)) return input;
+        
+        return input.length() > MAX_LENGTH
+            ? input.substring(0, MAX_LENGTH)
+            : input;
+    }
     
     // =================================================
     // REQUEST / RESPONSE TYPES (WSDL)
@@ -616,6 +733,15 @@ public with sharing class FEC_CreateCSCaseService {
         public String cifNumber;
     }
     
+    private static Set<String> channelSet = new Set<String>{
+        FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+        FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME,
+        FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
+        FEC_ConstantCommon.CHANNEL_LETTER_NAME,
+        FEC_ConstantCommon.CHANNEL_F2F_NAME,
+        FEC_ConstantCommon.CHANNEL_INTERNAL_NAME,
+        FEC_ConstantCommon.CHANNEL_EXTERNAL_NAME
+    };
     
     private static Set<String> internalSystems = new Set<String>{
         FEC_ConstantCommon.SYSTEM_SOURCE_VTIGER,

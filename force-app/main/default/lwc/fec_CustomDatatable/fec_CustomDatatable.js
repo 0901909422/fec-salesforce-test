@@ -12,7 +12,7 @@ export default class Fec_CustomDatatable extends LightningDatatable {
     nameLink: {
       template: nameLinkCell,
       standardCellLayout: true,
-      typeAttributes: ["label", "rowId"],
+      typeAttributes: ["label", "rowId", "columnName"],
     },
   };
 }

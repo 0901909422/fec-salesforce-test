@@ -31,8 +31,8 @@
     </types>
 	<types>
 		<members>fec_CloneLetterheadContainer</members>
-		<members>fec_EditLetterheadContainer</members>
-		<members>fec_NewLetterheadContainer</members>
+		<!--<members>fec_EditLetterheadContainer</members>
+		<members>fec_NewLetterheadContainer</members>-->
 		<name>AuraDefinitionBundle</name>
 	</types>
 	<types>

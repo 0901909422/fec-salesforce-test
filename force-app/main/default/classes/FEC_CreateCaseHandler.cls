@@ -18,6 +18,7 @@ public without sharing class FEC_CreateCaseHandler {
         public String nationalId;
         public String accountNumber;
         public String contractNumber;
+        public String email;
         
         // =========================
         // INTERACTION DATA
@@ -65,9 +66,11 @@ public without sharing class FEC_CreateCaseHandler {
         if (dto == null) {
             throw new IllegalArgumentException(System.Label.FEC_MSG_Interaction_Case_DTO_Null);
         }
+        
         Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
             .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
         Case interactionCase = new Case();
+        // System.debug('interactionRecordTypeId' + interactionRecordTypeId);
         interactionCase.RecordTypeId = interactionRecordTypeId;
         
         // ---------------------------
@@ -75,11 +78,10 @@ public without sharing class FEC_CreateCaseHandler {
         // ---------------------------
         
         
-        if( dto.channel == FEC_ConstantCommon.CHANNEL_INBOUND_API ) {
-            interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
-        }else if ( dto.channel == FEC_ConstantCommon.CHANNEL_OUTBOUND_API ) {
-            interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
+        if( dto.channel != null ) {
+            interactionCase.FEC_Channel__c = dto.channel;
         }
+        
         if( dto.subChannel != null ) {
             interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
         }
@@ -124,8 +126,106 @@ public without sharing class FEC_CreateCaseHandler {
             res.caseNo = res.linkId.substringBetween('>', '</');
         }
         
+        system.debug('Created interaction case with Id: ' + res.caseId + ', Link Id: ' + res.linkId + ', Case No: ' + res.caseNo);
         return res;
     }
+    
+    
+    @AuraEnabled
+    public static FEC_InteractionCaseResponse createInteractionCaseMyCaseAPI(FEC_InteractionCaseDTO dto) {
+        
+        if (dto == null) {
+            throw new IllegalArgumentException(System.Label.FEC_MSG_Interaction_Case_DTO_Null);
+        }
+        
+        Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+            .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+        Case interactionCase = new Case();
+        // System.debug('interactionRecordTypeId' + interactionRecordTypeId);
+        interactionCase.RecordTypeId = interactionRecordTypeId;
+        
+        // ---------------------------
+        // CHANNEL / STATUS
+        // ---------------------------
+        
+        if( dto.channel != null ) {
+            interactionCase.FEC_Channel__c = dto.channel;
+        }
+        
+        if( dto.subChannel != null ) {
+            interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
+        }
+        
+        interactionCase.FEC_External_Interaction_ID__c = dto.externalInteractionId;
+        interactionCase.FEC_Genesys_campaign_Name__c = dto.campaignName;
+        interactionCase.FEC_Interaction_View_Mode__c  = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
+        interactionCase.FEC_Is_MyCaseAPI_Interaction__c = true;
+        interactionCase.FEC_Outcome_Code__c = FEC_ConstantCommon.OUTCOME_CODE_COMPLETED;
+            // ---------------------------
+        // CUSTOMER INFO
+        // ---------------------------
+        interactionCase.FEC_Phone_Number__c = dto.phoneNumber;
+        interactionCase.FEC_Interaction_Email__c = dto.email;
+        interactionCase.FEC_National_ID_Passport_ID__c = dto.nationalId;
+        interactionCase.FEC_Account_Number__c = dto.accountNumber;
+        interactionCase.FEC_Contract_Number__c = dto.contractNumber;
+        
+        // ---------------------------
+        // INTERACTION DATA
+        // ---------------------------
+        interactionCase.FEC_Transcription__c = dto.transcription;
+        interactionCase.FEC_KYC_Method__c = dto.kycMethod;
+        
+        insert interactionCase;
+        
+        interactionCase = [
+            SELECT Id, FEC_Link_ID__c, OwnerId
+            FROM Case
+            WHERE Id = :interactionCase.Id
+        ];
+        
+        FEC_InteractionCaseResponse res = new FEC_InteractionCaseResponse();
+        res.caseId = interactionCase.Id;
+        res.linkId = interactionCase.FEC_Link_ID__c;
+        
+        if (res.linkId != null && res.linkId.contains('>')) {
+            res.caseNo = res.linkId.substringBetween('>', '</');
+        }
+        
+        system.debug('Created interaction case from MyCaseAPI with Id: ' + res.caseId + ', Link Id: ' + res.linkId + ', Case No: ' + res.caseNo);
+        return res;
+    }
+    
+    
+    
+    
+    @AuraEnabled
+    public static void updateInteractionCaseWithCustomerHistory(
+        Id interactionId,
+    Id customerHistoryId
+    ) {
+        try {
+            // Query record
+            Case interaction = [
+                SELECT Id, FEC_Account_or_Contract__c, Status
+                FROM Case
+                WHERE Id = :interactionId
+                LIMIT 1
+            ];
+            
+            // Update field
+            interaction.FEC_Account_or_Contract__c = customerHistoryId;
+            interaction.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CLOSED;
+            update interaction;
+            
+        } catch (Exception e) {
+            // Log properly
+            System.debug('ERROR updateInteractionCaseWithCustomerHistory: ' + e.getMessage());
+            // Surface error to LWC / caller
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+    
     
     @AuraEnabled
     public static FEC_InteractionCaseResponse createInteractionCaseManual(FEC_InteractionCaseDTO dto) {
@@ -251,7 +351,7 @@ public without sharing class FEC_CreateCaseHandler {
         insert c;
         return c;
     }
-
+    
     // Create case with no recordId in Lisview
     @AuraEnabled
     public static Id createInternalCase(String customerName, String nationalId) {
@@ -265,7 +365,7 @@ public without sharing class FEC_CreateCaseHandler {
         c.FEC_Customer_Name__c = customerName;
         c.FEC_National_ID_Passport_ID__c = nationalId;
         c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
-
+        
         insert c;
         return c.Id;
     }

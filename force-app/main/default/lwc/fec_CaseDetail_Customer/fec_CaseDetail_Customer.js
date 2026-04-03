@@ -35,7 +35,7 @@ import {
   STR_UNDEFINED,
   VIEW_MODE_HANDLING,
   VIEW_MODE_REVIEW,
-  RECORD_TYPE_INTERNAL_CASE
+  // RECORD_TYPE_INTERNAL_CASE
 } from "c/fec_CommonConst";
 
 export default class Fec_CaseDetail_Customer extends LightningElement {
@@ -117,38 +117,42 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .finally(() => { });
   }
 
-  connectedCallback() {
-    resetViewMode({
-      recordId: this.recordId,
-      viewMode: VIEW_MODE_REVIEW,
-    });
-
-    this.loadRemarkHistory();
-
-    this.subscribeToMessageChannel();
-    this.loadRemarkHistory();
-    this.checkInternalCaseEditMode();
-    this.isLoaded = true;
-  }
-
-  checkInternalCaseEditMode() {
-    if (!this.recordId) return;
-
-    getCase({ recordId: this.recordId })
-      .then((res) => {
-        const isInternal = res.RecordType?.DeveloperName === RECORD_TYPE_INTERNAL_CASE;
-        const isHandling = res.FEC_Interaction_View_Mode__c === VIEW_MODE_HANDLING;
-        const isSubmited = res.FEC_Is_Submited__c;
-
-        if (isInternal && isHandling && !isSubmited) {
-
-          this.handleMessage({ isModeEdit: true });
-        }
-      })
-      .catch((err) => {
-        console.error("checkInternalCaseEditMode err:", err);
+  async connectedCallback() {
+    try {
+      await resetViewMode({
+        recordId: this.recordId,
+        viewMode: VIEW_MODE_REVIEW,
       });
+
+      this.subscribeToMessageChannel();
+      this.loadRemarkHistory();
+
+      // this.checkInternalCaseEditMode();
+    } catch (err) {
+      console.error("Failed to reset view mode:", err);
+    } finally {
+      this.isLoaded = true;
+    }
   }
+
+  // checkInternalCaseEditMode() {
+  //   if (!this.recordId) return;
+
+  //   getCase({ recordId: this.recordId })
+  //     .then((res) => {
+  //       const isInternal = res.RecordType?.DeveloperName === RECORD_TYPE_INTERNAL_CASE;
+  //       const isHandling = res.FEC_Interaction_View_Mode__c === VIEW_MODE_HANDLING;
+  //       const isSubmited = res.FEC_Is_Submited__c;
+
+  //       if (isInternal && isHandling && !isSubmited) {
+
+  //         this.handleMessage({ isModeEdit: true });
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       console.error("checkInternalCaseEditMode err:", err);
+  //     });
+  // }
 
   subscribeToMessageChannel() {
     this.subscription = subscribe(
@@ -332,18 +336,16 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       return;
     }
 
-    this.isLoaded = false;
-    await Promise.resolve();
-
     // Kiểm tra chặn submit (vd: original === updated phone)
     if (caseBusinessEle?.checkSubmitBlock) {
       const blocked = await caseBusinessEle.checkSubmitBlock();
       if (blocked) {
-        this.isLoaded = true;
         this.isSubmitting = false;
         return;
       }
     }
+
+    this.isLoaded = false;
 
     try {
       const stageName = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;

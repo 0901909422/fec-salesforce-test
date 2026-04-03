@@ -2900,6 +2900,14 @@
         <value>Customer information updated successfully</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Action_Owner_Only</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Only Case Owner can perform this routing action</shortDescription>
+        <value>Chỉ Case Owner mới có thể thực hiện thao tác này.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_API_Error</fullName>
         <categories>API</categories>
         <language>en_US</language>
@@ -3039,6 +3047,14 @@
         <value>DateTime is null</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Edit_Owner_Only</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Only Case Owner can edit case draft or nature of case</shortDescription>
+        <value>Chỉ Case Owner mới có thể chỉnh sửa thông tin này.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Eligible</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -3085,6 +3101,14 @@
         <protected>false</protected>
         <shortDescription>MSG Error Panel Title</shortDescription>
         <value>We hit a snag</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Escalate_Owner_Only</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Only Case Owner can escalate the case</shortDescription>
+        <value>Chỉ Case Owner mới có thể escalate Case.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Escalation_Failed_Prefix</fullName>
@@ -3621,6 +3645,14 @@
         <value>TransID is null or no longer than 36 characters</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Transfer_Owner_Only</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Only Case Owner can transfer the case</shortDescription>
+        <value>Chỉ Case Owner mới có thể transfer Case.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_UNFOLLOW_INFO</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -3634,6 +3666,14 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_UPDATED_INFO_NOT_UPDATED</shortDescription>
         <value>The information has not been updated.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Update_Team_Permission_Denied</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User must be Case Owner or Case Participant to update team</shortDescription>
+        <value>Bạn không có quyền cập nhật Team. Chỉ Owner hoặc Case Participant mới được phép.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_User_Queue_Id_Invalid</fullName>
@@ -8038,20 +8078,6 @@
         <value>Không tìm thấy kết quả</value>
     </labels>
     <labels>
-        <fullName>FEC_Email_Subject_Case_Owner_Change</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Email subject when Case owner changes (Send Notification)</shortDescription>
-        <value>Case {0} đã được phân công cho bạn</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Email_Body_Case_Owner_Change</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Email body when Case owner changes. {0}=Case Number, {1}=Case link URL</shortDescription>
-        <value>Case {0} đã được phân công cho bạn. Vui lòng xem và xử lý: {1}</value>
-    </labels>
-    <labels>
         <fullName>FEC_Account_Card_Fetch_Error</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -8064,13 +8090,6 @@
         <protected>false</protected>
         <shortDescription>FEC_Case_Created_By_Label</shortDescription>
         <value>Case Created By</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Account_Card_Fetch_Error</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Account Card Fetch Error</shortDescription>
-        <value>Failed to retrieve card info for Account Number</value>
     </labels>
     <labels>
         <fullName>FEC_CREATE_CS_CASE_SUCCESSFULLY_MSG</fullName>
@@ -9517,6 +9536,22 @@
         <value>Case not found with ID: {0}</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Case_Customer_Type_Mismatch</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case FEC_Customer_Type__c does not match expected user type</shortDescription>
+        <value>Case customer type mismatch. Expected: {0}, Found: {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Contract_Or_Account_Info_Case_Mismatch</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract or account number does not match the case</shortDescription>
+        <value>Contract or Account information does not match the case</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_CancelCS_Case_Already_Closed_Or_Completed</fullName>
         <categories>API</categories>
         <language>en_US</language>
@@ -10637,7 +10672,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Template Management page title</shortDescription>
-        <value>Email Templates</value>
+        <value>Templates</value>
     </labels>
     <labels>
         <fullName>FEC_Template_Subject</fullName>
@@ -10756,7 +10791,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Required fields validation message</shortDescription>
-        <value>These required fields must be completed: Template Name</value>
+        <value>These required fields must be completed: {0}</value>
     </labels>
     <labels>
         <fullName>FEC_Template_Save_And_New</fullName>
@@ -10917,7 +10952,6 @@
         <shortDescription>On Hold</shortDescription>
         <value>On Hold</value>
     </labels>
-
     <labels>
         <fullName>FEC_On_Hold_Help_Text</fullName>
         <categories>Interaction Info</categories>
@@ -10925,5 +10959,610 @@
         <protected>false</protected>
         <shortDescription>Nếu được check, Interaction này sẽ không được tính vào Capacity...</shortDescription>
         <value>Nếu được check, Interaction này sẽ không được tính vào Capacity hiện tại của user khi thực hiện phân bổ tự động Interaction Email - Ubank.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interaction_Email_Info_Ubank_Label</fullName>
+        <categories>Interaction Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Email Info Ubank section label</shortDescription>
+        <value>Interaction Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</shortDescription>
+        <value>Phone number starting with 0 must be exactly 10 digits.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</shortDescription>
+        <value>Phone number starting with 84 must be exactly 11 digits.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</shortDescription>
+        <value>Phone number must start with 0 (10 digits) or 84 (11 digits).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PHONE_IS_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_PHONE_IS_REQUIRED_MSG</shortDescription>
+        <value>Phone number is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CHANNEL_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CHANNEL_INVALID_MSG</shortDescription>
+        <value>Channel is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CHANNEL_REQUIRED_MSG</shortDescription>
+        <value>Channel is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MISSING_REQUIRED_FIELDS_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MISSING_REQUIRED_FIELDS_MSG</shortDescription>
+        <value>Missing required fields in request</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_Channel_Disabled_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Notification Channel Disabled Message</shortDescription>
+        <value>Notification Channel is disabled. This Notification Type cannot be sent through this channel.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Body</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Body field label</shortDescription>
+        <value>Body</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Save_And_Close</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Save and Close button label</shortDescription>
+        <value>Save &amp; Close</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Channel_Validation</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Channel Validation</shortDescription>
+        <value>Channel id &quot;</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Data_Request_Master_Data</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Data Request Master Data</shortDescription>
+        <value>&quot; is not supported.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Limit_Character</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Limit Character</shortDescription>
+        <value>&quot; characters.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_TransactionId_Validation</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG TransactionId Validation</shortDescription>
+        <value>TransactionID null or exceeds maximum length of &quot;</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Incorrect_Payment_Form_Title</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Incorrect_Payment_Form_Title</shortDescription>
+        <value>Incorrect Payment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Incorrect_Contract_Number</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Incorrect_Contract_Number</shortDescription>
+        <value>Incorrect Contract Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Select_Contract_Number</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Select_Contract_Number</shortDescription>
+        <value>Select contract number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Incorrect_Contract_Hint</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Incorrect_Contract_Hint</shortDescription>
+        <value>Có thể để trống trong trường hợp không ghi số HĐ khi thanh toán (tiền treo).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Payment_Method</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Payment_Method</shortDescription>
+        <value>Payment Method</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Payment_Method_Bank_Transfer</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Payment_Method_Bank_Transfer</shortDescription>
+        <value>Bank transfer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Payment_Method_Other_Channels</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Payment_Method_Other_Channels</shortDescription>
+        <value>Other channels</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_No_Payment_History_Found</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_No_Payment_History_Found</shortDescription>
+        <value>No Payment History Found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Bill_Date</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Bill_Date</shortDescription>
+        <value>Bill Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Bill_Amount</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Bill_Amount</shortDescription>
+        <value>Bill Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Excess_Amount</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Excess_Amount</shortDescription>
+        <value>Excess Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Correct_Contract</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Correct_Contract</shortDescription>
+        <value>Correct Account/ Contract</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Adjusted_Amount</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Adjusted_Amount</shortDescription>
+        <value>Adjusted Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Remove_Row</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Remove_Row</shortDescription>
+        <value>Remove row</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Add_Item</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Add_Item</shortDescription>
+        <value>Add Item</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</shortDescription>
+        <value>Tổng số tiền điều chỉnh phải bằng số tiền thanh toán.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IncorrectPayment_LoanInfo_NotRetrieved</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IncorrectPayment_LoanInfo_NotRetrieved</shortDescription>
+        <value>Loan security information could not be retrieved.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row</shortDescription>
+        <value>No valid adjustment row with both Correct Contract and Adjusted Amount.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IncorrectPayment_Case_Not_Found</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IncorrectPayment_Case_Not_Found</shortDescription>
+        <value>Case not found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IncorrectPayment_No_Update_Case_Access</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IncorrectPayment_No_Update_Case_Access</shortDescription>
+        <value>Insufficient access to update Case.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IncorrectPayment_No_Update_Case_Fields_Access</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IncorrectPayment_No_Update_Case_Fields_Access</shortDescription>
+        <value>Insufficient access to update Case fields.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_AddIpp_Default_Failed</fullName>
+        <categories>IPP Conversion Apex</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_AddIpp_Default_Failed</shortDescription>
+        <value>Chuyển đổi thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_AddIpp_Default_Success</fullName>
+        <categories>IPP Conversion Apex</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_AddIpp_Default_Success</shortDescription>
+        <value>Thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_IPP_Retail_UI</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_IPP_Retail_UI</shortDescription>
+        <value>Giao dịch chưa sao kê##Check IPP Details##Convert IPP##IPP Conversion##Bạn sắp chuyển đổi giao dịch này. Bạn có chắc chắn muốn tiếp tục không?##Thành công##Khác##Có##Không##Khách hàng</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GET_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_REQUIRE_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_GET_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER _REQUIRE_MSG</shortDescription>
+        <value>ContractOrAccountNumber is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GET_CASE_STATUS_INCLUDE_FINISHED_REQUEST_REQUIRE_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_GET_CASE_STATUS_INCLUDE_FINISHED_REQUEST_REQUIRE_MSG`</shortDescription>
+        <value>IncludeFinishedRequest is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GET_CASE_STATUS_INVALID_CHANNEL_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_GET_CASE_STATUS_INVALID_CHANNEL_MSG</shortDescription>
+        <value>Invalid Channel:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG</shortDescription>
+        <value>NationalID is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_DATETIME_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_DATETIME_INVALID_MSG</shortDescription>
+        <value>DateTime_x is null or invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Endpoint_Null</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Endpoint Null</shortDescription>
+        <value>Endpoint is null or empty. Please check API configuration.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Create_Customer_History_Success</fullName>
+        <categories>Customer History</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Create Customer History Success</shortDescription>
+        <value>Create Customer History Successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Remove_Phone_Invalid_Format</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Remove_Phone_Invalid_Format</shortDescription>
+        <value>Số điện thoại không đúng định dạng. Vui lòng nhập 10 số bắt đầu bằng 0 hoặc 11 số bắt đầu bằng 84.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Remove_Phone_Service_Failed</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Remove_Phone_Service_Failed</shortDescription>
+        <value>Dịch vụ lỗi. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Remove_Phone_Phone_Type</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Remove_Phone_Phone_Type</shortDescription>
+        <value>Phone Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Remove_Phone_Removable</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Remove_Phone_Removable</shortDescription>
+        <value>Removable</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Remove_Phone_Section_Title</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Remove_Phone_Section_Title</shortDescription>
+        <value>Remove Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Remove_Phone_Input_Label</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Remove_Phone_Input_Label</shortDescription>
+        <value>Removed Phone Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Remove_Phone_Check_Eligibility</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Btn_Remove_Phone_Check_Eligibility</shortDescription>
+        <value>Check Eligibility</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_Conversion_Fail_Disable</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Conversion_Fail_Disable</shortDescription>
+        <value>Đã vượt quá số lần thử. Không thể chuyển đổi trả góp.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_Conversion_Fail_Retry</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Conversion_Fail_Retry</shortDescription>
+        <value>Chuyển đổi thất bại. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_Conversion_Success</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Conversion_Success</shortDescription>
+        <value>Chuyển đổi trả góp thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_No_Eligible_Transactions</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_No_Eligible_Transactions</shortDescription>
+        <value>Không có giao dịch hợp lệ để chuyển đổi trả góp.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_GetCSAttached_FileID_Invalid</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Get CS Attached File invalid FileID (ContentDocument)</shortDescription>
+        <value>FileID is invalid. Expected ContentDocument record Id.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_GetCSAttached_File_No_Content</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Get CS Attached File no ContentVersion</shortDescription>
+        <value>No file content found for FileID: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_GetCSAttached_File_Not_Linked_To_Case</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Get CS Attached File not linked to Case</shortDescription>
+        <value>File is not attached to this Case or FileID is invalid.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ACTION_CANCEL</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_COMPOSE_TEXT_FIELD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_COMPOSE_TEXT_FIELD</shortDescription>
+        <value>Compose text</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_CREATED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_CREATED_MSG</shortDescription>
+        <value>Note created</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_DELETED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_DELETED_MSG</shortDescription>
+        <value>Note deleted</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_DELETE_BTN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_DELETE_BTN</shortDescription>
+        <value>Delete File?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_DELETE_MODAL_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_DELETE_MODAL_MSG</shortDescription>
+        <value>Deleting a file also removes it from any records or posts it&apos;s attached to.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_EDIT_NOTE_MODAL_TITLE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_EDIT_NOTE_MODAL_TITLE</shortDescription>
+        <value>Edit Note</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_NEW_NOTE_MODAL_TITLE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_NEW_NOTE_MODAL_TITLE</shortDescription>
+        <value>New Note</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_REMOVED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_REMOVED_MSG</shortDescription>
+        <value>Note removed from record</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_REMOVE_BTN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_REMOVE_BTN</shortDescription>
+        <value>Remove file?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_REMOVE_MODAL_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_REMOVE_MODAL_MSG</shortDescription>
+        <value>The file will be removed from the record, but not deleted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN</shortDescription>
+        <value>Created By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN</shortDescription>
+        <value>Last Modified</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN</shortDescription>
+        <value>Text Preview</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN</shortDescription>
+        <value>Title</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_UPDATED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_UPDATED_MSG</shortDescription>
+        <value>Note updated</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Content_History_Tab</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Content History tab label</shortDescription>
+        <value>Content History Tracking</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_History_Tab</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Template History tab label</shortDescription>
+        <value>Template History Tracking</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Alt_Remove_From_Record</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Alt_Remove_From_Record</shortDescription>
+        <value>Remove from Record</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Alt_View</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Alt_View</shortDescription>
+        <value>View</value>
     </labels>
 </CustomLabels>

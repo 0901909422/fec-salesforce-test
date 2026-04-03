@@ -146,13 +146,13 @@ public without sharing class FEC_ApplicationsListController {
                 }
 
                 Map<String, String> cityMap = new Map<String, String>();
-                for (FEC_City__c c : [SELECT Name, FEC_Code__c FROM FEC_City__c]) {
-                    cityMap.put(c.FEC_Code__c, c.Name);
+                for (FEC_Province__c c : [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_Province__c]) {
+                    cityMap.put(c.FEC_Code__c, c.FEC_Name_VN__c);
                 }
 
                 Map<String, String> districtMap = new Map<String, String>();
-                for (FEC_District__c d : [SELECT Name, FEC_Code__c FROM FEC_District__c]) {
-                    districtMap.put(d.FEC_Code__c, d.Name);
+                for (FEC_District__c d : [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_District__c]) {
+                    districtMap.put(d.FEC_Code__c, d.FEC_Name_VN__c);
                 }
 
             for (FEC_GetApplicationsList.ApplicationInfo st: statusRes.Applications) {
