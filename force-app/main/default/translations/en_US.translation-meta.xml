@@ -790,7 +790,7 @@
     </customLabels>
     <customLabels>
         <name>FEC_Sub_Decision_Label</name>
-        <label>Quyết định phụ</label>
+        <label>Sub Decision</label>
     </customLabels>
     <customLabels>
         <name>FEC_Choose_Sub_Decision_Label</name>
