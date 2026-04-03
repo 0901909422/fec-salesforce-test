@@ -87,11 +87,10 @@ public without sharing class FEC_CaseTriggerHandler {
             handleAutoFollowUpOnInsert(newCases);
         } finally {
             isExecuting = false;
+            FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
+            syncGlobalSearch(newCases, null);
+            FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
         }
-        // Sau finally: tránh isExecuting chặn trigger lồng; đồng bộ Pending khi đổi Owner (case đã submit)
-        FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
-        syncGlobalSearch(newCases, null);
-        FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
     }
 
     /**
@@ -104,6 +103,9 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/02/02
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
+        if (FEC_CaseHandlingUserSyncService.inSyncUpdate) {
+            return;
+        }
         // Tránh recursive trigger
         if (isExecuting) {
             return;
@@ -117,11 +119,12 @@ public without sharing class FEC_CaseTriggerHandler {
             FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(newCases, oldMap);
         } finally {
             isExecuting = false;
+            // Sau owner/history và sau khi nhả cờ: đồng bộ phụ; trong finally để vẫn chạy khi try throw
+            FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, oldMap);
+            FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
+            syncGlobalSearch(newCases, oldMap);
+            FEC_CaseHandlingUserSyncService.syncAfterCaseUpdate(newCases);
         }
-        // Sau owner/history: đồng bộ Status Pending khi đổi Owner (case đã submit)
-        FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, oldMap);
-        FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
-        syncGlobalSearch(newCases, oldMap);
     }
 
     private void syncGlobalSearch(List<Case> newCases, Map<Id, Case> oldMap) {
