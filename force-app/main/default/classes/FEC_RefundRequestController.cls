@@ -241,7 +241,7 @@ public with sharing class FEC_RefundRequestController {
                 res.errorMessage = System.Label.FEC_MSG_Refund_Request_Receipt_Line_Incomplete;
                 return res;
             }
-            Date rd = parseIsoDate(line.receiptDateIso);
+            Date rd = FEC_CommonUltils.parseDate(line.receiptDateIso);
             if (rd == null) {
                 res.errorMessage = String.format(System.Label.FEC_MSG_Param_Date_Format_Invalid, new List<String>{ 'Receipt date', String.isNotBlank(line.receiptDateIso) ? line.receiptDateIso : '' });
                 return res;
@@ -329,17 +329,6 @@ public with sharing class FEC_RefundRequestController {
             res.errorMessage = System.Label.FEC_Toast_Save_Error_Message;
         }
         return res;
-    }
-
-    private static Date parseIsoDate(String iso) {
-        if (String.isBlank(iso)) {
-            return null;
-        }
-        try {
-            return Date.valueOf(iso);
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     private static List<PicklistOptionDTO> getPicklistOptions(String objectApiName, String fieldApiName) {
