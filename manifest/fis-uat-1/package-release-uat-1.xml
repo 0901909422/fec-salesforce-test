@@ -2007,10 +2007,12 @@
 		<members>ContentVersion.FEC_Stage_ID__c</members>
         <name>CustomField</name>
     </types>
-	<!--<types>
-		<members>FEC_CaseOwnerChangeNotification</members>
+	<types>
+		<!--<members>FEC_CaseOwnerChangeNotification</members>-->
+		<members>FEC_CustomerIntegrationService</members>
+        <members>FEC_FullCustomerIntegrationJob</members>
         <name>ApexClass</name>
-    </types>-->
+    </types>
     <types>
 		<!--<members>FEC_Email_Subject_Case_Owner_Change</members>
 		<members>FEC_Email_Body_Case_Owner_Change</members>-->

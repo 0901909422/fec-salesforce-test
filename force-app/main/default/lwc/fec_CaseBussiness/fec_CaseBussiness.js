@@ -186,6 +186,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
   fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
+  fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
 };
 
 export default class Fec_CaseBussiness extends LightningElement {
@@ -820,7 +821,9 @@ export default class Fec_CaseBussiness extends LightningElement {
           JSON.stringify(err),
         );
       })
-      .finally(() => { });
+      .finally(() => {
+        this.businessLoaded = true;
+      });
   }
 
   _applyInternalFieldVisibility() {
@@ -1395,6 +1398,9 @@ export default class Fec_CaseBussiness extends LightningElement {
   handleRun() {
     this.isLoaded = false;
     this.isModalOpen = false;
+    this.isProcessActionSuccessed = false;
+    this.isProcessActionFailed = false;
+    this.processActionMsg = null;
 
     let params;
 
@@ -1449,6 +1455,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (isSuccess) {
           this.processActionMsg = FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS;
           this.isProcessActionSuccessed = true;
+          this.isProcessActionFailed = false;
           this.actionValue = ACTION_RESOLVE;
 
           let routeToEle = this.template.querySelector(
@@ -1460,6 +1467,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           }
         } else {
           this.processActionMsg = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
+          this.isProcessActionSuccessed = false;
           this.isProcessActionFailed = true;
         }
 
@@ -1478,6 +1486,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         );
 
         this.isProcessActionFailed = true;
+        this.isProcessActionSuccessed = false;
         this.processActionMsg = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
       })
       .finally(() => {

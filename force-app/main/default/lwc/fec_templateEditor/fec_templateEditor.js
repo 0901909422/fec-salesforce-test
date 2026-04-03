@@ -51,6 +51,7 @@ import attachmentLabel                from '@salesforce/label/c.FEC_Template_Att
 import backToListLabel                from '@salesforce/label/c.FEC_Template_Back_To_List';
 import saveAndCloseLabel              from '@salesforce/label/c.FEC_Template_Save_And_Close';
 import bodyLabel                      from '@salesforce/label/c.FEC_Template_Body';
+import previewLabel                   from '@salesforce/label/c.FEC_Action_Preview';
 
 /* ── Constants & Utils ── */
 import { MAILBOX_OPTIONS } from 'c/fec_TemplateConstants';
@@ -107,6 +108,9 @@ export default class Fec_templateEditor extends LightningElement {
     /* Merge-field picker */
     @track isPickerOpen = false;
 
+    /* Preview modal */
+    @track isPreviewOpen = false;
+
     /* Cursor position for merge field insert */
     _savedRange = null;
 
@@ -121,6 +125,9 @@ export default class Fec_templateEditor extends LightningElement {
 
     /* Letterhead options – placeholder for future EnhancedLetterhead query */
     @track _letterheadOptions = [];
+
+    /** Raw letterhead records keyed by Id for header/footer lookup */
+    _letterheadMap = {};
 
     /* ═══════════════════════════════════════════ */
     /*  LABELS                                     */
@@ -149,7 +156,8 @@ export default class Fec_templateEditor extends LightningElement {
         attachmentLabel,
         backToListLabel,
         saveAndCloseLabel,
-        bodyLabel
+        bodyLabel,
+        previewLabel
     };
 
     /* ═══════════════════════════════════════════ */
@@ -164,7 +172,7 @@ export default class Fec_templateEditor extends LightningElement {
 
     get isNewMode() { return !this._recordId; }
 
-    get mergeFieldLabel() { return '{ }'; }
+    get mergeFieldLabel() { return 'Merge Fields { }'; }
 
     /* ── Wire: load all folders for the dropdown ── */
     connectedCallback() {
@@ -194,12 +202,19 @@ export default class Fec_templateEditor extends LightningElement {
     async _loadLetterheadOptions() {
         try {
             const data = await getAllLetterheads();
-            this._letterheadOptions = (data || [])
-                .filter(lh => lh.Name)
-                .map(lh => ({
-                    label: lh.Name,
-                    value: lh.Id
-                }));
+            const filtered = (data || []).filter(lh => lh.Name);
+            this._letterheadOptions = filtered.map(lh => ({
+                label: lh.Name,
+                value: lh.Id
+            }));
+            // Build a map for header/footer lookup in Preview
+            this._letterheadMap = {};
+            filtered.forEach(lh => {
+                this._letterheadMap[lh.Id] = {
+                    headerHtml: lh.FEC_Header__c || '',
+                    footerHtml: lh.FEC_Footer__c || ''
+                };
+            });
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error('[templateEditor] Error loading letterheads:', error);
@@ -420,6 +435,30 @@ export default class Fec_templateEditor extends LightningElement {
     }
     handleClosePicker() {
         this.isPickerOpen = false;
+    }
+
+    /* ═══════════════════════════════════════════ */
+    /*  PREVIEW MODAL                              */
+    /* ═══════════════════════════════════════════ */
+
+    /** Letterhead header HTML for the currently selected letterhead (or empty) */
+    get selectedLetterheadHeaderHtml() {
+        const lh = this._letterheadMap[this.enhancedLetterheadId];
+        return lh ? lh.headerHtml : '';
+    }
+
+    /** Letterhead footer HTML for the currently selected letterhead (or empty) */
+    get selectedLetterheadFooterHtml() {
+        const lh = this._letterheadMap[this.enhancedLetterheadId];
+        return lh ? lh.footerHtml : '';
+    }
+
+    handlePreview() {
+        this.isPreviewOpen = true;
+    }
+
+    handleClosePreview() {
+        this.isPreviewOpen = false;
     }
 
     /* ═══════════════════════════════════════════ */

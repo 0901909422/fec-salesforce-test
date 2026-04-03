@@ -59,6 +59,9 @@
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_CaseManagerListService</members>
 		<members>FEC_GetStatus</members>
+		<members>FEC_CaseEditNOCController</members>
+		<members>FEC_CustomerIntegrationService</members>
+        <members>FEC_FullCustomerIntegrationJob</members>
         <name>ApexClass</name>
     </types>
     <types>

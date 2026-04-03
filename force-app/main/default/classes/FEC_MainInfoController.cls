@@ -240,15 +240,15 @@ public without sharing class FEC_MainInfoController {
             );
 
         if (res == null || res.Addresses == null) return result;
-        List<FEC_Province__c> cityList = [SELECT Name, FEC_Code__c FROM FEC_Province__c];
+        List<FEC_Province__c> cityList = [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_Province__c];
         Map<String, String> cityMap = new Map<String, String>();
         for (FEC_Province__c c : cityList) {
-            cityMap.put(c.FEC_Code__c, c.Name);
+            cityMap.put(c.FEC_Code__c, c.FEC_Name_VN__c);
         }
-        List<FEC_District__c> districtList = [SELECT Name, FEC_Code__c FROM FEC_District__c];
+        List<FEC_District__c> districtList = [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_District__c];
         Map<String, String> districtMap = new Map<String, String>();
         for (FEC_District__c d : districtList) {
-            districtMap.put(d.FEC_Code__c, d.Name);
+            districtMap.put(d.FEC_Code__c, d.FEC_Name_VN__c);
         }
 
         Map<String, FEC_Address_Info__c> existingMap = new Map<String, FEC_Address_Info__c>();

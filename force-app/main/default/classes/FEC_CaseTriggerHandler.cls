@@ -83,19 +83,13 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/01/16 Toannd61
      */
     private void onAfterInsert(List<Case> newCases) {
-        
         isExecuting = true;
-        
-        try {
-            handleAutoFollowUpOnInsert(newCases);
-            updateEmail2CaseFieldsOnInsert(newCases);
-        } finally {
-            isExecuting = false;
-        }
-        // Sau finally: tránh isExecuting chặn trigger lồng; đồng bộ Status từ Route to mới nhất
-        FEC_CasePendingStatusService.syncPendingStatusFromLatestRouteTo(newCases, null);
+        handleAutoFollowUpOnInsert(newCases);
+        updateEmail2CaseFieldsOnInsert(newCases);
+        FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
         syncGlobalSearch(newCases, null);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
+        isExecuting = false;
         redirectEmailReplyToCustomerCase(newCases);
     }
 
@@ -109,20 +103,14 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/02/02
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
-        
         isExecuting = true;
-        
-        try {
-            handleFollowUpOnResolved(newCases, oldMap);
-            handleAutoFollowUpOnUpdate(newCases, oldMap);
-            FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(newCases, oldMap);
-        } finally {
-            isExecuting = false;
-        }
-        // Sau owner/history: re-query DB trong service để Status khớp Route to mới nhất
-        FEC_CasePendingStatusService.syncPendingStatusFromLatestRouteTo(newCases, oldMap);
+        handleFollowUpOnResolved(newCases, oldMap);
+        handleAutoFollowUpOnUpdate(newCases, oldMap);
+        FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(newCases, oldMap);
+        FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, oldMap);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
         syncGlobalSearch(newCases, oldMap);
+        isExecuting = false;
     }
 
     private void syncGlobalSearch(List<Case> newCases, Map<Id, Case> oldMap) {
@@ -429,7 +417,7 @@ public without sharing class FEC_CaseTriggerHandler {
         List<Id> caseIdsToUpdate = new List<Id>();
 
         for (Case c : newCases) {
-            if ((c.Origin != null && c.Origin.startsWith('Email')) 
+            if ((c.Origin != null && c.Origin.startsWith('Email'))
                 && c.RecordTypeId == interactionRecordTypeId) {
                 caseIdsToUpdate.add(c.Id);
             }
@@ -458,7 +446,7 @@ public without sharing class FEC_CaseTriggerHandler {
                     c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
                     c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
                     c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
-                } 
+                }
                 // Phân loại cho Internal -> Channel Internal
                 else if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_INTERNAL) {
                     c.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INTERNAL;
@@ -485,7 +473,7 @@ public without sharing class FEC_CaseTriggerHandler {
         for (EmailMessage em : [SELECT Id, ParentId, FromAddress, ToAddress, CreatedDate
                                 FROM EmailMessage
                                 WHERE ParentId IN :caseIds
-                                AND FromAddress != NULL 
+                                AND FromAddress != NULL
                                 ORDER BY CreatedDate ASC]) {
             if (!caseIdToEmailMap.containsKey(em.ParentId)) {
                 caseIdToEmailMap.put(em.ParentId, em);
@@ -503,7 +491,7 @@ public without sharing class FEC_CaseTriggerHandler {
 
         for (Case c : casesToDml) {
             EmailMessage relatedEmail = caseIdToEmailMap.get(c.Id);
-            
+
             if (relatedEmail != null) {
                 c.FEC_Interaction_Email__c = relatedEmail.FromAddress;
             }
