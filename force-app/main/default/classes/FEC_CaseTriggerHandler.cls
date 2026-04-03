@@ -76,7 +76,7 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/01/16 Toannd61
      */
     private void onAfterInsert(List<Case> newCases) {
-        if (FEC_CaseHandlingUserSyncService.inSyncUpdate || isExecuting) {
+        if (isExecuting) {
             return;
         }
 
@@ -98,7 +98,7 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/02/02
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
-        if (FEC_CaseHandlingUserSyncService.inSyncUpdate || isExecuting) {
+        if (isExecuting) {
             return;
         }
 
