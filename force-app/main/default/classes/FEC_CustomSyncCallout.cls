@@ -18,8 +18,7 @@ public with sharing class FEC_CustomSyncCallout {
             
             log.FEC_Quantity_Call__c = (log.FEC_Quantity_Call__c ?? 0) + 1;
             log.FEC_Endpoint__c = apiSetting?.Endpoint__c + apiConfig?.FEC_Endpoint__c;
-            log.FEC_Method__c = 'POST';
-            log.FEC_Request_String__c = jsonBody;
+            log.FEC_Method__c = 'POST'; 
 
             HttpRequest req = new HttpRequest();
             req.setEndpoint(apiSetting?.Endpoint__c + apiConfig?.FEC_Endpoint__c);
