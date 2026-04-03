@@ -81,10 +81,6 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/01/16 Toannd61
      */
     private void onAfterInsert(List<Case> newCases) {
-        if (isExecuting) {
-            return;
-        }
-
         isExecuting = true;
         handleAutoFollowUpOnInsert(newCases);
         updateEmail2CaseFieldsOnInsert(newCases);
@@ -104,10 +100,6 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/02/02
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
-        if (isExecuting) {
-            return;
-        }
-
         isExecuting = true;
         handleFollowUpOnResolved(newCases, oldMap);
         handleAutoFollowUpOnUpdate(newCases, oldMap);
