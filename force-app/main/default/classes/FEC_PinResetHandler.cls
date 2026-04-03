@@ -60,9 +60,9 @@ public without sharing class FEC_PinResetHandler {
             String transactionId = String.valueOf(UUID.randomUUID());
             FEC_PINReissueServiceCallout.PINResponse response = FEC_PINReissueServiceCallout.callPINReissue(nationalId,transactionId, mobile);
             
-            if (response.isSuccess && selectedCase.FEC_Process_Action_Count__c > 0) {
+            if (response.RespCode != '1' && selectedCase.FEC_Process_Action_Count__c > 0) {
                 selectedCase.FEC_Process_Action_Count__c -= 1;
-            } else if (!response.isSuccess) {
+            } else if (response.RespCode == '1') {
                 selectedCase.FEC_Process_Action_Count__c =
                     (selectedCase.FEC_Process_Action_Count__c == null ? 0 :
                     selectedCase.FEC_Process_Action_Count__c) + 1;

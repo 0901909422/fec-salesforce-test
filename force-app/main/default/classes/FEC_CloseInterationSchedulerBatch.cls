@@ -14,22 +14,24 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
     
     Map<String, Id> queueDevNameToId = new Map<String, Id>();
     
-    for (Group g : [
-          SELECT Id, DeveloperName
-          FROM Group
-          WHERE Type = 'Queue'
-          AND DeveloperName IN (
-              'FEC_Ubank_Email',
-              'FEC_CSM_Mailbox',
-              'FEC_Support_Mailbox',
-              'FEC_Care_Mailbox',
-              'FEC_Ecom_Mailbox',
-              'FEC_Office_Based_Mailbox',
-              'FEC_Day_2_Check',
-              'FEC_OM_Mailbox',
-              'FEC_Quality_Control_Mailbox'
-          )
-    ]) {
+    List<Group> groups = [
+    SELECT Id, DeveloperName
+    FROM Group
+    WHERE Type = 'Queue'
+    AND DeveloperName IN (
+        'FEC_Ubank_Email',
+        'FEC_CSM_Mailbox',
+        'FEC_Support_Mailbox',
+        'FEC_Care_Mailbox',
+        'FEC_Ecom_Mailbox',
+        'FEC_Office_Based_Mailbox',
+        'FEC_Day_2_Check',
+        'FEC_OM_Mailbox',
+        'FEC_Quality_Control_Mailbox'
+      )
+    ];
+    
+    for (Group g : groups) {
       queueDevNameToId.put(g.DeveloperName, g.Id);
     }
     // Luồng 4 - Email
@@ -102,20 +104,18 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
       'AND Status IN :statuslst ' +
       'AND FEC_Interaction_Status__c IN :interationStatuslst ' +
       
-    'AND NOT ( ' +
-      'FEC_Channel__c = \'Email\' ' +
-      'AND IsClosed = FALSE ' +
-      'AND FEC_Send_To__c = \'dichvukhachhang@ubank.vn\' ' +
-      'AND OwnerId IN :userUBankIds ' +
-      ') ' +
+    'AND (FEC_Channel__c != \'Email\' ' +
+      '     OR IsClosed = TRUE ' +
+      '     OR FEC_Send_To__c != \'dichvukhachhang@ubank.vn\' ' +
+      '     OR OwnerId NOT IN :userUBankIds) ' +
       
-    'AND NOT ( ' +
-      'FEC_Channel__c = \'Internal\' ' +
-      'AND FEC_Interaction_Subchannel__c = \'Internal Email\' ' +
-      'AND IsClosed = FALSE ' +
-      'AND OwnerId IN :userInternalMailIds ' +
-      ')';
+    'AND (FEC_Channel__c != \'Internal\' ' +
+      '     OR FEC_Interaction_Subchannel__c != \'Internal Email\' ' +
+      '     OR IsClosed = TRUE ' +
+      '     OR OwnerId NOT IN :userInternalMailIds)';
     
+    System.debug('### Batch Query: ');
+    System.debug(query);
     return Database.getQueryLocator(query);
   }
   

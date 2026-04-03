@@ -161,7 +161,7 @@ public without sharing class FEC_CreateCaseHandler {
         interactionCase.FEC_Interaction_View_Mode__c  = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
         interactionCase.FEC_Is_MyCaseAPI_Interaction__c = true;
         interactionCase.FEC_Outcome_Code__c = FEC_ConstantCommon.OUTCOME_CODE_COMPLETED;
-            // ---------------------------
+        // ---------------------------
         // CUSTOMER INFO
         // ---------------------------
         interactionCase.FEC_Phone_Number__c = dto.phoneNumber;
@@ -330,27 +330,86 @@ public without sharing class FEC_CreateCaseHandler {
         FEC_CustomerCaseDTO dto,
     Id interactionCaseId
     ) {
-        Id customerRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
-            .get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+        // ===== RECORD TYPE =====
+        Id customerRecordTypeId = Schema.SObjectType.Case
+            .getRecordTypeInfosByDeveloperName()
+            .get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)
+            .getRecordTypeId();
+        
+        // ===== QUEUE MAP =====
+        Map<String, Id> queueMap = getQueueMap();
+        Id queueId;
+        
+        // ===== CATEGORY LOGIC =====
+        String categoryName = getCategoryName(dto.categoryId);
+        System.debug('categoryName: ' + categoryName);
+        
+        if (categoryName == FEC_ConstantCommon.FEC_CATEGORY_REQUEST) {
+            queueId = queueMap.get(FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME);
+            
+        } else if (categoryName == FEC_ConstantCommon.FEC_CATEGORY_COMPLAINT || categoryName == FEC_ConstantCommon.FEC_CATEGORY_FEEDBACK) {
+            queueId = queueMap.get(FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME);
+        }
+        
+        // ===== CREATE CASE =====
         Case c = new Case();
         c.RecordTypeId = customerRecordTypeId;
         
-        c.FEC_Customer_Name__c = dto.customerName;
-        c.FEC_Phone_Number__c = dto.phoneNumber;
-        c.FEC_Customer_Type__c = dto.userType;
+        c.FEC_Customer_Name__c        = dto.customerName;
+        c.FEC_Phone_Number__c        = dto.phoneNumber;
+        c.FEC_Customer_Type__c       = dto.userType;
         c.FEC_Account_or_Contract__c = dto.customerHistoryId;
-        c.FEC_Business_Process__c = dto.businessProcessId;
-        c.FEC_Product_Type__c = dto.productTypeId;
-        c.FEC_Category__c = dto.categoryId;
-        c.FEC_SubCategory__c = dto.subCategoryId;
-        c.FEC_SubCode__c = dto.subCodeId;
-        c.FEC_Remarks__c = dto.remarks;
+        c.FEC_Business_Process__c    = dto.businessProcessId;
+        c.FEC_Product_Type__c        = dto.productTypeId;
+        c.FEC_Category__c            = dto.categoryId;
+        c.FEC_SubCategory__c         = dto.subCategoryId;
+        c.FEC_SubCode__c             = dto.subCodeId;
+        c.FEC_Remarks__c             = dto.remarks;
         
+        c.OwnerId = (queueId != null) ? queueId : UserInfo.getUserId();
         c.FEC_Interaction__c = interactionCaseId;
         
         insert c;
         return c;
     }
+    
+    private static string getCategoryName(String categoryId) {
+        try {
+            FEC_Category__c  category = [SELECT Id, Name FROM FEC_Category__c WHERE Id = :categoryId LIMIT 1];
+            return category.Name;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+    
+    private static Map<String, Id> getQueueMap() {
+        
+        Set<String> queueNames = new Set<String>{
+            'FEC_DQ_CS_Support',
+            'FEC_DQ_CS_Customer_Care'
+        };
+        
+        try {
+            List<Group> groups = [
+            SELECT Id, DeveloperName
+            FROM Group
+            WHERE Type = 'Queue'
+            AND DeveloperName IN :queueNames
+        ];
+            
+            Map<String, Id> queueMap = new Map<String, Id>();
+            
+            for (Group g : groups) {
+                queueMap.put(g.DeveloperName, g.Id);
+            }
+            
+            return queueMap;
+            
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+    
     
     // Create case with no recordId in Lisview
     @AuraEnabled
