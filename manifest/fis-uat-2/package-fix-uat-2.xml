@@ -57,6 +57,7 @@
 		<members>FEC_CaseRelatedNoteHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_PinResetHandler</members>
+		<members>FEC_RefundRequestController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -97,6 +98,7 @@
 		<members>fec_PinResetView</members>
 		<members>fec_CaseNote</members>
 		<members>fec_NewNoteModal</members>
+		<members>fec_RefundRequestForm</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
