@@ -44,12 +44,7 @@ public without sharing class FEC_FollowUpController {
             String currentUserId = UserInfo.getUserId();
             
             // Query Case
-            Case caseRecord = [
-                SELECT Id, OwnerId, CreatedById, Status, FEC_Is_Submited__c
-                FROM Case
-                WHERE Id = :caseId
-                LIMIT 1
-            ];
+            Case caseRecord = [SELECT Id, OwnerId, CreatedById, Status FROM Case WHERE Id = :caseId LIMIT 1];
             
             // Query Active Watcher
             List<FEC_Watcher__c> activeWatchers = [
@@ -65,8 +60,8 @@ public without sharing class FEC_FollowUpController {
             
             if (isFollowing) {
                 followType = convertToFrontendValue(activeWatchers[0].FEC_Follow_up_Type__c);
-                // CHO PHÉP unfollow với MỌI follow type (trừ khi Case đã submit và chưa Resolved — khớp FEC_Show_Unfollow__c)
-                canUnfollow = !isUnfollowBlockedWhileCaseOpenSubmitted(caseRecord);
+                // CHO PHÉP unfollow với MỌI follow type
+                canUnfollow = true;
             } else {
                 // Lấy followType cũ nếu có (để pre-select trong UI)
                 List<FEC_Watcher__c> inactiveWatchers = [
@@ -259,16 +254,6 @@ public without sharing class FEC_FollowUpController {
     public static String unfollowCase(String caseId) {
         try {
             String currentUserId = UserInfo.getUserId();
-
-            Case caseRow = [
-                SELECT Id, Status, FEC_Is_Submited__c
-                FROM Case
-                WHERE Id = :caseId
-                LIMIT 1
-            ];
-            if (isUnfollowBlockedWhileCaseOpenSubmitted(caseRow)) {
-                throw new AuraHandledException(System.Label.FEC_MSG_FollowUp_Unfollow_Not_Allowed_After_Submit);
-            }
             
             // Find watcher
             List<FEC_Watcher__c> watchers = [
@@ -515,16 +500,6 @@ public without sharing class FEC_FollowUpController {
     }
     
     // ==================== PRIVATE HELPER METHODS ====================
-
-    /**
-     * Khớp điều kiện ẩn nút Unfollow trên page (FEC_Show_Unfollow__c): case chưa Resolved và đã submit.
-     */
-    private static Boolean isUnfollowBlockedWhileCaseOpenSubmitted(Case c) {
-        if (c == null) {
-            return false;
-        }
-        return !FEC_CommonUltils.isCaseStatusResolved(c.Status) && c.FEC_Is_Submited__c == true;
-    }
     
     private static String convertToPicklistValue(String frontendValue) {
         if (FEC_ConstantCommon.FOLLOW_UP_FRONTEND_UNFOLLOW.equalsIgnoreCase(frontendValue)) {
