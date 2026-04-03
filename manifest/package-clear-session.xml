@@ -16,7 +16,6 @@
     </types>
     <types>
         <members>FEC_Clear_Session__c</members>
-        <members>Clear_Session_New</members>
         <name>CustomTab</name>
     </types>
     <types>
