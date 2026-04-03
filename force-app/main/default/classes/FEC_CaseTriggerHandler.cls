@@ -16,6 +16,10 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/16 - Added onAfterInsert handler for auto follow-up
      */
     public static void run() {
+        if (isExecuting) {
+            return;
+        }
+
         FEC_CaseTriggerHandler handler = new FEC_CaseTriggerHandler();
         
         if (Trigger.isBefore && Trigger.isInsert) {
@@ -76,10 +80,6 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/01/16 Toannd61
      */
     private void onAfterInsert(List<Case> newCases) {
-        if (isExecuting) {
-            return;
-        }
-
         isExecuting = true;
         handleAutoFollowUpOnInsert(newCases);
         FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
@@ -98,10 +98,6 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/02/02
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
-        if (isExecuting) {
-            return;
-        }
-
         isExecuting = true;
         handleFollowUpOnResolved(newCases, oldMap);
         handleAutoFollowUpOnUpdate(newCases, oldMap);
