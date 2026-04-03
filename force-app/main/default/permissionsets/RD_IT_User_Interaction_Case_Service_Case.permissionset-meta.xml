@@ -1614,6 +1614,10 @@
         <visible>true</visible>
     </recordTypeVisibilities>
     <tabSettings>
+        <tab>FEC_Clear_Session__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>Create_Case</tab>
         <visibility>Visible</visibility>
     </tabSettings>

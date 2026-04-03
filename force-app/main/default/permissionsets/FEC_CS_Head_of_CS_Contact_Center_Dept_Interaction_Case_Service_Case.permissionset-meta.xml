@@ -1770,6 +1770,10 @@
         <visible>true</visible>
     </recordTypeVisibilities>
     <tabSettings>
+        <tab>FEC_Clear_Session__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Customer_Search</tab>
         <visibility>Visible</visibility>
     </tabSettings>
