@@ -1343,6 +1343,8 @@
         <members>FEC_RELATED_NOTES_UPDATED_MSG</members>
 		<members>FEC_Alt_View</members>
         <members>FEC_Alt_Remove_From_Record</members>
+		<members>FEC_Select_Follow_Up_User_Type_Resolved</members>
+		<members>FEC_Select_Follow_Up_User_Type_Unfollow</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1352,6 +1354,7 @@
 		<members>fec_templatePreviewModal</members>
 		<members>fec_CaseNote</members>
 		<members>fec_NewNoteModal</members>
+		<members>fec_CaseFollowHeadlessAction</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
