@@ -405,6 +405,11 @@
 		<members>Case.FEC_Card_Block_Reason__c</members>
         <members>FEC_Notification__c.FEC_Notification_Template__c</members>
         <members>Case.FEC_Is_MyCaseAPI_Interaction__c</members>
+		<members>FEC_Address_Info__c.FEC_Country_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_District_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_Full_Address__c</members>
+        <members>FEC_Address_Info__c.FEC_Province_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_Ward_Text__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
