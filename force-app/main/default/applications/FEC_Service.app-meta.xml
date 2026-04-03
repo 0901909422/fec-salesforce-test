@@ -613,13 +613,9 @@
     <tabs>FEC_Enhanced_Letterhead__c</tabs>
     <tabs>Templates</tabs>
     <tabs>FEC_Clear_Session__c</tabs>
-    <tabs>Clear_Session_New</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
-        <mappings>
-            <tab>Clear_Session_New</tab>
-        </mappings>
         <mappings>
             <tab>FEC_Clear_Session__c</tab>
         </mappings>
