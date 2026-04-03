@@ -77,7 +77,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_EXTERNAL_NAME = 'External';
     public static final String CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME = 'Other';
     public static final String CHANNEL_CHAT = 'Chat';
-    
+
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
     public static final String PATTERN_APPLICATION_ID = '^(\\d{6}|\\d{8}|\\d{9})$';
@@ -119,6 +119,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_CORE = 'CORE';
     public static final String REQUESTOR_MOBILE = 'MOBILE';
     public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
+    public static final String REQUESTOR_VTIGER_CL = 'VTIGER_CL';
+    public static final String REQUESTOR_VTIGER_PL = 'VTIGER_PL';
     
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
@@ -187,6 +189,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
     public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
     
+    public static final String FEC_CATEGORY_REQUEST = 'Request';
+    public static final String FEC_CATEGORY_FEEDBACK = 'Feedback';
     public static final String FEC_CATEGORY_COMPLAINT = 'Complaint';
     public static final String FEC_COMPLAIN_TYPE_NORMAL = 'Normal';
     public static final String FEC_COMPLAIN_TYPE_URGENT = 'Urgent';
@@ -212,10 +216,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRIMARY_PHONE = 'Primary Phone';
     public static final String SUBCHANNEL_INCOMING_EMAIL = 'Incoming Email';
     public static final String CASE_ORIGIN_EMAIL2CASE = 'Email2Case';
-    public static final String CASE_ORIGIN_EMAIL_UBANK = 'Email-Ubank';
-    public static final String CASE_ORIGIN_EMAIL_FECREDIT = 'Email-FE';
-     public static final string CASE_ORIGIN_EMAIL_INTERNAL ='Email-Internal';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
+    public static final String CASE_ORIGIN_EMAIL_UBANK = 'Email-Ubank';
+    public static final String CASE_ORIGIN_EMAIL_INTERNAL = 'Email-Internal';
+    public static final string CASE_ORIGIN_EMAIL_FE ='Email-FE';
 
     public static final String KEY_VALID_CHANNELS_WED = 'WED';
     public static final String KEY_VALID_CHANNELS_MOBILE = 'MOBILE';
@@ -273,7 +277,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUEST_EXISTING_USER_TYPE  = 'EXISTING';
     public static final String REQUEST_NON_EXISTING_USER_TYPE  = 'NON-EXISTING';
     public static final String REQUEST_PROSPECT_USER_TYPE  = 'PROSPECT';
-
+    
     public static final String AUTO_METHOD = 'Auto';
 
     // Call api FEC_CancelCSCaseService
@@ -332,7 +336,9 @@ public with sharing class FEC_ConstantCommon {
         'INTERNAL',
         'ZALO'
     };
-
+    
+    public static final String API_CONFIG_NAME = 'FEC_Transfer_Call';
+    
     public static final String QUEUE_UBANK_EMAIL_NAME = 'FEC_Ubank_Email';
     public static final String QUEUE_CSM_MAILBOX_NAME = 'FEC_CSM_Mailbox';
     public static final String QUEUE_SUPPORT_MAILBOX_NAME = 'FEC_Support_Mailbox';
@@ -342,4 +348,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String QUEUE_DAY_2_CHECK_NAME = 'FEC_Day_2_Check';
     public static final String QUEUE_OM_MAILBOX_NAME = 'FEC_OM_Mailbox';
     public static final String QUEUE_QUALITY_CONTROL_MAILBOX_NAME = 'FEC_Quality_Control_Mailbox';
+    public static final String QUEUE_DQ_CS_SUPPORT_NAME = 'FEC_DQ_CS_Support';
+    public static final String QUEUE_DQ_CS_CUSTOMER_CARE_NAME = 'FEC_DQ_CS_Customer_Care';
+
+    public static final String PRODUCT_TYPE_CARD_CASE = 'Card';
+    public static final String PRODUCT_TYPE_LOAN_CASE = 'Loan';
+    public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
 }

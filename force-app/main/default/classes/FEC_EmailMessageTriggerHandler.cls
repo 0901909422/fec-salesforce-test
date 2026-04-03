@@ -1,24 +1,52 @@
 /**
- * Handler cho EmailMessage trigger
+ * Class Description: Handler class xử lý logic nghiệp vụ cho EmailMessage Trigger
  * Khi khách hàng reply email từ Customer Case / Internal Case:
- * - Incoming = true
- * - ThreadIdentifier != null và ThreadIdentifier != MessageIdentifier (là email reply, không phải email gốc)
- * - RecordType của case cha là Customer_Case hoặc Internal_Case
- * → Email đã được Salesforce gắn đúng vào case, không cần tạo Interaction mới
- * → Trigger này đảm bảo EmailMessage được giữ nguyên trên case đúng
+ *   - Incoming = true, ThreadIdentifier != null, ThreadIdentifier != MessageIdentifier
+ *   - RecordType của case cha là Customer_Case hoặc Internal_Case
+ *   → Copy EmailMessage incoming sang Customer/Internal Case gốc
+ * @created  : 2026/04/03
  */
 public without sharing class FEC_EmailMessageTriggerHandler {
+
+    // Trigger guard để tránh recursive
+    public static Boolean isExecuting = false;
 
     private static final Set<String> TARGET_RECORD_TYPES = new Set<String>{
         FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME,
         FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
     };
 
+    /**
+     * Method Description: Main entry point được gọi từ trigger
+     * @param newMsgs Danh sách EmailMessage mới vừa được insert
+     * @return void
+     * @created: 2026/04/03
+     */
     public static void run(List<EmailMessage> newMsgs) {
-        // Lọc email phản hồi theo spec:
-        // 1. Incoming = true
-        // 2. ThreadIdentifier != null
-        // 3. ThreadIdentifier != MessageIdentifier
+        if (isExecuting) return;
+
+        isExecuting = true;
+        try {
+            redirectIncomingReplyToServiceCase(newMsgs);
+        } finally {
+            isExecuting = false;
+        }
+    }
+
+    /**
+     * Method Description: Khi khách hàng reply email từ Customer/Internal Case,
+     * copy EmailMessage incoming sang case gốc.
+     * Điều kiện xác định email phản hồi (AND):
+     *   1. Incoming = true
+     *   2. ThreadIdentifier != null
+     *   3. ThreadIdentifier != MessageIdentifier
+     *   4. ParentId trỏ đến Interaction case có ParentId là Customer/Internal Case
+     * @param newMsgs Danh sách EmailMessage mới
+     * @return void
+     * @created: 2026/04/03
+     */
+    private static void redirectIncomingReplyToServiceCase(List<EmailMessage> newMsgs) {
+        // Lọc email phản hồi theo spec
         List<EmailMessage> replyMsgs = new List<EmailMessage>();
         for (EmailMessage em : newMsgs) {
             if (em.Incoming != true) continue;
@@ -35,7 +63,8 @@ public without sharing class FEC_EmailMessageTriggerHandler {
         }
         if (parentIds.isEmpty()) return;
 
-        Map<Id, Case> caseMap = new Map<Id, Case>([
+        // Check case cha trực tiếp có phải Customer/Internal Case không
+        Map<Id, Case> directServiceCaseMap = new Map<Id, Case>([
             SELECT Id, RecordType.DeveloperName
             FROM Case
             WHERE Id IN :parentIds
@@ -45,7 +74,9 @@ public without sharing class FEC_EmailMessageTriggerHandler {
         // Lấy Interaction cases có ParentId trỏ về Customer/Internal Case
         Set<Id> interactionIds = new Set<Id>();
         for (EmailMessage em : replyMsgs) {
-            if (!caseMap.containsKey(em.ParentId)) interactionIds.add(em.ParentId);
+            if (!directServiceCaseMap.containsKey(em.ParentId)) {
+                interactionIds.add(em.ParentId);
+            }
         }
 
         Map<Id, Case> interactionMap = new Map<Id, Case>();
@@ -68,12 +99,19 @@ public without sharing class FEC_EmailMessageTriggerHandler {
         // Copy EmailMessage incoming sang Customer/Internal Case
         List<EmailMessage> toInsert = new List<EmailMessage>();
         for (EmailMessage em : replyMsgs) {
-            if (caseMap.containsKey(em.ParentId)) continue; // đã đúng case rồi
+            Id targetCaseId = null;
+
+            if (directServiceCaseMap.containsKey(em.ParentId)) {
+                // EmailMessage đã trên Customer/Internal Case rồi - không cần copy
+                continue;
+            }
+
             Case interaction = interactionMap.get(em.ParentId);
             if (interaction == null || !targetCaseMap.containsKey(interaction.ParentId)) continue;
+            targetCaseId = interaction.ParentId;
 
             EmailMessage newEm = new EmailMessage();
-            newEm.ParentId    = interaction.ParentId;
+            newEm.ParentId    = targetCaseId;
             newEm.FromAddress = em.FromAddress;
             newEm.FromName    = em.FromName;
             newEm.ToAddress   = em.ToAddress;
@@ -89,8 +127,11 @@ public without sharing class FEC_EmailMessageTriggerHandler {
         }
 
         if (!toInsert.isEmpty()) {
-            try { insert toInsert; }
-            catch (Exception e) { System.debug('FEC_EmailMessageTriggerHandler insert failed: ' + e.getMessage()); }
+            try {
+                insert toInsert;
+            } catch (Exception e) {
+                System.debug('FEC_EmailMessageTriggerHandler insert failed: ' + e.getMessage());
+            }
         }
     }
 }
