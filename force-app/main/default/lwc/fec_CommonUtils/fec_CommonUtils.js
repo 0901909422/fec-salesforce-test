@@ -482,24 +482,46 @@ const _normalizeForCompare = (v) => {
   return v.trim();
 };
 
+/** Picklist Case → API value để so sánh (label/value đầu vào → cùng dạng value). */
+const _normalizePicklistFieldForCompare = (caseFieldOptions, fieldApiName, raw) => {
+  const n = _normalizeForCompare(raw);
+  if (!caseFieldOptions || !fieldApiName) return n;
+  const opts = caseFieldOptions[fieldApiName];
+  if (!opts || !Array.isArray(opts) || opts.length === 0) return n;
+  for (let i = 0; i < opts.length; i++) {
+    const o = opts[i];
+    if (_normalizeForCompare(o?.label) === n) return _normalizeForCompare(o?.value);
+  }
+  for (let i = 0; i < opts.length; i++) {
+    const o = opts[i];
+    if (_normalizeForCompare(o?.value) === n) return _normalizeForCompare(o?.value);
+  }
+  return n;
+};
+
 // true = mọi cặp (chỉ cặp đang hiển thị) đều original === updated → chặn submit
 const checkNoUpdateInSubmit = (getOriginalValue, getUpdatedValue, options) => {
   const presentSet = options?.presentUpdatedApiNames;
+  const picklistCase = options?.picklistCaseFieldOptions;
   const pairsToCheck =
     presentSet != null &&
-    (Set.prototype.isPrototypeOf(presentSet) || Array.isArray(presentSet))
+      (Set.prototype.isPrototypeOf(presentSet) || Array.isArray(presentSet))
       ? ORIGINAL_UPDATED_FIELD_PAIRS.filter((p) =>
-          Set.prototype.isPrototypeOf(presentSet)
-            ? presentSet.has(p.updated)
-            : presentSet.includes(p.updated),
-        )
+        Set.prototype.isPrototypeOf(presentSet)
+          ? presentSet.has(p.updated)
+          : presentSet.includes(p.updated),
+      )
       : ORIGINAL_UPDATED_FIELD_PAIRS;
 
   if (pairsToCheck.length === 0) return false;
 
   for (const pair of pairsToCheck) {
-    const orig = _normalizeForCompare(getOriginalValue(pair.original));
-    const upd = _normalizeForCompare(getUpdatedValue(pair.updated));
+    const orig = picklistCase
+      ? _normalizePicklistFieldForCompare(picklistCase, pair.original, getOriginalValue(pair.original))
+      : _normalizeForCompare(getOriginalValue(pair.original));
+    const upd = picklistCase
+      ? _normalizePicklistFieldForCompare(picklistCase, pair.updated, getUpdatedValue(pair.updated))
+      : _normalizeForCompare(getUpdatedValue(pair.updated));
     if (orig !== upd) return false;
   }
   return true;

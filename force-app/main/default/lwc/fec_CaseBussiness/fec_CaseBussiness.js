@@ -446,6 +446,14 @@ export default class Fec_CaseBussiness extends LightningElement {
     return names;
   }
 
+  /** Options cho checkNoUpdateInSubmit (picklist Case: label vs API value). */
+  _getCheckNoUpdateInSubmitOptions() {
+    return {
+      presentUpdatedApiNames: this._getPresentCaseFieldApiNames(),
+      picklistCaseFieldOptions: this.business?.picklistOptionsMap?.Case,
+    };
+  }
+
   /** Giá trị gốc (unmasked) để so sánh với updated. */
   _getCaseFieldOriginalValue(apiName) {
     const sections = this.business?.sectionlst ?? [];
@@ -496,7 +504,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     const noUpdate = checkNoUpdateInSubmit(
       this._getCaseFieldOriginalValue.bind(this),
       this._getCaseFieldValue.bind(this),
-      { presentUpdatedApiNames: this._getPresentCaseFieldApiNames() },
+      this._getCheckNoUpdateInSubmitOptions(),
     );
     if (noUpdate) {
       this.showToast(FEC_Warning_Title, FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
@@ -1217,7 +1225,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     const noUpdate = checkNoUpdateInSubmit(
       this._getCaseFieldOriginalValue.bind(this),
       this._getCaseFieldValue.bind(this),
-      { presentUpdatedApiNames: this._getPresentCaseFieldApiNames() },
+      this._getCheckNoUpdateInSubmitOptions(),
     );
     // Chỉ chặn khi có dropdown routing và user chưa cập nhật bất kỳ trường Updated nào.
     if (routeToEle && noUpdate) {
