@@ -101,7 +101,9 @@ public without sharing class FEC_CaseTriggerHandler {
         isExecuting = true;
         handleFollowUpOnResolved(newCases, oldMap);
         handleAutoFollowUpOnUpdate(newCases, oldMap);
-        FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(newCases, oldMap);
+        if (!FEC_GetNextWorkController.isGetNextWork) {
+            FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(newCases, oldMap);
+        }
         FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, oldMap);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
         syncGlobalSearch(newCases, oldMap);
