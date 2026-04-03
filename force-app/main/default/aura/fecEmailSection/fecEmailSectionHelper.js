@@ -648,7 +648,9 @@
     },
 
     doSendEmail: function(component, toEmail, subject, body, attachments) {
-        var action = component.get('c.sendEmailV2');
+        var isServiceCase = component.get('v.isServiceCase');
+        var actionName = isServiceCase ? 'c.sendEmailForServiceCase' : 'c.sendEmailV2';
+        var action = component.get(actionName);
         action.setParams({
             caseId: component.get('v.recordId'),
             fromEmail: component.get('v.fromEmail'),

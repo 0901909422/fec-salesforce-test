@@ -99,6 +99,18 @@ public without sharing class FEC_CustomEmailService {
     }
 
     @AuraEnabled
+    public static String sendEmailForServiceCase(
+        String caseId, String fromEmail, String toEmail, String ccEmail,
+        String subject, String body,
+        List<FEC_ServiceCaseEmailService.AttachmentWrapper> attachments,
+        String titleReply
+    ) {
+        return FEC_ServiceCaseEmailService.sendEmail(
+            caseId, fromEmail, toEmail, ccEmail, subject, body, attachments, titleReply
+        );
+    }
+
+    @AuraEnabled
     public static List<EmailMessage> getEmailMessages(String caseId) {
         return [
             SELECT Id, FromName, FromAddress, ToAddress, CcAddress,
@@ -265,9 +277,11 @@ public without sharing class FEC_CustomEmailService {
         try {
             // 1. Validate case status
             Case c = [
-                SELECT Id, Status, FEC_Interaction_Status__c, OwnerId, Subject
+                SELECT Id, Status, FEC_Interaction_Status__c, OwnerId, Subject, RecordType.DeveloperName
                 FROM Case WHERE Id = :caseId LIMIT 1
             ];
+            Boolean isCustomerOrInternal = (c.RecordType.DeveloperName == FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+                || c.RecordType.DeveloperName == FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME);
 
             if (BLOCKED_STATUSES.contains(c.Status)) {
                 throw new AuraHandledException(
@@ -359,7 +373,6 @@ public without sharing class FEC_CustomEmailService {
             } catch (Exception emEx) {
                 System.debug('EmailMessage insert skipped: ' + emEx.getMessage());
             }
-
             // 8. Post-send: update case fields + create Task log
             updateCaseAfterSend(caseId, fromEmail, toEmail, ccEmail, subject, titleReply);
             System.debug('### sendEmail completed successfully');
@@ -394,15 +407,6 @@ public without sharing class FEC_CustomEmailService {
     private static void setFromAddress(Messaging.SingleEmailMessage mail, String fromEmail, String caseId) {
         if (String.isBlank(fromEmail)) return;
 
-        // Kiểm tra có phải Customer Case không
-        Boolean isCustomerCase = false;
-        if (String.isNotBlank(caseId)) {
-            try {
-                Case c = [SELECT RecordType.DeveloperName FROM Case WHERE Id = :caseId LIMIT 1];
-                isCustomerCase = (c.RecordType.DeveloperName == FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME);
-            } catch (Exception e) {}
-        }
-
         // Tìm OrgWideEmailAddress khớp trực tiếp
         List<OrgWideEmailAddress> orgEmails = [
             SELECT Id, Address FROM OrgWideEmailAddress
@@ -411,22 +415,7 @@ public without sharing class FEC_CustomEmailService {
         if (!orgEmails.isEmpty()) {
             mail.setOrgWideEmailAddressId(orgEmails[0].Id);
         }
-
-        // Chỉ set ReplyTo = Email Service Address cho Customer Case
-        // để khi khách reply, Salesforce nhận được qua Email-to-Case
-        if (isCustomerCase) {
-            try {
-                List<SObject> routings = Database.query(
-                    'SELECT Id, EmailServiceAddress FROM EmailRoutingAddress WHERE Address = :fromEmail LIMIT 1'
-                );
-                if (!routings.isEmpty()) {
-                    String svcAddr = (String) routings[0].get('EmailServiceAddress');
-                    if (String.isNotBlank(svcAddr)) mail.setReplyTo(svcAddr);
-                }
-            } catch (Exception e) {
-                System.debug('EmailServiceAddress lookup failed: ' + e.getMessage());
-            }
-        }
+        // Không set ReplyTo - Interaction dùng luồng Email-to-Case tạo case mới
     }
 
     private static void updateCaseAfterSend(

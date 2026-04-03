@@ -1,62 +1,85 @@
 /**
  * Handler cho EmailMessage trigger
- * Khi khách hàng reply email từ Customer Case:
- * - Salesforce nhận email incoming → tạo EmailMessage trên case tạm (Interaction)
- * - Trigger này detect thread token → copy EmailMessage sang Customer Case gốc
+ * Khi khách hàng reply email từ Customer Case / Internal Case:
+ * - Incoming = true
+ * - ThreadIdentifier != null và ThreadIdentifier != MessageIdentifier (là email reply, không phải email gốc)
+ * - RecordType của case cha là Customer_Case hoặc Internal_Case
+ * → Email đã được Salesforce gắn đúng vào case, không cần tạo Interaction mới
+ * → Trigger này đảm bảo EmailMessage được giữ nguyên trên case đúng
  */
 public without sharing class FEC_EmailMessageTriggerHandler {
 
+    private static final Set<String> TARGET_RECORD_TYPES = new Set<String>{
+        FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME,
+        FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
+    };
+
     public static void run(List<EmailMessage> newMsgs) {
-        // Chỉ xử lý email incoming
-        List<EmailMessage> incomingMsgs = new List<EmailMessage>();
+        // Lọc email phản hồi theo spec:
+        // 1. Incoming = true
+        // 2. ThreadIdentifier != null
+        // 3. ThreadIdentifier != MessageIdentifier
+        List<EmailMessage> replyMsgs = new List<EmailMessage>();
         for (EmailMessage em : newMsgs) {
-            if (em.Incoming == true && String.isNotBlank(em.Subject)) {
-                incomingMsgs.add(em);
-            }
+            if (em.Incoming != true) continue;
+            if (String.isBlank(em.ThreadIdentifier)) continue;
+            if (em.ThreadIdentifier == em.MessageIdentifier) continue;
+            replyMsgs.add(em);
         }
-        if (incomingMsgs.isEmpty()) return;
+        if (replyMsgs.isEmpty()) return;
 
-        // Parse thread token [ ref:ORGID.CASEID:ref ] từ subject
-        Pattern threadPattern = Pattern.compile('\\[\\s*ref:[A-Za-z0-9]+\\.([A-Za-z0-9]{15,18}):ref\\s*\\]');
-        Map<Id, Id> emailToCustomerCase = new Map<Id, Id>(); // EmailMessage.Id → Customer Case Id
-
-        for (EmailMessage em : incomingMsgs) {
-            Matcher m = threadPattern.matcher(em.Subject);
-            if (!m.find()) continue;
-            String rawId = m.group(1);
-            try {
-                Id caseId = (Id) rawId;
-                emailToCustomerCase.put(em.Id, caseId);
-            } catch (Exception e) {
-                System.debug('Invalid case id in thread token: ' + rawId);
-            }
+        // Lấy ParentId để check RecordType
+        Set<Id> parentIds = new Set<Id>();
+        for (EmailMessage em : replyMsgs) {
+            if (em.ParentId != null) parentIds.add(em.ParentId);
         }
-        if (emailToCustomerCase.isEmpty()) return;
+        if (parentIds.isEmpty()) return;
 
-        // Kiểm tra các case ID đó có phải Customer Case không
-        Set<Id> candidateCaseIds = new Set<Id>(emailToCustomerCase.values());
-        Map<Id, Case> customerCaseMap = new Map<Id, Case>([
+        Map<Id, Case> caseMap = new Map<Id, Case>([
             SELECT Id, RecordType.DeveloperName
             FROM Case
-            WHERE Id IN :candidateCaseIds
-            AND RecordType.DeveloperName = :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            WHERE Id IN :parentIds
+            AND RecordType.DeveloperName IN :TARGET_RECORD_TYPES
         ]);
 
-        // Tạo EmailMessage mới trên Customer Case
+        // Lấy Interaction cases có ParentId trỏ về Customer/Internal Case
+        Set<Id> interactionIds = new Set<Id>();
+        for (EmailMessage em : replyMsgs) {
+            if (!caseMap.containsKey(em.ParentId)) interactionIds.add(em.ParentId);
+        }
+
+        Map<Id, Case> interactionMap = new Map<Id, Case>();
+        if (!interactionIds.isEmpty()) {
+            for (Case c : [SELECT Id, ParentId FROM Case WHERE Id IN :interactionIds AND ParentId != null]) {
+                interactionMap.put(c.Id, c);
+            }
+        }
+
+        // Verify ParentId của Interaction là Customer/Internal Case
+        Set<Id> targetIds = new Set<Id>();
+        for (Case c : interactionMap.values()) targetIds.add(c.ParentId);
+        Map<Id, Case> targetCaseMap = new Map<Id, Case>();
+        if (!targetIds.isEmpty()) {
+            for (Case c : [SELECT Id, RecordType.DeveloperName FROM Case WHERE Id IN :targetIds AND RecordType.DeveloperName IN :TARGET_RECORD_TYPES]) {
+                targetCaseMap.put(c.Id, c);
+            }
+        }
+
+        // Copy EmailMessage incoming sang Customer/Internal Case
         List<EmailMessage> toInsert = new List<EmailMessage>();
-        for (EmailMessage em : incomingMsgs) {
-            Id targetCaseId = emailToCustomerCase.get(em.Id);
-            if (targetCaseId == null || !customerCaseMap.containsKey(targetCaseId)) continue;
-            // Không copy nếu EmailMessage đã thuộc Customer Case rồi
-            if (em.ParentId == targetCaseId) continue;
+        for (EmailMessage em : replyMsgs) {
+            if (caseMap.containsKey(em.ParentId)) continue; // đã đúng case rồi
+            Case interaction = interactionMap.get(em.ParentId);
+            if (interaction == null || !targetCaseMap.containsKey(interaction.ParentId)) continue;
 
             EmailMessage newEm = new EmailMessage();
-            newEm.ParentId    = targetCaseId;
+            newEm.ParentId    = interaction.ParentId;
             newEm.FromAddress = em.FromAddress;
             newEm.FromName    = em.FromName;
             newEm.ToAddress   = em.ToAddress;
             newEm.CcAddress   = em.CcAddress;
-            newEm.Subject     = em.Subject.replaceAll('(?i)\\s*\\[\\s*ref:[^\\]]*:ref\\s*\\]', '').trim();
+            newEm.Subject     = String.isNotBlank(em.Subject)
+                ? em.Subject.replaceAll('(?i)\\s*\\[\\s*ref:[^\\]]*:ref\\s*\\]', '').trim() : '';
             newEm.TextBody    = em.TextBody;
             newEm.HtmlBody    = em.HtmlBody;
             newEm.Incoming    = true;
@@ -66,11 +89,8 @@ public without sharing class FEC_EmailMessageTriggerHandler {
         }
 
         if (!toInsert.isEmpty()) {
-            try {
-                insert toInsert;
-            } catch (Exception e) {
-                System.debug('FEC_EmailMessageTriggerHandler insert failed: ' + e.getMessage());
-            }
+            try { insert toInsert; }
+            catch (Exception e) { System.debug('FEC_EmailMessageTriggerHandler insert failed: ' + e.getMessage()); }
         }
     }
 }
