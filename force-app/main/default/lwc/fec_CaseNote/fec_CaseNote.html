@@ -32,9 +32,12 @@
 
         </div>
 
-        <lightning-datatable key-field="Id" data={pagedNotes} columns={columns} hide-checkbox-column
+        <!-- <lightning-datatable key-field="Id" data={pagedNotes} columns={columns} hide-checkbox-column
             onrowaction={handleRowAction}>
-        </lightning-datatable>
+        </lightning-datatable> -->
+        <c-fec_-custom-datatable key-field="id" data={pagedNotes} columns={columns} hide-checkbox-column
+            onnamelinkclick={handleNameClick}>
+        </c-fec_-custom-datatable>
         <!-- ================= PAGINATION ================= -->
         <div class="table-pagination slds-m-top_small slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
 
@@ -81,7 +84,7 @@
 
     <!-- Modal -->
     <template if:true={showModal}>
-        <c-fec_-new-note-modal note={selectedNote} record-id={recordId} onclose={handleClose} onsuccess={handleSuccess}>
+        <c-fec_-new-note-modal note={selectedNote} is-edit={isEditMode} record-id={recordId} onclose={handleClose} onsuccess={handleSuccess}>
         </c-fec_-new-note-modal>
     </template>
 

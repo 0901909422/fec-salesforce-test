@@ -1004,4 +1004,57 @@ public with sharing class FEC_CommonUltils {
       return 'SERIALIZE_ERROR: ' + e.getMessage();
     }
   }
+
+  /**
+  * Remove trailing comma (,) at the end of string
+  */
+  public static String removeTrailingComma(String input) {
+      if (String.isBlank(input)) return input;
+
+      String result = input.trim();
+
+      while (result.endsWith(',')) {
+          result = result.substring(0, result.length() - 1).trim();
+      }
+
+      return result;
+  }
+
+  /**
+   * Uppercase ASCII; strips common Vietnamese diacritics for default beneficiary display.
+   */
+  public static String toUpperNoVietnameseAccent(String input) {
+    if (String.isBlank(input)) {
+      return '';
+    }
+    String s = input.trim().toLowerCase();
+    s = s.replace('à', 'a').replace('á', 'a').replace('ạ', 'a').replace('ả', 'a').replace('ã', 'a');
+    s = s.replace('ầ', 'a').replace('ấ', 'a').replace('ậ', 'a').replace('ẩ', 'a').replace('ẫ', 'a');
+    s = s.replace('ằ', 'a').replace('ắ', 'a').replace('ặ', 'a').replace('ẳ', 'a').replace('ẵ', 'a');
+    s = s.replace('è', 'e').replace('é', 'e').replace('ẹ', 'e').replace('ẻ', 'e').replace('ẽ', 'e');
+    s = s.replace('ề', 'e').replace('ế', 'e').replace('ệ', 'e').replace('ể', 'e').replace('ễ', 'e');
+    s = s.replace('ì', 'i').replace('í', 'i').replace('ị', 'i').replace('ỉ', 'i').replace('ĩ', 'i');
+    s = s.replace('ò', 'o').replace('ó', 'o').replace('ọ', 'o').replace('ỏ', 'o').replace('õ', 'o');
+    s = s.replace('ồ', 'o').replace('ố', 'o').replace('ộ', 'o').replace('ổ', 'o').replace('ỗ', 'o');
+    s = s.replace('ờ', 'o').replace('ớ', 'o').replace('ợ', 'o').replace('ở', 'o').replace('ỡ', 'o');
+    s = s.replace('ù', 'u').replace('ú', 'u').replace('ụ', 'u').replace('ủ', 'u').replace('ũ', 'u');
+    s = s.replace('ừ', 'u').replace('ứ', 'u').replace('ự', 'u').replace('ử', 'u').replace('ữ', 'u');
+    s = s.replace('ỳ', 'y').replace('ý', 'y').replace('ỵ', 'y').replace('ỷ', 'y').replace('ỹ', 'y');
+    s = s.replace('đ', 'd');
+    s = s.replace('\u0300', '').replace('\u0301', '').replace('\u0303', '').replace('\u0309', '').replace('\u0323', '');
+    return s.toUpperCase();
+  }
+
+  public static String resolveAccountNumber(
+      String productTypeName,
+      String accountNumber,
+      String contractNumber
+  ) {
+      if ((productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE
+          || productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE)
+          && String.isNotBlank(contractNumber)) {
+          return contractNumber;
+      }
+      return accountNumber;
+  }
 }
