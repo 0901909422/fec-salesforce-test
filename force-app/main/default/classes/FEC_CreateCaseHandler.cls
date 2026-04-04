@@ -385,15 +385,15 @@ public without sharing class FEC_CreateCaseHandler {
     private static Map<String, Id> getQueueMap() {
         
         Set<String> queueNames = new Set<String>{
-            'FEC_DQ_CS_Support',
-            'FEC_DQ_CS_Customer_Care'
+            FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME,
+            FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
         };
         
         try {
             List<Group> groups = [
             SELECT Id, DeveloperName
             FROM Group
-            WHERE Type = 'Queue'
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
             AND DeveloperName IN :queueNames
         ];
             
