@@ -1803,15 +1803,15 @@
         <fullName>FEC_Follow_Up_Until_Resolved</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Until Resolved</shortDescription>
-        <value>Until Resolved</value>
+        <shortDescription>Until case is resolved</shortDescription>
+        <value>Until case is resolved</value>
     </labels>
     <labels>
         <fullName>FEC_Follow_Up_Until_Unfollow</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Until Unfollow</shortDescription>
-        <value>Until Unfollow</value>
+        <shortDescription>Until choosing Unfollow</shortDescription>
+        <value>Until choosing Unfollow</value>
     </labels>
     <labels>
         <fullName>FEC_Select_Follow_Up_User_Type_Resolved</fullName>
@@ -2107,15 +2107,15 @@
         <fullName>FEC_LABEL_UNTIL_CASE_RESOLVED</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Until Case Resolved</shortDescription>
-        <value>Until Case Resolved</value>
+        <shortDescription>Until case is resolved</shortDescription>
+        <value>Until case is resolved</value>
     </labels>
     <labels>
         <fullName>FEC_LABEL_UNTIL_UNFOLLOW</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Until Unfollow</shortDescription>
-        <value>Until Unfollow</value>
+        <shortDescription>Until choosing Unfollow</shortDescription>
+        <value>Until choosing Unfollow</value>
     </labels>
     <labels>
         <fullName>FEC_LABEL_USER</fullName>
@@ -7872,8 +7872,8 @@
         <fullName>FEC_LABEL_UNTIL_UNFOLLOW</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Until Unfollow</shortDescription>
-        <value>Until Unfollow</value>
+        <shortDescription>Until choosing Unfollow</shortDescription>
+        <value>Until choosing Unfollow</value>
     </labels>
     <labels>
         <fullName>FEC_ACTION_SELECT_USER</fullName>
@@ -11440,7 +11440,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Remove_Phone_Invalid_Format</shortDescription>
-        <value>Số điện thoại không đúng định dạng. Vui lòng nhập 10 số bắt đầu bằng 0 hoặc 11 số bắt đầu bằng 84.</value>
+        <value>Phone number must start with 0 (10 digits) or 84 (11 digits)</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Remove_Phone_Service_Failed</fullName>
@@ -11685,5 +11685,125 @@
         <protected>false</protected>
         <shortDescription>FEC_Alt_View</shortDescription>
         <value>View</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Refund_Amount</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Refund_Amount</shortDescription>
+        <value>Refund Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Receipt_Date</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Receipt_Date</shortDescription>
+        <value>Receipt Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Receipt_Amount</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Receipt_Amount</shortDescription>
+        <value>Receipt Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Transaction_No</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Transaction_No</shortDescription>
+        <value>Transaction No</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Beneficiary_Name</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Beneficiary_Name</shortDescription>
+        <value>Beneficiary Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Beneficiary_Account</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Beneficiary_Account</shortDescription>
+        <value>Beneficiary Account</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Bank_Name</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Bank_Name</shortDescription>
+        <value>Bank Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Bank_Branch</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Bank_Branch</shortDescription>
+        <value>Bank Branch</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Province_City</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Province_City</shortDescription>
+        <value>Province/ City</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Refund_Request_Receipt_Amount_Positive</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Refund_Request_Receipt_Amount_Positive</shortDescription>
+        <value>Vui lòng nhập số tiền biên lai lớn hơn 0.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Refund_Request_Receipt_Date_Future</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Refund_Request_Receipt_Date_Future</shortDescription>
+        <value>Ngày biên lai không được lớn hơn ngày hiện tại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Insufficient_Access</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Insufficient_Access</shortDescription>
+        <value>Insufficient access.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Refund_Request_Amount_Nonnegative</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Refund_Request_Amount_Nonnegative</shortDescription>
+        <value>Refund amount must be greater than or equal to 0.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Refund_Request_Receipt_Lines_Required</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Refund_Request_Receipt_Lines_Required</shortDescription>
+        <value>At least one receipt line is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Refund_Request_Receipt_Line_Incomplete</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Refund_Request_Receipt_Line_Incomplete</shortDescription>
+        <value>Each receipt line must have date, positive amount, transaction number, and payment channel.</value>
     </labels>
 </CustomLabels>

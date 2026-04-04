@@ -59,6 +59,9 @@ public without sharing class FEC_CaseTriggerHandler {
         syncChannelFromInteractionForCustomerCase(newCases);
         assignEntitlement(newCases);
         syncGlobalSearchFromParent(newCases, null);
+        setEmail2CaseChannelBeforeInsert(newCases);
+        setParentIdFromEmailThread(newCases);
+        stripSubjectThreadToken(newCases);
         setParentIdFromEmailThread(newCases);
         stripSubjectThreadToken(newCases);
     }

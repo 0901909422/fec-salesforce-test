@@ -19,7 +19,8 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Parent_ID__c,
                Parent.FEC_ID_Search__c,
                IsClosed,
-               FEC_Interaction_Status__c
+               FEC_Interaction_Status__c,
+               Origin
         FROM Case
         WHERE Id = :recordId
     ];
