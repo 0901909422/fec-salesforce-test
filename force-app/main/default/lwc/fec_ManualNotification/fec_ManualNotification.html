@@ -1,0 +1,70 @@
+<template>
+    <lightning-card title="Send Manual Notification" icon-name="standard:email">
+        <div class="slds-p-around_medium">
+            <template if:true={options}>
+                
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-combobox
+                            name="notificationType"
+                            label="Notification Type"
+                            value={selectedNotificationId}
+                            placeholder="Choose a notification type..."
+                            options={options}
+                            onchange={handleChange}
+                            required>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-input 
+                                type="text" 
+                                label="Notification Channel" 
+                                value={selectedChannel} 
+                                readonly>
+                        </lightning-input>
+                    </div>
+                </div>
+
+                <template if:true={selectedNotificationId}>
+                    <div class="slds-grid slds-gutters slds-m-top_medium">
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input 
+                                type="text" 
+                                label="Target Email" 
+                                value={targetEmail} 
+                                readonly>
+                            </lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input 
+                                type="text" 
+                                label="Target Group" 
+                                value={selectedTargetGroup} 
+                                readonly>
+                            </lightning-input>
+                        </div>
+                    </div>
+                </template>
+
+            </template>
+            
+            <template if:true={error}>
+                <div class="slds-text-color_error slds-m-top_small">{error}</div>
+            </template>
+        </div>
+        <template if:true={record}>
+            <c-fec_template-preview-modal 
+                subject={record.subject} 
+                email-body={record.emailBody}
+                header-html={record.letterheadHeaderHtml} 
+                footer-html={record.letterheadFooterHtml} 
+                is-open={_isPreviewOpen}
+                onclose={handleClosePreview}></c-fec_template-preview-modal>
+        </template>
+        
+        <div slot="footer">
+            <lightning-button label="Preview" onclick={handlePreview} disabled={isActionDisabled} class="slds-m-right_x-small"></lightning-button>
+            <lightning-button variant="brand" label="Send" onclick={handleSend} disabled={isActionDisabled}></lightning-button>
+        </div>
+    </lightning-card>
+</template>
