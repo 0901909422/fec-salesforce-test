@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Bank_Name__c</fullName>
+    <label>Bank Name</label>
+    <referenceTo>FEC_Bank_Name__c</referenceTo>
+    <relationshipLabel>Bank Branches</relationshipLabel>
+    <relationshipName>Bank_Branches</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

@@ -691,6 +691,7 @@
 		<members>fec_IPPConversionRetailForm</members>
 		<members>fec_IncorrectPaymentForm</members>
         <members>fec_RemovePhoneForm</members>
+		<members>fec_RefundRequestForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -1285,6 +1286,9 @@
 		<members>FEC_Province__c</members>
 		<members>FEC_Ward__c</members>
         <members>FEC_Case_Status__c</members>
+		<members>FEC_Bank_Branch__c</members>
+		<members>FEC_Bank_Name__c</members>
+		<members>FEC_Case_Refund_Details__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -1292,6 +1296,19 @@
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_LWC_Name__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
+		<members>FEC_Address_Info__c.FEC_Country_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_District_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_Full_Address__c</members>
+        <members>FEC_Address_Info__c.FEC_Province_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_Ward_Text__c</members>
+		<members>FEC_Address_Info__c.FEC_Building__c</members>
+        <members>FEC_Address_Info__c.FEC_Number__c</members>
+        <members>FEC_Address_Info__c.FEC_Street__c</members>
+        <members>FEC_Address_Info__c.FEC_ZipCode__c</members>
+        <members>FEC_Address_Info__c.FEC_Ward__c</members>
+        <members>FEC_Address_Info__c.FEC_District__c</members>
+        <members>FEC_Address_Info__c.FEC_Province__c</members>
+        <members>FEC_Address_Info__c.FEC_Country__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
@@ -1299,6 +1316,7 @@
 		<members>FEC_MainInfoAccountController</members>
 		<members>FEC_CaseRelatedNoteHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
+		<members>FEC_RefundRequestController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1343,6 +1361,8 @@
         <members>FEC_RELATED_NOTES_UPDATED_MSG</members>
 		<members>FEC_Alt_View</members>
         <members>FEC_Alt_Remove_From_Record</members>
+		<members>FEC_Select_Follow_Up_User_Type_Resolved</members>
+		<members>FEC_Select_Follow_Up_User_Type_Unfollow</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1352,6 +1372,7 @@
 		<members>fec_templatePreviewModal</members>
 		<members>fec_CaseNote</members>
 		<members>fec_NewNoteModal</members>
+		<members>fec_CaseFollowHeadlessAction</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>

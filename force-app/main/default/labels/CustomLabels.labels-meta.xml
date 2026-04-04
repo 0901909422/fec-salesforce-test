@@ -1814,6 +1814,22 @@
         <value>Until Unfollow</value>
     </labels>
     <labels>
+        <fullName>FEC_Select_Follow_Up_User_Type_Resolved</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Follow-Up User modal: Until case is resolved</shortDescription>
+        <value>Until case is resolved</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Select_Follow_Up_User_Type_Unfollow</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Follow-Up User modal: Until choosing Unfollow</shortDescription>
+        <value>Until choosing Unfollow</value>
+    </labels>
+    <labels>
         <fullName>FEC_Full_IPP_Payment_Amount_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -7851,13 +7867,6 @@
         <protected>false</protected>
         <shortDescription>Follow-Up</shortDescription>
         <value>Follow-Up</value>
-    </labels>
-    <labels>
-        <fullName>FEC_LABEL_UNTIL_CASE_RESOLVED</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Until Case Resolved</shortDescription>
-        <value>Until Case Resolved</value>
     </labels>
     <labels>
         <fullName>FEC_LABEL_UNTIL_UNFOLLOW</fullName>

@@ -44,6 +44,10 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     handlePhoneChange(event) {
         this.phone = (event.target.value || STR_EMPTY).trim();
+        const phoneInput = this.template.querySelector('lightning-input');
+        if (phoneInput) {
+            phoneInput.setCustomValidity('');
+        }
         if (this.phone !== this.lastCheckedPhone) {
             this.hasLoadedSuccessData = false;
             this.rows = [];
@@ -67,12 +71,20 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     handleCheckEligibility() {
         if (!this.isPhoneValid(this.phone)) {
-            this.resultMessage = FEC_MSG_Remove_Phone_Invalid_Format;
-            this.resultClass = RESULT_ERROR;
+            const phoneInput = this.template.querySelector('lightning-input');
+            if (phoneInput) {
+                phoneInput.setCustomValidity(FEC_MSG_Remove_Phone_Invalid_Format);
+                phoneInput.reportValidity();
+            }
+            this.resultMessage = STR_EMPTY;
             this.hasLoadedSuccessData = false;
             this.rows = [];
             this.selectedRowIds = [];
             return;
+        }
+        const phoneInputClear = this.template.querySelector('lightning-input');
+        if (phoneInputClear) {
+            phoneInputClear.setCustomValidity('');
         }
         this.isLoading = true;
         this.resultMessage = STR_EMPTY;

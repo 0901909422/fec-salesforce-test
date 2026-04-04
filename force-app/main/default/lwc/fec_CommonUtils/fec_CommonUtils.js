@@ -1,5 +1,5 @@
 import { getFocusedTabInfo, setTabLabel, setTabIcon } from 'lightning/platformWorkspaceApi';
-import { STR_EMPTY, MSG_PHONE_ONLY_NUMBERS, MSG_PHONE_FORMAT_0_OR_84, MSG_INVALID_NATIONAL_ID_OR_PASSPORT, MSG_NATIONAL_ID_9_OR_12_CHARS, MSG_PASSPORT_1_LETTER_7_DIGITS, MSG_PASSPORT_START_UPPERCASE_THEN_7, MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7, MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY, MSG_NATIONAL_ID_9_OR_12_DIGITS, MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY, MSG_NATIONAL_ID_PASSPORT_RULES, MSG_INVALID_NATIONAL_ID, MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12, MSG_INVALID_EMAIL_FORMAT } from 'c/fec_CommonConst';
+import { STR_EMPTY, LOCALE_VN, MSG_PHONE_ONLY_NUMBERS, MSG_PHONE_FORMAT_0_OR_84, MSG_INVALID_NATIONAL_ID_OR_PASSPORT, MSG_NATIONAL_ID_9_OR_12_CHARS, MSG_PASSPORT_1_LETTER_7_DIGITS, MSG_PASSPORT_START_UPPERCASE_THEN_7, MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7, MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY, MSG_NATIONAL_ID_9_OR_12_DIGITS, MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY, MSG_NATIONAL_ID_PASSPORT_RULES, MSG_INVALID_NATIONAL_ID, MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12, MSG_INVALID_EMAIL_FORMAT } from 'c/fec_CommonConst';
 
 const formatDate = (curr) => {
   if (!curr) {
@@ -657,6 +657,58 @@ const sortByStringField = (list = [], field, direction = 'asc') => {
   });
 };
 
+const stripToIntString = (raw) => {
+  if (raw == null || raw === STR_EMPTY) {
+    return STR_EMPTY;
+  }
+  const digits = String(raw).replace(/\D/g, '');
+  return digits;
+};
+
+const formatThousandsFromDigits = (digits) => {
+  if (!digits) {
+    return STR_EMPTY;
+  }
+  const n = parseInt(digits, 10);
+  if (isNaN(n)) {
+    return STR_EMPTY;
+  }
+  return new Intl.NumberFormat(LOCALE_VN, {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0
+  }).format(n);
+};
+
+const toUpperNoVietnameseAccent = (str) => {
+  if (!str) {
+    return STR_EMPTY;
+  }
+  let s = str.trim().toLowerCase();
+  const map = [
+    ['à', 'a'], ['á', 'a'], ['ạ', 'a'], ['ả', 'a'], ['ã', 'a'],
+    ['ầ', 'a'], ['ấ', 'a'], ['ậ', 'a'], ['ẩ', 'a'], ['ẫ', 'a'],
+    ['ằ', 'a'], ['ắ', 'a'], ['ặ', 'a'], ['ẳ', 'a'], ['ẵ', 'a'],
+    ['è', 'e'], ['é', 'e'], ['ẹ', 'e'], ['ẻ', 'e'], ['ẽ', 'e'], ['ê', 'e'], ['ề', 'e'], ['ế', 'e'], ['ệ', 'e'], ['ể', 'e'], ['ễ', 'e'],
+    ['ì', 'i'], ['í', 'i'], ['ị', 'i'], ['ỉ', 'i'], ['ĩ', 'i'],
+    ['ò', 'o'], ['ó', 'o'], ['ọ', 'o'], ['ỏ', 'o'], ['õ', 'o'], ['ô', 'o'], ['ồ', 'o'], ['ố', 'o'], ['ộ', 'o'], ['ổ', 'o'], ['ỗ', 'o'], ['ơ', 'o'], ['ờ', 'o'], ['ớ', 'o'], ['ợ', 'o'], ['ở', 'o'], ['ỡ', 'o'],
+    ['ù', 'u'], ['ú', 'u'], ['ụ', 'u'], ['ủ', 'u'], ['ũ', 'u'], ['ư', 'u'], ['ừ', 'u'], ['ứ', 'u'], ['ự', 'u'], ['ử', 'u'], ['ữ', 'u'],
+    ['ỳ', 'y'], ['ý', 'y'], ['ỵ', 'y'], ['ỷ', 'y'], ['ỹ', 'y'],
+    ['đ', 'd']
+  ];
+  map.forEach((pair) => {
+    s = s.split(pair[0]).join(pair[1]);
+  });
+  return s.toUpperCase();
+};
+
+const todayIso = () => {
+  const t = new Date();
+  const y = t.getFullYear();
+  const m = String(t.getMonth() + 1).padStart(2, '0');
+  const d = String(t.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + d;
+};
+
 export {
   formatDate,
   formatDateTime,
@@ -683,5 +735,9 @@ export {
   toSortDateStr,
   formatDuration,
   getCaseIdNumber,
-  sortByStringField
+  sortByStringField,
+  formatThousandsFromDigits,
+  stripToIntString,
+  todayIso,
+  toUpperNoVietnameseAccent
 };
