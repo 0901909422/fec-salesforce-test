@@ -116,6 +116,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
     public static final String ADDRESS_TYPE_OFFICE = 'OFFICE';
     public static final String TEXT_YES = 'Yes';
+    public static final String TEXT_NO = 'No';
     
     public static final String ORIGINAL_USER_UPLOAD = 'Original_User_Upload';
     public static final String JSON_DATA_FOR_PROCESSING = 'JSON_Data_For_Processing';
