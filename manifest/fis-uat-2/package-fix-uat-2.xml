@@ -57,6 +57,7 @@
 		<members>FEC_CaseRelatedNoteHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_PinResetHandler</members>
+		<members>FEC_CaseTriggerHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -419,5 +420,13 @@
 		<members>Case</members>
 		<name>Settings</name>
 	</types>
+	<types>
+		<members>FEC_New_Interaction_Record_For_E2C</members>
+		<name>Flow</name>
+	</types>
+	<types>
+        <members>CaseOrigin</members>
+        <name>StandardValueSet</name>
+    </types>
     <version>65.0</version>
 </Package>
