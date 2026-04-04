@@ -389,7 +389,7 @@
 		<members>FEC_CS_Unit_Head_of_CS_Support_Master_Data_Management</members>
 		<members>FEC_CS_Unit_Head_of_Customer_Care_Master_Data_Management</members>
 		<members>FEC_CS_Unit_Head_of_Office_Based_Master_Data_Management</members>
-
+		<members>RD_IT_User_Master_Data_Management</members>
 		<members>RD_IT_User_System_Management</members>
         <members>FEC_Common_System_Setting</members>
 		<name>PermissionSet</name>
@@ -491,7 +491,7 @@
 		<name>CustomObjectTranslation</name>
 	</types>
 	<types>
-
+		<members>Case</members>
 		<name>Settings</name>
 	</types>
 	<types>
