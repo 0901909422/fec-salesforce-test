@@ -8,7 +8,7 @@ public with sharing class FEC_ContractClosureController {
 
     private static final String OBJ_CASE = 'Case';
     private static final String OBJ_ADDRESS = 'FEC_Address_Info__c';
-    private static final String FLD_DELIVERY = 'FEC_Delivery_Option2__c';
+    private static final String FLD_DELIVERY = 'FEC_Delivery_Option_2__c';
     private static final String FLD_RECIPIENT_NAME = 'FEC_Recipient_Name__c';
     private static final String FLD_RECIPIENT_PHONE = 'FEC_Recipient_Phone_Number__c';
     private static final String FLD_TEMP_EMAIL = 'FEC_Temporary_Email__c';
@@ -20,7 +20,6 @@ public with sharing class FEC_ContractClosureController {
     private static final String FLD_CASE_CHANNEL = 'FEC_Channel__c';
 
     private static final String OBJ_ADDITIONAL_INFO = 'FEC_Additional_Info__c';
-    private static final String FLD_AI_CASE = 'FEC_Case__c';
     private static final String FLD_AI_VERIFY = 'FEC_Verify_Information__c';
     private static final String FLD_AI_CALLBACK = 'FEC_Callback__c';
 
@@ -88,7 +87,6 @@ public with sharing class FEC_ContractClosureController {
 
     public class SavePayloadDTO {
         public List<String> deliveryValues;
-        /** Chuỗi multipicklist chính xác để ghi Case.FEC_Delivery_Option2__c (vd Email;Địa chỉ). */
         public String deliveryOptionCombined;
         public Boolean deliveryEmailSelected;
         public Boolean deliveryAddressSelected;
@@ -101,7 +99,6 @@ public with sharing class FEC_ContractClosureController {
         public String temporaryAddressDisplay;
         public TempAddressPartsDTO tempAddressParts;
         public String tempAddressRecordId;
-        /** C360 | TEMPORARY — XOR chọn kênh email khi có Email trong delivery. */
         public String emailDeliveryChannel;
         public String verifyInformation;
         public String callback;

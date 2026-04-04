@@ -475,6 +475,7 @@
 		<members>Case.FEC_Payment_Method__c</members>
 		<members>Case.FEC_New_Block_Code__c</members>
 		<members>Case.FEC_Card_Block_Reason__c</members>
+		<members>Case.FEC_Delivery_Option_2__c</members>
         <members>FEC_Notification__c.FEC_Notification_Template__c</members>
 		<members>FEC_Bank_Branch__c.FEC_Bank_Branch_Name_Noaccent__c</members>
 		<members>FEC_Bank_Branch__c.FEC_Bank_Branch_Name__c</members>
