@@ -167,6 +167,12 @@
                 <identifier>c_fec_CaseDetail_Customer</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_ManualNotification</componentName>
+                <identifier>c_fec_ManualNotification</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>Facet-4caf6061-dc01-488c-bf14-8ebf5bcb8d36</name>
         <type>Facet</type>
     </flexiPageRegions>
