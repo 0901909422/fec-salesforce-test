@@ -57,6 +57,7 @@
 		<members>FEC_CaseRelatedNoteHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_PinResetHandler</members>
+		<members>FEC_RefundRequestController</members>
 		<members>FEC_GetMRCInfo</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
         <name>ApexClass</name>
@@ -99,8 +100,10 @@
 		<members>fec_PinResetView</members>
 		<members>fec_CaseNote</members>
 		<members>fec_NewNoteModal</members>
+		<members>fec_RefundRequestForm</members>
 		<members>fec_CaseFollowHeadlessAction</members>
 		<members>fec_ManualNotification</members>
+		<members>fec_CommonUtils</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -227,6 +230,21 @@
         <members>FEC_RELATED_NOTES_UPDATED_MSG</members>
 		<members>FEC_Alt_View</members>
         <members>FEC_Alt_Remove_From_Record</members>
+        <members>FEC_LBL_Refund_Amount</members>
+        <members>FEC_LBL_Receipt_Date</members>
+        <members>FEC_LBL_Receipt_Amount</members>
+        <members>FEC_LBL_Transaction_No</members>
+        <members>FEC_LBL_Beneficiary_Name</members>
+        <members>FEC_LBL_Beneficiary_Account</members>
+        <members>FEC_LBL_Bank_Name</members>
+        <members>FEC_LBL_Bank_Branch</members>
+        <members>FEC_LBL_Province_City</members>
+        <members>FEC_MSG_Refund_Request_Receipt_Amount_Positive</members>
+        <members>FEC_MSG_Refund_Request_Receipt_Date_Future</members>
+        <members>FEC_MSG_Insufficient_Access</members>
+        <members>FEC_MSG_Refund_Request_Amount_Nonnegative</members>
+        <members>FEC_MSG_Refund_Request_Receipt_Lines_Required</members>
+        <members>FEC_MSG_Refund_Request_Receipt_Line_Incomplete</members>
 		<members>FEC_Select_Follow_Up_User_Type_Resolved</members>
 		<members>FEC_Select_Follow_Up_User_Type_Unfollow</members>
 		<name>CustomLabel</name>
@@ -388,6 +406,9 @@
         <members>FEC_Folder__c</members>
         <members>FEC_Enhanced_Letterhead__c</members>
         <members>FEC_Case_Status__c</members>
+		<members>FEC_Bank_Branch__c</members>
+		<members>FEC_Bank_Name__c</members>
+		<members>FEC_Case_Refund_Details__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -410,6 +431,20 @@
 		<members>Case.FEC_New_Block_Code__c</members>
 		<members>Case.FEC_Card_Block_Reason__c</members>
         <members>FEC_Notification__c.FEC_Notification_Template__c</members>
+		<members>FEC_Bank_Branch__c.FEC_Bank_Branch_Name_Noaccent__c</members>
+		<members>FEC_Bank_Branch__c.FEC_Bank_Branch_Name__c</members>
+		<members>FEC_Bank_Branch__c.FEC_Bank_Name__c</members>
+		<members>FEC_Bank_Name__c.FEC_Bank_Name_Noaccent__c</members>
+		<members>FEC_Bank_Name__c.FEC_Active__c</members>
+		<members>FEC_Bank_Name__c.FEC_Bank_Full_Name__c</members>
+		<members>FEC_Bank_Name__c.FEC_Bank_Name_English__c</members>
+	    <members>FEC_Bank_Name__c.FEC_Bank_Name_Vietnamese__c</members>
+		<members>FEC_Bank_Name__c.FEC_Pzinskey__c</members>
+		<members>FEC_Case_Refund_Details__c.FEC_Case__c</members>
+		<members>FEC_Case_Refund_Details__c.FEC_Payment_Channel__c</members>
+		<members>FEC_Case_Refund_Details__c.FEC_Receipt_Amount__c</members>
+		<members>FEC_Case_Refund_Details__c.FEC_Receipt_Date__c</members>
+		<members>FEC_Case_Refund_Details__c.FEC_Transaction_Number__c</members>
         <members>Case.FEC_Is_MyCaseAPI_Interaction__c</members>
 		<members>FEC_Address_Info__c.FEC_Country_Text__c</members>
         <members>FEC_Address_Info__c.FEC_District_Text__c</members>

@@ -1,5 +1,5 @@
 import { getFocusedTabInfo, setTabLabel, setTabIcon } from 'lightning/platformWorkspaceApi';
-import { STR_EMPTY, MSG_PHONE_ONLY_NUMBERS, MSG_PHONE_FORMAT_0_OR_84, MSG_INVALID_NATIONAL_ID_OR_PASSPORT, MSG_NATIONAL_ID_9_OR_12_CHARS, MSG_PASSPORT_1_LETTER_7_DIGITS, MSG_PASSPORT_START_UPPERCASE_THEN_7, MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7, MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY, MSG_NATIONAL_ID_9_OR_12_DIGITS, MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY, MSG_NATIONAL_ID_PASSPORT_RULES, MSG_INVALID_NATIONAL_ID, MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12, MSG_INVALID_EMAIL_FORMAT } from 'c/fec_CommonConst';
+import { STR_EMPTY, LOCALE_VN, MSG_PHONE_ONLY_NUMBERS, MSG_PHONE_FORMAT_0_OR_84, MSG_INVALID_NATIONAL_ID_OR_PASSPORT, MSG_NATIONAL_ID_9_OR_12_CHARS, MSG_PASSPORT_1_LETTER_7_DIGITS, MSG_PASSPORT_START_UPPERCASE_THEN_7, MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7, MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY, MSG_NATIONAL_ID_9_OR_12_DIGITS, MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY, MSG_NATIONAL_ID_PASSPORT_RULES, MSG_INVALID_NATIONAL_ID, MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12, MSG_INVALID_EMAIL_FORMAT } from 'c/fec_CommonConst';
 
 const formatDate = (curr) => {
   if (!curr) {
@@ -514,24 +514,99 @@ const _normalizeForCompare = (v) => {
   return v.trim();
 };
 
+/** Tìm option theo raw (label hoặc value, có trim); dùng submit & label→API. */
+const findPicklistOptionByRaw = (options, raw) => {
+  if (!options || !Array.isArray(options) || options.length === 0) return undefined;
+  if (raw == null || raw === STR_EMPTY) return undefined;
+  const rawPl = typeof raw === "string" ? raw.trim() : raw;
+  let opt = options.find((o) => o.label === raw);
+  if (!opt && typeof rawPl === "string") {
+    opt = options.find((o) => {
+      const lb = o?.label;
+      const t =
+        typeof lb === "string" ? lb.trim() : String(lb ?? STR_EMPTY).trim();
+      return t === rawPl;
+    });
+  }
+  if (!opt) {
+    opt = options.find((o) => o.value === raw || o.value === rawPl);
+  }
+  return opt;
+};
+
+/** Chuẩn hóa raw (label hoặc API value) về API value theo mảng options. */
+const _normalizePicklistRawWithOpts = (opts, raw) => {
+  const n = _normalizeForCompare(raw);
+  if (!opts || !Array.isArray(opts) || opts.length === 0) return n;
+  if (!n) return n;
+  const opt = findPicklistOptionByRaw(opts, raw);
+  if (opt) return _normalizeForCompare(opt.value);
+  return n;
+};
+
+/** Picklist options cặp Original/Updated: ưu tiên original, không có thì updated. */
+const _picklistOptsForOriginalUpdatedPair = (caseFieldOptions, pair) => {
+  if (!caseFieldOptions || !pair) return null;
+  let opts = caseFieldOptions[pair.original];
+  if (opts && Array.isArray(opts) && opts.length > 0) return opts;
+  opts = caseFieldOptions[pair.updated];
+  if (opts && Array.isArray(opts) && opts.length > 0) return opts;
+  return null;
+};
+
+const _GENDER_OU_PAIR = ORIGINAL_UPDATED_FIELD_PAIRS.find(
+  (p) => p.updated === "FEC_Updated_Info_Gender__c",
+);
+
+const _isGenderOriginalUpdatedPair = (pair) =>
+  pair != null &&
+  _GENDER_OU_PAIR != null &&
+  pair.original === _GENDER_OU_PAIR.original &&
+  pair.updated === _GENDER_OU_PAIR.updated;
+
+/** Chuẩn hóa Gender (M/F, Male/Female, Nam/Nữ, …) về M/F trước khi so sánh */
+const _canonicalGenderApiForCompare = (s) => {
+  const n = _normalizeForCompare(s);
+  if (!n) return n;
+  const k = n.toLowerCase();
+  if (k === "m" || k === "male" || k === "nam") return "M";
+  if (k === "f" || k === "female" || k === "nữ" || k === "nu") return "F";
+  return n;
+};
+
 // true = mọi cặp (chỉ cặp đang hiển thị) đều original === updated → chặn submit
 const checkNoUpdateInSubmit = (getOriginalValue, getUpdatedValue, options) => {
   const presentSet = options?.presentUpdatedApiNames;
+  const picklistCase = options?.picklistCaseFieldOptions;
   const pairsToCheck =
     presentSet != null &&
-    (Set.prototype.isPrototypeOf(presentSet) || Array.isArray(presentSet))
+      (Set.prototype.isPrototypeOf(presentSet) || Array.isArray(presentSet))
       ? ORIGINAL_UPDATED_FIELD_PAIRS.filter((p) =>
-          Set.prototype.isPrototypeOf(presentSet)
-            ? presentSet.has(p.updated)
-            : presentSet.includes(p.updated),
-        )
+        Set.prototype.isPrototypeOf(presentSet)
+          ? presentSet.has(p.updated) && presentSet.has(p.original)
+          : presentSet.includes(p.updated) && presentSet.includes(p.original),
+      )
       : ORIGINAL_UPDATED_FIELD_PAIRS;
 
   if (pairsToCheck.length === 0) return false;
 
   for (const pair of pairsToCheck) {
-    const orig = _normalizeForCompare(getOriginalValue(pair.original));
-    const upd = _normalizeForCompare(getUpdatedValue(pair.updated));
+    const rawOrig = getOriginalValue(pair.original);
+    const rawUpd = getUpdatedValue(pair.updated);
+    let orig;
+    let upd;
+    if (picklistCase) {
+      const pairOpts = _picklistOptsForOriginalUpdatedPair(picklistCase, pair);
+      orig = _normalizePicklistRawWithOpts(pairOpts, rawOrig);
+      upd = _normalizePicklistRawWithOpts(pairOpts, rawUpd);
+    } else {
+      orig = _normalizeForCompare(rawOrig);
+      upd = _normalizeForCompare(rawUpd);
+    }
+    if (_isGenderOriginalUpdatedPair(pair)) {
+      orig = _canonicalGenderApiForCompare(orig);
+      upd = _canonicalGenderApiForCompare(upd);
+    }
     if (orig !== upd) return false;
   }
   return true;
@@ -657,6 +732,58 @@ const sortByStringField = (list = [], field, direction = 'asc') => {
   });
 };
 
+const stripToIntString = (raw) => {
+  if (raw == null || raw === STR_EMPTY) {
+    return STR_EMPTY;
+  }
+  const digits = String(raw).replace(/\D/g, '');
+  return digits;
+};
+
+const formatThousandsFromDigits = (digits) => {
+  if (!digits) {
+    return STR_EMPTY;
+  }
+  const n = parseInt(digits, 10);
+  if (isNaN(n)) {
+    return STR_EMPTY;
+  }
+  return new Intl.NumberFormat(LOCALE_VN, {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0
+  }).format(n);
+};
+
+const toUpperNoVietnameseAccent = (str) => {
+  if (!str) {
+    return STR_EMPTY;
+  }
+  let s = str.trim().toLowerCase();
+  const map = [
+    ['à', 'a'], ['á', 'a'], ['ạ', 'a'], ['ả', 'a'], ['ã', 'a'],
+    ['ầ', 'a'], ['ấ', 'a'], ['ậ', 'a'], ['ẩ', 'a'], ['ẫ', 'a'],
+    ['ằ', 'a'], ['ắ', 'a'], ['ặ', 'a'], ['ẳ', 'a'], ['ẵ', 'a'],
+    ['è', 'e'], ['é', 'e'], ['ẹ', 'e'], ['ẻ', 'e'], ['ẽ', 'e'], ['ê', 'e'], ['ề', 'e'], ['ế', 'e'], ['ệ', 'e'], ['ể', 'e'], ['ễ', 'e'],
+    ['ì', 'i'], ['í', 'i'], ['ị', 'i'], ['ỉ', 'i'], ['ĩ', 'i'],
+    ['ò', 'o'], ['ó', 'o'], ['ọ', 'o'], ['ỏ', 'o'], ['õ', 'o'], ['ô', 'o'], ['ồ', 'o'], ['ố', 'o'], ['ộ', 'o'], ['ổ', 'o'], ['ỗ', 'o'], ['ơ', 'o'], ['ờ', 'o'], ['ớ', 'o'], ['ợ', 'o'], ['ở', 'o'], ['ỡ', 'o'],
+    ['ù', 'u'], ['ú', 'u'], ['ụ', 'u'], ['ủ', 'u'], ['ũ', 'u'], ['ư', 'u'], ['ừ', 'u'], ['ứ', 'u'], ['ự', 'u'], ['ử', 'u'], ['ữ', 'u'],
+    ['ỳ', 'y'], ['ý', 'y'], ['ỵ', 'y'], ['ỷ', 'y'], ['ỹ', 'y'],
+    ['đ', 'd']
+  ];
+  map.forEach((pair) => {
+    s = s.split(pair[0]).join(pair[1]);
+  });
+  return s.toUpperCase();
+};
+
+const todayIso = () => {
+  const t = new Date();
+  const y = t.getFullYear();
+  const m = String(t.getMonth() + 1).padStart(2, '0');
+  const d = String(t.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + d;
+};
+
 export {
   formatDate,
   formatDateTime,
@@ -674,6 +801,7 @@ export {
   validateNationalId,
   validateUpdatedInfoNationalID,
   checkNoUpdateInSubmit,
+  findPicklistOptionByRaw,
   isOnlyNumber,
   setConsoleTab,
   urlCmpWithRecordId,
@@ -683,5 +811,9 @@ export {
   toSortDateStr,
   formatDuration,
   getCaseIdNumber,
-  sortByStringField
+  sortByStringField,
+  formatThousandsFromDigits,
+  stripToIntString,
+  todayIso,
+  toUpperNoVietnameseAccent
 };
