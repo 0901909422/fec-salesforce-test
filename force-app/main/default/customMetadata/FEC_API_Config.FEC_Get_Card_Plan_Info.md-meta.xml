@@ -4,7 +4,7 @@
     <protected>false</protected>
     <values>
         <field>FEC_Endpoint__c</field>
-        <value xsi:type="xsd:string">/CIF_CardInfo</value>
+        <value xsi:type="xsd:string">/esb/cif/CIF_CardInfo</value>
     </values>
     <values>
         <field>FEC_SOAP_Action__c</field>

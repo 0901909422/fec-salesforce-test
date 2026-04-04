@@ -187,6 +187,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
     public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
     
+    public static final String FEC_CATEGORY_REQUEST = 'Request';
+    public static final String FEC_CATEGORY_FEEDBACK = 'Feedback';
     public static final String FEC_CATEGORY_COMPLAINT = 'Complaint';
     public static final String FEC_COMPLAIN_TYPE_NORMAL = 'Normal';
     public static final String FEC_COMPLAIN_TYPE_URGENT = 'Urgent';
@@ -345,4 +347,6 @@ public with sharing class FEC_ConstantCommon {
     public static final String QUEUE_DAY_2_CHECK_NAME = 'FEC_Day_2_Check';
     public static final String QUEUE_OM_MAILBOX_NAME = 'FEC_OM_Mailbox';
     public static final String QUEUE_QUALITY_CONTROL_MAILBOX_NAME = 'FEC_Quality_Control_Mailbox';
+    public static final String QUEUE_DQ_CS_SUPPORT_NAME = 'FEC_DQ_CS_Support';
+    public static final String QUEUE_DQ_CS_CUSTOMER_CARE_NAME = 'FEC_DQ_CS_Customer_Care';
 }
