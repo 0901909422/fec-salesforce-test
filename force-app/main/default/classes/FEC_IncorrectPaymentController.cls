@@ -17,6 +17,11 @@ public with sharing class FEC_IncorrectPaymentController {
         @AuraEnabled public String subCode;
         @AuraEnabled public String incorrectContractNumber;
         @AuraEnabled public String paymentMethod;
+        @AuraEnabled public String beneficiaryName;
+        @AuraEnabled public String beneficiaryAccount;
+        @AuraEnabled public String bankName;
+        @AuraEnabled public String bankBranch;
+        @AuraEnabled public String provinceCity;
     }
 
     public class AdjustmentDTO {
@@ -73,9 +78,19 @@ public with sharing class FEC_IncorrectPaymentController {
         dto.subCode = FEC_ConstantCommon.STR_EMPTY;
         dto.incorrectContractNumber = FEC_ConstantCommon.STR_EMPTY;
         dto.paymentMethod = FEC_ConstantCommon.STR_EMPTY;
+        dto.beneficiaryName = FEC_ConstantCommon.STR_EMPTY;
+        dto.beneficiaryAccount = FEC_ConstantCommon.STR_EMPTY;
+        dto.bankName = FEC_ConstantCommon.STR_EMPTY;
+        dto.bankBranch = FEC_ConstantCommon.STR_EMPTY;
+        dto.provinceCity = FEC_ConstantCommon.STR_EMPTY;
         if (caseId == null) return dto;
         List<Case> cases = [
-            SELECT Id, FEC_SubCode__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c
+            SELECT Id, FEC_SubCode__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c,
+                FEC_Account_or_Contract__r.FEC_Beneficiary_Name__c,
+                FEC_Account_or_Contract__r.FEC_Beneficiary_Account__c,
+                FEC_Account_or_Contract__r.FEC_Bank_Name__c,
+                FEC_Account_or_Contract__r.FEC_Bank_Branch__c,
+                FEC_Account_or_Contract__r.FEC_Province_City__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -83,6 +98,13 @@ public with sharing class FEC_IncorrectPaymentController {
         if (cases.isEmpty()) return dto;
         dto.incorrectContractNumber = cases[0].FEC_Incorrect_Contract_Number__c != null ? cases[0].FEC_Incorrect_Contract_Number__c : FEC_ConstantCommon.STR_EMPTY;
         dto.paymentMethod = cases[0].FEC_Payment_Method__c != null ? cases[0].FEC_Payment_Method__c : FEC_ConstantCommon.STR_EMPTY;
+        if (cases[0].FEC_Account_or_Contract__r != null) {
+            dto.beneficiaryName = cases[0].FEC_Account_or_Contract__r.FEC_Beneficiary_Name__c != null ? cases[0].FEC_Account_or_Contract__r.FEC_Beneficiary_Name__c : FEC_ConstantCommon.STR_EMPTY;
+            dto.beneficiaryAccount = cases[0].FEC_Account_or_Contract__r.FEC_Beneficiary_Account__c != null ? cases[0].FEC_Account_or_Contract__r.FEC_Beneficiary_Account__c : FEC_ConstantCommon.STR_EMPTY;
+            dto.bankName = cases[0].FEC_Account_or_Contract__r.FEC_Bank_Name__c != null ? cases[0].FEC_Account_or_Contract__r.FEC_Bank_Name__c : FEC_ConstantCommon.STR_EMPTY;
+            dto.bankBranch = cases[0].FEC_Account_or_Contract__r.FEC_Bank_Branch__c != null ? cases[0].FEC_Account_or_Contract__r.FEC_Bank_Branch__c : FEC_ConstantCommon.STR_EMPTY;
+            dto.provinceCity = cases[0].FEC_Account_or_Contract__r.FEC_Province_City__c != null ? cases[0].FEC_Account_or_Contract__r.FEC_Province_City__c : FEC_ConstantCommon.STR_EMPTY;
+        }
         if (cases[0].FEC_SubCode__c == null) return dto;
         Id subCodeId = cases[0].FEC_SubCode__c;
         List<FEC_Nature_of_Case__c> nocs = [
@@ -138,7 +160,19 @@ public with sharing class FEC_IncorrectPaymentController {
     }
 
     @AuraEnabled
-    public static void saveAdjustment(Id caseId, String incorrectContract, String paymentMethod, String billDate, Decimal billAmount, List<AdjustmentDTO> adjustments) {
+    public static void saveAdjustment(
+        Id caseId,
+        String incorrectContract,
+        String paymentMethod,
+        String billDate,
+        Decimal billAmount,
+        List<AdjustmentDTO> adjustments,
+        String beneficiaryName,
+        String beneficiaryAccount,
+        String bankName,
+        String bankBranch,
+        String provinceCity
+    ) {
         if (caseId == null) {
             throw new AuraHandledException(
                 String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'})
@@ -179,7 +213,12 @@ public with sharing class FEC_IncorrectPaymentController {
                 throw new AuraHandledException(Label.FEC_MSG_Adjusted_Amount_Must_Equal_Payment);
             }
         }
-        List<Case> cases = [SELECT Id, FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c FROM Case WHERE Id = :caseId LIMIT 1];
+        List<Case> cases = [
+            SELECT Id, FEC_Account_or_Contract__c, FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
         if (cases.isEmpty()) {
             throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_Case_Not_Found);
         }
@@ -208,6 +247,30 @@ public with sharing class FEC_IncorrectPaymentController {
         }
         try {
             update toUpdate;
+        } catch (DmlException e) {
+            throw new AuraHandledException(e.getDmlMessage(0));
+        }
+        if (cases[0].FEC_Account_or_Contract__c == null) {
+            return;
+        }
+        if (!Schema.sObjectType.FEC_Customer_History__c.isUpdateable()) {
+            return;
+        }
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            Id = cases[0].FEC_Account_or_Contract__c,
+            FEC_Beneficiary_Name__c = String.isNotBlank(beneficiaryName) ? beneficiaryName.trim() : null,
+            FEC_Beneficiary_Account__c = String.isNotBlank(beneficiaryAccount) ? beneficiaryAccount.trim() : null,
+            FEC_Bank_Name__c = String.isNotBlank(bankName) ? bankName.trim() : null,
+            FEC_Bank_Branch__c = String.isNotBlank(bankBranch) ? bankBranch.trim() : null,
+            FEC_Province_City__c = String.isNotBlank(provinceCity) ? provinceCity.trim() : null
+        );
+        List<FEC_Customer_History__c> histToUpdate = new List<FEC_Customer_History__c>{ hist };
+        histToUpdate = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.UPDATABLE, histToUpdate).getRecords();
+        if (histToUpdate.isEmpty()) {
+            return;
+        }
+        try {
+            update histToUpdate;
         } catch (DmlException e) {
             throw new AuraHandledException(e.getDmlMessage(0));
         }

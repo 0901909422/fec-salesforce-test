@@ -289,8 +289,8 @@ export default class FecCaseFollowHeadlessAction extends LightningElement {
     // Chỉ popup Select Follow-Up User — nhãn riêng; modal Follow-up chính dùng FEC_Follow_Up_Until_*
     get followUpTypeOptions() {
         return [
-            { label: FEC_Select_Follow_Up_User_Type_Resolved, value: 'UNTIL_RESOLVED' },
-            { label: FEC_Select_Follow_Up_User_Type_Unfollow, value: 'UNTIL_UNFOLLOW' }
+            { label: FEC_Follow_Up_Until_Resolved, value: 'UNTIL_RESOLVED' },
+            { label: FEC_Follow_Up_Until_Unfollow, value: 'UNTIL_UNFOLLOW' }
         ];
     }
 

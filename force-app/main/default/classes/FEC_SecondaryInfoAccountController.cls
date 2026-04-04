@@ -62,7 +62,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
     private static void syncFromApi(Id caseId) {
 
         Case c = [
-            SELECT FEC_Account_or_Contract__c, FEC_Account_Number__c
+            SELECT FEC_Account_or_Contract__c, FEC_Account_Number__c, FEC_Product_Type__r.Name
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -76,12 +76,17 @@ public without sharing class FEC_SecondaryInfoAccountController {
         /* ========= 1. TRY LOCAL ========= */
         if (c.FEC_Account_or_Contract__c != null){
             acc = [
-                SELECT Id,FEC_Account_Number__c,FEC_CIF_Number__c,FEC_Application_ID__c
+                SELECT Id,FEC_Account_Number__c,FEC_CIF_Number__c,FEC_Application_ID__c,FEC_Contract_Number__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :c.FEC_Account_or_Contract__c
                 LIMIT 1
             ];
-            accountNumber = acc.FEC_Account_Number__c;
+
+            accountNumber = FEC_CommonUltils.resolveAccountNumber(
+                c.FEC_Product_Type__r.Name,
+                acc.FEC_Account_Number__c,
+                acc.FEC_Contract_Number__c
+            );
             cifNumber = acc.FEC_CIF_Number__c;
             applicationID = acc.FEC_Application_ID__c;
         }
