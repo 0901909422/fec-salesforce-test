@@ -89,8 +89,9 @@ public without sharing class FEC_CaseTriggerHandler {
         FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
         syncGlobalSearch(newCases, null);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
-        isExecuting = false;
         redirectEmailReplyToCustomerCase(newCases);
+        
+        isExecuting = false;
     }
 
     /**
