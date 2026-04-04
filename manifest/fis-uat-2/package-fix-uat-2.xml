@@ -250,6 +250,11 @@
         <members>FEC_MSG_Refund_Request_Receipt_Line_Incomplete</members>
 		<members>FEC_Select_Follow_Up_User_Type_Resolved</members>
 		<members>FEC_Select_Follow_Up_User_Type_Unfollow</members>
+		<members>FEC_FollowUp_Type_Until_Case_Resolved</members>
+		<members>FEC_Follow_Up_Until_Resolved</members>
+		<members>FEC_Follow_Up_Until_Unfollow</members>
+		<members>FEC_LABEL_UNTIL_CASE_RESOLVED</members>
+		<members>FEC_LABEL_UNTIL_UNFOLLOW</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -384,7 +389,7 @@
 		<members>FEC_CS_Unit_Head_of_CS_Support_Master_Data_Management</members>
 		<members>FEC_CS_Unit_Head_of_Customer_Care_Master_Data_Management</members>
 		<members>FEC_CS_Unit_Head_of_Office_Based_Master_Data_Management</members>
-		<members>RD_IT_User_Master_Data_Management</members>
+
 		<members>RD_IT_User_System_Management</members>
         <members>FEC_Common_System_Setting</members>
 		<name>PermissionSet</name>
@@ -486,7 +491,7 @@
 		<name>CustomObjectTranslation</name>
 	</types>
 	<types>
-		<members>Case</members>
+
 		<name>Settings</name>
 	</types>
 	<types>

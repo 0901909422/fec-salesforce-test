@@ -1383,6 +1383,11 @@
         <members>FEC_MSG_Refund_Request_Amount_Nonnegative</members>
         <members>FEC_MSG_Refund_Request_Receipt_Lines_Required</members>
         <members>FEC_MSG_Refund_Request_Receipt_Line_Incomplete</members>
+		<members>FEC_FollowUp_Type_Until_Case_Resolved</members>
+		<members>FEC_Follow_Up_Until_Resolved</members>
+		<members>FEC_Follow_Up_Until_Unfollow</members>
+		<members>FEC_LABEL_UNTIL_CASE_RESOLVED</members>
+		<members>FEC_LABEL_UNTIL_UNFOLLOW</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
