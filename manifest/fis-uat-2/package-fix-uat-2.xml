@@ -57,8 +57,14 @@
 		<members>FEC_CaseRelatedNoteHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_PinResetHandler</members>
+		<members>FEC_CaseTriggerHandler</members>
 		<members>FEC_RefundRequestController</members>
 		<members>FEC_GetMRCInfo</members>
+		<members>FEC_PaymentHistoryController</members>
+		<members>FEC_SecondaryInfoAccountController</members>
+		<members>FEC_StatementsAccountController</members>
+		<members>FEC_TransactionsController</members>
+		<members>FEC_GetCSMasterDataByCodeService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -102,6 +108,8 @@
 		<members>fec_RefundRequestForm</members>
 		<members>fec_CaseFollowHeadlessAction</members>
 		<members>fec_CommonUtils</members>
+		<members>fec_CustomerCaseExecuteAction</members>
+		<members>fec_CustomerCaseModeStore</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -245,6 +253,11 @@
         <members>FEC_MSG_Refund_Request_Receipt_Line_Incomplete</members>
 		<members>FEC_Select_Follow_Up_User_Type_Resolved</members>
 		<members>FEC_Select_Follow_Up_User_Type_Unfollow</members>
+		<members>FEC_FollowUp_Type_Until_Case_Resolved</members>
+		<members>FEC_Follow_Up_Until_Resolved</members>
+		<members>FEC_Follow_Up_Until_Unfollow</members>
+		<members>FEC_LABEL_UNTIL_CASE_RESOLVED</members>
+		<members>FEC_LABEL_UNTIL_UNFOLLOW</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -484,5 +497,13 @@
 		<members>Case</members>
 		<name>Settings</name>
 	</types>
+	<types>
+		<members>FEC_New_Interaction_Record_For_E2C</members>
+		<name>Flow</name>
+	</types>
+	<types>
+        <members>CaseOrigin</members>
+        <name>StandardValueSet</name>
+    </types>
     <version>65.0</version>
 </Package>

@@ -16,6 +16,7 @@ import FEC_ACTION_CANCEL from "@salesforce/label/c.FEC_Action_Cancel";
 import FEC_Button_Save from "@salesforce/label/c.FEC_Button_Save";
 export default class Fec_NewNoteModal extends LightningElement {
   @api recordId;
+  @api isEdit; // 'create' or 'edit'
   @api note;
   @track title = "";
   @track content = "";

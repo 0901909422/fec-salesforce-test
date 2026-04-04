@@ -17,6 +17,7 @@ import updateInteractionEmail from "@salesforce/apex/FEC_InteractionInforHandler
 import updateInteractionOnHold from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionOnHold";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionIdFromCustomerCase";
+import getParentCaseNumber from "@salesforce/apex/FEC_InteractionInforHandler.getParentCaseNumber";
 
 // ================= SCHEMA =================
 import ISCLOSED from "@salesforce/schema/Case.IsClosed";
@@ -81,6 +82,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   @track record;
   @track emailDraft = STR_EMPTY;
   @track emailError = STR_EMPTY;
+  @track parentCaseNumber = STR_EMPTY;
 
   isLoaded = false;
   isEditingEmail = false;
@@ -189,6 +191,9 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
       .then((result) => {
         this.record = result;
         this.isLoaded = true;
+        getParentCaseNumber({ caseId: this.recordId })
+          .then((num) => { this.parentCaseNumber = num || STR_EMPTY; })
+          .catch(() => { this.parentCaseNumber = STR_EMPTY; });
       })
       .catch((error) => {
         console.error("getInteraction error", error);
@@ -256,16 +261,17 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   }
 
   get parentId() {
-    return this.record?.[PARENT_ID_FIELD.fieldApiName] || STR_EMPTY;
+    return this.parentCaseNumber || this.record?.[PARENT_ID_FIELD.fieldApiName] || STR_EMPTY;
   }
 
   get parentIdUrl() {
-    if (!this.parentId) return null;
-    return `/lightning/r/${CASE_OBJECT.objectApiName}/${this.parentId}/view`;
+    const rawId = this.record?.[PARENT_ID_FIELD.fieldApiName];
+    if (!rawId) return null;
+    return `/lightning/r/${CASE_OBJECT.objectApiName}/${rawId}/view`;
   }
 
   get showParentIdLink() {
-    return !!this.parentId;
+    return !!(this.record?.[PARENT_ID_FIELD.fieldApiName] || this.parentCaseNumber);
   }
 
   // ================= EMAIL/ON HOLD ACTIONS =================
@@ -338,11 +344,12 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   }
 
   handleNavigateToParent() {
-    if (!this.parentId) return;
+    const rawId = this.record?.[PARENT_ID_FIELD.fieldApiName];
+    if (!rawId) return;
     this[NavigationMixin.Navigate]({
       type: "standard__recordPage",
       attributes: {
-        recordId: this.parentId,
+        recordId: rawId,
         objectApiName: CASE_OBJECT.objectApiName,
         actionName: NAV_ACTION_VIEW,
       },
