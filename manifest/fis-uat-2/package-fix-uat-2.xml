@@ -101,6 +101,7 @@
 		<members>fec_NewNoteModal</members>
 		<members>fec_RefundRequestForm</members>
 		<members>fec_CaseFollowHeadlessAction</members>
+		<members>fec_CommonUtils</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

@@ -691,6 +691,7 @@
 		<members>fec_IPPConversionRetailForm</members>
 		<members>fec_IncorrectPaymentForm</members>
         <members>fec_RemovePhoneForm</members>
+		<members>fec_RefundRequestForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -1285,6 +1286,9 @@
 		<members>FEC_Province__c</members>
 		<members>FEC_Ward__c</members>
         <members>FEC_Case_Status__c</members>
+		<members>FEC_Bank_Branch__c</members>
+		<members>FEC_Bank_Name__c</members>
+		<members>FEC_Case_Refund_Details__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -1304,6 +1308,7 @@
 		<members>FEC_MainInfoAccountController</members>
 		<members>FEC_CaseRelatedNoteHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
+		<members>FEC_RefundRequestController</members>
         <name>ApexClass</name>
     </types>
 	<types>
