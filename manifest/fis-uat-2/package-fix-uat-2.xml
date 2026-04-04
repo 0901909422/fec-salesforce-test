@@ -64,6 +64,7 @@
 		<members>FEC_SecondaryInfoAccountController</members>
 		<members>FEC_StatementsAccountController</members>
 		<members>FEC_TransactionsController</members>
+		<members>FEC_GetCSMasterDataByCodeService</members>
         <name>ApexClass</name>
     </types>
     <types>
