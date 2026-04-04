@@ -214,7 +214,6 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRIMARY_PHONE = 'Primary Phone';
     public static final String SUBCHANNEL_INCOMING_EMAIL = 'Incoming Email';
     public static final String CASE_ORIGIN_EMAIL2CASE = 'Email2Case';
-    public static final String CASE_ORIGIN_EMAIL_UBANK = 'Email Ubank';
     public static final String CASE_ORIGIN_EMAIL_FECREDIT = 'Email FECredit';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
     public static final String CASE_ORIGIN_EMAIL_UBANK = 'Email-Ubank';
