@@ -17,7 +17,8 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_On_Hold__c,
                ParentId,
                IsClosed,
-               FEC_Interaction_Status__c
+               FEC_Interaction_Status__c,
+               Origin
         FROM Case
         WHERE Id = :recordId
     ];
@@ -709,5 +710,14 @@ public without sharing class FEC_InteractionInforHandler {
         
         string recordTypeName = caseList.isEmpty() ? null : caseList[0].RecordType.DeveloperName;
         return recordTypeName;
+    }
+
+    @AuraEnabled
+    public static String getParentCaseNumber(Id caseId) {
+        List<Case> caseList = [SELECT ParentId FROM Case WHERE Id = :caseId LIMIT 1];
+        if (caseList.isEmpty() || caseList[0].ParentId == null) return null;
+        List<Case> parentList = [SELECT FEC_ID_Search__c FROM Case WHERE Id = :caseList[0].ParentId LIMIT 1];
+        if (parentList.isEmpty()) return null;
+        return String.isNotBlank(parentList[0].FEC_ID_Search__c) ? parentList[0].FEC_ID_Search__c : null;
     }
 }
