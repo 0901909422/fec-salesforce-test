@@ -1044,4 +1044,17 @@ public with sharing class FEC_CommonUltils {
     s = s.replace('\u0300', '').replace('\u0301', '').replace('\u0303', '').replace('\u0309', '').replace('\u0323', '');
     return s.toUpperCase();
   }
+
+  public static String resolveAccountNumber(
+      String productTypeName,
+      String accountNumber,
+      String contractNumber
+  ) {
+      if ((productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE
+          || productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE)
+          && String.isNotBlank(contractNumber)) {
+          return contractNumber;
+      }
+      return accountNumber;
+  }
 }

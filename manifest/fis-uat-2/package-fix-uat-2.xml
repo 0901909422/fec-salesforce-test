@@ -57,9 +57,14 @@
 		<members>FEC_CaseRelatedNoteHandler</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_PinResetHandler</members>
+		<members>FEC_CaseTriggerHandler</members>
 		<members>FEC_RefundRequestController</members>
 		<members>FEC_GetMRCInfo</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
+		<members>FEC_PaymentHistoryController</members>
+		<members>FEC_SecondaryInfoAccountController</members>
+		<members>FEC_StatementsAccountController</members>
+		<members>FEC_TransactionsController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -247,6 +252,11 @@
         <members>FEC_MSG_Refund_Request_Receipt_Line_Incomplete</members>
 		<members>FEC_Select_Follow_Up_User_Type_Resolved</members>
 		<members>FEC_Select_Follow_Up_User_Type_Unfollow</members>
+		<members>FEC_FollowUp_Type_Until_Case_Resolved</members>
+		<members>FEC_Follow_Up_Until_Resolved</members>
+		<members>FEC_Follow_Up_Until_Unfollow</members>
+		<members>FEC_LABEL_UNTIL_CASE_RESOLVED</members>
+		<members>FEC_LABEL_UNTIL_UNFOLLOW</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -462,7 +472,20 @@
 		<name>CustomField</name>
 	</types>
 	<types>
+        <members>FEC_API_Config.FEC_Add_IPP</members>
+        <members>FEC_API_Config.FEC_CardLockUnlock</members>
+        <members>FEC_API_Config.FEC_Get_Assets_List</members>
+        <members>FEC_API_Config.FEC_Get_Loan_Application_History</members>
+        <members>FEC_API_Config.FEC_Get_Loan_Basic_Info</members>
+        <members>FEC_API_Config.FEC_Get_Loan_Sec_Info</members>
+        <members>FEC_API_Config.FEC_Get_MRC_Info</members>
+        <members>FEC_API_Config.FEC_Get_Removable_Phone_Status</members>
+        <members>FEC_API_Config.FEC_Mark_NFU</members>
+        <members>FEC_API_Config.FEC_PINReissueService</members>
         <members>FEC_API_Config.FEC_Ps_DNB</members>
+        <members>FEC_API_Config.FEC_ReplacementCard</members>
+        <members>FEC_API_Config.FEC_Transfer_Call</members>
+        <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -473,5 +496,13 @@
 		<members>Case</members>
 		<name>Settings</name>
 	</types>
+	<types>
+		<members>FEC_New_Interaction_Record_For_E2C</members>
+		<name>Flow</name>
+	</types>
+	<types>
+        <members>CaseOrigin</members>
+        <name>StandardValueSet</name>
+    </types>
     <version>65.0</version>
 </Package>

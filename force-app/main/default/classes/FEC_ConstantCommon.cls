@@ -214,9 +214,12 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRIMARY_PHONE = 'Primary Phone';
     public static final String SUBCHANNEL_INCOMING_EMAIL = 'Incoming Email';
     public static final String CASE_ORIGIN_EMAIL2CASE = 'Email2Case';
-    public static final String CASE_ORIGIN_EMAIL_UBANK = 'Email Ubank';
     public static final String CASE_ORIGIN_EMAIL_FECREDIT = 'Email FECredit';
     public static final String OUTCOME_CODE_COMPLETED = 'Hoàn tất/ Đã phản hồi';
+    public static final String CASE_ORIGIN_EMAIL_UBANK = 'Email-Ubank';
+    public static final string CASE_ORIGIN_EMAIL_FE ='Email-FE';
+    public static final string CASE_ORIGIN_EMAIL_INTERNAL ='Email-Internal';
+
     
     public static final String KEY_VALID_CHANNELS_WED = 'WED';
     public static final String KEY_VALID_CHANNELS_MOBILE = 'MOBILE';
@@ -345,4 +348,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String QUEUE_QUALITY_CONTROL_MAILBOX_NAME = 'FEC_Quality_Control_Mailbox';
     public static final String QUEUE_DQ_CS_SUPPORT_NAME = 'FEC_DQ_CS_Support';
     public static final String QUEUE_DQ_CS_CUSTOMER_CARE_NAME = 'FEC_DQ_CS_Customer_Care';
+    public static final String PRODUCT_TYPE_CARD_CASE = 'Card';
+    public static final String PRODUCT_TYPE_LOAN_CASE = 'Loan';
+    public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
 }
