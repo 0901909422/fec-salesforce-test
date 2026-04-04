@@ -187,6 +187,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
     public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
     
+    public static final String FEC_CATEGORY_REQUEST = 'Request';
+    public static final String FEC_CATEGORY_FEEDBACK = 'Feedback';
     public static final String FEC_CATEGORY_COMPLAINT = 'Complaint';
     public static final String FEC_COMPLAIN_TYPE_NORMAL = 'Normal';
     public static final String FEC_COMPLAIN_TYPE_URGENT = 'Urgent';
