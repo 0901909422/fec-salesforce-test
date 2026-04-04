@@ -37,6 +37,19 @@
         <members>FEC_RePayment_Schedule__c.FEC_Total_Installment_Amount__c</members>
         <members>FEC_RePayment_Schedule__c.FEC_Total_Interest__c</members>
         <members>FEC_RePayment_Schedule__c.FEC_Total_Principal__c</members>
+        <members>FEC_Address_Info__c.FEC_Country_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_District_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_Full_Address__c</members>
+        <members>FEC_Address_Info__c.FEC_Province_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_Ward_Text__c</members>
+        <members>FEC_Address_Info__c.FEC_Building__c</members>
+        <members>FEC_Address_Info__c.FEC_Number__c</members>
+        <members>FEC_Address_Info__c.FEC_Street__c</members>
+        <members>FEC_Address_Info__c.FEC_ZipCode__c</members>
+        <members>FEC_Address_Info__c.FEC_Ward__c</members>
+        <members>FEC_Address_Info__c.FEC_District__c</members>
+        <members>FEC_Address_Info__c.FEC_Province__c</members>
+        <members>FEC_Address_Info__c.FEC_Country__c</members>
         <name>CustomField</name>
     </types>
     <types>

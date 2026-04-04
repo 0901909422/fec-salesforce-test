@@ -211,7 +211,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
 
     // Query for the Case to get the Application ID
     List<Case> cases = [
-      SELECT Id, FEC_Application_ID__c
+      SELECT Id, FEC_Application_ID__c, FEC_Search_Application_ID__c
       FROM Case
       WHERE Id = :caseId
     ];
@@ -225,7 +225,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
       );
     }
 
-    if (String.isBlank(cases[0].FEC_Application_ID__c)) {
+    if (String.isBlank(cases[0].FEC_Application_ID__c) && String.isBlank(cases[0].FEC_Search_Application_ID__c)) {
       throw new AuraHandledException(
         String.format(
           System.Label.FEC_MSG_Invalid,
@@ -237,6 +237,9 @@ public with sharing class FEC_GetLoanApplicationHistory {
     // Call the API
     LoanApplicationHistoryRequest req = new LoanApplicationHistoryRequest();
     req.applicationId = cases[0].FEC_Application_ID__c;
+    if (String.isBlank(req.applicationId)) {
+        req.applicationId = cases[0].FEC_Search_Application_ID__c;
+    }
     LoanApplicationHistoryResult response = getLoanApplicationHistory(req);
 
     if (
