@@ -33,19 +33,20 @@
 		<name>CustomField</name>
 	</types>
     <types>
-		<members>FEC_API_Config.FEC_CardLockUnlock</members>
-        <members>FEC_API_Config.FEC_ReplacementCard</members>
+		<members>FEC_API_Config.FEC_Add_IPP</members>
+        <members>FEC_API_Config.FEC_CardLockUnlock</members>
+        <members>FEC_API_Config.FEC_Get_Assets_List</members>
+        <members>FEC_API_Config.FEC_Get_Loan_Application_History</members>
+        <members>FEC_API_Config.FEC_Get_Loan_Basic_Info</members>
+        <members>FEC_API_Config.FEC_Get_Loan_Sec_Info</members>
+        <members>FEC_API_Config.FEC_Get_MRC_Info</members>
+        <members>FEC_API_Config.FEC_Get_Removable_Phone_Status</members>
+        <members>FEC_API_Config.FEC_Mark_NFU</members>
         <members>FEC_API_Config.FEC_PINReissueService</members>
-        <members>FEC_API_Config.FEC_Add_IPP</members>
-		<members>FEC_API_Config.FEC_Get_Assets_List</members>
-		<members>FEC_API_Config.FEC_Get_Loan_Application_History</members>
-		<members>FEC_API_Config.FEC_Get_MRC_Info</members>
-		<members>FEC_API_Config.FEC_Transfer_Call</members>
-		<members>FEC_API_Config.FEC_Get_Loan_Basic_Info</members>
-		<members>FEC_API_Config.FEC_Get_Loan_Sec_Info</members>
-		<members>FEC_API_Config.FEC_Get_Removable_Phone_Status</members>
-		<members>FEC_API_Config.FEC_Update_Customer_Address</members>
-		<members>FEC_API_Config.FEC_Ps_DNB</members>
+        <members>FEC_API_Config.FEC_Ps_DNB</members>
+        <members>FEC_API_Config.FEC_ReplacementCard</members>
+        <members>FEC_API_Config.FEC_Transfer_Call</members>
+        <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
