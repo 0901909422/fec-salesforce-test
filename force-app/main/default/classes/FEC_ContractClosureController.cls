@@ -189,7 +189,7 @@ public with sharing class FEC_ContractClosureController {
                         row.addressType = a.FEC_Address_Type__c;
                         row.address = a.FEC_Address__c;
                         row.mailingAddressLabel = a.FEC_Mailing_Address__c == null
-                            ? ''
+                            ? FEC_ConstantCommon.STR_EMPTY
                             : String.valueOf(a.FEC_Mailing_Address__c);
                         out.addresses.add(row);
                     }
@@ -301,7 +301,7 @@ public with sharing class FEC_ContractClosureController {
         if (!gd.containsKey(objectApiName) || !gd.get(objectApiName).getDescribe().isAccessible()) {
             return opts;
         }
-        String term = '%' + (searchKey == null ? '' : searchKey) + '%';
+        String term = '%' + (searchKey == null ? FEC_ConstantCommon.STR_EMPTY : searchKey) + '%';
         String q =
             'SELECT Id, Name FROM ' +
             objectApiName +
@@ -519,7 +519,7 @@ public with sharing class FEC_ContractClosureController {
             if (String.isBlank(channel) && p.useExistingEmail == true) {
                 channel = FEC_ConstantCommon.CONTRACT_CLOSURE_EMAIL_CHANNEL_C360;
             }
-            String tempMail = p.temporaryEmail != null ? p.temporaryEmail.trim() : '';
+            String tempMail = p.temporaryEmail != null ? p.temporaryEmail.trim() : FEC_ConstantCommon.STR_EMPTY;
             Boolean hasTemp = String.isNotBlank(tempMail);
             if (hasTemp && !EMAIL_PAT.matcher(tempMail).matches()) {
                 r.addFail(MSG_NOTI_03);
@@ -545,8 +545,8 @@ public with sharing class FEC_ContractClosureController {
             }
         }
         if (hasAddr || (hasEmail && hasOffice)) {
-            String rn = p.recipientName != null ? p.recipientName.trim() : '';
-            String rp = p.recipientPhone != null ? normalizePhone(p.recipientPhone) : '';
+            String rn = p.recipientName != null ? p.recipientName.trim() : FEC_ConstantCommon.STR_EMPTY;
+            String rp = p.recipientPhone != null ? normalizePhone(p.recipientPhone) : FEC_ConstantCommon.STR_EMPTY;
             if (forComplete && String.isBlank(rn)) {
                 r.addFail(MSG_NOTI_01);
             }
@@ -559,7 +559,7 @@ public with sharing class FEC_ContractClosureController {
             if (forComplete) {
                 Boolean hasRow = String.isNotBlank(p.selectedAddressId);
                 Boolean hasTempLine = String.isNotBlank(
-                    p.temporaryAddressDisplay != null ? p.temporaryAddressDisplay.trim() : ''
+                    p.temporaryAddressDisplay != null ? p.temporaryAddressDisplay.trim() : FEC_ConstantCommon.STR_EMPTY
                 );
                 if (!hasRow && !hasTempLine) {
                     r.addFail(MSG_ADDRESS_REQUIRED);
@@ -571,7 +571,7 @@ public with sharing class FEC_ContractClosureController {
 
     private static String normalizePhone(String raw) {
         if (raw == null) {
-            return '';
+            return FEC_ConstantCommon.STR_EMPTY;
         }
         String s = raw.replaceAll('\\s', '');
         if (s.startsWith('+84')) {
@@ -700,7 +700,7 @@ public with sharing class FEC_ContractClosureController {
     }
 
     private static String flc(String api) {
-        return api != null ? api.toLowerCase() : '';
+        return api != null ? api.toLowerCase() : FEC_ConstantCommon.STR_EMPTY;
     }
 
     private static List<PicklistEntryDTO> describePicklist(String obj, String fieldApi) {
