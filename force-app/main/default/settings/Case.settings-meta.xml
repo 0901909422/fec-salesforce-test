@@ -1,22 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CaseSettings xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseAutoProcUser>false</caseAutoProcUser>
     <caseFeedItemSettings>
         <characterLimit>400</characterLimit>
-        <collapseThread>true</collapseThread>
         <displayFormat>Default</displayFormat>
         <feedItemType>EmailMessageEvent</feedItemType>
     </caseFeedItemSettings>
+    <caseFeedReadUnreadLtng>false</caseFeedReadUnreadLtng>
+    <caseMergeInLightning>false</caseMergeInLightning>
     <closeCaseThroughStatusChange>true</closeCaseThroughStatusChange>
-    <defaultCaseOwner>phuongnt204.fe@fpt.com</defaultCaseOwner>
+    <defaultCaseFeedLayoutOn>false</defaultCaseFeedLayoutOn>
     <defaultCaseOwnerType>User</defaultCaseOwnerType>
     <emailToCase>
+        <enableE2CAttachmentAsFile>false</enableE2CAttachmentAsFile>
+        <enableE2CDeduplicateAttachments>false</enableE2CDeduplicateAttachments>
+        <enableE2CExternalServer>true</enableE2CExternalServer>
         <enableE2CSourceTracking>true</enableE2CSourceTracking>
         <enableEmailToCase>true</enableEmailToCase>
         <enableHtmlEmail>true</enableHtmlEmail>
+        <enableNewToReadTriggers>false</enableNewToReadTriggers>
         <enableOnDemandEmailToCase>true</enableOnDemandEmailToCase>
+        <enableThreadTokenInBody>true</enableThreadTokenInBody>
+        <enableThreadTokenInSubject>true</enableThreadTokenInSubject>
+        <movingEmailEnabled>false</movingEmailEnabled>
         <notifyOwnerOnNewCaseEmail>true</notifyOwnerOnNewCaseEmail>
+        <notifySenderE2CError>false</notifySenderE2CError>
         <overEmailLimitAction>Bounce</overEmailLimitAction>
         <preQuoteSignature>false</preQuoteSignature>
+        <replyWithNewContentOnly>false</replyWithNewContentOnly>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
             <caseOrigin>Email</caseOrigin>
@@ -25,7 +36,6 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>supportcsm@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>supportcsm@8-2042ww6s1idsuecjit3di43926yua35gwxs0nj3tkvmyt6ngbx.az-9oecxmaw.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>CSM Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
@@ -38,7 +48,6 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>customercare@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>customercare@2rxmmpcu5pzbx74ylhgft327p0jtprpsya32vwkb3ucw69vwjy.az-9oecxmaw.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>Care Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
@@ -51,7 +60,6 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>cs_d2c@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>cs_d2c@2-2jahcmaqmu1mt8wfeqauuzy1mel9p82hbuu2xx7hqm80uypbqg.az-9oecxmaw.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>Day 2 Check</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
@@ -64,22 +72,8 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>e_com@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>e_com@u-gkstfj4mrmjzeul61mrde2z3ebms3lwm4x0ca3ooqe641fqgr.az-9oecxmaw.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>Ecom Mailbox</routingName>
-            <saveEmailHeaders>false</saveEmailHeaders>
-        </routingAddresses>
-        <routingAddresses>
-            <addressType>EmailToCase</addressType>
-            <caseOrigin>Email-Internal</caseOrigin>
-            <caseOwner>FEC_Ubank_Email</caseOwner>
-            <caseOwnerType>Queue</caseOwnerType>
-            <casePriority>Medium</casePriority>
-            <createTask>false</createTask>
-            <emailAddress>duongauto4045@gmail.com</emailAddress>
-            <emailServicesAddress>duongauto4045@1kurkhogaxvajkfr51btvjd7ojcvcow96onuyx8t86b9yzaz43.az-9oecxmaw.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
-            <isVerified>true</isVerified>
-            <routingName>EmailInternal</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <routingAddresses>
@@ -90,7 +84,6 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>cs_om@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>cs_om@1p849mtmmjqm7d7r9dep5v6a58gngb4ln2dhy8w4ft5508nd0.az-9oecxmaw.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>OM Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
@@ -103,7 +96,6 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>f2f@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>f2f@lwyn1hs679ia1q9kr7wx4y3ni9crfp1qnzneo8wrt632zt7we.az-9oecxmaw.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>Office Based Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
@@ -116,7 +108,6 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>cs_qc_team@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>cs_qc_team@v-14xdrwwsxecqrfylww9vazqotj391dpsf4i2xpo23uiqco4n61.az-9oecxmaw.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>Quality Control Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
@@ -129,61 +120,56 @@
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>cssupport@fecredit.com.vn</emailAddress>
-            <emailServicesAddress>cssupport@h-1mmr3x9xwru6xam80xuzcdz985d940on4g9rrnxvodcjfhllh4.az-9oecxmaw.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
             <isVerified>false</isVerified>
             <routingName>Support Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
-            <caseOrigin>Email-Ubank</caseOrigin>
             <caseOrigin>Email</caseOrigin>
             <caseOwner>FEC_Ubank_Email</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
-            <emailAddress>tsalesforce63@gmail.com</emailAddress>
-            <emailServicesAddress>tsalesforce63@e-8msapfk3jrfdzmgrzog1xy3vxx84lbgk71otjnq00apkfipkr.az-9oecxmaw.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
-            <isVerified>true</isVerified>
-            <routingName>longnh76 Email-to-case</routingName>
-            <saveEmailHeaders>false</saveEmailHeaders>
-        </routingAddresses>
-        <routingAddresses>
-            <addressType>EmailToCase</addressType>
-            <caseOrigin>Email-FE</caseOrigin>
-            <caseOwner>FEC_Ubank_Email</caseOwner>
-            <caseOwnerType>Queue</caseOwnerType>
-            <casePriority>Medium</casePriority>
-            <createTask>false</createTask>
-            <emailAddress>minhtung2108@gmail.com</emailAddress>
-            <emailServicesAddress>minhtung2108@r-21eh14cxkc851ukhcsnyju363ag86qleba1us04km2qxl91sto.az-9oecxmaw.jpn10s.case.sandbox.salesforce.com</emailServicesAddress>
-            <isVerified>true</isVerified>
-            <routingName>minhtung E2C</routingName>
             <emailAddress>dichvukhachhang@ubank.vn</emailAddress>
             <isVerified>false</isVerified>
             <routingName>Ubank Email</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <unauthorizedSenderAction>Discard</unauthorizedSenderAction>
+        <useEmailHeadersForThreading>true</useEmailHeadersForThreading>
     </emailToCase>
     <enableCaseFeed>true</enableCaseFeed>
+    <enableCaseSwarming>false</enableCaseSwarming>
+    <enableCollapseEmailThread>true</enableCollapseEmailThread>
     <enableDraftEmails>true</enableDraftEmails>
     <enableEarlyEscalationRuleTriggers>false</enableEarlyEscalationRuleTriggers>
     <enableEmailActionDefaultsHandler>false</enableEmailActionDefaultsHandler>
+    <enableEscalateQfiToCaseInternal>false</enableEscalateQfiToCaseInternal>
+    <enableMultiLangSolnSrchCSS>false</enableMultiLangSolnSrchCSS>
+    <enableMultiLangSolnSrchPKB>false</enableMultiLangSolnSrchPKB>
+    <enableMultiLangSolution>false</enableMultiLangSolution>
+    <enableSolutionCategory>false</enableSolutionCategory>
+    <enableSolutionInlineCategory>true</enableSolutionInlineCategory>
+    <enableSolutionShortSummary>true</enableSolutionShortSummary>
     <enableSuggestedArticlesApplication>false</enableSuggestedArticlesApplication>
     <enableSuggestedArticlesCustomerPortal>false</enableSuggestedArticlesCustomerPortal>
     <enableSuggestedArticlesPartnerPortal>false</enableSuggestedArticlesPartnerPortal>
     <enableSuggestedSolutions>true</enableSuggestedSolutions>
+    <escalateCaseBefore>false</escalateCaseBefore>
+    <hidePublicInCaseComment>false</hidePublicInCaseComment>
     <keepRecordTypeOnAssignmentRule>true</keepRecordTypeOnAssignmentRule>
     <notifyContactOnCaseComment>false</notifyContactOnCaseComment>
     <notifyDefaultCaseOwner>false</notifyDefaultCaseOwner>
     <notifyOwnerOnCaseComment>false</notifyOwnerOnCaseComment>
     <notifyOwnerOnCaseOwnerChange>false</notifyOwnerOnCaseOwnerChange>
+    <rtaCaseComment>false</rtaCaseComment>
+    <rtaCaseDescription>false</rtaCaseDescription>
     <showEmailAttachmentsInCaseAttachmentsRL>true</showEmailAttachmentsInCaseAttachmentsRL>
     <showFewerCloseActions>false</showFewerCloseActions>
-    <systemUserEmail>phuongnt204@fpt.com</systemUserEmail>
     <useSystemEmailAddress>true</useSystemEmailAddress>
     <useSystemUserAsDefaultCaseUser>true</useSystemUserAsDefaultCaseUser>
+    <visibleInCssCheckbox>false</visibleInCssCheckbox>
     <webToCase>
         <enableWebToCase>false</enableWebToCase>
     </webToCase>
