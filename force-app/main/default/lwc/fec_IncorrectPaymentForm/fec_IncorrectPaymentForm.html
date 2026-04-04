@@ -179,15 +179,17 @@
                       ></lightning-input>
                     </div>
                     <div
-                      class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12 slds-grid slds-grid_vertical-align-center slds-no-flex"
-                      data-id={row.id}
-                      onclick={handleRemoveAdjustment}
+                      class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12 slds-grid slds-grid_vertical-align-center slds-no-flex delete-action-col"
                     >
-                      <lightning-button
+                      <lightning-button-icon
                         icon-name="utility:delete"
-                        variant="neutral"
+                        variant="border"
+                        alternative-text={customLabel.removeRow}
+                        aria-label={customLabel.removeRow}
                         title={customLabel.removeRow}
-                      ></lightning-button>
+                        data-id={row.id}
+                        onclick={handleRemoveAdjustment}
+                      ></lightning-button-icon>
                     </div>
                   </div>
                 </template>
@@ -205,6 +207,58 @@
               <p class="slds-m-top_small slds-text-body_small slds-text-color_error">
                 {customLabel.adjustedAmountMustEqualPayment}
               </p>
+            </div>
+            <div class="slds-grid slds-gutters slds-wrap slds-m-top_medium">
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input
+                  type="text"
+                  name="beneficiaryName"
+                  label={customLabel.beneficiaryName}
+                  value={beneficiaryName}
+                  required
+                  onchange={handleBeneficiaryNameChange}
+                ></lightning-input>
+              </div>
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input
+                  type="text"
+                  name="beneficiaryAccount"
+                  label={customLabel.beneficiaryAccount}
+                  value={beneficiaryAccount}
+                  required
+                  onchange={handleBeneficiaryAccountChange}
+                ></lightning-input>
+              </div>
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-top_small">
+                <lightning-combobox
+                  name="bankName"
+                  label={customLabel.bankName}
+                  value={bankName}
+                  options={bankOptions}
+                  required
+                  onchange={handleBankNameChange}
+                ></lightning-combobox>
+              </div>
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-top_small">
+                <lightning-combobox
+                  name="bankBranch"
+                  label={customLabel.bankBranch}
+                  value={bankBranch}
+                  options={bankBranchOptions}
+                  required
+                  onchange={handleBankBranchChange}
+                ></lightning-combobox>
+              </div>
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-top_small">
+                <lightning-combobox
+                  name="provinceCity"
+                  label={customLabel.provinceCity}
+                  value={provinceCity}
+                  options={provinceOptions}
+                  required
+                  onchange={handleProvinceCityChange}
+                ></lightning-combobox>
+              </div>
             </div>
           </template>
         </div>

@@ -660,7 +660,8 @@ public without sharing class FEC_CaseBusinessService {
         'SELECT Id, FEC_Action_Button__c, ' +
           'FEC_Action_Button__r.Name, ' +
           'FEC_Action_Button__r.FEC_Type__c, ' +
-          'FEC_Action_Button__r.FEC_Code__c ' +
+          'FEC_Action_Button__r.FEC_Code__c, ' +
+          'FEC_Field_Type__c ' +
           'FROM FEC_Stage_Screen__c ' +
           'WHERE FEC_Action_Button__c != NULL AND FEC_Active__c = TRUE AND FEC_Action_Button__r.FEC_Type__c IN :validButtonTypelst ' +
           'AND FEC_Case_Stage__c = \'' +
@@ -679,13 +680,24 @@ public without sharing class FEC_CaseBusinessService {
           if (ROUTE_TO.equals(item.FEC_Action_Button__r.FEC_Code__c)) {
             routeToId = item.FEC_Action_Button__c;
           }
-          result.routingActionlst.add(
-            new Action(
-              item.FEC_Action_Button__c,
-              item.FEC_Action_Button__r.FEC_Code__c,
-              item.FEC_Action_Button__r.Name
-            )
+          Action act = new Action(
+            item.FEC_Action_Button__c,
+            item.FEC_Action_Button__r.FEC_Code__c,
+            item.FEC_Action_Button__r.Name
           );
+          if (item.FEC_Field_Type__c == 'All') {
+            result.routingActionlst.add(
+              act
+            );
+          } else if (item.FEC_Field_Type__c == 'New' && !isRevert) {
+            result.routingActionlst.add(
+              act
+            );
+          } else if (item.FEC_Field_Type__c == 'Revert' && isRevert) {
+            result.routingActionlst.add(
+              act
+            );
+          }
         } else if (
           'Process Action'.equals(item.FEC_Action_Button__r.FEC_Type__c)
         ) {

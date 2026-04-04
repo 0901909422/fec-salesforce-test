@@ -330,7 +330,7 @@ public with sharing class FEC_GetMRCInfo {
 
     // 1. Query the Case to get the Contract Number
     List<Case> cases = [
-      SELECT Id, FEC_Contract_Number__c
+      SELECT Id, FEC_Contract_Number__c, FEC_Search_Contract_Number__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
@@ -345,7 +345,7 @@ public with sharing class FEC_GetMRCInfo {
       );
     }
 
-    if (String.isBlank(cases[0].FEC_Contract_Number__c)) {
+    if (String.isBlank(cases[0].FEC_Contract_Number__c) && String.isBlank(cases[0].FEC_Search_Contract_Number__c)) {
       throw new AuraHandledException(
         String.format(
           System.Label.FEC_MSG_Invalid,
@@ -357,6 +357,9 @@ public with sharing class FEC_GetMRCInfo {
     // 2. Call the API
     MRCInfoRequest req = new MRCInfoRequest();
     req.ContractNumber = cases[0].FEC_Contract_Number__c;
+    if (String.isBlank(req.ContractNumber)) {
+        req.ContractNumber = cases[0].FEC_Search_Contract_Number__c;
+    }
     MRCInfoResult result;
     try {
       result = getMRCInfo(req);
