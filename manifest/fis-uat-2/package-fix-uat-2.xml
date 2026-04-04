@@ -107,6 +107,8 @@
 		<members>fec_RefundRequestForm</members>
 		<members>fec_CaseFollowHeadlessAction</members>
 		<members>fec_CommonUtils</members>
+		<members>fec_CustomerCaseExecuteAction</members>
+		<members>fec_CustomerCaseModeStore</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

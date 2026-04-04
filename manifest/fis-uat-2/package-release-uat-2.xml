@@ -1398,6 +1398,8 @@
 		<members>fec_CaseNote</members>
 		<members>fec_NewNoteModal</members>
 		<members>fec_CaseFollowHeadlessAction</members>
+		<members>fec_CustomerCaseExecuteAction</members>
+		<members>fec_CustomerCaseModeStore</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
