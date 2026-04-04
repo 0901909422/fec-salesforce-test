@@ -1803,15 +1803,15 @@
         <fullName>FEC_Follow_Up_Until_Resolved</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Until Resolved</shortDescription>
-        <value>Until Resolved</value>
+        <shortDescription>Until case is resolved</shortDescription>
+        <value>Until case is resolved</value>
     </labels>
     <labels>
         <fullName>FEC_Follow_Up_Until_Unfollow</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Until Unfollow</shortDescription>
-        <value>Until Unfollow</value>
+        <shortDescription>Until choosing Unfollow</shortDescription>
+        <value>Until choosing Unfollow</value>
     </labels>
     <labels>
         <fullName>FEC_Select_Follow_Up_User_Type_Resolved</fullName>
@@ -2107,15 +2107,15 @@
         <fullName>FEC_LABEL_UNTIL_CASE_RESOLVED</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Until Case Resolved</shortDescription>
-        <value>Until Case Resolved</value>
+        <shortDescription>Until case is resolved</shortDescription>
+        <value>Until case is resolved</value>
     </labels>
     <labels>
         <fullName>FEC_LABEL_UNTIL_UNFOLLOW</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Until Unfollow</shortDescription>
-        <value>Until Unfollow</value>
+        <shortDescription>Until choosing Unfollow</shortDescription>
+        <value>Until choosing Unfollow</value>
     </labels>
     <labels>
         <fullName>FEC_LABEL_USER</fullName>
@@ -7872,8 +7872,8 @@
         <fullName>FEC_LABEL_UNTIL_UNFOLLOW</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Until Unfollow</shortDescription>
-        <value>Until Unfollow</value>
+        <shortDescription>Until choosing Unfollow</shortDescription>
+        <value>Until choosing Unfollow</value>
     </labels>
     <labels>
         <fullName>FEC_ACTION_SELECT_USER</fullName>
