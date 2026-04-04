@@ -1,8 +1,3 @@
-/**
- * Contract Closure Form — dữ liệu C360 (Customer History qua Case.FEC_Account_or_Contract__c),
- * địa chỉ FEC_Address_Info__c, cập nhật Case (multipicklist & trường closure theo spec).
- * Các field Case closure có thể chưa có trong metadata repo: truy vấn/cập nhật qua Schema an toàn.
- */
 public with sharing class FEC_ContractClosureController {
 
     public static final String MSG_NOTI_01 = System.Label.FEC_MSG_ContractClosure_Required_Fields;
@@ -17,6 +12,12 @@ public with sharing class FEC_ContractClosureController {
     private static final String FLD_RECIPIENT_NAME = 'FEC_Recipient_Name__c';
     private static final String FLD_RECIPIENT_PHONE = 'FEC_Recipient_Phone_Number__c';
     private static final String FLD_TEMP_EMAIL = 'FEC_Temporary_Email__c';
+    private static final String OBJ_CONTACT_LIST = 'FEC_Contact_List__c';
+    private static final String FLD_CL_HISTORY = 'FEC_Customer_History__c';
+    private static final String FLD_CL_COMM_TYPE = 'FEC_Communication_Type__c';
+    private static final String FLD_CL_CHANNEL = 'FEC_Channel__c';
+    private static final String FLD_CL_CONTACT_STRING = 'FEC_Contact_String__c';
+    private static final String FLD_CASE_CHANNEL = 'FEC_Channel__c';
 
     private static final String OBJ_ADDITIONAL_INFO = 'FEC_Additional_Info__c';
     private static final String FLD_AI_CASE = 'FEC_Case__c';
@@ -151,8 +152,8 @@ public with sharing class FEC_ContractClosureController {
             if (caseFields.containsKey(flc(FLD_RECIPIENT_PHONE))) {
                 selectParts.add(FLD_RECIPIENT_PHONE);
             }
-            if (caseFields.containsKey(flc(FLD_TEMP_EMAIL))) {
-                selectParts.add(FLD_TEMP_EMAIL);
+            if (caseFields.containsKey(flc(FLD_CASE_CHANNEL))) {
+                selectParts.add(FLD_CASE_CHANNEL);
             }
             String soql =
                 'SELECT ' +
@@ -213,9 +214,7 @@ public with sharing class FEC_ContractClosureController {
             if (caseFields.containsKey(flc(FLD_RECIPIENT_PHONE))) {
                 out.savedRecipientPhone = (String) c.get(FLD_RECIPIENT_PHONE);
             }
-            if (caseFields.containsKey(flc(FLD_TEMP_EMAIL))) {
-                out.savedTemporaryEmail = (String) c.get(FLD_TEMP_EMAIL);
-            }
+            out.savedTemporaryEmail = loadTemporaryEmailFromContactList((Case) c);
             out.verifyInformationOptions = describePicklist(OBJ_ADDITIONAL_INFO, FLD_AI_VERIFY);
             out.callbackOptions = describePicklist(OBJ_ADDITIONAL_INFO, FLD_AI_CALLBACK);
             if (Schema.sObjectType.FEC_Additional_Info__c.isAccessible()) {
@@ -283,6 +282,9 @@ public with sharing class FEC_ContractClosureController {
                 }
             }
             persistAdditionalInfoRow(caseId, init.additionalInfoId, p.verifyInformation, p.callback);
+            if (p.deliveryEmailSelected == true) {
+                persistTemporaryEmailToContactList(caseId, p);
+            }
             vr.valid = true;
         } catch (Exception ex) {
             vr.valid = false;
@@ -600,15 +602,6 @@ public with sharing class FEC_ContractClosureController {
         if (fRp != null && fRp.getDescribe().isUpdateable()) {
             c.put(FLD_RECIPIENT_PHONE, normalizePhone(p.recipientPhone));
         }
-        Schema.SObjectField fTe = fm.get(flc(FLD_TEMP_EMAIL));
-        if (fTe != null && fTe.getDescribe().isUpdateable()) {
-            String te = p.temporaryEmail != null ? p.temporaryEmail.trim() : null;
-            if (String.isBlank(te)) {
-                c.put(FLD_TEMP_EMAIL, null);
-            } else {
-                c.put(FLD_TEMP_EMAIL, te);
-            }
-        }
         putCaseCash24OnRecord(c, p.cash24ContractText);
         return c;
     }
@@ -628,6 +621,120 @@ public with sharing class FEC_ContractClosureController {
             if (t == DisplayType.STRING || t == DisplayType.TEXTAREA) {
                 caseRec.put(api, v);
                 return;
+            }
+        }
+    }
+
+    private static String loadTemporaryEmailFromContactList(Case caseRow) {
+        if (caseRow == null) {
+            return null;
+        }
+        if (!Schema.sObjectType.FEC_Contact_List__c.isAccessible()) {
+            return null;
+        }
+        Map<String, Schema.SObjectField> clf = Schema.SObjectType.FEC_Contact_List__c.fields.getMap();
+        String fk = flc(FLD_TEMP_EMAIL);
+        if (!clf.containsKey(fk) || !clf.get(fk).getDescribe().isAccessible()) {
+            return null;
+        }
+        List<FEC_Contact_List__c> matches = FEC_UpdateCustomerContact.getMatchingContactList(
+            caseRow,
+            FEC_UpdateCustomerContact.EMAIL_UPDATE
+        );
+        if (matches.isEmpty()) {
+            return null;
+        }
+        Id clId = matches[0].Id;
+        List<SObject> teRows = Database.query(
+            'SELECT Id, ' +
+                FLD_TEMP_EMAIL +
+                ' FROM ' +
+                OBJ_CONTACT_LIST +
+                ' WHERE Id = :clId LIMIT 1'
+        );
+        if (teRows.isEmpty()) {
+            return null;
+        }
+        return (String) teRows[0].get(FLD_TEMP_EMAIL);
+    }
+
+    @TestVisible
+    private static void persistTemporaryEmailToContactList(Id caseId, SavePayloadDTO p) {
+        Map<String, Schema.SObjectField> clf = Schema.SObjectType.FEC_Contact_List__c.fields.getMap();
+        String fk = flc(FLD_TEMP_EMAIL);
+        if (!clf.containsKey(fk)) {
+            return;
+        }
+        Schema.DescribeFieldResult fdTe = clf.get(fk).getDescribe();
+        List<SObject> caseRows = Database.query(
+            'SELECT Id, FEC_Account_or_Contract__c, FEC_Channel__c FROM Case WHERE Id = :caseId LIMIT 1'
+        );
+        if (caseRows.isEmpty()) {
+            return;
+        }
+        Case caseRec = (Case) caseRows[0];
+        String te = p.temporaryEmail != null ? p.temporaryEmail.trim() : null;
+        if (String.isBlank(te)) {
+            te = null;
+        }
+        List<FEC_Contact_List__c> matches = FEC_UpdateCustomerContact.getMatchingContactList(
+            caseRec,
+            FEC_UpdateCustomerContact.EMAIL_UPDATE
+        );
+        if (!matches.isEmpty()) {
+            if (!Schema.sObjectType.FEC_Contact_List__c.isUpdateable() || !fdTe.isUpdateable()) {
+                return;
+            }
+            SObject row = matches[0];
+            row.put(FLD_TEMP_EMAIL, te);
+            SObjectAccessDecision dec = Security.stripInaccessible(
+                AccessType.UPDATABLE,
+                new List<SObject>{ row }
+            );
+            List<SObject> safe = dec.getRecords();
+            if (!safe.isEmpty()) {
+                update as user safe;
+            }
+        } else if (te != null) {
+            if (!Schema.sObjectType.FEC_Contact_List__c.isCreateable() || !fdTe.isCreateable()) {
+                return;
+            }
+            Id histId = caseRec.FEC_Account_or_Contract__c;
+            if (histId == null) {
+                return;
+            }
+            SObject n = Schema.getGlobalDescribe().get(OBJ_CONTACT_LIST).newSObject(null);
+            n.put(FLD_CL_HISTORY, histId);
+            n.put(FLD_CL_CHANNEL, caseRec.FEC_Channel__c);
+            n.put(FLD_CL_COMM_TYPE, FEC_ConstantCommon.EMAIL);
+            Map<String, Schema.SObjectField> clfAll = Schema.SObjectType.FEC_Contact_List__c.fields.getMap();
+            if (
+                clfAll.containsKey(flc(FLD_CL_CONTACT_STRING)) &&
+                clfAll.get(flc(FLD_CL_CONTACT_STRING)).getDescribe().isCreateable()
+            ) {
+                if (
+                    Schema.sObjectType.FEC_Customer_History__c.isAccessible() &&
+                    Schema.SObjectType.FEC_Customer_History__c.fields.FEC_Email__c.isAccessible()
+                ) {
+                    List<FEC_Customer_History__c> hrs = [
+                        SELECT FEC_Email__c
+                        FROM FEC_Customer_History__c
+                        WHERE Id = :histId
+                        LIMIT 1
+                    ];
+                    if (!hrs.isEmpty() && String.isNotBlank(hrs[0].FEC_Email__c)) {
+                        n.put(FLD_CL_CONTACT_STRING, hrs[0].FEC_Email__c);
+                    }
+                }
+            }
+            n.put(FLD_TEMP_EMAIL, te);
+            SObjectAccessDecision decIns = Security.stripInaccessible(
+                AccessType.CREATABLE,
+                new List<SObject>{ n }
+            );
+            List<SObject> toIns = decIns.getRecords();
+            if (!toIns.isEmpty()) {
+                insert as user toIns;
             }
         }
     }
