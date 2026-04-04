@@ -287,8 +287,8 @@ export default class FecCaseFollowHeadlessAction extends LightningElement {
     // Options cho Follow-Up Type (giống popup Follow-Up)
     get followUpTypeOptions() {
         return [
-            { label: 'Until Case Resolved', value: 'UNTIL_RESOLVED' },
-            { label: 'Until Unfollow', value: 'UNTIL_UNFOLLOW' }
+            { label: FEC_Follow_Up_Until_Resolved, value: 'UNTIL_RESOLVED' },
+            { label: FEC_Follow_Up_Until_Unfollow, value: 'UNTIL_UNFOLLOW' }
         ];
     }
 
