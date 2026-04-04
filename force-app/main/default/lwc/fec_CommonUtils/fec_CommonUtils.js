@@ -657,6 +657,13 @@ const sortByStringField = (list = [], field, direction = 'asc') => {
   });
 };
 
+const stripToIntString = (raw) => {
+  if (raw == null || raw === STR_EMPTY) {
+    return STR_EMPTY;
+  }
+  const digits = String(raw).replace(/\D/g, '');
+  return digits;
+};
 
 const formatThousandsFromDigits = (digits) => {
   if (!digits) {
@@ -728,7 +735,7 @@ export {
   toSortDateStr,
   formatDuration,
   getCaseIdNumber,
-  sortByStringField
+  sortByStringField,
   formatThousandsFromDigits,
   stripToIntString,
   todayIso,
