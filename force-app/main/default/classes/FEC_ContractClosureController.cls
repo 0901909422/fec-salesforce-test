@@ -1,0 +1,738 @@
+/**
+ * Contract Closure Form — dữ liệu C360 (Customer History qua Case.FEC_Account_or_Contract__c),
+ * địa chỉ FEC_Address_Info__c, cập nhật Case (multipicklist & trường closure theo spec).
+ * Các field Case closure có thể chưa có trong metadata repo: truy vấn/cập nhật qua Schema an toàn.
+ */
+public with sharing class FEC_ContractClosureController {
+
+    public static final String MSG_NOTI_01 = System.Label.FEC_MSG_ContractClosure_Required_Fields;
+    public static final String MSG_NOTI_02 = System.Label.FEC_MSG_ContractClosure_Delivery_Invalid;
+    public static final String MSG_NOTI_03 = System.Label.FEC_Interaction_Email_Invalid_Msg;
+    public static final String MSG_NOTI_16 = System.Label.FEC_MSG_ContractClosure_Phone_Invalid;
+    public static final String MSG_ADDRESS_REQUIRED = System.Label.FEC_MSG_ContractClosure_Address_Required;
+
+    private static final String OBJ_CASE = 'Case';
+    private static final String OBJ_ADDRESS = 'FEC_Address_Info__c';
+    private static final String FLD_DELIVERY = 'FEC_Delivery_Option2__c';
+    private static final String FLD_RECIPIENT_NAME = 'FEC_Recipient_Name__c';
+    private static final String FLD_RECIPIENT_PHONE = 'FEC_Recipient_Phone_Number__c';
+    private static final String FLD_TEMP_EMAIL = 'FEC_Temporary_Email__c';
+
+    private static final String OBJ_ADDITIONAL_INFO = 'FEC_Additional_Info__c';
+    private static final String FLD_AI_CASE = 'FEC_Case__c';
+    private static final String FLD_AI_VERIFY = 'FEC_Verify_Information__c';
+    private static final String FLD_AI_CALLBACK = 'FEC_Callback__c';
+
+    /** Thử lần lượt — đổi thứ tự / thêm API nếu field thực tế trên Case khác tên. */
+    private static final List<String> CASE_CASH24_FIELD_CANDIDATES = new List<String>{
+        'FEC_SHD_Cash24__c',
+        'FEC_Cash24_Contract_Text__c'
+    };
+
+    private static final Set<String> ADMIN_UNIT_OBJECTS = new Set<String>{ 'FEC_Ward__c', 'FEC_Province__c' };
+
+    private static final Pattern EMAIL_PAT = Pattern.compile(FEC_ConstantCommon.PATTERN_EMAIL);
+    private static final Pattern PHONE_PAT = Pattern.compile(FEC_ConstantCommon.PATTERN_PHONE_NUMBER);
+
+    public class PicklistEntryDTO {
+        @AuraEnabled public String label;
+        @AuraEnabled public String value;
+        public PicklistEntryDTO(String l, String v) {
+            label = l;
+            value = v;
+        }
+    }
+
+    public class AddressRowDTO {
+        @AuraEnabled public String id;
+        @AuraEnabled public String addressType;
+        @AuraEnabled public String address;
+        @AuraEnabled public String mailingAddressLabel;
+    }
+
+    public class InitDataDTO {
+        @AuraEnabled public Boolean success;
+        @AuraEnabled public String errorMessage;
+        @AuraEnabled public String demographicEmail;
+        @AuraEnabled public String demographicCustomerName;
+        @AuraEnabled public String demographicPrimaryPhone;
+        @AuraEnabled public List<AddressRowDTO> addresses;
+        @AuraEnabled public List<PicklistEntryDTO> deliveryOptions;
+        @AuraEnabled public List<PicklistEntryDTO> wardOptions;
+        @AuraEnabled public List<PicklistEntryDTO> provinceOptions;
+        @AuraEnabled public String savedDeliveryOption;
+        @AuraEnabled public String savedRecipientName;
+        @AuraEnabled public String savedRecipientPhone;
+        @AuraEnabled public String savedTemporaryEmail;
+        @AuraEnabled public Id additionalInfoId;
+        @AuraEnabled public String savedVerifyInformation;
+        @AuraEnabled public String savedCallback;
+        @AuraEnabled public List<PicklistEntryDTO> verifyInformationOptions;
+        @AuraEnabled public List<PicklistEntryDTO> callbackOptions;
+        @AuraEnabled public String savedCash24ContractText;
+    }
+
+    public class ValidationResultDTO {
+        @AuraEnabled public Boolean valid;
+        @AuraEnabled public List<String> messages;
+        public ValidationResultDTO() {
+            valid = true;
+            messages = new List<String>();
+        }
+        public void addFail(String m) {
+            valid = false;
+            messages.add(m);
+        }
+    }
+
+    public class SavePayloadDTO {
+        public List<String> deliveryValues;
+        /** Chuỗi multipicklist chính xác để ghi Case.FEC_Delivery_Option2__c (vd Email;Địa chỉ). */
+        public String deliveryOptionCombined;
+        public Boolean deliveryEmailSelected;
+        public Boolean deliveryAddressSelected;
+        public Boolean deliveryOfficeSelected;
+        public Boolean useExistingEmail;
+        public String temporaryEmail;
+        public String recipientName;
+        public String recipientPhone;
+        public String selectedAddressId;
+        public String temporaryAddressDisplay;
+        public TempAddressPartsDTO tempAddressParts;
+        public String tempAddressRecordId;
+        /** C360 | TEMPORARY — XOR chọn kênh email khi có Email trong delivery. */
+        public String emailDeliveryChannel;
+        public String verifyInformation;
+        public String callback;
+        public String cash24ContractText;
+    }
+
+    public class TempAddressPartsDTO {
+        public String building;
+        /** JSON từ LWC: streetNumber (tránh từ khóa reserved `number` trong Apex). */
+        public String streetNumber;
+        public String street;
+        /** Id lookup FEC_Ward__c (hoặc giá trị picklist nếu org đổi kiểu field). */
+        public String wardRecordId;
+        /** Id lookup FEC_Province__c / FEC_Province_City__c tùy metadata org. */
+        public String provinceRecordId;
+        /** Nhãn hiển thị / ghép chuỗi địa chỉ (bắt buộc cho UI). */
+        public String wardLabel;
+        public String provinceLabel;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static InitDataDTO getInitData(Id caseId) {
+        InitDataDTO out = new InitDataDTO();
+        out.addresses = new List<AddressRowDTO>();
+        out.deliveryOptions = new List<PicklistEntryDTO>();
+        out.wardOptions = new List<PicklistEntryDTO>();
+        out.provinceOptions = new List<PicklistEntryDTO>();
+        out.success = false;
+        if (caseId == null) {
+            out.errorMessage = 'Case Id is required.';
+            return out;
+        }
+        try {
+            Map<String, Schema.SObjectField> caseFields = Schema.SObjectType.Case.fields.getMap();
+            List<String> selectParts = new List<String>{
+                'Id',
+                'FEC_Account_or_Contract__c',
+                'FEC_Account_or_Contract__r.FEC_Email__c',
+                'FEC_Account_or_Contract__r.FEC_Customer_Name__c',
+                'FEC_Account_or_Contract__r.FEC_Primary_Phone__c'
+            };
+            if (caseFields.containsKey(flc(FLD_DELIVERY))) {
+                selectParts.add(FLD_DELIVERY);
+            }
+            if (caseFields.containsKey(flc(FLD_RECIPIENT_NAME))) {
+                selectParts.add(FLD_RECIPIENT_NAME);
+            }
+            if (caseFields.containsKey(flc(FLD_RECIPIENT_PHONE))) {
+                selectParts.add(FLD_RECIPIENT_PHONE);
+            }
+            if (caseFields.containsKey(flc(FLD_TEMP_EMAIL))) {
+                selectParts.add(FLD_TEMP_EMAIL);
+            }
+            String soql =
+                'SELECT ' +
+                String.join(selectParts, ',') +
+                ' FROM Case WHERE Id = :caseId LIMIT 1';
+            List<SObject> rows = Database.query(soql);
+            if (rows.isEmpty()) {
+                out.errorMessage = 'Case not found.';
+                return out;
+            }
+            SObject c = rows[0];
+            Id histId = (Id) c.get('FEC_Account_or_Contract__c');
+            SObject hist = c.getSObject('FEC_Account_or_Contract__r');
+            if (hist != null) {
+                out.demographicEmail = (String) hist.get('FEC_Email__c');
+                out.demographicCustomerName = (String) hist.get('FEC_Customer_Name__c');
+                out.demographicPrimaryPhone = (String) hist.get('FEC_Primary_Phone__c');
+            }
+            if (histId != null) {
+                if (
+                    Schema.sObjectType.FEC_Address_Info__c.isAccessible() &&
+                    Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Address_Type__c.isAccessible() &&
+                    Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Address__c.isAccessible() &&
+                    Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Mailing_Address__c.isAccessible()
+                ) {
+                    for (FEC_Address_Info__c a : [
+                        SELECT Id, FEC_Address_Type__c, FEC_Address__c, FEC_Mailing_Address__c
+                        FROM FEC_Address_Info__c
+                        WHERE FEC_Customer_History__c = :histId
+                        ORDER BY FEC_Address_Type__c
+                    ]) {
+                        AddressRowDTO row = new AddressRowDTO();
+                        row.id = a.Id;
+                        row.addressType = a.FEC_Address_Type__c;
+                        row.address = a.FEC_Address__c;
+                        row.mailingAddressLabel = a.FEC_Mailing_Address__c == null
+                            ? ''
+                            : String.valueOf(a.FEC_Mailing_Address__c);
+                        out.addresses.add(row);
+                    }
+                }
+            }
+            out.deliveryOptions = describePicklist(OBJ_CASE, FLD_DELIVERY);
+            out.wardOptions = mergePicklistOptions(
+                describePicklist(OBJ_ADDRESS, 'FEC_Ward__c'),
+                describePicklist(OBJ_ADDRESS, 'FEC_Ward_Text__c')
+            );
+            out.provinceOptions = mergePicklistOptions(
+                describePicklist(OBJ_ADDRESS, 'FEC_Province_City__c'),
+                describePicklist(OBJ_ADDRESS, 'FEC_Province__c')
+            );
+            if (caseFields.containsKey(flc(FLD_DELIVERY))) {
+                out.savedDeliveryOption = (String) c.get(FLD_DELIVERY);
+            }
+            if (caseFields.containsKey(flc(FLD_RECIPIENT_NAME))) {
+                out.savedRecipientName = (String) c.get(FLD_RECIPIENT_NAME);
+            }
+            if (caseFields.containsKey(flc(FLD_RECIPIENT_PHONE))) {
+                out.savedRecipientPhone = (String) c.get(FLD_RECIPIENT_PHONE);
+            }
+            if (caseFields.containsKey(flc(FLD_TEMP_EMAIL))) {
+                out.savedTemporaryEmail = (String) c.get(FLD_TEMP_EMAIL);
+            }
+            out.verifyInformationOptions = describePicklist(OBJ_ADDITIONAL_INFO, FLD_AI_VERIFY);
+            out.callbackOptions = describePicklist(OBJ_ADDITIONAL_INFO, FLD_AI_CALLBACK);
+            if (Schema.sObjectType.FEC_Additional_Info__c.isAccessible()) {
+                List<FEC_Additional_Info__c> aiRows = [
+                    SELECT Id, FEC_Verify_Information__c, FEC_Callback__c
+                    FROM FEC_Additional_Info__c
+                    WHERE FEC_Case__c = :caseId
+                    LIMIT 1
+                ];
+                if (!aiRows.isEmpty()) {
+                    out.additionalInfoId = aiRows[0].Id;
+                    out.savedVerifyInformation = aiRows[0].FEC_Verify_Information__c;
+                    out.savedCallback = aiRows[0].FEC_Callback__c;
+                }
+            }
+            for (String cashApi : CASE_CASH24_FIELD_CANDIDATES) {
+                if (!caseFields.containsKey(flc(cashApi))) {
+                    continue;
+                }
+                List<SObject> cashOnly = Database.query(
+                    'SELECT ' + cashApi + ' FROM Case WHERE Id = :caseId LIMIT 1'
+                );
+                if (!cashOnly.isEmpty()) {
+                    out.savedCash24ContractText = (String) cashOnly[0].get(cashApi);
+                }
+                break;
+            }
+            out.success = true;
+        } catch (Exception ex) {
+            out.errorMessage = ex.getMessage();
+        }
+        return out;
+    }
+
+    @AuraEnabled
+    public static ValidationResultDTO validateForComplete(Id caseId, String payloadJson) {
+        InitDataDTO init = getInitData(caseId);
+        SavePayloadDTO p = parsePayload(payloadJson);
+        return runValidation(init, p, true);
+    }
+
+    @AuraEnabled
+    public static ValidationResultDTO saveForm(Id caseId, String payloadJson) {
+        ValidationResultDTO vr = new ValidationResultDTO();
+        InitDataDTO init = getInitData(caseId);
+        if (!init.success) {
+            vr.addFail(init.errorMessage != null ? init.errorMessage : 'Init failed.');
+            return vr;
+        }
+        SavePayloadDTO p = parsePayload(payloadJson);
+        vr = runValidation(init, p, false);
+        if (!vr.valid) {
+            return vr;
+        }
+        try {
+            SObject caseRec = buildCaseUpdate(caseId, p);
+            if (caseRec != null && hasNonIdField(caseRec)) {
+                SObjectAccessDecision dec = Security.stripInaccessible(
+                    AccessType.UPDATABLE,
+                    new List<SObject>{ caseRec }
+                );
+                List<SObject> safe = dec.getRecords();
+                if (!safe.isEmpty() && hasNonIdField(safe[0])) {
+                    update as user safe;
+                }
+            }
+            persistAdditionalInfoRow(caseId, init.additionalInfoId, p.verifyInformation, p.callback);
+            vr.valid = true;
+        } catch (Exception ex) {
+            vr.valid = false;
+            vr.messages.add(ex.getMessage());
+        }
+        return vr;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<PicklistEntryDTO> searchAdministrativeUnits(String objectApiName, String searchKey) {
+        List<PicklistEntryDTO> opts = new List<PicklistEntryDTO>();
+        if (String.isBlank(objectApiName) || !ADMIN_UNIT_OBJECTS.contains(objectApiName)) {
+            return opts;
+        }
+        Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
+        if (!gd.containsKey(objectApiName) || !gd.get(objectApiName).getDescribe().isAccessible()) {
+            return opts;
+        }
+        String term = '%' + (searchKey == null ? '' : searchKey) + '%';
+        String q =
+            'SELECT Id, Name FROM ' +
+            objectApiName +
+            ' WHERE Name LIKE :term ORDER BY Name LIMIT 200';
+        for (SObject row : Database.query(q)) {
+            opts.add(new PicklistEntryDTO((String) row.get('Name'), (String) row.get('Id')));
+        }
+        return opts;
+    }
+
+    @AuraEnabled
+    public static void deleteTemporaryAddressRecord(Id addressInfoId) {
+        if (addressInfoId == null) {
+            return;
+        }
+        if (!Schema.sObjectType.FEC_Address_Info__c.isDeletable()) {
+            throw new AuraHandledException('Insufficient access to delete Address Info.');
+        }
+        delete as user [SELECT Id FROM FEC_Address_Info__c WHERE Id = :addressInfoId LIMIT 1];
+    }
+
+    @AuraEnabled
+    public static Id upsertTemporaryAddress(Id caseId, String payloadJson) {
+        SavePayloadDTO p = parsePayload(payloadJson);
+        if (p.tempAddressParts == null) {
+            throw new AuraHandledException('Temporary address payload required.');
+        }
+        TempAddressPartsDTO t = p.tempAddressParts;
+        validateTempAddressParts(t);
+        Id histId = resolveCustomerHistoryId(caseId);
+        String line = buildTemporaryAddressLine(t);
+        if (String.isNotBlank(p.tempAddressRecordId)) {
+            return updateExistingTemporaryAddress((Id) p.tempAddressRecordId, histId, line, t);
+        }
+        if (!Schema.sObjectType.FEC_Address_Info__c.isCreateable()) {
+            throw new AuraHandledException('Cannot create Address Info.');
+        }
+        SObject addr = Schema.getGlobalDescribe().get(OBJ_ADDRESS).newSObject(null);
+        addr.put('FEC_Customer_History__c', histId);
+        putIfCreateable(addr, 'Name', 'Temporary-' + String.valueOf(Crypto.getRandomInteger()));
+        applyAddressLineAndComponents(addr, line, t, true);
+        SObjectAccessDecision dec = Security.stripInaccessible(
+            AccessType.CREATABLE,
+            new List<SObject>{ addr }
+        );
+        List<SObject> toIns = dec.getRecords();
+        if (toIns.isEmpty()) {
+            throw new AuraHandledException('No creatable Address Info fields.');
+        }
+        insert as user toIns;
+        return toIns[0].Id;
+    }
+
+    private static void validateTempAddressParts(TempAddressPartsDTO t) {
+        if (
+            String.isBlank(t.building) ||
+            String.isBlank(t.streetNumber) ||
+            String.isBlank(t.street) ||
+            String.isBlank(t.wardLabel) ||
+            String.isBlank(t.provinceLabel)
+        ) {
+            throw new AuraHandledException(MSG_NOTI_01);
+        }
+    }
+
+    private static Id resolveCustomerHistoryId(Id caseId) {
+        List<SObject> caseRows = Database.query(
+            'SELECT Id, FEC_Account_or_Contract__c FROM Case WHERE Id = :caseId LIMIT 1'
+        );
+        if (caseRows.isEmpty()) {
+            throw new AuraHandledException('Case not found.');
+        }
+        Id histId = (Id) caseRows[0].get('FEC_Account_or_Contract__c');
+        if (histId == null) {
+            throw new AuraHandledException('Case has no Customer History (C360).');
+        }
+        return histId;
+    }
+
+    private static String buildTemporaryAddressLine(TempAddressPartsDTO t) {
+        return String.join(
+            new List<String>{
+                t.building.trim(),
+                t.streetNumber.trim(),
+                t.street.trim(),
+                t.wardLabel.trim(),
+                t.provinceLabel.trim()
+            },
+            ', '
+        );
+    }
+
+    private static Id updateExistingTemporaryAddress(Id rowId, Id histId, String line, TempAddressPartsDTO t) {
+        if (!Schema.sObjectType.FEC_Address_Info__c.isUpdateable()) {
+            throw new AuraHandledException('Cannot update Address Info.');
+        }
+        FEC_Address_Info__c row = [
+            SELECT Id, FEC_Customer_History__c
+            FROM FEC_Address_Info__c
+            WHERE Id = :rowId
+            LIMIT 1
+        ];
+        if (row.FEC_Customer_History__c != histId) {
+            throw new AuraHandledException('Address does not belong to this customer.');
+        }
+        SObject addr = row;
+        applyAddressLineAndComponents(addr, line, t, false);
+        SObjectAccessDecision dec = Security.stripInaccessible(
+            AccessType.UPDATABLE,
+            new List<SObject>{ addr }
+        );
+        if (dec.getRecords().isEmpty()) {
+            throw new AuraHandledException('No updateable Address Info fields.');
+        }
+        update as user dec.getRecords();
+        return rowId;
+    }
+
+    private static void applyAddressLineAndComponents(SObject addr, String line, TempAddressPartsDTO t, Boolean forInsert) {
+        if (forInsert) {
+            putIfCreateable(addr, 'FEC_Address_Type__c', FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY);
+        } else {
+            putIfUpdateable(addr, 'FEC_Address_Type__c', FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY);
+        }
+        if (forInsert) {
+            putIfCreateable(addr, 'FEC_Address__c', line);
+            putIfCreateable(addr, 'FEC_Building__c', t.building.trim());
+            putIfCreateable(addr, 'FEC_Building_Number__c', t.streetNumber.trim());
+            putIfCreateable(addr, 'FEC_Number__c', t.streetNumber.trim());
+            putIfCreateable(addr, 'FEC_Street__c', t.street.trim());
+            putIfCreateable(addr, 'FEC_Temporary_Address__c', line);
+            putIfCreateable(addr, 'FEC_Ward_Text__c', t.wardLabel.trim());
+            putIfCreateable(addr, 'FEC_Province_Text__c', t.provinceLabel.trim());
+        } else {
+            putIfUpdateable(addr, 'FEC_Address__c', line);
+            putIfUpdateable(addr, 'FEC_Building__c', t.building.trim());
+            putIfUpdateable(addr, 'FEC_Building_Number__c', t.streetNumber.trim());
+            putIfUpdateable(addr, 'FEC_Number__c', t.streetNumber.trim());
+            putIfUpdateable(addr, 'FEC_Street__c', t.street.trim());
+            putIfUpdateable(addr, 'FEC_Temporary_Address__c', line);
+            putIfUpdateable(addr, 'FEC_Ward_Text__c', t.wardLabel.trim());
+            putIfUpdateable(addr, 'FEC_Province_Text__c', t.provinceLabel.trim());
+        }
+        if (String.isNotBlank(t.wardRecordId)) {
+            try {
+                if (forInsert) {
+                    putIfCreateable(addr, 'FEC_Ward__c', (Id) t.wardRecordId);
+                } else {
+                    putIfUpdateable(addr, 'FEC_Ward__c', (Id) t.wardRecordId);
+                }
+            } catch (Exception ignore) {
+            }
+        }
+        if (String.isNotBlank(t.provinceRecordId)) {
+            try {
+                if (forInsert) {
+                    putIfCreateable(addr, 'FEC_Province__c', (Id) t.provinceRecordId);
+                } else {
+                    putIfUpdateable(addr, 'FEC_Province__c', (Id) t.provinceRecordId);
+                }
+            } catch (Exception ignore) {
+            }
+        }
+    }
+
+    private static void putIfUpdateable(SObject rec, String api, Object val) {
+        Map<String, Schema.SObjectField> m = rec.getSObjectType().getDescribe().fields.getMap();
+        String fk = flc(api);
+        if (!m.containsKey(fk)) {
+            return;
+        }
+        Schema.DescribeFieldResult d = m.get(fk).getDescribe();
+        if (d.isUpdateable()) {
+            rec.put(api, val);
+        }
+    }
+
+    private static SavePayloadDTO parsePayload(String payloadJson) {
+        if (String.isBlank(payloadJson)) {
+            return new SavePayloadDTO();
+        }
+        return (SavePayloadDTO) JSON.deserialize(payloadJson, SavePayloadDTO.class);
+    }
+
+    private static ValidationResultDTO runValidation(InitDataDTO init, SavePayloadDTO p, Boolean forComplete) {
+        ValidationResultDTO r = new ValidationResultDTO();
+        if (!init.success) {
+            r.addFail(init.errorMessage != null ? init.errorMessage : 'Init failed.');
+            return r;
+        }
+        Boolean hasEmail = p.deliveryEmailSelected == true;
+        Boolean hasAddr = p.deliveryAddressSelected == true;
+        Boolean hasOffice = p.deliveryOfficeSelected == true;
+        Integer cnt = 0;
+        if (hasEmail) {
+            cnt++;
+        }
+        if (hasAddr) {
+            cnt++;
+        }
+        if (hasOffice) {
+            cnt++;
+        }
+        if (cnt == 0) {
+            r.addFail(MSG_NOTI_02);
+        }
+        if (hasAddr && hasOffice) {
+            r.addFail(MSG_NOTI_02);
+        }
+        if (cnt > 2) {
+            r.addFail(MSG_NOTI_02);
+        }
+        if (hasEmail) {
+            String channel = p.emailDeliveryChannel;
+            if (String.isBlank(channel) && p.useExistingEmail == true) {
+                channel = FEC_ConstantCommon.CONTRACT_CLOSURE_EMAIL_CHANNEL_C360;
+            }
+            String tempMail = p.temporaryEmail != null ? p.temporaryEmail.trim() : '';
+            Boolean hasTemp = String.isNotBlank(tempMail);
+            if (hasTemp && !EMAIL_PAT.matcher(tempMail).matches()) {
+                r.addFail(MSG_NOTI_03);
+            }
+            if (forComplete) {
+                Boolean hasDemo = String.isNotBlank(init.demographicEmail);
+                if (!hasDemo) {
+                    if (!hasTemp || !EMAIL_PAT.matcher(tempMail).matches()) {
+                        r.addFail(MSG_NOTI_02);
+                    }
+                } else {
+                    if (
+                        channel != FEC_ConstantCommon.CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 &&
+                        channel != FEC_ConstantCommon.CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY
+                    ) {
+                        r.addFail(MSG_NOTI_02);
+                    } else if (channel == FEC_ConstantCommon.CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY && !hasTemp) {
+                        r.addFail(MSG_NOTI_02);
+                    } else if (channel == FEC_ConstantCommon.CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 && hasTemp) {
+                        r.addFail(MSG_NOTI_02);
+                    }
+                }
+            }
+        }
+        if (hasAddr || (hasEmail && hasOffice)) {
+            String rn = p.recipientName != null ? p.recipientName.trim() : '';
+            String rp = p.recipientPhone != null ? normalizePhone(p.recipientPhone) : '';
+            if (forComplete && String.isBlank(rn)) {
+                r.addFail(MSG_NOTI_01);
+            }
+            if (forComplete && String.isBlank(rp)) {
+                r.addFail(MSG_NOTI_01);
+            }
+            if (String.isNotBlank(rp) && !PHONE_PAT.matcher(rp).matches()) {
+                r.addFail(MSG_NOTI_16);
+            }
+            if (forComplete) {
+                Boolean hasRow = String.isNotBlank(p.selectedAddressId);
+                Boolean hasTempLine = String.isNotBlank(
+                    p.temporaryAddressDisplay != null ? p.temporaryAddressDisplay.trim() : ''
+                );
+                if (!hasRow && !hasTempLine) {
+                    r.addFail(MSG_ADDRESS_REQUIRED);
+                }
+            }
+        }
+        return r;
+    }
+
+    private static String normalizePhone(String raw) {
+        if (raw == null) {
+            return '';
+        }
+        String s = raw.replaceAll('\\s', '');
+        if (s.startsWith('+84')) {
+            s = '84' + s.substring(3);
+        }
+        return s;
+    }
+
+    private static SObject buildCaseUpdate(Id caseId, SavePayloadDTO p) {
+        Map<String, Schema.SObjectField> fm = Case.SObjectType.getDescribe().fields.getMap();
+        SObject c = Case.SObjectType.newSObject();
+        c.put('Id', caseId);
+        Schema.SObjectField fDel = fm.get(flc(FLD_DELIVERY));
+        if (fDel != null && fDel.getDescribe().isUpdateable()) {
+            String combined = p.deliveryOptionCombined;
+            if (String.isBlank(combined) && p.deliveryValues != null && !p.deliveryValues.isEmpty()) {
+                combined = String.join(p.deliveryValues, ';');
+            }
+            c.put(FLD_DELIVERY, combined);
+        }
+        Schema.SObjectField fRn = fm.get(flc(FLD_RECIPIENT_NAME));
+        if (fRn != null && fRn.getDescribe().isUpdateable()) {
+            c.put(FLD_RECIPIENT_NAME, p.recipientName);
+        }
+        Schema.SObjectField fRp = fm.get(flc(FLD_RECIPIENT_PHONE));
+        if (fRp != null && fRp.getDescribe().isUpdateable()) {
+            c.put(FLD_RECIPIENT_PHONE, normalizePhone(p.recipientPhone));
+        }
+        Schema.SObjectField fTe = fm.get(flc(FLD_TEMP_EMAIL));
+        if (fTe != null && fTe.getDescribe().isUpdateable()) {
+            String te = p.temporaryEmail != null ? p.temporaryEmail.trim() : null;
+            if (String.isBlank(te)) {
+                c.put(FLD_TEMP_EMAIL, null);
+            } else {
+                c.put(FLD_TEMP_EMAIL, te);
+            }
+        }
+        putCaseCash24OnRecord(c, p.cash24ContractText);
+        return c;
+    }
+
+    private static void putCaseCash24OnRecord(SObject caseRec, String raw) {
+        if (raw == null) {
+            return;
+        }
+        String v = raw.trim();
+        Map<String, Schema.SObjectField> fm = Case.SObjectType.getDescribe().fields.getMap();
+        for (String api : CASE_CASH24_FIELD_CANDIDATES) {
+            Schema.SObjectField f = fm.get(flc(api));
+            if (f == null || !f.getDescribe().isUpdateable()) {
+                continue;
+            }
+            Schema.DisplayType t = f.getDescribe().getType();
+            if (t == DisplayType.STRING || t == DisplayType.TEXTAREA) {
+                caseRec.put(api, v);
+                return;
+            }
+        }
+    }
+
+    private static void persistAdditionalInfoRow(Id caseId, Id rowId, String verify, String callback) {
+        if (String.isBlank(verify) && String.isBlank(callback)) {
+            return;
+        }
+        if (!Schema.sObjectType.FEC_Additional_Info__c.isAccessible()) {
+            return;
+        }
+        if (rowId != null) {
+            if (!Schema.sObjectType.FEC_Additional_Info__c.isUpdateable()) {
+                return;
+            }
+            FEC_Additional_Info__c u = new FEC_Additional_Info__c(
+                Id = rowId,
+                FEC_Verify_Information__c = verify,
+                FEC_Callback__c = callback
+            );
+            SObjectAccessDecision dec = Security.stripInaccessible(
+                AccessType.UPDATABLE,
+                new List<SObject>{ u }
+            );
+            if (!dec.getRecords().isEmpty()) {
+                update as user dec.getRecords();
+            }
+        } else {
+            if (!Schema.sObjectType.FEC_Additional_Info__c.isCreateable()) {
+                return;
+            }
+            FEC_Additional_Info__c n = new FEC_Additional_Info__c(
+                FEC_Case__c = caseId,
+                FEC_Verify_Information__c = verify,
+                FEC_Callback__c = callback
+            );
+            SObjectAccessDecision dec = Security.stripInaccessible(
+                AccessType.CREATABLE,
+                new List<SObject>{ n }
+            );
+            if (!dec.getRecords().isEmpty()) {
+                insert as user dec.getRecords();
+            }
+        }
+    }
+
+    private static void putIfCreateable(SObject rec, String api, Object val) {
+        Map<String, Schema.SObjectField> m = rec.getSObjectType().getDescribe().fields.getMap();
+        String fk = flc(api);
+        if (!m.containsKey(fk)) {
+            return;
+        }
+        Schema.DescribeFieldResult d = m.get(fk).getDescribe();
+        if (d.isCreateable()) {
+            rec.put(api, val);
+        }
+    }
+
+    private static Boolean hasNonIdField(SObject rec) {
+        Map<String, Object> pop = rec.getPopulatedFieldsAsMap();
+        if (pop == null) {
+            return false;
+        }
+        for (String k : pop.keySet()) {
+            if (k != 'Id') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String flc(String api) {
+        return api != null ? api.toLowerCase() : '';
+    }
+
+    private static List<PicklistEntryDTO> describePicklist(String obj, String fieldApi) {
+        List<PicklistEntryDTO> opts = new List<PicklistEntryDTO>();
+        Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
+        if (!gd.containsKey(obj)) {
+            return opts;
+        }
+        Map<String, Schema.SObjectField> fm = gd.get(obj).getDescribe().fields.getMap();
+        String fk = flc(fieldApi);
+        if (!fm.containsKey(fk)) {
+            return opts;
+        }
+        Schema.DescribeFieldResult fd = fm.get(fk).getDescribe();
+        if (fd.getType() != DisplayType.PICKLIST && fd.getType() != DisplayType.MULTIPICKLIST) {
+            return opts;
+        }
+        for (Schema.PicklistEntry pe : fd.getPicklistValues()) {
+            if (pe.isActive()) {
+                opts.add(new PicklistEntryDTO(pe.getLabel(), pe.getValue()));
+            }
+        }
+        return opts;
+    }
+
+    private static List<PicklistEntryDTO> mergePicklistOptions(
+        List<PicklistEntryDTO> a,
+        List<PicklistEntryDTO> b
+    ) {
+        if (!a.isEmpty()) {
+            return a;
+        }
+        return b;
+    }
+}
