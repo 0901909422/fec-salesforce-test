@@ -534,7 +534,7 @@
 		<name>Settings</name>
 	</types>
 	<types>
-		<members>FEC_New_Interaction_Record_For_E2C</members>
+		<!--<members>FEC_New_Interaction_Record_For_E2C</members>-->
 		<name>Flow</name>
 	</types>
 	<types>
