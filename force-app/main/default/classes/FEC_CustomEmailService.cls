@@ -88,8 +88,26 @@ public without sharing class FEC_CustomEmailService {
 
     @AuraEnabled
     public static String getCaseSubject(String caseId) {
-        Case c = [SELECT Subject FROM Case WHERE Id = :caseId LIMIT 1];
+        Case c = [SELECT Subject, RecordType.DeveloperName FROM Case WHERE Id = :caseId LIMIT 1];
         return c.Subject;
+    }
+
+    @AuraEnabled
+    public static String getCaseRecordTypeName(String caseId) {
+        Case c = [SELECT RecordType.DeveloperName FROM Case WHERE Id = :caseId LIMIT 1];
+        return c.RecordType.DeveloperName;
+    }
+
+    @AuraEnabled
+    public static String sendEmailForServiceCase(
+        String caseId, String fromEmail, String toEmail, String ccEmail,
+        String subject, String body,
+        List<FEC_ServiceCaseEmailService.AttachmentWrapper> attachments,
+        String titleReply
+    ) {
+        return FEC_ServiceCaseEmailService.sendEmail(
+            caseId, fromEmail, toEmail, ccEmail, subject, body, attachments, titleReply
+        );
     }
 
     @AuraEnabled
@@ -259,9 +277,11 @@ public without sharing class FEC_CustomEmailService {
         try {
             // 1. Validate case status
             Case c = [
-                SELECT Id, Status, FEC_Interaction_Status__c, OwnerId, Subject
+                SELECT Id, Status, FEC_Interaction_Status__c, OwnerId, Subject, RecordType.DeveloperName
                 FROM Case WHERE Id = :caseId LIMIT 1
             ];
+            Boolean isCustomerOrInternal = (c.RecordType.DeveloperName == FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+                || c.RecordType.DeveloperName == FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME);
 
             if (BLOCKED_STATUSES.contains(c.Status)) {
                 throw new AuraHandledException(
@@ -289,13 +309,20 @@ public without sharing class FEC_CustomEmailService {
                 if (!ccList.isEmpty()) mail.setCcAddresses(ccList);
             }
 
-            mail.setSubject(subject);
+            // Append Salesforce thread identifier to subject for reply tracking
+            String orgId = UserInfo.getOrganizationId();
+            String shortOrgId = orgId.substring(0, 15);
+            String shortCaseId = caseId.substring(0, 15);
+            String threadToken = '[ ref:' + shortOrgId + '.' + shortCaseId + ':ref ]';
+            String subjectWithThread = subject.contains('[ ref:') ? subject : subject + ' ' + threadToken;
+
+            mail.setSubject(subjectWithThread);
             mail.setHtmlBody(body != null ? body.replace('\n', '<br/>') : '');
             mail.setSaveAsActivity(false);
 
             // 4. Set OrgWideEmailAddress (From)
             System.debug('### Step 4: setFromAddress from=' + fromEmail);
-            setFromAddress(mail, fromEmail);
+            setFromAddress(mail, fromEmail, caseId);
             System.debug('### Step 5: attachments');
 
             if (attachments != null && !attachments.isEmpty()) {
@@ -317,6 +344,7 @@ public without sharing class FEC_CustomEmailService {
 
             // 6. Send
             System.debug('### About to sendEmail: from=' + fromEmail + ' to=' + toEmail);
+            mail.setWhatId(caseId); // Link email to Case for Email-to-Case routing
             List<Messaging.SendEmailResult> results = Messaging.sendEmail(
                 new List<Messaging.SingleEmailMessage>{ mail }, false
             );
@@ -335,7 +363,7 @@ public without sharing class FEC_CustomEmailService {
                 em.FromAddress = fromEmail;
                 em.ToAddress = toEmail;
                 if (String.isNotBlank(ccEmail)) em.CcAddress = ccEmail;
-                em.Subject = subject;
+                em.Subject = subjectWithThread;
                 em.HtmlBody = body;
                 em.TextBody = body.replaceAll('<[^>]+>', '');
                 em.Incoming = false;
@@ -345,7 +373,6 @@ public without sharing class FEC_CustomEmailService {
             } catch (Exception emEx) {
                 System.debug('EmailMessage insert skipped: ' + emEx.getMessage());
             }
-
             // 8. Post-send: update case fields + create Task log
             updateCaseAfterSend(caseId, fromEmail, toEmail, ccEmail, subject, titleReply);
             System.debug('### sendEmail completed successfully');
@@ -377,7 +404,7 @@ public without sharing class FEC_CustomEmailService {
         }
     }
 
-    private static void setFromAddress(Messaging.SingleEmailMessage mail, String fromEmail) {
+    private static void setFromAddress(Messaging.SingleEmailMessage mail, String fromEmail, String caseId) {
         if (String.isBlank(fromEmail)) return;
 
         // Tìm OrgWideEmailAddress khớp trực tiếp
@@ -387,13 +414,8 @@ public without sharing class FEC_CustomEmailService {
         ];
         if (!orgEmails.isEmpty()) {
             mail.setOrgWideEmailAddressId(orgEmails[0].Id);
-            return;
         }
-
-        // Không có OrgWide → dùng EmailRoutingAddress (Email-to-Case)
-        // Salesforce tự route qua routing address khi setWhatId = caseId
-        // Chỉ set ReplyTo để khách hàng reply về đúng địa chỉ
-        mail.setReplyTo(fromEmail);
+        // Không set ReplyTo - Interaction dùng luồng Email-to-Case tạo case mới
     }
 
     private static void updateCaseAfterSend(
