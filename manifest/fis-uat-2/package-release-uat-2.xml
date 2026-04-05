@@ -1291,6 +1291,7 @@
 		<members>FEC_Bank_Name__c</members>
 		<members>FEC_Case_Refund_Details__c</members>
 		<members>FEC_Clear_Session__c</members>
+		<members>FEC_Interaction_Routed__e</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -1327,6 +1328,7 @@
 		<members>FEC_EmailMessageTriggerHandler</members>
 		<members>FEC_ServiceCaseEmailService</members>
 		<members>FEC_SessionUtil</members>
+        <members>FEC_InteractionRoutingController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1422,11 +1424,13 @@
 		<members>fec_CustomerCaseExecuteAction</members>
 		<members>fec_CustomerCaseModeStore</members>
 		<members>fecClearSessionNew</members>
+		<members>fec_InteractionRoutingUtilityBar</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
 		<members>FEC_Customer_Case_Record_Page</members>
 		<members>FEC_Clear_Session_Record_Page</members>
+		<members>FEC_Service_UtilityBar</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
