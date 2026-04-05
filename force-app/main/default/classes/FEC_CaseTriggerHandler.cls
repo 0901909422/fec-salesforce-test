@@ -53,15 +53,12 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/29 - Added updateCaseParticipants for Customer Case / Internal Case
      */
     private void onBeforeInsert(List<Case> newCases) {
-        setEmail2CaseChannelBeforeInsert(newCases);
         generateFECIdSearch(newCases);
         updateCaseParticipantsOnInsert(newCases);
         syncChannelFromInteractionForCustomerCase(newCases);
         assignEntitlement(newCases);
         syncGlobalSearchFromParent(newCases, null);
         setEmail2CaseChannelBeforeInsert(newCases);
-        setParentIdFromEmailThread(newCases);
-        stripSubjectThreadToken(newCases);
         setParentIdFromEmailThread(newCases);
         stripSubjectThreadToken(newCases);
     }
@@ -92,8 +89,9 @@ public without sharing class FEC_CaseTriggerHandler {
         FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
         syncGlobalSearch(newCases, null);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
-        isExecuting = false;
         redirectEmailReplyToCustomerCase(newCases);
+        
+        isExecuting = false;
     }
 
     /**
