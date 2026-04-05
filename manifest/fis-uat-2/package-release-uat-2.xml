@@ -1290,6 +1290,7 @@
 		<members>FEC_Bank_Branch__c</members>
 		<members>FEC_Bank_Name__c</members>
 		<members>FEC_Case_Refund_Details__c</members>
+		<members>FEC_Clear_Session__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -1322,6 +1323,10 @@
 		<members>FEC_SecondaryInfoAccountController</members>
 		<members>FEC_StatementsAccountController</members>
 		<members>FEC_TransactionsController</members>
+		<members>FEC_ClearSessionController</members>
+		<members>FEC_EmailMessageTriggerHandler</members>
+		<members>FEC_ServiceCaseEmailService</members>
+		<members>FEC_SessionUtil</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1388,6 +1393,22 @@
 		<members>FEC_Follow_Up_Until_Unfollow</members>
 		<members>FEC_LABEL_UNTIL_CASE_RESOLVED</members>
 		<members>FEC_LABEL_UNTIL_UNFOLLOW</members>
+		<members>FEC_Email_Label_From</members>
+		<members>FEC_Email_Label_To</members>
+		<members>FEC_Email_Error_To_Required</members>
+		<members>FEC_Clear_Session_Title</members>
+		<members>FEC_Clear_Session_Header</members>
+		<members>FEC_Clear_Session_Subtitle</members>
+		<members>FEC_Clear_Session_Search_Placeholder</members>
+		<members>FEC_Clear_Session_No_Users</members>
+		<members>FEC_Clear_Session_Btn</members>
+		<members>FEC_Clear_Session_Processing</members>
+		<members>FEC_Clear_Session_Validation_Title</members>
+		<members>FEC_Clear_Session_Validation_Msg</members>
+		<members>FEC_Clear_Session_Success_Title</members>
+		<members>FEC_Clear_Session_Success_Msg</members>
+		<members>FEC_Clear_Session_Error_Title</members>
+		<members>FEC_Clear_Session_Error_Msg</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1398,12 +1419,30 @@
 		<members>fec_CaseNote</members>
 		<members>fec_NewNoteModal</members>
 		<members>fec_CaseFollowHeadlessAction</members>
+		<members>fecClearSessionNew</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
 		<members>FEC_Customer_Case_Record_Page</members>
+		<members>FEC_Clear_Session_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
+	<types>
+        <members>FEC_Clear_Session__c</members>
+        <name>CustomTab</name>
+    </types>
+	<types>
+        <members>fecClearSessionAction</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
+	<types>
+		<members>FEC_Clear_Session__c-Clear Session Layout</members>
+		<name>Layout</name>
+	</types>
+    <types>
+		<members>FEC_EmailMessageTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
 
     <version>65.0</version>
 </Package>
