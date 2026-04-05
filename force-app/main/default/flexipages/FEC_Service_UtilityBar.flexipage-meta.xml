@@ -68,8 +68,8 @@
                     <type>decorator</type>
                     <value>340</value>
                 </componentInstanceProperties>
-                <componentName>fecInteractionRoutingUtilityBar</componentName>
-                <identifier>fecInteractionRoutingUtilityBar</identifier>
+                <componentName>fec_InteractionRoutingUtilityBar</componentName>
+                <identifier>fec_InteractionRoutingUtilityBar</identifier>
             </componentInstance>
         </itemInstances>
         <name>utilityItems</name>
