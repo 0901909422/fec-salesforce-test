@@ -55,9 +55,54 @@ public without sharing class FEC_InteractionRoutingController {
                 
                 // Update the records with new Owner assignments
                 update casesToRoute;
+                // Publish platform events after successful DML
+                System.debug('route start');
+                publishRoutingEvents(casesToRoute);
             }
         } catch (Exception e) {
             return;
+        }
+    }
+
+    // Thangtv - Auto open case to the new Case Owner
+    // 03/04/2026
+    public static void publishRoutingEvents(List<Case> routedCases) {
+        
+        if (routedCases == null || routedCases.isEmpty()) {
+            return;
+        }
+        System.debug('route start111 ' + routedCases);
+        List<FEC_Interaction_Routed__e> eventsToPublish = new List<FEC_Interaction_Routed__e>();
+        Datetime routedAt = System.now();
+
+        for (Case c : routedCases) {
+            eventsToPublish.add(new FEC_Interaction_Routed__e(
+                CaseId__c     = (String)c.Id,
+                CaseNumber__c = c.CaseNumber,
+                OwnerId__c    = (String)c.OwnerId,
+                ParentId__c   = c.ParentId == null ? null : (String)c.ParentId,
+                Channel__c    = c.FEC_Channel__c,
+                SendTo__c     = c.FEC_Send_To__c,
+                IsReply__c    = c.FEC_Is_Reply_Interaction_email__c,
+                RoutedAt__c   = routedAt,
+                Source__c     = 'FEC_InteractionRoutingController'
+            ));
+        }
+
+        if (!eventsToPublish.isEmpty()) {
+            List<Database.SaveResult> publishResults = EventBus.publish(eventsToPublish);
+            // Optional: log failures
+            for (Integer i = 0; i < publishResults.size(); i++) {
+                if (!publishResults[i].isSuccess()) {
+                    for (Database.Error err : publishResults[i].getErrors()) {
+                        System.debug(
+                            LoggingLevel.ERROR,
+                            'Platform Event publish failed for Case event index ' + i +
+                            ': ' + err.getStatusCode() + ' - ' + err.getMessage()
+                        );
+                    }
+                }
+            }
         }
     }
 }

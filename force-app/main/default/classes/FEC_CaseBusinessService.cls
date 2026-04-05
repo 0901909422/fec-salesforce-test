@@ -433,11 +433,10 @@ public without sharing class FEC_CaseBusinessService {
           'SELECT Id, Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE Id = :id ' +
-          'AND FEC_Active__c = TRUE'; 
-          // +
-          // 'AND FEC_User_Group__c INCLUDES (\'' +
-          // String.join(new List<String>(rolelst), '\',\'') +
-          // '\')';
+          'AND FEC_Active__c = TRUE ' +
+          'AND FEC_User_Group__c INCLUDES (\'' +
+          String.join(new List<String>(rolelst), '\',\'') +
+          '\')';
 
         bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
       } else {
@@ -446,11 +445,10 @@ public without sharing class FEC_CaseBusinessService {
           'FROM FEC_Case_Stage__c ' +
           'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
           'AND FEC_Active__c = TRUE ' +
-          'AND FEC_Default_Stage__c = TRUE';
-          // + 
-          // 'AND FEC_User_Group__c INCLUDES (\'' +
-          // String.join(new List<String>(rolelst), '\',\'') +
-          // '\')';
+          'AND FEC_Default_Stage__c = TRUE ' +
+          'AND FEC_User_Group__c INCLUDES (\'' +
+          String.join(new List<String>(rolelst), '\',\'') +
+          '\')';
 
         bindVars = new Map<String, Object>{
           'selectedNatureOfCaseId' => selectedNatureOfCaseId
@@ -558,30 +556,28 @@ public without sharing class FEC_CaseBusinessService {
               sectionTemp.componentlst.add(lwcName);
             }
           } else {
-          if (String.isNotBlank(subSectionNameTemp)) {
-            subSectionTemp = sectionTemp.findSubSection(subSectionNameTemp);
+            if (String.isNotBlank(subSectionNameTemp)) {
+              subSectionTemp = sectionTemp.findSubSection(subSectionNameTemp);
 
-            if (subSectionTemp == null) {
-              subSectionTemp = new Section(
-                subSectionNameTemp,
-                subSectionOrderTemp,
-                subSectionLayoutTemp
-              );
-              sectionTemp.subSectionlst.add(subSectionTemp);
-            }
+              if (subSectionTemp == null) {
+                subSectionTemp = new Section(
+                  subSectionNameTemp,
+                  subSectionOrderTemp,
+                  subSectionLayoutTemp
+                );
+                sectionTemp.subSectionlst.add(subSectionTemp);
+              }
 
-            if (String.isNotBlank(cObjNameTemp)) {
               cObjTemp = subSectionTemp.findObj(cObjNameTemp);
 
               if (cObjTemp == null) {
                 cObjTemp = new CObject(cObjNameTemp);
                 subSectionTemp.objlst.add(cObjTemp);
               }
+
               cObjTemp.masterDataSettinglst.add(item);
             }
           }
-          }
-
         }
 
         // =============================== GET DATA FROM FIELD OF MASTER DATA SETTING ============================

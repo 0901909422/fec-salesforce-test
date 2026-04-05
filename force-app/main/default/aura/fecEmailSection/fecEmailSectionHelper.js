@@ -513,6 +513,29 @@
 
     loadCaseData: function(component) {
         var caseId = component.get('v.recordId');
+        var self = this;
+        // Detect record type để biết Interaction hay Service Case
+        var aRT = component.get('c.getCaseRecordTypeName');
+        aRT.setParams({ caseId: caseId });
+        aRT.setCallback(this, function(r) {
+            if (r.getState() === 'SUCCESS') {
+                var rtName = r.getReturnValue() || '';
+                var isServiceCase = (rtName !== 'Interaction');
+                component.set('v.isServiceCase', isServiceCase);
+                if (isServiceCase) {
+                    // Service Case: load from picklist theo queue owner
+                    self.loadFromAddresses(component, '');
+                    // Pre-fill To từ outgoing email gần nhất
+                    var emails = component.get('v.emailList') || [];
+                    var lastOutgoing = emails.find(function(e) { return !e.incoming; });
+                    if (lastOutgoing && lastOutgoing.toAddress) {
+                        component.set('v.serviceCaseToEmail', lastOutgoing.toAddress);
+                    }
+                }
+            }
+        });
+        $A.enqueueAction(aRT);
+
         var a1 = component.get('c.getInteractionEmail');
         a1.setParams({caseId:caseId});
         a1.setCallback(this, function(r) {
@@ -625,7 +648,9 @@
     },
 
     doSendEmail: function(component, toEmail, subject, body, attachments) {
-        var action = component.get('c.sendEmailV2');
+        var isServiceCase = component.get('v.isServiceCase');
+        var actionName = isServiceCase ? 'c.sendEmailForServiceCase' : 'c.sendEmailV2';
+        var action = component.get(actionName);
         action.setParams({
             caseId: component.get('v.recordId'),
             fromEmail: component.get('v.fromEmail'),
@@ -665,8 +690,8 @@
                     fromName: sentFrom,
                     toAddress: sentTo,
                     ccAddress: component.get('v.ccEmail') || '',
-                    subject: sentSubject,
-                    subjectPreview: sentSubject,
+                    subject: sentSubject.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim(),
+                    subjectPreview: sentSubject.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim(),
                     bodyFull: body.replace(/<[^>]+>/g, ''),
                     messageDate: ds,
                     messageRawDate: now.toISOString(),
@@ -723,7 +748,8 @@
                         ds = d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()+' at '+h12+':'+minStr+' '+ampm;
                     }
                     var rb=(m.TextBody||'').replace(/<[^>]+>/g,''), subj=m.Subject||'';
-                    return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subj,subjectPreview:subj||rb.substring(0,80),bodyFull:rb,messageDate:ds,messageRawDate:m.MessageDate||'',expanded:false,showDD:false};
+                    var subjDisplay = subj.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim();
+                    return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb.substring(0,80),bodyFull:rb,messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false};
                 });
                 // Sort
                 list.sort(function(a,b){
@@ -732,6 +758,13 @@
                     return (a.messageRawDate||'') > (b.messageRawDate||'') ? -1 : 1; // recent = newest first
                 });
                 component.set('v.emailList',list);
+                // Pre-fill To cho Service Case từ outgoing email gần nhất
+                if (component.get('v.isServiceCase') && !component.get('v.serviceCaseToEmail')) {
+                    var outgoing = list.filter(function(e) { return e.incoming === false; });
+                    if (outgoing.length > 0 && outgoing[0].toAddress) {
+                        component.set('v.serviceCaseToEmail', outgoing[0].toAddress);
+                    }
+                }
             }
         });
         $A.enqueueAction(a);
