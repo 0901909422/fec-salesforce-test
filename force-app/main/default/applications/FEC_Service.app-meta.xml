@@ -29,6 +29,8 @@
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
     <isNavPersonalizationDisabled>true</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
     <label>FEC Service</label>
     <navType>Console</navType>
     <profileActionOverrides>
@@ -592,6 +594,7 @@
     <tabs>standard-ServiceResource</tabs>
     <tabs>FEC_Enhanced_Letterhead__c</tabs>
     <tabs>Templates</tabs>
+    <tabs>FEC_Clear_Session__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
@@ -612,6 +615,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Channel__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Clear_Session__c</tab>
         </mappings>
         <mappings>
             <tab>FEC_Customer_Search</tab>
