@@ -1,0 +1,8 @@
+.preview-body-scroll {
+    max-height: 50vh;
+    overflow-y: auto;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    padding: 1rem;
+    background-color: #ffffff;
+}

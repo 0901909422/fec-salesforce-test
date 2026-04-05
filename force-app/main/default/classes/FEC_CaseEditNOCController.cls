@@ -182,11 +182,13 @@ public with sharing class FEC_CaseEditNOCController {
           Id,
           CaseNumber,
           FEC_Account_or_Contract__c,
+          FEC_Account_Contract_Number_PL__c,
           FEC_Product_Type__c,
           FEC_Category__c,
           FEC_SubCategory__c,
           FEC_SubCode__c, FEC_Is_Submited__c,
-          FEC_Interaction_View_Mode__c
+          FEC_Interaction_View_Mode__c,
+          RecordType.DeveloperName
         FROM Case
         WHERE Id = :recordId
       ];

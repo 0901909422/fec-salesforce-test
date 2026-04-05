@@ -12,7 +12,7 @@
 ****************************************************************************************/
 
 import { LightningElement, api, track } from 'lwc';
-import { isNegative } from 'c/fec_CommonUtils';
+import { isNegative, maskValue } from 'c/fec_CommonUtils';
 
 export default class Fec_RelatedListPaging extends LightningElement {
 
@@ -26,6 +26,9 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api hideUpdatedTime = false; // Hide updated time display
     @api defaultSortedBy; // Default field to sort by (field name)
     @api defaultSortDirection = 'desc'; // Default sort direction
+    /** Khi set: hiển thị cạnh số item (ví dụ gộp nhiều tiêu chí), thay cho label cột đơn. */
+    @api sortedByDescription = '';
+    @api pageSizeOptions = [10, 20, 30, 40, 50];
     @api columnCount = 2;
     @api compactColumns = false;
     
@@ -65,9 +68,15 @@ export default class Fec_RelatedListPaging extends LightningElement {
     set records(value) {
         this._records = Array.isArray(value) ? [...value] : [];
         this.currentPage = 1;
-        this.applyDefaultSort();
+
+        // Re-apply existing sort if any
+        if (this.sortedBy) {
+            this.sortData(this.sortedBy, this.sortedDirection);
+        }
+
         this.eyeStates = {};
     }
+
     /* ================= GETTERS ================= */
     get hasRecords() {
         return this._records.length > 0;
@@ -103,6 +112,13 @@ export default class Fec_RelatedListPaging extends LightningElement {
         return sortedCol ? sortedCol.label : '';
     }
 
+    /** Text hiển thị dòng "Sorted by …" (ưu tiên mô tả tùy chỉnh nếu có). */
+    get displaySortedByLabel() {
+        const hint = this.sortedByDescription != null ? String(this.sortedByDescription).trim() : '';
+        if (hint) return hint;
+        return this.currentSortedByLabel;
+    }
+
     /* ================= UPDATED TIME ================= */
     /**
      * Format updated time for display.
@@ -130,37 +146,29 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
     /* ================= SORT UI ================= */
     get columnsWithSort() {
-    return this.columns.map(col => {
-        const isSorted = this.sortedBy === col.fieldName;
-        const headerClass = col.headerClass || 'header-center';
-        const widthStyle = this.compactColumns
-            ? 'width:40px; min-width:40px; max-width:40px;'
-            : (col.width ? `width:${col.width};` : null);
-
-        let iconName;
-
-        if (isSorted) {
-            // Column đang sort
-            iconName = this.sortedDirection === 'desc'
-                ? 'utility:arrowup'
-                : 'utility:arrowdown';
-        } else {
-            // Column chưa sort
-            iconName = 'utility:arrowdown';
-        }
-
-        return {
-            ...col,
-            headerClass,
-            fullHeaderClass: 'sortable-header ' + headerClass,
-            headerStyle: widthStyle,
-            iconName,
-            iconClass: isSorted
-                ? 'sort-icon active'
-                : 'sort-icon inactive'
-        };
-    });
-}
+        return this.columns.map(col => {
+            const isSorted = this.sortedBy === col.fieldName;
+            const headerClass = col.headerClass || 'header-center';
+            const widthStyle = this.compactColumns
+                ? 'width:40px; min-width:40px; max-width:40px;'
+                : (col.width ? `width:${col.width};` : null);
+            return {
+                ...col,
+                headerClass,
+                fullHeaderClass: 'sortable-header ' + headerClass,
+                headerStyle: widthStyle,
+                // asc = cũ→mới / A→Z → mũi tên lên; desc = mới→cũ → mũi tên xuống
+                iconName: isSorted
+                    ? (this.sortedDirection === 'desc'
+                        ? 'utility:arrowup'
+                        : 'utility:arrowdown')
+                    : 'utility:arrowdown',
+                iconClass: isSorted
+                    ? 'sort-icon active'
+                    : 'sort-icon inactive'
+            };
+        });
+    }
 
     /* ================= PAGING ================= */
     get pagedRecords() {
@@ -260,8 +268,6 @@ export default class Fec_RelatedListPaging extends LightningElement {
                         }
 
                         const eyeKey = `${rowIndex}-${col.fieldName}`;
-                        // Eye-type columns: ALL rows are masked by default;
-                        // isMasked is always true unless user has explicitly toggled it off
                         const isMasked = this.eyeStates[eyeKey] !== false;
                         const rawValue = row[col.fieldName];
 
@@ -274,7 +280,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
                             iconName: isMasked ? 'utility:hide' : 'utility:preview'
                         };
                     }
-
+                    
                     /* ===== RICH TEXT TYPE ===== */
                     if (col.type === 'richText') {
                         return {
@@ -320,7 +326,6 @@ export default class Fec_RelatedListPaging extends LightningElement {
                             iconName: isMasked ? 'utility:hide' : 'utility:preview'
                         };
                     }
-
                     return {
                         key: col.fieldName,
                         isLink: false,
@@ -355,6 +360,33 @@ export default class Fec_RelatedListPaging extends LightningElement {
                 '*'.repeat(v.length - 8) +
                 v.slice(-3)
             );
+        }
+
+        /* =====================
+        * LANDLINE bắt đầu bằng 02
+        * Hiển thị: 3 số đầu + 3 số cuối
+        * Ví dụ: 028*****456
+        * ===================== */
+        if (/^02\d{8,9}$/.test(v)) {
+        return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
+        }
+
+        /* =====================
+        * PHONE bắt đầu bằng 0 (10 số)
+        * Hiển thị: 4 số đầu + 3 số cuối
+        * Ví dụ: 0123***456
+        * ===================== */
+        if (/^0\d{9}$/.test(v)) {
+            return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
+        }
+
+        /* =====================
+        * CCCD (toàn số, > 6)
+        * Hiển thị: 3 số đầu + 3 số cuối
+        * ===================== */
+        if (/^\d+$/.test(v)) {
+            if (v.length <= 6) return v;
+            return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
         }
 
         /* =====================
@@ -438,36 +470,22 @@ export default class Fec_RelatedListPaging extends LightningElement {
         this.hoverCell = { rowId: null, fieldName: null };
     }
 
-    applyDefaultSort() {
-        if (this._defaultSortApplied) {
-            return;
-        }
-        if (!this.defaultSortedBy || !this._records.length) {
-            return;
-        }
-        this.sortedBy = this.defaultSortedBy;
-        this.sortedDirection = this.defaultSortDirection || 'desc';
-        this.sortData(this.sortedBy, this.sortedDirection);
-        this._records = [...this._records];
-        this._defaultSortApplied = true;
-    }
-
     /* ================= SORT LOGIC ================= */
     handleSort(event) {
         const fieldName = event.currentTarget.dataset.field;
         if (!fieldName) return;
-        if (this.sortedBy === fieldName) {
-            this.sortedDirection =
-                this.sortedDirection === 'asc' ? 'desc' : 'asc';
 
+        // Toggle sort direction if clicking the same column
+        if (this.sortedBy === fieldName) {
+            this.sortedDirection = this.sortedDirection === 'asc' ? 'desc' : 'asc';
         } else {
+            // Sort by new column, default to asc
             this.sortedBy = fieldName;
-            this.sortedDirection = 'desc';
+            this.sortedDirection = 'asc';
         }
-        
+
         this.currentPage = 1;
-        this.sortData(this.sortedBy, this.sortedDirection);
-        this._records = [...this._records];
+        this.sortData(fieldName, this.sortedDirection);
     }
 
     sortData(fieldName, direction) {
@@ -503,9 +521,25 @@ export default class Fec_RelatedListPaging extends LightningElement {
             return null;
         };
 
-        this._records = [...records].sort((a, b) => {
+        const parseCaseNumber = (s) => {
+            if (!s) return NaN;
+            const match = s.match(/\d+$/);
+            return match ? Number(match[0]) : NaN;
+        };
+        
+
+        this._records = records.sort((a, b) => {
             const rawA = a[fieldName];
             const rawB = b[fieldName];
+
+            if (fieldName === 'caseIdText') {
+                const numA = parseCaseNumber(rawA);
+                const numB = parseCaseNumber(rawB);
+
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return (numA - numB) * dir;
+                }
+            }
 
             const timeA = toTime(rawA);
             const timeB = toTime(rawB);
@@ -531,10 +565,6 @@ export default class Fec_RelatedListPaging extends LightningElement {
     }
 
     renderedCallback() {
-        if (!this._defaultSortApplied) {
-            this.applyDefaultSort();
-            this._defaultSortApplied = true;
-        }
         this.template
             .querySelectorAll('span[lwc\\:dom="manual"]')
             .forEach(el => {
