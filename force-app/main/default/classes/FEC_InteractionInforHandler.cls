@@ -16,6 +16,8 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Send_To__c,
                FEC_On_Hold__c,
                ParentId,
+               FEC_Parent_ID__c,
+               Parent.FEC_ID_Search__c,
                IsClosed,
                FEC_Interaction_Status__c,
                Origin

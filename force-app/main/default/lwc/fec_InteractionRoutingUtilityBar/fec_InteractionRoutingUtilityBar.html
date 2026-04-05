@@ -1,0 +1,25 @@
+<template>
+    <lightning-card title="Routed Email Interactions" icon-name="standard:case">
+        <div class="slds-p-horizontal_small slds-p-bottom_small">
+            <div class="slds-text-body_small slds-m-bottom_x-small">
+                Channel: <strong>{channelName}</strong>
+            </div>
+
+            <template if:true={hasCases}>
+                <lightning-datatable
+                    key-field="Id"
+                    data={cases}
+                    columns={columns}
+                    hide-checkbox-column
+                    onrowaction={handleRowAction}>
+                </lightning-datatable>
+            </template>
+
+            <template if:false={hasCases}>
+                <div class="slds-text-color_weak slds-p-vertical_medium">
+                    No routed interactions received yet.
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>
