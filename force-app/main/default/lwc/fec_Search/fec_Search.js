@@ -14,13 +14,20 @@ import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
 import getB2Contracts from "@salesforce/apex/FEC_SearchController.getB2Contracts";
 import getCash24Contracts from "@salesforce/apex/FEC_SearchController.getCash24Contracts";
 import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
+
 import FEC_National_ID_Passport_ID_Label  from '@salesforce/label/c.FEC_National_ID_Passport_ID_Label';
 import FEC_Toast_Search_Validation from '@salesforce/label/c.FEC_Toast_Search_Validation';
 import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
+import FEC_Toast_Refresh_Success from '@salesforce/label/c.FEC_Toast_Refresh_Success';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
+import FEC_MSG_Create_Customer_History_Error from '@salesforce/label/c.FEC_MSG_Create_Customer_History_Error';
+import FEC_MSG_Create_Customer_History_Success from '@salesforce/label/c.FEC_MSG_Create_Customer_History_Success';
+
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
+import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
+import createInternalCaseOnSkip from "@salesforce/apex/FEC_SearchController.createInternalCaseOnSkip";
 import {
   publish,
   MessageContext,
@@ -33,6 +40,7 @@ import {
   refreshTab,
 } from "lightning/platformWorkspaceApi";
 import getCardInfoByAccountNumber from "@salesforce/apex/FEC_SearchController.getCardInfoByAccountNumber";
+import getApplicationHistory from "@salesforce/apex/FEC_SearchController.getApplicationHistory";
 import CASE_ID_FIELD from "@salesforce/schema/Case.Id";
 import SEARCH_NATIONAL_ID_FIELD from "@salesforce/schema/Case.FEC_Search_National_ID__c";
 import SEARCH_PHONE_FIELD from "@salesforce/schema/Case.FEC_Search_Phone_Number__c";
@@ -41,6 +49,7 @@ import SEARCH_CONTRACT_FIELD from "@salesforce/schema/Case.FEC_Search_Contract_N
 import SEARCH_ACCOUNT_FIELD from "@salesforce/schema/Case.FEC_Search_Account_Number__c";
 import SEARCH_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Search_Email_Address__c";
 import SEARCH_CUSTOMER_NUM_FIELD from "@salesforce/schema/Case.FEC_Search_Customer_Number__c";
+import { CurrentPageReference } from 'lightning/navigation';
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -55,6 +64,7 @@ const FIELDS_TO_CHECK = [
 export default class Fec_Search extends NavigationMixin(LightningElement) {
   @api recordId;
   @api isLoaded = false;
+  @api showSkipButton = false;
   activeSections = ["searchCriteria", "results"];
   nationalId;
   phoneNumber;
@@ -72,14 +82,44 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   isSkip;
   wiredCaseResult;
   fieldPermissions;
+
   FEC_Toast_Search_Validation = FEC_Toast_Search_Validation;
   FEC_Toast_Validation_Title = FEC_Toast_Validation_Title;
   FEC_Toast_Error = FEC_Toast_Error;
   FEC_Toast_Error_Generic = FEC_Toast_Error_Generic;
   FEC_National_ID_Passport_ID_Label = FEC_National_ID_Passport_ID_Label;
+  FEC_MSG_Create_Customer_History_Error = FEC_MSG_Create_Customer_History_Error;
+  FEC_MSG_Create_Customer_History_Success = FEC_MSG_Create_Customer_History_Success;
+  FEC_Toast_Refresh_Success = FEC_Toast_Refresh_Success;
 
   @wire(MessageContext)
   messageContext;
+
+  @wire(CurrentPageReference)
+  pageRef;
+
+  get tabName() {
+    return this.pageRef?.attributes?.apiName; // e.g. 'Customer_Search'
+  }
+
+  get tabLabel() {
+    return this.tabName == 'FEC_Account_Contract_Search' ? 'Account/Contract Search' : 'Customer Search';
+  }
+
+  get isAccountContractSearch() {
+    return this.tabName === 'FEC_Account_Contract_Search'; // your tab's API name
+  }
+
+  get isListView() {
+    return this.pageRef?.type === 'standard__objectPage' &&
+      this.pageRef?.attributes?.objectApiName === 'Case' &&
+      !this.recordId;
+  }
+
+  get isCreateCaseTab() {
+    return this.pageRef?.type === 'standard__navItemPage' &&
+      this.pageRef?.attributes?.apiName === 'Create_Case';
+  }
 
   @wire(IsConsoleNavigation) isConsoleNavigation;
   async refreshTab() {
@@ -104,7 +144,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         typeAttributes:  {
               value: { fieldName: "AccountNumber" },
               fieldName: "AccountNumber",
-              selectedType: "Card"
+              selectedType: "Card",
+              isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false,
+              isAccountContractSearch: this.isAccountContractSearch
             },
         sortable: false,
       },
@@ -137,6 +179,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         },
         sortable: true },
       { label: "Plastic ID", fieldName: "PlasticID", sortable: true },
+      ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
       { label: "Account Status", fieldName: "AccountStatus", sortable: true },
     ];
   }
@@ -169,7 +212,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         typeAttributes:  {
               value: { fieldName: "ContractNumber" },
               fieldName: "ContractNumber",
-              selectedType: "Loan"
+              selectedType: "Loan",
+              isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false,
+              isAccountContractSearch: this.isAccountContractSearch
             },
         sortable: false,
       },
@@ -201,8 +246,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             year: "numeric"
         }, 
         sortable: true },
-      { label: "Product Code", fieldName: "ProductCode", sortable: true },
-      { label: "Contract Status", fieldName: "ContractStatus", sortable: true },
+      { label: "Plastic ID", fieldName: "PlasticID", sortable: true },
+      ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
+      { label: "Account Status", fieldName: "ContractStatus", sortable: true },
     ];
   }
 
@@ -348,13 +394,26 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   insuranceData = [];
   ubankData = [];
 
+  // Application History state: key = applicationId, value = { loading, rows, expanded }
+  appHistoryMap = {};
+  // Modal state
+  historyModalKey = null;
+  historyModalRows = [];
+  historyModalLoading = false;
+  get showHistoryModal() { return !!this.historyModalKey; }
+
+  handleCloseHistoryModal() {
+    this.historyModalKey = null;
+    this.historyModalRows = [];
+  }
+
   @wire(getCase, { caseId: "$recordId" })
   wiredCase(result) {
     this.wiredCaseResult = result;
     const { data, error } = result;
     if (data) {
       // Logic xử lý dữ liệu khi thành công (tương đương phần .then cũ)
-      this.isSkip = data?.RecordType?.Name == "Internal Case";
+      this.isSkip = this.showSkipButton || (data && data.RecordType?.Name === 'Internal Case');
       this.isDisplay =
         data.Customer_Histories__r === undefined &&
         data.FEC_Skip_Search_Internal_Case__c === false;
@@ -367,6 +426,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   async connectedCallback() {
     this.isLoaded = false;
+    this.isSkip = this.showSkipButton;
     // Load styles
     loadStyle(this, COMMON_STYLES)
       .then(() => console.log("Common styles loaded"))
@@ -384,14 +444,14 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         fieldNames: FIELDS_TO_CHECK
       })
       let result = await getCase({ caseId: this.recordId });
-      this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_Search_National_ID__c : null;
-      this.phoneNumber = this.fieldPermissions['FEC_Search_Phone_Number__c'] ? result.FEC_Search_Phone_Number__c : null;
-      this.applicationId = this.fieldPermissions['FEC_Search_Application_ID__c'] ? result.FEC_Search_Application_ID__c : null;
-      this.contractNumber = this.fieldPermissions['FEC_Search_Contract_Number__c'] ? result.FEC_Search_Contract_Number__c : null;
-      this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Search_Account_Number__c : null;
-      this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Search_Email_Address__c : null;
-      this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
-      if (this.phoneNumber || this.nationalId || this.contractNumber) {
+      this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_National_ID_Passport_ID__c : null;
+      this.phoneNumber = this.fieldPermissions['FEC_Search_Phone_Number__c'] ? result.FEC_Phone_Number__c : null;
+      this.applicationId = this.fieldPermissions['FEC_Search_Application_ID__c'] ? result.FEC_Application_ID__c : null;
+      this.contractNumber = this.fieldPermissions['FEC_Search_Contract_Number__c'] ? result.FEC_Contract_Number__c : null;
+      this.accountNumber = this.fieldPermissions['FEC_Search_Account_Number__c'] ? result.FEC_Account_Number__c : null;
+      this.emailAddress = this.fieldPermissions['FEC_Search_Email_Address__c'] ? result.FEC_Interaction_Email__c : null;
+      //this.customerNumber = this.fieldPermissions['FEC_Search_Customer_Number__c'] ? result.FEC_Search_Customer_Number__c : null;
+     if (this.applicationId || this.phoneNumber || this.nationalId || this.contractNumber || this.accountNumber || this.emailAddress) {
         await this.processSearch();
       }
     } catch (error) {
@@ -674,14 +734,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       return;
     }
 
-    //this.seedSampleRows(true);
-    this.processSearch() 
-  }
-
-  async processSearch() {
-    this.isLoaded = false;
-    this.isNoCustomerFound = false;
-
     if (this.recordId) {
       try {
         const fields = {};
@@ -705,6 +757,14 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       );
       }
     }
+    //this.seedSampleRows(true);
+    this.processSearch() 
+  }
+
+  async processSearch() {
+    this.isLoaded = false;
+    this.isNoCustomerFound = false;
+
 
     // Optional: clear old results before new search
     this.cardData = [];
@@ -878,6 +938,7 @@ hasAnySearchCriteria(params) {
                     } else {
                         cardMap.set(accNum, {
                             id: app.ApplicationID,
+                            ApplicationID: app.ApplicationID,
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
@@ -891,7 +952,7 @@ hasAnySearchCriteria(params) {
                     }
                 }
                 // NHÓM THEO LOAN (ContractNumber)
-                else if (['CDL', 'PL', 'TW', 'FC_CDL', 'FC_TW', 'FC_CDL_G'].includes(productCode)) {
+                else if (app.ContractNumber) {
                     const contractNum = app.ContractNumber;
                     if (loanContractMap.has(contractNum)) {
                         let existingRec = loanContractMap.get(contractNum);
@@ -901,6 +962,7 @@ hasAnySearchCriteria(params) {
                     } else {
                         loanContractMap.set(contractNum, {
                             id: app.ApplicationID,
+                            ApplicationID: app.ApplicationID,
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
@@ -950,14 +1012,28 @@ hasAnySearchCriteria(params) {
         this.showToast(
           "Validation",
           "Please correct the highlighted errors before creating.",
-          "error",
+          "error"
         );
         return;
       }
-      console.log(
-        "Creating case with:",
-        this.custNameForCreate,
-        this.nationalIdForCreate,
+
+      let caseIdToUse = this.recordId;
+
+      if (!caseIdToUse) {
+        caseIdToUse = await createInternalCase({
+          customerName: this.custNameForCreate,
+          nationalId: this.nationalIdForCreate
+        });
+      }
+
+      this.dispatchEvent(
+        new CustomEvent("createsuccess", {
+          detail: {
+            recordId: caseIdToUse
+          },
+          bubbles: true,
+          composed: true
+        })
       );
 
       this[NavigationMixin.Navigate]({
@@ -966,7 +1042,7 @@ hasAnySearchCriteria(params) {
           componentName: "c__fec_InteractionCreateCase",
         },
         state: {
-          c__recordId: this.recordId,
+          c__recordId: caseIdToUse,
           c__customerName: this.custNameForCreate,
           c__identityNo: this.nationalIdForCreate,
           c__isCreatedFromSearch: 'true'
@@ -987,6 +1063,21 @@ hasAnySearchCriteria(params) {
 
     // Nếu result có giá trị 'confirmed' (do mình định nghĩa ở handleConfirm)
     if (result === "confirm") {
+       if (!this.recordId || this.recordId === '') {
+           const caseId = await createInternalCaseOnSkip();
+
+            this.showToast("Thông báo", "Skip thành công.", "success");
+            this.dispatchEvent(new CustomEvent('skippedwithoutrecord', { bubbles: true, composed: true }));
+            this[NavigationMixin.Navigate]({
+              type: "standard__recordPage",
+              attributes: {
+                recordId: caseId,
+                objectApiName: "Case",
+                actionName: "view",
+              },
+            });
+            return;
+        }
       this.isLoaded = false;
       const fields = {};
       fields["Id"] = this.recordId;
@@ -1051,6 +1142,171 @@ hasAnySearchCriteria(params) {
       },
       this,
     );
+  }
+
+  // Double-click on link in custom table → toggle Application History only (no case/history creation)
+  handleDblClickRow(event) {
+    event.stopPropagation();
+    const key = event.currentTarget.dataset.key;
+    const fieldName = event.currentTarget.dataset.field;
+    if (!key || !fieldName) return;
+    this._toggleHistory(key, fieldName);
+  }
+
+  // Single click on Account/Contract Number → toggle Application History only
+  handleSingleClickRow(event) {
+    event.stopPropagation();
+    const key = event.currentTarget.dataset.key;
+    const fieldName = event.currentTarget.dataset.field;
+    if (!key || !fieldName) return;
+    this._toggleHistory(key, fieldName);
+  }
+
+  // Single click on Account/Contract Number → open Application History modal
+  handleDblClick(event) {
+    const { value, fieldName } = event.detail || {};
+    if (!value) return;
+    this._toggleHistory(value, fieldName);
+  }
+
+  _openHistoryModal(key, fieldName) {
+    let applicationId = null;
+    if (fieldName === 'AccountNumber') {
+      const row = this.cardData.find(r => r.AccountNumber === key);
+      applicationId = row?.ApplicationID;
+    } else if (fieldName === 'ContractNumber') {
+      const row = this.loanContractData.find(r => r.ContractNumber === key);
+      applicationId = row?.ApplicationID;
+    }
+    if (!applicationId) return;
+
+    this.historyModalKey = key;
+    this.historyModalRows = [];
+    this.historyModalLoading = true;
+
+    getApplicationHistory({ applicationId })
+      .then(rows => {
+        this.historyModalRows = rows || [];
+        this.historyModalLoading = false;
+      })
+      .catch(() => {
+        this.historyModalRows = [];
+        this.historyModalLoading = false;
+      });
+  }
+
+  // Handle click from custom table toggle button or link
+  handleToggleHistory(event) {
+    const key = event.currentTarget.dataset.key;
+    const fieldName = event.currentTarget.dataset.field;
+    if (!key) return;
+    this._toggleHistory(key, fieldName);
+  }
+
+  _toggleHistory(key, fieldName) {
+    // Find applicationId
+    let applicationId = null;
+    if (fieldName === 'AccountNumber') {
+      const row = this.cardData.find(r => r.AccountNumber === key);
+      applicationId = row?.ApplicationID;
+    } else if (fieldName === 'ContractNumber') {
+      const row = this.loanContractData.find(r => r.ContractNumber === key);
+      applicationId = row?.ApplicationID;
+    }
+    if (!applicationId) return;
+
+    const current = this.appHistoryMap[key] || {};
+
+    // Toggle collapse
+    if (current.expanded) {
+      this.appHistoryMap = { ...this.appHistoryMap, [key]: { ...current, expanded: false } };
+      this._refreshData();
+      return;
+    }
+
+    // Already loaded → just expand
+    if (current.rows) {
+      this.appHistoryMap = { ...this.appHistoryMap, [key]: { ...current, expanded: true } };
+      this._refreshData();
+      return;
+    }
+
+    // Load from API
+    this.appHistoryMap = { ...this.appHistoryMap, [key]: { loading: true, expanded: true, rows: null } };
+    this._refreshData();
+
+    getApplicationHistory({ applicationId })
+      .then(rows => {
+        this.appHistoryMap = { ...this.appHistoryMap, [key]: { loading: false, expanded: true, rows: rows || [] } };
+        this._refreshData();
+      })
+      .catch(() => {
+        this.appHistoryMap = { ...this.appHistoryMap, [key]: { loading: false, expanded: true, rows: [] } };
+        this._refreshData();
+      });
+  }
+
+  // Force LWC reactivity for appHistoryMap
+  _refreshData() {
+    this.cardData = this.cardData.map(r => ({
+      ...r,
+      _isExpanded: !!(this.appHistoryMap[r.AccountNumber]?.expanded)
+    }));
+    this.loanContractData = this.loanContractData.map(r => ({
+      ...r,
+      _isExpanded: !!(this.appHistoryMap[r.ContractNumber]?.expanded)
+    }));
+  }
+  get cardDataWithHistory() {
+    return this.cardData.map(r => ({
+      ...r,
+      _historyState: this.appHistoryMap[r.AccountNumber] || null,
+      _btnClass: (this.appHistoryMap[r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
+      _dateOfBirth: this._formatDate(r.DateOfBirth)
+    }));
+  }
+
+  get loanContractDataWithHistory() {
+    return this.loanContractData.map(r => ({
+      ...r,
+      _historyState: this.appHistoryMap[r.ContractNumber] || null,
+      _btnClass: (this.appHistoryMap[r.ContractNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
+      _dateOfBirth: this._formatDate(r.DateOfBirth)
+    }));
+  }
+
+  _formatDate(dateStr) {
+    if (!dateStr) return '';
+    // Handle YYYY-MM-DD format
+    const parts = dateStr.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return dateStr;
+  }
+
+  // Returns interleaved array: each data row followed by its history row (if expanded)
+  // Used for Account/Contract Search to render history inline
+  get cardRowsInterleaved() {
+    const result = [];
+    this.cardData.forEach(r => {
+      result.push({ ...r, _isDataRow: true, _key: 'data_' + r.AccountNumber, _singleRow: [r] });
+      const hs = this.appHistoryMap[r.AccountNumber];
+      if (hs && hs.expanded) {
+        result.push({ _isDataRow: false, _key: 'hist_' + r.AccountNumber, _historyState: hs });
+      }
+    });
+    return result;
+  }
+
+  get loanRowsInterleaved() {
+    const result = [];
+    this.loanContractData.forEach(r => {
+      result.push({ ...r, _isDataRow: true, _key: 'data_' + r.ContractNumber, _singleRow: [r] });
+      const hs = this.appHistoryMap[r.ContractNumber];
+      if (hs && hs.expanded) {
+        result.push({ _isDataRow: false, _key: 'hist_' + r.ContractNumber, _historyState: hs });
+      }
+    });
+    return result;
   }
 
   // Handle button actions from datatable rows
@@ -1126,7 +1382,8 @@ hasAnySearchCriteria(params) {
           selectedType: action.type,
           cifNumber: cifNumber,
           phone: row?.Phone,
-          customerName: row?.FullName
+          customerName: row?.FullName,
+          isListView: !this.recordId
         })
           .then(async (res) => {
             // const payload = {
@@ -1144,6 +1401,12 @@ hasAnySearchCriteria(params) {
                 // await refreshApex(this.wiredCaseResult);
                 this.dispatchEvent(new RefreshEvent());
             } else {
+                this.dispatchEvent(
+                  new CustomEvent('closerequest', {
+                    bubbles: true,
+                    composed: true
+                  })
+                );
               this[NavigationMixin.Navigate]({
                 type: "standard__recordPage",
                 attributes: {
@@ -1169,9 +1432,8 @@ hasAnySearchCriteria(params) {
   }
 
   get isDisplayCreateCase() {
-    return this.recordId && this.isNoCustomerFound;
+    return this.isNoCustomerFound && (this.recordId || this.isListView || this.isCreateCaseTab);
   }
-
 
   // Sorting helpers if you want per-table sorting in future (optional)
   onSorting(event) {

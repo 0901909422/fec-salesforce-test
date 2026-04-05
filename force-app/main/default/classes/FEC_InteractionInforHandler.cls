@@ -14,9 +14,13 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Interaction_Remarks__c,
                FEC_Interaction_Email__c,
                FEC_Send_To__c,
+               FEC_On_Hold__c,
                ParentId,
+               FEC_Parent_ID__c,
+               Parent.FEC_ID_Search__c,
                IsClosed,
-               FEC_Interaction_Status__c
+               FEC_Interaction_Status__c,
+               Origin
         FROM Case
         WHERE Id = :recordId
     ];
@@ -77,6 +81,17 @@ public without sharing class FEC_InteractionInforHandler {
         update new Case(
             Id = recordId,
             FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
+        );
+    }
+    
+    @AuraEnabled(cacheable=false)
+    public static void updateInteractionOnHold(Id recordId, Boolean onHold) {
+        if (recordId == null) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Record_Id_Invalid);
+        }
+        update new Case(
+            Id = recordId,
+            FEC_On_Hold__c = onHold
         );
     }
     
@@ -583,6 +598,7 @@ public without sharing class FEC_InteractionInforHandler {
         return [
         SELECT FEC_Phone_Number__c,
                FEC_Interaction_Email__c,
+               FEC_On_Hold__c,
                IsClosed,  FEC_Channel__c,
                ClosedDate
         FROM Case
@@ -696,5 +712,14 @@ public without sharing class FEC_InteractionInforHandler {
         
         string recordTypeName = caseList.isEmpty() ? null : caseList[0].RecordType.DeveloperName;
         return recordTypeName;
+    }
+
+    @AuraEnabled
+    public static String getParentCaseNumber(Id caseId) {
+        List<Case> caseList = [SELECT ParentId FROM Case WHERE Id = :caseId LIMIT 1];
+        if (caseList.isEmpty() || caseList[0].ParentId == null) return null;
+        List<Case> parentList = [SELECT FEC_ID_Search__c FROM Case WHERE Id = :caseList[0].ParentId LIMIT 1];
+        if (parentList.isEmpty()) return null;
+        return String.isNotBlank(parentList[0].FEC_ID_Search__c) ? parentList[0].FEC_ID_Search__c : null;
     }
 }

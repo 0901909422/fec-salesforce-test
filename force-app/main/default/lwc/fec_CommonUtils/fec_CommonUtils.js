@@ -1,5 +1,5 @@
 import { getFocusedTabInfo, setTabLabel, setTabIcon } from 'lightning/platformWorkspaceApi';
-import { STR_EMPTY, MSG_PHONE_ONLY_NUMBERS, MSG_PHONE_FORMAT_0_OR_84, MSG_INVALID_NATIONAL_ID_OR_PASSPORT, MSG_NATIONAL_ID_9_OR_12_CHARS, MSG_PASSPORT_1_LETTER_7_DIGITS, MSG_PASSPORT_START_UPPERCASE_THEN_7, MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7, MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY, MSG_NATIONAL_ID_9_OR_12_DIGITS, MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY, MSG_NATIONAL_ID_PASSPORT_RULES, MSG_INVALID_NATIONAL_ID, MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12, MSG_INVALID_EMAIL_FORMAT } from 'c/fec_CommonConst';
+import { STR_EMPTY, LOCALE_VN, MSG_PHONE_ONLY_NUMBERS, MSG_PHONE_FORMAT_0_OR_84, MSG_INVALID_NATIONAL_ID_OR_PASSPORT, MSG_NATIONAL_ID_9_OR_12_CHARS, MSG_PASSPORT_1_LETTER_7_DIGITS, MSG_PASSPORT_START_UPPERCASE_THEN_7, MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7, MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY, MSG_NATIONAL_ID_9_OR_12_DIGITS, MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY, MSG_NATIONAL_ID_PASSPORT_RULES, MSG_INVALID_NATIONAL_ID, MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12, MSG_INVALID_EMAIL_FORMAT } from 'c/fec_CommonConst';
 
 const formatDate = (curr) => {
   if (!curr) {
@@ -31,6 +31,33 @@ const formatDateTime = (curr) => {
   const s = String(curr.getSeconds()).padStart(2, "0");
 
   return `${day}/${month}/${year}, ${h}:${m}:${s}`;
+};
+
+/**
+ * Format date-time as DD/MM/YYYY HH:mm:ss (VN display)
+ */
+const formatDateTimeVN = (val) => {
+  if (!val) return '';
+  const d = new Date(val);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+
+  return `${day}/${month}/${year}, ${h}:${m}:${s}`;
+};
+/**
+ * Format seconds as HH:mm:ss
+ */
+const formatDuration = (seconds) => {
+  if (seconds == null || isNaN(Number(seconds))) return '';
+  const n = Math.floor(Number(seconds));
+  const h = Math.floor(n / 3600);
+  const m = Math.floor((n % 3600) / 60);
+  const s = n % 60;
+  return [h, m, s].map((x) => String(x).padStart(2, "0")).join(':');
 };
 
 const mask = (s, keepStart = 4, keepEnd = 4) => {
@@ -126,6 +153,11 @@ const maskWorkPhone = (phone) => {
   if (/^84\d{9}$/.test(v)) {
     return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
+
+  if (/^02\d{8}$/.test(v)) {
+    return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
+  }
+
   if (/^0\d{9}$/.test(v)) {
     return v.substring(0, 4) + "*".repeat(v.length - 7) + v.slice(-3);
   }
@@ -641,8 +673,52 @@ const formatNumber = (value) => {
   } catch {
     return value;
   }
-}
+};
 
+const getCaseIdNumber = (idText) => {
+    const match = idText?.match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
+};
+
+/**
+ * Format số với 2 chữ số thập phân, dùng cho tiền/amount. null/NaN → '0.00'.
+ * @param {*} val - Giá trị số (number hoặc string)
+ * @returns {string} Chuỗi đã format (vd: '1,234.00') hoặc '0.00'
+ */
+const formatNum = (val) => {
+  if (val == null) return '0.00';
+  const n = Number(val);
+  if (Number.isNaN(n)) return '0.00';
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+/**
+ * Chuẩn hóa chuỗi ngày sang YYYY-MM-DD để sort string đúng thứ tự.
+ * Trả về '9999-12-31' khi val rỗng/blank hoặc '-' (ô trống).
+ * @param {*} val - Giá trị ngày (string dạng YYYY-MM-DD hoặc DD/MM/YYYY, hoặc '-')
+ * @returns {string} Chuỗi YYYY-MM-DD hoặc '9999-12-31' cho ô trống
+ */
+const toSortDateStr = (val) => {
+  if (val == null || val === '' || String(val).trim() === '' || val === '-') return '9999-12-31';
+  const s = String(val).trim();
+  const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (iso) return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`.slice(0, 10);
+  const parts = s.split('/').filter(Boolean);
+  if (parts.length === 3) {
+    // DD/MM/YYYY (chuẩn hiển thị FEC) — năm 4 chữ số ở cuối
+    if (/^\d{4}$/.test(parts[2])) {
+      const d = parts[0].padStart(2, '0');
+      const m = parts[1].padStart(2, '0');
+      const y = parts[2];
+      return `${y}-${m}-${d}`;
+    }
+    // YYYY/MM/DD hoặc YYYY/M/D
+    if (/^\d{4}$/.test(parts[0])) {
+      return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+    }
+  }
+  return s;
+};
 const sortByStringField = (list = [], field, direction = 'asc') => {
   if (!Array.isArray(list) || !field) return [];
 
@@ -656,9 +732,62 @@ const sortByStringField = (list = [], field, direction = 'asc') => {
   });
 };
 
+const stripToIntString = (raw) => {
+  if (raw == null || raw === STR_EMPTY) {
+    return STR_EMPTY;
+  }
+  const digits = String(raw).replace(/\D/g, '');
+  return digits;
+};
+
+const formatThousandsFromDigits = (digits) => {
+  if (!digits) {
+    return STR_EMPTY;
+  }
+  const n = parseInt(digits, 10);
+  if (isNaN(n)) {
+    return STR_EMPTY;
+  }
+  return new Intl.NumberFormat(LOCALE_VN, {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0
+  }).format(n);
+};
+
+const toUpperNoVietnameseAccent = (str) => {
+  if (!str) {
+    return STR_EMPTY;
+  }
+  let s = str.trim().toLowerCase();
+  const map = [
+    ['à', 'a'], ['á', 'a'], ['ạ', 'a'], ['ả', 'a'], ['ã', 'a'],
+    ['ầ', 'a'], ['ấ', 'a'], ['ậ', 'a'], ['ẩ', 'a'], ['ẫ', 'a'],
+    ['ằ', 'a'], ['ắ', 'a'], ['ặ', 'a'], ['ẳ', 'a'], ['ẵ', 'a'],
+    ['è', 'e'], ['é', 'e'], ['ẹ', 'e'], ['ẻ', 'e'], ['ẽ', 'e'], ['ê', 'e'], ['ề', 'e'], ['ế', 'e'], ['ệ', 'e'], ['ể', 'e'], ['ễ', 'e'],
+    ['ì', 'i'], ['í', 'i'], ['ị', 'i'], ['ỉ', 'i'], ['ĩ', 'i'],
+    ['ò', 'o'], ['ó', 'o'], ['ọ', 'o'], ['ỏ', 'o'], ['õ', 'o'], ['ô', 'o'], ['ồ', 'o'], ['ố', 'o'], ['ộ', 'o'], ['ổ', 'o'], ['ỗ', 'o'], ['ơ', 'o'], ['ờ', 'o'], ['ớ', 'o'], ['ợ', 'o'], ['ở', 'o'], ['ỡ', 'o'],
+    ['ù', 'u'], ['ú', 'u'], ['ụ', 'u'], ['ủ', 'u'], ['ũ', 'u'], ['ư', 'u'], ['ừ', 'u'], ['ứ', 'u'], ['ự', 'u'], ['ử', 'u'], ['ữ', 'u'],
+    ['ỳ', 'y'], ['ý', 'y'], ['ỵ', 'y'], ['ỷ', 'y'], ['ỹ', 'y'],
+    ['đ', 'd']
+  ];
+  map.forEach((pair) => {
+    s = s.split(pair[0]).join(pair[1]);
+  });
+  return s.toUpperCase();
+};
+
+const todayIso = () => {
+  const t = new Date();
+  const y = t.getFullYear();
+  const m = String(t.getMonth() + 1).padStart(2, '0');
+  const d = String(t.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + d;
+};
+
 export {
   formatDate,
   formatDateTime,
+  formatDateTimeVN,
   mask,
   formatDateVNI,
   formatToDDMMYYYY,
@@ -678,5 +807,13 @@ export {
   urlCmpWithRecordId,
   isNegative,
   formatNumber,
-  sortByStringField
+  formatNum,
+  toSortDateStr,
+  formatDuration,
+  getCaseIdNumber,
+  sortByStringField,
+  formatThousandsFromDigits,
+  stripToIntString,
+  todayIso,
+  toUpperNoVietnameseAccent
 };

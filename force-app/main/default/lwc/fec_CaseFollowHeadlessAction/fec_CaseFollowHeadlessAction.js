@@ -25,6 +25,8 @@ import FEC_Label_User from '@salesforce/label/c.FEC_Label_User';
 import FEC_Label_Clear_User_Selection from '@salesforce/label/c.FEC_Label_Clear_User_Selection';
 import FEC_MSG_No_User_Found from '@salesforce/label/c.FEC_MSG_No_User_Found';
 import FEC_Label_Follow_Up_Type from '@salesforce/label/c.FEC_Label_Follow_Up_Type';
+import FEC_Select_Follow_Up_User_Type_Resolved from '@salesforce/label/c.FEC_Select_Follow_Up_User_Type_Resolved';
+import FEC_Select_Follow_Up_User_Type_Unfollow from '@salesforce/label/c.FEC_Select_Follow_Up_User_Type_Unfollow';
 
 export default class FecCaseFollowHeadlessAction extends LightningElement {
     @api recordId;
@@ -284,7 +286,7 @@ export default class FecCaseFollowHeadlessAction extends LightningElement {
             });
     }
 
-    // Options cho Follow-Up Type (giống popup Follow-Up)
+    // Chỉ popup Select Follow-Up User — nhãn riêng; modal Follow-up chính dùng FEC_Follow_Up_Until_*
     get followUpTypeOptions() {
         return [
             { label: FEC_Follow_Up_Until_Resolved, value: 'UNTIL_RESOLVED' },

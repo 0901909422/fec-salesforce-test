@@ -71,18 +71,24 @@ public without sharing class FEC_StatementsAccountController {
 
         /* ================= LOAD CASE ================= */
         Case c = [
-            SELECT FEC_Account_or_Contract__c
+            SELECT FEC_Account_or_Contract__c, FEC_Product_Type__r.Name
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
         ];
 
         FEC_Customer_History__c ch = [
-            SELECT Id, FEC_Account_Number__c
+            SELECT Id, FEC_Account_Number__c, FEC_Contract_Number__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
         ];
+
+       String accountNumber = FEC_CommonUltils.resolveAccountNumber(
+                c.FEC_Product_Type__r.Name,
+                ch.FEC_Account_Number__c,
+                ch.FEC_Contract_Number__c
+            );
 
         /* ================= 1.CALL API GetCardBasicInfo ================= */
         FEC_GetCardBasicInfo.ResponseWrapper resCard;
@@ -92,7 +98,7 @@ public without sharing class FEC_StatementsAccountController {
                 FEC_CommonUltils.generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                ch.FEC_Account_Number__c
+                accountNumber
             );
 
         } catch (Exception e) {
@@ -107,7 +113,7 @@ public without sharing class FEC_StatementsAccountController {
                     FEC_CommonUltils.generateTransactionId(),
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                    ch.FEC_Account_Number__c
+                    accountNumber
                 );
         } catch (Exception e) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));

@@ -1,0 +1,5 @@
+.note-icon {
+    --slds-c-icon-color-background: #b60554; /* đỏ giống Salesforce */
+    --slds-c-icon-color-foreground-default: white;
+    border-radius: 50%;
+}

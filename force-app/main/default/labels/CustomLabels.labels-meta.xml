@@ -528,6 +528,286 @@
         <value>CIF Number</value>
     </labels>
     <labels>
+        <fullName>FEC_CS_CASE_ADDITIONAL_INFO_ID_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_ADDITIONAL_INFO_ID_REQUIRED_MSG</shortDescription>
+        <value>AdditionalInfo.ID required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_ADDITIONAL_INFO_VALUE_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_ADDITIONAL_INFO_VALUE_REQUIRED_MSG</shortDescription>
+        <value>AdditionalInfo.Value required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CATEGORY_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CATEGORY_INVALID_MSG</shortDescription>
+        <value>Category is blank or invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_CUSTOMER_INFO_MISSING_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_CUSTOMER_INFO_MISSING_MSG</shortDescription>
+        <value>CustomerInfo is missing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_ERROR_CODE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CS CASE ERROR CODE</shortDescription>
+        <value>110</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_ADDITIONAL_INFO_VALUE_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_ADDITIONAL_INFO_VALUE_MSG</shortDescription>
+        <value>Invalid upload payload format</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG</shortDescription>
+        <value>Invalid ContractOrAccountNumber</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_CREATOR_EMAIL_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_CREATOR_EMAIL_MSG</shortDescription>
+        <value>Invalid CreatorEmail</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_CUSTOMER_NAME_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_CUSTOMER_NAME_MSG</shortDescription>
+        <value>Invalid customer name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_EMAIL_ADDRESS_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_EMAIL_ADDRESS_MSG</shortDescription>
+        <value>Invalid email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_NATIONAL_ID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_NATIONAL_ID_MSG</shortDescription>
+        <value>Invalid NationalID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG</shortDescription>
+        <value>Invalid phone number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_TRANSACTION_ID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CS CASE INVALID TRANSACTION ID MSG</shortDescription>
+        <value>Invalid TransactionID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_INVALID_USER_TYPE_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_INVALID_USER_TYPE_MSG</shortDescription>
+        <value>Invalid user type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_NOT_FOUND_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_NOT_FOUND_MSG</shortDescription>
+        <value>Case not found with ID:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_PRODUCT_TYPE_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_PRODUCT_TYPE_INVALID_MSG</shortDescription>
+        <value>ProductType is blank or invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_REMARKS_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_REMARKS_REQUIRED_MSG</shortDescription>
+        <value>Remarks required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_REMARKS_TOO_LONG_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_REMARKS_TOO_LONG_MSG</shortDescription>
+        <value>Remarks too long</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_REQUEST_INFO_MISSING_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_REQUEST_INFO_MISSING_MSG</shortDescription>
+        <value>RequestInfo is missing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_REQUEST_IS_NULL_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CS CASE REQUEST IS NULL MSG</shortDescription>
+        <value>Request is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_CASEID_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_CASEID_REQUIRED_MSG</shortDescription>
+        <value>Missing CaseID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_CASEREQUESTINFO_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_CASEREQUESTINFO_REQUIRED_MSG</shortDescription>
+        <value>CaseRequestInfo required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_CHANNEL_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_CHANNEL_REQUIRED_MSG</shortDescription>
+        <value>Channel required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_CONTRACT_OR_ACCOUNT_INFOS_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_CONTRACT_OR_ACCOUNT_INFOS_REQUIRED_MSG</shortDescription>
+        <value>ContractOrAccountInfos required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_MAX_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_MAX_MSG</shortDescription>
+        <value>ContractOrAccountNumber max 255</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_DATETIME_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_DATETIME_INVALID_MSG</shortDescription>
+        <value>Datetime must be ISO-8601</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_PHONE_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_PHONE_REQUIRED_MSG</shortDescription>
+        <value>PhoneNumber required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_PRODUCT_TYPE_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_PRODUCT_TYPE_REQUIRED_MSG</shortDescription>
+        <value>ProductType required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_REQUEST_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_REQUEST_INVALID_MSG</shortDescription>
+        <value>Request cannot be null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_SYS_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_SYS_REQUIRED_MSG</shortDescription>
+        <value>Sys required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_TRANSACTIONID_MAX_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_TRANSACTIONID_MAX_MSG</shortDescription>
+        <value>TransactionID max 36</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_TRANSACTIONID_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_TRANSACTIONID_REQUIRED_MSG</shortDescription>
+        <value>TransactionID required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_USERTYPE_MAX_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_USERTYPE_MAX_MSG</shortDescription>
+        <value>UserType max 15</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_STATUS_USERTYPE_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_STATUS_USERTYPE_REQUIRED_MSG</shortDescription>
+        <value>UserType required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_SUBCODE_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_SUBCODE_REQUIRED_MSG</shortDescription>
+        <value>SubCode required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_SUBCODE_TOO_LONG_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_SUBCODE_TOO_LONG_MSG</shortDescription>
+        <value>Subcode is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_SUB_CATEGORY_INVALID_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_SUB_CATEGORY_INVALID_MSG</shortDescription>
+        <value>SubCategory is blank or invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_SYS_MISSING_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC  CS CASE SYS MISSING MSG</shortDescription>
+        <value>Sys is missing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_TYPE_REQUIRED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_TYPE_REQUIRED_MSG</shortDescription>
+        <value>Casetype is blank or invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_CASE_TYPE_TOO_LONG_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CS_CASE_TYPE_TOO_LONG_MSG</shortDescription>
+        <value>CaseType is invalid or no longer than 255 characters</value>
+    </labels>
+    <labels>
         <fullName>FEC_Cancel</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -1534,6 +1814,22 @@
         <value>Until choosing Unfollow</value>
     </labels>
     <labels>
+        <fullName>FEC_Select_Follow_Up_User_Type_Resolved</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Follow-Up User modal: Until case is resolved</shortDescription>
+        <value>Until case is resolved</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Select_Follow_Up_User_Type_Unfollow</fullName>
+        <categories>Follow-Up</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Follow-Up User modal: Until choosing Unfollow</shortDescription>
+        <value>Until choosing Unfollow</value>
+    </labels>
+    <labels>
         <fullName>FEC_Full_IPP_Payment_Amount_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -2017,7 +2313,7 @@
         <shortDescription>Label for Field ID</shortDescription>
         <value>Field ID</value>
     </labels>
-        <labels>
+    <labels>
         <fullName>FEC_Label_Code_ID</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -6255,6 +6551,41 @@
         <value>Get next work</value>
     </labels>
     <labels>
+        <fullName>title_Select_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>You&apos;ve selected 1 record.</value>
+    </labels>
+    <labels>
+        <fullName>title_Toast_Event</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>No Case Found</value>
+    </labels>
+    <labels>
+        <fullName>UBankCustomberServiceEmail</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UBankCustomberServiceEmail</shortDescription>
+        <value>tsalesforce63@gmail.com</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Ubank_Email_DevName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Ubank_Email_DevName</shortDescription>
+        <value>FEC_Ubank_Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Ubank_Skill_DevName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Ubank_Skill_DevName</shortDescription>
+        <value>Ubank_Email</value>
+    </labels>
+    <labels>
         <fullName>User_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -6374,7 +6705,7 @@
         <value>Start Date Time</value>
     </labels>
     <labels>
-                
+
         <fullName>FEC_Tab_Action_Button</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -6943,7 +7274,7 @@
         <shortDescription>Error Deleting Data</shortDescription>
         <value>Error Deleting Data</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>LBL_Missing_Required_Fields</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -7358,7 +7689,7 @@
         <shortDescription>FEC_MSG_UPDATED_INFO_NOT_UPDATED</shortDescription>
         <value>The information has not been updated.</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>FEC_ACTION_PHONE_UPDATE_HEADER</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -7366,7 +7697,7 @@
         <shortDescription>FEC_ACTION_PHONE_UPDATE_HEADER</shortDescription>
         <value>Update Customer Info</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>FEC_MSG_ACTION_PHONE_UPDATE</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -7374,7 +7705,7 @@
         <shortDescription>FEC_MSG_ACTION_PHONE_UPDATE</shortDescription>
         <value>You are about to update this customer&apos;s information. Are you sure you want to proceed?</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -7382,7 +7713,7 @@
         <shortDescription>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</shortDescription>
         <value>Customer information updated successfully</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -9529,6 +9860,118 @@
         <value>dichvukhachhang@ubank.com.vn</value>
     </labels>
     <labels>
+        <fullName>FEC_Email_Label_From</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email compose - From label</shortDescription>
+        <value>From</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Label_To</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email compose - To label</shortDescription>
+        <value>To</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_To_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email compose - To email required error</shortDescription>
+        <value>To email không được để trống.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Page title</shortDescription>
+        <value>New Clear Session</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Header</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Header text</shortDescription>
+        <value>Select user to clear session</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Subtitle</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Subtitle text</shortDescription>
+        <value>Find user by Name, User Name, Email or Alias</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Search_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Search placeholder</shortDescription>
+        <value>Search...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_No_Users</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - No users found</shortDescription>
+        <value>No users found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Btn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Button label</shortDescription>
+        <value>Clear Session</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Processing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Processing spinner text</shortDescription>
+        <value>Processing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Validation_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Validation toast title</shortDescription>
+        <value>Validation</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Validation_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Validation message</shortDescription>
+        <value>Please select at least one user.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Success_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Success toast title</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Success_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Success message</shortDescription>
+        <value>Clear session completed.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Error_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Error toast title</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Clear_Session_Error_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Clear Session - Error message fallback</shortDescription>
+        <value>Clear session failed.</value>
+    </labels>
+    <labels>
         <fullName>FEC_Card_Number_Required_MSG</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -11004,7 +11447,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Remove_Phone_Invalid_Format</shortDescription>
-        <value>Số điện thoại không đúng định dạng. Vui lòng nhập 10 số bắt đầu bằng 0 hoặc 11 số bắt đầu bằng 84.</value>
+        <value>Phone number must start with 0 (10 digits) or 84 (11 digits)</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Remove_Phone_Service_Failed</fullName>
@@ -11123,5 +11566,265 @@
         <protected>false</protected>
         <shortDescription>Start date cannot be in the past</shortDescription>
         <value>Start Date cannot be in the past. Please select today or a future date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Content_History_Tab</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Content History tab label</shortDescription>
+        <value>Content History Tracking</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ACTION_CANCEL</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_COMPOSE_TEXT_FIELD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_COMPOSE_TEXT_FIELD</shortDescription>
+        <value>Compose text</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_CREATED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_CREATED_MSG</shortDescription>
+        <value>Note created</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_DELETED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_DELETED_MSG</shortDescription>
+        <value>Note deleted</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_DELETE_BTN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_DELETE_BTN</shortDescription>
+        <value>Delete File?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_DELETE_MODAL_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_DELETE_MODAL_MSG</shortDescription>
+        <value>Deleting a file also removes it from any records or posts it&apos;s attached to.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_EDIT_NOTE_MODAL_TITLE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_EDIT_NOTE_MODAL_TITLE</shortDescription>
+        <value>Edit Note</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_NEW_NOTE_MODAL_TITLE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_NEW_NOTE_MODAL_TITLE</shortDescription>
+        <value>New Note</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_REMOVED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_REMOVED_MSG</shortDescription>
+        <value>Note removed from record</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_REMOVE_BTN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_REMOVE_BTN</shortDescription>
+        <value>Remove file?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_REMOVE_MODAL_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_REMOVE_MODAL_MSG</shortDescription>
+        <value>The file will be removed from the record, but not deleted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN</shortDescription>
+        <value>Created By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN</shortDescription>
+        <value>Last Modified</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN</shortDescription>
+        <value>Text Preview</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN</shortDescription>
+        <value>Title</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RELATED_NOTES_UPDATED_MSG</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RELATED_NOTES_UPDATED_MSG</shortDescription>
+        <value>Note updated</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_History_Tab</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Template History tab label</shortDescription>
+        <value>Template History Tracking</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Alt_Remove_From_Record</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Alt_Remove_From_Record</shortDescription>
+        <value>Remove from Record</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Alt_View</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Alt_View</shortDescription>
+        <value>View</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Refund_Amount</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Refund_Amount</shortDescription>
+        <value>Refund Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Receipt_Date</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Receipt_Date</shortDescription>
+        <value>Receipt Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Receipt_Amount</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Receipt_Amount</shortDescription>
+        <value>Receipt Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Transaction_No</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Transaction_No</shortDescription>
+        <value>Transaction No</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Beneficiary_Name</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Beneficiary_Name</shortDescription>
+        <value>Beneficiary Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Beneficiary_Account</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Beneficiary_Account</shortDescription>
+        <value>Beneficiary Account</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Bank_Name</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Bank_Name</shortDescription>
+        <value>Bank Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Bank_Branch</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Bank_Branch</shortDescription>
+        <value>Bank Branch</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Province_City</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Province_City</shortDescription>
+        <value>Province/ City</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Refund_Request_Receipt_Amount_Positive</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Refund_Request_Receipt_Amount_Positive</shortDescription>
+        <value>Vui lòng nhập số tiền biên lai lớn hơn 0.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Refund_Request_Receipt_Date_Future</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Refund_Request_Receipt_Date_Future</shortDescription>
+        <value>Ngày biên lai không được lớn hơn ngày hiện tại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Insufficient_Access</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Insufficient_Access</shortDescription>
+        <value>Insufficient access.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Refund_Request_Amount_Nonnegative</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Refund_Request_Amount_Nonnegative</shortDescription>
+        <value>Refund amount must be greater than or equal to 0.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Refund_Request_Receipt_Lines_Required</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Refund_Request_Receipt_Lines_Required</shortDescription>
+        <value>At least one receipt line is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Refund_Request_Receipt_Line_Incomplete</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Refund_Request_Receipt_Line_Incomplete</shortDescription>
+        <value>Each receipt line must have date, positive amount, transaction number, and payment channel.</value>
     </labels>
 </CustomLabels>

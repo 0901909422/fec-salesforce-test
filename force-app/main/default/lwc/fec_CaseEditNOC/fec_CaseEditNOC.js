@@ -10,10 +10,10 @@ import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 
-import getProductTypeIds from "@salesforce/apex/FEC_CaseEditNOCController.getProductTypeIds";
-import getCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getCategoryIds";
-import getSubCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCategoryIds";
-import getSubCodeIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCodeIds";
+// import getProductTypeIds from "@salesforce/apex/FEC_CaseEditNOCController.getProductTypeIds";
+// import getCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getCategoryIds";
+// import getSubCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCategoryIds";
+// import getSubCodeIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCodeIds";
 
 import getNatureOfCase from "@salesforce/apex/FEC_CaseEditNOCController.getNatureOfCase";
 
@@ -31,8 +31,8 @@ import {
   VIEW_MODE_HANDLING, 
   VIEW_MODE_REVIEW, 
   // STR_UNDEFINED, 
-  // INTERNAL_REQUEST, 
-  // INTERNAL_UBANK
+  INTERNAL_REQUEST, 
+  INTERNAL_UBANK
 } from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
@@ -43,6 +43,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
   @api modeEditCase;
 
   isSubmited = true;
+  _isInternalRequest = false;
+  _internalProductTypeId = null;
+  _internalApplied = false;
 
   get isEdit() {
     
@@ -71,6 +74,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   };
 
   subscription = null;
+  subscriptionNOC = null;
 
   activeSection = ["noc"];
   productTypeSelectedId;
@@ -81,6 +85,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   disableProdType;
   interactionViewMode;
+  recordTypeDevName;
 
   get disableCategory() {
     return !this.productTypeSelectedId;
@@ -113,24 +118,28 @@ export default class Fec_CaseEditNOC extends LightningElement {
     return JSON.stringify(this.subCodeOptionlst);
   }
 
+  renderedCallback() {
+    if (this._internalProductTypeId && !this._internalApplied) {
+      const el = this.template.querySelector(`c-fec_-combo-box[data-id="prod-type"]`);
+      if (el) {
+        el.value = this._internalProductTypeId;
+        el.disabled = true;
+        this._internalApplied = true;
+      }
+    }
+  }
+
   async connectedCallback() {
     await resetViewMode({
       recordId: this.recordId,
       viewMode: VIEW_MODE_REVIEW,
     });
     this.subscribeToMessageChannel();
-
-    getCase({
-      recordId: this.recordId
-    })
+    
+    getCase({ recordId: this.recordId })
       .then((res) => {
         this.productTypeSelectedId = res.FEC_Product_Type__c;
-
-        if (this.productTypeSelectedId) {
-          this.disableProdType = true;
-        } else {
-          this.disableProdType = false;
-        }
+        this.disableProdType = !!this.productTypeSelectedId;
 
         this.categorySelectedId = res.FEC_Category__c;
 
@@ -140,11 +149,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
-
+        this.recordTypeDevName = res.RecordType?.DeveloperName;
+        this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
         this.getSubCode();
+
         getByCase({
           caseId: this.recordId,
           productTypeId: this.productTypeSelectedId,
@@ -154,6 +165,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         })
           .then((res) => {
             if (!res) return;
+
             let business = { ...res };
             const actions = business.routingActionlst || [];
             const foundActions = [];
@@ -163,37 +175,14 @@ export default class Fec_CaseEditNOC extends LightningElement {
             if (actions.some((a) => a.value === ACTION_RECALL))
               foundActions.push(ACTION_RECALL);
 
-            // 2. If any were found, call the update method with the combined string
-            if (foundActions.length > 0) {
-              this.updateRoutingActionDisplay(foundActions.join(";"));
-            } else {
-              this.updateRoutingActionDisplay("");
-            }
-          })
+            this.updateRoutingActionDisplay(
+              foundActions.length > 0 ? foundActions.join(";") : ""
+            );
+          });
       })
       .catch((err) => {
         console.log("🚀 ~ Fec_CaseEditNOC ~ connectedCallback ~ err:", err);
-       })
-      .finally(() => { });
-
-    // getProductTypeIds({
-    //   recordId: this.recordId
-    // })
-    //   .then((result) => {
-    //     console.log(">>>>>>result: ", result);
-    //     this.productTypeFilter = {
-    //       criteria: [
-    //         {
-    //           fieldPath: "Id",
-    //           operator: "in",
-    //           value: result
-    //         }
-    //       ]
-    //     };
-    //   })
-    //   .catch((error) => {
-    //     console.log("error", error);
-    //   });
+      });
   }
 
   updateRoutingActionDisplay(field) {
@@ -214,6 +203,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
   disconnectedCallback() {
     unsubscribe(this.subscription);
     this.subscription = null;
+
+    unsubscribe(this.subscriptionNOC);
+    this.subscriptionNOC = null;
+
+    this.modeEditCase = false;
   }
 
   subscribeToMessageChannel() {
@@ -223,6 +217,66 @@ export default class Fec_CaseEditNOC extends LightningElement {
       (message) => this.handleMessage(message),
       { scope: APPLICATION_SCOPE }
     );
+
+    this.subscriptionNOC = subscribe(
+      this.messageContext,
+      CASE_NOC,
+      (message) => this.handleCaseNOCMessage(message),
+      { scope: APPLICATION_SCOPE }
+    );
+  }
+
+  handleCaseNOCMessage(message) {
+    if (!Object.prototype.hasOwnProperty.call(message, 'accountType')) return;
+
+    const accountType = message.accountType;
+
+    this._isInternalRequest = false;
+    this.disableProdType = false;
+    this._internalProductTypeId = null;
+    this._internalApplied = false;
+
+    this.productTypeSelectedId = null;
+    this.categorySelectedId = null;
+    this.subCategorySelectedId = null;
+    this.subCodeSelectedId = null;
+
+    this.categoryOptionlst = [];
+    this.subCategoryOptionlst = [];
+    this.subCodeOptionlst = [];
+
+    this.natureOfCase = null;
+
+    ['prod-type', 'category', 'sub-category', 'sub-code'].forEach(id => {
+      const el = this.template.querySelector(`c-fec_-combo-box[data-id="${id}"]`);
+      if (el) el.clear();
+    });
+
+    if (accountType === INTERNAL_REQUEST || accountType === INTERNAL_UBANK) {
+      this._isInternalRequest = accountType === INTERNAL_REQUEST;
+
+      const option = this.productTypeOptionlst?.find(
+        (opt) => opt.label === accountType
+      );
+
+      if (option) {
+        setTimeout(() => {
+          this.productTypeSelectedId = option.value;
+          this.disableProdType = true;
+          this._internalProductTypeId = option.value;
+          this._internalApplied = false;
+
+          const categoryEl = this.template.querySelector(`c-fec_-combo-box[data-id="category"]`);
+          if (categoryEl) categoryEl.disabled = false;
+
+          this.getCategory();
+        }, 50);
+      }
+    } else {
+      this.handleDisable('category');
+      this.handleDisable('sub-category');
+      this.handleDisable('sub-code');
+    }
   }
 
   async handlePublishMessageChanel() {
@@ -239,6 +293,31 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   handleMessage(message) {
     this.modeEditCase = message.isModeEdit;
+  }
+
+  reloadData() {
+    this._internalApplied = false;
+    this._internalProductTypeId = null;
+
+    getCase({ recordId: this.recordId })
+      .then((res) => {
+        this.productTypeSelectedId = res.FEC_Product_Type__c;
+        this.categorySelectedId = res.FEC_Category__c;
+        this.subCategorySelectedId = res.FEC_SubCategory__c;
+        this.subCodeSelectedId = res.FEC_SubCode__c;
+
+        this.isSubmited = res.FEC_Is_Submited__c;
+        this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
+        this.recordTypeDevName = res.RecordType?.DeveloperName;
+        this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
+        this.getProdType();
+        this.getCategory();
+        this.getSubCategory();
+        this.getSubCode();
+      })
+      .catch((err) => {
+        console.log("reloadData err:", err);
+      });
   }
 
   // handleProductTypeSelect(event) {
@@ -367,6 +446,19 @@ export default class Fec_CaseEditNOC extends LightningElement {
         JSON.stringify(res)
       );
       this.productTypeOptionlst = res;
+      if (this._isInternalRequest && !this.productTypeSelectedId) {
+        const internalOption = res?.find((opt) => opt.label === INTERNAL_REQUEST);
+
+        if (internalOption) {
+          this.productTypeSelectedId = internalOption.value;
+          this.disableProdType = true;
+          this._internalProductTypeId = internalOption.value;
+          this._internalApplied = false; 
+          this.getCategory();
+          this.getSubCategory();
+          this.getSubCode();
+        }
+      }
     });
   }
 
