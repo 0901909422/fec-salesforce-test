@@ -1789,8 +1789,8 @@
         <fullName>FEC_FollowUp_Type_Until_Case_Resolved</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Follow-up type: Until Case is Resolved</shortDescription>
-        <value>Until Case is Resolved</value>
+        <shortDescription>Follow-up type: Until case is resolved</shortDescription>
+        <value>Until case is resolved</value>
     </labels>
     <labels>
         <fullName>FEC_Follow_Up_Label</fullName>
@@ -7867,6 +7867,13 @@
         <protected>false</protected>
         <shortDescription>Follow-Up</shortDescription>
         <value>Follow-Up</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_UNTIL_CASE_RESOLVED</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Until case is resolved</shortDescription>
+        <value>Until case is resolved</value>
     </labels>
     <labels>
         <fullName>FEC_LABEL_UNTIL_UNFOLLOW</fullName>

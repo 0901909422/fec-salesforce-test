@@ -2,7 +2,9 @@ import { LightningElement, wire } from 'lwc';
 import { publish, MessageContext } from 'lightning/messageService';
 import { CloseActionScreenEvent } from "lightning/actions";
 import IS_MODE_EDIT from '@salesforce/messageChannel/FEC_Case_Mode__c';
-
+import {
+  setMode,
+} from "c/fec_CustomerCaseModeStore";
 export default class Fec_CustomerCaseExecuteAction extends LightningElement {
   @wire(MessageContext)
   messageContext;
@@ -21,6 +23,7 @@ export default class Fec_CustomerCaseExecuteAction extends LightningElement {
     const payload = {
       isModeEdit: true
     };
+    setMode(true);
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
 

@@ -67,6 +67,7 @@
 		<members>FEC_SecondaryInfoAccountController</members>
 		<members>FEC_StatementsAccountController</members>
 		<members>FEC_TransactionsController</members>
+		<members>FEC_GetCSMasterDataByCodeService</members>
 		<members>FEC_EmailMessageTriggerHandler</members>
 		<members>FEC_ServiceCaseEmailService</members>
         <name>ApexClass</name>
@@ -113,6 +114,8 @@
 		<members>fec_RefundRequestForm</members>
 		<members>fec_CaseFollowHeadlessAction</members>
 		<members>fec_CommonUtils</members>
+		<members>fec_CustomerCaseExecuteAction</members>
+		<members>fec_CustomerCaseModeStore</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

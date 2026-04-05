@@ -70,7 +70,7 @@ public without sharing class FEC_MainInfoController {
             hist = [
                 SELECT Id,
                     FEC_Account_Number__c,
-                    FEC_Contract_Number__c
+                    FEC_Contract_Number__c,
                     FEC_First_Name__c,
                     FEC_Middle_Name__c,
                     FEC_Last_Name__c,
