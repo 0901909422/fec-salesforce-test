@@ -22,16 +22,25 @@ public without sharing class FEC_EmailMessageTriggerHandler {
      * @return void
      * @created: 2026/04/03
      */
-    public static void run(List<EmailMessage> newMsgs) {
-        if (isExecuting) return;
-
-        isExecuting = true;
-        try {
-            redirectIncomingReplyToServiceCase(newMsgs);
-        } finally {
-            isExecuting = false;
+    public static void run() {
+        if (isExecuting) {
+            return;
         }
+        isExecuting = true;
+
+        FEC_EmailMessageTriggerHandler handler = new FEC_EmailMessageTriggerHandler();
+
+        if (Trigger.isAfter && Trigger.isInsert) {
+            handler.onAfterInsert(Trigger.new);
+        }
+
+        isExecuting = false;
     }
+
+    private void onAfterInsert(List<EmailMessage> newEmailMsgs) {
+        redirectIncomingReplyToServiceCase(newEmailMsgs);
+    }
+
 
     /**
      * Method Description: Khi khách hàng reply email từ Customer/Internal Case,
@@ -45,7 +54,7 @@ public without sharing class FEC_EmailMessageTriggerHandler {
      * @return void
      * @created: 2026/04/03
      */
-    private static void redirectIncomingReplyToServiceCase(List<EmailMessage> newMsgs) {
+    private void redirectIncomingReplyToServiceCase(List<EmailMessage> newMsgs) {
         // Lọc email phản hồi theo spec
         List<EmailMessage> replyMsgs = new List<EmailMessage>();
         for (EmailMessage em : newMsgs) {
