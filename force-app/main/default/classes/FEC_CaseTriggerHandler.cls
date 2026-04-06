@@ -53,12 +53,12 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/29 - Added updateCaseParticipants for Customer Case / Internal Case
      */
     private void onBeforeInsert(List<Case> newCases) {
+        setEmail2CaseChannelBeforeInsert(newCases);
+        syncChannelFromInteractionForCustomerCase(newCases);
         generateFECIdSearch(newCases);
         updateCaseParticipantsOnInsert(newCases);
-        syncChannelFromInteractionForCustomerCase(newCases);
         assignEntitlement(newCases);
         syncGlobalSearchFromParent(newCases, null);
-        setEmail2CaseChannelBeforeInsert(newCases);
         setParentIdFromEmailThread(newCases);
         stripSubjectThreadToken(newCases);
     }
@@ -443,7 +443,7 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         for (Case c : newCases) {
-            if (c.RecordTypeId == interactionRecordTypeId && String.isBlank(c.FEC_Channel__c)) {
+            if (c.RecordTypeId == interactionRecordTypeId) {
                 // Phân loại cho Ubank hoặc FE -> Channel Email
                 if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK || c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_FE) {
                     c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
