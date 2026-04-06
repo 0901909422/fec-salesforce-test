@@ -12,7 +12,7 @@ export default class MaskedToggleDatatable extends LightningDatatable {
         dblclickText: {
             template: dblclickTemplate,
             standardCellLayout: true,
-            typeAttributes: ['value', 'fieldName', 'selectedType', 'isExpanded']
+            typeAttributes: ['value', 'fieldName', 'selectedType', 'isExpanded', 'isAccountContractSearch']
         }
     };
 }

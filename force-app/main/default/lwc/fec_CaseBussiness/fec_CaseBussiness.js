@@ -22,6 +22,7 @@ import {
   validateNationalId,
   validateUpdatedInfoNationalID,
   checkNoUpdateInSubmit,
+  findPicklistOptionByRaw,
   isOnlyNumber
 } from "c/fec_CommonUtils";
 
@@ -186,6 +187,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
   fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
+  fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
 };
 
 export default class Fec_CaseBussiness extends LightningElement {
@@ -475,6 +477,14 @@ export default class Fec_CaseBussiness extends LightningElement {
     return names;
   }
 
+  /** Options cho checkNoUpdateInSubmit (picklist Case: label vs API value). */
+  _getCheckNoUpdateInSubmitOptions() {
+    return {
+      presentUpdatedApiNames: this._getPresentCaseFieldApiNames(),
+      picklistCaseFieldOptions: this.business?.picklistOptionsMap?.Case,
+    };
+  }
+
   /** Giá trị gốc (unmasked) để so sánh với updated. */
   _getCaseFieldOriginalValue(apiName) {
     const sections = this.business?.sectionlst ?? [];
@@ -525,7 +535,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     const noUpdate = checkNoUpdateInSubmit(
       this._getCaseFieldOriginalValue.bind(this),
       this._getCaseFieldValue.bind(this),
-      { presentUpdatedApiNames: this._getPresentCaseFieldApiNames() },
+      this._getCheckNoUpdateInSubmitOptions(),
     );
     if (noUpdate) {
       this.showToast(FEC_Warning_Title, FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
@@ -738,7 +748,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                 // Convert label to value for picklist fields
                 const picklistOptions = this.business.picklistOptionsMap?.[obj.name]?.[field.apiName];
                 if (picklistOptions?.length && field.value) {
-                  const opt = picklistOptions.find((o) => o.label === field.value);
+                  const opt = findPicklistOptionByRaw(picklistOptions, field.value);
                   if (opt) {
                     field.value = opt.value;
                   }
@@ -1299,7 +1309,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     const noUpdate = checkNoUpdateInSubmit(
       this._getCaseFieldOriginalValue.bind(this),
       this._getCaseFieldValue.bind(this),
-      { presentUpdatedApiNames: this._getPresentCaseFieldApiNames() },
+      this._getCheckNoUpdateInSubmitOptions(),
     );
     // Chỉ chặn khi có dropdown routing và user chưa cập nhật bất kỳ trường Updated nào.
     if (routeToEle && noUpdate) {
@@ -1580,7 +1590,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       const currentVal = inputField.value;
       if (currentVal == null || currentVal === STR_EMPTY) return;
 
-      const found = options.find((opt) => opt.label === currentVal);
+      const found = findPicklistOptionByRaw(options, currentVal);
       if (found) {
         inputField.value = found.value;
       }

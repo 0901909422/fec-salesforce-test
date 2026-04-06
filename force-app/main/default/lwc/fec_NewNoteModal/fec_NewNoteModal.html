@@ -22,9 +22,10 @@
             <footer class="slds-modal__footer">
                 <lightning-button label={labels.cancelBtn} onclick={handleClose}>
                 </lightning-button>
-
-                <lightning-button variant="brand" label={labels.saveBtn} onclick={handleSave}>
-                </lightning-button>
+                <template if:true={isEdit}>
+                    <lightning-button variant="brand" label={labels.saveBtn} onclick={handleSave}>
+                    </lightning-button>
+                </template>
             </footer>
 
         </div>

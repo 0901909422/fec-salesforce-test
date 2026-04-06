@@ -145,11 +145,11 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
               value: { fieldName: "AccountNumber" },
               fieldName: "AccountNumber",
               selectedType: "Card",
-              isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false
+              isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false,
+              isAccountContractSearch: this.isAccountContractSearch
             },
         sortable: false,
       },
-      { label: "Application ID", fieldName: "ApplicationID", sortable: true },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
       {
         label: "National ID 1",
@@ -179,6 +179,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         },
         sortable: true },
       { label: "Plastic ID", fieldName: "PlasticID", sortable: true },
+      ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
       { label: "Account Status", fieldName: "AccountStatus", sortable: true },
     ];
   }
@@ -212,11 +213,11 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
               value: { fieldName: "ContractNumber" },
               fieldName: "ContractNumber",
               selectedType: "Loan",
-              isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false
+              isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false,
+              isAccountContractSearch: this.isAccountContractSearch
             },
         sortable: false,
       },
-      { label: "Application ID", fieldName: "ApplicationID", sortable: true },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
       {
         label: "National ID 1",
@@ -245,8 +246,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             year: "numeric"
         }, 
         sortable: true },
-      { label: "Product Code", fieldName: "ProductCode", sortable: true },
-      { label: "Contract Status", fieldName: "ContractStatus", sortable: true },
+      { label: "Plastic ID", fieldName: "PlasticID", sortable: true },
+      ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
+      { label: "Account Status", fieldName: "ContractStatus", sortable: true },
     ];
   }
 
@@ -394,6 +396,16 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   // Application History state: key = applicationId, value = { loading, rows, expanded }
   appHistoryMap = {};
+  // Modal state
+  historyModalKey = null;
+  historyModalRows = [];
+  historyModalLoading = false;
+  get showHistoryModal() { return !!this.historyModalKey; }
+
+  handleCloseHistoryModal() {
+    this.historyModalKey = null;
+    this.historyModalRows = [];
+  }
 
   @wire(getCase, { caseId: "$recordId" })
   wiredCase(result) {
@@ -1132,67 +1144,55 @@ hasAnySearchCriteria(params) {
     );
   }
 
-  // Double-click on link in custom table → create history (navigate)
+  // Double-click on link in custom table → toggle Application History only (no case/history creation)
   handleDblClickRow(event) {
     event.stopPropagation();
     const key = event.currentTarget.dataset.key;
     const fieldName = event.currentTarget.dataset.field;
     if (!key || !fieldName) return;
-
-    // Find row data
-    let row = null;
-    let selectedType = '';
-    if (fieldName === 'AccountNumber') {
-      row = this.cardData.find(r => r.AccountNumber === key);
-      selectedType = 'Card';
-    } else if (fieldName === 'ContractNumber') {
-      row = this.loanContractData.find(r => r.ContractNumber === key);
-      selectedType = 'Loan';
-    }
-    if (!row) return;
-
-    // Reuse handleRowAction logic
-    const cifNumber = row?.CIFNumber ?? '';
-    let categories = [];
-    if (this.cardData && this.cardData.length > 0) categories.push('Card');
-    if (this.loanContractData && this.loanContractData.length > 0) categories.push('Loan');
-    if (this.insuranceData && this.insuranceData.length > 0) categories.push('Insurance');
-    let searchProducts = categories.join(';');
-
-    this.isLoaded = false;
-    createHistory({
-      value: key,
-      fieldName: fieldName,
-      caseId: this.recordId,
-      searchProducts: searchProducts,
-      selectedType: selectedType,
-      cifNumber: cifNumber,
-      phone: row?.Phone,
-      customerName: row?.FullName,
-      isListView: !this.recordId
-    })
-      .then(async (res) => {
-        this.showToast(this.FEC_Toast_Refresh_Success, this.FEC_MSG_Create_Customer_History_Success, 'success');
-        if (this.recordId) {
-          await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
-          this.dispatchEvent(new RefreshEvent());
-        } else {
-          this.dispatchEvent(new CustomEvent('closerequest', { bubbles: true, composed: true }));
-          this[NavigationMixin.Navigate]({
-            type: 'standard__recordPage',
-            attributes: { recordId: res, objectApiName: 'Case', actionName: 'view' }
-          });
-        }
-      })
-      .catch(() => { this.showToast(this.FEC_Toast_Error, this.FEC_MSG_Create_Customer_History_Error, 'error'); })
-      .finally(() => { this.isLoaded = true; });
+    this._toggleHistory(key, fieldName);
   }
 
-  // Handle single click on Account/Contract Number → toggle Application History
+  // Single click on Account/Contract Number → toggle Application History only
+  handleSingleClickRow(event) {
+    event.stopPropagation();
+    const key = event.currentTarget.dataset.key;
+    const fieldName = event.currentTarget.dataset.field;
+    if (!key || !fieldName) return;
+    this._toggleHistory(key, fieldName);
+  }
+
+  // Single click on Account/Contract Number → open Application History modal
   handleDblClick(event) {
     const { value, fieldName } = event.detail || {};
     if (!value) return;
     this._toggleHistory(value, fieldName);
+  }
+
+  _openHistoryModal(key, fieldName) {
+    let applicationId = null;
+    if (fieldName === 'AccountNumber') {
+      const row = this.cardData.find(r => r.AccountNumber === key);
+      applicationId = row?.ApplicationID;
+    } else if (fieldName === 'ContractNumber') {
+      const row = this.loanContractData.find(r => r.ContractNumber === key);
+      applicationId = row?.ApplicationID;
+    }
+    if (!applicationId) return;
+
+    this.historyModalKey = key;
+    this.historyModalRows = [];
+    this.historyModalLoading = true;
+
+    getApplicationHistory({ applicationId })
+      .then(rows => {
+        this.historyModalRows = rows || [];
+        this.historyModalLoading = false;
+      })
+      .catch(() => {
+        this.historyModalRows = [];
+        this.historyModalLoading = false;
+      });
   }
 
   // Handle click from custom table toggle button or link
@@ -1257,12 +1257,12 @@ hasAnySearchCriteria(params) {
       _isExpanded: !!(this.appHistoryMap[r.ContractNumber]?.expanded)
     }));
   }
-
   get cardDataWithHistory() {
     return this.cardData.map(r => ({
       ...r,
       _historyState: this.appHistoryMap[r.AccountNumber] || null,
-      _btnClass: (this.appHistoryMap[r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn'
+      _btnClass: (this.appHistoryMap[r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
+      _dateOfBirth: this._formatDate(r.DateOfBirth)
     }));
   }
 
@@ -1270,8 +1270,43 @@ hasAnySearchCriteria(params) {
     return this.loanContractData.map(r => ({
       ...r,
       _historyState: this.appHistoryMap[r.ContractNumber] || null,
-      _btnClass: (this.appHistoryMap[r.ContractNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn'
+      _btnClass: (this.appHistoryMap[r.ContractNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
+      _dateOfBirth: this._formatDate(r.DateOfBirth)
     }));
+  }
+
+  _formatDate(dateStr) {
+    if (!dateStr) return '';
+    // Handle YYYY-MM-DD format
+    const parts = dateStr.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return dateStr;
+  }
+
+  // Returns interleaved array: each data row followed by its history row (if expanded)
+  // Used for Account/Contract Search to render history inline
+  get cardRowsInterleaved() {
+    const result = [];
+    this.cardData.forEach(r => {
+      result.push({ ...r, _isDataRow: true, _key: 'data_' + r.AccountNumber, _singleRow: [r] });
+      const hs = this.appHistoryMap[r.AccountNumber];
+      if (hs && hs.expanded) {
+        result.push({ _isDataRow: false, _key: 'hist_' + r.AccountNumber, _historyState: hs });
+      }
+    });
+    return result;
+  }
+
+  get loanRowsInterleaved() {
+    const result = [];
+    this.loanContractData.forEach(r => {
+      result.push({ ...r, _isDataRow: true, _key: 'data_' + r.ContractNumber, _singleRow: [r] });
+      const hs = this.appHistoryMap[r.ContractNumber];
+      if (hs && hs.expanded) {
+        result.push({ _isDataRow: false, _key: 'hist_' + r.ContractNumber, _historyState: hs });
+      }
+    });
+    return result;
   }
 
   // Handle button actions from datatable rows

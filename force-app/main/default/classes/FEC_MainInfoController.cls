@@ -56,7 +56,7 @@ public without sharing class FEC_MainInfoController {
 
         /* ===== LOAD CASE ===== */
         Case c = [
-            SELECT Id, FEC_Account_or_Contract__c
+            SELECT Id, FEC_Account_or_Contract__c,FEC_Product_Type__r.Name
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -70,6 +70,7 @@ public without sharing class FEC_MainInfoController {
             hist = [
                 SELECT Id,
                     FEC_Account_Number__c,
+                    FEC_Contract_Number__c,
                     FEC_First_Name__c,
                     FEC_Middle_Name__c,
                     FEC_Last_Name__c,
@@ -88,7 +89,11 @@ public without sharing class FEC_MainInfoController {
                 LIMIT 1
             ];
 
-            accountNumber = hist.FEC_Account_Number__c;
+           accountNumber = FEC_CommonUltils.resolveAccountNumber(
+                c.FEC_Product_Type__r.Name,
+                hist.FEC_Account_Number__c,
+                hist.FEC_Contract_Number__c
+            );
             cifNumber = hist.FEC_CIF_Number__c;
         }
         /* ===== CACHE HIT ===== */
@@ -240,20 +245,44 @@ public without sharing class FEC_MainInfoController {
             );
 
         if (res == null || res.Addresses == null) return result;
-        List<FEC_Province__c> cityList = [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_Province__c];
-        Map<String, String> cityMap = new Map<String, String>();
-        for (FEC_Province__c c : cityList) {
-            cityMap.put(c.FEC_Code__c, c.FEC_Name_VN__c);
-        }
-        List<FEC_District__c> districtList = [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_District__c];
-        Map<String, String> districtMap = new Map<String, String>();
-        for (FEC_District__c d : districtList) {
-            districtMap.put(d.FEC_Code__c, d.FEC_Name_VN__c);
+
+        /* ===== MAP CODE  ===== */
+        Map<String, Id> provinceMap = new Map<String, Id>();
+        for (FEC_Province__c c : [
+            SELECT Id, FEC_Code__c FROM FEC_Province__c
+        ]) {
+            provinceMap.put(c.FEC_Code__c, c.Id);
         }
 
+        Map<String, Id> districtMap = new Map<String, Id>();
+        for (FEC_District__c d : [
+            SELECT Id, FEC_Code__c FROM FEC_District__c
+        ]) {
+            districtMap.put(d.FEC_Code__c, d.Id);
+        }
+
+        Map<String, Id> wardMap = new Map<String, Id>();
+        for (FEC_Ward__c w : [
+            SELECT Id, FEC_Code__c FROM FEC_Ward__c
+        ]) {
+            wardMap.put(w.FEC_Code__c, w.Id);
+        }
+
+        Map<String, Id> countryMap = new Map<String, Id>();
+        for (FEC_Country__c country : [
+            SELECT Id, FEC_Code__c FROM FEC_Country__c
+        ]) {
+            countryMap.put(country.FEC_Code__c, country.Id);
+        }
+
+        /* ===== EXISTING ===== */
         Map<String, FEC_Address_Info__c> existingMap = new Map<String, FEC_Address_Info__c>();
         for (FEC_Address_Info__c a : [
-            SELECT Id, FEC_Address_Type__c
+            SELECT Id, FEC_Address_Type__c,
+                FEC_Building__c, FEC_Number__c, FEC_Street__c,
+                FEC_Ward__c, FEC_District__c, FEC_Province__c,
+                FEC_Country__c, FEC_ZipCode__c,
+                FEC_Full_Address__c
             FROM FEC_Address_Info__c
             WHERE FEC_Customer_History__c = :hist.Id
         ]) {
@@ -262,7 +291,9 @@ public without sharing class FEC_MainInfoController {
 
         List<FEC_Address_Info__c> toInsert = new List<FEC_Address_Info__c>();
 
+        /* ===== PROCESS ===== */
         for (FEC_GetAddressesList.AddressInfo ai : res.Addresses) {
+
             String type = mapApiAddressTypeToSF(ai.AddressType);
             if (String.isBlank(type)) continue;
 
@@ -270,28 +301,81 @@ public without sharing class FEC_MainInfoController {
 
             if (existingMap.containsKey(type)) {
                 addr = existingMap.get(type);
-            }
-            else {
+            } else {
                 addr = new FEC_Address_Info__c();
                 addr.FEC_Customer_History__c = hist.Id;
                 addr.FEC_Address_Type__c = type;
                 toInsert.add(addr);
             }
 
-            addr.FEC_Address__c = buildFullAddress(ai,cityMap, districtMap);
+            /* ===== BASIC FIELDS ===== */
+            addr.FEC_Building__c = ai.Building;
+            addr.FEC_Number__c   = ai.NumberStr;
+            addr.FEC_Street__c   = ai.Street;
+            addr.FEC_ZipCode__c  = ai.ZipCode;
             addr.FEC_Mailing_Address__c = FEC_ConstantCommon.TEXT_YES;
 
-            result.toUpdate.add(addr);
+            /* ===== WARD ===== */
+            if (String.isNotBlank(ai.Ward) && wardMap.containsKey(ai.Ward)) {
+                addr.FEC_Ward__c = wardMap.get(ai.Ward);
+                addr.FEC_Ward_Text__c = null;
+            } else {
+                addr.FEC_Ward__c = null;
+                addr.FEC_Ward_Text__c = ai.Ward;
+            }
 
-            AddressDTO dto = new AddressDTO();
-            dto.addressType = type;
-            dto.address = addr.FEC_Address__c;
-            dto.mailingAddress = FEC_ConstantCommon.TEXT_YES;
-            result.dtoList.add(dto);
+            /* ===== DISTRICT ===== */
+            if (String.isNotBlank(ai.District) && districtMap.containsKey(ai.District)) {
+                addr.FEC_District__c = districtMap.get(ai.District);
+                addr.FEC_District_Text__c = null;
+            } else {
+                addr.FEC_District__c = null;
+                addr.FEC_District_Text__c = ai.District;
+            }
+
+            /* ===== PROVINCE ===== */
+            if (String.isNotBlank(ai.City) && provinceMap.containsKey(ai.City)) {
+                addr.FEC_Province__c = provinceMap.get(ai.City);
+                addr.FEC_Province_Text__c = null;
+            } else {
+                addr.FEC_Province__c = null;
+                addr.FEC_Province_Text__c = ai.City;
+            }
+
+            /* ===== COUNTRY ===== */
+            if (String.isNotBlank(ai.CountryName) && countryMap.containsKey(ai.CountryName)) {
+                addr.FEC_Country__c = countryMap.get(ai.CountryName);
+                addr.FEC_Country_Text__c = null;
+            } else {
+                addr.FEC_Country__c = null;
+                addr.FEC_Country_Text__c = ai.CountryName;
+            }
+
+            result.toUpdate.add(addr);
         }
 
         if (!toInsert.isEmpty()) {
             insert toInsert;
+        }
+
+        if (!result.toUpdate.isEmpty()) {
+            update result.toUpdate;
+        }
+
+        /* ===== RE-QUERY GET FORMULA ===== */
+        List<FEC_Address_Info__c> refreshed = [
+            SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c
+            FROM FEC_Address_Info__c
+            WHERE FEC_Customer_History__c = :hist.Id
+        ];
+
+        /* ===== DTO ===== */
+        for (FEC_Address_Info__c addr : refreshed) {
+            AddressDTO dto = new AddressDTO();
+            dto.addressType = addr.FEC_Address_Type__c;
+            dto.address = FEC_CommonUltils.removeTrailingComma(addr.FEC_Full_Address__c);
+            dto.mailingAddress = addr.FEC_Mailing_Address__c;
+            result.dtoList.add(dto);
         }
 
         return result;

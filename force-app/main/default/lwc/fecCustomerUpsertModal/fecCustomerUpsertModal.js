@@ -149,6 +149,15 @@ export default class FecCustomerUpsertModal extends LightningElement {
         this.localData = { ...this.localData, [field]: val };
     }
 
+    // Auto-fill Field Name khi user rời khỏi Field ID input và Field Name rỗng (chỉ create mode)
+    handleFieldIdBlur() {
+        const currentFieldName = this.localData.FEC_FieldName__c;
+        const isFieldNameEmpty = !currentFieldName || !currentFieldName.trim();
+        if (isFieldNameEmpty && this.localData.FEC_FieldID__c) {
+            this.localData = { ...this.localData, FEC_FieldName__c: this.localData.FEC_FieldID__c };
+        }
+    }
+
     resetFileState() {
         this.fileName = this.label.lblNoFileChosen;
         this.isUploadDisabled = true;

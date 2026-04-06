@@ -51,13 +51,22 @@ public without sharing class FEC_ApplicationsListController {
         }
 
         Case cs = [
-            SELECT FEC_Account_or_Contract__c,FEC_Account_or_Contract__r.FEC_Account_Number__c
+            SELECT FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Contract_Number__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
         ];
 
-        String accountNumber = cs.FEC_Account_or_Contract__r.FEC_Account_Number__c;
+        String productTypeName = cs.FEC_Product_Type__r != null 
+            ? cs.FEC_Product_Type__r.Name 
+            : null;
+
+        String accountNumber = FEC_CommonUltils.resolveAccountNumber(
+            productTypeName,
+            cs.FEC_Account_or_Contract__r.FEC_Account_Number__c,
+            cs.FEC_Account_or_Contract__r.FEC_Contract_Number__c
+        );
+
         Id historyId = cs.FEC_Account_or_Contract__c;
 
         FEC_Application_List__c cacheRec;

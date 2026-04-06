@@ -1,4 +1,10 @@
 import { LightningElement, api, wire, track } from "lwc";
+import {
+  getMode,
+  setMode,
+  subscribeMode,
+  unsubscribeMode,
+} from "c/fec_CustomerCaseModeStore";
 import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page";
 import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
 
@@ -58,6 +64,14 @@ export default class Fec_CaseNote extends LightningElement {
    * ======================= */
 
   connectedCallback() {
+    this.isEditMode = getMode();
+
+    this._modeListener = (value) => {
+      this.isEditMode = value;
+      console.log("[STORE] isEditMode:", value);
+    };
+    subscribeMode(this._modeListener);
+
     this.subscribeToModeChannel();
   }
 
@@ -76,9 +90,7 @@ export default class Fec_CaseNote extends LightningElement {
     console.log("[LMS] Mode received:", message);
 
     if (message?.isModeEdit !== undefined) {
-      this.isEditMode = message.isModeEdit;
-
-      console.log("[LMS] isEditMode:", this.isEditMode);
+      setMode(message.isModeEdit);
     }
   }
 
@@ -86,6 +98,10 @@ export default class Fec_CaseNote extends LightningElement {
     if (this.subscription) {
       unsubscribe(this.subscription);
       this.subscription = null;
+    }
+
+    if (this._modeListener) {
+      unsubscribeMode(this._modeListener);
     }
   }
 
@@ -104,7 +120,9 @@ export default class Fec_CaseNote extends LightningElement {
         id: note.id,
         title: note.title,
         preview: note.preview,
+        createdById: note.createdById,
         createdByName: note.createdByName,
+        createdByUrl: "/" + note.createdById, // ✅ key line
         lastModifiedDateText: formatDateTime(note.lastModifiedDate),
       }));
       this.currentPage = 1;
@@ -122,6 +140,12 @@ export default class Fec_CaseNote extends LightningElement {
     {
       label: FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN,
       fieldName: "title",
+      type: "nameLink",
+      typeAttributes: {
+        label: { fieldName: "title" },
+        rowId: { fieldName: "id" }, // must match your data
+        columnName: "title",
+      },
     },
     {
       label: FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN,
@@ -129,16 +153,16 @@ export default class Fec_CaseNote extends LightningElement {
     },
     {
       label: FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN,
-      fieldName: "createdByName",
+      fieldName: "createdByUrl",
+      type: "url",
+      typeAttributes: {
+        label: { fieldName: "createdByName" },
+        target: "_self",
+      },
     },
     {
       label: FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN,
       fieldName: "lastModifiedDateText",
-    },
-    // 👉 ACTION COLUMN
-    {
-      type: "action",
-      typeAttributes: { rowActions: this.getRowActions },
     },
   ];
 
@@ -156,33 +180,18 @@ export default class Fec_CaseNote extends LightningElement {
     return refreshApex(this.wiredNotesResult);
   }
 
-  getRowActions(row, doneCallback) {
-    const actions = [
-      { label: FEC_Alt_View, name: "view" },
-      { label: FEC_Button_Delete, name: "delete" },
-      { label: FEC_Alt_Remove_From_Record, name: "remove" },
-    ];
-    doneCallback(actions);
-  }
+  handleNameClick(event) {
+    console.log("EVENT RECEIVED", event.detail);
 
-  handleRowAction(event) {
-    const actionName = event.detail.action.name;
-    const row = event.detail.row;
+    const { rowId } = event.detail;
 
-    switch (actionName) {
-      case "view":
-        this.openViewModal(row);
-        break;
+    const note = this.notes.find((n) => n.id === rowId);
 
-      case "delete":
-        this.openConfirmModal("delete", row);
-        break;
-
-      case "remove":
-        this.openConfirmModal("remove", row);
-        break;
+    if (note) {
+      this.openViewModal(note);
     }
   }
+
   openViewModal(note) {
     this.selectedNote = note;
     this.showModal = true;
