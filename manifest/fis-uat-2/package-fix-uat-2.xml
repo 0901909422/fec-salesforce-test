@@ -48,6 +48,7 @@
         <members>FEC_RemovePhoneController</members>
 		<members>FEC_CustomerIntegrationService</members>
 		<members>FEC_FullCustomerIntegrationJob</members>
+        <members>FEC_ContractClosureController</members>
         <members>FEC_CreateCaseInteractionController</members>
 		<members>FEC_GetLoanApplicationHistory</members>
 		<members>FEC_CaseEditNOCController</members>
@@ -71,6 +72,8 @@
 		<members>FEC_EmailMessageTriggerHandler</members>
 		<members>FEC_ServiceCaseEmailService</members>
         <members>FEC_InteractionRoutingController</members>
+        <members>FEC_GetCustomerList</members>
+        <members>FEC_GetCardBasicInfo</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -91,6 +94,7 @@
         <members>fec_NotificationOverride</members>
 		<members>fecInteractionInfo</members>
 		<members>fec_CommonConst</members>
+		<members>fec_ContractClosureForm</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_InteractionMyCaseInfo</members>
         <members>fec_Lookup</members>
@@ -118,6 +122,7 @@
 		<members>fec_CustomerCaseExecuteAction</members>
 		<members>fec_CustomerCaseModeStore</members>
 		<members>fec_InteractionRoutingUtilityBar</members>
+		<members>fec_CardClosureRefundForm</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -269,6 +274,40 @@
 		<members>FEC_Follow_Up_Until_Unfollow</members>
 		<members>FEC_LABEL_UNTIL_CASE_RESOLVED</members>
 		<members>FEC_LABEL_UNTIL_UNFOLLOW</members>
+		<members>FEC_Alt_Edit</members>
+		<members>FEC_Alt_Remove</members>
+		<members>FEC_Button_Cancel</members>
+		<members>FEC_Button_Save</members>
+		<members>FEC_Email_Label</members>
+		<members>FEC_Error_Title</members>
+		<members>FEC_Interaction_Email_Invalid_Msg</members>
+		<members>FEC_LBL_ContractClosure_Add_Temp_Address</members>
+		<members>FEC_LBL_ContractClosure_Add_Temp_Email</members>
+		<members>FEC_LBL_ContractClosure_Address_Col</members>
+		<members>FEC_LBL_ContractClosure_Address_Type</members>
+		<members>FEC_LBL_ContractClosure_Building</members>
+		<members>FEC_LBL_ContractClosure_Delivery_Option</members>
+		<members>FEC_LBL_ContractClosure_Mailing_Address_Col</members>
+		<members>FEC_LBL_ContractClosure_Modal_Edit_Temp_Address</members>
+		<members>FEC_LBL_ContractClosure_Modal_New_Temp_Address</members>
+		<members>FEC_LBL_ContractClosure_New_Temp_Email</members>
+		<members>FEC_LBL_ContractClosure_Recipient_Name</members>
+		<members>FEC_LBL_ContractClosure_Recipient_Phone</members>
+		<members>FEC_LBL_ContractClosure_Street</members>
+		<members>FEC_LBL_ContractClosure_Street_Number</members>
+		<members>FEC_LBL_ContractClosure_Ward</members>
+		<members>FEC_MSG_ContractClosure_Address_Required</members>
+		<members>FEC_MSG_ContractClosure_Delivery_Invalid</members>
+		<members>FEC_MSG_ContractClosure_Max_Two_Delivery_Options</members>
+		<members>FEC_MSG_ContractClosure_No_C360_Email</members>
+		<members>FEC_MSG_ContractClosure_Phone_Invalid</members>
+		<members>FEC_MSG_ContractClosure_Required_Fields</members>
+		<members>FEC_Placeholder_ContractClosure_Select_Admin</members>
+		<members>FEC_Placeholder_ContractClosure_Select_Delivery</members>
+		<members>FEC_Success_Title</members>
+		<members>FEC_Termination_Loading_Alt</members>
+		<members>FEC_Toast_Save_Success</members>
+		<members>LBL_SortBy</members>
 		<members>FEC_Email_Label_From</members>
 		<members>FEC_Email_Label_To</members>
 		<members>FEC_Email_Error_To_Required</members>
@@ -449,6 +488,7 @@
 		<members>FEC_Case_Refund_Details__c</members>
 		<members>FEC_Clear_Session__c</members>
 		<members>FEC_Interaction_Routed__e</members>
+		<members>FEC_Additional_Info__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -471,6 +511,7 @@
 		<members>Case.FEC_Payment_Method__c</members>
 		<members>Case.FEC_New_Block_Code__c</members>
 		<members>Case.FEC_Card_Block_Reason__c</members>
+		<members>Case.FEC_Delivery_Option_2__c</members>
         <members>FEC_Notification__c.FEC_Notification_Template__c</members>
 		<members>FEC_Bank_Branch__c.FEC_Bank_Branch_Name_Noaccent__c</members>
 		<members>FEC_Bank_Branch__c.FEC_Bank_Branch_Name__c</members>
@@ -502,6 +543,7 @@
         <members>FEC_Address_Info__c.FEC_District__c</members>
         <members>FEC_Address_Info__c.FEC_Province__c</members>
         <members>FEC_Address_Info__c.FEC_Country__c</members>
+		<members>FEC_Content_History_Tracking__c.FEC_Merge_Fields_Used__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
