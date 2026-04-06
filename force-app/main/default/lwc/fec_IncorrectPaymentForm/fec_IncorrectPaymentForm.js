@@ -57,6 +57,8 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
 
     @api recordId;
 
+    @api subCodeCode;
+
     @track subCode = CONST.EMPTY;
     @track incorrectContract = CONST.EMPTY;
     @track paymentHistory = [];
@@ -135,14 +137,24 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         return CONST.TH2_CODES;
     }
 
+    get effectiveSubCode() {
+        const fromParent = (this.subCodeCode || CONST.EMPTY).trim();
+        if (fromParent) return fromParent;
+        return (this.subCode || CONST.EMPTY).trim();
+    }
+
     get isTh1() {
-        const code = (this.subCode || CONST.EMPTY).trim();
+        const code = this.effectiveSubCode;
         return code && this.th1Codes.includes(code);
     }
 
     get isTh2() {
-        const code = (this.subCode || CONST.EMPTY).trim();
+        const code = this.effectiveSubCode;
         return code && this.th2Codes.includes(code);
+    }
+
+    get adjustmentAmountFieldLabel() {
+        return this.isTh2 ? this.customLabel.excessAmount : this.customLabel.adjustedAmount;
     }
 
     get displayExcessAmount() {
@@ -303,12 +315,12 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (this.selectedPaymentId) {
             const id = String(this.selectedPaymentId);
             const row = this.paymentHistory.find(p => String(p.id) === id);
-            if (row && this.subCode) {
-                if (this.th2Codes.includes(this.subCode)) {
+            if (row && this.effectiveSubCode) {
+                if (this.th2Codes.includes(this.effectiveSubCode)) {
                     this.paymentDate = row.paymentDate || null;
                     this.excessAmount = row.paymentAmount;
                     this.th1EditableBillAmount = null;
-                } else if (this.th1Codes.includes(this.subCode)) {
+                } else if (this.th1Codes.includes(this.effectiveSubCode)) {
                     this.th1EditableBillAmount = row.paymentAmount;
                     this.paymentDate = null;
                     this.excessAmount = null;

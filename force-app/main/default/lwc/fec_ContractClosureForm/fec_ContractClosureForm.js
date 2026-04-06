@@ -50,6 +50,7 @@ import {
     CONTRACT_CLOSURE_DELIVERY_VALUE_ADDRESS_DEFAULT,
     CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT
 } from 'c/fec_CommonConst';
+import { normalizePhone } from 'c/fec_CommonUtils';
 
 const CC_ADDRESS_TABLE_ITEM = 'item';
 const CC_ADDRESS_TABLE_ITEMS = 'items';
@@ -536,7 +537,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
         if (!inp) {
             return null;
         }
-        const n = this.normalizePhone(this.recipientPhone);
+        const n = normalizePhone(this.recipientPhone);
         if (!n) {
             inp.setCustomValidity('');
         } else if (!PATTERN_PHONE_VN_FEC.test(n)) {
@@ -567,17 +568,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
             return false;
         }
         return true;
-    }
-
-    normalizePhone(raw) {
-        if (!raw) {
-            return STR_EMPTY;
-        }
-        let s = String(raw).replace(/\s/g, '');
-        if (s.startsWith('+84')) {
-            s = '84' + s.substring(3);
-        }
-        return s;
     }
 
     ensureSelectedComboboxOption(optionRows, selectedValue, selectedLabel) {

@@ -32,7 +32,6 @@ public with sharing class FEC_ContractClosureController {
     private static final Set<String> ADMIN_UNIT_OBJECTS = new Set<String>{ 'FEC_Ward__c', 'FEC_Province__c' };
 
     private static final Pattern EMAIL_PAT = Pattern.compile(FEC_ConstantCommon.PATTERN_EMAIL);
-    private static final Pattern PHONE_PAT = Pattern.compile(FEC_ConstantCommon.PATTERN_PHONE_NUMBER);
 
     public class PicklistEntryDTO {
         @AuraEnabled public String label;
@@ -128,7 +127,7 @@ public with sharing class FEC_ContractClosureController {
         out.provinceOptions = new List<PicklistEntryDTO>();
         out.success = false;
         if (caseId == null) {
-            out.errorMessage = 'Case Id is required.';
+            out.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'});
             return out;
         }
         try {
@@ -158,7 +157,7 @@ public with sharing class FEC_ContractClosureController {
                 ' FROM Case WHERE Id = :caseId LIMIT 1';
             List<SObject> rows = Database.query(soql);
             if (rows.isEmpty()) {
-                out.errorMessage = 'Case not found.';
+                out.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
                 return out;
             }
             SObject c = rows[0];
@@ -258,7 +257,7 @@ public with sharing class FEC_ContractClosureController {
         ValidationResultDTO vr = new ValidationResultDTO();
         InitDataDTO init = getInitData(caseId);
         if (!init.success) {
-            vr.addFail(init.errorMessage != null ? init.errorMessage : 'Init failed.');
+            vr.addFail(init.errorMessage != null ? init.errorMessage : System.Label.FEC_Cannot_Refresh_Data);
             return vr;
         }
         SavePayloadDTO p = parsePayload(payloadJson);
@@ -317,7 +316,7 @@ public with sharing class FEC_ContractClosureController {
             return;
         }
         if (!Schema.sObjectType.FEC_Address_Info__c.isDeletable()) {
-            throw new AuraHandledException('Insufficient access to delete Address Info.');
+            throw new AuraHandledException(System.Label.FEC_Error_No_Delete_Permission);
         }
         delete as user [SELECT Id FROM FEC_Address_Info__c WHERE Id = :addressInfoId LIMIT 1];
     }
@@ -326,7 +325,7 @@ public with sharing class FEC_ContractClosureController {
     public static Id upsertTemporaryAddress(Id caseId, String payloadJson) {
         SavePayloadDTO p = parsePayload(payloadJson);
         if (p.tempAddressParts == null) {
-            throw new AuraHandledException('Temporary address payload required.');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Temporary address'}));
         }
         TempAddressPartsDTO t = p.tempAddressParts;
         validateTempAddressParts(t);
@@ -336,7 +335,7 @@ public with sharing class FEC_ContractClosureController {
             return updateExistingTemporaryAddress((Id) p.tempAddressRecordId, histId, line, t);
         }
         if (!Schema.sObjectType.FEC_Address_Info__c.isCreateable()) {
-            throw new AuraHandledException('Cannot create Address Info.');
+            throw new AuraHandledException(System.Label.FEC_MSG_Insufficient_Access);
         }
         SObject addr = Schema.getGlobalDescribe().get(OBJ_ADDRESS).newSObject(null);
         addr.put('FEC_Customer_History__c', histId);
@@ -348,7 +347,7 @@ public with sharing class FEC_ContractClosureController {
         );
         List<SObject> toIns = dec.getRecords();
         if (toIns.isEmpty()) {
-            throw new AuraHandledException('No creatable Address Info fields.');
+            throw new AuraHandledException(System.Label.FEC_MSG_Insufficient_Access);
         }
         insert as user toIns;
         return toIns[0].Id;
@@ -371,11 +370,11 @@ public with sharing class FEC_ContractClosureController {
             'SELECT Id, FEC_Account_or_Contract__c FROM Case WHERE Id = :caseId LIMIT 1'
         );
         if (caseRows.isEmpty()) {
-            throw new AuraHandledException('Case not found.');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' }));
         }
         Id histId = (Id) caseRows[0].get('FEC_Account_or_Contract__c');
         if (histId == null) {
-            throw new AuraHandledException('Case has no Customer History (C360).');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Customer History' }));
         }
         return histId;
     }
@@ -395,7 +394,7 @@ public with sharing class FEC_ContractClosureController {
 
     private static Id updateExistingTemporaryAddress(Id rowId, Id histId, String line, TempAddressPartsDTO t) {
         if (!Schema.sObjectType.FEC_Address_Info__c.isUpdateable()) {
-            throw new AuraHandledException('Cannot update Address Info.');
+            throw new AuraHandledException(System.Label.FEC_Error_No_Update_Permission);
         }
         FEC_Address_Info__c row = [
             SELECT Id, FEC_Customer_History__c
@@ -404,7 +403,7 @@ public with sharing class FEC_ContractClosureController {
             LIMIT 1
         ];
         if (row.FEC_Customer_History__c != histId) {
-            throw new AuraHandledException('Address does not belong to this customer.');
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'Address'}));
         }
         SObject addr = row;
         applyAddressLineAndComponents(addr, line, t, false);
@@ -413,7 +412,7 @@ public with sharing class FEC_ContractClosureController {
             new List<SObject>{ addr }
         );
         if (dec.getRecords().isEmpty()) {
-            throw new AuraHandledException('No updateable Address Info fields.');
+            throw new AuraHandledException(System.Label.FEC_Error_No_Field_Update_Permission);
         }
         update as user dec.getRecords();
         return rowId;
@@ -488,7 +487,7 @@ public with sharing class FEC_ContractClosureController {
     private static ValidationResultDTO runValidation(InitDataDTO init, SavePayloadDTO p, Boolean forComplete) {
         ValidationResultDTO r = new ValidationResultDTO();
         if (!init.success) {
-            r.addFail(init.errorMessage != null ? init.errorMessage : 'Init failed.');
+            r.addFail(init.errorMessage != null ? init.errorMessage : System.Label.FEC_Cannot_Refresh_Data);
             return r;
         }
         Boolean hasEmail = p.deliveryEmailSelected == true;
@@ -545,14 +544,14 @@ public with sharing class FEC_ContractClosureController {
         }
         if (hasAddr || (hasEmail && hasOffice)) {
             String rn = p.recipientName != null ? p.recipientName.trim() : FEC_ConstantCommon.STR_EMPTY;
-            String rp = p.recipientPhone != null ? normalizePhone(p.recipientPhone) : FEC_ConstantCommon.STR_EMPTY;
+            String rp = p.recipientPhone != null ? FEC_CommonUltils.normalizePhone(p.recipientPhone) : FEC_ConstantCommon.STR_EMPTY;
             if (forComplete && String.isBlank(rn)) {
                 r.addFail(MSG_NOTI_01);
             }
             if (forComplete && String.isBlank(rp)) {
                 r.addFail(MSG_NOTI_01);
             }
-            if (String.isNotBlank(rp) && !PHONE_PAT.matcher(rp).matches()) {
+            if (String.isNotBlank(rp) && !FEC_CommonUltils.isPhone(rp)) {
                 r.addFail(MSG_NOTI_16);
             }
             if (forComplete) {
@@ -566,17 +565,6 @@ public with sharing class FEC_ContractClosureController {
             }
         }
         return r;
-    }
-
-    private static String normalizePhone(String raw) {
-        if (raw == null) {
-            return FEC_ConstantCommon.STR_EMPTY;
-        }
-        String s = raw.replaceAll('\\s', '');
-        if (s.startsWith('+84')) {
-            s = '84' + s.substring(3);
-        }
-        return s;
     }
 
     private static SObject buildCaseUpdate(Id caseId, SavePayloadDTO p) {
@@ -597,7 +585,7 @@ public with sharing class FEC_ContractClosureController {
         }
         Schema.SObjectField fRp = fm.get(flc(FLD_RECIPIENT_PHONE));
         if (fRp != null && fRp.getDescribe().isUpdateable()) {
-            c.put(FLD_RECIPIENT_PHONE, normalizePhone(p.recipientPhone));
+            c.put(FLD_RECIPIENT_PHONE, FEC_CommonUltils.normalizePhone(p.recipientPhone));
         }
         putCaseCash24OnRecord(c, p.cash24ContractText);
         return c;
