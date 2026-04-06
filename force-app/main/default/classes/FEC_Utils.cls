@@ -247,32 +247,22 @@ public with sharing class FEC_Utils {
      *     '{"name":"John"}', customHeaders);
      */
     public static HttpResponse sendRequest(String method, String endpoint, String body, Map<String, String> headers) {
-        Http http = new Http();
-        HttpRequest request = new HttpRequest();
-        
-        // Configure basic HTTP request properties
-        request.setEndpoint(endpoint);
-        request.setMethod(method);
-        request.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX);
-        
-        // Set default JSON headers
-        request.setHeader(FEC_ConstantCommon.HTTP_HEADER_CONTENT_TYPE, FEC_ConstantCommon.API_CONTENT_TYPE_JSON_UTF8);
-        request.setHeader(FEC_ConstantCommon.HTTP_HEADER_ACCEPT, FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
+        // Build merged headers: default JSON headers + custom headers
+        Map<String, String> mergedHeaders = new Map<String, String>{
+            FEC_ConstantCommon.HTTP_HEADER_CONTENT_TYPE => FEC_ConstantCommon.API_CONTENT_TYPE_JSON_UTF8,
+            FEC_ConstantCommon.HTTP_HEADER_ACCEPT => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+        };
 
-        // Add custom headers if provided
+        // Add/override with custom headers if provided
         if (headers != null) {
-            for (String key : headers.keySet()) {
-                request.setHeader(key, headers.get(key));
-            }
+            mergedHeaders.putAll(headers);
         }
 
-        // Set request body for non-GET methods
-        if (String.isNotBlank(body) && method != FEC_ConstantCommon.API_METHOD_GET) {
-            request.setBody(body);
-        }
+        // For GET requests, do not send body
+        String requestBody = (String.isNotBlank(body) && method != FEC_ConstantCommon.API_METHOD_GET) ? body : null;
 
         try {
-            HttpResponse response = http.send(request);
+            HttpResponse response = FEC_CommonUltils.calloutApiWithHeaders(endpoint, method, mergedHeaders, requestBody);
             System.debug('HTTP Status Code: ' + response.getStatusCode());
             System.debug('HTTP Response Body: ' + response.getBody());         
             return response;
