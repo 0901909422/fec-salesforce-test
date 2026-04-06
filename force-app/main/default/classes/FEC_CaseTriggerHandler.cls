@@ -446,7 +446,7 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         for (Case c : newCases) {
-            if (c.RecordTypeId == interactionRecordTypeId && String.isBlank(c.FEC_Channel__c)) {
+            if (c.RecordTypeId == interactionRecordTypeId) {
                 // Phân loại cho Ubank hoặc FE -> Channel Email
                 if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK || c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_FE) {
                     c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;

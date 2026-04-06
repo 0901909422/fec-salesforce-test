@@ -74,6 +74,11 @@
         <members>FEC_InteractionRoutingController</members>
         <members>FEC_GetCustomerList</members>
         <members>FEC_GetCardBasicInfo</members>
+        <members>FEC_SecondaryInfoLoanAccountController</members>
+        <members>FEC_CardPaymentController</members>
+        <members>FEC_GetCardPlanInfo</members>
+		<members>FEC_EnhancedLetterheadTriggerHandler</members>
+		<members>FEC_EnhancedLetterheadHandler_Test</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -123,6 +128,8 @@
 		<members>fec_CustomerCaseModeStore</members>
 		<members>fec_InteractionRoutingUtilityBar</members>
 		<members>fec_CardClosureRefundForm</members>
+		<members>fec_SecondaryInfoLoanAccount</members>
+		<members>fec_CardPayment</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -298,7 +305,6 @@
 		<members>FEC_LBL_ContractClosure_Ward</members>
 		<members>FEC_MSG_ContractClosure_Address_Required</members>
 		<members>FEC_MSG_ContractClosure_Delivery_Invalid</members>
-		<members>FEC_MSG_ContractClosure_Max_Two_Delivery_Options</members>
 		<members>FEC_MSG_ContractClosure_No_C360_Email</members>
 		<members>FEC_MSG_ContractClosure_Phone_Invalid</members>
 		<members>FEC_MSG_ContractClosure_Required_Fields</members>
@@ -324,6 +330,11 @@
 		<members>FEC_Clear_Session_Success_Msg</members>
 		<members>FEC_Clear_Session_Error_Title</members>
 		<members>FEC_Clear_Session_Error_Msg</members>
+		<members>FEC_MSG_ContractClosure_Required_Fields</members>
+        <members>FEC_MSG_ContractClosure_Delivery_Invalid</members>
+        <members>FEC_MSG_ContractClosure_Phone_Invalid</members>
+        <members>FEC_MSG_ContractClosure_Address_Required</members>
+		<members>FEC_Cannot_Delete_Enhanced_Letterhead</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -585,6 +596,7 @@
     </types>
     <types>
 		<members>FEC_EmailMessageTrigger</members>
+		<members>FEC_EnhancedLetterheadTrigger</members>
         <name>ApexTrigger</name>
     </types>
     <version>65.0</version>
