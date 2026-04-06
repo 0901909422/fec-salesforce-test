@@ -26,6 +26,7 @@
         <members>TECH_CASE_RECORDTYPE_NAME_INTERACTION</members>
         <members>TECH_CASE_RECORDTYPE_NAME_SEARCH_INTERACTION</members>
         <members>TECH_CASE_RECORDTYPE_NAME_INTERNAL_CASE</members>
+        <members>TECH_API_GET_ARCHIVE_DETAIL_CASE</members>
         <name>CustomLabel</name>
     </types>
 

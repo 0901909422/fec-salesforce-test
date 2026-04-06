@@ -11862,4 +11862,11 @@
         <shortDescription>TECH_CASE_RECORDTYPE_NAME_INTERNAL_CASE</shortDescription>
         <value>Internal Case</value>
     </labels>
+    <labels>
+        <fullName>TECH_API_GET_ARCHIVE_DETAIL_CASE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_API_GET_ARCHIVE_DETAIL_CASE</shortDescription>
+        <value>FEC_Get_Archive_Detail_Case</value>
+    </labels>
 </CustomLabels>
