@@ -45,6 +45,7 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
     @track bankNameLocal = STR_EMPTY;
     @track bankBranchLocal = STR_EMPTY;
     @track provinceCityLocal = STR_EMPTY;
+    @track formLocked = false;
 
     customLabel = {
         confirmTitle: FEC_MSG_Card_Block_Confirm_Title,
@@ -100,6 +101,14 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
 
     get showRefundSection() {
         return this.uiContext && this.uiContext.requireRefundFields === true;
+    }
+
+    get refundInputLocked() {
+        return this.isSubmitting || this.formLocked;
+    }
+
+    get blockCardLocked() {
+        return this.isSubmitting || this.formLocked;
     }
 
     get pendingRowData() {
@@ -204,6 +213,7 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
         })
             .then((res) => {
                 if (res && res.success) {
+                    this.formLocked = true;
                     this.resultMessage = FEC_MSG_Card_Block_Success;
                     this.resultClass = RESULT_SUCCESS;
                     window.setTimeout(() => {

@@ -20,6 +20,7 @@
           label="Beneficiary Name"
           value={beneficiaryNameLocal}
           required
+          disabled={refundInputLocked}
           onchange={handleRefundFieldChange}>
         </lightning-input>
         <lightning-input
@@ -27,6 +28,7 @@
           label="Beneficiary Account"
           value={beneficiaryAccountLocal}
           required
+          disabled={refundInputLocked}
           onchange={handleRefundFieldChange}>
         </lightning-input>
         <lightning-input
@@ -34,6 +36,7 @@
           label="Bank Name"
           value={bankNameLocal}
           required
+          disabled={refundInputLocked}
           onchange={handleRefundFieldChange}>
         </lightning-input>
         <lightning-input
@@ -41,6 +44,7 @@
           label="Bank Branch"
           value={bankBranchLocal}
           required
+          disabled={refundInputLocked}
           onchange={handleRefundFieldChange}>
         </lightning-input>
         <lightning-input
@@ -48,6 +52,7 @@
           label="Province/City"
           value={provinceCityLocal}
           required
+          disabled={refundInputLocked}
           onchange={handleRefundFieldChange}>
         </lightning-input>
       </div>
@@ -62,7 +67,7 @@
           label={customLabel.blockCard}
           variant="brand"
           onclick={handleBlockCardClick}
-          disabled={isSubmitting}>
+          disabled={blockCardLocked}>
         </lightning-button>
       </div>
     </template>

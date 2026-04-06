@@ -77,6 +77,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     @track configLoaded = false;
     @track paymentHistoryTableKey = 0;
     @track incorrectContractOptionlst = [];
+    @track formLocked = false;
     _lastLoadedContract = CONST.EMPTY;
 
     customLabel = {
@@ -451,6 +452,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         })
             .then(() => {
                 this.isLoading = false;
+                this.formLocked = true;
                 this.dispatchEvent(new ShowToastEvent({ title: FEC_Success_Title, message: FEC_Toast_Save_Success, variant: CONST.VARIANT_SUCCESS }));
             })
             .catch((err) => {

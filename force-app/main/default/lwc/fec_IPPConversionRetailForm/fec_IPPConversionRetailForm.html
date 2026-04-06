@@ -24,6 +24,7 @@
           data={transactions}
           columns={transactionColumns}
           max-row-selection="1"
+          hide-checkbox-column={formLocked}
           onrowselection={handleRowSelection}
         >
         </lightning-datatable>
@@ -32,7 +33,7 @@
             <lightning-button
               label={ippRetailUi.btnCheckDetails}
               onclick={handleCheckIPPDetails}
-              disabled={detailsLoading}
+              disabled={checkDetailsLocked}
               variant="brand"
             ></lightning-button>
           </div>
@@ -56,6 +57,7 @@
                     name="tenor"
                     value={selectedTenor}
                     options={tenorOptions}
+                    disabled={formLocked}
                     onchange={handleTenorChange}
                     required
                   ></lightning-combobox>
@@ -103,7 +105,7 @@
             <lightning-button
               label={ippRetailUi.btnConvert}
               onclick={handleConvertIPP}
-              disabled={convertDisabled}
+              disabled={convertLocked}
               variant="brand"
             ></lightning-button>
           </div>

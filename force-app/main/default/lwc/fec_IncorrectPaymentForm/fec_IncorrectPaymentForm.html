@@ -8,6 +8,7 @@
           placeholder={customLabel.selectContractPlaceholder}
           value={incorrectContract}
           option={formattedIncorrectContractOption}
+          disabled={formLocked}
           onremove={handleRemoveIncorrectContract}
           onchange={handleChangeIncorrectContract}
         ></c-fec_-combo-box>
@@ -21,6 +22,7 @@
           label={customLabel.paymentMethod}
           value={paymentMethod}
           options={paymentMethodOptions}
+          disabled={formLocked}
           onchange={handlePaymentMethodChange}
           required
         >
@@ -48,6 +50,7 @@
                 columns={paymentHistoryColumns}
                 max-row-selection="1"
                 selected-rows={selectedRowIds}
+                hide-checkbox-column={formLocked}
                 onrowselection={handlePaymentRowSelect}
               >
               </lightning-datatable>
@@ -73,6 +76,7 @@
             placeholder={customLabel.datePlaceholder}
             label={customLabel.billDate}
             value={manualBillDate}
+            disabled={formLocked}
             onchange={handleManualBillDateChange}
           >
           </lightning-input>
@@ -83,6 +87,7 @@
             type="number"
             label={customLabel.billAmount}
             value={manualBillAmount}
+            disabled={formLocked}
             onchange={handleManualBillAmountChange}
             formatter="decimal"
             required
@@ -148,6 +153,7 @@
                     data-id={row.id}
                     label={row.correctContractLabel}
                     value={row.correctContract}
+                    disabled={formLocked}
                     onchange={handleAdjustmentCorrectContractChange}
                     required
                   >
@@ -159,6 +165,7 @@
                     type="number"
                     label={row.adjustedAmountLabel}
                     value={row.adjustedAmount}
+                    disabled={formLocked}
                     onchange={handleAdjustmentAmountChange}
                     formatter="decimal"
                     required
@@ -177,6 +184,7 @@
                     aria-label={customLabel.removeRow}
                     title={customLabel.removeRow}
                     data-id={row.id}
+                    disabled={formLocked}
                     onclick={handleRemoveAdjustment}
                   >
                   </lightning-button-icon>
@@ -191,6 +199,7 @@
           label={customLabel.addItem}
           icon-name="utility:add"
           variant="neutral"
+          disabled={formLocked}
           onclick={handleAddAdjustment}
         >
         </lightning-button>

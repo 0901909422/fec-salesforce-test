@@ -81,6 +81,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     @track convertDisabled = false;
     @track retryCount = 0;
     @track showConfirmModal = false;
+    @track formLocked = false;
     @track showManualEntry = false;
     @track manualAmount = null;
     @track manualTenor = null;
@@ -228,11 +229,13 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         })
             .then((res) => {
                 if (res && res.success) {
+                    this.formLocked = true;
                     this.showToast(FEC_Success_Title, FEC_MSG_IPP_Conversion_Success, CONST.VARIANT_SUCCESS);
                     this.navigateToCase();
                 } else {
                     this.retryCount += 1;
                     if (this.retryCount >= CONST.MAX_RETRY) {
+                        this.formLocked = true;
                         this.convertDisabled = true;
                         this.showToast(FEC_Toast_Error, FEC_MSG_IPP_Conversion_Fail_Disable, CONST.VARIANT_ERROR);
                         this.navigateToCase();
@@ -244,6 +247,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             .catch((err) => {
                 this.retryCount += 1;
                 if (this.retryCount >= CONST.MAX_RETRY) {
+                    this.formLocked = true;
                     this.convertDisabled = true;
                     this.showToast(FEC_Toast_Error, FEC_MSG_IPP_Conversion_Fail_Disable, CONST.VARIANT_ERROR);
                     this.navigateToCase();
@@ -378,6 +382,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         })
             .then((res) => {
                 if (res && res.success) {
+                    this.formLocked = true;
                     this.showToast(FEC_Success_Title, FEC_MSG_IPP_Conversion_Success, CONST.VARIANT_SUCCESS);
                     this.showManualEntry = false;
                     this.navigateToCase();
@@ -420,6 +425,14 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
 
     get showConvertButton() {
         return this.showDetailsSection && this.selectedTenor != null && !this.convertDisabled;
+    }
+
+    get checkDetailsLocked() {
+        return this.detailsLoading || this.formLocked;
+    }
+
+    get convertLocked() {
+        return this.convertDisabled || this.formLocked;
     }
 
     get detailsInterestDisplay() {

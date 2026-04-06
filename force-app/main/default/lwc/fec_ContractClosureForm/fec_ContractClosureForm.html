@@ -38,6 +38,7 @@
                               type="checkbox"
                               label={labelEmail}
                               checked={deliveryEmailSelected}
+                              disabled={formLocked}
                               onchange={handleToggleEmail}
                             ></lightning-input>
                           </div>
@@ -48,7 +49,7 @@
                               type="checkbox"
                               label={labelAddress}
                               checked={deliveryAddressSelected}
-                              disabled={disableAddressCheckbox}
+                              disabled={lockAddressCb}
                               onchange={handleToggleAddress}
                             ></lightning-input>
                           </div>
@@ -59,7 +60,7 @@
                               type="checkbox"
                               label={labelOffice}
                               checked={deliveryOfficeSelected}
-                              disabled={disableOfficeCheckbox}
+                              disabled={lockOfficeCb}
                               onchange={handleToggleOffice}
                             ></lightning-input>
                           </div>
@@ -76,7 +77,7 @@
               <lightning-button
                 variant="brand"
                 label={customLabel.addTempEmail}
-                disabled={disableAddTempEmail}
+                disabled={lockAddTempEmailBtn}
                 onclick={handleAddTempEmail}
               ></lightning-button>
             </lightning-layout-item>
@@ -91,6 +92,7 @@
                     value={emailRadioValue}
                     type="radio"
                     variant="label-hidden"
+                    disabled={formLocked}
                     onchange={handleEmailRadioChange}
                   ></lightning-radio-group>
                 </template>
@@ -111,6 +113,7 @@
                         type="email"
                         label={customLabel.newTempEmail}
                         value={temporaryEmail}
+                        disabled={formLocked}
                         onchange={handleTempEmailChange}
                       ></lightning-input>
                     </lightning-layout-item>
@@ -124,6 +127,7 @@
                         variant="border"
                         alternative-text={customLabel.altRemove}
                         title={customLabel.altRemove}
+                        disabled={formLocked}
                         onclick={handleRemoveTempEmail}
                       ></lightning-button-icon>
                     </lightning-layout-item>
@@ -140,6 +144,7 @@
                 label={customLabel.recipientName}
                 value={recipientName}
                 required
+                disabled={formLocked}
                 onchange={handleRecipientNameChange}
               ></lightning-input>
             </lightning-layout-item>
@@ -150,6 +155,7 @@
                 label={customLabel.recipientPhone}
                 value={recipientPhone}
                 required
+                disabled={formLocked}
                 onchange={handleRecipientPhoneChange}
                 onblur={handleRecipientPhoneBlur}
               ></lightning-input>
@@ -198,6 +204,7 @@
                             class="slds-m-right_xx-small"
                             data-row-id={row.id}
                             checked={row.selected}
+                            disabled={formLocked}
                             onchange={handlePickAddr}
                           />
                         </td>
@@ -214,7 +221,7 @@
               <lightning-button
                 variant="brand"
                 label={customLabel.addTempAddress}
-                disabled={disableAddTempAddress}
+                disabled={lockAddTempAddrBtn}
                 onclick={handleOpenTempAddressModal}
               ></lightning-button>
             </lightning-layout-item>
@@ -235,12 +242,14 @@
                     <lightning-button-icon
                       icon-name="utility:edit"
                       alternative-text={customLabel.altEdit}
+                      disabled={formLocked}
                       onclick={handleEditTempAddress}
                       class="slds-m-right_xx-small"
                     ></lightning-button-icon>
                     <lightning-button-icon
                       icon-name="utility:close"
                       alternative-text={customLabel.altRemove}
+                      disabled={formLocked}
                       onclick={handleRemoveTempAddress}
                     ></lightning-button-icon>
                   </div>

@@ -1,4 +1,4 @@
-import { LightningElement, api, wire } from 'lwc';
+import { LightningElement, api, wire, track } from 'lwc';
 import { refreshApex } from '@salesforce/apex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
@@ -107,6 +107,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
 
     lastValidationMessages = [];
     showValidateBanner = false;
+    @track formLocked = false;
 
     lastTempAddressParts;
     tempAddressModalIsEdit = false;
@@ -184,6 +185,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     toggleDeliveryDrop(event) {
+        if (this.formLocked) {
+            return;
+        }
         if (event) {
             event.stopPropagation();
         }
@@ -287,6 +291,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     handleToggleAddressSort() {
+        if (this.formLocked) {
+            return;
+        }
         this.addressSortAsc = !this.addressSortAsc;
     }
 
@@ -401,6 +408,22 @@ export default class Fec_ContractClosureForm extends LightningElement {
 
     get disableOfficeCheckbox() {
         return this.deliveryAddressSelected === true;
+    }
+
+    get lockAddressCb() {
+        return this.disableAddressCheckbox || this.formLocked;
+    }
+
+    get lockOfficeCb() {
+        return this.disableOfficeCheckbox || this.formLocked;
+    }
+
+    get lockAddTempEmailBtn() {
+        return this.disableAddTempEmail || this.formLocked;
+    }
+
+    get lockAddTempAddrBtn() {
+        return this.disableAddTempAddress || this.formLocked;
     }
 
     get validationMessageItems() {
@@ -844,6 +867,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
                 this.lastValidationMessages = r.messages || [];
                 this.showValidateBanner = true;
             } else {
+                this.formLocked = true;
                 this.showToast(this.customLabel.successTitle, this.customLabel.toastSaveSuccess, 'success');
             }
             return r;
