@@ -246,7 +246,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             year: "numeric"
         }, 
         sortable: true },
-      { label: "Plastic ID", fieldName: "PlasticID", sortable: true },
+      { label: "Product Code", fieldName: "ProductCode", sortable: true },
       ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
       { label: "Account Status", fieldName: "ContractStatus", sortable: true },
     ];
