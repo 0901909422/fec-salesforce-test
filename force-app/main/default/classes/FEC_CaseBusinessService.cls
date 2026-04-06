@@ -756,6 +756,7 @@ public without sharing class FEC_CaseBusinessService {
       System.debug('getByCase AuraHandledException: ' + e.getMessage());
     } catch (Exception e) {
       System.debug('getByCase Exception: ' + e.getMessage());
+      System.debug(e.getStackTraceString());
     }
     return result;
   }
@@ -2181,7 +2182,8 @@ public without sharing class FEC_CaseBusinessService {
     String editableGr = (String) masterDataItem.get(
       'FEC_Editable_User_Group__c'
     );
-
+    System.debug('>>>masterDataItem Sobject: ' + masterDataItem);
+    System.debug('>>>objTemp: ' + objTemp);
     Boolean isReverted = (Boolean) masterDataItem.get('FEC_Field_Reverted__c');
     Boolean isReadOnly = (Boolean) masterDataItem.get('FEC_Field_ReadOnly__c');
     Boolean isEditable = (Boolean) masterDataItem.get('FEC_Field_Editable__c');

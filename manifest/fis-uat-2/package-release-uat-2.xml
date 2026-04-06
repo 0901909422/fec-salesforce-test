@@ -1292,6 +1292,7 @@
 		<members>FEC_Case_Refund_Details__c</members>
 		<members>FEC_Clear_Session__c</members>
 		<members>FEC_Interaction_Routed__e</members>
+		<members>FEC_Additional_Info__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
