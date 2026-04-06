@@ -230,20 +230,21 @@ public with sharing class ArchiveCaseController {
                 else if (fieldType == Schema.DisplayType.BOOLEAN) {
                     caseIns.put(fieldName, Boolean.valueOf(String.valueOf(rawValue)));
                 } 
-                else {
-                    if(fieldType == Schema.DisplayType.REFERENCE) {
-                        // set default value for Lookup fields
-                        // If the Id does not exist or cannot access, we need to set null value
-                        String idStr = (String) rawValue;
-                        if (mapIdCanAccess.containsKey(idStr) 
-                            && !mapIdCanAccess.get(idStr).HasReadAccess) {
+                else if (fieldType == Schema.DisplayType.REFERENCE) {
+                    // set default value for Lookup fields
+                    // If the Id does not exist or cannot access, we need to set null value
+                    String idStr = (String) rawValue;
+                    if (mapIdCanAccess.containsKey(idStr) 
+                        && !mapIdCanAccess.get(idStr).HasReadAccess) {
 
-                            if (fieldName.equalsIgnoreCase('OwnerId')) caseIns.OwnerId = UserInfo.getUserId();
-                            else caseIns.put(fieldName, null);
-                        }
+                        if (fieldName.equalsIgnoreCase('OwnerId')) caseIns.OwnerId = UserInfo.getUserId();
+                        else caseIns.put(fieldName, null);
                     } else {
                         caseIns.put(fieldName, rawValue);
                     }
+                }
+                else {
+                    caseIns.put(fieldName, rawValue);
                 }
             }
         }
