@@ -139,7 +139,7 @@ public with sharing class FEC_Utils {
         if (dtDateTime == null) {
             return '';
         }
-        return dtDateTime.formatGmt('yyyyMMdd\'T\'HHmmss\'.0 GMT\'');
+        return dtDateTime.formatGmt(FEC_ConstantCommon.DATETIME_FORMAT_GMT);
     }
 
     /**
@@ -209,21 +209,16 @@ public with sharing class FEC_Utils {
      */
     public static Blob downloadFileAsBlob(String fileUrl) {
         if (String.isBlank(fileUrl)) {
-            throw new CalloutException('File URL is empty');
+            throw new CalloutException(System.Label.FEC_Error_FileURL_Empty);
         }
 
-        HttpRequest request = new HttpRequest();
-        request.setEndpoint(fileUrl);
-        request.setMethod('GET');
-        request.setTimeout(60000); // 60 second timeout
+        HttpResponse response = sendRequest(FEC_ConstantCommon.API_METHOD_GET, fileUrl, null, null);
         
-        Http http = new Http();
-        HttpResponse response = http.send(request);
-        
-        if (response.getStatusCode() == 200) {
+        if (response != null && response.getStatusCode() == FEC_ConstantCommon.HTTP_STATUS_OK) {
             return response.getBodyAsBlob();
         } else {
-            throw new CalloutException('Error downloading file: HTTP ' + response.getStatusCode());
+            Integer statusCode = response != null ? response.getStatusCode() : 0;
+            throw new CalloutException(System.Label.FEC_Error_DownloadFile + statusCode);
         }
     }
 
@@ -258,11 +253,11 @@ public with sharing class FEC_Utils {
         // Configure basic HTTP request properties
         request.setEndpoint(endpoint);
         request.setMethod(method);
-        request.setTimeout(120000); // 120 seconds (Salesforce maximum)
+        request.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX);
         
         // Set default JSON headers
-        request.setHeader('Content-Type', 'application/json;charset=UTF-8');
-        request.setHeader('Accept', 'application/json');
+        request.setHeader(FEC_ConstantCommon.HTTP_HEADER_CONTENT_TYPE, FEC_ConstantCommon.API_CONTENT_TYPE_JSON_UTF8);
+        request.setHeader(FEC_ConstantCommon.HTTP_HEADER_ACCEPT, FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
 
         // Add custom headers if provided
         if (headers != null) {
@@ -272,7 +267,7 @@ public with sharing class FEC_Utils {
         }
 
         // Set request body for non-GET methods
-        if (String.isNotBlank(body) && method != 'GET') {
+        if (String.isNotBlank(body) && method != FEC_ConstantCommon.API_METHOD_GET) {
             request.setBody(body);
         }
 

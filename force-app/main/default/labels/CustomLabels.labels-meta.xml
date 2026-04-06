@@ -1906,6 +1906,83 @@
     </labels>
     <labels>
         <fullName>FEC_Interaction_Channel_Label</fullName>
+    </labels>
+    <!-- Apex Error Messages -->
+    <labels>
+        <fullName>FEC_Error_SessionID_Missing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SessionID is missing</shortDescription>
+        <value>SessionID is missing</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_ChatHistory_Blank</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat history data is blank</shortDescription>
+        <value>Chat history data is blank</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_ChatHistory_Empty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat history list is empty</shortDescription>
+        <value>Chat history list is empty</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_SaveChatHistory</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error saving chat history</shortDescription>
+        <value>Error saving chat history: </value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_InteractionDTO_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Case DTO is null</shortDescription>
+        <value>Interaction Case DTO is null. Please provide valid data.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_CreateInteractionCase</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error creating interaction case</shortDescription>
+        <value>Lỗi khi tạo Case tương tác: </value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_FileURL_Empty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>File URL is empty</shortDescription>
+        <value>File URL is empty</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_DownloadFile</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error downloading file</shortDescription>
+        <value>Error downloading file: HTTP </value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <!-- LWC UI Labels -->
+    <labels>
+        <fullName>FEC_Label_InteractionInfo</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Info (C360)</shortDescription>
+        <value>Interaction Info (C360)</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_InteractionChannel</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Interaction Channel</shortDescription>
@@ -8021,5 +8098,102 @@
         <protected>false</protected>
         <shortDescription>FEC CREATE CS CASE SUCCESSFULLY MSG</shortDescription>
         <value>Case created successfully.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_ExternalInteractionID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>External Interaction ID</shortDescription>
+        <value>External Interaction ID</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_ChatHistory</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat History</shortDescription>
+        <value>Chat History</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_NoChatHistory</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No chat history data</shortDescription>
+        <value>No chat history data is available.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_ChatHubDisabled</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ChatHub disabled message</shortDescription>
+        <value>ChatHub is disabled or user access denied.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_CurrentStatus</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current status label</shortDescription>
+        <value>Trạng thái hiện tại</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_WaitingForData</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Waiting for data message</shortDescription>
+        <value>Đang chờ dữ liệu từ hệ thống...</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_LoadAttachments</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Could not load attachments</shortDescription>
+        <value>Could not load attachments: </value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Warning_SelectAttachment</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select at least one attachment</shortDescription>
+        <value>Vui lòng chọn ít nhất một tệp đính kèm mới.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Success_AttachFiles</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Attach files success</shortDescription>
+        <value>Đã gắn tệp đính kèm thành công.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_AttachFiles</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error attaching files</shortDescription>
+        <value>Có lỗi xảy ra khi gắn tệp.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_System</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>System error prefix</shortDescription>
+        <value>Lỗi hệ thống: </value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_FileNotFound</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>File not found</shortDescription>
+        <value>(File not found)</value>
+        <categories>FEC_ChatHub</categories>
     </labels>
 </CustomLabels>

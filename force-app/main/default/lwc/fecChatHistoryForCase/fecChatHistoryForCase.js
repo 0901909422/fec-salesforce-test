@@ -4,6 +4,9 @@ import { formatDatetimeLocal } from 'c/fecChathubUtils';
 import { refreshApex } from '@salesforce/apex';
 import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
 import FEC_CHAT_UPDATE from '@salesforce/messageChannel/FecChatUpdate__c';
+import labelChatHistory from '@salesforce/label/c.FEC_Label_ChatHistory';
+import labelNoChatHistory from '@salesforce/label/c.FEC_Label_NoChatHistory';
+import labelFileNotFound from '@salesforce/label/c.FEC_Label_FileNotFound';
 
 /**
  * Chat history component for displaying messages associated with a Case record
@@ -16,6 +19,11 @@ export default class ChatHistory extends LightningElement {
     wiredMessagesResult;
     @wire(MessageContext) messageContext;
     subscription = null;
+
+    // Custom Labels
+    labelChatHistory = labelChatHistory;
+    labelNoChatHistory = labelNoChatHistory;
+    labelFileNotFound = labelFileNotFound;
 
     /**
      * Lifecycle hook: Register listener when component is connected

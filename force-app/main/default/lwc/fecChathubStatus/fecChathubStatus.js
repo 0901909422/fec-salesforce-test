@@ -2,6 +2,8 @@ import { LightningElement, track, wire } from 'lwc';
 import { EnclosingUtilityId, updateUtility, updatePanel, minimize } from 'lightning/platformUtilityBarApi';
 import { publish, subscribe, MessageContext, APPLICATION_SCOPE } from 'lightning/messageService';
 import FEC_CHATHUB_STATUS from '@salesforce/messageChannel/FecChatHubStatus__c';
+import labelCurrentStatus from '@salesforce/label/c.FEC_Label_CurrentStatus';
+import labelWaitingForData from '@salesforce/label/c.FEC_Label_WaitingForData';
 
 /**
  * FecChathubStatus - Utility bar component for managing agent status
@@ -18,6 +20,10 @@ export default class FecChathubStatus extends LightningElement {
     // --- Reactive Properties (UI State) ---
     @track agentStatuses = null;        // Array of available agent status options
     @track selectedStatus = '';         // Currently selected agent status ID
+
+    // --- Custom Labels ---
+    labelCurrentStatus = labelCurrentStatus;
+    labelWaitingForData = labelWaitingForData;
 
     // --- Wire Adapters ---
     @wire(EnclosingUtilityId) utilityId;

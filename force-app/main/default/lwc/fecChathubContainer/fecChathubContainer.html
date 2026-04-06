@@ -1,15 +1,15 @@
 <template>
-    <div data-id="containerChathub" style="position: relative; height: 100%; display: flex; flex-direction: column;">
+    <div data-id="containerChathub" class="container-chathub">
         <template if:true={isInitialized}>
             <template if:true={isChatHubVisible}>
-                <div class="chathub-iframe-wrapper" style="flex-grow: 1; min-height: 700px; width: 100%;">
-                    <iframe src={chatHubUrl} class="chathub-iframe" style="height: 100%; width: 100%; border: none;"
+                <div class="chathub-iframe-wrapper">
+                    <iframe src={chatHubUrl} class="chathub-iframe"
                         title="ChatHub"></iframe>
                 </div>
             </template>
         </template>
         <template if:false={isInitialized}>
-            <p>ChatHub is disabled or user access denied.</p>
+            <p>{labelChatHubDisabled}</p>
         </template>
     </div>
 </template>

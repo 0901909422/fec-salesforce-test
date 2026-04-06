@@ -123,7 +123,7 @@ public with sharing class FEC_ChatHubCaseController {
             dto.kycResult = FEC_Utils.mappingKYCs((String)mapCustomer.get('kYCStatus'));
             // Optional: Validation
             if (String.isBlank(dto.externalInteractionId)) {
-                throw new AuraHandledException('SessionID is missing');
+                throw new AuraHandledException(System.Label.FEC_Error_SessionID_Missing);
             }
     
             String strDtoJson = JSON.serialize(dto);
@@ -147,7 +147,7 @@ public with sharing class FEC_ChatHubCaseController {
     @AuraEnabled
     public static Boolean saveChatHistoryAndAttachment(String strJsonData, Boolean isAttachmentOnly) {
         if (String.isBlank(strJsonData)) {
-            throw new AuraHandledException('Chat history data is blank');
+            throw new AuraHandledException(System.Label.FEC_Error_ChatHistory_Blank);
         }
         
         if (isAttachmentOnly == null) {
@@ -157,7 +157,7 @@ public with sharing class FEC_ChatHubCaseController {
         List<Object> listRawHistory = (List<Object>)JSON.deserializeUntyped(strJsonData);
         
         if (listRawHistory == null || listRawHistory.isEmpty()) {
-            throw new AuraHandledException('Chat history list is empty');
+            throw new AuraHandledException(System.Label.FEC_Error_ChatHistory_Empty);
         }
         
         String strCaseId = '';
@@ -265,7 +265,7 @@ public with sharing class FEC_ChatHubCaseController {
             }
             return true;
         } catch (Exception e) {
-            throw new AuraHandledException('Error saving chat history: ' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_SaveChatHistory + e.getMessage());
         }
     }
     /**
@@ -301,7 +301,7 @@ public with sharing class FEC_ChatHubCaseController {
         FEC_InteractionCaseDTO dto = (FEC_InteractionCaseDTO)JSON.deserialize(jsonInput, FEC_InteractionCaseDTO.class);
         
         if (dto == null) {
-            throw new IllegalArgumentException('Interaction Case DTO is null. Please provide valid data.');
+            throw new IllegalArgumentException(System.Label.FEC_Error_InteractionDTO_Null);
         }
         try {
             Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName().get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
@@ -377,7 +377,7 @@ public with sharing class FEC_ChatHubCaseController {
             return res;
         } catch (Exception e) {
             System.debug('Error creating Interaction Case: ' + e.getMessage());
-            throw new AuraHandledException('Lỗi khi tạo Case tương tác: ' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_CreateInteractionCase + e.getMessage());
         }
     }
 }

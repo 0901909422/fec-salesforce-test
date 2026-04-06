@@ -2,6 +2,11 @@ import { LightningElement, api, wire, track } from 'lwc';
 import getAttachmentsFromInteraction from '@salesforce/apex/FEC_AttachmentController.getAttachmentsFromInteraction';
 import attachFilesToServiceCase from '@salesforce/apex/FEC_AttachmentController.attachFilesToServiceCase';
 import { showToast } from 'c/fecChathubUtils';
+import labelLoadAttachments from '@salesforce/label/c.FEC_Error_LoadAttachments';
+import labelSelectAttachment from '@salesforce/label/c.FEC_Warning_SelectAttachment';
+import labelAttachSuccess from '@salesforce/label/c.FEC_Success_AttachFiles';
+import labelAttachError from '@salesforce/label/c.FEC_Error_AttachFiles';
+import labelSystemError from '@salesforce/label/c.FEC_Error_System';
 /**
  * fec_selectAttachment
  * Modal component to display and select attachments from a related Interaction Case.
@@ -38,7 +43,7 @@ export default class FecSelectAttachment extends LightningElement {
                 contentDocumentId: item.id.substring(0, 15) // ContentVersionId -> ContentDocumentId (Simulated)
             }));
         } else if (error) {
-            showToast(this, 'Error', 'Could not load attachments: ' + error.body.message, 'error');
+            showToast(this, 'Error', labelLoadAttachments + error.body.message, 'error');
             console.error(error);
         }
     }
@@ -60,7 +65,7 @@ export default class FecSelectAttachment extends LightningElement {
     // Xử lý nút "Hoàn tất"
     async handleAttachFiles() {
         if (this.selectedContentDocumentIds.size === 0) {
-            showToast(this, 'Warning', 'Vui lòng chọn ít nhất một tệp đính kèm mới.', 'warning');
+            showToast(this, 'Warning', labelSelectAttachment, 'warning');
             return;
         }
 
@@ -74,14 +79,14 @@ export default class FecSelectAttachment extends LightningElement {
             });
 
             if (result) {
-                showToast(this, 'Success', 'Đã gắn tệp đính kèm thành công.', 'success');
+                showToast(this, 'Success', labelAttachSuccess, 'success');
                 // Đóng modal và refresh giao diện
                 this.closeModal();
             } else {
-                showToast(this, 'Error', 'Có lỗi xảy ra khi gắn tệp.', 'error');
+                showToast(this, 'Error', labelAttachError, 'error');
             }
         } catch (error) {
-            showToast(this, 'Error', 'Lỗi hệ thống: ' + error.body.message, 'error');
+            showToast(this, 'Error', labelSystemError + error.body.message, 'error');
         }
     }
 

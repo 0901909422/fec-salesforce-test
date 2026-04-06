@@ -1,5 +1,5 @@
 <template>
-    <lightning-card title="Chat History" icon-name="standard:live_chat">
+    <lightning-card title={labelChatHistory} icon-name="standard:live_chat">
         <div class="slds-p-around_small container-chat-history">
             <section role="log" class="slds-chat">
                 <template if:true={hasMessages}>
@@ -27,7 +27,7 @@
                                                     </template>
                                                     
                                                     <template if:false={msg.downloadUrl}>
-                                                        <span class="slds-text-color_error">{msg.fileName} (File not found)</span>
+                                                        <span class="slds-text-color_error">{msg.fileName} {labelFileNotFound}</span>
                                                     </template>
                                                 </div>
                                             </template>
@@ -40,7 +40,7 @@
                 </template>
                 <template if:false={hasMessages}>
                     <div class="slds-align_absolute-center slds-m-top_large slds-m-bottom_large slds-text-color_weak">
-                        No chat history data is available.
+                        {labelNoChatHistory}
                     </div>
                 </template>
             </section>

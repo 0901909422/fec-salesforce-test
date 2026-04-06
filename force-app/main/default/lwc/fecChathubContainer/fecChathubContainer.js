@@ -15,6 +15,7 @@ import downloadAndSaveBase64 from '@salesforce/apex/FEC_AttachmentController.dow
 import { executeWithLock, fetchFileFromUrl, formatDatetime, showToast, decryptDataKYC } from 'c/fecChathubUtils';
 import FEC_CHATHUB_STATUS from '@salesforce/messageChannel/FecChatHubStatus__c';
 import { subscribe, APPLICATION_SCOPE } from 'lightning/messageService';
+import labelChatHubDisabled from '@salesforce/label/c.FEC_Label_ChatHubDisabled';
 
 const CHATHUB_URL_KEY = 'https://portal-chathub-uat.fecredit.cloud';
 // Log formatting for better console visibility
@@ -27,6 +28,9 @@ const PREFIX_INTERACTION_CASE_REASSIGN = "CHATHUB_IC_RS_";
 
 export default class FecChathubContainer extends NavigationMixin(LightningElement) {
     // ===== CLASS PROPERTIES & VARIABLES =====
+
+    // --- Custom Labels ---
+    labelChatHubDisabled = labelChatHubDisabled;
 
     // --- UI State Properties (Reactive) ---
     @track isChatHubVisible = false;
