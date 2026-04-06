@@ -1186,7 +1186,7 @@ hasAnySearchCriteria(params) {
 
     getApplicationHistory({ applicationId })
       .then(rows => {
-        this.historyModalRows = rows || [];
+        this.historyModalRows = (rows || []).map(h => ({ ...h, editDate: this._formatEditDate(h.editDate) }));
         this.historyModalLoading = false;
       })
       .catch(() => {
@@ -1237,7 +1237,7 @@ hasAnySearchCriteria(params) {
 
     getApplicationHistory({ applicationId })
       .then(rows => {
-        this.appHistoryMap = { ...this.appHistoryMap, [key]: { loading: false, expanded: true, rows: rows || [] } };
+        this.appHistoryMap = { ...this.appHistoryMap, [key]: { loading: false, expanded: true, rows: (rows || []).map(h => ({ ...h, editDate: this._formatEditDate(h.editDate) })) } };
         this._refreshData();
       })
       .catch(() => {
@@ -1281,6 +1281,25 @@ hasAnySearchCriteria(params) {
     const parts = dateStr.split('-');
     if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
     return dateStr;
+  }
+
+  _formatEditDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+      // API trả về dạng: YYYY-MM-DD HH:mm:ss hoặc YYYY-MM-DDTHH:mm:ss
+      const normalized = dateStr.replace('T', ' ');
+      const [datePart, timePart] = normalized.split(' ');
+      if (!datePart) return dateStr;
+      const [yyyy, mm, dd] = datePart.split('-');
+      if (!yyyy || !mm || !dd) return dateStr;
+      if (timePart) {
+        const [hh, min] = timePart.split(':');
+        return `${dd}/${mm}/${yyyy}, ${hh}:${min}`;
+      }
+      return `${dd}/${mm}/${yyyy}`;
+    } catch (e) {
+      return dateStr;
+    }
   }
 
   // Returns interleaved array: each data row followed by its history row (if expanded)
