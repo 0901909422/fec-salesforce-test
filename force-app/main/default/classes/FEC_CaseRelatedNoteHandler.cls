@@ -20,7 +20,7 @@ public with sharing class FEC_CaseRelatedNoteHandler {
             
             if (!contentIds.isEmpty()) {
                 List<ContentNote> listNotes = [
-                    SELECT Id, Title, TextPreview, CreatedById,
+                    SELECT Id, Title, TextPreview,Content, CreatedById,
                            CreatedBy.Name, LastModifiedDate
                     FROM ContentNote
                     WHERE Id IN :contentIds
@@ -32,6 +32,7 @@ public with sharing class FEC_CaseRelatedNoteHandler {
                         note.Id,
                     note.Title,
                     note.TextPreview,
+                    note.Content != null ? note.Content.toString() : '',
                     note.CreatedById,
                     note.CreatedBy.Name,
                     note.LastModifiedDate
@@ -115,6 +116,7 @@ public with sharing class FEC_CaseRelatedNoteHandler {
         @AuraEnabled public Id id;
         @AuraEnabled public String title;
         @AuraEnabled public String preview;
+        @AuraEnabled public String content;
         @AuraEnabled public String createdByName;
         @AuraEnabled public Id createdById;
         @AuraEnabled public Datetime lastModifiedDate;
@@ -123,6 +125,7 @@ public with sharing class FEC_CaseRelatedNoteHandler {
             Id id,
         String title,
         String preview,
+        String content,
         Id createdById,
         String createdBy,
         Datetime lastModified
@@ -130,6 +133,7 @@ public with sharing class FEC_CaseRelatedNoteHandler {
             this.id = id;
             this.title = title;
             this.preview = preview;
+            this.content = content;
             this.createdById = createdById;
             this.createdByName = createdBy;
             this.lastModifiedDate = lastModified;
