@@ -281,7 +281,7 @@
                             <value>FEC_Failure_Reason__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FEC_User__c</value>
+                            <value>FEC_Send_User__c</value>
                         </valueListItems>
                     </valueList>
                 </componentInstanceProperties>
