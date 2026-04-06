@@ -212,6 +212,44 @@ public with sharing class FEC_CommonUltils {
     }
     return options;
   }
+
+  public static List<PicklistOption> getPicklistOptionsWithAccess(
+    String objectName,
+    String fieldName
+  ) {
+    List<PicklistOption> options = new List<PicklistOption>();
+    if (String.isBlank(objectName) || String.isBlank(fieldName)) {
+      return options;
+    }
+    Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+    if (sObjectType == null) {
+      return options;
+    }
+    Schema.DescribeSObjectResult sObjectDescribe = sObjectType.getDescribe();
+    if (!sObjectDescribe.isAccessible()) {
+      return options;
+    }
+    Map<String, Schema.SObjectField> fieldsMap = sObjectDescribe.fields.getMap();
+    String fk = fieldName.toLowerCase();
+    if (!fieldsMap.containsKey(fk)) {
+      return options;
+    }
+    Schema.DescribeFieldResult fieldDescribe = fieldsMap.get(fk).getDescribe();
+    if (!fieldDescribe.isAccessible()) {
+      return options;
+    }
+    Schema.DisplayType dt = fieldDescribe.getType();
+    if (dt != Schema.DisplayType.PICKLIST && dt != Schema.DisplayType.MULTIPICKLIST) {
+      return options;
+    }
+    for (Schema.PicklistEntry entry : fieldDescribe.getPicklistValues()) {
+      if (!entry.isActive()) {
+        continue;
+      }
+      options.add(new PicklistOption(entry.getLabel(), entry.getValue(), null));
+    }
+    return options;
+  }
   
   public static String resolveTemplate(
     String template,

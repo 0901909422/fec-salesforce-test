@@ -797,23 +797,8 @@ public with sharing class FEC_ContractClosureController {
 
     private static List<PicklistEntryDTO> describePicklist(String obj, String fieldApi) {
         List<PicklistEntryDTO> opts = new List<PicklistEntryDTO>();
-        Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
-        if (!gd.containsKey(obj)) {
-            return opts;
-        }
-        Map<String, Schema.SObjectField> fm = gd.get(obj).getDescribe().fields.getMap();
-        String fk = flc(fieldApi);
-        if (!fm.containsKey(fk)) {
-            return opts;
-        }
-        Schema.DescribeFieldResult fd = fm.get(fk).getDescribe();
-        if (fd.getType() != DisplayType.PICKLIST && fd.getType() != DisplayType.MULTIPICKLIST) {
-            return opts;
-        }
-        for (Schema.PicklistEntry pe : fd.getPicklistValues()) {
-            if (pe.isActive()) {
-                opts.add(new PicklistEntryDTO(pe.getLabel(), pe.getValue()));
-            }
+        for (FEC_CommonUltils.PicklistOption po : FEC_CommonUltils.getPicklistOptionsWithAccess(obj, fieldApi)) {
+            opts.add(new PicklistEntryDTO(po.label, po.value));
         }
         return opts;
     }
