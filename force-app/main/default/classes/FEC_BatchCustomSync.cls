@@ -13,6 +13,7 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
 	private CustomSync__c cus;
 	private Integer countSuccess = 0;
 	private Integer countFail = 0;
+	private Integer totalSize = 0;
     private List<FEC_API_Log__c> logs = new List<FEC_API_Log__c>();
     public FEC_BatchCustomSync(CustomSync__c recordCustom) { 
         this.cus = recordCustom;
@@ -28,6 +29,7 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
         FEC_API_Log__c log = new FEC_API_Log__c();  
         log.FEC_Custom_Sync__c = cus.id;
         try{
+            totalSize = totalSize + scope.size();
             if(scope == null || scope.isEmpty()){
                 log.FEC_Error_Message__c = 'Record not found'; 
             }else{
@@ -54,6 +56,7 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
         cus.EndAt__c = System.now();
         cus.SyncSuccessFully__c = countSuccess;
         cus.SyncFailed__c = countFail;
+        cus.TotalRecordSync__c = totalSize;
         update cus; 
         if(!logs.isEmpty()){
             upsert logs;
@@ -64,9 +67,9 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
      String wherePart = ' WHERE ((LastModifiedDate > :startTime AND LastModifiedDate <= :toDate) ' +
                         ' OR (CreatedDate > :startTime AND CreatedDate <= :toDate) )' + 
                         ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName'; // test
-        CustomSyncField__mdt setting = [Select id, Fields__c  from CustomSyncField__mdt
-             WHERE DeveloperName = :cus.TargetObject__c limit 1];
+        CustomSyncField__mdt setting = [Select id, Fields__c,ObjecTarget__c  from CustomSyncField__mdt
+             WHERE MasterLabel = :cus.WhatSync__c limit 1];
   
-        return 'SELECT ' + setting.Fields__c + ' FROM ' + cus.TargetObject__c + wherePart;
+        return 'SELECT ' + setting.Fields__c + ' FROM ' + setting.ObjecTarget__c + wherePart;
     }
 }

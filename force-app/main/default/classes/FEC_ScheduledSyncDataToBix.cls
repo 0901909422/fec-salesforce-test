@@ -19,13 +19,13 @@ global class FEC_ScheduledSyncDataToBix implements  Schedulable {
                                         SyncFailed__c,
                                         SyncSuccessFully__c,
                                         SyncTo__c,
-                                        Active__c,
-                                        TargetObject__c,
+                                        Active__c, 
                                         StartAt__c,
                                         EndAt__c,
                                         ProcessingQuantity__c,
                                         WhatSync__c, 
-                                        TableName__c
+                                        TableName__c,
+                                        TotalRecordSync__c
                                         from CustomSync__c
                                         where SyncTo__c = 'Bix' and Active__c = true];
             Map<String,CustomSyncField__mdt> mMetaData  = getCustomSync();
@@ -45,9 +45,9 @@ global class FEC_ScheduledSyncDataToBix implements  Schedulable {
     
     public static Map<String,CustomSyncField__mdt>  getCustomSync(){
         Map<String,CustomSyncField__mdt> mSetting = new Map<String,CustomSyncField__mdt>();
-        List<CustomSyncField__mdt> lst = [Select id, Fields__c,DeveloperName  from CustomSyncField__mdt];
+        List<CustomSyncField__mdt> lst = [Select id, Fields__c,MasterLabel,ObjecTarget__c,DeveloperName  from CustomSyncField__mdt];
         for(CustomSyncField__mdt item :lst){
-                mSetting.put(item.DeveloperName, item);
+                mSetting.put(item.MasterLabel, item);
         }
         return mSetting;
     }

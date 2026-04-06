@@ -30,8 +30,7 @@ private class FEC_CustomSyncAllInOneTest {
          
         CustomSync__c cus = new CustomSync__c(
             Name = 'Test Sync',
-            TableName__c = 'Table Case',
-            TargetObject__c = 'Case', 
+            TableName__c = 'Table Case', 
             WhatSync__c = 'Phone Update',
             ProcessingQuantity__c = 1,
             Active__c = true,
@@ -41,8 +40,7 @@ private class FEC_CustomSyncAllInOneTest {
         
         CustomSync__c cus2 = new CustomSync__c(
             Name = 'Test Sync',
-            TableName__c = 'Table Case',
-            TargetObject__c = 'Case', 
+            TableName__c = 'Table Case', 
             WhatSync__c = 'Phone Update',
             ProcessingQuantity__c = 1,
             Active__c = true,
@@ -85,7 +83,7 @@ private class FEC_CustomSyncAllInOneTest {
     static void testQueueableAndBatch() { 
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMock());
         
-        List<CustomSync__c> cusList = [SELECT Id, TableName__c, TargetObject__c, WhatSync__c, 
+        List<CustomSync__c> cusList = [SELECT Id, TableName__c,  WhatSync__c, 
                                             ProcessingQuantity__c, EndAt__c FROM CustomSync__c];
 
         Test.startTest();
@@ -101,7 +99,7 @@ private class FEC_CustomSyncAllInOneTest {
         Map<Id, CustomSync__c> mCus = new Map<Id, CustomSync__c>([SELECT Id, TargetObject__c, TableName__c FROM CustomSync__c]);
          
         Map<String, CustomSyncField__mdt> mMetaData = new Map<String, CustomSyncField__mdt>();
-        for(CustomSyncField__mdt mdt : [SELECT DeveloperName, Fields__c FROM CustomSyncField__mdt]) {
+        for(CustomSyncField__mdt mdt : [SELECT DeveloperName, Fields__c,ObjecTarget__c FROM CustomSyncField__mdt]) {
             mMetaData.put(mdt.DeveloperName, mdt);
         }
 
