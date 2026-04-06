@@ -67,9 +67,10 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
      String wherePart = ' WHERE ((LastModifiedDate > :startTime AND LastModifiedDate <= :toDate) ' +
                         ' OR (CreatedDate > :startTime AND CreatedDate <= :toDate) )' + 
                         ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName'; // test
-        CustomSyncField__mdt setting = [Select id, Fields__c,ObjecTarget__c  from CustomSyncField__mdt
-             WHERE MasterLabel = :cus.WhatSync__c limit 1];
+        CustomSyncField__mdt setting = [Select id, Fields__c,TargetObject__c  
+            from CustomSyncField__mdt
+            WHERE MasterLabel = :cus.WhatSync__c limit 1];
   
-        return 'SELECT ' + setting.Fields__c + ' FROM ' + setting.ObjecTarget__c + wherePart;
+        return 'SELECT ' + setting.Fields__c + ' FROM ' + setting.TargetObject__c + wherePart;
     }
 }

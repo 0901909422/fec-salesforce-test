@@ -35,7 +35,7 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
             List<String> recordIdObject = (List<String>) JSON.deserialize(log.FEC_Request_String__c, List<String>.class);
 
             String queryString = 'Select ' + mMetaData.get(cus.WhatSync__c).Fields__c +
-             ' From ' + mMetaData.get(cus.WhatSync__c).ObjecTarget__c + 
+             ' From ' + mMetaData.get(cus.WhatSync__c).TargetObject__c + 
              ' where id in :recordIdObject';  
             List<sObject> records = Database.query(queryString);  
             log = FEC_CustomSyncCallout.sendRequest(cus,log,records); 

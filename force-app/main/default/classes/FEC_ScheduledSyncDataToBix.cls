@@ -45,7 +45,8 @@ global class FEC_ScheduledSyncDataToBix implements  Schedulable {
     
     public static Map<String,CustomSyncField__mdt>  getCustomSync(){
         Map<String,CustomSyncField__mdt> mSetting = new Map<String,CustomSyncField__mdt>();
-        List<CustomSyncField__mdt> lst = [Select id, Fields__c,MasterLabel,ObjecTarget__c,DeveloperName  from CustomSyncField__mdt];
+        List<CustomSyncField__mdt> lst = [Select id, Fields__c,MasterLabel  ,TargetObject__c
+            ,DeveloperName  from CustomSyncField__mdt];
         for(CustomSyncField__mdt item :lst){
                 mSetting.put(item.MasterLabel, item);
         }

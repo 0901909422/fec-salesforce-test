@@ -99,7 +99,8 @@ private class FEC_CustomSyncAllInOneTest {
         Map<Id, CustomSync__c> mCus = new Map<Id, CustomSync__c>([SELECT Id, WhatSync__c, TableName__c FROM CustomSync__c]);
          
         Map<String, CustomSyncField__mdt> mMetaData = new Map<String, CustomSyncField__mdt>();
-        for(CustomSyncField__mdt mdt : [SELECT DeveloperName, Fields__c,ObjecTarget__c FROM CustomSyncField__mdt]) {
+        for(CustomSyncField__mdt mdt : [SELECT DeveloperName, Fields__c  ,TargetObject__c
+             FROM CustomSyncField__mdt]) {
             mMetaData.put(mdt.DeveloperName, mdt);
         }
 
