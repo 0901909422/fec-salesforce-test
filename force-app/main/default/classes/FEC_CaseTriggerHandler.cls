@@ -485,13 +485,13 @@ public without sharing class FEC_CaseTriggerHandler {
 
         List<Case> casesToDml = [
             SELECT Id, RecordTypeId, OwnerId, FEC_Is_Reply_Interaction_email__c, 
-                   ParentId, FEC_Channel__c, FEC_Send_To__c 
+                   ParentId, FEC_Channel__c, FEC_Send_To__c,Origin, CaseNumber
             FROM Case 
             WHERE Id IN :caseIds
         ];
 
         List<Case> casesForRouting = new List<Case>();
-
+        List<Case> casesToPublish = new List<Case>();
         for (Case c : casesToDml) {
             EmailMessage relatedEmail = caseIdToEmailMap.get(c.Id);
 
@@ -509,12 +509,19 @@ public without sharing class FEC_CaseTriggerHandler {
                 c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
                 casesForRouting.add(c);
             }
+            if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK) {
+                casesToPublish.add(c);
+            }
         }
-
         // assignCases(casesToDml);
         if (!casesForRouting.isEmpty()) {
             FEC_InteractionRoutingService.assignInteractionReply(casesForRouting);
             FEC_InteractionRoutingService.assignNewInteractionEmail(casesForRouting);
+        }
+        // @Thangtv: Publish platform events to automatically open U-bank cases
+        if (!casesToPublish.isEmpty()) {
+            System.debug('platform events Case Auto Open is starting');
+            FEC_InteractionRoutingController.publishRoutingEvents(casesToPublish);
         }
 
         if (!casesToDml.isEmpty()) {

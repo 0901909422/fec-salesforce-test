@@ -201,10 +201,19 @@
                             <template if:true={hasTemplateHistory}>
                                 <lightning-datatable
                                     key-field="id"
-                                    data={templateHistoryData}
+                                    data={templateHistoryDisplayData}
                                     columns={templateHistoryColumns}
                                     hide-checkbox-column
                                 ></lightning-datatable>
+                                <template if:true={showTemplateHistoryViewAll}>
+                                    <div class="slds-align_absolute-center slds-p-top_medium">
+                                        <lightning-button
+                                            label="View All"
+                                            variant="base"
+                                            onclick={handleViewAllTemplateHistory}
+                                        ></lightning-button>
+                                    </div>
+                                </template>
                             </template>
                             <template if:false={hasTemplateHistory}>
                                 <p class="slds-text-color_weak slds-text-align_center slds-p-vertical_large">
@@ -220,11 +229,20 @@
                             <template if:true={hasContentHistory}>
                                 <lightning-datatable
                                     key-field="id"
-                                    data={contentHistoryData}
+                                    data={contentHistoryDisplayData}
                                     columns={contentHistoryColumns}
                                     hide-checkbox-column
                                     onrowaction={handleViewDiff}
                                 ></lightning-datatable>
+                                <template if:true={showContentHistoryViewAll}>
+                                    <div class="slds-align_absolute-center slds-p-top_medium">
+                                        <lightning-button
+                                            label="View All"
+                                            variant="base"
+                                            onclick={handleViewAllContentHistory}
+                                        ></lightning-button>
+                                    </div>
+                                </template>
                             </template>
                             <template if:false={hasContentHistory}>
                                 <p class="slds-text-color_weak slds-text-align_center slds-p-vertical_large">
