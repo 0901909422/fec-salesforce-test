@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types> 
+        <members>FEC_CustomSyncAllInOneTest</members> 
+        <members>FEC_ScheduledSyncDataToBix</members>
+        <members>FEC_QueueRunBatchSync</members>
+        <members>FEC_BatchCustomSync</members>
+        <members>FEC_CustomSyncCallout</members>
+        <members>FEC_BatchReCallCustomSync</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>CustomSync__c</members> 
+        <members>CustomSyncSetting__c</members>
+        <members>CustomSyncField__mdt</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>CustomSync__c.StartAt__c</members>
+        <members>CustomSync__c.EndAt__c</members>
+        <members>CustomSync__c.Active__c</members>
+        <members>CustomSync__c.TargetObject__c</members>
+        <members>CustomSync__c.SyncTo__c</members>
+        <members>CustomSync__c.SyncSuccessFully__c</members>
+        <members>CustomSync__c.SyncFailed__c</members>
+        <members>CustomSync__c.ProcessingQuantity__c</members>
+        <members>CustomSync__c.WhatSync__c</members>
+        <members>CustomSync__c.TableName__c</members> 
+        <members>FEC_API_Log__c.FEC_Quantity_Call__c</members> 
+        <members>FEC_API_Log__c.FEC_Custom_Sync__c</members> 
+        <members>CustomSyncSetting__c.Endpoint__c</members>
+        <members>CustomSyncSetting__c.ApiKey__c</members>
+        <members>CustomSyncSetting__c.LimitQuanitySync__c</members>
+        <name>CustomField</name>
+    </types>
+    <version>60.0</version>
+</Package>

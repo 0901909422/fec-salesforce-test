@@ -51,4 +51,4 @@ global class FEC_ScheduledSyncDataToBix implements  Schedulable {
         }
         return mSetting;
     }
-} 
+}
