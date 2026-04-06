@@ -176,7 +176,6 @@
 		<members>fecInteractionCreationHighlight</members>
 		<members>fec_CaseBussiness</members>
 		<members>fec_IPPClosureForm</members>
-		<members>fec_IPPClosureHandling</members>
 		<members>fec_CreateCaseInListView</members>
 		<members>fec_CaseDetail_Customer</members>
 		<members>fec_CaseEditNOC</members>
@@ -185,7 +184,6 @@
 		<members>fec_PinResetView</members>
 		<members>fec_InteractionSLA</members>
 		<members>fec_CardClosureRefundForm</members>
-		<members>fec_CardClosureRefundHandling</members>
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_CardBlock</members>
 		<members>fecInteractionInfo</members>

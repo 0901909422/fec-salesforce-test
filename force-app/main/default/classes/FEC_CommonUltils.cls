@@ -139,6 +139,20 @@ public with sharing class FEC_CommonUltils {
     return false;
   }
 
+  public static String normalizePhone(String raw) {
+    if (raw == null) {
+      return FEC_ConstantCommon.STR_EMPTY;
+    }
+    String s = raw.replaceAll('\\s', '');
+    if (s.startsWith('+84')) {
+      s = '84' + s.substring(3);
+    }
+    if (s.length() == 10 && s.startsWith('0') && Pattern.matches('\\d{10}', s)) {
+      s = '84' + s.substring(1);
+    }
+    return s;
+  }
+
   /**
    * Kiểm tra AccountNumber có hợp lệ không (16 hoặc 19 chữ số)
    * @param accountNumber - Account Number cần kiểm tra
@@ -195,6 +209,44 @@ public with sharing class FEC_CommonUltils {
     } catch (Exception e) {
       // Log the error for debugging
       System.debug('Error in getPicklistOptions: ' + e.getMessage());
+    }
+    return options;
+  }
+
+  public static List<PicklistOption> getPicklistOptionsWithAccess(
+    String objectName,
+    String fieldName
+  ) {
+    List<PicklistOption> options = new List<PicklistOption>();
+    if (String.isBlank(objectName) || String.isBlank(fieldName)) {
+      return options;
+    }
+    Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+    if (sObjectType == null) {
+      return options;
+    }
+    Schema.DescribeSObjectResult sObjectDescribe = sObjectType.getDescribe();
+    if (!sObjectDescribe.isAccessible()) {
+      return options;
+    }
+    Map<String, Schema.SObjectField> fieldsMap = sObjectDescribe.fields.getMap();
+    String fk = fieldName.toLowerCase();
+    if (!fieldsMap.containsKey(fk)) {
+      return options;
+    }
+    Schema.DescribeFieldResult fieldDescribe = fieldsMap.get(fk).getDescribe();
+    if (!fieldDescribe.isAccessible()) {
+      return options;
+    }
+    Schema.DisplayType dt = fieldDescribe.getType();
+    if (dt != Schema.DisplayType.PICKLIST && dt != Schema.DisplayType.MULTIPICKLIST) {
+      return options;
+    }
+    for (Schema.PicklistEntry entry : fieldDescribe.getPicklistValues()) {
+      if (!entry.isActive()) {
+        continue;
+      }
+      options.add(new PicklistOption(entry.getLabel(), entry.getValue(), null));
     }
     return options;
   }

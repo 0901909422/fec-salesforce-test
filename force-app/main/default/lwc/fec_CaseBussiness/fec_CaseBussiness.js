@@ -180,14 +180,15 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
  */
 const DYNAMIC_COMPONENT_REGISTRY = {
   fec_CardInfo: () => import('c/fec_CardInfo'),
-  fec_IPPClosureHandling: () => import('c/fec_IPPClosureHandling'),
-  fec_CardClosureRefundHandling: () => import('c/fec_CardClosureRefundHandling'),
+  fec_IPPClosureForm: () => import('c/fec_IPPClosureForm'),
+  fec_CardClosureRefundForm: () => import('c/fec_CardClosureRefundForm'),
   fec_PinResetHandling: () => import('c/fec_PinResetHandling'),
   fec_CardBlock: () => import('c/fec_CardBlock'),
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
   fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
   fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
+  fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
 };
 
 export default class Fec_CaseBussiness extends LightningElement {
