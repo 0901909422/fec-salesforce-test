@@ -298,7 +298,6 @@
 		<members>FEC_LBL_ContractClosure_Ward</members>
 		<members>FEC_MSG_ContractClosure_Address_Required</members>
 		<members>FEC_MSG_ContractClosure_Delivery_Invalid</members>
-		<members>FEC_MSG_ContractClosure_Max_Two_Delivery_Options</members>
 		<members>FEC_MSG_ContractClosure_No_C360_Email</members>
 		<members>FEC_MSG_ContractClosure_Phone_Invalid</members>
 		<members>FEC_MSG_ContractClosure_Required_Fields</members>
@@ -324,6 +323,10 @@
 		<members>FEC_Clear_Session_Success_Msg</members>
 		<members>FEC_Clear_Session_Error_Title</members>
 		<members>FEC_Clear_Session_Error_Msg</members>
+		<members>FEC_MSG_ContractClosure_Required_Fields</members>
+        <members>FEC_MSG_ContractClosure_Delivery_Invalid</members>
+        <members>FEC_MSG_ContractClosure_Phone_Invalid</members>
+        <members>FEC_MSG_ContractClosure_Address_Required</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

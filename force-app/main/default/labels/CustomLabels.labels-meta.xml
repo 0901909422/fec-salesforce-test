@@ -11957,5 +11957,36 @@
         <shortDescription>FEC_Placeholder_ContractClosure_Select_Admin</shortDescription>
         <value>Choose</value>
     </labels>
-    
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_Address_Required</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_Address_Required</shortDescription>
+        <value>Vui lòng chọn/ nhập địa chỉ phù hợp</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_Delivery_Invalid</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_Delivery_Invalid</shortDescription>
+        <value>Vui lòng chọn hình thức giao phát và thông tin giao phát phù hợp.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_Phone_Invalid</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_Phone_Invalid</shortDescription>
+        <value>Định dạng số điện thoại không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_Required_Fields</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_Required_Fields</shortDescription>
+        <value>Vui lòng nhập đầy đủ các trường bắt buộc.</value>
+    </labels>
 </CustomLabels>

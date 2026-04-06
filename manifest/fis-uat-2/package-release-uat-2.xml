@@ -651,6 +651,10 @@
 		<members>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</members>
 		<members>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</members>
 		<members>FEC_PHONE_IS_REQUIRED_MSG</members>
+		<members>FEC_MSG_ContractClosure_Required_Fields</members>
+        <members>FEC_MSG_ContractClosure_Delivery_Invalid</members>
+        <members>FEC_MSG_ContractClosure_Phone_Invalid</members>
+        <members>FEC_MSG_ContractClosure_Address_Required</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -1460,7 +1464,6 @@
 		<members>FEC_LBL_ContractClosure_Ward</members>
 		<members>FEC_MSG_ContractClosure_Address_Required</members>
 		<members>FEC_MSG_ContractClosure_Delivery_Invalid</members>
-		<members>FEC_MSG_ContractClosure_Max_Two_Delivery_Options</members>
 		<members>FEC_MSG_ContractClosure_No_C360_Email</members>
 		<members>FEC_MSG_ContractClosure_Phone_Invalid</members>
 		<members>FEC_MSG_ContractClosure_Required_Fields</members>
