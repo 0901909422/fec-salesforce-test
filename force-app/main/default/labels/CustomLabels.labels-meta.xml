@@ -11388,7 +11388,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_LBL_IPP_Retail_UI</shortDescription>
-        <value>Giao dịch chưa sao kê##Check IPP Details##Convert IPP##IPP Conversion##Bạn sắp chuyển đổi giao dịch này. Bạn có chắc chắn muốn tiếp tục không?##Thành công##Khác##Có##Không##Khách hàng</value>
+        <value>Unbilled Transaction##Check IPP Details##Convert IPP##IPP Conversion##Bạn sắp chuyển đổi giao dịch này. Bạn có chắc chắn muốn tiếp tục không?##Thành công##Khác##Có##Không##Khách hàng</value>
     </labels>
     <labels>
         <fullName>FEC_GET_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_REQUIRE_MSG</fullName>
@@ -11882,5 +11882,179 @@
         <protected>false</protected>
         <shortDescription>Template Not Found</shortDescription>
         <value>Không tìm thấy template.</value>
+        <fullName>FEC_LBL_ContractClosure_Add_Temp_Address</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Add_Temp_Address</shortDescription>
+        <value>Add Temporary Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Add_Temp_Email</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Add_Temp_Email</shortDescription>
+        <value>Add Temporary Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Address_Col</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Address_Col</shortDescription>
+        <value>Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Address_Type</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Address_Type</shortDescription>
+        <value>Address Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Building</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Building</shortDescription>
+        <value>Building</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Delivery_Option</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Delivery_Option</shortDescription>
+        <value>Delivery Option</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Mailing_Address_Col</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Mailing_Address_Col</shortDescription>
+        <value>Mailing Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Modal_Edit_Temp_Address</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Modal_Edit_Temp_Address</shortDescription>
+        <value>New Temporary Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Modal_New_Temp_Address</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Modal_New_Temp_Address</shortDescription>
+        <value>New Temporary Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_New_Temp_Email</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_New_Temp_Email</shortDescription>
+        <value>New Temporary Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Recipient_Name</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Recipient_Name</shortDescription>
+        <value>Recipient Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Recipient_Phone</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Recipient_Phone</shortDescription>
+        <value>Recipient Phone Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Street</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Street</shortDescription>
+        <value>Street</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Street_Number</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Street_Number</shortDescription>
+        <value>Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Ward</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Ward</shortDescription>
+        <value>Ward</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_No_C360_Email</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_No_C360_Email</shortDescription>
+        <value>Không có email C360 — vui lòng thêm email tạm thời.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_ContractClosure_Select_Delivery</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Placeholder_ContractClosure_Select_Delivery</shortDescription>
+        <value>Choose Delivery</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_ContractClosure_Select_Admin</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Placeholder_ContractClosure_Select_Admin</shortDescription>
+        <value>Choose</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_Address_Required</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_Address_Required</shortDescription>
+        <value>Vui lòng chọn/ nhập địa chỉ phù hợp</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_Delivery_Invalid</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_Delivery_Invalid</shortDescription>
+        <value>Vui lòng chọn hình thức giao phát và thông tin giao phát phù hợp.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_Phone_Invalid</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_Phone_Invalid</shortDescription>
+        <value>Định dạng số điện thoại không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_Required_Fields</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_Required_Fields</shortDescription>
+        <value>Vui lòng nhập đầy đủ các trường bắt buộc.</value>
     </labels>
 </CustomLabels>

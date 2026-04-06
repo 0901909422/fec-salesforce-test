@@ -354,4 +354,17 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
     public static final String TARGET_GROUP_CUSTOMER = 'Customer';
     public static final String NOTIFICATION_SUBJECT = 'Notification';
+
+    public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 = 'C360';
+    public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY = 'TEMPORARY';    /** FEC_Address_Info__c.FEC_Address_Type__c — địa chỉ tạm Contract Closure */
+    public static final String CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY = 'Temporary Address';
+
+    public static final String EMAIL_SUPPORT_CSM = 'supportcsm@fecredit.com.vn';
+    public static final String EMAIL_CS_SUPPORT = 'cssupport@fecredit.com.vn';
+    public static final String EMAIL_CUSTOMER_CARE = 'customercare@fecredit.com.vn';
+    public static final String EMAIL_E_COM = 'e_com@fecredit.com.vn';
+    public static final String EMAIL_F2F = 'F2F@fecredit.com.vn';
+    public static final String EMAIL_CS_D2C = 'cs_d2c@fecredit.com.vn';
+    public static final String EMAIL_CS_OM = 'CS_OM@fecredit.com.vn';
+    public static final String EMAIL_CS_QC_TEAM = 'CS_QC_TEAM@fecredit.com.vn';
 }

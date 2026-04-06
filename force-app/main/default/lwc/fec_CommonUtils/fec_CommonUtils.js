@@ -225,6 +225,20 @@ const maskValue = (value, showFull) => {
  * - Bắt đầu bằng 0: đúng 10 ký tự.
  * - Bắt đầu bằng 84: đúng 11 ký tự.
  * ========================= */
+const normalizePhone = (raw) => {
+  if (!raw) {
+    return STR_EMPTY;
+  }
+  let s = String(raw).replace(/\s/g, "");
+  if (s.startsWith("+84")) {
+    s = "84" + s.substring(3);
+  }
+  if (/^\d{10}$/.test(s) && s.startsWith("0")) {
+    s = "84" + s.substring(1);
+  }
+  return s;
+};
+
 const validateUpdatedInfoPhone = (phone) => {
   if (phone == null || typeof phone !== "string") return null;
 
@@ -794,6 +808,7 @@ export {
   parseDateVNI,
   maskWorkPhone,
   maskValue,
+  normalizePhone,
   validateUpdatedInfoPhone,
   applyPhoneInputMaxLength,
   validateUpdatedInfoEmail,
