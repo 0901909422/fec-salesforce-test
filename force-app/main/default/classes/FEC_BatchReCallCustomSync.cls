@@ -2,7 +2,7 @@
 Author:        Duan Nguyen
 Company:       Isobar
 Description:   ReSync Data 
-Test Class:     
+Test Class:    FEC_CustomSyncAllInOneTest
 History
 <Date>         <Authors Name>     <Brief Description of Change>
 2026/03/31     Duan Nguyen          Init

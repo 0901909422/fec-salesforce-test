@@ -2,7 +2,7 @@
 Author:        Duan Nguyen
 Company:       Isobar
 Description:   Create Callout Sync Data 
-Test Class:     
+Test Class:     FEC_CustomSyncAllInOneTest
 History
 <Date>         <Authors Name>     <Brief Description of Change>
 2026/03/31     Duan Nguyen          Init
@@ -27,7 +27,7 @@ public with sharing class FEC_CustomSyncCallout {
             req.setHeader('X-API-KEY', apiSetting.ApiKey__c);
             req.setHeader('Content-Type', 'application/json');  
             req.setBody(jsonBody);
-            Http http = new Http();
+            Http http = new Http(); 
             HttpResponse response = http.send(req); 
             
             log.FEC_Status_Code__c = String.valueOf(response.getStatusCode());

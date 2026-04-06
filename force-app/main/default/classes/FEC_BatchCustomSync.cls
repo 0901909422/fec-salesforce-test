@@ -2,7 +2,7 @@
 Author:        Duan Nguyen
 Company:       Isobar
 Description:   Create Queue Sync Data To
-Test Class:     
+Test Class:     FEC_CustomSyncAllInOneTest
 History
 <Date>         <Authors Name>     <Brief Description of Change>
 2026/03/31     Duan Nguyen          Init
@@ -21,10 +21,7 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
     global Database.QueryLocator start(Database.BatchableContext bc) {  
         DateTime toDate = System.now();
         DateTime startTime = (cus != null && cus.EndAt__c != null) ? cus.EndAt__c : toDate.addHours(-1);
-        String whatName = cus.WhatSync__c;
-        
-        system.debug('-- LOG WIHAT:'+ cus.WhatSync__c);
-        system.debug('-- LOG Size:'+ cus);
+        String whatName = cus.WhatSync__c; 
         return Database.getQueryLocator(getFields(cus));
     } 
     global void execute(Database.BatchableContext bc, List<sObject> scope) { 
@@ -57,8 +54,7 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
         cus.EndAt__c = System.now();
         cus.SyncSuccessFully__c = countSuccess;
         cus.SyncFailed__c = countFail;
-        update cus;
-        system.debug('-- LOG Size:'+logs.size());
+        update cus; 
         if(!logs.isEmpty()){
             upsert logs;
         }
