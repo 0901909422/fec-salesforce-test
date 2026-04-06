@@ -289,6 +289,16 @@
 		<members>FEC_Clear_Session_Success_Msg</members>
 		<members>FEC_Clear_Session_Error_Title</members>
 		<members>FEC_Clear_Session_Error_Msg</members>
+		<members>FEC_Choose_Notification_Type</members>
+		<members>FEC_Email_No_Valid_Address_Found</members>
+		<members>FEC_Email_Send_Error</members>
+		<members>FEC_Email_Sent_Success</members>
+		<members>FEC_Error_Loading_Template_List</members>
+		<members>FEC_Send</members>
+		<members>FEC_Send_Manual_Notification</members>
+		<members>FEC_Target_Email</members>
+		<members>FEC_Target_Group</members>
+		<members>FEC_Template_Not_Found</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -524,6 +534,7 @@
         <members>FEC_API_Config.FEC_ReplacementCard</members>
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
+		<members>FEC_System_Config.FEC_Default_Config</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>

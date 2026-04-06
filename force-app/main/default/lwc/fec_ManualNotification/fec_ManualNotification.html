@@ -1,5 +1,5 @@
 <template>
-    <lightning-card title="Send Manual Notification" icon-name="standard:email">
+    <lightning-card title={label.sendManualNotification} icon-name="standard:email">
         <div class="slds-p-around_medium">
             <template if:true={options}>
                 
@@ -7,9 +7,9 @@
                     <div class="slds-col slds-size_1-of-2">
                         <lightning-combobox
                             name="notificationType"
-                            label="Notification Type"
+                            label={label.LBL_SFT_Notification_Type}
                             value={selectedNotificationId}
-                            placeholder="Choose a notification type..."
+                            placeholder={notiTypePlaceHolder}
                             options={options}
                             onchange={handleChange}
                             required>
@@ -18,7 +18,7 @@
                     <div class="slds-col slds-size_1-of-2">
                         <lightning-input 
                                 type="text" 
-                                label="Notification Channel" 
+                                label={label.LBL_SFT_Notification_Channel} 
                                 value={selectedChannel} 
                                 readonly>
                         </lightning-input>
@@ -30,7 +30,7 @@
                         <div class="slds-col slds-size_1-of-2">
                             <lightning-input 
                                 type="text" 
-                                label="Target Email" 
+                                label={label.FEC_Target_Email}
                                 value={targetEmail} 
                                 readonly>
                             </lightning-input>
@@ -38,7 +38,7 @@
                         <div class="slds-col slds-size_1-of-2">
                             <lightning-input 
                                 type="text" 
-                                label="Target Group" 
+                                label={label.FEC_Target_Group}
                                 value={selectedTargetGroup} 
                                 readonly>
                             </lightning-input>
@@ -63,8 +63,8 @@
         </template>
         
         <div slot="footer">
-            <lightning-button label="Preview" onclick={handlePreview} disabled={isActionDisabled} class="slds-m-right_x-small"></lightning-button>
-            <lightning-button variant="brand" label="Send" onclick={handleSend} disabled={isActionDisabled}></lightning-button>
+            <lightning-button label={label.FEC_Action_Preview} onclick={handlePreview} disabled={isActionDisabled} class="slds-m-right_x-small"></lightning-button>
+            <lightning-button variant="brand" label={label.FEC_Send} onclick={handleSend} disabled={isActionDisabled}></lightning-button>
         </div>
     </lightning-card>
 </template>

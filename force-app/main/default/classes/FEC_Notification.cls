@@ -1,4 +1,19 @@
 public without sharing class FEC_Notification {
+    public static final String FEC_DEFAULT_CONFIG = 'FEC_Default_Config';
+
+    public class EmailInfo {
+        public Id caseId;
+        public String toEmail;
+        public String subject;
+        public String body;
+
+        public EmailInfo(Id caseId, String toEmail, String subject, String body) {
+            this.caseId = caseId;
+            this.toEmail = toEmail;
+            this.subject = subject;
+            this.body = body;
+        }
+    }
     
     @AuraEnabled
     public static RecordType getRecordTypeName(String recordTypeId) {
@@ -22,24 +37,6 @@ public without sharing class FEC_Notification {
       throw new AuraHandledException(e.getMessage());
     }
   }
-
-  //   @AuraEnabled
-  //   public static FEC_Notification__c getNotificationById(Id recordId) {
-  //   try {
-  //     FEC_Notification__c noti = [
-  //       SELECT Id, Name, RecordType.Name, RecordTypeId, RecordType.DeveloperName, FEC_Target_Group__c, FEC_Notification_Channel__c FROM FEC_Notification__c
-  //       WHERE Id = :recordId
-  //     ];
-
-  //     if (noti != null) {
-  //       return noti;
-  //     }
-
-  //     return null;
-  //   } catch (Exception e) {
-  //     throw new AuraHandledException(e.getMessage());
-  //   }
-  // }
 
   @AuraEnabled
     public static Map<String, Object> getNotificationById(Id recordId) {
@@ -87,9 +84,9 @@ public without sharing class FEC_Notification {
      */
     private static String getTargetEmailFromCase(Case c) {
         String targetEmail = '';
-        if(c.FEC_Customer_Type__c == 'Existing') {
+        if(c.FEC_Customer_Type__c == FEC_ConstantCommon.CASE_EXISTING_CUSTOMER) {
             targetEmail = c.FEC_Account_or_Contract__r.FEC_Email__c;
-        } else if (c.FEC_Customer_Type__c == 'Non-existing') {
+        } else if (c.FEC_Customer_Type__c == FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER) {
             if(String.isNotBlank(c.FEC_Interaction__r.FEC_Interaction_Email__c)) {
                 targetEmail = c.FEC_Interaction__r.FEC_Interaction_Email__c;
             } else {
@@ -126,7 +123,7 @@ public without sharing class FEC_Notification {
                                              AND FEC_SubCode__c = :currentCase.FEC_SubCode__c
                                              AND FEC_Case_Stage__c = :currentCase.FEC_Current_Case_Stage__c
                                              AND FEC_Notification_Status__c = true 
-                                             AND FEC_Notification_Channel__r.Name = 'Email'];
+                                             AND FEC_Notification_Channel__r.Name = :FEC_ConstantCommon.EMAIL];
         
         List<Map<String, String>> options = new List<Map<String, String>>();
         
@@ -156,30 +153,111 @@ public without sharing class FEC_Notification {
         String targetEmail = getTargetEmailFromCase(c);
         
         if(String.isBlank(targetEmail)) {
-            throw new AuraHandledException('Không tìm thấy email hợp lệ để gửi.');
+            throw new AuraHandledException(System.Label.FEC_Email_No_Valid_Address_Found);
         }
         if(String.isBlank(templateId)) {
-            throw new AuraHandledException('Không tìm thấy template.');
+            throw new AuraHandledException(System.Label.FEC_Template_Not_Found);
         }
 
         FEC_Template__c template = FEC_TemplateController.getTemplate(templateId);  
-        List<OrgWideEmailAddress> owaList = [
-                    SELECT Id, Address 
-                    FROM OrgWideEmailAddress 
-                    WHERE Address = 'minhtung2108@gmail.com'
-                    LIMIT 1
-                ];
-                
-        Id emailId = owaList.isEmpty() ? null : owaList[0].Id;
-
-        // 3. Send email
-        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-        mail.setToAddresses(new List<String>{targetEmail});
-        mail.setHtmlBody(template.FEC_Body__c);
-        mail.setWhatId(caseId); 
-        if (emailId != null) {
-          mail.setOrgWideEmailAddressId(emailId);
+        String senderEmail = '';
+        FEC_System_Config__mdt config = FEC_System_Config__mdt.getInstance(FEC_DEFAULT_CONFIG);
+        if (config != null && String.isNotBlank(config.FEC_Sender_Email__c)) {
+            senderEmail = config.FEC_Sender_Email__c;
         }
-        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+
+        String subject = String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
+
+        try {
+            executeSendEmail(caseId, senderEmail, targetEmail, subject, template.FEC_Body__c);
+        } catch (Exception e) {
+            throw new AuraHandledException(System.Label.FEC_Email_Send_Error + ': ' + e.getMessage());
+        }
+    }
+
+    // =========================================================
+    // 2. HÀM XỬ LÝ GỬI EMAIL BULK CHUẨN BEST PRACTICE (Dùng cho Trigger)
+    // =========================================================
+    public static void executeSendEmailsBulk(List<EmailInfo> emailsToSend, String fromEmail) {
+        if (emailsToSend == null || emailsToSend.isEmpty()) return;
+
+        // 1. Chỉ Query OrgWideEmailAddress 1 LẦN DUY NHẤT
+        Id orgWideEmailId = null;
+        if (String.isNotBlank(fromEmail)) {
+            List<OrgWideEmailAddress> orgEmails = [
+                SELECT Id FROM OrgWideEmailAddress 
+                WHERE Address = :fromEmail LIMIT 1
+            ];
+            if (!orgEmails.isEmpty()) {
+                orgWideEmailId = orgEmails[0].Id;
+            }
+        }
+
+        List<Messaging.SingleEmailMessage> mailList = new List<Messaging.SingleEmailMessage>();
+        List<EmailMessage> emailMessageLogs = new List<EmailMessage>();
+
+        // 2. Gom dữ liệu vào List thay vì thực thi ngay
+        for (EmailInfo info : emailsToSend) {
+            // Build Email
+            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+            mail.setToAddresses(info.toEmail.split(','));
+            mail.setSubject(info.subject);
+            mail.setHtmlBody(info.body != null ? info.body.replace('\n', '<br/>') : '');
+            mail.setWhatId(info.caseId);
+            mail.setSaveAsActivity(false); 
+            
+            if (orgWideEmailId != null) {
+                mail.setOrgWideEmailAddressId(orgWideEmailId);
+            }
+            mailList.add(mail);
+
+            // Build Audit Log (EmailMessage)
+            EmailMessage em = new EmailMessage();
+            em.ParentId = info.caseId;
+            em.FromAddress = fromEmail;
+            em.ToAddress = info.toEmail;
+            em.Subject = info.subject;
+            em.HtmlBody = info.body;
+            em.TextBody = info.body != null ? info.body.replaceAll('<[^>]+>', '') : '';
+            em.Incoming = false;
+            em.Status = '3'; // 3 = Sent
+            em.MessageDate = Datetime.now();
+            emailMessageLogs.add(em);
+        }
+
+        // 3. Thực thi DML và Callout 1 LẦN DUY NHẤT
+        if (!mailList.isEmpty()) {
+            // false: Gửi các email không lỗi ngay cả khi có 1 email bị lỗi
+            Messaging.sendEmail(mailList, false); 
+        }
+
+        if (!emailMessageLogs.isEmpty()) {
+            try {
+                insert emailMessageLogs;
+            } catch (Exception e) {
+                System.debug('Lỗi tạo EmailMessage bulk log: ' + e.getMessage());
+            }
+        }
+    }
+
+    // =========================================================
+    // 3. HÀM CHO LWC (Cập nhật để gọi chung hàm Bulk ở trên)
+    // =========================================================
+    public static void executeSendEmail(Id caseId, String fromEmail, String toEmail, String subject, String body) {
+        EmailInfo singleEmail = new EmailInfo(caseId, toEmail, subject, body);
+        executeSendEmailsBulk(new List<EmailInfo>{ singleEmail }, fromEmail);
+    }
+
+    private static void setFromAddress(Messaging.SingleEmailMessage mail, String fromEmail) {
+        if (String.isBlank(fromEmail)) return;
+
+        // Tìm OrgWideEmailAddress khớp trực tiếp
+        List<OrgWideEmailAddress> orgEmails = [
+            SELECT Id, Address FROM OrgWideEmailAddress
+            WHERE Address = :fromEmail LIMIT 1
+        ];
+        if (!orgEmails.isEmpty()) {
+            mail.setOrgWideEmailAddressId(orgEmails[0].Id);
+        }
     }
 }

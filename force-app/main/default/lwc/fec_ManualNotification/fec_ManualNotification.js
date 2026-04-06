@@ -4,6 +4,19 @@ import { NavigationMixin } from 'lightning/navigation';
 import getAvailableNotifications from '@salesforce/apex/FEC_Notification.getAvailableNotifications';
 import sendManualEmail from '@salesforce/apex/FEC_Notification.sendManualEmail';
 import getTemplate from '@salesforce/apex/FEC_TemplateController.getTemplate';
+import labelSendManualNotification from '@salesforce/label/c.FEC_Send_Manual_Notification';
+import LBL_SFT_Notification_Type from '@salesforce/label/c.LBL_SFT_Notification_Type';
+import FEC_Choose_Notification_Type from '@salesforce/label/c.FEC_Choose_Notification_Type';
+import LBL_SFT_Notification_Channel from '@salesforce/label/c.LBL_SFT_Notification_Channel';
+import FEC_Target_Email from '@salesforce/label/c.FEC_Target_Email';
+import FEC_Target_Group from '@salesforce/label/c.FEC_Target_Group';
+import FEC_Action_Preview from '@salesforce/label/c.FEC_Action_Preview';
+import FEC_Send from '@salesforce/label/c.FEC_Send';
+import FEC_Error_Loading_Template_List from '@salesforce/label/c.FEC_Error_Loading_Template_List';
+import FEC_MSG_IPP_AddIpp_Default_Success from '@salesforce/label/c.FEC_MSG_IPP_AddIpp_Default_Success';
+import FEC_Email_Sent_Success from '@salesforce/label/c.FEC_Email_Sent_Success';
+import FEC_Email_Send_Error from '@salesforce/label/c.FEC_Email_Send_Error';
+
 
 export default class Fec_ManualNotification extends NavigationMixin(LightningElement) {
     @api recordId; 
@@ -11,6 +24,21 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     @track rawNotifications = [];
     @track _record = null;
     @track _isPreviewOpen = false;
+
+    label = {
+        sendManualNotification: labelSendManualNotification,
+        LBL_SFT_Notification_Type: LBL_SFT_Notification_Type,
+        FEC_Choose_Notification_Type: FEC_Choose_Notification_Type,
+        LBL_SFT_Notification_Channel: LBL_SFT_Notification_Channel,
+        FEC_Target_Email: FEC_Target_Email,
+        FEC_Target_Group: FEC_Target_Group,
+        FEC_Action_Preview: FEC_Action_Preview,
+        FEC_Send: FEC_Send,
+        FEC_Error_Loading_Template_List: FEC_Error_Loading_Template_List,
+        FEC_MSG_IPP_AddIpp_Default_Success: FEC_MSG_IPP_AddIpp_Default_Success,
+        FEC_Email_Sent_Success: FEC_Email_Sent_Success,
+        FEC_Email_Send_Error: FEC_Email_Send_Error
+    };
     
     selectedNotificationId;
     selectedTemplateId;
@@ -28,7 +56,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             });
             this.error = undefined;
         } else if (error) {
-            this.error = 'Lỗi tải danh sách template: ' + (error.body ? error.body.message : JSON.stringify(error));
+            this.error = this.label.FEC_Error_Loading_Template_List + ': ' + (error.body ? error.body.message : JSON.stringify(error));
             this.options = undefined;
             this.rawNotifications = [];
         }
@@ -36,6 +64,10 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
 
     get record() {
         return this._record;
+    }
+
+    get notiTypePlaceHolder() {
+        return this.label.FEC_Choose_Notification_Type + '...';
     }
 
     handleChange(event) {
@@ -112,8 +144,8 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             .then(() => {
                 this.dispatchEvent(
                     new ShowToastEvent({
-                        title: 'Thành công',
-                        message: 'Đã gửi email thành công tới khách hàng.',
+                        title: this.label.FEC_MSG_IPP_AddIpp_Default_Success,
+                        message: this.label.FEC_Email_Sent_Success,
                         variant: 'success',
                     })
                 );
@@ -125,7 +157,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
                 this.targetEmail = '';
             })
             .catch(error => {
-                this.error = 'Lỗi gửi mail: ' + (error.body ? error.body.message : JSON.stringify(error));
+                this.error =  this.label.FEC_Email_Send_Error + ': ' + (error.body ? error.body.message : JSON.stringify(error));
             });
     }
 }

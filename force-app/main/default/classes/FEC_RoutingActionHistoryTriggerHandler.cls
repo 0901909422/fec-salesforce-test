@@ -55,155 +55,121 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   }
 
   public static void sendNotificationEmails(List<FEC_Routing_Action_History__c> newList) {
-        System.debug('--- [sendNotificationEmails] START - Total records in newList: ' + newList.size());
+    System.debug('--- [sendNotificationEmails] START');
 
-        // 1. Thu thập danh sách Case Ids từ Trigger
-        Set<Id> caseIds = new Set<Id>();
-        for (FEC_Routing_Action_History__c history : newList) {
-            if (history.FEC_Case__c != null) {
-                caseIds.add(history.FEC_Case__c);
+    Set<Id> caseIds = new Set<Id>();
+    for (FEC_Routing_Action_History__c history : newList) {
+        if (history.FEC_Case__c != null) caseIds.add(history.FEC_Case__c);
+    }
+    if (caseIds.isEmpty()) return;
+
+    // 1. Lấy Sender Email từ Metadata
+    String senderEmail = '';
+    FEC_System_Config__mdt config = FEC_System_Config__mdt.getInstance(FEC_Notification.FEC_DEFAULT_CONFIG);
+    if (config != null && String.isNotBlank(config.FEC_Sender_Email__c)) {
+        senderEmail = config.FEC_Sender_Email__c;
+    }
+
+    // 2. Query thông tin Case
+    Map<Id, Case> caseMap = new Map<Id, Case>([
+        SELECT Id, FEC_Customer_Type__c, FEC_Product_Type__c, FEC_Category__c, 
+               FEC_SubCategory__c, FEC_SubCode__c, FEC_Current_Case_Stage__c,
+               FEC_Account_or_Contract__r.FEC_Customer_Type__c, 
+               FEC_Account_or_Contract__r.FEC_Email__c,
+               FEC_Interaction__r.FEC_Interaction_Email__c, 
+               FEC_Case_Email__c
+        FROM Case WHERE Id IN :caseIds
+    ]);
+
+    // 3. Query các Notification đang active và lấy thêm trường Template ID
+    List<FEC_Notification__c> activeNotifications = [
+        SELECT Id, FEC_Current_Status__c, FEC_Changed_Status__c, FEC_Target_Group__c, 
+               FEC_Customer_Type__c, FEC_Product_Type__c, FEC_Category__c, 
+               FEC_SubCategory__c, FEC_SubCode__c, FEC_Case_Stage__c,
+               FEC_Notification_Template__c // Trường lưu Id Template
+        FROM FEC_Notification__c
+        WHERE FEC_Notification_Status__c = true 
+          AND FEC_Notification_Channel__r.Name = :FEC_ConstantCommon.EMAIL
+          AND FEC_Target_Group__c = :FEC_ConstantCommon.TARGET_GROUP_CUSTOMER
+    ];
+
+    // Cấu trúc để lưu vết các bản ghi cần gửi mail và tập hợp ID Template
+    Map<FEC_Routing_Action_History__c, FEC_Notification__c> historyToNotifMap = new Map<FEC_Routing_Action_History__c, FEC_Notification__c>();
+    Set<Id> templateIds = new Set<Id>();
+
+    for (FEC_Routing_Action_History__c history : newList) {
+        if (history.FEC_Case__c == null || !caseMap.containsKey(history.FEC_Case__c)) continue;
+        Case relatedCase = caseMap.get(history.FEC_Case__c);
+
+        for (FEC_Notification__c notif : activeNotifications) {
+            // Logic so khớp điều kiện (Giữ nguyên logic cũ của bạn)
+            Boolean isMatch = (notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c) == true)
+                && (notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c) == true)
+                && (notif.FEC_Customer_Type__c == relatedCase.FEC_Customer_Type__c)
+                && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
+                && (notif.FEC_Category__c == relatedCase.FEC_Category__c)
+                && (notif.FEC_SubCategory__c == relatedCase.FEC_SubCategory__c)
+                && (notif.FEC_SubCode__c == relatedCase.FEC_SubCode__c);
+
+            if (isMatch) {
+                historyToNotifMap.put(history, notif);
+                if (notif.FEC_Notification_Template__c != null) {
+                    templateIds.add(notif.FEC_Notification_Template__c);
+                }
+                break; 
             }
         }
-        
-        System.debug('--- [sendNotificationEmails] Step 1: Extracted Case IDs size: ' + caseIds.size());
-        if (caseIds.isEmpty()) {
-            System.debug('--- [sendNotificationEmails] No Case IDs found. Exiting method.');
-            return;
-        }
+    }
 
-        // 2. Query thông tin Case và các object liên quan (Account_or_Contract__r, Interaction__r)
-        Map<Id, Case> caseMap = new Map<Id, Case>([
-            SELECT Id, FEC_Customer_Type__c, FEC_Product_Type__c, FEC_Category__c, 
-                   FEC_SubCategory__c, FEC_SubCode__c, FEC_Current_Case_Stage__c,
-                   FEC_Account_or_Contract__r.FEC_Customer_Type__c, 
-                   FEC_Account_or_Contract__r.FEC_Email__c,
-                   FEC_Interaction__r.FEC_Interaction_Email__c, 
-                   FEC_Case_Email__c
-            FROM Case
-            WHERE Id IN :caseIds
+    if (historyToNotifMap.isEmpty()) return;
+
+    // 4. Query toàn bộ nội dung Template 1 lần duy nhất (Bulk SOQL)
+    Map<Id, FEC_Template__c> templateMap = new Map<Id, FEC_Template__c>();
+    if (!templateIds.isEmpty()) {
+        templateMap = new Map<Id, FEC_Template__c>([
+            SELECT Id, FEC_Subject_Line__c, FEC_Body__c 
+            FROM FEC_Template__c 
+            WHERE Id IN :templateIds
         ]);
-        System.debug('--- [sendNotificationEmails] Step 2: Queried CaseMap size: ' + caseMap.size());
+    }
 
-        // 3. Query các cấu hình Notification thỏa mãn điều kiện tĩnh
-        List<FEC_Notification__c> activeNotifications = [
-            SELECT Id, FEC_Current_Status__c, FEC_Changed_Status__c, FEC_Target_Group__c, 
-                   FEC_Customer_Type__c, FEC_Product_Type__c, FEC_Category__c, 
-                   FEC_SubCategory__c, FEC_SubCode__c, FEC_Case_Stage__c
-            FROM FEC_Notification__c
-            WHERE FEC_Notification_Status__c = true 
-              AND FEC_Notification_Channel__r.Name = 'Email'
-              AND FEC_Target_Group__c = 'Customer'
-        ];
-        System.debug('--- [sendNotificationEmails] Step 3: Active Notifications found: ' + activeNotifications.size());
+    // 5. Chuẩn bị danh sách email để gửi hàng loạt
+    List<FEC_Notification.EmailInfo> listEmailsToProcess = new List<FEC_Notification.EmailInfo>();
 
-        List<Messaging.SingleEmailMessage> emailsToSend = new List<Messaging.SingleEmailMessage>();
-
-        // 4. Xử lý logic cho từng Routing Action History
-        for (FEC_Routing_Action_History__c history : newList) {
-            System.debug('--- [sendNotificationEmails] Step 4: Processing History Record: ' + history);
-
-            if (history.FEC_Case__c == null || !caseMap.containsKey(history.FEC_Case__c)) {
-                System.debug('--- [sendNotificationEmails] Skipped: No related Case found for History ID: ' + history.Id);
-                continue;
-            }
-            
-            Case relatedCase = caseMap.get(history.FEC_Case__c);
-            FEC_Notification__c matchedNotification = null;
-
-            // Tìm Notification ĐẦU TIÊN khớp với các điều kiện
-            for (FEC_Notification__c notif : activeNotifications) {
-                System.debug('--- [sendNotificationEmails] Step 4.1: Processing Notification: ' + notif);
-
-                Boolean isCurrentStatusMatch = String.isNotBlank(notif.FEC_Current_Status__c) 
-                    && String.isNotBlank(history.FEC_Current_Status__c)
-                    && notif.FEC_Current_Status__c.contains(history.FEC_Current_Status__c);
-                                  
-                    System.debug('--- [sendNotificationEmails] Step 4.2: isCurrentStatusMatch ' + isCurrentStatusMatch);
-                    
-                    
-                
-                // Lưu ý bug tiềm ẩn ở đây (so sánh FEC_Changed_Status__c với FEC_Current_Status__c của history)
-                Boolean isChangedStatusMatch = String.isNotBlank(notif.FEC_Changed_Status__c) 
-                    && String.isNotBlank(history.FEC_Changed_Status__c) 
-                    && notif.FEC_Changed_Status__c.contains(history.FEC_Changed_Status__c);   
-                    System.debug('--- [sendNotificationEmails] Step 4.2: isChangedStatusMatch: ' + isChangedStatusMatch);
-                    
-
-                Boolean isCaseMatch = 
-                       (notif.FEC_Customer_Type__c == relatedCase.FEC_Customer_Type__c)
-                    && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
-                    && (notif.FEC_Category__c == relatedCase.FEC_Category__c)
-                    && (notif.FEC_SubCategory__c == relatedCase.FEC_SubCategory__c)
-                    && (notif.FEC_SubCode__c == relatedCase.FEC_SubCode__c);
-
-    
-                if (isCurrentStatusMatch && isChangedStatusMatch && isCaseMatch) {
-                    matchedNotification = notif;
-                    System.debug('--- [sendNotificationEmails] MATCH FOUND! Notification ID: ' + notif.Id + ' for History ID: ' + history.Id);
-                    break; 
-                }
-            }
-
-            // 5. Nếu tìm thấy Notification, tiến hành xác định Email và tạo Email Message
-            if (matchedNotification != null) {
-                String targetEmailAddress = null;
-                String accCustomerType = relatedCase.FEC_Account_or_Contract__r?.FEC_Customer_Type__c;
-
-                System.debug('--- [sendNotificationEmails] Step 5: Account Customer Type: ' + accCustomerType);
-                System.debug('--- [sendNotificationEmails] Step 5: Case Customer Type: ' + relatedCase.FEC_Customer_Type__c);
-                if (accCustomerType == 'Existing') {
-                    targetEmailAddress = relatedCase.FEC_Account_or_Contract__r?.FEC_Email__c;
-                } 
-                else if (accCustomerType == 'Non-existing') {
-                    if (String.isNotBlank(relatedCase.FEC_Interaction__r?.FEC_Interaction_Email__c)) {
-                        targetEmailAddress = relatedCase.FEC_Interaction__r.FEC_Interaction_Email__c;
-                    } else {
-                        targetEmailAddress = relatedCase.FEC_Case_Email__c;
-                    }
-                }
-
-                System.debug('--- [sendNotificationEmails] Target Email Address resolved: ' + targetEmailAddress);
-                List<OrgWideEmailAddress> owaList = [
-                    SELECT Id, Address 
-                    FROM OrgWideEmailAddress 
-                    WHERE Address = 'minhtung2108@gmail.com'
-                    LIMIT 1
-                ];
-                
-                Id emailId = owaList.isEmpty() ? null : owaList[0].Id;
-
-                if (String.isNotBlank(targetEmailAddress)) {
-                    Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-                    mail.setToAddresses(new List<String>{ targetEmailAddress });
-                    if (emailId != null) {
-                        mail.setOrgWideEmailAddressId(emailId);
-                    }
-                    mail.setSubject('Thông báo cập nhật Case từ hệ thống'); 
-                    mail.setPlainTextBody('Nội dung email dựa theo logic notification: ' + matchedNotification.Id);
-                    
-                    emailsToSend.add(mail);
-                    System.debug('--- [sendNotificationEmails] Email added to list for: ' + targetEmailAddress);
-                } else {
-                    System.debug('--- [sendNotificationEmails] Skipped: Target Email Address is blank.');
-                }
-            } else {
-                System.debug('--- [sendNotificationEmails] No matching notification found for History ID: ' + history.Id);
-            }
+    for (FEC_Routing_Action_History__c history : historyToNotifMap.keySet()) {
+        FEC_Notification__c matchedNotification = historyToNotifMap.get(history);
+        Case relatedCase = caseMap.get(history.FEC_Case__c);
+        
+        // Xác định địa chỉ email nhận
+        String targetEmailAddress = null;
+        String accType = relatedCase.FEC_Account_or_Contract__r?.FEC_Customer_Type__c;
+        if (accType == FEC_ConstantCommon.CUSTOMER_HISTORY_EXISTING_CUSTOMER) {
+            targetEmailAddress = relatedCase.FEC_Account_or_Contract__r?.FEC_Email__c;
+        } else {
+            targetEmailAddress = String.isNotBlank(relatedCase.FEC_Interaction__r?.FEC_Interaction_Email__c) 
+                ? relatedCase.FEC_Interaction__r.FEC_Interaction_Email__c 
+                : relatedCase.FEC_Case_Email__c;
         }
 
-        // 6. Gửi toàn bộ email ra ngoài cùng 1 lúc (Bulk DML)
-        System.debug('--- [sendNotificationEmails] Step 6: Total emails to send: ' + emailsToSend.size());
-        if (!emailsToSend.isEmpty()) {
-            try {
-                List<Messaging.SendEmailResult> results = Messaging.sendEmail(emailsToSend);
-                // Bạn có thể log thêm kết quả chi tiết của từng email nếu cần
-                System.debug('--- [sendNotificationEmails] Emails sent successfully.');
-            } catch (Exception e) {
-                System.debug('--- [sendNotificationEmails] ERROR sending email: ' + e.getMessage() + ' at line: ' + e.getLineNumber());
-            }
-        }   
-        System.debug('--- [sendNotificationEmails] END');
-}
+        // Lấy Template tương ứng từ Map
+        FEC_Template__c template = templateMap.get(matchedNotification.FEC_Notification_Template__c);
+
+        if (String.isNotBlank(targetEmailAddress) && template != null) {
+            listEmailsToProcess.add(new FEC_Notification.EmailInfo(
+                relatedCase.Id,
+                targetEmailAddress,
+                String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : 'Notification',
+                template.FEC_Body__c
+            ));
+        }
+    }
+
+    // 6. Gửi hàng loạt qua hàm Bulk của FEC_Notification
+    if (!listEmailsToProcess.isEmpty()) {
+        FEC_Notification.executeSendEmailsBulk(listEmailsToProcess, senderEmail);
+        System.debug('--- [sendNotificationEmails] Bulk process completed for ' + listEmailsToProcess.size() + ' records.');
+    }
+  }
 
   private void handleUpdateCaseTeamsOnInsert(
     List<FEC_Routing_Action_History__c> newRecords
