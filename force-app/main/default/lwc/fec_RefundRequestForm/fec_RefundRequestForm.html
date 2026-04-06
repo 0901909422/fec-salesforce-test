@@ -6,7 +6,6 @@
         label={customLabel.refundAmount}
         value={manualRefundAmountDisplay}
         data-field="refundTotalDisplay"
-        disabled={formLocked}
         onchange={handleRefundAmountInput}
       >
       </lightning-input>
@@ -15,7 +14,6 @@
       <lightning-button
         variant="brand"
         label={addItemLabel}
-        disabled={formLocked}
         onclick={handleAddItem}
       >
       </lightning-button>
@@ -37,7 +35,6 @@
                   data-field-type="date"
                   max={maxDateIso}
                   required
-                  disabled={formLocked}
                   onchange={handleRowDateChange}
                 >
                 </lightning-input>
@@ -50,7 +47,6 @@
                   data-row-id={row.rowId}
                   data-input="receiptAmount"
                   required
-                  disabled={formLocked}
                   onchange={handleRowAmountInput}
                 >
                 </lightning-input>
@@ -62,7 +58,6 @@
                   value={row.transactionNo}
                   data-row-id={row.rowId}
                   required
-                  disabled={formLocked}
                   onchange={handleRowTransactionInput}
                 >
                 </lightning-input>
@@ -75,7 +70,6 @@
                   data-row-id={row.rowId}
                   data-input="paymentChannel"
                   required
-                  disabled={formLocked}
                   onchange={handleRowPaymentChannelInput}
                 >
                 </lightning-input>
@@ -87,7 +81,6 @@
                   alternative-text={customLabel.removeRow}
                   title={customLabel.removeRow}
                   data-row-id={row.rowId}
-                  disabled={formLocked}
                   onclick={handleDeleteRow}
                 >
                 </lightning-button-icon>
@@ -103,7 +96,6 @@
         label={customLabel.beneficiaryName}
         value={beneficiaryName}
         required
-        disabled={formLocked}
         onchange={handleBeneficiaryInput}
       >
       </lightning-input>
@@ -114,7 +106,6 @@
         label={customLabel.beneficiaryAccount}
         value={beneficiaryAccount}
         required
-        disabled={formLocked}
         onchange={handleBeneficiaryAccountInput}
       >
       </lightning-input>
@@ -126,7 +117,6 @@
         value={bankComboValue}
         options={bankOptions}
         required
-        disabled={formLocked}
         onchange={handleBankComboChange}
       >
       </lightning-combobox>
@@ -137,7 +127,6 @@
         value={bankBranch}
         options={bankBranchOptions}
         required
-        disabled={formLocked}
         onchange={handleBankBranchInput}
       >
       </lightning-combobox>
@@ -149,7 +138,6 @@
         value={provinceComboValue}
         options={provinceOptions}
         required
-        disabled={formLocked}
         onchange={handleProvinceChange}
       >
       </lightning-combobox>

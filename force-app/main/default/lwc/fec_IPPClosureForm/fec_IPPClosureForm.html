@@ -24,7 +24,6 @@
           data={ippList}
           columns={ippColumns}
           max-row-selection="1"
-          hide-checkbox-column={formLocked}
           onrowselection={handleRowSelection}
         >
         </lightning-datatable>
@@ -42,7 +41,6 @@
             label={labelComplete}
             onclick={handleCompleteCase}
             variant="brand"
-            disabled={formLocked}
           ></lightning-button>
         </div>
       </template>

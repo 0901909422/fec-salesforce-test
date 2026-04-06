@@ -41,7 +41,6 @@ export default class Fec_RefundRequestForm extends LightningElement {
     @track bankOptions = [];
     @track provinceOptions = [];
     @track bankBranchOptions = [];
-    @track formLocked = false;
 
     _wiredDefaults;
 
@@ -329,7 +328,6 @@ export default class Fec_RefundRequestForm extends LightningElement {
             if (!res || !res.success) {
                 return Promise.reject(new Error((res && res.errorMessage) || "Save failed"));
             }
-            this.formLocked = true;
             if (this._wiredDefaults) {
                 return refreshApex(this._wiredDefaults).then(() => this.hydrateReceiptLinesFromServer());
             }

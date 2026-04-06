@@ -107,7 +107,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
 
     lastValidationMessages = [];
     showValidateBanner = false;
-    @track formLocked = false;
 
     lastTempAddressParts;
     tempAddressModalIsEdit = false;
@@ -185,9 +184,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     toggleDeliveryDrop(event) {
-        if (this.formLocked) {
-            return;
-        }
         if (event) {
             event.stopPropagation();
         }
@@ -291,9 +287,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     handleToggleAddressSort() {
-        if (this.formLocked) {
-            return;
-        }
         this.addressSortAsc = !this.addressSortAsc;
     }
 
@@ -411,19 +404,19 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     get lockAddressCb() {
-        return this.disableAddressCheckbox || this.formLocked;
+        return this.disableAddressCheckbox;
     }
 
     get lockOfficeCb() {
-        return this.disableOfficeCheckbox || this.formLocked;
+        return this.disableOfficeCheckbox;
     }
 
     get lockAddTempEmailBtn() {
-        return this.disableAddTempEmail || this.formLocked;
+        return this.disableAddTempEmail;
     }
 
     get lockAddTempAddrBtn() {
-        return this.disableAddTempAddress || this.formLocked;
+        return this.disableAddTempAddress;
     }
 
     get validationMessageItems() {
@@ -867,7 +860,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
                 this.lastValidationMessages = r.messages || [];
                 this.showValidateBanner = true;
             } else {
-                this.formLocked = true;
                 this.showToast(this.customLabel.successTitle, this.customLabel.toastSaveSuccess, 'success');
             }
             return r;

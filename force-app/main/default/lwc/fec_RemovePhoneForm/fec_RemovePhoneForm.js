@@ -22,7 +22,6 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     @track resultMessage = STR_EMPTY;
     @track resultClass = RESULT_ERROR;
     @track isLoading = false;
-    @track formLocked = false;
 
     lastCheckedPhone = STR_EMPTY;
 
@@ -49,7 +48,6 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             phoneInput.setCustomValidity('');
         }
         if (this.phone !== this.lastCheckedPhone) {
-            this.formLocked = false;
             this.rows = [];
             this.selectedRowIds = [];
         }
@@ -57,7 +55,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     get disableCheckButton() {
-        return this.isLoading || this.formLocked || !this.phone;
+        return this.isLoading || !this.phone;
     }
 
     get showTable() {
@@ -77,7 +75,6 @@ export default class Fec_RemovePhoneForm extends LightningElement {
                 phoneInput.reportValidity();
             }
             this.resultMessage = STR_EMPTY;
-            this.formLocked = false;
             this.rows = [];
             this.selectedRowIds = [];
             return;
@@ -95,16 +92,13 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             .then((res) => {
                 if (res && res.success) {
                     this.rows = res.rows || [];
-                    this.formLocked = true;
                     this.lastCheckedPhone = this.phone;
                     return;
                 }
-                this.formLocked = false;
                 this.resultMessage = (res && res.errorMessage) ? res.errorMessage : FEC_MSG_Remove_Phone_Service_Failed;
                 this.resultClass = RESULT_ERROR;
             })
             .catch(() => {
-                this.formLocked = false;
                 this.resultMessage = FEC_MSG_Remove_Phone_Service_Failed;
                 this.resultClass = RESULT_ERROR;
             })

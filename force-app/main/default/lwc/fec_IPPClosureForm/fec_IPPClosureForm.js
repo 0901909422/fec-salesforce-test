@@ -43,7 +43,6 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
     @track isLoading = false;
     @track completeLoading = false;
     @track showNoti11 = false;
-    @track formLocked = false;
 
     state = FORM_STATE_LOADING;
 
@@ -142,7 +141,6 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
         saveSelectedIPPToCase({ caseId: this.recordId, ippId: this.selectedIppId })
             .then((success) => {
                 if (success) {
-                    this.formLocked = true;
                     this.showToast(FEC_Success_Title, FEC_Toast_Save_Success, 'success');
                     this.navigateToCase();
                 } else {
