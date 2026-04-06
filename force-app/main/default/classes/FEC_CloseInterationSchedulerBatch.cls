@@ -93,14 +93,14 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
     // }
     
     Set<String> internalSendToSet = new Set<String>{
-      'supportcsm@fecredit.com.vn',
-      'cssupport@fecredit.com.vn',
-      'customercare@fecredit.com.vn',
-      'e_com@fecredit.com.vn',
-      'F2F@fecredit.com.vn',
-      'cs_d2c@fecredit.com.vn',
-      'CS_OM@fecredit.com.vn',
-      'CS_QC_TEAM@fecredit.com.vn'
+      FEC_ConstantCommon.EMAIL_SUPPORT_CSM,
+      FEC_ConstantCommon.EMAIL_CS_SUPPORT,
+      FEC_ConstantCommon.EMAIL_CUSTOMER_CARE,
+      FEC_ConstantCommon.EMAIL_E_COM,
+      FEC_ConstantCommon.EMAIL_F2F,
+      FEC_ConstantCommon.EMAIL_CS_D2C,
+      FEC_ConstantCommon.EMAIL_CS_OM,
+      FEC_ConstantCommon.EMAIL_CS_QC_TEAM
     };
     
     
