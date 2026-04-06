@@ -71,6 +71,8 @@
 		<members>FEC_EmailMessageTriggerHandler</members>
 		<members>FEC_ServiceCaseEmailService</members>
         <members>FEC_InteractionRoutingController</members>
+        <members>FEC_GetCustomerList</members>
+        <members>FEC_GetCardBasicInfo</members>
         <name>ApexClass</name>
     </types>
     <types>
