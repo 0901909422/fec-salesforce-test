@@ -363,4 +363,15 @@ public with sharing class FEC_ConstantCommon {
     // Auto Notification - Channel names (FEC_Notification_Channel__c.Name)
     public static final String NOTIFICATION_CHANNEL_EMAIL = 'Email';
     public static final String NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
+
+
+    //internalSendToSet
+    public static final String EMAIL_SUPPORT_CSM = 'supportcsm@fecredit.com.vn';
+    public static final String EMAIL_CS_SUPPORT = 'cssupport@fecredit.com.vn';
+    public static final String EMAIL_CUSTOMER_CARE = 'customercare@fecredit.com.vn';
+    public static final String EMAIL_E_COM = 'e_com@fecredit.com.vn';
+    public static final String EMAIL_F2F = 'F2F@fecredit.com.vn';
+    public static final String EMAIL_CS_D2C = 'cs_d2c@fecredit.com.vn';
+    public static final String EMAIL_CS_OM = 'CS_OM@fecredit.com.vn';
+    public static final String EMAIL_CS_QC_TEAM = 'CS_QC_TEAM@fecredit.com.vn';
 }
