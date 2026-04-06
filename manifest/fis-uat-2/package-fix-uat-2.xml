@@ -335,6 +335,7 @@
         <members>FEC_MSG_ContractClosure_Phone_Invalid</members>
         <members>FEC_MSG_ContractClosure_Address_Required</members>
 		<members>FEC_Cannot_Delete_Enhanced_Letterhead</members>
+		<members>FEC_LBL_Select_Payment_Method</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
