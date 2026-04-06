@@ -1267,6 +1267,14 @@ export default class Fec_CaseBussiness extends LightningElement {
   //   return this._lastValidationError || null;
   // }
 
+  _saveIncorrectPaymentAdjustmentsIfApplicable() {
+    const el = this.template.querySelector("c-fec_-incorrect-payment-form");
+    if (el && typeof el.saveAdjustmentsIfApplicable === "function") {
+      return el.saveAdjustmentsIfApplicable();
+    }
+    return Promise.resolve();
+  }
+
   /**
    * Chỉ lưu dữ liệu form (Nature of Case, Account Info, Case Info, Process Action, Routing Action)
    * mà KHÔNG gọi run() - không chuyển sang Stage tiếp theo.
@@ -1284,7 +1292,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     });
 
     const total = formToSubmit.length;
-    if (total === 0) return Promise.resolve();
+    const afterForms = () => this._saveIncorrectPaymentAdjustmentsIfApplicable();
+    if (total === 0) {
+      return afterForms();
+    }
 
     return new Promise((resolve, reject) => {
       this._saveOnlyResolve = resolve;
@@ -1296,7 +1307,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
-    });
+    }).then(() => afterForms());
   }
 
   /** false = bị chặn (đã show toast), true = submit thành công. */
@@ -1319,6 +1330,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     await this._submitFormsPromise();
+    await this._saveIncorrectPaymentAdjustmentsIfApplicable();
     if (routeToEle) {
       let method = routeToEle.value;
       let actionId;

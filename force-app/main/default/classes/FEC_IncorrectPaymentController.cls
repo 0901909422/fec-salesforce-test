@@ -17,11 +17,21 @@ public with sharing class FEC_IncorrectPaymentController {
         @AuraEnabled public String subCode;
         @AuraEnabled public String incorrectContractNumber;
         @AuraEnabled public String paymentMethod;
+        @AuraEnabled public String billDate;
+        @AuraEnabled public Decimal billAmount;
+        @AuraEnabled public String correctContractNumber;
+        @AuraEnabled public Decimal adjustedAmount;
     }
 
     public class AdjustmentDTO {
-        @AuraEnabled public String correctContract;
-        @AuraEnabled public Decimal adjustedAmount;
+        @AuraEnabled public String correctContract { get; set; }
+        @AuraEnabled public Decimal adjustedAmount { get; set; }
+        
+        // Constructor for JSON deserialization
+        public AdjustmentDTO() {
+            this.correctContract = null;
+            this.adjustedAmount = null;
+        }
     }
 
     @AuraEnabled
@@ -67,15 +77,20 @@ public with sharing class FEC_IncorrectPaymentController {
         return result;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static SubCodeConfigDTO getSubCodeConfig(Id caseId) {
         SubCodeConfigDTO dto = new SubCodeConfigDTO();
         dto.subCode = FEC_ConstantCommon.STR_EMPTY;
         dto.incorrectContractNumber = FEC_ConstantCommon.STR_EMPTY;
         dto.paymentMethod = FEC_ConstantCommon.STR_EMPTY;
+        dto.billDate = null;
+        dto.billAmount = null;
+        dto.correctContractNumber = FEC_ConstantCommon.STR_EMPTY;
+        dto.adjustedAmount = null;
         if (caseId == null) return dto;
         List<Case> cases = [
-            SELECT Id, FEC_SubCode__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c
+            SELECT Id, FEC_SubCode__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c,
+                FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -83,6 +98,10 @@ public with sharing class FEC_IncorrectPaymentController {
         if (cases.isEmpty()) return dto;
         dto.incorrectContractNumber = cases[0].FEC_Incorrect_Contract_Number__c != null ? cases[0].FEC_Incorrect_Contract_Number__c : FEC_ConstantCommon.STR_EMPTY;
         dto.paymentMethod = cases[0].FEC_Payment_Method__c != null ? cases[0].FEC_Payment_Method__c : FEC_ConstantCommon.STR_EMPTY;
+        dto.billDate = cases[0].FEC_Bill_Date__c != null ? String.valueOf(cases[0].FEC_Bill_Date__c) : null;
+        dto.billAmount = cases[0].FEC_Bill_Amount__c;
+        dto.correctContractNumber = cases[0].FEC_Correct_Contract_Number__c != null ? cases[0].FEC_Correct_Contract_Number__c : FEC_ConstantCommon.STR_EMPTY;
+        dto.adjustedAmount = cases[0].FEC_Adjusted_Amount__c;
         if (cases[0].FEC_SubCode__c == null) return dto;
         Id subCodeId = cases[0].FEC_SubCode__c;
         List<FEC_Nature_of_Case__c> nocs = [
@@ -97,43 +116,73 @@ public with sharing class FEC_IncorrectPaymentController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<FEC_CommonUltils.PicklistOption> getIncorrectContractOptions(Id caseId) {
+    public static List<FEC_CommonUltils.PicklistOption> getPaymentMethodOptions() {
         List<FEC_CommonUltils.PicklistOption> result = new List<FEC_CommonUltils.PicklistOption>();
-        if (caseId == null) {
-            return result;
+        
+        Schema.DescribeFieldResult fieldResult = Case.FEC_Payment_Method__c.getDescribe();
+        List<Schema.PicklistEntry> picklistEntries = fieldResult.getPicklistValues();
+        
+        for (Schema.PicklistEntry entry : picklistEntries) {
+            if (entry.isActive()) {
+                result.add(new FEC_CommonUltils.PicklistOption(entry.getLabel(), entry.getValue(), null));
+            }
         }
-        if (!Schema.sObjectType.Case.isAccessible()) {
-            return result;
-        }
-        List<Case> cases = [
-            SELECT FEC_Contract_Number__c, FEC_Incorrect_Contract_Number__c,
-                FEC_Account_or_Contract__r.FEC_Contract_Number__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-        if (cases.isEmpty()) {
-            return result;
-        }
-        Case c = cases[0];
-        Set<String> seen = new Set<String>();
-        addIncorrectContractOption(result, seen, c.FEC_Contract_Number__c);
-        addIncorrectContractOption(result, seen, c.FEC_Incorrect_Contract_Number__c);
-        if (c.FEC_Account_or_Contract__r != null) {
-            addIncorrectContractOption(result, seen, c.FEC_Account_or_Contract__r.FEC_Contract_Number__c);
-        }
+        
         return result;
     }
 
-    private static void addIncorrectContractOption(List<FEC_CommonUltils.PicklistOption> opts, Set<String> seen, String contractNum) {
+    @AuraEnabled(cacheable=true)
+    public static List<FEC_CommonUltils.PicklistOption> getIncorrectContractOptions(Id caseId) {
+        List<FEC_CommonUltils.PicklistOption> result = new List<FEC_CommonUltils.PicklistOption>();
+        
+        // Get picklist values from field metadata
+        Schema.DescribeFieldResult fieldResult = Case.FEC_Correct_Contract_Number__c.getDescribe();
+        List<Schema.PicklistEntry> picklistEntries = fieldResult.getPicklistValues();
+        
+        for (Schema.PicklistEntry entry : picklistEntries) {
+            if (entry.isActive()) {
+                result.add(new FEC_CommonUltils.PicklistOption(entry.getLabel(), entry.getValue(), null));
+            }
+        }
+        
+        // Also add contract numbers from Case if available
+        if (caseId != null && Schema.sObjectType.Case.isAccessible()) {
+            List<Case> cases = [
+                SELECT FEC_Contract_Number__c, FEC_Incorrect_Contract_Number__c,
+                    FEC_Account_or_Contract__r.FEC_Contract_Number__c
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+            
+            if (!cases.isEmpty()) {
+                Case c = cases[0];
+                Set<String> existingValues = new Set<String>();
+                for (FEC_CommonUltils.PicklistOption opt : result) {
+                    existingValues.add(opt.value);
+                }
+                
+                // Add contract numbers from Case if not already in picklist
+                addContractIfNotExists(result, existingValues, c.FEC_Contract_Number__c);
+                addContractIfNotExists(result, existingValues, c.FEC_Incorrect_Contract_Number__c);
+                if (c.FEC_Account_or_Contract__r != null) {
+                    addContractIfNotExists(result, existingValues, c.FEC_Account_or_Contract__r.FEC_Contract_Number__c);
+                }
+            }
+        }
+        
+        return result;
+    }
+    
+    private static void addContractIfNotExists(List<FEC_CommonUltils.PicklistOption> opts, Set<String> existingValues, String contractNum) {
         if (String.isBlank(contractNum)) {
             return;
         }
         String trimmed = contractNum.trim();
-        if (seen.contains(trimmed)) {
+        if (existingValues.contains(trimmed)) {
             return;
         }
-        seen.add(trimmed);
+        existingValues.add(trimmed);
         opts.add(new FEC_CommonUltils.PicklistOption(trimmed, trimmed, null));
     }
 
@@ -156,26 +205,27 @@ public with sharing class FEC_IncorrectPaymentController {
                 String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Adjustments'})
             );
         }
-        AdjustmentDTO first = null;
+        
+        List<AdjustmentDTO> validAdjs = new List<AdjustmentDTO>();
         for (AdjustmentDTO adj : adjustments) {
-            if (adj != null && String.isNotBlank(adj.correctContract) && adj.adjustedAmount != null && adj.adjustedAmount != 0) {
-                first = adj;
-                break;
+            // Check if row has both Correct Contract and Adjusted Amount filled
+            Boolean hasCorrectContract = adj != null && String.isNotBlank(adj.correctContract);
+            Boolean hasAdjustedAmount = adj != null && adj.adjustedAmount != null;
+            Boolean rowOk = hasCorrectContract && hasAdjustedAmount;
+            
+            if (rowOk) {
+                validAdjs.add(adj);
             }
         }
-        if (first == null) {
+        
+        if (validAdjs.isEmpty()) {
             throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row);
         }
+        AdjustmentDTO first = validAdjs[0];
         if (String.isBlank(paymentMethod)) {
             throw new AuraHandledException(
                 String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Payment Method'})
             );
-        }
-        List<AdjustmentDTO> validAdjs = new List<AdjustmentDTO>();
-        for (AdjustmentDTO adj : adjustments) {
-            if (adj != null && String.isNotBlank(adj.correctContract) && adj.adjustedAmount != null && adj.adjustedAmount != 0) {
-                validAdjs.add(adj);
-            }
         }
         if (billAmount != null && billAmount != 0 && !validAdjs.isEmpty()) {
             Decimal sumAdjusted = 0;
@@ -198,6 +248,8 @@ public with sharing class FEC_IncorrectPaymentController {
         if (!Schema.sObjectType.Case.isUpdateable()) {
             throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Update_Case_Access);
         }
+        
+        // Update Case fields
         Case c = cases[0];
         if (String.isNotBlank(billDate)) {
             try {
@@ -218,6 +270,7 @@ public with sharing class FEC_IncorrectPaymentController {
         if (toUpdate.isEmpty()) {
             throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Update_Case_Fields_Access);
         }
+        
         try {
             update toUpdate;
         } catch (DmlException e) {

@@ -25,7 +25,7 @@
         <template if:true={section.resolvedComponentlst}>
           <template for:each={section.resolvedComponentlst} for:item="dynCmp">
             <div key={dynCmp.key} class="slds-m-top_medium">
-              <lwc:component lwc:is={dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode}></lwc:component>
+              <lwc:component lwc:is={dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} is-edit={isEdit}></lwc:component>
             </div>
           </template>
         </template>

@@ -8,6 +8,7 @@
           placeholder={customLabel.selectContractPlaceholder}
           value={incorrectContract}
           option={formattedIncorrectContractOption}
+          disabled={isReadOnly}
           onremove={handleRemoveIncorrectContract}
           onchange={handleChangeIncorrectContract}
         ></c-fec_-combo-box>
@@ -20,8 +21,10 @@
           name="paymentMethod"
           label={customLabel.paymentMethod}
           value={paymentMethod}
+          placeholder={customLabel.selectPaymentMethodPlaceholder}
           options={paymentMethodOptions}
           onchange={handlePaymentMethodChange}
+          disabled={isReadOnly}
           required
         >
         </lightning-combobox>
@@ -46,7 +49,7 @@
                 key-field="id"
                 data={paymentHistory}
                 columns={paymentHistoryColumns}
-                max-row-selection="1"
+                max-row-selection={datatableMaxRowSelection}
                 selected-rows={selectedRowIds}
                 onrowselection={handlePaymentRowSelect}
               >
@@ -73,6 +76,7 @@
             placeholder={customLabel.datePlaceholder}
             label={customLabel.billDate}
             value={manualBillDate}
+            disabled={isReadOnly}
             onchange={handleManualBillDateChange}
           >
           </lightning-input>
@@ -83,6 +87,7 @@
             type="number"
             label={customLabel.billAmount}
             value={manualBillAmount}
+            disabled={isReadOnly}
             onchange={handleManualBillAmountChange}
             formatter="decimal"
             required
@@ -144,21 +149,25 @@
                 class="receipt-row slds-grid_vertical-align-end"
               >
                 <lightning-layout-item size="6" padding="around-small">
-                  <lightning-input
-                    data-id={row.id}
+                  <lightning-combobox
+                    data-id-value={row.id}
                     label={row.correctContractLabel}
                     value={row.correctContract}
+                    options={correctContractOptions}
+                    disabled={isReadOnly}
                     onchange={handleAdjustmentCorrectContractChange}
+                    placeholder={customLabel.selectContractPlaceholder}
                     required
                   >
-                  </lightning-input>
+                  </lightning-combobox>
                 </lightning-layout-item>
                 <lightning-layout-item size="4" padding="around-small">
                   <lightning-input
-                    data-id={row.id}
+                    data-id-value={row.id}
                     type="number"
                     label={row.adjustedAmountLabel}
                     value={row.adjustedAmount}
+                    disabled={isReadOnly}
                     onchange={handleAdjustmentAmountChange}
                     formatter="decimal"
                     required
@@ -170,16 +179,18 @@
                   padding="around-small"
                   class="btn-delete"
                 >
-                  <lightning-button-icon
-                    icon-name="utility:delete"
-                    variant="border"
-                    alternative-text={customLabel.removeRow}
-                    aria-label={customLabel.removeRow}
-                    title={customLabel.removeRow}
-                    data-id={row.id}
-                    onclick={handleRemoveAdjustment}
-                  >
-                  </lightning-button-icon>
+                  <template if:false={isReadOnly}>
+                    <lightning-button-icon
+                      icon-name="utility:delete"
+                      variant="border"
+                      alternative-text={customLabel.removeRow}
+                      aria-label={customLabel.removeRow}
+                      title={customLabel.removeRow}
+                      data-id={row.id}
+                      onclick={handleRemoveAdjustment}
+                    >
+                    </lightning-button-icon>
+                  </template>
                 </lightning-layout-item>
               </lightning-layout>
             </template>
@@ -187,18 +198,33 @@
         </lightning-layout-item>
       </template>
       <lightning-layout-item size="12" padding="around-small">
-        <lightning-button
-          label={customLabel.addItem}
-          icon-name="utility:add"
-          variant="neutral"
-          onclick={handleAddAdjustment}
-        >
-        </lightning-button>
+        <template if:false={isReadOnly}>
+          <lightning-button
+            label={customLabel.addItem}
+            icon-name="utility:add"
+            variant="neutral"
+            onclick={handleAddAdjustment}
+          >
+          </lightning-button>
+        </template>
       </lightning-layout-item>
       <lightning-layout-item size="12" padding="around-small">
         <p class="slds-text-body_small slds-text-color_error">
           {customLabel.adjustedAmountMustEqualPayment}
         </p>
+      </lightning-layout-item>
+      <lightning-layout-item size="12" padding="around-small">
+        <template if:true={showTestSaveAdjustmentButton}>
+          <template if:false={isReadOnly}>
+            <lightning-button
+              label="Test lưu (saveAdjustment)"
+              variant="brand"
+              onclick={handleTestSaveAdjustment}
+              disabled={isLoading}
+            >
+            </lightning-button>
+          </template>
+        </template>
       </lightning-layout-item>
     </template>
   </lightning-layout>
