@@ -11989,4 +11989,11 @@
         <shortDescription>FEC_MSG_ContractClosure_Required_Fields</shortDescription>
         <value>Vui lòng nhập đầy đủ các trường bắt buộc.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Cannot_Delete_Enhanced_Letterhead</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Cannot_Delete_Enhanced_Letterhead</shortDescription>
+        <value>This Enhanced Letterhead cannot be deleted because it contains active templates.</value>
+    </labels>
 </CustomLabels>
