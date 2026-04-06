@@ -11276,7 +11276,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_LBL_IPP_Retail_UI</shortDescription>
-        <value>Giao dịch chưa sao kê##Check IPP Details##Convert IPP##IPP Conversion##Bạn sắp chuyển đổi giao dịch này. Bạn có chắc chắn muốn tiếp tục không?##Thành công##Khác##Có##Không##Khách hàng</value>
+        <value>Unbilled Transaction##Check IPP Details##Convert IPP##IPP Conversion##Bạn sắp chuyển đổi giao dịch này. Bạn có chắc chắn muốn tiếp tục không?##Thành công##Khác##Có##Không##Khách hàng</value>
     </labels>
     <labels>
         <fullName>FEC_GET_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_REQUIRE_MSG</fullName>
