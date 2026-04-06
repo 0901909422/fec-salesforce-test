@@ -207,28 +207,36 @@ public with sharing class ArchiveCaseController {
                                             Map<String, Object> mapOfFieldAndValue, 
                                             Case caseIns, Map<String, UserRecordAccess> mapIdCanAccess) {
  
+        String devFieldTmp = '';
+        String strMapping = label.TECH_ARCHIEVE_MAPPING_DEV_FIELD;
+        Map<String, String> jsonDevField;
+        if (String.isNotBlank(strMapping)) jsonDevField = (Map<String, String>) JSON.deserialize(strMapping, Map<String, String>.class);
+
         for (String fieldName : fieldMap.keySet()) {
-            Schema.DescribeFieldResult fieldDetail = fieldMap.get(fieldName).getDescribe();
-            if (!fieldDetail.isCreateable()) continue;
-
-            Schema.DisplayType fieldType = fieldDetail.getType();
-
             Object rawValue = mapOfFieldAndValue.get(fieldName.toLowerCase());
             if (rawValue != null) {
+                devFieldTmp = mappingDevField(fieldName, jsonDevField);
+
+                Schema.DescribeFieldResult fieldDetail = fieldMap.get(devFieldTmp).getDescribe();
+                if (!fieldDetail.isCreateable()) continue;
+
+                Schema.DisplayType fieldType = fieldDetail.getType();
+
                 if (fieldType == Schema.DisplayType.DOUBLE || fieldType == Schema.DisplayType.CURRENCY) {
-                    caseIns.put(fieldName, Decimal.valueOf(String.valueOf(rawValue)));
+                    caseIns.put(devFieldTmp, Decimal.valueOf(String.valueOf(rawValue)));
                 } 
                 else if (fieldType == Schema.DisplayType.INTEGER) {
-                    caseIns.put(fieldName, Integer.valueOf(String.valueOf(rawValue)));
+                    caseIns.put(devFieldTmp, Integer.valueOf(String.valueOf(rawValue)));
                 } 
                 else if (fieldType == Schema.DisplayType.DATE) {
-                    caseIns.put(fieldName, Date.valueOf(String.valueOf(rawValue)));
+                    caseIns.put(devFieldTmp, Date.valueOf(String.valueOf(rawValue)));
                 } 
                 else if (fieldType == Schema.DisplayType.DATETIME) {
-                    caseIns.put(fieldName, DateTime.valueOf(String.valueOf(rawValue)));
+                    String dtStr = String.valueOf(rawValue).replace('T', ' ');
+                    caseIns.put(devFieldTmp, Datetime.valueOfGMT(dtStr));
                 } 
                 else if (fieldType == Schema.DisplayType.BOOLEAN) {
-                    caseIns.put(fieldName, Boolean.valueOf(String.valueOf(rawValue)));
+                    caseIns.put(devFieldTmp, Boolean.valueOf(String.valueOf(rawValue)));
                 } 
                 else if (fieldType == Schema.DisplayType.REFERENCE) {
                     // set default value for Lookup fields
@@ -237,14 +245,14 @@ public with sharing class ArchiveCaseController {
                     if (mapIdCanAccess.containsKey(idStr) 
                         && !mapIdCanAccess.get(idStr).HasReadAccess) {
 
-                        if (fieldName.equalsIgnoreCase('OwnerId')) caseIns.OwnerId = UserInfo.getUserId();
-                        else caseIns.put(fieldName, null);
+                        if (devFieldTmp.equalsIgnoreCase('OwnerId')) caseIns.OwnerId = UserInfo.getUserId();
+                        else caseIns.put(devFieldTmp, null);
                     } else {
-                        caseIns.put(fieldName, rawValue);
+                        caseIns.put(devFieldTmp, rawValue);
                     }
                 }
                 else {
-                    caseIns.put(fieldName, rawValue);
+                    caseIns.put(devFieldTmp, rawValue);
                 }
             }
         }
@@ -283,5 +291,25 @@ public with sharing class ArchiveCaseController {
         }
 
         return caseId;
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Mapping Developer Field Name
+    Returns:       
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2025/04/01      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static String mappingDevField(String fieldName, Map<String, String> jsonDevField) {
+
+        String fieldNameTmp = '';
+        if (jsonDevField != null) {
+            fieldNameTmp = jsonDevField.get(fieldName);
+            if (fieldNameTmp != null) fieldName = fieldNameTmp;
+        }
+
+        return fieldName;
     }
 }

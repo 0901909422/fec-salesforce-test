@@ -3,6 +3,10 @@
 
     <types>
         <members>Case.ArchiveExternalId__c</members>
+        <members>Case.ArchieveCreatedDate__c</members>
+        <members>Case.ArchieveLastModifiedDate__c</members>
+        <members>Case.FEC_Case_Created_On__c</members>
+        <members>Case.FEC_Last_Updated_On__c</members>
         <name>CustomField</name>
     </types>
 
@@ -27,6 +31,7 @@
         <members>TECH_CASE_RECORDTYPE_NAME_SEARCH_INTERACTION</members>
         <members>TECH_CASE_RECORDTYPE_NAME_INTERNAL_CASE</members>
         <members>TECH_API_GET_ARCHIVE_DETAIL_CASE</members>
+        <members>TECH_ARCHIEVE_MAPPING_DEV_FIELD</members>
         <name>CustomLabel</name>
     </types>
 

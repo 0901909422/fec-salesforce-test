@@ -3,13 +3,13 @@
     <fullName>FEC_Case_Created_On__c</fullName>
     <description>Hiển thị ngày giờ tạo Case
 Trường tạo mới để hiển thị trên Case details và interaction details do trường standard không hiển thị được đúng  yêu cầu</description>
-    <formula>IF(
-    OR(
+    <formula>IF(NOT(ISBLANK(ArchieveCreatedDate__c)), ArchieveCreatedDate__c,
+IF( OR(
         RecordType.DeveloperName = &quot;Customer_Case&quot;,
         RecordType.DeveloperName = &quot;Internal_Case&quot;
     ),
     CreatedDate,
-    NULL
+    NULL)
 )</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Case Created On</label>

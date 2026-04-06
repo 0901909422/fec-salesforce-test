@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Last_Updated_On__c</fullName>
     <description>Trường tạo mới để hiển thị trên Case details và interaction details do trường standard không hiển thị được đúng  yêu cầu</description>
-    <formula>LastModifiedDate</formula>
+    <formula>IF(NOT(ISBLANK(ArchieveLastModifiedDate__c)), ArchieveLastModifiedDate__c, LastModifiedDate)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Last Updated On</label>
     <required>false</required>

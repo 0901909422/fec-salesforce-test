@@ -736,4 +736,14 @@
         <field>Case.ArchiveExternalId__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchieveCreatedDate__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchieveLastModifiedDate__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
 </PermissionSet>

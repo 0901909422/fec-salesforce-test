@@ -11832,7 +11832,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>TECH_LIST_ATT_IGNORED</shortDescription>
-        <value>attributes,Id,CaseNumber,CreatedById,LastModifiedById,RecordTypeId,CreatedDate,LastModifiedDate</value>
+        <value>attributes,Id,CaseNumber,CreatedById,LastModifiedById,RecordTypeId</value>
     </labels>
     <labels>
         <fullName>TECH_CASE_RECORDTYPE_NAME_CUSTOMER_CASE</fullName>
@@ -11868,5 +11868,15 @@
         <protected>false</protected>
         <shortDescription>TECH_API_GET_ARCHIVE_DETAIL_CASE</shortDescription>
         <value>FEC_Get_Archive_Detail_Case</value>
+    </labels>
+    <labels>
+        <fullName>TECH_ARCHIEVE_MAPPING_DEV_FIELD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_ARCHIEVE_MAPPING_DEV_FIELD</shortDescription>
+        <value>{
+  &quot;createddate&quot;: &quot;ArchieveCreatedDate__c&quot;,
+  &quot;lastmodifieddate&quot;: &quot;ArchieveLastModifiedDate__c&quot;
+}</value>
     </labels>
 </CustomLabels>
