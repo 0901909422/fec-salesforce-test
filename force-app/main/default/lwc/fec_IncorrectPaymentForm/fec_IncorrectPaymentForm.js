@@ -182,7 +182,14 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     }
 
     get adjustmentRows() {
-        return this.adjustments || [];
+        const rows = this.adjustments || [];
+        const baseAmountLabel = this.adjustmentAmountFieldLabel;
+        const baseCorrectLabel = this.customLabel.correctContract;
+        return rows.map((row, index) => ({
+            ...row,
+            correctContractLabel: index === 0 ? baseCorrectLabel : `${baseCorrectLabel} ${index + 1}`,
+            adjustedAmountLabel: index === 0 ? baseAmountLabel : `${baseAmountLabel} ${index + 1}`
+        }));
     }
 
     get incorrectContractTrimmed() {

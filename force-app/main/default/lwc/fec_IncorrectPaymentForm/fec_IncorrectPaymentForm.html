@@ -146,7 +146,7 @@
                 <lightning-layout-item size="6" padding="around-small">
                   <lightning-input
                     data-id={row.id}
-                    label={customLabel.correctContract}
+                    label={row.correctContractLabel}
                     value={row.correctContract}
                     onchange={handleAdjustmentCorrectContractChange}
                     required
@@ -157,7 +157,7 @@
                   <lightning-input
                     data-id={row.id}
                     type="number"
-                    label={adjustmentAmountFieldLabel}
+                    label={row.adjustedAmountLabel}
                     value={row.adjustedAmount}
                     onchange={handleAdjustmentAmountChange}
                     formatter="decimal"
