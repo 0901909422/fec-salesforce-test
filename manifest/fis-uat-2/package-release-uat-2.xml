@@ -1334,6 +1334,8 @@
 		<members>FEC_ServiceCaseEmailService</members>
 		<members>FEC_SessionUtil</members>
         <members>FEC_InteractionRoutingController</members>
+        <members>FEC_CardPaymentController</members>
+        <members>FEC_GetCardPlanInfo</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1487,6 +1489,7 @@
 		<members>fec_CustomerCaseModeStore</members>
 		<members>fecClearSessionNew</members>
 		<members>fec_InteractionRoutingUtilityBar</members>
+		<members>fec_CardPayment</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>

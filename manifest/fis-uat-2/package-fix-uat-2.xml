@@ -75,6 +75,8 @@
         <members>FEC_GetCustomerList</members>
         <members>FEC_GetCardBasicInfo</members>
         <members>FEC_SecondaryInfoLoanAccountController</members>
+        <members>FEC_CardPaymentController</members>
+        <members>FEC_GetCardPlanInfo</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -125,6 +127,7 @@
 		<members>fec_InteractionRoutingUtilityBar</members>
 		<members>fec_CardClosureRefundForm</members>
 		<members>fec_SecondaryInfoLoanAccount</members>
+		<members>fec_CardPayment</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
