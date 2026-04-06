@@ -120,6 +120,7 @@
 		<members>fec_CustomerCaseExecuteAction</members>
 		<members>fec_CustomerCaseModeStore</members>
 		<members>fec_InteractionRoutingUtilityBar</members>
+		<members>fec_CustomerCaseModeStore</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
