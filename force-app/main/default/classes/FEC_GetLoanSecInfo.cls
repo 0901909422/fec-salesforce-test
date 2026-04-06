@@ -31,9 +31,28 @@ public with sharing class FEC_GetLoanSecInfo {
         public Loan Loan;
         public List<PaymentHistory> PaymentHistories;
         public PassDue PassDue;
-        public String TerminationSimulation;
-        public String LPI;
+        public TerminationSimulation TerminationSimulation;
+        public LPI LPI;
         public String ReversalTransactions;
+    }
+
+    // ===================== TERMINATION SIMULATION =====================
+    public class TerminationSimulation {
+        public Decimal NetReceivable;
+        public Decimal ExcessAmounts;
+        public Decimal PrePaymentPenalty;
+        public Decimal CurrentBalancePrincipal;
+        public Decimal InterestOnTermination;
+        public Decimal TotalDues;
+        public Integer InstallmentsOverdue;
+        public Decimal PenaltyFeeOverdue;
+        public Decimal RepaymentFeeOverdue;
+    }
+
+    // ===================== LPI =====================
+    public class LPI {
+        public Decimal PendingPenalInt;
+        public Decimal AppliedLPI;
     }
 
     // ===================== PASS DUE =====================
@@ -115,9 +134,11 @@ public with sharing class FEC_GetLoanSecInfo {
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Loan_Sec_Info');
 
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_LOAN_SEC_INFO_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            //String endpoint = apiSetting?.FEC_Call_Mock__c
+                //? FEC_MockupEndpoint.GET_LOAN_SEC_INFO_ENDPOINT_MOCKUP
+                //: (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
+            String endpoint = apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c;
 
             HttpResponse res = FEC_CommonUltils.calloutApi(
                 endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE,
@@ -148,11 +169,10 @@ public with sharing class FEC_GetLoanSecInfo {
             if (responseLog != null) {
                 responseLog.errorMessage = ex.getMessage();
             }
-            System.debug('### GET LOAN SEC INFO ERROR: ' + ex.getMessage());
+            // System.debug('### GET LOAN SEC INFO ERROR: ' + ex.getMessage());
             throw ex;
         }
     }
-
 
     // =========================================================================
     // BUILD SOAP BODY
@@ -232,9 +252,9 @@ public with sharing class FEC_GetLoanSecInfo {
             result.LoanSecInfo.PassDue =
                 parsePassDue(lsiNode.getChildElement('PassDue', null));
             result.LoanSecInfo.TerminationSimulation =
-                FEC_CommonUltils.getXmlValue(lsiNode, 'TerminationSimulation');
+                parseTerminationSimulation(lsiNode.getChildElement('TerminationSimulation', null));
             result.LoanSecInfo.LPI =
-                FEC_CommonUltils.getXmlValue(lsiNode, 'LPI');
+                parseLPI(lsiNode.getChildElement('LPI', null));
             result.LoanSecInfo.ReversalTransactions =
                 FEC_CommonUltils.getXmlValue(lsiNode, 'ReversalTransactions');
         }
@@ -285,6 +305,29 @@ public with sharing class FEC_GetLoanSecInfo {
         return listData;
     }
 
+    private static TerminationSimulation parseTerminationSimulation(Dom.XmlNode n) {
+        if (n == null) return null;
+        TerminationSimulation ts = new TerminationSimulation();
+        ts.NetReceivable = FEC_CommonUltils.xmlValToDecimal(n, 'NetReceivable');
+        ts.ExcessAmounts = FEC_CommonUltils.xmlValToDecimal(n, 'ExcessAmounts');
+        ts.PrePaymentPenalty = FEC_CommonUltils.xmlValToDecimal(n, 'PrePaymentPenalty');
+        ts.CurrentBalancePrincipal = FEC_CommonUltils.xmlValToDecimal(n, 'CurrentBalancePrincipal');
+        ts.InterestOnTermination = FEC_CommonUltils.xmlValToDecimal(n, 'InterestOnTermination');
+        ts.TotalDues = FEC_CommonUltils.xmlValToDecimal(n, 'TotalDues');
+        ts.InstallmentsOverdue = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(n, 'InstallmentsOverdue'));
+        ts.PenaltyFeeOverdue = FEC_CommonUltils.xmlValToDecimal(n, 'PenaltyFeeOverdue');
+        ts.RepaymentFeeOverdue = FEC_CommonUltils.xmlValToDecimal(n, 'RepaymentFeeOverdue');
+        return ts;
+    }
+
+    private static LPI parseLPI(Dom.XmlNode n) {
+        if (n == null) return null;
+        LPI lpi = new LPI();
+        lpi.PendingPenalInt = FEC_CommonUltils.xmlValToDecimal(n, 'PendingPenalInt');
+        lpi.AppliedLPI = FEC_CommonUltils.xmlValToDecimal(n, 'AppliedLPI');
+        return lpi;
+    }
+
     // =========================================================================
     // VALIDATION
     // =========================================================================
@@ -329,12 +372,13 @@ public with sharing class FEC_GetLoanSecInfo {
     public static void logApiResponse() {
         if (responseLog != null) {
             FEC_CommonUltils.logApi(
-                responseLog.apiName, 
-                responseLog.endpoint, 
-                responseLog.method, 
-                responseLog.requestBody, 
-                responseLog.response, 
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
                 responseLog.errorMessage);
         }
     }
+
 }

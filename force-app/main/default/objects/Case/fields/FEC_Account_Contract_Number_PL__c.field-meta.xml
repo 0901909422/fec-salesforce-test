@@ -24,9 +24,9 @@
                 <label>Ubank</label>
             </value>
             <value>
-                <fullName>Internal</fullName>
+                <fullName>Internal Request</fullName>
                 <default>false</default>
-                <label>Internal</label>
+                <label>Internal Request</label>
             </value>
         </valueSetDefinition>
         <valueSettings>
@@ -41,7 +41,7 @@
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>All</controllingFieldValue>
-            <valueName>Internal</valueName>
+            <valueName>Internal Request</valueName>
         </valueSettings>
     </valueSet>
 </CustomField>

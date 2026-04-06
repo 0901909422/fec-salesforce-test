@@ -164,9 +164,12 @@ public with sharing class FEC_GetLoanBasicInfo {
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Loan_Basic_Info');
 
-            String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_LOAN_BASIC_INFO_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            //String endpoint = apiSetting?.FEC_Call_Mock__c
+                //? FEC_MockupEndpoint.GET_LOAN_BASIC_INFO_ENDPOINT_MOCKUP
+                //: (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+                    
+            String endpoint = apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c;
+
 
             HttpResponse res = FEC_CommonUltils.calloutApi(
                 endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE,
@@ -202,7 +205,7 @@ public with sharing class FEC_GetLoanBasicInfo {
             if (responseLog != null) {
                 responseLog.errorMessage = ex.getMessage();
             }
-            System.debug('### GET LOAN BASIC INFO ERROR: ' + ex.getMessage());
+            // System.debug('### GET LOAN BASIC INFO ERROR: ' + ex.getMessage());
             throw ex;
         }
     }
@@ -479,4 +482,5 @@ public with sharing class FEC_GetLoanBasicInfo {
                 responseLog.errorMessage);
         }
     }
+
 }

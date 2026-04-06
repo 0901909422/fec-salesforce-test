@@ -83,13 +83,3 @@
 .current-page-btn:disabled {
     opacity: 1;
 }
-
-.view-all-link {
-    color: #0176d3;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.view-all-link:hover {
-    text-decoration: underline;
-}

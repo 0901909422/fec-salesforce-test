@@ -3,8 +3,9 @@
     <fullName>FEC_SubCode__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Thông tin danh mục con</description>
-    <label>SubCode</label>
+    <label>Sub Code</label>
     <referenceTo>FEC_Sub_Code__c</referenceTo>
+    <relationshipLabel>Notifications</relationshipLabel>
     <relationshipName>FEC_Notification_Settings</relationshipName>
     <required>false</required>
     <trackHistory>true</trackHistory>

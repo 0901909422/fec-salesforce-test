@@ -1,5 +1,6 @@
 public with sharing class FEC_AddIPP {
   public static final String API_CONFIG_NAME = 'FEC_Add_IPP';
+  public static FEC_ResponseLog responseLog;
 
   private static final String SOAP_NS = 'http://schemas.xmlsoap.org/soap/envelope/';
   private static final String SERVICE_NS = 'http://esbservice.fecredit.org/EStatementService/';
@@ -70,9 +71,48 @@ public with sharing class FEC_AddIPP {
     public String ippKey { get; set; }
   }
 
-
-
   @AuraEnabled
+  public static AddIPPResult getIPPRequest(Id caseId, Id transactionId) {
+    if (caseId == null || transactionId == null) {
+      return null;
+    }
+
+    try {
+      Case c = [
+        SELECT FEC_Account_Contract_Number_Text__c
+        FROM Case
+        WHERE Id = :caseId
+        WITH SECURITY_ENFORCED
+        LIMIT 1
+      ];
+
+      FEC_Transaction__c t = [
+        SELECT
+          FEC_Effective_Date__c,
+          FEC_Transaction_Amount__c,
+          FEC_Transaction_Plan__c,
+          FEC_Transaction_Code__c,
+          FEC_Post_Date__c
+        FROM FEC_Transaction__c
+        WHERE Id = :transactionId
+        WITH SECURITY_ENFORCED
+        LIMIT 1
+      ];
+
+      IPPRequest request = new IPPRequest();
+      request.accountNumber = c.FEC_Account_Contract_Number_Text__c;
+      request.effectiveDate = t.FEC_Effective_Date__c;
+      request.amount = t.FEC_Transaction_Amount__c;
+      request.planNumber = t.FEC_Transaction_Plan__c;
+      request.referenceNumber = t.FEC_Transaction_Code__c;
+      request.postingDate = t.FEC_Post_Date__c;
+
+      return addIPP(request);
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
   public static AddIPPResult addIPP(IPPRequest request) {
     validate(request);
     AddIPPResult finalResult = new AddIPPResult();
@@ -85,6 +125,22 @@ public with sharing class FEC_AddIPP {
       HttpResponse res = sendRequest(doc);
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
+      
+      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+      String endpoint = apiSetting?.FEC_Call_Mock__c
+        ? FEC_MockupEndpoint.ADD_IPP_ENDPOINT_MOCKUP
+        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
+      responseLog = new FEC_ResponseLog(
+        'FEC_AddIPP',
+        endpoint,
+        FEC_ConstantCommon.API_METHOD_POST,
+        doc.toXmlString(),
+        res,
+        null
+      );
+
       finalResult = parseResponse(body, status);
 
       if (finalResult.transId == null) {
@@ -137,7 +193,7 @@ public with sharing class FEC_AddIPP {
     requestNode.addChildElement('AccountNumber', null, null)
       .addTextNode(request.accountNumber);
     requestNode.addChildElement('EffectiveDate', null, null)
-      .addTextNode(FEC_CommonUltils.formatDate(request.effectiveDate));
+      .addTextNode(FEC_CommonUltils.formatDateYYYYMMDD(request.effectiveDate));
     requestNode.addChildElement('Amount', null, null)
       .addTextNode(String.valueOf(request.amount));
 
@@ -159,7 +215,7 @@ public with sharing class FEC_AddIPP {
     }
     if (request.postingDate != null) {
       requestNode.addChildElement('PostingDate', null, null)
-        .addTextNode(FEC_CommonUltils.formatDate(request.postingDate));
+        .addTextNode(FEC_CommonUltils.formatDateYYYYMMDD(request.postingDate));
     }
     if (String.isNotBlank(request.cardNumber)) {
       requestNode.addChildElement('CardNumber', null, null)
@@ -221,12 +277,31 @@ public with sharing class FEC_AddIPP {
         return result;
       }
 
-      Dom.XmlNode sysResponseNode = root.getChildElement(
+      // Navigate proper SOAP structure: Envelope -> Body -> AddIPPResponse
+      Dom.XmlNode bodyNode = root.getChildElement('Body', SOAP_NS);
+      if (bodyNode == null) {
+        bodyNode = FEC_CommonUltils.findChildByName(root, 'Body');
+      }
+
+      Dom.XmlNode responseNode = null;
+      if (bodyNode != null) {
+        responseNode = bodyNode.getChildElement('AddIPPResponse', SERVICE_NS);
+        if (responseNode == null) {
+          responseNode = FEC_CommonUltils.findChildByName(bodyNode, 'AddIPPResponse');
+        }
+      }
+
+      // Fallback if not wrapped in SOAP envelope properly
+      if (responseNode == null) {
+        responseNode = root;
+      }
+
+      Dom.XmlNode sysResponseNode = responseNode.getChildElement(
         'SysResponse',
         SERVICE_NS
       );
       if (sysResponseNode == null) {
-        sysResponseNode = root.getChildElement('SysResponse', null);
+        sysResponseNode = FEC_CommonUltils.findChildByName(responseNode, 'SysResponse');
       }
 
       if (sysResponseNode != null) {
@@ -261,17 +336,17 @@ public with sharing class FEC_AddIPP {
       }
 
       result.accountNumber = FEC_CommonUltils.getXmlValue(
-        root,
+        responseNode,
         'AccountNumber'
       );
 
-      String ippTermStr = FEC_CommonUltils.getXmlValue(root, 'IPPTerm');
+      String ippTermStr = FEC_CommonUltils.getXmlValue(responseNode, 'IPPTerm');
       result.ippTerm = String.isNotBlank(ippTermStr)
         ? Integer.valueOf(ippTermStr)
         : null;
 
       String principalStr = FEC_CommonUltils.getXmlValue(
-        root,
+        responseNode,
         'PrincipalAmount'
       );
       result.principalAmount = String.isNotBlank(principalStr)
@@ -279,7 +354,7 @@ public with sharing class FEC_AddIPP {
         : null;
 
       String installmentStr = FEC_CommonUltils.getXmlValue(
-        root,
+        responseNode,
         'InstallmentAmount'
       );
       result.installmentAmount = String.isNotBlank(installmentStr)
@@ -287,25 +362,25 @@ public with sharing class FEC_AddIPP {
         : null;
 
       String conversionStr = FEC_CommonUltils.getXmlValue(
-        root,
+        responseNode,
         'ConversionFee'
       );
       result.conversionFee = String.isNotBlank(conversionStr)
         ? Decimal.valueOf(conversionStr)
         : null;
 
-      String emiStr = FEC_CommonUltils.getXmlValue(root, 'EMI');
+      String emiStr = FEC_CommonUltils.getXmlValue(responseNode, 'EMI');
       result.emi = String.isNotBlank(emiStr) ? Decimal.valueOf(emiStr) : null;
 
       result.responseDescription = FEC_CommonUltils.getXmlValue(
-        root,
+        responseNode,
         'Description'
       );
 
-      String planStr = FEC_CommonUltils.getXmlValue(root, 'PlanNumber');
+      String planStr = FEC_CommonUltils.getXmlValue(responseNode, 'PlanNumber');
       result.planNumber = planStr;
 
-      String interestStr = FEC_CommonUltils.getXmlValue(root, 'InterestRate');
+      String interestStr = FEC_CommonUltils.getXmlValue(responseNode, 'InterestRate');
       result.interestRate = String.isNotBlank(interestStr)
         ? Decimal.valueOf(interestStr)
         : null;
@@ -333,6 +408,14 @@ public with sharing class FEC_AddIPP {
         )
       );
     }
+    if (request.accountNumber.length() > 255) {
+      throw new CalloutException(
+        String.format(
+          System.Label.FEC_MSG_Param_Maxlength,
+          new List<String>{ 'Account Number', '255' }
+        )
+      );
+    }
     if (request.effectiveDate == null) {
       throw new FEC_APIServiceException(
         String.format(
@@ -341,11 +424,99 @@ public with sharing class FEC_AddIPP {
         )
       );
     }
-    if (request.amount == null || request.amount <= 0) {
+    if (request.amount == null) {
       throw new AuraHandledException(
         String.format(
-          System.Label.FEC_MSG_From_To_Invalid,
-          new List<String>{ 'Amount', '0' }
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Amount' }
+        )
+      );
+    }
+    if (String.valueOf(request.amount).length() > 18) {
+      throw new CalloutException(
+        String.format(
+          System.Label.FEC_MSG_Param_Maxlength,
+          new List<String>{ 'Amount', '18' }
+        )
+      );
+    }
+    if (String.isBlank(request.planNumber)) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Plan Number' }
+        )
+      );
+    }
+    if (request.ippTerm == null) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'IPP Term' }
+        )
+      );
+    }
+    if (String.valueOf(request.ippTerm).length() > 18) {
+      throw new CalloutException(
+        String.format(
+          System.Label.FEC_MSG_Param_Maxlength,
+          new List<String>{ 'IPP Term', '18' }
+        )
+      );
+    }
+    if (String.isBlank(request.referenceNumber)) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Reference Number' }
+        )
+      );
+    }
+    if (String.isBlank(request.transactionPlan)) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Transaction Plan' }
+        )
+      );
+    }
+    if (request.postingDate == null) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Posting Date' }
+        )
+      );
+    }
+    if (String.isBlank(request.cardNumber)) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Card Number' }
+        )
+      );
+    }
+    if (request.cardNumber.length() > 80) {
+      throw new CalloutException(
+        String.format(
+          System.Label.FEC_MSG_Param_Maxlength,
+          new List<String>{ 'Card Number', '80' }
+        )
+      );
+    }
+    if (request.cardSeq == null) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Card Seq' }
+        )
+      );
+    }
+    if (String.isBlank(request.ippKey)) {
+      throw new FEC_APIServiceException(
+        String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'IPP Key' }
         )
       );
     }

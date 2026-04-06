@@ -33,22 +33,46 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
         Map<Id, List<ContentVersion>> mapJsonFiles = new Map<Id, List<ContentVersion>>();
         Map<Id, List<Id>> mapJsonDocIds = new Map<Id, List<Id>>();
         Map<Id, List<Id>> mapConfigToExcelIds = new Map<Id, List<Id>>();
+        Set<Id> orphanDocIds = new Set<Id>();
 
         for (ContentDocumentLink link : allLinks) {
             ContentVersion cv = link.ContentDocument.LatestPublishedVersion;
             Id cfgId = link.LinkedEntityId;
             
             if (cv.Description == FEC_ConstantCommon.JSON_DATA_FOR_PROCESSING) {
+                // Collect orphan docs (file đã bị xóa nhưng link còn tồn tại)
+                if (cv.VersionData == null) {
+                    orphanDocIds.add(link.ContentDocumentId);
+                    continue;
+                }
+                
                 if (!mapJsonFiles.containsKey(cfgId)) mapJsonFiles.put(cfgId, new List<ContentVersion>());
                 if (!mapJsonDocIds.containsKey(cfgId)) mapJsonDocIds.put(cfgId, new List<Id>());
                 
                 mapJsonFiles.get(cfgId).add(cv);
                 mapJsonDocIds.get(cfgId).add(link.ContentDocumentId);
             } else {
+                if (cv.VersionData == null) {
+                    orphanDocIds.add(link.ContentDocumentId);
+                    continue;
+                }
                 if (!mapConfigToExcelIds.containsKey(cfgId)) {
                     mapConfigToExcelIds.put(cfgId, new List<Id>());
                 }
                 mapConfigToExcelIds.get(cfgId).add(cv.Id);
+            }
+        }
+
+        // Cleanup orphan ContentDocuments
+        if (!orphanDocIds.isEmpty()) {
+            try {
+                List<ContentDocument> docsToDelete = new List<ContentDocument>();
+                for (Id docId : orphanDocIds) {
+                    docsToDelete.add(new ContentDocument(Id = docId));
+                }
+                delete docsToDelete;
+            } catch (Exception e) {
+                System.debug('Error cleaning up orphan docs: ' + e.getMessage());
             }
         }
 
@@ -64,6 +88,7 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
                 
                 if (jsonFileList != null && !jsonFileList.isEmpty()) {
                     for (ContentVersion jsonCV : jsonFileList) {
+                        if (jsonCV.VersionData == null) continue;
                         String jsonString = jsonCV.VersionData.toString(); 
                         List<Object> rows = (List<Object>) JSON.deserializeUntyped(jsonString);
 
@@ -97,7 +122,9 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
                     configsToUpdateStatus.add(config);
                     
                 } else {
-                    System.debug('Config ' + config.Id + ' không có file JSON hợp lệ.');
+                    config.FEC_Status__c = FEC_ConstantCommon.PROCESSED_STATUS;
+                    configsToUpdateStatus.add(config);
+                    System.debug('Config ' + config.Id + ' không có file JSON hợp lệ. Chuyển sang Processed.');
                 }
             } catch (Exception e) {
                 config.FEC_Status__c = 'Failed';

@@ -76,8 +76,13 @@ public with sharing class FEC_GetStatus {
                 // Kiểm tra responseCode từ API
                 // Code = "1" là success theo API spec
                 // Nếu không phải "1" thì có thể là account không tồn tại hoặc lỗi khác
-                if (info.responseCode != '1') {
-                    throw new CalloutException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{info.responseDesc}));
+                if (!'1'.equals(info.responseCode)) {
+                    throw new CalloutException(
+                        String.format(
+                            System.Label.FEC_MSG_API_Error,
+                            new List<String>{ String.isNotBlank(info.responseDesc) ? info.responseDesc : 'Unknown error' }
+                        )
+                    );
                 }
                 
                 return info;
@@ -119,29 +124,37 @@ public with sharing class FEC_GetStatus {
     // --- PARSE LOGIC ---
     private static CardDeliveryInfo parseDeliveryResponse(Dom.Document doc) {
         CardDeliveryInfo info = new CardDeliveryInfo();
+        if (doc == null) return info;
+
         Dom.XmlNode root = doc.getRootElement();
+        if (root == null) return info;
+
         Dom.XmlNode body = root.getChildElement('Body', FEC_ConstantCommon.SOAP_ENV);
+        if (body == null) return info;
+
         Dom.XmlNode responseNode = body.getChildElement('GetStatusResponse', SERVICE_NS);
-        
-        if (responseNode != null) {
-            Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
+        if (responseNode == null) return info;
+
+        Dom.XmlNode sysNode = responseNode.getChildElement('Sys', null);
+        if (sysNode != null) {
             info.transId = FEC_CommonUltils.getXmlValue(sysNode, 'TransID');
             info.sysDateTime = FEC_CommonUltils.getXmlValue(sysNode, 'DateTime');
             info.responseCode = FEC_CommonUltils.getXmlValue(sysNode, 'Code');
             info.responseDesc = FEC_CommonUltils.getXmlValue(sysNode, 'Description');
-            
-            Dom.XmlNode infoNode = responseNode.getChildElement('Info', null);
-            if (infoNode != null) {
-                info.accountNumber = FEC_CommonUltils.getXmlValue(infoNode, 'AccountNumber');
-                info.cardNumber = FEC_CommonUltils.getXmlValue(infoNode, 'CardNumber');        
-                info.trackingNo = FEC_CommonUltils.getXmlValue(infoNode, 'TrackingNo');
-                info.issueDate = FEC_CommonUltils.getXmlValue(infoNode, 'IssuelastUpdate');
-                info.status = FEC_CommonUltils.getXmlValue(infoNode, 'Status');
-                info.description = FEC_CommonUltils.getXmlValue(infoNode, 'Description');
-                info.deliveryNotes = FEC_CommonUltils.getXmlValue(infoNode, 'Deliverynotes');
-                info.receiverName = FEC_CommonUltils.getXmlValue(infoNode, 'ReceiverName');    
-            }
         }
+
+        Dom.XmlNode infoNode = responseNode.getChildElement('Info', null);
+        if (infoNode != null) {
+            info.accountNumber = FEC_CommonUltils.getXmlValue(infoNode, 'AccountNumber');
+            info.cardNumber = FEC_CommonUltils.getXmlValue(infoNode, 'CardNumber');        
+            info.trackingNo = FEC_CommonUltils.getXmlValue(infoNode, 'TrackingNo');
+            info.issueDate = FEC_CommonUltils.getXmlValue(infoNode, 'IssuelastUpdate');
+            info.status = FEC_CommonUltils.getXmlValue(infoNode, 'Status');
+            info.description = FEC_CommonUltils.getXmlValue(infoNode, 'Description');
+            info.deliveryNotes = FEC_CommonUltils.getXmlValue(infoNode, 'Deliverynotes');
+            info.receiverName = FEC_CommonUltils.getXmlValue(infoNode, 'ReceiverName');    
+        }
+
         return info;
     }
 

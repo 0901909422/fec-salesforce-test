@@ -47,6 +47,8 @@ import errorCreateTemplate from '@salesforce/label/c.FEC_Error_Create_Template';
 import cannotDeleteFileMsg from '@salesforce/label/c.FEC_Cannot_Delete_File';
 import endDateLessThanTodayMsg from '@salesforce/label/c.End_Date_Less_Than_Today_Validation_Msg';
 import endDateAfterOrEquealStartDateMsg from '@salesforce/label/c.End_Date_After_Or_Equal_Start_Date_Validation_Msg';
+import errorDuplicateKeyInFile from '@salesforce/label/c.FEC_Error_Duplicate_Key_In_File';
+import startDateLessThanTodayMsg from '@salesforce/label/c.FEC_Start_Date_Less_Than_Today';
 
 export default class FecCustomerUpsertModal extends LightningElement {
     label = {
@@ -82,6 +84,10 @@ export default class FecCustomerUpsertModal extends LightningElement {
         return getTomorrowDate();
     }
 
+    get isUploadButtonDisabled() {
+        return this.isUploadDisabled || this.isLoading;
+    }
+
     @wire(getRecord, { recordId: USER_ID, fields: [USER_NAME_FIELD] })
     wiredUser({ error, data }) {
         if (data) {
@@ -91,7 +97,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
         }
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         this.localData = {
             Id: this.initialData.Id || null,
             FEC_KeyIdentifier__c: this.initialData.FEC_KeyIdentifier__c || '',
@@ -103,11 +109,18 @@ export default class FecCustomerUpsertModal extends LightningElement {
         };
 
         if (this.initialData.Id) {
-            this.fetchExistingFiles(this.initialData.Id);
+            this.isLoading = true;
+            try {
+                await this.fetchExistingFiles(this.initialData.Id);
+            } finally {
+                this.isLoading = false;
+            }
             this.isEditting = true;
         } else {
+            this.existingFiles = [];
             this.isEditting = false;
         }
+        this.pendingFiles = [];
         this.resetFileState();
     }
 
@@ -134,6 +147,15 @@ export default class FecCustomerUpsertModal extends LightningElement {
         const field = event.target.name;
         const val = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
         this.localData = { ...this.localData, [field]: val };
+    }
+
+    // Auto-fill Field Name khi user rời khỏi Field ID input và Field Name rỗng (chỉ create mode)
+    handleFieldIdBlur() {
+        const currentFieldName = this.localData.FEC_FieldName__c;
+        const isFieldNameEmpty = !currentFieldName || !currentFieldName.trim();
+        if (isFieldNameEmpty && this.localData.FEC_FieldID__c) {
+            this.localData = { ...this.localData, FEC_FieldName__c: this.localData.FEC_FieldID__c };
+        }
     }
 
     resetFileState() {
@@ -190,6 +212,39 @@ export default class FecCustomerUpsertModal extends LightningElement {
         }
     
         return true;
+    }
+
+    /**
+     * Hàm kiểm tra trùng lặp giá trị Key Identifier trong file Excel
+     * @param {Array} lstRows - Danh sách các dòng từ file Excel (row[0] là header)
+     * @throws {Error} Nếu có giá trị Key Identifier trùng lặp
+     */
+    validateDuplicateKeys(lstRows) {
+        const keyMap = new Map();
+        // Bắt đầu từ row 1 (bỏ header)
+        for (let i = 1; i < lstRows.length; i++) {
+            const row = lstRows[i];
+            if (!row || row.length === 0) continue;
+            const keyValue = String(row[0] ?? '').trim();
+            if (!keyValue) continue;
+            
+            if (keyMap.has(keyValue.toUpperCase())) {
+                keyMap.get(keyValue.toUpperCase()).count++;
+            } else {
+                keyMap.set(keyValue.toUpperCase(), { original: keyValue, count: 1 });
+            }
+        }
+
+        const duplicates = [];
+        for (const [, entry] of keyMap) {
+            if (entry.count > 1) {
+                duplicates.push(entry.original);
+            }
+        }
+
+        if (duplicates.length > 0) {
+            throw new Error(formatString(errorDuplicateKeyInFile, duplicates.join(', ')));
+        }
     }
 
     /**
@@ -256,6 +311,13 @@ export default class FecCustomerUpsertModal extends LightningElement {
 
         if (!allValid) {
             this.showToast(FAIL_TITLE, errorRequiredFields, 'error');
+            return;
+        }
+
+        const startDate = this.localData.FEC_StartDate__c;
+        const today = new Date().toISOString().split('T')[0];
+        if (startDate && startDate < today) {
+            this.showToast(FAIL_TITLE, startDateLessThanTodayMsg, 'error');
             return;
         }
 
@@ -335,7 +397,10 @@ export default class FecCustomerUpsertModal extends LightningElement {
     
                     // Validate Header
                     this.validateFileHeader(rawRows, file.name);
-    
+
+                    // Validate duplicate Key Identifier values
+                    this.validateDuplicateKeys(rawRows);
+
                     // Trả về tất cả kết quả xử lý
                     resolve({
                         jsonString: JSON.stringify(rawRows),
@@ -436,22 +501,22 @@ export default class FecCustomerUpsertModal extends LightningElement {
         return this.existingFiles ? this.existingFiles : [];
     }
 
-    fetchExistingFiles(recordId) {
-        getRelatedFiles({ recordId: recordId })
-            .then(result => {
-                this.existingFiles = result.map(file => ({
-                        id: file.id,
-                        name: file.name,
-                        downloadUrl: `/sfc/servlet.shepherd/document/download/${file.id}`,
-                        uploadedBy: file.uploadedBy,
-                        uploadedTime: formatDateDDMMYYYY(file.uploadedTime),
-                        status: file.status,
-                        isProcessing: file.status === 'Uploaded'
-                    }));
-            })
-            .catch(error => {
-                console.error('### FEC_ERROR fetchFiles:', error);
-            });
+    async fetchExistingFiles(recordId) {
+        try {
+            const result = await getRelatedFiles({ recordId: recordId });
+            this.existingFiles = result.map(file => ({
+                id: file.id,
+                name: file.name,
+                downloadUrl: `/sfc/servlet.shepherd/document/download/${file.id}`,
+                uploadedBy: file.uploadedBy,
+                uploadedTime: formatDateDDMMYYYY(file.uploadedTime),
+                status: file.status,
+                isProcessing: file.status === 'Uploaded'
+            }));
+        } catch (error) {
+            console.error('### FEC_ERROR fetchFiles:', error);
+            this.existingFiles = [];
+        }
     }
 
     showToast(title, message, variant) {
