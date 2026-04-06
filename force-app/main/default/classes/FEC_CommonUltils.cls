@@ -212,7 +212,7 @@ public with sharing class FEC_CommonUltils {
     }
     return options;
   }
-  
+
   public static List<PicklistOption> getPicklistOptionsWithAccess(
     String objectName,
     String fieldName
@@ -602,7 +602,7 @@ public with sharing class FEC_CommonUltils {
       return '';
     return amount.setScale(scale).format();
   }
-  
+
   /**
    * Số hiển thị đủ phần thập phân (vd API = 0 → "0.00"), dùng dấu chấm — tránh locale .format() bỏ .00.
    */
@@ -623,7 +623,7 @@ public with sharing class FEC_CommonUltils {
   public static String formatTimestamp(Datetime timestamp ,String format) {
     return Datetime.valueOf(timestamp).format(format);
   }
-  
+
   /** Ngày hiển thị cố định dd/MM/yyyy (không phụ thuộc locale). */
   public static String formatDateDDMMYYYY(Date d) {
     if (d == null) {
@@ -636,7 +636,7 @@ public with sharing class FEC_CommonUltils {
     String mStr = mm < 10 ? '0' + mm : String.valueOf(mm);
     return dStr + '/' + mStr + '/' + yyyy;
   }
-  
+
   /** Ngày hiển thị cố định yyyy-MM-dd (không phụ thuộc locale). */
   public static String formatDateYYYYMMDD(Date d) {
     if (d == null) {
@@ -882,14 +882,14 @@ public with sharing class FEC_CommonUltils {
         parts.add(clean);
     }
 }
-  
+
   public static Boolean checkLength(String fieldName, String value, Integer length) {
     if (String.isNotBlank(value) && value.length() > length) {
       return false;
     }
     return true;
   }
-  
+
   public static void addTextNodeSafe(Dom.XmlNode parent, String tagName, String value) {
     parent.addChildElement(tagName, null, null)
       .addTextNode(value == null ? '' : value);
@@ -924,71 +924,71 @@ public with sharing class FEC_CommonUltils {
       System.debug('LOG INSERT ERROR: ' + e.getMessage());
     }
   }
-  
+
   public static String pickNameByLanguage(String nameEN, String nameVN, String language) {
-    String lang = String.valueOf(language);
-    if (lang != null && lang.toUpperCase() == FEC_ConstantCommon.LANGUAGE_VN) {
-      return String.isNotBlank(nameVN)
-        ? nameVN
-        : (String.isNotBlank(nameEN) ? nameEN : '');
-    }
-    return String.isNotBlank(nameEN)
-      ? nameEN
-      : (String.isNotBlank(nameVN) ? nameVN : '');
+      String lang = String.valueOf(language);
+      if (lang != null && lang.toUpperCase() == FEC_ConstantCommon.LANGUAGE_VN) {
+          return String.isNotBlank(nameVN)
+              ? nameVN
+              : (String.isNotBlank(nameEN) ? nameEN : '');
+      }
+      return String.isNotBlank(nameEN)
+          ? nameEN
+          : (String.isNotBlank(nameVN) ? nameVN : '');
   }
-  
+
   public static String getFieldType(String objectName, String fieldName) {
     try {
-      
-      Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
-      if (sObjectType == null) return null;
-      Schema.DescribeSObjectResult objDescribe = sObjectType.getDescribe();
-      Schema.SObjectField fieldToken = objDescribe.fields.getMap().get(fieldName);
-      if (fieldToken == null) return null;
-      Schema.DisplayType t = fieldToken.getDescribe().getType();
-      switch on t {
-        when Picklist {
-          return FEC_ConstantCommon.KEY_PICKLIST;
+
+        Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+        if (sObjectType == null) return null;
+        Schema.DescribeSObjectResult objDescribe = sObjectType.getDescribe();
+        Schema.SObjectField fieldToken = objDescribe.fields.getMap().get(fieldName);
+        if (fieldToken == null) return null;
+        Schema.DisplayType t = fieldToken.getDescribe().getType();
+        switch on t {
+            when Picklist {
+                return FEC_ConstantCommon.KEY_PICKLIST;
+            }
+            when Boolean {
+                return FEC_ConstantCommon.KEY_CHECKBOX;
+            }
+            when Date {
+                return FEC_ConstantCommon.KEY_DATE;
+            }
+            when DateTime {
+                return FEC_ConstantCommon.KEY_DATETIME;
+            }
+            when Integer, Double {
+                return FEC_ConstantCommon.KEY_NUMBER;
+            }
+            when else {
+                return FEC_ConstantCommon.KEY_TEXT;
+            }
         }
-        when Boolean {
-          return FEC_ConstantCommon.KEY_CHECKBOX;
-        }
-        when Date {
-          return FEC_ConstantCommon.KEY_DATE;
-        }
-        when DateTime {
-          return FEC_ConstantCommon.KEY_DATETIME;
-        }
-        when Integer, Double {
-          return FEC_ConstantCommon.KEY_NUMBER;
-        }
-        when else {
-          return FEC_ConstantCommon.KEY_TEXT;
-        }
-      }
     } catch (Exception e) {
-      System.debug('getFieldType error: ' + e.getMessage());
-      return null;
+        System.debug('getFieldType error: ' + e.getMessage());
+        return null;
     }
   }
-  
+
   public static Integer toInt(Decimal d) {
     return d == null ? null : Integer.valueOf(d);
   }
-  
+
   public static String getFieldLabel(String objectName, String fieldName) {
     try {
-      Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
-      if (sObjectType == null) return null;
-      
-      Schema.DescribeSObjectResult objDescribe = sObjectType.getDescribe();
-      Schema.SObjectField fieldToken = objDescribe.fields.getMap().get(fieldName);
-      if (fieldToken == null) return null;
-      
-      return fieldToken.getDescribe().getLabel();
+        Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+        if (sObjectType == null) return null;
+
+        Schema.DescribeSObjectResult objDescribe = sObjectType.getDescribe();
+        Schema.SObjectField fieldToken = objDescribe.fields.getMap().get(fieldName);
+        if (fieldToken == null) return null;
+
+        return fieldToken.getDescribe().getLabel();
     } catch (Exception e) {
-      System.debug('getFieldLabel error: ' + e.getMessage());
-      return null;
+        System.debug('getFieldLabel error: ' + e.getMessage());
+        return null;
     }
   }
   
@@ -1001,12 +1001,12 @@ public with sharing class FEC_CommonUltils {
     if (log != null) {
       logApi(
         log.apiName,
-      log.endpoint,
-      log.method,
-      log.requestBody,
-      log.response,
-      log.errorMessage
-        );
+        log.endpoint,
+        log.method,
+        log.requestBody,
+        log.response,
+        log.errorMessage
+      );
     }
   }
   
@@ -1019,7 +1019,7 @@ public with sharing class FEC_CommonUltils {
       .replace('"', '&quot;')
       .replace('\'', '&apos;');
   }
-  
+
   public static Integer toIntDec(Decimal d) {
     return d == null ? null : Integer.valueOf(d);
   }
@@ -1032,7 +1032,7 @@ public with sharing class FEC_CommonUltils {
         ? email.substringBefore('@') 
         : email;
   }
-  
+
   public static Id getRecordTypeIdByDev(String devName) {
     Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
     if (!rtMap.containsKey(devName)) {
@@ -1041,33 +1041,33 @@ public with sharing class FEC_CommonUltils {
     Id recordTypeId = rtMap.get(devName).getRecordTypeId();
     return recordTypeId;
   }
-  
+
   public static String mergeApplyTo(String oldVal, String newVal) {
     if (oldVal == null) return newVal;
     if (oldVal == newVal) return oldVal;
     return 'ALL';
   }
-  
+
   public static String formatISOWithTimezone(Datetime dt) {
-    TimeZone tz = UserInfo.getTimeZone();
-    Integer offset = tz.getOffset(dt) / 1000 / 60; // minutes
+        TimeZone tz = UserInfo.getTimeZone();
+        Integer offset = tz.getOffset(dt) / 1000 / 60; // minutes
+        
+        Integer hours = offset / 60;
+        Integer minutes = Math.mod(offset, 60);
+        
+        String sign = hours >= 0 ? '+' : '-';
+        
+        return dt.format('yyyy-MM-dd\'T\'HH:mm:ss.SSS') +
+            sign +
+            pad2(Math.abs(hours)) +
+            ':' +
+            pad2(Math.abs(minutes));
+    }
     
-    Integer hours = offset / 60;
-    Integer minutes = Math.mod(offset, 60);
-    
-    String sign = hours >= 0 ? '+' : '-';
-    
-    return dt.format('yyyy-MM-dd\'T\'HH:mm:ss.SSS') +
-      sign +
-      pad2(Math.abs(hours)) +
-      ':' +
-      pad2(Math.abs(minutes));
-  }
-  
-  public static String pad2(Integer val) {
-    return (val < 10 ? '0' : '') + String.valueOf(val);
-  }
-  
+    public static String pad2(Integer val) {
+        return (val < 10 ? '0' : '') + String.valueOf(val);
+    }
+
   public static String serializeSafe(Object obj) {
     try {
       return obj != null ? JSON.serialize(obj) : null;
