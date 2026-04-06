@@ -11827,7 +11827,7 @@
         <shortDescription>FEC_MSG_Refund_Request_Receipt_Line_Incomplete</shortDescription>
         <value>Each receipt line must have date, positive amount, transaction number, and payment channel.</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>TECH_LIST_ATT_IGNORED</fullName>
         <language>en_US</language>
         <protected>false</protected>
