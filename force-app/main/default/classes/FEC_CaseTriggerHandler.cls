@@ -102,6 +102,7 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/01/03
      * @modified: 2026/01/16
      * @modified: 2026/02/02
+     * @modified: 2026/04/06 - Added Auto Notification for Internal User (Loại 3 Email + Loại 4 SF App)
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         isExecuting = true;
@@ -113,6 +114,8 @@ public without sharing class FEC_CaseTriggerHandler {
         FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, oldMap);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
         syncGlobalSearch(newCases, oldMap);
+        FEC_NotificationService.sendEmailNotifications(newCases, oldMap);
+        FEC_NotificationService.sendSFAppNotifications(newCases, oldMap);
         isExecuting = false;
     }
 

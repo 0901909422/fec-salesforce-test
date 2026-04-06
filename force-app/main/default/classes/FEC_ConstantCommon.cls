@@ -352,4 +352,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_CARD_CASE = 'Card';
     public static final String PRODUCT_TYPE_LOAN_CASE = 'Loan';
     public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
+
+    // Auto Notification - Target Group
+    public static final String NOTIFICATION_TARGET_GROUP_INTERNAL = 'Internal User';
+
+    // Auto Notification - Channel names (FEC_Notification_Channel__c.Name)
+    public static final String NOTIFICATION_CHANNEL_EMAIL = 'Email';
+    public static final String NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
 }
