@@ -504,6 +504,7 @@
         <members>FEC_Address_Info__c.FEC_District__c</members>
         <members>FEC_Address_Info__c.FEC_Province__c</members>
         <members>FEC_Address_Info__c.FEC_Country__c</members>
+		<members>FEC_Content_History_Tracking__c.FEC_Merge_Fields_Used__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
