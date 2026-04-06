@@ -25,8 +25,15 @@
                                     label={label.saveAndCloseLabel}
                                     variant="brand"
                                     onclick={handleSaveAndClose}
+                                    class="slds-m-right_x-small"
                                 ></lightning-button>
                             </template>
+                            <lightning-button
+                                label={label.previewLabel}
+                                variant="neutral"
+                                onclick={handlePreview}
+                                icon-name="utility:preview"
+                            ></lightning-button>
                         </div>
                     </div>
                 </div>
@@ -250,12 +257,29 @@
                             label={label.saveAndCloseLabel}
                             variant="brand"
                             onclick={handleSaveAndClose}
+                            class="slds-m-right_x-small"
                         ></lightning-button>
                     </template>
+                    <lightning-button
+                        label={label.previewLabel}
+                        variant="neutral"
+                        onclick={handlePreview}
+                        icon-name="utility:preview"
+                    ></lightning-button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- PREVIEW MODAL -->
+    <c-fec_template-preview-modal
+        subject={subject}
+        email-body={emailBody}
+        header-html={selectedLetterheadHeaderHtml}
+        footer-html={selectedLetterheadFooterHtml}
+        is-open={isPreviewOpen}
+        onclose={handleClosePreview}
+    ></c-fec_template-preview-modal>
 
     <!-- MERGE FIELD PICKER MODAL -->
     <template if:true={isPickerOpen}>

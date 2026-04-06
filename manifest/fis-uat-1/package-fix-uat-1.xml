@@ -58,6 +58,10 @@
 		<members>FEC_KYCService</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
 		<members>FEC_CaseManagerListService</members>
+		<members>FEC_GetStatus</members>
+		<members>FEC_CaseEditNOCController</members>
+		<members>FEC_CustomerIntegrationService</members>
+        <members>FEC_FullCustomerIntegrationJob</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -171,6 +175,7 @@
 		<members>FEC_Process_Action_History__c.FEC_Date_Time__c</members>
 		<members>FEC_Relevant_Ticket__c.FEC_Date_Time__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Date_Time__c</members>
+		<members>FEC_Stage_Screen__c.FEC_Field_Type__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -178,12 +183,35 @@
 		<name>CustomApplication</name>
 	</types>
     <types>
-		<members>FEC_API_Config.FEC_Get_Customer_List</members>
-		<members>FEC_API_Config.FEC_Get_Payment_Info</members>
-		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
-		<members>FEC_API_Config.FEC_Get_Product_List</members>
-		<name>CustomMetadata</name>
-	</types>
+        <members>FEC_API_Config.FEC_Emea_Account_Inq</members>
+        <members>FEC_API_Config.FEC_GetCardTransactions</members>
+        <members>FEC_API_Config.FEC_Get_Addresses_List</members>
+        <members>FEC_API_Config.FEC_Get_App_Status</members>
+        <members>FEC_API_Config.FEC_Get_Applications_List</members>
+        <members>FEC_API_Config.FEC_Get_Billed_Transaction</members>
+        <members>FEC_API_Config.FEC_Get_Card_Basic_Info</members>
+        <members>FEC_API_Config.FEC_Get_Card_Financial_Transaction</members>
+        <members>FEC_API_Config.FEC_Get_Card_Payment_Info</members>
+        <members>FEC_API_Config.FEC_Get_Card_Plan_Info</members>
+        <members>FEC_API_Config.FEC_Get_Card_Sec_Info</members>
+        <members>FEC_API_Config.FEC_Get_Contacts_List</members>
+        <members>FEC_API_Config.FEC_Get_Customer_Info_Basic</members>
+        <members>FEC_API_Config.FEC_Get_Customer_List</members>
+        <members>FEC_API_Config.FEC_Get_Customer_Sale_Disburse_Info</members>
+        <members>FEC_API_Config.FEC_Get_Digital_Account_Status</members>
+        <members>FEC_API_Config.FEC_Get_Documents_List</members>
+        <members>FEC_API_Config.FEC_Get_IPP_Detail</members>
+        <members>FEC_API_Config.FEC_Get_Payment_Info</members>
+        <members>FEC_API_Config.FEC_Get_Product_List</members>
+        <members>FEC_API_Config.FEC_Get_Relatives_List</members>
+        <members>FEC_API_Config.FEC_Get_Reward_Eligibility</members>
+        <members>FEC_API_Config.FEC_Get_Status</members>
+        <members>FEC_API_Config.FEC_Get_Unbilled_Transaction</members>
+        <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
+        <members>FEC_API_Config.FEC_Update_Customer_Basic_Info</members>
+        <members>FEC_API_Config.FEC_Update_Customer_Contact</members>
+        <name>CustomMetadata</name>
+    </types>
 	<types>
 		<members>FEC_Additional_Info__c-en_US</members>
 		<name>CustomObjectTranslation</name>
@@ -269,6 +297,11 @@
 		<members>FEC_Wrap_Up_Modal_Btn_Cancel</members>
 		<members>FEC_Account_Card_Fetch_Error</members>
 		<members>FEC_MSG_FollowUp_Not02_User_Already_Watcher</members>
+		<members>FEC_MSG_Action_Owner_Only</members>
+		<members>FEC_MSG_Edit_Owner_Only</members>
+		<members>FEC_MSG_Escalate_Owner_Only</members>
+		<members>FEC_MSG_Transfer_Owner_Only</members>
+		<members>FEC_MSG_Update_Team_Permission_Denied</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -490,6 +523,49 @@
 		<members>FEC_CS_Unit_Head_of_Customer_Care_Customer_360</members>
 		<members>FEC_CS_Unit_Head_of_Office_Based_Customer_360</members>
 		<members>RD_IT_User_Customer_360</members>
+		<members>FEC_CS_CS_Ecom_Officer_Master_Data_Management</members>
+		<members>FEC_CS_CS_Ecom_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Ecom_Team_Leader_Master_Data_Management</members>
+		<members>FEC_CS_CS_Inbound_Officer_Master_Data_Management</members>
+		<members>FEC_CS_CS_Inbound_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Inbound_Team_Leader_Master_Data_Management</members>
+		<members>FEC_CS_CS_Operations_Management_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Operations_Manager_Master_Data_Management</members>
+		<members>FEC_CS_CS_Outbound_Officer_Master_Data_Management</members>
+		<members>FEC_CS_CS_Outbound_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Outbound_Team_Leader_Master_Data_Management</members>
+		<members>FEC_CS_CS_Quality_Control_Manager_Master_Data_Management</members>
+		<members>FEC_CS_CS_Quality_Control_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Support_Manager_Master_Data_Management</members>
+		<members>FEC_CS_CS_Support_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Card_Risk_Monitoring_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Center_Director_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Care_Manager_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Care_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Experience_Manager_1_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Experience_Manager_2_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Experience_Manager_3_Master_Data_Management</members>
+		<members>FEC_CS_Head_of_CS_Contact_Center_Dept_Master_Data_Management</members>
+		<members>FEC_CS_Head_of_CS_QC_OM_Dept_Master_Data_Management</members>
+		<members>FEC_CS_Head_of_Customer_Care_Dept_Master_Data_Management</members>
+		<members>FEC_CS_Office_Based_Team_Leader_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Ecom_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Inbound_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Operations_Management_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Outbound_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Quality_Control_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Support_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_Card_Risk_Monitoring_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_Customer_Care_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_Office_Based_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Ecom_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Inbound_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Operations_Management_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Outbound_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Quality_Control_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Support_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_Customer_Care_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_Office_Based_Master_Data_Management</members>
 		<members>RD_IT_User_Master_Data_Management</members>
 		<name>PermissionSet</name>
 	</types>

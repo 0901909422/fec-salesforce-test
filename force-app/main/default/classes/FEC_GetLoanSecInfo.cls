@@ -169,7 +169,7 @@ public with sharing class FEC_GetLoanSecInfo {
             if (responseLog != null) {
                 responseLog.errorMessage = ex.getMessage();
             }
-            System.debug('### GET LOAN SEC INFO ERROR: ' + ex.getMessage());
+            // System.debug('### GET LOAN SEC INFO ERROR: ' + ex.getMessage());
             throw ex;
         }
     }
@@ -372,11 +372,11 @@ public with sharing class FEC_GetLoanSecInfo {
     public static void logApiResponse() {
         if (responseLog != null) {
             FEC_CommonUltils.logApi(
-                responseLog.apiName, 
-                responseLog.endpoint, 
-                responseLog.method, 
-                responseLog.requestBody, 
-                responseLog.response, 
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
                 responseLog.errorMessage);
         }
     }

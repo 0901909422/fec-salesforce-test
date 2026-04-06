@@ -88,7 +88,7 @@ public without sharing class FEC_MainInfoAccountController {
         }
 
         Case c = [
-            SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c
+            SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c,FEC_Product_Type__r.Name
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -100,12 +100,16 @@ public without sharing class FEC_MainInfoAccountController {
         /* ========= 1. TRY LOCAL ========= */
         if (c.FEC_Account_or_Contract__c != null) {
             FEC_Customer_History__c acc = [
-                SELECT FEC_Account_Number__c,FEC_CIF_Number__c
+                SELECT FEC_Account_Number__c,FEC_CIF_Number__c,FEC_Contract_Number__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :c.FEC_Account_or_Contract__c
                 LIMIT 1
             ];
-            accountNumber = acc.FEC_Account_Number__c;
+            accountNumber = FEC_CommonUltils.resolveAccountNumber(
+                c.FEC_Product_Type__r.Name,
+                acc.FEC_Account_Number__c,
+                acc.FEC_Contract_Number__c
+            );
             cifNumber = acc.FEC_CIF_Number__c;
         }
 
@@ -591,10 +595,10 @@ public without sharing class FEC_MainInfoAccountController {
         if (emeaRes != null) {
             localUse = emeaRes.localUseInd;
         }
-        update new FEC_Customer_History__c(
+        /* Không gán FEC_Contract_Number__c = null khi MainCard/API thiếu — tránh xóa số HĐ đã lưu từ luồng Loan (GetLoanBasicInfo). */
+        FEC_Customer_History__c rec = new FEC_Customer_History__c(
             Id = accountId,
             FEC_Account_Number__c = m != null ? m.AccountNumber : null,
-            FEC_Contract_Number__c = m != null ? m.ContractNumber : null,
             FEC_Account_Status__c = m != null ? m.Status : null,
             FEC_Credit_Limit__c = m != null ? m.CreditLimit : null,
             FEC_OTB__c = m != null ? m.OTB : null,
@@ -617,8 +621,8 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Insurance_Flag__c = m != null ? FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag) : null,
             FEC_Customer_Segment__c = m != null ? m.CustomerSegment : null,
             FEC_Expiry_Date__c = m != null ? m.ExpiryDate : null,
-            //FEC_Card_Type__c = 
-            //FEC_Plastic_ID__c = 
+            //FEC_Card_Type__c =  m != null ? m.DigitalCardIndicator : null,
+            FEC_Plastic_ID__c = m != null ? m.PlasticIndicator : null,
             FEC_Scheme_ID__c      = a != null ? a.SchemeId : null,
             FEC_Scheme_Desc__c    = a != null ? a.SchemeDesc : null,
             /* ===== CARD STATUS ===== */

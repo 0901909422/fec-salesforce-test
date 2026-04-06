@@ -9,16 +9,20 @@ import FEC_No_Btn from "@salesforce/label/c.FEC_No_Btn";
 import FEC_Card_Number_Required_MSG from "@salesforce/label/c.FEC_Card_Number_Required_MSG";
 import FEC_CIF_Number_Required_MSG from "@salesforce/label/c.FEC_CIF_Number_Required_MSG";
 
-import { ERROR_MODAL_TITLE,
+import {
+  ERROR_MODAL_TITLE,
   SUCCESS_MODAL_TITLE,
   SUCCESS_TOAST_TYPE,
-  ERROR_TOAST_TYPE} from "c/fec_CommonConst";
+  ERROR_TOAST_TYPE,
+} from "c/fec_CommonConst";
 
 export default class Fec_PinResetView extends LightningElement {
   @api recordId;
 
   cardNumber;
   cifNumber;
+  nationalId;
+  mobile;
   processActionCount = 0;
 
   isOpen = false;
@@ -29,7 +33,7 @@ export default class Fec_PinResetView extends LightningElement {
     FEC_Yes_Btn,
     FEC_No_Btn,
     FEC_Card_Number_Required_MSG,
-    FEC_CIF_Number_Required_MSG
+    FEC_CIF_Number_Required_MSG,
   };
   // ================= INIT =================
   connectedCallback() {
@@ -39,8 +43,11 @@ export default class Fec_PinResetView extends LightningElement {
   loadCardInfo() {
     getCardInfo({ customerCaseId: this.recordId })
       .then((res) => {
+        console.log("res: ", JSON.stringify(res));
         this.cardNumber = res.cardNumber;
         this.cifNumber = res.cifNumber;
+        this.nationalId = res.nationalId;
+        this.mobile = res.mobile;
         this.processActionCount = res.processActionCount;
       })
       .catch((err) => {
@@ -86,7 +93,11 @@ export default class Fec_PinResetView extends LightningElement {
       this.cardNumber === undefined ||
       this.cardNumber === ""
     ) {
-      this.showToast(ERROR_MODAL_TITLE, this.label.FEC_Card_Number_Required_MSG, ERROR_TOAST_TYPE);
+      this.showToast(
+        ERROR_MODAL_TITLE,
+        this.label.FEC_Card_Number_Required_MSG,
+        ERROR_TOAST_TYPE,
+      );
       this.close();
       return;
     }
@@ -96,21 +107,30 @@ export default class Fec_PinResetView extends LightningElement {
       this.cifNumber === undefined ||
       this.cardNumber === ""
     ) {
-      this.showToast(ERROR_MODAL_TITLE, this.label.FEC_CIF_Number_Required_MSG, ERROR_MODAL_TITLE);
+      this.showToast(
+        ERROR_MODAL_TITLE,
+        this.label.FEC_CIF_Number_Required_MSG,
+        ERROR_MODAL_TITLE,
+      );
       this.close();
       return;
     }
 
     resetPin({
       caseId: this.recordId,
-      cardNumber: this.cardNumber,
-      cifNumber: this.cifNumber,
+      nationalId: this.nationalId,
+      mobile: this.mobile,
     })
       .then((res) => {
-        if (res.isSuccess) {
+        console.log("res from api: ", JSON.stringify(res));
+        if (res.RespCode != "1") {
           this.showToast(SUCCESS_MODAL_TITLE, res.RespDesc, SUCCESS_TOAST_TYPE);
         } else {
-          this.showToast(ERROR_MODAL_TITLE, res.RespDesc || res.errorMessage, ERROR_MODAL_TITLE);
+          this.showToast(
+            ERROR_MODAL_TITLE,
+            res.RespDesc || res.errorMessage,
+            ERROR_MODAL_TITLE,
+          );
         }
       })
       .catch((err) => {

@@ -12,6 +12,7 @@
 ****************************************************************************************/
 
 public without sharing class FEC_GetNextWorkController {
+    public static Boolean isGetNextWork = false;
 
     @AuraEnabled(cacheable=true)
 
@@ -112,7 +113,7 @@ public without sharing class FEC_GetNextWorkController {
     @AuraEnabled
     public static Id takeOwnership(Id caseId) {
         if (caseId == null) return null;
-
+        isGetNextWork = true;
         Id currentUserId = UserInfo.getUserId();
 
         User u = [
@@ -137,28 +138,35 @@ public without sharing class FEC_GetNextWorkController {
             LIMIT 1
         ];
 
-        update c;
+        try {
+            
+            isGetNextWork = true; 
+            update c;           
 
-        // Create history record
-        FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c();
-        history.FEC_Case__c = caseId;
-        history.FEC_Routing_Action__c = FEC_ConstantCommon.CASE_ROUTING_ACTION;
-        history.FEC_Decision__c = '';
-        history.FEC_Original_User_Queue__c = oldCase.Owner.Name;
-        history.FEC_Updated_User_Queue__c = FEC_CommonUltils.getEmailPrefix(u.Email);
-        history.FEC_Stage_Name__c = oldCase.FEC_Current_Case_Stage__r != null 
-             ? oldCase.FEC_Current_Case_Stage__r.FEC_Code__c 
-            : null;
-        history.FEC_User__c = FEC_CommonUltils.getEmailPrefix(u.Email);
-        history.FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null;
-        history.FEC_Original_User_Queue_ID__c = oldCase.OwnerId;
-        history.FEC_Updated_User_Queue_ID__c = currentUserId;
-        history.FEC_Description__c = FEC_ConstantCommon.CASE_TYPE_DESCRIPTION;
-        insert history;
+            FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
+                FEC_Case__c = caseId,
+                FEC_Routing_Action__c = FEC_ConstantCommon.CASE_TYPE_DESCRIPTION,
+                FEC_Decision__c = FEC_ConstantCommon.STR_EMPTY,
+                FEC_Original_User_Queue__c = oldCase.Owner.Name,
+                FEC_Updated_User_Queue__c = FEC_CommonUltils.getEmailPrefix(u.Email),
+                FEC_Stage_Name__c = oldCase.FEC_Current_Case_Stage__r != null 
+                    ? oldCase.FEC_Current_Case_Stage__r.FEC_Code__c 
+                    : null,
+                FEC_User__c = FEC_CommonUltils.getEmailPrefix(u.Email),
+                FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
+                FEC_Original_User_Queue_ID__c = oldCase.OwnerId,
+                FEC_Updated_User_Queue_ID__c = currentUserId,
+                FEC_Description__c = FEC_ConstantCommon.CASE_TYPE_DESCRIPTION
+            );
+            insert history;
 
-        updateCaseTeamFromLatestHistory(caseId);
+            updateCaseTeamFromLatestHistory(caseId);
         
-        return c.Id;
+            return c.Id;
+
+        } finally {
+            isGetNextWork = false; 
+        }
     }
 
     private static void updateCaseTeamFromLatestHistory(Id caseId) {
@@ -171,7 +179,7 @@ public without sharing class FEC_GetNextWorkController {
                 CreatedDate
             FROM FEC_Routing_Action_History__c
             WHERE FEC_Case__c = :caseId
-            AND FEC_Routing_Action__c = :FEC_ConstantCommon.CASE_ROUTING_ACTION
+            AND FEC_Routing_Action__c = :FEC_ConstantCommon.CASE_TYPE_DESCRIPTION
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];

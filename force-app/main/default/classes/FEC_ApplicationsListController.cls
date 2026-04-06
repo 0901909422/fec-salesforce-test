@@ -51,13 +51,22 @@ public without sharing class FEC_ApplicationsListController {
         }
 
         Case cs = [
-            SELECT FEC_Account_or_Contract__c,FEC_Account_or_Contract__r.FEC_Account_Number__c
+            SELECT FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Contract_Number__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
         ];
 
-        String accountNumber = cs.FEC_Account_or_Contract__r.FEC_Account_Number__c;
+        String productTypeName = cs.FEC_Product_Type__r != null 
+            ? cs.FEC_Product_Type__r.Name 
+            : null;
+
+        String accountNumber = FEC_CommonUltils.resolveAccountNumber(
+            productTypeName,
+            cs.FEC_Account_or_Contract__r.FEC_Account_Number__c,
+            cs.FEC_Account_or_Contract__r.FEC_Contract_Number__c
+        );
+
         Id historyId = cs.FEC_Account_or_Contract__c;
 
         FEC_Application_List__c cacheRec;
@@ -146,13 +155,13 @@ public without sharing class FEC_ApplicationsListController {
                 }
 
                 Map<String, String> cityMap = new Map<String, String>();
-                for (FEC_City__c c : [SELECT Name, FEC_Code__c FROM FEC_City__c]) {
-                    cityMap.put(c.FEC_Code__c, c.Name);
+                for (FEC_Province__c c : [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_Province__c]) {
+                    cityMap.put(c.FEC_Code__c, c.FEC_Name_VN__c);
                 }
 
                 Map<String, String> districtMap = new Map<String, String>();
-                for (FEC_District__c d : [SELECT Name, FEC_Code__c FROM FEC_District__c]) {
-                    districtMap.put(d.FEC_Code__c, d.Name);
+                for (FEC_District__c d : [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_District__c]) {
+                    districtMap.put(d.FEC_Code__c, d.FEC_Name_VN__c);
                 }
 
             for (FEC_GetApplicationsList.ApplicationInfo st: statusRes.Applications) {

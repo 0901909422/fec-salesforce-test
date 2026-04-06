@@ -18,6 +18,7 @@ import getTemplateHistory from '@salesforce/apex/FEC_TemplateController.getTempl
 // Custom Labels
 import detailPageTitle   from '@salesforce/label/c.FEC_Template_Management_Title';
 import editLabel         from '@salesforce/label/c.FEC_Action_Edit';
+import previewLabel      from '@salesforce/label/c.FEC_Action_Preview';
 import backToListLabel   from '@salesforce/label/c.FEC_Template_Back_To_List';
 import templateNameLabel from '@salesforce/label/c.FEC_Col_Template_Name';
 import apiNameLabel      from '@salesforce/label/c.FEC_Template_API_Name';
@@ -31,8 +32,11 @@ import subjectLabel      from '@salesforce/label/c.FEC_Template_Subject';
 import emailBodyLabel    from '@salesforce/label/c.FEC_Template_Email_Body';
 import lastModLabel      from '@salesforce/label/c.FEC_Col_Last_Modified_Date';
 import lastModByLabel    from '@salesforce/label/c.FEC_Col_Last_Modified_By';
+import templateHistoryTabLabel from '@salesforce/label/c.FEC_Template_History_Tab';
+import contentHistoryTabLabel  from '@salesforce/label/c.FEC_Content_History_Tab';
 
 import { formatFileSize } from 'c/fec_TemplateUtils';
+import { formatDateTime } from 'c/fec_CommonUtils';
 
 export default class Fec_templateDetailPage extends LightningElement {
 
@@ -55,6 +59,7 @@ export default class Fec_templateDetailPage extends LightningElement {
     label = {
         detailPageTitle,
         editLabel,
+        previewLabel,
         backToListLabel,
         templateNameLabel,
         apiNameLabel,
@@ -67,7 +72,9 @@ export default class Fec_templateDetailPage extends LightningElement {
         subjectLabel,
         emailBodyLabel,
         lastModLabel,
-        lastModByLabel
+        lastModByLabel,
+        templateHistoryTabLabel,
+        contentHistoryTabLabel
     };
 
     @track activeTab = 'details';
@@ -88,6 +95,16 @@ export default class Fec_templateDetailPage extends LightningElement {
     @track _diffNewValue       = '';
     @track _diffChangedBy      = '';
     @track _diffChangedDate    = '';
+
+    /* ── Preview modal state ── */
+    @track _isPreviewOpen = false;
+
+    /* ── View All flags for history tabs ── */
+    @track _showAllTemplateHistory = false;
+    @track _showAllContentHistory  = false;
+
+    /** Max rows shown before "View All" is required */
+    _HISTORY_PAGE_SIZE = 5;
 
     /* ═══════════════════════════════════════════ */
     /*  LIFECYCLE                                  */
@@ -160,13 +177,17 @@ export default class Fec_templateDetailPage extends LightningElement {
         // ── Content History (FEC_Content_History_Tracking__c) ──
         if (contentHistResult.status === 'fulfilled') {
             this._contentHistory = (contentHistResult.value || []).map(h => ({
-                id:           h.Id,
-                date:         h.FEC_Date__c,
-                user:         h.FEC_User__r ? h.FEC_User__r.Name : '',
-                description:  h.FEC_Merge_Fields_Used__c || 'Body content changed',
-                oldValue:     h.FEC_Original_Value__c || '',
-                newValue:     h.FEC_New_Value__c || '',
-                templateId:   h.FEC_Template__c
+                id:              h.Id,
+                date:            formatDateTime(h.FEC_Date__c),
+                user:            h.FEC_User__r ? h.FEC_User__r.Name : '',
+                userUrl:         h.FEC_User__c ? `/lightning/r/User/${h.FEC_User__c}/view` : null,
+                description:     h.FEC_Merge_Fields_Used__c || 'Body content changed',
+                mergeFieldsUsed: this._truncate(h.FEC_Merge_Fields_Used__c, 255),
+                oldValue:        this._truncate(h.FEC_Original_Value__c, 255),
+                newValue:        this._truncate(h.FEC_New_Value__c, 255),
+                fullOldValue:    h.FEC_Original_Value__c || '',
+                fullNewValue:    h.FEC_New_Value__c || '',
+                templateId:      h.FEC_Template__c
             }));
         } else {
             this._contentHistory = [];
@@ -178,9 +199,10 @@ export default class Fec_templateDetailPage extends LightningElement {
         if (tmplHistResult.status === 'fulfilled') {
             this._templateHistory = (tmplHistResult.value || []).map(h => ({
                 id:            h.Id,
-                date:          h.CreatedDate,
+                date:          formatDateTime(h.CreatedDate),
                 field:         h.Field || '',
                 user:          h.CreatedBy ? h.CreatedBy.Name : '',
+                userUrl:       h.CreatedById ? `/lightning/r/User/${h.CreatedById}/view` : null,
                 originalValue: h.OldValue != null ? String(h.OldValue) : '',
                 newValue:      h.NewValue != null ? String(h.NewValue) : ''
             }));
@@ -191,6 +213,8 @@ export default class Fec_templateDetailPage extends LightningElement {
         }
 
         this._bodyRendered = false;
+        this._showAllTemplateHistory = false;
+        this._showAllContentHistory  = false;
         this._isLoading = false;
     }
 
@@ -285,11 +309,30 @@ export default class Fec_templateDetailPage extends LightningElement {
         return this._contentHistory;
     }
 
+    /** Paginated content history: first N rows or all */
+    get contentHistoryDisplayData() {
+        if (this._showAllContentHistory) return this._contentHistory;
+        return this._contentHistory.slice(0, this._HISTORY_PAGE_SIZE);
+    }
+
+    /** Show "View All" when there are more rows than the page size */
+    get showContentHistoryViewAll() {
+        return !this._showAllContentHistory
+            && this._contentHistory.length > this._HISTORY_PAGE_SIZE;
+    }
+
     get contentHistoryColumns() {
         return [
-            { label: 'Date',        fieldName: 'date',        type: 'text' },
-            { label: 'User',        fieldName: 'user',        type: 'text' },
-            { label: 'Description', fieldName: 'description', type: 'text', wrapText: true },
+            { label: 'Date',              fieldName: 'date',            type: 'text' },
+            {
+                label: 'User',
+                fieldName: 'userUrl',
+                type: 'url',
+                typeAttributes: { label: { fieldName: 'user' }, target: '_blank' }
+            },
+            { label: 'Original Value',    fieldName: 'oldValue',        type: 'text', wrapText: true },
+            { label: 'New Value',         fieldName: 'newValue',        type: 'text', wrapText: true },
+            { label: 'Merge Fields Used', fieldName: 'mergeFieldsUsed', type: 'text', wrapText: true },
             {
                 label: 'Action',
                 type: 'button',
@@ -312,11 +355,28 @@ export default class Fec_templateDetailPage extends LightningElement {
         return this._templateHistory;
     }
 
+    /** Paginated template history: first N rows or all */
+    get templateHistoryDisplayData() {
+        if (this._showAllTemplateHistory) return this._templateHistory;
+        return this._templateHistory.slice(0, this._HISTORY_PAGE_SIZE);
+    }
+
+    /** Show "View All" when there are more rows than the page size */
+    get showTemplateHistoryViewAll() {
+        return !this._showAllTemplateHistory
+            && this._templateHistory.length > this._HISTORY_PAGE_SIZE;
+    }
+
     get templateHistoryColumns() {
         return [
             { label: 'Date',           fieldName: 'date',          type: 'text' },
             { label: 'Field',          fieldName: 'field',         type: 'text' },
-            { label: 'User',           fieldName: 'user',          type: 'text' },
+            {
+                label: 'User',
+                fieldName: 'userUrl',
+                type: 'url',
+                typeAttributes: { label: { fieldName: 'user' }, target: '_blank' }
+            },
             { label: 'Original Value', fieldName: 'originalValue', type: 'text' },
             { label: 'New Value',      fieldName: 'newValue',      type: 'text' }
         ];
@@ -344,13 +404,21 @@ export default class Fec_templateDetailPage extends LightningElement {
         }));
     }
 
+    handlePreview() {
+        this._isPreviewOpen = true;
+    }
+
+    handleClosePreview() {
+        this._isPreviewOpen = false;
+    }
+
     /**
      * Content History "View Diff" – opens the diff viewer modal.
      */
     handleViewDiff(event) {
         const row = event.detail.row;
-        this._diffOldValue    = row.oldValue || '';
-        this._diffNewValue    = row.newValue || '';
+        this._diffOldValue    = row.fullOldValue || '';
+        this._diffNewValue    = row.fullNewValue || '';
         this._diffChangedBy   = row.user || '';
         this._diffChangedDate = row.date || '';
         this._showDiffViewer  = true;
@@ -358,6 +426,14 @@ export default class Fec_templateDetailPage extends LightningElement {
 
     handleCloseDiffViewer() {
         this._showDiffViewer = false;
+    }
+
+    handleViewAllTemplateHistory() {
+        this._showAllTemplateHistory = true;
+    }
+
+    handleViewAllContentHistory() {
+        this._showAllContentHistory = true;
     }
 
     /* ═══════════════════════════════════════════ */
@@ -368,6 +444,7 @@ export default class Fec_templateDetailPage extends LightningElement {
      * Map FEC_Template__c SObject to a flat UI-friendly object.
      */
     _mapTemplate(rec) {
+        const lh = rec.FEC_Enhanced_Letterhead__r;
         return {
             id:                     rec.Id,
             name:                   rec.Name || '',
@@ -375,7 +452,9 @@ export default class Fec_templateDetailPage extends LightningElement {
             description:            rec.FEC_Description__c || '',
             folderName:             rec.FEC_Folder__r ? rec.FEC_Folder__r.Name : '',
             isActive:               rec.FEC_Active__c,
-            enhancedLetterheadName: rec.FEC_Enhanced_Letterhead__r ? rec.FEC_Enhanced_Letterhead__r.Name : '',
+            enhancedLetterheadName: lh ? lh.Name : '',
+            letterheadHeaderHtml:   lh ? (lh.FEC_Header__c || '') : '',
+            letterheadFooterHtml:   lh ? (lh.FEC_Footer__c || '') : '',
             applicableMailbox:      rec.FEC_Applicable_for_Mailbox__c
                 ? rec.FEC_Applicable_for_Mailbox__c.split(';')
                 : [],
@@ -385,5 +464,18 @@ export default class Fec_templateDetailPage extends LightningElement {
             lastModifiedById:       rec.LastModifiedById || '',
             lastModifiedDate:       rec.LastModifiedDate
         };
+    }
+
+    /**
+     * Truncate a string to maxLen characters, appending '…' if exceeded.
+     * @param {String} value    The source string
+     * @param {Number} maxLen   Maximum visible characters (default 255)
+     * @returns {String}
+     */
+    _truncate(value, maxLen = 255) {
+        if (!value) return '';
+        return value.length > maxLen
+            ? value.substring(0, maxLen) + '…'
+            : value;
     }
 }

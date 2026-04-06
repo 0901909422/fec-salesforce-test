@@ -1,30 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Show_Unfollow__c</fullName>
-    <description>True khi Case ở trạng thái Resolved và user hiện tại có thể bỏ theo dõi (Unfollow): (1) Không phải Owner/Creator nhưng ID user nằm trong FEC_Follow_Up_User__c (theo dõi thường), hoặc (2) Là Owner hoặc Creator và trong FEC_Follow_Up_User__c có bản ghi dạng Until Unfollow (ID kèm hậu tố |U). Dùng để điều kiện hiển thị nút Unfollow trên Lightning Record Page.</description>
+    <description>True khi user hiện tại có thể bỏ theo dõi (Unfollow) trên Lightning Record Page. OR: (A) Case Resolved VÀ (Normal Watcher trong FEC_Follow_Up_User__c HOẶC Owner/Creator có |U); (B) Case chưa Resolved VÀ chỉ Normal Watcher (không Owner/Creator) có ID trong FEC_Follow_Up_User__c.</description>
     <externalId>false</externalId>
-    <formula>AND(
-  BEGINS(TEXT(Status), &apos;Resolved&apos;),
-  OR(
-    /* Trường hợp 1: Normal Watcher - Không phải Owner và Không phải Creator */
-    AND(
-      OwnerId &lt;&gt; $User.Id,
-      CreatedById &lt;&gt; $User.Id,
-      OR(
-        CONTAINS(FEC_Follow_Up_User__c, $User.Id),
-        CONTAINS(FEC_Follow_Up_User__c, CASESAFEID($User.Id))
-      )
-    ),
-    /* Trường hợp 2: LÀ Owner hoặc Creator -> Type = Until Unfollow (|U) */
-    AND(
-      OR(
-        OwnerId = $User.Id,
-        CreatedById = $User.Id
+    <formula>OR(
+  AND(
+    BEGINS(TEXT(Status), &apos;Resolved&apos;),
+    OR(
+      AND(
+        OwnerId &lt;&gt; $User.Id,
+        CreatedById &lt;&gt; $User.Id,
+        OR(
+          CONTAINS(FEC_Follow_Up_User__c, $User.Id),
+          CONTAINS(FEC_Follow_Up_User__c, CASESAFEID($User.Id))
+        )
       ),
-      OR(
-        CONTAINS(FEC_Follow_Up_User__c, CASESAFEID($User.Id) &amp; &quot;|U&quot;),
-        CONTAINS(FEC_Follow_Up_User__c, $User.Id &amp; &quot;|U&quot;)
+      AND(
+        OR(
+          OwnerId = $User.Id,
+          CreatedById = $User.Id
+        ),
+        OR(
+          CONTAINS(FEC_Follow_Up_User__c, CASESAFEID($User.Id) &amp; &quot;|U&quot;),
+          CONTAINS(FEC_Follow_Up_User__c, $User.Id &amp; &quot;|U&quot;)
+        )
       )
+    )
+  ),
+  AND(
+    NOT(BEGINS(TEXT(Status), &apos;Resolved&apos;)),
+    NOT(FEC_Is_Submited__c),
+    OwnerId &lt;&gt; $User.Id,
+    CreatedById &lt;&gt; $User.Id,
+    OR(
+      CONTAINS(FEC_Follow_Up_User__c, $User.Id),
+      CONTAINS(FEC_Follow_Up_User__c, CASESAFEID($User.Id))
     )
   )
 )</formula>

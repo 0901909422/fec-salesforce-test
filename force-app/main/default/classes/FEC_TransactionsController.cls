@@ -49,10 +49,25 @@ public without sharing class FEC_TransactionsController {
        ===================================================== */
     @AuraEnabled(cacheable=false)
     public static TransactionsResponse loadTransactions(Id caseId) {
+        
+        Case c = [
+            SELECT FEC_Account_or_Contract__c, FEC_Product_Type__r.Name
+            FROM Case
+            WHERE Id = :caseId
+        ];
+        
+        FEC_Customer_History__c ch = [
+            SELECT Id, FEC_Account_Number__c, FEC_Contract_Number__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :c.FEC_Account_or_Contract__c
+        ];
 
-        FEC_Customer_History__c ch = getCustomerHistory(caseId);
-        String accNumber = ch.FEC_Account_Number__c;
-       
+        String accNumber = FEC_CommonUltils.resolveAccountNumber(
+            c.FEC_Product_Type__r.Name,
+            ch.FEC_Account_Number__c,
+            ch.FEC_Contract_Number__c
+        );
+    
         TransactionsResponse res = new TransactionsResponse();
         res.unbilledTransactions = new List<TransactionDTO>();
         res.pendingTransactions  = new List<TransactionDTO>();
@@ -369,7 +384,7 @@ public without sharing class FEC_TransactionsController {
        ===================================================== */
     private static FEC_Customer_History__c getCustomerHistory(Id caseId) {
         Case c = [
-            SELECT FEC_Account_or_Contract__c
+            SELECT FEC_Account_or_Contract__c, FEC_Product_Type__r.Name
             FROM Case
             WHERE Id = :caseId
         ];
@@ -377,7 +392,7 @@ public without sharing class FEC_TransactionsController {
             throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
 
         return [
-            SELECT Id, FEC_Account_Number__c
+            SELECT Id, FEC_Account_Number__c,FEC_Contract_Number__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
         ];
