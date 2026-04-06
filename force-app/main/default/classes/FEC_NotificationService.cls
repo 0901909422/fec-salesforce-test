@@ -73,17 +73,8 @@ public without sharing class FEC_NotificationService {
 
         if (queueIdToNotifs.isEmpty()) return;
 
-        Time nowTime = getCurrentTime();
+        Time nowTime = FEC_CommonUltils.getCurrentLocalTime();
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
-
-        // Lấy OWA verified để set From (tránh unverified sender error)
-        // Chỉ set nếu có OWA của current user email
-        Id verifiedOwaId = null;
-        String currentUserEmail = UserInfo.getUserEmail();
-        List<OrgWideEmailAddress> owas = [
-            SELECT Id FROM OrgWideEmailAddress WHERE Address = :currentUserEmail LIMIT 1
-        ];
-        if (!owas.isEmpty()) verifiedOwaId = owas[0].Id;
 
         for (Case c : routedCases) {
             List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
@@ -91,7 +82,7 @@ public without sharing class FEC_NotificationService {
 
             for (FEC_Notification__c n : candidates) {
                 if (!matchesNatureOfCase(c, n)) continue;
-                if (!isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c)) continue;
+                if (!FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c)) continue;
 
                 List<String> toAddresses = parseReceivers(n.FEC_Receivers__c);
                 if (toAddresses.isEmpty()) continue;
@@ -108,18 +99,12 @@ public without sharing class FEC_NotificationService {
                 mail.setSubject(subject);
                 mail.setHtmlBody(body);
                 mail.setSaveAsActivity(false);
-                // Set OWA để tránh unverified sender error
-                if (verifiedOwaId != null) mail.setOrgWideEmailAddressId(verifiedOwaId);
                 emails.add(mail);
             }
         }
 
         if (!emails.isEmpty()) {
-            try {
-                Messaging.sendEmail(emails, false);
-            } catch (Exception e) {
-                System.debug('FEC_NotificationService.sendEmailNotifications failed: ' + e.getMessage());
-            }
+            sendEmails(emails);
         }
     }
 
@@ -206,7 +191,7 @@ public without sharing class FEC_NotificationService {
             return;
         }
 
-        Time nowTime = getCurrentTime();
+        Time nowTime = FEC_CommonUltils.getCurrentLocalTime();
 
         for (Case c : routedCases) {
             List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
@@ -214,7 +199,7 @@ public without sharing class FEC_NotificationService {
 
             for (FEC_Notification__c n : candidates) {
                 if (!matchesNatureOfCase(c, n)) continue;
-                if (!isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c)) continue;
+                if (!FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c)) continue;
 
                 List<String> receiverEmails = parseReceivers(n.FEC_Receivers__c);
                 Set<String> recipientIds = new Set<String>();
@@ -237,6 +222,18 @@ public without sharing class FEC_NotificationService {
     }
 
     // ─── Private helpers ────────────────────────────────────────────────────
+
+    /**
+     * Common method gửi email - dùng lại cho sendEmailNotifications
+     */
+    private static void sendEmails(List<Messaging.SingleEmailMessage> emails) {
+        if (emails == null || emails.isEmpty()) return;
+        try {
+            Messaging.sendEmail(emails, false);
+        } catch (Exception e) {
+            System.debug('FEC_NotificationService.sendEmails failed: ' + e.getMessage());
+        }
+    }
 
     /**
      * Lọc các Case có OwnerId thay đổi sang Queue (khác Queue cũ)
@@ -262,7 +259,7 @@ public without sharing class FEC_NotificationService {
     private static Map<Id, String> getQueueDeveloperNames(Set<Id> queueIds) {
         Map<Id, String> result = new Map<Id, String>();
         if (queueIds.isEmpty()) return result;
-        for (Group g : [SELECT Id, DeveloperName FROM Group WHERE Id IN :queueIds AND Type = 'Queue']) {
+        for (Group g : [SELECT Id, DeveloperName FROM Group WHERE Id IN :queueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
             result.put(g.Id, g.DeveloperName);
         }
         return result;
@@ -275,7 +272,7 @@ public without sharing class FEC_NotificationService {
     private static Map<String, Id> buildQueueLookupMap(Set<Id> queueIds) {
         Map<String, Id> result = new Map<String, Id>();
         if (queueIds.isEmpty()) return result;
-        for (Group g : [SELECT Id, DeveloperName FROM Group WHERE Id IN :queueIds AND Type = 'Queue']) {
+        for (Group g : [SELECT Id, DeveloperName FROM Group WHERE Id IN :queueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
             // Match by DeveloperName
             result.put(g.DeveloperName, g.Id);
             // Match by Id (15 char)
@@ -296,27 +293,6 @@ public without sharing class FEC_NotificationService {
         if (n.FEC_SubCategory__c != null && n.FEC_SubCategory__c != c.FEC_SubCategory__c) return false;
         if (n.FEC_SubCode__c != null && n.FEC_SubCode__c != c.FEC_SubCode__c) return false;
         return true;
-    }
-
-    /**
-     * Kiểm tra thời điểm hiện tại có trong khung giờ schedule không.
-     * Nếu không set schedule → luôn gửi.
-     */
-    private static Boolean isWithinSchedule(Time nowTime, Time startTime, Time endTime) {
-        if (startTime == null || endTime == null) return true;
-        return nowTime >= startTime && nowTime <= endTime;
-    }
-
-    /**
-     * Lấy giờ hiện tại theo timezone của org
-     */
-    private static Time getCurrentTime() {
-        Datetime nowDt = Datetime.now();
-        TimeZone tz = UserInfo.getTimeZone();
-        // Convert UTC to org timezone
-        Integer offsetMs = tz.getOffset(nowDt);
-        Datetime localDt = nowDt.addSeconds(offsetMs / 1000);
-        return Time.newInstance(localDt.hour(), localDt.minute(), localDt.second(), 0);
     }
 
     /**

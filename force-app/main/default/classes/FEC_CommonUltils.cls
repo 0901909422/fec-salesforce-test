@@ -1068,6 +1068,26 @@ public with sharing class FEC_CommonUltils {
         return (val < 10 ? '0' : '') + String.valueOf(val);
     }
 
+  /**
+   * Lấy giờ hiện tại (Time) theo timezone của user hiện tại.
+   */
+  public static Time getCurrentLocalTime() {
+    Datetime nowDt = Datetime.now();
+    TimeZone tz = UserInfo.getTimeZone();
+    Integer offsetMs = tz.getOffset(nowDt);
+    Datetime localDt = nowDt.addSeconds(offsetMs / 1000);
+    return Time.newInstance(localDt.hour(), localDt.minute(), localDt.second(), 0);
+  }
+
+  /**
+   * Kiểm tra thời điểm hiện tại có trong khung giờ schedule không.
+   * Nếu không set schedule → luôn gửi.
+   */
+  public static Boolean isWithinSchedule(Time nowTime, Time startTime, Time endTime) {
+    if (startTime == null || endTime == null) return true;
+    return nowTime >= startTime && nowTime <= endTime;
+  }
+
   public static String serializeSafe(Object obj) {
     try {
       return obj != null ? JSON.serialize(obj) : null;
