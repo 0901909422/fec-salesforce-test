@@ -676,7 +676,6 @@
 		<members>fecInteractionCreationHighlight</members>
 		<members>fec_CaseBussiness</members>
 		<members>fec_IPPClosureForm</members>
-		<members>fec_IPPClosureHandling</members>
 		<members>fec_CreateCaseInListView</members>
 		<members>fec_CaseDetail_Customer</members>
 		<members>fec_CaseEditNOC</members>
@@ -685,7 +684,6 @@
 		<members>fec_PinResetView</members>
 		<members>fec_InteractionSLA</members>
 		<members>fec_CardClosureRefundForm</members>
-		<members>fec_CardClosureRefundHandling</members>
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_CardBlock</members>
 		<members>fecInteractionEmailInfoUbank</members>
@@ -693,6 +691,7 @@
 		<members>fec_IncorrectPaymentForm</members>
         <members>fec_RemovePhoneForm</members>
 		<members>fec_RefundRequestForm</members>
+		<members>fec_ContractClosureForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -724,6 +723,7 @@
         <members>FEC_IPPConversionController</members>
         <members>FEC_IncorrectPaymentController</members>
         <members>FEC_RemovePhoneController</members>
+        <members>FEC_ContractClosureController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1412,6 +1412,64 @@
 		<members>FEC_Clear_Session_Success_Msg</members>
 		<members>FEC_Clear_Session_Error_Title</members>
 		<members>FEC_Clear_Session_Error_Msg</members>
+		<members>FEC_LBL_Incorrect_Payment_Form_Title</members>
+        <members>FEC_LBL_Incorrect_Contract_Number</members>
+        <members>FEC_LBL_Select_Contract_Number</members>
+        <members>FEC_LBL_Incorrect_Contract_Hint</members>
+        <members>FEC_LBL_Payment_Method</members>
+        <members>FEC_LBL_Payment_Method_Bank_Transfer</members>
+        <members>FEC_LBL_Payment_Method_Other_Channels</members>
+        <members>FEC_LBL_No_Payment_History_Found</members>
+        <members>FEC_LBL_Bill_Date</members>
+        <members>FEC_LBL_Bill_Amount</members>
+        <members>FEC_LBL_Excess_Amount</members>
+        <members>FEC_LBL_Correct_Contract</members>
+        <members>FEC_LBL_Adjusted_Amount</members>
+        <members>FEC_LBL_Remove_Row</members>
+        <members>FEC_LBL_Add_Item</members>
+        <members>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</members>
+        <members>FEC_MSG_IncorrectPayment_LoanInfo_NotRetrieved</members>
+        <members>FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row</members>
+        <members>FEC_MSG_IncorrectPayment_Case_Not_Found</members>
+        <members>FEC_MSG_IncorrectPayment_No_Update_Case_Access</members>
+        <members>FEC_MSG_IncorrectPayment_No_Update_Case_Fields_Access</members>
+        <members>FEC_LBL_Incorrect_Payment_Form_Title</members>
+        <members>FEC_MSG_IPP_AddIpp_Default_Success</members>
+        <members>FEC_LBL_IPP_Retail_UI</members>
+		<members>FEC_Alt_Edit</members>
+		<members>FEC_Alt_Remove</members>
+		<members>FEC_Button_Cancel</members>
+		<members>FEC_Button_Save</members>
+		<members>FEC_Email_Label</members>
+		<members>FEC_Error_Title</members>
+		<members>FEC_Interaction_Email_Invalid_Msg</members>
+		<members>FEC_LBL_ContractClosure_Add_Temp_Address</members>
+		<members>FEC_LBL_ContractClosure_Add_Temp_Email</members>
+		<members>FEC_LBL_ContractClosure_Address_Col</members>
+		<members>FEC_LBL_ContractClosure_Address_Type</members>
+		<members>FEC_LBL_ContractClosure_Building</members>
+		<members>FEC_LBL_ContractClosure_Delivery_Option</members>
+		<members>FEC_LBL_ContractClosure_Mailing_Address_Col</members>
+		<members>FEC_LBL_ContractClosure_Modal_Edit_Temp_Address</members>
+		<members>FEC_LBL_ContractClosure_Modal_New_Temp_Address</members>
+		<members>FEC_LBL_ContractClosure_New_Temp_Email</members>
+		<members>FEC_LBL_ContractClosure_Recipient_Name</members>
+		<members>FEC_LBL_ContractClosure_Recipient_Phone</members>
+		<members>FEC_LBL_ContractClosure_Street</members>
+		<members>FEC_LBL_ContractClosure_Street_Number</members>
+		<members>FEC_LBL_ContractClosure_Ward</members>
+		<members>FEC_MSG_ContractClosure_Address_Required</members>
+		<members>FEC_MSG_ContractClosure_Delivery_Invalid</members>
+		<members>FEC_MSG_ContractClosure_Max_Two_Delivery_Options</members>
+		<members>FEC_MSG_ContractClosure_No_C360_Email</members>
+		<members>FEC_MSG_ContractClosure_Phone_Invalid</members>
+		<members>FEC_MSG_ContractClosure_Required_Fields</members>
+		<members>FEC_Placeholder_ContractClosure_Select_Admin</members>
+		<members>FEC_Placeholder_ContractClosure_Select_Delivery</members>
+		<members>FEC_Success_Title</members>
+		<members>FEC_Termination_Loading_Alt</members>
+		<members>FEC_Toast_Save_Success</members>
+		<members>LBL_SortBy</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
