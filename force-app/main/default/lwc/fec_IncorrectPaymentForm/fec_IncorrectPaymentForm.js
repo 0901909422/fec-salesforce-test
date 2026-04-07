@@ -55,9 +55,6 @@ const CONST = {
     TH2_CODES: ['RL08.05', 'RL08.06', 'RL08.07']
 };
 
-/** Test-only: set false before production release (calls saveAdjustments / saveAdjustment). */
-const SHOW_TEST_SAVE_ADJUSTMENT_BUTTON = true;
-
 export default class Fec_IncorrectPaymentForm extends LightningElement {
 
     @api recordId;
@@ -72,10 +69,6 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
 
     get datatableMaxRowSelection() {
         return this.isReadOnly ? 0 : 1;
-    }
-
-    get showTestSaveAdjustmentButton() {
-        return SHOW_TEST_SAVE_ADJUSTMENT_BUTTON;
     }
 
     @track subCode = CONST.EMPTY;
@@ -423,10 +416,6 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
 
     handlePaymentMethodChange(event) {
         this.paymentMethod = event.detail.value || CONST.EMPTY;
-    }
-
-    handleTestSaveAdjustment() {
-        this.saveAdjustments();
     }
 
     handleAddAdjustment() {

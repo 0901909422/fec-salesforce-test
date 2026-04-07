@@ -213,19 +213,6 @@
           {customLabel.adjustedAmountMustEqualPayment}
         </p>
       </lightning-layout-item>
-      <lightning-layout-item size="12" padding="around-small">
-        <template if:true={showTestSaveAdjustmentButton}>
-          <template if:false={isReadOnly}>
-            <lightning-button
-              label="Test lưu (saveAdjustment)"
-              variant="brand"
-              onclick={handleTestSaveAdjustment}
-              disabled={isLoading}
-            >
-            </lightning-button>
-          </template>
-        </template>
-      </lightning-layout-item>
     </template>
   </lightning-layout>
 </template>

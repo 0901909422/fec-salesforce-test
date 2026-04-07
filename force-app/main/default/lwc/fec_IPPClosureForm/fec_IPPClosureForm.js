@@ -24,27 +24,39 @@ import FEC_LBL_IPP_Closure_Col_IppBalance from '@salesforce/label/c.FEC_LBL_IPP_
 import FEC_LBL_IPP_Closure_Col_IppCurrentBalance from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppCurrentBalance';
 import FEC_LBL_IPP_Closure_Col_IppInterestRate from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppInterestRate';
 import FEC_LBL_IPP_Closure_Col_IppTerm from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppTerm';
-import FEC_LBL_IPP_Closure_Col_IppInsurance from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppInsurance';
 import FEC_LBL_IPP_Closure_Col_IppCurrentTerm from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppCurrentTerm';
 import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Toast_Save_Success from '@salesforce/label/c.FEC_Toast_Save_Success';
 import FEC_Toast_Save_Error from '@salesforce/label/c.FEC_Toast_Save_Error';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
+import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
 import { formatToDDMMYYYY } from 'c/fec_CommonUtils';
-import { STR_EMPTY, FORM_STATE_LOADING, FORM_STATE_NONE, FORM_STATE_HAS_DATA } from 'c/fec_CommonConst';
+import { STR_EMPTY } from 'c/fec_CommonConst';
+
+const IPP_SAVE_FAILED = 'IPP_SAVE_FAILED';
 
 export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement) {
 
     @api recordId;
+
+    @api isEdit;
+
+    get isReadOnly() {
+        return this.isEdit === false;
+    }
+
+    get datatableMaxRowSelection() {
+        return this.isReadOnly ? 0 : 1;
+    }
 
     @track ippList = [];
     @track selectedIppId = null;
     @track isLoading = false;
     @track completeLoading = false;
     @track showNoti11 = false;
-
-    state = FORM_STATE_LOADING;
+    @track showNoEligibleWarning = false;
+    @track loadSucceeded = false;
 
     labelLoading = LBL_LOADING;
     labelSaving = FEC_SPINNER_SAVING;
@@ -62,7 +74,6 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
         { label: FEC_LBL_IPP_Closure_Col_IppCurrentBalance, fieldName: 'ippCurrentBalanceDisplay', type: 'text', cellAttributes: { alignment: 'right' } },
         { label: FEC_LBL_IPP_Closure_Col_IppInterestRate, fieldName: 'ippInterestRateDisplay', type: 'text', cellAttributes: { alignment: 'right' } },
         { label: FEC_LBL_IPP_Closure_Col_IppTerm, fieldName: 'ippTermDisplay', type: 'text' },
-        { label: FEC_LBL_IPP_Closure_Col_IppInsurance, fieldName: 'ippInsuranceDisplay', type: 'text', cellAttributes: { alignment: 'right' } },
         { label: FEC_LBL_IPP_Closure_Col_IppCurrentTerm, fieldName: 'ippCurrentTermDisplay', type: 'text' }
     ];
 
@@ -72,25 +83,27 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
 
     loadEligibleIPPs() {
         if (!this.recordId) {
-            this.state = FORM_STATE_NONE;
+            this.loadSucceeded = false;
+            this.showNoEligibleWarning = false;
             return;
         }
         this.isLoading = true;
         this.ippList = [];
         this.selectedIppId = null;
         this.showNoti11 = false;
+        this.loadSucceeded = false;
+        this.showNoEligibleWarning = false;
         getEligibleIPPsForClosure({ caseId: this.recordId })
             .then((data) => {
-                const rows = (data || []).map(row => this.mapRowToDisplay(row));
+                const rawRows = (data && data.rows) ? data.rows : [];
+                const rows = rawRows.map(row => this.mapRowToDisplay(row));
                 this.ippList = rows;
-                if (rows.length === 0) {
-                    this.state = FORM_STATE_NONE;
-                } else {
-                    this.state = FORM_STATE_HAS_DATA;
-                }
+                this.showNoEligibleWarning = !!(data && data.showNoEligibleWarning);
+                this.loadSucceeded = true;
             })
             .catch((err) => {
-                this.state = FORM_STATE_NONE;
+                this.loadSucceeded = false;
+                this.showNoEligibleWarning = false;
                 this.showToast(FEC_Toast_Error, err?.body?.message || err?.message || FEC_Toast_Error_Generic, 'error');
             })
             .finally(() => {
@@ -115,7 +128,6 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
             ippCurrentBalanceDisplay: this.formatCurrency(row.ippCurrentBalance),
             ippInterestRateDisplay: interestDisplay,
             ippTermDisplay: termDisplay,
-            ippInsuranceDisplay: this.formatCurrency(row.ippInsurance),
             ippCurrentTermDisplay: row.ippCurrentTerm != null ? String(row.ippCurrentTerm) : STR_EMPTY
         };
     }
@@ -131,28 +143,70 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
         this.showNoti11 = false;
     }
 
+    /** Submit Case: bắt buộc chọn một dòng khi bảng có IPP đủ điều kiện. */
+    @api validateSelectionRequiredForSubmit() {
+        if (this.isReadOnly) {
+            return true;
+        }
+        if (!this.loadSucceeded || !this.ippList || this.ippList.length === 0) {
+            return true;
+        }
+        if (this.selectedIppId) {
+            return true;
+        }
+        this.showNoti11 = true;
+        this.showToast(FEC_Toast_Validation_Title, FEC_MSG_IPP_Closure_Select_One, 'warning');
+        return false;
+    }
+
+    /** Parent Save & Close / Submit: lưu IPP đã chọn nếu có; bỏ qua khi không có dòng hoặc chưa chọn. */
+    @api saveSelectedIPPIfApplicable() {
+        if (this.isReadOnly) {
+            return Promise.resolve();
+        }
+        const hasRows = this.ippList && this.ippList.length > 0;
+        if (!hasRows || !this.selectedIppId) {
+            return Promise.resolve();
+        }
+        return this.persistSelectedIPP(false);
+    }
+
+    async persistSelectedIPP(navigateAfter) {
+        this.completeLoading = true;
+        try {
+            const success = await saveSelectedIPPToCase({
+                caseId: this.recordId,
+                ippId: this.selectedIppId
+            });
+            if (success) {
+                this.showToast(FEC_Success_Title, FEC_Toast_Save_Success, 'success');
+                if (navigateAfter) {
+                    this.navigateToCase();
+                }
+                return;
+            }
+            this.showToast(FEC_Toast_Error, FEC_Toast_Save_Error, 'error');
+            throw new Error(IPP_SAVE_FAILED);
+        } catch (err) {
+            if (err?.message !== IPP_SAVE_FAILED) {
+                this.showToast(FEC_Toast_Error, err?.body?.message || err?.message || FEC_Toast_Error_Generic, 'error');
+            }
+            throw err;
+        } finally {
+            this.completeLoading = false;
+        }
+    }
+
     handleCompleteCase() {
+        if (this.isReadOnly) {
+            return;
+        }
         if (!this.selectedIppId) {
             this.showNoti11 = true;
             return;
         }
         this.showNoti11 = false;
-        this.completeLoading = true;
-        saveSelectedIPPToCase({ caseId: this.recordId, ippId: this.selectedIppId })
-            .then((success) => {
-                if (success) {
-                    this.showToast(FEC_Success_Title, FEC_Toast_Save_Success, 'success');
-                    this.navigateToCase();
-                } else {
-                    this.showToast(FEC_Toast_Error, FEC_Toast_Save_Error, 'error');
-                }
-            })
-            .catch((err) => {
-                this.showToast(FEC_Toast_Error, err?.body?.message || err?.message || FEC_Toast_Error_Generic, 'error');
-            })
-            .finally(() => {
-                this.completeLoading = false;
-            });
+        this.persistSelectedIPP(true).catch(() => {});
     }
 
     handleBackToCase() {
@@ -175,12 +229,12 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 
-    get hasNoEligibleIPPs() {
-        return this.state === FORM_STATE_NONE && !this.isLoading;
+    get showIppTableSection() {
+        return this.recordId && !this.isLoading && this.loadSucceeded;
     }
 
-    get hasEligibleIPPs() {
-        return this.state === FORM_STATE_HAS_DATA && this.ippList.length > 0;
+    get showFooterButtons() {
+        return this.ippList.length > 0;
     }
 
     get noti11Message() {

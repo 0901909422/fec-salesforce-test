@@ -1275,6 +1275,29 @@ export default class Fec_CaseBussiness extends LightningElement {
     return Promise.resolve();
   }
 
+  _getIppClosureFormEl() {
+    return (
+      this.template.querySelector("c-fec_-i-p-p-closure-form") ||
+      this.template.querySelector("c-fec_-ipp-closure-form")
+    );
+  }
+
+  _validateIPPClosureForSubmit() {
+    const el = this._getIppClosureFormEl();
+    if (el && typeof el.validateSelectionRequiredForSubmit === "function") {
+      return el.validateSelectionRequiredForSubmit();
+    }
+    return true;
+  }
+
+  _saveIPPClosureIfApplicable() {
+    const el = this._getIppClosureFormEl();
+    if (el && typeof el.saveSelectedIPPIfApplicable === "function") {
+      return el.saveSelectedIPPIfApplicable();
+    }
+    return Promise.resolve();
+  }
+
   /**
    * Chỉ lưu dữ liệu form (Nature of Case, Account Info, Case Info, Process Action, Routing Action)
    * mà KHÔNG gọi run() - không chuyển sang Stage tiếp theo.
@@ -1292,7 +1315,11 @@ export default class Fec_CaseBussiness extends LightningElement {
     });
 
     const total = formToSubmit.length;
-    const afterForms = () => this._saveIncorrectPaymentAdjustmentsIfApplicable();
+    const afterForms = () =>
+      Promise.all([
+        this._saveIncorrectPaymentAdjustmentsIfApplicable(),
+        this._saveIPPClosureIfApplicable(),
+      ]);
     if (total === 0) {
       return afterForms();
     }
@@ -1313,6 +1340,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   /** false = bị chặn (đã show toast), true = submit thành công. */
   @api async submit() {
     if (!this.validate()) return false;
+    if (!this._validateIPPClosureForSubmit()) return false;
 
     // Có routing thì mới chặn khi chưa đổi thông tin Updated; không có routing cho phép chỉ submit remarks.
     let routeToEle = this.template.querySelector(
@@ -1330,7 +1358,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     await this._submitFormsPromise();
-    await this._saveIncorrectPaymentAdjustmentsIfApplicable();
+    await Promise.all([
+      this._saveIncorrectPaymentAdjustmentsIfApplicable(),
+      this._saveIPPClosureIfApplicable(),
+    ]);
     if (routeToEle) {
       let method = routeToEle.value;
       let actionId;
