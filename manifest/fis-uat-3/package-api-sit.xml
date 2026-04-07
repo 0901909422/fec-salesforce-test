@@ -4,10 +4,13 @@
 		<members>FEC_CMSIPPBlockWSMock</members>
 		<members>FEC_CMSIPPBlockWS_Test</members>
 		<members>FEC_CMSIPPBlockWS</members>
+		<members>FEC_SearchByListNIDsServiceCallout_Test</members>
+		<members>FEC_SearchByListNIDsServiceCallout</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
 		<members>FEC_API_Config.FEC_CMS_IPP_BlockWS</members>
+		<members>FEC_API_Config.FEC_Search_By_List_NIDs</members>
 		<name>CustomMetadata</name>
 	</types>
 	<version>66.0</version>
