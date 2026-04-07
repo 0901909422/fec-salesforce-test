@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Q8_Reason_for_Settlement__c</fullName>
+    <description>Lý do yêu cầu tất toán</description>
+    <label>Q8. Reason for Settlement</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Want to take out a new loan at FE</fullName>
+                <default>false</default>
+                <label>Want to take out a new loan at FE</label>
+            </value>
+            <value>
+                <fullName>Need to borrow from another lender</fullName>
+                <default>false</default>
+                <label>Need to borrow from another lender</label>
+            </value>
+            <value>
+                <fullName>Have sufficient funds to settle/pay off early</fullName>
+                <default>false</default>
+                <label>Have sufficient funds to settle/pay off early</label>
+            </value>
+            <value>
+                <fullName>High interest rates, settling early</fullName>
+                <default>false</default>
+                <label>High interest rates, settling early</label>
+            </value>
+            <value>
+                <fullName>Frequent/Excessive fees incurred on the card</fullName>
+                <default>false</default>
+                <label>Frequent/Excessive fees incurred on the card</label>
+            </value>
+            <value>
+                <fullName>Installment amounts differ from what the sales agent advised</fullName>
+                <default>false</default>
+                <label>Installment amounts differ from what the sales agent advised</label>
+            </value>
+            <value>
+                <fullName>Loan solicitation or card opening process</fullName>
+                <default>false</default>
+                <label>Loan solicitation or card opening process</label>
+            </value>
+            <value>
+                <fullName>Debt collection/payment reminder process</fullName>
+                <default>false</default>
+                <label>Debt collection/payment reminder process</label>
+            </value>
+            <value>
+                <fullName>Have not had the opportunity to take the survey</fullName>
+                <default>false</default>
+                <label>Have not had the opportunity to take the survey</label>
+            </value>
+            <value>
+                <fullName>Other (provide detailed notes)</fullName>
+                <default>false</default>
+                <label>Other (provide detailed notes)</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

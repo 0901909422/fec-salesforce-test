@@ -196,19 +196,19 @@
                         </h3>
 
                         <div class="slds-p-top_small">
-                            <!-- Upload button – uses lightning-file-upload (only in edit mode with recordId) -->
-                            <template if:true={isEditMode}>
+                            <!-- Upload button – uses draft Id in new mode, real Id in edit mode -->
+                            <template if:true={isUploadReady}>
                                 <lightning-file-upload
                                     label="Upload Files"
                                     name="fileUploader"
-                                    record-id={_recordId}
+                                    record-id={uploadRecordId}
                                     onuploadfinished={handleUploadFinished}
                                     multiple
                                 ></lightning-file-upload>
                             </template>
-                            <template if:false={isEditMode}>
+                            <template if:false={isUploadReady}>
                                 <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
-                                    Save the template first to upload attachments.
+                                    Preparing file upload…
                                 </p>
                             </template>
 
