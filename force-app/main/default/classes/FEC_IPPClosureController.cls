@@ -89,10 +89,38 @@ public with sharing class FEC_IPPClosureController {
      */
     @AuraEnabled
     public static Boolean saveSelectedIPPToCase(Id caseId, Id ippId) {
-        if (caseId == null) {
+        if (caseId == null || ippId == null) {
             return false;
         }
         if (!Schema.sObjectType.Case.isAccessible() || !Schema.sObjectType.Case.isUpdateable()) {
+            return false;
+        }
+        if (!Schema.sObjectType.FEC_IPP__c.isAccessible()) {
+            return false;
+        }
+        Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
+        if (customerHistoryId == null) {
+            return false;
+        }
+        List<FEC_IPP__c> ippRows = [
+            SELECT Id, FEC_Customer_History__c, FEC_IPP_Current_Balance__c
+            FROM FEC_IPP__c
+            WHERE Id = :ippId
+            LIMIT 1
+        ];
+        if (ippRows.isEmpty()) {
+            return false;
+        }
+        SObjectAccessDecision ippDecision = Security.stripInaccessible(AccessType.READABLE, ippRows);
+        List<SObject> ippReadable = ippDecision.getRecords();
+        if (ippReadable.isEmpty()) {
+            return false;
+        }
+        FEC_IPP__c ippRec = (FEC_IPP__c) ippReadable[0];
+        if (ippRec.FEC_Customer_History__c != customerHistoryId) {
+            return false;
+        }
+        if (ippRec.FEC_IPP_Current_Balance__c == null || ippRec.FEC_IPP_Current_Balance__c == 0) {
             return false;
         }
         List<Case> cases = [SELECT Id, FEC_IPP_To_Close__c FROM Case WHERE Id = :caseId LIMIT 1];

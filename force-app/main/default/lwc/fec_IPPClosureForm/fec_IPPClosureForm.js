@@ -5,15 +5,12 @@
 
 import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { NavigationMixin } from 'lightning/navigation';
 import getEligibleIPPsForClosure from '@salesforce/apex/FEC_IPPClosureController.getEligibleIPPsForClosure';
 import saveSelectedIPPToCase from '@salesforce/apex/FEC_IPPClosureController.saveSelectedIPPToCase';
 import FEC_MSG_IPP_Closure_Select_One from '@salesforce/label/c.FEC_MSG_IPP_Closure_Select_One';
 import FEC_MSG_IPP_Closure_No_Eligible from '@salesforce/label/c.FEC_MSG_IPP_Closure_No_Eligible';
 import LBL_LOADING from '@salesforce/label/c.Loading';
 import FEC_SPINNER_SAVING from '@salesforce/label/c.FEC_Spinner_Saving';
-import FEC_LBL_IPP_Closure_Back_To_Case from '@salesforce/label/c.FEC_LBL_IPP_Closure_Back_To_Case';
-import FEC_LBL_IPP_Closure_Complete from '@salesforce/label/c.FEC_LBL_IPP_Closure_Complete';
 import FEC_LBL_IPP_Closure_Heading from '@salesforce/label/c.FEC_LBL_IPP_Closure_Heading';
 import FEC_LBL_IPP_Closure_Col_IppRecordNo from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppRecordNo';
 import FEC_LBL_IPP_Closure_Col_IppPlan from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppPlan';
@@ -35,8 +32,10 @@ import { formatToDDMMYYYY } from 'c/fec_CommonUtils';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 
 const IPP_SAVE_FAILED = 'IPP_SAVE_FAILED';
+const EVT_IPP_CLOSURE_READY = 'fecippclosureready';
+const EVT_IPP_CLOSURE_DETACH = 'fecippclosuredetach';
 
-export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement) {
+export default class Fec_IPPClosureForm extends LightningElement {
 
     @api recordId;
 
@@ -60,8 +59,6 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
 
     labelLoading = LBL_LOADING;
     labelSaving = FEC_SPINNER_SAVING;
-    labelBackToCase = FEC_LBL_IPP_Closure_Back_To_Case;
-    labelComplete = FEC_LBL_IPP_Closure_Complete;
     headingText = FEC_LBL_IPP_Closure_Heading;
 
     ippColumns = [
@@ -78,7 +75,24 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
     ];
 
     connectedCallback() {
+        this.dispatchEvent(
+            new CustomEvent(EVT_IPP_CLOSURE_READY, {
+                bubbles: true,
+                composed: true,
+                detail: { component: this }
+            })
+        );
         this.loadEligibleIPPs();
+    }
+
+    disconnectedCallback() {
+        this.dispatchEvent(
+            new CustomEvent(EVT_IPP_CLOSURE_DETACH, {
+                bubbles: true,
+                composed: true,
+                detail: { component: this }
+            })
+        );
     }
 
     loadEligibleIPPs() {
@@ -155,7 +169,7 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
             return true;
         }
         this.showNoti11 = true;
-        this.showToast(FEC_Toast_Validation_Title, FEC_MSG_IPP_Closure_Select_One, 'warning');
+        this.showToast(FEC_Toast_Validation_Title, FEC_MSG_IPP_Closure_Select_One, 'error');
         return false;
     }
 
@@ -168,10 +182,10 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
         if (!hasRows || !this.selectedIppId) {
             return Promise.resolve();
         }
-        return this.persistSelectedIPP(false);
+        return this.persistSelectedIPP();
     }
 
-    async persistSelectedIPP(navigateAfter) {
+    async persistSelectedIPP() {
         this.completeLoading = true;
         try {
             const success = await saveSelectedIPPToCase({
@@ -180,9 +194,6 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
             });
             if (success) {
                 this.showToast(FEC_Success_Title, FEC_Toast_Save_Success, 'success');
-                if (navigateAfter) {
-                    this.navigateToCase();
-                }
                 return;
             }
             this.showToast(FEC_Toast_Error, FEC_Toast_Save_Error, 'error');
@@ -197,44 +208,12 @@ export default class Fec_IPPClosureForm extends NavigationMixin(LightningElement
         }
     }
 
-    handleCompleteCase() {
-        if (this.isReadOnly) {
-            return;
-        }
-        if (!this.selectedIppId) {
-            this.showNoti11 = true;
-            return;
-        }
-        this.showNoti11 = false;
-        this.persistSelectedIPP(true).catch(() => {});
-    }
-
-    handleBackToCase() {
-        this.navigateToCase();
-    }
-
-    navigateToCase() {
-        if (!this.recordId) return;
-        this[NavigationMixin.Navigate]({
-            type: 'standard__recordPage',
-            attributes: {
-                recordId: this.recordId,
-                objectApiName: 'Case',
-                actionName: 'view'
-            }
-        });
-    }
-
     showToast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 
     get showIppTableSection() {
         return this.recordId && !this.isLoading && this.loadSucceeded;
-    }
-
-    get showFooterButtons() {
-        return this.ippList.length > 0;
     }
 
     get noti11Message() {

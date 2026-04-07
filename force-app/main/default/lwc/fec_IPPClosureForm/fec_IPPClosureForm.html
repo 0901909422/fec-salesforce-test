@@ -26,23 +26,6 @@
         <template if:true={showNoti11}>
           <p class="slds-m-top_small validation-msg validation-msg-red">{noti11Message}</p>
         </template>
-        <template if:true={showFooterButtons}>
-          <div class="slds-m-top_medium">
-            <lightning-button
-              label={labelBackToCase}
-              onclick={handleBackToCase}
-              variant="neutral"
-              class="slds-m-right_x-small"
-            ></lightning-button>
-            <template if:false={isReadOnly}>
-              <lightning-button
-                label={labelComplete}
-                onclick={handleCompleteCase}
-                variant="brand"
-              ></lightning-button>
-            </template>
-          </div>
-        </template>
       </template>
     </template>
   </div>
