@@ -256,7 +256,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Add New Button</shortDescription>
-        <value>Add New</value>
+        <value>New</value>
     </labels>
     <labels>
         <fullName>FEC_Btn_Apply</fullName>
@@ -319,7 +319,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Reload Button</shortDescription>
-        <value>Reload</value>
+        <value>Refresh</value>
     </labels>
     <labels>
         <fullName>FEC_Btn_Upload</fullName>
@@ -12009,5 +12009,103 @@
         <protected>false</protected>
         <shortDescription>FEC_Cannot_Delete_Enhanced_Letterhead</shortDescription>
         <value>This Enhanced Letterhead cannot be deleted because it contains active templates.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Uploaded</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Uploaded</shortDescription>
+        <value>Uploaded</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Reuploaded</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Reuploaded</shortDescription>
+        <value>Reuploaded</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Processing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Processing</shortDescription>
+        <value>Processing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Processed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Processed</shortDescription>
+        <value>Processed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Reprocess</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Reprocess</shortDescription>
+        <value>Reprocess</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Cancelled</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Cancelled</shortDescription>
+        <value>Cancelled</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Failure</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Failure</shortDescription>
+        <value>Failure</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Cannot_Delete_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Error_Cannot_Delete_Status</shortDescription>
+        <value>Cannot delete config in this status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Process_Now</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Btn_Process_Now</shortDescription>
+        <value>Process Now</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Process_Now_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Process_Now_Success</shortDescription>
+        <value>Batch processing has been triggered successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Updated_At</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Lbl_Updated_At</shortDescription>
+        <value>Updated At</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Page_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Lbl_Page_Info</shortDescription>
+        <value>Page {0}/{1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Previous</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Btn_Previous</shortDescription>
+        <value>Previous</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Next</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Btn_Next</shortDescription>
+        <value>Next</value>
     </labels>
 </CustomLabels>
