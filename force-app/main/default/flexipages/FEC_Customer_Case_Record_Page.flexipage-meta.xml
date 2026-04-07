@@ -416,6 +416,9 @@
                 </visibilityRule>
             </componentInstance>
         </itemInstances>
+        <componentInstances>
+            <componentName>fecEmailSection</componentName>
+        </componentInstances>
         <name>Facet-d56f04f8-9999-47ac-9f57-deb1710d03c5</name>
         <type>Facet</type>
     </flexiPageRegions>
