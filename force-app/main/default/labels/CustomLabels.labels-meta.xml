@@ -11882,6 +11882,8 @@
         <protected>false</protected>
         <shortDescription>Template Not Found</shortDescription>
         <value>Không tìm thấy template.</value>
+    </labels>
+    <labels>
         <fullName>FEC_LBL_ContractClosure_Add_Temp_Address</fullName>
         <categories>Contract Closure LWC</categories>
         <language>en_US</language>

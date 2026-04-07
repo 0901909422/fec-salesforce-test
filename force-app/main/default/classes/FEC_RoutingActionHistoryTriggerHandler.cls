@@ -65,9 +65,9 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
     // 1. Lấy Sender Email từ Metadata
     String senderEmail = '';
-    FEC_System_Config__mdt config = FEC_System_Config__mdt.getInstance(FEC_Notification.FEC_DEFAULT_CONFIG);
-    if (config != null && String.isNotBlank(config.FEC_Sender_Email__c)) {
-        senderEmail = config.FEC_Sender_Email__c;
+    FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
+    if (String.isNotBlank(systemConfig?.FEC_Sender_Email__c)) {
+        senderEmail = systemConfig.FEC_Sender_Email__c;
     }
 
     // 2. Query thông tin Case

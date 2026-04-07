@@ -509,6 +509,7 @@
 		<members>FEC_Clear_Session__c</members>
 		<members>FEC_Interaction_Routed__e</members>
 		<members>FEC_Additional_Info__c</members>
+		<members>FEC_System_Config__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -581,7 +582,6 @@
         <members>FEC_API_Config.FEC_ReplacementCard</members>
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
-		<members>FEC_System_Config.FEC_Default_Config</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
