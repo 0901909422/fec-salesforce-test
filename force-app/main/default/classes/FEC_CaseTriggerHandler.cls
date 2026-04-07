@@ -471,7 +471,7 @@ public without sharing class FEC_CaseTriggerHandler {
         }
 
         FEC_System_Config__c sysConfig = FEC_System_Config__c.getInstance();
-        String sendToValue = sysConfig != null ? sysConfig.FEC_Sender_Email__c : null;
+        String sendToValue = sysConfig != null ? sysConfig.FEC_Sender_Email_Ubank__c : null;
 
         Map<Id, EmailMessage> caseIdToEmailMap = new Map<Id, EmailMessage>();
         for (EmailMessage em : [SELECT Id, ParentId, FromAddress, ToAddress, CreatedDate
