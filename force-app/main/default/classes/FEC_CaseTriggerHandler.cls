@@ -507,13 +507,7 @@ public without sharing class FEC_CaseTriggerHandler {
                     c.FEC_Send_To__c = relatedEmail.ToAddress;
                 }
             } else {
-                // Lấy ToAddress từ EmailMessage (routing address thực tế nhận email)
-                // Fallback về UBankCustomberServiceEmail nếu không có
-                if (relatedEmail != null && String.isNotBlank(relatedEmail.ToAddress)) {
-                    c.FEC_Send_To__c = relatedEmail.ToAddress;
-                } else {
-                    c.FEC_Send_To__c = sendToValue;
-                }
+                c.FEC_Send_To__C = sendToValue;
                 c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
                 c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
                 casesForRouting.add(c);
