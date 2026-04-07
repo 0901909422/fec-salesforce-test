@@ -16,7 +16,6 @@ import FEC_MSG_IPP_Conversion_Fail_Disable from '@salesforce/label/c.FEC_MSG_IPP
 import FEC_MSG_IPP_No_Eligible_Transactions from '@salesforce/label/c.FEC_MSG_IPP_No_Eligible_Transactions';
 import FEC_MSG_IPP_AddIpp_Default_Failed from '@salesforce/label/c.FEC_MSG_IPP_AddIpp_Default_Failed';
 import FEC_LBL_IPP_Retail_UI from '@salesforce/label/c.FEC_LBL_IPP_Retail_UI';
-import FEC_LBL_IPP_Closure_Back_To_Case from '@salesforce/label/c.FEC_LBL_IPP_Closure_Back_To_Case';
 import FEC_Button_Close from '@salesforce/label/c.FEC_Button_Close';
 import Loading from '@salesforce/label/c.Loading';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
@@ -127,7 +126,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         { label: CONST.COL_MERCHANT, fieldName: 'merchant', type: 'text' }
     ];
 
-    lblBackToCase = FEC_LBL_IPP_Closure_Back_To_Case;
     lblTenor = CONST.LBL_TENOR;
     lblInterest = CONST.LBL_INTEREST;
     lblConversionFee = CONST.LBL_CONVERSION_FEE;
@@ -270,10 +268,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                 actionName: 'view'
             }
         });
-    }
-
-    handleNavigateToCase() {
-        this.navigateToCase();
     }
 
     resetManualEntryFields() {

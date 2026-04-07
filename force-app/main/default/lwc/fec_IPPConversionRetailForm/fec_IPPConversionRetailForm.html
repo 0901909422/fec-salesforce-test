@@ -9,11 +9,6 @@
     <template if:false={isLoading}>
       <template if:true={hasNoEligibleTransactions}>
         <p class="slds-m-bottom_medium validation-msg validation-msg-red">{noEligibleMessage}</p>
-        <lightning-button
-          label={lblBackToCase}
-          onclick={handleNavigateToCase}
-          variant="neutral"
-        ></lightning-button>
       </template>
       <template if:true={hasEligibleTransactions}>
         <h3 class="slds-text-heading_small slds-m-bottom_small">
