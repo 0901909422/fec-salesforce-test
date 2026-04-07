@@ -54,7 +54,8 @@ const CONST = {
     DESELECT_ALL_ROWS: 'deselectAllRows',
     LOCALE_EN_US: 'en-US',
     TH1_CODES: ['RL08.01', 'RL08.02', 'RL08.03', 'RL08.04', 'RL08.08'],
-    TH2_CODES: ['RL08.05', 'RL08.06', 'RL08.07']
+    TH2_CODES: ['RL08.05', 'RL08.06', 'RL08.07'],
+    DRAFT_KEY_PREFIX: 'fec-incorrect-payment-draft-'
 };
 
 export default class Fec_IncorrectPaymentForm extends LightningElement {
@@ -93,6 +94,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     @track incorrectContractOptionlst = [];
     @track paymentMethodOptionlst = [];
     _lastLoadedContract = CONST.EMPTY;
+    _pendingSelectedPaymentId = null;
 
     customLabel = {
         loading: Loading,
@@ -234,6 +236,84 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (this.recordId) this.loadSubCodeConfig();
     }
 
+    get draftStorageKey() {
+        if (!this.recordId) return null;
+        return CONST.DRAFT_KEY_PREFIX + this.recordId;
+    }
+
+    readLocalDraft() {
+        const key = this.draftStorageKey;
+        if (!key) return null;
+        try {
+            const raw = window.localStorage.getItem(key);
+            if (!raw) return null;
+            return JSON.parse(raw);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    writeLocalDraft() {
+        const key = this.draftStorageKey;
+        if (!key) return;
+        const payload = {
+            incorrectContract: this.incorrectContract || CONST.EMPTY,
+            paymentMethod: this.paymentMethod || CONST.EMPTY,
+            manualBillDate: this.manualBillDate || null,
+            manualBillAmount: this.manualBillAmount != null ? this.manualBillAmount : null,
+            selectedPaymentId: this.selectedPaymentId != null ? String(this.selectedPaymentId) : null,
+            paymentDate: this.paymentDate || null,
+            excessAmount: this.excessAmount != null ? this.excessAmount : null,
+            th1EditableBillAmount: this.th1EditableBillAmount != null ? this.th1EditableBillAmount : null,
+            adjustments: (this.adjustments || []).map((a) => ({
+                id: a.id,
+                correctContract: a.correctContract || CONST.EMPTY,
+                adjustedAmount: a.adjustedAmount != null ? a.adjustedAmount : null
+            })),
+            nextAdjustmentId: this.nextAdjustmentId
+        };
+        try {
+            window.localStorage.setItem(key, JSON.stringify(payload));
+        } catch (e) {
+            // no-op
+        }
+    }
+
+    clearLocalDraft() {
+        const key = this.draftStorageKey;
+        if (!key) return;
+        try {
+            window.localStorage.removeItem(key);
+        } catch (e) {
+            // no-op
+        }
+    }
+
+    applyLocalDraftIfAny() {
+        const draft = this.readLocalDraft();
+        if (!draft) return;
+        this.incorrectContract = draft.incorrectContract != null ? draft.incorrectContract : this.incorrectContract;
+        this.paymentMethod = draft.paymentMethod != null ? draft.paymentMethod : this.paymentMethod;
+        this.manualBillDate = draft.manualBillDate != null ? draft.manualBillDate : this.manualBillDate;
+        this.manualBillAmount = draft.manualBillAmount != null ? draft.manualBillAmount : this.manualBillAmount;
+        this.paymentDate = draft.paymentDate != null ? draft.paymentDate : this.paymentDate;
+        this.excessAmount = draft.excessAmount != null ? draft.excessAmount : this.excessAmount;
+        this.th1EditableBillAmount = draft.th1EditableBillAmount != null ? draft.th1EditableBillAmount : this.th1EditableBillAmount;
+        if (draft.adjustments && Array.isArray(draft.adjustments) && draft.adjustments.length > 0) {
+            this.adjustments = draft.adjustments.map((a, index) => ({
+                id: a.id != null ? Number(a.id) : index + 1,
+                correctContract: a.correctContract || CONST.EMPTY,
+                adjustedAmount: a.adjustedAmount != null ? a.adjustedAmount : null
+            }));
+        }
+        if (draft.nextAdjustmentId != null) {
+            this.nextAdjustmentId = Number(draft.nextAdjustmentId) || this.nextAdjustmentId;
+        }
+        if (draft.selectedPaymentId != null && draft.selectedPaymentId !== CONST.EMPTY) {
+            this._pendingSelectedPaymentId = String(draft.selectedPaymentId);
+        }
+    }
+
     loadSubCodeConfig() {
         getSubCodeConfig({ caseId: this.recordId })
             .then((data) => {
@@ -281,6 +361,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 return Promise.all([contractPromise, paymentMethodPromise]);
             })
             .then(() => {
+                this.applyLocalDraftIfAny();
                 this.configLoaded = true;
                 if (this.incorrectContract && this.incorrectContract.trim()) {
                     Promise.resolve().then(() => this.loadPaymentHistory());
@@ -329,18 +410,27 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (!contract) {
             this.paymentHistory = [];
             this.paymentHistoryTableKey += 1;
-            return;
+            return Promise.resolve();
         }
         this.paymentHistoryLoading = true;
         this.selectedPaymentId = null;
         this.selectedRowIds = [];
-        getPaymentHistoryFromSOAP({ contractNumber: contract })
+        return getPaymentHistoryFromSOAP({ contractNumber: contract })
             .then((data) => {
                 this.paymentHistory = (data || []).map((p, idx) => ({
                     ...p,
                     paymentAmountDisplay: this.formatAmount(p.paymentAmount)
                 }));
                 this._lastLoadedContract = contract;
+                if (this._pendingSelectedPaymentId != null) {
+                    const pendingId = String(this._pendingSelectedPaymentId);
+                    const matched = this.paymentHistory.find((p) => String(p.id) === pendingId);
+                    if (matched) {
+                        this.selectedPaymentId = pendingId;
+                        this.selectedRowIds = [pendingId];
+                    }
+                    this._pendingSelectedPaymentId = null;
+                }
                 this.paymentHistoryTableKey += 1;
                 this.paymentHistoryLoading = false;
             })
@@ -716,6 +806,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (!this._shouldRunIncorrectPaymentDraftSave()) {
             return Promise.resolve();
         }
+        this.writeLocalDraft();
 
         const draftFirst = this._getDraftFirstAdjustment();
         const billDate = this.selectedPayment ? (this.selectedPayment.paymentDate || null) : (this.manualBillDate || null);
@@ -770,6 +861,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         })
             .then(() => {
                 this.isLoading = false;
+                this.clearLocalDraft();
                 this.dispatchEvent(new ShowToastEvent({ 
                     title: FEC_Success_Title, 
                     message: FEC_Toast_Save_Success, 

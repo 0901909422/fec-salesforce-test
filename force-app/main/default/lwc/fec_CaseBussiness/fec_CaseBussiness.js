@@ -1276,22 +1276,19 @@ export default class Fec_CaseBussiness extends LightningElement {
   // }
 
   _getIncorrectPaymentFormEl() {
-    return (
-      this.template.querySelector("c-fec_-incorrect-payment-form") ||
-      this.template.querySelector(
-        '[data-fec-lwc="fec_IncorrectPaymentForm"] c-fec_-incorrect-payment-form',
-      ) ||
-      (() => {
-        const wrap = this.template.querySelector(
-          '[data-fec-lwc="fec_IncorrectPaymentForm"]',
-        );
-        const host = wrap && wrap.firstElementChild;
-        if (host && typeof host.saveAdjustmentsIfApplicable === "function") {
-          return host;
-        }
-        return null;
-      })()
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_IncorrectPaymentForm"]',
     );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveAdjustmentsIfApplicable === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
   }
 
   _saveIncorrectPaymentAdjustmentsIfApplicable() {
