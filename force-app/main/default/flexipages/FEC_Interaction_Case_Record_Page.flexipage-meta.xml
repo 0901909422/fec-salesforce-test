@@ -947,38 +947,6 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
-                    <value>Facet-fc5d9e9a-8c21-44d1-a5e8-9b070a02bcb2</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>title</name>
-                    <value>Interaction History</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab21</identifier>
-                <visibilityRule>
-                    <booleanFilter>(1 OR 2) AND 3</booleanFilter>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>review</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>handling</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
-                        <operator>NE</operator>
-                        <rightValue>Non-existing</rightValue>
-                    </criteria>
-                </visibilityRule>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
                     <value>Facet-c2792dca-a561-477a-801c-cb47564b39bb</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
