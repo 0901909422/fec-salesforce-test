@@ -32,8 +32,6 @@ import { formatToDDMMYYYY } from 'c/fec_CommonUtils';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 
 const IPP_SAVE_FAILED = 'IPP_SAVE_FAILED';
-const EVT_IPP_CLOSURE_READY = 'fecippclosureready';
-const EVT_IPP_CLOSURE_DETACH = 'fecippclosuredetach';
 
 export default class Fec_IPPClosureForm extends LightningElement {
 
@@ -75,24 +73,7 @@ export default class Fec_IPPClosureForm extends LightningElement {
     ];
 
     connectedCallback() {
-        this.dispatchEvent(
-            new CustomEvent(EVT_IPP_CLOSURE_READY, {
-                bubbles: true,
-                composed: true,
-                detail: { component: this }
-            })
-        );
         this.loadEligibleIPPs();
-    }
-
-    disconnectedCallback() {
-        this.dispatchEvent(
-            new CustomEvent(EVT_IPP_CLOSURE_DETACH, {
-                bubbles: true,
-                composed: true,
-                detail: { component: this }
-            })
-        );
     }
 
     loadEligibleIPPs() {

@@ -213,25 +213,6 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   businessLoaded = false;
 
-  _ippClosureFormCmp = null;
-
-  _ippClosureListenersBound = false;
-
-  _onIppClosureReady = (e) => {
-    if (
-      e.detail?.component &&
-      typeof e.detail.component.validateSelectionRequiredForSubmit === "function"
-    ) {
-      this._ippClosureFormCmp = e.detail.component;
-    }
-  };
-
-  _onIppClosureDetach = (e) => {
-    if (e.detail?.component && e.detail.component === this._ippClosureFormCmp) {
-      this._ippClosureFormCmp = null;
-    }
-  };
-
   @track activeSectionlst = ["routing-action"];
 
   routingAccordionSectionKey = "routing-action";
@@ -594,21 +575,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
   }
 
-  renderedCallback() {
-    if (!this._ippClosureListenersBound) {
-      this.template.addEventListener("fecippclosureready", this._onIppClosureReady);
-      this.template.addEventListener("fecippclosuredetach", this._onIppClosureDetach);
-      this._ippClosureListenersBound = true;
-    }
-  }
-
   disconnectedCallback() {
-    if (this._ippClosureListenersBound) {
-      this.template.removeEventListener("fecippclosureready", this._onIppClosureReady);
-      this.template.removeEventListener("fecippclosuredetach", this._onIppClosureDetach);
-      this._ippClosureListenersBound = false;
-    }
-    this._ippClosureFormCmp = null;
     localStorage.removeItem(this.draftKey);
   }
 
@@ -1309,10 +1276,6 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   _getIppClosureFormEl() {
-    const ref = this._ippClosureFormCmp;
-    if (ref && typeof ref.validateSelectionRequiredForSubmit === "function") {
-      return ref;
-    }
     return (
       this.template.querySelector("c-fec_-i-p-p-closure-form") ||
       this.template.querySelector("c-fec_-ipp-closure-form")
