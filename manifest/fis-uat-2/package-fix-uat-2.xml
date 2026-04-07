@@ -16,6 +16,7 @@
         <members>FEC_TemplateHistorySelector_Test</members>
         <members>FEC_TemplateSelector_Test</members>
         <members>FEC_TemplateSelector</members>
+		<members>FEC_TemplateService</members>
         <members>FEC_TemplateService_Test</members>
         <members>FEC_TemplateTriggerHandler_Test</members>
         <members>FEC_TemplateTriggerHandler</members>
