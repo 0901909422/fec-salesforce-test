@@ -8,7 +8,7 @@
     </template>
     <template if:false={isLoading}>
       <template if:true={hasNoEligibleTransactions}>
-        <p class="slds-m-bottom_medium">{noEligibleMessage}</p>
+        <p class="slds-m-bottom_medium validation-msg validation-msg-red">{noEligibleMessage}</p>
         <lightning-button
           label={lblBackToCase}
           onclick={handleNavigateToCase}
@@ -32,7 +32,6 @@
             <lightning-button
               label={ippRetailUi.btnCheckDetails}
               onclick={handleCheckIPPDetails}
-              disabled={detailsLoading}
               variant="brand"
             ></lightning-button>
           </div>
@@ -103,7 +102,6 @@
             <lightning-button
               label={ippRetailUi.btnConvert}
               onclick={handleConvertIPP}
-              disabled={convertDisabled}
               variant="brand"
             ></lightning-button>
           </div>

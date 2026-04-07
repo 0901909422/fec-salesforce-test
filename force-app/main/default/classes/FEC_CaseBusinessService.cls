@@ -187,6 +187,24 @@ public without sharing class FEC_CaseBusinessService {
         subCategoryId = selectedCase.FEC_SubCategory__c;
       if (String.isBlank(subCodeId))
         subCodeId = selectedCase.FEC_SubCode__c;
+      // 06/04/2026 adhoc for sub code
+      result.subCodeCode = FEC_ConstantCommon.STR_EMPTY;
+      if (String.isNotBlank(subCodeId)) {
+        try {
+          Id subCodeRecordId = subCodeId;
+          List<FEC_Sub_Code__c> subCoderlst = [
+            SELECT FEC_Code__c
+            FROM FEC_Sub_Code__c
+            WHERE Id = :subCodeRecordId
+            LIMIT 1
+          ];
+          if (!subCoderlst.isEmpty() && subCoderlst[0].FEC_Code__c != null) {
+            result.subCodeCode = subCoderlst[0].FEC_Code__c;
+          }
+        } catch (Exception e) {
+          System.debug('getByCase subCodeCode: ' + e.getMessage());
+        }
+      }
 
       // =============================== GET ROUTING ACTION ===========================
 
@@ -756,6 +774,7 @@ public without sharing class FEC_CaseBusinessService {
       System.debug('getByCase AuraHandledException: ' + e.getMessage());
     } catch (Exception e) {
       System.debug('getByCase Exception: ' + e.getMessage());
+      System.debug(e.getStackTraceString());
     }
     return result;
   }
@@ -2181,7 +2200,8 @@ public without sharing class FEC_CaseBusinessService {
     String editableGr = (String) masterDataItem.get(
       'FEC_Editable_User_Group__c'
     );
-
+    System.debug('>>>masterDataItem Sobject: ' + masterDataItem);
+    System.debug('>>>objTemp: ' + objTemp);
     Boolean isReverted = (Boolean) masterDataItem.get('FEC_Field_Reverted__c');
     Boolean isReadOnly = (Boolean) masterDataItem.get('FEC_Field_ReadOnly__c');
     Boolean isEditable = (Boolean) masterDataItem.get('FEC_Field_Editable__c');
@@ -2315,6 +2335,9 @@ public without sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public String natureOfCase;
+
+    @AuraEnabled
+    public String subCodeCode;
 
     @AuraEnabled
     public String stage;
