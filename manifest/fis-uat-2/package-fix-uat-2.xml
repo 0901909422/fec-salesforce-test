@@ -16,6 +16,7 @@
         <members>FEC_TemplateHistorySelector_Test</members>
         <members>FEC_TemplateSelector_Test</members>
         <members>FEC_TemplateSelector</members>
+		<members>FEC_TemplateService</members>
         <members>FEC_TemplateService_Test</members>
         <members>FEC_TemplateTriggerHandler_Test</members>
         <members>FEC_TemplateTriggerHandler</members>
@@ -64,6 +65,7 @@
 		<members>FEC_CaseTriggerHandler</members>
 		<members>FEC_RefundRequestController</members>
 		<members>FEC_GetMRCInfo</members>
+		<members>FEC_RoutingActionHistoryTriggerHandler</members>
 		<members>FEC_PaymentHistoryController</members>
 		<members>FEC_SecondaryInfoAccountController</members>
 		<members>FEC_StatementsAccountController</members>
@@ -123,6 +125,7 @@
 		<members>fecClearSessionNew</members>
 		<members>fec_RefundRequestForm</members>
 		<members>fec_CaseFollowHeadlessAction</members>
+		<members>fec_ManualNotification</members>
 		<members>fec_CommonUtils</members>
 		<members>fec_CustomerCaseExecuteAction</members>
 		<members>fec_CustomerCaseModeStore</members>
@@ -330,6 +333,16 @@
 		<members>FEC_Clear_Session_Success_Msg</members>
 		<members>FEC_Clear_Session_Error_Title</members>
 		<members>FEC_Clear_Session_Error_Msg</members>
+		<members>FEC_Choose_Notification_Type</members>
+		<members>FEC_Email_No_Valid_Address_Found</members>
+		<members>FEC_Email_Send_Error</members>
+		<members>FEC_Email_Sent_Success</members>
+		<members>FEC_Error_Loading_Template_List</members>
+		<members>FEC_Send</members>
+		<members>FEC_Send_Manual_Notification</members>
+		<members>FEC_Target_Email</members>
+		<members>FEC_Target_Group</members>
+		<members>FEC_Template_Not_Found</members>
 		<members>FEC_MSG_ContractClosure_Required_Fields</members>
         <members>FEC_MSG_ContractClosure_Delivery_Invalid</members>
         <members>FEC_MSG_ContractClosure_Phone_Invalid</members>
@@ -500,6 +513,7 @@
 		<members>FEC_Clear_Session__c</members>
 		<members>FEC_Interaction_Routed__e</members>
 		<members>FEC_Additional_Info__c</members>
+		<members>FEC_System_Config__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -555,6 +569,8 @@
         <members>FEC_Address_Info__c.FEC_Province__c</members>
         <members>FEC_Address_Info__c.FEC_Country__c</members>
 		<members>FEC_Content_History_Tracking__c.FEC_Merge_Fields_Used__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
