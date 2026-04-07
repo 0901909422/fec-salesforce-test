@@ -11806,6 +11806,14 @@
         <value>Refund amount must be greater than or equal to 0.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Refund_Request_Refund_Amount_Positive</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Refund_Request_Refund_Amount_Positive</shortDescription>
+        <value>Vui lòng nhập số tiền hoàn lớn hơn 0.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Refund_Request_Receipt_Lines_Required</fullName>
         <categories>Refund Request LWC</categories>
         <language>en_US</language>

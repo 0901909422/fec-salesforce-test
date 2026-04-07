@@ -190,6 +190,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
   fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
   fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
+  fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
 };
 
 export default class Fec_CaseBussiness extends LightningElement {
