@@ -128,8 +128,32 @@ public with sharing class FEC_ConstantCommon {
     
     public static final String ORIGINAL_USER_UPLOAD = 'Original_User_Upload';
     public static final String JSON_DATA_FOR_PROCESSING = 'JSON_Data_For_Processing';
+    // === Customer Additional Data — Status constants ===
     public static final String UPLOADED_STATUS = 'Uploaded';
     public static final String PROCESSED_STATUS = 'Processed';
+    public static final String REUPLOADED_STATUS = 'Reuploaded';
+    public static final String PROCESSING_STATUS = 'Processing';
+    public static final String REPROCESS_STATUS = 'Reprocess';
+    public static final String CANCELLED_STATUS = 'Cancelled';
+    public static final String FAILURE_STATUS = 'Failure';
+
+    // === Customer Additional Data — Status groups ===
+    public static final Set<String> PENDING_STATUSES = new Set<String>{
+        UPLOADED_STATUS, REUPLOADED_STATUS, PROCESSING_STATUS, REPROCESS_STATUS, FAILURE_STATUS
+    };
+    public static final Set<String> PROCESSED_STATUSES = new Set<String>{
+        PROCESSED_STATUS, CANCELLED_STATUS
+    };
+    public static final Set<String> BATCH_QUERY_STATUSES = new Set<String>{
+        UPLOADED_STATUS, REUPLOADED_STATUS
+    };
+    public static final Set<String> DELETABLE_STATUSES = new Set<String>{
+        UPLOADED_STATUS, REUPLOADED_STATUS, FAILURE_STATUS
+    };
+
+    // === Customer Additional Data — Composite Key ===
+    public static final String COMPOSITE_KEY_DELIMITER = '!';
+
     public static final String JSON_EXTENSION = '.json';
     public static final String SUCCESS_MESSAGE = 'Success';
     public static final String SUCCESS_STATUS_CODE = '0';
@@ -352,4 +376,17 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_CARD_CASE = 'Card';
     public static final String PRODUCT_TYPE_LOAN_CASE = 'Loan';
     public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
+
+    public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 = 'C360';
+    public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY = 'TEMPORARY';    /** FEC_Address_Info__c.FEC_Address_Type__c — địa chỉ tạm Contract Closure */
+    public static final String CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY = 'Temporary Address';
+
+    public static final String EMAIL_SUPPORT_CSM = 'supportcsm@fecredit.com.vn';
+    public static final String EMAIL_CS_SUPPORT = 'cssupport@fecredit.com.vn';
+    public static final String EMAIL_CUSTOMER_CARE = 'customercare@fecredit.com.vn';
+    public static final String EMAIL_E_COM = 'e_com@fecredit.com.vn';
+    public static final String EMAIL_F2F = 'F2F@fecredit.com.vn';
+    public static final String EMAIL_CS_D2C = 'cs_d2c@fecredit.com.vn';
+    public static final String EMAIL_CS_OM = 'CS_OM@fecredit.com.vn';
+    public static final String EMAIL_CS_QC_TEAM = 'CS_QC_TEAM@fecredit.com.vn';
 }

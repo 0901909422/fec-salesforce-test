@@ -51,13 +51,14 @@ public without sharing class FEC_ApplicationsListController {
         }
 
         Case cs = [
-            SELECT FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Contract_Number__c
+            SELECT FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Contract_Number__c, FEC_Product_Type__r.Name
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
         ];
 
-        String productTypeName = cs.FEC_Product_Type__r != null 
+       String productTypeName = 
+            cs.FEC_Product_Type__c != null 
             ? cs.FEC_Product_Type__r.Name 
             : null;
 

@@ -1,10 +1,11 @@
 import { LightningElement, track, wire } from 'lwc';
-import { getTomorrowDate, HEADER_ACTIONS, VIEW_HISTORY_ACTION, EDIT_ACTION, DELETE_ACTION, DELETED_DATA_SUCCESSFULLY_MSG, DELETE_CONFIRMATION_TITLE, DELETE_CONFIRMATION_MSG, SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE } from 'c/fecUtils';
+import { getTomorrowDate, formatDateDDMMYYYY, HEADER_ACTIONS, VIEW_HISTORY_ACTION, EDIT_ACTION, DELETE_ACTION, DELETED_DATA_SUCCESSFULLY_MSG, DELETE_CONFIRMATION_TITLE, DELETE_CONFIRMATION_MSG, SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE, DELETABLE_STATUSES, EDITABLE_STATUSES } from 'c/fecUtils';
 import { refreshApex } from '@salesforce/apex';
 import LightningConfirm from 'lightning/confirm';
 import deleteConfig from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.deleteConfig';
 import getUploadedConfigs from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getUploadedConfigs';
 import getExistingConfigs from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.getExistingConfigs';
+import triggerBatchProcessing from '@salesforce/apex/FEC_CustomerAdditionalInfoListController.triggerBatchProcessing';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 // Import labels
@@ -24,6 +25,10 @@ import LBL_IS_ACTIVE from '@salesforce/label/c.FEC_Lbl_Is_Active';
 import LBL_START_DATE from '@salesforce/label/c.FEC_Lbl_Start_Date';
 import LBL_END_DATE from '@salesforce/label/c.FEC_Lbl_End_Date';
 import LBL_HISTORY from '@salesforce/label/c.FEC_Title_Change_History';
+import errorCannotDeleteStatus from '@salesforce/label/c.FEC_Error_Cannot_Delete_Status';
+import processNow from '@salesforce/label/c.FEC_Btn_Process_Now';
+import processNowSuccess from '@salesforce/label/c.FEC_Process_Now_Success';
+import updatedAt from '@salesforce/label/c.FEC_Lbl_Updated_At';
 
 export default class FecCustomerAdditionalInfoList extends LightningElement {
     label = {
@@ -31,7 +36,10 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
         addNew,
         reload,
         titlePendingProcess,
-        titleExistingFields
+        titleExistingFields,
+        processNow,
+        processNowSuccess,
+        updatedAt
     };
 
     @track columnsProcessed = [
@@ -65,49 +73,60 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
             fieldName: 'FEC_EndDate__c', type: 'text', sortable: true,
             actions: HEADER_ACTIONS 
         },
-        { 
-            type: 'button', 
-            initialWidth: 100, 
-            typeAttributes: { 
-                label: LBL_HISTORY, 
-                name: VIEW_HISTORY_ACTION, 
-                variant: 'brand-outline' 
+        {
+            type: 'button-icon',
+            initialWidth: 50,
+            typeAttributes: {
+                iconName: 'utility:edit',
+                alternativeText: LBL_EDIT_TITLE,
+                title: LBL_EDIT_TITLE,
+                name: EDIT_ACTION,
+                variant: 'bare',
+                disabled: { fieldName: 'disableEdit' }
             }
         },
         { 
             type: 'button-icon', 
-            fixedWidth: 50, 
+            initialWidth: 50, 
             typeAttributes: { 
-                iconName: 'utility:edit', 
-                name: EDIT_ACTION, 
+                iconName: 'utility:date_time',
+                alternativeText: LBL_HISTORY,
+                title: LBL_HISTORY,
+                name: VIEW_HISTORY_ACTION, 
                 variant: 'bare' 
             }
         }
     ];
     @track columnsPending = [
         { label: LBL_DATA_LINKAGE, fieldName: 'FEC_KeyIdentifier__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
-        { label: LBL_FIELD_ID, fieldName: 'FEC_FieldID__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
         { label: LBL_FIELD_NAME, fieldName: 'FEC_FieldName__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
         { label: LBL_STATUS, fieldName: 'FEC_Status__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
-        { label: LBL_START_DATE, fieldName: 'FEC_StartDate__c', type: 'date', sortable: true, actions: HEADER_ACTIONS },
-        { label: LBL_END_DATE, fieldName: 'FEC_EndDate__c', type: 'date', sortable: true, actions: HEADER_ACTIONS },
-        { 
-            type: 'button-icon', 
-            fixedWidth: 50, 
-            typeAttributes: { 
-                iconName: 'utility:edit', 
-                name: EDIT_ACTION, 
-                variant: 'bare'
-            } 
+        { label: LBL_START_DATE, fieldName: 'FEC_StartDate__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
+        { label: LBL_END_DATE, fieldName: 'FEC_EndDate__c', type: 'text', sortable: true, actions: HEADER_ACTIONS },
+        { label: updatedAt, fieldName: 'LastModifiedDate', type: 'text', sortable: true, actions: HEADER_ACTIONS },
+        {
+            type: 'button-icon',
+            initialWidth: 50,
+            typeAttributes: {
+                iconName: 'utility:edit',
+                alternativeText: LBL_EDIT_TITLE,
+                title: LBL_EDIT_TITLE,
+                name: EDIT_ACTION,
+                variant: 'bare',
+                disabled: { fieldName: 'disableEdit' }
+            }
         },
-        { 
-            type: 'button-icon', 
-            fixedWidth: 50, 
-            typeAttributes: { 
+        {
+            type: 'button-icon',
+            initialWidth: 50,
+            typeAttributes: {
                 iconName: 'utility:delete',
+                alternativeText: DELETE_CONFIRMATION_TITLE,
+                title: DELETE_CONFIRMATION_TITLE,
                 name: DELETE_ACTION,
                 variant: 'bare',
-            } 
+                disabled: { fieldName: 'disableDelete' }
+            }
         }
     ];
     @track DEFAULT_FORM_DATA = {
@@ -115,7 +134,6 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
         FEC_FieldID__c: '',
         FEC_FieldName__c: '',
         FEC_IsActive__c: true,
-        FEC_Status__c: 'New',
         FEC_StartDate__c: getTomorrowDate()
     };
     
@@ -138,7 +156,16 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
     wiredConfigs(result) {
         this.wiredPendingResults = result;
         if (result.data) {
-            this.uploadedData = result.data;
+            this.uploadedData = result.data.map(row => {
+                return {
+                    ...row,
+                    FEC_StartDate__c: formatDateDDMMYYYY(row.FEC_StartDate__c),
+                    FEC_EndDate__c: formatDateDDMMYYYY(row.FEC_EndDate__c),
+                    LastModifiedDate: formatDateDDMMYYYY(row.LastModifiedDate),
+                    disableEdit: !EDITABLE_STATUSES.has(row.FEC_Status__c),
+                    disableDelete: !DELETABLE_STATUSES.has(row.FEC_Status__c)
+                };
+            });
         } else if (result.error) {
             this.showToast(FAIL_TITLE, cannotRefreshDataMsg, 'error');
         }
@@ -148,7 +175,14 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
     wiredProcessed(result) {
         this.wiredProcessedResults = result;
         if (result.data) {
-            this.processedData = result.data;
+            this.processedData = result.data.map(row => {
+                return {
+                    ...row,
+                    FEC_StartDate__c: formatDateDDMMYYYY(row.FEC_StartDate__c),
+                    FEC_EndDate__c: formatDateDDMMYYYY(row.FEC_EndDate__c),
+                    disableEdit: !EDITABLE_STATUSES.has(row.FEC_Status__c)
+                };
+            });
         }
     }
 
@@ -157,7 +191,9 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
         const action = event.detail.action.name;
         const row = event.detail.row;
         if (action === VIEW_HISTORY_ACTION) this.openHistoryModal(row);
-        else if (action === EDIT_ACTION) this.openEditModal(row);
+        else if (action === EDIT_ACTION) {
+            this.openEditModal(row);
+        }
     }
     
     async handleUploadedRowAction(event) {
@@ -188,10 +224,23 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
                 
                 await this.handleReload();
             } catch (error) {
-                this.showToast(FAIL_TITLE, error.body.message, 'error');
+                this.showToast(FAIL_TITLE, error.body?.message || error.message, 'error');
             } finally {
                 this.isLoading = false;
             }
+        }
+    }
+
+    async handleProcessNow() {
+        this.isLoading = true;
+        try {
+            const result = await triggerBatchProcessing();
+            this.showToast(SUCCESS_TITLE, result, 'success');
+            await this.handleReload();
+        } catch (error) {
+            this.showToast(FAIL_TITLE, error.body?.message || error.message, 'error');
+        } finally {
+            this.isLoading = false;
         }
     }
 

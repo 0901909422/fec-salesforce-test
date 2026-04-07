@@ -192,8 +192,8 @@ export default class FecCustomerUpsertModal extends LightningElement {
         const fieldId = this.localData.FEC_FieldID__c;
         const keyId = this.localData.FEC_KeyIdentifier__c;
     
-        const isKeyMatch = fileHeader[0] && String(fileHeader[0]).trim().toUpperCase() === String(keyId).trim().toUpperCase();
-        const isFieldMatch = fileHeader[1] && String(fileHeader[1]).trim().toUpperCase() === String(fieldId).trim().toUpperCase();
+        const isKeyMatch = fileHeader[0] && String(fileHeader[0]).trim().localeCompare(String(keyId).trim(), undefined, { sensitivity: 'accent' }) === 0;
+        const isFieldMatch = fileHeader[1] && String(fileHeader[1]).trim().localeCompare(String(fieldId).trim(), undefined, { sensitivity: 'accent' }) === 0;
     
         if (!isKeyMatch || !isFieldMatch) {
             let errorMsg = '';
@@ -377,16 +377,12 @@ export default class FecCustomerUpsertModal extends LightningElement {
      */
     processExcelFile(file) {
         return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            // Đọc dưới dạng DataURL để lấy Base64 trước
-            reader.onload = (e) => {
+            // Đọc file 2 lần: ArrayBuffer cho SheetJS, DataURL cho base64 upload
+            const readerBuffer = new FileReader();
+            readerBuffer.onload = (bufferEvent) => {
                 try {
-                    const base64WithHeader = e.target.result;
-                    const base64Data = base64WithHeader.split(',')[1]; // Lấy phần data sau dấu phẩy
-    
-                    // Chuyển từ base64 sang ArrayBuffer để SheetJS xử lý
-                    const data = new Uint8Array(atob(base64Data).split("").map(c => c.charCodeAt(0)));
-                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const arrayBuffer = bufferEvent.target.result;
+                    const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array', cellDates: true });
                     
                     if (!workbook || !workbook.SheetNames.length) {
                         throw new Error(errorFileInvalid);
@@ -395,23 +391,30 @@ export default class FecCustomerUpsertModal extends LightningElement {
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     
-                    // Validate Header
+                    // Validate Header — dùng localeCompare cho tiếng Việt
                     this.validateFileHeader(rawRows, file.name);
 
                     // Validate duplicate Key Identifier values
                     this.validateDuplicateKeys(rawRows);
 
-                    // Trả về tất cả kết quả xử lý
-                    resolve({
-                        jsonString: JSON.stringify(rawRows),
-                        base64Data: base64Data
-                    });
+                    // Đọc base64 riêng cho upload lên server
+                    const readerBase64 = new FileReader();
+                    readerBase64.onload = (base64Event) => {
+                        const base64WithHeader = base64Event.target.result;
+                        const base64Data = base64WithHeader.split(',')[1];
+                        resolve({
+                            jsonString: JSON.stringify(rawRows),
+                            base64Data: base64Data
+                        });
+                    };
+                    readerBase64.onerror = (err) => reject(err);
+                    readerBase64.readAsDataURL(file);
                 } catch (err) {
                     reject(err);
                 }
             };
-            reader.onerror = (err) => reject(err);
-            reader.readAsDataURL(file); // Đọc 1 lần lấy DataURL (Base64)
+            readerBuffer.onerror = (err) => reject(err);
+            readerBuffer.readAsArrayBuffer(file);
         });
     }
 
