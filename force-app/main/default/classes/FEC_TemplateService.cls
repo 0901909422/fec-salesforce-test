@@ -118,7 +118,7 @@ public with sharing class FEC_TemplateService {
 
     /**
      * Extract merge field references like {{{Contact.FirstName}}} from the body.
-     * Returns a comma-separated string, truncated to 255 chars (field limit).
+     * Returns a comma-separated string of all unique merge fields found.
      */
     @TestVisible
     private static String extractMergeFields(String body) {
@@ -133,7 +133,6 @@ public with sharing class FEC_TemplateService {
 
         if (mergeFields.isEmpty()) return '';
 
-        String result = String.join(new List<String>(mergeFields), ', ');
-        return result.length() > 255 ? result.substring(0, 255) : result;
+        return String.join(new List<String>(mergeFields), ', ');
     }
 }

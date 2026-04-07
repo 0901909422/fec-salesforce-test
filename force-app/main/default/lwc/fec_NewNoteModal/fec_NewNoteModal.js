@@ -24,15 +24,15 @@ export default class Fec_NewNoteModal extends LightningElement {
   connectedCallback() {
     if (this.note) {
       this.title = this.note.title;
-      this.content = this.note.preview; // hoặc full content nếu có
+      this.content = this.note.content; // hoặc full content nếu có
     }
   }
 
   labels = {
     titleField: FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN,
     composeTextField: FEC_RELATED_NOTES_COMPOSE_TEXT_FIELD,
-    cancelBtn : FEC_ACTION_CANCEL,
-    saveBtn : FEC_Button_Save
+    cancelBtn: FEC_ACTION_CANCEL,
+    saveBtn: FEC_Button_Save,
   };
 
   handleTitle(event) {

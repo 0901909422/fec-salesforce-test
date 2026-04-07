@@ -1,0 +1,65 @@
+.fec-closure-form .fec-required {
+  color: var(--lwc-colorTextError, #c23934);
+}
+
+.fec-closure-form .msg-error,
+.fec-closure-form .fec-noti {
+  font-weight: bold;
+  color: #ff0000;
+}
+
+.fec-closure-form .fec-email-box {
+  border: 1px solid var(--lwc-colorBorder, #dddbda);
+  border-radius: 0.25rem;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.fec-closure-form .fec-table-wrap {
+  margin-top: 0.75rem;
+  border: 1px solid var(--lwc-colorBorder, #dddbda);
+  border-radius: 0.25rem;
+  padding: 0.75rem;
+}
+
+.fec-closure-form .fec-address-table-meta {
+  color: var(--lwc-colorTextWeak, #706e6b);
+}
+
+.fec-closure-form .fec-sortable-th {
+  cursor: pointer;
+}
+
+.fec-closure-form .fec-th-sort {
+  display: inline-flex;
+  align-items: center;
+}
+
+.fec-closure-form .fec-col-select {
+  width: 2.5rem;
+}
+
+.fec-closure-form .fec-delivery-combo {
+  position: relative;
+  max-width: 100%;
+}
+
+.fec-closure-form .fec-delivery-field-slot {
+  max-width: 24rem;
+}
+
+.fec-closure-form .fec-delivery-combobox-container {
+  max-width: 100%;
+}
+
+.fec-closure-form .fec-delivery-dropdown {
+  left: 0;
+  right: auto;
+  max-width: 100%;
+}
+
+.fec-closure-form .btn-delete {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
