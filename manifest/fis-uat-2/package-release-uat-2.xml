@@ -1337,6 +1337,8 @@
         <members>FEC_InteractionRoutingController</members>
         <members>FEC_CardPaymentController</members>
         <members>FEC_GetCardPlanInfo</members>
+		<members>FEC_EnhancedLetterheadTriggerHandler</members>
+		<members>FEC_EnhancedLetterheadHandler_Test</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1476,6 +1478,7 @@
 		<members>FEC_Termination_Loading_Alt</members>
 		<members>FEC_Toast_Save_Success</members>
 		<members>LBL_SortBy</members>
+		<members>FEC_Cannot_Delete_Enhanced_Letterhead</members>
 		<members>FEC_Choose_Notification_Type</members>
 		<members>FEC_Email_No_Valid_Address_Found</members>
 		<members>FEC_Email_Send_Error</members>
@@ -1524,6 +1527,7 @@
 	</types>
     <types>
 		<members>FEC_EmailMessageTrigger</members>
+		<members>FEC_EnhancedLetterheadTrigger</members>
         <name>ApexTrigger</name>
     </types>
 

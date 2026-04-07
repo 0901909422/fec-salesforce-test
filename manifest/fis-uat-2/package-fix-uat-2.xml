@@ -16,6 +16,7 @@
         <members>FEC_TemplateHistorySelector_Test</members>
         <members>FEC_TemplateSelector_Test</members>
         <members>FEC_TemplateSelector</members>
+		<members>FEC_TemplateService</members>
         <members>FEC_TemplateService_Test</members>
         <members>FEC_TemplateTriggerHandler_Test</members>
         <members>FEC_TemplateTriggerHandler</members>
@@ -78,6 +79,8 @@
         <members>FEC_SecondaryInfoLoanAccountController</members>
         <members>FEC_CardPaymentController</members>
         <members>FEC_GetCardPlanInfo</members>
+		<members>FEC_EnhancedLetterheadTriggerHandler</members>
+		<members>FEC_EnhancedLetterheadHandler_Test</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -344,6 +347,7 @@
         <members>FEC_MSG_ContractClosure_Delivery_Invalid</members>
         <members>FEC_MSG_ContractClosure_Phone_Invalid</members>
         <members>FEC_MSG_ContractClosure_Address_Required</members>
+		<members>FEC_Cannot_Delete_Enhanced_Letterhead</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -606,6 +610,7 @@
     </types>
     <types>
 		<members>FEC_EmailMessageTrigger</members>
+		<members>FEC_EnhancedLetterheadTrigger</members>
         <name>ApexTrigger</name>
     </types>
     <version>65.0</version>
