@@ -53,12 +53,12 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/29 - Added updateCaseParticipants for Customer Case / Internal Case
      */
     private void onBeforeInsert(List<Case> newCases) {
+        setEmail2CaseChannelBeforeInsert(newCases);
+        syncChannelFromInteractionForCustomerCase(newCases);
         generateFECIdSearch(newCases);
         updateCaseParticipantsOnInsert(newCases);
-        syncChannelFromInteractionForCustomerCase(newCases);
         assignEntitlement(newCases);
         syncGlobalSearchFromParent(newCases, null);
-        setEmail2CaseChannelBeforeInsert(newCases);
         setParentIdFromEmailThread(newCases);
         stripSubjectThreadToken(newCases);
     }
