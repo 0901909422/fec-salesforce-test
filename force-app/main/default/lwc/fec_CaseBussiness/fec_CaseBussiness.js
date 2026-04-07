@@ -179,6 +179,7 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
  *   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
  */
 const DYNAMIC_COMPONENT_REGISTRY = {
+  fec_UpdateAddress: () => import('c/fec_UpdateAddress'),
   fec_CardInfo: () => import('c/fec_CardInfo'),
   fec_IPPClosureForm: () => import('c/fec_IPPClosureForm'),
   fec_CardClosureRefundForm: () => import('c/fec_CardClosureRefundForm'),
