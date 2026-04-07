@@ -154,7 +154,7 @@
 		<name>CustomLabel</name>
 	</types>
 	<types>
-		<members>FEC_New_Interaction_Record_For_E2C</members>
+		<!--<members>FEC_New_Interaction_Record_For_E2C</members>-->
 		<members>FEC_Mark_Complete_for_Milestone</members>
 		<name>Flow</name>
 	</types>
@@ -176,7 +176,6 @@
 		<members>fecInteractionCreationHighlight</members>
 		<members>fec_CaseBussiness</members>
 		<members>fec_IPPClosureForm</members>
-		<members>fec_IPPClosureHandling</members>
 		<members>fec_CreateCaseInListView</members>
 		<members>fec_CaseDetail_Customer</members>
 		<members>fec_CaseEditNOC</members>
@@ -185,7 +184,6 @@
 		<members>fec_PinResetView</members>
 		<members>fec_InteractionSLA</members>
 		<members>fec_CardClosureRefundForm</members>
-		<members>fec_CardClosureRefundHandling</members>
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_CardBlock</members>
 		<members>fecInteractionInfo</members>

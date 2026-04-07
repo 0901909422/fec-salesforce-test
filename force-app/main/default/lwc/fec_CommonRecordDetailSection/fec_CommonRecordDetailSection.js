@@ -15,12 +15,16 @@ import { LightningElement, api } from 'lwc';
 import { isNegative } from 'c/fec_CommonUtils';
 
 import FEC_Button_Refresh from '@salesforce/label/c.FEC_Button_Refresh';
+import FEC_Termination_Loading_Alt from '@salesforce/label/c.FEC_Termination_Loading_Alt';
 
 export default class Fec_CommonRecordDetailSection extends LightningElement {
     /* ================= API ================= */
     @api sectionTitle;
+    /** Hiển thị trên thanh section (lightning-accordion-section label). Mặc định dùng sectionTitle. */
+    @api sectionLabel;
     @api showRefreshButton = false;
     @api columns = 2;
+    @api sectionLoading = false;
 
     /* ================= PRIVATE STATE ================= */
     _fields = [];
@@ -36,6 +40,13 @@ export default class Fec_CommonRecordDetailSection extends LightningElement {
 
     customLabel = {
         btnRefresh: FEC_Button_Refresh,
+        loadingAlt: FEC_Termination_Loading_Alt,
+    };
+
+    get accordionLabel() {
+        return this.sectionLabel != null && this.sectionLabel !== ''
+            ? this.sectionLabel
+            : this.sectionTitle;
     }
 
     /* ================= EVENTS ================= */
