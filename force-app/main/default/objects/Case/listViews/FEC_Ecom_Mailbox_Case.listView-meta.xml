@@ -21,7 +21,7 @@
     <filters>
         <field>CASES.RECORDTYPE</field>
         <operation>equals</operation>
-        <value>Case.Customer_Case,Case.Internal_Case</value>
+        <value>Case.Customer_Case,Case.Internal_Case,Case.Interaction_Case</value>
     </filters>
     <label>Ecom Mailbox</label>
     <queue>FEC_Ecom_Mailbox</queue>
