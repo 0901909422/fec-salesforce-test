@@ -470,7 +470,10 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
 
-        String sendToValue = System.Label.UBankCustomberServiceEmail;
+        FEC_System_Config__c sysConfig = FEC_System_Config__c.getInstance();
+        String sendToValue = (sysConfig != null && String.isNotBlank(sysConfig.FEC_Sender_Email__c)) 
+                             ? sysConfig.FEC_Sender_Email__c 
+                             : System.Label.UBankCustomberServiceEmail;
 
         Map<Id, EmailMessage> caseIdToEmailMap = new Map<Id, EmailMessage>();
         for (EmailMessage em : [SELECT Id, ParentId, FromAddress, ToAddress, CreatedDate
