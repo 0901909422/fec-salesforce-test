@@ -316,36 +316,6 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>fec_MRC</componentName>
-                <identifier>c_fec_MRC</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-b39ae01f-1cc7-46da-932e-25da76ddc7a9</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>fec_Asset</componentName>
-                <identifier>c_fec_Asset</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-4e12d1b9-12bd-413a-8c21-9b75a9b8fb1c</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>fec_AppInfo</componentName>
-                <identifier>c_fec_AppInfo</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-fad4e003-d16c-4ce9-929c-e342eac2bfa8</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
                 <componentInstanceProperties>
                     <name>active</name>
                     <value>true</value>
@@ -458,48 +428,6 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab14</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
-                    <value>Facet-b39ae01f-1cc7-46da-932e-25da76ddc7a9</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>title</name>
-                    <value>MRC</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab16</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
-                    <value>Facet-4e12d1b9-12bd-413a-8c21-9b75a9b8fb1c</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>title</name>
-                    <value>Asset</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab17</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
-                    <value>Facet-fad4e003-d16c-4ce9-929c-e342eac2bfa8</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>title</name>
-                    <value>Application History</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab18</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-7ff9e3fd-0caa-4867-8d23-4e594181ec78</name>
@@ -754,6 +682,36 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_MRC</componentName>
+                <identifier>c_fec_MRC</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-adff6adf-8ad8-4efa-a7f2-4d1f0ef87d3f</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_Asset</componentName>
+                <identifier>c_fec_Asset</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-4yb546l8g7b</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_AppInfo</componentName>
+                <identifier>c_fec_AppInfo</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-a0fda9b7-7334-41ef-83ff-7464f81b72ea</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>active</name>
                     <value>true</value>
@@ -810,6 +768,48 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab25</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-adff6adf-8ad8-4efa-a7f2-4d1f0ef87d3f</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>MRC</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab16</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-4yb546l8g7b</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Asset</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab17</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-a0fda9b7-7334-41ef-83ff-7464f81b72ea</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Application History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab18</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-690c96c5-e309-412b-9b6c-d612d8c9fb79</name>

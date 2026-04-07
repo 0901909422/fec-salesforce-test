@@ -12,6 +12,9 @@ import { publish, MessageContext } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import createCustomerCaseFromCase from "@salesforce/apex/FEC_CreateCaseInteractionController.createCustomerCaseFromCase";
 import createCustomerCaseFromCaseNonExistingCustomer from "@salesforce/apex/FEC_CreateCaseInteractionController.createCustomerCaseFromCaseNonExistingCustomer";
+import {
+  setMode,
+} from "c/fec_CustomerCaseModeStore";
 // import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 // import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 // import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
@@ -184,6 +187,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
     const payload = {
       isModeEdit: true,
     };
+    setMode(true);
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
 }

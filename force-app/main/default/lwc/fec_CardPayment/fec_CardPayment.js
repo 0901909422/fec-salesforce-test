@@ -74,9 +74,9 @@ export default class Fec_CardPayment extends LightningElement {
             formattedRecord.FEC_REF_Number_Display__c =
                 refRaw != null && String(refRaw).trim() !== '' ? String(refRaw) : '__';
 
-            // Base Rate: Apex lưu baseRate API / 100; hiển thị đúng giá trị thô API (vd 5500000 → 5500000.00 %)
+            // Base Rate: trường Percent — giá trị đã là % (vd 10 → 10.00 %)
             if (formattedRecord.FEC_Base_Rate__c != null && formattedRecord.FEC_Base_Rate__c !== undefined) {
-                const value = Number(formattedRecord.FEC_Base_Rate__c) * 100;
+                const value = Number(formattedRecord.FEC_Base_Rate__c);
                 formattedRecord.FEC_Base_Rate_Formatted__c = value.toFixed(2) + ' %';
             }
 

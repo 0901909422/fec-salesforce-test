@@ -353,14 +353,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       await clearDraftRemarks({ caseId: this.recordId });
       await caseRemarksEle.createRemark(stageName);
 
-      // Luôn đẩy Case Remark vào History khi user đã nhập và bấm Submit (tránh mất nội dung khi business submit bị chặn)
-      await caseRemarksEle.submitRemark(stageName);
-      this.loadRemarkHistory();
-
       const submitted = await caseBusinessEle.submit();
       if (submitted === false) {
         return;
       }
+
+      // Chuyển Lưu Remark xuống dưới để khi submit business thành công thì mới lưu remark
+      await caseRemarksEle.submitRemark(stageName);
+      this.loadRemarkHistory();
 
       // Chuyển sang Case Review (chế độ xem), không đóng tab
       setTimeout(() => {
