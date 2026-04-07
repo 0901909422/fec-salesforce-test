@@ -1922,6 +1922,10 @@
     </labels>
     <labels>
         <fullName>FEC_Interaction_Channel_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Channel</shortDescription>
+        <value>Interaction Channel</value>
     </labels>
     <!-- Apex Error Messages -->
     <labels>
