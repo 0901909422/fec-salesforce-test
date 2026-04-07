@@ -1341,6 +1341,7 @@
         <members>FEC_GetCardPlanInfo</members>
 		<members>FEC_EnhancedLetterheadTriggerHandler</members>
 		<members>FEC_EnhancedLetterheadHandler_Test</members>
+		<members>FEC_NotificationService</members>
         <name>ApexClass</name>
     </types>
 	<types>
