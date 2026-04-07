@@ -13,6 +13,8 @@ import FEC_LBL_Province_City from "@salesforce/label/c.FEC_LBL_Province_City";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
 import FEC_Toast_Save_Success_Title from "@salesforce/label/c.FEC_Toast_Save_Success_Title";
 import FEC_Toast_Save_Success from "@salesforce/label/c.FEC_Toast_Save_Success";
+import FEC_MSG_Param_Required from "@salesforce/label/c.FEC_MSG_Param_Required";
+import FEC_Toast_Validation_Message from "@salesforce/label/c.FEC_Toast_Validation_Message";
 import { STR_EMPTY } from "c/fec_CommonConst";
 import { toUpperNoVietnameseAccent } from "c/fec_CommonUtils";
 
@@ -161,10 +163,16 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
             return Promise.resolve();
         }
         if (!this.recordId) {
-            return Promise.resolve({ success: false, errorMessage: "Case Id required" });
+            return Promise.resolve({
+                success: false,
+                errorMessage: FEC_MSG_Param_Required.replace("{0}", "Case Id")
+            });
         }
         if (!this.reportValidity()) {
-            return Promise.resolve({ success: false, errorMessage: "Validation failed" });
+            return Promise.resolve({
+                success: false,
+                errorMessage: FEC_Toast_Validation_Message
+            });
         }
         const v = this.getFieldValues();
         this.isBusy = true;
