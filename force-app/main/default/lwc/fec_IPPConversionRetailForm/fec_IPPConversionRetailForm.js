@@ -69,6 +69,16 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
 
     @api recordId;
 
+    @api isEdit;
+
+    get isReadOnly() {
+        return this.isEdit === false;
+    }
+
+    get datatableMaxRowSelection() {
+        return this.isReadOnly ? 0 : 1;
+    }
+
     @track transactions = [];
     @track selectedTransactionId = null;
     @track details = null;
@@ -176,6 +186,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     handleCheckIPPDetails() {
+        if (this.isReadOnly) {
+            return;
+        }
         if (!this.selectedTransactionId) {
             this.showToast(FEC_Toast_Warning, FEC_Toast_Validation_Message, CONST.VARIANT_WARNING);
             return;
@@ -201,6 +214,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     handleConvertIPP() {
+        if (this.isReadOnly) {
+            return;
+        }
         if (!this.selectedTransactionId || !this.selectedTenor) {
             this.showToast(FEC_Toast_Warning, FEC_Toast_Validation_Message, CONST.VARIANT_WARNING);
             return;
@@ -210,6 +226,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
 
     handleConfirmYes() {
         this.showConfirmModal = false;
+        if (this.isReadOnly) {
+            return;
+        }
         this.doConvert();
     }
 
@@ -218,6 +237,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     doConvert() {
+        if (this.isReadOnly) {
+            return;
+        }
         this.convertLoading = true;
         convertIPP({
             caseId: this.recordId,
@@ -255,6 +277,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     handleTenorChange(event) {
+        if (this.isReadOnly) {
+            return;
+        }
         this.selectedTenor = event.detail.value ? parseInt(event.detail.value, 10) : null;
     }
 
@@ -286,6 +311,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     handleShowManualEntry() {
+        if (this.isReadOnly) {
+            return;
+        }
         this.resetManualEntryFields();
         this.showManualEntry = true;
     }
@@ -332,6 +360,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     handleManualEntrySubmit() {
+        if (this.isReadOnly) {
+            return;
+        }
         const allFields = [
             this.manualVerificationInfo,
             this.manualCallback,

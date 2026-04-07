@@ -18,7 +18,8 @@
           key-field="transactionId"
           data={transactions}
           columns={transactionColumns}
-          max-row-selection="1"
+          max-row-selection={datatableMaxRowSelection}
+          hide-checkbox-column={isReadOnly}
           onrowselection={handleRowSelection}
         >
         </lightning-datatable>
@@ -28,6 +29,7 @@
               label={ippRetailUi.btnCheckDetails}
               onclick={handleCheckIPPDetails}
               variant="brand"
+              disabled={isReadOnly}
             ></lightning-button>
           </div>
         </template>
@@ -52,6 +54,7 @@
                     options={tenorOptions}
                     onchange={handleTenorChange}
                     required
+                    disabled={isReadOnly}
                   ></lightning-combobox>
                 </div>
               </div>
@@ -98,6 +101,7 @@
               label={ippRetailUi.btnConvert}
               onclick={handleConvertIPP}
               variant="brand"
+              disabled={isReadOnly}
             ></lightning-button>
           </div>
         </template>
