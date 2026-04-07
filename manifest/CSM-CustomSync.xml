@@ -17,29 +17,34 @@
     </types>
     <types>
         <members>CustomSyncField__mdt.Fields__c</members>
-        <members>CustomSyncField__mdt.ObjectTarget__c</members>
+        <members>CustomSyncField__mdt.TargetObject__c</members>
+
         <members>CustomSync__c.StartAt__c</members>
         <members>CustomSync__c.EndAt__c</members>
         <members>CustomSync__c.Active__c</members> 
+        <members>CustomSync__c.TotalRecordSync__c</members> 
         <members>CustomSync__c.SyncTo__c</members>
         <members>CustomSync__c.SyncSuccessFully__c</members>
         <members>CustomSync__c.SyncFailed__c</members>
         <members>CustomSync__c.ProcessingQuantity__c</members>
         <members>CustomSync__c.WhatSync__c</members>
         <members>CustomSync__c.TableName__c</members> 
+
         <members>FEC_API_Log__c.FEC_Quantity_Call__c</members> 
         <members>FEC_API_Log__c.FEC_Custom_Sync__c</members> 
         <members>CustomSyncSetting__c.Endpoint__c</members>
+        
         <members>CustomSyncSetting__c.ApiKey__c</members>
         <members>CustomSyncSetting__c.LimitQuanitySync__c</members>
         <name>CustomField</name>
     </types>
-    <types>
-        <members>CustomSync__c-Custom Sync Layout</members>
-        <members>FEC_API_Log__c-FEC API Log Layout</members>
-        <members>CustomSyncSetting__c-Custom Sync Setting Layout</members>
+    <types> 
         <members>CustomSyncField__mdt-Custom Sync Field Layout</members>
         <name>Layout</name>
+    </types>
+    <types>
+        <members>FEC_Common_System_Setting</members>
+        <name>PermissionSet</name>
     </types>
     <version>60.0</version>
 </Package>
