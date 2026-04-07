@@ -1,7 +1,7 @@
 <template>
     <lightning-accordion-section
         name={sectionTitle}
-        label={sectionTitle}
+        label={accordionLabel}
         class="slds-accordion__section">
 
         <!-- ACTIONS -->
@@ -14,6 +14,12 @@
         </div>
 
         <!-- CONTENT -->
+        <template if:true={sectionLoading}>
+            <div class="fec-section-spinner-wrapper">
+                <lightning-spinner alternative-text={customLabel.loadingAlt} size="medium"></lightning-spinner>
+            </div>
+        </template>
+        <template if:false={sectionLoading}>
         <div class="slds-form slds-p-around_small" role="list">
 
             <template for:each={rows} for:item="row">
@@ -100,5 +106,6 @@
                 </div>
             </template>
         </div>
+        </template>
     </lightning-accordion-section>
 </template>

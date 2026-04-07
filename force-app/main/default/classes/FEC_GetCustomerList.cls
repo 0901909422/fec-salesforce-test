@@ -1,4 +1,7 @@
 public with sharing class FEC_GetCustomerList {
+
+    public static FEC_ResponseLog responseLog;
+
     /* ================================
      * RESPONSE MODELS
      * ================================ */
@@ -129,7 +132,16 @@ public with sharing class FEC_GetCustomerList {
                 ? FEC_MockupEndpoint.GET_CUSTOMER_LIST_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
                     
-        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+        
+        responseLog = new FEC_ResponseLog(
+            'FEC_GetCustomerList',
+            endpoint,
+            FEC_ConstantCommon.API_METHOD_POST,
+            soapBody,
+            res,
+            null
+        );
         
         if (res.getStatusCode() == 200 && String.isNotBlank(res.getBody())) {
 

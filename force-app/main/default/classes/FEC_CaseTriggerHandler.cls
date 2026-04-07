@@ -443,7 +443,7 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         for (Case c : newCases) {
-            if (c.RecordTypeId == interactionRecordTypeId && String.isBlank(c.FEC_Channel__c)) {
+            if (c.RecordTypeId == interactionRecordTypeId) {
                 // Phân loại cho Ubank hoặc FE -> Channel Email
                 if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK || c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_FE) {
                     c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
@@ -504,7 +504,13 @@ public without sharing class FEC_CaseTriggerHandler {
                     c.FEC_Send_To__c = relatedEmail.ToAddress;
                 }
             } else {
-                c.FEC_Send_To__c = sendToValue;
+                // Lấy ToAddress từ EmailMessage (routing address thực tế nhận email)
+                // Fallback về UBankCustomberServiceEmail nếu không có
+                if (relatedEmail != null && String.isNotBlank(relatedEmail.ToAddress)) {
+                    c.FEC_Send_To__c = relatedEmail.ToAddress;
+                } else {
+                    c.FEC_Send_To__c = sendToValue;
+                }
                 c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
                 c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
                 casesForRouting.add(c);
