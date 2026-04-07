@@ -247,16 +247,4 @@ public without sharing class FEC_Notification {
         executeSendEmailsBulk(new List<EmailInfo>{ singleEmail }, fromEmail);
     }
 
-    private static void setFromAddress(Messaging.SingleEmailMessage mail, String fromEmail) {
-        if (String.isBlank(fromEmail)) return;
-
-        // Tìm OrgWideEmailAddress khớp trực tiếp
-        List<OrgWideEmailAddress> orgEmails = [
-            SELECT Id, Address FROM OrgWideEmailAddress
-            WHERE Address = :fromEmail LIMIT 1
-        ];
-        if (!orgEmails.isEmpty()) {
-            mail.setOrgWideEmailAddressId(orgEmails[0].Id);
-        }
-    }
 }
