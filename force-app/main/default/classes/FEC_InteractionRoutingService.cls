@@ -324,7 +324,7 @@ public with sharing class FEC_InteractionRoutingService {
      * Fallback về Custom Label nếu chưa cấu hình.
      */
     private static String getRoutingEmail() {
-        FEC_System_Config__c sysConfig = FEC_System_Config__c.getInstance();
+        FEC_System_Config__c sysConfig = FEC_System_Config__c.getOrgDefaults();
         return sysConfig != null ? sysConfig.FEC_Send_To_Email_Ubank__c : null;
     }
 }
