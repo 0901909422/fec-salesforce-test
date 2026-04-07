@@ -6327,6 +6327,13 @@
         <value>Search</value>
     </labels>
     <labels>
+        <fullName>LBL_UpdateSuccessfully</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Address or record update completed successfully</shortDescription>
+        <value>Updated successfully</value>
+    </labels>
+    <labels>
         <fullName>LBL_SearchFraudCaseScreen</fullName>
         <language>en_US</language>
         <protected>false</protected>
