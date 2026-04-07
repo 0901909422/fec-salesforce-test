@@ -139,6 +139,20 @@ public with sharing class FEC_CommonUltils {
     return false;
   }
 
+  public static String normalizePhone(String raw) {
+    if (raw == null) {
+      return FEC_ConstantCommon.STR_EMPTY;
+    }
+    String s = raw.replaceAll('\\s', '');
+    if (s.startsWith('+84')) {
+      s = '84' + s.substring(3);
+    }
+    if (s.length() == 10 && s.startsWith('0') && Pattern.matches('\\d{10}', s)) {
+      s = '84' + s.substring(1);
+    }
+    return s;
+  }
+
   /**
    * Kiểm tra AccountNumber có hợp lệ không (16 hoặc 19 chữ số)
    * @param accountNumber - Account Number cần kiểm tra
@@ -195,6 +209,44 @@ public with sharing class FEC_CommonUltils {
     } catch (Exception e) {
       // Log the error for debugging
       System.debug('Error in getPicklistOptions: ' + e.getMessage());
+    }
+    return options;
+  }
+
+  public static List<PicklistOption> getPicklistOptionsWithAccess(
+    String objectName,
+    String fieldName
+  ) {
+    List<PicklistOption> options = new List<PicklistOption>();
+    if (String.isBlank(objectName) || String.isBlank(fieldName)) {
+      return options;
+    }
+    Schema.SObjectType sObjectType = Schema.getGlobalDescribe().get(objectName);
+    if (sObjectType == null) {
+      return options;
+    }
+    Schema.DescribeSObjectResult sObjectDescribe = sObjectType.getDescribe();
+    if (!sObjectDescribe.isAccessible()) {
+      return options;
+    }
+    Map<String, Schema.SObjectField> fieldsMap = sObjectDescribe.fields.getMap();
+    String fk = fieldName.toLowerCase();
+    if (!fieldsMap.containsKey(fk)) {
+      return options;
+    }
+    Schema.DescribeFieldResult fieldDescribe = fieldsMap.get(fk).getDescribe();
+    if (!fieldDescribe.isAccessible()) {
+      return options;
+    }
+    Schema.DisplayType dt = fieldDescribe.getType();
+    if (dt != Schema.DisplayType.PICKLIST && dt != Schema.DisplayType.MULTIPICKLIST) {
+      return options;
+    }
+    for (Schema.PicklistEntry entry : fieldDescribe.getPicklistValues()) {
+      if (!entry.isActive()) {
+        continue;
+      }
+      options.add(new PicklistOption(entry.getLabel(), entry.getValue(), null));
     }
     return options;
   }
@@ -355,7 +407,26 @@ public with sharing class FEC_CommonUltils {
       System.debug('Invalid decimal for tag ' + name + ': [' + v + ']');
       return null; 
     }
-}
+  }
+
+  /** BaseRate API dạng packed (vd 1000000): 4 ký tự đầu / 100 = % (1000 → 10%). */
+  public static Decimal xmlPackedBaseRateToPercent(Dom.XmlNode n, String name) {
+    String v = getXmlValue(n, name);
+    if (String.isBlank(v)) {
+      return null;
+    }
+    v = v.trim();
+    if (v.length() == 0) {
+      return null;
+    }
+    String head = v.length() >= 4 ? v.substring(0, 4) : v;
+    try {
+      return Decimal.valueOf(head) / 100;
+    } catch (Exception e) {
+      System.debug('Invalid BaseRate packed value for tag ' + name + ': [' + v + ']');
+      return null;
+    }
+  }
 
   public static Date xmlValToDate(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
@@ -1020,6 +1091,19 @@ public with sharing class FEC_CommonUltils {
       return result;
   }
 
+  public static String resolveAccountNumber(
+      String productTypeName,
+      String accountNumber,
+      String contractNumber
+  ) {
+      if ((productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE
+          || productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE)
+          && String.isNotBlank(contractNumber)) {
+          return contractNumber;
+      }
+      return accountNumber;
+  }
+
   /**
    * Uppercase ASCII; strips common Vietnamese diacritics for default beneficiary display.
    */
@@ -1045,16 +1129,27 @@ public with sharing class FEC_CommonUltils {
     return s.toUpperCase();
   }
 
-  public static String resolveAccountNumber(
-      String productTypeName,
-      String accountNumber,
-      String contractNumber
-  ) {
-      if ((productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE
-          || productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE)
-          && String.isNotBlank(contractNumber)) {
-          return contractNumber;
-      }
-      return accountNumber;
+  /**
+   * Sort FEC_Team__c with alphabetically order
+   */
+  public static String sortTeamField(String input) {
+    if (String.isBlank(input)) {
+        return input;
+    }
+    
+    // Split by "_"
+    List<String> parts = input.split('_');
+    
+    // Trim spaces
+    for (Integer i = 0; i < parts.size(); i++) {
+        parts[i] = parts[i].trim();
+    }
+    
+    // Sort alphabetically
+    parts.sort();
+    
+    // Join back with "_"
+    return String.join(parts, '_');
+
   }
 }
