@@ -128,8 +128,32 @@ public with sharing class FEC_ConstantCommon {
     
     public static final String ORIGINAL_USER_UPLOAD = 'Original_User_Upload';
     public static final String JSON_DATA_FOR_PROCESSING = 'JSON_Data_For_Processing';
+    // === Customer Additional Data — Status constants ===
     public static final String UPLOADED_STATUS = 'Uploaded';
     public static final String PROCESSED_STATUS = 'Processed';
+    public static final String REUPLOADED_STATUS = 'Reuploaded';
+    public static final String PROCESSING_STATUS = 'Processing';
+    public static final String REPROCESS_STATUS = 'Reprocess';
+    public static final String CANCELLED_STATUS = 'Cancelled';
+    public static final String FAILURE_STATUS = 'Failure';
+
+    // === Customer Additional Data — Status groups ===
+    public static final Set<String> PENDING_STATUSES = new Set<String>{
+        UPLOADED_STATUS, REUPLOADED_STATUS, PROCESSING_STATUS, REPROCESS_STATUS, FAILURE_STATUS
+    };
+    public static final Set<String> PROCESSED_STATUSES = new Set<String>{
+        PROCESSED_STATUS, CANCELLED_STATUS
+    };
+    public static final Set<String> BATCH_QUERY_STATUSES = new Set<String>{
+        UPLOADED_STATUS, REUPLOADED_STATUS
+    };
+    public static final Set<String> DELETABLE_STATUSES = new Set<String>{
+        UPLOADED_STATUS, REUPLOADED_STATUS, FAILURE_STATUS
+    };
+
+    // === Customer Additional Data — Composite Key ===
+    public static final String COMPOSITE_KEY_DELIMITER = '!';
+
     public static final String JSON_EXTENSION = '.json';
     public static final String SUCCESS_MESSAGE = 'Success';
     public static final String SUCCESS_STATUS_CODE = '0';
