@@ -24,7 +24,7 @@
         <!-- Dynamic LWC components from section.componentlst (FEC_LWC_Name__c, FEC_Type__c = LWC) -->
         <template if:true={section.resolvedComponentlst}>
           <template for:each={section.resolvedComponentlst} for:item="dynCmp">
-            <div key={dynCmp.key} class="slds-m-top_medium">
+            <div key={dynCmp.key} class="slds-m-top_medium" data-fec-lwc={dynCmp.componentName}>
               <lwc:component lwc:is={dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} is-edit={isEdit}></lwc:component>
             </div>
           </template>

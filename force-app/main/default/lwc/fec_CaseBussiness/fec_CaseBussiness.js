@@ -179,6 +179,7 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
  *   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
  */
 const DYNAMIC_COMPONENT_REGISTRY = {
+  fec_UpdateAddress: () => import('c/fec_UpdateAddress'),
   fec_CardInfo: () => import('c/fec_CardInfo'),
   fec_IPPClosureForm: () => import('c/fec_IPPClosureForm'),
   fec_CardClosureRefundForm: () => import('c/fec_CardClosureRefundForm'),
@@ -1276,7 +1277,20 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   _getIncorrectPaymentFormEl() {
     return (
-      this.template.querySelector("c-fec_-incorrect-payment-form")
+      this.template.querySelector("c-fec_-incorrect-payment-form") ||
+      this.template.querySelector(
+        '[data-fec-lwc="fec_IncorrectPaymentForm"] c-fec_-incorrect-payment-form',
+      ) ||
+      (() => {
+        const wrap = this.template.querySelector(
+          '[data-fec-lwc="fec_IncorrectPaymentForm"]',
+        );
+        const host = wrap && wrap.firstElementChild;
+        if (host && typeof host.saveAdjustmentsIfApplicable === "function") {
+          return host;
+        }
+        return null;
+      })()
     );
   }
 
@@ -1702,7 +1716,7 @@ export default class Fec_CaseBussiness extends LightningElement {
    * pre-declared static `() => import('c/<name>')` thunks. Unknown names are
    * skipped with a console warning — the rest of the UI is unaffected.
    *
-   * Results are stored on each subSection as resolvedComponentlst [{key, ctor}].
+   * Results are stored on each section as resolvedComponentlst [{key, ctor, componentName}].
    */
   _resolveComponentlst() {
     if (!this.business?.sectionlst) return;
@@ -1731,6 +1745,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             section.resolvedComponentlst.push({
               key: `${name}-${idx}`,
               ctor: mod.default,
+              componentName: name,
             });
           })
           .catch((err) => {
