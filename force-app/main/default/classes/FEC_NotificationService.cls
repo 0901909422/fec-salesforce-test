@@ -74,6 +74,7 @@ public without sharing class FEC_NotificationService {
         if (queueIdToNotifs.isEmpty()) return;
 
         Time nowTime = FEC_CommonUltils.getCurrentLocalTime();
+        List<Messaging.SingleEmailMessage> emailsToSend = new List<Messaging.SingleEmailMessage>();
 
         for (Case c : routedCases) {
             List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
@@ -83,7 +84,7 @@ public without sharing class FEC_NotificationService {
                 if (!matchesNatureOfCase(c, n)) continue;
                 if (!FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c)) continue;
 
-                List<String> toAddresses = parseReceivers(n.FEC_Receivers__c);
+                List<String> toAddresses = FEC_CommonUltils.parseReceivers(n.FEC_Receivers__c);
                 if (toAddresses.isEmpty()) continue;
 
                 if (String.isBlank(n.FEC_Notification_Template__r?.FEC_Subject_Line__c)) continue;
@@ -93,9 +94,11 @@ public without sharing class FEC_NotificationService {
                     ? resolveTemplate(n.FEC_Notification_Template__r.FEC_Body__c, c)
                     : '';
 
-                FEC_CommonUltils.sendEmail(toAddresses, subject, body);
+                emailsToSend.add(FEC_CommonUltils.buildEmail(toAddresses, subject, body));
             }
         }
+
+        FEC_CommonUltils.sendEmails(emailsToSend);
     }
 
     /**
@@ -160,7 +163,7 @@ public without sharing class FEC_NotificationService {
         Set<String> allEmails = new Set<String>();
         for (FEC_Notification__c n : notifications) {
             if (String.isBlank(n.FEC_Receivers__c)) continue;
-            for (String email : parseReceivers(n.FEC_Receivers__c)) {
+            for (String email : FEC_CommonUltils.parseReceivers(n.FEC_Receivers__c)) {
                 allEmails.add(email.toLowerCase());
             }
         }
@@ -191,7 +194,7 @@ public without sharing class FEC_NotificationService {
                 if (!matchesNatureOfCase(c, n)) continue;
                 if (!FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c)) continue;
 
-                List<String> receiverEmails = parseReceivers(n.FEC_Receivers__c);
+                List<String> receiverEmails = FEC_CommonUltils.parseReceivers(n.FEC_Receivers__c);
                 Set<String> recipientIds = new Set<String>();
                 for (String email : receiverEmails) {
                     Id uid = emailToUserId.get(email.toLowerCase());
@@ -274,26 +277,10 @@ public without sharing class FEC_NotificationService {
     }
 
     /**
-     * Parse danh sách email từ LongTextArea (phân cách bằng dấu phẩy hoặc xuống dòng)
-     */
-    private static List<String> parseReceivers(String receivers) {
-        List<String> result = new List<String>();
-        if (String.isBlank(receivers)) return result;
-        // Normalize: replace newlines with comma
-        String normalized = receivers.replace('\n', ',').replace('\r', ',');
-        for (String email : normalized.split(',')) {
-            String trimmed = email.trim();
-            if (String.isNotBlank(trimmed)) result.add(trimmed);
-        }
-        return result;
-    }
-
-    /**
      * Thay thế placeholder {{FieldName}} trong template bằng giá trị từ Case
      */
     private static String resolveTemplate(String template, Case c) {
         if (String.isBlank(template)) return template;
-        // Dùng FEC_CommonUltils.resolveTemplate nếu có, hoặc basic replace
         try {
             return FEC_CommonUltils.resolveTemplate(template, c);
         } catch (Exception e) {

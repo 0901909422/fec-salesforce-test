@@ -1107,6 +1107,33 @@ public with sharing class FEC_CommonUltils {
   }
 
   /**
+   * Parse danh sách email từ LongTextArea (phân cách bằng dấu phẩy hoặc xuống dòng).
+   * @param receivers Chuỗi chứa danh sách email
+   * @return Danh sách email đã trim, bỏ blank
+   */
+  public static List<String> parseReceivers(String receivers) {
+    List<String> result = new List<String>();
+    if (String.isBlank(receivers)) return result;
+    for (String raw : receivers.split('[,\\n\\r]+')) {
+      String email = raw.trim();
+      if (String.isNotBlank(email)) result.add(email);
+    }
+    return result;
+  }
+
+  /**
+   * Build một SingleEmailMessage (không gửi ngay) để caller có thể gom vào list rồi sendEmails.
+   */
+  public static Messaging.SingleEmailMessage buildEmail(List<String> toAddresses, String subject, String htmlBody) {
+    Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+    mail.setToAddresses(toAddresses);
+    mail.setSubject(subject != null ? subject : '');
+    mail.setHtmlBody(htmlBody != null ? htmlBody : '');
+    mail.setSaveAsActivity(false);
+    return mail;
+  }
+
+  /**
    * Gửi nhiều email cùng lúc (bulk).
    */
   public static void sendEmails(List<Messaging.SingleEmailMessage> emails) {
