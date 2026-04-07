@@ -11223,6 +11223,14 @@
         <value>Select contract number</value>
     </labels>
     <labels>
+        <fullName>FEC_LBL_Select_Payment_Method</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Select_Payment_Method</shortDescription>
+        <value>Select payment method</value>
+    </labels>
+    <labels>
         <fullName>FEC_LBL_Incorrect_Contract_Hint</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>

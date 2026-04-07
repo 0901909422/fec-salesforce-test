@@ -359,6 +359,15 @@ public with sharing class FEC_ConstantCommon {
     public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY = 'TEMPORARY';    /** FEC_Address_Info__c.FEC_Address_Type__c — địa chỉ tạm Contract Closure */
     public static final String CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY = 'Temporary Address';
 
+    // Auto Notification - Target Group
+    public static final String NOTIFICATION_TARGET_GROUP_INTERNAL = 'Internal User';
+
+    // Auto Notification - Channel names (FEC_Notification_Channel__c.Name)
+    public static final String NOTIFICATION_CHANNEL_EMAIL = 'Email';
+    public static final String NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
+
+
+    //internalSendToSet
     public static final String EMAIL_SUPPORT_CSM = 'supportcsm@fecredit.com.vn';
     public static final String EMAIL_CS_SUPPORT = 'cssupport@fecredit.com.vn';
     public static final String EMAIL_CUSTOMER_CARE = 'customercare@fecredit.com.vn';
