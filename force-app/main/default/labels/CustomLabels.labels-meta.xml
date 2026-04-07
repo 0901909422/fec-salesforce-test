@@ -12159,4 +12159,19 @@
   &quot;createddate&quot;: &quot;ArchieveCreatedDate__c&quot;,
   &quot;lastmodifieddate&quot;: &quot;ArchieveLastModifiedDate__c&quot;
 }</value>
+    </labels>
+    <labels>
+        <fullName>TECH_API_GET_ARCHIVE_ATTACHMENT</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_API_GET_ARCHIVE_ATTACHMENT</shortDescription>
+        <value>FEC_Get_Archive_Attachment</value>
+    </labels>
+    <labels>
+        <fullName>TECH_ATTACHMENT_ARCHIVE_PREFIX</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_ATTACHMENT_ARCHIVE_PREFIX</shortDescription>
+        <value>Att_Archive_</value>
+    </labels>
 </CustomLabels>
