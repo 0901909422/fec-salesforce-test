@@ -19,6 +19,7 @@ public with sharing class FEC_GetServiceCases {
             'FEC_Last_Updated_On__c, FEC_Last_Updated_By__c ' +
             'FROM Case ' +
             'WHERE RecordType.DeveloperName IN :rtNames AND IsClosed = false ' +
+            'AND (FEC_Case_Status__c = null OR FEC_Case_Status__c NOT LIKE \'Resolved%\') ' +
             'ORDER BY FEC_Case_Created_On__c DESC NULLS LAST';
         List<Case> cases = new List<Case>();
         try {
