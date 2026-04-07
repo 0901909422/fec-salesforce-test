@@ -443,7 +443,7 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         for (Case c : newCases) {
-            if (c.RecordTypeId == interactionRecordTypeId) {
+            if (c.RecordTypeId == interactionRecordTypeId && String.isBlank(c.FEC_Channel__c)) {
                 // Phân loại cho Ubank hoặc FE -> Channel Email
                 if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK || c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_FE) {
                     c.FEC_Channel__c = FEC_ConstantCommon.EMAIL;
@@ -471,9 +471,7 @@ public without sharing class FEC_CaseTriggerHandler {
         }
 
         FEC_System_Config__c sysConfig = FEC_System_Config__c.getInstance();
-        String sendToValue = (sysConfig != null && String.isNotBlank(sysConfig.FEC_Sender_Email__c)) 
-                             ? sysConfig.FEC_Sender_Email__c 
-                             : System.Label.UBankCustomberServiceEmail;
+        String sendToValue = sysConfig != null ? sysConfig.FEC_Sender_Email__c : null;
 
         Map<Id, EmailMessage> caseIdToEmailMap = new Map<Id, EmailMessage>();
         for (EmailMessage em : [SELECT Id, ParentId, FromAddress, ToAddress, CreatedDate
@@ -488,13 +486,14 @@ public without sharing class FEC_CaseTriggerHandler {
 
         List<Case> casesToDml = [
             SELECT Id, RecordTypeId, OwnerId, FEC_Is_Reply_Interaction_email__c, 
-                   ParentId, FEC_Channel__c, FEC_Send_To__c,Origin, CaseNumber
+                   ParentId, FEC_Channel__c, FEC_Send_To__c, Origin, CaseNumber
             FROM Case 
             WHERE Id IN :caseIds
         ];
 
-        List<Case> casesForRouting = new List<Case>();
+            List<Case> casesForRouting = new List<Case>();
         List<Case> casesToPublish = new List<Case>();
+
         for (Case c : casesToDml) {
             EmailMessage relatedEmail = caseIdToEmailMap.get(c.Id);
 
@@ -514,6 +513,7 @@ public without sharing class FEC_CaseTriggerHandler {
                 c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
                 casesForRouting.add(c);
             }
+
             if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK) {
                 casesToPublish.add(c);
             }

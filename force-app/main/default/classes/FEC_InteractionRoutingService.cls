@@ -325,8 +325,6 @@ public with sharing class FEC_InteractionRoutingService {
      */
     private static String getRoutingEmail() {
         FEC_System_Config__c sysConfig = FEC_System_Config__c.getInstance();
-        return (sysConfig != null && String.isNotBlank(sysConfig.FEC_Sender_Email__c)) 
-               ? sysConfig.FEC_Sender_Email__c 
-               : System.Label.UBankCustomberServiceEmail;
+        return sysConfig != null ? sysConfig.FEC_Sender_Email__c : null;
     }
 }
