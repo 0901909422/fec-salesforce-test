@@ -120,6 +120,7 @@ export default class Fec_CaseNote extends LightningElement {
         id: note.id,
         title: note.title,
         preview: note.preview,
+        content: note.content,
         createdById: note.createdById,
         createdByName: note.createdByName,
         createdByUrl: "/" + note.createdById, // ✅ key line
@@ -166,18 +167,24 @@ export default class Fec_CaseNote extends LightningElement {
     },
   ];
 
+  get showTable() {
+    return this.notes && this.notes.length > 0;
+  }
   handleNew() {
+    this.selectedNote = null;
     this.showModal = true;
   }
 
   handleClose() {
+    this.selectedNote = null;
     this.showModal = false;
   }
 
-  handleSuccess() {
+  async handleSuccess() {
     this.showModal = false;
-    // reload lại dữ liệu
-    return refreshApex(this.wiredNotesResult);
+    this.selectedNote = null;
+
+    await refreshApex(this.wiredNotesResult);
   }
 
   handleNameClick(event) {
@@ -187,6 +194,7 @@ export default class Fec_CaseNote extends LightningElement {
 
     const note = this.notes.find((n) => n.id === rowId);
 
+    console.log("NOTE FOUND", note);
     if (note) {
       this.openViewModal(note);
     }
@@ -214,7 +222,7 @@ export default class Fec_CaseNote extends LightningElement {
       this.handleDeleteConfirmed();
     }
   }
-  hhandleRemoveConfirmed() {
+  handleRemoveConfirmed() {
     removeNoteFromRecord({
       recordId: this.recordId,
       noteId: this.selectedRow.id,
