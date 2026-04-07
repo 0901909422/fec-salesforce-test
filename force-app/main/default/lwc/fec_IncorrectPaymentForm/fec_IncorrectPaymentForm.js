@@ -10,6 +10,7 @@ import getSubCodeConfig from '@salesforce/apex/FEC_IncorrectPaymentController.ge
 import getIncorrectContractOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getIncorrectContractOptions';
 import getPaymentMethodOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getPaymentMethodOptions';
 import saveAdjustment from '@salesforce/apex/FEC_IncorrectPaymentController.saveAdjustment';
+import saveAdjustmentDraft from '@salesforce/apex/FEC_IncorrectPaymentController.saveAdjustmentDraft';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
 import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
@@ -37,6 +38,7 @@ import FEC_LBL_Adjusted_Amount from '@salesforce/label/c.FEC_LBL_Adjusted_Amount
 import FEC_LBL_Remove_Row from '@salesforce/label/c.FEC_LBL_Remove_Row';
 import FEC_LBL_Add_Item from '@salesforce/label/c.FEC_LBL_Add_Item';
 import FEC_MSG_Adjusted_Amount_Must_Equal_Payment from '@salesforce/label/c.FEC_MSG_Adjusted_Amount_Must_Equal_Payment';
+import FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row from '@salesforce/label/c.FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row';
 import FEC_LBL_Payment_Method_Bank_Transfer from '@salesforce/label/c.FEC_LBL_Payment_Method_Bank_Transfer';
 import FEC_LBL_Payment_Method_Other_Channels from '@salesforce/label/c.FEC_LBL_Payment_Method_Other_Channels';
 import FEC_Complete_This_Field from '@salesforce/label/c.FEC_Complete_This_Field';
@@ -540,42 +542,71 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         }
     }
 
-    /**
-     * Gọi từ parent (Save & Close / Submit): chỉ gọi Apex khi user đã nhập dữ liệu điều chỉnh;
-     * bỏ qua khi section trống để không chặn lưu Case chung.
-     */
-    @api saveAdjustmentsIfApplicable() {
-        if (this.isReadOnly) {
-            return Promise.resolve();
-        }
+    _shouldRunIncorrectPaymentSave() {
         const hasPaymentMethod = !!(this.paymentMethod && String(this.paymentMethod).trim());
         const hasCompleteRow = (this.adjustments || []).some((a) => {
             const hasCorrectContract = a.correctContract && String(a.correctContract).trim();
             const hasAdjustedAmount = a.adjustedAmount != null && a.adjustedAmount !== 0;
             return hasCorrectContract && hasAdjustedAmount;
         });
-        if (!hasPaymentMethod && !hasCompleteRow) {
-            return Promise.resolve();
-        }
-        return this.saveAdjustments();
+        return hasPaymentMethod || hasCompleteRow;
     }
 
-    @api saveAdjustments() {
-        if (this.isReadOnly) {
-            return Promise.reject(new Error('readonly'));
+    _shouldRunIncorrectPaymentDraftSave() {
+        const hasIncorrectContract = !!(this.incorrectContract && String(this.incorrectContract).trim());
+        const hasPaymentMethod = !!(this.paymentMethod && String(this.paymentMethod).trim());
+        const hasManualBillDate = !!(this.manualBillDate && String(this.manualBillDate).trim());
+        const hasManualBillAmount = this.manualBillAmount != null && this.manualBillAmount !== 0;
+        const hasSelectedPayment = !!this.selectedPayment;
+        const hasAnyAdjustmentInput = (this.adjustments || []).some((a) => {
+            const hasCorrectContract = !!(a.correctContract && String(a.correctContract).trim());
+            const hasAdjustedAmount = a.adjustedAmount != null;
+            return hasCorrectContract || hasAdjustedAmount;
+        });
+        return (
+            hasIncorrectContract ||
+            hasPaymentMethod ||
+            hasManualBillDate ||
+            hasManualBillAmount ||
+            hasSelectedPayment ||
+            hasAnyAdjustmentInput
+        );
+    }
+
+    _getDraftFirstAdjustment() {
+        const firstWithAnyInput = (this.adjustments || []).find((a) => {
+            const hasCorrectContract = !!(a.correctContract && String(a.correctContract).trim());
+            const hasAdjustedAmount = a.adjustedAmount != null;
+            return hasCorrectContract || hasAdjustedAmount;
+        });
+        if (!firstWithAnyInput) {
+            return { correctContract: null, adjustedAmount: null };
         }
+        return {
+            correctContract: firstWithAnyInput.correctContract || null,
+            adjustedAmount: firstWithAnyInput.adjustedAmount != null ? firstWithAnyInput.adjustedAmount : null
+        };
+    }
+
+    /**
+     * Trả về false khi fail; object khi pass (skipApex: không gọi Apex, vẫn coi là hợp lệ).
+     */
+    _performClientSaveValidation() {
         if (!this.validateFields(['lightning-combobox[name="paymentMethod"]'])) {
-            return Promise.reject(new Error('validation'));
+            this.dispatchEvent(new ShowToastEvent({
+                title: FEC_Toast_Validation_Title,
+                message: FEC_LBL_Select_Payment_Method,
+                variant: CONST.VARIANT_WARNING
+            }));
+            return false;
         }
-        
-        // Check for incomplete rows (has one field but missing the other)
+
         this.clearAdjustmentFieldsCustomValidity();
         const incompleteRows = [];
         this.adjustments.forEach((a, index) => {
             const hasCorrectContract = a.correctContract && String(a.correctContract).trim();
             const hasAdjustedAmount = a.adjustedAmount != null && a.adjustedAmount !== 0;
-            
-            // Row is incomplete if it has one field but not the other
+
             if ((hasCorrectContract && !hasAdjustedAmount) || (!hasCorrectContract && hasAdjustedAmount)) {
                 incompleteRows.push({
                     index: index + 1,
@@ -584,24 +615,33 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 });
             }
         });
-        
+
         if (incompleteRows.length > 0) {
             this.reportIncompleteAdjustmentFields(incompleteRows);
-            return Promise.reject(new Error('validation'));
+            this.dispatchEvent(new ShowToastEvent({
+                title: FEC_Toast_Validation_Title,
+                message: FEC_Complete_This_Field,
+                variant: CONST.VARIANT_WARNING
+            }));
+            return false;
         }
-        
-        // Filter valid adjustments: must have BOTH correct contract AND adjusted amount
+
         const valid = this.adjustments.filter((a) => {
             const hasCorrectContract = a.correctContract && String(a.correctContract).trim();
             const hasAdjustedAmount = a.adjustedAmount != null && a.adjustedAmount !== 0;
             return hasCorrectContract && hasAdjustedAmount;
         });
-        
+
         if (valid.length === 0) {
             this.reportFirstAdjustmentRowRequired();
-            return Promise.reject(new Error('validation'));
+            this.dispatchEvent(new ShowToastEvent({
+                title: FEC_Toast_Validation_Title,
+                message: FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row,
+                variant: CONST.VARIANT_WARNING
+            }));
+            return false;
         }
-        
+
         const billDate = this.selectedPayment ? (this.selectedPayment.paymentDate || null) : (this.manualBillDate || null);
         let billAmount = null;
         if (this.isTh1 && this.th1EditableBillAmount != null) {
@@ -611,26 +651,109 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         } else {
             billAmount = this.manualBillAmount ?? null;
         }
-        
+
         const billFieldsRendered = this.showManualBill || this.selectedPaymentId;
         if (this.showManualBill && !this.validateFields(['lightning-input[name="manualBillAmount"]'])) {
-            return Promise.reject(new Error('validation'));
+            this.dispatchEvent(new ShowToastEvent({
+                title: FEC_Toast_Validation_Title,
+                message: FEC_LBL_Bill_Amount + ': ' + FEC_Complete_This_Field,
+                variant: CONST.VARIANT_WARNING
+            }));
+            return false;
         }
         if (!billFieldsRendered && (billAmount == null || billAmount === 0)) {
-            return Promise.resolve();
+            return { skipApex: true, valid, billDate, billAmount };
         }
         const sumAdjusted = valid.reduce((sum, a) => sum + Number(a.adjustedAmount), 0);
         const tolerance = 0.01;
-        
+
         if (Math.abs(sumAdjusted - Number(billAmount)) > tolerance) {
             this.dispatchEvent(new ShowToastEvent({ 
                 title: FEC_Toast_Validation_Title, 
                 message: FEC_MSG_Adjusted_Amount_Must_Equal_Payment, 
                 variant: CONST.VARIANT_WARNING 
             }));
+            return false;
+        }
+
+        return { skipApex: false, valid, billDate, billAmount };
+    }
+
+    /**
+     * Gọi từ parent (fec_CaseBussiness validate / saveOnly): khi section có dữ liệu thì chạy cùng rule với saveAdjustments.
+     */
+    @api validateForSubmit() {
+        if (this.isReadOnly) {
+            return true;
+        }
+        if (!this._shouldRunIncorrectPaymentSave()) {
+            return true;
+        }
+        const ctx = this._performClientSaveValidation();
+        return ctx !== false;
+    }
+
+    /**
+     * Gọi từ parent (Save & Close / Submit): chỉ gọi Apex khi user đã nhập dữ liệu điều chỉnh;
+     * bỏ qua khi section trống để không chặn lưu Case chung.
+     */
+    @api saveAdjustmentsIfApplicable() {
+        if (this.isReadOnly) {
+            console.log('[fec_IncorrectPaymentForm] saveAdjustmentsIfApplicable: bỏ qua (isReadOnly).');
+            return Promise.resolve();
+        }
+        if (!this._shouldRunIncorrectPaymentSave()) {
+            console.log('[fec_IncorrectPaymentForm] saveAdjustmentsIfApplicable: bỏ qua — chưa có payment method và chưa có dòng điều chỉnh đủ (contract + số tiền khác 0). Không validate/toast để không chặn lưu Case khi section để trống.');
+            return Promise.resolve();
+        }
+        return this.saveAdjustments();
+    }
+
+    @api saveDraftIfApplicable() {
+        if (this.isReadOnly) {
+            return Promise.resolve();
+        }
+        if (!this._shouldRunIncorrectPaymentDraftSave()) {
+            return Promise.resolve();
+        }
+
+        const draftFirst = this._getDraftFirstAdjustment();
+        const billDate = this.selectedPayment ? (this.selectedPayment.paymentDate || null) : (this.manualBillDate || null);
+        let billAmount = null;
+        if (this.isTh1 && this.th1EditableBillAmount != null) {
+            billAmount = this.th1EditableBillAmount;
+        } else if (this.selectedPayment) {
+            billAmount = this.selectedPayment.paymentAmount ?? null;
+        } else {
+            billAmount = this.manualBillAmount ?? null;
+        }
+
+        return saveAdjustmentDraft({
+            caseId: this.recordId,
+            incorrectContract: this.incorrectContract || CONST.EMPTY,
+            paymentMethod: this.paymentMethod || CONST.EMPTY,
+            billDate: billDate || CONST.EMPTY,
+            billAmount: billAmount,
+            correctContract: draftFirst.correctContract,
+            adjustedAmount: draftFirst.adjustedAmount
+        });
+    }
+
+    @api saveAdjustments() {
+        if (this.isReadOnly) {
+            return Promise.reject(new Error('readonly'));
+        }
+        const ctx = this._performClientSaveValidation();
+        if (ctx === false) {
             return Promise.reject(new Error('validation'));
         }
-        
+        if (ctx.skipApex) {
+            return Promise.resolve();
+        }
+
+        const valid = ctx.valid;
+        const billDate = ctx.billDate;
+        const billAmount = ctx.billAmount;
         this.isLoading = true;
         const payload = valid.map(a => ({ 
             correctContract: (a.correctContract || CONST.EMPTY).trim(), 

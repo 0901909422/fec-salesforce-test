@@ -277,4 +277,62 @@ public with sharing class FEC_IncorrectPaymentController {
             throw new AuraHandledException(e.getDmlMessage(0));
         }
     }
+
+    @AuraEnabled
+    public static void saveAdjustmentDraft(
+        Id caseId,
+        String incorrectContract,
+        String paymentMethod,
+        String billDate,
+        Decimal billAmount,
+        String correctContract,
+        Decimal adjustedAmount
+    ) {
+        if (caseId == null) {
+            throw new AuraHandledException(
+                String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'})
+            );
+        }
+
+        List<Case> cases = [
+            SELECT Id, FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (cases.isEmpty()) {
+            throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_Case_Not_Found);
+        }
+        if (!Schema.sObjectType.Case.isUpdateable()) {
+            throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Update_Case_Access);
+        }
+
+        Case c = cases[0];
+        if (String.isNotBlank(billDate)) {
+            try {
+                c.FEC_Bill_Date__c = Date.valueOf(billDate);
+            } catch (Exception e) {
+                c.FEC_Bill_Date__c = null;
+            }
+        } else {
+            c.FEC_Bill_Date__c = null;
+        }
+        c.FEC_Bill_Amount__c = billAmount != null ? billAmount : null;
+        c.FEC_Incorrect_Contract_Number__c = String.isNotBlank(incorrectContract) ? incorrectContract.trim() : null;
+        c.FEC_Payment_Method__c = String.isNotBlank(paymentMethod) ? paymentMethod.trim() : null;
+        c.FEC_Correct_Contract_Number__c = String.isNotBlank(correctContract) ? correctContract.trim() : null;
+        c.FEC_Adjusted_Amount__c = adjustedAmount != null ? adjustedAmount : null;
+
+        List<Case> toUpdate = new List<Case>{ c };
+        toUpdate = (List<Case>) Security.stripInaccessible(AccessType.UPDATABLE, toUpdate).getRecords();
+        if (toUpdate.isEmpty()) {
+            throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Update_Case_Fields_Access);
+        }
+
+        try {
+            update toUpdate;
+        } catch (DmlException e) {
+            throw new AuraHandledException(e.getDmlMessage(0));
+        }
+    }
 }

@@ -1249,6 +1249,13 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (routeToEle)
       isAllValid = routeToEle && routeToEle.reportValidity() && isAllValid;
 
+    const ipEl = this._getIncorrectPaymentFormEl();
+    if (ipEl && typeof ipEl.validateForSubmit === "function") {
+      if (!ipEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -1267,12 +1274,26 @@ export default class Fec_CaseBussiness extends LightningElement {
   //   return this._lastValidationError || null;
   // }
 
+  _getIncorrectPaymentFormEl() {
+    return (
+      this.template.querySelector("c-fec_-incorrect-payment-form")
+    );
+  }
+
   _saveIncorrectPaymentAdjustmentsIfApplicable() {
-    const el = this.template.querySelector("c-fec_-incorrect-payment-form");
-    if (el && typeof el.saveAdjustmentsIfApplicable === "function") {
-      return el.saveAdjustmentsIfApplicable();
+    const el = this._getIncorrectPaymentFormEl();
+    if (!el || typeof el.saveAdjustmentsIfApplicable !== "function") {
+      return Promise.resolve();
     }
-    return Promise.resolve();
+    return el.saveAdjustmentsIfApplicable();
+  }
+
+  _saveIncorrectPaymentDraftIfApplicable() {
+    const el = this._getIncorrectPaymentFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
   }
 
   _getIppClosureFormEl() {
@@ -1317,7 +1338,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     const total = formToSubmit.length;
     const afterForms = () =>
       Promise.all([
-        this._saveIncorrectPaymentAdjustmentsIfApplicable(),
+        this._saveIncorrectPaymentDraftIfApplicable(),
         this._saveIPPClosureIfApplicable(),
       ]);
     if (total === 0) {
