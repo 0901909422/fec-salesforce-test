@@ -37,3 +37,26 @@ export const ACCOUNT_LINKAGE_OPTIONS = [
     { label: LBL_OPT_APP_ID, value: 'APPLICATION_ID' },
     { label: LBL_OPT_PHONE, value: 'PHONE' }
 ];
+
+// Status constants
+export const STATUS_UPLOADED = 'Uploaded';
+export const STATUS_REUPLOADED = 'Reuploaded';
+export const STATUS_PROCESSING = 'Processing';
+export const STATUS_PROCESSED = 'Processed';
+export const STATUS_REPROCESS = 'Reprocess';
+export const STATUS_CANCELLED = 'Cancelled';
+export const STATUS_FAILURE = 'Failure';
+
+// Status groups
+export const PENDING_STATUSES = new Set([
+    STATUS_UPLOADED, STATUS_REUPLOADED, STATUS_PROCESSING, STATUS_REPROCESS, STATUS_FAILURE
+]);
+export const PROCESSED_STATUSES = new Set([
+    STATUS_PROCESSED, STATUS_CANCELLED
+]);
+export const DELETABLE_STATUSES = new Set([
+    STATUS_UPLOADED, STATUS_REUPLOADED, STATUS_FAILURE
+]);
+export const EDITABLE_STATUSES = new Set([
+    STATUS_UPLOADED, STATUS_REUPLOADED, STATUS_FAILURE, STATUS_PROCESSED
+]);

@@ -10,7 +10,7 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
         return Database.getQueryLocator([
             SELECT Id, FEC_KeyIdentifier__c, FEC_FieldID__c, FEC_Status__c 
             FROM FEC_CustomerAdditionalInfoConfig__c 
-            WHERE FEC_Status__c = :FEC_ConstantCommon.UPLOADED_STATUS
+            WHERE FEC_Status__c IN :FEC_ConstantCommon.BATCH_QUERY_STATUSES
         ]);
     }
 
@@ -96,14 +96,20 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
                             List<Object> cols = (List<Object>) rows[i];
                             if (cols.size() < 3) continue; 
 
+                            String keyIdValue = String.valueOf(cols[0]);
                             masterDataList.add(new FEC_CustomerAdditionalInfo__c(
                                 FEC_Config__c = config.Id,
                                 FEC_KeyIdentifier__c = config.FEC_KeyIdentifier__c,
                                 FEC_FieldID__c = config.FEC_FieldID__c,
-                                FEC_KeyIDValue__c = String.valueOf(cols[0]),
+                                FEC_KeyIDValue__c = keyIdValue,
                                 FEC_FieldValue__c = String.valueOf(cols[1]),
                                 FEC_IsActive__c = (cols[2] == FEC_ConstantCommon.YES_VALUE),
-                                FEC_LinkedFilename__c = jsonCV.Title
+                                FEC_LinkedFilename__c = jsonCV.Title,
+                                FEC_CompositeKey__c = keyIdValue 
+                                    + FEC_ConstantCommon.COMPOSITE_KEY_DELIMITER 
+                                    + config.FEC_KeyIdentifier__c 
+                                    + FEC_ConstantCommon.COMPOSITE_KEY_DELIMITER 
+                                    + config.FEC_FieldID__c
                             ));
                         }
                     }
@@ -118,7 +124,12 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
                         allExcelIdsToQueue.addAll(mapConfigToExcelIds.get(config.Id));
                     }
                     
-                    config.FEC_Status__c = 'Processing';
+                    // Uploaded → Processing, Reuploaded → Reprocess
+                    if (config.FEC_Status__c == FEC_ConstantCommon.REUPLOADED_STATUS) {
+                        config.FEC_Status__c = FEC_ConstantCommon.REPROCESS_STATUS;
+                    } else {
+                        config.FEC_Status__c = FEC_ConstantCommon.PROCESSING_STATUS;
+                    }
                     configsToUpdateStatus.add(config);
                     
                 } else {
@@ -127,7 +138,7 @@ global class FEC_ProcessCustomerDataBatch implements Database.Batchable<SObject>
                     System.debug('Config ' + config.Id + ' không có file JSON hợp lệ. Chuyển sang Processed.');
                 }
             } catch (Exception e) {
-                config.FEC_Status__c = 'Failed';
+                config.FEC_Status__c = FEC_ConstantCommon.FAILURE_STATUS;
                 configsToUpdateStatus.add(config); 
                 System.debug('Lỗi parse Config ' + config.Id + ': ' + e.getMessage());
             }
