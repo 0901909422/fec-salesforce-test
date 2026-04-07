@@ -1,6 +1,5 @@
 public without sharing class FEC_Notification {
-    public static final String FEC_DEFAULT_CONFIG = 'FEC_Default_Config';
-
+    
     public class EmailInfo {
         public Id caseId;
         public String toEmail;
@@ -161,9 +160,9 @@ public without sharing class FEC_Notification {
 
         FEC_Template__c template = FEC_TemplateController.getTemplate(templateId);  
         String senderEmail = '';
-        FEC_System_Config__mdt config = FEC_System_Config__mdt.getInstance(FEC_DEFAULT_CONFIG);
-        if (config != null && String.isNotBlank(config.FEC_Sender_Email__c)) {
-            senderEmail = config.FEC_Sender_Email__c;
+        FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
+        if (String.isNotBlank(systemConfig?.FEC_Sender_Email__c)) {
+            senderEmail = systemConfig.FEC_Sender_Email__c;
         }
 
         String subject = String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
@@ -248,16 +247,4 @@ public without sharing class FEC_Notification {
         executeSendEmailsBulk(new List<EmailInfo>{ singleEmail }, fromEmail);
     }
 
-    private static void setFromAddress(Messaging.SingleEmailMessage mail, String fromEmail) {
-        if (String.isBlank(fromEmail)) return;
-
-        // Tìm OrgWideEmailAddress khớp trực tiếp
-        List<OrgWideEmailAddress> orgEmails = [
-            SELECT Id, Address FROM OrgWideEmailAddress
-            WHERE Address = :fromEmail LIMIT 1
-        ];
-        if (!orgEmails.isEmpty()) {
-            mail.setOrgWideEmailAddressId(orgEmails[0].Id);
-        }
-    }
 }
