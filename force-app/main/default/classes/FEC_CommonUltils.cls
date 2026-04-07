@@ -1088,6 +1088,36 @@ public with sharing class FEC_CommonUltils {
     return nowTime >= startTime && nowTime <= endTime;
   }
 
+  /**
+   * Gửi email đơn giản với toAddresses, subject, htmlBody.
+   * Dùng lại ở nhiều chỗ thay vì build SingleEmailMessage thủ công.
+   */
+  public static void sendEmail(List<String> toAddresses, String subject, String htmlBody) {
+    if (toAddresses == null || toAddresses.isEmpty()) return;
+    try {
+      Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+      mail.setToAddresses(toAddresses);
+      mail.setSubject(subject);
+      mail.setHtmlBody(htmlBody != null ? htmlBody : '');
+      mail.setSaveAsActivity(false);
+      Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail }, false);
+    } catch (Exception e) {
+      System.debug('FEC_CommonUltils.sendEmail failed: ' + e.getMessage());
+    }
+  }
+
+  /**
+   * Gửi nhiều email cùng lúc (bulk).
+   */
+  public static void sendEmails(List<Messaging.SingleEmailMessage> emails) {
+    if (emails == null || emails.isEmpty()) return;
+    try {
+      Messaging.sendEmail(emails, false);
+    } catch (Exception e) {
+      System.debug('FEC_CommonUltils.sendEmails failed: ' + e.getMessage());
+    }
+  }
+
   public static String serializeSafe(Object obj) {
     try {
       return obj != null ? JSON.serialize(obj) : null;

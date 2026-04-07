@@ -74,7 +74,6 @@ public without sharing class FEC_NotificationService {
         if (queueIdToNotifs.isEmpty()) return;
 
         Time nowTime = FEC_CommonUltils.getCurrentLocalTime();
-        List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
 
         for (Case c : routedCases) {
             List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
@@ -94,17 +93,8 @@ public without sharing class FEC_NotificationService {
                     ? resolveTemplate(n.FEC_Notification_Template__r.FEC_Body__c, c)
                     : '';
 
-                Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-                mail.setToAddresses(toAddresses);
-                mail.setSubject(subject);
-                mail.setHtmlBody(body);
-                mail.setSaveAsActivity(false);
-                emails.add(mail);
+                FEC_CommonUltils.sendEmail(toAddresses, subject, body);
             }
-        }
-
-        if (!emails.isEmpty()) {
-            sendEmails(emails);
         }
     }
 
@@ -222,18 +212,6 @@ public without sharing class FEC_NotificationService {
     }
 
     // ─── Private helpers ────────────────────────────────────────────────────
-
-    /**
-     * Common method gửi email - dùng lại cho sendEmailNotifications
-     */
-    private static void sendEmails(List<Messaging.SingleEmailMessage> emails) {
-        if (emails == null || emails.isEmpty()) return;
-        try {
-            Messaging.sendEmail(emails, false);
-        } catch (Exception e) {
-            System.debug('FEC_NotificationService.sendEmails failed: ' + e.getMessage());
-        }
-    }
 
     /**
      * Lọc các Case có OwnerId thay đổi sang Queue (khác Queue cũ)
