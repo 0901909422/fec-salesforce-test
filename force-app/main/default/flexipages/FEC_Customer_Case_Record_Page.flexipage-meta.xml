@@ -121,6 +121,16 @@
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
+                        <valueListItems>
+                            <value>Case.Hold_Case</value>
+                            <visibilityRule>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>handling</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
                     </valueList>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
