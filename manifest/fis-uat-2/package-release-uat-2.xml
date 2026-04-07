@@ -1490,6 +1490,7 @@
 		<members>FEC_Target_Email</members>
 		<members>FEC_Target_Group</members>
 		<members>FEC_Template_Not_Found</members>
+		<members>FEC_LBL_Select_Payment_Method</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

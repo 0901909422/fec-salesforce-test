@@ -82,6 +82,9 @@
 		<members>FEC_EnhancedLetterheadTriggerHandler</members>
 		<members>FEC_EnhancedLetterheadHandler_Test</members>
 		<members>FEC_NotificationService</members>
+		<members>FEC_CardClosureRefundController</members>
+		<members>FEC_GetServiceCases</members>
+		<members>FEC_IPPClosureController</members>
         <name>ApexClass</name>
     </types>
     <types>
