@@ -133,6 +133,7 @@
 		<members>fec_CardClosureRefundForm</members>
 		<members>fec_SecondaryInfoLoanAccount</members>
 		<members>fec_CardPayment</members>
+		<members>fec_UserSearchModal</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
