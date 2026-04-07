@@ -922,8 +922,8 @@
                     <booleanFilter>1 AND 2 AND (3 OR 4)</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Existing</rightValue>
+                        <operator>NE</operator>
+                        <rightValue>Non-existing</rightValue>
                     </criteria>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
@@ -1006,8 +1006,8 @@
                     </criteria>
                     <criteria>
                         <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Existing</rightValue>
+                        <operator>NE</operator>
+                        <rightValue>Non-existing</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
