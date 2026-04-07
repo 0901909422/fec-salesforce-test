@@ -11814,6 +11814,76 @@
         <value>Each receipt line must have date, positive amount, transaction number, and payment channel.</value>
     </labels>
     <labels>
+        <fullName>FEC_Choose_Notification_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Choose Notification Type</shortDescription>
+        <value>Choose a notification type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_No_Valid_Address_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email No Valid Address Found</shortDescription>
+        <value>Không tìm thấy email hợp lệ để gửi.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Send_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Send Error</shortDescription>
+        <value>Lỗi gửi mail</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Sent_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Sent Success</shortDescription>
+        <value>Đã gửi email thành công tới khách hàng.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Loading_Template_List</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error Loading Template List</shortDescription>
+        <value>Lỗi tải danh sách template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Send</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Send</shortDescription>
+        <value>Send</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Send_Manual_Notification</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Send Manual Notification</shortDescription>
+        <value>Send Manual Notification</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Target_Email</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Target Email</shortDescription>
+        <value>Target Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Target_Group</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Target Group</shortDescription>
+        <value>Target Group</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Not_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template Not Found</shortDescription>
+        <value>Không tìm thấy template.</value>
+    </labels>
+    <labels>
         <fullName>FEC_LBL_ContractClosure_Add_Temp_Address</fullName>
         <categories>Contract Closure LWC</categories>
         <language>en_US</language>
