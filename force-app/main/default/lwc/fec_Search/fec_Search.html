@@ -58,8 +58,8 @@
                 <lightning-accordion-section class="search-result" name="results" label="Search Result">
                     <template if:true={isNoCustomerFound}>
                         <div class="slds-p-vertical_medium">
-                            <div class="slds-text-align_center slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
-                                Không tìm thấy khách hàng
+                            <div class="slds-text-align_center slds-text-body_regular slds-m-bottom_medium" style="color: red;">
+                                Không tìm thấy kết quả
                             </div>
                             <template if:true={isDisplayCreateCase}>
                                 <div class="slds-grid slds-gutters slds-m-bottom_medium">
