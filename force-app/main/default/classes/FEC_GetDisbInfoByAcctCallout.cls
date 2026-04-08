@@ -5,20 +5,9 @@
 public with sharing class FEC_GetDisbInfoByAcctCallout {
 
     private static final String API_CONFIG_NAME = 'FEC_GetDisb_Info_By_Acct';
+    private static final String CALLOUT_LOG_NAME = 'FEC_GetDisbInfoByAcctCallout';
 
-    //=============== REQUEST ===============//
-
-    public class GetDisbInfoRequestEnvelope {
-        public Map<String, Object> headers;
-        public List<Object> parameters;
-        public Map<String, Object> body;
-
-        public GetDisbInfoRequestEnvelope() {
-            this.headers = new Map<String, Object>();
-            this.parameters = new List<Object>();
-            this.body = new Map<String, Object>();
-        }
-    }
+    public static FEC_ResponseLog responseLog;
 
     //=============== RESPONSE ===============//
 
@@ -106,6 +95,8 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         }
     }
 
+    //=============== REQUEST ===============//
+
     public static String buildRequestPayload(
         String transId,
         String dateTimeHeader,
@@ -132,17 +123,47 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         return JSON.serialize(root);
     }
 
-    public static HttpResponse sendRequest(String jsonPayload) {
+    private static String resolveDisbInfoEndpoint() {
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
-
-        String endpoint = apiSetting?.FEC_Call_Mock__c
+        return apiSetting?.FEC_Call_Mock__c
             ? FEC_MockupEndpoint.GET_DISB_INFO_BY_ACCT_ENDPOINT_MOCKUP
             : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+    }
+
+    private static GetDisbInfoByAcctResponse disbErrorResponse(String errorCode, String errorMessage) {
+        GetDisbInfoByAcctResponse err = new GetDisbInfoByAcctResponse();
+        err.errorCode = errorCode;
+        err.errorMessage = errorMessage;
+        return err;
+    }
+
+    private static void logDisbCall(String endpoint, String payload, HttpResponse resp, String errorMessage) {
+        responseLog = new FEC_ResponseLog(
+            CALLOUT_LOG_NAME,
+            endpoint,
+            FEC_ConstantCommon.API_METHOD_POST,
+            payload,
+            resp,
+            errorMessage
+        );
+        FEC_CommonUltils.logApiResponse(responseLog);
+    }
+
+    public static HttpResponse sendRequest(
+        String jsonPayload,
+        String transId,
+        String dateTimeHeader,
+        String requestorId
+    ) {
+        String endpoint = resolveDisbInfoEndpoint();
 
         Map<String, String> httpHeaders = new Map<String, String>{
             'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
-            'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+            'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+            'TransID' => transId,
+            'DateTime' => dateTimeHeader,
+            'RequestorID' => requestorId
         };
 
         return FEC_CommonUltils.calloutApiWithHeaders(
@@ -187,27 +208,32 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
     public static GetDisbInfoByAcctResponse getDisbInfoByAcct(String accountNumber, Integer ageOfRecords) {
         ValidationResult reqVal = validateRequest(accountNumber);
         if (!reqVal.isValid) {
-            GetDisbInfoByAcctResponse err = new GetDisbInfoByAcctResponse();
-            err.errorCode = 'VALIDATION_ERROR';
-            err.errorMessage = reqVal.errorMessage;
-            return err;
+            return disbErrorResponse('VALIDATION_ERROR', reqVal.errorMessage);
         }
 
         String transactionId = String.valueOf(UUID.randomUUID());
         String dateTimeValue = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX);
         ValidationResult headerVal = validateRequestHeaders(transactionId, dateTimeValue, FEC_ConstantCommon.REQUESTOR_PEGA_CSM);
         if (!headerVal.isValid) {
-            GetDisbInfoByAcctResponse err = new GetDisbInfoByAcctResponse();
-            err.errorCode = 'HEADER_VALIDATION_ERROR';
-            err.errorMessage = headerVal.errorMessage;
-            return err;
+            return disbErrorResponse('HEADER_VALIDATION_ERROR', headerVal.errorMessage);
         }
 
         String payload = buildRequestPayload(transactionId, dateTimeValue, accountNumber, ageOfRecords);
-        HttpResponse resp = sendRequest(payload);
-        Integer statusCode = resp == null ? null : resp.getStatusCode();
-        String bodyStr = resp == null ? null : resp.getBody();
-        return parseResponseBody(bodyStr, statusCode);
+        String endpoint = resolveDisbInfoEndpoint();
+        HttpResponse resp;
+        try {
+            resp = sendRequest(
+                payload,
+                transactionId,
+                dateTimeValue,
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM
+            );
+        } catch (Exception e) {
+            logDisbCall(endpoint, payload, null, e.getMessage());
+            throw e;
+        }
+        logDisbCall(endpoint, payload, resp, null);
+        return parseResponseBody(resp == null ? null : resp.getBody(), resp == null ? null : resp.getStatusCode());
     }
 
     public static ValidationResult validateRequest(String accountNumber) {
@@ -227,16 +253,8 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         if (String.isBlank(dateTimeValue)) {
             return new ValidationResult(false, System.Label.FEC_MSG_Datetime_Null);
         }
-        try {
-            Pattern dateTimePattern = Pattern.compile(FEC_ConstantCommon.PATTERN_DATE_TIME_FULL);
-            Matcher matcher = dateTimePattern.matcher(dateTimeValue);
-            if (!matcher.matches()) {
-                return new ValidationResult(
-                    false,
-                    String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeValue})
-                );
-            }
-        } catch (Exception e) {
+        Pattern dateTimePattern = Pattern.compile(FEC_ConstantCommon.PATTERN_DATE_TIME_FULL);
+        if (!dateTimePattern.matcher(dateTimeValue).matches()) {
             return new ValidationResult(
                 false,
                 String.format(System.Label.FEC_MSG_Datetime_Invalid, new List<String>{dateTimeValue})
