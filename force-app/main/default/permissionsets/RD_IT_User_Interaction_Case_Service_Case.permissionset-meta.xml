@@ -1641,13 +1641,8 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>ServiceResource.Description</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>ServiceResource.IsActive</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1658,6 +1653,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>ServiceResource.FEC_User_Role__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>ServiceResource.IsActive</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
