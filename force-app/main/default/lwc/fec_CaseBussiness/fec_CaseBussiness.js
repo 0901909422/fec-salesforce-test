@@ -1258,6 +1258,13 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
     }
 
+    const benEl = this._getBeneficiaryBankInfoBlockEl();
+    if (benEl && typeof benEl.validateForSubmit === "function") {
+      if (!benEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -1292,6 +1299,22 @@ export default class Fec_CaseBussiness extends LightningElement {
     return null;
   }
 
+  _getBeneficiaryBankInfoBlockEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_BeneficiaryBankInfoBlock"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveBeneficiaryIfApplicable === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
   _saveIncorrectPaymentAdjustmentsIfApplicable() {
     const el = this._getIncorrectPaymentFormEl();
     if (!el || typeof el.saveAdjustmentsIfApplicable !== "function") {
@@ -1306,6 +1329,22 @@ export default class Fec_CaseBussiness extends LightningElement {
       return Promise.resolve();
     }
     return el.saveDraftIfApplicable();
+  }
+
+  _saveBeneficiaryBankInfoDraftIfApplicable() {
+    const el = this._getBeneficiaryBankInfoBlockEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveBeneficiaryIfApplicable() {
+    const el = this._getBeneficiaryBankInfoBlockEl();
+    if (!el || typeof el.saveBeneficiaryIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveBeneficiaryIfApplicable();
   }
 
   _getIppClosureFormEl() {
@@ -1352,6 +1391,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       Promise.all([
         this._saveIncorrectPaymentDraftIfApplicable(),
         this._saveIPPClosureIfApplicable(),
+        this._saveBeneficiaryBankInfoDraftIfApplicable(),
       ]);
     if (total === 0) {
       return afterForms();
@@ -1394,6 +1434,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     await Promise.all([
       this._saveIncorrectPaymentAdjustmentsIfApplicable(),
       this._saveIPPClosureIfApplicable(),
+      this._saveBeneficiaryIfApplicable(),
     ]);
     if (routeToEle) {
       let method = routeToEle.value;

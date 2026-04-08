@@ -275,4 +275,74 @@ public with sharing class FEC_BeneficiaryBankInfoController {
         }
         return res;
     }
+
+    /**
+     * Lưu nháp thông tin người thụ hưởng lên FEC_Customer_History__c (cho phép bỏ trống một phần trường).
+     */
+    @AuraEnabled
+    public static void saveBeneficiaryBankInfoDraft(
+        Id caseId,
+        String beneficiaryName,
+        String beneficiaryAccount,
+        String bankPicklistValue,
+        String bankBranch,
+        String provinceCity
+    ) {
+        if (caseId == null) {
+            throw new AuraHandledException(
+                String.format(
+                    System.Label.FEC_MSG_Param_Required,
+                    new List<String>{ 'Case Id' }
+                )
+            );
+        }
+        if (!Schema.sObjectType.FEC_Customer_History__c.isUpdateable()) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Insufficient_Access);
+        }
+        List<Case> caseRows = [
+            SELECT Id, FEC_Account_or_Contract__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        caseRows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, caseRows).getRecords();
+        if (caseRows.isEmpty()) {
+            throw new AuraHandledException(
+                String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' })
+            );
+        }
+        Case c = caseRows[0];
+        if (c.FEC_Account_or_Contract__c == null) {
+            throw new AuraHandledException(
+                String.format(
+                    System.Label.FEC_MSG_Not_Found,
+                    new List<String>{ 'Customer History' }
+                )
+            );
+        }
+        try {
+            FEC_Customer_History__c histUpd = new FEC_Customer_History__c(
+                Id = c.FEC_Account_or_Contract__c,
+                FEC_Beneficiary_Name__c = String.isNotBlank(beneficiaryName) ? beneficiaryName.trim() : null,
+                FEC_Beneficiary_Account__c = String.isNotBlank(beneficiaryAccount)
+                    ? beneficiaryAccount.trim()
+                    : null,
+                FEC_Bank_Name__c = String.isNotBlank(bankPicklistValue) ? bankPicklistValue.trim() : null,
+                FEC_Bank_Branch__c = String.isNotBlank(bankBranch) ? bankBranch.trim() : null,
+                FEC_Province_City__c = String.isNotBlank(provinceCity) ? provinceCity.trim() : null
+            );
+            SObjectAccessDecision histDec = Security.stripInaccessible(
+                AccessType.UPDATABLE,
+                new List<SObject>{ histUpd }
+            );
+            if (histDec.getRecords().isEmpty()) {
+                throw new AuraHandledException(System.Label.FEC_MSG_Insufficient_Access);
+            }
+            update histDec.getRecords();
+        } catch (DmlException e) {
+            throw new AuraHandledException(e.getDmlMessage(0));
+        } catch (Exception e) {
+            throw new AuraHandledException(System.Label.FEC_Toast_Save_Error_Message);
+        }
+    }
 }
