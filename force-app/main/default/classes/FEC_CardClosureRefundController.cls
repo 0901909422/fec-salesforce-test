@@ -27,6 +27,7 @@ public with sharing class FEC_CardClosureRefundController {
         @AuraEnabled public Date pendingDisbursementApprovalDate;
         @AuraEnabled public String pendingDisbursementStatus;
         @AuraEnabled public String pendingCsDecision;
+        @AuraEnabled public Boolean cardBlocked;
     }
 
     @AuraEnabled
@@ -36,6 +37,7 @@ public with sharing class FEC_CardClosureRefundController {
         dto.showBlockCardButton = false;
         dto.attemptsExhausted = false;
         dto.cardBlockServiceAttempts = 0;
+        dto.cardBlocked = false;
         if (caseId == null || !Schema.sObjectType.Case.isAccessible() || !Schema.sObjectType.FEC_Customer_History__c.isAccessible()) {
             return dto;
         }
@@ -74,6 +76,7 @@ public with sharing class FEC_CardClosureRefundController {
             }
         }
         Boolean cardAlreadyC = BLOCK_CODE_CARD.equals(cardBlock);
+        dto.cardBlocked = cardAlreadyC;
         dto.showBlockCardButton = !dto.hideBlockCardBySubCode && !dto.attemptsExhausted && !cardAlreadyC;
         if (Schema.sObjectType.FEC_Pending_Disbursement__c.isAccessible()) {
             Map<String, Schema.SObjectField> pdFieldMap = Schema.SObjectType.FEC_Pending_Disbursement__c.fields.getMap();

@@ -17,6 +17,8 @@ import FEC_LBL_Pending_Disbursement_CS_Decision from '@salesforce/label/c.FEC_LB
 import FEC_MSG_Param_Required from '@salesforce/label/c.FEC_MSG_Param_Required';
 import { STR_EMPTY, RESULT_ERROR, RESULT_SUCCESS } from 'c/fec_CommonConst';
 
+const SUB_CODE_RC16_01 = 'RC16.01';
+
 export default class Fec_CardClosureRefundForm extends NavigationMixin(LightningElement) {
 
     _recordId;
@@ -34,6 +36,8 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
     }
 
     @api isEdit;
+
+    @api subCodeCode;
 
     @track uiContext = null;
     @track uiContextLoading = false;
@@ -83,7 +87,16 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
     }
 
     get showBlockCardButton() {
-        return this.uiContext && this.uiContext.showBlockCardButton === true;
+        if (!this.uiContext) {
+            return false;
+        }
+        const ctx = this.uiContext;
+        const parentCode = this.subCodeCode != null ? String(this.subCodeCode).trim() : STR_EMPTY;
+        const hideBySubCode = parentCode !== STR_EMPTY
+            ? SUB_CODE_RC16_01 === parentCode
+            : ctx.hideBlockCardBySubCode === true;
+        const cardBlocked = ctx.cardBlocked === true;
+        return !hideBySubCode && ctx.attemptsExhausted !== true && !cardBlocked;
     }
 
     get blockCardLocked() {
