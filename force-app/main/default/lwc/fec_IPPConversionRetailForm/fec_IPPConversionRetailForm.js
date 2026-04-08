@@ -16,7 +16,6 @@ import FEC_MSG_IPP_Conversion_Fail_Disable from '@salesforce/label/c.FEC_MSG_IPP
 import FEC_MSG_IPP_No_Eligible_Transactions from '@salesforce/label/c.FEC_MSG_IPP_No_Eligible_Transactions';
 import FEC_MSG_IPP_AddIpp_Default_Failed from '@salesforce/label/c.FEC_MSG_IPP_AddIpp_Default_Failed';
 import FEC_LBL_IPP_Retail_UI from '@salesforce/label/c.FEC_LBL_IPP_Retail_UI';
-import FEC_LBL_IPP_Closure_Back_To_Case from '@salesforce/label/c.FEC_LBL_IPP_Closure_Back_To_Case';
 import FEC_Button_Close from '@salesforce/label/c.FEC_Button_Close';
 import Loading from '@salesforce/label/c.Loading';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
@@ -69,6 +68,16 @@ const CONST = {
 export default class Fec_IPPConversionRetailForm extends NavigationMixin(LightningElement) {
 
     @api recordId;
+
+    @api isEdit;
+
+    get isReadOnly() {
+        return this.isEdit === false;
+    }
+
+    get datatableMaxRowSelection() {
+        return this.isReadOnly ? 0 : 1;
+    }
 
     @track transactions = [];
     @track selectedTransactionId = null;
@@ -127,7 +136,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         { label: CONST.COL_MERCHANT, fieldName: 'merchant', type: 'text' }
     ];
 
-    lblBackToCase = FEC_LBL_IPP_Closure_Back_To_Case;
     lblTenor = CONST.LBL_TENOR;
     lblInterest = CONST.LBL_INTEREST;
     lblConversionFee = CONST.LBL_CONVERSION_FEE;
@@ -178,6 +186,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     handleCheckIPPDetails() {
+        if (this.isReadOnly) {
+            return;
+        }
         if (!this.selectedTransactionId) {
             this.showToast(FEC_Toast_Warning, FEC_Toast_Validation_Message, CONST.VARIANT_WARNING);
             return;
@@ -203,6 +214,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     handleConvertIPP() {
+        if (this.isReadOnly) {
+            return;
+        }
         if (!this.selectedTransactionId || !this.selectedTenor) {
             this.showToast(FEC_Toast_Warning, FEC_Toast_Validation_Message, CONST.VARIANT_WARNING);
             return;
@@ -212,6 +226,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
 
     handleConfirmYes() {
         this.showConfirmModal = false;
+        if (this.isReadOnly) {
+            return;
+        }
         this.doConvert();
     }
 
@@ -220,6 +237,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     doConvert() {
+        if (this.isReadOnly) {
+            return;
+        }
         this.convertLoading = true;
         convertIPP({
             caseId: this.recordId,
@@ -257,6 +277,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     handleTenorChange(event) {
+        if (this.isReadOnly) {
+            return;
+        }
         this.selectedTenor = event.detail.value ? parseInt(event.detail.value, 10) : null;
     }
 
@@ -270,10 +293,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                 actionName: 'view'
             }
         });
-    }
-
-    handleNavigateToCase() {
-        this.navigateToCase();
     }
 
     resetManualEntryFields() {
@@ -292,6 +311,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     handleShowManualEntry() {
+        if (this.isReadOnly) {
+            return;
+        }
         this.resetManualEntryFields();
         this.showManualEntry = true;
     }
@@ -338,6 +360,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     handleManualEntrySubmit() {
+        if (this.isReadOnly) {
+            return;
+        }
         const allFields = [
             this.manualVerificationInfo,
             this.manualCallback,

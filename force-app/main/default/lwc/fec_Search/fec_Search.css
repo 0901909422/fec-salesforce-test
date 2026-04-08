@@ -86,3 +86,21 @@
     color: #0070d2;
     border-bottom: 1px solid #dddbda;
 }
+
+.no-result-icon {
+    --sds-c-icon-color-foreground-default: #c23934;
+}
+
+.no-result-text {
+    color: #c23934;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.no-result-text .no-result-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    color: #c23934;
+}

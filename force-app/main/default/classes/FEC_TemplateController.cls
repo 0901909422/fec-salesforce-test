@@ -73,6 +73,34 @@ public with sharing class FEC_TemplateController {
     }
 
     /**
+     * Create a draft template so the New Template form has a record Id
+     * for file uploads before the user saves.
+     * @return Id of the draft record
+     */
+    @AuraEnabled
+    public static Id createDraftTemplate() {
+        try {
+            return FEC_TemplateService.createDraftTemplate();
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    /**
+     * Delete a draft template and its uploaded files when the user
+     * cancels the New Template form.
+     * @param draftId  The draft template record Id
+     */
+    @AuraEnabled
+    public static void deleteDraftTemplate(Id draftId) {
+        try {
+            FEC_TemplateService.deleteDraftTemplate(draftId);
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    /**
      * Get file attachments (ContentDocumentLinks) for a template.
      * @param templateId  The template record Id
      * @return List of ContentDocumentLink with ContentDocument details
