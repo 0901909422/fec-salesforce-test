@@ -143,9 +143,5 @@
         <members>FEC_Common_System_Setting</members>
         <name>PermissionSet</name>
     </types>
-    <types>
-        <members>FEC_Service</members>
-        <name>CustomApplication</name>
-    </types>
     <version>66.0</version>
 </Package>
