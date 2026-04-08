@@ -1515,6 +1515,7 @@
 		<members>fec_AccountOrContractPicklistCustomerCase</members>
 		<members>fec_AccountOrContractPicklistInteraction</members>
 		<members>fec_BeneficiaryBankInfoBlock</members>
+		<members>fec_UserSearchModal</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
