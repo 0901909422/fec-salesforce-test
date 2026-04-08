@@ -5,9 +5,6 @@
 public with sharing class FEC_GetDisbInfoByAcctCallout {
 
     private static final String API_CONFIG_NAME = 'FEC_GetDisb_Info_By_Acct';
-    private static final String CALLOUT_LOG_NAME = 'FEC_GetDisbInfoByAcctCallout';
-
-    public static FEC_ResponseLog responseLog;
 
     //=============== RESPONSE ===============//
 
@@ -138,18 +135,6 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         return err;
     }
 
-    private static void logDisbCall(String endpoint, String payload, HttpResponse resp, String errorMessage) {
-        responseLog = new FEC_ResponseLog(
-            CALLOUT_LOG_NAME,
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            payload,
-            resp,
-            errorMessage
-        );
-        FEC_CommonUltils.logApiResponse(responseLog);
-    }
-
     public static HttpResponse sendRequest(
         String jsonPayload,
         String transId,
@@ -219,7 +204,6 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         }
 
         String payload = buildRequestPayload(transactionId, dateTimeValue, accountNumber, ageOfRecords);
-        String endpoint = resolveDisbInfoEndpoint();
         HttpResponse resp;
         try {
             resp = sendRequest(
@@ -229,10 +213,8 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
                 FEC_ConstantCommon.REQUESTOR_PEGA_CSM
             );
         } catch (Exception e) {
-            logDisbCall(endpoint, payload, null, e.getMessage());
-            throw e;
+            return disbErrorResponse('CALLOUT_ERROR', e.getMessage());
         }
-        logDisbCall(endpoint, payload, resp, null);
         return parseResponseBody(resp == null ? null : resp.getBody(), resp == null ? null : resp.getStatusCode());
     }
 
