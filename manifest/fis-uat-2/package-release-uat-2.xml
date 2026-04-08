@@ -1340,6 +1340,7 @@
 		<members>FEC_EnhancedLetterheadTriggerHandler</members>
 		<members>FEC_EnhancedLetterheadHandler_Test</members>
 		<members>FEC_NotificationService</members>
+		<members>FEC_AccountOrContractPicklistHandler</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1507,6 +1508,8 @@
 		<members>fec_InteractionRoutingUtilityBar</members>
 		<members>fec_CardPayment</members>
 		<members>fec_ManualNotification</members>
+		<members>fec_AccountOrContractPicklistCustomerCase</members>
+		<members>fec_AccountOrContractPicklistInteraction</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
