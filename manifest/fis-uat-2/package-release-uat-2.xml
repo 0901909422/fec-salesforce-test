@@ -47,6 +47,7 @@
         <members>FEC_API_Config.FEC_ReplacementCard</members>
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
+		<members>FEC_API_Config.FEC_Get_Disb_Info_By_Acct</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -1341,6 +1342,8 @@
 		<members>FEC_EnhancedLetterheadHandler_Test</members>
 		<members>FEC_NotificationService</members>
 		<members>FEC_AccountOrContractPicklistHandler</members>
+		<members>FEC_BeneficiaryBankInfoController</members>
+		<members>FEC_GetDisbInfoByAcctCallout</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1492,6 +1495,7 @@
 		<members>FEC_Target_Group</members>
 		<members>FEC_Template_Not_Found</members>
 		<members>FEC_LBL_Select_Payment_Method</members>
+		<members>FEC_MSG_Refund_Request_Refund_Amount_Positive</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1510,6 +1514,7 @@
 		<members>fec_ManualNotification</members>
 		<members>fec_AccountOrContractPicklistCustomerCase</members>
 		<members>fec_AccountOrContractPicklistInteraction</members>
+		<members>fec_BeneficiaryBankInfoBlock</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
