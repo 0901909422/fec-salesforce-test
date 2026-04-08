@@ -67,7 +67,10 @@
                                 <lightning-spinner size="small" alternative-text="Loading users"></lightning-spinner>
                             </template>
                             <template lwc:elseif={usersError}>
-                                <c-inline-error message={usersError}></c-inline-error>
+                                <div class="slds-notify slds-notify_alert slds-theme_error slds-m-top_medium" role="alert">
+                                    <span class="slds-assistive-text">{customLabels.CS_OrgChart_Text_Save_Error_Title}</span>
+                                    {usersError}
+                                </div>
                             </template>
                             <template lwc:elseif={noQueueSelected}>
                                 <div class="slds-text-color_weak">{customLabels.CS_OrgChart_Text_UserTable_Requie_Select_Queue}</div>
@@ -282,7 +285,10 @@
                         </div>
                     </template>
                     <template lwc:if={usersError}>
-                        <c-inline-error message={usersError}></c-inline-error>
+                        <div class="slds-notify slds-notify_alert slds-theme_error slds-m-top_medium" role="alert">
+                            <span class="slds-assistive-text">{customLabels.CS_OrgChart_Text_Save_Error_Title}</span>
+                            {usersError}
+                        </div>
                     </template>
                 </div>
 
