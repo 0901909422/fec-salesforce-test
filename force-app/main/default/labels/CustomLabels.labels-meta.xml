@@ -12082,4 +12082,108 @@
         <shortDescription>FEC_Cannot_Delete_Enhanced_Letterhead</shortDescription>
         <value>This Enhanced Letterhead cannot be deleted because it contains active templates.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Error_MessageError_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error MessageError Hold Case</shortDescription>
+        <value>Số hợp đồng/tài khoản này đã chuyển ngưng tác động thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Message_Maxretris</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error Message Maxretris</shortDescription>
+        <value>Số hợp đồng/tài khoản này đã chuyển ngưng tác động thất bại. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case</shortDescription>
+        <value>Hold Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Messenger_Success_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Messenger Success Hold Case</shortDescription>
+        <value>Số hợp đồng/tài khoản này đã chuyển ngưng tác động thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Code</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Code</shortDescription>
+        <value>NFU Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Hold_Day_Duration</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Hold Day Duration</shortDescription>
+        <value>NFU Hold Day Duration</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Reason</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Reason</shortDescription>
+        <value>NFU Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Show_Action_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Show Action Hold Case</shortDescription>
+        <value>Không tìm thấy bộ Hold Case thủ công tương ứng cho bộ NOC</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Succes_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Succes Hold Case</shortDescription>
+        <value>Hold Case thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_An_Unexpected_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>An Unexpected Error</shortDescription>
+        <value>An unexpected error occurred.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Failed_To_Load_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed To Load Case</shortDescription>
+        <value>Failed to load Case record:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Failed_To_Load_NFU</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed To Load NFU</shortDescription>
+        <value>Failed to load NFU Reasons:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Please_Select_An_NFU</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please Select An NFU</shortDescription>
+        <value>Please select an NFU Reason.</value>
+    </labels>
 </CustomLabels>

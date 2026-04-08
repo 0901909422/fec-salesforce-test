@@ -376,6 +376,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String EMAIL_CS_D2C = 'cs_d2c@fecredit.com.vn';
     public static final String EMAIL_CS_OM = 'CS_OM@fecredit.com.vn';
     public static final String EMAIL_CS_QC_TEAM = 'CS_QC_TEAM@fecredit.com.vn';
+
+    public static final String STATUS_SUCCESS = 'SUCCESS';
+    public static final String CASE_STATUS_ON_HOLD = 'On Hold';
+    
     public static final Map<String, String> decisionToTeamMap = new Map<String, String>{
       // Nhóm thường (Pending-) -> Bỏ prefix
       'Pending CS' => 'CSInternal',
@@ -398,4 +402,5 @@ public with sharing class FEC_ConstantCommon {
       'Document Preparation' => 'DocumentPreparation',
       'Task Under Review' => 'TaskUnderReview'
     };
+    
 }
