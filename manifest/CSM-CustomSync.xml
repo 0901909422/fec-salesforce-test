@@ -2,14 +2,10 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
         <members>CustomSync__c</members> 
-        <members>CustomSyncSetting__c</members>
-        <members>CustomSyncField__mdt</members>
+        <members>CustomSyncSetting__c</members> 
         <name>CustomObject</name>
     </types>
-    <types>
-        <members>CustomSyncField__mdt.Fields__c</members>
-        <members>CustomSyncField__mdt.TargetObject__c</members>
-
+    <types>  
         <members>CustomSync__c.StartAt__c</members>
         <members>CustomSync__c.EndAt__c</members>
         <members>CustomSync__c.Active__c</members> 
@@ -19,7 +15,8 @@
         <members>CustomSync__c.SyncFailed__c</members>
         <members>CustomSync__c.ProcessingQuantity__c</members>
         <members>CustomSync__c.WhatSync__c</members>
-        <members>CustomSync__c.TableName__c</members> 
+        <members>CustomSync__c.Fields__c</members> 
+        <members>CustomSync__c.TargetObject__c</members> 
 
         <members>FEC_API_Log__c.FEC_Quantity_Call__c</members> 
         <members>FEC_API_Log__c.FEC_Custom_Sync__c</members> 
@@ -29,8 +26,7 @@
         <members>CustomSyncSetting__c.LimitQuanitySync__c</members>
         <name>CustomField</name>
     </types>
-    <types>
-        <members>CustomSyncField.Phone_Update</members> 
+    <types> 
         <members>FEC_API_Config.FEC_Custom_Sync_Bix</members> 
         <name>CustomMetadata</name>
     </types>
@@ -41,11 +37,7 @@
     <types>
         <members>Custom_Sync_Record_Page</members>
         <name>FlexiPage</name>
-    </types>
-    <types> 
-        <members>CustomSyncField__mdt-Custom Sync Field Layout</members>
-        <name>Layout</name>
-    </types>
+    </types> 
     <types> 
         <members>FEC_ScheduledSyncDataToBix</members>
         <members>FEC_QueueRunBatchSync</members>
@@ -55,10 +47,10 @@
         <members>FEC_CustomSyncAllInOneTest</members> 
         <name>ApexClass</name>
     </types>
-    
     <types>
         <members>FEC_Common_System_Setting</members>
         <name>PermissionSet</name>
     </types>
+    
     <version>65.0</version>
 </Package>
