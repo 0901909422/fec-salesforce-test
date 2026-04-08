@@ -1347,6 +1347,38 @@ export default class Fec_CaseBussiness extends LightningElement {
     return el.saveBeneficiaryIfApplicable();
   }
 
+  _getCardClosureRefundFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_CardClosureRefundForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveForSubmitIfApplicable === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _saveCardClosureRefundDraftIfApplicable() {
+    const el = this._getCardClosureRefundFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveCardClosureRefundForSubmitIfApplicable() {
+    const el = this._getCardClosureRefundFormEl();
+    if (!el || typeof el.saveForSubmitIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveForSubmitIfApplicable();
+  }
+
   _getIppClosureFormEl() {
     return (
       this.template.querySelector("c-fec_-i-p-p-closure-form") ||
@@ -1392,6 +1424,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveIncorrectPaymentDraftIfApplicable(),
         this._saveIPPClosureIfApplicable(),
         this._saveBeneficiaryBankInfoDraftIfApplicable(),
+        this._saveCardClosureRefundDraftIfApplicable(),
       ]);
     if (total === 0) {
       return afterForms();
@@ -1435,6 +1468,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveIncorrectPaymentAdjustmentsIfApplicable(),
       this._saveIPPClosureIfApplicable(),
       this._saveBeneficiaryIfApplicable(),
+      this._saveCardClosureRefundForSubmitIfApplicable(),
     ]);
     if (routeToEle) {
       let method = routeToEle.value;

@@ -47,6 +47,21 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
     @track resultClass = STR_EMPTY;
     @track formLocked = false;
 
+    @api
+    validateForSubmit() {
+        return true;
+    }
+
+    @api
+    saveDraftIfApplicable() {
+        return Promise.resolve();
+    }
+
+    @api
+    saveForSubmitIfApplicable() {
+        return Promise.resolve();
+    }
+
     customLabel = {
         confirmTitle: FEC_MSG_Card_Block_Confirm_Title,
         confirmBody: FEC_MSG_Card_Block_Confirm_Body,
