@@ -146,6 +146,7 @@
 		<members>fec_SecondaryInfoLoanAccount</members>
 		<members>fec_CardPayment</members>
 		<members>fec_Asset</members>
+		<members>fec_CreateCaseInListView</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
