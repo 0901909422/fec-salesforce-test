@@ -4,7 +4,6 @@ public with sharing class FEC_CardClosureRefundController {
     private static final String FUNC_BLOCK = 'B';
     private static final String FUNC_UNBLOCK = 'U';
     private static final String SUB_CODE_RC16_01 = 'RC16.01';
-    private static final String SUB_CODE_RC16_05 = 'RC16.05';
     private static final Integer MAX_BLOCK_SERVICE_ATTEMPTS = 3;
 
     public class LockUnlockResultDTO {
@@ -19,7 +18,6 @@ public with sharing class FEC_CardClosureRefundController {
 
     public class CardLockUiContextDTO {
         @AuraEnabled public Boolean hideBlockCardBySubCode;
-        @AuraEnabled public Boolean requireRefundFields;
         @AuraEnabled public Boolean showBlockCardButton;
         @AuraEnabled public Boolean attemptsExhausted;
         @AuraEnabled public Integer cardBlockServiceAttempts;
@@ -29,18 +27,12 @@ public with sharing class FEC_CardClosureRefundController {
         @AuraEnabled public Date pendingDisbursementApprovalDate;
         @AuraEnabled public String pendingDisbursementStatus;
         @AuraEnabled public String pendingCsDecision;
-        @AuraEnabled public String beneficiaryName;
-        @AuraEnabled public String beneficiaryAccount;
-        @AuraEnabled public String bankName;
-        @AuraEnabled public String bankBranch;
-        @AuraEnabled public String provinceCity;
     }
 
     @AuraEnabled
     public static CardLockUiContextDTO getCardLockUnlockUiContext(Id caseId) {
         CardLockUiContextDTO dto = new CardLockUiContextDTO();
         dto.hideBlockCardBySubCode = false;
-        dto.requireRefundFields = false;
         dto.showBlockCardButton = false;
         dto.attemptsExhausted = false;
         dto.cardBlockServiceAttempts = 0;
@@ -63,7 +55,6 @@ public with sharing class FEC_CardClosureRefundController {
         Case c = caseRows[0];
         String subCode = c.FEC_SubCode__r != null ? c.FEC_SubCode__r.FEC_Code__c : null;
         dto.hideBlockCardBySubCode = SUB_CODE_RC16_01.equals(subCode);
-        dto.requireRefundFields = SUB_CODE_RC16_05.equals(subCode);
         Decimal att = c.FEC_Card_Block_Service_Attempts__c;
         Integer attInt = att == null ? 0 : att.intValue();
         dto.cardBlockServiceAttempts = attInt;
@@ -71,7 +62,7 @@ public with sharing class FEC_CardClosureRefundController {
         String cardBlock = null;
         if (c.FEC_Account_or_Contract__c != null) {
             List<FEC_Customer_History__c> histories = [
-                SELECT Id, FEC_Block_Code__c, FEC_Beneficiary_Name__c, FEC_Beneficiary_Account__c, FEC_Bank_Name__c, FEC_Bank_Branch__c, FEC_Province_City__c
+                SELECT Id, FEC_Block_Code__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :c.FEC_Account_or_Contract__c
                 LIMIT 1
@@ -80,11 +71,6 @@ public with sharing class FEC_CardClosureRefundController {
             if (!histories.isEmpty()) {
                 FEC_Customer_History__c h = histories[0];
                 cardBlock = h.FEC_Block_Code__c;
-                dto.beneficiaryName = h.FEC_Beneficiary_Name__c;
-                dto.beneficiaryAccount = h.FEC_Beneficiary_Account__c;
-                dto.bankName = h.FEC_Bank_Name__c;
-                dto.bankBranch = h.FEC_Bank_Branch__c;
-                dto.provinceCity = h.FEC_Province_City__c;
             }
         }
         Boolean cardAlreadyC = BLOCK_CODE_CARD.equals(cardBlock);
@@ -123,31 +109,16 @@ public with sharing class FEC_CardClosureRefundController {
     }
 
     @AuraEnabled
-    public static LockUnlockResultDTO blockCard(
-        Id caseId,
-        String beneficiaryName,
-        String beneficiaryAccount,
-        String bankName,
-        String bankBranch,
-        String provinceCity
-    ) {
-        return executeLockUnlock(caseId, FUNC_BLOCK, beneficiaryName, beneficiaryAccount, bankName, bankBranch, provinceCity);
+    public static LockUnlockResultDTO blockCard(Id caseId) {
+        return executeLockUnlock(caseId, FUNC_BLOCK);
     }
 
     @AuraEnabled
     public static LockUnlockResultDTO unblockCard(Id caseId) {
-        return executeLockUnlock(caseId, FUNC_UNBLOCK, null, null, null, null, null);
+        return executeLockUnlock(caseId, FUNC_UNBLOCK);
     }
 
-    private static LockUnlockResultDTO executeLockUnlock(
-        Id caseId,
-        String funcCode,
-        String beneficiaryName,
-        String beneficiaryAccount,
-        String bankName,
-        String bankBranch,
-        String provinceCity
-    ) {
+    private static LockUnlockResultDTO executeLockUnlock(Id caseId, String funcCode) {
         LockUnlockResultDTO dto = new LockUnlockResultDTO();
         dto.success = false;
         dto.code = null;
@@ -205,8 +176,7 @@ public with sharing class FEC_CardClosureRefundController {
         }
 
         List<FEC_Customer_History__c> historyRows = [
-            SELECT Id, FEC_Account_Number__c, FEC_Card_Number__c, FEC_Block_Code__c, FEC_Block_Code_1__c,
-                FEC_Beneficiary_Name__c, FEC_Beneficiary_Account__c, FEC_Bank_Name__c, FEC_Bank_Branch__c, FEC_Province_City__c
+            SELECT Id, FEC_Account_Number__c, FEC_Card_Number__c, FEC_Block_Code__c, FEC_Block_Code_1__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
@@ -228,28 +198,6 @@ public with sharing class FEC_CardClosureRefundController {
         if (String.isBlank(last4Digit)) {
             dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Last4Digit' });
             return dto;
-        }
-
-        if (funcCode == FUNC_BLOCK && SUB_CODE_RC16_05.equals(subCode)) {
-            if (String.isBlank(beneficiaryName) || String.isBlank(beneficiaryAccount) || String.isBlank(bankName)
-                || String.isBlank(bankBranch) || String.isBlank(provinceCity)) {
-                dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Refund beneficiary fields' });
-                return dto;
-            }
-            if (Schema.sObjectType.FEC_Customer_History__c.isUpdateable()) {
-                FEC_Customer_History__c hSave = new FEC_Customer_History__c(
-                    Id = customerHistory.Id,
-                    FEC_Beneficiary_Name__c = beneficiaryName,
-                    FEC_Beneficiary_Account__c = beneficiaryAccount,
-                    FEC_Bank_Name__c = bankName,
-                    FEC_Bank_Branch__c = bankBranch,
-                    FEC_Province_City__c = provinceCity
-                );
-                List<FEC_Customer_History__c> toUp = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.UPDATABLE, new List<FEC_Customer_History__c>{ hSave }).getRecords();
-                if (!toUp.isEmpty()) {
-                    update toUp;
-                }
-            }
         }
 
         Boolean cardOnlyLock = false;

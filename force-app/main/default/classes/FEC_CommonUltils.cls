@@ -1068,6 +1068,83 @@ public with sharing class FEC_CommonUltils {
         return (val < 10 ? '0' : '') + String.valueOf(val);
     }
 
+  /**
+   * Lấy giờ hiện tại (Time) theo timezone của user hiện tại.
+   */
+  public static Time getCurrentLocalTime() {
+    Datetime nowDt = Datetime.now();
+    TimeZone tz = UserInfo.getTimeZone();
+    Integer offsetMs = tz.getOffset(nowDt);
+    Datetime localDt = nowDt.addSeconds(offsetMs / 1000);
+    return Time.newInstance(localDt.hour(), localDt.minute(), localDt.second(), 0);
+  }
+
+  /**
+   * Kiểm tra thời điểm hiện tại có trong khung giờ schedule không.
+   * Nếu không set schedule → luôn gửi.
+   */
+  public static Boolean isWithinSchedule(Time nowTime, Time startTime, Time endTime) {
+    if (startTime == null || endTime == null) return true;
+    return nowTime >= startTime && nowTime <= endTime;
+  }
+
+  /**
+   * Gửi email đơn giản với toAddresses, subject, htmlBody.
+   * Dùng lại ở nhiều chỗ thay vì build SingleEmailMessage thủ công.
+   */
+  public static void sendEmail(List<String> toAddresses, String subject, String htmlBody) {
+    if (toAddresses == null || toAddresses.isEmpty()) return;
+    try {
+      Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+      mail.setToAddresses(toAddresses);
+      mail.setSubject(subject);
+      mail.setHtmlBody(htmlBody != null ? htmlBody : '');
+      mail.setSaveAsActivity(false);
+      Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail }, false);
+    } catch (Exception e) {
+      System.debug('FEC_CommonUltils.sendEmail failed: ' + e.getMessage());
+    }
+  }
+
+  /**
+   * Parse danh sách email từ LongTextArea (phân cách bằng dấu phẩy hoặc xuống dòng).
+   * @param receivers Chuỗi chứa danh sách email
+   * @return Danh sách email đã trim, bỏ blank
+   */
+  public static List<String> parseReceivers(String receivers) {
+    List<String> result = new List<String>();
+    if (String.isBlank(receivers)) return result;
+    for (String raw : receivers.split('[,\\n\\r]+')) {
+      String email = raw.trim();
+      if (String.isNotBlank(email)) result.add(email);
+    }
+    return result;
+  }
+
+  /**
+   * Build một SingleEmailMessage (không gửi ngay) để caller có thể gom vào list rồi sendEmails.
+   */
+  public static Messaging.SingleEmailMessage buildEmail(List<String> toAddresses, String subject, String htmlBody) {
+    Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+    mail.setToAddresses(toAddresses);
+    mail.setSubject(subject != null ? subject : '');
+    mail.setHtmlBody(htmlBody != null ? htmlBody : '');
+    mail.setSaveAsActivity(false);
+    return mail;
+  }
+
+  /**
+   * Gửi nhiều email cùng lúc (bulk).
+   */
+  public static void sendEmails(List<Messaging.SingleEmailMessage> emails) {
+    if (emails == null || emails.isEmpty()) return;
+    try {
+      Messaging.sendEmail(emails, false);
+    } catch (Exception e) {
+      System.debug('FEC_CommonUltils.sendEmails failed: ' + e.getMessage());
+    }
+  }
+
   public static String serializeSafe(Object obj) {
     try {
       return obj != null ? JSON.serialize(obj) : null;
