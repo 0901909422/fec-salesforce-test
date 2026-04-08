@@ -98,6 +98,7 @@
 		<members>FEC_BeneficiaryBankInfoController</members>
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_GetDisbInfoByAcctCallout</members>
+		<members>FEC_HoldCaseController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -157,6 +158,7 @@
 		<members>fec_AccountOrContractPicklistInteraction</members>
 		<members>fec_CreateInteractionCaseInListView</members>
 		<members>fec_BeneficiaryBankInfoBlock</members>
+		<members>fec_holdCaseManual</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -374,6 +376,19 @@
 		<members>FEC_Cannot_Delete_Enhanced_Letterhead</members>
 		<members>FEC_LBL_Select_Payment_Method</members>
 		<members>FEC_MSG_Refund_Request_Refund_Amount_Positive</members>
+		<members>FEC_NFU_Hold_Day_Duration</members>
+		<members>FEC_Messenger_Success_Hold_Case</members>
+		<members>FEC_Error_MessageError_Hold_Case</members>
+		<members>FEC_Error_Message_Maxretris</members>
+		<members>FEC_Show_Action_Hold_Case</members>
+        <members>FEC_NFU_Reason</members>
+        <members>FEC_Hold_Case</members>
+        <members>FEC_NFU_Code</members>
+        <members>FEC_Succes_Hold_Case</members>
+		<members>FEC_Failed_To_Load_Case</members>
+        <members>FEC_Failed_To_Load_NFU</members>
+        <members>FEC_Please_Select_An_NFU</members>
+        <members>FEC_An_Unexpected_Error</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -540,6 +555,7 @@
 		<members>FEC_Interaction_Routed__e</members>
 		<members>FEC_Additional_Info__c</members>
 		<members>FEC_System_Config__c</members>
+		<members>FEC_Hold_Case_Config__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -649,6 +665,10 @@
 	<types>
 		<members>en_US</members>
 		<name>Translations</name>
+	</types>
+	<types>
+		<members>Case.Hold_Case</members>
+		<name>QuickAction</name>
 	</types>
     <version>65.0</version>
 </Package>
