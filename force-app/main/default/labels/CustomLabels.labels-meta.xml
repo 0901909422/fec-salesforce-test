@@ -11530,6 +11530,629 @@
         <value>Không có giao dịch hợp lệ để chuyển đổi trả góp.</value>
     </labels>
     <labels>
+        <fullName>CS_OrgChart_Text_header</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Org Chart</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Manage Queues and Users in Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Users in Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_Queue_Name_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_Edit_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Edit queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_Add_User_To_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Add users to queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_Requie_Select_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Select Queue to view list users</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_No_User</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>This queue hasn't any user</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserQueueDetailModal_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queues for</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserQueueDetailModal_UserId</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>User Id</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddUserModal_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Add users to queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddUserModal_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue:</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddUserModal_SearchUser_Input</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Search user</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddUserModal_SearchUser_PlaceHolder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Enter Username or Email</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddUserModal_SearchUser_Result</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Result</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Checkbox_AddUserModal_SearchUser_SelectAll</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Checkbox</shortDescription>
+        <value>Select all</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_AddUserModal_SearchUser_AddIntoQueue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button</shortDescription>
+        <value>Add into Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_table_AddUserModal_SuggestUser_Name_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Name</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_table_AddUserModal_SuggestUser_Email_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Email</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_table_AddUserModal_SuggestUser_Role_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Role</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_table_AddUserModal_SuggestUser_ResultNotFound</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Result not found</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_Name_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Full Name</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_Email_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Email</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_UserRole_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>User Role</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_Queue_Unknow</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Unknown Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserQueueDetailModal_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Can not show detail, the user invalid.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_RemoveUser_Message_Confirm</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Do you want to remove {userName} from {queueName}?</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddUserModal_AddAction_Eror</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Can not add users into Queue.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_Unknow_Eror</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Unknown error</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_RemoveUser_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to remove user from queue.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_Refresh_History_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to refresh child history log</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_Input_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue Label</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_Label_PlaceHolder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Enter queue label</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_Input_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue Name</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_Name_PlaceHolder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Enter queue name</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_Input_Name_Pattern</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>The unique name used by the API and managed packages. The name must begin with a letter and use only alphanumeric characters and underscores. The name cannot end with an underscore or have two consecutive underscores.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_Input_Name_Exp</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Exp: FEC_Bussiness_Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_Modal_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_Modal_Save</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Save</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_TeamQueue_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_HistoryLog_No_Result</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>No history logs found.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_HistoryLog_ModifiedOn_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Modified On</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_HistoryLog_ModifiedBy_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Modified by</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_HistoryLog_Action_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Action</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_HistoryLog_OldValue_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Old Value</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_HistoryLog_NewValue_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>New Value</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_HistoryLog_View</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button</shortDescription>
+        <value>View Custom History</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_HistoryLog_Hide</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button</shortDescription>
+        <value>Hide Custom History</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_HistoryLog_Require_Select_Object</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Please Select Team or Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Heading</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Edit Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Input_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue Label</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Combobox_EditQueueModal_Team</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Combobox</shortDescription>
+        <value>Queue Team</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Combobox_EditQueueModal_Team_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Combobox</shortDescription>
+        <value>Select a team</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to load queue info</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Confirm_Save</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Do you want to save change for this Queue. If you change Queue Team, the page will be refresh to update Org Tree?</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Save_Success_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue updated</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_Save_Success_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_Save_Error_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_TeamQueue_Add_New</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button</shortDescription>
+        <value>Add New Team</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Input_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team Label</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Input_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team Name</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Input_Name_Pattern</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>The unique API name (alphanumeric and underscores, must start with a letter; no trailing underscore or double underscores).</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Input_Description</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Description</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Input_Description_Placehoder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Describe this team</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Success_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team created successfully.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Label_Require_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team Label is required.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Name_Require_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team Name must start with a letter, contain only alphanumeric or underscore, cannot end with underscore or contain consecutive underscores.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_TeamQueue_Add_NewQueue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Add New Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_Queues</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queues</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_QueueName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Name</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_MainQueue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Main Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_View_ListQueue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>View list queues of this user</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_Remove_User_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Remove user from this queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_InvalidName_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Please insert the valid Queue Name. Exp: FEC_Bussiness_Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_InvalidName_Exist</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>A queue with this name already exists. Please choose a different name.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_AddQueue_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Add New Queue Successfully</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_AddQueue_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to create team queue record, Please contact with your administrator to check Queue.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_AddQueue_Error_Catch</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to create queue in Salesforce</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_Error_UserID_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>No user specified for queue lookup.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_MainQueue_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Main queue updated successfully.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_MainQueue_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to update main queue.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Invalid_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue not found.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Create_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to create team: </value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Update_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to update Queue Label:</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_UpdateTeam_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to update Queue Team mapping:</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_Modal_Close</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button</shortDescription>
+        <value>Close</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_MainQueue_Select_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Please select a queue to set as main queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_MainQueue_User_NotFound</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Unable to update main queue: user not found</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_MainQueue_Init_Queue_Data_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to initialize queue data. Please try again.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_GetCSAttached_FileID_Invalid</fullName>
         <categories>API</categories>
         <language>en_US</language>
