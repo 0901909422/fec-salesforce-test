@@ -1,4 +1,5 @@
 public without sharing class FEC_RoutingActionHistoryTriggerHandler {
+  public class RoutingActionHistoryException extends Exception {}
   private static Boolean isExecuting = false;
 
   public static void run() {
@@ -49,6 +50,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       handleUpdateCaseTeamsOnInsert(newRecords);
       FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
       sendNotificationEmails(newRecords);
+    } catch (Exception e) {
+      throw new RoutingActionHistoryException('Error processing Routing Action History after insert: ' + e.getMessage());
     } finally {
       isExecuting = false;
     }
@@ -56,7 +59,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
   public static void sendNotificationEmails(List<FEC_Routing_Action_History__c> newList) {
     System.debug('--- [sendNotificationEmails] START');
-
+    if (newList == null || newList.isEmpty()) return;   
     Set<Id> caseIds = new Set<Id>();
     for (FEC_Routing_Action_History__c history : newList) {
         if (history.FEC_Case__c != null) caseIds.add(history.FEC_Case__c);
@@ -97,14 +100,16 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     Map<FEC_Routing_Action_History__c, FEC_Notification__c> historyToNotifMap = new Map<FEC_Routing_Action_History__c, FEC_Notification__c>();
     Set<Id> templateIds = new Set<Id>();
 
+    if (activeNotifications.isEmpty()) return;
+
     for (FEC_Routing_Action_History__c history : newList) {
         if (history.FEC_Case__c == null || !caseMap.containsKey(history.FEC_Case__c)) continue;
         Case relatedCase = caseMap.get(history.FEC_Case__c);
 
         for (FEC_Notification__c notif : activeNotifications) {
             // Logic so khớp điều kiện (Giữ nguyên logic cũ của bạn)
-            Boolean isMatch = (notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c) == true)
-                && (notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c) == true)
+            Boolean isMatch = (String.isNotBlank(history.FEC_Current_Status__c) && notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c) == true)
+                && (String.isNotBlank(history.FEC_Changed_Status__c) && notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c) == true)
                 && (notif.FEC_Customer_Type__c == relatedCase.FEC_Customer_Type__c)
                 && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
                 && (notif.FEC_Category__c == relatedCase.FEC_Category__c)
