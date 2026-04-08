@@ -12138,4 +12138,36 @@
         <shortDescription>Succes Hold Case</shortDescription>
         <value>Hold Case thành công.</value>
     </labels>
+    <labels>
+        <fullName>FEC_An_Unexpected_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>An Unexpected Error</shortDescription>
+        <value>An unexpected error occurred.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Failed_To_Load_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed To Load Case</shortDescription>
+        <value>Failed to load Case record:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Failed_To_Load_NFU</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed To Load NFU</shortDescription>
+        <value>Failed to load NFU Reasons:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Please_Select_An_NFU</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please Select An NFU</shortDescription>
+        <value>Please select an NFU Reason.</value>
+    </labels>
 </CustomLabels>

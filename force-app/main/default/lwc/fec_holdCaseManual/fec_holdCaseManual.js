@@ -20,10 +20,15 @@ import FEC_Messenger_Success_Hold_Case from '@salesforce/label/c.FEC_Messenger_S
 import FEC_Error_MessageError_Hold_Case from '@salesforce/label/c.FEC_Error_MessageError_Hold_Case';
 import FEC_Error_Message_Maxretris from '@salesforce/label/c.FEC_Error_Message_Maxretris';
 import FEC_Show_Action_Hold_Case from '@salesforce/label/c.FEC_Show_Action_Hold_Case'; 
-
-
+import FEC_Failed_To_Load_Case from '@salesforce/label/c.FEC_Failed_To_Load_Case'; 
+import FEC_Failed_To_Load_NFU from '@salesforce/label/c.FEC_Failed_To_Load_NFU'; 
+import FEC_Please_Select_An_NFU from '@salesforce/label/c.FEC_Please_Select_An_NFU'; 
+import FEC_MSG_IPP_AddIpp_Default_Success from '@salesforce/label/c.FEC_MSG_IPP_AddIpp_Default_Success'; 
+import FEC_An_Unexpected_Error from '@salesforce/label/c.FEC_An_Unexpected_Error'; 
 import {
-  STR_EMPTY
+  STR_EMPTY, ERROR_TOAST_TYPE, WARNING_HOLD_CASE,
+   WARNING_HOLD_TOAST, SUCCESS_MODAL_TITLE,
+    RESPONSE_SUCCESS,ERROR_MODAL_TITLE
 } from "c/fec_CommonConst";
 
 
@@ -76,7 +81,12 @@ export default class Fec_holdCaseManual extends LightningElement {
        messengerSuccessHoldCase : FEC_Messenger_Success_Hold_Case,
        errorMessageErrorHoldCase : FEC_Error_MessageError_Hold_Case,
        errorMessageMaxretris : FEC_Error_Message_Maxretris,
-       showActionHoldCase : FEC_Show_Action_Hold_Case
+       showActionHoldCase : FEC_Show_Action_Hold_Case,
+       failedToLoadCase : FEC_Failed_To_Load_Case,
+       failedToLoadNFU : FEC_Failed_To_Load_NFU,
+       pleaseSelectAnNFU : FEC_Please_Select_An_NFU,
+       mSGIPPAddIppDefaultSuccess : FEC_MSG_IPP_AddIpp_Default_Success,
+       anUnexpectedError : FEC_An_Unexpected_Error
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -98,9 +108,9 @@ export default class Fec_holdCaseManual extends LightningElement {
 
         } else if (error) {
             this._showToast(
-                '',
-                'Failed to load Case record: ' + (error?.body?.message ?? error),
-                'error'
+                STR_EMPTY,
+                this.customLabel.failedToLoadCase + (error?.body?.message ?? error),
+                ERROR_TOAST_TYPE
             );
         }
     }
@@ -148,9 +158,9 @@ export default class Fec_holdCaseManual extends LightningElement {
 
         } catch (error) {
             this._showToast(
-                '',
-                'Failed to load NFU Reasons: ' + (error?.body?.message ?? error),
-                'error'
+                STR_EMPTY,
+                this.customLabel.failedToLoadNFU + (error?.body?.message ?? error),
+                ERROR_TOAST_TYPE
             );
         } finally {
             this.isLoading = false;
@@ -175,8 +185,8 @@ export default class Fec_holdCaseManual extends LightningElement {
             this.nfuCode = meta.nfuCode;
             this.nfuHoldDayDuration = meta.nfuDuration;
         } else {
-            this.nfuCode = '';
-            this.nfuHoldDayDuration = '';
+            this.nfuCode = STR_EMPTY;
+            this.nfuHoldDayDuration = STR_EMPTY;
         }
     }
 
@@ -192,7 +202,7 @@ export default class Fec_holdCaseManual extends LightningElement {
      */
     async handleHoldCase() {
         if (!this.selectedReason) {
-            this._showToast('Warning', 'Please select an NFU Reason.', 'warning');
+            this._showToast(WARNING_HOLD_CASE, this.customLabel.pleaseSelectAnNFU, WARNING_HOLD_TOAST);
             return;
         }
         this.isLoading = true;
@@ -203,13 +213,11 @@ export default class Fec_holdCaseManual extends LightningElement {
                 nfuCode      : this.nfuCode,
                 holdDuration : this.nfuHoldDayDuration
             });
-
-            console.log('response:', JSON.stringify(response));
             this._retryCount += 1;
 
-            if (response?.status == 'SUCCESS') {
+            if (response?.status == RESPONSE_SUCCESS) {
                 this.isHoldCaseSuccess = true;
-                this._showToast('Thành công', this.customLabel.messengerSuccessHoldCase, 'success');
+                this._showToast(this.customLabel.mSGIPPAddIppDefaultSuccess, this.customLabel.messengerSuccessHoldCase, SUCCESS_MODAL_TITLE);
                 this.handleCancel();
             } else {
                 
@@ -225,8 +233,8 @@ export default class Fec_holdCaseManual extends LightningElement {
            
 
         } catch (error) {
-            const msg = error?.body?.message ?? 'An unexpected error occurred.';
-            this._showToast('Error', msg, 'error');
+            const msg = error?.body?.message ?? this.customLabel.anUnexpectedError;
+            this._showToast(ERROR_MODAL_TITLE, msg, ERROR_TOAST_TYPE);
         } finally {
             this.isLoading = false;
         }
@@ -238,6 +246,6 @@ export default class Fec_holdCaseManual extends LightningElement {
     }
 
     _showToastNotFoundCaseConfig() {
-        this._showToast( '', this.customLabel.showActionHoldCase, 'error');
+        this._showToast( STR_EMPTY, this.customLabel.showActionHoldCase, ERROR_TOAST_TYPE);
     }
 }

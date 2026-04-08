@@ -130,6 +130,10 @@
         <members>FEC_Hold_Case</members>
         <members>FEC_NFU_Code</members>
         <members>FEC_Succes_Hold_Case</members>
+		<members>FEC_Failed_To_Load_Case</members>
+        <members>FEC_Failed_To_Load_NFU</members>
+        <members>FEC_Please_Select_An_NFU</members>
+        <members>FEC_An_Unexpected_Error</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
