@@ -1,4 +1,5 @@
 public without sharing class FEC_RoutingActionHistoryTriggerHandler {
+  public class RoutingActionHistoryException extends Exception {}
   private static Boolean isExecuting = false;
 
   public static void run() {
@@ -49,6 +50,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       handleUpdateCaseTeamsOnInsert(newRecords);
       FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
       sendNotificationEmails(newRecords);
+    } catch (Exception e) {
+      throw new RoutingActionHistoryException('Error processing Routing Action History after insert: ' + e.getMessage());
     } finally {
       isExecuting = false;
     }
@@ -56,7 +59,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
   public static void sendNotificationEmails(List<FEC_Routing_Action_History__c> newList) {
     System.debug('--- [sendNotificationEmails] START');
-
+    if (newList == null || newList.isEmpty()) return;   
     Set<Id> caseIds = new Set<Id>();
     for (FEC_Routing_Action_History__c history : newList) {
         if (history.FEC_Case__c != null) caseIds.add(history.FEC_Case__c);
@@ -97,14 +100,16 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     Map<FEC_Routing_Action_History__c, FEC_Notification__c> historyToNotifMap = new Map<FEC_Routing_Action_History__c, FEC_Notification__c>();
     Set<Id> templateIds = new Set<Id>();
 
+    if (activeNotifications.isEmpty()) return;
+
     for (FEC_Routing_Action_History__c history : newList) {
         if (history.FEC_Case__c == null || !caseMap.containsKey(history.FEC_Case__c)) continue;
         Case relatedCase = caseMap.get(history.FEC_Case__c);
 
         for (FEC_Notification__c notif : activeNotifications) {
             // Logic so khớp điều kiện (Giữ nguyên logic cũ của bạn)
-            Boolean isMatch = (notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c) == true)
-                && (notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c) == true)
+            Boolean isMatch = (String.isNotBlank(history.FEC_Current_Status__c) && notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c) == true)
+                && (String.isNotBlank(history.FEC_Changed_Status__c) && notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c) == true)
                 && (notif.FEC_Customer_Type__c == relatedCase.FEC_Customer_Type__c)
                 && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
                 && (notif.FEC_Category__c == relatedCase.FEC_Category__c)
@@ -206,7 +211,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       updateCaseTeams(
         parseOwnerIdField(history.FEC_Original_User_Queue_ID__c),
         parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c),
-        caseRecord
+        caseRecord,
+        history
       );
     }
 
@@ -296,9 +302,19 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   public static void updateCaseTeams(
     Id originalUserQueueId,
     Id updatedUserQueueId,
-    Case caseRecord
+    Case caseRecord,
+    FEC_Routing_Action_History__c history
   ) {
-    if (caseRecord == null) {
+    if (caseRecord == null || history == null) {
+      return;
+    }
+
+    if (
+      history.FEC_Routing_Action__c == FEC_CaseBusinessService.CANCEL ||
+      history.FEC_Routing_Action__c == FEC_CaseBusinessService.REJECT ||
+      history.FEC_Routing_Action__c == FEC_CaseBusinessService.RESOLVE
+    ) {
+      caseRecord.FEC_Team__c = null;
       return;
     }
 
@@ -309,8 +325,18 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       idSet.add(updatedUserQueueId);
 
     Map<Id, String> teamMap = getTeamsFromIds(idSet);
+    Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
     String originalTeam = teamMap.get(originalUserQueueId);
-    String updatedTeam = teamMap.get(updatedUserQueueId);
+    if (String.isNotBlank(originalTeam)) {
+        // Xóa sạch khoảng trắng dư thừa, ký tự invisible, newline...
+        originalTeam = originalTeam.replaceAll('\\s+', '').trim();
+    }
+
+    if (history.FEC_Routing_Action__c == FEC_CaseBusinessService.REOPEN) {
+      caseRecord.FEC_Team__c = originalTeam;
+      return;
+    }
+    String updatedTeam = history.FEC_Routing_Action__c == FEC_CaseBusinessService.UPDATEACTION ? decisionToTeamMap.get(history.FEC_Decision__c) : teamMap.get(updatedUserQueueId);
 
     String currentTeamsStr = caseRecord.FEC_Team__c;
     Set<String> teamSet = new Set<String>();
@@ -323,9 +349,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
         }
       }
     }
-
-    // Remove original team if exists
-    if (String.isNotBlank(originalTeam)) {
+    if (teamSet.contains(originalTeam)) {
       teamSet.remove(originalTeam);
     }
 
@@ -337,10 +361,10 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     if (teamSet.isEmpty()) {
       caseRecord.FEC_Team__c = null;
     } else {
-      caseRecord.FEC_Team__c = String.join(
+      caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(String.join(
         new List<String>(teamSet),
         FEC_ConstantCommon.DELIMITER_UNDERSCORE
-      );
+      ));
     }
   }
 

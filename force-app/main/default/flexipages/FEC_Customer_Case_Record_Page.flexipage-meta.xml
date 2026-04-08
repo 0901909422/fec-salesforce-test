@@ -398,32 +398,8 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>forceChatter:recordFeedContainer</componentName>
-                <identifier>forceChatter_recordFeedContainer</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>handling</rightValue>
-                    </criteria>
-                </visibilityRule>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>showLegacyActivityComposer</name>
-                    <value>true</value>
-                </componentInstanceProperties>
-                <componentName>runtime_sales_activities:activityPanel</componentName>
-                <identifier>runtime_sales_activities_activityPanel</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>review</rightValue>
-                    </criteria>
-                </visibilityRule>
+                <componentName>fecEmailSection</componentName>
+                <identifier>c_fecEmailSection</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-d56f04f8-9999-47ac-9f57-deb1710d03c5</name>
