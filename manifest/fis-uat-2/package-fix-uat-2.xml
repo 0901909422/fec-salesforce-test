@@ -150,6 +150,7 @@
 		<members>fec_CardClosureRefundForm</members>
 		<members>fec_SecondaryInfoLoanAccount</members>
 		<members>fec_CardPayment</members>
+		<members>fec_UserSearchModal</members>
 		<members>fec_Asset</members>
 		<members>fec_CreateCaseInListView</members>
 		<members>fec_AccountOrContractPicklistCustomerCase</members>

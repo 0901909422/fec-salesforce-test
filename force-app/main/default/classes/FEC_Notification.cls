@@ -140,7 +140,21 @@ public without sharing class FEC_Notification {
     }
 
     @AuraEnabled
-    public static void sendManualEmail(Id caseId, Id templateId) {
+    public static List<User> searchInternalUsers(String searchTerm) {
+        // Biến tìm kiếm đặc biệt cho Email: bắt buộc chuỗi tìm kiếm phải nằm trước dấu '@'
+        String emailLikeTerm = '%' + searchTerm + '%@%';
+        
+        return [
+            SELECT Id, Name, Username, Email 
+            FROM User 
+            WHERE IsActive = true 
+            AND Email LIKE :emailLikeTerm 
+            LIMIT 20 
+        ];
+    }
+
+    @AuraEnabled
+    public static void sendManualEmail(Id caseId, Id templateId, String toEmail) {
         // 1. Query Case
         Case c = [SELECT Id, FEC_Customer_Type__c, 
                          FEC_Account_or_Contract__r.FEC_Email__c,
@@ -149,8 +163,12 @@ public without sharing class FEC_Notification {
                   FROM Case WHERE Id = :caseId LIMIT 1];
                   
         // 2. Use helper method to extract email
-        String targetEmail = getTargetEmailFromCase(c);
-        
+        String targetEmail;
+        if (String.isNotBlank(toEmail)) {
+            targetEmail = toEmail;
+        } else {
+            targetEmail = getTargetEmailFromCase(c);
+        }
         if(String.isBlank(targetEmail)) {
             throw new AuraHandledException(System.Label.FEC_Email_No_Valid_Address_Found);
         }
