@@ -21,7 +21,7 @@
     <filters>
         <field>CASES.RECORDTYPE</field>
         <operation>equals</operation>
-        <value>Case.Customer_Case,Case.Internal_Case,Case.Interaction_Case</value>
+        <value>Case.Customer_Case,Case.Internal_Case,Case.Interaction</value>
     </filters>
     <label>CSM Mailbox</label>
     <queue>FEC_CSM_Mailbox</queue>
