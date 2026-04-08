@@ -3,6 +3,7 @@ import { NavigationMixin } from "lightning/navigation";
 import {
   IsConsoleNavigation,
   getFocusedTabInfo,
+  openTab,
   closeTab,
   openSubtab,
 } from "lightning/platformWorkspaceApi";
@@ -107,9 +108,7 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(
         `${FEC_Interaction_Title_Label} ${caseNo} ${FEC_Create_Successfully_MSG}`,
         "success",
       );
-
       this.isShowModal = false;
-
       await this.navigateToCase(caseId);
     } catch (error) {
       this.showToast(
@@ -125,28 +124,15 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(
   ------------------------------ */
 
   async navigateToCase(caseId) {
-    try {
-      if (this.isConsole) {
-        const tabInfo = await getFocusedTabInfo();
+    this.navigateStandard(caseId);
 
-        await openSubtab(tabInfo.tabId, {
-          recordId: caseId,
-          focus: true,
-        });
-
-        setTimeout(() => {
-          this.closeCurrentTab();
-        }, 300);
-      } else {
-        this.navigateStandard(caseId);
-      }
-    } catch (e) {
-      console.error("Navigation error:", e);
-
-      this.navigateStandard(caseId);
-    }
+    // Give Salesforce time to process navigation
+    setTimeout(async () => {
+      await this.closeTab();
+    }, 500); // 300–500ms is safe
   }
 
+  
   navigateStandard(caseId) {
     this[NavigationMixin.Navigate]({
       type: "standard__recordPage",
@@ -164,7 +150,7 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(
 
   async handleClose() {
     this.isShowModal = false;
-    await this.closeCurrentTab();
+
     this[NavigationMixin.Navigate]({
       type: "standard__objectPage",
       attributes: {
@@ -172,19 +158,14 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(
         actionName: "list",
       },
     });
+
+    await this.closeTab();
   }
 
-  async closeCurrentTab() {
-    console.log("closeCurrentTab");
-    // if (!this.isConsole) return;
-
-    try {
-      const { tabId } = await getFocusedTabInfo();
-      console.log(tabId);
-      await closeTab(tabId);
-    } catch (e) {
-      console.warn("Close tab failed:", e);
-    }
+  async closeTab() {
+    if (!this.isConsoleNavigation) return;
+    const { tabId } = await getFocusedTabInfo();
+    await closeTab(tabId);
   }
 
   /* -----------------------------

@@ -1,0 +1,21 @@
+<template>
+  <lightning-spinner lwc:if={isBusy} alternative-text="Loading" size="small"></lightning-spinner>
+  <lightning-layout multiple-rows>
+    <lightning-layout-item size="6" padding="around-small">
+      <lightning-input type="text" label={customLabel.beneficiaryName} value={beneficiaryName} required disabled={isReadOnly} onchange={handleBeneficiaryInput}></lightning-input>
+    </lightning-layout-item>
+    <lightning-layout-item size="6" padding="around-small">
+      <lightning-input type="text" label={customLabel.beneficiaryAccount} value={beneficiaryAccount} required disabled={isReadOnly} onchange={handleBeneficiaryAccountInput}></lightning-input>
+    </lightning-layout-item>
+    <lightning-layout-item size="6" padding="around-small">
+      <lightning-combobox name="bankName" label={customLabel.bankName} value={bankComboValue} options={bankOptions} required disabled={isReadOnly} onchange={handleBankComboChange}></lightning-combobox>
+    </lightning-layout-item>
+    <lightning-layout-item size="6" padding="around-small">
+      <lightning-combobox name="bankBranch" label={customLabel.bankBranch} value={bankBranch} options={bankBranchOptions} required disabled={isReadOnly} onchange={handleBankBranchInput}></lightning-combobox>
+    </lightning-layout-item>
+    <lightning-layout-item size="6" padding="around-small">
+      <lightning-combobox name="province" label={customLabel.provinceCity} value={provinceComboValue} options={provinceOptions} required disabled={isReadOnly} onchange={handleProvinceChange}></lightning-combobox>
+    </lightning-layout-item>
+    <lightning-layout-item size="6" padding="around-small"></lightning-layout-item>
+  </lightning-layout>
+</template>

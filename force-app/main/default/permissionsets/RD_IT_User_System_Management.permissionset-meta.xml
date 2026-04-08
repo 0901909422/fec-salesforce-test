@@ -29,6 +29,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BeneficiaryBankInfoController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CancelCSCaseService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -129,6 +133,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_ContractClosureController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CreateCSCaseService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -162,6 +170,14 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_EmeaAccountInqService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_EnhancedLetterheadHandler_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_EnhancedLetterheadTriggerHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -290,6 +306,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_GetDigitalAccountStatus</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_GetDisbInfoByAcctCallout</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -442,6 +462,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_Notification</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_NotificationService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
