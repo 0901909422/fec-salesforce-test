@@ -126,33 +126,12 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
       this.subscribeToMessageChannel();
       this.loadRemarkHistory();
-
-      // this.checkInternalCaseEditMode();
     } catch (err) {
       console.error("Failed to reset view mode:", err);
     } finally {
       this.isLoaded = true;
     }
   }
-
-  // checkInternalCaseEditMode() {
-  //   if (!this.recordId) return;
-
-  //   getCase({ recordId: this.recordId })
-  //     .then((res) => {
-  //       const isInternal = res.RecordType?.DeveloperName === RECORD_TYPE_INTERNAL_CASE;
-  //       const isHandling = res.FEC_Interaction_View_Mode__c === VIEW_MODE_HANDLING;
-  //       const isSubmited = res.FEC_Is_Submited__c;
-
-  //       if (isInternal && isHandling && !isSubmited) {
-
-  //         this.handleMessage({ isModeEdit: true });
-  //       }
-  //     })
-  //     .catch((err) => {
-  //       console.error("checkInternalCaseEditMode err:", err);
-  //     });
-  // }
 
   subscribeToMessageChannel() {
     this.subscription = subscribe(
@@ -171,6 +150,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   }
 
   handleMessage(message) {
+    console.log('>>>>>>handleMessage isModeEdit: ', message.isModeEdit);
     if (message == null || typeof message.isModeEdit === STR_UNDEFINED) return;
 
     this.modeEditCase = message.isModeEdit === true;

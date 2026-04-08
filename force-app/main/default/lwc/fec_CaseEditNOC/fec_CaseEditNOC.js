@@ -36,7 +36,6 @@ import {
 } from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
-import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 
 export default class Fec_CaseEditNOC extends LightningElement {
   @api recordId;
@@ -130,10 +129,6 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   async connectedCallback() {
-    await resetViewMode({
-      recordId: this.recordId,
-      viewMode: VIEW_MODE_REVIEW,
-    });
     this.subscribeToMessageChannel();
     
     getCase({ recordId: this.recordId })
@@ -230,7 +225,23 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (!Object.prototype.hasOwnProperty.call(message, 'accountType')) return;
 
     const accountType = message.accountType;
+    const isInternalType = accountType === INTERNAL_REQUEST || accountType === INTERNAL_UBANK;
+    const hasExistingNOCSelection =
+      !!this.productTypeSelectedId ||
+      !!this.categorySelectedId ||
+      !!this.subCategorySelectedId ||
+      !!this.subCodeSelectedId;
 
+    if (this._incomingAccountType == null && hasExistingNOCSelection && !isInternalType) {
+      this._incomingAccountType = accountType;
+      return;
+    }
+
+    if (this._incomingAccountType === accountType) {
+      return;
+    }
+
+    this._incomingAccountType = accountType;
     this._isInternalRequest = false;
     this.disableProdType = false;
     this._internalProductTypeId = null;
@@ -252,7 +263,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
       if (el) el.clear();
     });
 
-    if (accountType === INTERNAL_REQUEST || accountType === INTERNAL_UBANK) {
+    if (isInternalType) {
       this._isInternalRequest = accountType === INTERNAL_REQUEST;
 
       const option = this.productTypeOptionlst?.find(
@@ -292,7 +303,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   handleMessage(message) {
-    this.modeEditCase = message.isModeEdit;
+    if (!message || typeof message.isModeEdit === "undefined") return;
+    const nextModeEdit = message.isModeEdit === true;
+    const prevModeEdit = this.modeEditCase === true;
+    this.modeEditCase = nextModeEdit;
+    if (prevModeEdit !== nextModeEdit && !nextModeEdit) {
+      this.reloadData();
+    }
   }
 
   reloadData() {
