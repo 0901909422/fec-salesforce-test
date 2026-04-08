@@ -644,5 +644,9 @@
         <members>Case.Internal_Case</members>
         <name>RecordType</name>
     </types>
+	<types>
+		<members>en_US</members>
+		<name>Translations</name>
+	</types>
     <version>65.0</version>
 </Package>
