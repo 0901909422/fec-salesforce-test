@@ -309,6 +309,15 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       return;
     }
 
+    if (
+      history.FEC_Routing_Action__c == FEC_CaseBusinessService.CANCEL ||
+      history.FEC_Routing_Action__c == FEC_CaseBusinessService.REJECT ||
+      history.FEC_Routing_Action__c == FEC_CaseBusinessService.RESOLVE
+    ) {
+      caseRecord.FEC_Team__c = null;
+      return;
+    }
+
     Set<Id> idSet = new Set<Id>();
     if (originalUserQueueId != null)
       idSet.add(originalUserQueueId);
@@ -322,7 +331,12 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
         // Xóa sạch khoảng trắng dư thừa, ký tự invisible, newline...
         originalTeam = originalTeam.replaceAll('\\s+', '').trim();
     }
-    String updatedTeam = history.FEC_Routing_Action__c == 'Update' ? decisionToTeamMap.get(history.FEC_Decision__c) : teamMap.get(updatedUserQueueId);
+
+    if (history.FEC_Routing_Action__c == FEC_CaseBusinessService.REOPEN) {
+      caseRecord.FEC_Team__c = originalTeam;
+      return;
+    }
+    String updatedTeam = history.FEC_Routing_Action__c == FEC_CaseBusinessService.UPDATEACTION ? decisionToTeamMap.get(history.FEC_Decision__c) : teamMap.get(updatedUserQueueId);
 
     String currentTeamsStr = caseRecord.FEC_Team__c;
     Set<String> teamSet = new Set<String>();
@@ -347,10 +361,10 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     if (teamSet.isEmpty()) {
       caseRecord.FEC_Team__c = null;
     } else {
-      caseRecord.FEC_Team__c = String.join(
+      caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(String.join(
         new List<String>(teamSet),
         FEC_ConstantCommon.DELIMITER_UNDERSCORE
-      );
+      ));
     }
   }
 
