@@ -159,6 +159,8 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
             this.uploadedData = result.data.map(row => {
                 return {
                     ...row,
+                    _rawStartDate: row.FEC_StartDate__c,
+                    _rawEndDate: row.FEC_EndDate__c,
                     FEC_StartDate__c: formatDateDDMMYYYY(row.FEC_StartDate__c),
                     FEC_EndDate__c: formatDateDDMMYYYY(row.FEC_EndDate__c),
                     LastModifiedDate: formatDateDDMMYYYY(row.LastModifiedDate),
@@ -178,6 +180,8 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
             this.processedData = result.data.map(row => {
                 return {
                     ...row,
+                    _rawStartDate: row.FEC_StartDate__c,
+                    _rawEndDate: row.FEC_EndDate__c,
                     FEC_StartDate__c: formatDateDDMMYYYY(row.FEC_StartDate__c),
                     FEC_EndDate__c: formatDateDDMMYYYY(row.FEC_EndDate__c),
                     disableEdit: !EDITABLE_STATUSES.has(row.FEC_Status__c)
@@ -278,8 +282,8 @@ export default class FecCustomerAdditionalInfoList extends LightningElement {
             FEC_FieldName__c: row.FEC_FieldName__c,
             FEC_IsActive__c: row.FEC_IsActive__c,
             FEC_Status__c: row.FEC_Status__c,
-            FEC_StartDate__c: row.FEC_StartDate__c,
-            FEC_EndDate__c: row.FEC_EndDate__c
+            FEC_StartDate__c: row._rawStartDate,
+            FEC_EndDate__c: row._rawEndDate
         };
         this.isEditModalOpen = true;
     }
