@@ -5,6 +5,16 @@ public with sharing class FEC_CardClosureRefundController {
     private static final String FUNC_UNBLOCK = 'U';
     private static final String SUB_CODE_RC16_01 = 'RC16.01';
     private static final Integer MAX_BLOCK_SERVICE_ATTEMPTS = 3;
+    private static final String LOS_RESOLVED_COMPLETED = 'Resolved-Completed';
+    private static final String LOS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
+    private static final String DISB_ESB_ORIG = 'ORIG';
+    private static final String DISB_ESB_SENT = 'SENT';
+    private static final String DISB_ESB_LOCK = 'LOCK';
+    private static final String DISB_ESB_CONFIRMED = 'CONFIRMED';
+    private static final String DISB_ESB_CANCELLED = 'CANCELLED';
+    private static final String DISB_ESB_CANCELLED_AUTO = 'CANCELLED_AUTO';
+    private static final String CS_DECISION_NOTI_17 = 'Không có khoản chờ giải ngân';
+    private static final String CS_DECISION_NOTI_18 = 'Có khoản chờ giải ngân. Cần tư vấn khách hàng giữ thẻ';
 
     public class LockUnlockResultDTO {
         @AuraEnabled public Boolean success;
@@ -27,6 +37,7 @@ public with sharing class FEC_CardClosureRefundController {
         @AuraEnabled public Date pendingDisbursementApprovalDate;
         @AuraEnabled public String pendingDisbursementStatus;
         @AuraEnabled public String pendingCsDecision;
+        @AuraEnabled public Boolean cardBlocked;
     }
 
     @AuraEnabled
@@ -36,6 +47,7 @@ public with sharing class FEC_CardClosureRefundController {
         dto.showBlockCardButton = false;
         dto.attemptsExhausted = false;
         dto.cardBlockServiceAttempts = 0;
+        dto.cardBlocked = false;
         if (caseId == null || !Schema.sObjectType.Case.isAccessible() || !Schema.sObjectType.FEC_Customer_History__c.isAccessible()) {
             return dto;
         }
@@ -74,6 +86,7 @@ public with sharing class FEC_CardClosureRefundController {
             }
         }
         Boolean cardAlreadyC = BLOCK_CODE_CARD.equals(cardBlock);
+        dto.cardBlocked = cardAlreadyC;
         dto.showBlockCardButton = !dto.hideBlockCardBySubCode && !dto.attemptsExhausted && !cardAlreadyC;
         if (Schema.sObjectType.FEC_Pending_Disbursement__c.isAccessible()) {
             Map<String, Schema.SObjectField> pdFieldMap = Schema.SObjectType.FEC_Pending_Disbursement__c.fields.getMap();
@@ -87,8 +100,7 @@ public with sharing class FEC_CardClosureRefundController {
                     ' FEC_PD_Application_Status__c,' +
                     ' FEC_PD_Disbursed_Amount__c,' +
                     ' FEC_PD_Disbursement_Approval_Date__c,' +
-                    ' FEC_PD_Disbursement_Status__c,' +
-                    ' FEC_PD_CS_Decision__c' +
+                    ' FEC_PD_Disbursement_Status__c' +
                     ' FROM FEC_Pending_Disbursement__c' +
                     ' WHERE ' + caseLookupField + ' = :caseId' +
                     ' LIMIT 1'
@@ -101,11 +113,40 @@ public with sharing class FEC_CardClosureRefundController {
                     dto.pendingDisbursedAmount = p.FEC_PD_Disbursed_Amount__c;
                     dto.pendingDisbursementApprovalDate = p.FEC_PD_Disbursement_Approval_Date__c;
                     dto.pendingDisbursementStatus = p.FEC_PD_Disbursement_Status__c;
-                    dto.pendingCsDecision = p.FEC_PD_CS_Decision__c;
+                    dto.pendingCsDecision = resolvePendingDisbursementCsDecision(
+                        p.FEC_PD_Disbursement_Status__c,
+                        p.FEC_PD_Application_Status__c
+                    );
                 }
             }
         }
         return dto;
+    }
+
+    @TestVisible
+    private static String resolvePendingDisbursementCsDecision(String disbStatusEsb, String appStatusLos) {
+        if (String.isBlank(disbStatusEsb)) {
+            return null;
+        }
+        String esb = disbStatusEsb.trim().toUpperCase();
+        if (esb == DISB_ESB_ORIG || esb == DISB_ESB_SENT || esb == DISB_ESB_LOCK) {
+            return CS_DECISION_NOTI_17;
+        }
+        if (esb == DISB_ESB_CONFIRMED) {
+            return losMatchesResolvedCompleted(appStatusLos) ? CS_DECISION_NOTI_18 : CS_DECISION_NOTI_17;
+        }
+        if (esb == DISB_ESB_CANCELLED || esb == DISB_ESB_CANCELLED_AUTO) {
+            return losMatchesResolvedCancelled(appStatusLos) ? CS_DECISION_NOTI_18 : CS_DECISION_NOTI_17;
+        }
+        return null;
+    }
+
+    private static Boolean losMatchesResolvedCompleted(String appStatusLos) {
+        return String.isNotBlank(appStatusLos) && LOS_RESOLVED_COMPLETED.equalsIgnoreCase(appStatusLos.trim());
+    }
+
+    private static Boolean losMatchesResolvedCancelled(String appStatusLos) {
+        return String.isNotBlank(appStatusLos) && LOS_RESOLVED_CANCELLED.equalsIgnoreCase(appStatusLos.trim());
     }
 
     @AuraEnabled
