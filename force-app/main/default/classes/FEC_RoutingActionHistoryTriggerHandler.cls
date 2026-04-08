@@ -329,7 +329,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     String originalTeam = teamMap.get(originalUserQueueId);
     if (String.isNotBlank(originalTeam)) {
         // Xóa sạch khoảng trắng dư thừa, ký tự invisible, newline...
-        originalTeam = originalTeam.replaceAll('\\s+', '').trim();
+        originalTeam = originalTeam.replaceAll('\\W+', '').trim();
     }
 
     if (history.FEC_Routing_Action__c == FEC_CaseBusinessService.REOPEN) {
