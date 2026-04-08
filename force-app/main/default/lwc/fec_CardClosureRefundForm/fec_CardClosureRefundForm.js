@@ -14,7 +14,6 @@ import FEC_LBL_Pending_Disbursement_Disbursed_Amount from '@salesforce/label/c.F
 import FEC_LBL_Pending_Disbursement_Approval_Date from '@salesforce/label/c.FEC_LBL_Pending_Disbursement_Approval_Date';
 import FEC_LBL_Pending_Disbursement_Disbursement_Status from '@salesforce/label/c.FEC_LBL_Pending_Disbursement_Disbursement_Status';
 import FEC_LBL_Pending_Disbursement_CS_Decision from '@salesforce/label/c.FEC_LBL_Pending_Disbursement_CS_Decision';
-import FEC_MSG_Card_Block_Beneficiary_Required from '@salesforce/label/c.FEC_MSG_Card_Block_Beneficiary_Required';
 import FEC_MSG_Param_Required from '@salesforce/label/c.FEC_MSG_Param_Required';
 import { STR_EMPTY, RESULT_ERROR, RESULT_SUCCESS } from 'c/fec_CommonConst';
 
@@ -34,17 +33,15 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
         return this._recordId;
     }
 
+    @api isEdit;
+
     @track uiContext = null;
     @track uiContextLoading = false;
     @track showConfirmModal = false;
     @track isSubmitting = false;
     @track resultMessage = STR_EMPTY;
     @track resultClass = STR_EMPTY;
-    @track beneficiaryNameLocal = STR_EMPTY;
-    @track beneficiaryAccountLocal = STR_EMPTY;
-    @track bankNameLocal = STR_EMPTY;
-    @track bankBranchLocal = STR_EMPTY;
-    @track provinceCityLocal = STR_EMPTY;
+    @track formLocked = false;
 
     customLabel = {
         confirmTitle: FEC_MSG_Card_Block_Confirm_Title,
@@ -68,8 +65,6 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
         { label: this.customLabel.pendingDisbursementCsDecision, fieldName: 'csDecision', type: 'text' }
     ];
 
-    refundFieldKeys = ['beneficiaryNameLocal', 'beneficiaryAccountLocal', 'bankNameLocal', 'bankBranchLocal', 'provinceCityLocal'];
-
     loadUiContext() {
         if (!this.recordId) {
             return Promise.resolve();
@@ -78,13 +73,6 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
         return getCardLockUnlockUiContext({ caseId: this.recordId })
             .then((ctx) => {
                 this.uiContext = ctx;
-                if (ctx) {
-                    this.beneficiaryNameLocal = ctx.beneficiaryName || STR_EMPTY;
-                    this.beneficiaryAccountLocal = ctx.beneficiaryAccount || STR_EMPTY;
-                    this.bankNameLocal = ctx.bankName || STR_EMPTY;
-                    this.bankBranchLocal = ctx.bankBranch || STR_EMPTY;
-                    this.provinceCityLocal = ctx.provinceCity || STR_EMPTY;
-                }
             })
             .catch(() => {
                 this.uiContext = null;
@@ -98,8 +86,8 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
         return this.uiContext && this.uiContext.showBlockCardButton === true;
     }
 
-    get showRefundSection() {
-        return this.uiContext && this.uiContext.requireRefundFields === true;
+    get blockCardLocked() {
+        return this.isSubmitting || this.formLocked || this.isEdit === false;
     }
 
     get pendingRowData() {
@@ -139,28 +127,12 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
         return s;
     }
 
-    handleRefundFieldChange(event) {
-        const key = event.target.name;
-        if (this.refundFieldKeys.includes(key)) {
-            this[key] = event.target.value;
-        }
-    }
-
-    refundFieldsValid() {
-        return this.refundFieldKeys.every((k) => String(this[k] || STR_EMPTY).trim() !== STR_EMPTY);
-    }
-
     handleBlockCardClick() {
-        if (!this.showBlockCardButton || this.isSubmitting) {
+        if (!this.showBlockCardButton || this.isSubmitting || this.isEdit === false) {
             return;
         }
         if (!this.recordId) {
             this.resultMessage = FEC_MSG_Param_Required.replace('{0}', 'Case Id');
-            this.resultClass = RESULT_ERROR;
-            return;
-        }
-        if (this.showRefundSection && !this.refundFieldsValid()) {
-            this.resultMessage = FEC_MSG_Card_Block_Beneficiary_Required;
             this.resultClass = RESULT_ERROR;
             return;
         }
@@ -188,22 +160,19 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
     }
 
     callBlockCard() {
+        if (this.isEdit === false) {
+            return;
+        }
         if (!this.recordId) {
             this.resultMessage = FEC_MSG_Param_Required.replace('{0}', 'Case Id');
             this.resultClass = RESULT_ERROR;
             return;
         }
         this.isSubmitting = true;
-        blockCard({
-            caseId: this.recordId,
-            beneficiaryName: this.beneficiaryNameLocal,
-            beneficiaryAccount: this.beneficiaryAccountLocal,
-            bankName: this.bankNameLocal,
-            bankBranch: this.bankBranchLocal,
-            provinceCity: this.provinceCityLocal
-        })
+        blockCard({ caseId: this.recordId })
             .then((res) => {
                 if (res && res.success) {
+                    this.formLocked = true;
                     this.resultMessage = FEC_MSG_Card_Block_Success;
                     this.resultClass = RESULT_SUCCESS;
                     window.setTimeout(() => {

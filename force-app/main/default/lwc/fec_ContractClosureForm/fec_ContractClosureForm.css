@@ -53,7 +53,7 @@
 }
 
 .fec-closure-form .fec-delivery-dropdown {
-  left: 0;
+  left: 50px;
   right: auto;
   max-width: 100%;
 }
