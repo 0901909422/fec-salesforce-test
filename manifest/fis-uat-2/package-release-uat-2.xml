@@ -578,8 +578,6 @@
         <members>FEC_Create_Successfully_MSG</members>
 		<members>FEC_MSG_IPP_Closure_No_Eligible</members>
 		<members>FEC_MSG_IPP_Closure_Select_One</members>
-		<members>FEC_LBL_IPP_Closure_Back_To_Case</members>
-		<members>FEC_LBL_IPP_Closure_Complete</members>
 		<members>FEC_LBL_IPP_Closure_Heading</members>
 		<members>FEC_LBL_IPP_Closure_Col_IppRecordNo</members>
 		<members>FEC_LBL_IPP_Closure_Col_IppPlan</members>
@@ -1492,6 +1490,7 @@
 		<members>FEC_Target_Email</members>
 		<members>FEC_Target_Group</members>
 		<members>FEC_Template_Not_Found</members>
+		<members>FEC_LBL_Select_Payment_Method</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1532,6 +1531,21 @@
 		<members>FEC_EmailMessageTrigger</members>
 		<members>FEC_EnhancedLetterheadTrigger</members>
         <name>ApexTrigger</name>
+    </types>
+	<types>
+		<members>Case.FEC_CSM_Mailbox_Case</members>
+		<members>Case.FEC_Care_Mailbox_Case</members>
+		<members>Case.FEC_Day_2_Check_Case</members>
+		<members>Case.FEC_Ecom_Mailbox_Case</members>
+		<members>Case.FEC_OM_Mailbox_Case</members>
+		<members>Case.FEC_Office_Based_Mailbox_Case</members>
+		<members>Case.FEC_Quality_Control_Mailbox_Case</members>
+		<members>Case.FEC_Support_Mailbox_Case</members>
+		<name>ListView</name>
+    </types>
+	<types>
+        <members>Case.Internal_Case</members>
+        <name>RecordType</name>
     </types>
 
     <version>65.0</version>

@@ -5,6 +5,14 @@
 		<members>FEC_Notification__c.Auto_Notification_for_Internal_User</members>
 		<members>FEC_Notification__c.Manual_Notification_for_Internal_User</members>
 		<members>FEC_Clear_Session__c.All_Clear_Sessions</members>
+		<members>Case.FEC_CSM_Mailbox_Case</members>
+		<members>Case.FEC_Care_Mailbox_Case</members>
+		<members>Case.FEC_Day_2_Check_Case</members>
+		<members>Case.FEC_Ecom_Mailbox_Case</members>
+		<members>Case.FEC_OM_Mailbox_Case</members>
+		<members>Case.FEC_Office_Based_Mailbox_Case</members>
+		<members>Case.FEC_Quality_Control_Mailbox_Case</members>
+		<members>Case.FEC_Support_Mailbox_Case</members>
 		<name>ListView</name>
     </types>
 	<types>
@@ -82,6 +90,9 @@
 		<members>FEC_EnhancedLetterheadTriggerHandler</members>
 		<members>FEC_EnhancedLetterheadHandler_Test</members>
 		<members>FEC_NotificationService</members>
+		<members>FEC_CardClosureRefundController</members>
+		<members>FEC_GetServiceCases</members>
+		<members>FEC_IPPClosureController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -136,6 +147,7 @@
 		<members>fec_CardPayment</members>
 		<members>fec_Asset</members>
 		<members>fec_UpdateAddress</members>
+		<members>fec_CreateCaseInListView</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -351,6 +363,7 @@
         <members>FEC_MSG_ContractClosure_Phone_Invalid</members>
         <members>FEC_MSG_ContractClosure_Address_Required</members>
 		<members>FEC_Cannot_Delete_Enhanced_Letterhead</members>
+		<members>FEC_LBL_Select_Payment_Method</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -617,6 +630,10 @@
 		<members>FEC_EmailMessageTrigger</members>
 		<members>FEC_EnhancedLetterheadTrigger</members>
         <name>ApexTrigger</name>
+    </types>
+	<types>
+        <members>Case.Internal_Case</members>
+        <name>RecordType</name>
     </types>
     <version>65.0</version>
 </Package>

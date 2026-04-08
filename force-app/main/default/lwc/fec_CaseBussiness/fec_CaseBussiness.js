@@ -1250,6 +1250,13 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (routeToEle)
       isAllValid = routeToEle && routeToEle.reportValidity() && isAllValid;
 
+    const ipEl = this._getIncorrectPaymentFormEl();
+    if (ipEl && typeof ipEl.validateForSubmit === "function") {
+      if (!ipEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -1268,6 +1275,61 @@ export default class Fec_CaseBussiness extends LightningElement {
   //   return this._lastValidationError || null;
   // }
 
+  _getIncorrectPaymentFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_IncorrectPaymentForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveAdjustmentsIfApplicable === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _saveIncorrectPaymentAdjustmentsIfApplicable() {
+    const el = this._getIncorrectPaymentFormEl();
+    if (!el || typeof el.saveAdjustmentsIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveAdjustmentsIfApplicable();
+  }
+
+  _saveIncorrectPaymentDraftIfApplicable() {
+    const el = this._getIncorrectPaymentFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _getIppClosureFormEl() {
+    return (
+      this.template.querySelector("c-fec_-i-p-p-closure-form") ||
+      this.template.querySelector("c-fec_-ipp-closure-form")
+    );
+  }
+
+  _validateIPPClosureForSubmit() {
+    const el = this._getIppClosureFormEl();
+    if (el && typeof el.validateSelectionRequiredForSubmit === "function") {
+      return el.validateSelectionRequiredForSubmit();
+    }
+    return true;
+  }
+
+  _saveIPPClosureIfApplicable() {
+    const el = this._getIppClosureFormEl();
+    if (el && typeof el.saveSelectedIPPIfApplicable === "function") {
+      return el.saveSelectedIPPIfApplicable();
+    }
+    return Promise.resolve();
+  }
+
   /**
    * Chỉ lưu dữ liệu form (Nature of Case, Account Info, Case Info, Process Action, Routing Action)
    * mà KHÔNG gọi run() - không chuyển sang Stage tiếp theo.
@@ -1285,7 +1347,14 @@ export default class Fec_CaseBussiness extends LightningElement {
     });
 
     const total = formToSubmit.length;
-    if (total === 0) return Promise.resolve();
+    const afterForms = () =>
+      Promise.all([
+        this._saveIncorrectPaymentDraftIfApplicable(),
+        this._saveIPPClosureIfApplicable(),
+      ]);
+    if (total === 0) {
+      return afterForms();
+    }
 
     return new Promise((resolve, reject) => {
       this._saveOnlyResolve = resolve;
@@ -1297,12 +1366,13 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
-    });
+    }).then(() => afterForms());
   }
 
   /** false = bị chặn (đã show toast), true = submit thành công. */
   @api async submit() {
     if (!this.validate()) return false;
+    if (!this._validateIPPClosureForSubmit()) return false;
 
     // Có routing thì mới chặn khi chưa đổi thông tin Updated; không có routing cho phép chỉ submit remarks.
     let routeToEle = this.template.querySelector(
@@ -1320,6 +1390,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     await this._submitFormsPromise();
+    await Promise.all([
+      this._saveIncorrectPaymentAdjustmentsIfApplicable(),
+      this._saveIPPClosureIfApplicable(),
+    ]);
     if (routeToEle) {
       let method = routeToEle.value;
       let actionId;
@@ -1639,7 +1713,7 @@ export default class Fec_CaseBussiness extends LightningElement {
    * pre-declared static `() => import('c/<name>')` thunks. Unknown names are
    * skipped with a console warning — the rest of the UI is unaffected.
    *
-   * Results are stored on each subSection as resolvedComponentlst [{key, ctor}].
+   * Results are stored on each section as resolvedComponentlst [{key, ctor, componentName}].
    */
   _resolveComponentlst() {
     if (!this.business?.sectionlst) return;
@@ -1668,6 +1742,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             section.resolvedComponentlst.push({
               key: `${name}-${idx}`,
               ctor: mod.default,
+              componentName: name,
             });
           })
           .catch((err) => {
