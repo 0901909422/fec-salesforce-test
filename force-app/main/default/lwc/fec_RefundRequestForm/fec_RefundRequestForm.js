@@ -27,7 +27,7 @@ export default class Fec_RefundRequestForm extends LightningElement {
     @track manualRefundAmountDisplay = STR_EMPTY;
     @track receiptRows = [];
 
-    _wiredReceiptLines;
+    _existingReceiptLinesWireResult;
 
     customLabel = {
         refundAmount: FEC_LBL_Refund_Amount,
@@ -48,7 +48,7 @@ export default class Fec_RefundRequestForm extends LightningElement {
 
     @wire(getExistingReceiptLines, { caseId: "$recordId" })
     wiredReceiptLines(result) {
-        this._wiredReceiptLines = result;
+        this._existingReceiptLinesWireResult = result;
         const { data, error } = result;
         if (data) {
             if (!data || data.length === 0) {
@@ -232,8 +232,8 @@ export default class Fec_RefundRequestForm extends LightningElement {
             if (!res || !res.success) {
                 return Promise.reject(new Error((res && res.errorMessage) || "Save failed"));
             }
-            if (this._wiredReceiptLines) {
-                return refreshApex(this._wiredReceiptLines);
+            if (this._existingReceiptLinesWireResult) {
+                return refreshApex(this._existingReceiptLinesWireResult);
             }
             return Promise.resolve();
         });

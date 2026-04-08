@@ -21,6 +21,7 @@ import { STR_EMPTY } from "c/fec_CommonConst";
 import { toUpperNoVietnameseAccent } from "c/fec_CommonUtils";
 
 const DRAFT_KEY_PREFIX = "fec-beneficiary-bank-draft-";
+const ERR_BENEFICIARY_SAVE_ALREADY_TOASTED = "fec_beneficiary_save_dto";
 
 export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
     @api recordId;
@@ -321,12 +322,12 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
                 }
                 if (res && res.errorMessage) {
                     this.showToast(FEC_Error_Title, res.errorMessage, "error");
-                    return Promise.reject(new Error("fec_beneficiary_save_dto"));
+                    return Promise.reject(new Error(ERR_BENEFICIARY_SAVE_ALREADY_TOASTED));
                 }
-                return Promise.reject(new Error("fec_beneficiary_save_dto"));
+                return Promise.reject(new Error(ERR_BENEFICIARY_SAVE_ALREADY_TOASTED));
             })
             .catch((error) => {
-                if (error && error.message === "fec_beneficiary_save_dto") {
+                if (error && error.message === ERR_BENEFICIARY_SAVE_ALREADY_TOASTED) {
                     return Promise.reject(error);
                 }
                 this.showToast(FEC_Error_Title, this.handleError(error), "error");
