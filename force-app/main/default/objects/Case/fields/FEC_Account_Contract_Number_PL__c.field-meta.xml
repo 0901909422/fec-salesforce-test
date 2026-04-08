@@ -40,6 +40,7 @@
             <valueName>Ubank</valueName>
         </valueSettings>
         <valueSettings>
+            <controllingFieldValue>Non-existing</controllingFieldValue>
             <controllingFieldValue>All</controllingFieldValue>
             <valueName>Internal Request</valueName>
         </valueSettings>

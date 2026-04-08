@@ -352,11 +352,22 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_CARD_CASE = 'Card';
     public static final String PRODUCT_TYPE_LOAN_CASE = 'Loan';
     public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
+    public static final String TARGET_GROUP_CUSTOMER = 'Customer';
+    public static final String NOTIFICATION_SUBJECT = 'Notification';
 
     public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 = 'C360';
     public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY = 'TEMPORARY';    /** FEC_Address_Info__c.FEC_Address_Type__c — địa chỉ tạm Contract Closure */
     public static final String CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY = 'Temporary Address';
 
+    // Auto Notification - Target Group
+    public static final String NOTIFICATION_TARGET_GROUP_INTERNAL = 'Internal User';
+
+    // Auto Notification - Channel names (FEC_Notification_Channel__c.Name)
+    public static final String NOTIFICATION_CHANNEL_EMAIL = 'Email';
+    public static final String NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
+
+
+    //internalSendToSet
     public static final String EMAIL_SUPPORT_CSM = 'supportcsm@fecredit.com.vn';
     public static final String EMAIL_CS_SUPPORT = 'cssupport@fecredit.com.vn';
     public static final String EMAIL_CUSTOMER_CARE = 'customercare@fecredit.com.vn';
