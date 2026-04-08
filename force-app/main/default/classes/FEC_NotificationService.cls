@@ -7,6 +7,10 @@
  */
 public without sharing class FEC_NotificationService {
 
+    // Guard để tránh gọi notification nhiều lần trong cùng transaction
+    @TestVisible
+    private static Boolean notificationSent = false;
+
     /**
      * Method Description: Gửi Email notification khi Case được route đến Queue
      * Điều kiện lọc Notification record:
@@ -22,6 +26,7 @@ public without sharing class FEC_NotificationService {
      * @created: 2026/04/06
      */
     public static void sendEmailNotifications(List<Case> newCases, Map<Id, Case> oldMap) {
+        if (notificationSent) return;
         System.debug('--- [sendEmailNotifications] START cases=' + newCases.size());
         List<Case> routedCases = filterCasesRoutedToQueue(newCases, oldMap);
         System.debug('--- [sendEmailNotifications] routedCases=' + routedCases.size());
@@ -109,6 +114,7 @@ public without sharing class FEC_NotificationService {
 
         System.debug('--- [sendEmailNotifications] sending ' + emailsToSend.size() + ' emails');
         FEC_CommonUltils.sendEmails(emailsToSend);
+        notificationSent = true;
     }
 
     /**
