@@ -31,6 +31,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   selectedValue = "";
   cifNumber = "";
   hasAccountOrContact = false;
+  phone = "";
   isOpen = false;
   selectedRows = [];
   isEditMode = false;
@@ -138,7 +139,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
 
       const parsed = result ? JSON.parse(result) : {};
 
-      console.log("DATA:", parsed);
+      console.log("DATA:", JSON.stringify(parsed));
 
       // ❗ nếu chưa có data → retry
       if (!parsed.accountNumber && retry < 3) {
@@ -155,6 +156,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
       // ✅ data OK → set state
       this.selectedValue = parsed.accountNumber || "";
       this.cifNumber = parsed.cifNumber;
+      this.phone = parsed.phone || "";
 
       if (this.isNonExistingCustomer) {
         this.initAccountDataNonExisting();
@@ -289,6 +291,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
           selectedAccountContractNumber: this.selectedValue,
           selectedType: selectedRow.product,
           cifNumber: this.cifNumber,
+          phone: this.phone,
         });
       }
 

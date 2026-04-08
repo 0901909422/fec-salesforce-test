@@ -1340,6 +1340,7 @@
 		<members>FEC_EnhancedLetterheadTriggerHandler</members>
 		<members>FEC_EnhancedLetterheadHandler_Test</members>
 		<members>FEC_NotificationService</members>
+		<members>FEC_AccountOrContractPicklistHandler</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1507,6 +1508,8 @@
 		<members>fec_InteractionRoutingUtilityBar</members>
 		<members>fec_CardPayment</members>
 		<members>fec_ManualNotification</members>
+		<members>fec_AccountOrContractPicklistCustomerCase</members>
+		<members>fec_AccountOrContractPicklistInteraction</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -1531,6 +1534,21 @@
 		<members>FEC_EmailMessageTrigger</members>
 		<members>FEC_EnhancedLetterheadTrigger</members>
         <name>ApexTrigger</name>
+    </types>
+	<types>
+		<members>Case.FEC_CSM_Mailbox_Case</members>
+		<members>Case.FEC_Care_Mailbox_Case</members>
+		<members>Case.FEC_Day_2_Check_Case</members>
+		<members>Case.FEC_Ecom_Mailbox_Case</members>
+		<members>Case.FEC_OM_Mailbox_Case</members>
+		<members>Case.FEC_Office_Based_Mailbox_Case</members>
+		<members>Case.FEC_Quality_Control_Mailbox_Case</members>
+		<members>Case.FEC_Support_Mailbox_Case</members>
+		<name>ListView</name>
+    </types>
+	<types>
+        <members>Case.Internal_Case</members>
+        <name>RecordType</name>
     </types>
 
     <version>65.0</version>
