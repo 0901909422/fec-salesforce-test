@@ -351,14 +351,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       const stageName = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
       // Xóa draft cũ, chỉ lưu 1 bản ghi = nội dung hiện tại trong ô (tránh sinh nhiều bản ghi từ Save & Close trước đó)
       await clearDraftRemarks({ caseId: this.recordId });
-      await caseRemarksEle.createRemark(stageName);
 
       const submitted = await caseBusinessEle.submit();
       if (submitted === false) {
         return;
       }
 
-      // Chuyển Lưu Remark xuống dưới để khi submit business thành công thì mới lưu remark
+      // Submit xóa draft trên Case — createRemark phải sau submit rồi mới submitRemark.
+      await caseRemarksEle.createRemark(stageName);
       await caseRemarksEle.submitRemark(stageName);
       this.loadRemarkHistory();
 
