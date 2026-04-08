@@ -8,6 +8,14 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
 
     //=============== RESPONSE ===============//
 
+    public class GetDisbInfoByAcctExecutionResult {
+        public GetDisbInfoByAcctResponse response;
+        public String endpoint;
+        public String requestPayload;
+        public HttpResponse httpResponse;
+        public String logErrorMessage;
+    }
+
     public class GetDisbInfoByAcctResponse {
         public String pxObjClass;
         public List<ApplicationsEntry> Applications;
@@ -160,51 +168,75 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
     }
 
     public static GetDisbInfoByAcctResponse parseResponseBody(String responseBody, Integer httpStatus) {
-        GetDisbInfoByAcctResponse out = new GetDisbInfoByAcctResponse();
+        GetDisbInfoByAcctResponse response = new GetDisbInfoByAcctResponse();
         if (httpStatus != null && httpStatus != 200) {
-            out.errorCode = String.valueOf(httpStatus);
-            out.errorMessage = String.format(
+            response.errorCode = String.valueOf(httpStatus);
+            response.errorMessage = String.format(
                 System.Label.FEC_MSG_HTTP_Error,
                 new List<String>{String.valueOf(httpStatus)}
             );
-            return out;
+            return response;
         }
         if (String.isBlank(responseBody)) {
-            out.errorCode = 'EMPTY';
-            out.errorMessage = System.Label.FEC_MSG_Response_Null;
-            return out;
+            response.errorCode = 'EMPTY';
+            response.errorMessage = System.Label.FEC_MSG_Response_Null;
+            return response;
         }
         try {
             String normalized = responseBody.replace('"DateTime":', '"DateTime_x":');
-            out = (GetDisbInfoByAcctResponse) JSON.deserialize(
+            response = (GetDisbInfoByAcctResponse) JSON.deserialize(
                 normalized,
                 FEC_GetDisbInfoByAcctCallout.GetDisbInfoByAcctResponse.class
             );
         } catch (JSONException e) {
-            out.errorCode = 'JSON_PARSE_ERROR';
-            out.errorMessage = String.format(
+            response.errorCode = 'JSON_PARSE_ERROR';
+            response.errorMessage = String.format(
                 System.Label.FEC_MSG_Parse_JSON_Error,
                 new List<String>{e.getMessage()}
             );
         }
-        return out;
+        return response;
     }
 
     public static GetDisbInfoByAcctResponse getDisbInfoByAcct(String accountNumber, Integer ageOfRecords) {
+        return getDisbInfoByAcctExecutionResult(accountNumber, ageOfRecords).response;
+    }
+
+    public static GetDisbInfoByAcctExecutionResult getDisbInfoByAcctExecutionResult(String accountNumber, Integer ageOfRecords) {
+        GetDisbInfoByAcctExecutionResult result = new GetDisbInfoByAcctExecutionResult();
+        result.endpoint = resolveDisbInfoEndpoint();
         ValidationResult reqVal = validateRequest(accountNumber);
         if (!reqVal.isValid) {
-            return disbErrorResponse('VALIDATION_ERROR', reqVal.errorMessage);
+            HttpResponse synVal = new HttpResponse();
+            synVal.setStatusCode(400);
+            synVal.setBody('');
+            result.requestPayload = null;
+            result.httpResponse = synVal;
+            result.logErrorMessage = reqVal.errorMessage;
+            result.response = disbErrorResponse('VALIDATION_ERROR', reqVal.errorMessage);
+            return result;
         }
-
         String transactionId = String.valueOf(UUID.randomUUID());
         String dateTimeValue = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX);
-        ValidationResult headerVal = validateRequestHeaders(transactionId, dateTimeValue, FEC_ConstantCommon.REQUESTOR_PEGA_CSM);
+        ValidationResult headerVal = validateRequestHeaders(
+            transactionId,
+            dateTimeValue,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM
+        );
         if (!headerVal.isValid) {
-            return disbErrorResponse('HEADER_VALIDATION_ERROR', headerVal.errorMessage);
+            HttpResponse synHdr = new HttpResponse();
+            synHdr.setStatusCode(400);
+            synHdr.setBody('');
+            result.requestPayload = null;
+            result.httpResponse = synHdr;
+            result.logErrorMessage = headerVal.errorMessage;
+            result.response = disbErrorResponse('HEADER_VALIDATION_ERROR', headerVal.errorMessage);
+            return result;
         }
-
         String payload = buildRequestPayload(transactionId, dateTimeValue, accountNumber, ageOfRecords);
+        result.requestPayload = payload;
         HttpResponse resp;
+        String callExMsg = null;
         try {
             resp = sendRequest(
                 payload,
@@ -213,9 +245,25 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
                 FEC_ConstantCommon.REQUESTOR_PEGA_CSM
             );
         } catch (Exception e) {
-            return disbErrorResponse('CALLOUT_ERROR', String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{e.getMessage()}));
+            callExMsg = e.getMessage();
+            resp = new HttpResponse();
+            resp.setStatusCode(0);
+            resp.setBody('');
         }
-        return parseResponseBody(resp == null ? null : resp.getBody(), resp == null ? null : resp.getStatusCode());
+        result.httpResponse = resp;
+        result.logErrorMessage = callExMsg;
+        if (String.isNotBlank(callExMsg)) {
+            result.response = disbErrorResponse(
+                'CALLOUT_ERROR',
+                String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{callExMsg})
+            );
+        } else {
+            result.response = parseResponseBody(
+                resp == null ? null : resp.getBody(),
+                resp == null ? null : resp.getStatusCode()
+            );
+        }
+        return result;
     }
 
     public static ValidationResult validateRequest(String accountNumber) {
