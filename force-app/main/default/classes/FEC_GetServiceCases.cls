@@ -1,5 +1,14 @@
 public with sharing class FEC_GetServiceCases {
 
+    private static final List<String> RESOLVED_SERVICE_CASE_STATUSES = new List<String>{
+        FEC_ConstantCommon.CASE_STATUS_RESOLVED,
+        FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+        FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED,
+        FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED,
+        FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED,
+        FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER
+    };
+
     @AuraEnabled
     public static List<PendingCaseRow> getPendingServiceCases() {
         if (!Schema.sObjectType.Case.isAccessible()) {
@@ -9,6 +18,7 @@ public with sharing class FEC_GetServiceCases {
             FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME,
             FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
         };
+        List<String> resolvedStatuses = RESOLVED_SERVICE_CASE_STATUSES;
         String soql =
             'SELECT Id, FEC_ID_Search__c, FEC_Case_Status__c, ' +
             'FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Product_Type__c, FEC_Product_Type__r.Name, ' +
@@ -19,6 +29,7 @@ public with sharing class FEC_GetServiceCases {
             'FEC_Last_Updated_On__c, FEC_Last_Updated_By__c ' +
             'FROM Case ' +
             'WHERE RecordType.DeveloperName IN :rtNames AND IsClosed = false ' +
+            'AND (FEC_Case_Status__c = null OR FEC_Case_Status__c NOT IN :resolvedStatuses) ' +
             'ORDER BY FEC_Case_Created_On__c DESC NULLS LAST';
         List<Case> cases = new List<Case>();
         try {
@@ -65,6 +76,7 @@ public with sharing class FEC_GetServiceCases {
             FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME,
             FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
         };
+        List<String> resolvedStatuses = RESOLVED_SERVICE_CASE_STATUSES;
         //DateTime archiveThreshold = DateTime.now().addMonths(-3);
         String soql =
             'SELECT Id, FEC_ID_Search__c, FEC_Case_Status__c, ' +
@@ -75,7 +87,7 @@ public with sharing class FEC_GetServiceCases {
             'FEC_Case_Created_On__c, FEC_Case_Created_By__c, ' +
             'FEC_Last_Updated_On__c, FEC_Last_Updated_By__c ' +
             'FROM Case ' +
-            'WHERE RecordType.DeveloperName IN :rtNames AND FEC_Case_Status__c LIKE \'Resolved%\' ' +
+            'WHERE RecordType.DeveloperName IN :rtNames AND FEC_Case_Status__c IN :resolvedStatuses ' +
             //'AND (ClosedDate = null OR ClosedDate >= :archiveThreshold) ' +
             'ORDER BY FEC_Case_Created_On__c DESC NULLS LAST';
         List<Case> cases = new List<Case>();

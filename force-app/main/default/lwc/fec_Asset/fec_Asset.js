@@ -105,22 +105,25 @@ export default class Fec_Asset extends LightningElement {
         if (!this.accountData && !this.error) return [];
 
         return [
-            this.buildField(this.customLabel.categoryCodeLabel, this.accountData?.[AssetFields.CATEGORY_CODE], AssetFields.CATEGORY_CODE),
-            this.buildField(this.customLabel.assetTypeLabel, this.accountData?.[AssetFields.ASSET_TYPE], AssetFields.ASSET_TYPE),
             this.buildField(this.customLabel.assetDescriptionLabel, this.accountData?.[AssetFields.ASSET_DESCRIPTION], AssetFields.ASSET_DESCRIPTION),
-            this.buildField(this.customLabel.additionalInfoLabel, this.accountData?.[AssetFields.ADDITIONAL_INFO], AssetFields.ADDITIONAL_INFO),
-            this.buildField(this.customLabel.assetModelLabel, this.accountData?.[AssetFields.ASSET_MODEL], AssetFields.ASSET_MODEL),
-            this.buildField(this.customLabel.assetColorLabel, this.accountData?.[AssetFields.ASSET_COLOR], AssetFields.ASSET_COLOR),
             this.buildField(this.customLabel.engineNoLabel, this.accountData?.[AssetFields.ENGINE_NO], AssetFields.ENGINE_NO),
-            this.buildField(this.customLabel.chasisNoLabel, this.accountData?.[AssetFields.CHASIS_NO], AssetFields.CHASIS_NO),
-            this.buildField(this.customLabel.regNoLabel, this.accountData?.[AssetFields.REG_NO], AssetFields.REG_NO),
-            this.buildField(this.customLabel.supplierNameLabel, this.accountData?.[AssetFields.SUPPLIER_NAME], AssetFields.SUPPLIER_NAME),
-            // Currency field - just using standard standard formatting for now if it's rendered generically.
             this.buildField(this.customLabel.assetCostLabel, this.accountData?.[AssetFields.ASSET_COST], AssetFields.ASSET_COST),
+
+            this.buildField(this.customLabel.additionalInfoLabel, this.accountData?.[AssetFields.ADDITIONAL_INFO], AssetFields.ADDITIONAL_INFO),
+            this.buildField(this.customLabel.chasisNoLabel, this.accountData?.[AssetFields.CHASIS_NO], AssetFields.CHASIS_NO),
             this.buildField(this.customLabel.amountPledgedLabel, formatDate(this.accountData?.[AssetFields.AMOUNT_PLEDGED]), AssetFields.AMOUNT_PLEDGED),
+
+            this.buildField(this.customLabel.assetModelLabel, this.accountData?.[AssetFields.ASSET_MODEL], AssetFields.ASSET_MODEL),
+            this.buildField(this.customLabel.regNoLabel, this.accountData?.[AssetFields.REG_NO], AssetFields.REG_NO),
             this.buildField(this.customLabel.makeDateLabel, formatDate(this.accountData?.[AssetFields.MAKE_DATE]), AssetFields.MAKE_DATE),
-            this.buildField(this.customLabel.boughtDateLabel, formatDate(this.accountData?.[AssetFields.BOUGHT_DATE]), AssetFields.BOUGHT_DATE)
-        ];
+
+            this.buildField(this.customLabel.assetColorLabel, this.accountData?.[AssetFields.ASSET_COLOR], AssetFields.ASSET_COLOR),
+            this.buildField(this.customLabel.categoryCodeLabel, this.accountData?.[AssetFields.CATEGORY_CODE], AssetFields.CATEGORY_CODE),
+            this.buildField(this.customLabel.boughtDateLabel, formatDate(this.accountData?.[AssetFields.BOUGHT_DATE]), AssetFields.BOUGHT_DATE),
+
+            this.buildField(this.customLabel.assetTypeLabel, this.accountData?.[AssetFields.ASSET_TYPE], AssetFields.ASSET_TYPE),
+            this.buildField(this.customLabel.supplierNameLabel, this.accountData?.[AssetFields.SUPPLIER_NAME], AssetFields.SUPPLIER_NAME)
+    ];
     }
 
     buildField(label, value, fieldApiName) {
