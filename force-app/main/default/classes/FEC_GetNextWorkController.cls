@@ -198,7 +198,8 @@ public without sharing class FEC_GetNextWorkController {
         FEC_RoutingActionHistoryTriggerHandler.updateCaseTeams(
             latest.FEC_Original_User_Queue_ID__c,
             latest.FEC_Updated_User_Queue_ID__c,
-            caseRecord
+            caseRecord,
+            latest
         );
 
         update caseRecord;

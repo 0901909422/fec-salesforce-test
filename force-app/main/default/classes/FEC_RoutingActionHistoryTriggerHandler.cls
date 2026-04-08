@@ -211,7 +211,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       updateCaseTeams(
         parseOwnerIdField(history.FEC_Original_User_Queue_ID__c),
         parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c),
-        caseRecord
+        caseRecord,
+        history
       );
     }
 
@@ -301,9 +302,10 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   public static void updateCaseTeams(
     Id originalUserQueueId,
     Id updatedUserQueueId,
-    Case caseRecord
+    Case caseRecord,
+    FEC_Routing_Action_History__c history
   ) {
-    if (caseRecord == null) {
+    if (caseRecord == null || history == null) {
       return;
     }
 
@@ -314,8 +316,13 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       idSet.add(updatedUserQueueId);
 
     Map<Id, String> teamMap = getTeamsFromIds(idSet);
+    Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
     String originalTeam = teamMap.get(originalUserQueueId);
-    String updatedTeam = teamMap.get(updatedUserQueueId);
+    if (String.isNotBlank(originalTeam)) {
+        // Xóa sạch khoảng trắng dư thừa, ký tự invisible, newline...
+        originalTeam = originalTeam.replaceAll('\\s+', '').trim();
+    }
+    String updatedTeam = history.FEC_Routing_Action__c == 'Update' ? decisionToTeamMap.get(history.FEC_Decision__c) : teamMap.get(updatedUserQueueId);
 
     String currentTeamsStr = caseRecord.FEC_Team__c;
     Set<String> teamSet = new Set<String>();
@@ -328,9 +335,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
         }
       }
     }
-
-    // Remove original team if exists
-    if (String.isNotBlank(originalTeam)) {
+    if (teamSet.contains(originalTeam)) {
       teamSet.remove(originalTeam);
     }
 

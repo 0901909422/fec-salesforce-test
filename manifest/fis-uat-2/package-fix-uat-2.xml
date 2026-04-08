@@ -93,6 +93,7 @@
 		<members>FEC_CardClosureRefundController</members>
 		<members>FEC_GetServiceCases</members>
 		<members>FEC_IPPClosureController</members>
+		<members>FEC_GetNextWorkController</members>
         <name>ApexClass</name>
     </types>
     <types>
