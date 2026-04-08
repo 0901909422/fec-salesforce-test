@@ -1543,6 +1543,10 @@
 		<members>Case.FEC_Support_Mailbox_Case</members>
 		<name>ListView</name>
     </types>
+	<types>
+        <members>Case.Internal_Case</members>
+        <name>RecordType</name>
+    </types>
 
     <version>65.0</version>
 </Package>

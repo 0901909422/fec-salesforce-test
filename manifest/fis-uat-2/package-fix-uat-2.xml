@@ -629,5 +629,9 @@
 		<members>FEC_EnhancedLetterheadTrigger</members>
         <name>ApexTrigger</name>
     </types>
+	<types>
+        <members>Case.Internal_Case</members>
+        <name>RecordType</name>
+    </types>
     <version>65.0</version>
 </Package>
