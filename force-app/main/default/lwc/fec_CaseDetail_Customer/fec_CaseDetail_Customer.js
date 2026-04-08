@@ -81,6 +81,8 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   }
 
   @track remarklst = [];
+  isLoaded = false;
+  isSubmitting = false;
 
   get remarkColumnlst() {
     return [
