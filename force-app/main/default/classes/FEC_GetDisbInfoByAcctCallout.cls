@@ -178,8 +178,8 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
             return response;
         }
         if (String.isBlank(responseBody)) {
-            response.errorCode = 'EMPTY';
             response.errorMessage = System.Label.FEC_MSG_Response_Null;
+            result.success = false;
             return response;
         }
         try {
