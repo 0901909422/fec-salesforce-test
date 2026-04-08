@@ -213,7 +213,7 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
                 FEC_ConstantCommon.REQUESTOR_PEGA_CSM
             );
         } catch (Exception e) {
-            return disbErrorResponse('CALLOUT_ERROR', e.getMessage());
+            return disbErrorResponse('CALLOUT_ERROR', String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{e.getMessage()}));
         }
         return parseResponseBody(resp == null ? null : resp.getBody(), resp == null ? null : resp.getStatusCode());
     }
@@ -321,7 +321,7 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         } catch (Exception e) {
             result.isSuccess = false;
             result.errorCode = 'UNKNOWN_ERROR';
-            result.errorMessage = e.getMessage();
+            result.errorMessage = System.Label.FEC_Unknown_Error;
         }
         return result;
     }
