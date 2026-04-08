@@ -9,11 +9,9 @@ History
 ------------------------------------------------------------*/ 
 global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, Database.AllowsCallouts, Database.Stateful {
       
-	private Map<Id, CustomSync__c> mCus; 
-    private Map<String,CustomSyncField__mdt>  mMetaData;
+	private Map<Id, CustomSync__c> mCus;  
     private List<FEC_API_Log__c> uLog = new List<FEC_API_Log__c>();
-    public FEC_BatchReCallCustomSync(  Map<Id, CustomSync__c> mCusSync,  Map<String,CustomSyncField__mdt> mapSetting) { 
-        this.mMetaData = mapSetting;
+    public FEC_BatchReCallCustomSync(  Map<Id, CustomSync__c> mCusSync) {  
         this.mCus = mCusSync; 
     }
     
@@ -34,8 +32,8 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
             CustomSync__c cus = mCus.get(log.FEC_Custom_Sync__c); 
             List<String> recordIdObject = (List<String>) JSON.deserialize(log.FEC_Request_String__c, List<String>.class);
 
-            String queryString = 'Select ' + mMetaData.get(cus.WhatSync__c).Fields__c +
-             ' From ' + mMetaData.get(cus.WhatSync__c).TargetObject__c + 
+            String queryString = 'Select ' +  cus.Fields__c  +
+             ' From ' + cus.TargetObject__c + 
              ' where id in :recordIdObject';  
             List<sObject> records = Database.query(queryString);  
             log = FEC_CustomSyncCallout.sendRequest(cus,log,records); 

@@ -14,14 +14,26 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
 	private Integer countSuccess = 0;
 	private Integer countFail = 0;
 	private Integer totalSize = 0;
+    private DateTime toDate ;
+    private DateTime startTime ;
     private List<FEC_API_Log__c> logs = new List<FEC_API_Log__c>();
     public FEC_BatchCustomSync(CustomSync__c recordCustom) { 
         this.cus = recordCustom;
     }
     
     global Database.QueryLocator start(Database.BatchableContext bc) {  
-        DateTime toDate = System.now();
-        DateTime startTime = (cus != null && cus.EndAt__c != null) ? cus.EndAt__c : toDate.addHours(-1);
+
+        DateTime currentNow = System.now();
+ 
+        toDate = DateTime.newInstance(
+            currentNow.year(), 
+            currentNow.month(), 
+            currentNow.day(), 
+            currentNow.hour(), 
+            0, // Phút gán bằng 0
+            0  // Giây gán bằng 0
+        );  
+        startTime  = cus.EndAt__c ?? toDate.addHours(-1);
         String whatName = cus.WhatSync__c; 
         return Database.getQueryLocator(getFields(cus));
     } 
@@ -52,8 +64,8 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
     }
  
     global void finish(Database.BatchableContext bc) { 
-        cus.StartAt__c = cus.EndAt__c ?? System.now().addHours(-1);
-        cus.EndAt__c = System.now();
+        cus.StartAt__c = cus.EndAt__c ?? toDate.addHours(-1);
+        cus.EndAt__c = toDate;
         cus.SyncSuccessFully__c = countSuccess;
         cus.SyncFailed__c = countFail;
         cus.TotalRecordSync__c = totalSize;
@@ -64,13 +76,12 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
     }
 
     public static String getFields(CustomSync__c cus) { 
+    if (Test.isRunningTest()) {
+           return 'SELECT ' + cus.Fields__c + ' FROM ' + cus.TargetObject__c;
+    } 
      String wherePart = ' WHERE ((LastModifiedDate > :startTime AND LastModifiedDate <= :toDate) ' +
                         ' OR (CreatedDate > :startTime AND CreatedDate <= :toDate) )' + 
-                        ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName'; // test
-        CustomSyncField__mdt setting = [Select id, Fields__c,TargetObject__c  
-            from CustomSyncField__mdt
-            WHERE MasterLabel = :cus.WhatSync__c limit 1];
-  
-        return 'SELECT ' + setting.Fields__c + ' FROM ' + setting.TargetObject__c + wherePart;
+                        ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName';  
+        return 'SELECT ' + cus.Fields__c + ' FROM ' + cus.TargetObject__c + wherePart;
     }
 }

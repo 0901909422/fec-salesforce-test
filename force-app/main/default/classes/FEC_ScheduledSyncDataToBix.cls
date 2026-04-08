@@ -25,31 +25,23 @@ global class FEC_ScheduledSyncDataToBix implements  Schedulable {
                                         ProcessingQuantity__c,
                                         WhatSync__c, 
                                         TableName__c,
-                                        TotalRecordSync__c
+                                        TotalRecordSync__c,
+                                        TargetObject__c,
+                                        Fields__c
                                         from CustomSync__c
-                                        where SyncTo__c = 'Bix' and Active__c = true];
-            Map<String,CustomSyncField__mdt> mMetaData  = getCustomSync();
+                                        where SyncTo__c = 'Bix' and Active__c = true]; 
             if(!lst.isEmpty()){  
                 Map<Id, CustomSync__c> mapCustomSync = new Map<Id, CustomSync__c>(lst); // ReSync
                 // Sync New
                 FEC_QueueRunBatchSync nextJob = new FEC_QueueRunBatchSync(lst);  
                 System.enqueueJob(nextJob, 1);   
                 // ReSync
-                FEC_BatchReCallCustomSync batch = new FEC_BatchReCallCustomSync(mapCustomSync,mMetaData);
+                FEC_BatchReCallCustomSync batch = new FEC_BatchReCallCustomSync(mapCustomSync);
                 Database.executeBatch(batch,1);
             }  
         }Catch(Exception e){
             System.debug('Schedule Sync Data To bix Error: Line '+e.getLineNumber() + ' - ' + e.getMessage());
         }
     }
-    
-    public static Map<String,CustomSyncField__mdt>  getCustomSync(){
-        Map<String,CustomSyncField__mdt> mSetting = new Map<String,CustomSyncField__mdt>();
-        List<CustomSyncField__mdt> lst = [Select id, Fields__c,MasterLabel  ,TargetObject__c
-            ,DeveloperName  from CustomSyncField__mdt];
-        for(CustomSyncField__mdt item :lst){
-                mSetting.put(item.MasterLabel, item);
-        }
-        return mSetting;
-    }
+     
 }

@@ -19,8 +19,7 @@ public class FEC_QueueRunBatchSync implements Queueable {
         if (records == null || records.isEmpty()) return;
         CustomSync__c cus = records.remove(0);   
         FEC_BatchCustomSync batch = new FEC_BatchCustomSync(cus);
-        Database.executeBatch(batch, (Integer)(cus.ProcessingQuantity__c ?? 10));
-       
+        Database.executeBatch(batch, (Integer)(cus.ProcessingQuantity__c ?? 10)); 
         if (!records.isEmpty()) { 
             FEC_QueueRunBatchSync nextJob = new FEC_QueueRunBatchSync(records); 
             if (!Test.isRunningTest()) {
