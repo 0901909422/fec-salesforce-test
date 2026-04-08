@@ -283,6 +283,12 @@ public with sharing class FEC_SearchController {
     public static Id createInternalCaseOnSkip() {
         try {
             Id recordTypeId = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME);
+            List<FEC_Product_Type__c> productTypes = [
+                SELECT Id 
+                FROM FEC_Product_Type__c 
+                WHERE FEC_Code__c = :FEC_ConstantCommon.CASE_INTERNAL_REQUEST
+                LIMIT 1
+            ];
 
             Case c = new Case();
             c.RecordTypeId = recordTypeId;
@@ -290,6 +296,9 @@ public with sharing class FEC_SearchController {
             c.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.CASE_INTERNAL_REQUEST;
             c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
             c.FEC_Skip_Search_Internal_Case__c = true;
+            if (!productTypes.isEmpty()) {
+                c.FEC_Product_Type__c = productTypes.get(0).Id;
+            }
 
             insert c;
 
