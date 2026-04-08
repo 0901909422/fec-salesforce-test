@@ -18,12 +18,13 @@ public class FEC_QueueRunBatchSync implements Queueable {
     public void execute(QueueableContext context) { 
         if (records == null || records.isEmpty()) return;
         CustomSync__c cus = records.remove(0);   
-        FEC_BatchCustomSync batch = new FEC_BatchCustomSync(cus);
+        Boolean isEndJob = records.isEmpty();
+        FEC_BatchCustomSync batch = new FEC_BatchCustomSync(cus,isEndJob);
         Database.executeBatch(batch, (Integer)(cus.ProcessingQuantity__c ?? 10)); 
         if (!records.isEmpty()) { 
             FEC_QueueRunBatchSync nextJob = new FEC_QueueRunBatchSync(records); 
             if (!Test.isRunningTest()) {
-                System.enqueueJob(nextJob); 
+                System.enqueueJob(nextJob,1); 
             } 
         }
     }

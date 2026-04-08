@@ -20,10 +20,11 @@
 
         <members>FEC_API_Log__c.FEC_Quantity_Call__c</members> 
         <members>FEC_API_Log__c.FEC_Custom_Sync__c</members> 
-        <members>CustomSyncSetting__c.Endpoint__c</members>
 
+        <members>CustomSyncSetting__c.Endpoint__c</members> 
         <members>CustomSyncSetting__c.ApiKey__c</members>
         <members>CustomSyncSetting__c.LimitQuanitySync__c</members>
+        <members>CustomSyncSetting__c.EmailReport__c</members>
         <name>CustomField</name>
     </types>
     <types> 
@@ -44,13 +45,13 @@
         <members>FEC_BatchCustomSync</members>
         <members>FEC_CustomSyncCallout</members>
         <members>FEC_BatchReCallCustomSync</members>
-        <members>FEC_CustomSyncAllInOneTest</members> 
+        <members>FEC_QueueReportCustomSyncBix</members> 
+        <members>FEC_CustomSyncAllInOneTest</members>  
         <name>ApexClass</name>
     </types>
     <types>
         <members>FEC_Common_System_Setting</members>
         <name>PermissionSet</name>
     </types>
-    
     <version>65.0</version>
 </Package>

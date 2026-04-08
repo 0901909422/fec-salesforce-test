@@ -36,6 +36,7 @@ private class FEC_CustomSyncAllInOneTest {
         CustomSyncSetting__c setting = new CustomSyncSetting__c(
             Endpoint__c = 'https://api.test.com',
             ApiKey__c = 'test-key-123',
+            EmailReport__c = 'nguyenleduan.index@gmail.com',
             LimitQuanitySync__c = 5
         );
         insert setting;
@@ -177,7 +178,7 @@ private class FEC_CustomSyncAllInOneTest {
         // EndAt__c = null → nhánh startTime = toDate.addHours(-1)
 
         Test.startTest();
-        FEC_BatchCustomSync batch = new FEC_BatchCustomSync(cus);
+        FEC_BatchCustomSync batch = new FEC_BatchCustomSync(cus,true);
         Database.executeBatch(batch, 200);
         Test.stopTest(); 
     }
@@ -208,7 +209,7 @@ private class FEC_CustomSyncAllInOneTest {
         ];
 
         Test.startTest();
-        FEC_BatchCustomSync batch = new FEC_BatchCustomSync(cus);
+        FEC_BatchCustomSync batch = new FEC_BatchCustomSync(cus,False);
         Database.executeBatch(batch, 200);
         Test.stopTest(); 
     }
@@ -227,7 +228,7 @@ private class FEC_CustomSyncAllInOneTest {
         ];
 
         Test.startTest();
-        FEC_BatchCustomSync batch = new FEC_BatchCustomSync(cus);
+        FEC_BatchCustomSync batch = new FEC_BatchCustomSync(cus,true);
         Database.executeBatch(batch, 200);
         Test.stopTest(); 
     }
