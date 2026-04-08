@@ -301,28 +301,22 @@ public with sharing class FEC_ChatHubCaseController {
         FEC_InteractionCaseDTO dto = (FEC_InteractionCaseDTO)JSON.deserialize(jsonInput, FEC_InteractionCaseDTO.class);
         
         if (dto == null) {
-            throw new IllegalArgumentException(System.Label.FEC_Error_InteractionDTO_Null);
+             throw new IllegalArgumentException(System.Label.FEC_Error_InteractionDTO_Null);
         }
         try {
             Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName().get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
             Case interactionCase = new Case();
             interactionCase.RecordTypeId = interactionRecordTypeId;
             
-            // ---------------------------
+        // ---------------------------
             // CHANNEL / STATUS
-            // ---------------------------
-            
-            
-            if(dto.channel == FEC_ConstantCommon.CHANNEL_INBOUND_API) {
-                interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
-            } else if ( dto.channel == FEC_ConstantCommon.CHANNEL_OUTBOUND_API) {
-                interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
-            }
+        // ---------------------------
+            interactionCase.FEC_Channel__c = dto.channel;
             if(dto.subChannel != null) {
                 interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
             }
-            
-            interactionCase.FEC_Other_Subchannel__c =dto.subChannel == 'Other' ? dto.otherSubChannel : null;
+
+            interactionCase.FEC_Other_Subchannel__c = dto.subChannel == 'Other' ? dto.otherSubChannel : null;
             interactionCase.FEC_External_Interaction_ID__c = dto.externalInteractionId;
             if (dto.channel == 'Chat') {
                 interactionCase.Status = 'Pending';
@@ -333,25 +327,25 @@ public with sharing class FEC_ChatHubCaseController {
                 interactionCase.FEC_Genesys_campaign_Name__c = dto.campaignName;
             }
             
-            // ---------------------------
+        // ---------------------------
             // CUSTOMER INFO
-            // ---------------------------
+        // ---------------------------
             interactionCase.FEC_Phone_Number__c = dto.phoneNumber;
             interactionCase.FEC_National_ID_Passport_ID__c = dto.nationalId;
             interactionCase.FEC_Account_Number__c = dto.accountNumber;
             interactionCase.FEC_Contract_Number__c = dto.contractNumber;
-            
-            // ---------------------------
+
+        // ---------------------------
             // INTERACTION DATA
-            // ---------------------------
+        // ---------------------------
             interactionCase.FEC_Transcription__c = dto.transcription;
             interactionCase.FEC_KYC_Method__c = dto.kycMethod;
             // interactionCase.FEC_KYC_Result__c = dto.kycResult;
-    
-          
-            
+
+
+
             insert interactionCase;
-            
+
             interactionCase = [
                 SELECT Id, FEC_Link_ID__c, OwnerId
                 FROM Case
@@ -364,7 +358,7 @@ public with sharing class FEC_ChatHubCaseController {
                 //     userInfo.FEC_Agent_ID__c = dto.agentId;
                 //     update userInfo;
             // }
-            
+
             
             FEC_InteractionCaseResponse res = new FEC_InteractionCaseResponse();
             res.caseId = interactionCase.Id;
