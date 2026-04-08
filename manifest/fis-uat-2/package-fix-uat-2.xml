@@ -85,6 +85,9 @@
 		<members>FEC_CardClosureRefundController</members>
 		<members>FEC_GetServiceCases</members>
 		<members>FEC_IPPClosureController</members>
+		<members>FEC_BeneficiaryBankInfoController</members>
+		<members>FEC_MockupEndpoint</members>
+		<members>FEC_GetDisbInfoByAcctCallout</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -596,6 +599,7 @@
         <members>FEC_API_Config.FEC_ReplacementCard</members>
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
+		<members>FEC_API_Config.FEC_Get_Disb_Info_By_Acct</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
