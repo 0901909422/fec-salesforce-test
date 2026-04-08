@@ -596,7 +596,7 @@ public without sharing class FEC_MainInfoAccountController {
             localUse = emeaRes.localUseInd;
         }
         
-        FEC_Customer_History__c rec = new FEC_Customer_History__c(
+        update new FEC_Customer_History__c(
             Id = accountId,
             FEC_Account_Number__c = m != null ? m.AccountNumber : null,
             FEC_Contract_Number__c = m != null ? m.ContractNumber : null,
