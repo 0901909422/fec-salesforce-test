@@ -1,4 +1,4 @@
-public with sharing class FEC_CaseRemarkController {
+public without sharing class FEC_CaseRemarkController {
   @AuraEnabled
   public static List<FEC_Case_Remarks__c> getRemarklst(String caseId) {
     try {
