@@ -593,6 +593,7 @@
     <tabs>FEC_Notification_Channel__c</tabs>
     <tabs>standard-ServiceResource</tabs>
     <tabs>FEC_Enhanced_Letterhead__c</tabs>
+    <tabs>FE_Department_Admin</tabs>
     <tabs>Templates</tabs>
     <tabs>FEC_Clear_Session__c</tabs>
     <uiType>Lightning</uiType>
@@ -624,6 +625,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Enhanced_Letterhead__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FE_Department_Admin</tab>
         </mappings>
         <mappings>
             <tab>FEC_Hold_Case__c</tab>
