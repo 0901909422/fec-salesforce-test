@@ -22,15 +22,16 @@ public without sharing class FEC_NotificationService {
      * @created: 2026/04/06
      */
     public static void sendEmailNotifications(List<Case> newCases, Map<Id, Case> oldMap) {
+        System.debug('--- [sendEmailNotifications] START cases=' + newCases.size());
         List<Case> routedCases = filterCasesRoutedToQueue(newCases, oldMap);
+        System.debug('--- [sendEmailNotifications] routedCases=' + routedCases.size());
         if (routedCases.isEmpty()) return;
 
-        // Lấy DeveloperName của Queue mới
         Set<Id> queueIds = new Set<Id>();
         for (Case c : routedCases) queueIds.add(c.OwnerId);
 
-        // Build lookup map: DeveloperName/Id → Queue Id
         Map<String, Id> queueLookup = buildQueueLookupMap(queueIds);
+        System.debug('--- [sendEmailNotifications] queueLookup=' + queueLookup);
 
         String channelEmail = FEC_ConstantCommon.NOTIFICATION_CHANNEL_EMAIL;
         String targetInternal = FEC_ConstantCommon.NOTIFICATION_TARGET_GROUP_INTERNAL;
@@ -54,22 +55,23 @@ public without sharing class FEC_NotificationService {
               AND FEC_Notification_Channel__r.Name = :channelEmail
               AND FEC_Assigned_to_Queue__c != null
         ];
+        System.debug('--- [sendEmailNotifications] notifications queried=' + notifications.size());
 
         if (notifications.isEmpty()) return;
 
-        // Build map: Queue Id → matching notifications
-        // FEC_Assigned_to_Queue__c có thể lưu DeveloperName hoặc Queue Id
         Map<Id, List<FEC_Notification__c>> queueIdToNotifs = new Map<Id, List<FEC_Notification__c>>();
         for (FEC_Notification__c n : notifications) {
-            if (String.isBlank(n.FEC_Receivers__c)) continue;
+            if (String.isBlank(n.FEC_Receivers__c)) { System.debug('--- SKIP no receivers: ' + n.Id); continue; }
             String assignedVal = n.FEC_Assigned_to_Queue__c.trim();
             Id matchedQueueId = queueLookup.get(assignedVal);
+            System.debug('--- notif assignedVal=[' + assignedVal + '] matchedQueueId=' + matchedQueueId);
             if (matchedQueueId == null) continue;
             if (!queueIdToNotifs.containsKey(matchedQueueId)) {
                 queueIdToNotifs.put(matchedQueueId, new List<FEC_Notification__c>());
             }
             queueIdToNotifs.get(matchedQueueId).add(n);
         }
+        System.debug('--- [sendEmailNotifications] queueIdToNotifs size=' + queueIdToNotifs.size());
 
         if (queueIdToNotifs.isEmpty()) return;
 
@@ -78,26 +80,34 @@ public without sharing class FEC_NotificationService {
 
         for (Case c : routedCases) {
             List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
+            System.debug('--- case=' + c.Id + ' OwnerId=' + c.OwnerId + ' candidates=' + (candidates == null ? 0 : candidates.size()));
             if (candidates == null || candidates.isEmpty()) continue;
 
             for (FEC_Notification__c n : candidates) {
-                if (!matchesNatureOfCase(c, n)) continue;
-                if (!FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c)) continue;
+                Boolean natureOk = matchesNatureOfCase(c, n);
+                Boolean scheduleOk = FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c);
+                System.debug('--- notif=' + n.Id + ' natureOk=' + natureOk + ' scheduleOk=' + scheduleOk);
+                if (!natureOk) continue;
+                if (!scheduleOk) continue;
 
                 List<String> toAddresses = FEC_CommonUltils.parseReceivers(n.FEC_Receivers__c);
+                Boolean templateActive = n.FEC_Notification_Template__r?.FEC_Active__c == true;
+                Boolean hasSubject = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Subject_Line__c);
+                System.debug('--- toAddresses=' + toAddresses + ' templateActive=' + templateActive + ' hasSubject=' + hasSubject);
                 if (toAddresses.isEmpty()) continue;
+                if (!hasSubject) continue;
+                if (!templateActive) continue;
 
-                if (String.isBlank(n.FEC_Notification_Template__r?.FEC_Subject_Line__c)) continue;
-                if (n.FEC_Notification_Template__r?.FEC_Active__c != true) continue;
                 String subject = resolveTemplate(n.FEC_Notification_Template__r.FEC_Subject_Line__c, c);
                 String body = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Body__c)
-                    ? resolveTemplate(n.FEC_Notification_Template__r.FEC_Body__c, c)
-                    : '';
+                    ? resolveTemplate(n.FEC_Notification_Template__r.FEC_Body__c, c) : '';
 
                 emailsToSend.add(FEC_CommonUltils.buildEmail(toAddresses, subject, body));
+                System.debug('--- email queued to=' + toAddresses + ' subject=' + subject);
             }
         }
 
+        System.debug('--- [sendEmailNotifications] sending ' + emailsToSend.size() + ' emails');
         FEC_CommonUltils.sendEmails(emailsToSend);
     }
 
