@@ -269,10 +269,6 @@
         <label>Không thể lấy danh sách Additional Fields: </label>
     </customLabels>
     <customLabels>
-        <name>FEC_Error_Title</name>
-        <label>Lỗi</label>
-    </customLabels>
-    <customLabels>
         <name>FEC_Error_Unknown_Node_Type</name>
         <label>Loại node không xác định: {0}</label>
     </customLabels>
