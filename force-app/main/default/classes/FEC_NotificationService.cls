@@ -82,8 +82,34 @@ public without sharing class FEC_NotificationService {
         // Lấy OrgWide sender 1 lần cho toàn bộ emails
         Id orgWideId = FEC_CommonUltils.getOrgWideEmailIdForNotification();
 
-        // Cache letterhead để tránh query nhiều lần
-        Map<Id, EnhancedLetterhead> letterheadCache = new Map<Id, EnhancedLetterhead>();
+        // Cache letterhead đã xử lý để tránh query nhiều lần
+        Map<Id, FEC_Enhanced_Letterhead__c> letterheadCache = new Map<Id, FEC_Enhanced_Letterhead__c>();
+
+        // Bulk query ContentDocumentLink cho tất cả template
+        Set<Id> templateIds = new Set<Id>();
+        for (FEC_Notification__c n : notifications) {
+            if (n.FEC_Notification_Template__c != null) templateIds.add(n.FEC_Notification_Template__c);
+        }
+        Map<Id, List<ContentVersion>> templateAttachments = new Map<Id, List<ContentVersion>>();
+        if (!templateIds.isEmpty()) {
+            Map<Id, Id> docToTemplate = new Map<Id, Id>();
+            for (ContentDocumentLink link : [
+                SELECT ContentDocumentId, LinkedEntityId, ContentDocument.LatestPublishedVersionId
+                FROM ContentDocumentLink WHERE LinkedEntityId IN :templateIds
+            ]) {
+                docToTemplate.put(link.ContentDocument.LatestPublishedVersionId, link.LinkedEntityId);
+            }
+            if (!docToTemplate.isEmpty()) {
+                for (ContentVersion cv : [
+                    SELECT Id, Title, FileExtension, VersionData
+                    FROM ContentVersion WHERE Id IN :docToTemplate.keySet()
+                ]) {
+                    Id tId = docToTemplate.get(cv.Id);
+                    if (!templateAttachments.containsKey(tId)) templateAttachments.put(tId, new List<ContentVersion>());
+                    templateAttachments.get(tId).add(cv);
+                }
+            }
+        }
 
         for (Case c : routedCases) {
             List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
@@ -114,21 +140,37 @@ public without sharing class FEC_NotificationService {
                 if (lhId != null) {
                     if (!letterheadCache.containsKey(lhId)) {
                         try {
-                            EnhancedLetterhead lh = [SELECT Id, LetterheadHeader, LetterheadFooter FROM EnhancedLetterhead WHERE Id = :lhId LIMIT 1];
+                            FEC_Enhanced_Letterhead__c lh = [SELECT Id, FEC_Header__c, FEC_Footer__c FROM FEC_Enhanced_Letterhead__c WHERE Id = :lhId LIMIT 1];
                             letterheadCache.put(lhId, lh);
                         } catch (Exception e) {
-                            System.debug('Letterhead query failed: ' + e.getMessage());
+                            System.debug('FEC Letterhead query failed: ' + e.getMessage());
+                            letterheadCache.put(lhId, null);
                         }
                     }
-                    EnhancedLetterhead lh = letterheadCache.get(lhId);
+                    FEC_Enhanced_Letterhead__c lh = letterheadCache.get(lhId);
                     if (lh != null) {
-                        String header = String.isNotBlank(lh.LetterheadHeader) ? lh.LetterheadHeader : '';
-                        String footer = String.isNotBlank(lh.LetterheadFooter) ? lh.LetterheadFooter : '';
+                        String header = String.isNotBlank(lh.FEC_Header__c) ? inlineImages(lh.FEC_Header__c) : '';
+                        String footer = String.isNotBlank(lh.FEC_Footer__c) ? inlineImages(lh.FEC_Footer__c) : '';
                         bodyContent = header + bodyContent + footer;
                     }
                 }
 
-                emailsToSend.add(FEC_CommonUltils.buildEmailWithSender(toAddresses, subject, bodyContent, orgWideId));
+                Messaging.SingleEmailMessage mail = FEC_CommonUltils.buildEmailWithSender(toAddresses, subject, bodyContent, orgWideId);
+
+                // Attach files từ ContentDocumentLink của template (đã bulk query)
+                Id templateId = n.FEC_Notification_Template__c;
+                if (templateId != null && templateAttachments.containsKey(templateId)) {
+                    List<Messaging.EmailFileAttachment> attachments = new List<Messaging.EmailFileAttachment>();
+                    for (ContentVersion cv : templateAttachments.get(templateId)) {
+                        Messaging.EmailFileAttachment att = new Messaging.EmailFileAttachment();
+                        att.setFileName(cv.Title + (String.isNotBlank(cv.FileExtension) ? '.' + cv.FileExtension : ''));
+                        att.setBody(cv.VersionData);
+                        attachments.add(att);
+                    }
+                    if (!attachments.isEmpty()) mail.setFileAttachments(attachments);
+                }
+
+                emailsToSend.add(mail);
                 System.debug('--- email queued to=' + toAddresses + ' subject=' + subject);
             }
         }
@@ -310,6 +352,42 @@ public without sharing class FEC_NotificationService {
         if (n.FEC_SubCategory__c != null && n.FEC_SubCategory__c != c.FEC_SubCategory__c) return false;
         if (n.FEC_SubCode__c != null && n.FEC_SubCode__c != c.FEC_SubCode__c) return false;
         return true;
+    }
+
+    /**
+     * Convert rtaImage URLs trong HTML sang base64 inline để email client hiển thị được.
+     * Tự detect org domain nên không cần hardcode URL.
+     */
+    private static String inlineImages(String html) {
+        if (String.isBlank(html)) return html;
+        // Lấy org domain động
+        String orgDomain = URL.getOrgDomainUrl().toExternalForm();
+        // Tìm tất cả src="...rtaImage..." và replace bằng base64
+        Pattern p = Pattern.compile('src="(https?://[^"]*rtaImage[^"]*)"');
+        Matcher m = p.matcher(html);
+        String result = html;
+        while (m.find()) {
+            String url = m.group(1);
+            try {
+                HttpRequest req = new HttpRequest();
+                req.setEndpoint(url);
+                req.setMethod('GET');
+                req.setTimeout(10000);
+                req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
+                Http http = new Http();
+                HttpResponse res = http.send(req);
+                if (res.getStatusCode() == 200) {
+                    String contentType = res.getHeader('Content-Type') != null ? res.getHeader('Content-Type') : 'image/png';
+                    if (contentType.contains(';')) contentType = contentType.substringBefore(';').trim();
+                    String b64 = EncodingUtil.base64Encode(res.getBodyAsBlob());
+                    String dataUri = 'data:' + contentType + ';base64,' + b64;
+                    result = result.replace(url, dataUri);
+                }
+            } catch (Exception e) {
+                System.debug('inlineImages failed for url: ' + url + ' | ' + e.getMessage());
+            }
+        }
+        return result;
     }
 
     /**
