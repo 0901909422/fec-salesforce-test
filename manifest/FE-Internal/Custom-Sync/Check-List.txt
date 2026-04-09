@@ -1,0 +1,58 @@
+Checklist 
+	 - Custom Setting | CustomSyncSetting__c
+		- record Default
+		- Quantity call: số lượng lần sync 
+		- Email: add Email
+        - Endpoint
+	 - Email:  Setup > Deliverability > Select All Emal > Go Organization-Wide Addresses and add Email > email cần add
+	 - CustomSync__C  | object lưu config
+		- ProcessingQuantity__c: số lượng reocord trong 1 lần gửi 
+		- TotalRecordSync__c: Số lượng reocrd đc Sync trong kỳ trước 
+        - Field: Các field phải được query trước khi add(Tránh lỗi)
+- Tất cả sử dụng permision FEC_Common_System_Setting
+
+
+- Scrip Run Schedule
+    FEC_ScheduledSyncDataToBix syncJob = new FEC_ScheduledSyncDataToBix(); 
+    String cronExp = '0 0 * * * ?'; 
+    String jobID = System.schedule('Custom Sync Hourly', cronExp, syncJob);
+
+
+- Scrtip Test
+
+List<Case> lst = [Select id, FEC_Case_Phone_Number__c, LastModifiedDate from Case 
+                  where FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = 'Phone Update'  
+                  limit 1000];
+for(Case item : lst){
+    item.FEC_Case_Phone_Number__c = '0999999999';
+}
+update lst;
+
+
+-------
+
+
+
+List<CustomSync__c> lst = [Select id, Name,
+                           SyncFailed__c,
+                           SyncSuccessFully__c,
+                           SyncTo__c,
+                           Active__c, 
+                           StartAt__c,
+                           EndAt__c,
+                           ProcessingQuantity__c,
+                           WhatSync__c, 
+                           TableName__c,
+                           Fields__c,
+                           TargetObject__c
+                           from CustomSync__c
+                           where SyncTo__c = 'Bix' and Active__c = true]; 
+if(!lst.isEmpty()){  
+    Map<Id, CustomSync__c> mapCustomSync = new Map<Id, CustomSync__c>(lst); // ReSync
+    // Sync New
+    FEC_QueueRunBatchSync nextJob = new FEC_QueueRunBatchSync(lst);  
+    System.enqueueJob(nextJob);   
+    // ReSync
+    FEC_BatchReCallCustomSync batch = new FEC_BatchReCallCustomSync(mapCustomSync);
+    Database.executeBatch(batch,1);
+} 
