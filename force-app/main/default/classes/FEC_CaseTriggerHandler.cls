@@ -510,7 +510,6 @@ public without sharing class FEC_CaseTriggerHandler {
             } else {
                 // Ép cứng địa chỉ Routing bằng giá trị lấy từ Custom Setting (sendToValue)
                 c.FEC_Send_To__c = sendToValue;
-
                 c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
                 c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
                 casesForRouting.add(c);
