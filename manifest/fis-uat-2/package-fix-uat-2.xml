@@ -100,6 +100,7 @@
 		<members>FEC_GetDisbInfoByAcctCallout</members>
 		<members>FEC_HoldCaseController</members>
 		<members>FEC_UpdateCustomerAddress</members>
+		<members>FEC_CaseRemarkController</members>
         <name>ApexClass</name>
     </types>
     <types>
