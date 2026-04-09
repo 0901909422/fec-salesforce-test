@@ -47,6 +47,22 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         return this.isEdit === false;
     }
 
+    get comboRequired() {
+        return !this.isReadOnly;
+    }
+
+    get bankOptionsJson() {
+        return JSON.stringify(this.bankOptions || []);
+    }
+
+    get bankBranchOptionsJson() {
+        return JSON.stringify(this.bankBranchOptions || []);
+    }
+
+    get provinceOptionsJson() {
+        return JSON.stringify(this.provinceOptions || []);
+    }
+
     @wire(getBankNamePicklistOptions)
     wiredBanks({ data, error }) {
         if (data) {
@@ -188,18 +204,58 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         this.beneficiaryAccount = event.target.value;
     }
 
-    handleBankComboChange(event) {
-        this.bankComboValue = event.detail.value;
+    _clearPickCombo(pick) {
+        Promise.resolve().then(() => {
+            const el = this.template.querySelector("c-fec_-combo-box[data-pick=\"" + pick + "\"]");
+            if (el && typeof el.clear === "function") {
+                el.clear();
+            }
+        });
+    }
+
+    handleBankPickFromCombo(event) {
+        const v = event.detail.value;
+        if (!v) {
+            return;
+        }
+        const prev = this.bankComboValue;
+        this.bankComboValue = v;
+        if (v !== prev) {
+            this.bankBranch = STR_EMPTY;
+            this._clearPickCombo("branch");
+            this.refreshBranchOptions();
+        }
+    }
+
+    handleBankRemove() {
+        this.bankComboValue = STR_EMPTY;
         this.bankBranch = STR_EMPTY;
-        this.refreshBranchOptions();
+        this.bankBranchOptions = [];
+        this._clearPickCombo("branch");
     }
 
-    handleBankBranchInput(event) {
-        this.bankBranch = event.detail.value;
+    handleBankBranchPickFromCombo(event) {
+        const v = event.detail.value;
+        if (!v) {
+            return;
+        }
+        this.bankBranch = v;
     }
 
-    handleProvinceChange(event) {
-        this.provinceComboValue = event.detail.value;
+    handleBankBranchRemove() {
+        this.bankBranch = STR_EMPTY;
+    }
+
+    handleProvincePickFromCombo(event) {
+        const v = event.detail.value;
+        if (!v) {
+            return;
+        }
+        this.provinceComboValue = v;
+    }
+
+    handleProvinceRemove() {
+        this.provinceComboValue = STR_EMPTY;
     }
 
     handleError(error) {
@@ -238,14 +294,21 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         if (this.isReadOnly) {
             return true;
         }
-        const fields = [...this.template.querySelectorAll("lightning-input"), ...this.template.querySelectorAll("lightning-combobox")];
+        const fields = [...this.template.querySelectorAll("lightning-input")];
         let ok = true;
         fields.forEach((el) => {
             if (typeof el.reportValidity === "function" && !el.reportValidity()) {
                 ok = false;
             }
         });
-        return ok;
+        if (!ok) {
+            return false;
+        }
+        const nz = (s) => !!(s && String(s).trim());
+        if (!nz(this.bankComboValue) || !nz(this.bankBranch) || !nz(this.provinceComboValue)) {
+            return false;
+        }
+        return true;
     }
 
     /** Submit Case: khi block có dữ liệu thì validate đủ trường bắt buộc. */
