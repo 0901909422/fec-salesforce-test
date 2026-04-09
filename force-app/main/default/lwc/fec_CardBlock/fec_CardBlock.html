@@ -1,24 +1,24 @@
 <template>
   <lightning-layout multiple-rows>
     <lightning-layout-item size="6" padding="around-small">
-      <lightning-input name="currentCardStatus" type="text" label={customLabel.currentCardStatus}></lightning-input>
+      <lightning-input data-id="currentCardStatus" type="text" label={customLabel.currentCardStatus}></lightning-input>
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">
       <lightning-combobox
-        name="cardBlockReason"
+        data-id="cardBlockReason"
         label={customLabel.cardBlockReason}
         value={cardBlockReasonValue}
         options={optionReasons}
-        onchange={handleChange}>
+        onchange={handleCardBlockReasonChange}>
       </lightning-combobox>
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">
-      <lightning-input name="newBlockCode" type="text" label={customLabel.newBlockCode}></lightning-input>
+      <lightning-input data-id="newBlockCode" type="text" label={customLabel.newBlockCode} value={newBlockCodeValue}></lightning-input>
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small"></lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">
       <lightning-combobox
-        name="verifyInformation"
+        data-id="verifyInformation"
         label={customLabel.verifyInformation}
         value={verifyInformationValue}
         options={verifyInformationOptions}
@@ -27,7 +27,7 @@
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">
       <lightning-combobox
-        name="callback"
+        data-id="callback"
         label={customLabel.callback}
         value={callbackValue}
         options={callbackOptions}
