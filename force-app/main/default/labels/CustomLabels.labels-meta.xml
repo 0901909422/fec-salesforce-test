@@ -6408,6 +6408,13 @@
         <value>Search</value>
     </labels>
     <labels>
+        <fullName>LBL_UpdateSuccessfully</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Address or record update completed successfully</shortDescription>
+        <value>Updated successfully</value>
+    </labels>
+    <labels>
         <fullName>LBL_SearchFraudCaseScreen</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -12835,6 +12842,38 @@
         <value>Ward</value>
     </labels>
     <labels>
+        <fullName>FEC_LBL_UpdateAddress_Add_New_Address</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — Add New Address button/section</shortDescription>
+        <value>Add New Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_Edit_Mailing</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — edit mailing modal title</shortDescription>
+        <value>Chỉnh sửa địa chỉ giao phát</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_New_Address</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — new address modal title</shortDescription>
+        <value>New Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_Province_Search_Placeholder</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — province combobox search placeholder</shortDescription>
+        <value>Nhập để tìm tỉnh/thành...</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ContractClosure_No_C360_Email</fullName>
         <categories>Contract Closure LWC</categories>
         <language>en_US</language>
@@ -12994,5 +13033,116 @@
         <protected>false</protected>
         <shortDescription>FEC_Btn_Next</shortDescription>
         <value>Next</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_MessageError_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error MessageError Hold Case</shortDescription>
+        <value>Số hợp đồng/tài khoản này đã chuyển ngưng tác động thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Message_Maxretris</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error Message Maxretris</shortDescription>
+        <value>Số hợp đồng/tài khoản này đã chuyển ngưng tác động thất bại. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case</shortDescription>
+        <value>Hold Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Messenger_Success_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Messenger Success Hold Case</shortDescription>
+        <value>Số hợp đồng/tài khoản này đã chuyển ngưng tác động thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Code</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Code</shortDescription>
+        <value>NFU Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Hold_Day_Duration</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Hold Day Duration</shortDescription>
+        <value>NFU Hold Day Duration</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Reason</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Reason</shortDescription>
+        <value>NFU Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Show_Action_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Show Action Hold Case</shortDescription>
+        <value>Không tìm thấy bộ Hold Case thủ công tương ứng cho bộ NOC</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Succes_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Succes Hold Case</shortDescription>
+        <value>Hold Case thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_An_Unexpected_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>An Unexpected Error</shortDescription>
+        <value>An unexpected error occurred.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Failed_To_Load_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed To Load Case</shortDescription>
+        <value>Failed to load Case record:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Failed_To_Load_NFU</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed To Load NFU</shortDescription>
+        <value>Failed to load NFU Reasons:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Please_Select_An_NFU</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please Select An NFU</shortDescription>
+        <value>Please select an NFU Reason.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Exception</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Exception</shortDescription>
+        <value>An exception has occurred. Please contact the System Administrator.</value>
     </labels>
 </CustomLabels>

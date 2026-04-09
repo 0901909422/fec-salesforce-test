@@ -131,7 +131,13 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
+    /** API trả PERMANENT — khác PERMNENT (mã nguồn CIF). */
+    public static final String ADDRESS_TYPE_PERMANENT = 'PERMANENT';
     public static final String ADDRESS_TYPE_OFFICE = 'OFFICE';
+    /** FEC_Address_Info__c.FEC_Address_Type__c — giá trị picklist. */
+    public static final String SF_ADDRESS_TYPE_PERMANENT = 'Permanent Address';
+    public static final String SF_ADDRESS_TYPE_OFFICE = 'Office Address';
+    public static final String SF_ADDRESS_TYPE_CURRENT = 'Current Address';
     public static final String TEXT_YES = 'Yes';
 
     public static final String TEXT_NO = 'No';
@@ -411,4 +417,31 @@ public with sharing class FEC_ConstantCommon {
     public static final String EMAIL_CS_D2C = 'cs_d2c@fecredit.com.vn';
     public static final String EMAIL_CS_OM = 'CS_OM@fecredit.com.vn';
     public static final String EMAIL_CS_QC_TEAM = 'CS_QC_TEAM@fecredit.com.vn';
+
+    public static final String STATUS_SUCCESS = 'SUCCESS';
+    public static final String CASE_STATUS_ON_HOLD = 'On Hold';
+    
+    public static final Map<String, String> decisionToTeamMap = new Map<String, String>{
+      // Nhóm thường (Pending-) -> Bỏ prefix
+      'Pending CS' => 'CSInternal',
+      'Pending Customer' => 'Customer',
+      'Pending Card Ops' => 'CardOpsOutOfSystem',
+      'Pending Collections' => 'CollectionsOutOfSystem',
+      'Pending Contract Processing' => 'CPOutOfSystem',
+      'Pending Credit Assessment' => 'CAOutOfSystem',
+      'Pending Direct Sales' => 'DirectSalesOutOfSystem',
+      'Pending Telesales' => 'TelesalesOutOfSystem',
+      'Pending IT' => 'ITOutOfSystem',
+      'Pending Payment' => 'PaymentOutOfSystem',
+      'Pending Product' => 'PBDOutOfSystem',
+      'Pending RCP&A' => 'RCPAOutOfSystem',
+      'Pending Security' => 'SecurityOutOfSystem',
+      'Pending Vendor' => 'VendorOutOfSystem',
+      // Nhóm đặc biệt (cần map Team và đổi Owner sang Queue)
+      'Out Of Process' => 'OutOfProcess',
+      'CIC Related' => 'CICRelated',
+      'Document Preparation' => 'DocumentPreparation',
+      'Task Under Review' => 'TaskUnderReview'
+    };
+    
 }

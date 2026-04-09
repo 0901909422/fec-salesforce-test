@@ -32,7 +32,7 @@ public with sharing class FEC_CardLockUnLockController {
                 objCasse.FEC_Account_Number__c
             );
             if (!validateResult.isValid) {
-                throw new FEC_APIServiceException(validateResult.errorMessage);
+                return validateResult.errorMessage;
             }
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
@@ -45,15 +45,18 @@ public with sharing class FEC_CardLockUnLockController {
             // Log API response
             FEC_CardLockUnLockCallout.logApiResponse();
 
-            if (String.isNotBlank(response.errorCode)) {
-                throw new FEC_APIServiceException(response.errorMessage);
-            }
-            if (!FEC_CardLockUnLockCallout.isSuccess(response)) {
-                return '';
+            if (String.isNotBlank(response.errorCode) || !FEC_CardLockUnLockCallout.isSuccess(response)) {
+                return 'FAIL';
             }
             return 'SUCCESS';
-        } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
+        } catch (Exception ex) {
+            FEC_CommonUltils.logException(
+                'FEC_CardLockUnLockController', 
+                'blockCard', 
+                ex.getMessage(),
+                ex.getStackTraceString()
+            );
+            return System.Label.FEC_MSG_Exception;
         }
     }
 }
