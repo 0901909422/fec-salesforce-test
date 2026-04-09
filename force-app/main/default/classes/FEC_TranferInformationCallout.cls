@@ -142,7 +142,7 @@ public without sharing class FEC_TranferInformationCallout {
       'subCode',
       'remark'
     };
-    String csCaseId = '';
+    String csCaseId = FEC_ConstantCommon.STR_EMPTY;
     if (reqObj.callData != null) {
       csCaseId = reqObj.callData.get('csCaseID');
       for (String key : orderedKeys) {
@@ -203,7 +203,7 @@ public without sharing class FEC_TranferInformationCallout {
     if (String.isBlank(jsonResponse)) {
       result.errorMessage = System.Label.FEC_MSG_Response_Null;
       result.success = false;
-      result.Code = 'E';
+      result.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
       return result;
     }
 
