@@ -63,8 +63,7 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(LightningE
 
     async handleCreateSuccess(event) {
         this.isShowModal = false;
-        this.newCaseId = event.detail.recordId;
-        await this.handleClose();
+        await this.handleCloseButtonCancel();
     }
 
     async handleClose() {
