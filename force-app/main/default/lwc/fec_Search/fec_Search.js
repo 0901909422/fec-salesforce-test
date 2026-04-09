@@ -249,7 +249,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
       ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
-      { label: this.isAccountContractSearch ? "Contract Status" : "Contract Status", fieldName: "ContractStatus", sortable: true },
+      { label: "Contract Status", fieldName: "ContractStatus", sortable: true },
     ];
   }
 
