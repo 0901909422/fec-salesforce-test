@@ -95,44 +95,74 @@ public without sharing class FEC_CaseRemarkController {
   @AuraEnabled
   public static void clearDraftRemarks(String caseId) {
       try {
-          if (String.isBlank(caseId)) return;
+          System.debug('===== START clearDraftRemarks =====');
+          System.debug('Input caseId: ' + caseId);
+          System.debug('Running UserId: ' + UserInfo.getUserId());
 
-          // Check object & field permission
-          if (!Schema.sObjectType.Case.isUpdateable() ||
-              !Schema.sObjectType.Case.fields.FEC_Draft_Remarks__c.isUpdateable()) {
-              throw new AuraHandledException('You do not have permission to update Case or Draft Remarks');
+          if (String.isBlank(caseId)) {
+              System.debug('caseId is blank → EXIT');
+              return;
+          }
+
+          // Check permission
+          Boolean canUpdateCase = Schema.sObjectType.Case.isUpdateable();
+          Boolean canUpdateField = Schema.sObjectType.Case.fields.FEC_Draft_Remarks__c.isUpdateable();
+
+          System.debug('Can update Case: ' + canUpdateCase);
+          System.debug('Can update FEC_Draft_Remarks__c: ' + canUpdateField);
+
+          if (!canUpdateCase || !canUpdateField) {
+              throw new AuraHandledException('No permission to update Case or field');
           }
 
           List<Case> caselst = [
-              SELECT Id, FEC_Draft_Remarks__c
+              SELECT Id, OwnerId, FEC_Draft_Remarks__c
               FROM Case
               WHERE Id = :caseId
               LIMIT 1
           ];
 
-          if (caselst.isEmpty()) return;
+          System.debug('Query result size: ' + caselst.size());
+
+          if (caselst.isEmpty()) {
+              System.debug('No Case found → EXIT');
+              return;
+          }
 
           Case c = caselst[0];
 
-          // 🔒 Check nếu record bị lock
-          if (Approval.isLocked(c.Id)) {
-              System.debug('Case is locked. Trying to unlock...');
+          System.debug('Case Id: ' + c.Id);
+          System.debug('Case OwnerId: ' + c.OwnerId);
+          System.debug('Draft before clear: ' + c.FEC_Draft_Remarks__c);
+
+          // Check lock
+          Boolean isLocked = Approval.isLocked(c.Id);
+          System.debug('Is Case Locked: ' + isLocked);
+
+          if (isLocked) {
+              System.debug('Trying to unlock Case...');
               try {
                   Approval.unlock(c.Id);
+                  System.debug('Unlock SUCCESS');
               } catch (Exception unlockEx) {
-                  System.debug('Unlock failed: ' + unlockEx.getMessage());
-                  throw new AuraHandledException('Case is locked and cannot be updated.');
+                  System.debug('Unlock FAILED: ' + unlockEx.getMessage());
+                  throw new AuraHandledException('Case is locked, cannot update');
               }
           }
 
-          // Clear draft
+          // Clear field
           c.FEC_Draft_Remarks__c = null;
 
-          // Update
+          System.debug('Updating Case...');
+
           update c;
 
+          System.debug('Update SUCCESS');
+          System.debug('===== END clearDraftRemarks =====');
+
       } catch (Exception e) {
-          System.debug('ERROR clearDraftRemarks: ' + e.getMessage());
+          System.debug('❌ ERROR clearDraftRemarks: ' + e.getMessage());
+          System.debug('StackTrace: ' + e.getStackTraceString());
           throw new AuraHandledException(e.getMessage());
       }
   }
