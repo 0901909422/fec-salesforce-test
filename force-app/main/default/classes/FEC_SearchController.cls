@@ -86,7 +86,12 @@ public with sharing class FEC_SearchController {
 
         // 4. Khởi tạo và Insert History (Trường FEC_Case__c bây giờ chắc chắn có giá trị)
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
-        rec.FEC_Account_Number__c = value;
+        if (fieldName == 'AccountNumber') {
+            rec.FEC_Account_Number__c = value;
+        }
+        if (fieldName == 'ContractNumber') {
+            rec.FEC_Contract_Number__c = value;
+        }
         rec.Name = value;
         rec.FEC_CIF_Number__c = cifNumber;
         rec.FEC_Work_Phone__c = phone;
@@ -283,13 +288,22 @@ public with sharing class FEC_SearchController {
     public static Id createInternalCaseOnSkip() {
         try {
             Id recordTypeId = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME);
+            List<FEC_Product_Type__c> productTypes = [
+                SELECT Id 
+                FROM FEC_Product_Type__c 
+                WHERE FEC_Code__c = :FEC_ConstantCommon.CASE_INTERNAL_REQUEST
+                LIMIT 1
+            ];
 
             Case c = new Case();
             c.RecordTypeId = recordTypeId;
-            c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
+            c.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
             c.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.CASE_INTERNAL_REQUEST;
             c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
             c.FEC_Skip_Search_Internal_Case__c = true;
+            if (!productTypes.isEmpty()) {
+                c.FEC_Product_Type__c = productTypes.get(0).Id;
+            }
 
             insert c;
 

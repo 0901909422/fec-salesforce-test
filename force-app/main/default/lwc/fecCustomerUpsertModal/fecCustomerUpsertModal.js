@@ -106,6 +106,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
             FEC_IsActive__c: this.initialData.FEC_IsActive__c !== undefined ? this.initialData.FEC_IsActive__c : false,
             FEC_StartDate__c: this.initialData.FEC_StartDate__c || this.tomorrowDate,
             FEC_EndDate__c: this.initialData.FEC_EndDate__c || null,
+            FEC_Status__c: this.initialData.FEC_Status__c || null
         };
 
         if (this.initialData.Id) {

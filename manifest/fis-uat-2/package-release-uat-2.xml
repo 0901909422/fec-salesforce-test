@@ -47,6 +47,7 @@
         <members>FEC_API_Config.FEC_ReplacementCard</members>
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
+		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -578,8 +579,6 @@
         <members>FEC_Create_Successfully_MSG</members>
 		<members>FEC_MSG_IPP_Closure_No_Eligible</members>
 		<members>FEC_MSG_IPP_Closure_Select_One</members>
-		<members>FEC_LBL_IPP_Closure_Back_To_Case</members>
-		<members>FEC_LBL_IPP_Closure_Complete</members>
 		<members>FEC_LBL_IPP_Closure_Heading</members>
 		<members>FEC_LBL_IPP_Closure_Col_IppRecordNo</members>
 		<members>FEC_LBL_IPP_Closure_Col_IppPlan</members>
@@ -1297,6 +1296,7 @@
 		<members>FEC_Clear_Session__c</members>
 		<members>FEC_Interaction_Routed__e</members>
 		<members>FEC_Additional_Info__c</members>
+		<members>FEC_System_Config__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -1317,6 +1317,8 @@
         <members>FEC_Address_Info__c.FEC_District__c</members>
         <members>FEC_Address_Info__c.FEC_Province__c</members>
         <members>FEC_Address_Info__c.FEC_Country__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
@@ -1338,6 +1340,10 @@
         <members>FEC_GetCardPlanInfo</members>
 		<members>FEC_EnhancedLetterheadTriggerHandler</members>
 		<members>FEC_EnhancedLetterheadHandler_Test</members>
+		<members>FEC_NotificationService</members>
+		<members>FEC_AccountOrContractPicklistHandler</members>
+		<members>FEC_BeneficiaryBankInfoController</members>
+		<members>FEC_GetDisbInfoByAcctCallout</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1478,6 +1484,18 @@
 		<members>FEC_Toast_Save_Success</members>
 		<members>LBL_SortBy</members>
 		<members>FEC_Cannot_Delete_Enhanced_Letterhead</members>
+		<members>FEC_Choose_Notification_Type</members>
+		<members>FEC_Email_No_Valid_Address_Found</members>
+		<members>FEC_Email_Send_Error</members>
+		<members>FEC_Email_Sent_Success</members>
+		<members>FEC_Error_Loading_Template_List</members>
+		<members>FEC_Send</members>
+		<members>FEC_Send_Manual_Notification</members>
+		<members>FEC_Target_Email</members>
+		<members>FEC_Target_Group</members>
+		<members>FEC_Template_Not_Found</members>
+		<members>FEC_LBL_Select_Payment_Method</members>
+		<members>FEC_MSG_Refund_Request_Refund_Amount_Positive</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1493,6 +1511,10 @@
 		<members>fecClearSessionNew</members>
 		<members>fec_InteractionRoutingUtilityBar</members>
 		<members>fec_CardPayment</members>
+		<members>fec_ManualNotification</members>
+		<members>fec_AccountOrContractPicklistCustomerCase</members>
+		<members>fec_AccountOrContractPicklistInteraction</members>
+		<members>fec_BeneficiaryBankInfoBlock</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -1517,6 +1539,21 @@
 		<members>FEC_EmailMessageTrigger</members>
 		<members>FEC_EnhancedLetterheadTrigger</members>
         <name>ApexTrigger</name>
+    </types>
+	<types>
+		<members>Case.FEC_CSM_Mailbox_Case</members>
+		<members>Case.FEC_Care_Mailbox_Case</members>
+		<members>Case.FEC_Day_2_Check_Case</members>
+		<members>Case.FEC_Ecom_Mailbox_Case</members>
+		<members>Case.FEC_OM_Mailbox_Case</members>
+		<members>Case.FEC_Office_Based_Mailbox_Case</members>
+		<members>Case.FEC_Quality_Control_Mailbox_Case</members>
+		<members>Case.FEC_Support_Mailbox_Case</members>
+		<name>ListView</name>
+    </types>
+	<types>
+        <members>Case.Internal_Case</members>
+        <name>RecordType</name>
     </types>
 
     <version>65.0</version>

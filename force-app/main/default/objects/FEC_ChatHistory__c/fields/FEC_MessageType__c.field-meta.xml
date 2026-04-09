@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_MessageType__c</fullName>
+    <description>Loại tin nhắn (text, attachment, image).</description>
+    <label>MessageType</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>text</fullName>
+                <default>false</default>
+                <label>text</label>
+            </value>
+            <value>
+                <fullName>attachment</fullName>
+                <default>false</default>
+                <label>attachment</label>
+            </value>
+            <value>
+                <fullName>image</fullName>
+                <default>false</default>
+                <label>image</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

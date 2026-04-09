@@ -179,6 +179,7 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
  *   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
  */
 const DYNAMIC_COMPONENT_REGISTRY = {
+  fec_UpdateAddress: () => import('c/fec_UpdateAddress'),
   fec_CardInfo: () => import('c/fec_CardInfo'),
   fec_IPPClosureForm: () => import('c/fec_IPPClosureForm'),
   fec_CardClosureRefundForm: () => import('c/fec_CardClosureRefundForm'),
@@ -189,6 +190,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
   fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
   fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
+  fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
 };
 
 export default class Fec_CaseBussiness extends LightningElement {
@@ -1249,6 +1251,20 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (routeToEle)
       isAllValid = routeToEle && routeToEle.reportValidity() && isAllValid;
 
+    const ipEl = this._getIncorrectPaymentFormEl();
+    if (ipEl && typeof ipEl.validateForSubmit === "function") {
+      if (!ipEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
+    const benEl = this._getBeneficiaryBankInfoBlockEl();
+    if (benEl && typeof benEl.validateForSubmit === "function") {
+      if (!benEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -1267,6 +1283,125 @@ export default class Fec_CaseBussiness extends LightningElement {
   //   return this._lastValidationError || null;
   // }
 
+  _getIncorrectPaymentFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_IncorrectPaymentForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveAdjustmentsIfApplicable === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _getBeneficiaryBankInfoBlockEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_BeneficiaryBankInfoBlock"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveBeneficiaryIfApplicable === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _saveIncorrectPaymentAdjustmentsIfApplicable() {
+    const el = this._getIncorrectPaymentFormEl();
+    if (!el || typeof el.saveAdjustmentsIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveAdjustmentsIfApplicable();
+  }
+
+  _saveIncorrectPaymentDraftIfApplicable() {
+    const el = this._getIncorrectPaymentFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveBeneficiaryBankInfoDraftIfApplicable() {
+    const el = this._getBeneficiaryBankInfoBlockEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveBeneficiaryIfApplicable() {
+    const el = this._getBeneficiaryBankInfoBlockEl();
+    if (!el || typeof el.saveBeneficiaryIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveBeneficiaryIfApplicable();
+  }
+
+  _getCardClosureRefundFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_CardClosureRefundForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveForSubmitIfApplicable === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _saveCardClosureRefundDraftIfApplicable() {
+    const el = this._getCardClosureRefundFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveCardClosureRefundForSubmitIfApplicable() {
+    const el = this._getCardClosureRefundFormEl();
+    if (!el || typeof el.saveForSubmitIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveForSubmitIfApplicable();
+  }
+
+  _getIppClosureFormEl() {
+    return (
+      this.template.querySelector("c-fec_-i-p-p-closure-form") ||
+      this.template.querySelector("c-fec_-ipp-closure-form")
+    );
+  }
+
+  _validateIPPClosureForSubmit() {
+    const el = this._getIppClosureFormEl();
+    if (el && typeof el.validateSelectionRequiredForSubmit === "function") {
+      return el.validateSelectionRequiredForSubmit();
+    }
+    return true;
+  }
+
+  _saveIPPClosureIfApplicable() {
+    const el = this._getIppClosureFormEl();
+    if (el && typeof el.saveSelectedIPPIfApplicable === "function") {
+      return el.saveSelectedIPPIfApplicable();
+    }
+    return Promise.resolve();
+  }
+
   /**
    * Chỉ lưu dữ liệu form (Nature of Case, Account Info, Case Info, Process Action, Routing Action)
    * mà KHÔNG gọi run() - không chuyển sang Stage tiếp theo.
@@ -1284,7 +1419,16 @@ export default class Fec_CaseBussiness extends LightningElement {
     });
 
     const total = formToSubmit.length;
-    if (total === 0) return Promise.resolve();
+    const afterForms = () =>
+      Promise.all([
+        this._saveIncorrectPaymentDraftIfApplicable(),
+        this._saveIPPClosureIfApplicable(),
+        this._saveBeneficiaryBankInfoDraftIfApplicable(),
+        this._saveCardClosureRefundDraftIfApplicable(),
+      ]);
+    if (total === 0) {
+      return afterForms();
+    }
 
     return new Promise((resolve, reject) => {
       this._saveOnlyResolve = resolve;
@@ -1296,12 +1440,13 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
-    });
+    }).then(() => afterForms());
   }
 
   /** false = bị chặn (đã show toast), true = submit thành công. */
   @api async submit() {
     if (!this.validate()) return false;
+    if (!this._validateIPPClosureForSubmit()) return false;
 
     // Có routing thì mới chặn khi chưa đổi thông tin Updated; không có routing cho phép chỉ submit remarks.
     let routeToEle = this.template.querySelector(
@@ -1319,6 +1464,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     await this._submitFormsPromise();
+    await Promise.all([
+      this._saveIncorrectPaymentAdjustmentsIfApplicable(),
+      this._saveIPPClosureIfApplicable(),
+      this._saveBeneficiaryIfApplicable(),
+      this._saveCardClosureRefundForSubmitIfApplicable(),
+    ]);
     if (routeToEle) {
       let method = routeToEle.value;
       let actionId;
@@ -1638,7 +1789,7 @@ export default class Fec_CaseBussiness extends LightningElement {
    * pre-declared static `() => import('c/<name>')` thunks. Unknown names are
    * skipped with a console warning — the rest of the UI is unaffected.
    *
-   * Results are stored on each subSection as resolvedComponentlst [{key, ctor}].
+   * Results are stored on each section as resolvedComponentlst [{key, ctor, componentName}].
    */
   _resolveComponentlst() {
     if (!this.business?.sectionlst) return;
@@ -1667,6 +1818,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             section.resolvedComponentlst.push({
               key: `${name}-${idx}`,
               ctor: mod.default,
+              componentName: name,
             });
           })
           .catch((err) => {
