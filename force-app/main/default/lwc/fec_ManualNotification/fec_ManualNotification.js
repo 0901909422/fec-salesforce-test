@@ -327,6 +327,8 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
                 this.selectedChannel = '';
                 this.selectedTargetGroup = '';
                 this.targetEmail = '';
+                this.searchTerm = '';
+                this.isDropdownOpen = false;
             })
             .catch(error => {
                 this.error =  this.label.FEC_Email_Send_Error + ': ' + (error.body ? error.body.message : JSON.stringify(error));

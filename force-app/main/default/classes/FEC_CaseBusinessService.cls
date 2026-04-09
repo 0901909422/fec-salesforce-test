@@ -2233,6 +2233,18 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       masked = false;
     }
+    if (
+      apiName == 'FEC_Original_Info_Date_of_Issue__c' ||
+      apiName == 'FEC_Original_Info_Place_of_Issue__c' ||
+      apiName == 'FEC_Updated_Info_Date_of_Issue__c' ||
+      apiName == 'FEC_Updated_Info_Place_of_Issue__c'
+    ) {
+      masked = false;
+    }
+    if (apiName == 'FEC_Original_Info_National_ID__c') {
+      masked = true;
+      maskingTypeTemp = 'National ID/ Passport';
+    }
 
     return new Field(
       apiName,

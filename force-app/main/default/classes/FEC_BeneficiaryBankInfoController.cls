@@ -4,7 +4,8 @@ public with sharing class FEC_BeneficiaryBankInfoController {
     private static final String FLD_BANK_BRANCH_NAME_NOACCENT = 'FEC_Bank_Branch_Name_Noaccent__c';
     private static final String FLD_BANK_NAME_NOACCENT = 'FEC_Bank_Name_Noaccent__c';
     private static final String OBJ_CUSTOMER_HISTORY = 'FEC_Customer_History__c';
-    private static final String FLD_PROVINCE_CITY = 'FEC_Province_City__c';
+    private static final String OBJ_PROVINCE = 'FEC_Province__c';
+    private static final String FLD_PROVINCE_NAME_VN = 'FEC_Name_VN__c';
     private static final String OBJ_BANK_NAME = 'FEC_Bank_Name__c';
 
     public class PicklistOptionDTO {
@@ -56,7 +57,27 @@ public with sharing class FEC_BeneficiaryBankInfoController {
 
     @AuraEnabled(cacheable=true)
     public static List<PicklistOptionDTO> getProvinceCityPicklistOptions() {
-        return getPicklistOptions(OBJ_CUSTOMER_HISTORY, FLD_PROVINCE_CITY);
+        List<PicklistOptionDTO> out = new List<PicklistOptionDTO>();
+        Schema.SObjectType t = Schema.getGlobalDescribe().get(OBJ_PROVINCE);
+        if (t == null || !t.getDescribe().isAccessible()) {
+            return out;
+        }
+        String soql = 'SELECT ' + FLD_PROVINCE_NAME_VN + ' FROM ' + OBJ_PROVINCE
+            + ' WHERE ' + FLD_PROVINCE_NAME_VN + ' != null ORDER BY ' + FLD_PROVINCE_NAME_VN;
+        List<SObject> rows = Security.stripInaccessible(AccessType.READABLE, Database.query(soql)).getRecords();
+        Set<String> seen = new Set<String>();
+        for (SObject r : rows) {
+            String val = (String) r.get(FLD_PROVINCE_NAME_VN);
+            if (String.isBlank(val) || seen.contains(val)) {
+                continue;
+            }
+            seen.add(val);
+            PicklistOptionDTO row = new PicklistOptionDTO();
+            row.label = val;
+            row.value = val;
+            out.add(row);
+        }
+        return out;
     }
 
     /**
@@ -166,32 +187,6 @@ public with sharing class FEC_BeneficiaryBankInfoController {
         dto.bankBranch = h.FEC_Bank_Branch__c;
         dto.provinceCity = h.FEC_Province_City__c;
         return dto;
-    }
-
-    private static List<PicklistOptionDTO> getPicklistOptions(String objectApiName, String fieldApiName) {
-        List<PicklistOptionDTO> out = new List<PicklistOptionDTO>();
-        Schema.SObjectType t = Schema.getGlobalDescribe().get(objectApiName);
-        if (t == null || !t.getDescribe().isAccessible()) {
-            return out;
-        }
-        Map<String, Schema.SObjectField> fields = t.getDescribe().fields.getMap();
-        if (!fields.containsKey(fieldApiName)) {
-            return out;
-        }
-        Schema.DescribeFieldResult d = fields.get(fieldApiName).getDescribe();
-        if (!d.isAccessible()) {
-            return out;
-        }
-        for (Schema.PicklistEntry pe : d.getPicklistValues()) {
-            if (!pe.isActive()) {
-                continue;
-            }
-            PicklistOptionDTO row = new PicklistOptionDTO();
-            row.label = pe.getLabel();
-            row.value = pe.getValue();
-            out.add(row);
-        }
-        return out;
     }
 
     @AuraEnabled
