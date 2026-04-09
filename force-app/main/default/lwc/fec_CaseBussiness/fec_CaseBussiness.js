@@ -14,6 +14,7 @@ import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
 import {
   mask,
+  maskValue,
   formatToDDMMYYYY,
   validateUpdatedInfoPhone,
   applyPhoneInputMaxLength,
@@ -26,7 +27,7 @@ import {
   isOnlyNumber
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -80,6 +81,12 @@ const FIELD_ORIGINAL_INFO_PHONE_NUMBER = "FEC_Original_Info_Phone_Number__c";
 const CASE_REGISTERED_PHONE_NUMBER = "Case.FEC_Registered_Phone_Number__c";
 const FIELD_REGISTERED_PHONE_NUMBER = "FEC_Registered_Phone_Number__c";
 const FIELD_CASE_PHONE_NUMBER = "FEC_Case_Phone_Number__c";
+const PHONE_MASK_FIELD_APIS = new Set([
+  FIELD_ORIGINAL_INFO_PHONE_NUMBER,
+  FIELD_UPDATED_INFO_PHONE_NUMBER,
+  FIELD_REGISTERED_PHONE_NUMBER,
+  FIELD_CASE_PHONE_NUMBER,
+]);
 const CASE_UPDATED_INFO_FIRST_NAME = "Case.FEC_Updated_Info_First_Name__c";
 const CASE_UPDATED_INFO_MIDDLE_NAME = "Case.FEC_Updated_Info_Middle_Name__c";
 const CASE_UPDATED_INFO_LAST_NAME = "Case.FEC_Updated_Info_Last_Name__c";
@@ -581,6 +588,11 @@ export default class Fec_CaseBussiness extends LightningElement {
     localStorage.removeItem(this.draftKey);
   }
 
+  _maskDisplayPhone(raw) {
+    if (raw == null || raw === STR_EMPTY) return STR_EMPTY;
+    return maskValue(String(raw).replace(/\D/g, STR_EMPTY), false);
+  }
+
   handleToggleMask(e) {
     let filter = {
       section: e.target.dataset.section,
@@ -595,7 +607,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     e.target.iconName = isPreview ? ICON_HIDE : ICON_PREVIEW;
 
     if (isPreview) {
-      if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
+      if (
+        field.maskingType === MASKING_TYPE_PHONE ||
+        PHONE_MASK_FIELD_APIS.has(field.apiName)
+      ) {
+        field.value = this._maskDisplayPhone(field.original);
+      } else if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
         field.value = isOnlyNumber(field.original)
           ? mask(field.original, 3, 3)
           : mask(field.original, 2, 3);
@@ -765,14 +782,13 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.masked = field.masked && field.value && !field.editable;
 
                 if (field.masked) {
+                  if (
+                    field.maskingType === MASKING_TYPE_PHONE ||
+                    PHONE_MASK_FIELD_APIS.has(field.apiName)
+                  ) {
+                    field.value = this._maskDisplayPhone(field.original);
+                  } else {
                   switch (field.maskingType) {
-                    case MASKING_TYPE_PHONE:
-                      if (field.original?.startsWith(PHONE_VN_REGION)) {
-                        field.value = mask(field.original, 5, 3);
-                      } else {
-                        field.value = mask(field.original, 4, 3);
-                      }
-                      break;
                     case MASKING_TYPE_PASSPORT:
                         if (isOnlyNumber(field.original)) {
                         field.value = mask(field.original, 3, 3);
@@ -791,6 +807,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                         field.value = mask(field.original, 4, 4);
                       }
                       break;
+                  }
                   }
                 }
 

@@ -16,6 +16,13 @@ import FEC_Error_Loading_Template_List from '@salesforce/label/c.FEC_Error_Loadi
 import FEC_MSG_IPP_AddIpp_Default_Success from '@salesforce/label/c.FEC_MSG_IPP_AddIpp_Default_Success';
 import FEC_Email_Sent_Success from '@salesforce/label/c.FEC_Email_Sent_Success';
 import FEC_Email_Send_Error from '@salesforce/label/c.FEC_Email_Send_Error';
+import fec_UserSearchModal from 'c/fec_UserSearchModal';
+import searchInternalUsers from '@salesforce/apex/FEC_Notification.searchInternalUsers';
+import { 
+    SEARCH_PLACEHOLDER, 
+    TARGET_GROUP_INTERNAL_USER,
+    SEARCH_INTERNAL_USERS
+} from 'c/fec_CommonConst';
 
 
 export default class Fec_ManualNotification extends NavigationMixin(LightningElement) {
@@ -24,6 +31,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     @track rawNotifications = [];
     @track _record = null;
     @track _isPreviewOpen = false;
+    SEARCH_PLACEHOLDER = SEARCH_PLACEHOLDER;
 
     label = {
         sendManualNotification: labelSendManualNotification,
@@ -46,6 +54,22 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     selectedTargetGroup = '';
     targetEmail = '';
     error;
+
+    @track isDropdownOpen = false;
+    @track isSearching = false;
+    @track userSearchResults = [];
+    @track searchTerm = '';
+    searchTimeout;
+
+    // Getter kiểm tra Internal User
+    get isInternalUser() {
+        return this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER;
+    }
+
+    // Getter kiểm tra kết quả rỗng
+    get noResults() {
+        return this.userSearchResults.length === 0;
+    }
 
     @wire(getAvailableNotifications, { caseId: '$recordId' })
     wiredNotifications({ error, data }) {
@@ -80,6 +104,70 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             this.selectedTemplateId = selectedItem.templateId;
             this.selectedTargetGroup = selectedItem.targetGroup;
             this.targetEmail = selectedItem.targetEmail;
+            // Xóa email và reset trạng thái combobox nếu là Internal User
+            if (this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER) {
+                this.targetEmail = '';
+                this.searchTerm = '';
+                this.isDropdownOpen = false;
+                this.userSearchResults = [];
+            } else {
+                this.targetEmail = selectedItem.targetEmail;
+            }
+        }
+    }
+
+    handleSearchInput(event) {
+        this.searchTerm = event.target.value;
+        
+        // Đóng dropdown nếu gõ ít hơn 2 ký tự
+        if (!this.searchTerm) {
+            this.isDropdownOpen = false;
+            this.userSearchResults = [];
+            this.isSearching = false;
+            return;
+        }
+
+        this.isSearching = true;
+        this.isDropdownOpen = true;
+
+        // Debounce: Chờ 300ms sau khi ngừng gõ mới gọi server
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => {
+            searchInternalUsers({ searchTerm: this.searchTerm })
+                .then(result => {
+                    this.userSearchResults = result;
+                    this.isSearching = false;
+                })
+                .catch(error => {
+                    console.error('Lỗi tìm kiếm users:', error);
+                    this.isSearching = false;
+                });
+        }, 300); 
+    }
+
+    // Xử lý khi chọn 1 user
+    handleSelectUser(event) {
+        const selectedEmail = event.currentTarget.dataset.email;
+        this.targetEmail = selectedEmail; // Biến này sẽ được gửi đi
+        this.searchTerm = selectedEmail;  // Hiển thị email lên ô input
+        this.isDropdownOpen = false;      // Tắt combobox
+    }
+
+    // --- NEW: Open Modal Logic ---
+    async handleEmailInputKeyup(event) {
+        if (this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER && event.keyCode === 13) {
+            // Open the LWC Modal and wait for the user to close it
+            const result = await fec_UserSearchModal.open({
+                size: 'large',
+                description: SEARCH_INTERNAL_USERS,
+                initialSearchTerm: this.searchTerm 
+            });
+
+            if (result) {
+                this.targetEmail = result;
+                this.searchTerm = result;
+                this.isDropdownOpen = false;
+            }
         }
     }
 
@@ -140,7 +228,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     }
 
     handleSend() {
-        sendManualEmail({ caseId: this.recordId, templateId: this.selectedTemplateId })
+        sendManualEmail({ caseId: this.recordId, templateId: this.selectedTemplateId, toEmail: this.selectedTargetGroup === 'Internal User' ? this.targetEmail : '' })
             .then(() => {
                 this.dispatchEvent(
                     new ShowToastEvent({
@@ -155,6 +243,8 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
                 this.selectedChannel = '';
                 this.selectedTargetGroup = '';
                 this.targetEmail = '';
+                this.searchTerm = '';
+                this.isDropdownOpen = false;
             })
             .catch(error => {
                 this.error =  this.label.FEC_Email_Send_Error + ': ' + (error.body ? error.body.message : JSON.stringify(error));

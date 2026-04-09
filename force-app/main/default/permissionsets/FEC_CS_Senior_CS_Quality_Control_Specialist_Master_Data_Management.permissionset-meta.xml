@@ -312,6 +312,21 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Case_NFU_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Case_Stage__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Category__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -333,6 +348,16 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Hold_Case_Config__c.FEC_NFU_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Sub_Category__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Sub_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

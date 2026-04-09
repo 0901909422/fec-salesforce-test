@@ -22,6 +22,7 @@
         <members>FEC_TemplateHistorySelector</members>
         <members>FEC_TemplateHistorySelector_Test</members>
         <members>FEC_TemplateHistoryService</members>
+		<members>FEC_HoldCaseController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -120,6 +121,19 @@
 		<members>FEC_Message_Content</members>
 		<members>FEC_Subject_Line</members>
 		<members>FEC_Template_Settings</members>
+		<members>FEC_NFU_Hold_Day_Duration</members>
+		<members>FEC_Messenger_Success_Hold_Case</members>
+		<members>FEC_Error_MessageError_Hold_Case</members>
+		<members>FEC_Error_Message_Maxretris</members>
+		<members>FEC_Show_Action_Hold_Case</members>
+        <members>FEC_NFU_Reason</members>
+        <members>FEC_Hold_Case</members>
+        <members>FEC_NFU_Code</members>
+        <members>FEC_Succes_Hold_Case</members>
+		<members>FEC_Failed_To_Load_Case</members>
+        <members>FEC_Failed_To_Load_NFU</members>
+        <members>FEC_Please_Select_An_NFU</members>
+        <members>FEC_An_Unexpected_Error</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -156,6 +170,7 @@
         <members>fec_folderDeleteAction</members>
         <members>fec_CustomDatatable</members>
         <members>fec_TemplateMockData</members>
+		<members>fec_holdCaseManual</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -212,6 +227,7 @@
 	</types>
 	<types>
 		<members>FEC_Enhanced_Letterhead__c.Clone</members>
+		<members>Case.Hold_Case</members>
 		<name>QuickAction</name>
 	</types>
 	<types>
