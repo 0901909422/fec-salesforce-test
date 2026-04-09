@@ -18,11 +18,13 @@ import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 /* ── Apex ── */
-import getTemplate      from '@salesforce/apex/FEC_TemplateController.getTemplate';
-import saveTemplate     from '@salesforce/apex/FEC_TemplateController.saveTemplate';
-import getAttachments   from '@salesforce/apex/FEC_TemplateController.getAttachments';
-import getAllLetterheads from '@salesforce/apex/FEC_TemplateController.getAllLetterheads';
-import getAllFolders     from '@salesforce/apex/FEC_FolderController.getAllFolders';
+import getTemplate        from '@salesforce/apex/FEC_TemplateController.getTemplate';
+import saveTemplate       from '@salesforce/apex/FEC_TemplateController.saveTemplate';
+import getAttachments     from '@salesforce/apex/FEC_TemplateController.getAttachments';
+import getAllLetterheads   from '@salesforce/apex/FEC_TemplateController.getAllLetterheads';
+import getAllFolders       from '@salesforce/apex/FEC_FolderController.getAllFolders';
+import createDraftTemplate from '@salesforce/apex/FEC_TemplateController.createDraftTemplate';
+import deleteDraftTemplate from '@salesforce/apex/FEC_TemplateController.deleteDraftTemplate';
 
 /* ── Custom Labels (i18n) ── */
 import FEC_New_Template               from '@salesforce/label/c.FEC_New_Template';
@@ -129,6 +131,12 @@ export default class Fec_templateEditor extends LightningElement {
     /** Raw letterhead records keyed by Id for header/footer lookup */
     _letterheadMap = {};
 
+    /** Draft record Id created on New Template load for file uploads */
+    @track _draftId = null;
+
+    /** True while the draft is being initialised — disables file upload */
+    @track _isDraftLoading = false;
+
     /* ═══════════════════════════════════════════ */
     /*  LABELS                                     */
     /* ═══════════════════════════════════════════ */
@@ -172,6 +180,16 @@ export default class Fec_templateEditor extends LightningElement {
 
     get isNewMode() { return !this._recordId; }
 
+    /** Record Id used by lightning-file-upload: real Id in edit, draft in new */
+    get uploadRecordId() {
+        return this._recordId || this._draftId;
+    }
+
+    /** File upload is ready when we have a valid record Id to link files to */
+    get isUploadReady() {
+        return !!this.uploadRecordId;
+    }
+
     get mergeFieldLabel() { return 'Merge Fields { }'; }
 
     /* ── Wire: load all folders for the dropdown ── */
@@ -181,6 +199,26 @@ export default class Fec_templateEditor extends LightningElement {
         // Pre-fill folder for new templates (not edit, not clone)
         if (!this._recordId && !this._cloneData && this.defaultFolderId) {
             this.folderId = this.defaultFolderId;
+        }
+        // Create a draft record for new templates so file upload works immediately
+        if (!this._recordId) {
+            this._initDraft();
+        }
+    }
+
+    /**
+     * Create a draft FEC_Template__c so that lightning-file-upload
+     * has a valid record-id in New mode.
+     */
+    async _initDraft() {
+        this._isDraftLoading = true;
+        try {
+            this._draftId = await createDraftTemplate();
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('[templateEditor] Error creating draft:', error);
+        } finally {
+            this._isDraftLoading = false;
         }
     }
 
@@ -313,14 +351,13 @@ export default class Fec_templateEditor extends LightningElement {
 
     /**
      * Handle file upload finish.
-     * Uses lightning-file-upload's onuploadfinished event (only works in edit mode
-     * with a real recordId). For new templates, files will be uploaded after save.
+     * Works in both edit mode (real recordId) and new mode (draftId).
      */
     handleUploadFinished(event) {
         const uploadedFiles = event.detail.files;
         if (uploadedFiles && uploadedFiles.length > 0) {
             /* Reload attachments from server after upload */
-            this._loadAttachments(this._recordId);
+            this._loadAttachments(this.uploadRecordId);
         }
     }
 
@@ -475,7 +512,11 @@ export default class Fec_templateEditor extends LightningElement {
         await this._performSave(true);
     }
 
-    handleBack() {
+    /**
+     * Cancel / Back to List — clean up draft record + files if in new mode.
+     */
+    async handleBack() {
+        await this._cleanupDraft();
         this.dispatchEvent(new CustomEvent('cancel'));
     }
 
@@ -485,6 +526,8 @@ export default class Fec_templateEditor extends LightningElement {
 
     /**
      * Core save logic – calls Apex saveTemplate, handles response.
+     * In new mode the draft record is updated with the real field values
+     * (the draftId becomes the permanent Id, keeping uploaded files linked).
      * @param {Boolean} andClose  If true, navigate back to list view after save.
      */
     async _performSave(andClose) {
@@ -492,10 +535,14 @@ export default class Fec_templateEditor extends LightningElement {
         try {
             const sObj = this._buildSObject();
             const templateJson = JSON.stringify(sObj);
+            // Pass null oldBody for new templates (draft→real) to skip content history
             const savedId = await saveTemplate({
                 templateJson: templateJson,
-                oldBody: this._originalBody || ''
+                oldBody: this.isNewMode ? null : (this._originalBody || '')
             });
+
+            // Draft is now the real record — clear the draft reference
+            this._draftId = null;
 
             this.dispatchEvent(new ShowToastEvent({
                 title: 'Success',
@@ -573,6 +620,8 @@ export default class Fec_templateEditor extends LightningElement {
 
     /**
      * Build a serialisable FEC_Template__c SObject for Apex.
+     * In new mode we set Id = _draftId so Apex performs an UPDATE
+     * on the draft record (keeping uploaded files linked).
      */
     _buildSObject() {
         const sObj = {
@@ -586,8 +635,11 @@ export default class Fec_templateEditor extends LightningElement {
             FEC_Active__c:              this.isActive,
             FEC_Body__c:                this.emailBody
         };
+        // In edit mode use the real Id; in new mode use the draft Id
         if (this._recordId) {
             sObj.Id = this._recordId;
+        } else if (this._draftId) {
+            sObj.Id = this._draftId;
         }
         return sObj;
     }
@@ -608,6 +660,23 @@ export default class Fec_templateEditor extends LightningElement {
         this.errorMessage = '';
         this._apiNameManuallySet = false;
         this._originalBody = '';
+        this._draftId = null;
+    }
+
+    /**
+     * Delete the draft record and its uploaded files.
+     * Only fires when in new mode and a draft exists.
+     */
+    async _cleanupDraft() {
+        if (!this._draftId) return;
+        try {
+            await deleteDraftTemplate({ draftId: this._draftId });
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('[templateEditor] Error cleaning up draft:', error);
+        } finally {
+            this._draftId = null;
+        }
     }
 
     /**

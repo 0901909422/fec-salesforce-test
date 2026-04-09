@@ -255,7 +255,6 @@
         <field>FEC_Category__c.FEC_Order__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Active__c</field>
@@ -277,6 +276,21 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Case_NFU_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Case_Stage__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Category__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Last_Modified_Date__c</field>
         <readable>true</readable>
@@ -284,6 +298,16 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Hold_Case_Config__c.FEC_NFU_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Sub_Category__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Sub_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -534,6 +558,16 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Product_Type__c.FEC_Order__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Changed_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Current_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

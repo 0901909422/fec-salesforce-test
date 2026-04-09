@@ -19,6 +19,8 @@
  */
 import { LightningElement, api, track } from 'lwc';
 
+const REQUIRED_FIELD_MESSAGE = 'Complete this field.';
+
 export default class Fec_searchableCombobox extends LightningElement {
 
     @api label       = '';
@@ -36,12 +38,14 @@ export default class Fec_searchableCombobox extends LightningElement {
     }
 
     /** Options array: [{ label, value }] */
-    _options = [];
+    @track _options = [];
 
     @api
-    get options() { return this._options; }
+    get options() {
+        return this._options;
+    }
     set options(val) {
-        this._options = val || [];
+        this._options = Array.isArray(val) ? [...val] : [];
     }
 
     /* ── Internal state ── */
@@ -69,6 +73,13 @@ export default class Fec_searchableCombobox extends LightningElement {
      */
     @api
     reportValidity() {
+        if (this.required && !this._value) {
+            this._errorMessage = REQUIRED_FIELD_MESSAGE;
+            return false;
+        }
+        if (this._errorMessage === REQUIRED_FIELD_MESSAGE) {
+            this._errorMessage = '';
+        }
         return !this._errorMessage;
     }
 
@@ -77,10 +88,20 @@ export default class Fec_searchableCombobox extends LightningElement {
     /* ═══════════════════════════════════════════ */
 
     /** Display label of the currently selected value */
+    optionLabel(o) {
+        if (!o) {
+            return '';
+        }
+        const lbl = o.label != null ? o.label : o.Label;
+        return lbl != null ? String(lbl) : '';
+    }
+
     get selectedLabel() {
-        if (!this._value) return '';
-        const match = this._options.find(o => o.value === this._value);
-        return match ? match.label : '';
+        if (!this._value) {
+            return '';
+        }
+        const match = this._options.find((o) => o.value === this._value);
+        return match ? this.optionLabel(match) : '';
     }
 
     /** Value shown in the input field */
@@ -89,17 +110,55 @@ export default class Fec_searchableCombobox extends LightningElement {
         return this.selectedLabel;
     }
 
+    /**
+     * Chuẩn hóa chuỗi để so khớp tìm kiếm (bỏ dấu tiếng Việt, xử lý đ/Đ, không phân biệt hoa thường).
+     * Không dùng \\p{M} (Unicode property) vì có thể không tương thích Locker / engine cũ.
+     */
+    foldForSearch(s) {
+        if (s == null || s === '') {
+            return '';
+        }
+        try {
+            let t = String(s).normalize('NFD');
+            t = t.replace(/[\u0300-\u036f]/g, '');
+            t = t.replace(/\u0111/g, 'd').replace(/\u0110/g, 'd');
+            return t.toLowerCase().trim();
+        } catch (e) {
+            return String(s)
+                .toLowerCase()
+                .trim();
+        }
+    }
+
     /** Filtered options based on search term */
     get filteredOptions() {
-        const term = (this._searchTerm || '').toLowerCase().trim();
-        if (!term) return this._options;
-        return this._options.filter(o =>
-            o.label && o.label.toLowerCase().includes(term)
-        );
+        const term = (this._searchTerm || '').trim();
+        if (!term) {
+            return this._options;
+        }
+        const foldedTerm = this.foldForSearch(term);
+        if (!foldedTerm) {
+            return this._options;
+        }
+        return this._options.filter((o) => {
+            const lbl = this.optionLabel(o);
+            if (!lbl.trim()) {
+                return false;
+            }
+            return this.foldForSearch(lbl).includes(foldedTerm);
+        });
     }
 
     get hasFilteredOptions() {
         return this.filteredOptions.length > 0;
+    }
+
+    /** Bản hiển thị listbox (label chuẩn hóa từ label hoặc Label). */
+    get filteredOptionsForTemplate() {
+        return this.filteredOptions.map((o) => ({
+            value: o.value,
+            displayLabel: this.optionLabel(o)
+        }));
     }
 
     get dropdownClass() {

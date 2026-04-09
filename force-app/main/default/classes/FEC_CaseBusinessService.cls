@@ -2233,6 +2233,18 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       masked = false;
     }
+    if (
+      apiName == 'FEC_Original_Info_Date_of_Issue__c' ||
+      apiName == 'FEC_Original_Info_Place_of_Issue__c' ||
+      apiName == 'FEC_Updated_Info_Date_of_Issue__c' ||
+      apiName == 'FEC_Updated_Info_Place_of_Issue__c'
+    ) {
+      masked = false;
+    }
+    if (apiName == 'FEC_Original_Info_National_ID__c') {
+      masked = true;
+      maskingTypeTemp = 'National ID/ Passport';
+    }
 
     return new Field(
       apiName,
@@ -2891,28 +2903,7 @@ public without sharing class FEC_CaseBusinessService {
     }
 
     // 1. Tạo Map ánh xạ từ Decision (Input) sang FEC_Team__c (Output)
-    Map<String, String> decisionToTeamMap = new Map<String, String>{
-      // Nhóm thường (Pending-) -> Bỏ prefix
-      'Pending CS' => 'CSInternal',
-      'Pending Customer' => 'Customer',
-      'Pending Card Ops' => 'CardOpsOutOfSystem',
-      'Pending Collections' => 'CollectionsOutOfSystem',
-      'Pending Contract Processing' => 'CPOutOfSystem',
-      'Pending Credit Assessment' => 'CAOutOfSystem',
-      'Pending Direct Sales' => 'DirectSalesOutOfSystem',
-      'Pending Telesales' => 'TelesalesOutOfSystem',
-      'Pending IT' => 'ITOutOfSystem',
-      'Pending Payment' => 'PaymentOutOfSystem',
-      'Pending Product' => 'PBDOutOfSystem',
-      'Pending RCP&A' => 'RCPAOutOfSystem',
-      'Pending Security' => 'SecurityOutOfSystem',
-      'Pending Vendor' => 'VendorOutOfSystem',
-      // Nhóm đặc biệt (cần map Team và đổi Owner sang Queue)
-      'Out Of Process' => 'OutOfProcess',
-      'CIC Related' => 'CICRelated',
-      'Document Preparation' => 'DocumentPreparation',
-      'Task Under Review' => 'TaskUnderReview'
-    };
+    Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
 
     // Nếu Decision không hợp lệ thì dừng
     if (!decisionToTeamMap.containsKey(decision))
@@ -2962,7 +2953,7 @@ public without sharing class FEC_CaseBusinessService {
     Case c = new Case(
       Id = caseId,
       OwnerId = newOwnerId,
-      FEC_Team__c = teamValue,
+      //FEC_Team__c = teamValue,
       Status = String.isNotBlank(teamValue)
         ? FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX + teamValue
         : FEC_ConstantCommon.CASE_STATUS_PENDING
