@@ -15,7 +15,6 @@ public with sharing class FEC_CardClosureRefundController {
     private static final String DISB_ESB_CANCELLED_AUTO = 'CANCELLED_AUTO';
     private static final String CS_DECISION_NOTI_17 = 'Không có khoản chờ giải ngân';
     private static final String CS_DECISION_NOTI_18 = 'Có khoản chờ giải ngân. Cần tư vấn khách hàng giữ thẻ';
-    private static final String DISB_CALLOUT_LOG_NAME = 'FEC_GetDisbInfoByAcctCallout';
 
     public class LockUnlockResultDTO {
         @AuraEnabled public Boolean success;
@@ -99,16 +98,7 @@ public with sharing class FEC_CardClosureRefundController {
             try {
                 FEC_GetDisbInfoByAcctCallout.GetDisbInfoByAcctExecutionResult disbExec =
                     FEC_GetDisbInfoByAcctCallout.getDisbInfoByAcctExecutionResult(accountNumberForDisb, null);
-                FEC_CommonUltils.logApiResponse(
-                    new FEC_ResponseLog(
-                        DISB_CALLOUT_LOG_NAME,
-                        disbExec.endpoint,
-                        FEC_ConstantCommon.API_METHOD_POST,
-                        disbExec.requestPayload,
-                        disbExec.httpResponse,
-                        disbExec.logErrorMessage
-                    )
-                );
+                FEC_GetDisbInfoByAcctCallout.logApiResponse();
                 FEC_GetDisbInfoByAcctCallout.ResultWrapper rw =
                     FEC_GetDisbInfoByAcctCallout.convertToResultWrapper(disbExec.response);
                 if (rw.isSuccess

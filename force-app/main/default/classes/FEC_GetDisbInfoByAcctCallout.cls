@@ -6,6 +6,50 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
 
     private static final String API_CONFIG_NAME = 'FEC_GetDisb_Info_By_Acct';
 
+    private static ResponseLog responseLog;
+
+    public class ResponseLog {
+        public String apiName;
+        public String endpoint;
+        public String method;
+        public String requestBody;
+        public HttpResponse response;
+        public String errorMessage;
+
+        public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
+            this.apiName = apiName;
+            this.endpoint = endpoint;
+            this.method = method;
+            this.requestBody = requestBody;
+            this.response = response;
+            this.errorMessage = errorMessage;
+        }
+    }
+
+    private static void stashDisbApiLog(GetDisbInfoByAcctExecutionResult result) {
+        responseLog = new ResponseLog(
+            'FEC_GetDisbInfoByAcctCallout',
+            result.endpoint,
+            FEC_ConstantCommon.API_METHOD_POST,
+            result.requestPayload,
+            result.httpResponse,
+            result.logErrorMessage
+        );
+    }
+
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+        }
+    }
+
     //=============== RESPONSE ===============//
 
     public class GetDisbInfoByAcctExecutionResult {
@@ -214,6 +258,7 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
             result.httpResponse = synVal;
             result.logErrorMessage = reqVal.errorMessage;
             result.response = disbErrorResponse('VALIDATION_ERROR', reqVal.errorMessage);
+            stashDisbApiLog(result);
             return result;
         }
         String transactionId = String.valueOf(UUID.randomUUID());
@@ -231,6 +276,7 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
             result.httpResponse = synHdr;
             result.logErrorMessage = headerVal.errorMessage;
             result.response = disbErrorResponse('HEADER_VALIDATION_ERROR', headerVal.errorMessage);
+            stashDisbApiLog(result);
             return result;
         }
         String payload = buildRequestPayload(transactionId, dateTimeValue, accountNumber, ageOfRecords);
@@ -263,6 +309,7 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
                 resp == null ? null : resp.getStatusCode()
             );
         }
+        stashDisbApiLog(result);
         return result;
     }
 
