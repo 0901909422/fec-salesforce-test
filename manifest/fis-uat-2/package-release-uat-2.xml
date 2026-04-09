@@ -1584,6 +1584,10 @@
 		<members>Case.Hold_Case</members>
 		<name>QuickAction</name>
 	</types>
+	<types>
+		<members>FEC_ServiceResource_Set_ServiceType_Agent</members>
+		<name>Flow</name>
+	</types>
 
     <version>65.0</version>
 </Package>
