@@ -81,6 +81,12 @@ const FIELD_ORIGINAL_INFO_PHONE_NUMBER = "FEC_Original_Info_Phone_Number__c";
 const CASE_REGISTERED_PHONE_NUMBER = "Case.FEC_Registered_Phone_Number__c";
 const FIELD_REGISTERED_PHONE_NUMBER = "FEC_Registered_Phone_Number__c";
 const FIELD_CASE_PHONE_NUMBER = "FEC_Case_Phone_Number__c";
+const PHONE_MASK_FIELD_APIS = new Set([
+  FIELD_ORIGINAL_INFO_PHONE_NUMBER,
+  FIELD_UPDATED_INFO_PHONE_NUMBER,
+  FIELD_REGISTERED_PHONE_NUMBER,
+  FIELD_CASE_PHONE_NUMBER,
+]);
 const CASE_UPDATED_INFO_FIRST_NAME = "Case.FEC_Updated_Info_First_Name__c";
 const CASE_UPDATED_INFO_MIDDLE_NAME = "Case.FEC_Updated_Info_Middle_Name__c";
 const CASE_UPDATED_INFO_LAST_NAME = "Case.FEC_Updated_Info_Last_Name__c";
@@ -601,7 +607,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     e.target.iconName = isPreview ? ICON_HIDE : ICON_PREVIEW;
 
     if (isPreview) {
-      if (field.maskingType === MASKING_TYPE_PHONE) {
+      if (
+        field.maskingType === MASKING_TYPE_PHONE ||
+        PHONE_MASK_FIELD_APIS.has(field.apiName)
+      ) {
         field.value = this._maskDisplayPhone(field.original);
       } else if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
         field.value = isOnlyNumber(field.original)
@@ -773,10 +782,13 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.masked = field.masked && field.value && !field.editable;
 
                 if (field.masked) {
+                  if (
+                    field.maskingType === MASKING_TYPE_PHONE ||
+                    PHONE_MASK_FIELD_APIS.has(field.apiName)
+                  ) {
+                    field.value = this._maskDisplayPhone(field.original);
+                  } else {
                   switch (field.maskingType) {
-                    case MASKING_TYPE_PHONE:
-                      field.value = this._maskDisplayPhone(field.original);
-                      break;
                     case MASKING_TYPE_PASSPORT:
                         if (isOnlyNumber(field.original)) {
                         field.value = mask(field.original, 3, 3);
@@ -795,6 +807,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                         field.value = mask(field.original, 4, 4);
                       }
                       break;
+                  }
                   }
                 }
 
