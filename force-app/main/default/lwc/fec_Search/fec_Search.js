@@ -1602,7 +1602,7 @@ hasAnySearchCriteria(params) {
 
     // INSURANCE
     if (force || this.insuranceData?.length === 0) {
-     this.insuranceData = [
+      this.insuranceData = [
         {
           id: "ins1",
           UserId: "23456789",
