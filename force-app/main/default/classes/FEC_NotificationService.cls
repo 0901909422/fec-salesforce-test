@@ -43,6 +43,7 @@ public without sharing class FEC_NotificationService {
                    FEC_Notification_Template__r.FEC_Subject_Line__c,
                    FEC_Notification_Template__r.FEC_Body__c,
                    FEC_Notification_Template__r.FEC_Active__c,
+                   FEC_Notification_Template__r.FEC_Enhanced_Letterhead__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
                    FEC_SubCategory__c,
@@ -81,6 +82,9 @@ public without sharing class FEC_NotificationService {
         // Lấy OrgWide sender 1 lần cho toàn bộ emails
         Id orgWideId = FEC_CommonUltils.getOrgWideEmailIdForNotification();
 
+        // Cache letterhead để tránh query nhiều lần
+        Map<Id, EnhancedLetterhead> letterheadCache = new Map<Id, EnhancedLetterhead>();
+
         for (Case c : routedCases) {
             List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
             System.debug('--- case=' + c.Id + ' OwnerId=' + c.OwnerId + ' candidates=' + (candidates == null ? 0 : candidates.size()));
@@ -102,10 +106,29 @@ public without sharing class FEC_NotificationService {
                 if (!templateActive) continue;
 
                 String subject = resolveTemplate(n.FEC_Notification_Template__r.FEC_Subject_Line__c, c);
-                String body = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Body__c)
+                String bodyContent = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Body__c)
                     ? resolveTemplate(n.FEC_Notification_Template__r.FEC_Body__c, c) : '';
 
-                emailsToSend.add(FEC_CommonUltils.buildEmailWithSender(toAddresses, subject, body, orgWideId));
+                // Wrap body với letterhead header/footer nếu có
+                Id lhId = n.FEC_Notification_Template__r?.FEC_Enhanced_Letterhead__c;
+                if (lhId != null) {
+                    if (!letterheadCache.containsKey(lhId)) {
+                        try {
+                            EnhancedLetterhead lh = [SELECT Id, LetterheadHeader, LetterheadFooter FROM EnhancedLetterhead WHERE Id = :lhId LIMIT 1];
+                            letterheadCache.put(lhId, lh);
+                        } catch (Exception e) {
+                            System.debug('Letterhead query failed: ' + e.getMessage());
+                        }
+                    }
+                    EnhancedLetterhead lh = letterheadCache.get(lhId);
+                    if (lh != null) {
+                        String header = String.isNotBlank(lh.LetterheadHeader) ? lh.LetterheadHeader : '';
+                        String footer = String.isNotBlank(lh.LetterheadFooter) ? lh.LetterheadFooter : '';
+                        bodyContent = header + bodyContent + footer;
+                    }
+                }
+
+                emailsToSend.add(FEC_CommonUltils.buildEmailWithSender(toAddresses, subject, bodyContent, orgWideId));
                 System.debug('--- email queued to=' + toAddresses + ' subject=' + subject);
             }
         }
