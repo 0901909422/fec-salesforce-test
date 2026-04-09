@@ -208,13 +208,13 @@ public without sharing class FEC_Notification {
         Set<String> custHistoryFields = new Set<String>();
         Set<Id> caseIds = new Set<Id>();
 
-        Pattern p = Pattern.compile('\\{\\{\\{([^}]+)\\}\\}\\}');
+        Pattern p = Pattern.compile(FEC_ConstantCommon.PATTERN_MERGE_FIELD);
         
         // Pass 1: Extract all fields and Case Ids
         for (EmailInfo info : emailsToSend) {
             if (info.caseId != null) caseIds.add(info.caseId);
             
-            if (String.isNotBlank(info.body) && info.body.contains('{{{')) {
+            if (String.isNotBlank(info.body) && info.body.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
                 Matcher m = p.matcher(info.body);
                 while (m.find()) {
                     List<String> parts = m.group(1).split('\\.');
@@ -227,7 +227,7 @@ public without sharing class FEC_Notification {
                     }
                 }
             }
-            if (String.isNotBlank(info.subject) && info.subject.contains('{{{')) {
+            if (String.isNotBlank(info.subject) && info.subject.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
                 Matcher m = p.matcher(info.subject);
                 while (m.find()) {
                     List<String> parts = m.group(1).split('\\.');
@@ -287,23 +287,23 @@ public without sharing class FEC_Notification {
 
         // Phase 3: Replace
         for (EmailInfo info : emailsToSend) {
-            if(String.isNotBlank(info.body) && info.body.contains('{{{')) {
+            if(String.isNotBlank(info.body) && info.body.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
                 info.body = performReplacements(info.body, info.caseId, caseMap, senderUser, addInfoMap, custHistoryMap);
             }
-            if(String.isNotBlank(info.subject) && info.subject.contains('{{{')) {
+            if(String.isNotBlank(info.subject) && info.subject.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
                 info.subject = performReplacements(info.subject, info.caseId, caseMap, senderUser, addInfoMap, custHistoryMap);
             }
         }
     }
 
     private static String performReplacements(String text, Id caseId, Map<Id, Case> caseMap, User senderUser, Map<Id, FEC_Additional_Info__c> addInfoMap, Map<Id, FEC_Customer_History__c> custHistoryMap) {
-        Pattern p = Pattern.compile('\\{\\{\\{([^}]+)\\}\\}\\}');
+        Pattern p = Pattern.compile(FEC_ConstantCommon.PATTERN_MERGE_FIELD);
         Matcher m = p.matcher(text);
         Set<String> uniqueTokens = new Set<String>();
         while(m.find()) { uniqueTokens.add(m.group(1)); }
 
         for(String token : uniqueTokens) {
-            String fullToken = '{{{' + token + '}}}';
+            String fullToken = FEC_ConstantCommon.MERGE_FIELD_OPEN + token + FEC_ConstantCommon.MERGE_FIELD_CLOSE;
             List<String> parts = token.split('\\.');
             String resolvedValue = '';
             
