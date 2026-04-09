@@ -34,19 +34,20 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(LightningE
     messageContext;
 
     async connectedCallback() {
-        if (!this.isConsoleNavigation) return;
-        const { tabId } = await getFocusedTabInfo();
-        this.currentTabId = tabId;
+        try {
+            const { tabId } = await getFocusedTabInfo();
+            this.currentTabId = tabId;
+        } catch (e) {}
     }
 
     // ----------------------
     // Utility functions
     // ----------------------
-    // async handleCloseTab() {
-    //     if (!this.isConsoleNavigation) return;
-    //     const { tabId } = await getFocusedTabInfo();
-    //     await closeTab(tabId);
-    // }
+    async handleCloseTab() {
+        if (!this.isConsoleNavigation) return;
+        const { tabId } = await getFocusedTabInfo();
+        await closeTab(tabId);
+    }
 
     async handleCloseModal(event) {
         this.isShowModal = false;
@@ -60,12 +61,47 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(LightningE
         await this.handleClose();
     }
 
-    async handleCreateSuccess(){
+    async handleCreateSuccess(event) {
         this.isShowModal = false;
+        this.newCaseId = event.detail.recordId;
         await this.handleClose();
     }
-    
+
     async handleClose() {
+        this.isShowModal = false;
+
+        let tabToClose = this.currentTabId;
+        if (!tabToClose) {
+            try {
+                const { tabId } = await getFocusedTabInfo();
+                tabToClose = tabId;
+            } catch (e) { }
+        }
+
+        this[NavigationMixin.Navigate]({
+            type: 'standard__objectPage',
+            attributes: {
+                objectApiName: 'Case',
+                actionName: 'list'
+            }
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        await openTab({
+            recordId: this.newCaseId,
+            focus: true,
+        });
+
+        setTimeout(async () => {
+            await this.handlePublishMessageChanel();
+            if (tabToClose) {
+                await closeTab(tabToClose);
+            }
+        }, 1000);
+    }
+
+    async handleCloseButtonCancel() {
         this.isShowModal = false;
 
         this[NavigationMixin.Navigate]({
@@ -75,19 +111,8 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(LightningE
                 actionName: 'list'
             }
         });
-        
-        // await this.handleCloseTab();
 
-        await openTab({
-            recordId: this.newCaseId,
-            focus: true,
-        });
-        setTimeout(async () => {
-            await this.handlePublishMessageChanel();
-            if (this.currentTabId) {
-                closeTab(this.currentTabId);
-            }
-        }, 3000);
+        await this.handleCloseTab();
     }
 
     showToast(title, message, variant) {
