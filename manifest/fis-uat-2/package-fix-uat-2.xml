@@ -567,6 +567,7 @@
 		<members>FEC_Additional_Info__c</members>
 		<members>FEC_System_Config__c</members>
 		<members>FEC_Hold_Case_Config__c</members>
+		<members>FEC_Log__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>

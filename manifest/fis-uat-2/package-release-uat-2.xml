@@ -1297,6 +1297,7 @@
 		<members>FEC_Interaction_Routed__e</members>
 		<members>FEC_Additional_Info__c</members>
 		<members>FEC_System_Config__c</members>
+		<members>FEC_Log__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
