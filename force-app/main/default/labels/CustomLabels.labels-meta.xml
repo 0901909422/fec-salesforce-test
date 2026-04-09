@@ -12225,4 +12225,11 @@
         <shortDescription>Please Select An NFU</shortDescription>
         <value>Please select an NFU Reason.</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_Exception</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Exception</shortDescription>
+        <value>An exception has occurred. Please contact the System Administrator.</value>
+    </labels>
 </CustomLabels>

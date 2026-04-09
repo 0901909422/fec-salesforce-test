@@ -1517,6 +1517,7 @@
         <members>FEC_LBL_UpdateAddress_Edit_Mailing</members>
         <members>FEC_LBL_UpdateAddress_New_Address</members>
         <members>FEC_LBL_UpdateAddress_Province_Search_Placeholder</members>
+		<members>FEC_MSG_Exception</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
