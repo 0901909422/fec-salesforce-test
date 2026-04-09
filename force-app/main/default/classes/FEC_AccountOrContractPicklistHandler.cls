@@ -11,7 +11,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
     public static String getInteractionAccountNumber(String caseId){
         try {
             Case interactionCase = [
-            SELECT Id,
+            SELECT Id, FEC_Product_Type__r.Name,
                    FEC_Account_or_Contract__r.FEC_Contract_Number__c,
                    FEC_Account_or_Contract__r.FEC_Account_Number__c,
                    FEC_Account_or_Contract__r.FEC_Product_Code__c,
@@ -28,18 +28,18 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             if (interactionCase.FEC_Account_or_Contract__r != null) {
                 
                 String productCode =
-                    interactionCase.FEC_Account_or_Contract__r.FEC_Product_Code__c;
+                    interactionCase.FEC_Product_Type__r.Name ;
                 
                 String accountNumber;
                 
                 // 🎯 CORE LOGIC
-                if (productCode == FEC_ConstantCommon.PRODUCT_TYPE_LOAN ||
-                productCode == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE) {
+                if (productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_LOAN.toLowerCase() ||
+                productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.toLowerCase()) {
                     
                     accountNumber =
                         interactionCase.FEC_Account_or_Contract__r.FEC_Contract_Number__c;
                     
-                } else if (productCode == FEC_ConstantCommon.PRODUCT_TYPE_CARD ||productCode == FEC_ConstantCommon.PRODUCT_TYPE_UBANK) {
+                } else if (productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_CARD.toLowerCase() ||productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_UBANK.toLowerCase()) {
                     
                     accountNumber =
                         interactionCase.FEC_Account_or_Contract__r.FEC_Account_Number__c;

@@ -153,7 +153,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
         : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
       String endpoint = baseEndpoint + '?APPLICATION_ID=' + req.applicationId;
-      String transId = FEC_CommonUltils.generateTransactionId();
+      String transId = FEC_CommonUltils.generateTransactionUUID();
 
       Map<String, String> headers = new Map<String, String>{
         'TransID'      => transId,

@@ -597,6 +597,10 @@ public with sharing class FEC_CommonUltils {
       String.valueOf(Math.abs(Crypto.getRandomInteger())).substring(0, 6);
   }
 
+  public static String generateTransactionUUID() {
+    return UUID.randomUUID().toString();
+  }
+
   public static String formatCurrency(Decimal amount, Integer scale) {
     if (amount == null)
       return '';
@@ -1134,6 +1138,43 @@ public with sharing class FEC_CommonUltils {
   }
 
   /**
+   * Lấy OrgWideEmailAddress Id để gửi notification.
+   * Ưu tiên OrgWide có Purpose = 'Default No-Reply Address', fallback OrgWide đầu tiên.
+   * @return Id của OrgWideEmailAddress, hoặc null nếu không tìm thấy
+   */
+  public static Id getOrgWideEmailIdForNotification() {
+    try {
+      List<OrgWideEmailAddress> owas = [
+        SELECT Id, Address, Purpose
+        FROM OrgWideEmailAddress
+        ORDER BY DisplayName ASC
+        LIMIT 10
+      ];
+      if (owas.isEmpty()) return null;
+      // Ưu tiên Default No-Reply Address
+      for (OrgWideEmailAddress owa : owas) {
+        if (owa.Purpose == 'Default No-Reply Address') return owa.Id;
+      }
+      // Fallback: đầu tiên
+      return owas[0].Id;
+    } catch (Exception e) {
+      System.debug('getOrgWideEmailIdForNotification error: ' + e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * Build email với OrgWideEmailAddress sender.
+   */
+  public static Messaging.SingleEmailMessage buildEmailWithSender(List<String> toAddresses, String subject, String htmlBody, Id orgWideEmailId) {
+    Messaging.SingleEmailMessage mail = buildEmail(toAddresses, subject, htmlBody);
+    if (orgWideEmailId != null) {
+      mail.setOrgWideEmailAddressId(orgWideEmailId);
+    }
+    return mail;
+  }
+
+  /**
    * Gửi nhiều email cùng lúc (bulk).
    */
   public static void sendEmails(List<Messaging.SingleEmailMessage> emails) {
@@ -1228,5 +1269,19 @@ public with sharing class FEC_CommonUltils {
     // Join back with "_"
     return String.join(parts, '_');
 
+  }
+
+  public static void logException(String author, String func, String errMsg, String stackTrace) {
+    try {
+      FEC_Log__c log = new FEC_Log__c(
+        FEC_Author__c = author,
+        FEC_Function_Name__c = func,
+        FEC_Error_Message__c = errMsg,
+        FEC_Stack_Trace_String__c = stackTrace
+      );
+      insert log;
+    } catch (Exception ex) {
+      System.debug('Log Exception Error:' + ex.getMessage());
+    }
   }
 }
