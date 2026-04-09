@@ -162,6 +162,9 @@
 		<members>fec_CreateInteractionCaseInListView</members>
 		<members>fec_BeneficiaryBankInfoBlock</members>
 		<members>fec_holdCaseManual</members>
+		<members>fec_MainInfoLoanAccount</members>
+		<members>fec_RepaymentSchedulePaymentHistory</members>
+		<members>fec_Termination</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
