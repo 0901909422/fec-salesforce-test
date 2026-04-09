@@ -15,35 +15,44 @@ public without sharing class FEC_TranferInformationCallout {
     public Map<String, String> callData { get; set; }
   }
 
-  // Lớp cho mỗi cặp fieldKey/fieldValue trong mảng 'data'
-  public class DataEntry {
+  /** Phần tử mảng body.data — chỉ fieldKey / fieldValue theo contract API */
+  public class TransferDataEntry {
     public String fieldKey;
     public String fieldValue;
-    public String seqID; // Mã dòng (có thể là tùy chọn hoặc ID tuần tự)
 
-    public DataEntry(String k, String v, String s) {
+    public TransferDataEntry(String k, String v) {
       this.fieldKey = k;
       this.fieldValue = v;
-      this.seqID = s;
     }
   }
 
-  // Lớp cho phần 'Body' chứa genesysId và mảng 'data'
-  public class RequestBody {
+  /** Body JSON gửi Pega: genesysId, data[], csCaseID — không bọc headers trong body. */
+  public class TransferCallRequestBody {
     public String genesysId;
-    public List<DataEntry> data;
+    public List<TransferDataEntry> data;
+    public String csCaseID;
   }
 
-  // Lớp gốc cho toàn bộ yêu cầu, chứa header và body
-  public class TransferCallRequest {
-    public String TransID;
-    public String DateTimes;
-    public String RequestorID;
-    public RequestBody Body;
+  private static final List<String> CALL_DATA_FIELD_ORDER = new List<String>{
+    'productType',
+    'extAppId',
+    'phoneNumber',
+    'category',
+    'subCategory',
+    'subCode',
+    'remark'
+  };
+
+  /** DateTime trên HTTP header — khớp Postman/Pega: yyyyMMddTHHmmss.SSS GMT */
+  private static String formatTransferRequestDateTime(Datetime dt) {
+    Datetime useDt = dt == null ? Datetime.now() : dt;
+    return useDt.formatGMT('yyyyMMdd\'T\'HHmmss.SSS') + ' GMT';
   }
 
   // Wrapper for case data mapped to call request fields
   public class CaseCallData {
+    /** Genesys id: trên Case Interaction là chính record; Case KH lấy từ Interaction cha (lookup). */
+    @AuraEnabled public String genesysId { get; set; }
     @AuraEnabled public String productType { get; set; }
     @AuraEnabled public String extAppId { get; set; }
     @AuraEnabled public String phoneNumber { get; set; }
@@ -60,8 +69,12 @@ public without sharing class FEC_TranferInformationCallout {
     }
     Case c = [
       SELECT
+        FEC_External_Interaction_ID__c,
+        FEC_Interaction__r.FEC_External_Interaction_ID__c,
         FEC_Product_Type__r.Name,
         FEC_Account_Contract_Number_Text__c,
+        FEC_Phone_Number__c,
+        FEC_Case_Phone_Number__c,
         FEC_Interaction__r.FEC_Phone_Number__c,
         FEC_Category__r.Name,
         FEC_SubCategory__r.Name,
@@ -75,15 +88,58 @@ public without sharing class FEC_TranferInformationCallout {
     ];
 
     CaseCallData data = new CaseCallData();
+    data.genesysId = String.isNotBlank(c.FEC_External_Interaction_ID__c)
+      ? c.FEC_External_Interaction_ID__c
+      : c.FEC_Interaction__r?.FEC_External_Interaction_ID__c;
     data.productType = c.FEC_Product_Type__r?.Name;
     data.extAppId = c.FEC_Account_Contract_Number_Text__c;
-    data.phoneNumber = c.FEC_Interaction__r?.FEC_Phone_Number__c;
+    // Interaction Phone trên Case; nếu trống lấy từ Interaction cha; cuối cùng Phone Number (nghiệp vụ Case).
+    if (String.isNotBlank(c.FEC_Phone_Number__c)) {
+      data.phoneNumber = c.FEC_Phone_Number__c;
+    } else if (String.isNotBlank(c.FEC_Interaction__r?.FEC_Phone_Number__c)) {
+      data.phoneNumber = c.FEC_Interaction__r.FEC_Phone_Number__c;
+    } else {
+      data.phoneNumber = c.FEC_Case_Phone_Number__c;
+    }
     data.category = c.FEC_Category__r?.Name;
     data.subCategory = c.FEC_SubCategory__r?.Name;
     data.subCode = c.FEC_SubCode__r?.Name;
     data.remark = c.FEC_Transfer_Call_to_Collections_Remarks__c;
     data.csCaseID = c.FEC_Case_ID__c;
     return data;
+  }
+
+  /**
+   * LWC: transfer chỉ cần Case Id — lấy Genesys ID từ Interaction, RequestorID chuẩn CSM.
+   */
+  @AuraEnabled
+  public static TransferCallResponse transferCallFromCase(Id caseId) {
+    try {
+      CaseCallData data = getCaseCallData(caseId);
+      if (data == null) {
+        TransferCallResponse res = new TransferCallResponse();
+        res.success = false;
+        res.errorMessage = String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Case ID' }
+        );
+        res.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
+        return res;
+      }
+      return transferCallByCase(
+        caseId,
+        data.genesysId,
+        FEC_ConstantCommon.API_REQUESTOR_ID
+      );
+    } catch (Exception e) {
+      System.debug(LoggingLevel.ERROR, e.getMessage() + '\n' + e.getStackTraceString());
+      TransferCallResponse err = new TransferCallResponse();
+      err.success = false;
+      err.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
+      err.errorMessage = formatExceptionDetail(e);
+      err.ResultOfClass = err.errorMessage;
+      return err;
+    }
   }
 
   @AuraEnabled
@@ -121,8 +177,31 @@ public without sharing class FEC_TranferInformationCallout {
 
       return transferCall(reqObj);
     } catch (Exception e) {
-      throw new AuraHandledException(e.getMessage());
+      System.debug(LoggingLevel.ERROR, e.getMessage() + '\n' + e.getStackTraceString());
+      TransferCallResponse err = new TransferCallResponse();
+      err.success = false;
+      err.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
+      err.errorMessage = formatExceptionDetail(e);
+      err.ResultOfClass = err.errorMessage;
+      return err;
     }
+  }
+
+  private static String formatExceptionDetail(Exception e) {
+    List<String> parts = new List<String>();
+    if (String.isNotBlank(e.getMessage())) {
+      parts.add(e.getMessage());
+    }
+    parts.add('[' + e.getTypeName() + ']');
+    Exception cause = e.getCause();
+    while (cause != null) {
+      if (String.isNotBlank(cause.getMessage())) {
+        parts.add('Cause: ' + cause.getMessage());
+      }
+      cause = cause.getCause();
+    }
+    String msg = String.join(parts, ' ');
+    return String.isNotBlank(msg) ? msg : '[' + e.getTypeName() + ']';
   }
 
   // ============================================================
@@ -158,35 +237,32 @@ public without sharing class FEC_TranferInformationCallout {
   // ============================================================
   // 4. Các Phương thức Gọi API (Refactored like FEC_GetLoanApplicationHistory)
   // ============================================================
-  public static String buildRequestPayload(TransferCallInput reqObj, String transId, String timestamp) {
-    RequestBody reqBody = new RequestBody();
+  /** Chỉ body JSON (genesysId, data, csCaseID) — TransID/RequestorID/DateTime là HTTP header. */
+  public static String buildRequestBodyJson(TransferCallInput reqObj) {
+    TransferCallRequestBody reqBody = new TransferCallRequestBody();
     reqBody.genesysId = reqObj.genesysId;
-    reqBody.data = new List<DataEntry>();
-
-    Integer seqCounter = 1;
+    reqBody.csCaseID = reqObj.callData != null
+      ? reqObj.callData.get('csCaseID')
+      : null;
+    reqBody.data = new List<TransferDataEntry>();
 
     if (reqObj.callData != null) {
-      for (String key : reqObj.callData.keySet()) {
+      for (String key : CALL_DATA_FIELD_ORDER) {
         reqBody.data.add(
-          new DataEntry(
-            key,
-            reqObj.callData.get(key),
-            String.valueOf(seqCounter++)
-          )
+          new TransferDataEntry(key, reqObj.callData.get(key))
         );
       }
     }
 
-    TransferCallRequest fullRequest = new TransferCallRequest();
-    fullRequest.TransID = transId;
-    fullRequest.DateTimes = timestamp;
-    fullRequest.RequestorID = reqObj.requestorId;
-    fullRequest.Body = reqBody;
-
-    return JSON.serialize(fullRequest);
+    return JSON.serialize(reqBody);
   }
 
-  public static HttpResponse sendRequest(String jsonPayload) {
+  public static HttpResponse sendRequest(
+    String jsonBody,
+    String transId,
+    String requestorId,
+    String dateTimeHeader
+  ) {
     FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
     FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(
       API_CONFIG_NAME
@@ -198,14 +274,17 @@ public without sharing class FEC_TranferInformationCallout {
 
     Map<String, String> headers = new Map<String, String>{
       'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
-      'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+      'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+      'TransID' => transId,
+      'RequestorID' => requestorId,
+      'DateTime' => dateTimeHeader
     };
 
     return FEC_CommonUltils.calloutApiWithHeaders(
       endpoint,
       FEC_ConstantCommon.API_METHOD_POST,
       headers,
-      jsonPayload
+      jsonBody
     );
   }
 
@@ -236,6 +315,13 @@ public without sharing class FEC_TranferInformationCallout {
       result.success = (result.Code == FEC_ConstantCommon.SUCCESS_CODE_1 ||
       result.Code == FEC_ConstantCommon.SUCCESS_CODE_Y ||
       result.Code == FEC_ConstantCommon.SUCCESS_MESSAGE);
+      if (
+        !result.success &&
+        String.isBlank(result.errorMessage) &&
+        String.isNotBlank(result.ResultOfClass)
+      ) {
+        result.errorMessage = result.ResultOfClass;
+      }
     } catch (Exception ex) {
       result.errorMessage = String.format(
         System.Label.FEC_MSG_Parse_XML_Error,
@@ -253,11 +339,17 @@ public without sharing class FEC_TranferInformationCallout {
     validate(reqObj);
     TransferCallResponse finalResult = new TransferCallResponse();
     try {
-      String transId = FEC_CommonUltils.generateTransactionId();
-      String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
-      String jsonPayload = buildRequestPayload(reqObj, transId, timestamp);
+      String transId = FEC_CommonUltils.generateTransactionUUID();
+      Datetime nowDt = Datetime.now();
+      String timestamp = formatTransferRequestDateTime(nowDt);
+      String jsonPayload = buildRequestBodyJson(reqObj);
 
-      HttpResponse res = sendRequest(jsonPayload);
+      HttpResponse res = sendRequest(
+        jsonPayload,
+        transId,
+        reqObj.requestorId,
+        timestamp
+      );
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
 
@@ -284,6 +376,26 @@ public without sharing class FEC_TranferInformationCallout {
         finalResult.httpStatus = status;
       if (finalResult.rawResponse == null)
         finalResult.rawResponse = body;
+
+      String logError = null;
+      if (!finalResult.success) {
+        logError = String.isNotBlank(finalResult.errorMessage)
+          ? finalResult.errorMessage
+          : finalResult.ResultOfClass;
+      }
+      if (responseLog != null) {
+        responseLog.errorMessage = logError;
+      }
+      if (res != null) {
+        FEC_CommonUltils.logApi(
+          'FEC_TranferInformationCallout',
+          endpoint,
+          FEC_ConstantCommon.API_METHOD_POST,
+          jsonPayload,
+          res,
+          logError
+        );
+      }
     } catch (Exception ex) {
       finalResult.errorMessage = ex.getMessage();
       finalResult.success = false;
