@@ -23,7 +23,6 @@ import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
 import FEC_MSG_Create_Customer_History_Error from '@salesforce/label/c.FEC_MSG_Create_Customer_History_Error';
 import FEC_MSG_Create_Customer_History_Success from '@salesforce/label/c.FEC_MSG_Create_Customer_History_Success';
-import FEC_Error_Callout_Insurance from '@salesforce/label/c.FEC_Error_Callout_Insurance';
 
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
@@ -39,7 +38,6 @@ import {
   IsConsoleNavigation,
   getFocusedTabInfo,
   refreshTab,
-
 } from "lightning/platformWorkspaceApi";
 import getCardInfoByAccountNumber from "@salesforce/apex/FEC_SearchController.getCardInfoByAccountNumber";
 import getApplicationHistory from "@salesforce/apex/FEC_SearchController.getApplicationHistory";
@@ -94,7 +92,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   FEC_MSG_Create_Customer_History_Error = FEC_MSG_Create_Customer_History_Error;
   FEC_MSG_Create_Customer_History_Success = FEC_MSG_Create_Customer_History_Success;
   FEC_Toast_Refresh_Success = FEC_Toast_Refresh_Success;
-
 
   @wire(MessageContext)
   messageContext;
@@ -386,7 +383,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       },
     ];
   }
-
 
   // Sample data placeholders (replace with real wired/callout data)
   cardData = [];
@@ -1213,7 +1209,7 @@ hasAnySearchCriteria(params) {
   }
 
   _toggleHistory(key, fieldName) {
-    // Find applicationId — fallback to key (ContractNumber/AccountNumber) if ApplicationID null
+    // Find applicationId
     let applicationId = null;
     if (fieldName === 'AccountNumber') {
       const row = this.cardData.find(r => r.AccountNumber === key);
@@ -1606,32 +1602,32 @@ hasAnySearchCriteria(params) {
 
     // INSURANCE
     if (force || this.insuranceData?.length === 0) {
-      // this.insuranceData = [
-      //   {
-      //     id: "ins1",
-      //     UserId: "23456789",
-      //     FullName: "NGUYEN VAN A",
-      //     DateOfBirth: "1990-01-01",
-      //     BuyerNID: "062789888321",
-      //     ProductName: "Single Health",
-      //     PremiumFee: 800000,
-      //     PaymentId: "IZI00012345",
-      //     EffectiveDate: "2024-01-01",
-      //     Status: "Còn hiệu lực",
-      //   },
-      //   {
-      //     id: "ins2",
-      //     UserId: "98765432",
-      //     FullName: "LE QUANG D",
-      //     DateOfBirth: "1988-03-27",
-      //     BuyerNID: "023456777210",
-      //     ProductName: "Family Care",
-      //     PremiumFee: 1250000,
-      //     PaymentId: "IZI00056789",
-      //     EffectiveDate: "2023-02-15",
-      //     Status: "Hết hiệu lực",
-      //   },
-      // ];
+     this.insuranceData = [
+        {
+          id: "ins1",
+          UserId: "23456789",
+          FullName: "NGUYEN VAN A",
+          DateOfBirth: "1990-01-01",
+          BuyerNID: "062789888321",
+          ProductName: "Single Health",
+          PremiumFee: 800000,
+          PaymentId: "IZI00012345",
+          EffectiveDate: "2024-01-01",
+          Status: "Còn hiệu lực",
+        },
+        {
+          id: "ins2",
+          UserId: "98765432",
+          FullName: "LE QUANG D",
+          DateOfBirth: "1988-03-27",
+          BuyerNID: "023456777210",
+          ProductName: "Family Care",
+          PremiumFee: 1250000,
+          PaymentId: "IZI00056789",
+          EffectiveDate: "2023-02-15",
+          Status: "Hết hiệu lực",
+        },
+      ];
       const response = await searchByListNIDs({nationalIDs: [this.nationalId]});
               let items = [];
               if (response.sys2.code2 != '200') {
