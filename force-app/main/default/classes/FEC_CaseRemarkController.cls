@@ -94,18 +94,41 @@ public without sharing class FEC_CaseRemarkController {
   /** Xóa draft Case Remarks trên Case (trước khi Submit để chỉ lưu 1 bản ghi = nội dung hiện tại). */
   @AuraEnabled
   public static void clearDraftRemarks(String caseId) {
-    if (String.isBlank(caseId))
-      return;
-    List<Case> caselst = [
-      SELECT Id, FEC_Draft_Remarks__c
-      FROM Case
-      WHERE Id = :caseId
-      LIMIT 1
-    ];
-    if (caselst.isEmpty())
-      return;
-    caselst[0].FEC_Draft_Remarks__c = null;
-    Database.update(caselst, AccessLevel.SYSTEM_MODE);
+    try {
+      if (String.isBlank(caseId))
+        return;
+      List<Case> caselst = [
+        SELECT Id, OwnerId, FEC_Draft_Remarks__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+      ];
+      if (caselst.isEmpty())
+        return;
+      Case c = caselst[0];
+      System.debug(
+        'FEC_DBG clearDraftRemarks caseId=' +
+          caseId +
+          ' runUserId=' +
+          UserInfo.getUserId() +
+          ' profileId=' +
+          UserInfo.getProfileId() +
+          ' caseOwnerId=' +
+          c.OwnerId +
+          ' userIsOwner=' +
+          (UserInfo.getUserId() == c.OwnerId)
+      );
+      c.FEC_Draft_Remarks__c = null;
+      Database.update(caselst, AccessLevel.SYSTEM_MODE);
+    } catch (Exception e) {
+      System.debug(
+        'FEC_DBG clearDraftRemarks ERROR msg=' +
+          e.getMessage() +
+          ' stack=' +
+          e.getStackTraceString()
+      );
+      throw new AuraHandledException(e.getMessage());
+    }
   }
 
   /** Submit chỉ tạo 1 bản ghi: lấy bản nháp mới nhất (phần tử cuối trong draft). */
