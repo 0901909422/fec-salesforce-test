@@ -1,0 +1,302 @@
+<template>
+    <div class="slds-card container">
+        <div class="slds-card__header slds-grid slds-p-around_small">
+            <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                <div class="slds-media__figure">
+                    <span class="slds-icon_container slds-icon-standard-queue" title="Queues">
+                        <svg class="slds-icon slds-icon_small" aria-hidden="true">
+                            <use xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#queue"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="slds-media__body">
+                    <h2 class="slds-card__header-title">
+                        <span>{customLabels.CS_OrgChart_Text_header}</span>
+                    </h2>
+                    <p class="slds-text-body_small slds-m-top_xx-small">{customLabels.CS_OrgChart_Text_Title}</p>
+                </div>
+            </header>
+        </div>
+
+        <div class="slds-card__body slds-card__body_inner">
+            <div class="slds-grid slds-wrap">
+                <!-- Left Panel: Queue Tree/List -->
+                <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3 slds-p-right_small">
+                    <c-fec_-team-queue-tree ongetqueueusers={handleSelectQueue} onselectteam={handleSelectTeam}></c-fec_-team-queue-tree>
+                </div>
+
+                <!-- Right Panel: Users Table -->
+                <div class="slds-col slds-size_1-of-1 slds-large-size_2-of-3 slds-p-left_small">
+                    <template if:true={currentTeamName}>
+                        <div class="slds-text-title_caps slds-m-bottom_x-small">{currentTeamName}</div>
+                    </template>
+                    <template if:true={isLoadQueue}>
+                        <div class="slds-box slds-theme_default">
+                            <div class="slds-grid slds-wrap slds-m-bottom_small">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-text-title_bold">{customLabels.CS_OrgChart_Text_UserTable_Title}</div>
+                                    <template lwc:if={selectedQueueName}>
+                                        <div class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
+                                            {customLabels.CS_OrgChart_Text_UserTable_Queue_Name_Title}: {selectedQueueName}
+                                        </div>
+                                    </template>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                                    <span class="slds-p-right_x-small">
+                                        <lightning-button
+                                            label={customLabels.CS_OrgChart_Text_UserTable_Edit_Queue}
+                                            title={customLabels.CS_OrgChart_Text_UserTable_Edit_Queue}
+                                            variant="brand"
+                                            onclick={handleOpenEditQueueModal}
+                                            disabled={noQueueSelected}>
+                                        </lightning-button>
+                                    </span>
+                                    <span>
+                                        <lightning-button
+                                            label={customLabels.CS_OrgChart_Text_UserTable_Add_User_To_Queue}
+                                            title={customLabels.CS_OrgChart_Text_UserTable_Add_User_To_Queue}
+                                            variant="brand"
+                                            onclick={handleOpenAddUsersModal}
+                                            disabled={noQueueSelected}>
+                                        </lightning-button>
+                                    </span>
+                                </div>
+                            </div>                      
+
+                            <template lwc:if={isLoadingUsers}>
+                                <lightning-spinner size="small" alternative-text="Loading users"></lightning-spinner>
+                            </template>
+                            <template lwc:elseif={usersError}>
+                                <div class="slds-notify slds-notify_alert slds-theme_error slds-m-top_medium" role="alert">
+                                    <span class="slds-assistive-text">{customLabels.CS_OrgChart_Text_Save_Error_Title}</span>
+                                    {usersError}
+                                </div>
+                            </template>
+                            <template lwc:elseif={noQueueSelected}>
+                                <div class="slds-text-color_weak">{customLabels.CS_OrgChart_Text_UserTable_Requie_Select_Queue}</div>
+                            </template>
+                            <template lwc:elseif={isEmptyUsers}>
+                                <div class="slds-text-color_weak">{customLabels.CS_OrgChart_Text_UserTable_No_User}</div>
+                            </template>
+                            <template lwc:else>
+                                <div class="table-user-container">
+                                    <lightning-datatable key-field="id"
+                                                        data={users}
+                                                        columns={userColumns}
+                                                        hide-checkbox-column
+                                                        show-row-number-column
+                                                        onloadmore={handleLoadMore}
+                                                        enable-infinite-loading
+                                                        onrowaction={handleRowAction}>
+                                    </lightning-datatable>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    
+                    <div class="slds-m-top_medium">
+                        <template if:true={isLoadQueue}>
+                            <c-fec_-custom-history-log target-id={selectedQueueId}></c-fec_-custom-history-log>
+                        </template>
+                        <template if:false={isLoadQueue}>
+                            <c-fec_-custom-history-log target-id={curentTeamId}></c-fec_-custom-history-log>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Queues Modal -->
+    <template lwc:if={isUserQueuesModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="user-queues-heading"
+                 class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 id="user-queues-heading" class="slds-text-heading_medium">
+                        {customLabels.CS_OrgChart_Text_UserQueueDetailModal_Title} {selectedUserName}
+                    </h2>
+                    <p class="slds-text-body_small slds-m-top_xx-small">
+                        {customLabels.CS_OrgChart_Text_UserQueueDetailModal_UserId} : {selectedUserId}
+                    </p>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <c-fec_-user-queue-detail user-id={selectedUserId} queue-id={selectedQueueId} oncloseuserdetailmodal={handleCloseUserQueuesModal}></c-fec_-user-queue-detail>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label={customLabels.CS_OrgChart_Btn_Modal_Close} onclick={handleCloseUserQueuesModal}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- Edit Queue Modal -->
+    <template if:true={isEditQueueModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-edit-queue" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 id="modal-heading-edit-queue" class="slds-text-heading_medium">{customLabels.CS_OrgChart_Text_EditQueueModal_Heading}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <div class="slds-form">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="editQueueLabel">{customLabels.CS_OrgChart_Text_EditQueueModal_Input_Label}</label>
+                            <div class="slds-form-element__control">
+                                <input id="editQueueLabel" type="text" class="slds-input" value={editQueueLabel} onchange={handleEditQueueLabelChange} placeholder="Enter queue label" />
+                            </div>
+                        </div>
+                        <div class="slds-form-element slds-m-top_medium">
+                            <label class="slds-form-element__label" for="editQueueTeam">{customLabels.CS_OrgChart_Combobox_EditQueueModal_Team}</label>
+                            <div class="slds-form-element__control">
+                                <lightning-combobox
+                                    name="editQueueTeam"
+                                    value={curentTeamId}
+                                    options={teamOptions}
+                                    placeholder={customLabels.CS_OrgChart_Combobox_EditQueueModal_Team_Placeholder}
+                                    onchange={handleEditTeamChange}>
+                                </lightning-combobox>
+                            </div>
+                        </div>
+                        <template if:true={editErrorMessage}>
+                            <div class="slds-notify slds-notify_alert slds-theme_error slds-m-top_medium" role="alert">
+                                <span class="slds-assistive-text">{customLabels.CS_OrgChart_Text_Save_Error_Title}</span>
+                                {editErrorMessage}
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={handleCloseEditQueueModal}>{customLabels.CS_OrgChart_Btn_Modal_Cancel}</button>
+                    <button class="slds-button slds-button_brand" onclick={handleSaveEditQueue} disabled={isSavingEditQueue}>{customLabels.CS_OrgChart_Btn_Modal_Save}</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- Add Users Modal -->
+    <template lwc:if={isAddUsersModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="add-users-heading"
+                 class="slds-modal slds-modal_medium slds-fade-in-open">
+            <div class="slds-modal__container custom-add-users-modal">
+                <header class="slds-modal__header">
+                    <h2 id="add-users-heading" class="slds-text-heading_medium">
+                        {customLabels.CS_OrgChart_Text_AddUserModal_Title}
+                    </h2>
+                    <p class="slds-text-body_small slds-m-top_xx-small">
+                        {customLabels.CS_OrgChart_Text_UserTable_Queue_Name_Title}: {selectedQueueName}
+                    </p>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <!-- Search input and action -->
+                    <div class="slds-grid slds-gutters slds-m-bottom_small">
+                        <div class="slds-col">
+                            <lightning-input
+                                type="search"
+                                label={customLabels.CS_OrgChart_Text_AddUserModal_SearchUser_Input}
+                                value={searchTerm}
+                                onchange={handleSearchTermChange}
+                                onkeyup={handleSearch}
+                                placeholder={customLabels.CS_OrgChart_Text_AddUserModal_SearchUser_PlaceHolder}>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <!-- Suggestions -->
+                    <template lwc:if={showSuggestions}>
+                        <div class="slds-box slds-theme_default slds-m-bottom_small">
+                            <div class="slds-text-title_bold slds-m-bottom_x-small">{customLabels.CS_OrgChart_Text_AddUserModal_SearchUser_Result}</div>
+                            <template lwc:if={isSearching}>
+                                <lightning-spinner size="small" alternative-text="Researching"></lightning-spinner>
+                            </template>
+                            <template lwc:else>
+                                <template lwc:if={suggestions.length}>
+                                    <!-- Select all -->
+                                    <div class="slds-grid slds-wrap slds-p-vertical_x-small slds-border_bottom slds-m-bottom_x-small">
+                                        <div class="slds-col slds-size_1-of-2 slds-text-align_left">
+                                            <lightning-input
+                                                type="checkbox"
+                                                label={customLabels.CS_OrgChart_Checkbox_AddUserModal_SearchUser_SelectAll}
+                                                checked={isAllSuggestionsSelected}
+                                                onchange={handleToggleSelectAll}>
+                                            </lightning-input>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                                            <template lwc:if={showSelectedUsersTable}>
+                                                <lightning-button
+                                                    label={customLabels.CS_OrgChart_Btn_AddUserModal_SearchUser_AddIntoQueue}
+                                                    variant="success"
+                                                    onclick={handleAddSelectedUsersToQueue}
+                                                    disabled={isAddingToQueue}>
+                                                </lightning-button>
+                                            </template>
+                                        </div>
+                                        <!-- Selected users table -->
+                                        
+                                    </div>
+                                    <div class="slds-table_header-fixed_container slds-scrollable_y" style="max-height: 320px;">
+                                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout" role="grid"
+                                            aria-label="Suggested Users">
+                                            <thead>
+                                                <tr class="slds-line-height_reset">
+                                                    <th scope="col" style="width: 35%">
+                                                        <div class="slds-truncate" title={customLabels.CS_OrgChart_table_AddUserModal_SuggestUser_Name_Column}>{customLabels.CS_OrgChart_table_AddUserModal_SuggestUser_Name_Column}</div>
+                                                    </th>
+                                                    <th scope="col" style="width: 30%">
+                                                        <div class="slds-truncate" title={customLabels.CS_OrgChart_table_AddUserModal_SuggestUser_Email_Column}>{customLabels.CS_OrgChart_table_AddUserModal_SuggestUser_Email_Column}</div>
+                                                    </th>
+                                                    <th scope="col" style="width: 30%">
+                                                        <div class="slds-truncate" title={customLabels.CS_OrgChart_table_AddUserModal_SuggestUser_Role_Column}>{customLabels.CS_OrgChart_table_AddUserModal_SuggestUser_Role_Column}</div>
+                                                    </th>
+                                                    <th scope="col" class="slds-text-align_center" style="width: 5%">
+                                                        <div class="slds-truncate" title="Action"></div>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody> 
+                                                <template for:each={suggestions} for:item="sug">
+                                                    <tr key={sug.id} class="slds-hint-parent">
+                                                        <th scope="row" data-label="Name">
+                                                            <div class="slds-truncate" title={sug.name}>{sug.name}</div>
+                                                        </th>
+                                                        <td data-label="Email">
+                                                            <div class="slds-truncate" title={sug.email}>{sug.email}</div>
+                                                        </td>
+                                                        <td data-label="Role">
+                                                            <div class="slds-truncate" title={sug.userrole}>{sug.userrole}</div>
+                                                        </td>
+                                                        <td data-label="Action" class="slds-text-align_center"> <lightning-input type="checkbox"
+                                                                aria-label={sug.name} title={sug.name} data-user-id={sug.id} data-user-email={sug.email}
+                                                                checked={sug.isSelected} onchange={handleToggleSuggestion}> </lightning-input> </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                                <template lwc:else>
+                                    <div class="slds-text-color_weak">{customLabels.CS_OrgChart_table_AddUserModal_SuggestUser_ResultNotFound}</div>
+                                </template>
+                            </template>
+                        </div>
+                    </template>
+                    <template lwc:if={usersError}>
+                        <div class="slds-notify slds-notify_alert slds-theme_error slds-m-top_medium" role="alert">
+                            <span class="slds-assistive-text">{customLabels.CS_OrgChart_Text_Save_Error_Title}</span>
+                            {usersError}
+                        </div>
+                    </template>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Close" onclick={handleCloseAddUsersModal}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>
