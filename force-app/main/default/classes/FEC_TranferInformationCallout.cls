@@ -15,33 +15,6 @@ public without sharing class FEC_TranferInformationCallout {
     public Map<String, String> callData { get; set; }
   }
 
-  // Lớp cho mỗi cặp fieldKey/fieldValue trong mảng 'data'
-  public class DataEntry {
-    public String fieldKey;
-    public String fieldValue;
-    public String seqID; // Mã dòng (có thể là tùy chọn hoặc ID tuần tự)
-
-    public DataEntry(String k, String v, String s) {
-      this.fieldKey = k;
-      this.fieldValue = v;
-      this.seqID = s;
-    }
-  }
-
-  // Lớp cho phần 'Body' chứa genesysId và mảng 'data'
-  public class RequestBody {
-    public String genesysId;
-    public List<DataEntry> data;
-  }
-
-  // Lớp gốc cho toàn bộ yêu cầu, chứa header và body
-  public class TransferCallRequest {
-    public String TransID;
-    public String DateTimes;
-    public String RequestorID;
-    public RequestBody Body;
-  }
-
   // Wrapper for case data mapped to call request fields
   public class CaseCallData {
     @AuraEnabled public String productType { get; set; }
@@ -158,35 +131,42 @@ public without sharing class FEC_TranferInformationCallout {
   // ============================================================
   // 4. Các Phương thức Gọi API (Refactored like FEC_GetLoanApplicationHistory)
   // ============================================================
-  public static String buildRequestPayload(TransferCallInput reqObj, String transId, String timestamp) {
-    RequestBody reqBody = new RequestBody();
-    reqBody.genesysId = reqObj.genesysId;
-    reqBody.data = new List<DataEntry>();
-
-    Integer seqCounter = 1;
-
+  public static String buildRequestPayload(TransferCallInput reqObj) {
+    List<Object> dataList = new List<Object>();
+    List<String> orderedKeys = new List<String>{
+      'productType',
+      'extAppId',
+      'phoneNumber',
+      'category',
+      'subCategory',
+      'subCode',
+      'remark'
+    };
+    String csCaseId = '';
     if (reqObj.callData != null) {
-      for (String key : reqObj.callData.keySet()) {
-        reqBody.data.add(
-          new DataEntry(
-            key,
-            reqObj.callData.get(key),
-            String.valueOf(seqCounter++)
-          )
+      csCaseId = reqObj.callData.get('csCaseID');
+      for (String key : orderedKeys) {
+        dataList.add(
+          new Map<String, String>{
+            'fieldKey' => key,
+            'fieldValue' => reqObj.callData.get(key)
+          }
         );
       }
     }
-
-    TransferCallRequest fullRequest = new TransferCallRequest();
-    fullRequest.TransID = transId;
-    fullRequest.DateTimes = timestamp;
-    fullRequest.RequestorID = reqObj.requestorId;
-    fullRequest.Body = reqBody;
-
-    return JSON.serialize(fullRequest);
+    Map<String, Object> root = new Map<String, Object>();
+    root.put('genesysId', reqObj.genesysId);
+    root.put('data', dataList);
+    root.put('csCaseID', csCaseId);
+    return JSON.serialize(root);
   }
 
-  public static HttpResponse sendRequest(String jsonPayload) {
+  public static HttpResponse sendRequest(
+    String jsonPayload,
+    String transIdHeader,
+    String requestorId,
+    String dateTimeGmtHeader
+  ) {
     FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
     FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(
       API_CONFIG_NAME
@@ -198,7 +178,10 @@ public without sharing class FEC_TranferInformationCallout {
 
     Map<String, String> headers = new Map<String, String>{
       'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
-      'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+      'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+      'TransID' => transIdHeader,
+      'RequestorID' => requestorId,
+      'DateTime' => dateTimeGmtHeader
     };
 
     return FEC_CommonUltils.calloutApiWithHeaders(
@@ -253,11 +236,17 @@ public without sharing class FEC_TranferInformationCallout {
     validate(reqObj);
     TransferCallResponse finalResult = new TransferCallResponse();
     try {
-      String transId = FEC_CommonUltils.generateTransactionId();
-      String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
-      String jsonPayload = buildRequestPayload(reqObj, transId, timestamp);
+      String transId = String.valueOf(UUID.randomUUID());
+      String dateTimeHeader =
+        Datetime.now().formatGmt('yyyyMMdd\'T\'HHmmss.SSS') + ' GMT';
+      String jsonPayload = buildRequestPayload(reqObj);
 
-      HttpResponse res = sendRequest(jsonPayload);
+      HttpResponse res = sendRequest(
+        jsonPayload,
+        transId,
+        reqObj.requestorId,
+        dateTimeHeader
+      );
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
 
