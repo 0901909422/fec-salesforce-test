@@ -1,4 +1,4 @@
-import { LightningElement, api, wire } from "lwc";
+﻿import { LightningElement, api, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import {
   updateRecord,
@@ -247,7 +247,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             year: "numeric"
         }, 
         sortable: true },
-      ...(this.isAccountContractSearch ? [{ label: "Plastic ID", fieldName: "PlasticID", sortable: true }] : [{ label: "Product Code", fieldName: "ProductCode", sortable: true }]),
+      ...(this.isAccountContractSearch ? [{ label: "Product Code", fieldName: "PlasticID", sortable: true }] : [{ label: "Product Code", fieldName: "ProductCode", sortable: true }]),
       ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
       { label: this.isAccountContractSearch ? "Account Status" : "Contract Status", fieldName: "ContractStatus", sortable: true },
     ];
@@ -1420,7 +1420,6 @@ hasAnySearchCriteria(params) {
               //     objectApiName: "Case",
               //     actionName: "view",
               //   },
-              // });
             }
             //await this.refreshTab();
           })

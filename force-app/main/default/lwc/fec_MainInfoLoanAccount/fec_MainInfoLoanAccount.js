@@ -1,4 +1,7 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
+import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import FEC_ACCOUNT_OR_CONTRACT from '@salesforce/schema/Case.FEC_Account_or_Contract__c';
+import FEC_CONTRACT_NUMBER from '@salesforce/schema/Case.FEC_Contract_Number__c';
 import loadLoanAccountInfo from '@salesforce/apex/FEC_MainInfoLoanAccountController.loadLoanAccountInfo';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { isNegative } from 'c/fec_CommonUtils';
@@ -43,6 +46,9 @@ export default class Fec_MainInfoLoanAccount extends LightningElement {
     @track isLoading = false;
     @track isProcessing = false;
 
+    /** Tránh load trùng khi LDS emit nhiều lần; đổi khi đổi hợp đồng Loan (lookup + số HĐ). */
+    _caseContractSignature;
+
     get activeSections() {
         return [FEC_Contract_Label, FEC_Loan_Label, FEC_Payment_Label, FEC_Debt_Sale_Label];
     }
@@ -55,9 +61,26 @@ export default class Fec_MainInfoLoanAccount extends LightningElement {
         loadingAlt: FEC_Termination_Loading_Alt,
     }
 
-    /* ================= LIFECYCLE ================= */
+    /* ================= CASE → RELOAD KHI ĐỔI HỢP ĐỒNG LOAN ================= */
 
-    connectedCallback() {
+    @wire(getRecord, {
+        recordId: '$recordId',
+        fields: [FEC_ACCOUNT_OR_CONTRACT, FEC_CONTRACT_NUMBER],
+    })
+    wiredCaseForLoanRefresh({ data, error }) {
+        if (!this.recordId || !data) {
+            return;
+        }
+        if (error) {
+            return;
+        }
+        const historyId = getFieldValue(data, FEC_ACCOUNT_OR_CONTRACT);
+        const contractNo = getFieldValue(data, FEC_CONTRACT_NUMBER);
+        const signature = `${this.recordId}|${historyId || ''}|${contractNo || ''}`;
+        if (this._caseContractSignature === signature) {
+            return;
+        }
+        this._caseContractSignature = signature;
         this.loadData();
     }
 
