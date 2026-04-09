@@ -24,11 +24,24 @@ export default class CustomDblclickCell extends LightningElement {
         }
     }
 
+    // Click icon collapse — fire showhistory ngay lập tức (không delay)
+    handleCollapseClick(event) {
+        event.stopPropagation();
+        window.clearTimeout(this.clickTimer);
+        this.dispatchEvent(new CustomEvent('showhistory', {
+            detail: { value: this.value, fieldName: this.fieldName },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
     // Double click:
-    // - Interaction / Account-Contract Search → create history/case
-    // - On Account-Contract Search, cancel pending single-click show history
+    // - Interaction → create history/case
+    // - Account-Contract Search → block (no action)
     handleDblClick(event) {
         window.clearTimeout(this.clickTimer);
+        // Account/Contract Search: double click không làm gì
+        if (this.isAccountContractSearch) return;
         const detail = {
             action: {
                 name: 'create_history',
