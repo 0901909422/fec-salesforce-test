@@ -1628,6 +1628,7 @@ hasAnySearchCriteria(params) {
           Status: "Hết hiệu lực",
         },
       ];
+    }
   }
 
   async handlePublishMessageChanel() {
