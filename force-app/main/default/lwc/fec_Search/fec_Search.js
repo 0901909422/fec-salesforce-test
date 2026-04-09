@@ -1659,5 +1659,4 @@ hasAnySearchCriteria(params) {
     };
     publish(this.messageContext, IS_MODE_EDIT_INTERACTION, payload);
   }
-
 }
