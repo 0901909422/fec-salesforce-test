@@ -85,7 +85,7 @@ public without sharing class FEC_CaseRemarkController {
       existingRemarks.add(caseRemark);
       caselst[0].FEC_Draft_Remarks__c = remarksToJson(existingRemarks);
 
-      update caselst;
+      Database.update(caselst, AccessLevel.SYSTEM_MODE);
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
@@ -94,109 +94,18 @@ public without sharing class FEC_CaseRemarkController {
   /** Xóa draft Case Remarks trên Case (trước khi Submit để chỉ lưu 1 bản ghi = nội dung hiện tại). */
   @AuraEnabled
   public static void clearDraftRemarks(String caseId) {
-      String traceId = String.valueOf(Crypto.getRandomLong());
-
-      try {
-          System.debug('===== START clearDraftRemarks | TRACE: ' + traceId + ' =====');
-
-          // ===== CONTEXT =====
-          System.debug('UserId: ' + UserInfo.getUserId());
-          System.debug('ProfileId: ' + UserInfo.getProfileId());
-          System.debug('UserRoleId: ' + UserInfo.getUserRoleId());
-          System.debug('OrgId: ' + UserInfo.getOrganizationId());
-          System.debug('Input caseId: ' + caseId);
-
-          if (String.isBlank(caseId)) {
-              System.debug('caseId is blank → EXIT');
-              return;
-          }
-
-          // ===== PERMISSION CHECK =====
-          Boolean canUpdateCase = Schema.sObjectType.Case.isUpdateable();
-          Boolean canReadCase = Schema.sObjectType.Case.isAccessible();
-          Boolean canUpdateField = Schema.sObjectType.Case.fields.FEC_Draft_Remarks__c.isUpdateable();
-
-          System.debug('Case Accessible: ' + canReadCase);
-          System.debug('Case Updateable: ' + canUpdateCase);
-          System.debug('Field Updateable: ' + canUpdateField);
-
-          // ===== QUERY =====
-          List<Case> caselst = [
-              SELECT Id, OwnerId, CreatedById, LastModifiedById,
-                    FEC_Draft_Remarks__c
-              FROM Case
-              WHERE Id = :caseId
-              LIMIT 1
-          ];
-
-          System.debug('Query size: ' + caselst.size());
-
-          if (caselst.isEmpty()) {
-              System.debug('No Case found → EXIT');
-              return;
-          }
-
-          Case c = caselst[0];
-
-          // ===== RECORD CONTEXT =====
-          System.debug('CaseId: ' + c.Id);
-          System.debug('OwnerId: ' + c.OwnerId);
-          System.debug('CreatedById: ' + c.CreatedById);
-          System.debug('LastModifiedById: ' + c.LastModifiedById);
-          System.debug('Draft Length: ' + (c.FEC_Draft_Remarks__c != null ? c.FEC_Draft_Remarks__c.length() : 0));
-
-          // ===== LOCK CHECK =====
-          Boolean isLocked = Approval.isLocked(c.Id);
-          System.debug('IsLocked: ' + isLocked);
-
-          if (isLocked) {
-              System.debug('Attempting unlock...');
-              try {
-                  Approval.unlock(c.Id);
-                  System.debug('Unlock SUCCESS');
-              } catch (Exception unlockEx) {
-                  System.debug('Unlock FAILED: ' + unlockEx.getMessage());
-                  System.debug('Unlock Stack: ' + unlockEx.getStackTraceString());
-                  throw new AuraHandledException('Case is locked and cannot be updated');
-              }
-          }
-
-          // ===== SHARING DEBUG =====
-          System.debug('Running as without sharing → bypass sharing, but still checking context');
-          System.debug('Current User == Owner? ' + (UserInfo.getUserId() == c.OwnerId));
-
-          // ===== DML PREP =====
-          c.FEC_Draft_Remarks__c = null;
-
-          System.debug('Prepared record for update');
-
-          // ===== TRY UPDATE =====
-          try {
-              System.debug('Executing update...');
-              update c;
-              System.debug('Update SUCCESS');
-          } catch (DmlException dmlEx) {
-              System.debug('❌ DML ERROR: ' + dmlEx.getMessage());
-              System.debug('DML StatusCode: ' + dmlEx.getDmlType(0));
-              System.debug('DML Fields: ' + dmlEx.getDmlFields(0));
-              System.debug('DML Stack: ' + dmlEx.getStackTraceString());
-
-              // Deep hint
-              if (dmlEx.getMessage().contains('INSUFFICIENT_ACCESS')) {
-                  System.debug('👉 ROOT CAUSE HINT: Permission / Sharing / Lock issue');
-              }
-
-              throw new AuraHandledException(dmlEx.getMessage());
-          }
-
-          System.debug('===== END clearDraftRemarks | TRACE: ' + traceId + ' =====');
-
-      } catch (Exception e) {
-          System.debug('❌ FATAL ERROR | TRACE: ' + traceId);
-          System.debug('Message: ' + e.getMessage());
-          System.debug('StackTrace: ' + e.getStackTraceString());
-          throw new AuraHandledException(e.getMessage());
-      }
+    if (String.isBlank(caseId))
+      return;
+    List<Case> caselst = [
+      SELECT Id, FEC_Draft_Remarks__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (caselst.isEmpty())
+      return;
+    caselst[0].FEC_Draft_Remarks__c = null;
+    Database.update(caselst, AccessLevel.SYSTEM_MODE);
   }
 
   /** Submit chỉ tạo 1 bản ghi: lấy bản nháp mới nhất (phần tử cuối trong draft). */
@@ -244,7 +153,7 @@ public without sharing class FEC_CaseRemarkController {
       }
 
       caselst[0].FEC_Draft_Remarks__c = null;
-      update caselst;
+      Database.update(caselst, AccessLevel.SYSTEM_MODE);
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
