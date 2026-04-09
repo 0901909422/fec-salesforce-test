@@ -1135,7 +1135,7 @@ public with sharing class FEC_CommonUltils {
 
   /**
    * Lấy OrgWideEmailAddress Id để gửi notification.
-   * Ưu tiên OrgWide có Purpose = 'UserSelection', fallback OrgWide đầu tiên.
+   * Ưu tiên OrgWide có Purpose = 'Default No-Reply Address', fallback OrgWide đầu tiên.
    * @return Id của OrgWideEmailAddress, hoặc null nếu không tìm thấy
    */
   public static Id getOrgWideEmailIdForNotification() {
@@ -1147,9 +1147,9 @@ public with sharing class FEC_CommonUltils {
         LIMIT 10
       ];
       if (owas.isEmpty()) return null;
-      // Ưu tiên UserSelection
+      // Ưu tiên Default No-Reply Address
       for (OrgWideEmailAddress owa : owas) {
-        if (owa.Purpose == 'UserSelection') return owa.Id;
+        if (owa.Purpose == 'Default No-Reply Address') return owa.Id;
       }
       // Fallback: đầu tiên
       return owas[0].Id;
