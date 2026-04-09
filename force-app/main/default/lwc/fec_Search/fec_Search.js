@@ -1475,7 +1475,7 @@ hasAnySearchCriteria(params) {
   }
 
   // Demo data seeding
-    seedSampleRows(force = false) {
+  seedSampleRows(force = false) {
     if (this.emailAddress == "a@a.aa") {
       this.isNoCustomerFound = true;
       this.cardData = [];
