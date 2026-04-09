@@ -190,6 +190,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
   fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
   fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
+  fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
 };
 
 export default class Fec_CaseBussiness extends LightningElement {
@@ -1257,6 +1258,13 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
     }
 
+    const benEl = this._getBeneficiaryBankInfoBlockEl();
+    if (benEl && typeof benEl.validateForSubmit === "function") {
+      if (!benEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -1291,6 +1299,22 @@ export default class Fec_CaseBussiness extends LightningElement {
     return null;
   }
 
+  _getBeneficiaryBankInfoBlockEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_BeneficiaryBankInfoBlock"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveBeneficiaryIfApplicable === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
   _saveIncorrectPaymentAdjustmentsIfApplicable() {
     const el = this._getIncorrectPaymentFormEl();
     if (!el || typeof el.saveAdjustmentsIfApplicable !== "function") {
@@ -1305,6 +1329,54 @@ export default class Fec_CaseBussiness extends LightningElement {
       return Promise.resolve();
     }
     return el.saveDraftIfApplicable();
+  }
+
+  _saveBeneficiaryBankInfoDraftIfApplicable() {
+    const el = this._getBeneficiaryBankInfoBlockEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveBeneficiaryIfApplicable() {
+    const el = this._getBeneficiaryBankInfoBlockEl();
+    if (!el || typeof el.saveBeneficiaryIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveBeneficiaryIfApplicable();
+  }
+
+  _getCardClosureRefundFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_CardClosureRefundForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveForSubmitIfApplicable === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _saveCardClosureRefundDraftIfApplicable() {
+    const el = this._getCardClosureRefundFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveCardClosureRefundForSubmitIfApplicable() {
+    const el = this._getCardClosureRefundFormEl();
+    if (!el || typeof el.saveForSubmitIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveForSubmitIfApplicable();
   }
 
   _getIppClosureFormEl() {
@@ -1351,6 +1423,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       Promise.all([
         this._saveIncorrectPaymentDraftIfApplicable(),
         this._saveIPPClosureIfApplicable(),
+        this._saveBeneficiaryBankInfoDraftIfApplicable(),
+        this._saveCardClosureRefundDraftIfApplicable(),
       ]);
     if (total === 0) {
       return afterForms();
@@ -1393,6 +1467,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     await Promise.all([
       this._saveIncorrectPaymentAdjustmentsIfApplicable(),
       this._saveIPPClosureIfApplicable(),
+      this._saveBeneficiaryIfApplicable(),
+      this._saveCardClosureRefundForSubmitIfApplicable(),
     ]);
     if (routeToEle) {
       let method = routeToEle.value;

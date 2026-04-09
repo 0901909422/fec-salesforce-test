@@ -247,9 +247,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             year: "numeric"
         }, 
         sortable: true },
-      ...(this.isAccountContractSearch ? [{ label: "Product Code", fieldName: "ProductCode", sortable: true }] : [{ label: "Plastic ID", fieldName: "PlasticID", sortable: true }]),
+      ...(this.isAccountContractSearch ? [{ label: "Plastic ID", fieldName: "PlasticID", sortable: true }] : [{ label: "Product Code", fieldName: "ProductCode", sortable: true }]),
       ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
-      { label: this.isAccountContractSearch ? "Contract Status" : "Account Status", fieldName: "ContractStatus", sortable: true },
+      { label: this.isAccountContractSearch ? "Account Status" : "Contract Status", fieldName: "ContractStatus", sortable: true },
     ];
   }
 
@@ -1064,22 +1064,26 @@ hasAnySearchCriteria(params) {
 
     // Nếu result có giá trị 'confirmed' (do mình định nghĩa ở handleConfirm)
     if (result === "confirm") {
-       if (!this.recordId || this.recordId === '') {
-           const caseId = await createInternalCaseOnSkip();
-
-            this.showToast("Thông báo", "Skip thành công.", "success");
-            this.dispatchEvent(new CustomEvent('skippedwithoutrecord', { bubbles: true, composed: true }));
-            this[NavigationMixin.Navigate]({
-              type: "standard__recordPage",
-              attributes: {
-                recordId: caseId,
-                objectApiName: "Case",
-                actionName: "view",
-              },
-            });
-            return;
-        }
       this.isLoaded = false;
+      if (!this.recordId || this.recordId === '') {
+        createInternalCaseOnSkip()
+          .then(async (caseId) => {
+            this.dispatchEvent(new CustomEvent('skippedwithoutrecord', { 
+              detail: {
+                recordId: caseId
+              }
+             }));
+            this.showToast("Thành công", "Tạo Internal Case thành công", "success");
+          })
+          .catch((error) => {
+            this.showToast("Lỗi", error.body.message, "error");
+          })
+          .finally(() => {
+            this.isLoaded = true;
+          })
+        
+        return; 
+      }
       const fields = {};
       fields["Id"] = this.recordId;
       fields["FEC_Skip_Search_Internal_Case__c"] = true;
@@ -1404,18 +1408,19 @@ hasAnySearchCriteria(params) {
             } else {
                 this.dispatchEvent(
                   new CustomEvent('closerequest', {
-                    bubbles: true,
-                    composed: true
+                    detail: {
+                      recordId: res
+                    }
                   })
                 );
-              this[NavigationMixin.Navigate]({
-                type: "standard__recordPage",
-                attributes: {
-                  recordId: res,
-                  objectApiName: "Case",
-                  actionName: "view",
-                },
-              });
+              // this[NavigationMixin.Navigate]({
+              //   type: "standard__recordPage",
+              //   attributes: {
+              //     recordId: res,
+              //     objectApiName: "Case",
+              //     actionName: "view",
+              //   },
+              // });
             }
             //await this.refreshTab();
           })

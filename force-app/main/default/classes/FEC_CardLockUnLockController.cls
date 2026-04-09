@@ -45,10 +45,7 @@ public with sharing class FEC_CardLockUnLockController {
             // Log API response
             FEC_CardLockUnLockCallout.logApiResponse();
 
-            if (String.isNotBlank(response.errorCode)) {
-                throw new FEC_APIServiceException(response.errorMessage);
-            }
-            if (!FEC_CardLockUnLockCallout.isSuccess(response)) {
+            if (String.isNotBlank(response.errorCode) || !FEC_CardLockUnLockCallout.isSuccess(response)) {
                 return '';
             }
             return 'SUCCESS';

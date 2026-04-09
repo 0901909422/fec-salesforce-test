@@ -869,11 +869,16 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
+                    <booleanFilter>1 AND 2 AND 3</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>true</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Card</rightValue>
                     </criteria>
                     <criteria>
                         <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
@@ -976,7 +981,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>title</name>
-                    <value>Account - Loan</value>
+                    <value>Account</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab26</identifier>

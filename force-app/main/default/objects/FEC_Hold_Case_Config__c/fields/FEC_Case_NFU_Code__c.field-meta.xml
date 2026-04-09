@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Case_NFU_Code__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Hold Case</label>
+    <referenceTo>FEC_Hold_Case__c</referenceTo>
+    <relationshipLabel>Hold Case Config</relationshipLabel>
+    <relationshipName>Hold_Case_Config</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>
