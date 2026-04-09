@@ -133,10 +133,6 @@
         <label>Vai trò áp dụng</label>
     </customLabels>
     <customLabels>
-        <name>FEC_Col_Channel</name>
-        <label>Kênh</label>
-    </customLabels>
-    <customLabels>
         <name>FEC_Col_Code</name>
         <label>Mã</label>
     </customLabels>
@@ -591,10 +587,6 @@
     <customLabels>
         <name>FEC_Reset_MDM</name>
         <label>Đặt lại MDM</label>
-    </customLabels>
-    <customLabels>
-        <name>FEC_Save</name>
-        <label>Lưu</label>
     </customLabels>
     <customLabels>
         <name>FEC_Save_Success_Message</name>

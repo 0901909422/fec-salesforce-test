@@ -93,6 +93,10 @@
 		<members>FEC_CardClosureRefundController</members>
 		<members>FEC_GetServiceCases</members>
 		<members>FEC_IPPClosureController</members>
+		<members>FEC_AccountOrContractPicklistHandler</members>
+		<members>FEC_BeneficiaryBankInfoController</members>
+		<members>FEC_MockupEndpoint</members>
+		<members>FEC_GetDisbInfoByAcctCallout</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -146,6 +150,11 @@
 		<members>fec_SecondaryInfoLoanAccount</members>
 		<members>fec_CardPayment</members>
 		<members>fec_Asset</members>
+		<members>fec_CreateCaseInListView</members>
+		<members>fec_AccountOrContractPicklistCustomerCase</members>
+		<members>fec_AccountOrContractPicklistInteraction</members>
+		<members>fec_CreateInteractionCaseInListView</members>
+		<members>fec_BeneficiaryBankInfoBlock</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -362,6 +371,7 @@
         <members>FEC_MSG_ContractClosure_Address_Required</members>
 		<members>FEC_Cannot_Delete_Enhanced_Letterhead</members>
 		<members>FEC_LBL_Select_Payment_Method</members>
+		<members>FEC_MSG_Refund_Request_Refund_Amount_Positive</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -602,6 +612,7 @@
         <members>FEC_API_Config.FEC_ReplacementCard</members>
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
+		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -629,5 +640,13 @@
 		<members>FEC_EnhancedLetterheadTrigger</members>
         <name>ApexTrigger</name>
     </types>
+	<types>
+        <members>Case.Internal_Case</members>
+        <name>RecordType</name>
+    </types>
+	<types>
+		<members>en_US</members>
+		<name>Translations</name>
+	</types>
     <version>65.0</version>
 </Package>
