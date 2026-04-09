@@ -1017,26 +1017,26 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (field) {
       field.value = value;
       if (fieldName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
-        field.isInternalRequest = value === INTERNAL_REQUEST;
+        // field.isInternalRequest = value === INTERNAL_REQUEST;
         publish(this.messageContext, CASE_NOC, {
           accountType: value 
         });
-        this.business.sectionlst = this.business.sectionlst.map(section => ({
-          ...section,
-          subSectionlst: section.subSectionlst?.map(sub => ({
-            ...sub,
-            objlst: sub.objlst?.map(obj => ({
-              ...obj,
-              fieldlst: obj.fieldlst?.map(f => ({
-                ...f,
-                isHidden: value === INTERNAL_REQUEST
-                  ? f.apiName !== FIELD_ACCOUNT_CONTRACT_NUMBER_PL
-                  : false,
-              })) || [],
-            })) || [],
-          })) || [],
-        }));
-        this.business = { ...this.business };
+        // this.business.sectionlst = this.business.sectionlst.map(section => ({
+        //   ...section,
+        //   subSectionlst: section.subSectionlst?.map(sub => ({
+        //     ...sub,
+        //     objlst: sub.objlst?.map(obj => ({
+        //       ...obj,
+        //       fieldlst: obj.fieldlst?.map(f => ({
+        //         ...f,
+        //         isHidden: value === INTERNAL_REQUEST
+        //           ? f.apiName !== FIELD_ACCOUNT_CONTRACT_NUMBER_PL
+        //           : false,
+        //       })) || [],
+        //     })) || [],
+        //   })) || [],
+        // }));
+        // this.business = { ...this.business };
       }
       
       if (field.isDate) {
@@ -1860,7 +1860,8 @@ export default class Fec_CaseBussiness extends LightningElement {
                 obj.fieldlst.forEach(field => {
             if (!field.editable) return; // ignore non editable
                     const key = obj.id + '_' + field.apiName;
-            if (draft[key] && !field.value) {
+            // if (draft[key] && !field.value) {
+            if (draft[key]) { // still applyDraft with existing data
               field.value = draft[key];
               field.displayValue = draft[key];
             }
