@@ -1,4 +1,4 @@
-import { LightningElement, api, wire } from "lwc";
+﻿import { LightningElement, api, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import {
   updateRecord,
@@ -12,7 +12,6 @@ import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getCase from "@salesforce/apex/FEC_SearchController.getCase";
 import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
 import getB2Contracts from "@salesforce/apex/FEC_SearchController.getB2Contracts";
-import searchByListNIDs from "@salesforce/apex/FEC_SearchByListNIDsServiceCallout.searchByListNIDs";
 import getCash24Contracts from "@salesforce/apex/FEC_SearchController.getCash24Contracts";
 import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
 
@@ -40,7 +39,7 @@ import {
   IsConsoleNavigation,
   getFocusedTabInfo,
   refreshTab,
-  openTab
+
 } from "lightning/platformWorkspaceApi";
 import getCardInfoByAccountNumber from "@salesforce/apex/FEC_SearchController.getCardInfoByAccountNumber";
 import getApplicationHistory from "@salesforce/apex/FEC_SearchController.getApplicationHistory";
@@ -86,7 +85,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   isSkip;
   wiredCaseResult;
   fieldPermissions;
-  errorCalloutIsurance;
 
   FEC_Toast_Search_Validation = FEC_Toast_Search_Validation;
   FEC_Toast_Validation_Title = FEC_Toast_Validation_Title;
@@ -97,9 +95,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   FEC_MSG_Create_Customer_History_Success = FEC_MSG_Create_Customer_History_Success;
   FEC_Toast_Refresh_Success = FEC_Toast_Refresh_Success;
 
-  labels = {
-    errorCalloutInsuranceMsg: FEC_Error_Callout_Insurance
-  }
 
   @wire(MessageContext)
   messageContext;
@@ -317,15 +312,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         sortable: false,
       },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
-      {
-        label: "Buyer NID",
-        fieldName: "BuyerNID",
-        type: "maskedToggle",
-        sortable: true,
-        typeAttributes:  {
-              caseId: this.recordId
-            },
-      },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
         type: "date", 
@@ -335,6 +321,15 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             year: "numeric"
         },
         sortable: true },
+      {
+        label: "Buyer NID",
+        fieldName: "BuyerNID",
+        type: "maskedToggle",
+        sortable: true,
+        typeAttributes:  {
+              caseId: this.recordId
+            },
+      },
       { label: "Product Name", fieldName: "ProductName", sortable: true },
       {
         label: "Premium Fee",
@@ -392,9 +387,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     ];
   }
 
-  get hasIsuranceData() {
-    return this.insuranceData && this.insuranceData?.length > 0;
-  }
 
   // Sample data placeholders (replace with real wired/callout data)
   cardData = [];
@@ -770,8 +762,8 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       );
       }
     }
-    this.seedSampleRows(true);
-    // this.processSearch() 
+    //this.seedSampleRows(true);
+    this.processSearch() 
   }
 
   async processSearch() {
@@ -833,34 +825,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       console.log("getCustomerList result:", result);
 
       const customers = result?.Customers || [];
-      this.errorCalloutIsurance = false;
       if (this.loanB2Data.length > 0 || this.loanCash24Data.length > 0 || customers.length > 0) {
         this.isNoCustomerFound = false;
         if (customers.length > 0) {
-            if (this.nationalId) {
-              const response = await searchByListNIDs({nationalIDs: [this.nationalId]});
-              let items = [];
-              if (response.sys2.code2 != '200') {
-                this.insuranceData = []; // not found insurance data
-                this.errorCalloutIsurance = response.sys2.code2 != '400';
-              } else if (response.sys2.code2 === '200') {
-                  response.result.forEach(element => {
-                    items.push({
-                      id: element.userID,
-                      UserId: element.userID,
-                      FullName: element.buyerName,
-                      BuyerNID: element.buyerNID,
-                      DateOfBirth: element.buyerDOB,
-                      ProductName: element.productNameEn,
-                      PremiumFee: element.collectedPremiumFee,
-                      PaymentId:  element.paymentID,
-                      EffectiveDate:  element.effectiveDate,
-                      Status:  element.StatusDisplay,
-                    })
-                  });
-                this.insuranceData = items;
-              }
-          }
           this.processCustomerResults(customers);
           this.fetchPlasticIds();
         }
@@ -1014,24 +981,24 @@ hasAnySearchCriteria(params) {
                     }
                 }
                 // INSURANCE
-                // else if (productCode === 'INS' || (app.SchemeDesc && app.SchemeDesc.includes('INSURED'))) {
-                //     insuranceList.push({
-                //         id: app.ApplicationID,
-                //         FullName: cust.FullName,
-                //         BuyerNID: cust.NationalID,
-                //         ProductName: app.SchemeDesc || 'Insurance',
-                //         Status: app.Status,
-                //         Phone: phone,
-                //         CIFNumber: cust.CIFNumber
-                //     });
-                // }
+                else if (productCode === 'INS' || (app.SchemeDesc && app.SchemeDesc.includes('INSURED'))) {
+                    insuranceList.push({
+                        id: app.ApplicationID,
+                        FullName: cust.FullName,
+                        BuyerNID: cust.NationalID,
+                        ProductName: app.SchemeDesc || 'Insurance',
+                        Status: app.Status,
+                        Phone: phone,
+                        CIFNumber: cust.CIFNumber
+                    });
+                }
             });
         }
     });
 
     this.cardData = Array.from(cardMap.values());
     this.loanContractData = Array.from(loanContractMap.values());
-    // this.insuranceData = insuranceList;
+    this.insuranceData = insuranceList;
 }
 
 
@@ -1111,13 +1078,6 @@ hasAnySearchCriteria(params) {
               }
              }));
             this.showToast("Thành công", "Tạo Internal Case thành công", "success");
-            // await openTab({
-            //   recordId: caseId,
-            //   focus: true,
-            // });
-            // setTimeout(async () => {
-            //   await this.handlePublishMessageChanelInternalCase();
-            // }, 3000);
           })
           .catch((error) => {
             this.showToast("Lỗi", error.body.message, "error");
@@ -1141,6 +1101,7 @@ hasAnySearchCriteria(params) {
         // Bước 2: ĐẶT TẠI ĐÂY - Thông báo cho UI làm mới dữ liệu
         //await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
         await refreshApex(this.wiredCaseResult);
+
         this.showToast("Thành công", "Case đã được cập nhật.", "success");
       } catch (error) {
         this.showToast("Lỗi", error.body.message, "error");
@@ -1256,10 +1217,10 @@ hasAnySearchCriteria(params) {
     let applicationId = null;
     if (fieldName === 'AccountNumber') {
       const row = this.cardData.find(r => r.AccountNumber === key);
-      applicationId = row?.ApplicationID || key;
+      applicationId = row?.ApplicationID;
     } else if (fieldName === 'ContractNumber') {
       const row = this.loanContractData.find(r => r.ContractNumber === key);
-      applicationId = row?.ApplicationID || key;
+      applicationId = row?.ApplicationID;
     }
     if (!applicationId) return;
 
@@ -1463,7 +1424,6 @@ hasAnySearchCriteria(params) {
               //     objectApiName: "Case",
               //     actionName: "view",
               //   },
-              // });
             }
             //await this.refreshTab();
           })
@@ -1519,7 +1479,7 @@ hasAnySearchCriteria(params) {
   }
 
   // Demo data seeding
-  async seedSampleRows(force = false) {
+    seedSampleRows(force = false) {
     if (this.emailAddress == "a@a.aa") {
       this.isNoCustomerFound = true;
       this.cardData = [];
