@@ -1628,29 +1628,6 @@ hasAnySearchCriteria(params) {
           Status: "Hết hiệu lực",
         },
       ];
-      const response = await searchByListNIDs({nationalIDs: [this.nationalId]});
-              let items = [];
-              if (response.sys2.code2 != '200') {
-                this.insuranceData = []; // not found insurance data
-                this.errorCalloutIsurance = response.sys2.code2 != '400';
-              } else if (response.sys2.code2 === '200') {
-                  response.result.forEach(element => {
-                    items.push({
-                      id: element.userID,
-                      UserId: element.userID,
-                      FullName: element.buyerName,
-                      BuyerNID: element.buyerNID,
-                      DateOfBirth: element.buyerDOB,
-                      ProductName: element.productNameEn,
-                      PremiumFee: element.collectedPremiumFee,
-                      PaymentId:  element.paymentID,
-                      EffectiveDate:  element.effectiveDate,
-                      Status:  element.StatusDisplay,
-                    })
-                  });
-                this.insuranceData = items;
-              }
-    }
   }
 
   async handlePublishMessageChanel() {
