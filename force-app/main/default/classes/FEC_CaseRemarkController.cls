@@ -85,7 +85,7 @@ public without sharing class FEC_CaseRemarkController {
       existingRemarks.add(caseRemark);
       caselst[0].FEC_Draft_Remarks__c = remarksToJson(existingRemarks);
 
-      Database.update(caselst, AccessLevel.SYSTEM_MODE);
+      update caselst;
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
@@ -94,18 +94,47 @@ public without sharing class FEC_CaseRemarkController {
   /** Xóa draft Case Remarks trên Case (trước khi Submit để chỉ lưu 1 bản ghi = nội dung hiện tại). */
   @AuraEnabled
   public static void clearDraftRemarks(String caseId) {
-    if (String.isBlank(caseId))
-      return;
-    List<Case> caselst = [
-      SELECT Id, FEC_Draft_Remarks__c
-      FROM Case
-      WHERE Id = :caseId
-      LIMIT 1
-    ];
-    if (caselst.isEmpty())
-      return;
-    caselst[0].FEC_Draft_Remarks__c = null;
-    Database.update(caselst, AccessLevel.SYSTEM_MODE);
+      try {
+          if (String.isBlank(caseId)) return;
+
+          // Check object & field permission
+          if (!Schema.sObjectType.Case.isUpdateable() ||
+              !Schema.sObjectType.Case.fields.FEC_Draft_Remarks__c.isUpdateable()) {
+              throw new AuraHandledException('You do not have permission to update Case or Draft Remarks');
+          }
+
+          List<Case> caselst = [
+              SELECT Id, FEC_Draft_Remarks__c
+              FROM Case
+              WHERE Id = :caseId
+              LIMIT 1
+          ];
+
+          if (caselst.isEmpty()) return;
+
+          Case c = caselst[0];
+
+          // 🔒 Check nếu record bị lock
+          if (Approval.isLocked(c.Id)) {
+              System.debug('Case is locked. Trying to unlock...');
+              try {
+                  Approval.unlock(c.Id);
+              } catch (Exception unlockEx) {
+                  System.debug('Unlock failed: ' + unlockEx.getMessage());
+                  throw new AuraHandledException('Case is locked and cannot be updated.');
+              }
+          }
+
+          // Clear draft
+          c.FEC_Draft_Remarks__c = null;
+
+          // Update
+          update c;
+
+      } catch (Exception e) {
+          System.debug('ERROR clearDraftRemarks: ' + e.getMessage());
+          throw new AuraHandledException(e.getMessage());
+      }
   }
 
   /** Submit chỉ tạo 1 bản ghi: lấy bản nháp mới nhất (phần tử cuối trong draft). */
@@ -153,7 +182,7 @@ public without sharing class FEC_CaseRemarkController {
       }
 
       caselst[0].FEC_Draft_Remarks__c = null;
-      Database.update(caselst, AccessLevel.SYSTEM_MODE);
+      update caselst;
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
