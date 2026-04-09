@@ -355,10 +355,13 @@ public without sharing class FEC_NotificationService {
     }
 
     /**
-     * Convert rtaImage URLs trong HTML sang base64 inline để email client hiển thị được
+     * Convert rtaImage URLs trong HTML sang base64 inline để email client hiển thị được.
+     * Tự detect org domain nên không cần hardcode URL.
      */
     private static String inlineImages(String html) {
         if (String.isBlank(html)) return html;
+        // Lấy org domain động
+        String orgDomain = URL.getOrgDomainUrl().toExternalForm();
         // Tìm tất cả src="...rtaImage..." và replace bằng base64
         Pattern p = Pattern.compile('src="(https?://[^"]*rtaImage[^"]*)"');
         Matcher m = p.matcher(html);
@@ -370,13 +373,11 @@ public without sharing class FEC_NotificationService {
                 req.setEndpoint(url);
                 req.setMethod('GET');
                 req.setTimeout(10000);
-                // Dùng session Id để authenticate
                 req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
                 Http http = new Http();
                 HttpResponse res = http.send(req);
                 if (res.getStatusCode() == 200) {
                     String contentType = res.getHeader('Content-Type') != null ? res.getHeader('Content-Type') : 'image/png';
-                    // Strip charset nếu có
                     if (contentType.contains(';')) contentType = contentType.substringBefore(';').trim();
                     String b64 = EncodingUtil.base64Encode(res.getBodyAsBlob());
                     String dataUri = 'data:' + contentType + ';base64,' + b64;
