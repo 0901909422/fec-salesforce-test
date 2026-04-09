@@ -7,10 +7,6 @@
  */
 public without sharing class FEC_NotificationService {
 
-    // Guard để tránh gọi notification nhiều lần trong cùng transaction
-    @TestVisible
-    private static Boolean notificationSent = false;
-
     /**
      * Method Description: Gửi Email notification khi Case được route đến Queue
      * Điều kiện lọc Notification record:
@@ -26,7 +22,6 @@ public without sharing class FEC_NotificationService {
      * @created: 2026/04/06
      */
     public static void sendEmailNotifications(List<Case> newCases, Map<Id, Case> oldMap) {
-        if (notificationSent) return;
         System.debug('--- [sendEmailNotifications] START cases=' + newCases.size());
         List<Case> routedCases = filterCasesRoutedToQueue(newCases, oldMap);
         System.debug('--- [sendEmailNotifications] routedCases=' + routedCases.size());
@@ -83,6 +78,9 @@ public without sharing class FEC_NotificationService {
         Time nowTime = FEC_CommonUltils.getCurrentLocalTime();
         List<Messaging.SingleEmailMessage> emailsToSend = new List<Messaging.SingleEmailMessage>();
 
+        // Lấy OrgWide sender 1 lần cho toàn bộ emails
+        Id orgWideId = FEC_CommonUltils.getOrgWideEmailIdForNotification();
+
         for (Case c : routedCases) {
             List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
             System.debug('--- case=' + c.Id + ' OwnerId=' + c.OwnerId + ' candidates=' + (candidates == null ? 0 : candidates.size()));
@@ -107,14 +105,13 @@ public without sharing class FEC_NotificationService {
                 String body = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Body__c)
                     ? resolveTemplate(n.FEC_Notification_Template__r.FEC_Body__c, c) : '';
 
-                emailsToSend.add(FEC_CommonUltils.buildEmail(toAddresses, subject, body));
+                emailsToSend.add(FEC_CommonUltils.buildEmailWithSender(toAddresses, subject, body, orgWideId));
                 System.debug('--- email queued to=' + toAddresses + ' subject=' + subject);
             }
         }
 
         System.debug('--- [sendEmailNotifications] sending ' + emailsToSend.size() + ' emails');
         FEC_CommonUltils.sendEmails(emailsToSend);
-        notificationSent = true;
     }
 
     /**

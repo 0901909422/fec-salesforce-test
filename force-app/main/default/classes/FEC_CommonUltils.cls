@@ -1134,6 +1134,43 @@ public with sharing class FEC_CommonUltils {
   }
 
   /**
+   * Lấy OrgWideEmailAddress Id để gửi notification.
+   * Ưu tiên OrgWide có Purpose = 'UserSelection', fallback OrgWide đầu tiên.
+   * @return Id của OrgWideEmailAddress, hoặc null nếu không tìm thấy
+   */
+  public static Id getOrgWideEmailIdForNotification() {
+    try {
+      List<OrgWideEmailAddress> owas = [
+        SELECT Id, Address, Purpose
+        FROM OrgWideEmailAddress
+        ORDER BY DisplayName ASC
+        LIMIT 10
+      ];
+      if (owas.isEmpty()) return null;
+      // Ưu tiên UserSelection
+      for (OrgWideEmailAddress owa : owas) {
+        if (owa.Purpose == 'UserSelection') return owa.Id;
+      }
+      // Fallback: đầu tiên
+      return owas[0].Id;
+    } catch (Exception e) {
+      System.debug('getOrgWideEmailIdForNotification error: ' + e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * Build email với OrgWideEmailAddress sender.
+   */
+  public static Messaging.SingleEmailMessage buildEmailWithSender(List<String> toAddresses, String subject, String htmlBody, Id orgWideEmailId) {
+    Messaging.SingleEmailMessage mail = buildEmail(toAddresses, subject, htmlBody);
+    if (orgWideEmailId != null) {
+      mail.setOrgWideEmailAddressId(orgWideEmailId);
+    }
+    return mail;
+  }
+
+  /**
    * Gửi nhiều email cùng lúc (bulk).
    */
   public static void sendEmails(List<Messaging.SingleEmailMessage> emails) {

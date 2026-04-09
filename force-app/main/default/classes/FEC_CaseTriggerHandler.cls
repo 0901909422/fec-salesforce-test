@@ -104,8 +104,6 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/02/02
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
-        FEC_NotificationService.sendEmailNotifications(newCases, oldMap);
-        FEC_NotificationService.sendSFAppNotifications(newCases, oldMap);
         isExecuting = true;
         handleFollowUpOnResolved(newCases, oldMap);
         handleAutoFollowUpOnUpdate(newCases, oldMap);
@@ -115,6 +113,8 @@ public without sharing class FEC_CaseTriggerHandler {
         FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, oldMap);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
         syncGlobalSearch(newCases, oldMap);
+        FEC_NotificationService.sendEmailNotifications(newCases, oldMap);
+        FEC_NotificationService.sendSFAppNotifications(newCases, oldMap);
         isExecuting = false;
     }
 
@@ -493,7 +493,7 @@ public without sharing class FEC_CaseTriggerHandler {
             WHERE Id IN :caseIds
         ];
 
-            List<Case> casesForRouting = new List<Case>();
+        List<Case> casesForRouting = new List<Case>();
         List<Case> casesToPublish = new List<Case>();
 
         for (Case c : casesToDml) {
