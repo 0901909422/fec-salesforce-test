@@ -9,17 +9,39 @@ import clearMainInfoCache from '@salesforce/apex/FEC_MainInfoController.clearMai
 import getMailingAddressUpdateContext from '@salesforce/apex/FEC_MainInfoController.getMailingAddressUpdateContext';
 import getProvinceOptionsForAddress from '@salesforce/apex/FEC_MainInfoController.getProvinceOptionsForAddress';
 import getWardOptionsForProvinceCode from '@salesforce/apex/FEC_MainInfoController.getWardOptionsForProvinceCode';
-import updateCustomerAddressParams from '@salesforce/apex/FEC_UpdateCustomerAddress.updateCustomerAddressParams';
+import updateCustomerAddressParams from '@salesforce/apex/FEC_MainInfoController.updateCustomerAddressParams';
 
 import FEC_Permanent_Address from '@salesforce/label/c.FEC_Permanent_Address';
 import FEC_Office_Address from '@salesforce/label/c.FEC_Office_Address';
+import FEC_Current_Address from '@salesforce/label/c.FEC_Current_Address';
+import FEC_Button_Cancel from '@salesforce/label/c.FEC_Button_Cancel';
+import FEC_Button_Save from '@salesforce/label/c.FEC_Button_Save';
+import FEC_LBL_ContractClosure_Mailing_Address_Col from '@salesforce/label/c.FEC_LBL_ContractClosure_Mailing_Address_Col';
+import FEC_LBL_ContractClosure_Building from '@salesforce/label/c.FEC_LBL_ContractClosure_Building';
+import FEC_LBL_ContractClosure_Street_Number from '@salesforce/label/c.FEC_LBL_ContractClosure_Street_Number';
+import FEC_LBL_ContractClosure_Street from '@salesforce/label/c.FEC_LBL_ContractClosure_Street';
+import FEC_LBL_ContractClosure_Ward from '@salesforce/label/c.FEC_LBL_ContractClosure_Ward';
+import FEC_LBL_ContractClosure_Address_Type from '@salesforce/label/c.FEC_LBL_ContractClosure_Address_Type';
+import FEC_LBL_Province_City from '@salesforce/label/c.FEC_LBL_Province_City';
+import FEC_LBL_UpdateAddress_Add_New_Address from '@salesforce/label/c.FEC_LBL_UpdateAddress_Add_New_Address';
+import FEC_LBL_UpdateAddress_Edit_Mailing from '@salesforce/label/c.FEC_LBL_UpdateAddress_Edit_Mailing';
+import FEC_LBL_UpdateAddress_New_Address from '@salesforce/label/c.FEC_LBL_UpdateAddress_New_Address';
+import FEC_LBL_UpdateAddress_Province_Search_Placeholder from '@salesforce/label/c.FEC_LBL_UpdateAddress_Province_Search_Placeholder';
+import Loading from '@salesforce/label/c.Loading';
 import LBL_UpdateSuccessfully from '@salesforce/label/c.LBL_UpdateSuccessfully';
 import LBL_Error from '@salesforce/label/c.LBL_Error';
 
-const TYPE_PERMANENT = 'Permanent Address';
-const TYPE_OFFICE = 'Office Address';
+const TYPE_PERMANENT = FEC_Permanent_Address;
+const TYPE_OFFICE = FEC_Office_Address;
 /** Địa chỉ hiện tại (API CURRES) — không trùng Permanent Address. */
-const TYPE_CURRENT = 'Current Address';
+const TYPE_CURRENT = FEC_Current_Address;
+
+/** Khóa hàng mailing/radio — khớp `data-row` trên template. */
+const ROW_PERMANENT = 'permanent';
+const ROW_CURRENT = 'current';
+const ROW_OFFICE = 'office';
+/** Thứ tự hàng. */
+const MAILING_ROW_ORDER = [ROW_PERMANENT, ROW_CURRENT, ROW_OFFICE];
 
 function cloneAddressesSnapshot(addresses) {
     if (!Array.isArray(addresses)) {
@@ -155,7 +177,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     @track mailingAddressId;
     @track mailingAddressTypeApi;
     /** Một trong hai địa chỉ được chọn làm giao phát (radio). */
-    @track mailingSelectedRow = 'permanent';
+    @track mailingSelectedRow = ROW_PERMANENT;
     @track mailingSelectionBusy = false;
 
     /** Popup thêm/sửa địa chỉ (Original > Add New Address). */
@@ -174,23 +196,23 @@ export default class Fec_UpdateAddress extends LightningElement {
     _lastFetchKey = 'fec-update-address-unset';
 
     labels = {
-        mailingAddress: 'Mailing Address',
+        mailingAddress: FEC_LBL_ContractClosure_Mailing_Address_Col,
         permanentAddress: FEC_Permanent_Address,
         officeAddress: FEC_Office_Address,
-        editMailing: 'Chỉnh sửa địa chỉ giao phát',
-        addNewAddress: 'Add New Address',
-        building: 'Building',
-        number: 'Number',
-        street: 'Street',
-        provinceCity: 'Province/City',
-        provinceSearchPlaceholder: 'Nhập để tìm tỉnh/thành...',
-        ward: 'Ward',
-        cancel: 'Cancel',
-        save: 'Save',
-        loading: 'Loading',
-        newAddressTitle: 'New Address',
-        addressTypeLabel: 'Address Type',
-        currentAddressOption: 'Current Address'
+        editMailing: FEC_LBL_UpdateAddress_Edit_Mailing,
+        addNewAddress: FEC_LBL_UpdateAddress_Add_New_Address,
+        building: FEC_LBL_ContractClosure_Building,
+        number: FEC_LBL_ContractClosure_Street_Number,
+        street: FEC_LBL_ContractClosure_Street,
+        provinceCity: FEC_LBL_Province_City,
+        provinceSearchPlaceholder: FEC_LBL_UpdateAddress_Province_Search_Placeholder,
+        ward: FEC_LBL_ContractClosure_Ward,
+        cancel: FEC_Button_Cancel,
+        save: FEC_Button_Save,
+        loading: Loading,
+        newAddressTitle: FEC_LBL_UpdateAddress_New_Address,
+        addressTypeLabel: FEC_LBL_ContractClosure_Address_Type,
+        currentAddressOption: FEC_Current_Address
     };
 
     connectedCallback() {
@@ -285,7 +307,7 @@ export default class Fec_UpdateAddress extends LightningElement {
         return (
             this.mailingRadiosDisabled ||
             !this.mailingEditRow ||
-            this.mailingEditRow !== 'permanent'
+            this.mailingEditRow !== ROW_PERMANENT
         );
     }
 
@@ -293,7 +315,7 @@ export default class Fec_UpdateAddress extends LightningElement {
         return (
             this.mailingRadiosDisabled ||
             !this.mailingEditRow ||
-            this.mailingEditRow !== 'current'
+            this.mailingEditRow !== ROW_CURRENT
         );
     }
 
@@ -301,20 +323,20 @@ export default class Fec_UpdateAddress extends LightningElement {
         return (
             this.mailingRadiosDisabled ||
             !this.mailingEditRow ||
-            this.mailingEditRow !== 'office'
+            this.mailingEditRow !== ROW_OFFICE
         );
     }
 
     get permanentMailingRadioChecked() {
-        return this.mailingSelectedRow === 'permanent';
+        return this.mailingSelectedRow === ROW_PERMANENT;
     }
 
     get officeMailingRadioChecked() {
-        return this.mailingSelectedRow === 'office';
+        return this.mailingSelectedRow === ROW_OFFICE;
     }
 
     get currentMailingRadioChecked() {
-        return this.mailingSelectedRow === 'current';
+        return this.mailingSelectedRow === ROW_CURRENT;
     }
 
     get mailingSaveOrFormBusy() {
@@ -377,15 +399,15 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     get isEditingPermanentMailing() {
-        return this.mailingEditRow === 'permanent';
+        return this.mailingEditRow === ROW_PERMANENT;
     }
 
     get isEditingOfficeMailing() {
-        return this.mailingEditRow === 'office';
+        return this.mailingEditRow === ROW_OFFICE;
     }
 
     get isEditingCurrentMailing() {
-        return this.mailingEditRow === 'current';
+        return this.mailingEditRow === ROW_CURRENT;
     }
 
     findAddress(typeLabel, addressList) {
@@ -572,13 +594,13 @@ export default class Fec_UpdateAddress extends LightningElement {
         const cur = this.isMailingFlagYes(this.currentAddr);
         const off = this.isMailingFlagYes(this.officeAddr);
         if (perm) {
-            this.mailingSelectedRow = 'permanent';
+            this.mailingSelectedRow = ROW_PERMANENT;
         } else if (cur) {
-            this.mailingSelectedRow = 'current';
+            this.mailingSelectedRow = ROW_CURRENT;
         } else if (off) {
-            this.mailingSelectedRow = 'office';
+            this.mailingSelectedRow = ROW_OFFICE;
         } else {
-            this.mailingSelectedRow = 'permanent';
+            this.mailingSelectedRow = ROW_PERMANENT;
         }
     }
 
@@ -632,10 +654,10 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     sfTypeFromRow(row) {
-        if (row === 'office') {
+        if (row === ROW_OFFICE) {
             return TYPE_OFFICE;
         }
-        if (row === 'current') {
+        if (row === ROW_CURRENT) {
             return TYPE_CURRENT;
         }
         return TYPE_PERMANENT;
@@ -809,9 +831,8 @@ export default class Fec_UpdateAddress extends LightningElement {
     handleMailingCheckboxChange(event) {
         const row = event.currentTarget?.dataset?.row;
         const checked = event.detail?.checked === true;
-        const validRows = ['permanent', 'current', 'office'];
         if (
-            !validRows.includes(row) ||
+            !MAILING_ROW_ORDER.includes(row) ||
             this.mailingRadiosDisabled ||
             !this.mailingEditRow ||
             this.mailingEditRow !== row
@@ -826,9 +847,9 @@ export default class Fec_UpdateAddress extends LightningElement {
             return;
         }
         if (this.mailingSelectedRow === row) {
-            const order = ['permanent', 'current', 'office'];
-            const idx = order.indexOf(row);
-            this.mailingSelectedRow = order[(idx + 1) % order.length];
+            const idx = MAILING_ROW_ORDER.indexOf(row);
+            this.mailingSelectedRow =
+                MAILING_ROW_ORDER[(idx + 1) % MAILING_ROW_ORDER.length];
             this.persistMailingSelectionOnly();
         }
     }
@@ -842,9 +863,9 @@ export default class Fec_UpdateAddress extends LightningElement {
         }
         this.mailingSelectionBusy = true;
         const rowTypes = [
-            { row: 'permanent', sf: TYPE_PERMANENT },
-            { row: 'current', sf: TYPE_CURRENT },
-            { row: 'office', sf: TYPE_OFFICE }
+            { row: ROW_PERMANENT, sf: TYPE_PERMANENT },
+            { row: ROW_CURRENT, sf: TYPE_CURRENT },
+            { row: ROW_OFFICE, sf: TYPE_OFFICE }
         ];
         try {
             const contexts = await Promise.all(
@@ -972,9 +993,9 @@ export default class Fec_UpdateAddress extends LightningElement {
             }
 
             const allRows = [
-                { row: 'permanent', sf: TYPE_PERMANENT },
-                { row: 'current', sf: TYPE_CURRENT },
-                { row: 'office', sf: TYPE_OFFICE }
+                { row: ROW_PERMANENT, sf: TYPE_PERMANENT },
+                { row: ROW_CURRENT, sf: TYPE_CURRENT },
+                { row: ROW_OFFICE, sf: TYPE_OFFICE }
             ];
             for (const { row: r, sf } of allRows) {
                 if (r === row) {
@@ -1042,8 +1063,8 @@ export default class Fec_UpdateAddress extends LightningElement {
         this.newAddrWard = '';
         this.newAddrWardOptions = [];
         this.newAddrIsMailing =
-            this.mailingSelectedRow === 'permanent' ||
-            this.mailingSelectedRow === 'current';
+            this.mailingSelectedRow === ROW_PERMANENT ||
+            this.mailingSelectedRow === ROW_CURRENT;
     }
 
     handleAddNewAddress() {
@@ -1093,9 +1114,9 @@ export default class Fec_UpdateAddress extends LightningElement {
         const val = e.detail.value;
         this.newAddrAddressType = val || TYPE_CURRENT;
         if (this.newAddrAddressType === TYPE_OFFICE) {
-            this.newAddrIsMailing = this.mailingSelectedRow === 'office';
+            this.newAddrIsMailing = this.mailingSelectedRow === ROW_OFFICE;
         } else if (this.newAddrAddressType === TYPE_CURRENT) {
-            this.newAddrIsMailing = this.mailingSelectedRow === 'current';
+            this.newAddrIsMailing = this.mailingSelectedRow === ROW_CURRENT;
         }
     }
 
@@ -1173,7 +1194,7 @@ export default class Fec_UpdateAddress extends LightningElement {
         }
         const isOffice = this.newAddrAddressType === TYPE_OFFICE;
         const isCurrent = this.newAddrAddressType === TYPE_CURRENT;
-        const primaryRow = isOffice ? 'office' : 'current';
+        const primaryRow = isOffice ? ROW_OFFICE : ROW_CURRENT;
         if (!this.resolvedCaseId) {
             this.showToast(LBL_Error, LBL_Error, 'error');
             return;
@@ -1258,9 +1279,9 @@ export default class Fec_UpdateAddress extends LightningElement {
             if (this.newAddrIsMailing) {
                 this.mailingSelectedRow = primaryRow;
             } else if (isOffice) {
-                this.mailingSelectedRow = 'permanent';
+                this.mailingSelectedRow = ROW_PERMANENT;
             } else if (isCurrent) {
-                this.mailingSelectedRow = 'office';
+                this.mailingSelectedRow = ROW_OFFICE;
             }
             await clearMainInfoCache({ caseId: this.resolvedCaseId });
             this.showToast(LBL_UpdateSuccessfully, LBL_UpdateSuccessfully, 'success');

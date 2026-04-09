@@ -12019,6 +12019,38 @@
         <value>Ward</value>
     </labels>
     <labels>
+        <fullName>FEC_LBL_UpdateAddress_Add_New_Address</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — Add New Address button/section</shortDescription>
+        <value>Add New Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_Edit_Mailing</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — edit mailing modal title</shortDescription>
+        <value>Chỉnh sửa địa chỉ giao phát</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_New_Address</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — new address modal title</shortDescription>
+        <value>New Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_Province_Search_Placeholder</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — province combobox search placeholder</shortDescription>
+        <value>Nhập để tìm tỉnh/thành...</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ContractClosure_No_C360_Email</fullName>
         <categories>Contract Closure LWC</categories>
         <language>en_US</language>

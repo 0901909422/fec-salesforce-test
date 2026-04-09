@@ -82,7 +82,12 @@ public without sharing class FEC_MainInfoController {
         ];
 
         if (c.FEC_Account_or_Contract__c == null) {
-            throw new AuraHandledException(System.Label.FEC_MSG_Not_Found);
+            throw new AuraHandledException(
+                String.format(
+                    System.Label.FEC_MSG_Not_Found,
+                    new List<String>{ 'Customer History' }
+                )
+            );
         }
 
         /* ===== LOAD CUSTOMER HISTORY ===== */
@@ -278,6 +283,54 @@ public without sharing class FEC_MainInfoController {
         return opts;
     }
 
+    /**
+     * Gọi Update Customer Address (SOAP); ghi API log sau khi callout xong (không log trong class API).
+     */
+    @AuraEnabled
+    public static FEC_UpdateCustomerAddress.UpdateResult updateCustomerAddressParams(
+        String caseId,
+        String sfAddressType,
+        String cifNumber,
+        String addressId,
+        String addressType,
+        String number_x,
+        String building,
+        String street,
+        String ward,
+        String city,
+        String propertyStatus,
+        String years,
+        String months,
+        String isMailingAddress,
+        String isPrimary,
+        String receiveStatement,
+        String cardDelivery
+    ) {
+        try {
+            return FEC_UpdateCustomerAddress.updateCustomerAddressParams(
+                caseId,
+                sfAddressType,
+                cifNumber,
+                addressId,
+                addressType,
+                number_x,
+                building,
+                street,
+                ward,
+                city,
+                propertyStatus,
+                years,
+                months,
+                isMailingAddress,
+                isPrimary,
+                receiveStatement,
+                cardDelivery
+            );
+        } finally {
+            FEC_UpdateCustomerAddress.logApiResponse();
+        }
+    }
+
     @AuraEnabled
     public static MailingAddressContextDTO getMailingAddressUpdateContext(
         Id caseId,
@@ -318,7 +371,10 @@ public without sharing class FEC_MainInfoController {
         ];
 
         if (c.FEC_Account_or_Contract__c == null) {
-            dto.message = System.Label.FEC_MSG_Not_Found;
+            dto.message = String.format(
+                System.Label.FEC_MSG_Not_Found,
+                new List<String>{ 'Customer History' }
+            );
             return dto;
         }
 
@@ -365,12 +421,15 @@ public without sharing class FEC_MainInfoController {
             );
 
         if (res == null || res.Addresses == null) {
-            dto.message = System.Label.FEC_MSG_Not_Found;
+            dto.message = String.format(
+                System.Label.FEC_MSG_Not_Found,
+                new List<String>{ 'Addresses' }
+            );
             return dto;
         }
 
         FEC_GetAddressesList.AddressInfo found;
-        if (sfAddressType == 'Permanent Address') {
+        if (sfAddressType == FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT) {
             for (FEC_GetAddressesList.AddressInfo ai : res.Addresses) {
                 if (ai != null && ai.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
                     found = ai;
@@ -395,7 +454,10 @@ public without sharing class FEC_MainInfoController {
         }
 
         if (found == null || String.isBlank(found.AddressId)) {
-            dto.message = System.Label.FEC_MSG_Not_Found;
+            dto.message = String.format(
+                System.Label.FEC_MSG_Not_Found,
+                new List<String>{ 'Address' }
+            );
             return dto;
         }
 
@@ -412,13 +474,13 @@ public without sharing class FEC_MainInfoController {
     }
 
     private static String mapSfAddressTypeToApiCode(String sfType) {
-        if (sfType == 'Permanent Address') {
-            return 'PERMNENT';
+        if (sfType == FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT) {
+            return FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT;
         }
-        if (sfType == 'Office Address') {
-            return 'OFFICE';
+        if (sfType == FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE) {
+            return FEC_ConstantCommon.ADDRESS_TYPE_OFFICE;
         }
-        if (sfType == 'Current Address') {
+        if (sfType == FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT) {
             return FEC_ConstantCommon.ADDRESS_TYPE_CURRES;
         }
         return null;
@@ -646,11 +708,15 @@ public without sharing class FEC_MainInfoController {
      * API có thể trả PERMANENT (chuẩn) hoặc PERMNENT (mã nguồn CIF) — cùng một loại địa chỉ thường trú.
      */
     private static String mapApiAddressTypeToSF(String apiType) {
-        if (apiType == 'CURRES') return 'Current Address';
-        if (apiType == 'OFFICE') return 'Office Address';
+        if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_CURRES) {
+            return FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT;
+        }
+        if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_OFFICE) {
+            return FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE;
+        }
         if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT
             || apiType == FEC_ConstantCommon.ADDRESS_TYPE_PERMANENT) {
-            return 'Permanent Address';
+            return FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT;
         }
         return null;
     }

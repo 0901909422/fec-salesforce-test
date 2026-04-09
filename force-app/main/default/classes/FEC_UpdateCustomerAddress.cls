@@ -11,6 +11,8 @@
 
 public with sharing class FEC_UpdateCustomerAddress {
 
+  public static FEC_ResponseLog responseLog;
+
   private static final String CIF_NS = 'http://fecredit.com.vn/CIF_CustomerInfoUpdate';
   private static final String DEFAULT_PATH = '/CIF_CustomerInfoUpdate';
   private static final String SOAP_BODY_NS = 'http://schemas.xmlsoap.org/soap/envelope/';
@@ -46,7 +48,6 @@ public with sharing class FEC_UpdateCustomerAddress {
     @AuraEnabled public Decimal actionCount;
   }
 
-  @AuraEnabled
   public static UpdateResult updateCustomerAddress(CustomerAddressInfo info) {
     try {
       validateInput(info);
@@ -79,7 +80,14 @@ public with sharing class FEC_UpdateCustomerAddress {
           doc,
           ''
         );
-        FEC_CommonUltils.logApi(API_NAME, endpoint, FEC_ConstantCommon.API_METHOD_POST, reqXml, res, null);
+        responseLog = new FEC_ResponseLog(
+          API_NAME,
+          endpoint,
+          FEC_ConstantCommon.API_METHOD_POST,
+          reqXml,
+          res,
+          null
+        );
 
         Integer status = (res == null) ? null : res.getStatusCode();
         String resBody = (res == null) ? null : res.getBody();
@@ -95,7 +103,18 @@ public with sharing class FEC_UpdateCustomerAddress {
         }
       } catch (Exception ex) {
         String safeEndpoint = String.isNotBlank(endpoint) ? endpoint : 'Unknown_Endpoint';
-        FEC_CommonUltils.logApi(API_NAME, safeEndpoint, FEC_ConstantCommon.API_METHOD_POST, reqXml, null, ex.getMessage());
+        if (responseLog != null) {
+          responseLog.errorMessage = ex.getMessage();
+        } else {
+          responseLog = new FEC_ResponseLog(
+            API_NAME,
+            safeEndpoint,
+            FEC_ConstantCommon.API_METHOD_POST,
+            reqXml,
+            null,
+            ex.getMessage()
+          );
+        }
         finalResult.errorMessage = ex.getMessage();
         finalResult.success = false;
       }
@@ -111,7 +130,6 @@ public with sharing class FEC_UpdateCustomerAddress {
    * Giống updateCustomerAddress; tham số primitive để LWC deserialize.
    * Thiếu CIF/AddressId/AddressType có thể merge từ getMailingAddressUpdateContext (caseId + sfAddressType).
    */
-  @AuraEnabled
   public static UpdateResult updateCustomerAddressParams(
     String caseId,
     String sfAddressType,
@@ -341,5 +359,19 @@ public with sharing class FEC_UpdateCustomerAddress {
       return 'N';
     }
     return v.substring(0, 1);
+  }
+
+  public static void logApiResponse() {
+    if (responseLog != null) {
+      FEC_CommonUltils.logApi(
+        responseLog.apiName,
+        responseLog.endpoint,
+        responseLog.method,
+        responseLog.requestBody,
+        responseLog.response,
+        responseLog.errorMessage
+      );
+      responseLog = null;
+    }
   }
 }

@@ -122,7 +122,13 @@ public with sharing class FEC_ConstantCommon {
     
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
+    /** API trả PERMANENT — khác PERMNENT (mã nguồn CIF). */
+    public static final String ADDRESS_TYPE_PERMANENT = 'PERMANENT';
     public static final String ADDRESS_TYPE_OFFICE = 'OFFICE';
+    /** FEC_Address_Info__c.FEC_Address_Type__c — giá trị picklist. */
+    public static final String SF_ADDRESS_TYPE_PERMANENT = 'Permanent Address';
+    public static final String SF_ADDRESS_TYPE_OFFICE = 'Office Address';
+    public static final String SF_ADDRESS_TYPE_CURRENT = 'Current Address';
     public static final String TEXT_YES = 'Yes';
     public static final String TEXT_NO = 'No';
     
