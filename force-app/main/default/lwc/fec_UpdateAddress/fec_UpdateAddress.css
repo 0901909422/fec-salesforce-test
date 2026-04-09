@@ -1,0 +1,143 @@
+.case-info--card {
+    border: none;
+    border-radius: 0.25rem;
+    background-color: #ffffff;
+}
+
+.case-info__toolbar--original {
+    width: 100%;
+}
+
+.case-info__row {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.case-info__field-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #181818;
+    margin-bottom: 0.25rem;
+}
+
+.case-info__field-value {
+    font-size: 0.8125rem;
+    color: #181818;
+    word-break: break-word;
+}
+
+.case-info__mailing-header {
+    margin-bottom: 0.25rem;
+}
+
+.case-info__mailing-inline-form {
+    margin-top: 0.25rem;
+    padding: 0.75rem;
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 0.25rem;
+}
+
+.case-info__mailing-checkbox-input {
+    margin-top: 0.125rem;
+}
+
+.case-info__row--editable .case-info__field-value {
+    padding-right: 0.25rem;
+}
+
+.case-info__mailing-toggle-col {
+    min-height: 2.5rem;
+}
+
+.case-info__mailing-aside {
+    padding-top: 1.5rem;
+}
+
+@media (max-width: 64em) {
+    .case-info__mailing-aside {
+        padding-top: 0.5rem;
+    }
+}
+
+.case-info__pencil-cell {
+    padding-top: 1.25rem;
+}
+
+@media (min-width: 48em) {
+    .case-info__pencil-cell {
+        align-self: flex-start;
+    }
+}
+
+/* —— New Address modal: một lớp overlay (tránh chồng SLDS .slds-modal + backdrop) —— */
+.fec-new-address-modal__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100002;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    box-sizing: border-box;
+    background-color: rgba(8, 7, 7, 0.45);
+}
+
+.fec-new-address-modal__panel {
+    position: relative;
+    /* Rộng hơn bản 36rem: tận dụng màn hình lớn, vẫn co theo viewport */
+    max-width: min(56rem, 94vw);
+    width: 100%;
+    max-height: min(90vh, 100%);
+    overflow: auto;
+    margin: 0;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+}
+
+.fec-new-address-modal__header {
+    text-align: center;
+    border-bottom: none;
+    padding: 1.25rem 1.25rem 0.5rem;
+}
+
+.fec-new-address-modal__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #032d60;
+    margin: 0;
+}
+
+.fec-new-address-modal__rule {
+    height: 1px;
+    margin-top: 0.75rem;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #b8d9f5 12%,
+        #b8d9f5 88%,
+        transparent
+    );
+}
+
+.fec-new-address-modal__footer {
+    border-top: none;
+    padding: 0.5rem 1.25rem 1.25rem;
+}
+
+.fec-new-address-modal__footer .fec-new-address-modal__rule {
+    margin-top: 0;
+    margin-bottom: 0.25rem;
+}
+
+.fec-new-address-modal__spinner-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 12rem;
+}
+
+.fec-new-address-modal__mailing-cb {
+    margin-bottom: 0.25rem;
+}

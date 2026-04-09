@@ -153,6 +153,7 @@
 		<members>fec_CardPayment</members>
 		<members>fec_UserSearchModal</members>
 		<members>fec_Asset</members>
+		<members>fec_UpdateAddress</members>
 		<members>fec_CreateCaseInListView</members>
 		<members>fec_AccountOrContractPicklistCustomerCase</members>
 		<members>fec_AccountOrContractPicklistInteraction</members>
