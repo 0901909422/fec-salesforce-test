@@ -25,7 +25,7 @@ import MESSAGE_WARNING from '@salesforce/label/c.messenger_Warning';
 import TITLE_TOAST_EVENT from '@salesforce/label/c.title_Toast_Event';
 import MESSAGE_TOAST_EVENT from '@salesforce/label/c.messager_Toast_Event';
 
-import { IsConsoleNavigation, getFocusedTabInfo, closeTab } from 'lightning/platformWorkspaceApi';
+import { IsConsoleNavigation, getFocusedTabInfo, closeTab, openTab } from 'lightning/platformWorkspaceApi';
 
 export default class Fec_GetNextWork extends NavigationMixin(LightningElement) {
     @track selectedQueue = '';
@@ -45,7 +45,17 @@ export default class Fec_GetNextWork extends NavigationMixin(LightningElement) {
         MESSAGE_TOAST_EVENT
     };
 
+    newCaseId;
+    currentTabId; 
+
     @wire(IsConsoleNavigation) isConsoleNavigation;
+
+    async connectedCallback() {                    
+        try {
+            const { tabId } = await getFocusedTabInfo();
+            this.currentTabId = tabId;
+        } catch (e) {}
+    }
 
     /**
     * @description get data Queue
@@ -75,12 +85,25 @@ export default class Fec_GetNextWork extends NavigationMixin(LightningElement) {
     }
 
     /**
+    * @description handleCloseTab
+    * @Date 2025/12/07
+    * @param event
+    * @return null
+    */
+    async handleCloseTab() {
+        if (!this.isConsoleNavigation) return;
+        const { tabId } = await getFocusedTabInfo();
+        await closeTab(tabId);
+    }
+
+    /**
     * @description closeTab
     * @Date 2025/12/07
     * @param tabId
     * @return null
     */
-    async closeTab() {
+    async handleCloseButtonCancel() {
+        this.isShowModal = false;
 
         this[NavigationMixin.Navigate]({
             type: 'standard__objectPage',
@@ -90,11 +113,7 @@ export default class Fec_GetNextWork extends NavigationMixin(LightningElement) {
             }
         });
 
-        if (!this.isConsoleNavigation) {
-            return;
-        }
-        const { tabId } = await getFocusedTabInfo();
-        await closeTab(tabId);
+        await this.handleCloseTab();
     }
 
     /**
@@ -105,7 +124,46 @@ export default class Fec_GetNextWork extends NavigationMixin(LightningElement) {
     */
     async handleCancel() {
         this.isShowModal = false;
-        await this.closeTab();
+        await this.handleCloseButtonCancel();    
+    }
+
+    /**
+    * @description handleClose
+    * @Date 2025/12/07
+    * @param 
+    * @return null
+    */
+    async handleClose() {
+        this.isShowModal = false;
+
+        let tabToClose = this.currentTabId;
+        if (!tabToClose) {
+            try {
+                const { tabId } = await getFocusedTabInfo();
+                tabToClose = tabId;
+            } catch (e) {}
+        }
+
+        this[NavigationMixin.Navigate]({
+            type: 'standard__objectPage',
+            attributes: {
+                objectApiName: 'Case',
+                actionName: 'list'
+            }
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        await openTab({
+            recordId: this.newCaseId,
+            focus: true,
+        });
+
+        setTimeout(async () => {
+            if (tabToClose) {
+                await closeTab(tabToClose);
+            }
+        }, 1000);
     }
 
     /**
@@ -135,17 +193,8 @@ export default class Fec_GetNextWork extends NavigationMixin(LightningElement) {
 
             await takeOwnership({ caseId });
 
-            this[NavigationMixin.Navigate]({
-                type: 'standard__recordPage',
-                attributes: {
-                    recordId: caseId,
-                    objectApiName: 'Case',
-                    actionName: 'view'
-                }
-            });
-
-            this.isShowModal = false;
-            await this.closeTab();
+            this.newCaseId = caseId;              
+            await this.handleClose(); 
 
         } catch (error) {
             this.toastError(this, error);
