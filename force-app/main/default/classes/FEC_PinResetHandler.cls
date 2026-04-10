@@ -14,10 +14,10 @@ public without sharing class FEC_PinResetHandler {
     public static CardInfoResponse getCardInfo(String customerCaseId){
         try {
             
-            List<Case> cases = [SELECT Id, FEC_Account_or_Contract__r.FEC_Account_Number__c  , FEC_CIF_Number__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c, FEC_Phone_Number__c,  FEC_Process_Action_Count__c
-                                FROM Case
-                                WHERE Id = :customerCaseId
-                                LIMIT 1]
+            List<Case> cases = [SELECT Id, FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c , FEC_Account_or_Contract__r.FEC_Primary_Phone__c , FEC_Process_Action_Count__c
+                FROM Case
+                WHERE Id = :customerCaseId
+                LIMIT 1]
                 
             ;
             if(cases.isEmpty()){
@@ -25,10 +25,8 @@ public without sharing class FEC_PinResetHandler {
             }
             
             CardInfoResponse response = new CardInfoResponse();
-            response.cardNumber = cases[0].FEC_Account_or_Contract__r.FEC_Account_Number__c ;
-            response.cifNumber = cases[0].FEC_CIF_Number__c  ;
             response.nationalId = cases[0].FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c;
-            response.mobile = cases[0].FEC_Phone_Number__c;
+            response.mobile = cases[0].FEC_Account_or_Contract__r.FEC_Primary_Phone__c;
             response.processActionCount =
                 cases[0].FEC_Process_Action_Count__c != null
                 ? cases[0].FEC_Process_Action_Count__c

@@ -30,6 +30,7 @@ import blockCard from '@salesforce/apex/FEC_CardLockUnLockController.blockCard';
 
 export default class Fec_CardBlock extends LightningElement {
     @api recordId;
+    @api isEdit;
 
     isShowSpinner = false;
     isShowModal = false;
@@ -69,7 +70,15 @@ export default class Fec_CardBlock extends LightningElement {
         'Thẻ bị mất/ đánh cắp có phát sinh giao dịch': 'S',
     }
 
+    get isDisabled() {
+        return this.isEdit === false;
+    }
+
     get isShowBtn() {
+        return !this.isDisabled && !this.isSuccess && (this.blockCardCount < 3);
+    }
+
+    get isShowMsgRetry() {
         return !this.isSuccess && (this.blockCardCount < 3);
     }
 
