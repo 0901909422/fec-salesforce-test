@@ -45,6 +45,11 @@ import FEC_Decision_Label from "@salesforce/label/c.FEC_Decision_Label";
 import FEC_Choose_Decision_Label from "@salesforce/label/c.FEC_Choose_Decision_Label";
 import FEC_Sub_Decision_Label from "@salesforce/label/c.FEC_Sub_Decision_Label";
 import FEC_Choose_Sub_Decision_Label from "@salesforce/label/c.FEC_Choose_Sub_Decision_Label";
+import FEC_ACTION_UNBLOCK_CARD_HEADER from "@salesforce/label/c.FEC_ACTION_UNBLOCK_CARD_HEADER";
+import FEC_MSG_ACTION_UNBLOCK_CARD from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD";
+import FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS";
+import FEC_MSG_ACTION_UNBLOCK_CARD_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_ERROR";
+
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 
@@ -66,6 +71,8 @@ const ACTION_ESCALATE = "Escalate";
 const ACTION_CANCEL = "Cancel";
 
 const OUTBOUND_CAMPAIGN = 'Outbound Campaign';
+
+const ACTION_UNBLOCK_CARD = "Unblock Card";
 
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
@@ -1564,8 +1571,18 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     this.processActionMethod = method;
 
-    this.header = FEC_ACTION_PHONE_UPDATE_HEADER;
-    this.content = FEC_MSG_ACTION_PHONE_UPDATE;
+    let header;
+    let content;
+    if (method == ACTION_UNBLOCK_CARD) {
+      header = FEC_ACTION_UNBLOCK_CARD_HEADER;
+      content = FEC_MSG_ACTION_UNBLOCK_CARD;
+    } else {
+      header = FEC_ACTION_PHONE_UPDATE_HEADER;
+      content = FEC_MSG_ACTION_PHONE_UPDATE;
+    }
+
+    this.header = header;
+    this.content = content;
     this.isModalOpen = true;
   }
 
@@ -1619,10 +1636,26 @@ export default class Fec_CaseBussiness extends LightningElement {
         };
         break;
 
+      case ACTION_UNBLOCK_CARD:
+        params = {
+          caseId: this.recordId,
+        };
+        break;
+
       default:
         break;
     }
 
+    let msgSuccess;
+    let msgError;
+    if (this.processActionMethod == ACTION_UNBLOCK_CARD) {
+      msgSuccess = FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS;
+      msgError = FEC_MSG_ACTION_UNBLOCK_CARD_ERROR;
+    } else {
+      msgSuccess = FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS;
+      msgError = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
+    }
+    
     run({ method: this.processActionMethod, params })
       .then((res) => {
         let isSuccess = res?.success;
@@ -1631,7 +1664,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           res?.actionCount != -1 && res?.actionCount != 3;
 
         if (isSuccess) {
-          this.processActionMsg = FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS;
+          this.processActionMsg = msgSuccess;
           this.isProcessActionSuccessed = true;
           this.isProcessActionFailed = false;
           this.actionValue = ACTION_RESOLVE;
@@ -1644,7 +1677,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             routeToEle.value = ACTION_RESOLVE;
           }
         } else {
-          this.processActionMsg = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
+          this.processActionMsg = msgError;
           this.isProcessActionSuccessed = false;
           this.isProcessActionFailed = true;
         }
@@ -1665,7 +1698,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         this.isProcessActionFailed = true;
         this.isProcessActionSuccessed = false;
-        this.processActionMsg = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
+        this.processActionMsg = msgError;
       })
       .finally(() => {
         this.isLoaded = true;
