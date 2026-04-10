@@ -1519,6 +1519,10 @@
         <members>FEC_LBL_UpdateAddress_New_Address</members>
         <members>FEC_LBL_UpdateAddress_Province_Search_Placeholder</members>
 		<members>FEC_MSG_Exception</members>
+		<members>FEC_ACTION_UNBLOCK_CARD_HEADER</members>
+        <members>FEC_MSG_ACTION_UNBLOCK_CARD</members>
+        <members>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</members>
+		<members>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
