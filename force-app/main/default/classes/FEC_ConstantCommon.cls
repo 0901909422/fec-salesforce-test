@@ -411,5 +411,5 @@ public with sharing class FEC_ConstantCommon {
       'Document Preparation' => 'DocumentPreparation',
       'Task Under Review' => 'TaskUnderReview'
     };
-    
+  public static final String CASE_ALL_REQUEST = 'All';  
 }
