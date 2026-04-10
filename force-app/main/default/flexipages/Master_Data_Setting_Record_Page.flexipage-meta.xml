@@ -268,6 +268,26 @@
                 <identifier>RecordFEC_Editable_User_Group_cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Type__c</fieldItem>
+                <identifier>RecordFEC_Type__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_LWC_Name__c</fieldItem>
+                <identifier>RecordFEC_LWC_Name_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-43612907-cf65-40ec-bf27-dc8c39e8b4ce</name>
         <type>Facet</type>
     </flexiPageRegions>
