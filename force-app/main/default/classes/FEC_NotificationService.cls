@@ -360,24 +360,26 @@ public without sharing class FEC_NotificationService {
      */
     private static String inlineImages(String html) {
         if (String.isBlank(html)) return html;
-        // Tìm tất cả src="...rtaImage..." và replace bằng base64
         Pattern p = Pattern.compile('src="(https?://[^"]*rtaImage[^"]*)"');
         Matcher m = p.matcher(html);
         String result = html;
         while (m.find()) {
             String rawUrl = m.group(1);
-            // Decode HTML entities trong URL (&amp; → &)
             String url = rawUrl.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>');
             try {
+                Http http = new Http();
+                String sid = UserInfo.getSessionId();
+
+                // Thử với sid cookie trước (Salesforce file server cần cookie, không phải Bearer)
                 HttpRequest req = new HttpRequest();
                 req.setEndpoint(url);
                 req.setMethod('GET');
                 req.setTimeout(10000);
-                req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
-                Http http = new Http();
+                req.setHeader('Cookie', 'sid=' + sid);
                 HttpResponse res = http.send(req);
                 Integer statusCode = res.getStatusCode();
-                // Follow redirect nếu 302/301, statusCode == 200 bên dưới khác với statusCode ban đầu
+
+                // Nếu 302/301: follow redirect
                 if (statusCode == 302 || statusCode == 301) {
                     String location = res.getHeader('Location');
                     if (String.isNotBlank(location)) {
@@ -385,24 +387,31 @@ public without sharing class FEC_NotificationService {
                         req2.setEndpoint(location);
                         req2.setMethod('GET');
                         req2.setTimeout(10000);
-                        req2.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
+                        req2.setHeader('Cookie', 'sid=' + sid);
                         res = http.send(req2);
+                        statusCode = res.getStatusCode();
+                    } else {
+                        // Location null → thử lại với Bearer
+                        HttpRequest req3 = new HttpRequest();
+                        req3.setEndpoint(url);
+                        req3.setMethod('GET');
+                        req3.setTimeout(10000);
+                        req3.setHeader('Authorization', 'Bearer ' + sid);
+                        res = http.send(req3);
                         statusCode = res.getStatusCode();
                     }
                 }
+
                 if (statusCode == 200 && res.getBodyAsBlob() != null && res.getBodyAsBlob().size() > 0) {
                     String contentType = res.getHeader('Content-Type') != null ? res.getHeader('Content-Type') : 'image/png';
                     if (contentType.contains(';')) contentType = contentType.substringBefore(';').trim();
                     String b64 = EncodingUtil.base64Encode(res.getBodyAsBlob());
-                    String dataUri = 'data:' + contentType + ';base64,' + b64;
-                    result = result.replace(rawUrl, dataUri);
+                    result = result.replace(rawUrl, 'data:' + contentType + ';base64,' + b64);
                 } else {
-                    // Không inline được ảnh, giữ nguyên URL gốc trong HTML
-                    System.debug('inlineImages: skip inline for url=' + url + ' | status=' + statusCode
-                        + ' | bodySize=' + (res.getBodyAsBlob() != null ? res.getBodyAsBlob().size() : 0));
+                    System.debug('inlineImages: skip url=' + url + ' status=' + statusCode);
                 }
             } catch (Exception e) {
-                System.debug('inlineImages failed for url: ' + url + ' | ' + e.getMessage());
+                System.debug('inlineImages failed: ' + url + ' | ' + e.getMessage());
             }
         }
         return result;
