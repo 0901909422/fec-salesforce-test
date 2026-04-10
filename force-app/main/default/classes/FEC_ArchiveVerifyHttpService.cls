@@ -12,8 +12,8 @@
  */
 public class FEC_ArchiveVerifyHttpService {
 
-    private static final String API_CREDENTIAL = 'callout:FEC_CaseExport_API';
-    private static final String PATH           = '/api/v1/dispatcher/cases/archive-status';
+    private static final String API_CREDENTIAL = 'callout:FECredit_Service';
+    private static final String PATH           = '/archival/dispatcher/api/v1/cases/archive-status';
     private static final Integer TIMEOUT_MS    = 30000;
 
     /**
@@ -29,6 +29,7 @@ public class FEC_ArchiveVerifyHttpService {
         req.setEndpoint(API_CREDENTIAL + PATH);
         req.setMethod('POST');
         req.setHeader('Content-Type', 'application/json');
+        req.setHeader('X-API-KEY', 'RkVDX1NBTEVTRk9SQ0U=');
         req.setBody(JSON.serialize(body));
         req.setTimeout(TIMEOUT_MS);
 
@@ -40,12 +41,12 @@ public class FEC_ArchiveVerifyHttpService {
                 + res.getStatusCode() + ': ' + res.getBody());
         }
 
-        // Parse: { "results": [ {"caseId": "...", "status": "ARCHIVED"} ] }
+        // Parse: { "code": 200, "data": { "results": [...] }, "message": "OK" }
         Map<String, Object> parsed =
             (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-
-        List<Object> results = (List<Object>) parsed.get('results');
-
+        Map<String, Object> data = (Map<String, Object>) parsed.get('data');
+        List<Object> results = (List<Object>) data.get('results');
+        
         Map<String, String> statusMap = new Map<String, String>();
         for (Object item : results) {
             Map<String, Object> entry = (Map<String, Object>) item;

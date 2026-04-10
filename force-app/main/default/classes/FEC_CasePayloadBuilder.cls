@@ -10,6 +10,7 @@ public class FEC_CasePayloadBuilder {
     public static String buildBatch(
         List<Case> cases,
         Map<Id, List<FEC_Case_Remarks__c>> remarksByCaseId,
+        Map<Id, List<FEC_ChatHistory__c>> chatHistoriesByCaseId,
         Map<Id, User> usersById
     ) {
         List<Map<String, Object>> batchList = new List<Map<String, Object>>();
@@ -17,7 +18,10 @@ public class FEC_CasePayloadBuilder {
             List<FEC_Case_Remarks__c> remarks = remarksByCaseId.containsKey(c.Id)
                 ? remarksByCaseId.get(c.Id)
                 : new List<FEC_Case_Remarks__c>();
-            batchList.add(buildOne(c, remarks, usersById));
+            List<FEC_ChatHistory__c> chats = chatHistoriesByCaseId.containsKey(c.Id)
+                ? chatHistoriesByCaseId.get(c.Id)
+                : new List<FEC_ChatHistory__c>();
+            batchList.add(buildOne(c, remarks, chats, usersById));
         }
         return JSON.serialize(batchList);
     }
@@ -26,6 +30,7 @@ public class FEC_CasePayloadBuilder {
     public static Map<String, Object> buildOne(
         Case c,
         List<FEC_Case_Remarks__c> remarks,
+        List<FEC_ChatHistory__c> chats,
         Map<Id, User> usersById
     ) {
         Map<String, Object> p = new Map<String, Object>();
@@ -166,6 +171,9 @@ public class FEC_CasePayloadBuilder {
         // ── Remarks (tất cả remarks của case này) ─────────────────────────────
         p.put('FEC_Case_Remarks_List__r', remarksList(remarks));
 
+        // ── Chat Histories (tất cả tin nhắn của case này) ─────────────────────
+        // p.put('Chat_Histories__r', chatHistoryList(chats));
+
         return p;
     }
 
@@ -281,6 +289,27 @@ public class FEC_CasePayloadBuilder {
                 'FEC_Stage_Name__c'   => r.FEC_Stage_Name__c,
                 'FEC_User__c'         => r.FEC_User__c,
                 'FEC_User_Role__c'    => r.FEC_User_Role__c
+            });
+        }
+        return results;
+    }
+
+    // ── Chat History list ─────────────────────────────────────────────────────
+    private static List<Map<String, Object>> chatHistoryList(List<FEC_ChatHistory__c> chats) {
+        List<Map<String, Object>> results = new List<Map<String, Object>>();
+        if (chats == null) return results;
+        for (FEC_ChatHistory__c ch : chats) {
+            results.add(new Map<String, Object>{
+                'Id'                 => ch.Id,
+                'Name'               => ch.Name,
+                'FEC_Case__c'        => ch.FEC_Case__c,
+                'FEC_ChatChannel__c' => ch.FEC_ChatChannel__c,
+                'FEC_CreatedAt__c'   => formatDt(ch.FEC_CreatedAt__c),
+                'FEC_IsAgent__c'     => ch.FEC_IsAgent__c,
+                'FEC_Message__c'     => ch.FEC_Message__c,
+                'FEC_MessageType__c' => ch.FEC_MessageType__c,
+                'FEC_SenderName__c'  => ch.FEC_SenderName__c,
+                'FEC_SessionID__c'   => ch.FEC_SessionID__c
             });
         }
         return results;
