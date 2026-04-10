@@ -101,7 +101,7 @@
 		<members>FEC_HoldCaseController</members>
 		<members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_CaseRemarkController</members>
-		<members>FEC_UpdateCustomerDocument</members>
+		<members>FEC_MarkNFU</members>
         <name>ApexClass</name>
     </types>
     <types>
