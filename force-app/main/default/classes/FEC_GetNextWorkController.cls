@@ -160,49 +160,11 @@ public without sharing class FEC_GetNextWorkController {
             );
             insert history;
 
-            updateCaseTeamFromLatestHistory(caseId);
-        
             return c.Id;
 
         } finally {
             isGetNextWork = false; 
         }
-    }
-
-    private static void updateCaseTeamFromLatestHistory(Id caseId) {
-        if (caseId == null) return;
-
-        List<FEC_Routing_Action_History__c> histories = [
-            SELECT Id,
-                FEC_Original_User_Queue_ID__c,
-                FEC_Updated_User_Queue_ID__c,
-                CreatedDate
-            FROM FEC_Routing_Action_History__c
-            WHERE FEC_Case__c = :caseId
-            AND FEC_Routing_Action__c = :FEC_ConstantCommon.CASE_TYPE_DESCRIPTION
-            ORDER BY CreatedDate DESC
-            LIMIT 1
-        ];
-
-        if (histories.isEmpty()) return;
-
-        FEC_Routing_Action_History__c latest = histories[0];
-
-        Case caseRecord = [
-            SELECT Id, FEC_Team__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-
-        FEC_RoutingActionHistoryTriggerHandler.updateCaseTeams(
-            latest.FEC_Original_User_Queue_ID__c,
-            latest.FEC_Updated_User_Queue_ID__c,
-            caseRecord,
-            latest
-        );
-
-        update caseRecord;
     }
 
     public class Option {
