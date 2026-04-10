@@ -66,6 +66,9 @@ export default class Lookup extends LightningElement {
             this.selection = JSON.parse(JSON.stringify(data));
         } else {
             this.selection = [];
+            this.searchTerm = '';
+            this.cleanSearchTerm = '';
+            this.searchResults = [];
         }
     }
 
@@ -252,6 +255,7 @@ export default class Lookup extends LightningElement {
             this.selection = newSelection;
             // Reset search
             this.searchTerm = '';
+            this.cleanSearchTerm = '';
             this.searchResults = [];
             // Notify parent components that selection has changed
             this.selectionValueEvt();
@@ -318,12 +322,16 @@ export default class Lookup extends LightningElement {
     handleRemoveSelectedItem(event) {
         const recordId = event.currentTarget.name;
         this.selection = this.selection.filter(item => item.id !== recordId);
+        this.cleanSearchTerm = '';
         this.selectionValueEvt();
     }
 
     handleClearSelection(event) {
         event.preventDefault();
         this.selection = [];
+        this.searchTerm = '';
+        this.cleanSearchTerm = '';
+        this.searchResults = [];
         // Notify parent components that selection has changed
         this.selectionValueEvt();
     }

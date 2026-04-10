@@ -134,7 +134,7 @@ public with sharing class FEC_SearchController {
                 for (FEC_GetLoanApplicationHistory.ApplicationHistory h : res.histories) {
                     rows.add(new Map<String, String>{
                         'user'     => h.userName,
-                        'activity' => h.activityName,
+                        'activity' => h.activityId,
                         'status'   => h.statusId,
                         'editDate' => h.editDate
                     });
