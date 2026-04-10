@@ -414,6 +414,23 @@ public without sharing class FEC_NotificationService {
     private static String resolveTemplate(String template, Case c) {
         if (String.isBlank(template)) return template;
         try {
+            // Xử lý {{{Object.Field}}} (triple-brace) — convert sang {{Object.Field}}
+            template = template.replaceAll('\\{\\{\\{([^}]+)\\}\\}\\}', '{{$1}}');
+            // Resolve User.* fields từ current user
+            Pattern userPat = Pattern.compile('\\{\\{User\\.([^}]+)\\}\\}');
+            Matcher userMat = userPat.matcher(template);
+            if (userMat.find()) {
+                // Query User với tất cả fields cần thiết
+                User u = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+                Matcher userMat2 = userPat.matcher(template);
+                while (userMat2.find()) {
+                    String fieldName = userMat2.group(1);
+                    String val = '';
+                    try { val = String.valueOf(u.get(fieldName)); } catch(Exception ex) {}
+                    if (val == 'null') val = '';
+                    template = template.replace('{{User.' + fieldName + '}}', val);
+                }
+            }
             return FEC_CommonUltils.resolveTemplate(template, c);
         } catch (Exception e) {
             return template;
