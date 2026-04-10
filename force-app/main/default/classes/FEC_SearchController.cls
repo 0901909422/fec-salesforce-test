@@ -317,4 +317,46 @@ public with sharing class FEC_SearchController {
             );
         }
     }
+
+    @AuraEnabled
+    public static Map<String, Object> getHistoryStatus(Id historyId) {
+        try {
+            FEC_Customer_History__c hist = [
+                SELECT Id,
+                    FEC_Customer_Name__c,
+                    FEC_National_ID_Passport_ID__c,
+                    FEC_Gender__c,
+                    FEC_Date_of_Birth__c,
+                    FEC_Primary_Phone__c,
+                    FEC_Email__c,
+                    FEC_Zalo_Follower__c,
+                    FEC_Website_Account__c,
+                    FEC_Mobile_App_Account__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :historyId
+                LIMIT 1
+            ];
+
+           Boolean isReady = String.isNotBlank(hist.FEC_Customer_Name__c)
+            && (
+                String.isNotBlank(hist.FEC_Gender__c) ||
+                hist.FEC_Date_of_Birth__c != null ||
+                String.isNotBlank(hist.FEC_Primary_Phone__c)
+            );
+            return new Map<String, Object>{
+                'isReady'      => isReady,
+                'customerName' => hist.FEC_Customer_Name__c,
+                'nationalId'   => hist.FEC_National_ID_Passport_ID__c,
+                'gender'       => hist.FEC_Gender__c,
+                'dateOfBirth'  => hist.FEC_Date_of_Birth__c,
+                'primaryPhone' => hist.FEC_Primary_Phone__c,
+                'email'        => hist.FEC_Email__c,
+                'zalo'         => hist.FEC_Zalo_Follower__c,
+                'website'      => hist.FEC_Website_Account__c,
+                'mobileApp'    => hist.FEC_Mobile_App_Account__c
+            };
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
 }
