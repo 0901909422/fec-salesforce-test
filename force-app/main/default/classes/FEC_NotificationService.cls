@@ -377,7 +377,7 @@ public without sharing class FEC_NotificationService {
                 Http http = new Http();
                 HttpResponse res = http.send(req);
                 Integer statusCode = res.getStatusCode();
-                // Follow redirect nếu 302
+                // Follow redirect nếu 302/301, statusCode == 200 bên dưới khác với statusCode ban đầu
                 if (statusCode == 302 || statusCode == 301) {
                     String location = res.getHeader('Location');
                     if (String.isNotBlank(location)) {
@@ -397,7 +397,9 @@ public without sharing class FEC_NotificationService {
                     String dataUri = 'data:' + contentType + ';base64,' + b64;
                     result = result.replace(rawUrl, dataUri);
                 } else {
-                    System.debug('inlineImages: status=' + statusCode + ' for url=' + url);
+                    // Không inline được ảnh, giữ nguyên URL gốc trong HTML
+                    System.debug('inlineImages: skip inline for url=' + url + ' | status=' + statusCode
+                        + ' | bodySize=' + (res.getBodyAsBlob() != null ? res.getBodyAsBlob().size() : 0));
                 }
             } catch (Exception e) {
                 System.debug('inlineImages failed for url: ' + url + ' | ' + e.getMessage());
