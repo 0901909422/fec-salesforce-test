@@ -24,14 +24,14 @@ public class FEC_ArchiveVerifyBatch
     private Integer totalPending = 0;
     private Integer totalError   = 0;
 
-    public static final Integer DEFAULT_BATCH_SIZE = 50;
+    public static final Integer DEFAULT_BATCH_SIZE = 100;
 
     private static final String QUERY =
-        'SELECT Id, CaseNumber ' +
+        'SELECT Id, CaseNumber, FEC_ID_Search__c ' +
         'FROM Case ' +
-        'WHERE FEC_Archive_Status__c = \'Processing\' ' +
-        '  AND (FEC_Attachment_Status__c = \'Completed\' ' +
-        '       OR FEC_Attachment_Status__c =  \'Completed\') ' +
+        'WHERE FEC_Archive_Status__c = \'Processing\' ' +   
+        'AND (FEC_Attachment_Status__c = \'Completed\' OR FEC_Attachment_Status__c = NULL) ' +
+        'AND Status = \'Closed\' AND ClosedDate <= LAST_N_DAYS:30 ' +
         'ORDER BY FEC_Archive_Sent_At__c ASC';
 
     public Database.QueryLocator start(Database.BatchableContext bc) {
@@ -45,16 +45,24 @@ public class FEC_ArchiveVerifyBatch
 
         // ── [1] Gom caseIds ───────────────────────────────────────────────────
         List<String> caseIds = new List<String>();
+        List<String> caseIdSearchs = new List<String>();
         Map<String, Case> caseById = new Map<String, Case>();
         for (Case c : cases) {
             caseIds.add(c.Id);
             caseById.put(c.Id, c);
+            caseIdSearchs.add(c.FEC_ID_Search__c);
         }
 
-        // ── [2] Gọi Java check Outbox status ─────────────────────────────────
+        // ── [2] Gọi Java check Outbox status (gửi FEC_ID_Search__c) ────────
+        // Build reverse map: FEC_ID_Search__c → Case Id
+        Map<String, Id> searchIdToCaseId = new Map<String, Id>();
+        for (Case c : cases) {
+            searchIdToCaseId.put(c.FEC_ID_Search__c, c.Id);
+        }
+
         Map<String, String> statusMap;
         try {
-            statusMap = FEC_ArchiveVerifyHttpService.checkArchiveStatus(caseIds);
+            statusMap = FEC_ArchiveVerifyHttpService.checkArchiveStatus(caseIdSearchs);
         } catch (Exception ex) {
             totalError += cases.size();
             System.debug(LoggingLevel.ERROR,
@@ -67,13 +75,19 @@ public class FEC_ArchiveVerifyBatch
         Set<Id> toDelete     = new Set<Id>();
         Set<Id> pendingDocIds = new Set<Id>();
 
-        for (String caseId : statusMap.keySet()) {
-            if ('SENT'.equals(statusMap.get(caseId))) {
-                toDelete.add((Id) caseId);
+        for (String searchId : statusMap.keySet()) {
+            Id sfCaseId = searchIdToCaseId.get(searchId);
+            if (sfCaseId == null) {
+                System.debug(LoggingLevel.WARN,
+                    '[FEC_ArchiveVerifyBatch] Unknown searchId from API: ' + searchId);
+                continue;
+            }
+            if ('ARCHIVED'.equals(statusMap.get(searchId))) {
+                toDelete.add(sfCaseId);
             } else {
                 totalPending++;
                 System.debug('[FEC_ArchiveVerifyBatch] Still PENDING: '
-                    + caseById.get(caseId).CaseNumber);
+                    + caseById.get(sfCaseId).CaseNumber);
             }
         }
 
@@ -115,6 +129,16 @@ public class FEC_ArchiveVerifyBatch
                 delete remarks;
                 System.debug('[FEC_ArchiveVerifyBatch] Deleted '
                     + remarks.size() + ' remarks');
+            }
+
+            // Bước 1.5 : Xóa FEC_ChatHistory__c
+            List<FEC_ChatHistory__c> chatHistories = [
+                SELECT Id FROM FEC_ChatHistory__c
+                WHERE FEC_Case__c IN :caseIds
+            ];
+            if (!chatHistories.isEmpty()) {
+                delete chatHistories;
+                System.debug('[FEC_ArchiveVerifyBatch] Deleted ' + chatHistories.size() + ' chat histories');
             }
 
             // Bước 2: Xóa Case (ContentDocumentLink tự unlink)

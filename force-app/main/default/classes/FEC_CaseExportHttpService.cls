@@ -1,7 +1,7 @@
 public class FEC_CaseExportHttpService {
 
     private static final String EXTERNAL_API_CREDENTIAL = 'callout:FECredit_Service';
-    private static final String CASES_PATH               = '/archival/dispatcher/api/v1/dispatcher/ingest_archival';
+    private static final String CASES_PATH               = '/archival/dispatcher/api/v1/cases/ingest_archival';
     private static final Integer TIMEOUT_MS              = 60000;
 
     // Số lần retry khi gặp lỗi 5xx hoặc timeout
@@ -50,6 +50,7 @@ public class FEC_CaseExportHttpService {
                 }
 
             } catch (ExportCalloutException ex) {
+                System.debug('[CaseExportHttpService] Callout exception: ' + ex.getMessage());
                 throw ex;
             } catch (System.CalloutException ex) {
                 System.debug(LoggingLevel.WARN,
