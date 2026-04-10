@@ -1,0 +1,23 @@
+:host {
+    display: block;
+    height: 100%;
+}
+
+.container-chathub {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.chathub-iframe-wrapper {
+    flex-grow: 1;
+    min-height: 700px;
+    width: 100%;
+}
+
+.chathub-iframe {
+    height: 100%;
+    width: 100%;
+    border: none;
+}

@@ -1,20 +1,31 @@
 import { LightningElement, api, track } from 'lwc';
-import { sortData, FILTER_ACTION } from 'c/fecUtils';
+import { sortData, formatString, FILTER_ACTION } from 'c/fecUtils';
 
 import LBL_EMPTY from '@salesforce/label/c.FEC_Empty';
+import LBL_PAGE_INFO from '@salesforce/label/c.FEC_Lbl_Page_Info';
+import LBL_PREVIOUS from '@salesforce/label/c.FEC_Btn_Previous';
+import LBL_NEXT from '@salesforce/label/c.FEC_Btn_Next';
 
 export default class FecCustomDatatable extends LightningElement {
     @api keyField = 'id';
     @api hideCheckboxColumn = false;
+    @api pageSize = 10;
     
     @track _originalData = [];
     @track displayData = [];
     @track internalColumns = [];
+    @track currentPage = 1;
+
+    label = {
+        previous: LBL_PREVIOUS,
+        next: LBL_NEXT
+    };
     
     // Sử dụng getter/setter để xử lý dữ liệu khi cha truyền vào
     @api 
     set tableData(value) {
         this._originalData = value || [];
+        this.currentPage = 1;
         this.executeFiltering();
     }
     get tableData() { return this._originalData; }
@@ -24,6 +35,33 @@ export default class FecCustomDatatable extends LightningElement {
         this.internalColumns = value ? JSON.parse(JSON.stringify(value)) : [];
     }
     get columns() { return this.internalColumns; }
+
+    // --- PAGINATION COMPUTED GETTERS ---
+    get totalPages() {
+        return Math.ceil(this.displayData.length / this.pageSize) || 1;
+    }
+
+    get paginatedData() {
+        const start = (this.currentPage - 1) * this.pageSize;
+        const end = start + this.pageSize;
+        return this.displayData.slice(start, end);
+    }
+
+    get hasPrevious() {
+        return this.currentPage === 1;
+    }
+
+    get hasNext() {
+        return this.currentPage === this.totalPages;
+    }
+
+    get pageInfo() {
+        return formatString(LBL_PAGE_INFO, this.currentPage, this.totalPages);
+    }
+
+    get showPagination() {
+        return this.displayData.length > this.pageSize;
+    }
 
     // State nội bộ cho Filter
     @track isFilterOpen = false;
@@ -138,6 +176,7 @@ export default class FecCustomDatatable extends LightningElement {
             result = result.filter(row => values.includes(String(row[field])));
         });
         this.displayData = result;
+        this.currentPage = 1;
     }
 
     updateColumnIcon(fieldName, isFiltered) {
@@ -156,6 +195,19 @@ export default class FecCustomDatatable extends LightningElement {
 
     handleInsideClick(){this.isPopupInsideClick = true;}
     closeFilter() { this.isFilterOpen = false; }
+
+    // --- PAGINATION HANDLERS ---
+    handlePrevious() {
+        if (this.currentPage > 1) {
+            this.currentPage--;
+        }
+    }
+
+    handleNext() {
+        if (this.currentPage < this.totalPages) {
+            this.currentPage++;
+        }
+    }
 
     handleRowAction(event) {
         // Chuyển tiếp sự kiện row action lên cha
