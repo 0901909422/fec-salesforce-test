@@ -389,6 +389,8 @@ public without sharing class FEC_NotificationService {
                         res = http.send(req2);
                         statusCode = res.getStatusCode();
                     }
+                } else if (statusCode != 200) {
+                    System.debug('inlineImages: unexpected status=' + statusCode + ' for url=' + url);
                 }
                 if (statusCode == 200 && res.getBodyAsBlob() != null && res.getBodyAsBlob().size() > 0) {
                     String contentType = res.getHeader('Content-Type') != null ? res.getHeader('Content-Type') : 'image/png';
