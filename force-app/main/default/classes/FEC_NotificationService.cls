@@ -359,8 +359,8 @@ public without sharing class FEC_NotificationService {
      * Tự detect org domain nên không cần hardcode URL.
      */
     private static String inlineImages(String html) {
-        // Tìm tất cả src="...rtaImage..." và replace bằng base64
         if (String.isBlank(html)) return html;
+        // Tìm tất cả src="...rtaImage..." và replace bằng base64
         Pattern p = Pattern.compile('src="(https?://[^"]*rtaImage[^"]*)"');
         Matcher m = p.matcher(html);
         String result = html;
@@ -369,7 +369,6 @@ public without sharing class FEC_NotificationService {
             // Decode HTML entities trong URL (&amp; → &)
             String url = rawUrl.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>');
             try {
-               
                 HttpRequest req = new HttpRequest();
                 req.setEndpoint(url);
                 req.setMethod('GET');
@@ -386,9 +385,10 @@ public without sharing class FEC_NotificationService {
                         HttpRequest req2 = new HttpRequest();
                         req2.setEndpoint(location);
                         req2.setMethod('GET');
+                        eq2.setTimeout(10000);
                         rereq2.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
                         res = http.send(req2);
-                        statusCode = res.getStatusCode(); 
+                        statusCode = res.getStatusCode();
                     }
                 }
                 if (statusCode == 200 && res.getBodyAsBlob() != null && res.getBodyAsBlob().size() > 0) {
