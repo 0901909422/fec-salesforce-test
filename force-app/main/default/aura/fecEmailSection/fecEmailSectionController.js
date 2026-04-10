@@ -1,7 +1,7 @@
 ({
     doInit: function(component, event, helper) {
         helper.loadCaseData(component);
-        helper.loadTemplates(component);
+        helper.loadTemplates(component, null);
         helper.loadEmails(component);
     },
 
@@ -182,7 +182,10 @@
     },
 
     onFromChange: function(component, event, helper) {
-        component.set('v.fromEmail', event.target.value);
+        var newFrom = event.target.value;
+        component.set('v.fromEmail', newFrom);
+        // Reload templates filtered by new From address
+        helper.loadTemplates(component, newFrom);
     },
 
     onServiceCaseToChange: function(component, event, helper) {
@@ -355,27 +358,65 @@
         if (isServiceCase) {
             finalToEmail = (component.get('v.serviceCaseToEmail') || '').trim();
             if (!finalToEmail) {
-                component.set('v.serviceCaseToError', $A.get('$Label.c.FEC_Email_Error_To_Required') || 'To email không được để trống.');
+                try {
+                    var t1 = $A.get('e.force:showToast');
+                    if (t1) { t1.setParams({ title: 'Required field', message: 'To email is required.', type: 'error', duration: 4000 }); t1.fire(); }
+                } catch(e) {}
                 return;
             }
             var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRe.test(finalToEmail)) {
-                component.set('v.serviceCaseToError', 'To ' + ($A.get('$Label.c.FEC_Email_Error_Invalid') || 'email không hợp lệ: "') + finalToEmail + '"');
+            // Normalize: đổi "; " thành "," rồi split
+            var normalizedInput = finalToEmail.replace(/;/g, ',').replace(/,\s*/g, ',');
+            var emailList = normalizedInput.split(',').map(function(e) { return e.trim().replace(/\.+$/, ''); }).filter(function(e) { return e && e.indexOf('@') > -1; });
+            var invalidEmail = null;
+            for (var i = 0; i < emailList.length; i++) {
+                if (!emailRe.test(emailList[i])) { invalidEmail = emailList[i]; break; }
+            }
+            if (invalidEmail) {
+                try {
+                    var t2 = $A.get('e.force:showToast');
+                    if (t2) { t2.setParams({ title: 'Invalid email', message: '"' + invalidEmail + '" is not a valid email address.', type: 'error', duration: 4000 }); t2.fire(); }
+                } catch(e) {}
                 return;
             }
-            component.set('v.serviceCaseToError', '');
         } else {
             var toEmail = component.get('v.toEmail');
             var tags = component.get('v.toTags');
             finalToEmail = toEmail || (tags && tags.length > 0 ? tags.join(',') : '');
-            if (!finalToEmail) { component.set('v.errorMsg', $A.get('$Label.c.FEC_Email_Error_Empty') || 'To email is required.'); return; }
+            if (!finalToEmail) {
+                component.set('v.errorMsg', $A.get('$Label.c.FEC_Email_Error_Empty') || 'To email is required.');
+                try {
+                    var t3 = $A.get('e.force:showToast');
+                    if (t3) { t3.setParams({ title: 'Required field', message: 'To email is required.', type: 'error', duration: 4000 }); t3.fire(); }
+                } catch(e) {}
+                return;
+            }
         }
         var subject = component.get('v.subject');
         var body = window._fecQuill ? window._fecQuill.root.innerHTML : component.get('v.body');
-        if (!subject) { component.set('v.errorMsg', 'Subject is required.'); return; }
+        if (!subject) {
+            component.set('v.errorMsg', 'Subject is required.');
+            try { var ts=$A.get('e.force:showToast'); if(ts){ts.setParams({title:'Required field',message:'Subject is required.',type:'error',duration:4000});ts.fire();} } catch(e){}
+            return;
+        }
         var bodyText = window._fecQuill ? window._fecQuill.getText().trim() : (body || '').replace(/<[^>]+>/g,'').trim();
-        if (!bodyText) { component.set('v.errorMsg', 'Body is required.'); return; }
+        // Nếu getText() empty nhưng có table trong editor thì vẫn có content
+        if (!bodyText && window._fecQuill) {
+            var hasTable = window._fecQuill.root.querySelector('table') !== null;
+            if (hasTable) bodyText = 'table';
+        }
+        if (!bodyText) {
+            component.set('v.errorMsg', 'Body is required.');
+            try { var tb=$A.get('e.force:showToast'); if(tb){tb.setParams({title:'Required field',message:'Email body is required.',type:'error',duration:4000});tb.fire();} } catch(e){}
+            return;
+        }
         console.log('sendEmail: calling doSendEmail, fromEmail=', component.get('v.fromEmail'), 'toEmail=', finalToEmail);
+        // Normalize: đổi ". " thành "," rồi split, trim trailing dots
+        if (isServiceCase) {
+            var normalizedInput2 = finalToEmail.replace(/;/g, ',').replace(/,\s*/g, ',');
+            var normalizedEmails = normalizedInput2.split(',').map(function(e) { return e.trim().replace(/\.+$/, ''); }).filter(function(e) { return e && e.indexOf('@') > -1; });
+            finalToEmail = normalizedEmails.join(',');
+        }
 
         component.set('v.isSending', true);
         component.set('v.errorMsg', '');
@@ -390,6 +431,18 @@
         // Convert File objects to base64
         var converted = [];
         var pending = attachments.length;
+        var MAX_SIZE = 25 * 1024 * 1024; // 25MB
+        for (var i = 0; i < attachments.length; i++) {
+            if (attachments[i].size > MAX_SIZE) {
+                component.set('v.isSending', false);
+                var toastSize = $A.get('e.force:showToast');
+                if (toastSize) {
+                    toastSize.setParams({ title: 'File too large', message: attachments[i].name + ' exceeds the 25 MB limit.', type: 'error', duration: 6000 });
+                    toastSize.fire();
+                }
+                return;
+            }
+        }
         attachments.forEach(function(att, idx) {
             var reader = new FileReader();
             reader.onload = $A.getCallback(function(e) {
