@@ -12232,4 +12232,36 @@
         <shortDescription>MSG Exception</shortDescription>
         <value>An exception has occurred. Please contact the System Administrator.</value>
     </labels>
+    <labels>
+        <fullName>FEC_ACTION_UNBLOCK_CARD_HEADER</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_ACTION_UNBLOCK_CARD_HEADER</shortDescription>
+        <value>Unblock Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_UNBLOCK_CARD</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD</shortDescription>
+        <value>Bạn sắp mở khoá thẻ cho khách hàng này. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</shortDescription>
+        <value>Mở khoá thẻ thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</shortDescription>
+        <value>Mở khoá thẻ thất bại.</value>
+    </labels>
 </CustomLabels>

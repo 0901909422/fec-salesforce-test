@@ -20,6 +20,7 @@ public without sharing class FEC_CaseBusinessService {
   public static final String GENDER_UPDATE = 'Gender Update';
   public static final String IDENTIFICATION_UPDATE = 'National ID Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
+  public static final String UNBLOCK_CARD = 'Unblock Card';
 
   /**
    * Case sẽ có Routing Action History do logic nghiệp vụ (không dùng bản tự động từ trigger khi đổi Owner).
@@ -61,7 +62,8 @@ public without sharing class FEC_CaseBusinessService {
     DOB_UPDATE,
     GENDER_UPDATE,
     IDENTIFICATION_UPDATE,
-    OC_001
+    OC_001,
+    UNBLOCK_CARD
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -81,7 +83,8 @@ public without sharing class FEC_CaseBusinessService {
     DOB_UPDATE => Method.DOB_UPDATE,
     GENDER_UPDATE => Method.GENDER_UPDATE,
     IDENTIFICATION_UPDATE => Method.IDENTIFICATION_UPDATE,
-    OC_001 => Method.OC_001
+    OC_001 => Method.OC_001,
+    UNBLOCK_CARD => Method.UNBLOCK_CARD
   };
 
   @AuraEnabled
@@ -1079,6 +1082,10 @@ public without sharing class FEC_CaseBusinessService {
         }
         when OC_001 {
           System.debug(OC_001);
+        }
+        when UNBLOCK_CARD {
+          System.debug(UNBLOCK_CARD);
+          return null;
         }
         when else {
           // throw new CaseBusinessServiceException('Method not found.');

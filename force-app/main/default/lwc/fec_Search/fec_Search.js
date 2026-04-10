@@ -50,7 +50,7 @@ import SEARCH_ACCOUNT_FIELD from "@salesforce/schema/Case.FEC_Search_Account_Num
 import SEARCH_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Search_Email_Address__c";
 import SEARCH_CUSTOMER_NUM_FIELD from "@salesforce/schema/Case.FEC_Search_Customer_Number__c";
 import { CurrentPageReference } from 'lightning/navigation';
-import { formatDateTimeVN } from 'c/fec_CommonUtils';
+import { formatDateTimeVNShort } from 'c/fec_CommonUtils';
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -247,9 +247,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             year: "numeric"
         }, 
         sortable: true },
-      ...(this.isAccountContractSearch ? [{ label: "Product Code", fieldName: "PlasticID", sortable: true }] : [{ label: "Product Code", fieldName: "ProductCode", sortable: true }]),
+      { label: "Product Code", fieldName: "ProductCode", sortable: true },
       ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
-      { label: this.isAccountContractSearch ? "Account Status" : "Contract Status", fieldName: "ContractStatus", sortable: true },
+      { label: "Contract Status", fieldName: "ContractStatus", sortable: true },
     ];
   }
 
@@ -1191,7 +1191,7 @@ hasAnySearchCriteria(params) {
 
     getApplicationHistory({ applicationId })
       .then(rows => {
-        this.historyModalRows = (rows || []).map(h => ({ ...h, editDate: formatDateTimeVN(h.editDate) }));
+        this.historyModalRows = (rows || []).map(h => ({ ...h, editDate: formatDateTimeVNShort(h.editDate) }));
         this.historyModalLoading = false;
       })
       .catch(() => {
@@ -1242,7 +1242,7 @@ hasAnySearchCriteria(params) {
 
     getApplicationHistory({ applicationId })
       .then(rows => {
-        this.appHistoryMap = { ...this.appHistoryMap, [key]: { loading: false, expanded: true, rows: (rows || []).map(h => ({ ...h, editDate: formatDateTimeVN(h.editDate) })) } };
+        this.appHistoryMap = { ...this.appHistoryMap, [key]: { loading: false, expanded: true, rows: (rows || []).map(h => ({ ...h, editDate: formatDateTimeVNShort(h.editDate) })) } };
         this._refreshData();
       })
       .catch(() => {
