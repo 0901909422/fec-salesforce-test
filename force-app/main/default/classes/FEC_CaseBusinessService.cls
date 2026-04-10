@@ -2973,7 +2973,7 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
-  private static Error phoneUpdateValidate(Id cHistoryId) {
+  public static Error phoneUpdateValidate(Id cHistoryId) {
     List<String> validStatuslst = new List<String>{ '8', '9', 'Z' };
     List<String> validBlockCodelst = new List<String>{ 'C' };
     List<String> validBlockCode1lst = new List<String>{

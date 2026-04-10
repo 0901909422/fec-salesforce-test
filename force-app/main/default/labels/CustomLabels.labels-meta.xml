@@ -3452,6 +3452,54 @@
         <value>No transaction selected</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Address_Update_Not_Eligible</fullName>
+        <categories>CSM</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Không đủ điều kiện cập nhật địa chỉ</shortDescription>
+        <value>Không đủ điều kiện cập nhật địa chỉ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Address_Update_Reason_Account_Status</fullName>
+        <categories>CSM</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lí do chặn địa chỉ — Account Status T-1</shortDescription>
+        <value>Lí do: Account Status (account level, T-1) = {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Address_Update_Reason_Block_Code</fullName>
+        <categories>CSM</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lí do chặn địa chỉ — Block Code</shortDescription>
+        <value>Lí do: Block Code (account level, T-1) = {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Address_Update_Reason_Block_Code_1</fullName>
+        <categories>CSM</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lí do chặn địa chỉ — Block Code 1</shortDescription>
+        <value>Lí do: Block Code 1 (account level, T-1) = {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Address_Update_Reason_Block_Code_2</fullName>
+        <categories>CSM</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lí do chặn địa chỉ — Block Code 2</shortDescription>
+        <value>Lí do: Block Code 2 (account level, T-1) = {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Address_Update_Reason_Generic</fullName>
+        <categories>CSM</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lí do chặn địa chỉ — chi tiết chung</shortDescription>
+        <value>Lí do: {0}</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Not_Account_Linked</fullName>
         <categories>API</categories>
         <language>en_US</language>
@@ -12059,6 +12107,22 @@
         <value>Nhập để tìm tỉnh/thành...</value>
     </labels>
     <labels>
+        <fullName>FEC_LBL_UpdateAddress_Original_Information</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — column title Original Information</shortDescription>
+        <value>Original Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_Updated_Information</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — column title Updated Information</shortDescription>
+        <value>Updated Information</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ContractClosure_No_C360_Email</fullName>
         <categories>Contract Closure LWC</categories>
         <language>en_US</language>
@@ -12231,6 +12295,110 @@
         <protected>false</protected>
         <shortDescription>MSG Exception</shortDescription>
         <value>An exception has occurred. Please contact the System Administrator.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_16_Collections_Transfer_Success</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Noti-16: chuyển KH tới Collections thành công</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_GenesysId_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Genesys ID trống</shortDescription>
+        <value>Genesys ID không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_PhoneNumber_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Phone Number trống</shortDescription>
+        <value>Phone Number không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_PhoneNumber_Invalid</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Phone Number không hợp lệ</shortDescription>
+        <value>Phone Number không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_CsCaseId_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Case ID trống</shortDescription>
+        <value>Case ID không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_ExtAppId_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: App ID trống</shortDescription>
+        <value>App ID không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_ProductType_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Product Type trống</shortDescription>
+        <value>Product Type không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_ProductType_Invalid</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Product Type không hợp lệ</shortDescription>
+        <value>Product Type không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_Category_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Category trống</shortDescription>
+        <value>Category không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_SubCategory_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Sub Category trống</shortDescription>
+        <value>Sub Category không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_SubCode_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Sub Code trống</shortDescription>
+        <value>Sub Code không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_Remark_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Remark trống</shortDescription>
+        <value>Remarks for Collections không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Collections_Transfer_Failed_Summary</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections thất bại — dòng tóm tắt (đỏ đậm)</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại. Vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_ACTION_UNBLOCK_CARD_HEADER</fullName>
