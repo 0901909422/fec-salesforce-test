@@ -378,15 +378,14 @@ public without sharing class FEC_NotificationService {
                 HttpResponse res = http.send(req);
                 Integer statusCode = res.getStatusCode();
                 // Follow redirect nếu 302/301, statusCode == 200 bên dưới khác với statusCode ban đầu
-
                 if (statusCode == 302 || statusCode == 301) {
                     String location = res.getHeader('Location');
                     if (String.isNotBlank(location)) {
                         HttpRequest req2 = new HttpRequest();
                         req2.setEndpoint(location);
                         req2.setMethod('GET');
-                        eq2.setTimeout(10000);
-                        rereq2.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
+                        req2.setTimeout(10000);
+                        req2.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
                         res = http.send(req2);
                         statusCode = res.getStatusCode();
                     }
