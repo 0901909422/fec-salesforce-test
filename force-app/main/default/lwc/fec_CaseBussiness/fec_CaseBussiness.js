@@ -1849,6 +1849,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.business.sectionlst.forEach((section) => {
       if (!section.componentlst?.length) return;
 
+      const slots = section.componentlst.map(() => null);
+      section._fecDynCmpSlots = slots;
       section.resolvedComponentlst = [];
 
       section.componentlst.forEach((name, idx) => {
@@ -1865,11 +1867,11 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         const p = loader()
           .then((mod) => {
-            section.resolvedComponentlst.push({
+            slots[idx] = {
               key: `${name}-${idx}`,
               ctor: mod.default,
               componentName: name,
-            });
+            };
           })
           .catch((err) => {
             console.error(`[fec_CaseBussiness] Failed to load component "${name}":`, err);
@@ -1880,6 +1882,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     });
 
     Promise.all(resolvePromises).then(() => {
+      this.business.sectionlst.forEach((section) => {
+        if (section._fecDynCmpSlots) {
+          section.resolvedComponentlst = section._fecDynCmpSlots.filter(Boolean);
+          delete section._fecDynCmpSlots;
+        }
+      });
       this.business = { ...this.business };
     });
   }

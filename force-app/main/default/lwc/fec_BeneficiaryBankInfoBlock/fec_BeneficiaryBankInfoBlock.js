@@ -14,14 +14,13 @@ import FEC_LBL_Province_City from "@salesforce/label/c.FEC_LBL_Province_City";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
 import FEC_Toast_Save_Success_Title from "@salesforce/label/c.FEC_Toast_Save_Success_Title";
 import FEC_Toast_Save_Success from "@salesforce/label/c.FEC_Toast_Save_Success";
-import FEC_MSG_Param_Required from "@salesforce/label/c.FEC_MSG_Param_Required";
 import FEC_Toast_Validation_Message from "@salesforce/label/c.FEC_Toast_Validation_Message";
 import FEC_Toast_Validation_Title from "@salesforce/label/c.FEC_Toast_Validation_Title";
 import { STR_EMPTY } from "c/fec_CommonConst";
 import { toUpperNoVietnameseAccent } from "c/fec_CommonUtils";
 
 const DRAFT_KEY_PREFIX = "fec-beneficiary-bank-draft-";
-const ERR_BENEFICIARY_SAVE_ALREADY_TOASTED = "fec_beneficiary_save_dto";
+const ERR_BENEFICIARY_SAVE_ALREADY_TOASTED = "Beneficiary Save Error";
 
 export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
     @api recordId;
@@ -81,20 +80,34 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         }
     }
 
-    @wire(getBeneficiaryFormDefaults, { caseId: "$recordId" })
-    wiredFormDefaults({ data, error }) {
-        if (data) {
-            this.beneficiaryName = data.beneficiaryName || data.defaultBeneficiaryUpperNoAccent || STR_EMPTY;
-            this.beneficiaryAccount = data.beneficiaryAccount || STR_EMPTY;
-            this.bankComboValue = data.bankPicklistValue || STR_EMPTY;
-            this.bankBranch = data.bankBranch || STR_EMPTY;
-            this.provinceComboValue = data.provinceCity || STR_EMPTY;
-            this.refreshBranchOptions().then(() => {
-                this.applyLocalDraftIfAny();
-            });
-        } else if (error) {
-            this.bankBranchOptions = [];
+    connectedCallback() {
+        this._loadBeneficiaryFormDefaults();
+    }
+
+    _loadBeneficiaryFormDefaults() {
+        if (!this.recordId) {
+            return;
         }
+        const caseId = this.recordId;
+        getBeneficiaryFormDefaults({ caseId: caseId })
+            .then((data) => {
+                if (this.recordId !== caseId) {
+                    return;
+                }
+                if (data) {
+                    this.beneficiaryName = data.beneficiaryName || data.defaultBeneficiaryUpperNoAccent || STR_EMPTY;
+                    this.beneficiaryAccount = data.beneficiaryAccount || STR_EMPTY;
+                    this.bankComboValue = data.bankPicklistValue || STR_EMPTY;
+                    this.bankBranch = data.bankBranch || STR_EMPTY;
+                    this.provinceComboValue = data.provinceCity || STR_EMPTY;
+                    this.refreshBranchOptions().then(() => {
+                        this.applyLocalDraftIfAny();
+                    });
+                }
+            })
+            .catch(() => {
+                this.bankBranchOptions = [];
+            });
     }
 
     get draftStorageKey() {
@@ -295,17 +308,19 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
             return true;
         }
         const fields = [...this.template.querySelectorAll("lightning-input")];
+        const combos = [...this.template.querySelectorAll("c-fec_-combo-box")];
         let ok = true;
         fields.forEach((el) => {
             if (typeof el.reportValidity === "function" && !el.reportValidity()) {
                 ok = false;
             }
         });
+        combos.forEach((el) => {
+            if (typeof el.reportValidity === "function" && !el.reportValidity()) {
+                ok = false;
+            }
+        });
         if (!ok) {
-            return false;
-        }
-        const nz = (s) => !!(s && String(s).trim());
-        if (!nz(this.bankComboValue) || !nz(this.bankBranch) || !nz(this.provinceComboValue)) {
             return false;
         }
         return true;
@@ -317,9 +332,6 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         if (this.isReadOnly) {
             return true;
         }
-        if (!this._shouldRunBeneficiaryDraftOrSubmit()) {
-            return true;
-        }
         if (!this.reportValidity()) {
             this.showToast(FEC_Toast_Validation_Title, FEC_Toast_Validation_Message, "warning");
             return false;
@@ -327,7 +339,7 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         return true;
     }
 
-    /** Save & Close: localStorage + Apex nháp khi có ít nhất một trường có giá trị. */
+    /** Save & Close: localStorage + Apex nháp (Case) khi có ít nhất một trường có giá trị. */
     @api
     saveDraftIfApplicable() {
         if (this.isReadOnly) {
@@ -395,51 +407,6 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
                 }
                 this.showToast(FEC_Error_Title, this.handleError(error), "error");
                 return Promise.reject(error);
-            })
-            .finally(() => {
-                this.isBusy = false;
-            });
-    }
-
-    @api
-    saveBeneficiaryToCustomerHistory() {
-        if (this.isReadOnly) {
-            return Promise.resolve();
-        }
-        if (!this.recordId) {
-            return Promise.resolve({
-                success: false,
-                errorMessage: FEC_MSG_Param_Required.replace("{0}", "Case Id")
-            });
-        }
-        if (!this.reportValidity()) {
-            return Promise.resolve({
-                success: false,
-                errorMessage: FEC_Toast_Validation_Message
-            });
-        }
-        const v = this.getFieldValues();
-        this.isBusy = true;
-        return saveBeneficiaryBankInfo({
-            caseId: this.recordId,
-            beneficiaryName: v.beneficiaryName,
-            beneficiaryAccount: v.beneficiaryAccount,
-            bankPicklistValue: v.bankPicklistValue,
-            bankBranch: v.bankBranch,
-            provinceCity: v.provinceCity
-        })
-            .then((res) => {
-                if (res && res.success) {
-                    this.clearLocalDraft();
-                    this.showToast(FEC_Toast_Save_Success_Title, FEC_Toast_Save_Success, "success");
-                } else if (res && res.errorMessage) {
-                    this.showToast(FEC_Error_Title, res.errorMessage, "error");
-                }
-                return res;
-            })
-            .catch((error) => {
-                this.showToast(FEC_Error_Title, this.handleError(error), "error");
-                return { success: false, errorMessage: this.handleError(error) };
             })
             .finally(() => {
                 this.isBusy = false;
