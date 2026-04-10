@@ -166,6 +166,7 @@
 		<members>fec_MainInfoLoanAccount</members>
 		<members>fec_RepaymentSchedulePaymentHistory</members>
 		<members>fec_Termination</members>
+		<members>fec_GetNextWork</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -179,6 +180,9 @@
 		<members>FEC_Customer_Case_Record_Page</members>
 		<members>FEC_Clear_Session_Record_Page</members>
 		<members>FEC_Service_UtilityBar</members>
+		<members>Master_Data_Setting_Record_Page</members>
+		<members>Stage_Change_Record_Page</members>
+		<members>Stage_Screen_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -634,6 +638,7 @@
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
 		<members>FEC_Additional_Info__c.FEC_Replace_Card__c</members>
 		<members>Case.FEC_Incorrect_Payment_Adj_Rows__c</members>
+		<members>Case.FEC_Current_Card_Status__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>

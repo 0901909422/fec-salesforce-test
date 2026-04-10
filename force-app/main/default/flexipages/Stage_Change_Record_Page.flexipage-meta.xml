@@ -82,6 +82,12 @@
                 <identifier>RecordFEC_Code_cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.FEC_Condition_Requirement__c</fieldItem>
+                <identifier>RecordFEC_Condition_Requirement__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-5b3b2b0f-73cd-4f31-bda5-bcf38d5c95d7</name>
         <type>Facet</type>
     </flexiPageRegions>

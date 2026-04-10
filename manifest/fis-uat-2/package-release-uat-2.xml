@@ -1546,12 +1546,16 @@
 		<members>fec_UserSearchModal</members>
 		<members>fec_holdCaseManual</members>
 		<members>fec_UpdateAddress</members>
+		<members>fec_GetNextWork</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
 		<members>FEC_Customer_Case_Record_Page</members>
 		<members>FEC_Clear_Session_Record_Page</members>
 		<members>FEC_Service_UtilityBar</members>
+		<members>Master_Data_Setting_Record_Page</members>
+		<members>Stage_Change_Record_Page</members>
+		<members>Stage_Screen_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
