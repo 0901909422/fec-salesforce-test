@@ -25,7 +25,7 @@ public with sharing class FEC_MarkNFU {
     env += '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:PegaRULES:SOAP:CollectionServices:Services">';
     env += '<soapenv:Header/>';
     env += '<soapenv:Body>';
-    env += '<urn:MarkNFURequest>';
+    env += '<urn:MarkNFU>';
     if (String.isNotBlank(req.ContractNumber)) {
       env += '<ContractNumber>' + FEC_CommonUltils.escapeXml(req.ContractNumber) + '</ContractNumber>';
     }
@@ -35,7 +35,7 @@ public with sharing class FEC_MarkNFU {
     if (String.isNotBlank(req.NFUUpdatedBy)) {
       env += '<NFUUpdatedBy>' + FEC_CommonUltils.escapeXml(req.NFUUpdatedBy) + '</NFUUpdatedBy>';
     }
-    env += '</urn:MarkNFURequest>';
+    env += '</urn:MarkNFU>';
     env += '</soapenv:Body>';
     env += '</soapenv:Envelope>';
     return env;

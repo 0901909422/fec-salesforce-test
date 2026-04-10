@@ -101,6 +101,7 @@
 		<members>FEC_HoldCaseController</members>
 		<members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_CaseRemarkController</members>
+		<members>FEC_UpdateCustomerDocument</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -631,6 +632,7 @@
 		<members>FEC_Content_History_Tracking__c.FEC_Merge_Fields_Used__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
+		<members>FEC_Additional_Info__c.FEC_Replace_Card__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
