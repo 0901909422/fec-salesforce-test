@@ -166,6 +166,7 @@
 		<members>fec_MainInfoLoanAccount</members>
 		<members>fec_RepaymentSchedulePaymentHistory</members>
 		<members>fec_Termination</members>
+		<members>fec_GetNextWork</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

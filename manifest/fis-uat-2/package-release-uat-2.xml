@@ -1546,6 +1546,7 @@
 		<members>fec_UserSearchModal</members>
 		<members>fec_holdCaseManual</members>
 		<members>fec_UpdateAddress</members>
+		<members>fec_GetNextWork</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
