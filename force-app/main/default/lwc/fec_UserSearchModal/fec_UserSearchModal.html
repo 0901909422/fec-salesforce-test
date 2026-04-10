@@ -1,0 +1,32 @@
+<template>
+    <lightning-modal-header label="Search Internal User"></lightning-modal-header>
+    <lightning-modal-body>
+        <div class="slds-grid slds-gutters slds-m-bottom_medium">
+            <div class="slds-col slds-size_2-of-3">
+                <lightning-input 
+                    type="search" 
+                    label={SEARCH_BY_EMAIL}
+                    value={searchTerm} 
+                    onchange={handleSearchTermChange}
+                    onkeyup={handleKeyup}>
+                </lightning-input>
+            </div>
+            <div class="slds-col slds-size_1-of-3 slds-p-top_large">
+                <lightning-button label="Search" onclick={handleSearch}></lightning-button>
+            </div>
+        </div>
+        <div class="search-results">
+            <lightning-datatable
+                key-field="Id"
+                data={searchResults}
+                columns={columns}
+                max-row-selection="1"
+                onrowselection={handleRowSelection}>
+            </lightning-datatable>
+        </div>
+    </lightning-modal-body>
+    <lightning-modal-footer>
+        <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+        <lightning-button variant="brand" label="Select" onclick={handleSelect}></lightning-button>
+    </lightning-modal-footer>
+</template>
