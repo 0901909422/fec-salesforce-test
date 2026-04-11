@@ -46,6 +46,7 @@
 
     <types>
         <members>ContentVersion.FEC_Comments__c</members>
+        <members>FEC_CustomerAdditionalInfo__c.FEC_CompositeKey__c</members>
         <name>CustomField</name>
     </types>
 
