@@ -413,6 +413,14 @@
         <members>FEC_MSG_ACTION_UNBLOCK_CARD</members>
         <members>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</members>
 		<members>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</members>
+		<members>FEC_MSG_Address_Update_Not_Eligible</members>
+        <members>FEC_MSG_Address_Update_Reason_Account_Status</members>
+        <members>FEC_MSG_Address_Update_Reason_Block_Code</members>
+        <members>FEC_MSG_Address_Update_Reason_Block_Code_1</members>
+        <members>FEC_MSG_Address_Update_Reason_Block_Code_2</members>
+        <members>FEC_MSG_Address_Update_Reason_Generic</members>
+        <members>FEC_LBL_UpdateAddress_Original_Information</members>
+        <members>FEC_LBL_UpdateAddress_Updated_Information</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
