@@ -1547,6 +1547,9 @@
 		<members>fec_holdCaseManual</members>
 		<members>fec_UpdateAddress</members>
 		<members>fec_GetNextWork</members>
+		<members>fec_InteractionCaseModeStore</members>
+		<members>fec_InteractionHighlightMain</members>
+		<members>maskedToggleCell</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -1587,7 +1590,10 @@
 		<name>ListView</name>
     </types>
 	<types>
+        <members>Case.Customer_Case</members>
+        <members>Case.Interaction</members>
         <members>Case.Internal_Case</members>
+        <members>Case.Search_Interaction</members>
         <name>RecordType</name>
     </types>
 	<types>

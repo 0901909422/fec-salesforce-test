@@ -167,6 +167,9 @@
 		<members>fec_RepaymentSchedulePaymentHistory</members>
 		<members>fec_Termination</members>
 		<members>fec_GetNextWork</members>
+		<members>fec_InteractionCaseModeStore</members>
+		<members>fec_InteractionHighlightMain</members>
+		<members>maskedToggleCell</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -644,6 +647,7 @@
 		<members>Case.FEC_Beneficiary_Account__c</members>
 		<members>Case.FEC_Beneficiary_Name__c</members>
 		<members>Case.FEC_Province_City__c</members>
+		<members>Case.FEC_Interaction_Subchannel__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -691,7 +695,10 @@
         <name>ApexTrigger</name>
     </types>
 	<types>
+        <members>Case.Customer_Case</members>
+        <members>Case.Interaction</members>
         <members>Case.Internal_Case</members>
+        <members>Case.Search_Interaction</members>
         <name>RecordType</name>
     </types>
 	<types>
