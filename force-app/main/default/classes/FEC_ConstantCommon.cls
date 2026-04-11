@@ -95,6 +95,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String MERGE_FIELD_OPEN = '{{{';
     public static final String MERGE_FIELD_CLOSE = '}}}';
     public static final String PATTERN_MERGE_FIELD = '\\{\\{\\{([^}]+)\\}\\}\\}';
+    public static final String PATTERN_TRIPLE_BRACE = '\\{\\{\\{([^}]+)\\}\\}\\}';
+    public static final String PATTERN_USER_MERGE_FIELD = '\\{\\{User\\.([^}]+)\\}\\}';
     
     // CARD: 16 hoặc 19 digits
     public static final String PATTERN_CARD = '^(\\d{16}|\\d{19})$';
