@@ -709,5 +709,9 @@
 		<members>Case.Hold_Case</members>
 		<name>QuickAction</name>
 	</types>
+	<types>
+		<members>QuillEditor</members>
+        <name>StaticResource</name>
+    </types>
     <version>65.0</version>
 </Package>
