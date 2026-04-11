@@ -639,6 +639,11 @@
 		<members>FEC_Additional_Info__c.FEC_Replace_Card__c</members>
 		<members>Case.FEC_Incorrect_Payment_Adj_Rows__c</members>
 		<members>Case.FEC_Current_Card_Status__c</members>
+		<members>Case.FEC_Bank_Branch_Name_Noaccent__c</members>
+		<members>Case.FEC_Bank_Name_Noaccent__c</members>
+		<members>Case.FEC_Beneficiary_Account__c</members>
+		<members>Case.FEC_Beneficiary_Name__c</members>
+		<members>Case.FEC_Province_City__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>

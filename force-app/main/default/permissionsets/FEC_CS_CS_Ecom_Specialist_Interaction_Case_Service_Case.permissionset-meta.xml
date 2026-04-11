@@ -72,6 +72,26 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>Case.FEC_Bank_Branch_Name_Noaccent__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Bank_Name_Noaccent__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Beneficiary_Account__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Beneficiary_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>Case.FEC_Bill_Amount__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -683,6 +703,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Product_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Province_City__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
