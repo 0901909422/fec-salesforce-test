@@ -46,17 +46,11 @@ public with sharing class FEC_CardLockUnLockController {
             FEC_CardLockUnLockCallout.logApiResponse();
 
             if (String.isNotBlank(response.errorCode) || !FEC_CardLockUnLockCallout.isSuccess(response)) {
-                return 'FAIL';
+                return '';
             }
             return 'SUCCESS';
-        } catch (Exception ex) {
-            FEC_CommonUltils.logException(
-                'FEC_CardLockUnLockController', 
-                'blockCard', 
-                ex.getMessage(),
-                ex.getStackTraceString()
-            );
-            return System.Label.FEC_MSG_Exception;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
         }
     }
 }
