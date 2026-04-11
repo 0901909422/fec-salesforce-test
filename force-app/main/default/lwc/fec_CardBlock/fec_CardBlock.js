@@ -30,6 +30,7 @@ import blockCard from '@salesforce/apex/FEC_CardLockUnLockController.blockCard';
 
 export default class Fec_CardBlock extends LightningElement {
     @api recordId;
+    @api isEdit;
 
     isShowSpinner = false;
     isShowModal = false;
@@ -59,9 +60,30 @@ export default class Fec_CardBlock extends LightningElement {
     optionReasons;
     verifyInformationOptions;
     callbackOptions;
+    cardBlockReasonValue;
+    verifyInformationValue;
+    callbackValue;
+
+    mapNewBlockCode = {
+        'A': 'A',
+        'Không sử dụng': 'L',
+        'Thẻ bị mất/ đánh cắp có phát sinh giao dịch': 'S',
+    }
+
+    get isDisabled() {
+        return this.isEdit === false;
+    }
 
     get isShowBtn() {
+        return !this.isDisabled && !this.isSuccess && (this.blockCardCount < 3);
+    }
+
+    get isShowMsgRetry() {
         return !this.isSuccess && (this.blockCardCount < 3);
+    }
+
+    get newBlockCodeValue() {
+        return this.mapNewBlockCode[this.cardBlockReasonValue] || '';
     }
 
     @wire(getObjectInfo, { objectApiName: CASE_OBJECT })
@@ -148,6 +170,18 @@ export default class Fec_CardBlock extends LightningElement {
             .finally(() => {
                 this.isShowSpinner = false;
             });
+    }
+
+    handleCardBlockReasonChange(event) {
+        this.cardBlockReasonValue = event.detail.value;
+    }
+
+    handleVerifyInformationChange(event) {
+        this.verifyInformationValue = event.detail.value;
+    }
+
+    handleCallbackChange(event) {
+        this.callbackValue = event.detail.value;
     }
 
     handleError(error) {

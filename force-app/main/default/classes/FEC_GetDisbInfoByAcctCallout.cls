@@ -158,11 +158,16 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
             'RequestorID' => FEC_ConstantCommon.REQUESTOR_PEGA_CSM,
             'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
         };
-        Map<String, Object> bodyMap = new Map<String, Object>{
-            'AccountNumber' => accountNumber
-        };
+        Map<String, Object> bodyMap;
         if (ageOfRecords != null) {
-            bodyMap.put('AgeOfRecords', ageOfRecords);
+            bodyMap = new Map<String, Object>{
+                'AgeOfRecords' => ageOfRecords,
+                'AccountNumber' => accountNumber
+            };
+        } else {
+            bodyMap = new Map<String, Object>{
+                'AccountNumber' => accountNumber
+            };
         }
         Map<String, Object> root = new Map<String, Object>{
             'headers' => headerMap,

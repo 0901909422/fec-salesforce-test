@@ -32,7 +32,7 @@ public with sharing class FEC_CardLockUnLockController {
                 objCasse.FEC_Account_Number__c
             );
             if (!validateResult.isValid) {
-                throw new FEC_APIServiceException(validateResult.errorMessage);
+                return validateResult.errorMessage;
             }
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,

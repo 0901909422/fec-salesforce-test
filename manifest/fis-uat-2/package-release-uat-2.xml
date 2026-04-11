@@ -1346,6 +1346,8 @@
 		<members>FEC_BeneficiaryBankInfoController</members>
 		<members>FEC_GetDisbInfoByAcctCallout</members>
 		<members>FEC_HoldCaseController</members>
+		<members>FEC_RoutingActionHistoryTriggerHandler</members>
+		<members>FEC_MarkNFU</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1516,6 +1518,11 @@
         <members>FEC_LBL_UpdateAddress_Edit_Mailing</members>
         <members>FEC_LBL_UpdateAddress_New_Address</members>
         <members>FEC_LBL_UpdateAddress_Province_Search_Placeholder</members>
+		<members>FEC_MSG_Exception</members>
+		<members>FEC_ACTION_UNBLOCK_CARD_HEADER</members>
+        <members>FEC_MSG_ACTION_UNBLOCK_CARD</members>
+        <members>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</members>
+		<members>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1538,12 +1545,19 @@
 		<members>fec_UserSearchModal</members>
 		<members>fec_holdCaseManual</members>
 		<members>fec_UpdateAddress</members>
+		<members>fec_GetNextWork</members>
+		<members>fec_InteractionCaseModeStore</members>
+		<members>fec_InteractionHighlightMain</members>
+		<members>maskedToggleCell</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
 		<members>FEC_Customer_Case_Record_Page</members>
 		<members>FEC_Clear_Session_Record_Page</members>
 		<members>FEC_Service_UtilityBar</members>
+		<members>Master_Data_Setting_Record_Page</members>
+		<members>Stage_Change_Record_Page</members>
+		<members>Stage_Screen_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -1575,12 +1589,19 @@
 		<name>ListView</name>
     </types>
 	<types>
+        <members>Case.Customer_Case</members>
+        <members>Case.Interaction</members>
         <members>Case.Internal_Case</members>
+        <members>Case.Search_Interaction</members>
         <name>RecordType</name>
     </types>
 	<types>
 		<members>Case.Hold_Case</members>
 		<name>QuickAction</name>
+	</types>
+	<types>
+		<members>FEC_ServiceResource_Set_ServiceType_Agent</members>
+		<name>Flow</name>
 	</types>
 
     <version>65.0</version>

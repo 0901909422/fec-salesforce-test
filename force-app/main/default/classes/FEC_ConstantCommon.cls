@@ -92,9 +92,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_DATE_FORMAT_DDMMYYZZ = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
     public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
+    public static final String MERGE_FIELD_OPEN = '{{{';
+    public static final String MERGE_FIELD_CLOSE = '}}}';
+    public static final String PATTERN_MERGE_FIELD = '\\{\\{\\{([^}]+)\\}\\}\\}';
     public static final String PATTERN_TRIPLE_BRACE = '\\{\\{\\{([^}]+)\\}\\}\\}';
     public static final String PATTERN_USER_MERGE_FIELD = '\\{\\{User\\.([^}]+)\\}\\}';
-    public static final String PATTERN_MERGE_FIELD = '\\{\\{\\{([^}]+)\\}\\}\\}';
     
     // CARD: 16 hoặc 19 digits
     public static final String PATTERN_CARD = '^(\\d{16}|\\d{19})$';
@@ -411,5 +413,5 @@ public with sharing class FEC_ConstantCommon {
       'Document Preparation' => 'DocumentPreparation',
       'Task Under Review' => 'TaskUnderReview'
     };
-    
+  public static final String CASE_ALL_REQUEST = 'All';  
 }

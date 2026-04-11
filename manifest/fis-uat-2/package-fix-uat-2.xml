@@ -101,6 +101,7 @@
 		<members>FEC_HoldCaseController</members>
 		<members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_CaseRemarkController</members>
+		<members>FEC_MarkNFU</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -165,6 +166,10 @@
 		<members>fec_MainInfoLoanAccount</members>
 		<members>fec_RepaymentSchedulePaymentHistory</members>
 		<members>fec_Termination</members>
+		<members>fec_GetNextWork</members>
+		<members>fec_InteractionCaseModeStore</members>
+		<members>fec_InteractionHighlightMain</members>
+		<members>maskedToggleCell</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -178,6 +183,9 @@
 		<members>FEC_Customer_Case_Record_Page</members>
 		<members>FEC_Clear_Session_Record_Page</members>
 		<members>FEC_Service_UtilityBar</members>
+		<members>Master_Data_Setting_Record_Page</members>
+		<members>Stage_Change_Record_Page</members>
+		<members>Stage_Screen_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -400,6 +408,11 @@
         <members>FEC_LBL_UpdateAddress_Edit_Mailing</members>
         <members>FEC_LBL_UpdateAddress_New_Address</members>
         <members>FEC_LBL_UpdateAddress_Province_Search_Placeholder</members>
+		<members>FEC_MSG_Exception</members>
+		<members>FEC_ACTION_UNBLOCK_CARD_HEADER</members>
+        <members>FEC_MSG_ACTION_UNBLOCK_CARD</members>
+        <members>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</members>
+		<members>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -625,6 +638,15 @@
 		<members>FEC_Content_History_Tracking__c.FEC_Merge_Fields_Used__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
+		<members>FEC_Additional_Info__c.FEC_Replace_Card__c</members>
+		<members>Case.FEC_Incorrect_Payment_Adj_Rows__c</members>
+		<members>Case.FEC_Current_Card_Status__c</members>
+		<members>Case.FEC_Bank_Branch_Name_Noaccent__c</members>
+		<members>Case.FEC_Bank_Name_Noaccent__c</members>
+		<members>Case.FEC_Beneficiary_Account__c</members>
+		<members>Case.FEC_Beneficiary_Name__c</members>
+		<members>Case.FEC_Province_City__c</members>
+		<members>Case.FEC_Interaction_Subchannel__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -659,6 +681,7 @@
 	</types>
 	<types>
 		<!--<members>FEC_New_Interaction_Record_For_E2C</members>-->
+		<members>FEC_ServiceResource_Set_ServiceType_Agent</members>
 		<name>Flow</name>
 	</types>
 	<types>
@@ -671,7 +694,10 @@
         <name>ApexTrigger</name>
     </types>
 	<types>
+        <members>Case.Customer_Case</members>
+        <members>Case.Interaction</members>
         <members>Case.Internal_Case</members>
+        <members>Case.Search_Interaction</members>
         <name>RecordType</name>
     </types>
 	<types>

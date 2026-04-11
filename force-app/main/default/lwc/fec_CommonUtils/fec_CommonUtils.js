@@ -165,7 +165,7 @@ const maskWorkPhone = (phone) => {
   const v = String(phone).trim();
   if (v.length < 7) return v;
 
-  if (/^84\d{9}$/.test(v)) {
+  if (/^84\d{9,}$/.test(v)) {
     return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
 
@@ -198,11 +198,11 @@ const maskValue = (value, showFull) => {
   }
 
   /* =====================
-   * PHONE bắt đầu bằng 84 (11 số)
-   * Hiển thị: 5 số đầu + 3 số cuối
+   * PHONE bắt đầu bằng 84 (≥11 số: 84 + ít nhất 9 chữ số)
+   * Hiển thị: 5 số đầu + 3 số cuối (chuỗi dài hơn 11 vẫn cùng rule)
    * Ví dụ: 84123***456
    * ===================== */
-  if (/^84\d{9}$/.test(v)) {
+  if (/^84\d{9,}$/.test(v)) {
     return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
 

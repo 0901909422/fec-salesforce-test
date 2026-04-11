@@ -597,6 +597,10 @@ public with sharing class FEC_CommonUltils {
       String.valueOf(Math.abs(Crypto.getRandomInteger())).substring(0, 6);
   }
 
+  public static String generateTransactionUUID() {
+    return UUID.randomUUID().toString();
+  }
+
   public static String formatCurrency(Decimal amount, Integer scale) {
     if (amount == null)
       return '';

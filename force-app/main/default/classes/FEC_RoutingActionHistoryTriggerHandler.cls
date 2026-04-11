@@ -251,6 +251,18 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     }
     Id origId = parseOwnerIdField(history.FEC_Original_User_Queue_ID__c);
     Id updId = parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c);
+    // Change Owner (UI/API): chỉ hiển thị team của owner mới — không ghép Pending-TeamOld_TeamNew
+    if (history.FEC_Routing_Action__c == FEC_ConstantCommon.FEC_ROUTING_ACTION_CHANGE_OWNER) {
+      if (updId == null) {
+        return FEC_ConstantCommon.CASE_STATUS_PENDING;
+      }
+      Map<Id, String> teamMap = getTeamsFromIds(new Set<Id>{ updId });
+      String tUpd = teamMap.get(updId);
+      if (String.isBlank(tUpd)) {
+        return FEC_ConstantCommon.CASE_STATUS_PENDING;
+      }
+      return FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX + tUpd;
+    }
     return buildPendingStatusFromOwnerIds(origId, updId);
   }
 
@@ -334,6 +346,16 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
     if (history.FEC_Routing_Action__c == FEC_CaseBusinessService.REOPEN) {
       caseRecord.FEC_Team__c = originalTeam;
+      return;
+    }
+    // Change Owner: gán FEC_Team__c = team của owner mới (thay thế toàn bộ), không merge với team cũ trên Case
+    if (history.FEC_Routing_Action__c == FEC_CaseBusinessService.CHANGE_OWNER) {
+      String updatedTeamOnly = teamMap.get(updatedUserQueueId);
+      if (String.isNotBlank(updatedTeamOnly)) {
+        caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(updatedTeamOnly);
+      } else {
+        caseRecord.FEC_Team__c = null;
+      }
       return;
     }
     String updatedTeam = history.FEC_Routing_Action__c == FEC_CaseBusinessService.UPDATEACTION ? decisionToTeamMap.get(history.FEC_Decision__c) : teamMap.get(updatedUserQueueId);

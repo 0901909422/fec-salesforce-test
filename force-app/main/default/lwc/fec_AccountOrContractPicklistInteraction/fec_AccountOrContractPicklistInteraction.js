@@ -17,10 +17,17 @@ import {
 } from "lightning/messageService";
 import createHistory from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.createHistory";
 import createHistoryNonExistingCustomer from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.createHistoryNonExistingCustomer";
+import getInteractionFirstCustomerHistoryAccountNumber from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionFirstCustomerHistoryAccountNumber";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Interaction_Case_Mode__c";
 import FEC_ACCOUNT_CONTRACT_NUMBER_LABEL from "@salesforce/label/c.FEC_Account_Contract_Number_Label";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
+import {
+  getMode,
+  setMode,
+  subscribeMode,
+  unsubscribeMode,
+} from "c/fec_InteractionCaseModeStore";
 export default class Fec_AccountOrContractPicklistInteraction extends LightningElement {
   labels = {
     accountContractNumber: FEC_ACCOUNT_CONTRACT_NUMBER_LABEL,
@@ -43,7 +50,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   isInitialized = false;
   @wire(MessageContext)
   messageContext;
-
+  firstAccountContractNumber;
   columns = [
     {
       label: "",
@@ -68,6 +75,14 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
    * ======================= */
 
   connectedCallback() {
+    this.isEditMode = getMode();
+
+    this._modeListener = (value) => {
+      this.isEditMode = value;
+      console.log("[STORE] isEditMode:", value);
+    };
+    subscribeMode(this._modeListener);
+
     this.subscribeToModeChannel();
   }
 
@@ -86,9 +101,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     console.log("[LMS] Mode received:", message);
 
     if (message?.isModeEdit !== undefined) {
-      this.isEditMode = message.isModeEdit;
-
-      console.log("[LMS] isEditMode:", this.isEditMode);
+      setMode(message.isModeEdit);
     }
   }
 
@@ -96,6 +109,10 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     if (this.subscription) {
       unsubscribe(this.subscription);
       this.subscription = null;
+    }
+
+    if (this._modeListener) {
+      unsubscribeMode(this._modeListener);
     }
   }
 
@@ -157,7 +174,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
       this.selectedValue = parsed.accountNumber || "";
       this.cifNumber = parsed.cifNumber;
       this.phone = parsed.phone || "";
-
+      await this.getInteractionFirstCustomerHistoryAccountNumber();
       if (this.isNonExistingCustomer) {
         this.initAccountDataNonExisting();
       } else {
@@ -208,6 +225,18 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     } catch (e) {
       console.error("loadProducts error:", e);
     }
+  }
+
+  async getInteractionFirstCustomerHistoryAccountNumber() {
+    if (!this.recordId) return;
+
+    const result = await getInteractionFirstCustomerHistoryAccountNumber({
+      caseId: this.recordId,
+    });
+
+    console.log("AccountNumber:", result);
+
+    this.firstAccountContractNumber = result || "";
   }
 
   initAccountDataNonExisting() {
@@ -286,6 +315,20 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
           selectedType: selectedRow.product,
         });
       } else {
+        if (selectedRow.product === UBANK_PRODUCT_NAME) {
+          this.selectedValue = this.firstAccountContractNumber;
+        }
+
+        console.log(
+          "Creating history with:",
+          JSON.stringify({
+            caseId: this.recordId,
+            selectedAccountContractNumber: this.selectedValue,
+            selectedType: selectedRow.product,
+            cifNumber: this.cifNumber,
+            phone: this.phone,
+          }),
+        );
         await createHistory({
           caseId: this.recordId,
           selectedAccountContractNumber: this.selectedValue,
