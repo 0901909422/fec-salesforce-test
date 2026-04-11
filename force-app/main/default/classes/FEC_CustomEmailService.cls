@@ -194,6 +194,8 @@ public without sharing class FEC_CustomEmailService {
         Map<String, String> routingLabelMap = new Map<String, String>();
         Map<String, String> routingAddrMap  = new Map<String, String>();
         List<String> routingOrder = new List<String>();
+        final String FIELD_ADDRESS = 'Address';
+        final String FIELD_PERSONAL_NAME = 'PersonalName';
         try {
             // Lấy Queue Id mà user đang là member
             Set<Id> userQueueIds = new Set<Id>();
@@ -207,12 +209,12 @@ public without sharing class FEC_CustomEmailService {
                 );
                 // Lấy email của Queue để match với EmailRoutingAddress
                 Map<String, Boolean> queueEmailSet = new Map<String, Boolean>();
-                for (Group q : [SELECT Email FROM Group WHERE Id IN :userQueueIds AND Type = 'Queue' AND Email != null]) {
+                for (Group q : [SELECT Email FROM Group WHERE Id IN :userQueueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND Email != null]) {
                     queueEmailSet.put(q.Email.toLowerCase(), true);
                 }
                 for (SObject r : routingAddrs) {
-                    String addr = (String) r.get('Address');
-                    String name = (String) r.get('PersonalName');
+                    String addr = (String) r.get(FIELD_ADDRESS);
+                    String name = (String) r.get(FIELD_PERSONAL_NAME);
                     if (String.isNotBlank(addr)) {
                         String lower = addr.toLowerCase();
                         // Chỉ include nếu thuộc Queue của user, hoặc không có Queue nào match thì include tất cả
@@ -247,8 +249,8 @@ public without sharing class FEC_CustomEmailService {
                     'SELECT Id, Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
                 );
                 for (SObject r : routingAddrs) {
-                    String addr = (String) r.get('Address');
-                    String name = (String) r.get('PersonalName');
+                    String addr = (String) r.get(FIELD_ADDRESS);
+                    String name = (String) r.get(FIELD_PERSONAL_NAME);
                     if (String.isNotBlank(addr)) {
                         String lower = addr.toLowerCase();
                         String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
@@ -396,7 +398,29 @@ public without sharing class FEC_CustomEmailService {
             String subjectWithThread = subject.contains('[ ref:') ? subject : subject + ' ' + threadToken;
 
             mail.setSubject(subjectWithThread);
-            mail.setHtmlBody(body != null ? body.replace('\n', '<br/>') : '');
+            // Resolve merge fields {{{...}}} và {{...}} trong body trước khi gửi
+            String resolvedBody = body != null ? body : '';
+            try {
+                resolvedBody = resolvedBody.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
+                // Resolve User.* fields
+                Pattern userPat = Pattern.compile(FEC_ConstantCommon.PATTERN_USER_MERGE_FIELD);
+                Matcher userMat = userPat.matcher(resolvedBody);
+                if (userMat.find()) {
+                    User u = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+                    Matcher userMat2 = userPat.matcher(resolvedBody);
+                    while (userMat2.find()) {
+                        String fieldName = userMat2.group(1);
+                        String val = '';
+                        try { val = String.valueOf(u.get(fieldName)); } catch(Exception ex) {}
+                        if (val == 'null') val = '';
+                        resolvedBody = resolvedBody.replace('{{User.' + fieldName + '}}', val);
+                    }
+                }
+                resolvedBody = FEC_CommonUltils.resolveTemplate(resolvedBody, c);
+            } catch (Exception resolveEx) {
+                System.debug('resolveTemplate failed: ' + resolveEx.getMessage());
+            }
+            mail.setHtmlBody(resolvedBody.replace('\n', '<br/>'));
             mail.setSaveAsActivity(false);
 
             // 4. Set OrgWideEmailAddress (From)

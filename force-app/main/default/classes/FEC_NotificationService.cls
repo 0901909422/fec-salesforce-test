@@ -415,9 +415,9 @@ public without sharing class FEC_NotificationService {
         if (String.isBlank(template)) return template;
         try {
             // Xử lý {{{Object.Field}}} (triple-brace) — convert sang {{Object.Field}}
-            template = template.replaceAll('\\{\\{\\{([^}]+)\\}\\}\\}', '{{$1}}');
+            template = template.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
             // Resolve User.* fields từ current user
-            Pattern userPat = Pattern.compile('\\{\\{User\\.([^}]+)\\}\\}');
+            Pattern userPat = Pattern.compile(FEC_ConstantCommon.PATTERN_USER_MERGE_FIELD);
             Matcher userMat = userPat.matcher(template);
             if (userMat.find()) {
                 // Query User với tất cả fields cần thiết
