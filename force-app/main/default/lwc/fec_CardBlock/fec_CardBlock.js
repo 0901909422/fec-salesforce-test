@@ -135,7 +135,7 @@ export default class Fec_CardBlock extends LightningElement {
             .then((result) => {
                 if (result === 'SUCCESS') {
                     this.isSuccess = true;
-                } else if (result === 'FAIL') {
+                } else {
                     this.blockCardCount++;
                     this.isError = true;
                 } else {
