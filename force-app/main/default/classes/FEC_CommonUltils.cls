@@ -1266,4 +1266,18 @@ public with sharing class FEC_CommonUltils {
     return String.join(parts, '_');
 
   }
+
+  public static void logException(String author, String func, String errMsg, String stackTrace) {
+    try {
+      FEC_Log__c log = new FEC_Log__c(
+        FEC_Author__c = author,
+        FEC_Function_Name__c = func,
+        FEC_Error_Message__c = errMsg,
+        FEC_Stack_Trace_String__c = stackTrace
+      );
+      insert log;
+    } catch (Exception ex) {
+      System.debug('Log Exception Error:' + ex.getMessage());
+    }
+  }
 }

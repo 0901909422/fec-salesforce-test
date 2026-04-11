@@ -135,9 +135,11 @@ export default class Fec_CardBlock extends LightningElement {
             .then((result) => {
                 if (result === 'SUCCESS') {
                     this.isSuccess = true;
-                } else {
+                } else if (result === 'FAIL') {
                     this.blockCardCount++;
                     this.isError = true;
+                } else {
+                    this.showToast(this.customLabel.errorTitle, result, 'error');
                 }
                 this.isShowModal = false;
             })
