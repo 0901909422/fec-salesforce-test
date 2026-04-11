@@ -1,4 +1,5 @@
 import { LightningElement, api, track } from "lwc";
+import FEC_Complete_This_Field from "@salesforce/label/c.FEC_Complete_This_Field";
 
 export default class Fec_ComboBox extends LightningElement {
   @api option;
@@ -10,6 +11,7 @@ export default class Fec_ComboBox extends LightningElement {
 
   openSearch = false;
   @api searchKey;
+  hasError = false;
 
   _value;
   @api get value() {
@@ -21,6 +23,10 @@ export default class Fec_ComboBox extends LightningElement {
 
   get optionLabel() {
     return this.optionlst?.find((item) => item.value === this.value)?.label;
+  }
+
+  get formElementClass() {
+    return this.hasError ? "slds-form-element slds-has-error" : "slds-form-element";
   }
 
   get comboboxClassName() {
@@ -61,6 +67,29 @@ export default class Fec_ComboBox extends LightningElement {
     this.value = undefined;
     this.searchKey = undefined;
     this.openSearch = false;
+    this.hasError = false;
+  }
+
+  @api reportValidity() {
+    if (this.disabled) {
+      this.hasError = false;
+      return true;
+    }
+    const isMissing = !!this.required && !this.hasValue;
+    this.hasError = isMissing;
+    const inputEl = this.template.querySelector('lightning-input[data-id="search-input"]');
+    if (inputEl && typeof inputEl.setCustomValidity === "function" && typeof inputEl.reportValidity === "function") {
+      inputEl.setCustomValidity(isMissing ? FEC_Complete_This_Field : "");
+      return inputEl.reportValidity();
+    }
+    return !isMissing;
+  }
+
+  @api checkValidity() {
+    if (this.disabled) {
+      return true;
+    }
+    return !(!!this.required && !this.hasValue);
   }
 
   connectedCallback() {
@@ -109,6 +138,7 @@ export default class Fec_ComboBox extends LightningElement {
 
     this.value = undefined;
     this.searchKey = undefined;
+    this.hasError = false;
 
     const event = new CustomEvent("remove");
 
@@ -133,6 +163,7 @@ export default class Fec_ComboBox extends LightningElement {
     if (value) {
       this.value = value;
       this.openSearch = false;
+      this.hasError = false;
 
       const event = new CustomEvent("change", {
         detail: {

@@ -197,6 +197,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Incorrect_Payment_Adj_Rows__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Country_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
