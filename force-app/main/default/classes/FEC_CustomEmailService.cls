@@ -194,8 +194,8 @@ public without sharing class FEC_CustomEmailService {
         Map<String, String> routingLabelMap = new Map<String, String>();
         Map<String, String> routingAddrMap  = new Map<String, String>();
         List<String> routingOrder = new List<String>();
-        final String FIELD_ADDRESS = 'Address';
-        final String FIELD_PERSONAL_NAME = 'PersonalName';
+        String FIELD_ADDRESS = 'Address';
+        String FIELD_PERSONAL_NAME = 'PersonalName';
         try {
             // Lấy Queue Id mà user đang là member
             Set<Id> userQueueIds = new Set<Id>();
@@ -229,8 +229,8 @@ public without sharing class FEC_CustomEmailService {
                 // Fallback: nếu không match được Queue nào thì lấy tất cả
                 if (routingOrder.isEmpty()) {
                     for (SObject r : routingAddrs) {
-                        String addr = (String) r.get('Address');
-                        String name = (String) r.get('PersonalName');
+                        String addr = (String) r.get(FIELD_ADDRESS);
+                        String name = (String) r.get(FIELD_PERSONAL_NAME);
                         if (String.isNotBlank(addr)) {
                             String lower = addr.toLowerCase();
                             String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
