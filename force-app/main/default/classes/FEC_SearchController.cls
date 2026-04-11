@@ -313,7 +313,7 @@ public with sharing class FEC_SearchController {
 
             Case c = new Case();
             c.RecordTypeId = recordTypeId;
-            c.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
+            c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_ALL_REQUEST;
             c.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.CASE_INTERNAL_REQUEST;
             c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
             c.FEC_Skip_Search_Internal_Case__c = true;
