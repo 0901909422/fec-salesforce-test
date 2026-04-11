@@ -36,17 +36,6 @@
         </values>
     </picklistValues>
     <picklistValues>
-        <picklist>FEC_CS_Customer_Care_Assessment_Type__c</picklist>
-        <values>
-            <fullName>Qualified</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Unqualified</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
         <picklist>FEC_CS_D2C_Assessment_Type__c</picklist>
         <values>
             <fullName>Qualified</fullName>
@@ -110,41 +99,6 @@
         </values>
         <values>
             <fullName>Thẻ bị mất%2F đánh cắp có phát sinh giao dịch</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
-        <picklist>FEC_Card_Replacement_Reason__c</picklist>
-        <values>
-            <fullName>Bị hư hỏng</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Bị mất%2F đánh cắp</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Bị nuốt tại ATM</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Chưa nhận được thẻ</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Không còn nguyên vẹn</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Liên quan gian lận</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Sai tên in nổi</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Thay thế lần đầu thẻ Money Tab</fullName>
             <default>false</default>
         </values>
     </picklistValues>
@@ -218,48 +172,6 @@
         </values>
     </picklistValues>
     <picklistValues>
-        <picklist>FEC_Complaint_Source__c</picklist>
-        <values>
-            <fullName>CIC</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>EA</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Others</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>PR%2FMKT</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>SBV</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>VCCA</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>VIP</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
-        <picklist>FEC_Confirm_CS_CC_Assessment__c</picklist>
-        <values>
-            <fullName>Agree</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Disagree</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
         <picklist>FEC_Confirm_CS_SP_Assessment__c</picklist>
         <values>
             <fullName>Agree</fullName>
@@ -272,28 +184,6 @@
     </picklistValues>
     <picklistValues>
         <picklist>FEC_Confirm_D2C_Assessment__c</picklist>
-        <values>
-            <fullName>Agree</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Disagree</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
-        <picklist>FEC_Confirm_RD_CO_Assessment__c</picklist>
-        <values>
-            <fullName>Agree</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Disagree</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
-        <picklist>FEC_Confirm_RD_PM_Assessment__c</picklist>
         <values>
             <fullName>Agree</fullName>
             <default>false</default>
@@ -352,25 +242,6 @@
         </values>
         <values>
             <fullName>M</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
-        <picklist>FEC_Hold_Case_Status__c</picklist>
-        <values>
-            <fullName>Completed</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Failed</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>In Progress</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Pending</fullName>
             <default>false</default>
         </values>
     </picklistValues>
@@ -473,17 +344,6 @@
         </values>
     </picklistValues>
     <picklistValues>
-        <picklist>FEC_NFU_Status__c</picklist>
-        <values>
-            <fullName>No</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Yes</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
         <picklist>FEC_New_Block_Code__c</picklist>
         <values>
             <fullName>A</fullName>
@@ -525,35 +385,6 @@
         <values>
             <fullName>Other Channels</fullName>
             <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
-        <picklist>FEC_RD_Card_Ops_Assessment_Type__c</picklist>
-        <values>
-            <fullName>Qualified</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Unqualified</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
-        <picklist>FEC_RD_Payment_Assessment_Type__c</picklist>
-        <values>
-            <fullName>Qualified</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Unqualified</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
-        <picklist>FEC_Reply_Template__c</picklist>
-        <values>
-            <fullName>--None--</fullName>
-            <default>true</default>
         </values>
     </picklistValues>
     <picklistValues>
