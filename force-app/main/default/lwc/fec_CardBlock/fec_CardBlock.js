@@ -138,8 +138,6 @@ export default class Fec_CardBlock extends LightningElement {
                 } else {
                     this.blockCardCount++;
                     this.isError = true;
-                } else {
-                    this.showToast(this.customLabel.errorTitle, result, 'error');
                 }
                 this.isShowModal = false;
             })
