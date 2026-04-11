@@ -75,9 +75,9 @@
                     <label class="field-label">{!$Label.c.FEC_Email_Label_Danh_Xung}</label>
                     <lightning:select name="titleReply" label="" value="{!v.titleReply}" onchange="{!c.onTitleChange}" class="field-select">
                         <option value="">{!$Label.c.FEC_Email_Option_None}</option>
-                        <option value="Anh/ Chị">{!$Label.c.FEC_Email_Option_Anh_Chi}</option>
-                        <option value="Anh">{!$Label.c.FEC_Email_Option_Anh}</option>
-                        <option value="Chị">{!$Label.c.FEC_Email_Option_Chi}</option>
+                        <option value="{!$Label.c.FEC_Email_Option_Anh_Chi}">{!$Label.c.FEC_Email_Option_Anh_Chi}</option>
+                        <option value="{!$Label.c.FEC_Email_Option_Anh}">{!$Label.c.FEC_Email_Option_Anh}</option>
+                        <option value="{!$Label.c.FEC_Email_Option_Chi}">{!$Label.c.FEC_Email_Option_Chi}</option>
                     </lightning:select>
                 </div>
                 <div class="field-col">
@@ -180,9 +180,9 @@
                     <label class="field-label">{!$Label.c.FEC_Email_Label_Danh_Xung}</label>
                     <lightning:select name="titleReply" label="" value="{!v.titleReply}" onchange="{!c.onTitleChange}" class="field-select">
                         <option value="">{!$Label.c.FEC_Email_Option_None}</option>
-                        <option value="Anh/ Chị">{!$Label.c.FEC_Email_Option_Anh_Chi}</option>
-                        <option value="Anh">{!$Label.c.FEC_Email_Option_Anh}</option>
-                        <option value="Chị">{!$Label.c.FEC_Email_Option_Chi}</option>
+                        <option value="{!$Label.c.FEC_Email_Option_Anh_Chi}">{!$Label.c.FEC_Email_Option_Anh_Chi}</option>
+                        <option value="{!$Label.c.FEC_Email_Option_Anh}">{!$Label.c.FEC_Email_Option_Anh}</option>
+                        <option value="{!$Label.c.FEC_Email_Option_Chi}">{!$Label.c.FEC_Email_Option_Chi}</option>
                     </lightning:select>
                 </div>
                 <div class="field-col">
