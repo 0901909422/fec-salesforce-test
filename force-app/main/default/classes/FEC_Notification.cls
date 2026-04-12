@@ -198,7 +198,7 @@ public without sharing class FEC_Notification {
     }
 
     /**
-     * Resolves {{{Object.Field}}} merge fields for manual and bulk emails dynamically.
+     * Resolves {{{Object.Field}}} and {{Object.Field}} merge fields for manual and bulk emails dynamically.
      * Extracts tokens securely across ALL emails and builds single bulk SOQL queries to avoid DML limits!
      */
     private static void bulkResolveMergeFields(List<EmailInfo> emailsToSend, String fromEmail) {
@@ -208,11 +208,20 @@ public without sharing class FEC_Notification {
         Set<String> custHistoryFields = new Set<String>();
         Set<Id> caseIds = new Set<Id>();
 
+        // Match cả {{{...}}} và {{...}} (không phải triple-brace)
         Pattern p = Pattern.compile(FEC_ConstantCommon.PATTERN_MERGE_FIELD);
-        
+        Pattern pDouble = Pattern.compile('\\{\\{([^{}]+)\\}\\}');
+
         // Pass 1: Extract all fields and Case Ids
         for (EmailInfo info : emailsToSend) {
             if (info.caseId != null) caseIds.add(info.caseId);
+            // Normalize {{...}} → {{{...}}} để xử lý chung
+            if (String.isNotBlank(info.body)) {
+                info.body = pDouble.matcher(info.body).replaceAll('{{{$1}}}');
+            }
+            if (String.isNotBlank(info.subject)) {
+                info.subject = pDouble.matcher(info.subject).replaceAll('{{{$1}}}');
+            }
             
             if (String.isNotBlank(info.body) && info.body.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
                 Matcher m = p.matcher(info.body);
