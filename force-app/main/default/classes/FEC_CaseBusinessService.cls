@@ -574,7 +574,21 @@ public without sharing class FEC_CaseBusinessService {
           if (TYPE_LWC.equals(itemType)) {
             String lwcName = (String) item.get('FEC_LWC_Name__c');
             if (String.isNotBlank(lwcName)) {
-              sectionTemp.componentlst.add(lwcName);
+              Boolean lwcMasterIsEdit = canEditFromMasterDataSetting(
+                item,
+                currentUser.FEC_User_Group__c
+              );
+              System.debug(
+                '[FEC_CaseBusinessService] LWC master isEdit | section=' +
+                  sectionNameTemp +
+                  ' lwc=' +
+                  lwcName +
+                  ' fecMasterDataSettingIsEdit=' +
+                  lwcMasterIsEdit
+              );
+              sectionTemp.componentlst.add(
+                new LwcComponentRef(lwcName, lwcMasterIsEdit)
+              );
             }
           } else {
             if (String.isNotBlank(subSectionNameTemp)) {
@@ -2244,6 +2258,53 @@ public without sharing class FEC_CaseBusinessService {
     return result;
   }
 
+  private static Boolean canEditFromMasterDataSetting(
+    SObject masterDataItem,
+    String userGr
+  ) {
+    Boolean masterReadOnly =
+      (Boolean) masterDataItem.get('FEC_Field_ReadOnly__c') == true;
+    Boolean masterEditable =
+      (Boolean) masterDataItem.get('FEC_Field_Editable__c') == true;
+    String editableGr = (String) masterDataItem.get(
+      'FEC_Editable_User_Group__c'
+    );
+
+    Boolean userAllowedByGroup =
+      String.isNotBlank(editableGr) &&
+      String.isNotBlank(userGr) &&
+      editableGr.contains(userGr);
+
+    Boolean canEdit =
+      !masterReadOnly && masterEditable && userAllowedByGroup;
+
+    String fecCtx = (String) masterDataItem.get('FEC_Field_API_Name__c');
+    if (String.isBlank(fecCtx)) {
+      fecCtx = (String) masterDataItem.get('FEC_LWC_Name__c');
+    }
+    if (String.isBlank(fecCtx)) {
+      fecCtx = '(no api/lwc name)';
+    }
+    System.debug(
+      '[FEC_CaseBusinessService] canEditFromMasterDataSetting | apiOrLwc=' +
+        fecCtx +
+        ' readOnly=' +
+        masterReadOnly +
+        ' fieldEditable=' +
+        masterEditable +
+        ' editableGr=' +
+        editableGr +
+        ' userGr=' +
+        userGr +
+        ' userAllowedByGroup=' +
+        userAllowedByGroup +
+        ' canEdit=' +
+        canEdit
+    );
+
+    return canEdit;
+  }
+
   private static Field transform(
     Sobject masterDataItem,
     SObject objTemp,
@@ -2461,6 +2522,22 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
+  public class LwcComponentRef {
+    @AuraEnabled
+    public String componentName;
+
+    @AuraEnabled
+    public Boolean fecMasterDataSettingIsEdit;
+
+    public LwcComponentRef() {
+    }
+
+    public LwcComponentRef(String componentName, Boolean fecMasterDataSettingIsEdit) {
+      this.componentName = componentName;
+      this.fecMasterDataSettingIsEdit = fecMasterDataSettingIsEdit;
+    }
+  }
+
   public class Section implements Comparable {
     @AuraEnabled
     public String name;
@@ -2481,14 +2558,14 @@ public without sharing class FEC_CaseBusinessService {
     public Decimal layout;
 
     @AuraEnabled
-    public List<String> componentlst;
+    public List<LwcComponentRef> componentlst;
 
     // Default constructor
     public Section() {
       this.objlst = new List<CObject>();
       this.subSectionlst = new List<Section>();
       this.error = new Error();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<LwcComponentRef>();
     }
 
     public Section(String name) {
@@ -2496,7 +2573,7 @@ public without sharing class FEC_CaseBusinessService {
       this.objlst = new List<CObject>();
       this.subSectionlst = new List<Section>();
       this.error = new Error();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<LwcComponentRef>();
     }
 
     public Section(String name, Decimal order, Decimal layout) {
@@ -2506,14 +2583,14 @@ public without sharing class FEC_CaseBusinessService {
       this.layout = layout;
       this.subSectionlst = new List<Section>();
       this.error = new Error();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<LwcComponentRef>();
     }
 
     // Parameterized constructor
     public Section(String name, List<CObject> objlst) {
       this.name = name;
       this.objlst = objlst != null ? objlst : new List<CObject>();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<LwcComponentRef>();
       this.error = new Error();
     }
 
@@ -2521,7 +2598,7 @@ public without sharing class FEC_CaseBusinessService {
       this.name = name;
       this.error = err;
       this.subSectionlst = new List<Section>();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<LwcComponentRef>();
     }
 
     public CObject findObj(String name) {

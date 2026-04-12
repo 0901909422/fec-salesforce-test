@@ -581,7 +581,20 @@ export default class Fec_CaseBussiness extends LightningElement {
       this.business.routingActionlst &&
       this.business.routingActionlst.length > 0 &&
       this._isEdit;
+    this._updateDynCmpIsEditFlags();
     this.business = { ...this.business };
+  }
+
+  _updateDynCmpIsEditFlags() {
+    if (!this.business?.sectionlst) return;
+    this.business.sectionlst.forEach((section) => {
+      section.resolvedComponentlst?.forEach((d) => {
+        if (!d) return;
+        const master =
+          typeof d.fecMasterDataSettingIsEdit === "boolean" ? d.fecMasterDataSettingIsEdit : true;
+        d.isEdit = this._isEdit && master;
+      });
+    });
   }
 
   connectedCallback() {
@@ -1902,8 +1915,19 @@ export default class Fec_CaseBussiness extends LightningElement {
       section._fecDynCmpSlots = slots;
       section.resolvedComponentlst = [];
 
-      section.componentlst.forEach((name, idx) => {
+      section.componentlst.forEach((entry, idx) => {
+        if (!entry) return;
+
+        const name =
+          typeof entry === "string" ? entry : entry.componentName;
         if (!name) return;
+
+        const fecMasterDataSettingIsEdit =
+          typeof entry === "object" &&
+          entry !== null &&
+          Object.prototype.hasOwnProperty.call(entry, "fecMasterDataSettingIsEdit")
+            ? Boolean(entry.fecMasterDataSettingIsEdit)
+            : true;
 
         const loader = DYNAMIC_COMPONENT_REGISTRY[name];
         if (!loader) {
@@ -1920,6 +1944,8 @@ export default class Fec_CaseBussiness extends LightningElement {
               key: `${name}-${idx}`,
               ctor: mod.default,
               componentName: name,
+              fecMasterDataSettingIsEdit,
+              isEdit: this._isEdit && fecMasterDataSettingIsEdit,
             };
           })
           .catch((err) => {
@@ -1937,6 +1963,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           delete section._fecDynCmpSlots;
         }
       });
+      this._updateDynCmpIsEditFlags();
       this.business = { ...this.business };
     });
   }
