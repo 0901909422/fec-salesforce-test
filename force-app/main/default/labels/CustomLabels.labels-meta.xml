@@ -4122,7 +4122,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Other Card Label</shortDescription>
-        <value>Other Card</value>
+        <value>Other Cards</value>
     </labels>
     <labels>
         <fullName>FEC_Outcome_Code_Label</fullName>
