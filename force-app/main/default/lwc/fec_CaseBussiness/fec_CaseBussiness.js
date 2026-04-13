@@ -14,6 +14,7 @@ import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
 import {
   mask,
+  maskValue,
   formatToDDMMYYYY,
   validateUpdatedInfoPhone,
   applyPhoneInputMaxLength,
@@ -26,7 +27,7 @@ import {
   isOnlyNumber
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, PHONE_VN_REGION, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -44,6 +45,11 @@ import FEC_Decision_Label from "@salesforce/label/c.FEC_Decision_Label";
 import FEC_Choose_Decision_Label from "@salesforce/label/c.FEC_Choose_Decision_Label";
 import FEC_Sub_Decision_Label from "@salesforce/label/c.FEC_Sub_Decision_Label";
 import FEC_Choose_Sub_Decision_Label from "@salesforce/label/c.FEC_Choose_Sub_Decision_Label";
+import FEC_ACTION_UNBLOCK_CARD_HEADER from "@salesforce/label/c.FEC_ACTION_UNBLOCK_CARD_HEADER";
+import FEC_MSG_ACTION_UNBLOCK_CARD from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD";
+import FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS";
+import FEC_MSG_ACTION_UNBLOCK_CARD_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_ERROR";
+
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 
@@ -66,6 +72,8 @@ const ACTION_CANCEL = "Cancel";
 
 const OUTBOUND_CAMPAIGN = 'Outbound Campaign';
 
+const ACTION_UNBLOCK_CARD = "Unblock Card";
+
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
   ACTION_ESCALATE,
@@ -80,6 +88,12 @@ const FIELD_ORIGINAL_INFO_PHONE_NUMBER = "FEC_Original_Info_Phone_Number__c";
 const CASE_REGISTERED_PHONE_NUMBER = "Case.FEC_Registered_Phone_Number__c";
 const FIELD_REGISTERED_PHONE_NUMBER = "FEC_Registered_Phone_Number__c";
 const FIELD_CASE_PHONE_NUMBER = "FEC_Case_Phone_Number__c";
+const PHONE_MASK_FIELD_APIS = new Set([
+  FIELD_ORIGINAL_INFO_PHONE_NUMBER,
+  FIELD_UPDATED_INFO_PHONE_NUMBER,
+  FIELD_REGISTERED_PHONE_NUMBER,
+  FIELD_CASE_PHONE_NUMBER,
+]);
 const CASE_UPDATED_INFO_FIRST_NAME = "Case.FEC_Updated_Info_First_Name__c";
 const CASE_UPDATED_INFO_MIDDLE_NAME = "Case.FEC_Updated_Info_Middle_Name__c";
 const CASE_UPDATED_INFO_LAST_NAME = "Case.FEC_Updated_Info_Last_Name__c";
@@ -179,15 +193,18 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
  *   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
  */
 const DYNAMIC_COMPONENT_REGISTRY = {
+  fec_UpdateAddress: () => import('c/fec_UpdateAddress'),
   fec_CardInfo: () => import('c/fec_CardInfo'),
-  fec_IPPClosureHandling: () => import('c/fec_IPPClosureHandling'),
-  fec_CardClosureRefundHandling: () => import('c/fec_CardClosureRefundHandling'),
+  fec_IPPClosureForm: () => import('c/fec_IPPClosureForm'),
+  fec_CardClosureRefundForm: () => import('c/fec_CardClosureRefundForm'),
   fec_PinResetHandling: () => import('c/fec_PinResetHandling'),
   fec_CardBlock: () => import('c/fec_CardBlock'),
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
   fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
   fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
+  fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
+  fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
 };
 
 export default class Fec_CaseBussiness extends LightningElement {
@@ -578,6 +595,11 @@ export default class Fec_CaseBussiness extends LightningElement {
     localStorage.removeItem(this.draftKey);
   }
 
+  _maskDisplayPhone(raw) {
+    if (raw == null || raw === STR_EMPTY) return STR_EMPTY;
+    return maskValue(String(raw).replace(/\D/g, STR_EMPTY), false);
+  }
+
   handleToggleMask(e) {
     let filter = {
       section: e.target.dataset.section,
@@ -592,7 +614,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     e.target.iconName = isPreview ? ICON_HIDE : ICON_PREVIEW;
 
     if (isPreview) {
-      if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
+      if (
+        field.maskingType === MASKING_TYPE_PHONE ||
+        PHONE_MASK_FIELD_APIS.has(field.apiName)
+      ) {
+        field.value = this._maskDisplayPhone(field.original);
+      } else if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
         field.value = isOnlyNumber(field.original)
           ? mask(field.original, 3, 3)
           : mask(field.original, 2, 3);
@@ -762,14 +789,13 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.masked = field.masked && field.value && !field.editable;
 
                 if (field.masked) {
+                  if (
+                    field.maskingType === MASKING_TYPE_PHONE ||
+                    PHONE_MASK_FIELD_APIS.has(field.apiName)
+                  ) {
+                    field.value = this._maskDisplayPhone(field.original);
+                  } else {
                   switch (field.maskingType) {
-                    case MASKING_TYPE_PHONE:
-                      if (field.original?.startsWith(PHONE_VN_REGION)) {
-                        field.value = mask(field.original, 5, 3);
-                      } else {
-                        field.value = mask(field.original, 4, 3);
-                      }
-                      break;
                     case MASKING_TYPE_PASSPORT:
                         if (isOnlyNumber(field.original)) {
                         field.value = mask(field.original, 3, 3);
@@ -788,6 +814,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                         field.value = mask(field.original, 4, 4);
                       }
                       break;
+                  }
                   }
                 }
 
@@ -997,26 +1024,26 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (field) {
       field.value = value;
       if (fieldName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
-        field.isInternalRequest = value === INTERNAL_REQUEST;
+        // field.isInternalRequest = value === INTERNAL_REQUEST;
         publish(this.messageContext, CASE_NOC, {
           accountType: value 
         });
-        this.business.sectionlst = this.business.sectionlst.map(section => ({
-          ...section,
-          subSectionlst: section.subSectionlst?.map(sub => ({
-            ...sub,
-            objlst: sub.objlst?.map(obj => ({
-              ...obj,
-              fieldlst: obj.fieldlst?.map(f => ({
-                ...f,
-                isHidden: value === INTERNAL_REQUEST
-                  ? f.apiName !== FIELD_ACCOUNT_CONTRACT_NUMBER_PL
-                  : false,
-              })) || [],
-            })) || [],
-          })) || [],
-        }));
-        this.business = { ...this.business };
+        // this.business.sectionlst = this.business.sectionlst.map(section => ({
+        //   ...section,
+        //   subSectionlst: section.subSectionlst?.map(sub => ({
+        //     ...sub,
+        //     objlst: sub.objlst?.map(obj => ({
+        //       ...obj,
+        //       fieldlst: obj.fieldlst?.map(f => ({
+        //         ...f,
+        //         isHidden: value === INTERNAL_REQUEST
+        //           ? f.apiName !== FIELD_ACCOUNT_CONTRACT_NUMBER_PL
+        //           : false,
+        //       })) || [],
+        //     })) || [],
+        //   })) || [],
+        // }));
+        // this.business = { ...this.business };
       }
       
       if (field.isDate) {
@@ -1248,6 +1275,20 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (routeToEle)
       isAllValid = routeToEle && routeToEle.reportValidity() && isAllValid;
 
+    const ipEl = this._getIncorrectPaymentFormEl();
+    if (ipEl && typeof ipEl.validateForSubmit === "function") {
+      if (!ipEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
+    const benEl = this._getBeneficiaryBankInfoBlockEl();
+    if (benEl && typeof benEl.validateForSubmit === "function") {
+      if (!benEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -1266,6 +1307,125 @@ export default class Fec_CaseBussiness extends LightningElement {
   //   return this._lastValidationError || null;
   // }
 
+  _getIncorrectPaymentFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_IncorrectPaymentForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveAdjustmentsIfApplicable === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _getBeneficiaryBankInfoBlockEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_BeneficiaryBankInfoBlock"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveBeneficiaryIfApplicable === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _saveIncorrectPaymentAdjustmentsIfApplicable() {
+    const el = this._getIncorrectPaymentFormEl();
+    if (!el || typeof el.saveAdjustmentsIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveAdjustmentsIfApplicable();
+  }
+
+  _saveIncorrectPaymentDraftIfApplicable() {
+    const el = this._getIncorrectPaymentFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveBeneficiaryBankInfoDraftIfApplicable() {
+    const el = this._getBeneficiaryBankInfoBlockEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveBeneficiaryIfApplicable() {
+    const el = this._getBeneficiaryBankInfoBlockEl();
+    if (!el || typeof el.saveBeneficiaryIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveBeneficiaryIfApplicable();
+  }
+
+  _getCardClosureRefundFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_CardClosureRefundForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveForSubmitIfApplicable === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _saveCardClosureRefundDraftIfApplicable() {
+    const el = this._getCardClosureRefundFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveCardClosureRefundForSubmitIfApplicable() {
+    const el = this._getCardClosureRefundFormEl();
+    if (!el || typeof el.saveForSubmitIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveForSubmitIfApplicable();
+  }
+
+  _getIppClosureFormEl() {
+    return (
+      this.template.querySelector("c-fec_-i-p-p-closure-form") ||
+      this.template.querySelector("c-fec_-ipp-closure-form")
+    );
+  }
+
+  _validateIPPClosureForSubmit() {
+    const el = this._getIppClosureFormEl();
+    if (el && typeof el.validateSelectionRequiredForSubmit === "function") {
+      return el.validateSelectionRequiredForSubmit();
+    }
+    return true;
+  }
+
+  _saveIPPClosureIfApplicable() {
+    const el = this._getIppClosureFormEl();
+    if (el && typeof el.saveSelectedIPPIfApplicable === "function") {
+      return el.saveSelectedIPPIfApplicable();
+    }
+    return Promise.resolve();
+  }
+
   /**
    * Chỉ lưu dữ liệu form (Nature of Case, Account Info, Case Info, Process Action, Routing Action)
    * mà KHÔNG gọi run() - không chuyển sang Stage tiếp theo.
@@ -1283,7 +1443,16 @@ export default class Fec_CaseBussiness extends LightningElement {
     });
 
     const total = formToSubmit.length;
-    if (total === 0) return Promise.resolve();
+    const afterForms = () =>
+      Promise.all([
+        this._saveIncorrectPaymentDraftIfApplicable(),
+        this._saveIPPClosureIfApplicable(),
+        this._saveBeneficiaryBankInfoDraftIfApplicable(),
+        this._saveCardClosureRefundDraftIfApplicable(),
+      ]);
+    if (total === 0) {
+      return afterForms();
+    }
 
     return new Promise((resolve, reject) => {
       this._saveOnlyResolve = resolve;
@@ -1295,12 +1464,13 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
-    });
+    }).then(() => afterForms());
   }
 
   /** false = bị chặn (đã show toast), true = submit thành công. */
   @api async submit() {
     if (!this.validate()) return false;
+    if (!this._validateIPPClosureForSubmit()) return false;
 
     // Có routing thì mới chặn khi chưa đổi thông tin Updated; không có routing cho phép chỉ submit remarks.
     let routeToEle = this.template.querySelector(
@@ -1318,6 +1488,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     await this._submitFormsPromise();
+    await Promise.all([
+      this._saveIncorrectPaymentAdjustmentsIfApplicable(),
+      this._saveIPPClosureIfApplicable(),
+      this._saveBeneficiaryIfApplicable(),
+      this._saveCardClosureRefundForSubmitIfApplicable(),
+    ]);
     if (routeToEle) {
       let method = routeToEle.value;
       let actionId;
@@ -1395,8 +1571,18 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     this.processActionMethod = method;
 
-    this.header = FEC_ACTION_PHONE_UPDATE_HEADER;
-    this.content = FEC_MSG_ACTION_PHONE_UPDATE;
+    let header;
+    let content;
+    if (method == ACTION_UNBLOCK_CARD) {
+      header = FEC_ACTION_UNBLOCK_CARD_HEADER;
+      content = FEC_MSG_ACTION_UNBLOCK_CARD;
+    } else {
+      header = FEC_ACTION_PHONE_UPDATE_HEADER;
+      content = FEC_MSG_ACTION_PHONE_UPDATE;
+    }
+
+    this.header = header;
+    this.content = content;
     this.isModalOpen = true;
   }
 
@@ -1450,10 +1636,26 @@ export default class Fec_CaseBussiness extends LightningElement {
         };
         break;
 
+      case ACTION_UNBLOCK_CARD:
+        params = {
+          caseId: this.recordId,
+        };
+        break;
+
       default:
         break;
     }
 
+    let msgSuccess;
+    let msgError;
+    if (this.processActionMethod == ACTION_UNBLOCK_CARD) {
+      msgSuccess = FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS;
+      msgError = FEC_MSG_ACTION_UNBLOCK_CARD_ERROR;
+    } else {
+      msgSuccess = FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS;
+      msgError = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
+    }
+    
     run({ method: this.processActionMethod, params })
       .then((res) => {
         let isSuccess = res?.success;
@@ -1462,7 +1664,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           res?.actionCount != -1 && res?.actionCount != 3;
 
         if (isSuccess) {
-          this.processActionMsg = FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS;
+          this.processActionMsg = msgSuccess;
           this.isProcessActionSuccessed = true;
           this.isProcessActionFailed = false;
           this.actionValue = ACTION_RESOLVE;
@@ -1475,7 +1677,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             routeToEle.value = ACTION_RESOLVE;
           }
         } else {
-          this.processActionMsg = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
+          this.processActionMsg = msgError;
           this.isProcessActionSuccessed = false;
           this.isProcessActionFailed = true;
         }
@@ -1496,7 +1698,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         this.isProcessActionFailed = true;
         this.isProcessActionSuccessed = false;
-        this.processActionMsg = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
+        this.processActionMsg = msgError;
       })
       .finally(() => {
         this.isLoaded = true;
@@ -1637,7 +1839,7 @@ export default class Fec_CaseBussiness extends LightningElement {
    * pre-declared static `() => import('c/<name>')` thunks. Unknown names are
    * skipped with a console warning — the rest of the UI is unaffected.
    *
-   * Results are stored on each subSection as resolvedComponentlst [{key, ctor}].
+   * Results are stored on each section as resolvedComponentlst [{key, ctor, componentName}].
    */
   _resolveComponentlst() {
     if (!this.business?.sectionlst) return;
@@ -1666,6 +1868,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             section.resolvedComponentlst.push({
               key: `${name}-${idx}`,
               ctor: mod.default,
+              componentName: name,
             });
           })
           .catch((err) => {
@@ -1690,7 +1893,8 @@ export default class Fec_CaseBussiness extends LightningElement {
                 obj.fieldlst.forEach(field => {
             if (!field.editable) return; // ignore non editable
                     const key = obj.id + '_' + field.apiName;
-            if (draft[key] && !field.value) {
+            // if (draft[key] && !field.value) {
+            if (draft[key]) { // still applyDraft with existing data
               field.value = draft[key];
               field.displayValue = draft[key];
             }

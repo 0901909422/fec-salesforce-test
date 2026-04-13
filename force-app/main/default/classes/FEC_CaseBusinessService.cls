@@ -20,6 +20,7 @@ public without sharing class FEC_CaseBusinessService {
   public static final String GENDER_UPDATE = 'Gender Update';
   public static final String IDENTIFICATION_UPDATE = 'National ID Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
+  public static final String UNBLOCK_CARD = 'Unblock Card';
 
   /**
    * Case sẽ có Routing Action History do logic nghiệp vụ (không dùng bản tự động từ trigger khi đổi Owner).
@@ -61,7 +62,8 @@ public without sharing class FEC_CaseBusinessService {
     DOB_UPDATE,
     GENDER_UPDATE,
     IDENTIFICATION_UPDATE,
-    OC_001
+    OC_001,
+    UNBLOCK_CARD
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -81,7 +83,8 @@ public without sharing class FEC_CaseBusinessService {
     DOB_UPDATE => Method.DOB_UPDATE,
     GENDER_UPDATE => Method.GENDER_UPDATE,
     IDENTIFICATION_UPDATE => Method.IDENTIFICATION_UPDATE,
-    OC_001 => Method.OC_001
+    OC_001 => Method.OC_001,
+    UNBLOCK_CARD => Method.UNBLOCK_CARD
   };
 
   @AuraEnabled
@@ -187,6 +190,24 @@ public without sharing class FEC_CaseBusinessService {
         subCategoryId = selectedCase.FEC_SubCategory__c;
       if (String.isBlank(subCodeId))
         subCodeId = selectedCase.FEC_SubCode__c;
+      // 06/04/2026 adhoc for sub code
+      result.subCodeCode = FEC_ConstantCommon.STR_EMPTY;
+      if (String.isNotBlank(subCodeId)) {
+        try {
+          Id subCodeRecordId = subCodeId;
+          List<FEC_Sub_Code__c> subCoderlst = [
+            SELECT FEC_Code__c
+            FROM FEC_Sub_Code__c
+            WHERE Id = :subCodeRecordId
+            LIMIT 1
+          ];
+          if (!subCoderlst.isEmpty() && subCoderlst[0].FEC_Code__c != null) {
+            result.subCodeCode = subCoderlst[0].FEC_Code__c;
+          }
+        } catch (Exception e) {
+          System.debug('getByCase subCodeCode: ' + e.getMessage());
+        }
+      }
 
       // =============================== GET ROUTING ACTION ===========================
 
@@ -756,6 +777,7 @@ public without sharing class FEC_CaseBusinessService {
       System.debug('getByCase AuraHandledException: ' + e.getMessage());
     } catch (Exception e) {
       System.debug('getByCase Exception: ' + e.getMessage());
+      System.debug(e.getStackTraceString());
     }
     return result;
   }
@@ -1060,6 +1082,10 @@ public without sharing class FEC_CaseBusinessService {
         }
         when OC_001 {
           System.debug(OC_001);
+        }
+        when UNBLOCK_CARD {
+          System.debug(UNBLOCK_CARD);
+          return null;
         }
         when else {
           // throw new CaseBusinessServiceException('Method not found.');
@@ -2181,7 +2207,8 @@ public without sharing class FEC_CaseBusinessService {
     String editableGr = (String) masterDataItem.get(
       'FEC_Editable_User_Group__c'
     );
-
+    System.debug('>>>masterDataItem Sobject: ' + masterDataItem);
+    System.debug('>>>objTemp: ' + objTemp);
     Boolean isReverted = (Boolean) masterDataItem.get('FEC_Field_Reverted__c');
     Boolean isReadOnly = (Boolean) masterDataItem.get('FEC_Field_ReadOnly__c');
     Boolean isEditable = (Boolean) masterDataItem.get('FEC_Field_Editable__c');
@@ -2212,6 +2239,18 @@ public without sharing class FEC_CaseBusinessService {
       apiName == 'FEC_Original_Info_Last_Name__c'
     ) {
       masked = false;
+    }
+    if (
+      apiName == 'FEC_Original_Info_Date_of_Issue__c' ||
+      apiName == 'FEC_Original_Info_Place_of_Issue__c' ||
+      apiName == 'FEC_Updated_Info_Date_of_Issue__c' ||
+      apiName == 'FEC_Updated_Info_Place_of_Issue__c'
+    ) {
+      masked = false;
+    }
+    if (apiName == 'FEC_Original_Info_National_ID__c') {
+      masked = true;
+      maskingTypeTemp = 'National ID/ Passport';
     }
 
     return new Field(
@@ -2315,6 +2354,9 @@ public without sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public String natureOfCase;
+
+    @AuraEnabled
+    public String subCodeCode;
 
     @AuraEnabled
     public String stage;
@@ -2868,28 +2910,7 @@ public without sharing class FEC_CaseBusinessService {
     }
 
     // 1. Tạo Map ánh xạ từ Decision (Input) sang FEC_Team__c (Output)
-    Map<String, String> decisionToTeamMap = new Map<String, String>{
-      // Nhóm thường (Pending-) -> Bỏ prefix
-      'Pending CS' => 'CSInternal',
-      'Pending Customer' => 'Customer',
-      'Pending Card Ops' => 'CardOpsOutOfSystem',
-      'Pending Collections' => 'CollectionsOutOfSystem',
-      'Pending Contract Processing' => 'CPOutOfSystem',
-      'Pending Credit Assessment' => 'CAOutOfSystem',
-      'Pending Direct Sales' => 'DirectSalesOutOfSystem',
-      'Pending Telesales' => 'TelesalesOutOfSystem',
-      'Pending IT' => 'ITOutOfSystem',
-      'Pending Payment' => 'PaymentOutOfSystem',
-      'Pending Product' => 'PBDOutOfSystem',
-      'Pending RCP&A' => 'RCPAOutOfSystem',
-      'Pending Security' => 'SecurityOutOfSystem',
-      'Pending Vendor' => 'VendorOutOfSystem',
-      // Nhóm đặc biệt (cần map Team và đổi Owner sang Queue)
-      'Out Of Process' => 'OutOfProcess',
-      'CIC Related' => 'CICRelated',
-      'Document Preparation' => 'DocumentPreparation',
-      'Task Under Review' => 'TaskUnderReview'
-    };
+    Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
 
     // Nếu Decision không hợp lệ thì dừng
     if (!decisionToTeamMap.containsKey(decision))
@@ -2939,7 +2960,7 @@ public without sharing class FEC_CaseBusinessService {
     Case c = new Case(
       Id = caseId,
       OwnerId = newOwnerId,
-      FEC_Team__c = teamValue,
+      //FEC_Team__c = teamValue,
       Status = String.isNotBlank(teamValue)
         ? FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX + teamValue
         : FEC_ConstantCommon.CASE_STATUS_PENDING

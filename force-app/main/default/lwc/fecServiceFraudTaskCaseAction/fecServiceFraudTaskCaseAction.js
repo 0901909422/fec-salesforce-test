@@ -1,5 +1,5 @@
 import { LightningElement, api, wire, track } from 'lwc';
-import { CurrentPageReference } from 'lightning/navigation';
+
 import { getFocusedTabInfo, setTabLabel, setTabIcon } from 'lightning/platformWorkspaceApi';
 
 import getCaseData from '@salesforce/apex/FEC_ServiceFraudTaskCaseController.getCaseData';
@@ -250,7 +250,18 @@ export default class ServiceFraudTaskCaseAction extends LightningElement {
     @track sortedFraudCasesData = [];
     
     
-
+    connectedCallback() {
+        console.log('recordId:', this.recordId);
+    
+        if (this.recordId) {
+            this.effectiveRecordId = this.recordId;
+        }
+    
+        if (!this.effectiveRecordId) {
+            console.error('No caseId provided!');
+            this.isLoading = false;
+        }
+    }
 
     // ===== OPTIONS =====
     decisionOptions = [
@@ -318,14 +329,6 @@ export default class ServiceFraudTaskCaseAction extends LightningElement {
     
     
     // ===== LOAD DATA =====
-    @wire(CurrentPageReference)
-    handlePageRef(pageRef) {
-        const caseId = pageRef?.state?.c__caseId;
-        //console.log('handlePageRef:', caseId);
-        if (caseId && caseId !== this.effectiveRecordId) {
-            this.effectiveRecordId = caseId;
-        }
-    }
     @wire(getCaseData, { caseId: '$effectiveRecordId' })
     wiredCase({ data, error }) {
         if (data) {            
@@ -591,7 +594,7 @@ export default class ServiceFraudTaskCaseAction extends LightningElement {
         console.log('remarks:', this.remarks);
     
         submitProcessCaseDecision({
-            caseId: this.recordId,
+            caseId: this.effectiveRecordId,
             decision: this.decision,
             subDecision: this.cancelReason,
             reason: this.cancelReason,

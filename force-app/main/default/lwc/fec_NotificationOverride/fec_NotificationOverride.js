@@ -243,13 +243,28 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
         this.selectedAssignedToQueueId = joined || null;
         break;
       case PRODUCT_TYPE_FIELD.fieldApiName:
-        this.selectedProductTypeId = joined || null;
+        if (this.selectedProductTypeId !== joined) {
+           this.selectedProductTypeId = joined || null;
+           // Cascade reset children
+           this.selectedCategoryId = null; this.initialCategory = [];
+           this.selectedSubCategoryId = null; this.initialSubCategory = [];
+           this.selectedSubCodeId = null; this.initialSubCode = [];
+        }
         break;
       case CATEGORY_FIELD.fieldApiName:
-        this.selectedCategoryId = joined || null;
+        if (this.selectedCategoryId !== joined) {
+           this.selectedCategoryId = joined || null;
+           // Cascade reset children
+           this.selectedSubCategoryId = null; this.initialSubCategory = [];
+           this.selectedSubCodeId = null; this.initialSubCode = [];
+        }
         break;
       case SUB_CATEGORY_OBJECT:
-        this.selectedSubCategoryId = joined || null;
+        if (this.selectedSubCategoryId !== joined) {
+           this.selectedSubCategoryId = joined || null;
+           // Cascade reset down to sub code
+           this.selectedSubCodeId = null; this.initialSubCode = [];
+        }
         break;
       case SUB_CODE_OBJECT:
         this.selectedSubCodeId = joined || null;
@@ -420,7 +435,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
             // Map data to local tracking variables for saving and logic
             this.headerLabel = 'Edit ' + res.Name;
             this.targetGroup = res.FEC_Target_Group__c;
-            this.recordType.DeveloperName = res.RecordType.DeveloperName;
+            this.recordType.DeveloperName = res?.RecordType?.DeveloperName;
             this.recordTypeId = res.RecordTypeId;
             this.selectedNotiChannelId = res.FEC_Notification_Channel__c;
             this.selectedChannelId = res.FEC_Channel__c;
@@ -448,21 +463,21 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
             // Populating UI Pills for Single-Select Lookups
             if (res.FEC_Product_Type__c) {
-                this.initialProductType = [{ id: res.FEC_Product_Type__c, title: res.FEC_Product_Type__r.Name }];
+                this.initialProductType = [{ id: res.FEC_Product_Type__c, title: res?.FEC_Product_Type__r?.Name }];
             }
             if (res.FEC_Category__c) {
-                this.initialCategory = [{ id: res.FEC_Category__c, title: res.FEC_Category__r.Name }];
+                this.initialCategory = [{ id: res.FEC_Category__c, title: res?.FEC_Category__r?.Name }];
             }
             if (res.FEC_SubCategory__c) {
-                this.initialSubCategory = [{ id: res.FEC_SubCategory__c, title: res.FEC_SubCategory__r.Name }];
+                this.initialSubCategory = [{ id: res.FEC_SubCategory__c, title: res?.FEC_SubCategory__r?.Name }];
             }
             if (res.FEC_SubCode__c) {
-                this.initialSubCode = [{ id: res.FEC_SubCode__c, title: res.FEC_SubCode__r.Name }];
+                this.initialSubCode = [{ id: res.FEC_SubCode__c, title: res?.FEC_SubCode__r?.Name }];
             }
             if (res.FEC_Assigned_to_Queue__c && response.queue) {
                 this.initialAssignedToQueue = [{ 
-                    id: response.queue.DeveloperName, 
-                    title: response.queue.Name, 
+                    id: response?.queue?.DeveloperName, 
+                    title: response?.queue?.Name, 
                     subtitle: 'Group' 
                 }];
             }

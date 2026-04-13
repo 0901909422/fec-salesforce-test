@@ -1,0 +1,15 @@
+<template>
+    <div data-id="containerChathub" class="container-chathub">
+        <template if:true={isInitialized}>
+            <template if:true={isChatHubVisible}>
+                <div class="chathub-iframe-wrapper">
+                    <iframe src={chatHubUrl} class="chathub-iframe"
+                        title="ChatHub"></iframe>
+                </div>
+            </template>
+        </template>
+        <template if:false={isInitialized}>
+            <p>{labelChatHubDisabled}</p>
+        </template>
+    </div>
+</template>

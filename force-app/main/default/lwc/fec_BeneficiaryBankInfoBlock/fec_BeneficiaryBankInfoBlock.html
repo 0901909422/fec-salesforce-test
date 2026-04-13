@@ -1,0 +1,21 @@
+<template>
+  <lightning-spinner lwc:if={isBusy} alternative-text="Loading" size="small"></lightning-spinner>
+  <lightning-layout multiple-rows>
+    <lightning-layout-item size="6" padding="around-small">
+      <lightning-input type="text" label={customLabel.beneficiaryName} value={beneficiaryName} required disabled={isReadOnly} onchange={handleBeneficiaryInput}></lightning-input>
+    </lightning-layout-item>
+    <lightning-layout-item size="6" padding="around-small">
+      <lightning-input type="text" label={customLabel.beneficiaryAccount} value={beneficiaryAccount} required disabled={isReadOnly} onchange={handleBeneficiaryAccountInput}></lightning-input>
+    </lightning-layout-item>
+    <lightning-layout-item size="6" padding="around-small">
+      <c-fec_-combo-box data-pick="bank" label={customLabel.bankName} option={bankOptionsJson} value={bankComboValue} required={comboRequired} disabled={isReadOnly} onchange={handleBankPickFromCombo} onremove={handleBankRemove}></c-fec_-combo-box>
+    </lightning-layout-item>
+    <lightning-layout-item size="6" padding="around-small">
+      <c-fec_-combo-box data-pick="branch" label={customLabel.bankBranch} option={bankBranchOptionsJson} value={bankBranch} required={comboRequired} disabled={isReadOnly} onchange={handleBankBranchPickFromCombo} onremove={handleBankBranchRemove}></c-fec_-combo-box>
+    </lightning-layout-item>
+    <lightning-layout-item size="6" padding="around-small">
+      <c-fec_-combo-box data-pick="province" label={customLabel.provinceCity} option={provinceOptionsJson} value={provinceComboValue} required={comboRequired} disabled={isReadOnly} onchange={handleProvincePickFromCombo} onremove={handleProvinceRemove}></c-fec_-combo-box>
+    </lightning-layout-item>
+    <lightning-layout-item size="6" padding="around-small"></lightning-layout-item>
+  </lightning-layout>
+</template>

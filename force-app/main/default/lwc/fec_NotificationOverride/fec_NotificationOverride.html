@@ -173,10 +173,9 @@
 
       <!-- Actions -->
       <div class="slds-col slds-m-top_medium submit">
-        <lightning-button label={Cancel} class="cancel-button" onclick={handleCancel}></lightning-button>
+        <lightning-button label={Cancel} onclick={handleCancel}></lightning-button>
         <template if:true={isCreate}>
-          <lightning-button type="submit" label={FEC_Button_SaveAndNew} onclick={handleSaveAndNew} variant="neutral"
-            class="slds-m-horizontal_x-small">
+          <lightning-button type="submit" label={FEC_Button_SaveAndNew} onclick={handleSaveAndNew} variant="neutral">
           </lightning-button>
         </template>
         <lightning-button type="submit" variant="brand" label={FEC_Save}></lightning-button>

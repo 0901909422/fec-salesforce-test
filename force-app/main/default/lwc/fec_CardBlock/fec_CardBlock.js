@@ -1,5 +1,11 @@
-import { LightningElement, api } from 'lwc';
+import { LightningElement, api, wire } from 'lwc';
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import { getObjectInfo, getPicklistValues } from "lightning/uiObjectInfoApi";
+import CASE_OBJECT from "@salesforce/schema/Case";
+import CARD_BLOCK_REASON_FIELD from "@salesforce/schema/Case.FEC_Card_Block_Reason__c";
+import ADDITIONAL_INFO_OBJECT from "@salesforce/schema/FEC_Additional_Info__c";
+import VERIFY_INFORMATION_FIELD from "@salesforce/schema/FEC_Additional_Info__c.FEC_Verify_Information__c";
+import CALLBACK_FIELD from "@salesforce/schema/FEC_Additional_Info__c.FEC_Callback__c";
 
 import FEC_Yes_Btn from "@salesforce/label/c.FEC_Yes_Btn";
 import FEC_No_Btn from "@salesforce/label/c.FEC_No_Btn";
@@ -16,10 +22,15 @@ import FEC_Block_Card_Failed_Max from '@salesforce/label/c.FEC_Block_Card_Failed
 import FEC_Block_Card_Confirmation_Msg from '@salesforce/label/c.FEC_Block_Card_Confirmation_Msg';
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
 
+import { 
+    RECORD_TYPE_CUSTOMER_CASE_NAME,
+ } from 'c/fec_CommonConst';
+
 import blockCard from '@salesforce/apex/FEC_CardLockUnLockController.blockCard';
 
 export default class Fec_CardBlock extends LightningElement {
     @api recordId;
+    @api isEdit;
 
     isShowSpinner = false;
     isShowModal = false;
@@ -44,8 +55,88 @@ export default class Fec_CardBlock extends LightningElement {
         errorTitle: FEC_Error_Title,
     };
 
+    customerCaseRecordTypeId;
+    addInfoRecordTypeMasterId;
+    optionReasons;
+    verifyInformationOptions;
+    callbackOptions;
+    cardBlockReasonValue;
+    verifyInformationValue;
+    callbackValue;
+
+    mapNewBlockCode = {
+        'A': 'A',
+        'Không sử dụng': 'L',
+        'Thẻ bị mất/ đánh cắp có phát sinh giao dịch': 'S',
+    }
+
+    get isDisabled() {
+        return this.isEdit === false;
+    }
+
     get isShowBtn() {
+        return !this.isDisabled && !this.isSuccess && (this.blockCardCount < 3);
+    }
+
+    get isShowMsgRetry() {
         return !this.isSuccess && (this.blockCardCount < 3);
+    }
+
+    get newBlockCodeValue() {
+        return this.mapNewBlockCode[this.cardBlockReasonValue] || '';
+    }
+
+    @wire(getObjectInfo, { objectApiName: CASE_OBJECT })
+    wiredCaseInfo({ error, data }) {
+        if (data) {
+            const recordTypes = data.recordTypeInfos;
+            // Find the Record Type ID by Name
+            this.customerCaseRecordTypeId = Object.keys(recordTypes).find(
+                (recordTypeId) => recordTypes[recordTypeId].name === RECORD_TYPE_CUSTOMER_CASE_NAME
+            );
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "$customerCaseRecordTypeId", fieldApiName: CARD_BLOCK_REASON_FIELD })
+    cardBlockReasonResults({ error, data }) {
+        if (data) {
+            this.optionReasons = data.values;
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getObjectInfo, { objectApiName: ADDITIONAL_INFO_OBJECT })
+    wiredAdditionalInfo({ error, data }) {
+        if (data) {
+            const recordTypes = data.recordTypeInfos;
+            // Find the Record Type ID Master
+            this.addInfoRecordTypeMasterId = Object.keys(recordTypes).find(
+                (recordTypeId) => recordTypes[recordTypeId].master === true
+            );
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "$addInfoRecordTypeMasterId", fieldApiName: VERIFY_INFORMATION_FIELD })
+    verifyInfoResults({ error, data }) {
+        if (data) {
+            this.verifyInformationOptions = data.values;
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "$addInfoRecordTypeMasterId", fieldApiName: CALLBACK_FIELD })
+    callbackResults({ error, data }) {
+        if (data) {
+            this.callbackOptions = data.values;
+        } else if (error) {
+            console.log(error);
+        }
     }
 
     connectedCallback() {
@@ -66,9 +157,11 @@ export default class Fec_CardBlock extends LightningElement {
             .then((result) => {
                 if (result === 'SUCCESS') {
                     this.isSuccess = true;
-                } else {
+                } else if (result === 'FAIL') {
                     this.blockCardCount++;
                     this.isError = true;
+                } else {
+                    this.showToast(this.customLabel.errorTitle, result, 'error');
                 }
                 this.isShowModal = false;
             })
@@ -79,6 +172,18 @@ export default class Fec_CardBlock extends LightningElement {
             .finally(() => {
                 this.isShowSpinner = false;
             });
+    }
+
+    handleCardBlockReasonChange(event) {
+        this.cardBlockReasonValue = event.detail.value;
+    }
+
+    handleVerifyInformationChange(event) {
+        this.verifyInformationValue = event.detail.value;
+    }
+
+    handleCallbackChange(event) {
+        this.callbackValue = event.detail.value;
     }
 
     handleError(error) {
