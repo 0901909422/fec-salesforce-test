@@ -286,7 +286,10 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             .catch(() => {
                 this.eligibilityLoading = false;
                 this.notEligible = true;
+                this.eligible = false;
                 this.fastCashStatusLabel = this.customLabel.statusNotEligible;
+                this.displayErrorCode = STR_EMPTY;
+                this.displayErrorDescription = STR_EMPTY;
             });
     }
 
