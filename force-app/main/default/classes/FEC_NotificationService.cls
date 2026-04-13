@@ -449,7 +449,7 @@ public without sharing class FEC_NotificationService {
             if (c != null && c.Id != null && template.contains('{{')) {
                 try {
                     // Extract tất cả Case.* fields từ template
-                    Pattern casePat = Pattern.compile('\\{\\{Case\\.([^}]+)\\}\\}');
+                    Pattern casePat = Pattern.compile(FEC_ConstantCommon.PATTERN_CASE_MERGE_FIELD);
                     Matcher caseMat = casePat.matcher(template);
                     Set<String> caseFields = new Set<String>{'Id'};
                     while (caseMat.find()) { caseFields.add(caseMat.group(1)); }
