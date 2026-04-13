@@ -1322,6 +1322,7 @@
 		<members>FEC_Address_Info__c.FEC_Mailing_Address__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
+		<members>FEC_Stage_Change__c.FEC_Condition_Requirement__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
