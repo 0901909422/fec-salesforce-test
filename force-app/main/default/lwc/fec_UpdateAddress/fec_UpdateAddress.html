@@ -11,78 +11,78 @@
                         </div>
                     </template>
 
+                    <template if:true={showAddressEligibilityBlock}>
+                        <div
+                            class="fec-update-address__eligibility slds-m-bottom_medium"
+                            role="alert"
+                        >
+                            <p class="fec-update-address__eligibility-title">
+                                {addressEligibilityTitle}
+                            </p>
+                            <template
+                                for:each={addressEligibilityReasonLines}
+                                for:item="row"
+                            >
+                                <p
+                                    key={row.key}
+                                    class="fec-update-address__eligibility-reason"
+                                >
+                                    {row.text}
+                                </p>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template if:false={showAddressEligibilityBlock}>
                     <div class="slds-grid slds-wrap slds-gutters_medium">
-                        <!-- Original column (no column title) -->
+                        <!-- Original column -->
                         <div
                             class="slds-col slds-size_1-of-1 slds-large-size_1-of-2"
                         >
-                            <div class="case-info__row slds-border_bottom">
+                            <h3 class="case-info__column-title slds-m-bottom_small">
+                                {labels.originalInformation}
+                            </h3>
+                            <template
+                                for:each={originalInformationRows}
+                                for:item="row"
+                            >
                                 <div
-                                    class="slds-grid slds-wrap slds-gutters_small"
+                                    key={row.key}
+                                    class="case-info__row slds-border_bottom"
                                 >
                                     <div
-                                        class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2"
+                                        class="slds-grid slds-wrap slds-gutters_small"
                                     >
-                                        <p class="case-info__field-label">
-                                            {labels.permanentAddress}
-                                        </p>
-                                        <p class="case-info__field-value">
-                                            {permanentOriginalDisplay}
-                                        </p>
-                                    </div>
-                                    <div
-                                        class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 case-info__mailing-toggle-col"
-                                    >
-                                        <p
-                                            class="case-info__field-label slds-m-bottom_xx-small"
+                                        <div
+                                            class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2"
                                         >
-                                            {labels.mailingAddress}
-                                        </p>
-                                        <lightning-input
-                                            type="checkbox"
-                                            variant="label-hidden"
-                                            label={labels.mailingAddress}
-                                            checked={permanentMailingCheckedOriginal}
-                                            disabled={originalMailingCheckboxDisabled}
-                                            class="case-info__mailing-checkbox-input"
-                                        ></lightning-input>
+                                            <p class="case-info__field-label">
+                                                {row.typeLabel}
+                                            </p>
+                                            <p class="case-info__field-value">
+                                                {row.addressDisplay}
+                                            </p>
+                                        </div>
+                                        <div
+                                            class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 case-info__mailing-toggle-col"
+                                        >
+                                            <p
+                                                class="case-info__field-label slds-m-bottom_xx-small"
+                                            >
+                                                {labels.mailingAddress}
+                                            </p>
+                                            <lightning-input
+                                                type="checkbox"
+                                                variant="label-hidden"
+                                                label={labels.mailingAddress}
+                                                checked={row.mailingChecked}
+                                                disabled={originalMailingCheckboxDisabled}
+                                                class="case-info__mailing-checkbox-input"
+                                            ></lightning-input>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="case-info__row slds-border_bottom">
-                                <div
-                                    class="slds-grid slds-wrap slds-gutters_small"
-                                >
-                                    <div
-                                        class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2"
-                                    >
-                                        <p class="case-info__field-label">
-                                            {labels.officeAddress}
-                                        </p>
-                                        <p class="case-info__field-value">
-                                            {officeOriginalDisplay}
-                                        </p>
-                                    </div>
-                                    <div
-                                        class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 case-info__mailing-toggle-col"
-                                    >
-                                        <p
-                                            class="case-info__field-label slds-m-bottom_xx-small"
-                                        >
-                                            {labels.mailingAddress}
-                                        </p>
-                                        <lightning-input
-                                            type="checkbox"
-                                            variant="label-hidden"
-                                            label={labels.mailingAddress}
-                                            checked={officeMailingCheckedOriginal}
-                                            disabled={originalMailingCheckboxDisabled}
-                                            class="case-info__mailing-checkbox-input"
-                                        ></lightning-input>
-                                    </div>
-                                </div>
-                            </div>
+                            </template>
 
                             <div
                                 class="case-info__toolbar case-info__toolbar--original slds-m-top_small"
@@ -96,10 +96,13 @@
                             </div>
                         </div>
 
-                        <!-- Updated column (no column title) -->
+                        <!-- Updated column -->
                         <div
                             class="slds-col slds-size_1-of-1 slds-large-size_1-of-2"
                         >
+                            <h3 class="case-info__column-title slds-m-bottom_small">
+                                {labels.updatedInformation}
+                            </h3>
                             <div
                                 class="case-info__row case-info__row--editable slds-border_bottom"
                             >
@@ -674,6 +677,7 @@
                             </div>
                         </div>
                     </div>
+                    </template>
                 </div>
 
         <template if:true={newAddressModalOpen}>
@@ -740,7 +744,7 @@
                                         <c-fec_searchable-combobox
                                             label={labels.provinceCity}
                                             value={newAddrCity}
-                                            options={newAddrProvinceOptionsForModal}
+                                            options={provinceOptions}
                                             placeholder={labels.provinceSearchPlaceholder}
                                             required
                                             onchange={handleNewAddrProvinceChange}

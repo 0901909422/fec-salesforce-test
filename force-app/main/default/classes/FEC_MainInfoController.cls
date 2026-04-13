@@ -31,6 +31,10 @@ public without sharing class FEC_MainInfoController {
         @AuraEnabled public String placeOfIssue;
         @AuraEnabled public String primaryPhone;
         @AuraEnabled public List<AddressDTO> addresses;
+        /** Tiêu đề khi KH không đủ điều kiện cập nhật địa chỉ (null = không chặn). */
+        @AuraEnabled public String addressUpdateNotEligibleTitle;
+        /** Các dòng lí do; mỗi phần tử đã gồm tiền tố "Lí do: …". */
+        @AuraEnabled public List<String> addressUpdateNotEligibleReasons;
     }
 
     public class AddressDTO {
@@ -61,6 +65,8 @@ public without sharing class FEC_MainInfoController {
     private class AddressUpdateResult {
         List<FEC_Address_Info__c> toUpdate = new List<FEC_Address_Info__c>();
         List<AddressDTO> dtoList = new List<AddressDTO>();
+        /** null = đủ điều kiện đồng bộ; non-null = đã format cho UI địa chỉ. */
+        FEC_CaseBusinessService.Error addressEligibilityError;
     }
 
     /* =====================================================
@@ -128,6 +134,7 @@ public without sharing class FEC_MainInfoController {
             /* Luôn lấy địa chỉ từ FEC_Address_Info__c — không tin mảng addresses trong JSON cache (dễ lệch sau khi đồng bộ API / map PERMNENT). */
             cached.addresses = buildAddressDTOListFromHistory(hist.Id);
             if (cached.addresses != null && !cached.addresses.isEmpty()) {
+                applyAddressEligibilityToDto(cached, hist.Id, null);
                 return cached;
             }
             /* Còn cache thông tin KH nhưng đã xóa hết địa chỉ trên SF — phải gọi lại GetAddressesList, không return sớm với mảng rỗng. */
@@ -135,11 +142,17 @@ public without sharing class FEC_MainInfoController {
                 try {
                     AddressUpdateResult addrResult = updateAddressesFromApi(hist, cifNumber);
                     cached.addresses = addrResult.dtoList;
+                    cached.addressUpdateNotEligibleTitle = null;
+                    cached.addressUpdateNotEligibleReasons = null;
                     hist.FEC_API_Cache__c = JSON.serialize(cached);
                     update hist;
+                    applyAddressEligibilityToDto(cached, hist.Id, addrResult);
                 } catch (Exception e) {
                     System.debug('### GetAddressesList (cache + empty addresses resync) FAILED: ' + e.getMessage());
+                    applyAddressEligibilityToDto(cached, hist.Id, null);
                 }
+            } else {
+                applyAddressEligibilityToDto(cached, hist.Id, null);
             }
             return cached;
         }
@@ -223,8 +236,12 @@ public without sharing class FEC_MainInfoController {
         dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
 
         /* ===== SAVE CACHE ===== */
+        dto.addressUpdateNotEligibleTitle = null;
+        dto.addressUpdateNotEligibleReasons = null;
         hist.FEC_API_Cache__c = JSON.serialize(dto);
         update hist;
+
+        applyAddressEligibilityToDto(dto, hist.Id, addrResult);
         return dto;
     }
 
@@ -531,6 +548,116 @@ public without sharing class FEC_MainInfoController {
 
     /* ================= HELPER METHODS ================= */
 
+    /**
+     * Đủ điều kiện đồng bộ địa chỉ hay không (rule giống phoneUpdateValidate).
+     * Trả về null nếu được phép; khi chặn: Error với tiêu đề + các dòng Lí do cho UI.
+     */
+    private static FEC_CaseBusinessService.Error getAddressUpdateEligibilityForUi(
+        Id cHistoryId
+    ) {
+        FEC_CaseBusinessService.Error raw = FEC_CaseBusinessService.phoneUpdateValidate(
+            cHistoryId
+        );
+        if (raw == null || raw.errorlst == null || raw.errorlst.isEmpty()) {
+            return null;
+        }
+        return new FEC_CaseBusinessService.Error(
+            System.Label.FEC_MSG_Address_Update_Not_Eligible,
+            formatContactValidationErrorsForAddressUi(raw.errorlst)
+        );
+    }
+
+    private static List<String> formatContactValidationErrorsForAddressUi(
+        List<String> rawlst
+    ) {
+        List<String> out = new List<String>();
+        if (rawlst == null) {
+            return out;
+        }
+        for (String s : rawlst) {
+            if (String.isBlank(s)) {
+                continue;
+            }
+            String t = s.trim();
+            if (t.startsWith('Block Code 1 = ')) {
+                String v = t.substring('Block Code 1 = '.length()).trim();
+                out.add(
+                    String.format(
+                        System.Label.FEC_MSG_Address_Update_Reason_Block_Code_1,
+                        new List<String>{ v }
+                    )
+                );
+            } else if (t.startsWith('Block Code 2 = ')) {
+                String v = t.substring('Block Code 2 = '.length()).trim();
+                out.add(
+                    String.format(
+                        System.Label.FEC_MSG_Address_Update_Reason_Block_Code_2,
+                        new List<String>{ v }
+                    )
+                );
+            } else if (t.startsWith('Block Code = ')) {
+                String v = t.substring('Block Code = '.length()).trim();
+                out.add(
+                    String.format(
+                        System.Label.FEC_MSG_Address_Update_Reason_Block_Code,
+                        new List<String>{ v }
+                    )
+                );
+            } else if (t.startsWith('Account Status = ')) {
+                String v = t.substring('Account Status = '.length()).trim();
+                out.add(
+                    String.format(
+                        System.Label.FEC_MSG_Address_Update_Reason_Account_Status,
+                        new List<String>{ v }
+                    )
+                );
+            } else {
+                out.add(
+                    String.format(
+                        System.Label.FEC_MSG_Address_Update_Reason_Generic,
+                        new List<String>{ t }
+                    )
+                );
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Gắn thông báo chặn cập nhật địa chỉ lên DTO trả về LWC (không lưu vào FEC_API_Cache__c).
+     * addrResult != null: dùng kết quả đồng bộ địa chỉ (tránh gọi validate trùng).
+     * addrResult == null: chỉ đọc cache / chưa gọi GetAddressesList — validate một lần.
+     */
+    private static void applyAddressEligibilityToDto(
+        MainInfoDTO dto,
+        Id customerHistoryId,
+        AddressUpdateResult addrResult
+    ) {
+        if (dto == null || customerHistoryId == null) {
+            return;
+        }
+        if (addrResult != null && addrResult.addressEligibilityError != null) {
+            dto.addressUpdateNotEligibleTitle = addrResult.addressEligibilityError.label;
+            dto.addressUpdateNotEligibleReasons = addrResult.addressEligibilityError.errorlst;
+            return;
+        }
+        if (addrResult != null) {
+            dto.addressUpdateNotEligibleTitle = null;
+            dto.addressUpdateNotEligibleReasons = null;
+            return;
+        }
+        FEC_CaseBusinessService.Error e = getAddressUpdateEligibilityForUi(
+            customerHistoryId
+        );
+        if (e != null) {
+            dto.addressUpdateNotEligibleTitle = e.label;
+            dto.addressUpdateNotEligibleReasons = e.errorlst;
+        } else {
+            dto.addressUpdateNotEligibleTitle = null;
+            dto.addressUpdateNotEligibleReasons = null;
+        }
+    }
+
     private static String getPrimaryPhoneOnly(String accountNumber) {
         FEC_GetCustomerList.ResponseWrapper res =
             FEC_GetCustomerList.getCustomerList(
@@ -552,6 +679,16 @@ public without sharing class FEC_MainInfoController {
         String cifNumber
     ) {
         AddressUpdateResult result = new AddressUpdateResult();
+
+        if (hist != null && hist.Id != null) {
+            FEC_CaseBusinessService.Error addrValErr =
+                getAddressUpdateEligibilityForUi(hist.Id);
+            if (addrValErr != null) {
+                result.dtoList = buildAddressDTOListFromHistory(hist.Id);
+                result.addressEligibilityError = addrValErr;
+                return result;
+            }
+        }
 
         FEC_GetAddressesList.ResponseWrapper res =
             FEC_GetAddressesList.callGetAddressesList(

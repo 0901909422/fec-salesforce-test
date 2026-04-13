@@ -1,4 +1,4 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 import checkEligibility from '@salesforce/apex/FEC_RemovePhoneController.checkEligibility';
 import FEC_Customer_Name_Label from '@salesforce/label/c.FEC_Customer_Name_Label';
 import FEC_MainInfo_Contract_Number_Label from '@salesforce/label/c.FEC_MainInfo_Contract_Number_Label';
@@ -13,8 +13,15 @@ import FEC_LBL_Remove_Phone_Input_Label from '@salesforce/label/c.FEC_LBL_Remove
 import FEC_Btn_Remove_Phone_Check_Eligibility from '@salesforce/label/c.FEC_Btn_Remove_Phone_Check_Eligibility';
 import Loading from '@salesforce/label/c.Loading';
 import { STR_EMPTY, RESULT_ERROR } from 'c/fec_CommonConst';
+import { validateUpdatedInfoPhone } from 'c/fec_CommonUtils';
 
 export default class Fec_RemovePhoneForm extends LightningElement {
+
+    @api isEdit;
+
+    get isReadOnly() {
+        return this.isEdit === false;
+    }
 
     @track phone = STR_EMPTY;
     @track rows = [];
@@ -42,6 +49,9 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     };
 
     handlePhoneChange(event) {
+        if (this.isReadOnly) {
+            return;
+        }
         this.phone = (event.target.value || STR_EMPTY).trim();
         const phoneInput = this.template.querySelector('lightning-input');
         if (phoneInput) {
@@ -55,7 +65,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     get disableCheckButton() {
-        return this.isLoading || !this.phone;
+        return this.isLoading || !this.phone || this.isReadOnly;
     }
 
     get showTable() {
@@ -63,15 +73,22 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     handleRowSelection(event) {
+        if (this.isReadOnly) {
+            return;
+        }
         const selectedRows = event.detail.selectedRows || [];
         this.selectedRowIds = selectedRows.map((item) => item.id);
     }
 
     handleCheckEligibility() {
-        if (!this.isPhoneValid(this.phone)) {
+        if (this.isReadOnly) {
+            return;
+        }
+        const phoneErr = this.phone ? validateUpdatedInfoPhone(this.phone) : FEC_MSG_Remove_Phone_Invalid_Format;
+        if (phoneErr) {
             const phoneInput = this.template.querySelector('lightning-input');
             if (phoneInput) {
-                phoneInput.setCustomValidity(FEC_MSG_Remove_Phone_Invalid_Format);
+                phoneInput.setCustomValidity(phoneErr);
                 phoneInput.reportValidity();
             }
             this.resultMessage = STR_EMPTY;
@@ -105,18 +122,5 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             .finally(() => {
                 this.isLoading = false;
             });
-    }
-
-    isPhoneValid(value) {
-        if (!value) {
-            return false;
-        }
-        if (/^0\d{9}$/.test(value)) {
-            return true;
-        }
-        if (/^84\d{9}$/.test(value)) {
-            return true;
-        }
-        return false;
     }
 }
