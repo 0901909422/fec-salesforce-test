@@ -282,11 +282,23 @@
     <picklistValues>
         <picklist>FEC_Interaction_Subchannel__c</picklist>
         <values>
+            <fullName>EA</fullName>
+            <default>false</default>
+        </values>
+        <values>
             <fullName>Inbound Call</fullName>
             <default>false</default>
         </values>
         <values>
             <fullName>Other</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>PR%2FMKT</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>SBV</fullName>
             <default>false</default>
         </values>
     </picklistValues>

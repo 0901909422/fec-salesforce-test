@@ -93,8 +93,9 @@ export default class Fec_IPPClosureForm extends LightningElement {
                 const rawRows = (data && data.rows) ? data.rows : [];
                 const rows = rawRows.map(row => this.mapRowToDisplay(row));
                 this.ippList = rows;
-                this.showNoEligibleWarning = !!(data && data.showNoEligibleWarning);
+                this.showNoEligibleWarning = rows.length === 0;
                 this.loadSucceeded = true;
+                this.dispatchEvent(new CustomEvent('fecippclosureload', { bubbles: true, composed: true, detail: { noEligibleForClosure: this.showNoEligibleWarning } }));
             })
             .catch((err) => {
                 this.loadSucceeded = false;
@@ -142,6 +143,10 @@ export default class Fec_IPPClosureForm extends LightningElement {
     @api validateSelectionRequiredForSubmit() {
         if (this.isReadOnly) {
             return true;
+        }
+        if (this.isLoading) {
+            this.showToast(FEC_Toast_Validation_Title, labelLoading, 'error');
+            return false;
         }
         if (!this.loadSucceeded || !this.ippList || this.ippList.length === 0) {
             return true;

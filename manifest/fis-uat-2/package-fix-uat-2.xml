@@ -166,6 +166,10 @@
 		<members>fec_MainInfoLoanAccount</members>
 		<members>fec_RepaymentSchedulePaymentHistory</members>
 		<members>fec_Termination</members>
+		<members>fec_GetNextWork</members>
+		<members>fec_InteractionCaseModeStore</members>
+		<members>fec_InteractionHighlightMain</members>
+		<members>maskedToggleCell</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -179,6 +183,9 @@
 		<members>FEC_Customer_Case_Record_Page</members>
 		<members>FEC_Clear_Session_Record_Page</members>
 		<members>FEC_Service_UtilityBar</members>
+		<members>Master_Data_Setting_Record_Page</members>
+		<members>Stage_Change_Record_Page</members>
+		<members>Stage_Screen_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -406,6 +413,14 @@
         <members>FEC_MSG_ACTION_UNBLOCK_CARD</members>
         <members>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</members>
 		<members>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</members>
+		<members>FEC_MSG_Address_Update_Not_Eligible</members>
+        <members>FEC_MSG_Address_Update_Reason_Account_Status</members>
+        <members>FEC_MSG_Address_Update_Reason_Block_Code</members>
+        <members>FEC_MSG_Address_Update_Reason_Block_Code_1</members>
+        <members>FEC_MSG_Address_Update_Reason_Block_Code_2</members>
+        <members>FEC_MSG_Address_Update_Reason_Generic</members>
+        <members>FEC_LBL_UpdateAddress_Original_Information</members>
+        <members>FEC_LBL_UpdateAddress_Updated_Information</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -633,6 +648,14 @@
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
 		<members>FEC_Additional_Info__c.FEC_Replace_Card__c</members>
+		<members>Case.FEC_Incorrect_Payment_Adj_Rows__c</members>
+		<members>Case.FEC_Current_Card_Status__c</members>
+		<members>Case.FEC_Bank_Branch_Name_Noaccent__c</members>
+		<members>Case.FEC_Bank_Name_Noaccent__c</members>
+		<members>Case.FEC_Beneficiary_Account__c</members>
+		<members>Case.FEC_Beneficiary_Name__c</members>
+		<members>Case.FEC_Province_City__c</members>
+		<members>Case.FEC_Interaction_Subchannel__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -655,6 +678,7 @@
 	</types>
     <types>
 		<members>ServiceResourceSkill-en_US</members>
+		<members>FEC_Additional_Info__c-en_US</members>
 		<name>CustomObjectTranslation</name>
 	</types>
 	<types>
@@ -680,7 +704,10 @@
         <name>ApexTrigger</name>
     </types>
 	<types>
+        <members>Case.Customer_Case</members>
+        <members>Case.Interaction</members>
         <members>Case.Internal_Case</members>
+        <members>Case.Search_Interaction</members>
         <name>RecordType</name>
     </types>
 	<types>
@@ -691,5 +718,9 @@
 		<members>Case.Hold_Case</members>
 		<name>QuickAction</name>
 	</types>
+	<types>
+		<members>QuillEditor</members>
+        <name>StaticResource</name>
+    </types>
     <version>65.0</version>
 </Package>
