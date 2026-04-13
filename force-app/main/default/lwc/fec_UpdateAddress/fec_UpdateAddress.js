@@ -27,6 +27,8 @@ import FEC_LBL_UpdateAddress_Add_New_Address from '@salesforce/label/c.FEC_LBL_U
 import FEC_LBL_UpdateAddress_Edit_Mailing from '@salesforce/label/c.FEC_LBL_UpdateAddress_Edit_Mailing';
 import FEC_LBL_UpdateAddress_New_Address from '@salesforce/label/c.FEC_LBL_UpdateAddress_New_Address';
 import FEC_LBL_UpdateAddress_Province_Search_Placeholder from '@salesforce/label/c.FEC_LBL_UpdateAddress_Province_Search_Placeholder';
+import FEC_LBL_UpdateAddress_Original_Information from '@salesforce/label/c.FEC_LBL_UpdateAddress_Original_Information';
+import FEC_LBL_UpdateAddress_Updated_Information from '@salesforce/label/c.FEC_LBL_UpdateAddress_Updated_Information';
 import Loading from '@salesforce/label/c.Loading';
 import LBL_UpdateSuccessfully from '@salesforce/label/c.LBL_UpdateSuccessfully';
 import LBL_Error from '@salesforce/label/c.LBL_Error';
@@ -212,7 +214,9 @@ export default class Fec_UpdateAddress extends LightningElement {
         loading: Loading,
         newAddressTitle: FEC_LBL_UpdateAddress_New_Address,
         addressTypeLabel: FEC_LBL_ContractClosure_Address_Type,
-        currentAddressOption: FEC_Current_Address
+        currentAddressOption: FEC_Current_Address,
+        originalInformation: FEC_LBL_UpdateAddress_Original_Information,
+        updatedInformation: FEC_LBL_UpdateAddress_Updated_Information
     };
 
     connectedCallback() {
@@ -286,6 +290,26 @@ export default class Fec_UpdateAddress extends LightningElement {
         return !this.isLoading;
     }
 
+    get showAddressEligibilityBlock() {
+        const t = this.mainInfoData?.addressUpdateNotEligibleTitle;
+        return t != null && String(t).trim() !== '';
+    }
+
+    get addressEligibilityTitle() {
+        return this.mainInfoData?.addressUpdateNotEligibleTitle ?? '';
+    }
+
+    get addressEligibilityReasonLines() {
+        const reasons = this.mainInfoData?.addressUpdateNotEligibleReasons;
+        if (!Array.isArray(reasons) || reasons.length === 0) {
+            return [];
+        }
+        return reasons.map((text, index) => ({
+            key: `addr-elig-${index}`,
+            text: text != null ? String(text) : ''
+        }));
+    }
+
     get wardComboboxDisabled() {
         return !this.mailingCity;
     }
@@ -357,10 +381,6 @@ export default class Fec_UpdateAddress extends LightningElement {
         ];
     }
 
-    get newAddrProvinceOptionsForModal() {
-        return this.provinceOptions;
-    }
-
     get newAddrWardComboboxDisabled() {
         return !this.newAddrCity || this.newAddressSaveLoading;
     }
@@ -421,6 +441,31 @@ export default class Fec_UpdateAddress extends LightningElement {
         return list.find((a) => a.addressType === typeLabel) || null;
     }
 
+    /** Mảng địa chỉ cho cột Original — snapshot lần load; nếu chưa có thì dùng addresses từ Main Info (cùng nguồn GetAddressesList). */
+    get originalAddressesSourceList() {
+        if (Array.isArray(this.originalAddressesSnapshot)) {
+            return this.originalAddressesSnapshot;
+        }
+        const live = this.mainInfoData?.addresses;
+        return Array.isArray(live) ? live : [];
+    }
+
+    /** Một hàng / phần tử DTO addresses; không có addressType thì bỏ qua. */
+    get originalInformationRows() {
+        const list = this.originalAddressesSourceList;
+        if (!Array.isArray(list) || list.length === 0) {
+            return [];
+        }
+        return list
+            .filter((a) => a && a.addressType)
+            .map((a, index) => ({
+                key: `fec-orig-${index}-${a.addressType}`,
+                typeLabel: a.addressType,
+                addressDisplay: this.formatAddress(a),
+                mailingChecked: this.isMailingFlagYes(a)
+            }));
+    }
+
     /** Đủ 3 loại trong danh sách địa chỉ Main Info — không cho Add New Address. */
     get hasAllStandardAddressTypes() {
         const list = this.mainInfoData?.addresses;
@@ -455,16 +500,12 @@ export default class Fec_UpdateAddress extends LightningElement {
         return addr.address;
     }
 
-    formatMailing(addr) {
-        if (!addr || addr.mailingAddress == null || addr.mailingAddress === '') {
-            return '';
-        }
-        return addr.mailingAddress;
-    }
-
     /** Cờ địa chỉ giao phát (DTO map từ SF: có giá trị, thường là "Yes"). */
     isMailingFlagYes(addr) {
-        return this.formatMailing(addr) !== '';
+        if (!addr || addr.mailingAddress == null || addr.mailingAddress === '') {
+            return false;
+        }
+        return true;
     }
 
     /** Địa chỉ hiện tại (DTO); cột Updated ưu tiên DTO, sau đó preview form, cuối cùng đồng bộ với Original. */
@@ -493,19 +534,6 @@ export default class Fec_UpdateAddress extends LightningElement {
 
     get currentAddrOriginal() {
         return this.findAddress(TYPE_CURRENT, this.originalAddressesSnapshot);
-    }
-
-    get permanentOriginalDisplay() {
-        return (
-            this.formatAddress(this.permanentAddrOriginal) ||
-            this.emptyDisplay
-        );
-    }
-
-    get officeOriginalDisplay() {
-        return (
-            this.formatAddress(this.officeAddrOriginal) || this.emptyDisplay
-        );
     }
 
     get permanentUpdatedDisplay() {
@@ -572,14 +600,6 @@ export default class Fec_UpdateAddress extends LightningElement {
         return parts.length ? parts.join(', ') : '';
     }
 
-    get permanentMailingCheckedOriginal() {
-        return this.isMailingFlagYes(this.permanentAddrOriginal);
-    }
-
-    get officeMailingCheckedOriginal() {
-        return this.isMailingFlagYes(this.officeAddrOriginal);
-    }
-
     /** Cột Original: checkbox mailing chỉ hiển thị (template không dùng literal {true}). */
     get originalMailingCheckboxDisabled() {
         return true;
@@ -638,18 +658,6 @@ export default class Fec_UpdateAddress extends LightningElement {
             isPrimary: x.isPrimary ?? '',
             receiveStatement: x.receiveStatement ?? '',
             cardDelivery: x.cardDelivery ?? ''
-        });
-    }
-
-    /** Trace CIF merge: client gửi caseId+sfAddressType; Apex merge cif/addressId từ getMailingAddressUpdateContext. */
-    debugAddressUpdatePayload(phase, info) {
-        // eslint-disable-next-line no-console
-        console.debug('[fec_UpdateAddress] updateCustomerAddress', phase, {
-            caseId: info?.caseId,
-            sfAddressType: info?.sfAddressType,
-            hasCif: Boolean(info?.cifNumber),
-            hasAddressId: Boolean(info?.addressId),
-            hasAddressType: Boolean(info?.addressType)
         });
     }
 
@@ -902,10 +910,6 @@ export default class Fec_UpdateAddress extends LightningElement {
                     rowTypes[i].sf,
                     yn
                 );
-                this.debugAddressUpdatePayload(
-                    'persistMailingSelection ' + rowTypes[i].row,
-                    info
-                );
                 const r = await this.callUpdateCustomerAddress(info);
                 if (!r?.success) {
                     this.syncMailingSelectionFromData();
@@ -981,7 +985,6 @@ export default class Fec_UpdateAddress extends LightningElement {
                     this.mailingSelectedRow === row ? 'Y' : 'N'
             };
 
-            this.debugAddressUpdatePayload('handleSaveMailing primary', primaryInfo);
             const result = await this.callUpdateCustomerAddress(primaryInfo);
             if (!result?.success) {
                 const msg =
@@ -1012,10 +1015,6 @@ export default class Fec_UpdateAddress extends LightningElement {
                     ctxOther,
                     sf,
                     this.mailingSelectedRow === r ? 'Y' : 'N'
-                );
-                this.debugAddressUpdatePayload(
-                    'handleSaveMailing other ' + r,
-                    infoOther
                 );
                 const resultOther = await this.callUpdateCustomerAddress(
                     infoOther
@@ -1213,7 +1212,6 @@ export default class Fec_UpdateAddress extends LightningElement {
                 isMailingAddress: this.newAddrIsMailing ? 'Y' : 'N'
             };
 
-            this.debugAddressUpdatePayload('handleSaveNewAddress primary', primaryInfo);
             const result = await this.callUpdateCustomerAddress(primaryInfo);
             if (!result?.success) {
                 const msg =
@@ -1258,10 +1256,6 @@ export default class Fec_UpdateAddress extends LightningElement {
                     ctxOther,
                     sf,
                     yn
-                );
-                this.debugAddressUpdatePayload(
-                    'handleSaveNewAddress other ' + sf,
-                    infoOther
                 );
                 const resultOther = await this.callUpdateCustomerAddress(
                     infoOther
