@@ -115,6 +115,8 @@
         <members>CS_OrgChart_Text_UserDetail_MainQueue_Select_Err</members>
         <members>CS_OrgChart_Text_UserDetail_MainQueue_User_NotFound</members>
         <members>CS_OrgChart_Text_UserDetail_MainQueue_Init_Queue_Data_Err</members>
+        <members>CS_OrgChart_Text_AddTeamModal_Input_Label_Placeholder</members>
+        <members>CS_OrgChart_Text_AddTeamModal_Input_Name_Placeholder</members>
         <name>CustomLabel</name>
     </types>
     <types>
@@ -142,6 +144,10 @@
     <types>
         <members>FEC_Common_System_Setting</members>
         <name>PermissionSet</name>
+    </types>
+    <types>
+        <members>FEC_Service</members>
+        <name>CustomApplication</name>
     </types>
     <version>66.0</version>
 </Package>

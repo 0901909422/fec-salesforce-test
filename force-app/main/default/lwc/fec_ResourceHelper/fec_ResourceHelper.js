@@ -87,7 +87,8 @@ import CS_OrgChart_Btn_Modal_Close from '@salesforce/label/c.CS_OrgChart_Btn_Mod
 import CS_OrgChart_Text_UserDetail_MainQueue_Select_Err from '@salesforce/label/c.CS_OrgChart_Text_UserDetail_MainQueue_Select_Err';
 import CS_OrgChart_Text_UserDetail_MainQueue_User_NotFound from '@salesforce/label/c.CS_OrgChart_Text_UserDetail_MainQueue_User_NotFound';
 import CS_OrgChart_Text_UserDetail_MainQueue_Init_Queue_Data_Err from '@salesforce/label/c.CS_OrgChart_Text_UserDetail_MainQueue_Init_Queue_Data_Err';
-
+import CS_OrgChart_Text_AddTeamModal_Input_Label_Placeholder from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Input_Label_Placeholder';
+import CS_OrgChart_Text_AddTeamModal_Input_Name_Placeholder from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Input_Name_Placeholder';
 
 export const customLabels = {
     CS_OrgChart_Text_header,
@@ -178,5 +179,7 @@ export const customLabels = {
     CS_OrgChart_Btn_Modal_Close,
     CS_OrgChart_Text_UserDetail_MainQueue_Select_Err,
     CS_OrgChart_Text_UserDetail_MainQueue_User_NotFound,
-    CS_OrgChart_Text_UserDetail_MainQueue_Init_Queue_Data_Err
+    CS_OrgChart_Text_UserDetail_MainQueue_Init_Queue_Data_Err,
+    CS_OrgChart_Text_AddTeamModal_Input_Label_Placeholder,
+    CS_OrgChart_Text_AddTeamModal_Input_Name_Placeholder
 };

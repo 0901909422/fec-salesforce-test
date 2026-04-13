@@ -13145,4 +13145,18 @@
         <shortDescription>MSG Exception</shortDescription>
         <value>An exception has occurred. Please contact the System Administrator.</value>
     </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Input_Label_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Enter team label</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Input_Name_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Enter team API name</value>
+    </labels>
 </CustomLabels>
