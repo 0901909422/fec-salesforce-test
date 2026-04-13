@@ -656,6 +656,9 @@
 		<members>Case.FEC_Beneficiary_Name__c</members>
 		<members>Case.FEC_Province_City__c</members>
 		<members>Case.FEC_Interaction_Subchannel__c</members>
+		<members>FEC_Stage_Change__c.FEC_Condition_Requirement__c</members>
+		<members>Case.FEC_Case_Created_By__c</members>
+		<members>FEC_Notification__c.FEC_Customer_Type__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
