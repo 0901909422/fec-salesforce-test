@@ -7,6 +7,7 @@ export default class MaskedToggleCell extends LightningElement {
   @api rowKeyValue; // optional: unique key of the row for accessibility/testability
 
   @api caseId;
+  @api fieldLabel;
 
   isMasked = true;
 
@@ -39,7 +40,7 @@ export default class MaskedToggleCell extends LightningElement {
     this.isMasked = !this.isMasked;
     if (this.caseId && !this.isMasked) {
       try {
-        await revealNationalId({ recordId: this.caseId });
+        await revealNationalId({ recordId: this.caseId, fieldLabel: this.fieldLabel });
       }
       catch (error) {
         console.error('Error revealing national ID:', error);

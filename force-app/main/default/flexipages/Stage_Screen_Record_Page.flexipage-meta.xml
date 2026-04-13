@@ -92,6 +92,12 @@
                 <identifier>RecordFEC_Action_Button_cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.FEC_Field_Type__c</fieldItem>
+                <identifier>RecordFEC_Field_Type__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-66b1f90b-4018-4d09-a5e3-a4f94b53b80a</name>
         <type>Facet</type>
     </flexiPageRegions>

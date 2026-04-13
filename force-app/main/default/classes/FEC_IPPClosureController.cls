@@ -80,7 +80,7 @@ public with sharing class FEC_IPPClosureController {
             dto.ippCurrentTerm = rec.FEC_IPP_Current_Term__c;
             wrapper.rows.add(dto);
         }
-        wrapper.showNoEligibleWarning = wrapper.rows.isEmpty() && !afterExclusion.isEmpty();
+        wrapper.showNoEligibleWarning = wrapper.rows.isEmpty();
         return wrapper;
     }
 
