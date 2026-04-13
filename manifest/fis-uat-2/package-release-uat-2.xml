@@ -968,6 +968,7 @@
     </types>
     <types>
 		<members>ServiceResourceSkill-en_US</members>
+		<members>FEC_Additional_Info__c-en_US</members>
 		<name>CustomObjectTranslation</name>
 	</types>
 
@@ -1524,6 +1525,14 @@
         <members>FEC_MSG_ACTION_UNBLOCK_CARD</members>
         <members>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</members>
 		<members>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</members>
+		<members>FEC_MSG_Address_Update_Not_Eligible</members>
+        <members>FEC_MSG_Address_Update_Reason_Account_Status</members>
+        <members>FEC_MSG_Address_Update_Reason_Block_Code</members>
+        <members>FEC_MSG_Address_Update_Reason_Block_Code_1</members>
+        <members>FEC_MSG_Address_Update_Reason_Block_Code_2</members>
+        <members>FEC_MSG_Address_Update_Reason_Generic</members>
+        <members>FEC_LBL_UpdateAddress_Original_Information</members>
+        <members>FEC_LBL_UpdateAddress_Updated_Information</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1546,12 +1555,19 @@
 		<members>fec_UserSearchModal</members>
 		<members>fec_holdCaseManual</members>
 		<members>fec_UpdateAddress</members>
+		<members>fec_GetNextWork</members>
+		<members>fec_InteractionCaseModeStore</members>
+		<members>fec_InteractionHighlightMain</members>
+		<members>maskedToggleCell</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
 		<members>FEC_Customer_Case_Record_Page</members>
 		<members>FEC_Clear_Session_Record_Page</members>
 		<members>FEC_Service_UtilityBar</members>
+		<members>Master_Data_Setting_Record_Page</members>
+		<members>Stage_Change_Record_Page</members>
+		<members>Stage_Screen_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -1583,7 +1599,10 @@
 		<name>ListView</name>
     </types>
 	<types>
+        <members>Case.Customer_Case</members>
+        <members>Case.Interaction</members>
         <members>Case.Internal_Case</members>
+        <members>Case.Search_Interaction</members>
         <name>RecordType</name>
     </types>
 	<types>

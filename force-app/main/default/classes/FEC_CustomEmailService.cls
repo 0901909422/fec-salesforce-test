@@ -125,12 +125,39 @@ public without sharing class FEC_CustomEmailService {
     @AuraEnabled(cacheable=true)
     public static List<SObject> getEmailTemplates() {
         return [
-            SELECT Id, Name, FEC_Template_Name__c, FEC_Subject_Line__c, FEC_Body__c
+            SELECT Id, Name, FEC_Template_Name__c, FEC_Subject_Line__c, FEC_Body__c, FEC_Enhanced_Letterhead__c
             FROM FEC_Template__c
             WHERE FEC_Active__c = true
             ORDER BY FEC_Template_Name__c ASC
             LIMIT 100
         ];
+    }
+
+    @AuraEnabled
+    public static List<SObject> getEmailTemplatesByMailbox(String mailboxAddress) {
+        if (String.isBlank(mailboxAddress)) return getEmailTemplates();
+        // Lấy template có FEC_Applicable_For_Mailbox__c chứa mailboxAddress hoặc null (áp dụng cho tất cả)
+        List<FEC_Template__c> result = new List<FEC_Template__c>();
+        for (FEC_Template__c t : [
+            SELECT Id, Name, FEC_Template_Name__c, FEC_Subject_Line__c, FEC_Body__c, FEC_Enhanced_Letterhead__c, FEC_Applicable_For_Mailbox__c
+            FROM FEC_Template__c
+            WHERE FEC_Active__c = true
+            ORDER BY FEC_Template_Name__c ASC
+            LIMIT 200
+        ]) {
+            if (String.isBlank(t.FEC_Applicable_For_Mailbox__c)) {
+                result.add(t); // null = áp dụng cho tất cả mailbox
+            } else {
+                List<String> mailboxes = t.FEC_Applicable_For_Mailbox__c.split(';');
+                for (String mb : mailboxes) {
+                    if (mb.trim().equalsIgnoreCase(mailboxAddress)) {
+                        result.add(t);
+                        break;
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @AuraEnabled
@@ -163,27 +190,76 @@ public without sharing class FEC_CustomEmailService {
         List<Map<String, String>> options = new List<Map<String, String>>();
         String defaultFrom = null;
 
-        // Lấy toàn bộ EmailRoutingAddress
+        // Lấy Queue mà current user là member → lấy email của Queue đó
         Map<String, String> routingLabelMap = new Map<String, String>();
         Map<String, String> routingAddrMap  = new Map<String, String>();
         List<String> routingOrder = new List<String>();
+        String FIELD_ADDRESS = 'Address';
+        String FIELD_PERSONAL_NAME = 'PersonalName';
         try {
-            List<SObject> routingAddrs = Database.query(
-                'SELECT Id, Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
-            );
-            for (SObject r : routingAddrs) {
-                String addr = (String) r.get('Address');
-                String name = (String) r.get('PersonalName');
-                if (String.isNotBlank(addr)) {
-                    String lower = addr.toLowerCase();
-                    String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
-                    routingLabelMap.put(lower, lbl);
-                    routingAddrMap.put(lower, addr);
-                    routingOrder.add(lower);
+            // Lấy Queue Id mà user đang là member
+            Set<Id> userQueueIds = new Set<Id>();
+            for (GroupMember gm : [SELECT GroupId FROM GroupMember WHERE UserOrGroupId = :UserInfo.getUserId()]) {
+                userQueueIds.add(gm.GroupId);
+            }
+            // Lấy EmailRoutingAddress của các Queue đó
+            if (!userQueueIds.isEmpty()) {
+                List<SObject> routingAddrs = Database.query(
+                    'SELECT Id, Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
+                );
+                // Lấy email của Queue để match với EmailRoutingAddress
+                Map<String, Boolean> queueEmailSet = new Map<String, Boolean>();
+                for (Group q : [SELECT Email FROM Group WHERE Id IN :userQueueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND Email != null]) {
+                    queueEmailSet.put(q.Email.toLowerCase(), true);
+                }
+                for (SObject r : routingAddrs) {
+                    String addr = (String) r.get(FIELD_ADDRESS);
+                    String name = (String) r.get(FIELD_PERSONAL_NAME);
+                    if (String.isNotBlank(addr)) {
+                        String lower = addr.toLowerCase();
+                        // Chỉ include nếu thuộc Queue của user, hoặc không có Queue nào match thì include tất cả
+                        if (queueEmailSet.isEmpty() || queueEmailSet.containsKey(lower)) {
+                            String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
+                            routingLabelMap.put(lower, lbl);
+                            routingAddrMap.put(lower, addr);
+                            routingOrder.add(lower);
+                        }
+                    }
+                }
+                // Fallback: nếu không match được Queue nào thì lấy tất cả
+                if (routingOrder.isEmpty()) {
+                    for (SObject r : routingAddrs) {
+                        String addr = (String) r.get(FIELD_ADDRESS);
+                        String name = (String) r.get(FIELD_PERSONAL_NAME);
+                        if (String.isNotBlank(addr)) {
+                            String lower = addr.toLowerCase();
+                            String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
+                            routingLabelMap.put(lower, lbl);
+                            routingAddrMap.put(lower, addr);
+                            routingOrder.add(lower);
+                        }
+                    }
                 }
             }
         } catch (Exception e) {
             System.debug('EmailRoutingAddress query failed: ' + e.getMessage());
+            // Fallback: lấy tất cả
+            try {
+                List<SObject> routingAddrs = Database.query(
+                    'SELECT Id, Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
+                );
+                for (SObject r : routingAddrs) {
+                    String addr = (String) r.get(FIELD_ADDRESS);
+                    String name = (String) r.get(FIELD_PERSONAL_NAME);
+                    if (String.isNotBlank(addr)) {
+                        String lower = addr.toLowerCase();
+                        String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
+                        routingLabelMap.put(lower, lbl);
+                        routingAddrMap.put(lower, addr);
+                        routingOrder.add(lower);
+                    }
+                }
+            } catch (Exception e2) {}
         }
 
         // Xác định Queue email của Case
@@ -290,6 +366,7 @@ public without sharing class FEC_CustomEmailService {
             }
 
             // 2. Validate email addresses
+            toEmail = toEmail.replace(';', ',');
             validateEmail(toEmail, 'To');
             if (String.isNotBlank(ccEmail)) {
                 for (String cc : ccEmail.split(',')) {
@@ -299,7 +376,11 @@ public without sharing class FEC_CustomEmailService {
 
             // 3. Build email message
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-            mail.setToAddresses(toEmail.split(','));
+            List<String> toList = new List<String>();
+            for (String addr : toEmail.split(',')) {
+                if (String.isNotBlank(addr.trim())) toList.add(addr.trim());
+            }
+            mail.setToAddresses(toList);
 
             if (String.isNotBlank(ccEmail)) {
                 List<String> ccList = new List<String>();
@@ -317,7 +398,29 @@ public without sharing class FEC_CustomEmailService {
             String subjectWithThread = subject.contains('[ ref:') ? subject : subject + ' ' + threadToken;
 
             mail.setSubject(subjectWithThread);
-            mail.setHtmlBody(body != null ? body.replace('\n', '<br/>') : '');
+            // Resolve merge fields {{{...}}} và {{...}} trong body trước khi gửi
+            String resolvedBody = body != null ? body : '';
+            try {
+                resolvedBody = resolvedBody.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
+                // Resolve User.* fields
+                Pattern userPat = Pattern.compile(FEC_ConstantCommon.PATTERN_USER_MERGE_FIELD);
+                Matcher userMat = userPat.matcher(resolvedBody);
+                if (userMat.find()) {
+                    User u = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+                    Matcher userMat2 = userPat.matcher(resolvedBody);
+                    while (userMat2.find()) {
+                        String fieldName = userMat2.group(1);
+                        String val = '';
+                        try { val = String.valueOf(u.get(fieldName)); } catch(Exception ex) {}
+                        if (val == 'null') val = '';
+                        resolvedBody = resolvedBody.replace('{{User.' + fieldName + '}}', val);
+                    }
+                }
+                resolvedBody = FEC_CommonUltils.resolveTemplate(resolvedBody, c);
+            } catch (Exception resolveEx) {
+                System.debug('resolveTemplate failed: ' + resolveEx.getMessage());
+            }
+            mail.setHtmlBody(resolvedBody.replace('\n', '<br/>'));
             mail.setSaveAsActivity(false);
 
             // 4. Set OrgWideEmailAddress (From)

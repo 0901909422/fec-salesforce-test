@@ -320,15 +320,29 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 this.subCode = data.subCode || CONST.EMPTY;
                 this.incorrectContract = data.incorrectContractNumber != null ? data.incorrectContractNumber : CONST.EMPTY;
                 this.paymentMethod = data.paymentMethod != null && data.paymentMethod !== undefined ? data.paymentMethod : CONST.EMPTY;
-                const adjRow = { id: 1, correctContract: CONST.EMPTY, adjustedAmount: null };
-                if (data.correctContractNumber != null && String(data.correctContractNumber).trim()) {
-                    adjRow.correctContract = String(data.correctContractNumber).trim();
+                const rowsFromCase = data.adjustmentRows && Array.isArray(data.adjustmentRows) && data.adjustmentRows.length > 0
+                    ? data.adjustmentRows
+                    : null;
+                if (rowsFromCase) {
+                    this.adjustments = rowsFromCase.map((r, index) => ({
+                        id: index + 1,
+                        correctContract: r.correctContract != null && String(r.correctContract).trim()
+                            ? String(r.correctContract).trim()
+                            : CONST.EMPTY,
+                        adjustedAmount: r.adjustedAmount != null && r.adjustedAmount !== undefined ? r.adjustedAmount : null
+                    }));
+                    this.nextAdjustmentId = this.adjustments.length + 1;
+                } else {
+                    const adjRow = { id: 1, correctContract: CONST.EMPTY, adjustedAmount: null };
+                    if (data.correctContractNumber != null && String(data.correctContractNumber).trim()) {
+                        adjRow.correctContract = String(data.correctContractNumber).trim();
+                    }
+                    if (data.adjustedAmount != null && data.adjustedAmount !== undefined) {
+                        adjRow.adjustedAmount = data.adjustedAmount;
+                    }
+                    this.adjustments = [adjRow];
+                    this.nextAdjustmentId = 2;
                 }
-                if (data.adjustedAmount != null && data.adjustedAmount !== undefined) {
-                    adjRow.adjustedAmount = data.adjustedAmount;
-                }
-                this.adjustments = [adjRow];
-                this.nextAdjustmentId = 2;
                 if (data.billDate != null && String(data.billDate).trim()) {
                     this.manualBillDate = String(data.billDate).trim();
                 } else {
@@ -548,7 +562,13 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         const idx = this.adjustments.findIndex(a => a.id === id);
         if (idx < 0) return;
         const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
-        const amount = v === CONST.EMPTY || v == null ? null : (Number(v) || null);
+        let amount = null;
+        if (v !== CONST.EMPTY && v != null && v !== '') {
+            const n = Number(v);
+            if (!isNaN(n)) {
+                amount = n;
+            }
+        }
         const next = [...this.adjustments];
         next[idx] = { ...next[idx], adjustedAmount: amount };
         this.adjustments = next;
@@ -636,7 +656,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         const hasPaymentMethod = !!(this.paymentMethod && String(this.paymentMethod).trim());
         const hasCompleteRow = (this.adjustments || []).some((a) => {
             const hasCorrectContract = a.correctContract && String(a.correctContract).trim();
-            const hasAdjustedAmount = a.adjustedAmount != null && a.adjustedAmount !== 0;
+            const hasAdjustedAmount = a.adjustedAmount != null;
             return hasCorrectContract && hasAdjustedAmount;
         });
         return hasPaymentMethod || hasCompleteRow;
@@ -695,7 +715,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         const incompleteRows = [];
         this.adjustments.forEach((a, index) => {
             const hasCorrectContract = a.correctContract && String(a.correctContract).trim();
-            const hasAdjustedAmount = a.adjustedAmount != null && a.adjustedAmount !== 0;
+            const hasAdjustedAmount = a.adjustedAmount != null;
 
             if ((hasCorrectContract && !hasAdjustedAmount) || (!hasCorrectContract && hasAdjustedAmount)) {
                 incompleteRows.push({
@@ -718,7 +738,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
 
         const valid = this.adjustments.filter((a) => {
             const hasCorrectContract = a.correctContract && String(a.correctContract).trim();
-            const hasAdjustedAmount = a.adjustedAmount != null && a.adjustedAmount !== 0;
+            const hasAdjustedAmount = a.adjustedAmount != null;
             return hasCorrectContract && hasAdjustedAmount;
         });
 
