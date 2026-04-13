@@ -102,6 +102,8 @@
 		<members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_CaseRemarkController</members>
 		<members>FEC_MarkNFU</members>
+		<members>FEC_CMSIPPBlockWS</members>
+		<members>FEC_FastCashCaseController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -170,6 +172,7 @@
 		<members>fec_InteractionCaseModeStore</members>
 		<members>fec_InteractionHighlightMain</members>
 		<members>maskedToggleCell</members>
+		<members>fec_FastCashCaseForm</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -656,6 +659,8 @@
 		<members>Case.FEC_Beneficiary_Name__c</members>
 		<members>Case.FEC_Province_City__c</members>
 		<members>Case.FEC_Interaction_Subchannel__c</members>
+		<members>Case.FEC_Requested_Amount__c</members>
+        <members>Case.FEC_Max_Amount__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -674,6 +679,7 @@
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
+		<members>FEC_API_Config.FEC_CMS_IPP_BlockWS</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
