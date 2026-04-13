@@ -8,7 +8,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import getAvailableNotifications from '@salesforce/apex/FEC_Notification.getAvailableNotifications';
 import sendManualEmail from '@salesforce/apex/FEC_Notification.sendManualEmail';
-import getTemplate from '@salesforce/apex/FEC_TemplateController.getTemplate';
+import previewTemplate from '@salesforce/apex/FEC_Notification.previewTemplate';
 import labelSendManualNotification from '@salesforce/label/c.FEC_Send_Manual_Notification';
 import LBL_SFT_Notification_Type from '@salesforce/label/c.LBL_SFT_Notification_Type';
 import FEC_Choose_Notification_Type from '@salesforce/label/c.FEC_Choose_Notification_Type';
@@ -265,7 +265,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
 
     async handlePreview() {
         try {
-            const recResult = await getTemplate({ templateId: this.selectedTemplateId });    
+            const recResult = await previewTemplate({ caseId: this.recordId, templateId: this.selectedTemplateId });    
             this._record = recResult ? this._mapTemplate(recResult) : null;
             this._isPreviewOpen = true;
         } catch (error) {
