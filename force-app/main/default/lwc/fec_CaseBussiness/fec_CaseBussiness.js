@@ -1340,6 +1340,13 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
     }
 
+    const fcEl = this._getFastCashCaseFormEl();
+    if (fcEl && typeof fcEl.validateForCaseSubmit === "function") {
+      if (!fcEl.validateForCaseSubmit()) {
+        isAllValid = false;
+      }
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -1384,6 +1391,22 @@ export default class Fec_CaseBussiness extends LightningElement {
       (typeof host.validateForSubmit === "function" ||
         typeof host.saveBeneficiaryIfApplicable === "function" ||
         typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _getFastCashCaseFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_FastCashCaseForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForCaseSubmit === "function" ||
+        typeof host.saveDraftIfApplicable === "function" ||
+        typeof host.saveForSubmitIfApplicable === "function")
     ) {
       return host;
     }
@@ -1448,6 +1471,22 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   _saveCardClosureRefundForSubmitIfApplicable() {
     const el = this._getCardClosureRefundFormEl();
+    if (!el || typeof el.saveForSubmitIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveForSubmitIfApplicable();
+  }
+
+  _saveFastCashDraftIfApplicable() {
+    const el = this._getFastCashCaseFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveFastCashForSubmitIfApplicable() {
+    const el = this._getFastCashCaseFormEl();
     if (!el || typeof el.saveForSubmitIfApplicable !== "function") {
       return Promise.resolve();
     }
@@ -1585,6 +1624,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveIPPClosureIfApplicable(),
         this._saveBeneficiaryBankInfoDraftIfApplicable(),
         this._saveCardClosureRefundDraftIfApplicable(),
+        this._saveFastCashDraftIfApplicable(),
       ]);
     if (total === 0) {
       return afterForms();
@@ -1629,6 +1669,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveIPPClosureIfApplicable(),
       this._saveBeneficiaryIfApplicable(),
       this._saveCardClosureRefundForSubmitIfApplicable(),
+      this._saveFastCashForSubmitIfApplicable(),
     ]);
     if (routeToEle) {
       let method = routeToEle.value;

@@ -528,4 +528,14 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             maxAmount: this.maxAmountDecimal
         }).then(() => Promise.resolve());
     }
+
+    @api
+    saveDraftIfApplicable() {
+        return this.saveFastCashDataIfVisible();
+    }
+
+    @api
+    saveForSubmitIfApplicable() {
+        return this.saveFastCashDataIfVisible();
+    }
 }
