@@ -12264,4 +12264,12 @@
         <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</shortDescription>
         <value>Mở khoá thẻ thất bại.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Reason_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reason Error</shortDescription>
+        <value>Không tìm thấy NFU Config cho Sub Code</value>
+    </labels>
 </CustomLabels>

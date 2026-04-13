@@ -24,6 +24,7 @@
 		<members>FEC_Pending_Disbursement__c.FEC_PD_Disbursement_Approval_Date__c</members>
 		<members>FEC_Pending_Disbursement__c.FEC_PD_Disbursement_Status__c</members>
 		<members>Case.FEC_Title_Reply__c</members>
+		<members>FEC_Reason_Error</members>
         <name>CustomField</name>
     </types>
 	<types>

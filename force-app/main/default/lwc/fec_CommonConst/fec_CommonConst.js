@@ -121,6 +121,9 @@ const TARGET_GROUP_INTERNAL_USER = 'Internal User';
 const SEARCH_PLACEHOLDER = 'Search User...';
 const SEARCH_BY_EMAIL = 'Search By Email'
 const SEARCH_INTERNAL_USERS = 'Search Internal Users';
+const ERROR_TILE_SHOWTOAST = 'Thất bại'
+const RESPONE_MESSARE_ERROR = 'Số hợp đồng/ tài khoản này đã chuyển ngưng tác động thất bại'
+const RESPONE_MESSARE_SUCCESS = 'Số hợp đồng/ tài khoản này đã chuyển ngưng tác động thành công'
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -203,5 +206,8 @@ export {
     TARGET_GROUP_INTERNAL_USER,
     SEARCH_PLACEHOLDER,
     SEARCH_BY_EMAIL,
-    SEARCH_INTERNAL_USERS
+    SEARCH_INTERNAL_USERS,
+    ERROR_TILE_SHOWTOAST,
+    RESPONE_MESSARE_ERROR,
+    RESPONE_MESSARE_SUCCESS
 };
