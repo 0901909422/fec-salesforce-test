@@ -1,5 +1,9 @@
 public without sharing class FEC_Notification {
-    
+
+    // Compile Pattern 1 lần ở class level để tái sử dụng
+    private static final Pattern PATTERN_MERGE  = Pattern.compile(FEC_ConstantCommon.PATTERN_MERGE_FIELD);
+    private static final Pattern PATTERN_DOUBLE = Pattern.compile(FEC_ConstantCommon.PATTERN_DOUBLE_BRACE);
+
     public class EmailInfo {
         public Id caseId;
         public String toEmail;
@@ -114,13 +118,16 @@ public without sharing class FEC_Notification {
         String finalSubCategory = String.isNotBlank(subCategoryId) ? subCategoryId : currentCase.FEC_SubCategory__c;
         String finalSubCode = String.isNotBlank(subCodeId) ? subCodeId : currentCase.FEC_SubCode__c;
 
+        System.debug('Search Criteria -> CustomerType: ' + currentCase.FEC_Customer_Type__c + ', ProductType: ' + finalProductType + ', Category: ' + finalCategory + ', SubCategory: ' + finalSubCategory + ', SubCode: ' + finalSubCode + ', Stage: ' + currentCase.FEC_Current_Case_Stage__c);
+
         // 3. Query Notification satisfying conditions
+        Set<String> validCustomerTypes = new Set<String>{ currentCase.FEC_Customer_Type__c, FEC_ConstantCommon.CASE_ALL_REQUEST };
         List<FEC_Notification__c> validNotifs = [SELECT Id, Name, FEC_Notification_Template__c, 
                                                     FEC_Notification_Template__r.Name,
                                                     FEC_Notification_Channel__r.Name,
                                                     FEC_Target_Group__c
                                              FROM FEC_Notification__c 
-                                             WHERE FEC_Customer_Type__c = :currentCase.FEC_Customer_Type__c
+                                             WHERE FEC_Customer_Type__c IN :validCustomerTypes
                                              AND FEC_Product_Type__c = :finalProductType
                                              AND FEC_Category__c = :finalCategory
                                              AND FEC_SubCategory__c = :finalSubCategory
@@ -198,7 +205,7 @@ public without sharing class FEC_Notification {
     }
 
     /**
-     * Resolves {{{Object.Field}}} merge fields for manual and bulk emails dynamically.
+     * Resolves {{{Object.Field}}} and {{Object.Field}} merge fields for manual and bulk emails dynamically.
      * Extracts tokens securely across ALL emails and builds single bulk SOQL queries to avoid DML limits!
      */
     private static void bulkResolveMergeFields(List<EmailInfo> emailsToSend, String fromEmail) {
@@ -208,14 +215,20 @@ public without sharing class FEC_Notification {
         Set<String> custHistoryFields = new Set<String>();
         Set<Id> caseIds = new Set<Id>();
 
-        Pattern p = Pattern.compile(FEC_ConstantCommon.PATTERN_MERGE_FIELD);
-        
+        // Match cả {{{...}}} và {{...}} (không phải triple-brace)
         // Pass 1: Extract all fields and Case Ids
         for (EmailInfo info : emailsToSend) {
             if (info.caseId != null) caseIds.add(info.caseId);
+            // Normalize {{...}} → {{{...}}} để xử lý chung
+            if (String.isNotBlank(info.body)) {
+                info.body = PATTERN_DOUBLE.matcher(info.body).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
+            }
+            if (String.isNotBlank(info.subject)) {
+                info.subject = PATTERN_DOUBLE.matcher(info.subject).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
+            }
             
             if (String.isNotBlank(info.body) && info.body.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
-                Matcher m = p.matcher(info.body);
+                Matcher m = PATTERN_MERGE.matcher(info.body);
                 while (m.find()) {
                     List<String> parts = m.group(1).split('\\.');
                     if (parts.size() == 2) {
@@ -228,7 +241,7 @@ public without sharing class FEC_Notification {
                 }
             }
             if (String.isNotBlank(info.subject) && info.subject.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
-                Matcher m = p.matcher(info.subject);
+                Matcher m = PATTERN_MERGE.matcher(info.subject);
                 while (m.find()) {
                     List<String> parts = m.group(1).split('\\.');
                     if (parts.size() == 2) {
@@ -297,8 +310,7 @@ public without sharing class FEC_Notification {
     }
 
     private static String performReplacements(String text, Id caseId, Map<Id, Case> caseMap, User senderUser, Map<Id, FEC_Additional_Info__c> addInfoMap, Map<Id, FEC_Customer_History__c> custHistoryMap) {
-        Pattern p = Pattern.compile(FEC_ConstantCommon.PATTERN_MERGE_FIELD);
-        Matcher m = p.matcher(text);
+        Matcher m = PATTERN_MERGE.matcher(text);
         Set<String> uniqueTokens = new Set<String>();
         while(m.find()) { uniqueTokens.add(m.group(1)); }
 
@@ -405,4 +417,25 @@ public without sharing class FEC_Notification {
         executeSendEmailsBulk(new List<EmailInfo>{ singleEmail }, fromEmail);
     }
 
+    @AuraEnabled
+    public static FEC_Template__c previewTemplate(Id caseId, Id templateId) {
+        FEC_Template__c template = FEC_TemplateController.getTemplate(templateId);
+        if (template != null && String.isNotBlank(caseId)) {
+            String subject = String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
+            String body = template.FEC_Body__c;
+
+            String senderEmail = '';
+            FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
+            if (String.isNotBlank(systemConfig?.FEC_Sender_Email__c)) {
+                senderEmail = systemConfig.FEC_Sender_Email__c;
+            }
+
+            EmailInfo previewEmail = new EmailInfo(caseId, '', subject, body);
+            bulkResolveMergeFields(new List<EmailInfo>{ previewEmail }, senderEmail);
+
+            template.FEC_Subject_Line__c = previewEmail.subject;
+            template.FEC_Body__c = previewEmail.body;
+        }
+        return template;
+    }
 }
