@@ -3,6 +3,7 @@ import { subscribe, unsubscribe, onError } from 'lightning/empApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { IsConsoleNavigation, openTab, getFocusedTabInfo, openSubtab, focusTab } from 'lightning/platformWorkspaceApi';
 import { minimizeUtility } from 'lightning/platformUtilityBarApi';
+import executeRoutingAssignments from "@salesforce/apex/FEC_InteractionRoutingController.executeRoutingAssignments";
 import USER_ID from '@salesforce/user/Id';
 
 
@@ -199,7 +200,15 @@ export default class FecInteractionRoutingUtilityBar extends LightningElement {
             console.warn('Could not minimize utility:', e);
         }
     }
-
+    callExecuteRouting() {
+        executeRoutingAssignments()
+            .then(() => {
+            console.log('executeRoutingAssignments success');
+            })
+            .catch(error => {
+            console.error('executeRoutingAssignments error', error);
+            });
+    }
     showToast(title, message, variant) {
         this.dispatchEvent(
             new ShowToastEvent({
