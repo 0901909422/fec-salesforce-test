@@ -424,6 +424,26 @@
         <members>FEC_MSG_Address_Update_Reason_Generic</members>
         <members>FEC_LBL_UpdateAddress_Original_Information</members>
         <members>FEC_LBL_UpdateAddress_Updated_Information</members>
+        <members>FEC_LBL_Fast_Cash_Status</members>
+        <members>FEC_LBL_Fast_Cash_Error_Code</members>
+        <members>FEC_LBL_Fast_Cash_Error_Description</members>
+        <members>FEC_LBL_Fast_Cash_Requested_Amount</members>
+        <members>FEC_LBL_Fast_Cash_Max_Amount</members>
+        <members>FEC_LBL_Fast_Cash_Block_Amount</members>
+        <members>FEC_LBL_Fast_Cash_Status_Eligible</members>
+        <members>FEC_LBL_Fast_Cash_Status_Not_Eligible</members>
+        <members>FEC_LBL_Fast_Cash_Btn_No</members>
+        <members>FEC_LBL_Fast_Cash_Btn_Yes</members>
+        <members>FEC_LBL_Fast_Cash_Spinner_Loading</members>
+        <members>FEC_LBL_Fast_Cash_Spinner_Processing</members>
+        <members>FEC_MSG_Fast_Cash_Modal_Body</members>
+        <members>FEC_MSG_Fast_Cash_Noti_01</members>
+        <members>FEC_MSG_Fast_Cash_Noti_02</members>
+        <members>FEC_MSG_Fast_Cash_Noti_08</members>
+        <members>FEC_MSG_Fast_Cash_Noti_09</members>
+        <members>FEC_MSG_Fast_Cash_Noti_10</members>
+        <members>FEC_MSG_Fast_Cash_Noti_12</members>
+        <members>FEC_MSG_Fast_Cash_Noti_15</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
