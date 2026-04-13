@@ -127,6 +127,14 @@ public without sharing class FEC_Notification {
     }
 
     /**
+     * Public wrapper cho buildCaseStatusPills — LWC hoặc Apex khác gọi khi cần cùng cấu trúc pill (Id + Name) từ CSV.
+     */
+    @AuraEnabled(cacheable = true)
+    public static List<Map<String, String>> resolveCaseStatusPills(String statusNamesCsv) {
+        return buildCaseStatusPills(statusNamesCsv);
+    }
+
+    /**
      * Helper method to determine the target email based on Case
      */
     private static String getTargetEmailFromCase(Case c) {
@@ -256,14 +264,19 @@ public without sharing class FEC_Notification {
         Set<String> custHistoryFields = new Set<String>();
         Set<Id> caseIds = new Set<Id>();
 
-        Pattern p = Pattern.compile(FEC_ConstantCommon.PATTERN_MERGE_FIELD);
-        
         // Pass 1: Extract all fields and Case Ids
         for (EmailInfo info : emailsToSend) {
             if (info.caseId != null) caseIds.add(info.caseId);
+            // Normalize {{...}} → {{{...}}} để xử lý chung
+            if (String.isNotBlank(info.body)) {
+                info.body = PATTERN_DOUBLE.matcher(info.body).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
+            }
+            if (String.isNotBlank(info.subject)) {
+                info.subject = PATTERN_DOUBLE.matcher(info.subject).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
+            }
             
             if (String.isNotBlank(info.body) && info.body.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
-                Matcher m = p.matcher(info.body);
+                Matcher m = PATTERN_MERGE.matcher(info.body);
                 while (m.find()) {
                     List<String> parts = m.group(1).split('\\.');
                     if (parts.size() == 2) {
@@ -276,7 +289,7 @@ public without sharing class FEC_Notification {
                 }
             }
             if (String.isNotBlank(info.subject) && info.subject.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
-                Matcher m = p.matcher(info.subject);
+                Matcher m = PATTERN_MERGE.matcher(info.subject);
                 while (m.find()) {
                     List<String> parts = m.group(1).split('\\.');
                     if (parts.size() == 2) {
@@ -345,8 +358,7 @@ public without sharing class FEC_Notification {
     }
 
     private static String performReplacements(String text, Id caseId, Map<Id, Case> caseMap, User senderUser, Map<Id, FEC_Additional_Info__c> addInfoMap, Map<Id, FEC_Customer_History__c> custHistoryMap) {
-        Pattern p = Pattern.compile(FEC_ConstantCommon.PATTERN_MERGE_FIELD);
-        Matcher m = p.matcher(text);
+        Matcher m = PATTERN_MERGE.matcher(text);
         Set<String> uniqueTokens = new Set<String>();
         while(m.find()) { uniqueTokens.add(m.group(1)); }
 
