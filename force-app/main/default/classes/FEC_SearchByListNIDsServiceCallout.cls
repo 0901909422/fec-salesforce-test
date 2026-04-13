@@ -28,6 +28,7 @@ public with sharing class FEC_SearchByListNIDsServiceCallout {
         @AuraEnabled public String saleSubChannel;
         @AuraEnabled public String StatusDisplay;
         @AuraEnabled public String userID;
+        @AuraEnabled public String cancelDate;
     }
 
     public class Sys2 {
