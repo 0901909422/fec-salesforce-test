@@ -174,12 +174,47 @@ public with sharing class FEC_TeamQueue {
                 Team__c = teamID,  // This maps to the Name field on the custom object
                 FEC_Queue_Name__c = queueName  // This maps to the custom field
             );
-            Database.insert(newTeamQueue, false);
+            insert newTeamQueue;
             DepartmentAdmin.insertCustomLog(teamID, CLASS_NAME, 'saveNewQueue', 'Add New Queue For Team', '', queueName);
             return true;
         } catch (Exception e) {
+            // Call remove queue if team queue record creation fails to avoid orphaned queues
+            removeQueue(queueName, null);
             System.debug('Error creating team queue record: ' + e.getMessage());
             return false;
+        }
+    }
+    /*------------------------------------------------------------
+    Author:        Ha Linh
+    Company:       Amaris
+    Description:   Remove Queue by DeveloperName or Id, used when queue creation is successful but team queue record creation fails to avoid orphaned queues
+    @param QueueId The ID of the queue to delete
+    @param queueDeveloperName The developer name for the new queue
+    Test Class:    
+    History
+    <Date>         <Authors Name>     <Brief Description of Change>
+    2026/04/13      Ha Linh          Init
+    ------------------------------------------------------------*/
+    @future
+    public static void removeQueue(String queueDeveloperName, Id QueueId) {
+        if (String.isBlank(queueDeveloperName) && QueueId == null) return;
+        List<Group> queuesToDelete = [
+            SELECT Id 
+            FROM Group 
+            WHERE Type = 'Queue' 
+            AND (DeveloperName = :queueDeveloperName OR Id = :QueueId)
+            LIMIT 1
+        ];
+
+        if (!queuesToDelete.isEmpty()) {
+            try {
+                delete queuesToDelete;
+                System.debug('Successfully deleted queue: ' + queueDeveloperName + ' with Id: ' + queuesToDelete[0].Id);
+            } catch (DmlException e) {
+                System.debug('Error deleting queue: ' + e.getMessage() + ' for queue: ' + queueDeveloperName + ' with Id: ' + queuesToDelete[0].Id);
+            }
+        } else {
+            System.debug('Queue not found: ' + queueDeveloperName);
         }
     }
     /*------------------------------------------------------------

@@ -21,15 +21,29 @@
                 <div class="slds-modal__content slds-p-around_medium">
                     <div class="slds-form">
                         <div class="slds-form-element">
-                            <label class="slds-form-element__label">{customLabels.CS_OrgChart_Text_EditQueueModal_Input_Label}</label>
                             <div class="slds-form-element__control">
-                                <input type="text" class="slds-input" value={queueLabel} onchange={handleQueueLabelChange} placeholder={customLabels.CS_OrgChart_Text_AddQueueModal_Label_PlaceHolder} />
+                                <lightning-input
+                                    name="queueLabel"
+                                    label={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Label}
+                                    type="text"
+                                    value={queueLabel}
+                                    onchange={handleQueueLabelChange}
+                                    placeholder={customLabels.CS_OrgChart_Text_AddQueueModal_Label_PlaceHolder}
+                                    required>
+                                </lightning-input>
                             </div>
                         </div>
                         <div class="slds-form-element slds-m-top_medium">
-                            <label class="slds-form-element__label">{customLabels.CS_OrgChart_Text_AddQueueModal_Input_Name}</label>
                             <div class="slds-form-element__control">
-                                <input type="text" name="inputQueueName" class="slds-input" value={queueName} onchange={handleQueueNameChange} placeholder={customLabels.CS_OrgChart_Text_AddQueueModal_Input_Name} />
+                                <lightning-input
+                                    name="inputQueueName"
+                                    label={customLabels.CS_OrgChart_Text_AddQueueModal_Input_Name}
+                                    type="text"
+                                    value={queueName}
+                                    onchange={handleQueueNameChange}
+                                    placeholder={customLabels.CS_OrgChart_Text_AddQueueModal_Input_Name}
+                                    required>
+                                </lightning-input>
                                 <div class="slds-form-element__help slds-text-body_small slds-m-top_x-small">
                                     {customLabels.CS_OrgChart_Text_AddQueueModal_Input_Name_Pattern}
                                 </br>{customLabels.CS_OrgChart_Text_AddQueueModal_Input_Name_Exp}
@@ -61,15 +75,29 @@
                 <div class="slds-modal__content slds-p-around_medium">
                     <div class="slds-form">
                         <div class="slds-form-element">
-                            <label class="slds-form-element__label" for="teamLabel">{customLabels.CS_OrgChart_Text_AddTeamModal_Input_Label}</label>
                             <div class="slds-form-element__control">
-                                <input id="teamLabel" type="text" class="slds-input" value={teamLabel} onchange={handleTeamLabelChange} placeholder="Enter team label" />
+                                <lightning-input
+                                    name="teamLabel"
+                                    label={customLabels.CS_OrgChart_Text_AddTeamModal_Input_Label}
+                                    type="text"
+                                    value={teamLabel}
+                                    onchange={handleTeamLabelChange}
+                                    placeholder={customLabels.CS_OrgChart_Text_AddTeamModal_Input_Label_Placeholder}
+                                    required>
+                                </lightning-input>
                             </div>
                         </div>
                         <div class="slds-form-element slds-m-top_medium">
-                            <label class="slds-form-element__label" for="teamName">{customLabels.CS_OrgChart_Text_AddTeamModal_Input_Name}</label>
                             <div class="slds-form-element__control">
-                                <input id="teamName" type="text" class="slds-input" value={teamName} onchange={handleTeamNameChange} placeholder="Enter team API name" />
+                                <lightning-input
+                                    name="teamName"
+                                    label={customLabels.CS_OrgChart_Text_AddTeamModal_Input_Name}
+                                    type="text"
+                                    value={teamName}
+                                    onchange={handleTeamNameChange}
+                                    placeholder={customLabels.CS_OrgChart_Text_AddTeamModal_Input_Name_Placeholder}
+                                    required>
+                                </lightning-input>
                                 <div class="slds-form-element__help slds-text-body_small slds-m-top_x-small">
                                     {customLabels.CS_OrgChart_Text_AddTeamModal_Input_Name_Pattern}
                                 </div>

@@ -304,7 +304,8 @@ export default class fec_TeamQueueTree extends LightningElement {
         }
     }
 
-    // Save new queue
+    // Save new queue and new queue team
+    // MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object
     async saveNewQueue() {
         // Reset any previous errors
         this.errorMessage = '';
