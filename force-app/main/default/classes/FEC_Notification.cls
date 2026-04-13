@@ -210,7 +210,7 @@ public without sharing class FEC_Notification {
 
         // Match cả {{{...}}} và {{...}} (không phải triple-brace)
         Pattern p = Pattern.compile(FEC_ConstantCommon.PATTERN_MERGE_FIELD);
-        Pattern pDouble = Pattern.compile('\\{\\{([^{}]+)\\}\\}');
+        Pattern pDouble = Pattern.compile(FEC_ConstantCommon.PATTERN_DOUBLE_BRACE);
 
         // Pass 1: Extract all fields and Case Ids
         for (EmailInfo info : emailsToSend) {
