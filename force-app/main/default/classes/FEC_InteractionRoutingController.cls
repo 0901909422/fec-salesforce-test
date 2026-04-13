@@ -29,6 +29,18 @@ public without sharing class FEC_InteractionRoutingController {
                 return;
             }
 
+            //Thangtv: update logic check user Login - Only assign the case when the user is logged in.
+            List<AuthSession> sessionLogin = [
+                SELECT Id, UsersId, LoginType, SessionType, IsCurrent
+                FROM AuthSession
+                WHERE UsersId =:UserInfo.getUserId() 
+                AND SessionType = 'UI'
+            ];
+            if (sessionLogin.isEmpty()) {
+                return;
+            }
+
+
             // Lấy Queue
             List<Group> queueGrouplst = [
                 SELECT Id
@@ -42,7 +54,7 @@ public without sharing class FEC_InteractionRoutingController {
             Id queueId = queueGrouplst.get(0).Id;
 
             List<Case> casesToRoute = [
-                SELECT Id, RecordTypeId, OwnerId, ParentId, 
+                SELECT Id, RecordTypeId,CaseNumber, OwnerId, ParentId, 
                        FEC_Is_Reply_Interaction_email__c, FEC_Channel__c, FEC_Send_To__c
                 FROM Case
                 WHERE RecordTypeId = :interactionRtId
