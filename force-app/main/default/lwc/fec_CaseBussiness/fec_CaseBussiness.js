@@ -233,6 +233,10 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   routingAccordionSectionKey = "routing-action";
 
+  _routingSelectLockedForIpp = false;
+
+  _ippClosureHasEligibleRows = false;
+
   // get eyeIcon() {
   //   return this.isMasked ? "utility:preview" : "utility:hide";
   // }
@@ -408,6 +412,10 @@ export default class Fec_CaseBussiness extends LightningElement {
   header;
   content;
 
+  get isRoutingActionDisabled() {
+    return this._routingSelectLockedForIpp === true;
+  }
+
   get showRouteTo() {
     return ACTION_ROUTE_TO === this.actionValue;
   }
@@ -582,6 +590,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       this.business.routingActionlst.length > 0 &&
       this._isEdit;
     this._updateDynCmpIsEditFlags();
+    if (!this._isEdit) {
+      this._routingSelectLockedForIpp = false;
+    }
     this.business = { ...this.business };
   }
 
@@ -600,9 +611,14 @@ export default class Fec_CaseBussiness extends LightningElement {
   connectedCallback() {
     console.log("🚀 ~ Fec_CaseBussiness ~ connectedCallback ~ this.business:", JSON.stringify(this.business))
     this._boundHandleIppClosureLoad = this.handleIppClosureLoad.bind(this);
+    this._boundHandleIppClosureSelection = this.handleIppClosureSelection.bind(this);
     this.template.addEventListener(
       "fecippclosureload",
       this._boundHandleIppClosureLoad,
+    );
+    this.template.addEventListener(
+      "fecippclosureselection",
+      this._boundHandleIppClosureSelection,
     );
     this.getData();
     if (this.isEdit) {
@@ -616,6 +632,12 @@ export default class Fec_CaseBussiness extends LightningElement {
       this.template.removeEventListener(
         "fecippclosureload",
         this._boundHandleIppClosureLoad,
+      );
+    }
+    if (this._boundHandleIppClosureSelection) {
+      this.template.removeEventListener(
+        "fecippclosureselection",
+        this._boundHandleIppClosureSelection,
       );
     }
     localStorage.removeItem(this.draftKey);
@@ -674,6 +696,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     natureOfCaseIdFallback = null,
   ) {
     this.businessLoaded = false;
+    this._routingSelectLockedForIpp = false;
+    this._ippClosureHasEligibleRows = false;
 
     getByCase({
       caseId: this.recordId,
@@ -1445,31 +1469,80 @@ export default class Fec_CaseBussiness extends LightningElement {
     );
   }
 
-  /*Nếu thẻ không có khoản IPP nào thỏa điều kiện tất toán
-  Mong muốn: hệ thống tự động chọn giá trị action = Reject*/
+  /* IPP Closure: không đủ IPP → auto Reject; Case đã có IPP chọn → khóa routing + auto Route to */
   handleIppClosureLoad(event) {
-    if (!event.detail || !event.detail.noEligibleForClosure) {
+    const d = event.detail || {};
+    this._ippClosureHasEligibleRows = !!d.hasEligibleRows;
+
+    if (d.noEligibleForClosure) {
+      this._routingSelectLockedForIpp = false;
+      Promise.resolve().then(() => {
+        if (!this.isEdit || !this.business?.hasRoutingAction) {
+          return;
+        }
+        const hasReject = this.business.routingActionlst?.some(
+          (a) => a.value === ACTION_REJECT,
+        );
+        if (!hasReject) {
+          return;
+        }
+        const routeToEle = this.template.querySelector(
+          'lightning-select[data-id="routing-action"]',
+        );
+        if (!routeToEle) {
+          return;
+        }
+        routeToEle.value = ACTION_REJECT;
+        this.actionValue = ACTION_REJECT;
+      });
       return;
     }
+
+    if (d.hasEligibleRows && d.savedIppToCloseOnCase) {
+      this._routingSelectLockedForIpp = true;
+      Promise.resolve().then(() => {
+        this._applyIppClosureRouteToWhenEditable();
+      });
+      return;
+    }
+
+    this._routingSelectLockedForIpp = false;
+  }
+
+  handleIppClosureSelection(event) {
+    const d = event.detail || {};
+    const has = d.hasSelection === true;
+    if (!this._ippClosureHasEligibleRows) {
+      return;
+    }
+    if (!has) {
+      this._routingSelectLockedForIpp = false;
+      return;
+    }
+    this._routingSelectLockedForIpp = true;
     Promise.resolve().then(() => {
-      if (!this.isEdit || !this.business?.hasRoutingAction) {
-        return;
-      }
-      const hasReject = this.business.routingActionlst?.some(
-        (a) => a.value === ACTION_REJECT,
-      );
-      if (!hasReject) {
-        return;
-      }
-      const routeToEle = this.template.querySelector(
-        'lightning-select[data-id="routing-action"]',
-      );
-      if (!routeToEle) {
-        return;
-      }
-      routeToEle.value = ACTION_REJECT;
-      this.actionValue = ACTION_REJECT;
+      this._applyIppClosureRouteToWhenEditable();
     });
+  }
+
+  _applyIppClosureRouteToWhenEditable() {
+    if (!this.isEdit || !this.business?.hasRoutingAction) {
+      return;
+    }
+    const hasRouteTo = this.business.routingActionlst?.some(
+      (a) => a.value === ACTION_ROUTE_TO,
+    );
+    if (!hasRouteTo) {
+      return;
+    }
+    const routeToEle = this.template.querySelector(
+      'lightning-select[data-id="routing-action"]',
+    );
+    if (!routeToEle) {
+      return;
+    }
+    routeToEle.value = ACTION_ROUTE_TO;
+    this.actionValue = ACTION_ROUTE_TO;
   }
 
   _validateIPPClosureForSubmit() {
