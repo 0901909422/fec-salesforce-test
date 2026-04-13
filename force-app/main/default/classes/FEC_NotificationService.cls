@@ -414,25 +414,58 @@ public without sharing class FEC_NotificationService {
     private static String resolveTemplate(String template, Case c) {
         if (String.isBlank(template)) return template;
         try {
-            // Xử lý {{{Object.Field}}} (triple-brace) — convert sang {{Object.Field}}
+            // Normalize: convert {{{...}}} → {{...}}
             template = template.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
+            System.debug('resolveTemplate after triple convert: ' + template.left(100));
             // Resolve User.* fields từ current user
             Pattern userPat = Pattern.compile(FEC_ConstantCommon.PATTERN_USER_MERGE_FIELD);
             Matcher userMat = userPat.matcher(template);
             if (userMat.find()) {
-                // Query User với tất cả fields cần thiết
-                User u = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
-                Matcher userMat2 = userPat.matcher(template);
-                while (userMat2.find()) {
-                    String fieldName = userMat2.group(1);
-                    String val = '';
-                    try { val = String.valueOf(u.get(fieldName)); } catch(Exception ex) {}
-                    if (val == 'null') val = '';
-                    template = template.replace('{{User.' + fieldName + '}}', val);
+                // Collect all User field names needed
+                Set<String> userFieldNames = new Set<String>{'Id'};
+                Matcher userMatCollect = userPat.matcher(template);
+                while (userMatCollect.find()) { userFieldNames.add(userMatCollect.group(1)); }
+                // Dynamic query to get all needed fields
+                String userSoql = 'SELECT ' + String.join(new List<String>(userFieldNames), ', ') + ' FROM User WHERE Id = :userId LIMIT 1';
+                Id userId = UserInfo.getUserId();
+                List<User> users = new List<User>();
+                try { users = Database.query(userSoql); } catch(Exception qEx) {
+                    // Fallback: query standard fields only
+                    users = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :userId LIMIT 1];
                 }
+                if (!users.isEmpty()) {
+                    User u = users[0];
+                    Matcher userMat2 = userPat.matcher(template);
+                    while (userMat2.find()) {
+                        String fieldName = userMat2.group(1);
+                        String val = '';
+                        try { Object fv = u.get(fieldName); val = fv != null ? String.valueOf(fv) : ''; } catch(Exception ex) {}
+                        template = template.replace('{{User.' + fieldName + '}}', val);
+                    }
+                }
+                System.debug('resolveTemplate after user resolve: ' + template.left(100));
             }
-            return FEC_CommonUltils.resolveTemplate(template, c);
+            // Re-query Case với related objects nếu template có merge fields
+            if (c != null && c.Id != null && template.contains('{{')) {
+                try {
+                    Case fullCase = [
+                        SELECT Id, CaseNumber, Subject, Status, Description, SuppliedName, SuppliedEmail, SuppliedPhone,
+                               FEC_Account_Number__c, FEC_Original_Info_Email__c, AccountId,
+                               FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Address__c,
+                               FEC_Account_or_Contract__r.FEC_Email__c, FEC_Account_or_Contract__r.Name
+                        FROM Case WHERE Id = :c.Id LIMIT 1
+                    ];
+                    String result = FEC_CommonUltils.resolveTemplate(template, fullCase);
+                    System.debug('resolveTemplate final: ' + result.left(100));
+                    return result;
+                } catch (Exception ex) { System.debug('fullCase query error: ' + ex.getMessage()); }
+            }
+            if (c != null) {
+                return FEC_CommonUltils.resolveTemplate(template, c);
+            }
+            return template;
         } catch (Exception e) {
+            System.debug('resolveTemplate exception: ' + e.getMessage());
             return template;
         }
     }
