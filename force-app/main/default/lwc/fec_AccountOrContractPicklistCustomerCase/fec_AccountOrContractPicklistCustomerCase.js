@@ -197,10 +197,10 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
   }
 
   async getInteractionFirstCustomerHistoryAccountNumber() {
-    if (!this.recordId) return;
+    if (!this.interactionId) return;
 
     const result = await getInteractionFirstCustomerHistoryAccountNumber({
-      caseId: this.recordId,
+      caseId: this.interactionId,
     });
 
     console.log("AccountNumber:", result);
