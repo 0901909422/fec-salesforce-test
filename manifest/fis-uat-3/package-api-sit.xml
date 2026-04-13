@@ -6,6 +6,7 @@
 		<members>FEC_CMSIPPBlockWS</members>
 		<members>FEC_SearchByListNIDsServiceCallout_Test</members>
 		<members>FEC_SearchByListNIDsServiceCallout</members>
+		<members>FEC_GetDeals</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
@@ -17,5 +18,15 @@
 		<members>fec_Search</members>
 		<name>LightningComponentBundle</name>
 	</types>
+	<types>
+		<members>FEC_Page_Size_Deals</members>
+		<members>FEC_Page_Number_Deals</members>
+		<name>CustomLabel</name>
+    </types>
+	<types>
+		<members>FEC_API_Config.FEC_GetDeals</members>
+		<name>CustomMetadata</name>
+    </types>
+	
 	<version>66.0</version>
 </Package>

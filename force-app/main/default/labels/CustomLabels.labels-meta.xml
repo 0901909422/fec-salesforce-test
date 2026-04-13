@@ -13345,4 +13345,20 @@
         <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</shortDescription>
         <value>Mở khoá thẻ thất bại.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Page_Number_Deals</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Page Number Deals</shortDescription>
+        <value>pageNumber is required and must be &gt; 0</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Page_Size_Deals</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Page Size Deals</shortDescription>
+        <value>pageSize is required and must be &gt; 0</value>
+    </labels>
 </CustomLabels>
