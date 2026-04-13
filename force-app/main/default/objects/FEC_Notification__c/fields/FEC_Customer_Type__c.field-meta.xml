@@ -3,13 +3,12 @@
     <fullName>FEC_Customer_Type__c</fullName>
     <description>Đối tượng khách hàng được áp dụng thông báo</description>
     <label>Customer Type</label>
-    <required>false</required>
+    <required>true</required>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
-    <type>MultiselectPicklist</type>
+    <type>Picklist</type>
     <valueSet>
         <restricted>true</restricted>
         <valueSetName>Customer_Type</valueSetName>
     </valueSet>
-    <visibleLines>4</visibleLines>
 </CustomField>
