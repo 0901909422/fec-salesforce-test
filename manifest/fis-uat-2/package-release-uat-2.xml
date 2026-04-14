@@ -1322,6 +1322,11 @@
 		<members>FEC_Address_Info__c.FEC_Mailing_Address__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
+		<members>FEC_Stage_Change__c.FEC_Condition_Requirement__c</members>
+		<members>Case.FEC_Case_Created_By__c</members>
+		<members>FEC_Notification__c.FEC_Customer_Type__c</members>
+		<members>Case.FEC_Created_by__c</members>
+		<members>Case.FEC_Last_Updated_By__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
@@ -1350,6 +1355,7 @@
 		<members>FEC_HoldCaseController</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
 		<members>FEC_MarkNFU</members>
+		<members>FEC_GetProductListCallout</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1533,6 +1539,10 @@
         <members>FEC_MSG_Address_Update_Reason_Generic</members>
         <members>FEC_LBL_UpdateAddress_Original_Information</members>
         <members>FEC_LBL_UpdateAddress_Updated_Information</members>
+		<members>FEC_ACTION_PIN_REISSUE_HEADER</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE_ERROR</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

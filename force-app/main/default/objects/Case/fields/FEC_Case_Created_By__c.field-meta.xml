@@ -4,8 +4,17 @@
     <description>Trường tạo mới để hiển thị trên Case details và interaction details do trường standard không hiển thị được đúng  yêu cầu. Hiển thị Email ID của người tạo Case</description>
     <externalId>false</externalId>
     <formula>IF(
-  RecordType.Name &lt;&gt; &apos;Interaction&apos;,
-    LEFT(CreatedBy.Email, FIND(&quot;@&quot;, CreatedBy.Email) - 1),&apos;&apos;)</formula>
+    OR(
+        TRIM(LOWER(CreatedBy.LastName)) = &quot;platform integration user&quot;,
+        TRIM(LOWER(CreatedBy.Alias)) = &quot;platint&quot;
+    ),
+    &quot;system&quot;,
+    IF(
+        RecordType.Name &lt;&gt; &quot;Interaction&quot;,
+        LEFT(CreatedBy.Email, FIND(&quot;@&quot;, CreatedBy.Email) - 1),
+        &quot;&quot;
+    )
+)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Case Created By</label>
     <required>false</required>

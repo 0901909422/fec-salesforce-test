@@ -367,7 +367,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
         String t : currentTeamsStr.split(FEC_ConstantCommon.DELIMITER_UNDERSCORE)
       ) {
         if (String.isNotBlank(t)) {
-          teamSet.add(t.trim());
+          teamSet.add(t.replaceAll('\\W+', '').trim());
         }
       }
     }
