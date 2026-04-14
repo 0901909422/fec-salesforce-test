@@ -18,18 +18,18 @@ public with sharing class FEC_CardLockUnLockController {
             String requestorId = FEC_ConstantCommon.API_REQUESTOR_ID;
             // Function indicator: "B" for block, "U" for unblock.
 
-            FEC_CardLockUnLockCallout.ValidationResult validateResult = FEC_CardLockUnLockCallout.validateRequest(
-                transId,
-                requestorId,
-                objCasse.FEC_New_Block_Code__c,
-                funcCode,
-                cardNumber,
-                objCasse.FEC_Account_Number__c
-            );
-            if (!validateResult.isValid) {
-                result.success = false;
-                return result;
-            }
+            // FEC_CardLockUnLockCallout.ValidationResult validateResult = FEC_CardLockUnLockCallout.validateRequest(
+            //     transId,
+            //     requestorId,
+            //     objCasse.FEC_New_Block_Code__c,
+            //     funcCode,
+            //     cardNumber,
+            //     objCasse.FEC_Account_Number__c
+            // );
+            // if (!validateResult.isValid) {
+            //     result.success = false;
+            //     return result;
+            // }
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
                 requestorId,
