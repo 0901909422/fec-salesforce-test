@@ -24,6 +24,7 @@ public with sharing class FEC_TeamQueue {
         @AuraEnabled public String teamqueue;
         @AuraEnabled public String queueId;
         @AuraEnabled public String displayname;
+        @AuraEnabled public String queueLabelStatus;
     }
 
     /**
@@ -35,6 +36,7 @@ public with sharing class FEC_TeamQueue {
 
         @AuraEnabled public Id teamQueueRecordId;      // FEC_Team_Queue__c.Id
         @AuraEnabled public Id teamId;
+        @AuraEnabled public String queueLabelStatus;    // FEC_Team_Queue__c.FEC_Queue_Label_Status__c
     }
     /*------------------------------------------------------------
     Author:        Ha Linh
@@ -167,12 +169,13 @@ public with sharing class FEC_TeamQueue {
     2026/03/31      Ha Linh          Init
     ------------------------------------------------------------*/
     @AuraEnabled
-    public static Boolean createTeamQueueRecord(String teamID, String queueName) {
+    public static Boolean createTeamQueueRecord(String teamID, String queueName, String labelStatus) {
         try {
             // Create a new FEC_Team_Queue__c record
             FEC_Team_Queue__c newTeamQueue = new FEC_Team_Queue__c(
                 Team__c = teamID,  // This maps to the Name field on the custom object
-                FEC_Queue_Name__c = queueName  // This maps to the custom field
+                FEC_Queue_Name__c = queueName,  // This maps to the custom field
+                FEC_Queue_Label_Status__c = labelStatus  // This maps to the custom field for label status
             );
             insert newTeamQueue;
             DepartmentAdmin.insertCustomLog(teamID, CLASS_NAME, 'saveNewQueue', 'Add New Queue For Team', '', queueName);
@@ -286,7 +289,7 @@ public with sharing class FEC_TeamQueue {
 
         // Resolve FEC_Team_Queue__c mapping
         FEC_Team_Queue__c teamQueue = [
-                SELECT Id, Team__c
+                SELECT Id, Team__c, FEC_Queue_Label_Status__c
                 FROM FEC_Team_Queue__c
                 WHERE Id = :teamQueueRecordId
                 LIMIT 1
@@ -295,6 +298,7 @@ public with sharing class FEC_TeamQueue {
         if (teamQueue != null) {
             dto.teamQueueRecordId = teamQueue.Id;
             dto.teamId = teamQueue.Team__c;
+            dto.queueLabelStatus = teamQueue.FEC_Queue_Label_Status__c;
         }
         return dto;
     }
@@ -313,7 +317,7 @@ public with sharing class FEC_TeamQueue {
     2026/03/31      Ha Linh          Init
     ------------------------------------------------------------*/
     @AuraEnabled
-    public static Boolean updateQueueEdit(Id queueId, String newQueueLabel, Id teamQueueRecordId, Id newTeamId) {
+    public static Boolean updateQueueEdit(Id queueId, String newQueueLabel, Id teamQueueRecordId, Id newTeamId, String newLabelStatus) {
         String messageEdit = '';
         // Update Queue Label if provided
         if (!String.isBlank(newQueueLabel)) {
@@ -326,11 +330,21 @@ public with sharing class FEC_TeamQueue {
             }
         }
         // Update Team mapping if provided
+        FEC_Team_Queue__c tqUpdate = new FEC_Team_Queue__c(Id = teamQueueRecordId);
+        Boolean isTqNeeded = false;
         if (newTeamId != null) {
+            tqUpdate.Team__c = newTeamId;
+            messageEdit = messageEdit + ' update team to: ' + newTeamId;
+            isTqNeeded = true;
+        }
+        if (!String.isBlank(newLabelStatus)) {
+            tqUpdate.FEC_Queue_Label_Status__c = newLabelStatus;
+            messageEdit = messageEdit + ' update label status to: ' + newLabelStatus;
+            isTqNeeded = true;
+        }
+        if (isTqNeeded) {
             try {
-                FEC_Team_Queue__c tqUpdate = new FEC_Team_Queue__c(Id = teamQueueRecordId, Team__c = newTeamId);
                 update tqUpdate;
-                messageEdit = messageEdit + ' update team to: ' + newTeamId;
             } catch (DmlException d) {
                 throw new AuraHandledException(System.Label.CS_OrgChart_Text_EditQueueModal_UpdateTeam_Err + d.getMessage());
             }

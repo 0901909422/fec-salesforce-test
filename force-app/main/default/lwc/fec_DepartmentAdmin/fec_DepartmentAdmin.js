@@ -48,6 +48,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     // Selection and pagination
     selectedQueueId;
     selectedQueueName;
+    selectedQueueLabelStatus;
     pageSize = 100; // Number of users to load per page
     lastUserId = null; // For keyset pagination
     sortOrder = 'ASC';
@@ -66,6 +67,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     @track isLoadQueue = false;
     @track isEditQueueModalOpen = false;
     @track editQueueLabel = '';
+    @track editQueueLabelStatus = '';
     @track curentTeamId = null;
     @track currentTeamName = null;
     @track editTeamId = null;
@@ -96,9 +98,12 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             if (info) {
                 this.editQueueLabel = info.queueLabel || '';
                 this.editTeamId = info.teamId;
+                this.editQueueLabelStatus = info.queueLabelStatus || '';
+                this.selectedQueueLabelStatus = info.queueLabelStatus || '';
             } else {
                 this.editQueueLabel = '';
                 this.editTeamId = '';
+                this.editQueueLabelStatus = '';
             }
         } catch (err) {
             console.error('Failed to load queue edit info', err);
@@ -120,6 +125,10 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         this.editTeamId = event.detail ? event.detail.value : event.target.value;
     }
 
+    handleEditQueueLabelStatusChange(event) {
+        this.editQueueLabelStatus = event.target.value;
+    }
+
     async handleSaveEditQueue() {
         if (!this.selectedQueueId || !this.editTeamQueueRecordId) return;
         this.editErrorMessage = '';
@@ -130,11 +139,13 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             if (confirmed) {
                 const teamChanged = this.curentTeamId !== this.editTeamId;
                 const labelChanged = this.selectedQueueName !== this.editQueueLabel;
+                const labelStatusChanged = this.selectedQueueLabelStatus !== this.editQueueLabelStatus;
                 const queueEdit = {
                     queueId: this.selectedQueueId,
                     newQueueLabel: null,
                     teamQueueRecordId: null,
-                    newTeamId: null
+                    newTeamId: null,
+                    newLabelStatus: null
                 };
                 if (teamChanged) {
                     queueEdit.newTeamId = this.editTeamId;
@@ -144,11 +155,16 @@ export default class Fec_DepartmentAdmin extends LightningElement {
                     queueEdit.newQueueLabel = this.editQueueLabel;
                     this.selectedQueueName = this.editQueueLabel;
                 }
+                if (labelStatusChanged) {
+                    queueEdit.newLabelStatus = this.editQueueLabelStatus;
+                    this.selectedQueueLabelStatus = this.editQueueLabelStatus;
+                }
                 await updateQueueEdit(queueEdit);
                 if (teamChanged) {
                     window.location.reload();
-                } else if (labelChanged) {
+                } else if (labelChanged || labelStatusChanged) {
                     this.selectedQueueName = this.editQueueLabel;
+                    this.selectedQueueLabelStatus = this.editQueueLabelStatus;
                     this.refreshTeamQueueTreeChild();
                     this.handleCloseEditQueueModal();
                 }

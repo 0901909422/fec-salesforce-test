@@ -143,9 +143,27 @@
                 <div class="slds-modal__content slds-p-around_medium">
                     <div class="slds-form">
                         <div class="slds-form-element">
-                            <label class="slds-form-element__label" for="editQueueLabel">{customLabels.CS_OrgChart_Text_EditQueueModal_Input_Label}</label>
                             <div class="slds-form-element__control">
-                                <input id="editQueueLabel" type="text" class="slds-input" value={editQueueLabel} onchange={handleEditQueueLabelChange} placeholder="Enter queue label" />
+                                <lightning-input 
+                                    type="text" 
+                                    label={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Label}
+                                    variant="label-hidden"
+                                    value={editQueueLabel} 
+                                    onchange={handleEditQueueLabelChange} 
+                                    placeholder={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Label}>
+                                </lightning-input>
+                            </div>
+                        </div>
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <lightning-input 
+                                    type="text" 
+                                    label={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Queue_Status}
+                                    variant="label-hidden"
+                                    value={editQueueLabelStatus} 
+                                    onchange={handleEditQueueLabelStatusChange} 
+                                    placeholder={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Queue_Status}>
+                                </lightning-input>
                             </div>
                         </div>
                         <div class="slds-form-element slds-m-top_medium">

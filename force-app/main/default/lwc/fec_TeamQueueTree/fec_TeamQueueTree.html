@@ -50,6 +50,19 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <lightning-input
+                                    name="queueLabelStatus"
+                                    label={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Queue_Status}
+                                    type="text"
+                                    value={queueLabelStatus}
+                                    onchange={handleQueueLabelStatusChange}
+                                    placeholder={customLabels.CS_OrgChart_Text_AddQueueModal_QueueLabelStatus_PlaceHolder}
+                                    required>
+                                </lightning-input>
+                            </div>
+                        </div>
                         <div class="slds-notify slds-notify_alert slds-theme_error slds-m-top_medium" role="alert" if:true={errorMessage}>
                             <span class="slds-assistive-text">{customLabels.CS_OrgChart_Text_Save_Error_Title}</span>
                             {errorMessage}

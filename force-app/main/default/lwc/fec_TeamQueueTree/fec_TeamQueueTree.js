@@ -16,6 +16,7 @@ export default class fec_TeamQueueTree extends LightningElement {
     @track showModalNewQueue = false;
     @track queueLabel = '';
     @track queueName = '';
+    @track queueLabelStatus = '';
     @track errorMessage = '';
     @track currentTeamName = '';
     @track currentTeamID = '';
@@ -175,6 +176,7 @@ export default class fec_TeamQueueTree extends LightningElement {
         this.showModalNewQueue = true;
         this.queueLabel = '';
         this.queueName = '';
+        this.queueLabelStatus = '';
         this.errorMessage = '';
         this.currentTeamID = teamID;
     }
@@ -184,6 +186,7 @@ export default class fec_TeamQueueTree extends LightningElement {
         this.showModalNewQueue = false;
         this.queueLabel = '';
         this.queueName = '';
+        this.queueLabelStatus = '';
         this.errorMessage = '';
     }
 
@@ -203,6 +206,10 @@ export default class fec_TeamQueueTree extends LightningElement {
 
     handleQueueNameChange(event) {
         this.queueName = event.target.value;
+    }
+
+    handleQueueLabelStatusChange(event) {
+        this.queueLabelStatus = event.target.value;
     }
 
     // Validate queue name format using regex
@@ -331,7 +338,7 @@ export default class fec_TeamQueueTree extends LightningElement {
             const queueResultId = await createQueue({ queueLabel: this.queueLabel, queueName: this.queueName });
             if (queueResultId !== null) {
                 // Create record in FEC_Team_Queue__c custom object
-                const teamQueueResult = await createTeamQueueRecord({ teamID: this.currentTeamID, queueName: this.queueName });
+                const teamQueueResult = await createTeamQueueRecord({ teamID: this.currentTeamID, queueName: this.queueName, labelStatus: this.queueLabelStatus });
                 if (teamQueueResult) {
                     // Refresh the queue list for the team
                     await this.refreshQueuesForTeam(this.currentTeamID);
