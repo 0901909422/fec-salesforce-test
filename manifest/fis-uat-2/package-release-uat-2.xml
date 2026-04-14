@@ -1629,6 +1629,10 @@
 		<members>FEC_ServiceResource_Set_ServiceType_Agent</members>
 		<name>Flow</name>
 	</types>
+    <types>
+		<members>en_US</members>
+		<name>Translations</name>
+	</types>
 
     <version>65.0</version>
 </Package>
