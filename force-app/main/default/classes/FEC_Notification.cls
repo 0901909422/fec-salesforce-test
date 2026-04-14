@@ -240,7 +240,7 @@ public without sharing class FEC_Notification {
         String subject = String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
         String fullBody = '';
         if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Header__c)) {
-            fullBody += FEC_NotificationService.inlineImages(html) ;
+            fullBody += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Header__c) ;
         }
         fullBody += String.isNotBlank(template.FEC_Body__c) ? template.FEC_Body__c : '';
         if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c)) {
