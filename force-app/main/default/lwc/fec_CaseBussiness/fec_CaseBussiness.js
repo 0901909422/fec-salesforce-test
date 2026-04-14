@@ -49,6 +49,10 @@ import FEC_ACTION_UNBLOCK_CARD_HEADER from "@salesforce/label/c.FEC_ACTION_UNBLO
 import FEC_MSG_ACTION_UNBLOCK_CARD from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD";
 import FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS";
 import FEC_MSG_ACTION_UNBLOCK_CARD_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_ERROR";
+import FEC_ACTION_PIN_REISSUE_HEADER from "@salesforce/label/c.FEC_ACTION_PIN_REISSUE_HEADER";
+import FEC_MSG_ACTION_PIN_REISSUE from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE";
+import FEC_MSG_ACTION_PIN_REISSUE_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_SUCCESS";
+import FEC_MSG_ACTION_PIN_REISSUE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_ERROR";
 
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
@@ -72,7 +76,8 @@ const ACTION_CANCEL = "Cancel";
 
 const OUTBOUND_CAMPAIGN = 'Outbound Campaign';
 
-const ACTION_UNBLOCK_CARD = "Unblock Card";
+const ACTION_UNBLOCK_CARD = "Card Unblock";
+const ACTION_PIN_REISSUE = "PIN Reissue";
 
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
@@ -841,6 +846,15 @@ export default class Fec_CaseBussiness extends LightningElement {
             });
           });
         });
+
+        // check show button process action PIN Reissue
+        const processActions = this.business.processActionlst || [];
+        processActions.forEach(processAction => {
+          if (processAction.value === ACTION_PIN_REISSUE) {
+            this.showProcessAction = true;
+          }
+        });
+
         const actions = this.business.routingActionlst || [];
         const foundActions = [];
 
@@ -1625,6 +1639,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (method == ACTION_UNBLOCK_CARD) {
       header = FEC_ACTION_UNBLOCK_CARD_HEADER;
       content = FEC_MSG_ACTION_UNBLOCK_CARD;
+    } else if (method == ACTION_PIN_REISSUE) {
+      header = FEC_ACTION_PIN_REISSUE_HEADER;
+      content = FEC_MSG_ACTION_PIN_REISSUE;
     } else {
       header = FEC_ACTION_PHONE_UPDATE_HEADER;
       content = FEC_MSG_ACTION_PHONE_UPDATE;
@@ -1691,6 +1708,12 @@ export default class Fec_CaseBussiness extends LightningElement {
         };
         break;
 
+      case ACTION_PIN_REISSUE:
+        params = {
+          caseId: this.recordId,
+        };
+        break;
+
       default:
         break;
     }
@@ -1700,6 +1723,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (this.processActionMethod == ACTION_UNBLOCK_CARD) {
       msgSuccess = FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS;
       msgError = FEC_MSG_ACTION_UNBLOCK_CARD_ERROR;
+    } else if (this.processActionMethod == ACTION_PIN_REISSUE) {
+      msgSuccess = FEC_MSG_ACTION_PIN_REISSUE_SUCCESS;
+      msgError = FEC_MSG_ACTION_PIN_REISSUE_ERROR;
     } else {
       msgSuccess = FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS;
       msgError = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
