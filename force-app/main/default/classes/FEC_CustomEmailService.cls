@@ -125,7 +125,8 @@ public without sharing class FEC_CustomEmailService {
     @AuraEnabled(cacheable=true)
     public static List<SObject> getEmailTemplates() {
         return [
-            SELECT Id, Name, FEC_Template_Name__c, FEC_Subject_Line__c, FEC_Body__c, FEC_Enhanced_Letterhead__c
+            SELECT Id, Name, FEC_Template_Name__c, FEC_Subject_Line__c, FEC_Body__c, FEC_Enhanced_Letterhead__c,
+                   FEC_Enhanced_Letterhead__r.FEC_Header__c, FEC_Enhanced_Letterhead__r.FEC_Footer__c
             FROM FEC_Template__c
             WHERE FEC_Active__c = true
             ORDER BY FEC_Template_Name__c ASC
@@ -139,7 +140,9 @@ public without sharing class FEC_CustomEmailService {
         // Lấy template có FEC_Applicable_For_Mailbox__c chứa mailboxAddress hoặc null (áp dụng cho tất cả)
         List<FEC_Template__c> result = new List<FEC_Template__c>();
         for (FEC_Template__c t : [
-            SELECT Id, Name, FEC_Template_Name__c, FEC_Subject_Line__c, FEC_Body__c, FEC_Enhanced_Letterhead__c, FEC_Applicable_For_Mailbox__c
+            SELECT Id, Name, FEC_Template_Name__c, FEC_Subject_Line__c, FEC_Body__c, FEC_Enhanced_Letterhead__c,
+                   FEC_Enhanced_Letterhead__r.FEC_Header__c, FEC_Enhanced_Letterhead__r.FEC_Footer__c,
+                   FEC_Applicable_For_Mailbox__c
             FROM FEC_Template__c
             WHERE FEC_Active__c = true
             ORDER BY FEC_Template_Name__c ASC
@@ -207,32 +210,22 @@ public without sharing class FEC_CustomEmailService {
                 List<SObject> routingAddrs = Database.query(
                     'SELECT Id, Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
                 );
-                // Lấy email của Queue để match với EmailRoutingAddress
+                // Match theo tên Queue (vì Queue thường không có Email field)
+                // Lấy tên của các Queue mà user là member
+                Map<String, Boolean> queueNameSet = new Map<String, Boolean>();
                 Map<String, Boolean> queueEmailSet = new Map<String, Boolean>();
-                for (Group q : [SELECT Email FROM Group WHERE Id IN :userQueueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND Email != null]) {
-                    queueEmailSet.put(q.Email.toLowerCase(), true);
+                for (Group q : [SELECT Name, Email FROM Group WHERE Id IN :userQueueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
+                    queueNameSet.put(q.Name.toLowerCase(), true);
+                    if (String.isNotBlank(q.Email)) queueEmailSet.put(q.Email.toLowerCase(), true);
                 }
                 for (SObject r : routingAddrs) {
                     String addr = (String) r.get(FIELD_ADDRESS);
                     String name = (String) r.get(FIELD_PERSONAL_NAME);
                     if (String.isNotBlank(addr)) {
                         String lower = addr.toLowerCase();
-                        // Chỉ include nếu thuộc Queue của user, hoặc không có Queue nào match thì include tất cả
-                        if (queueEmailSet.isEmpty() || queueEmailSet.containsKey(lower)) {
-                            String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
-                            routingLabelMap.put(lower, lbl);
-                            routingAddrMap.put(lower, addr);
-                            routingOrder.add(lower);
-                        }
-                    }
-                }
-                // Fallback: nếu không match được Queue nào thì lấy tất cả
-                if (routingOrder.isEmpty()) {
-                    for (SObject r : routingAddrs) {
-                        String addr = (String) r.get(FIELD_ADDRESS);
-                        String name = (String) r.get(FIELD_PERSONAL_NAME);
-                        if (String.isNotBlank(addr)) {
-                            String lower = addr.toLowerCase();
+                        String nameLower = String.isNotBlank(name) ? name.toLowerCase() : '';
+                        // Match theo tên Queue hoặc email Queue
+                        if (queueNameSet.containsKey(nameLower) || queueEmailSet.containsKey(lower)) {
                             String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
                             routingLabelMap.put(lower, lbl);
                             routingAddrMap.put(lower, addr);
@@ -243,7 +236,6 @@ public without sharing class FEC_CustomEmailService {
             }
         } catch (Exception e) {
             System.debug('EmailRoutingAddress query failed: ' + e.getMessage());
-            // Fallback: lấy tất cả
             try {
                 List<SObject> routingAddrs = Database.query(
                     'SELECT Id, Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
@@ -293,16 +285,25 @@ public without sharing class FEC_CustomEmailService {
             });
         }
 
-        // Thêm OrgWide (tránh trùng)
-        for (OrgWideEmailAddress owa : [
-            SELECT Id, Address, DisplayName FROM OrgWideEmailAddress ORDER BY DisplayName ASC
-        ]) {
-            String owaLower = owa.Address.toLowerCase();
-            if (!routingAddrMap.containsKey(owaLower)) {
-                options.add(new Map<String, String>{
-                    'label' => owa.DisplayName + ' <' + owa.Address + '>',
-                    'value' => owa.Address
-                });
+        // Nếu user không thuộc Queue nào → fallback lấy EmailRoutingAddress của Queue owner của Case
+        if (options.isEmpty() && String.isNotBlank(queueEmail)) {
+            try {
+                List<SObject> allRouting = Database.query(
+                    'SELECT Id, Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
+                );
+                String qeLower = queueEmail.toLowerCase();
+                for (SObject r : allRouting) {
+                    String addr = (String) r.get(FIELD_ADDRESS);
+                    String name = (String) r.get(FIELD_PERSONAL_NAME);
+                    if (String.isNotBlank(addr) && addr.toLowerCase() == qeLower) {
+                        String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
+                        options.add(new Map<String, String>{ 'label' => lbl, 'value' => addr });
+                        defaultFrom = addr;
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                System.debug('Fallback routing lookup failed: ' + e.getMessage());
             }
         }
 
