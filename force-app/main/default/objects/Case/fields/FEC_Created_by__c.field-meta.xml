@@ -4,7 +4,18 @@
     <description>Hiển thị Email ID của người tạo Interaction
 Trường tạo mới để đáp ứng hiển thị trên giao diện và listview</description>
     <externalId>false</externalId>
-    <formula>IF( RecordType.Name = &apos;Interaction&apos; , LEFT(CreatedBy.Email,FIND(&quot;@&quot;,CreatedBy.Email)-1) , &apos;&apos;)</formula>
+    <formula>IF(
+OR(
+TRIM(LOWER(CreatedBy.LastName)) = &quot;platform integration user&quot;,
+TRIM(LOWER(CreatedBy.Alias)) = &quot;platint&quot;
+),
+&quot;system&quot;,
+IF(
+RecordType.Name = &quot;Interaction&quot;,
+LEFT(CreatedBy.Email, FIND(&quot;@&quot;, CreatedBy.Email) - 1),
+&quot;&quot;
+)
+)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Interaction Created By</label>
     <required>false</required>

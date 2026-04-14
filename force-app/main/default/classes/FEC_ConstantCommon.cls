@@ -108,6 +108,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_MERGE_FIELD = '\\{\\{\\{([^}]+)\\}\\}\\}';
     public static final String PATTERN_TRIPLE_BRACE = '\\{\\{\\{([^}]+)\\}\\}\\}';
     public static final String PATTERN_DOUBLE_BRACE = '\\{\\{([^{}]+)\\}\\}';
+    public static final String PATTERN_CASE_MERGE_FIELD = '\\{\\{Case\\.([^}]+)\\}\\}';
     public static final String PATTERN_USER_MERGE_FIELD = '\\{\\{User\\.([^}]+)\\}\\}';
     
     // CARD: 16 hoặc 19 digits
@@ -135,7 +136,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_CORE = 'CORE';
     public static final String REQUESTOR_MOBILE = 'MOBILE';
     public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
-
+    public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
+    
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
     /** API trả PERMANENT — khác PERMNENT (mã nguồn CIF). */
@@ -450,5 +452,13 @@ public with sharing class FEC_ConstantCommon {
       'Document Preparation' => 'DocumentPreparation',
       'Task Under Review' => 'TaskUnderReview'
     };
-  public static final String CASE_ALL_REQUEST = 'All';  
+    
+    public static final String CASE_ALL_REQUEST = 'All';
+
+    //----------HARD CODE VALUE FOR RESET PIN (Non-production)----------
+    public static final String RESET_PIN_NON_PRODUCTION = 'Non-Production';
+    public static final String RESET_PIN_DEFAULT_NID = '261089113994';
+    public static final String RESET_PIN_DEFAULT_PHONE = '84983893967';
+    public static final String CASE_ALL_CUSTOMER = 'All';
+    
 }
