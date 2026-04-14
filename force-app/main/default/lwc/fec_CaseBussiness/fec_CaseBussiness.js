@@ -77,7 +77,7 @@ const ACTION_CANCEL = "Cancel";
 const OUTBOUND_CAMPAIGN = 'Outbound Campaign';
 
 const ACTION_UNBLOCK_CARD = "Unblock Card";
-const ACTION_PIN_REISSUE = "PIN Reissue";
+const ACTION_PIN_REISSUE = "Reissue PIN";
 
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
