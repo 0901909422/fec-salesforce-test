@@ -242,18 +242,16 @@ public with sharing class FEC_GetLoanApplicationHistory {
     }
     LoanApplicationHistoryResult response = getLoanApplicationHistory(req);
 
-    if (
-      response == null ||
-      !response.success ||
-      response.histories == null ||
-      response.histories.isEmpty()
-    ) {
+    if (response == null || !response.success) {
       throw new AuraHandledException(
-        response != null &&
-          response.errorMessage != null
+        response != null && response.errorMessage != null
           ? response.errorMessage
           : System.Label.FEC_MSG_Error_API_Label
       );
+    }
+
+    if (response.histories == null || response.histories.isEmpty()) {
+      return null;
     }
 
     List<FEC_Application_History__c> historiesToUpdate = [
