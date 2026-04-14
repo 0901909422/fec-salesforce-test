@@ -169,7 +169,6 @@ public without sharing class FEC_Notification {
                                                     FEC_Target_Group__c
                                              FROM FEC_Notification__c 
                                              WHERE FEC_Product_Type__c = :finalProductType
-                                             AND FEC_Product_Type__c = :finalProductType
                                              AND FEC_Category__c = :finalCategory
                                              AND FEC_SubCategory__c = :finalSubCategory
                                              AND FEC_SubCode__c = :finalSubCode
