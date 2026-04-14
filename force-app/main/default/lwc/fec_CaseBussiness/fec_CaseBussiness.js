@@ -1485,7 +1485,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     );
   }
 
-  /* IPP Closure: không đủ IPP → auto Reject; Case đã có IPP chọn → khóa routing + auto Route to */
+  /* IPP Closure: không đủ IPP → auto Reject; Case đã có IPP chọn → khóa routing + auto Route to */									
   handleIppClosureLoad(event) {
     const d = event.detail || {};
     this._ippClosureHasEligibleRows = !!d.hasEligibleRows;
@@ -1493,23 +1493,19 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (d.noEligibleForClosure) {
       this._routingSelectLockedForIpp = false;
       Promise.resolve().then(() => {
-        if (!this.isEdit || !this.business?.hasRoutingAction) {
-          return;
-        }
         const hasReject = this.business.routingActionlst?.some(
           (a) => a.value === ACTION_REJECT,
         );
         if (!hasReject) {
           return;
         }
+        this.actionValue = ACTION_REJECT;
         const routeToEle = this.template.querySelector(
           'lightning-select[data-id="routing-action"]',
         );
-        if (!routeToEle) {
-          return;
+        if (routeToEle) {
+          routeToEle.value = ACTION_REJECT;
         }
-        routeToEle.value = ACTION_REJECT;
-        this.actionValue = ACTION_REJECT;
       });
       return;
     }
