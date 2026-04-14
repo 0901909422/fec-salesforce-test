@@ -2037,6 +2037,14 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         const p = loader()
           .then((mod) => {
+            console.log(
+              "[fec_CaseBussiness] dynamic component edit flags",
+              {
+                componentName: name,
+                _isEdit: this._isEdit,
+                fecMasterDataSettingIsEdit: fecMasterDataSettingIsEdit
+              }
+            );
             slots[idx] = {
               key: `${name}-${idx}`,
               ctor: mod.default,
