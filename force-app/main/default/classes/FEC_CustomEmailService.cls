@@ -124,14 +124,54 @@ public without sharing class FEC_CustomEmailService {
 
     @AuraEnabled(cacheable=true)
     public static List<SObject> getEmailTemplates() {
-        return [
+        // Lấy email của các Queue mà user đang là member
+        Set<String> userMailboxEmails = new Set<String>();
+        try {
+            Set<Id> queueIds = new Set<Id>();
+            for (GroupMember gm : [SELECT GroupId FROM GroupMember WHERE UserOrGroupId = :UserInfo.getUserId()]) {
+                queueIds.add(gm.GroupId);
+            }
+            if (!queueIds.isEmpty()) {
+                List<SObject> routingAddrs = Database.query(
+                    'SELECT Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
+                );
+                Set<String> queueNames = new Set<String>();
+                for (Group q : [SELECT Name FROM Group WHERE Id IN :queueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
+                    queueNames.add(q.Name.toLowerCase());
+                }
+                for (SObject r : routingAddrs) {
+                    String addr = (String) r.get('Address');
+                    String name = (String) r.get('PersonalName');
+                    if (String.isNotBlank(addr) && String.isNotBlank(name) && queueNames.contains(name.toLowerCase())) {
+                        userMailboxEmails.add(addr.toLowerCase());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.debug('getEmailTemplates queue lookup failed: ' + e.getMessage());
+        }
+
+        List<FEC_Template__c> result = new List<FEC_Template__c>();
+        for (FEC_Template__c t : [
             SELECT Id, Name, FEC_Template_Name__c, FEC_Subject_Line__c, FEC_Body__c, FEC_Enhanced_Letterhead__c,
-                   FEC_Enhanced_Letterhead__r.FEC_Header__c, FEC_Enhanced_Letterhead__r.FEC_Footer__c
+                   FEC_Enhanced_Letterhead__r.FEC_Header__c, FEC_Enhanced_Letterhead__r.FEC_Footer__c,
+                   FEC_Applicable_For_Mailbox__c
             FROM FEC_Template__c
             WHERE FEC_Active__c = true
             ORDER BY FEC_Template_Name__c ASC
-            LIMIT 100
-        ];
+            LIMIT 200
+        ]) {
+            if (String.isNotBlank(t.FEC_Applicable_For_Mailbox__c) && !userMailboxEmails.isEmpty()) {
+                List<String> mailboxes = t.FEC_Applicable_For_Mailbox__c.split(';');
+                for (String mb : mailboxes) {
+                    if (userMailboxEmails.contains(mb.trim().toLowerCase())) {
+                        result.add(t);
+                        break;
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @AuraEnabled
@@ -148,9 +188,7 @@ public without sharing class FEC_CustomEmailService {
             ORDER BY FEC_Template_Name__c ASC
             LIMIT 200
         ]) {
-            if (String.isBlank(t.FEC_Applicable_For_Mailbox__c)) {
-                result.add(t); // null = áp dụng cho tất cả mailbox
-            } else {
+            if (String.isNotBlank(t.FEC_Applicable_For_Mailbox__c)) {
                 List<String> mailboxes = t.FEC_Applicable_For_Mailbox__c.split(';');
                 for (String mb : mailboxes) {
                     if (mb.trim().equalsIgnoreCase(mailboxAddress)) {

@@ -847,8 +847,6 @@
         var a = component.get(actionName);
         if (mailboxAddress) {
             a.setParams({ mailboxAddress: mailboxAddress });
-        } else {
-            a.setStorable();
         }
         a.setCallback(this, function(r) {
             if (r.getState()==='SUCCESS') {
