@@ -454,5 +454,12 @@ public with sharing class FEC_ConstantCommon {
       'Document Preparation' => 'DocumentPreparation',
       'Task Under Review' => 'TaskUnderReview'
     };
-  public static final String CASE_ALL_REQUEST = 'All';  
+    
+    public static final String CASE_ALL_REQUEST = 'All';
+
+    //----------HARD CODE VALUE FOR RESET PIN (Non-production)----------
+    public static final String RESET_PIN_NON_PRODUCTION = 'Non-Production';
+    public static final String RESET_PIN_DEFAULT_NID = '261089113994';
+    public static final String RESET_PIN_DEFAULT_PHONE = '84983893967';
+    
 }
