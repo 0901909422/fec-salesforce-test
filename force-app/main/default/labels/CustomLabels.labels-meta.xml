@@ -12746,7 +12746,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Send Manual Notification</shortDescription>
-        <value>Send Manual Notification</value>
+        <value>Send Notification</value>
     </labels>
     <labels>
         <fullName>FEC_Target_Email</fullName>
