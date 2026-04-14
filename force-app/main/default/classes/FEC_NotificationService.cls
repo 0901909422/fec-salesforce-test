@@ -358,7 +358,7 @@ public without sharing class FEC_NotificationService {
      * Convert rtaImage URLs trong HTML sang base64 inline để email client hiển thị được.
      * Tự detect org domain nên không cần hardcode URL.
      */
-    private static String inlineImages(String html) {
+    public static String inlineImages(String html) {
         if (String.isBlank(html)) return html;
         // Tìm tất cả src="...rtaImage..." và replace bằng base64
         Pattern p = Pattern.compile('src="(https?://[^"]*rtaImage[^"]*)"');
@@ -414,25 +414,88 @@ public without sharing class FEC_NotificationService {
     private static String resolveTemplate(String template, Case c) {
         if (String.isBlank(template)) return template;
         try {
-            // Xử lý {{{Object.Field}}} (triple-brace) — convert sang {{Object.Field}}
+            // Normalize: convert {{{...}}} → {{...}}
             template = template.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
+            System.debug('resolveTemplate after triple convert: ' + template.left(100));
             // Resolve User.* fields từ current user
             Pattern userPat = Pattern.compile(FEC_ConstantCommon.PATTERN_USER_MERGE_FIELD);
             Matcher userMat = userPat.matcher(template);
             if (userMat.find()) {
-                // Query User với tất cả fields cần thiết
-                User u = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
-                Matcher userMat2 = userPat.matcher(template);
-                while (userMat2.find()) {
-                    String fieldName = userMat2.group(1);
-                    String val = '';
-                    try { val = String.valueOf(u.get(fieldName)); } catch(Exception ex) {}
-                    if (val == 'null') val = '';
-                    template = template.replace('{{User.' + fieldName + '}}', val);
+                // Collect all User field names needed
+                Set<String> userFieldNames = new Set<String>{'Id'};
+                Matcher userMatCollect = userPat.matcher(template);
+                while (userMatCollect.find()) { userFieldNames.add(userMatCollect.group(1)); }
+                // Dynamic query to get all needed fields
+                String userSoql = 'SELECT ' + String.join(new List<String>(userFieldNames), ', ') + ' FROM User WHERE Id = :userId LIMIT 1';
+                Id userId = UserInfo.getUserId();
+                List<User> users = new List<User>();
+                try { users = Database.query(userSoql); } catch(Exception qEx) {
+                    // Fallback: query standard fields only
+                    users = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :userId LIMIT 1];
                 }
+                if (!users.isEmpty()) {
+                    User u = users[0];
+                    Matcher userMat2 = userPat.matcher(template);
+                    while (userMat2.find()) {
+                        String fieldName = userMat2.group(1);
+                        String val = '';
+                        try { Object fv = u.get(fieldName); val = fv != null ? String.valueOf(fv) : ''; } catch(Exception ex) {}
+                        template = template.replace('{{User.' + fieldName + '}}', val);
+                    }
+                }
+                System.debug('resolveTemplate after user resolve: ' + template.left(100));
             }
-            return FEC_CommonUltils.resolveTemplate(template, c);
+            // Re-query Case với dynamic fields từ template
+            if (c != null && c.Id != null && template.contains('{{')) {
+                try {
+                    // Extract tất cả Case.* fields từ template
+                    Pattern casePat = Pattern.compile(FEC_ConstantCommon.PATTERN_CASE_MERGE_FIELD);
+                    Matcher caseMat = casePat.matcher(template);
+                    Set<String> caseFields = new Set<String>{'Id'};
+                    while (caseMat.find()) { caseFields.add(caseMat.group(1)); }
+
+                    // Build dynamic SOQL
+                    String caseSoql = 'SELECT ' + String.join(new List<String>(caseFields), ', ') + ' FROM Case WHERE Id = :cId LIMIT 1';
+                    Id cId = c.Id;
+                    List<Case> caseList = new List<Case>();
+                    try {
+                        caseList = Database.query(caseSoql);
+                    } catch(Exception qEx) {
+                        // Fallback nếu có field không hợp lệ: query từng field, bỏ qua field lỗi
+                        Set<String> validFields = new Set<String>{'Id'};
+                        for (String f : caseFields) {
+                            if (f == 'Id') continue;
+                            try {
+                                Database.query('SELECT ' + f + ' FROM Case WHERE Id = :cId LIMIT 1');
+                                validFields.add(f);
+                            } catch(Exception fe) {}
+                        }
+                        caseList = Database.query('SELECT ' + String.join(new List<String>(validFields), ', ') + ' FROM Case WHERE Id = :cId LIMIT 1');
+                    }
+
+                    if (!caseList.isEmpty()) {
+                        Case fullCase = caseList[0];
+                        // Replace {{Case.FieldName}} với giá trị thực
+                        Matcher caseMat2 = casePat.matcher(template);
+                        while (caseMat2.find()) {
+                            String fieldName = caseMat2.group(1);
+                            String val = '';
+                            try { Object fv = fullCase.get(fieldName); val = fv != null ? String.valueOf(fv) : ''; } catch(Exception ex) {}
+                            template = template.replace('{{Case.' + fieldName + '}}', val);
+                        }
+                        // Tiếp tục resolve các object khác (FEC_Additional_Info__c, FEC_Customer_History__c...)
+                        template = FEC_CommonUltils.resolveTemplate(template, fullCase);
+                    }
+                    System.debug('resolveTemplate final: ' + template.left(100));
+                    return template;
+                } catch (Exception ex) { System.debug('fullCase query error: ' + ex.getMessage()); }
+            }
+            if (c != null) {
+                return FEC_CommonUltils.resolveTemplate(template, c);
+            }
+            return template;
         } catch (Exception e) {
+            System.debug('resolveTemplate exception: ' + e.getMessage());
             return template;
         }
     }

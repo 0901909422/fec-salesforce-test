@@ -71,15 +71,25 @@ public without sharing class FEC_PINReissueServiceCallout {
     ){
         PINResponse response = new PINResponse();
         try{
+            String nationalIdParam = '';
+            String mobileParam = '';
+            FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
+            if (String.isNotBlank(systemConfig?.FEC_Enviroment__c) && systemConfig.FEC_Enviroment__c == FEC_ConstantCommon.RESET_PIN_NON_PRODUCTION) {
+                nationalIdParam = FEC_ConstantCommon.RESET_PIN_DEFAULT_NID;
+                mobileParam = FEC_ConstantCommon.RESET_PIN_DEFAULT_PHONE;
+            }else{
+                nationalIdParam = nationalID;
+                mobileParam = mobile;
+            }
             
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_PINReissueService');
             
             String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
                 + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
-            endpoint += '?NationalID=' + nationalID;
+            endpoint += '?NationalID=' + nationalIdParam;
             endpoint += '&TransID=' + transId;
-            endpoint += '&Mobile=' + mobile;
+            endpoint += '&Mobile=' + mobileParam;
             
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_GET, FEC_ConstantCommon.API_CONTENT_TYPE_JSON, null, null, null);
             
@@ -97,7 +107,7 @@ public without sharing class FEC_PINReissueServiceCallout {
                 response = (PINResponse)JSON.deserialize(res.getBody(), PINResponse.class);
                 
                 // ✅ SET SUCCESS FLAG
-                response.isSuccess = (response != null && response.RespCode == '1');
+                response.isSuccess = (response != null && response.RespCode == '0' && response.errorMessage ==null);
                 
             } else {
                 response.errorCode = String.valueOf(res.getStatusCode());

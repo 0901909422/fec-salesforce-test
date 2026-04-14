@@ -1,27 +1,39 @@
 <template>
   <lightning-layout multiple-rows>
     <lightning-layout-item size="6" padding="around-small">
-      <lightning-input data-id="currentCardStatus" type="text" label={customLabel.currentCardStatus} disabled={isDisabled}></lightning-input>
+      <!-- <lightning-input data-id="currentCardStatus" type="text" label={customLabel.currentCardStatus} value={cardBlock.currentCardStatus} disabled={isDisabled}></lightning-input> -->
+      <div class="slds-form-element slds-border_bottom">
+        <label class="slds-form-element__label" for="newBlockCode">{customLabel.currentCardStatus}</label>
+        <div class="slds-form-element__control">
+          <input id="currentCardStatus" readonly type="text" class="slds-input" value={cardBlock.currentCardStatus} />
+        </div>
+      </div>
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">
       <lightning-combobox
         data-id="cardBlockReason"
         label={customLabel.cardBlockReason}
-        value={cardBlockReasonValue}
+        value={cardBlock.cardBlockReason}
         options={optionReasons}
         onchange={handleCardBlockReasonChange}
         disabled={isDisabled}>
       </lightning-combobox>
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">
-      <lightning-input data-id="newBlockCode" type="text" label={customLabel.newBlockCode} value={newBlockCodeValue} disabled={isDisabled}></lightning-input>
+      <!-- <lightning-input data-id="newBlockCode" type="text" label={customLabel.newBlockCode} value={cardBlock.newBlockCode} disabled={isDisabled}></lightning-input> -->
+      <div class="slds-form-element slds-border_bottom">
+        <label class="slds-form-element__label" for="newBlockCode">{customLabel.newBlockCode}</label>
+        <div class="slds-form-element__control">
+          <input id="newBlockCode" readonly type="text" class="slds-input" value={cardBlock.newBlockCode} />
+        </div>
+      </div>
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small"></lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">
       <lightning-combobox
         data-id="verifyInformation"
         label={customLabel.verifyInformation}
-        value={verifyInformationValue}
+        value={cardBlock.verifyInformation}
         options={verifyInformationOptions}
         onchange={handleVerifyInformationChange}
         disabled={isDisabled}>
@@ -31,7 +43,7 @@
       <lightning-combobox
         data-id="callback"
         label={customLabel.callback}
-        value={callbackValue}
+        value={cardBlock.callback}
         options={callbackOptions}
         onchange={handleCallbackChange}
         disabled={isDisabled}>

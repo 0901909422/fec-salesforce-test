@@ -21,6 +21,7 @@ public without sharing class FEC_CaseBusinessService {
   public static final String IDENTIFICATION_UPDATE = 'National ID Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
   public static final String UNBLOCK_CARD = 'Unblock Card';
+  public static final String PIN_REISSUE = 'PIN Reissue';
 
   /**
    * Case sẽ có Routing Action History do logic nghiệp vụ (không dùng bản tự động từ trigger khi đổi Owner).
@@ -63,7 +64,8 @@ public without sharing class FEC_CaseBusinessService {
     GENDER_UPDATE,
     IDENTIFICATION_UPDATE,
     OC_001,
-    UNBLOCK_CARD
+    UNBLOCK_CARD,
+    PIN_REISSUE
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -84,7 +86,8 @@ public without sharing class FEC_CaseBusinessService {
     GENDER_UPDATE => Method.GENDER_UPDATE,
     IDENTIFICATION_UPDATE => Method.IDENTIFICATION_UPDATE,
     OC_001 => Method.OC_001,
-    UNBLOCK_CARD => Method.UNBLOCK_CARD
+    UNBLOCK_CARD => Method.UNBLOCK_CARD,
+    PIN_REISSUE => Method.PIN_REISSUE
   };
 
   @AuraEnabled
@@ -953,6 +956,7 @@ public without sharing class FEC_CaseBusinessService {
     return k.Status;
   }
 
+
   private static void markCaseSubmittedAndClearDrafts(String caseId) {
     if (String.isBlank(caseId))
       return;
@@ -1105,8 +1109,10 @@ public without sharing class FEC_CaseBusinessService {
           System.debug(OC_001);
         }
         when UNBLOCK_CARD {
-          System.debug(UNBLOCK_CARD);
-          return null;
+          return FEC_CardLockUnLockController.unblockCard(caseId, UNBLOCK_CARD);
+        }
+        when PIN_REISSUE {
+          return FEC_PinReplacementController.pinReplacement(caseId, PIN_REISSUE);
         }
         when else {
           // throw new CaseBusinessServiceException('Method not found.');
@@ -1649,8 +1655,8 @@ public without sharing class FEC_CaseBusinessService {
       FEC_User__c = currentUserEmailId,
       FEC_User_Role__c = currentUserRole,
       FEC_Description__c = FEC_ConstantCommon.FEC_RAH_DESCRIPTION_CHANGE_OWNER,
-      FEC_Current_Status__c = routingHistoryFinalStatusSnapshot(oldCase),
-      FEC_Changed_Status__c = routingHistoryFinalStatusSnapshot(c)
+      FEC_Current_Status__c = null,
+      FEC_Changed_Status__c = null
     );
   }
 
@@ -2583,7 +2589,12 @@ public without sharing class FEC_CaseBusinessService {
         }
       }
 
-      // 3. Keep if still has valid subsections
+      // 3. Check if this section has any LWC
+      if (!componentlst.isEmpty()) {
+        return true; // keep this section
+      }
+
+      // 4. Keep if still has valid subsections
       return !subSectionlst.isEmpty();
     }
   }

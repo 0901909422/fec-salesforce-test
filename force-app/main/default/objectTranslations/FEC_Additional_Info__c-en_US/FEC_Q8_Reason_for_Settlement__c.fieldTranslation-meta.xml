@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q8. Reason for Settlement --></label>
+    <name>FEC_Q8_Reason_for_Settlement__c</name>
+    <picklistValues>
+        <masterLabel>Debt collection/payment reminder process</masterLabel>
+        <translation>Quy trình nhắc nợ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Frequent/Excessive fees incurred on the card</masterLabel>
+        <translation>Nhiều phí phát sinh trên thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Have not had the opportunity to take the survey</masterLabel>
+        <translation>Chưa có cơ hội khảo sát</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Have sufficient funds to settle/pay off early</masterLabel>
+        <translation>Đã có tiền nên tất toán sớm</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>High interest rates, settling early</masterLabel>
+        <translation>Lãi cao nên tất toán sớm</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Installment amounts differ from what the sales agent advised</masterLabel>
+        <translation>Khoản góp không giống NV Sales tư vấn</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Loan solicitation or card opening process</masterLabel>
+        <translation>Quy trình mời vay/ mở thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Need to borrow from another lender</masterLabel>
+        <translation>Cần vay bên khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other (provide detailed notes)</masterLabel>
+        <translation>Khác (ghi chú chi tiết)</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Want to take out a new loan at FE</masterLabel>
+        <translation>Muốn vay khoản mới ở FE</translation>
+    </picklistValues>
+</CustomFieldTranslation>

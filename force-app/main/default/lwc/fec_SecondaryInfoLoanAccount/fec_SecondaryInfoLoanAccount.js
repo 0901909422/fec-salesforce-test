@@ -115,16 +115,10 @@ export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
         };
     }
 
-    handleSectionToggle(event) {
-        const raw = event.detail?.openSections;
-        let next = [];
-        if (raw == null) {
-            next = [];
-        } else if (Array.isArray(raw)) {
-            next = [...raw];
-        } else {
-            next = [raw];
-        }
+    toggleSection(sectionName) {
+        const prev = Array.isArray(this.activeSections) ? [...this.activeSections] : [];
+        const idx = prev.indexOf(sectionName);
+        const next = idx > -1 ? prev.filter((s) => s !== sectionName) : [...prev, sectionName];
         this.activeSections = next;
 
         if (next.includes(FEC_Collections_Info_Label)) {
@@ -133,6 +127,73 @@ export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
         if (next.includes(FEC_Sales_Info_Label)) {
             this.ensureSalesLoaded();
         }
+    }
+
+    handleDisbursementToggle() {
+        this.toggleSection(FEC_Disbursement_Label);
+    }
+
+    handleCollectionsToggle() {
+        this.toggleSection(FEC_Collections_Info_Label);
+    }
+
+    handleSalesToggle() {
+        this.toggleSection(FEC_Sales_Info_Label);
+    }
+
+    get isDisbursementOpen() {
+        return this.activeSections.includes(FEC_Disbursement_Label);
+    }
+
+    get isCollectionsOpen() {
+        return this.activeSections.includes(FEC_Collections_Info_Label);
+    }
+
+    get isSalesOpen() {
+        return this.activeSections.includes(FEC_Sales_Info_Label);
+    }
+
+    get disbursementIconName() {
+        return this.isDisbursementOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    get collectionsIconName() {
+        return this.isCollectionsOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    get salesIconName() {
+        return this.isSalesOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    get disbursementSectionClass() {
+        return `slds-accordion__section${this.isDisbursementOpen ? ' slds-is-open' : ''}`;
+    }
+
+    get collectionsSectionClass() {
+        return `slds-accordion__section${this.isCollectionsOpen ? ' slds-is-open' : ''}`;
+    }
+
+    get salesSectionClass() {
+        return `slds-accordion__section${this.isSalesOpen ? ' slds-is-open' : ''}`;
+    }
+
+    get disbursementContentClass() {
+        return this.isDisbursementOpen ? 'slds-accordion__content' : 'slds-accordion__content slds-hide';
+    }
+
+    get collectionsContentClass() {
+        return this.isCollectionsOpen ? 'slds-accordion__content' : 'slds-accordion__content slds-hide';
+    }
+
+    get salesContentClass() {
+        return this.isSalesOpen ? 'slds-accordion__content' : 'slds-accordion__content slds-hide';
+    }
+
+    get disbursementHeaderText() {
+        if (this.disbursementInitError) {
+            return `${this.customLabel.disbursementLabel} - ${this.customLabel.msgErrorAPI}`;
+        }
+        return this.customLabel.disbursementLabel;
     }
 
     ensureCollectionsLoaded() {
@@ -175,25 +236,12 @@ export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
             });
     }
 
-    get disbursementSectionLabel() {
-        if (this.disbursementInitError) {
-            return `${this.customLabel.disbursementLabel} - ${this.customLabel.msgErrorAPI}`;
-        }
-        return null;
+    get collectionsSectionLabelError() {
+        return this.collectionsStage === S_ERROR ? this.customLabel.msgErrorAPI : null;
     }
 
-    get collectionsSectionLabel() {
-        if (this.collectionsStage === S_ERROR) {
-            return `${this.customLabel.collectionInfoLabel} - ${this.customLabel.msgErrorAPI}`;
-        }
-        return null;
-    }
-
-    get salesSectionLabel() {
-        if (this.salesStage === S_ERROR) {
-            return `${this.customLabel.salesInfoLabel} - ${this.customLabel.msgErrorAPI}`;
-        }
-        return null;
+    get salesSectionLabelError() {
+        return this.salesStage === S_ERROR ? this.customLabel.msgErrorAPI : null;
     }
 
     get isLoadingCollections() {
