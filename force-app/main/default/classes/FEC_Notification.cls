@@ -162,13 +162,15 @@ public without sharing class FEC_Notification {
         String finalSubCategory = String.isNotBlank(subCategoryId) ? subCategoryId : currentCase.FEC_SubCategory__c;
         String finalSubCode = String.isNotBlank(subCodeId) ? subCodeId : currentCase.FEC_SubCode__c;
 
+        Set<String> validCustomerTypes = new Set<String>{currentCase.FEC_Customer_Type__c, FEC_ConstantCommon.CASE_ALL_CUSTOMER};
         // 3. Query Notification satisfying conditions
         List<FEC_Notification__c> validNotifs = [SELECT Id, Name, FEC_Notification_Template__c, 
                                                     FEC_Notification_Template__r.Name,
                                                     FEC_Notification_Channel__r.Name,
                                                     FEC_Target_Group__c
                                              FROM FEC_Notification__c 
-                                             WHERE FEC_Product_Type__c = :finalProductType
+                                             WHERE FEC_Customer_Type__c IN :validCustomerTypes
+                                             AND FEC_Product_Type__c = :finalProductType
                                              AND FEC_Category__c = :finalCategory
                                              AND FEC_SubCategory__c = :finalSubCategory
                                              AND FEC_SubCode__c = :finalSubCode
@@ -236,9 +238,16 @@ public without sharing class FEC_Notification {
         }
 
         String subject = String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
-
+        String fullBody = '';
+        if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Header__c)) {
+            fullBody += FEC_NotificationService.inlineImages(html) ;
+        }
+        fullBody += String.isNotBlank(template.FEC_Body__c) ? template.FEC_Body__c : '';
+        if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c)) {
+            fullBody += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c);
+        }
         try {
-            executeSendEmail(caseId, senderEmail, targetEmail, subject, template.FEC_Body__c);
+            executeSendEmail(caseId, senderEmail, targetEmail, subject, fullBody);
         } catch (Exception e) {
             throw new AuraHandledException(System.Label.FEC_Email_Send_Error + ': ' + e.getMessage());
         }
