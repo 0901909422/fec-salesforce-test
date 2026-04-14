@@ -2072,6 +2072,9 @@ export default class Fec_CaseBussiness extends LightningElement {
           if (routeToEle) {
             routeToEle.value = ACTION_RESOLVE;
           }
+          // thangtv update logic for Jira KH-931
+          this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
+
         } else {
           this.processActionMsg = msgError;
           this.isProcessActionSuccessed = false;
@@ -2358,5 +2361,21 @@ export default class Fec_CaseBussiness extends LightningElement {
     const key = objId + '_' + fieldName;
     draft[key] = value;
     localStorage.setItem(this.draftKey, JSON.stringify(draft));
+  }
+  //Thangtv update logic remove routing action Reject, Cancel after run API success
+  removeRoutingActions(actionsToRemove = []) {
+    if (!this.business?.routingActionlst) return;
+
+    this.business.routingActionlst = this.business.routingActionlst.filter(
+      (a) => !actionsToRemove.includes(a.value)
+    );
+
+    // If current selected value was removed, reset to Resolve
+    if (actionsToRemove.includes(this.actionValue)) {
+      this.actionValue = ACTION_RESOLVE;
+    }
+
+    this._syncHasRoutingAction();
+    this.business = { ...this.business };
   }
 }
