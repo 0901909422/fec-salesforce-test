@@ -171,6 +171,7 @@
 		<members>fec_InteractionCaseModeStore</members>
 		<members>fec_InteractionHighlightMain</members>
 		<members>maskedToggleCell</members>
+		<members>fec_AppInfo</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -666,6 +667,11 @@
 		<members>FEC_Notification__c.FEC_Customer_Type__c</members>
 		<members>Case.FEC_Created_by__c</members>
 		<members>Case.FEC_Last_Updated_By__c</members>
+		<members>Case.FEC_Card_Replacement_Fee__c</members>
+		<members>Case.FEC_Card_Replacement_Reason__c</members>
+		<members>Case.FEC_New_Block_Code_Card_Replace__c</members>
+		<members>Case.FEC_Recipient_Name__c</members>
+		<members>Case.FEC_Recipient_Phone_Number__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
