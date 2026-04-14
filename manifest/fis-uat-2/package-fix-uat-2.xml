@@ -103,6 +103,7 @@
 		<members>FEC_CaseRemarkController</members>
 		<members>FEC_MarkNFU</members>
 		<members>FEC_GetProductListCallout</members>
+		<members>FEC_PinReplacementController</members>
         <name>ApexClass</name>
     </types>
     <types>
