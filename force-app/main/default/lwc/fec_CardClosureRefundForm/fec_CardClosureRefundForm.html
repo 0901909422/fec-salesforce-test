@@ -13,46 +13,6 @@
       hide-checkbox-column>
     </lightning-datatable>
 
-    <template if:true={showRefundSection}>
-      <div class="slds-m-top_medium refund-grid">
-        <lightning-input
-          name="beneficiaryNameLocal"
-          label="Beneficiary Name"
-          value={beneficiaryNameLocal}
-          required
-          onchange={handleRefundFieldChange}>
-        </lightning-input>
-        <lightning-input
-          name="beneficiaryAccountLocal"
-          label="Beneficiary Account"
-          value={beneficiaryAccountLocal}
-          required
-          onchange={handleRefundFieldChange}>
-        </lightning-input>
-        <lightning-input
-          name="bankNameLocal"
-          label="Bank Name"
-          value={bankNameLocal}
-          required
-          onchange={handleRefundFieldChange}>
-        </lightning-input>
-        <lightning-input
-          name="bankBranchLocal"
-          label="Bank Branch"
-          value={bankBranchLocal}
-          required
-          onchange={handleRefundFieldChange}>
-        </lightning-input>
-        <lightning-input
-          name="provinceCityLocal"
-          label="Province/City"
-          value={provinceCityLocal}
-          required
-          onchange={handleRefundFieldChange}>
-        </lightning-input>
-      </div>
-    </template>
-
     <template if:true={showBlockCardButton}>
       <div class="slds-m-top_medium">
         <template if:true={isSubmitting}>
@@ -62,7 +22,7 @@
           label={customLabel.blockCard}
           variant="brand"
           onclick={handleBlockCardClick}
-          disabled={isSubmitting}>
+          disabled={blockCardLocked}>
         </lightning-button>
       </div>
     </template>

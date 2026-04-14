@@ -81,8 +81,6 @@
         <members>FEC_Create_Successfully_MSG</members>
 		<members>FEC_MSG_IPP_Closure_No_Eligible</members>
 		<members>FEC_MSG_IPP_Closure_Select_One</members>
-		<members>FEC_LBL_IPP_Closure_Back_To_Case</members>
-		<members>FEC_LBL_IPP_Closure_Complete</members>
 		<members>FEC_LBL_IPP_Closure_Heading</members>
 		<members>FEC_LBL_IPP_Closure_Col_IppRecordNo</members>
 		<members>FEC_LBL_IPP_Closure_Col_IppPlan</members>
@@ -176,7 +174,6 @@
 		<members>fecInteractionCreationHighlight</members>
 		<members>fec_CaseBussiness</members>
 		<members>fec_IPPClosureForm</members>
-		<members>fec_IPPClosureHandling</members>
 		<members>fec_CreateCaseInListView</members>
 		<members>fec_CaseDetail_Customer</members>
 		<members>fec_CaseEditNOC</members>
@@ -185,7 +182,6 @@
 		<members>fec_PinResetView</members>
 		<members>fec_InteractionSLA</members>
 		<members>fec_CardClosureRefundForm</members>
-		<members>fec_CardClosureRefundHandling</members>
 		<members>fec_InteractionCreateCase</members>
 		<members>fec_CardBlock</members>
 		<members>fecInteractionInfo</members>

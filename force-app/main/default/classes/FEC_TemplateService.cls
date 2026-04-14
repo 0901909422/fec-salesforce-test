@@ -56,7 +56,9 @@ public with sharing class FEC_TemplateService {
         upsert tmpl;
 
         // Track body change → FEC_Content_History_Tracking__c
-        if (!isInsert && newBody != oldBody && (String.isNotBlank(newBody) || String.isNotBlank(oldBody))) {
+        // Skip when oldBody is null (initial save / draft→real conversion)
+        if (!isInsert && oldBody != null && newBody != oldBody
+            && (String.isNotBlank(newBody) || String.isNotBlank(oldBody))) {
             createContentHistory(tmpl.Id, oldBody, newBody);
         }
 
@@ -73,6 +75,57 @@ public with sharing class FEC_TemplateService {
         }
         FEC_Template__c toDelete = new FEC_Template__c(Id = templateId);
         delete toDelete;
+    }
+
+    /**
+     * Create a lightweight draft template so that file uploads have a valid
+     * LinkedEntityId before the user fills in the form.
+     * The record is intentionally minimal — the real field values are applied
+     * when the user clicks Save (via saveTemplate / upsert).
+     * @return Id of the newly created draft record
+     */
+    public static Id createDraftTemplate() {
+        if (!Schema.sObjectType.FEC_Template__c.isCreateable()) {
+            throw new FEC_APIServiceException('Insufficient privileges to create templates.');
+        }
+        FEC_Template__c draft = new FEC_Template__c(
+            Name = 'Draft-' + Datetime.now().getTime()
+        );
+        insert draft;
+        return draft.Id;
+    }
+
+    /**
+     * Delete a draft template together with every file that was uploaded to it.
+     * Called when the user cancels or navigates away from the New Template form.
+     *
+     * Deletion order:
+     *   1. ContentDocument (cascade-deletes ContentDocumentLink + ContentVersion)
+     *   2. FEC_Template__c draft record
+     *
+     * @param draftId  The Id of the draft template to remove
+     */
+    public static void deleteDraftTemplate(Id draftId) {
+        if (draftId == null) return;
+
+        // Delete attached files first (ContentDocument cascade-deletes links & versions)
+        List<ContentDocumentLink> links = [
+            SELECT ContentDocumentId
+            FROM ContentDocumentLink
+            WHERE LinkedEntityId = :draftId
+        ];
+        if (!links.isEmpty()) {
+            Set<Id> docIds = new Set<Id>();
+            for (ContentDocumentLink cdl : links) {
+                docIds.add(cdl.ContentDocumentId);
+            }
+            delete [SELECT Id FROM ContentDocument WHERE Id IN :docIds];
+        }
+
+        // Delete the draft template record
+        if (Schema.sObjectType.FEC_Template__c.isDeletable()) {
+            delete new FEC_Template__c(Id = draftId);
+        }
     }
 
     /**
@@ -118,7 +171,7 @@ public with sharing class FEC_TemplateService {
 
     /**
      * Extract merge field references like {{{Contact.FirstName}}} from the body.
-     * Returns a comma-separated string, truncated to 255 chars (field limit).
+     * Returns a comma-separated string of all unique merge fields found.
      */
     @TestVisible
     private static String extractMergeFields(String body) {
@@ -133,7 +186,6 @@ public with sharing class FEC_TemplateService {
 
         if (mergeFields.isEmpty()) return '';
 
-        String result = String.join(new List<String>(mergeFields), ', ');
-        return result.length() > 255 ? result.substring(0, 255) : result;
+        return String.join(new List<String>(mergeFields), ', ');
     }
 }

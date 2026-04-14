@@ -13,20 +13,26 @@ public with sharing class FEC_IncorrectPaymentController {
         @AuraEnabled public String particulars;
     }
 
+    public class AdjustmentDTO {
+        @AuraEnabled public String correctContract { get; set; }
+        @AuraEnabled public Decimal adjustedAmount { get; set; }
+        
+        // Constructor for JSON deserialization
+        public AdjustmentDTO() {
+            this.correctContract = null;
+            this.adjustedAmount = null;
+        }
+    }
+
     public class SubCodeConfigDTO {
         @AuraEnabled public String subCode;
         @AuraEnabled public String incorrectContractNumber;
         @AuraEnabled public String paymentMethod;
-        @AuraEnabled public String beneficiaryName;
-        @AuraEnabled public String beneficiaryAccount;
-        @AuraEnabled public String bankName;
-        @AuraEnabled public String bankBranch;
-        @AuraEnabled public String provinceCity;
-    }
-
-    public class AdjustmentDTO {
-        @AuraEnabled public String correctContract;
+        @AuraEnabled public String billDate;
+        @AuraEnabled public Decimal billAmount;
+        @AuraEnabled public String correctContractNumber;
         @AuraEnabled public Decimal adjustedAmount;
+        @AuraEnabled public List<AdjustmentDTO> adjustmentRows;
     }
 
     @AuraEnabled
@@ -72,25 +78,22 @@ public with sharing class FEC_IncorrectPaymentController {
         return result;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static SubCodeConfigDTO getSubCodeConfig(Id caseId) {
         SubCodeConfigDTO dto = new SubCodeConfigDTO();
         dto.subCode = FEC_ConstantCommon.STR_EMPTY;
         dto.incorrectContractNumber = FEC_ConstantCommon.STR_EMPTY;
         dto.paymentMethod = FEC_ConstantCommon.STR_EMPTY;
-        dto.beneficiaryName = FEC_ConstantCommon.STR_EMPTY;
-        dto.beneficiaryAccount = FEC_ConstantCommon.STR_EMPTY;
-        dto.bankName = FEC_ConstantCommon.STR_EMPTY;
-        dto.bankBranch = FEC_ConstantCommon.STR_EMPTY;
-        dto.provinceCity = FEC_ConstantCommon.STR_EMPTY;
+        dto.billDate = null;
+        dto.billAmount = null;
+        dto.correctContractNumber = FEC_ConstantCommon.STR_EMPTY;
+        dto.adjustedAmount = null;
+        dto.adjustmentRows = null;
         if (caseId == null) return dto;
         List<Case> cases = [
             SELECT Id, FEC_SubCode__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c,
-                FEC_Account_or_Contract__r.FEC_Beneficiary_Name__c,
-                FEC_Account_or_Contract__r.FEC_Beneficiary_Account__c,
-                FEC_Account_or_Contract__r.FEC_Bank_Name__c,
-                FEC_Account_or_Contract__r.FEC_Bank_Branch__c,
-                FEC_Account_or_Contract__r.FEC_Province_City__c
+                FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c,
+                FEC_Incorrect_Payment_Adj_Rows__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -98,12 +101,20 @@ public with sharing class FEC_IncorrectPaymentController {
         if (cases.isEmpty()) return dto;
         dto.incorrectContractNumber = cases[0].FEC_Incorrect_Contract_Number__c != null ? cases[0].FEC_Incorrect_Contract_Number__c : FEC_ConstantCommon.STR_EMPTY;
         dto.paymentMethod = cases[0].FEC_Payment_Method__c != null ? cases[0].FEC_Payment_Method__c : FEC_ConstantCommon.STR_EMPTY;
-        if (cases[0].FEC_Account_or_Contract__r != null) {
-            dto.beneficiaryName = cases[0].FEC_Account_or_Contract__r.FEC_Beneficiary_Name__c != null ? cases[0].FEC_Account_or_Contract__r.FEC_Beneficiary_Name__c : FEC_ConstantCommon.STR_EMPTY;
-            dto.beneficiaryAccount = cases[0].FEC_Account_or_Contract__r.FEC_Beneficiary_Account__c != null ? cases[0].FEC_Account_or_Contract__r.FEC_Beneficiary_Account__c : FEC_ConstantCommon.STR_EMPTY;
-            dto.bankName = cases[0].FEC_Account_or_Contract__r.FEC_Bank_Name__c != null ? cases[0].FEC_Account_or_Contract__r.FEC_Bank_Name__c : FEC_ConstantCommon.STR_EMPTY;
-            dto.bankBranch = cases[0].FEC_Account_or_Contract__r.FEC_Bank_Branch__c != null ? cases[0].FEC_Account_or_Contract__r.FEC_Bank_Branch__c : FEC_ConstantCommon.STR_EMPTY;
-            dto.provinceCity = cases[0].FEC_Account_or_Contract__r.FEC_Province_City__c != null ? cases[0].FEC_Account_or_Contract__r.FEC_Province_City__c : FEC_ConstantCommon.STR_EMPTY;
+        dto.billDate = cases[0].FEC_Bill_Date__c != null ? String.valueOf(cases[0].FEC_Bill_Date__c) : null;
+        dto.billAmount = cases[0].FEC_Bill_Amount__c;
+        dto.correctContractNumber = cases[0].FEC_Correct_Contract_Number__c != null ? cases[0].FEC_Correct_Contract_Number__c : FEC_ConstantCommon.STR_EMPTY;
+        dto.adjustedAmount = cases[0].FEC_Adjusted_Amount__c;
+        String adjRowsJson = cases[0].FEC_Incorrect_Payment_Adj_Rows__c;
+        if (String.isNotBlank(adjRowsJson)) {
+            try {
+                List<AdjustmentDTO> parsedRows = (List<AdjustmentDTO>) JSON.deserialize(adjRowsJson.trim(), List<AdjustmentDTO>.class);
+                if (parsedRows != null && !parsedRows.isEmpty()) {
+                    dto.adjustmentRows = parsedRows;
+                }
+            } catch (Exception parseEx) {
+                dto.adjustmentRows = null;
+            }
         }
         if (cases[0].FEC_SubCode__c == null) return dto;
         Id subCodeId = cases[0].FEC_SubCode__c;
@@ -119,43 +130,73 @@ public with sharing class FEC_IncorrectPaymentController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<FEC_CommonUltils.PicklistOption> getIncorrectContractOptions(Id caseId) {
+    public static List<FEC_CommonUltils.PicklistOption> getPaymentMethodOptions() {
         List<FEC_CommonUltils.PicklistOption> result = new List<FEC_CommonUltils.PicklistOption>();
-        if (caseId == null) {
-            return result;
+        
+        Schema.DescribeFieldResult fieldResult = Case.FEC_Payment_Method__c.getDescribe();
+        List<Schema.PicklistEntry> picklistEntries = fieldResult.getPicklistValues();
+        
+        for (Schema.PicklistEntry entry : picklistEntries) {
+            if (entry.isActive()) {
+                result.add(new FEC_CommonUltils.PicklistOption(entry.getLabel(), entry.getValue(), null));
+            }
         }
-        if (!Schema.sObjectType.Case.isAccessible()) {
-            return result;
-        }
-        List<Case> cases = [
-            SELECT FEC_Contract_Number__c, FEC_Incorrect_Contract_Number__c,
-                FEC_Account_or_Contract__r.FEC_Contract_Number__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-        if (cases.isEmpty()) {
-            return result;
-        }
-        Case c = cases[0];
-        Set<String> seen = new Set<String>();
-        addIncorrectContractOption(result, seen, c.FEC_Contract_Number__c);
-        addIncorrectContractOption(result, seen, c.FEC_Incorrect_Contract_Number__c);
-        if (c.FEC_Account_or_Contract__r != null) {
-            addIncorrectContractOption(result, seen, c.FEC_Account_or_Contract__r.FEC_Contract_Number__c);
-        }
+        
         return result;
     }
 
-    private static void addIncorrectContractOption(List<FEC_CommonUltils.PicklistOption> opts, Set<String> seen, String contractNum) {
+    @AuraEnabled(cacheable=true)
+    public static List<FEC_CommonUltils.PicklistOption> getIncorrectContractOptions(Id caseId) {
+        List<FEC_CommonUltils.PicklistOption> result = new List<FEC_CommonUltils.PicklistOption>();
+        
+        // Get picklist values from field metadata
+        Schema.DescribeFieldResult fieldResult = Case.FEC_Correct_Contract_Number__c.getDescribe();
+        List<Schema.PicklistEntry> picklistEntries = fieldResult.getPicklistValues();
+        
+        for (Schema.PicklistEntry entry : picklistEntries) {
+            if (entry.isActive()) {
+                result.add(new FEC_CommonUltils.PicklistOption(entry.getLabel(), entry.getValue(), null));
+            }
+        }
+        
+        // Also add contract numbers from Case if available
+        if (caseId != null && Schema.sObjectType.Case.isAccessible()) {
+            List<Case> cases = [
+                SELECT FEC_Contract_Number__c, FEC_Incorrect_Contract_Number__c,
+                    FEC_Account_or_Contract__r.FEC_Contract_Number__c
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+            
+            if (!cases.isEmpty()) {
+                Case c = cases[0];
+                Set<String> existingValues = new Set<String>();
+                for (FEC_CommonUltils.PicklistOption opt : result) {
+                    existingValues.add(opt.value);
+                }
+                
+                // Add contract numbers from Case if not already in picklist
+                addContractIfNotExists(result, existingValues, c.FEC_Contract_Number__c);
+                addContractIfNotExists(result, existingValues, c.FEC_Incorrect_Contract_Number__c);
+                if (c.FEC_Account_or_Contract__r != null) {
+                    addContractIfNotExists(result, existingValues, c.FEC_Account_or_Contract__r.FEC_Contract_Number__c);
+                }
+            }
+        }
+        
+        return result;
+    }
+    
+    private static void addContractIfNotExists(List<FEC_CommonUltils.PicklistOption> opts, Set<String> existingValues, String contractNum) {
         if (String.isBlank(contractNum)) {
             return;
         }
         String trimmed = contractNum.trim();
-        if (seen.contains(trimmed)) {
+        if (existingValues.contains(trimmed)) {
             return;
         }
-        seen.add(trimmed);
+        existingValues.add(trimmed);
         opts.add(new FEC_CommonUltils.PicklistOption(trimmed, trimmed, null));
     }
 
@@ -166,12 +207,7 @@ public with sharing class FEC_IncorrectPaymentController {
         String paymentMethod,
         String billDate,
         Decimal billAmount,
-        List<AdjustmentDTO> adjustments,
-        String beneficiaryName,
-        String beneficiaryAccount,
-        String bankName,
-        String bankBranch,
-        String provinceCity
+        List<AdjustmentDTO> adjustments
     ) {
         if (caseId == null) {
             throw new AuraHandledException(
@@ -183,26 +219,27 @@ public with sharing class FEC_IncorrectPaymentController {
                 String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Adjustments'})
             );
         }
-        AdjustmentDTO first = null;
+        
+        List<AdjustmentDTO> validAdjs = new List<AdjustmentDTO>();
         for (AdjustmentDTO adj : adjustments) {
-            if (adj != null && String.isNotBlank(adj.correctContract) && adj.adjustedAmount != null && adj.adjustedAmount != 0) {
-                first = adj;
-                break;
+            // Check if row has both Correct Contract and Adjusted Amount filled
+            Boolean hasCorrectContract = adj != null && String.isNotBlank(adj.correctContract);
+            Boolean hasAdjustedAmount = adj != null && adj.adjustedAmount != null;
+            Boolean rowOk = hasCorrectContract && hasAdjustedAmount;
+            
+            if (rowOk) {
+                validAdjs.add(adj);
             }
         }
-        if (first == null) {
+        
+        if (validAdjs.isEmpty()) {
             throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row);
         }
+        AdjustmentDTO first = validAdjs[0];
         if (String.isBlank(paymentMethod)) {
             throw new AuraHandledException(
                 String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Payment Method'})
             );
-        }
-        List<AdjustmentDTO> validAdjs = new List<AdjustmentDTO>();
-        for (AdjustmentDTO adj : adjustments) {
-            if (adj != null && String.isNotBlank(adj.correctContract) && adj.adjustedAmount != null && adj.adjustedAmount != 0) {
-                validAdjs.add(adj);
-            }
         }
         if (billAmount != null && billAmount != 0 && !validAdjs.isEmpty()) {
             Decimal sumAdjusted = 0;
@@ -214,7 +251,8 @@ public with sharing class FEC_IncorrectPaymentController {
             }
         }
         List<Case> cases = [
-            SELECT Id, FEC_Account_or_Contract__c, FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c
+            SELECT Id, FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c,
+                FEC_Incorrect_Payment_Adj_Rows__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -225,6 +263,8 @@ public with sharing class FEC_IncorrectPaymentController {
         if (!Schema.sObjectType.Case.isUpdateable()) {
             throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Update_Case_Access);
         }
+        
+        // Update Case fields
         Case c = cases[0];
         if (String.isNotBlank(billDate)) {
             try {
@@ -240,37 +280,61 @@ public with sharing class FEC_IncorrectPaymentController {
         c.FEC_Payment_Method__c = paymentMethod != null ? paymentMethod.trim() : null;
         c.FEC_Correct_Contract_Number__c = String.isNotBlank(first.correctContract) ? first.correctContract.trim() : null;
         c.FEC_Adjusted_Amount__c = first.adjustedAmount != null ? first.adjustedAmount : null;
-        List<Case> toUpdate = new List<Case>{ c };
-        toUpdate = (List<Case>) Security.stripInaccessible(AccessType.UPDATABLE, toUpdate).getRecords();
-        if (toUpdate.isEmpty()) {
-            throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Update_Case_Fields_Access);
-        }
+        c.FEC_Incorrect_Payment_Adj_Rows__c = JSON.serialize(validAdjs);
         try {
-            update toUpdate;
+            update new List<Case>{ c };
         } catch (DmlException e) {
             throw new AuraHandledException(e.getDmlMessage(0));
         }
-        if (cases[0].FEC_Account_or_Contract__c == null) {
-            return;
+    }
+
+    @AuraEnabled
+    public static void saveAdjustmentDraft(
+        Id caseId,
+        String incorrectContract,
+        String paymentMethod,
+        String billDate,
+        Decimal billAmount,
+        String correctContract,
+        Decimal adjustedAmount
+    ) {
+        if (caseId == null) {
+            throw new AuraHandledException(
+                String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'})
+            );
         }
-        if (!Schema.sObjectType.FEC_Customer_History__c.isUpdateable()) {
-            return;
+
+        List<Case> cases = [
+            SELECT Id, FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (cases.isEmpty()) {
+            throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_Case_Not_Found);
         }
-        FEC_Customer_History__c hist = new FEC_Customer_History__c(
-            Id = cases[0].FEC_Account_or_Contract__c,
-            FEC_Beneficiary_Name__c = String.isNotBlank(beneficiaryName) ? beneficiaryName.trim() : null,
-            FEC_Beneficiary_Account__c = String.isNotBlank(beneficiaryAccount) ? beneficiaryAccount.trim() : null,
-            FEC_Bank_Name__c = String.isNotBlank(bankName) ? bankName.trim() : null,
-            FEC_Bank_Branch__c = String.isNotBlank(bankBranch) ? bankBranch.trim() : null,
-            FEC_Province_City__c = String.isNotBlank(provinceCity) ? provinceCity.trim() : null
-        );
-        List<FEC_Customer_History__c> histToUpdate = new List<FEC_Customer_History__c>{ hist };
-        histToUpdate = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.UPDATABLE, histToUpdate).getRecords();
-        if (histToUpdate.isEmpty()) {
-            return;
+        if (!Schema.sObjectType.Case.isUpdateable()) {
+            throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Update_Case_Access);
         }
+
+        Case c = cases[0];
+        if (String.isNotBlank(billDate)) {
+            try {
+                c.FEC_Bill_Date__c = Date.valueOf(billDate);
+            } catch (Exception e) {
+                c.FEC_Bill_Date__c = null;
+            }
+        } else {
+            c.FEC_Bill_Date__c = null;
+        }
+        c.FEC_Bill_Amount__c = billAmount != null ? billAmount : null;
+        c.FEC_Incorrect_Contract_Number__c = String.isNotBlank(incorrectContract) ? incorrectContract.trim() : null;
+        c.FEC_Payment_Method__c = String.isNotBlank(paymentMethod) ? paymentMethod.trim() : null;
+        c.FEC_Correct_Contract_Number__c = String.isNotBlank(correctContract) ? correctContract.trim() : null;
+        c.FEC_Adjusted_Amount__c = adjustedAmount != null ? adjustedAmount : null;
+
         try {
-            update histToUpdate;
+            update new List<Case>{ c };
         } catch (DmlException e) {
             throw new AuraHandledException(e.getDmlMessage(0));
         }

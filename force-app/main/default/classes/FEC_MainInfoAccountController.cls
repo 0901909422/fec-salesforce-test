@@ -595,10 +595,11 @@ public without sharing class FEC_MainInfoAccountController {
         if (emeaRes != null) {
             localUse = emeaRes.localUseInd;
         }
-        /* Không gán FEC_Contract_Number__c = null khi MainCard/API thiếu — tránh xóa số HĐ đã lưu từ luồng Loan (GetLoanBasicInfo). */
-        FEC_Customer_History__c rec = new FEC_Customer_History__c(
+        
+        update new FEC_Customer_History__c(
             Id = accountId,
             FEC_Account_Number__c = m != null ? m.AccountNumber : null,
+            FEC_Contract_Number__c = m != null ? m.ContractNumber : null,
             FEC_Account_Status__c = m != null ? m.Status : null,
             FEC_Credit_Limit__c = m != null ? m.CreditLimit : null,
             FEC_OTB__c = m != null ? m.OTB : null,

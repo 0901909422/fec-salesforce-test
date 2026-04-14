@@ -27,11 +27,11 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
     };
     
     List<Group> groups = [
-    SELECT Id, DeveloperName
-    FROM Group
-    WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-    AND DeveloperName IN :queueNames
-];
+      SELECT Id, DeveloperName
+      FROM Group
+      WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+      AND DeveloperName IN :queueNames
+    ];
     
     for (Group g : groups) {
       queueDevNameToId.put(g.DeveloperName, g.Id);
@@ -44,19 +44,19 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
       ubankEmailQueueIds.add(queueDevNameToId.get(FEC_ConstantCommon.QUEUE_UBANK_EMAIL_NAME));
     }
     
-    Set<Id> userUBankIds = new Set<Id>();
+    // Set<Id> userUBankIds = new Set<Id>();
     
-    List<GroupMember> groupMembersUbankEmail = [
-    SELECT UserOrGroupId
-    FROM GroupMember
-    WHERE GroupId IN :ubankEmailQueueIds
-    ];
+    // List<GroupMember> groupMembersUbankEmail = [
+    // SELECT UserOrGroupId
+    // FROM GroupMember
+    // WHERE GroupId IN :ubankEmailQueueIds
+    // ];
     
-    for (GroupMember gm : groupMembersUbankEmail) {
-      if (gm.UserOrGroupId.getSObjectType() == User.SObjectType) {
-        userUBankIds.add(gm.UserOrGroupId);
-      }
-    }
+    // for (GroupMember gm : groupMembersUbankEmail) {
+      //   if (gm.UserOrGroupId.getSObjectType() == User.SObjectType) {
+        //     userUBankIds.add(gm.UserOrGroupId);
+      //   }
+    // }
     
     // Luồng 5 - Internal Email
     Set<String> internalChannelSet = new Set<String>{ FEC_ConstantCommon.CHANNEL_INTERNAL };
@@ -78,19 +78,31 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
       }
     }
     
-    Set<Id> userInternalMailIds = new Set<Id>();
+    // Set<Id> userInternalMailIds = new Set<Id>();
     
-    List<GroupMember> groupMembersInternalMail = [
-    SELECT UserOrGroupId
-    FROM GroupMember
-    WHERE GroupId IN :internalMailboxQueueIds
-    ];
+    // List<GroupMember> groupMembersInternalMail = [
+    // SELECT UserOrGroupId
+    // FROM GroupMember
+    // WHERE GroupId IN :internalMailboxQueueIds
+    // ];
     
-    for (GroupMember gm : groupMembersInternalMail) {
-      if (gm.UserOrGroupId.getSObjectType() == User.SObjectType) {
-        userInternalMailIds.add(gm.UserOrGroupId);
-      }
-    }
+    // for (GroupMember gm : groupMembersInternalMail) {
+      //   if (gm.UserOrGroupId.getSObjectType() == User.SObjectType) {
+        //     userInternalMailIds.add(gm.UserOrGroupId);
+      //   }
+    // }
+    
+    Set<String> internalSendToSet = new Set<String>{
+      FEC_ConstantCommon.EMAIL_SUPPORT_CSM,
+      FEC_ConstantCommon.EMAIL_CS_SUPPORT,
+      FEC_ConstantCommon.EMAIL_CUSTOMER_CARE,
+      FEC_ConstantCommon.EMAIL_E_COM,
+      FEC_ConstantCommon.EMAIL_F2F,
+      FEC_ConstantCommon.EMAIL_CS_D2C,
+      FEC_ConstantCommon.EMAIL_CS_OM,
+      FEC_ConstantCommon.EMAIL_CS_QC_TEAM
+    };
+    
     
     
     String query =
@@ -104,13 +116,15 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
     'AND (FEC_Channel__c != \'Email\' ' +
       '     OR IsClosed = TRUE ' +
       '     OR FEC_Send_To__c != \'' + FEC_ConstantCommon.EMAIL_UBANK_VN + '\' '  +
-      '     OR OwnerId NOT IN :userUBankIds) ' +
+      '     OR (Owner.Type != \'User\' AND OwnerId NOT IN :ubankEmailQueueIds) ' +
+      ') ' +
       
     'AND (FEC_Channel__c != \'Internal\' ' +
       '     OR FEC_Interaction_Subchannel__c != \'' + FEC_ConstantCommon.SUBCHANNEL_INTERNAL_EMAIL + '\' ' +
       '     OR IsClosed = TRUE ' +
-      '     OR OwnerId NOT IN :userInternalMailIds)';
-    
+      '     OR FEC_Send_To__c NOT IN :internalSendToSet ' +
+      '     OR (Owner.Type != \'User\' AND OwnerId NOT IN :internalMailboxQueueIds)' +
+      ') ';
     System.debug('### Batch Query: ');
     System.debug(query);
     return Database.getQueryLocator(query);

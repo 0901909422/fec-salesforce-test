@@ -36,6 +36,7 @@ import templateHistoryTabLabel from '@salesforce/label/c.FEC_Template_History_Ta
 import contentHistoryTabLabel  from '@salesforce/label/c.FEC_Content_History_Tab';
 
 import { formatFileSize } from 'c/fec_TemplateUtils';
+import { formatDateTime } from 'c/fec_CommonUtils';
 
 export default class Fec_templateDetailPage extends LightningElement {
 
@@ -97,6 +98,13 @@ export default class Fec_templateDetailPage extends LightningElement {
 
     /* ── Preview modal state ── */
     @track _isPreviewOpen = false;
+
+    /* ── View All flags for history tabs ── */
+    @track _showAllTemplateHistory = false;
+    @track _showAllContentHistory  = false;
+
+    /** Max rows shown before "View All" is required */
+    _HISTORY_PAGE_SIZE = 5;
 
     /* ═══════════════════════════════════════════ */
     /*  LIFECYCLE                                  */
@@ -169,15 +177,17 @@ export default class Fec_templateDetailPage extends LightningElement {
         // ── Content History (FEC_Content_History_Tracking__c) ──
         if (contentHistResult.status === 'fulfilled') {
             this._contentHistory = (contentHistResult.value || []).map(h => ({
-                id:           h.Id,
-                date:         this._formatDate(h.FEC_Date__c),
-                user:         h.FEC_User__r ? h.FEC_User__r.Name : '',
-                description:  h.FEC_Merge_Fields_Used__c || 'Body content changed',
-                oldValue:     this._truncate(h.FEC_Original_Value__c, 255),
-                newValue:     this._truncate(h.FEC_New_Value__c, 255),
-                fullOldValue: h.FEC_Original_Value__c || '',
-                fullNewValue: h.FEC_New_Value__c || '',
-                templateId:   h.FEC_Template__c
+                id:              h.Id,
+                date:            formatDateTime(h.FEC_Date__c),
+                user:            h.FEC_User__r ? h.FEC_User__r.Name : '',
+                userUrl:         h.FEC_User__c ? `/lightning/r/User/${h.FEC_User__c}/view` : null,
+                description:     h.FEC_Merge_Fields_Used__c || 'Body content changed',
+                mergeFieldsUsed: this._truncate(h.FEC_Merge_Fields_Used__c, 255),
+                oldValue:        this._truncate(h.FEC_Original_Value__c, 255),
+                newValue:        this._truncate(h.FEC_New_Value__c, 255),
+                fullOldValue:    h.FEC_Original_Value__c || '',
+                fullNewValue:    h.FEC_New_Value__c || '',
+                templateId:      h.FEC_Template__c
             }));
         } else {
             this._contentHistory = [];
@@ -189,9 +199,10 @@ export default class Fec_templateDetailPage extends LightningElement {
         if (tmplHistResult.status === 'fulfilled') {
             this._templateHistory = (tmplHistResult.value || []).map(h => ({
                 id:            h.Id,
-                date:          this._formatDate(h.CreatedDate),
+                date:          formatDateTime(h.CreatedDate),
                 field:         h.Field || '',
                 user:          h.CreatedBy ? h.CreatedBy.Name : '',
+                userUrl:       h.CreatedById ? `/lightning/r/User/${h.CreatedById}/view` : null,
                 originalValue: h.OldValue != null ? String(h.OldValue) : '',
                 newValue:      h.NewValue != null ? String(h.NewValue) : ''
             }));
@@ -202,6 +213,8 @@ export default class Fec_templateDetailPage extends LightningElement {
         }
 
         this._bodyRendered = false;
+        this._showAllTemplateHistory = false;
+        this._showAllContentHistory  = false;
         this._isLoading = false;
     }
 
@@ -296,12 +309,30 @@ export default class Fec_templateDetailPage extends LightningElement {
         return this._contentHistory;
     }
 
+    /** Paginated content history: first N rows or all */
+    get contentHistoryDisplayData() {
+        if (this._showAllContentHistory) return this._contentHistory;
+        return this._contentHistory.slice(0, this._HISTORY_PAGE_SIZE);
+    }
+
+    /** Show "View All" when there are more rows than the page size */
+    get showContentHistoryViewAll() {
+        return !this._showAllContentHistory
+            && this._contentHistory.length > this._HISTORY_PAGE_SIZE;
+    }
+
     get contentHistoryColumns() {
         return [
-            { label: 'Date',           fieldName: 'date',     type: 'text' },
-            { label: 'User',           fieldName: 'user',     type: 'text' },
-            { label: 'Original Value', fieldName: 'oldValue', type: 'text', wrapText: true },
-            { label: 'New Value',      fieldName: 'newValue', type: 'text', wrapText: true },
+            { label: 'Date',              fieldName: 'date',            type: 'text' },
+            {
+                label: 'User',
+                fieldName: 'userUrl',
+                type: 'url',
+                typeAttributes: { label: { fieldName: 'user' }, target: '_blank' }
+            },
+            { label: 'Original Value',    fieldName: 'oldValue',        type: 'text', wrapText: true },
+            { label: 'New Value',         fieldName: 'newValue',        type: 'text', wrapText: true },
+            { label: 'Merge Fields Used', fieldName: 'mergeFieldsUsed', type: 'text', wrapText: true },
             {
                 label: 'Action',
                 type: 'button',
@@ -324,11 +355,28 @@ export default class Fec_templateDetailPage extends LightningElement {
         return this._templateHistory;
     }
 
+    /** Paginated template history: first N rows or all */
+    get templateHistoryDisplayData() {
+        if (this._showAllTemplateHistory) return this._templateHistory;
+        return this._templateHistory.slice(0, this._HISTORY_PAGE_SIZE);
+    }
+
+    /** Show "View All" when there are more rows than the page size */
+    get showTemplateHistoryViewAll() {
+        return !this._showAllTemplateHistory
+            && this._templateHistory.length > this._HISTORY_PAGE_SIZE;
+    }
+
     get templateHistoryColumns() {
         return [
             { label: 'Date',           fieldName: 'date',          type: 'text' },
             { label: 'Field',          fieldName: 'field',         type: 'text' },
-            { label: 'User',           fieldName: 'user',          type: 'text' },
+            {
+                label: 'User',
+                fieldName: 'userUrl',
+                type: 'url',
+                typeAttributes: { label: { fieldName: 'user' }, target: '_blank' }
+            },
             { label: 'Original Value', fieldName: 'originalValue', type: 'text' },
             { label: 'New Value',      fieldName: 'newValue',      type: 'text' }
         ];
@@ -380,6 +428,14 @@ export default class Fec_templateDetailPage extends LightningElement {
         this._showDiffViewer = false;
     }
 
+    handleViewAllTemplateHistory() {
+        this._showAllTemplateHistory = true;
+    }
+
+    handleViewAllContentHistory() {
+        this._showAllContentHistory = true;
+    }
+
     /* ═══════════════════════════════════════════ */
     /*  PRIVATE HELPERS                            */
     /* ═══════════════════════════════════════════ */
@@ -408,26 +464,6 @@ export default class Fec_templateDetailPage extends LightningElement {
             lastModifiedById:       rec.LastModifiedById || '',
             lastModifiedDate:       rec.LastModifiedDate
         };
-    }
-
-    /**
-     * Format an ISO date string to DD/MM/YYYY, HH:MM.
-     * @param {String} isoString  ISO 8601 date string
-     * @returns {String} Formatted date or empty string
-     */
-    _formatDate(isoString) {
-        if (!isoString) return '';
-        try {
-            const d = new Date(isoString);
-            const day   = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year  = d.getFullYear();
-            const hours = String(d.getHours()).padStart(2, '0');
-            const mins  = String(d.getMinutes()).padStart(2, '0');
-            return `${day}/${month}/${year}, ${hours}:${mins}`;
-        } catch (e) {
-            return String(isoString);
-        }
     }
 
     /**

@@ -7,15 +7,7 @@
       ></lightning-spinner>
     </template>
     <template if:false={isLoading}>
-      <template if:true={hasNoEligibleIPPs}>
-        <p class="slds-m-bottom_medium validation-msg validation-msg-red">{noti12Message}</p>
-        <lightning-button
-          label={labelBackToCase}
-          onclick={handleBackToCase}
-          variant="neutral"
-        ></lightning-button>
-      </template>
-      <template if:true={hasEligibleIPPs}>
+      <template if:true={showIppTableSection}>
         <h3 class="slds-text-heading_small slds-m-bottom_small">
           {headingText}
         </h3>
@@ -23,26 +15,17 @@
           key-field="Id"
           data={ippList}
           columns={ippColumns}
-          max-row-selection="1"
+          max-row-selection={datatableMaxRowSelection}
+          hide-checkbox-column={isReadOnly}
           onrowselection={handleRowSelection}
         >
         </lightning-datatable>
+        <template if:true={showNoEligibleWarning}>
+          <p class="slds-m-top_small validation-msg validation-msg-red">{noti12Message}</p>
+        </template>
         <template if:true={showNoti11}>
           <p class="slds-m-top_small validation-msg validation-msg-red">{noti11Message}</p>
         </template>
-        <div class="slds-m-top_medium">
-          <lightning-button
-            label={labelBackToCase}
-            onclick={handleBackToCase}
-            variant="neutral"
-            class="slds-m-right_x-small"
-          ></lightning-button>
-          <lightning-button
-            label={labelComplete}
-            onclick={handleCompleteCase}
-            variant="brand"
-          ></lightning-button>
-        </div>
       </template>
     </template>
   </div>

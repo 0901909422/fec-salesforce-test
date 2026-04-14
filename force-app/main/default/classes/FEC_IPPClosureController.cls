@@ -16,8 +16,12 @@ public with sharing class FEC_IPPClosureController {
         @AuraEnabled public Decimal ippCurrentBalance;
         @AuraEnabled public Decimal ippInterestRate;
         @AuraEnabled public Decimal ippTerm;
-        @AuraEnabled public Decimal ippInsurance;
         @AuraEnabled public Decimal ippCurrentTerm;
+    }
+
+    public class IPPClosureResultDTO {
+        @AuraEnabled public List<IPPClosureDTO> rows;
+        @AuraEnabled public Boolean showNoEligibleWarning;
     }
 
     /**
@@ -25,33 +29,41 @@ public with sharing class FEC_IPPClosureController {
      * and no other Case (same contract) with Status Pending has recorded this IPP for closure.
      */
     @AuraEnabled(cacheable=false)
-    public static List<IPPClosureDTO> getEligibleIPPsForClosure(Id caseId) {
-        List<IPPClosureDTO> result = new List<IPPClosureDTO>();
+    public static IPPClosureResultDTO getEligibleIPPsForClosure(Id caseId) {
+        IPPClosureResultDTO wrapper = new IPPClosureResultDTO();
+        wrapper.rows = new List<IPPClosureDTO>();
+        wrapper.showNoEligibleWarning = false;
         if (caseId == null) {
-            return result;
+            return wrapper;
         }
         if (!Schema.sObjectType.Case.isAccessible() || !Schema.sObjectType.FEC_IPP__c.isAccessible()) {
-            return result;
+            return wrapper;
         }
         Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
         if (customerHistoryId == null) {
-            return result;
+            return wrapper;
         }
         Set<Id> excludedIppIds = getIppIdsWithPendingClosureCase(customerHistoryId, caseId);
         List<FEC_IPP__c> ipps = [
             SELECT Id, FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Open_Date__c,
                    FEC_IPP_First_Due_Date__c, FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c,
                    FEC_IPP_Current_Balance__c, FEC_IPP_Interest_Rate__c, FEC_IPP_Term__c,
-                   FEC_IPP_Insurance__c, FEC_IPP_Current_Term__c
+                   FEC_IPP_Current_Term__c
             FROM FEC_IPP__c
             WHERE FEC_Customer_History__c = :customerHistoryId
-            AND (FEC_IPP_Current_Balance__c = null OR FEC_IPP_Current_Balance__c != 0)
             ORDER BY FEC_IPP_Record_No__c ASC NULLS LAST
         ];
         SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, ipps);
+        List<FEC_IPP__c> afterExclusion = new List<FEC_IPP__c>();
         for (SObject so : decision.getRecords()) {
             FEC_IPP__c rec = (FEC_IPP__c) so;
             if (excludedIppIds != null && excludedIppIds.contains(rec.Id)) {
+                continue;
+            }
+            afterExclusion.add(rec);
+        }
+        for (FEC_IPP__c rec : afterExclusion) {
+            if (rec.FEC_IPP_Current_Balance__c == null || rec.FEC_IPP_Current_Balance__c == 0) {
                 continue;
             }
             IPPClosureDTO dto = new IPPClosureDTO();
@@ -65,11 +77,11 @@ public with sharing class FEC_IPPClosureController {
             dto.ippCurrentBalance = rec.FEC_IPP_Current_Balance__c;
             dto.ippInterestRate = rec.FEC_IPP_Interest_Rate__c;
             dto.ippTerm = rec.FEC_IPP_Term__c;
-            dto.ippInsurance = rec.FEC_IPP_Insurance__c;
             dto.ippCurrentTerm = rec.FEC_IPP_Current_Term__c;
-            result.add(dto);
+            wrapper.rows.add(dto);
         }
-        return result;
+        wrapper.showNoEligibleWarning = wrapper.rows.isEmpty();
+        return wrapper;
     }
 
     /**
@@ -77,10 +89,38 @@ public with sharing class FEC_IPPClosureController {
      */
     @AuraEnabled
     public static Boolean saveSelectedIPPToCase(Id caseId, Id ippId) {
-        if (caseId == null) {
+        if (caseId == null || ippId == null) {
             return false;
         }
         if (!Schema.sObjectType.Case.isAccessible() || !Schema.sObjectType.Case.isUpdateable()) {
+            return false;
+        }
+        if (!Schema.sObjectType.FEC_IPP__c.isAccessible()) {
+            return false;
+        }
+        Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
+        if (customerHistoryId == null) {
+            return false;
+        }
+        List<FEC_IPP__c> ippRows = [
+            SELECT Id, FEC_Customer_History__c, FEC_IPP_Current_Balance__c
+            FROM FEC_IPP__c
+            WHERE Id = :ippId
+            LIMIT 1
+        ];
+        if (ippRows.isEmpty()) {
+            return false;
+        }
+        SObjectAccessDecision ippDecision = Security.stripInaccessible(AccessType.READABLE, ippRows);
+        List<SObject> ippReadable = ippDecision.getRecords();
+        if (ippReadable.isEmpty()) {
+            return false;
+        }
+        FEC_IPP__c ippRec = (FEC_IPP__c) ippReadable[0];
+        if (ippRec.FEC_Customer_History__c != customerHistoryId) {
+            return false;
+        }
+        if (ippRec.FEC_IPP_Current_Balance__c == null || ippRec.FEC_IPP_Current_Balance__c == 0) {
             return false;
         }
         List<Case> cases = [SELECT Id, FEC_IPP_To_Close__c FROM Case WHERE Id = :caseId LIMIT 1];

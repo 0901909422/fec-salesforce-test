@@ -3452,6 +3452,54 @@
         <value>No transaction selected</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Address_Update_Not_Eligible</fullName>
+        <categories>CSM</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Không đủ điều kiện cập nhật địa chỉ</shortDescription>
+        <value>Không đủ điều kiện cập nhật địa chỉ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Address_Update_Reason_Account_Status</fullName>
+        <categories>CSM</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lí do chặn địa chỉ — Account Status T-1</shortDescription>
+        <value>Lí do: Account Status (account level, T-1) = {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Address_Update_Reason_Block_Code</fullName>
+        <categories>CSM</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lí do chặn địa chỉ — Block Code</shortDescription>
+        <value>Lí do: Block Code (account level, T-1) = {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Address_Update_Reason_Block_Code_1</fullName>
+        <categories>CSM</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lí do chặn địa chỉ — Block Code 1</shortDescription>
+        <value>Lí do: Block Code 1 (account level, T-1) = {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Address_Update_Reason_Block_Code_2</fullName>
+        <categories>CSM</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lí do chặn địa chỉ — Block Code 2</shortDescription>
+        <value>Lí do: Block Code 2 (account level, T-1) = {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Address_Update_Reason_Generic</fullName>
+        <categories>CSM</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lí do chặn địa chỉ — chi tiết chung</shortDescription>
+        <value>Lí do: {0}</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Not_Account_Linked</fullName>
         <categories>API</categories>
         <language>en_US</language>
@@ -6325,6 +6373,13 @@
         <protected>false</protected>
         <shortDescription>Search button label</shortDescription>
         <value>Search</value>
+    </labels>
+    <labels>
+        <fullName>LBL_UpdateSuccessfully</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Address or record update completed successfully</shortDescription>
+        <value>Updated successfully</value>
     </labels>
     <labels>
         <fullName>LBL_SearchFraudCaseScreen</fullName>
@@ -11223,6 +11278,14 @@
         <value>Select contract number</value>
     </labels>
     <labels>
+        <fullName>FEC_LBL_Select_Payment_Method</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Select_Payment_Method</shortDescription>
+        <value>Select payment method</value>
+    </labels>
+    <labels>
         <fullName>FEC_LBL_Incorrect_Contract_Hint</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -11388,7 +11451,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_LBL_IPP_Retail_UI</shortDescription>
-        <value>Giao dịch chưa sao kê##Check IPP Details##Convert IPP##IPP Conversion##Bạn sắp chuyển đổi giao dịch này. Bạn có chắc chắn muốn tiếp tục không?##Thành công##Khác##Có##Không##Khách hàng</value>
+        <value>Unbilled Transaction##Check IPP Details##Convert IPP##IPP Conversion##Bạn sắp chuyển đổi giao dịch này. Bạn có chắc chắn muốn tiếp tục không?##Thành công##Khác##Có##Không##Khách hàng</value>
     </labels>
     <labels>
         <fullName>FEC_GET_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_REQUIRE_MSG</fullName>
@@ -11812,6 +11875,14 @@
         <value>Refund amount must be greater than or equal to 0.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Refund_Request_Refund_Amount_Positive</fullName>
+        <categories>Refund Request LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Refund_Request_Refund_Amount_Positive</shortDescription>
+        <value>Vui lòng nhập số tiền hoàn lớn hơn 0.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Refund_Request_Receipt_Lines_Required</fullName>
         <categories>Refund Request LWC</categories>
         <language>en_US</language>
@@ -11826,5 +11897,585 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_Refund_Request_Receipt_Line_Incomplete</shortDescription>
         <value>Each receipt line must have date, positive amount, transaction number, and payment channel.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Choose_Notification_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Choose Notification Type</shortDescription>
+        <value>Choose a notification type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_No_Valid_Address_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email No Valid Address Found</shortDescription>
+        <value>Không tìm thấy email hợp lệ để gửi.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Send_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Send Error</shortDescription>
+        <value>Lỗi gửi mail</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Sent_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Sent Success</shortDescription>
+        <value>Đã gửi email thành công tới khách hàng.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Loading_Template_List</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error Loading Template List</shortDescription>
+        <value>Lỗi tải danh sách template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Send</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Send</shortDescription>
+        <value>Send</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Send_Manual_Notification</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Send Manual Notification</shortDescription>
+        <value>Send Manual Notification</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Target_Email</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Target Email</shortDescription>
+        <value>Target Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Target_Group</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Target Group</shortDescription>
+        <value>Target Group</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Template_Not_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template Not Found</shortDescription>
+        <value>Không tìm thấy template.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Add_Temp_Address</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Add_Temp_Address</shortDescription>
+        <value>Add Temporary Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Add_Temp_Email</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Add_Temp_Email</shortDescription>
+        <value>Add Temporary Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Address_Col</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Address_Col</shortDescription>
+        <value>Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Address_Type</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Address_Type</shortDescription>
+        <value>Address Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Building</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Building</shortDescription>
+        <value>Building</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Delivery_Option</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Delivery_Option</shortDescription>
+        <value>Delivery Option</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Mailing_Address_Col</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Mailing_Address_Col</shortDescription>
+        <value>Mailing Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Modal_Edit_Temp_Address</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Modal_Edit_Temp_Address</shortDescription>
+        <value>New Temporary Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Modal_New_Temp_Address</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Modal_New_Temp_Address</shortDescription>
+        <value>New Temporary Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_New_Temp_Email</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_New_Temp_Email</shortDescription>
+        <value>New Temporary Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Recipient_Name</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Recipient_Name</shortDescription>
+        <value>Recipient Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Recipient_Phone</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Recipient_Phone</shortDescription>
+        <value>Recipient Phone Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Street</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Street</shortDescription>
+        <value>Street</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Street_Number</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Street_Number</shortDescription>
+        <value>Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_ContractClosure_Ward</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_ContractClosure_Ward</shortDescription>
+        <value>Ward</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_Add_New_Address</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — Add New Address button/section</shortDescription>
+        <value>Add New Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_Edit_Mailing</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — edit mailing modal title</shortDescription>
+        <value>Chỉnh sửa địa chỉ giao phát</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_New_Address</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — new address modal title</shortDescription>
+        <value>New Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_Province_Search_Placeholder</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — province combobox search placeholder</shortDescription>
+        <value>Nhập để tìm tỉnh/thành...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_Original_Information</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — column title Original Information</shortDescription>
+        <value>Original Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_Updated_Information</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — column title Updated Information</shortDescription>
+        <value>Updated Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_No_C360_Email</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_No_C360_Email</shortDescription>
+        <value>Không có email C360 — vui lòng thêm email tạm thời.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_ContractClosure_Select_Delivery</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Placeholder_ContractClosure_Select_Delivery</shortDescription>
+        <value>Choose Delivery</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_ContractClosure_Select_Admin</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Placeholder_ContractClosure_Select_Admin</shortDescription>
+        <value>Choose</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_Address_Required</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_Address_Required</shortDescription>
+        <value>Vui lòng chọn/ nhập địa chỉ phù hợp</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_Delivery_Invalid</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_Delivery_Invalid</shortDescription>
+        <value>Vui lòng chọn hình thức giao phát và thông tin giao phát phù hợp.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_Phone_Invalid</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_Phone_Invalid</shortDescription>
+        <value>Định dạng số điện thoại không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ContractClosure_Required_Fields</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ContractClosure_Required_Fields</shortDescription>
+        <value>Vui lòng nhập đầy đủ các trường bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Cannot_Delete_Enhanced_Letterhead</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Cannot_Delete_Enhanced_Letterhead</shortDescription>
+        <value>This Enhanced Letterhead cannot be deleted because it contains active templates.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_MessageError_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error MessageError Hold Case</shortDescription>
+        <value>Số hợp đồng/tài khoản này đã chuyển ngưng tác động thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Message_Maxretris</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error Message Maxretris</shortDescription>
+        <value>Số hợp đồng/tài khoản này đã chuyển ngưng tác động thất bại. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case</shortDescription>
+        <value>Hold Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Messenger_Success_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Messenger Success Hold Case</shortDescription>
+        <value>Số hợp đồng/tài khoản này đã chuyển ngưng tác động thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Code</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Code</shortDescription>
+        <value>NFU Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Hold_Day_Duration</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Hold Day Duration</shortDescription>
+        <value>NFU Hold Day Duration</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Reason</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Reason</shortDescription>
+        <value>NFU Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Show_Action_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Show Action Hold Case</shortDescription>
+        <value>Không tìm thấy bộ Hold Case thủ công tương ứng cho bộ NOC</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Succes_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Succes Hold Case</shortDescription>
+        <value>Hold Case thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_An_Unexpected_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>An Unexpected Error</shortDescription>
+        <value>An unexpected error occurred.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Failed_To_Load_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed To Load Case</shortDescription>
+        <value>Failed to load Case record:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Failed_To_Load_NFU</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed To Load NFU</shortDescription>
+        <value>Failed to load NFU Reasons:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Please_Select_An_NFU</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please Select An NFU</shortDescription>
+        <value>Please select an NFU Reason.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Exception</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Exception</shortDescription>
+        <value>An exception has occurred. Please contact the System Administrator.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_16_Collections_Transfer_Success</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Noti-16: chuyển KH tới Collections thành công</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_GenesysId_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Genesys ID trống</shortDescription>
+        <value>Genesys ID không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_PhoneNumber_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Phone Number trống</shortDescription>
+        <value>Phone Number không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_PhoneNumber_Invalid</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Phone Number không hợp lệ</shortDescription>
+        <value>Phone Number không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_CsCaseId_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Case ID trống</shortDescription>
+        <value>Case ID không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_ExtAppId_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: App ID trống</shortDescription>
+        <value>App ID không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_ProductType_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Product Type trống</shortDescription>
+        <value>Product Type không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_ProductType_Invalid</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Product Type không hợp lệ</shortDescription>
+        <value>Product Type không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_Category_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Category trống</shortDescription>
+        <value>Category không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_SubCategory_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Sub Category trống</shortDescription>
+        <value>Sub Category không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_SubCode_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Sub Code trống</shortDescription>
+        <value>Sub Code không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_Remark_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Remark trống</shortDescription>
+        <value>Remarks for Collections không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Collections_Transfer_Failed_Summary</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections thất bại — dòng tóm tắt (đỏ đậm)</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại. Vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ACTION_UNBLOCK_CARD_HEADER</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_ACTION_UNBLOCK_CARD_HEADER</shortDescription>
+        <value>Unblock Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_UNBLOCK_CARD</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD</shortDescription>
+        <value>Bạn sắp mở khoá thẻ cho khách hàng này. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</shortDescription>
+        <value>Mở khoá thẻ thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</shortDescription>
+        <value>Mở khoá thẻ thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ACTION_PIN_REISSUE_HEADER</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_ACTION_PIN_REISSUE_HEADER</shortDescription>
+        <value>PIN Replacement</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_PIN_REISSUE</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PIN_REISSUE</shortDescription>
+        <value>Bạn sắp thay thế mã PIN cho khách hàng này. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</shortDescription>
+        <value>Thay thế mã PIN thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_PIN_REISSUE_ERROR</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR</shortDescription>
+        <value>Thay thế mã PIN thất bại.</value>
     </labels>
 </CustomLabels>

@@ -92,6 +92,14 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_DATE_FORMAT_DDMMYYZZ = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
     public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
+    public static final String MERGE_FIELD_OPEN = '{{{';
+    public static final String MERGE_FIELD_CLOSE = '}}}';
+    public static final String MERGE_FIELD_NORMALIZE_REPLACEMENT = '{{{$1}}}';
+    public static final String PATTERN_MERGE_FIELD = '\\{\\{\\{([^}]+)\\}\\}\\}';
+    public static final String PATTERN_TRIPLE_BRACE = '\\{\\{\\{([^}]+)\\}\\}\\}';
+    public static final String PATTERN_DOUBLE_BRACE = '\\{\\{([^{}]+)\\}\\}';
+    public static final String PATTERN_CASE_MERGE_FIELD = '\\{\\{Case\\.([^}]+)\\}\\}';
+    public static final String PATTERN_USER_MERGE_FIELD = '\\{\\{User\\.([^}]+)\\}\\}';
     
     // CARD: 16 hoặc 19 digits
     public static final String PATTERN_CARD = '^(\\d{16}|\\d{19})$';
@@ -119,10 +127,17 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_CORE = 'CORE';
     public static final String REQUESTOR_MOBILE = 'MOBILE';
     public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
+    public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
     
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
+    /** API trả PERMANENT — khác PERMNENT (mã nguồn CIF). */
+    public static final String ADDRESS_TYPE_PERMANENT = 'PERMANENT';
     public static final String ADDRESS_TYPE_OFFICE = 'OFFICE';
+    /** FEC_Address_Info__c.FEC_Address_Type__c — giá trị picklist. */
+    public static final String SF_ADDRESS_TYPE_PERMANENT = 'Permanent Address';
+    public static final String SF_ADDRESS_TYPE_OFFICE = 'Office Address';
+    public static final String SF_ADDRESS_TYPE_CURRENT = 'Current Address';
     public static final String TEXT_YES = 'Yes';
     public static final String TEXT_NO = 'No';
     
@@ -352,4 +367,55 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_CARD_CASE = 'Card';
     public static final String PRODUCT_TYPE_LOAN_CASE = 'Loan';
     public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
+    public static final String TARGET_GROUP_CUSTOMER = 'Customer';
+    public static final String NOTIFICATION_SUBJECT = 'Notification';
+
+    public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 = 'C360';
+    public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY = 'TEMPORARY';    /** FEC_Address_Info__c.FEC_Address_Type__c — địa chỉ tạm Contract Closure */
+    public static final String CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY = 'Temporary Address';
+
+    // Auto Notification - Target Group
+    public static final String NOTIFICATION_TARGET_GROUP_INTERNAL = 'Internal User';
+
+    // Auto Notification - Channel names (FEC_Notification_Channel__c.Name)
+    public static final String NOTIFICATION_CHANNEL_EMAIL = 'Email';
+    public static final String NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
+
+
+    //internalSendToSet
+    public static final String EMAIL_SUPPORT_CSM = 'supportcsm@fecredit.com.vn';
+    public static final String EMAIL_CS_SUPPORT = 'cssupport@fecredit.com.vn';
+    public static final String EMAIL_CUSTOMER_CARE = 'customercare@fecredit.com.vn';
+    public static final String EMAIL_E_COM = 'e_com@fecredit.com.vn';
+    public static final String EMAIL_F2F = 'F2F@fecredit.com.vn';
+    public static final String EMAIL_CS_D2C = 'cs_d2c@fecredit.com.vn';
+    public static final String EMAIL_CS_OM = 'CS_OM@fecredit.com.vn';
+    public static final String EMAIL_CS_QC_TEAM = 'CS_QC_TEAM@fecredit.com.vn';
+
+    public static final String STATUS_SUCCESS = 'SUCCESS';
+    public static final String CASE_STATUS_ON_HOLD = 'On Hold';
+    
+    public static final Map<String, String> decisionToTeamMap = new Map<String, String>{
+      // Nhóm thường (Pending-) -> Bỏ prefix
+      'Pending CS' => 'CSInternal',
+      'Pending Customer' => 'Customer',
+      'Pending Card Ops' => 'CardOpsOutOfSystem',
+      'Pending Collections' => 'CollectionsOutOfSystem',
+      'Pending Contract Processing' => 'CPOutOfSystem',
+      'Pending Credit Assessment' => 'CAOutOfSystem',
+      'Pending Direct Sales' => 'DirectSalesOutOfSystem',
+      'Pending Telesales' => 'TelesalesOutOfSystem',
+      'Pending IT' => 'ITOutOfSystem',
+      'Pending Payment' => 'PaymentOutOfSystem',
+      'Pending Product' => 'PBDOutOfSystem',
+      'Pending RCP&A' => 'RCPAOutOfSystem',
+      'Pending Security' => 'SecurityOutOfSystem',
+      'Pending Vendor' => 'VendorOutOfSystem',
+      // Nhóm đặc biệt (cần map Team và đổi Owner sang Queue)
+      'Out Of Process' => 'OutOfProcess',
+      'CIC Related' => 'CICRelated',
+      'Document Preparation' => 'DocumentPreparation',
+      'Task Under Review' => 'TaskUnderReview'
+    };
+  public static final String CASE_ALL_REQUEST = 'All';  
 }
