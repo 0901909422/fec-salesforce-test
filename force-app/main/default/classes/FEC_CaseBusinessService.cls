@@ -953,18 +953,6 @@ public without sharing class FEC_CaseBusinessService {
     return k.Status;
   }
 
-  /**
-   * Giá trị ghi lên Routing Action History: ưu tiên Case.FEC_Final_Status__c, fallback tương đương công thức (Status + FEC_Team__c).
-   */
-  public static String resolveRoutingHistoryFinalStatus(Case k) {
-    if (k == null) {
-      return null;
-    }
-    if (String.isNotBlank(k.FEC_Final_Status__c)) {
-      return k.FEC_Final_Status__c;
-    }
-    return routingHistoryFinalStatusSnapshot(k);
-  }
 
   private static void markCaseSubmittedAndClearDrafts(String caseId) {
     if (String.isBlank(caseId))
