@@ -956,6 +956,7 @@ public without sharing class FEC_CaseBusinessService {
     return k.Status;
   }
 
+
   private static void markCaseSubmittedAndClearDrafts(String caseId) {
     if (String.isBlank(caseId))
       return;
@@ -1656,8 +1657,8 @@ public without sharing class FEC_CaseBusinessService {
       FEC_User__c = currentUserEmailId,
       FEC_User_Role__c = currentUserRole,
       FEC_Description__c = FEC_ConstantCommon.FEC_RAH_DESCRIPTION_CHANGE_OWNER,
-      FEC_Current_Status__c = routingHistoryFinalStatusSnapshot(oldCase),
-      FEC_Changed_Status__c = routingHistoryFinalStatusSnapshot(c)
+      FEC_Current_Status__c = null,
+      FEC_Changed_Status__c = null
     );
   }
 
