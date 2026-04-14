@@ -102,7 +102,6 @@
 		<members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_CaseRemarkController</members>
 		<members>FEC_MarkNFU</members>
-		<members>FEC_CMSIPPBlockWS</members>
 		<members>FEC_GetProductListCallout</members>
         <name>ApexClass</name>
     </types>
@@ -681,7 +680,10 @@
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
-		<members>FEC_API_Config.FEC_CMS_IPP_BlockWS</members>
+		<members>FEC_ACTION_PIN_REISSUE_HEADER</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE_ERROR</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
