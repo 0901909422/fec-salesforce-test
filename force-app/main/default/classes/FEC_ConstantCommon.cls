@@ -94,8 +94,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
     public static final String MERGE_FIELD_OPEN = '{{{';
     public static final String MERGE_FIELD_CLOSE = '}}}';
+    public static final String MERGE_FIELD_NORMALIZE_REPLACEMENT = '{{{$1}}}';
     public static final String PATTERN_MERGE_FIELD = '\\{\\{\\{([^}]+)\\}\\}\\}';
     public static final String PATTERN_TRIPLE_BRACE = '\\{\\{\\{([^}]+)\\}\\}\\}';
+    public static final String PATTERN_DOUBLE_BRACE = '\\{\\{([^{}]+)\\}\\}';
+    public static final String PATTERN_CASE_MERGE_FIELD = '\\{\\{Case\\.([^}]+)\\}\\}';
     public static final String PATTERN_USER_MERGE_FIELD = '\\{\\{User\\.([^}]+)\\}\\}';
     
     // CARD: 16 hoặc 19 digits
@@ -123,7 +126,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_ESB = 'ESB';
     public static final String REQUESTOR_CORE = 'CORE';
     public static final String REQUESTOR_MOBILE = 'MOBILE';
+    public static final String REQUESTOR_VTIGER_CL = 'VTIGER_CL';
+    public static final String REQUESTOR_VTIGER_PL = 'VTIGER_PL';
     public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
+    public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
     
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
@@ -181,7 +187,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_STATUS_PENDING = 'Pending';
     /** Prefix cho Status dạng Pending-{Team} / Pending-{Team1}_{Team2} */
     public static final String CASE_STATUS_PENDING_PREFIX = 'Pending-';
-
+    
     public static final String CASE_WEB_ORIGIN = 'Web';
     
     public static final String GROUP_TYPE_QUEUE = 'Queue';
@@ -189,7 +195,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String SOBJECT_GROUP = 'Group';
     public static final String DELIMITER_SEMICOLON = ';';
     public static final String DELIMITER_UNDERSCORE = '_';
-
+    
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
     
@@ -231,7 +237,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_ORIGIN_EMAIL_UBANK = 'Email-Ubank';
     public static final String CASE_ORIGIN_EMAIL_FE ='Email-FE';
     public static final String CASE_ORIGIN_EMAIL_INTERNAL ='Email-Internal';
-
+    
     
     public static final String KEY_VALID_CHANNELS_WED = 'WED';
     public static final String KEY_VALID_CHANNELS_MOBILE = 'MOBILE';
@@ -244,9 +250,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String KEY_SUBCATEGORY = 'SubCategory';
     public static final String KEY_SUBCODE = 'SubCode';
     public static final String KEY_ERROR = 'Error';
-
+    
     public static final String API_BLANK_BODY = '{}';
-
+    
     //Get Next Work
     public static final String CASE_TYPE_DESCRIPTION = 'Get Next Work';
     public static final String CASE_ROUTING_ACTION = 'Route to';
@@ -264,7 +270,7 @@ public with sharing class FEC_ConstantCommon {
     /** Routing Action History: đổi Owner Case (khớp FEC_CaseBusinessService.buildRoutingActionHistoryRecord). */
     public static final String FEC_RAH_DESCRIPTION_CHANGE_OWNER = 'Change Owner';
     public static final String CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER = 'Resolved-CannotContactCustomer';
-
+    
     public static final String UPLOAD_DOCUMENT = 'UploadDocument';
     public static final String CASE_STATUS_ERROR = 'ERROR';
     
@@ -274,10 +280,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String SYSTEM_SOURCE_WEBSITE  = 'Website';
     public static final String SYSTEM_SOURCE_FEOL     = 'FEOL';
     public static final String SYSTEM_SOURCE_ZALO     = 'Zalo';
-
+    
     public static final String LANGUAGE_EN = 'EN';
     public static final String LANGUAGE_VN = 'VN';
-
+    
     // Call api FEC_GetCSMasterDataService
     public static final String KEY_PICKLIST = 'Picklist';
     public static final String KEY_CHECKBOX = 'Checkbox';
@@ -289,9 +295,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUEST_EXISTING_USER_TYPE  = 'EXISTING';
     public static final String REQUEST_NON_EXISTING_USER_TYPE  = 'NON-EXISTING';
     public static final String REQUEST_PROSPECT_USER_TYPE  = 'PROSPECT';
-
+    
     public static final String AUTO_METHOD = 'Auto';
-
+    
     // Call api FEC_CancelCSCaseService
     public static final String STATUS_CLOSED = 'Closed';
     public static final String STATUS_COMPLETED = 'Completed';
@@ -303,12 +309,12 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUCCESS_MESSAGE_CANCEL_CASE = System.Label.FEC_MSG_CancelCS_Success;
     public static final String PHONE_REGEX_VN    = '^0[0-9]{9}$';
     public static final String PHONE_REGEX_INTL  = '^\\+[0-9]{8,15}$';
-
+    
     /** Kênh hợp lệ cho API FEC_CancelCSCaseService (SOAP). */
     public static final String CANCEL_CS_CHANNEL_CHAT = 'Chat';
     public static final String CANCEL_CS_CHANNEL_F2F = 'F2F';
     public static final String CANCEL_CS_CHANNEL_LETTER = 'Letter';
-
+    
     public static final List<String> CANCEL_CS_VALID_CHANNELS_ORDERED = new List<String>{
         CHANNEL_INBOUND_NAME,
         CHANNEL_OUTBOUND_NAME,
@@ -319,20 +325,20 @@ public with sharing class FEC_ConstantCommon {
         CHANNEL_EXTERNAL,
         CHANNEL_INTERNAL
     };
-
+    
     public static final Set<String> CANCEL_CS_VALID_CHANNELS = new Set<String>(CANCEL_CS_VALID_CHANNELS_ORDERED);
-
+    
     /** Độ dài tối đa field request Cancel CS Case. */
     public static final Integer CANCEL_CS_TRANSACTION_ID_MAX_LEN = 36;
     public static final Integer CANCEL_CS_CASE_ID_MAX_LEN = 15;
     public static final Integer CANCEL_CS_CONTRACT_OR_ACCOUNT_MAX_LEN = 255;
     public static final Integer CANCEL_CS_PHONE_MAX_LEN = 16;
-
+    
     // Email readonly from addresses
     public static final String EMAIL_READONLY_FROM_FECREDIT = 'dichvukhachhang@fecredit.com.vn';
     public static final String EMAIL_READONLY_FROM_UBANK    = 'dichvukhachhang@ubank.com.vn';
     public static final String EMAIL_UBANK_VN    = 'dichvukhachhang@ubank.vn';
-
+    
     // Case statuses blocked from sending email
     public static final String CASE_STATUS_CLOSED    = 'Closed';
     public static final String CASE_STATUS_RESOLVED  = 'Resolved';
@@ -348,7 +354,7 @@ public with sharing class FEC_ConstantCommon {
         'INTERNAL',
         'ZALO'
     };
-
+    
     public static final String QUEUE_UBANK_EMAIL_NAME = 'FEC_Ubank_Email';
     public static final String QUEUE_CSM_MAILBOX_NAME = 'FEC_CSM_Mailbox';
     public static final String QUEUE_SUPPORT_MAILBOX_NAME = 'FEC_Support_Mailbox';
@@ -365,19 +371,19 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
     public static final String TARGET_GROUP_CUSTOMER = 'Customer';
     public static final String NOTIFICATION_SUBJECT = 'Notification';
-
+    
     public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 = 'C360';
     public static final String CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY = 'TEMPORARY';    /** FEC_Address_Info__c.FEC_Address_Type__c — địa chỉ tạm Contract Closure */
-    public static final String CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY = 'Temporary Address';
-
+        public static final String CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY = 'Temporary Address';
+    
     // Auto Notification - Target Group
     public static final String NOTIFICATION_TARGET_GROUP_INTERNAL = 'Internal User';
-
+    
     // Auto Notification - Channel names (FEC_Notification_Channel__c.Name)
     public static final String NOTIFICATION_CHANNEL_EMAIL = 'Email';
     public static final String NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
-
-
+    
+    
     //internalSendToSet
     public static final String EMAIL_SUPPORT_CSM = 'supportcsm@fecredit.com.vn';
     public static final String EMAIL_CS_SUPPORT = 'cssupport@fecredit.com.vn';
@@ -387,31 +393,38 @@ public with sharing class FEC_ConstantCommon {
     public static final String EMAIL_CS_D2C = 'cs_d2c@fecredit.com.vn';
     public static final String EMAIL_CS_OM = 'CS_OM@fecredit.com.vn';
     public static final String EMAIL_CS_QC_TEAM = 'CS_QC_TEAM@fecredit.com.vn';
-
+    
     public static final String STATUS_SUCCESS = 'SUCCESS';
     public static final String CASE_STATUS_ON_HOLD = 'On Hold';
     
     public static final Map<String, String> decisionToTeamMap = new Map<String, String>{
-      // Nhóm thường (Pending-) -> Bỏ prefix
-      'Pending CS' => 'CSInternal',
-      'Pending Customer' => 'Customer',
-      'Pending Card Ops' => 'CardOpsOutOfSystem',
-      'Pending Collections' => 'CollectionsOutOfSystem',
-      'Pending Contract Processing' => 'CPOutOfSystem',
-      'Pending Credit Assessment' => 'CAOutOfSystem',
-      'Pending Direct Sales' => 'DirectSalesOutOfSystem',
-      'Pending Telesales' => 'TelesalesOutOfSystem',
-      'Pending IT' => 'ITOutOfSystem',
-      'Pending Payment' => 'PaymentOutOfSystem',
-      'Pending Product' => 'PBDOutOfSystem',
-      'Pending RCP&A' => 'RCPAOutOfSystem',
-      'Pending Security' => 'SecurityOutOfSystem',
-      'Pending Vendor' => 'VendorOutOfSystem',
-      // Nhóm đặc biệt (cần map Team và đổi Owner sang Queue)
-      'Out Of Process' => 'OutOfProcess',
-      'CIC Related' => 'CICRelated',
-      'Document Preparation' => 'DocumentPreparation',
-      'Task Under Review' => 'TaskUnderReview'
+        // Nhóm thường (Pending-) -> Bỏ prefix
+        'Pending CS' => 'CSInternal',
+        'Pending Customer' => 'Customer',
+        'Pending Card Ops' => 'CardOpsOutOfSystem',
+        'Pending Collections' => 'CollectionsOutOfSystem',
+        'Pending Contract Processing' => 'CPOutOfSystem',
+        'Pending Credit Assessment' => 'CAOutOfSystem',
+        'Pending Direct Sales' => 'DirectSalesOutOfSystem',
+        'Pending Telesales' => 'TelesalesOutOfSystem',
+        'Pending IT' => 'ITOutOfSystem',
+        'Pending Payment' => 'PaymentOutOfSystem',
+        'Pending Product' => 'PBDOutOfSystem',
+        'Pending RCP&A' => 'RCPAOutOfSystem',
+        'Pending Security' => 'SecurityOutOfSystem',
+        'Pending Vendor' => 'VendorOutOfSystem',
+        // Nhóm đặc biệt (cần map Team và đổi Owner sang Queue)
+        'Out Of Process' => 'OutOfProcess',
+        'CIC Related' => 'CICRelated',
+        'Document Preparation' => 'DocumentPreparation',
+        'Task Under Review' => 'TaskUnderReview'
     };
-  public static final String CASE_ALL_REQUEST = 'All';  
+    public static final String CASE_ALL_REQUEST = 'All';
+    
+    //----------HARD CODE VALUE FOR RESET PIN (Non-production)----------
+    public static final String RESET_PIN_NON_PRODUCTION = 'Non-Production';
+    public static final String RESET_PIN_DEFAULT_NID = '261089113994';
+    public static final String RESET_PIN_DEFAULT_PHONE = '84983893967';
+    
+    
 }
