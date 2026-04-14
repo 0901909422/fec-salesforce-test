@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+	<types>
+		<members>FEC_CMSIPPBlockWSMock</members>
+		<members>FEC_CMSIPPBlockWS_Test</members>
+		<members>FEC_CMSIPPBlockWS</members>
+		<members>FEC_SearchByListNIDsServiceCallout_Test</members>
+		<members>FEC_SearchByListNIDsServiceCallout</members>
+		<members>FEC_FetchCollectionDataService_Test</members>
+		<members>FEC_FetchCollectionDataServiceCallout</members>
+		<name>Apexclass</name>
+	</types>
+	<types>
+		<members>FEC_API_Config.FEC_CMS_IPP_BlockWS</members>
+		<members>FEC_API_Config.FEC_Search_By_List_NIDs</members>
+		<members>FEC_API_Config.FEC_Fetch_Collection_Data</members>
+		<name>CustomMetadata</name>
+	</types>
+	<types>
+		<members>fec_Search</members>
+		<name>LightningComponentBundle</name>
+	</types>
+	<version>66.0</version>
+</Package>
