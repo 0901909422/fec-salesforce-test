@@ -551,6 +551,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Max_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Middle_Name__c</field>
         <readable>true</readable>
@@ -683,6 +688,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Remarks__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Requested_Amount__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
