@@ -421,9 +421,14 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_ALL_REQUEST = 'All';
 
     //----------HARD CODE VALUE FOR RESET PIN (Non-production)----------
-    public static final String RESET_PIN_NON_PRODUCTION = 'Non-Production';
+    public static final String ENVIROMENT_NON_PRODUCTION = 'Non-Production';
     public static final String RESET_PIN_DEFAULT_NID = '261089113994';
     public static final String RESET_PIN_DEFAULT_PHONE = '84983893967';
     public static final String CASE_ALL_CUSTOMER = 'All';
+    
+    //----------HARD CODE VALUE FOR CARD LOCK UNLOCK (Non-production)----------
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_BLOCK_CODE = 'C';
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_LAST4DIGIT = '6309';
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER = '0001500010000173373';
     
 }
