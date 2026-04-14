@@ -1112,8 +1112,7 @@ public without sharing class FEC_CaseBusinessService {
           return FEC_CardLockUnLockController.unblockCard(caseId, UNBLOCK_CARD);
         }
         when PIN_REISSUE {
-          System.debug(PIN_REISSUE);
-          return null;
+          return FEC_PinReplacementController.pinReplacement(caseId, PIN_REISSUE);
         }
         when else {
           // throw new CaseBusinessServiceException('Method not found.');
