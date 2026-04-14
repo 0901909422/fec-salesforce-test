@@ -422,6 +422,10 @@
         <members>FEC_MSG_Address_Update_Reason_Generic</members>
         <members>FEC_LBL_UpdateAddress_Original_Information</members>
         <members>FEC_LBL_UpdateAddress_Updated_Information</members>
+		<members>FEC_ACTION_PIN_REISSUE_HEADER</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE_ERROR</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -680,10 +684,6 @@
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
-		<members>FEC_ACTION_PIN_REISSUE_HEADER</members>
-		<members>FEC_MSG_ACTION_PIN_REISSUE</members>
-		<members>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</members>
-		<members>FEC_MSG_ACTION_PIN_REISSUE_ERROR</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
