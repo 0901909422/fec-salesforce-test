@@ -188,6 +188,40 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
   12: 'slds-medium-size_12-of-12'
 };
 
+const MAP_NEW_BLOCK_CODE_CARD_REPLACE = {
+  'Bị hư hỏng': 'L',
+  'Bị mất/ đánh cắp': 'L',
+  'Bị nuốt tại ATM': 'L',
+  'Chưa nhận được thẻ': 'L',
+  'Không còn nguyên vẹn': 'L',
+  'Sai tên in nổi': 'L',
+  'Thay thế lần đầu thẻ Money Tab': 'L',
+  'Liên quan gian lận': 'S',
+}
+const MAP_CARD_REPLACEMENT_FEE_VALUE = {
+  'Bị hư hỏng': '110000',
+  'Bị mất/ đánh cắp': '110000',
+  'Bị nuốt tại ATM': '',
+  'Chưa nhận được thẻ': '',
+  'Không còn nguyên vẹn': '',
+  'Sai tên in nổi': '',
+  'Thay thế lần đầu thẻ Money Tab': '',
+  'Liên quan gian lận': '110000',
+}
+const MAP_CARD_REPLACEMENT_FEE_DISPLAY = {
+  'Bị hư hỏng': '110,000 VND (include 10% VAT)',
+  'Bị mất/ đánh cắp': '110,000 VND (include 10% VAT)',
+  'Bị nuốt tại ATM': '',
+  'Chưa nhận được thẻ': '',
+  'Không còn nguyên vẹn': '',
+  'Sai tên in nổi': '',
+  'Thay thế lần đầu thẻ Money Tab': '',
+  'Liên quan gian lận': '110,000 VND (include 10% VAT)',
+}
+const FIELD_CARD_REPLACEMENT_REASON = 'FEC_Card_Replacement_Reason__c';
+const FIELD_NEW_BLOCK_CODE_CARD_REPLACE = 'FEC_New_Block_Code_Card_Replace__c';
+const FIELD_CARD_REPLACEMENT_FEE = 'FEC_Card_Replacement_Fee__c';
+
 /**
  * Registry of dynamically loadable components.
  * ADD a new entry here for every LWC name stored in FEC_LWC_Name__c metadata.
@@ -1519,6 +1553,28 @@ export default class Fec_CaseBussiness extends LightningElement {
           this.actionValue = ACTION_REJECT;
         }
       }
+    }
+
+    // card replacement
+    if (fieldName === FIELD_CARD_REPLACEMENT_REASON) {
+      this.business.sectionlst.forEach(section => {
+        section.subSectionlst.forEach(sub => {
+          sub.objlst.forEach(obj => {
+            obj.fieldlst.forEach(field => {
+              if (field.editable) return; // ignore editable
+              if (field.apiName === FIELD_NEW_BLOCK_CODE_CARD_REPLACE) {
+                field.value = MAP_NEW_BLOCK_CODE_CARD_REPLACE[value];
+                field.displayValue = field.value;
+                field.readonlyDisplayValue = field.value;
+              } else if (field.apiName === FIELD_CARD_REPLACEMENT_FEE) {
+                field.value = MAP_CARD_REPLACEMENT_FEE_VALUE[value];
+                field.displayValue = MAP_CARD_REPLACEMENT_FEE_DISPLAY[value];
+                field.readonlyDisplayValue = field.displayValue;
+              }
+            });
+          });
+        });
+      });
     }
   }
 
