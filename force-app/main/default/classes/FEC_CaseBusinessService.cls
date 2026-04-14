@@ -21,7 +21,7 @@ public without sharing class FEC_CaseBusinessService {
   public static final String IDENTIFICATION_UPDATE = 'National ID Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
   public static final String UNBLOCK_CARD = 'Unblock Card';
-  public static final String PIN_REISSUE = 'PIN Reissue';
+  public static final String PIN_REISSUE = 'Reissue PIN';
 
   /**
    * Case sẽ có Routing Action History do logic nghiệp vụ (không dùng bản tự động từ trigger khi đổi Owner).
