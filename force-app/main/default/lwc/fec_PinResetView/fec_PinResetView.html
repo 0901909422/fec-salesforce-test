@@ -1,24 +1,20 @@
 <template>
     <div class="container">
         <!-- Button -->
-        <div class="button-container">
-            <template if:false={isInvisibleButton}>
+        <template if:false={hiddenButton}>
+            <div class="button-container">
                 <lightning-button label={label.FEC_Reset_PIN_Title} variant="brand" onclick={openModal}>
                 </lightning-button>
-            </template>
+            </div>
+        </template>
 
-            <template if:true={isShowSuccessMessage}>
-                <p class="slds-text-color_success slds-m-top_medium">Test</p>
-            </template>
 
-            <template if:true={isShowRetryMessage}>
-                <p class="slds-text-color_error slds-m-top_medium">{label.FEC_RESET_PIN_ERROR}</p>
-            </template>
-
-            <template if:true={isShowFailedMessage}>
-                <p class="slds-text-color_error slds-m-top_medium">{label.FEC_RESET_PIN_FAILED}</p>
-            </template>
-        </div>
+        <!-- Message -->
+        <template if:true={message}>
+            <div class="message-container">
+                <p class={messageClass}>{message}</p>
+            </div>
+        </template>
     </div>
 
     <!-- MODAL -->
