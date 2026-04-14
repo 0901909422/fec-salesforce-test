@@ -1109,8 +1109,7 @@ public without sharing class FEC_CaseBusinessService {
           System.debug(OC_001);
         }
         when UNBLOCK_CARD {
-          System.debug(UNBLOCK_CARD);
-          return null;
+          return FEC_CardLockUnLockController.unblockCard(caseId, UNBLOCK_CARD);
         }
         when PIN_REISSUE {
           System.debug(PIN_REISSUE);
