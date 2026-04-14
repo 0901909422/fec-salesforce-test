@@ -89,6 +89,10 @@
             <fullName>Non-existing</fullName>
             <default>false</default>
         </values>
+        <values>
+            <fullName>All</fullName>
+            <default>false</default>
+        </values>
     </picklistValues>
     <picklistValues>
         <picklist>FEC_Target_Group__c</picklist>

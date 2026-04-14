@@ -424,5 +424,6 @@ public with sharing class FEC_ConstantCommon {
     public static final String RESET_PIN_NON_PRODUCTION = 'Non-Production';
     public static final String RESET_PIN_DEFAULT_NID = '261089113994';
     public static final String RESET_PIN_DEFAULT_PHONE = '84983893967';
+    public static final String CASE_ALL_CUSTOMER = 'All';
     
 }
