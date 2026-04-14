@@ -14,6 +14,7 @@ import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
 import getB2Contracts from "@salesforce/apex/FEC_SearchController.getB2Contracts";
 import getCash24Contracts from "@salesforce/apex/FEC_SearchController.getCash24Contracts";
 import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
+import getBancaInsurance from "@salesforce/apex/FEC_SearchByListNIDs.searchByNIDs";
 
 import FEC_National_ID_Passport_ID_Label  from '@salesforce/label/c.FEC_National_ID_Passport_ID_Label';
 import FEC_Toast_Search_Validation from '@salesforce/label/c.FEC_Toast_Search_Validation';
@@ -825,6 +826,17 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         if (customers.length > 0) {
           this.processCustomerResults(customers);
           this.fetchPlasticIds();
+          // Gọi Banca Insurance API với danh sách NID từ kết quả (unique, tối đa 20)
+          const nidSet = new Set(
+            customers
+              .map(c => c.NationalID)
+              .filter(n => n && n.trim())
+          );
+          const nids = Array.from(nidSet).slice(0, 20);
+          console.log('NIDs for Banca:', nids, 'length:', nids.length);
+          if (nids.length > 0) {
+            this.fetchBancaInsurance(nids);
+          }
         }
       } else {
         this.isNoCustomerFound = true;
@@ -857,6 +869,32 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             card.PlasticID = "Error";
         }
         this.cardData = [...tempCardData];
+    }
+}
+
+async fetchBancaInsurance(nids) {
+    console.log('fetchBancaInsurance called with nids:', nids);
+    try {
+        const results = await getBancaInsurance({ nationalIds: nids });
+        console.log('fetchBancaInsurance results:', results);
+        if (!results || results.length === 0) return;
+        this.insuranceData = results.map(r => ({
+            id: r.paymentID || r.policyNumber,
+            UserId: r.userId,
+            FullName: r.buyerName,
+            DateOfBirth: r.buyerDOB,
+            BuyerNID: r.buyerNID,
+            MarkedBuyerNID: r.markedBuyerNID,
+            ProductName: r.productNameEn,
+            PremiumFee: r.collectedPremiumFee,
+            PaymentId: r.paymentID,
+            EffectiveDate: r.effectiveDate,
+            Status: r.statusDisplay,
+            PolicyNumber: r.policyNumber,
+            InsurerCompany: r.insurerCompany
+        }));
+    } catch (e) {
+        console.error('fetchBancaInsurance error:', e);
     }
 }
 
