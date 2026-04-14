@@ -358,7 +358,7 @@ public without sharing class FEC_NotificationService {
      * Convert rtaImage URLs trong HTML sang base64 inline để email client hiển thị được.
      * Tự detect org domain nên không cần hardcode URL.
      */
-    private static String inlineImages(String html) {
+    public static String inlineImages(String html) {
         if (String.isBlank(html)) return html;
         // Tìm tất cả src="...rtaImage..." và replace bằng base64
         Pattern p = Pattern.compile('src="(https?://[^"]*rtaImage[^"]*)"');
