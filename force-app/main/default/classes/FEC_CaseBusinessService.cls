@@ -20,7 +20,7 @@ public without sharing class FEC_CaseBusinessService {
   public static final String GENDER_UPDATE = 'Gender Update';
   public static final String IDENTIFICATION_UPDATE = 'National ID Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
-  public static final String UNBLOCK_CARD = 'Card Unblock';
+  public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'PIN Reissue';
 
   /**
