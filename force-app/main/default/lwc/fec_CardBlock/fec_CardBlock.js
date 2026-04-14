@@ -156,7 +156,7 @@ export default class Fec_CardBlock extends LightningElement {
 
     handleConfirmClick() {
         this.isShowSpinner = true;
-        const blockCode = this.template.querySelector('lightning-input[data-id="newBlockCode"]').value;
+        const blockCode = this.template.querySelector('input[data-id="newBlockCode"]').value;
         blockCard({ 
             recordId: this.recordId,
             blockCode: blockCode,
