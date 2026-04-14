@@ -34,6 +34,7 @@
         <members>FEC_MSG_NationalIDs_Null</members>
 		<members>FEC_Page_Size_Deals</members>
 		<members>FEC_Page_Number_Deals</members>
+		<members>FEC_Error_Callout_Insurance</members>
         <name>CustomLabel</name>
     </types>
 	<version>66.0</version>
