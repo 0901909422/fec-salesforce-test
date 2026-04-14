@@ -171,6 +171,7 @@
 		<members>fec_InteractionCaseModeStore</members>
 		<members>fec_InteractionHighlightMain</members>
 		<members>maskedToggleCell</members>
+		<members>fec_AppInfo</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
