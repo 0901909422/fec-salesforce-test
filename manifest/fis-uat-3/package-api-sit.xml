@@ -9,12 +9,14 @@
 		<members>FEC_FetchCollectionDataService_Test</members>
 		<members>FEC_FetchCollectionDataServiceCallout</members>
 		<members>FEC_ConstantCommon</members>
+		<members>FEC_GetDeals</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
 		<members>FEC_API_Config.FEC_CMS_IPP_BlockWS</members>
 		<members>FEC_API_Config.FEC_Search_By_List_NIDs</members>
 		<members>FEC_API_Config.FEC_Fetch_Collection_Data</members>
+		<members>FEC_API_Config.FEC_GetDeals</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -30,6 +32,8 @@
         <members>FEC_Contract_Number_Is_Null</members>
         <members>FEC_Record_Type_Is_Null</members>
         <members>FEC_MSG_NationalIDs_Null</members>
+		<members>FEC_Page_Size_Deals</members>
+		<members>FEC_Page_Number_Deals</members>
         <name>CustomLabel</name>
     </types>
 	<version>66.0</version>
