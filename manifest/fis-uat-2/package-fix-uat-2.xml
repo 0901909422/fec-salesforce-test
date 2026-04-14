@@ -102,6 +102,7 @@
 		<members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_CaseRemarkController</members>
 		<members>FEC_MarkNFU</members>
+		<members>FEC_GetProductListCallout</members>
         <name>ApexClass</name>
     </types>
     <types>
