@@ -127,14 +127,6 @@ public without sharing class FEC_Notification {
     }
 
     /**
-     * Public wrapper cho buildCaseStatusPills — LWC hoặc Apex khác gọi khi cần cùng cấu trúc pill (Id + Name) từ CSV.
-     */
-    @AuraEnabled(cacheable = true)
-    public static List<Map<String, String>> resolveCaseStatusPills(String statusNamesCsv) {
-        return buildCaseStatusPills(statusNamesCsv);
-    }
-
-    /**
      * Helper method to determine the target email based on Case
      */
     private static String getTargetEmailFromCase(Case c) {
@@ -465,4 +457,25 @@ public without sharing class FEC_Notification {
         executeSendEmailsBulk(new List<EmailInfo>{ singleEmail }, fromEmail);
     }
 
+    @AuraEnabled
+    public static FEC_Template__c previewTemplate(Id caseId, Id templateId) {
+        FEC_Template__c template = FEC_TemplateController.getTemplate(templateId);
+        if (template != null && String.isNotBlank(caseId)) {
+            String subject = String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
+            String body = template.FEC_Body__c;
+
+            String senderEmail = '';
+            FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
+            if (String.isNotBlank(systemConfig?.FEC_Sender_Email__c)) {
+                senderEmail = systemConfig.FEC_Sender_Email__c;
+            }
+
+            EmailInfo previewEmail = new EmailInfo(caseId, '', subject, body);
+            bulkResolveMergeFields(new List<EmailInfo>{ previewEmail }, senderEmail);
+
+            template.FEC_Subject_Line__c = previewEmail.subject;
+            template.FEC_Body__c = previewEmail.body;
+        }
+        return template;
+    }
 }
