@@ -62,7 +62,7 @@ public with sharing class FEC_CardLockUnLockController {
         } catch (Exception ex) {
             FEC_CommonUltils.logException(
                 'FEC_CardLockUnLockController', 
-                'unblockCard', 
+                'lockUnblockCard', 
                 ex.getMessage(),
                 ex.getStackTraceString()
             );
