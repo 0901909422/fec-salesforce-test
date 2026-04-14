@@ -107,7 +107,7 @@ public without sharing class FEC_PINReissueServiceCallout {
                 response = (PINResponse)JSON.deserialize(res.getBody(), PINResponse.class);
                 
                 // ✅ SET SUCCESS FLAG
-                response.isSuccess = (response != null && response.RespCode == '1');
+                response.isSuccess = (response != null && response.RespCode == '0' && response.errorMessage ==null);
                 
             } else {
                 response.errorCode = String.valueOf(res.getStatusCode());
