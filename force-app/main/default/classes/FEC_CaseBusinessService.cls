@@ -20,6 +20,7 @@ public without sharing class FEC_CaseBusinessService {
   public static final String GENDER_UPDATE = 'Gender Update';
   public static final String IDENTIFICATION_UPDATE = 'National ID Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
+  public static final String BLOCK_CARD = 'Block Card';
   public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'Reissue PIN';
 
@@ -64,6 +65,7 @@ public without sharing class FEC_CaseBusinessService {
     GENDER_UPDATE,
     IDENTIFICATION_UPDATE,
     OC_001,
+    BLOCK_CARD,
     UNBLOCK_CARD,
     PIN_REISSUE
   }
@@ -86,6 +88,7 @@ public without sharing class FEC_CaseBusinessService {
     GENDER_UPDATE => Method.GENDER_UPDATE,
     IDENTIFICATION_UPDATE => Method.IDENTIFICATION_UPDATE,
     OC_001 => Method.OC_001,
+    BLOCK_CARD => Method.BLOCK_CARD,
     UNBLOCK_CARD => Method.UNBLOCK_CARD,
     PIN_REISSUE => Method.PIN_REISSUE
   };
@@ -1123,8 +1126,11 @@ public without sharing class FEC_CaseBusinessService {
         when OC_001 {
           System.debug(OC_001);
         }
+        when BLOCK_CARD {
+          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'B', BLOCK_CARD);
+        }
         when UNBLOCK_CARD {
-          return FEC_CardLockUnLockController.unblockCard(caseId, UNBLOCK_CARD);
+          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'U', UNBLOCK_CARD);
         }
         when PIN_REISSUE {
           return FEC_PinReplacementController.pinReplacement(caseId, PIN_REISSUE);
