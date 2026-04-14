@@ -135,6 +135,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_ESB = 'ESB';
     public static final String REQUESTOR_CORE = 'CORE';
     public static final String REQUESTOR_MOBILE = 'MOBILE';
+    public static final String REQUESTOR_VTIGER_CL = 'VTIGER_CL';
+    public static final String REQUESTOR_VTIGER_PL = 'VTIGER_PL';
     public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
     public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
     

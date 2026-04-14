@@ -8,6 +8,7 @@
 		<members>FEC_SearchByListNIDsServiceCallout</members>
 		<members>FEC_FetchCollectionDataService_Test</members>
 		<members>FEC_FetchCollectionDataServiceCallout</members>
+		<members>FEC_ConstantCommon</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
@@ -20,5 +21,16 @@
 		<members>fec_Search</members>
 		<name>LightningComponentBundle</name>
 	</types>
+	<types>
+        <members>FEC_MSG_CRM_ID_Null</members>
+        <members>FEC_MSG_DisbChannel_Null</members>
+        <members>FEC_MSG_Account_Number_Null</members>
+        <members>FEC_MSG_Amount_Null</members>
+        <members>FEC_MSG_Tenure_Null</members>
+        <members>FEC_Contract_Number_Is_Null</members>
+        <members>FEC_Record_Type_Is_Null</members>
+        <members>FEC_MSG_NationalIDs_Null</members>
+        <name>CustomLabel</name>
+    </types>
 	<version>66.0</version>
 </Package>
