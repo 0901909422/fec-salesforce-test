@@ -524,7 +524,7 @@ public without sharing class FEC_CaseBusinessService {
           String.escapeSingleQuotes(String.valueOf(selectedStage.Id)) +
           '\' ' +
           'AND FEC_Field_Status__c = TRUE ' +
-          'ORDER BY FEC_Section__c, FEC_Sub_Section__c, FEC_Field_Object_Name__c, FEC_Field_Order_Display__c';
+          'ORDER BY FEC_Section__c, FEC_Sub_Section_Order__c NULLS LAST, FEC_Sub_Section__c, FEC_Field_Object_Name__c, FEC_Field_Order_Display__c';
 
         List<SObject> masterDatalst = Database.query(soql);
 
@@ -577,7 +577,14 @@ public without sharing class FEC_CaseBusinessService {
           if (TYPE_LWC.equals(itemType)) {
             String lwcName = (String) item.get('FEC_LWC_Name__c');
             if (String.isNotBlank(lwcName)) {
-              sectionTemp.componentlst.add(lwcName);
+              DynamicLwcComponent lwcSlot = new DynamicLwcComponent();
+              lwcSlot.componentName = lwcName;
+              lwcSlot.order = subSectionOrderTemp;
+              lwcSlot.fieldLayout = (Decimal) item.get(
+                'FEC_Sub_Section_Field_Layout__c'
+              );
+              lwcSlot.subSectionName = subSectionNameTemp;
+              sectionTemp.componentlst.add(lwcSlot);
             }
           } else {
             if (String.isNotBlank(subSectionNameTemp)) {
@@ -590,6 +597,14 @@ public without sharing class FEC_CaseBusinessService {
                   subSectionLayoutTemp
                 );
                 sectionTemp.subSectionlst.add(subSectionTemp);
+              } else if (subSectionOrderTemp != null) {
+                // Nhiều dòng MDS cùng FEC_Sub_Section__c: giữ order nhỏ nhất (đúng FEC_Sub_Section_Order__c khi SOQL không theo order).
+                if (
+                  subSectionTemp.order == null ||
+                  subSectionOrderTemp < subSectionTemp.order
+                ) {
+                  subSectionTemp.order = subSectionOrderTemp;
+                }
               }
 
               cObjTemp = subSectionTemp.findObj(cObjNameTemp);
@@ -674,7 +689,7 @@ public without sharing class FEC_CaseBusinessService {
 
       if (containProcessAction) {
         validButtonTypelst.add('Process Action');
-      }
+      } 
 
       List<FEC_Stage_Screen__c> actionlst = Database.query(
         'SELECT Id, FEC_Action_Button__c, ' +
@@ -2467,6 +2482,18 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
+  /** Metadata LWC slot (FEC_Type__c = LWC) — thứ tự theo FEC_Sub_Section_Order__c. */
+  public class DynamicLwcComponent {
+    @AuraEnabled
+    public String componentName;
+    @AuraEnabled
+    public Decimal order;
+    @AuraEnabled
+    public Decimal fieldLayout;
+    @AuraEnabled
+    public String subSectionName;
+  }
+
   public class Section implements Comparable {
     @AuraEnabled
     public String name;
@@ -2487,14 +2514,14 @@ public without sharing class FEC_CaseBusinessService {
     public Decimal layout;
 
     @AuraEnabled
-    public List<String> componentlst;
+    public List<DynamicLwcComponent> componentlst;
 
     // Default constructor
     public Section() {
       this.objlst = new List<CObject>();
       this.subSectionlst = new List<Section>();
       this.error = new Error();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<DynamicLwcComponent>();
     }
 
     public Section(String name) {
@@ -2502,7 +2529,7 @@ public without sharing class FEC_CaseBusinessService {
       this.objlst = new List<CObject>();
       this.subSectionlst = new List<Section>();
       this.error = new Error();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<DynamicLwcComponent>();
     }
 
     public Section(String name, Decimal order, Decimal layout) {
@@ -2512,14 +2539,14 @@ public without sharing class FEC_CaseBusinessService {
       this.layout = layout;
       this.subSectionlst = new List<Section>();
       this.error = new Error();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<DynamicLwcComponent>();
     }
 
     // Parameterized constructor
     public Section(String name, List<CObject> objlst) {
       this.name = name;
       this.objlst = objlst != null ? objlst : new List<CObject>();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<DynamicLwcComponent>();
       this.error = new Error();
     }
 
@@ -2527,7 +2554,7 @@ public without sharing class FEC_CaseBusinessService {
       this.name = name;
       this.error = err;
       this.subSectionlst = new List<Section>();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<DynamicLwcComponent>();
     }
 
     public CObject findObj(String name) {
