@@ -663,6 +663,8 @@
 		<members>FEC_Stage_Change__c.FEC_Condition_Requirement__c</members>
 		<members>Case.FEC_Case_Created_By__c</members>
 		<members>FEC_Notification__c.FEC_Customer_Type__c</members>
+		<members>Case.FEC_Created_by__c</members>
+		<members>Case.FEC_Last_Updated_By__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
