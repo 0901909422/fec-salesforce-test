@@ -718,6 +718,8 @@
         <members>Case.Interaction</members>
         <members>Case.Internal_Case</members>
         <members>Case.Search_Interaction</members>
+		<members>FEC_Notification__c.Auto_Notification</members>
+		<members>FEC_Notification__c.Manual_Notification</members>
         <name>RecordType</name>
     </types>
 	<types>

@@ -121,14 +121,12 @@ public without sharing class FEC_Notification {
         System.debug('Search Criteria -> CustomerType: ' + currentCase.FEC_Customer_Type__c + ', ProductType: ' + finalProductType + ', Category: ' + finalCategory + ', SubCategory: ' + finalSubCategory + ', SubCode: ' + finalSubCode + ', Stage: ' + currentCase.FEC_Current_Case_Stage__c);
 
         // 3. Query Notification satisfying conditions
-        Set<String> validCustomerTypes = new Set<String>{ currentCase.FEC_Customer_Type__c, FEC_ConstantCommon.CASE_ALL_REQUEST };
         List<FEC_Notification__c> validNotifs = [SELECT Id, Name, FEC_Notification_Template__c, 
                                                     FEC_Notification_Template__r.Name,
                                                     FEC_Notification_Channel__r.Name,
                                                     FEC_Target_Group__c
                                              FROM FEC_Notification__c 
-                                             WHERE FEC_Customer_Type__c IN :validCustomerTypes
-                                             AND FEC_Product_Type__c = :finalProductType
+                                             WHERE FEC_Product_Type__c = :finalProductType
                                              AND FEC_Category__c = :finalCategory
                                              AND FEC_SubCategory__c = :finalSubCategory
                                              AND FEC_SubCode__c = :finalSubCode
