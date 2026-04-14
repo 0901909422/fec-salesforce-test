@@ -968,6 +968,7 @@
     </types>
     <types>
 		<members>ServiceResourceSkill-en_US</members>
+		<members>FEC_Additional_Info__c-en_US</members>
 		<name>CustomObjectTranslation</name>
 	</types>
 
@@ -1321,6 +1322,16 @@
 		<members>FEC_Address_Info__c.FEC_Mailing_Address__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
+		<members>FEC_Stage_Change__c.FEC_Condition_Requirement__c</members>
+		<members>Case.FEC_Case_Created_By__c</members>
+		<members>FEC_Notification__c.FEC_Customer_Type__c</members>
+		<members>Case.FEC_Created_by__c</members>
+		<members>Case.FEC_Last_Updated_By__c</members>
+		<members>Case.FEC_Card_Replacement_Fee__c</members>
+		<members>Case.FEC_Card_Replacement_Reason__c</members>
+		<members>Case.FEC_New_Block_Code_Card_Replace__c</members>
+		<members>Case.FEC_Recipient_Name__c</members>
+		<members>Case.FEC_Recipient_Phone_Number__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
@@ -1349,6 +1360,8 @@
 		<members>FEC_HoldCaseController</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
 		<members>FEC_MarkNFU</members>
+		<members>FEC_GetProductListCallout</members>
+		<members>FEC_PinReplacementController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1524,6 +1537,18 @@
         <members>FEC_MSG_ACTION_UNBLOCK_CARD</members>
         <members>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</members>
 		<members>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</members>
+		<members>FEC_MSG_Address_Update_Not_Eligible</members>
+        <members>FEC_MSG_Address_Update_Reason_Account_Status</members>
+        <members>FEC_MSG_Address_Update_Reason_Block_Code</members>
+        <members>FEC_MSG_Address_Update_Reason_Block_Code_1</members>
+        <members>FEC_MSG_Address_Update_Reason_Block_Code_2</members>
+        <members>FEC_MSG_Address_Update_Reason_Generic</members>
+        <members>FEC_LBL_UpdateAddress_Original_Information</members>
+        <members>FEC_LBL_UpdateAddress_Updated_Information</members>
+		<members>FEC_ACTION_PIN_REISSUE_HEADER</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE_ERROR</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1546,12 +1571,19 @@
 		<members>fec_UserSearchModal</members>
 		<members>fec_holdCaseManual</members>
 		<members>fec_UpdateAddress</members>
+		<members>fec_GetNextWork</members>
+		<members>fec_InteractionCaseModeStore</members>
+		<members>fec_InteractionHighlightMain</members>
+		<members>maskedToggleCell</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
 		<members>FEC_Customer_Case_Record_Page</members>
 		<members>FEC_Clear_Session_Record_Page</members>
 		<members>FEC_Service_UtilityBar</members>
+		<members>Master_Data_Setting_Record_Page</members>
+		<members>Stage_Change_Record_Page</members>
+		<members>Stage_Screen_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -1583,7 +1615,10 @@
 		<name>ListView</name>
     </types>
 	<types>
+        <members>Case.Customer_Case</members>
+        <members>Case.Interaction</members>
         <members>Case.Internal_Case</members>
+        <members>Case.Search_Interaction</members>
         <name>RecordType</name>
     </types>
 	<types>
@@ -1593,6 +1628,10 @@
 	<types>
 		<members>FEC_ServiceResource_Set_ServiceType_Agent</members>
 		<name>Flow</name>
+	</types>
+    <types>
+		<members>en_US</members>
+		<name>Translations</name>
 	</types>
 
     <version>65.0</version>

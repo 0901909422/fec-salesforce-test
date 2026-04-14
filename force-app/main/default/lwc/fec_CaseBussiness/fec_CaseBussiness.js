@@ -49,6 +49,10 @@ import FEC_ACTION_UNBLOCK_CARD_HEADER from "@salesforce/label/c.FEC_ACTION_UNBLO
 import FEC_MSG_ACTION_UNBLOCK_CARD from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD";
 import FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS";
 import FEC_MSG_ACTION_UNBLOCK_CARD_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_ERROR";
+import FEC_ACTION_PIN_REISSUE_HEADER from "@salesforce/label/c.FEC_ACTION_PIN_REISSUE_HEADER";
+import FEC_MSG_ACTION_PIN_REISSUE from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE";
+import FEC_MSG_ACTION_PIN_REISSUE_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_SUCCESS";
+import FEC_MSG_ACTION_PIN_REISSUE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_ERROR";
 
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
@@ -73,6 +77,7 @@ const ACTION_CANCEL = "Cancel";
 const OUTBOUND_CAMPAIGN = 'Outbound Campaign';
 
 const ACTION_UNBLOCK_CARD = "Unblock Card";
+const ACTION_PIN_REISSUE = "PIN Reissue";
 
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
@@ -585,6 +590,12 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   connectedCallback() {
+    console.log("🚀 ~ Fec_CaseBussiness ~ connectedCallback ~ this.business:", JSON.stringify(this.business))
+    this._boundHandleIppClosureLoad = this.handleIppClosureLoad.bind(this);
+    this.template.addEventListener(
+      "fecippclosureload",
+      this._boundHandleIppClosureLoad,
+    );
     this.getData();
     if (this.isEdit) {
       this.updateRoutingActionDisplay(STR_EMPTY);
@@ -592,6 +603,13 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   disconnectedCallback() {
+    console.log("🚀 ~ Fec_CaseBussiness ~ disconnectedCallback ~ this._boundHandleIppClosureLoad:", this._boundHandleIppClosureLoad)
+    if (this._boundHandleIppClosureLoad) {
+      this.template.removeEventListener(
+        "fecippclosureload",
+        this._boundHandleIppClosureLoad,
+      );
+    }
     localStorage.removeItem(this.draftKey);
   }
 
@@ -828,6 +846,15 @@ export default class Fec_CaseBussiness extends LightningElement {
             });
           });
         });
+
+        // check show button process action PIN Reissue
+        const processActions = this.business.processActionlst || [];
+        processActions.forEach(processAction => {
+          if (processAction.value === ACTION_PIN_REISSUE) {
+            this.showProcessAction = true;
+          }
+        });
+
         const actions = this.business.routingActionlst || [];
         const foundActions = [];
 
@@ -1402,12 +1429,48 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
     return el.saveForSubmitIfApplicable();
   }
-
+  /*Lấy element của form IPP Closure*/
   _getIppClosureFormEl() {
+    const wrapper = this.template.querySelector(
+      '[data-fec-lwc="fec_IPPClosureForm"]',
+    );
+    if (wrapper && wrapper.firstElementChild) {
+      const el = wrapper.firstElementChild;
+      if (typeof el.validateSelectionRequiredForSubmit === "function") {
+        return el;
+      }
+    }
     return (
       this.template.querySelector("c-fec_-i-p-p-closure-form") ||
       this.template.querySelector("c-fec_-ipp-closure-form")
     );
+  }
+
+  /*Nếu thẻ không có khoản IPP nào thỏa điều kiện tất toán
+  Mong muốn: hệ thống tự động chọn giá trị action = Reject*/
+  handleIppClosureLoad(event) {
+    if (!event.detail || !event.detail.noEligibleForClosure) {
+      return;
+    }
+    Promise.resolve().then(() => {
+      if (!this.isEdit || !this.business?.hasRoutingAction) {
+        return;
+      }
+      const hasReject = this.business.routingActionlst?.some(
+        (a) => a.value === ACTION_REJECT,
+      );
+      if (!hasReject) {
+        return;
+      }
+      const routeToEle = this.template.querySelector(
+        'lightning-select[data-id="routing-action"]',
+      );
+      if (!routeToEle) {
+        return;
+      }
+      routeToEle.value = ACTION_REJECT;
+      this.actionValue = ACTION_REJECT;
+    });
   }
 
   _validateIPPClosureForSubmit() {
@@ -1576,6 +1639,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (method == ACTION_UNBLOCK_CARD) {
       header = FEC_ACTION_UNBLOCK_CARD_HEADER;
       content = FEC_MSG_ACTION_UNBLOCK_CARD;
+    } else if (method == ACTION_PIN_REISSUE) {
+      header = FEC_ACTION_PIN_REISSUE_HEADER;
+      content = FEC_MSG_ACTION_PIN_REISSUE;
     } else {
       header = FEC_ACTION_PHONE_UPDATE_HEADER;
       content = FEC_MSG_ACTION_PHONE_UPDATE;
@@ -1642,6 +1708,12 @@ export default class Fec_CaseBussiness extends LightningElement {
         };
         break;
 
+      case ACTION_PIN_REISSUE:
+        params = {
+          caseId: this.recordId,
+        };
+        break;
+
       default:
         break;
     }
@@ -1651,6 +1723,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (this.processActionMethod == ACTION_UNBLOCK_CARD) {
       msgSuccess = FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS;
       msgError = FEC_MSG_ACTION_UNBLOCK_CARD_ERROR;
+    } else if (this.processActionMethod == ACTION_PIN_REISSUE) {
+      msgSuccess = FEC_MSG_ACTION_PIN_REISSUE_SUCCESS;
+      msgError = FEC_MSG_ACTION_PIN_REISSUE_ERROR;
     } else {
       msgSuccess = FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS;
       msgError = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
@@ -1849,6 +1924,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.business.sectionlst.forEach((section) => {
       if (!section.componentlst?.length) return;
 
+      const slots = section.componentlst.map(() => null);
+      section._fecDynCmpSlots = slots;
       section.resolvedComponentlst = [];
 
       section.componentlst.forEach((name, idx) => {
@@ -1865,11 +1942,11 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         const p = loader()
           .then((mod) => {
-            section.resolvedComponentlst.push({
+            slots[idx] = {
               key: `${name}-${idx}`,
               ctor: mod.default,
               componentName: name,
-            });
+            };
           })
           .catch((err) => {
             console.error(`[fec_CaseBussiness] Failed to load component "${name}":`, err);
@@ -1880,6 +1957,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     });
 
     Promise.all(resolvePromises).then(() => {
+      this.business.sectionlst.forEach((section) => {
+        if (section._fecDynCmpSlots) {
+          section.resolvedComponentlst = section._fecDynCmpSlots.filter(Boolean);
+          delete section._fecDynCmpSlots;
+        }
+      });
       this.business = { ...this.business };
     });
   }
