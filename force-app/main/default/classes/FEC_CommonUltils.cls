@@ -786,6 +786,60 @@ public with sharing class FEC_CommonUltils {
         return responseBody;
     }
 
+    /**
+     * Convert rtaImage URLs trong HTML sang base64 inline để email client hiển thị được.
+     * Tự detect org domain nên không cần hardcode URL.
+     */
+    public static String inlineImages(String html) {
+        if (String.isBlank(html)) return html;
+        // Tìm tất cả src="...rtaImage..." và replace bằng base64
+        Pattern p = Pattern.compile('src="(https?://[^"]*rtaImage[^"]*)"');
+        Matcher m = p.matcher(html);
+        String result = html;
+        while (m.find()) {
+            String rawUrl = m.group(1);
+            // Decode HTML entities trong URL (&amp; → &)
+            String url = rawUrl.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>');
+            try {
+                HttpRequest req = new HttpRequest();
+                req.setEndpoint(url);
+                req.setMethod('GET');
+                req.setTimeout(10000);
+                req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
+                Http http = new Http();
+                HttpResponse res = http.send(req);
+                Integer statusCode = res.getStatusCode();
+                // Follow redirect nếu 302/301, statusCode == 200 bên dưới khác với statusCode ban đầu
+                if (statusCode == 302 || statusCode == 301) {
+                    String location = res.getHeader('Location');
+                    if (String.isNotBlank(location)) {
+                        HttpRequest req2 = new HttpRequest();
+                        req2.setEndpoint(location);
+                        req2.setMethod('GET');
+                        req2.setTimeout(10000);
+                        req2.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
+                        res = http.send(req2);
+                        statusCode = res.getStatusCode();
+                    }
+                }
+                if (statusCode == 200 && res.getBodyAsBlob() != null && res.getBodyAsBlob().size() > 0) {
+                    String contentType = res.getHeader('Content-Type') != null ? res.getHeader('Content-Type') : 'image/png';
+                    if (contentType.contains(';')) contentType = contentType.substringBefore(';').trim();
+                    String b64 = EncodingUtil.base64Encode(res.getBodyAsBlob());
+                    String dataUri = 'data:' + contentType + ';base64,' + b64;
+                    result = result.replace(rawUrl, dataUri);
+                } else {
+                    // Không inline được ảnh, giữ nguyên URL gốc trong HTML
+                    System.debug('inlineImages: skip inline for url=' + url + ' | status=' + statusCode
+                        + ' | bodySize=' + (res.getBodyAsBlob() != null ? res.getBodyAsBlob().size() : 0));
+                }
+            } catch (Exception e) {
+                System.debug('inlineImages failed for url: ' + url + ' | ' + e.getMessage());
+            }
+        }
+        return result;
+    }
+
   public static String normalizeInsuranceFlag(String value) {
     if (String.isBlank(value)) return null;
 

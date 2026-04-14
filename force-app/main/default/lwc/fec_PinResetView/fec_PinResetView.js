@@ -1,4 +1,6 @@
-import { LightningElement, track, api } from "lwc";
+import { LightningElement, track, api, wire } from "lwc";
+import { publish, MessageContext } from "lightning/messageService";
+import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import getCardInfo from "@salesforce/apex/FEC_PinResetHandler.getCardInfo";
 import resetPin from "@salesforce/apex/FEC_PinResetHandler.resetPin";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
@@ -8,6 +10,10 @@ import FEC_Yes_Btn from "@salesforce/label/c.FEC_Yes_Btn";
 import FEC_No_Btn from "@salesforce/label/c.FEC_No_Btn";
 import FEC_Card_Number_Required_MSG from "@salesforce/label/c.FEC_Card_Number_Required_MSG";
 import FEC_CIF_Number_Required_MSG from "@salesforce/label/c.FEC_CIF_Number_Required_MSG";
+
+import FEC_RESET_PIN_SUCCESS from "@salesforce/label/c.FEC_RESET_PIN_SUCCESS";
+import FEC_RESET_PIN_ERROR from "@salesforce/label/c.FEC_RESET_PIN_ERROR";
+import FEC_RESET_PIN_FAILED from "@salesforce/label/c.FEC_RESET_PIN_FAILED";
 
 import {
   ERROR_MODAL_TITLE,
@@ -24,7 +30,9 @@ export default class Fec_PinResetView extends LightningElement {
   nationalId;
   mobile;
   processActionCount = 0;
-
+  successReset = false;
+  // showRetry = false;
+  // showFailed = false;
   isOpen = false;
 
   label = {
@@ -34,16 +42,22 @@ export default class Fec_PinResetView extends LightningElement {
     FEC_No_Btn,
     FEC_Card_Number_Required_MSG,
     FEC_CIF_Number_Required_MSG,
+    FEC_RESET_PIN_SUCCESS,
+    FEC_RESET_PIN_ERROR,
+    FEC_RESET_PIN_FAILED,
   };
   // ================= INIT =================
+
+  @wire(MessageContext)
+  messageContext;
+
   connectedCallback() {
     this.loadCardInfo();
   }
 
   loadCardInfo() {
-    getCardInfo({ customerCaseId: this.recordId })
+    return getCardInfo({ customerCaseId: this.recordId })
       .then((res) => {
-        console.log("res: ", JSON.stringify(res));
         this.nationalId = res.nationalId;
         this.mobile = res.mobile;
         this.processActionCount = res.processActionCount;
@@ -66,10 +80,25 @@ export default class Fec_PinResetView extends LightningElement {
     this.openModal();
   }
 
-  get isDisable() {
-    return this.processActionCount >= 3;
+  get isInvisibleButton() {
+    return this.successReset || this.processActionCount >= 3;
   }
 
+  get isShowSuccessMessage() {
+    return this.successReset;
+  }
+
+  get isShowRetryMessage() {
+    return (
+      this.processActionCount > 0 &&
+      this.processActionCount < 3 &&
+      !this.successReset
+    );
+  }
+
+  get isShowFailedMessage() {
+    return this.processActionCount >= 3 && !this.successReset;
+  }
   // ================= MODAL =================
   openModal() {
     this.isOpen = true;
@@ -86,28 +115,41 @@ export default class Fec_PinResetView extends LightningElement {
   handleConfirmReset() {
     this.isLoading = true;
 
+    // publish(this.messageContext, CASE_NOC, {
+    //   type: "PIN_RESET_CONFIRMED",
+    //   caseId: this.recordId,
+    // });
+
     resetPin({
       caseId: this.recordId,
       nationalId: this.nationalId,
       mobile: this.mobile,
     })
       .then((res) => {
-        console.log("res from api: ", JSON.stringify(res));
+        console.log("🔄 API RESPONSE:", JSON.stringify(res));
         if (res.RespCode != "1") {
           this.showToast(SUCCESS_MODAL_TITLE, res.RespDesc, SUCCESS_TOAST_TYPE);
+
+          // ✅ only mark success locally
+          this.successReset = res.isSuccess;
+
+          return this.loadCardInfo(); // 👈 WAIT for fresh data
         } else {
-          this.showToast(
-            ERROR_MODAL_TITLE,
-            res.RespDesc || res.errorMessage,
-            ERROR_MODAL_TITLE,
-          );
+          throw new Error(res.RespDesc || res.errorMessage);
         }
       })
+      .then(() => {
+        publish(this.messageContext, CASE_NOC, {
+          type: "PIN_RESET_SUCCESS",
+          caseId: this.recordId,
+        });
+      })
       .catch((err) => {
-        this.showToast(ERROR_MODAL_TITLE, err.body?.message, ERROR_MODAL_TITLE);
+        this.showToast(ERROR_MODAL_TITLE, err.message, ERROR_TOAST_TYPE);
       })
       .finally(() => {
         this.close();
+        this.isLoading = false;
       });
   }
 
