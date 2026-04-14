@@ -93,7 +93,7 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
         String cardNbr,
         String name
     ) {
-        validateRequest(transID, requestorId, dateTimeStr, context, signOnName, org, cardNbr, name);
+        validateRequest(transID, requestorId, dateTimeStr, vmxVersion, context, signOnName, org, cardNbr, name);
 
         String soapBody = buildSoapRequest(
             transID,
@@ -331,6 +331,7 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
         String transID,
         String requestorId,
         String dateTimeStr,
+        String vmxVersion,
         String context,
         String signOnName,
         String org,
@@ -365,6 +366,14 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
             );
         }
 
+        // ===================== VMX VERSION =====================
+       if (String.isBlank(vmxVersion)) {
+            throw new CalloutException(
+                String.format(System.Label.FEC_MSG_Param_Required,
+                    new List<String>{ 'VMXVersion' })
+            );
+        }
+
         // ===================== CONTEXT =====================
         if (String.isBlank(context)) {
             throw new CalloutException(
@@ -395,7 +404,7 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
                 String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'ORG' })
             );
         }
-        if (org.length() > 10) {
+        if (org.length() < 10) {
             throw new CalloutException(
                 String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{ 'ORG', '10' })
             );
@@ -413,7 +422,7 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
             );
         }
 
-        // ===================== NAME (optional) =====================
+        // ===================== NAME =====================
         if (!String.isBlank(name) && name.length() > 50) {
             throw new CalloutException(
                 String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{ 'NAME', '50' })
