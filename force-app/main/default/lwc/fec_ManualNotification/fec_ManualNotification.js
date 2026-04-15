@@ -105,6 +105,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             this.categoryId = res.FEC_Category__c;
             this.subCategoryId = res.FEC_SubCategory__c;
             this.subCodeId = res.FEC_SubCode__c;
+            this.fetchNotifications();
         } catch(error) {
             console.error('Error fetching Case details in fec_ManualNotification: ', error);
         }
@@ -141,29 +142,41 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
 
     handleNOCMessage(message) {
         if (!message) return;
-        if (message.productTypeId !== undefined) {
-            this.productTypeId = message.productTypeId;
-            this.categoryId = message.categoryId;
-            this.subCategoryId = message.subCategoryId;
-            this.subCodeId = message.subCodeId;
-        } else if (message.accountType != null) {
-            // When accountType is provided, it means NOC is reset from another source
-            this.productTypeId = null;
-            this.categoryId = null;
-            this.subCategoryId = null;
-            this.subCodeId = null;
-        }
+        this.productTypeId = message?.productTypeId;
+        this.categoryId = message?.categoryId;
+        this.subCategoryId = message?.subCategoryId;
+        this.subCodeId = message?.subCodeId;
+        this.fetchNotifications();
     }
 
-    @wire(getAvailableNotifications, { caseId: '$recordId', productTypeId: '$productTypeId', categoryId: '$categoryId', subCategoryId: '$subCategoryId', subCodeId: '$subCodeId' })
-    wiredNotifications({ error, data }) {
-        if (data) {
+    async fetchNotifications() {
+        if (!this.recordId) return;
+        try {
+            const data = await getAvailableNotifications({ 
+                caseId: this.recordId, 
+                productTypeId: this.productTypeId, 
+                categoryId: this.categoryId, 
+                subCategoryId: this.subCategoryId, 
+                subCodeId: this.subCodeId 
+            });
+            console.log('--- [fetchNotifications] data: ' + JSON.stringify(data));
             this.rawNotifications = data;
             this.options = data.map(item => {
                 return { label: item.label, value: item.value };
             });
+            
+            // Reset all selections since the available notifications just changed
+            this.selectedNotificationId = null;
+            this.selectedTemplateId = null;
+            this.selectedChannel = '';
+            this.selectedTargetGroup = '';
+            this.targetEmail = '';
+            this.searchTerm = '';
+            this.isDropdownOpen = false;
+            this.userSearchResults = [];
+
             this.error = undefined;
-        } else if (error) {
+        } catch (error) {
             this.error = this.label.FEC_Error_Loading_Template_List + ': ' + (error.body ? error.body.message : JSON.stringify(error));
             this.options = undefined;
             this.rawNotifications = [];
