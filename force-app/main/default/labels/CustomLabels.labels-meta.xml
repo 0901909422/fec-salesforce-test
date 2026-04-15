@@ -9807,7 +9807,7 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Email Section - Danh xung label</shortDescription>
-        <value>Danh xưng</value>
+        <value>Title</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Option_Anh_Chi</fullName>
