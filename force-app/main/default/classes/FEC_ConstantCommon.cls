@@ -98,8 +98,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_MERGE_FIELD = '\\{\\{\\{([^}]+)\\}\\}\\}';
     public static final String PATTERN_TRIPLE_BRACE = '\\{\\{\\{([^}]+)\\}\\}\\}';
     public static final String PATTERN_DOUBLE_BRACE = '\\{\\{([^{}]+)\\}\\}';
+    public static final String PATTERN_FLEXIBLE_BRACES = '\\{\\{+([^{}]+)\\}\\}+';
+
     public static final String PATTERN_CASE_MERGE_FIELD = '\\{\\{Case\\.([^}]+)\\}\\}';
     public static final String PATTERN_USER_MERGE_FIELD = '\\{\\{User\\.([^}]+)\\}\\}';
+    public static final String PATTERN_CLEAN_TEXT = '[^a-zA-Z0-9-_]';
     
     // CARD: 16 hoặc 19 digits
     public static final String PATTERN_CARD = '^(\\d{16}|\\d{19})$';
@@ -419,5 +422,18 @@ public with sharing class FEC_ConstantCommon {
       'Document Preparation' => 'DocumentPreparation',
       'Task Under Review' => 'TaskUnderReview'
     };
-  public static final String CASE_ALL_REQUEST = 'All';  
+    
+    public static final String CASE_ALL_REQUEST = 'All';
+
+    //----------HARD CODE VALUE FOR RESET PIN (Non-production)----------
+    public static final String ENVIROMENT_NON_PRODUCTION = 'Non-Production';
+    public static final String RESET_PIN_DEFAULT_NID = '261089113994';
+    public static final String RESET_PIN_DEFAULT_PHONE = '84983893967';
+    public static final String CASE_ALL_CUSTOMER = 'All';
+    
+    //----------HARD CODE VALUE FOR CARD LOCK UNLOCK (Non-production)----------
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_BLOCK_CODE = 'C';
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_LAST4DIGIT = '6309';
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER = '0001500010000173373';
+    
 }

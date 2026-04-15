@@ -1,7 +1,13 @@
 <template>
   <lightning-layout multiple-rows>
     <lightning-layout-item size="6" padding="around-small">
-      <lightning-input data-id="currentCardStatus" type="text" label={customLabel.currentCardStatus} value={cardBlock.currentCardStatus} disabled={isDisabled}></lightning-input>
+      <!-- <lightning-input data-id="currentCardStatus" type="text" label={customLabel.currentCardStatus} value={cardBlock.currentCardStatus} disabled={isDisabled}></lightning-input> -->
+      <div class="slds-form-element slds-border_bottom">
+        <label class="slds-form-element__label" for="newBlockCode">{customLabel.currentCardStatus}</label>
+        <div class="slds-form-element__control">
+          <input id="currentCardStatus" readonly type="text" class="slds-input" value={cardBlock.currentCardStatus} />
+        </div>
+      </div>
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">
       <lightning-combobox
@@ -14,7 +20,13 @@
       </lightning-combobox>
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">
-      <lightning-input data-id="newBlockCode" type="text" label={customLabel.newBlockCode} value={cardBlock.newBlockCode} disabled={isDisabled}></lightning-input>
+      <!-- <lightning-input data-id="newBlockCode" type="text" label={customLabel.newBlockCode} value={cardBlock.newBlockCode} disabled={isDisabled}></lightning-input> -->
+      <div class="slds-form-element slds-border_bottom">
+        <label class="slds-form-element__label" for="newBlockCode">{customLabel.newBlockCode}</label>
+        <div class="slds-form-element__control">
+          <input data-id="newBlockCode" id="newBlockCode" readonly type="text" class="slds-input" value={cardBlock.newBlockCode} />
+        </div>
+      </div>
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small"></lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">

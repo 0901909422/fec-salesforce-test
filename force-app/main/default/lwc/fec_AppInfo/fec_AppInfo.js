@@ -26,6 +26,10 @@ export default class Fec_AppInfo extends LightningElement {
         msgErrorAPI: FEC_MSG_Error_API_Label
     };
 
+    get showDataTable() {
+        return !this.errorText;
+    }
+
     columns = [
         {
             label: this.customLabel.userLabel,
@@ -63,15 +67,15 @@ export default class Fec_AppInfo extends LightningElement {
         this.isLoading = true;
 
         updateCaseApplicationHistory({ caseId: this.recordId })
-            .then(res => {
+            .then((res) => {
+                this.errorText = '';
                 if (res) {
                     this.histories = [this.mapHistory(res)];
                 } else {
                     this.histories = [];
                 }
-                this.errorText = '';
             })
-            .catch(err => {
+            .catch((err) => {
                 console.error('[FEC] updateCaseApplicationHistory error', err);
                 this.histories = [];
                 this.errorText = this.customLabel.msgErrorAPI;
