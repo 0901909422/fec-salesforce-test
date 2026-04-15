@@ -104,6 +104,7 @@
 		<members>FEC_MarkNFU</members>
 		<members>FEC_GetProductListCallout</members>
 		<members>FEC_PinReplacementController</members>
+		<members>FEC_MCMSCARDTOCARDINQEMEA</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -114,7 +115,7 @@
         <members>fec_templateListView</members>
         <members>fec_CaseEditNOC</members>
 		<members>fec_CaseBussiness</members>
-		<members>fec_CardBlock</members>
+		<!--<members>fec_CardBlock</members>-->
 		<members>fec_Search</members>
 		<members>fecInteractionEmailInfo</members>
 		<members>fec_CaseDetail_Customer</members>
@@ -691,6 +692,7 @@
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
+		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>

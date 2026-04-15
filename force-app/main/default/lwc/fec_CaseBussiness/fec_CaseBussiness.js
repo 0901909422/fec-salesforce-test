@@ -45,6 +45,10 @@ import FEC_Decision_Label from "@salesforce/label/c.FEC_Decision_Label";
 import FEC_Choose_Decision_Label from "@salesforce/label/c.FEC_Choose_Decision_Label";
 import FEC_Sub_Decision_Label from "@salesforce/label/c.FEC_Sub_Decision_Label";
 import FEC_Choose_Sub_Decision_Label from "@salesforce/label/c.FEC_Choose_Sub_Decision_Label";
+import FEC_Block_Card_Header from '@salesforce/label/c.FEC_Block_Card_Header';
+import FEC_Block_Card_Confirmation_Msg from '@salesforce/label/c.FEC_Block_Card_Confirmation_Msg';
+import FEC_Block_Card_Success from '@salesforce/label/c.FEC_Block_Card_Success';
+import FEC_Block_Card_Failed_Max from '@salesforce/label/c.FEC_Block_Card_Failed_Max';
 import FEC_ACTION_UNBLOCK_CARD_HEADER from "@salesforce/label/c.FEC_ACTION_UNBLOCK_CARD_HEADER";
 import FEC_MSG_ACTION_UNBLOCK_CARD from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD";
 import FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS";
@@ -76,8 +80,9 @@ const ACTION_CANCEL = "Cancel";
 
 const OUTBOUND_CAMPAIGN = 'Outbound Campaign';
 
+const ACTION_BLOCK_CARD = "Block Card";
 const ACTION_UNBLOCK_CARD = "Unblock Card";
-const ACTION_PIN_REISSUE = "PIN Reissue";
+const ACTION_PIN_REISSUE = "Reissue PIN";
 
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
@@ -187,6 +192,47 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
   11: 'slds-medium-size_11-of-12',
   12: 'slds-medium-size_12-of-12'
 };
+
+const MAP_NEW_BLOCK_CODE = {
+  'A': 'A',
+  'Không sử dụng': 'L',
+  'Thẻ bị mất/ đánh cắp có phát sinh giao dịch': 'S',
+}
+const MAP_NEW_BLOCK_CODE_CARD_REPLACE = {
+  'Bị hư hỏng': 'L',
+  'Bị mất/ đánh cắp': 'L',
+  'Bị nuốt tại ATM': 'L',
+  'Chưa nhận được thẻ': 'L',
+  'Không còn nguyên vẹn': 'L',
+  'Sai tên in nổi': 'L',
+  'Thay thế lần đầu thẻ Money Tab': 'L',
+  'Liên quan gian lận': 'S',
+}
+const MAP_CARD_REPLACEMENT_FEE_VALUE = {
+  'Bị hư hỏng': '110000',
+  'Bị mất/ đánh cắp': '110000',
+  'Bị nuốt tại ATM': '',
+  'Chưa nhận được thẻ': '',
+  'Không còn nguyên vẹn': '',
+  'Sai tên in nổi': '',
+  'Thay thế lần đầu thẻ Money Tab': '',
+  'Liên quan gian lận': '110000',
+}
+const MAP_CARD_REPLACEMENT_FEE_DISPLAY = {
+  'Bị hư hỏng': '110,000 VND (include 10% VAT)',
+  'Bị mất/ đánh cắp': '110,000 VND (include 10% VAT)',
+  'Bị nuốt tại ATM': '',
+  'Chưa nhận được thẻ': '',
+  'Không còn nguyên vẹn': '',
+  'Sai tên in nổi': '',
+  'Thay thế lần đầu thẻ Money Tab': '',
+  'Liên quan gian lận': '110,000 VND (include 10% VAT)',
+}
+const FIELD_CARD_BLOCK_REASON = 'FEC_Card_Block_Reason__c';
+const FIELD_NEW_BLOCK_CODE = 'FEC_New_Block_Code__c';
+const FIELD_CARD_REPLACEMENT_REASON = 'FEC_Card_Replacement_Reason__c';
+const FIELD_NEW_BLOCK_CODE_CARD_REPLACE = 'FEC_New_Block_Code_Card_Replace__c';
+const FIELD_CARD_REPLACEMENT_FEE = 'FEC_Card_Replacement_Fee__c';
 
 /**
  * Registry of dynamically loadable components.
@@ -1059,7 +1105,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         // check show button process action PIN Reissue
         const processActions = this.business.processActionlst || [];
         processActions.forEach(processAction => {
-          if (processAction.value === ACTION_PIN_REISSUE) {
+          if (processAction.value === ACTION_BLOCK_CARD || processAction.value === ACTION_PIN_REISSUE) {
             this.showProcessAction = true;
           }
         });
@@ -1520,6 +1566,45 @@ export default class Fec_CaseBussiness extends LightningElement {
         }
       }
     }
+
+    // card block
+    if (fieldName === FIELD_CARD_BLOCK_REASON) {
+      this.business.sectionlst.forEach(section => {
+        section.subSectionlst.forEach(sub => {
+          sub.objlst.forEach(obj => {
+            obj.fieldlst.forEach(field => {
+              if (field.editable) return; // ignore editable
+              if (field.apiName === FIELD_NEW_BLOCK_CODE) {
+                field.value = MAP_NEW_BLOCK_CODE[value];
+                field.displayValue = field.value;
+                field.readonlyDisplayValue = field.value;
+              }
+            });
+          });
+        });
+      });
+    }
+    // card replacement
+    else if (fieldName === FIELD_CARD_REPLACEMENT_REASON) {
+      this.business.sectionlst.forEach(section => {
+        section.subSectionlst.forEach(sub => {
+          sub.objlst.forEach(obj => {
+            obj.fieldlst.forEach(field => {
+              if (field.editable) return; // ignore editable
+              if (field.apiName === FIELD_NEW_BLOCK_CODE_CARD_REPLACE) {
+                field.value = MAP_NEW_BLOCK_CODE_CARD_REPLACE[value];
+                field.displayValue = field.value;
+                field.readonlyDisplayValue = field.value;
+              } else if (field.apiName === FIELD_CARD_REPLACEMENT_FEE) {
+                field.value = MAP_CARD_REPLACEMENT_FEE_VALUE[value];
+                field.displayValue = MAP_CARD_REPLACEMENT_FEE_DISPLAY[value];
+                field.readonlyDisplayValue = field.displayValue;
+              }
+            });
+          });
+        });
+      });
+    }
   }
 
   handleChangeAction(e) {
@@ -1957,7 +2042,10 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     let header;
     let content;
-    if (method == ACTION_UNBLOCK_CARD) {
+    if (method == ACTION_BLOCK_CARD) {
+      header = FEC_Block_Card_Header;
+      content = FEC_Block_Card_Confirmation_Msg;
+    } else if (method == ACTION_UNBLOCK_CARD) {
       header = FEC_ACTION_UNBLOCK_CARD_HEADER;
       content = FEC_MSG_ACTION_UNBLOCK_CARD;
     } else if (method == ACTION_PIN_REISSUE) {
@@ -2023,6 +2111,12 @@ export default class Fec_CaseBussiness extends LightningElement {
         };
         break;
 
+      case ACTION_BLOCK_CARD:
+        params = {
+          caseId: this.recordId,
+        };
+        break;
+
       case ACTION_UNBLOCK_CARD:
         params = {
           caseId: this.recordId,
@@ -2041,7 +2135,10 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     let msgSuccess;
     let msgError;
-    if (this.processActionMethod == ACTION_UNBLOCK_CARD) {
+    if (this.processActionMethod == ACTION_BLOCK_CARD) {
+      msgSuccess = FEC_Block_Card_Success;
+      msgError = FEC_Block_Card_Failed_Max;
+    } else if (this.processActionMethod == ACTION_UNBLOCK_CARD) {
       msgSuccess = FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS;
       msgError = FEC_MSG_ACTION_UNBLOCK_CARD_ERROR;
     } else if (this.processActionMethod == ACTION_PIN_REISSUE) {
@@ -2055,6 +2152,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     run({ method: this.processActionMethod, params })
       .then((res) => {
         let isSuccess = res?.success;
+        console.log('>>>>>>>isSuccess: ' + isSuccess);
 
         this.isProcessActionValid =
           res?.actionCount != -1 && res?.actionCount != 3;
@@ -2375,7 +2473,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this.actionValue = ACTION_RESOLVE;
     }
 
-    this._syncHasRoutingAction();
+    // this._syncHasRoutingAction(); // PhuongNT cmt, method not exist
     this.business = { ...this.business };
   }
 }
