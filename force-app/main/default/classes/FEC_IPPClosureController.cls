@@ -1,6 +1,6 @@
 /****************************************************************************************
  * File Name    : FEC_IPPClosureController.cls
- * Description  : Controller for IPP Closure. Eligible IPPs (Current Balance != 0, no Pending Case for that IPP), save selected IPP to Case.
+ * Description  : Controller for IPP Closure. Lists IPPs (Current Balance != 0) for selection; if Case.FEC_IPP_To_Close__c is set, returns that IPP only for display.
  ****************************************************************************************/
 
 public with sharing class FEC_IPPClosureController {
@@ -22,11 +22,11 @@ public with sharing class FEC_IPPClosureController {
     public class IPPClosureResultDTO {
         @AuraEnabled public List<IPPClosureDTO> rows;
         @AuraEnabled public Boolean showNoEligibleWarning;
+        @AuraEnabled public Id savedIppToCloseOnCase;
     }
 
     /**
-     * Get IPPs eligible for closure: same Customer History as Case, Current Balance != 0,
-     * and no other Case (same contract) with Status Pending has recorded this IPP for closure.
+     * Get IPPs for closure: same Customer History as Case. If Case.FEC_IPP_To_Close__c is set, returns only that IPP (review / later stages). Otherwise returns all IPPs with Current Balance != 0 and != null.
      */
     @AuraEnabled(cacheable=false)
     public static IPPClosureResultDTO getEligibleIPPsForClosure(Id caseId) {
@@ -43,26 +43,76 @@ public with sharing class FEC_IPPClosureController {
         if (customerHistoryId == null) {
             return wrapper;
         }
-        Set<Id> excludedIppIds = getIppIdsWithPendingClosureCase(customerHistoryId, caseId);
+        Id caseIppToClose = null;
+        List<Case> caseForIpp = [
+            SELECT FEC_IPP_To_Close__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (!caseForIpp.isEmpty()) {
+            caseIppToClose = caseForIpp[0].FEC_IPP_To_Close__c;
+            wrapper.savedIppToCloseOnCase = caseIppToClose;
+        }
         List<FEC_IPP__c> ipps = [
             SELECT Id, FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Open_Date__c,
                    FEC_IPP_First_Due_Date__c, FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c,
                    FEC_IPP_Current_Balance__c, FEC_IPP_Interest_Rate__c, FEC_IPP_Term__c,
-                   FEC_IPP_Current_Term__c
+                   FEC_IPP_Current_Term__c, FEC_Customer_History__c
             FROM FEC_IPP__c
             WHERE FEC_Customer_History__c = :customerHistoryId
             ORDER BY FEC_IPP_Record_No__c ASC NULLS LAST
         ];
         SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, ipps);
-        List<FEC_IPP__c> afterExclusion = new List<FEC_IPP__c>();
+        List<FEC_IPP__c> accessibleIpps = new List<FEC_IPP__c>();
         for (SObject so : decision.getRecords()) {
-            FEC_IPP__c rec = (FEC_IPP__c) so;
-            if (excludedIppIds != null && excludedIppIds.contains(rec.Id)) {
-                continue;
-            }
-            afterExclusion.add(rec);
+            accessibleIpps.add((FEC_IPP__c) so);
         }
-        for (FEC_IPP__c rec : afterExclusion) {
+        if (caseIppToClose != null) {
+            FEC_IPP__c chosen = null;
+            for (FEC_IPP__c rec : accessibleIpps) {
+                if (rec.Id == caseIppToClose) {
+                    chosen = rec;
+                    break;
+                }
+            }
+            if (chosen == null) {
+                List<FEC_IPP__c> byId = [
+                    SELECT Id, FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Open_Date__c,
+                           FEC_IPP_First_Due_Date__c, FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c,
+                           FEC_IPP_Current_Balance__c, FEC_IPP_Interest_Rate__c, FEC_IPP_Term__c,
+                           FEC_IPP_Current_Term__c, FEC_Customer_History__c
+                    FROM FEC_IPP__c
+                    WHERE Id = :caseIppToClose
+                    AND FEC_Customer_History__c = :customerHistoryId
+                    LIMIT 1
+                ];
+                if (!byId.isEmpty()) {
+                    SObjectAccessDecision dec2 = Security.stripInaccessible(AccessType.READABLE, byId);
+                    if (!dec2.getRecords().isEmpty()) {
+                        chosen = (FEC_IPP__c) dec2.getRecords()[0];
+                    }
+                }
+            }
+            if (chosen != null) {
+                IPPClosureDTO dto = new IPPClosureDTO();
+                dto.Id = chosen.Id;
+                dto.ippRecordNo = chosen.FEC_IPP_Record_No__c;
+                dto.ippPlan = chosen.FEC_IPP_Plan__c;
+                dto.ippOpenDate = chosen.FEC_IPP_Open_Date__c;
+                dto.ippFirstDueDate = chosen.FEC_IPP_First_Due_Date__c;
+                dto.ippMatureDate = chosen.FEC_IPP_Mature_Date__c;
+                dto.ippBalance = chosen.FEC_IPP_Balance__c;
+                dto.ippCurrentBalance = chosen.FEC_IPP_Current_Balance__c;
+                dto.ippInterestRate = chosen.FEC_IPP_Interest_Rate__c;
+                dto.ippTerm = chosen.FEC_IPP_Term__c;
+                dto.ippCurrentTerm = chosen.FEC_IPP_Current_Term__c;
+                wrapper.rows.add(dto);
+            }
+            wrapper.showNoEligibleWarning = wrapper.rows.isEmpty();
+            return wrapper;
+        }
+        for (FEC_IPP__c rec : accessibleIpps) {
             if (rec.FEC_IPP_Current_Balance__c == null || rec.FEC_IPP_Current_Balance__c == 0) {
                 continue;
             }
@@ -167,27 +217,4 @@ public with sharing class FEC_IPPClosureController {
         return null;
     }
 
-    private static Set<Id> getIppIdsWithPendingClosureCase(Id customerHistoryId, Id excludeCaseId) {
-        Set<Id> ippIds = new Set<Id>();
-        if (!Schema.sObjectType.Case.isAccessible()) {
-            return ippIds;
-        }
-        String pendingPattern = FEC_ConstantCommon.CASE_STATUS_PENDING + '%';
-        List<Case> pendingCases = [
-            SELECT Id, FEC_IPP_To_Close__c
-            FROM Case
-            WHERE FEC_Account_or_Contract__c = :customerHistoryId
-            AND FEC_IPP_To_Close__c != null
-            AND Id != :excludeCaseId
-            AND (FEC_Case_Status__c LIKE :pendingPattern OR Status = :FEC_ConstantCommon.CASE_STATUS_PENDING)
-        ];
-        SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, pendingCases);
-        for (SObject so : decision.getRecords()) {
-            Case cs = (Case) so;
-            if (cs.FEC_IPP_To_Close__c != null) {
-                ippIds.add(cs.FEC_IPP_To_Close__c);
-            }
-        }
-        return ippIds;
-    }
 }

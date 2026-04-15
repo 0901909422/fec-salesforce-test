@@ -87,6 +87,46 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
 
   async connectedCallback() {
     this.isLoading = true;
+    if (this.isCreatedFromSearch === 'true' && this.recordId) {
+        this.isLoading = false;
+        if (this.isConsoleNavigation) {
+            const allTabs = await getAllTabInfo();
+            const componentTab = allTabs.find(t =>
+                t.pageReference?.type === 'standard__component' &&
+                t.pageReference?.attributes?.componentName === 'c__fec_InteractionCreateCase'
+            );
+
+            const focusedTab = await getFocusedTabInfo();
+            if (focusedTab?.parentTabId) {
+                await openSubtab(focusedTab.parentTabId, {
+                    recordId: this.recordId,
+                    focus: true,
+                });
+            } else {
+                await openTab({
+                    recordId: this.recordId,
+                    focus: true,
+                });
+            }
+
+            setTimeout(async () => {
+                await this.handlePublishMessageChanel();
+                if (componentTab?.tabId) {
+                    closeTab(componentTab.tabId);
+                }
+            }, 2000);
+        } else {
+            this[NavigationMixin.Navigate]({
+                type: "standard__recordPage",
+                attributes: {
+                    recordId: this.recordId,
+                    objectApiName: "Case",
+                    actionName: "view",
+                },
+            });
+        }
+      return;
+    }
     if (!this.isNonExistingCustomer) {
       createCustomerCaseFromCase({ caseId: this.recordId })
         .then(async (newCaseId) => {
