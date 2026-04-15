@@ -13384,4 +13384,18 @@
         <shortDescription>Không tìm thấy kết quả (Application History)</shortDescription>
         <value>Không tìm thấy kết quả</value>
     </labels>
+    <labels>
+        <fullName>FEC_BIX_Ingest_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>BIX Ingest Error</shortDescription>
+        <value>BIX Ingest API call failed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BIX_Ingest_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>BIX Ingest Success</shortDescription>
+        <value>BIX Ingest API call succeeded</value>
+    </labels>
 </CustomLabels>
