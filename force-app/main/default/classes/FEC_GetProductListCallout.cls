@@ -106,6 +106,7 @@ public without sharing class FEC_GetProductListCallout {
         Dom.XmlNode productsNode = responseNode.getChildElement('Products', null);
         if (productsNode != null && result.code == '1') {
             for (Dom.XmlNode productNode : productsNode.getChildElements()) {
+                System.debug('Parsing product node: ' + productNode);
                 ProductInfo p = new ProductInfo();
                 p.productName = FEC_CommonUltils.getXmlValue(productNode, 'ProductName');
                 p.productType = FEC_CommonUltils.getXmlValue(productNode, 'ProductType');

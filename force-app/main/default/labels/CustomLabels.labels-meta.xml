@@ -11931,7 +11931,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Send Manual Notification</shortDescription>
-        <value>Send Manual Notification</value>
+        <value>Send Notification</value>
     </labels>
     <labels>
         <fullName>FEC_Target_Email</fullName>
@@ -12431,5 +12431,37 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</shortDescription>
         <value>Mở khoá thẻ thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ACTION_PIN_REISSUE_HEADER</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_ACTION_PIN_REISSUE_HEADER</shortDescription>
+        <value>PIN Replacement</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_PIN_REISSUE</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PIN_REISSUE</shortDescription>
+        <value>Bạn sắp thay thế mã PIN cho khách hàng này. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</shortDescription>
+        <value>Thay thế mã PIN thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_PIN_REISSUE_ERROR</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR</shortDescription>
+        <value>Thay thế mã PIN thất bại.</value>
     </labels>
 </CustomLabels>
