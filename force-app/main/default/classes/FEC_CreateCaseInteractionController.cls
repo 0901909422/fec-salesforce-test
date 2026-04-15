@@ -32,6 +32,9 @@ public with sharing class FEC_CreateCaseInteractionController {
     newCase.FEC_Account_Number__c = interation.FEC_Account_Number__c;
     newCase.FEC_Contract_Number__c = interation.FEC_Contract_Number__c;
     newCase.FEC_CIF_Number__c = interation.FEC_CIF_Number__c;
+    // 15/04/2026 PhuongNT add
+    newCase.FEC_Recipient_Name__c = newCase.FEC_Customer_Name__c;
+    newCase.FEC_Recipient_Phone_Number__c = interation.FEC_Phone_Number__c;
     
     insert newCase;
     

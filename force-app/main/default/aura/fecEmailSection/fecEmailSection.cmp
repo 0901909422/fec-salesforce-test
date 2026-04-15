@@ -12,9 +12,12 @@
     <aura:attribute name="isSending" type="Boolean" default="false" />
     <aura:attribute name="titleReply" type="String" default="Anh/ Chi" />
     <aura:attribute name="replyTemplate" type="String" default="" />
+    <aura:attribute name="replyPrefix" type="String" default="" />
     <aura:attribute name="templateOptions" type="List" default="[]" />
     <aura:attribute name="templateBodies" type="Object" default="{}" />
     <aura:attribute name="templateSubjects" type="Object" default="{}" />
+    <aura:attribute name="templateHeaders" type="Object" default="{}" />
+    <aura:attribute name="templateFooters" type="Object" default="{}" />
     <aura:attribute name="originalSubject" type="String" default="" />
     <aura:attribute name="emailList" type="List" default="[]" />
     <aura:attribute name="isLoading" type="Boolean" default="false" />
@@ -403,7 +406,7 @@
                                                 <span class="fec-info-val">{!email.fromName}</span>
                                             </div>
                                             <div class="fec-info-divider"></div>
-                                            <a class="fec-info-link" onclick="{!c.previewEmail}">View Email</a>
+                                            <a class="fec-info-link" data-body="{!email.bodyHtml}" onclick="{!c.previewFeedEmail}">View Email</a>
                                         </div>
                                     </span>
                                 </div>

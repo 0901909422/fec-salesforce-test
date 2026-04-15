@@ -43,12 +43,17 @@ export default class Fec_IPPClosureForm extends LightningElement {
         return this.isEdit === false;
     }
 
+    get ippTableLocked() {
+        return this.isReadOnly || this.savedIppToCloseOnCase != null;
+    }
+
     get datatableMaxRowSelection() {
-        return this.isReadOnly ? 0 : 1;
+        return this.ippTableLocked ? 0 : 1;
     }
 
     @track ippList = [];
     @track selectedIppId = null;
+    @track savedIppToCloseOnCase = null;
     @track isLoading = false;
     @track completeLoading = false;
     @track showNoti11 = false;
@@ -85,6 +90,7 @@ export default class Fec_IPPClosureForm extends LightningElement {
         this.isLoading = true;
         this.ippList = [];
         this.selectedIppId = null;
+        this.savedIppToCloseOnCase = null;
         this.showNoti11 = false;
         this.loadSucceeded = false;
         this.showNoEligibleWarning = false;
@@ -95,7 +101,16 @@ export default class Fec_IPPClosureForm extends LightningElement {
                 this.ippList = rows;
                 this.showNoEligibleWarning = rows.length === 0;
                 this.loadSucceeded = true;
-                this.dispatchEvent(new CustomEvent('fecippclosureload', { bubbles: true, composed: true, detail: { noEligibleForClosure: this.showNoEligibleWarning } }));
+                this.savedIppToCloseOnCase = data && data.savedIppToCloseOnCase ? data.savedIppToCloseOnCase : null;
+                if (this.savedIppToCloseOnCase && rows.length === 1) {
+                    this.selectedIppId = this.savedIppToCloseOnCase;
+                }
+                const hasEligibleRows = rows.length > 0;
+                this.dispatchEvent(new CustomEvent('fecippclosureload', { bubbles: true, composed: true, detail: {
+                    noEligibleForClosure: this.showNoEligibleWarning,
+                    hasEligibleRows: hasEligibleRows,
+                    savedIppToCloseOnCase: this.savedIppToCloseOnCase
+                } }));
             })
             .catch((err) => {
                 this.loadSucceeded = false;
@@ -135,13 +150,15 @@ export default class Fec_IPPClosureForm extends LightningElement {
 
     handleRowSelection(event) {
         const selectedRows = event.detail.selectedRows || [];
-        this.selectedIppId = selectedRows.length === 1 ? selectedRows[0].Id : null;
+        const hasSelection = selectedRows.length === 1;
+        this.selectedIppId = hasSelection ? selectedRows[0].Id : null;
         this.showNoti11 = false;
+        this.dispatchEvent(new CustomEvent('fecippclosureselection', { bubbles: true, composed: true, detail: { hasSelection: hasSelection } }));
     }
 
     /** Submit Case: bắt buộc chọn một dòng khi bảng có IPP đủ điều kiện. */
     @api validateSelectionRequiredForSubmit() {
-        if (this.isReadOnly) {
+        if (this.ippTableLocked) {
             return true;
         }
         if (this.isLoading) {
@@ -161,7 +178,7 @@ export default class Fec_IPPClosureForm extends LightningElement {
 
     /** Parent Save & Close / Submit: lưu IPP đã chọn nếu có; bỏ qua khi không có dòng hoặc chưa chọn. */
     @api saveSelectedIPPIfApplicable() {
-        if (this.isReadOnly) {
+        if (this.ippTableLocked) {
             return Promise.resolve();
         }
         const hasRows = this.ippList && this.ippList.length > 0;
