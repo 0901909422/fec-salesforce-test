@@ -1325,6 +1325,13 @@
 		<members>FEC_Stage_Change__c.FEC_Condition_Requirement__c</members>
 		<members>Case.FEC_Case_Created_By__c</members>
 		<members>FEC_Notification__c.FEC_Customer_Type__c</members>
+		<members>Case.FEC_Created_by__c</members>
+		<members>Case.FEC_Last_Updated_By__c</members>
+		<members>Case.FEC_Card_Replacement_Fee__c</members>
+		<members>Case.FEC_Card_Replacement_Reason__c</members>
+		<members>Case.FEC_New_Block_Code_Card_Replace__c</members>
+		<members>Case.FEC_Recipient_Name__c</members>
+		<members>Case.FEC_Recipient_Phone_Number__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
@@ -1353,6 +1360,8 @@
 		<members>FEC_HoldCaseController</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
 		<members>FEC_MarkNFU</members>
+		<members>FEC_GetProductListCallout</members>
+		<members>FEC_PinReplacementController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1536,6 +1545,10 @@
         <members>FEC_MSG_Address_Update_Reason_Generic</members>
         <members>FEC_LBL_UpdateAddress_Original_Information</members>
         <members>FEC_LBL_UpdateAddress_Updated_Information</members>
+		<members>FEC_ACTION_PIN_REISSUE_HEADER</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</members>
+		<members>FEC_MSG_ACTION_PIN_REISSUE_ERROR</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1615,6 +1628,10 @@
 	<types>
 		<members>FEC_ServiceResource_Set_ServiceType_Agent</members>
 		<name>Flow</name>
+	</types>
+    <types>
+		<members>en_US</members>
+		<name>Translations</name>
 	</types>
 
     <version>65.0</version>
