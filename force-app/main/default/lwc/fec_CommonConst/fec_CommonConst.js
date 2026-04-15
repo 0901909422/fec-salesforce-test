@@ -52,6 +52,8 @@ const CASE_ORIGIN_EMAIL_INTERNAL = 'Email-Internal';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const RESULT_ERROR = "result-error";
 const RESULT_SUCCESS = "result-success";
+const RESPONE_MESSARE_ERROR = 'Số hợp đồng/ tài khoản này đã chuyển ngưng tác động thất bại'
+const RESPONE_MESSARE_SUCCESS = 'Số hợp đồng/ tài khoản này đã chuyển ngưng tác động thành công'
 const CHANNEL_OPTIONS = [
   { label: "Inbound", value: "Inbound" },
   { label: "Outbound", value: "Outbound" },
@@ -106,7 +108,7 @@ const FORM_STATE_LOADING = 'LOADING';
 const FORM_STATE_NONE = 'NONE';
 const FORM_STATE_HAS_DATA = 'HAS_DATA';
 const INTERNAL_REQUEST = 'Internal Request';
-const INTERNAL_UBANK = 'Ubank'
+const INTERNAL_UBANK = 'Ubank';
 const PATTERN_EMAIL_FEC_STRICT = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,5}(\.[A-Za-z]{2,5})?$/;
 const PATTERN_PHONE_VN_FEC = /^(0\d{9}|84\d{9})$/;
 const CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 = 'C360';
@@ -114,18 +116,19 @@ const CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY = 'TEMPORARY';
 const CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY = 'Temporary Address';
 const CONTRACT_CLOSURE_DELIVERY_VALUE_ADDRESS_DEFAULT = 'Địa chỉ';
 const CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT = 'Văn phòng';
-const WARNING_HOLD_CASE = 'Warning'
+const WARNING_HOLD_CASE = 'Warning';
 const WARNING_HOLD_TOAST = 'warning';
-const RESPONSE_SUCCESS = 'SUCCESS'
+const RESPONSE_SUCCESS = 'SUCCESS';
 const TARGET_GROUP_INTERNAL_USER = 'Internal User';
 const SEARCH_PLACEHOLDER = 'Search User...';
-const SEARCH_BY_EMAIL = 'Search By Email'
+const SEARCH_BY_EMAIL = 'Search By Email';
 const SEARCH_INTERNAL_USERS = 'Search Internal Users';
 const MIN_FAST_CASH_REGISTRATION_VND = 2000000;
 const MAX_FAST_CASH_BLOCK_ATTEMPTS = 3;
 const FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX = 'fec_fc_noclock_';
 const FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX = 'fec_fc_blkfail_';
 const FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX = 'fec_fc_blkok_';
+const ERROR_TILE_SHOWTOAST = 'Thất bại';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -213,5 +216,9 @@ export {
     MAX_FAST_CASH_BLOCK_ATTEMPTS,
     FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX,
     FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX,
-    FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX
+    FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX,
+    SEARCH_INTERNAL_USERS,
+    RESPONE_MESSARE_ERROR,
+    RESPONE_MESSARE_SUCCESS,
+    ERROR_TILE_SHOWTOAST
 };

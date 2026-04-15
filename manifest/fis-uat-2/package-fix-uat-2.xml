@@ -103,6 +103,8 @@
 		<members>FEC_CaseRemarkController</members>
 		<members>FEC_MarkNFU</members>
 		<members>FEC_GetProductListCallout</members>
+		<members>FEC_PinReplacementController</members>
+		<members>FEC_MCMSCARDTOCARDINQEMEA</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -113,7 +115,7 @@
         <members>fec_templateListView</members>
         <members>fec_CaseEditNOC</members>
 		<members>fec_CaseBussiness</members>
-		<members>fec_CardBlock</members>
+		<!--<members>fec_CardBlock</members>-->
 		<members>fec_Search</members>
 		<members>fecInteractionEmailInfo</members>
 		<members>fec_CaseDetail_Customer</members>
@@ -171,6 +173,7 @@
 		<members>fec_InteractionCaseModeStore</members>
 		<members>fec_InteractionHighlightMain</members>
 		<members>maskedToggleCell</members>
+		<members>fec_AppInfo</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -653,6 +656,7 @@
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
 		<members>FEC_Additional_Info__c.FEC_Replace_Card__c</members>
+		<members>FEC_Additional_Info__c.FEC_IPP_Plan__c</members>
 		<members>Case.FEC_Incorrect_Payment_Adj_Rows__c</members>
 		<members>Case.FEC_Current_Card_Status__c</members>
 		<members>Case.FEC_Bank_Branch_Name_Noaccent__c</members>
@@ -666,6 +670,11 @@
 		<members>FEC_Notification__c.FEC_Customer_Type__c</members>
 		<members>Case.FEC_Created_by__c</members>
 		<members>Case.FEC_Last_Updated_By__c</members>
+		<members>Case.FEC_Card_Replacement_Fee__c</members>
+		<members>Case.FEC_Card_Replacement_Reason__c</members>
+		<members>Case.FEC_New_Block_Code_Card_Replace__c</members>
+		<members>Case.FEC_Recipient_Name__c</members>
+		<members>Case.FEC_Recipient_Phone_Number__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -684,6 +693,7 @@
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
+		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -718,6 +728,8 @@
         <members>Case.Interaction</members>
         <members>Case.Internal_Case</members>
         <members>Case.Search_Interaction</members>
+		<members>FEC_Notification__c.Auto_Notification</members>
+		<members>FEC_Notification__c.Manual_Notification</members>
         <name>RecordType</name>
     </types>
 	<types>
